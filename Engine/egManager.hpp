@@ -13,18 +13,5 @@ namespace Engine::Abstract
 		virtual void Update() = 0;
 		virtual void PreRender() = 0;
 		virtual void Render() = 0;
-
-		static Manager* GetManager()
-		{
-			return m_manager.get();
-		}
-
-	protected:
-		Manager()
-		{
-			m_manager = std::unique_ptr<Manager>(this);
-		}
-
-		inline static std::unique_ptr<Manager> m_manager = nullptr;
 	};
 }
