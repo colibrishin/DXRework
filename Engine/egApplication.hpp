@@ -7,7 +7,7 @@
 namespace Engine
 {
 	inline std::atomic<bool> g_full_screen = false;
-	inline std::atomic<bool> g_vsync_enabled = false;
+	inline std::atomic<bool> g_vsync_enabled = true;
 	inline std::atomic<UINT> g_window_width = 800;
 	inline std::atomic<UINT> g_window_height = 600;
 
