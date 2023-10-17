@@ -21,6 +21,11 @@ namespace Engine::Graphic
 		D3Device::BindConstantBuffer(s_vp_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
 	}
 
+	void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
+	{
+		D3Device::s_context_->IASetPrimitiveTopology(topology);
+	}
+
 	void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
 	{
 		constexpr UINT stride = sizeof(VertexElement);
@@ -95,59 +100,49 @@ namespace Engine::Graphic
 			if(file.path().extension() == L".hlsl")
 			{
 				const auto prefix = file.path().filename().wstring();
+				const auto filename_without_extension = prefix.substr(0, prefix.find_last_of(L"."));
 
 				if (prefix.starts_with(L"vs"))
 				{
-					auto shader = new VertexShader(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<VertexShader>(filename_without_extension, file.path()));
+					std::shared_ptr<VertexShader> shader = std::reinterpret_pointer_cast<VertexShader>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 				else if (prefix.starts_with(L"ps"))
 				{
-					auto shader = new Shader<ID3D11PixelShader>(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<Shader<ID3D11PixelShader>>(filename_without_extension, file.path()));
+					std::shared_ptr<Shader<ID3D11PixelShader>> shader = std::reinterpret_pointer_cast<Shader<ID3D11PixelShader>>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(
-					std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 				else if (prefix.starts_with(L"gs"))
 				{
-					auto shader = new Shader<ID3D11GeometryShader>(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<Shader<ID3D11GeometryShader>>(filename_without_extension, file.path()));
+					std::shared_ptr<Shader<ID3D11GeometryShader>> shader = std::reinterpret_pointer_cast<Shader<ID3D11GeometryShader>>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(
-					std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 				else if (prefix.starts_with(L"cs"))
 				{
-					auto shader = new Shader<ID3D11ComputeShader>(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<Shader<ID3D11ComputeShader>>(filename_without_extension, file.path()));
+					std::shared_ptr<Shader<ID3D11ComputeShader>> shader = std::reinterpret_pointer_cast<Shader<ID3D11ComputeShader>>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(
-					std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 				else if (prefix.starts_with(L"hs"))
 				{
-					auto shader = new Shader<ID3D11HullShader>(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<Shader<ID3D11HullShader>>(filename_without_extension, file.path()));
+					std::shared_ptr<Shader<ID3D11HullShader>> shader = std::reinterpret_pointer_cast<Shader<ID3D11HullShader>>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(
-					std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 				else if (prefix.starts_with(L"ds"))
 				{
-					auto shader = new Shader<ID3D11DomainShader>(file.path().filename(), file.path());
+					s_shader_map_.emplace(filename_without_extension, std::make_shared<Shader<ID3D11DomainShader>>(filename_without_extension, file.path()));
+					std::shared_ptr<Shader<ID3D11DomainShader>> shader = std::reinterpret_pointer_cast<Shader<ID3D11DomainShader>>(s_shader_map_[filename_without_extension]);
 
-					D3Device::CreateShader(
-					std::filesystem::absolute(file), shader);
-
-					s_shader_map_.emplace(shader->GetName(), shader);
+					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 			}
 		}

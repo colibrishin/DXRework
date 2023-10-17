@@ -12,9 +12,9 @@ namespace Engine::Graphic
 	{
 	public:
 		Shader(const std::wstring& name, const std::filesystem::path& path);
-		~Shader() = default;
+		~Shader() override = default;
 
-		ComPtr<T> GetShader() const { return m_shader_; }
+		T** GetShader() { return m_shader_.GetAddressOf(); }
 		void Initialize() override;
 		void PreUpdate() override;
 		void Update() override;

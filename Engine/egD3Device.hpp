@@ -94,31 +94,33 @@ namespace Engine::Graphic
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(Shader<ID3D11VertexShader>* shader, ID3DBlob* blob);
 
 		template <typename T>
-		static void BindShader(const Shader<T>* shader)
+		static void BindShader(Shader<T>* shader)
 		{
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
 			{
-				s_context_->VSSetShader(shader->GetShader().Get(), nullptr, 0);
+				VertexShader* casting = static_cast<VertexShader*>(shader);
+				s_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
+				s_context_->IASetInputLayout(*casting->GetInputLayout());
 			}
 			else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
 			{
-				s_context_->PSSetShader(shader->GetShader().Get(), nullptr, 0);
+				s_context_->PSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
 			else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
 			{
-				s_context_->GSSetShader(shader->GetShader().Get(), nullptr, 0);
+				s_context_->GSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
 			else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
 			{
-				s_context_->CSSetShader(shader->GetShader().Get(), nullptr, 0);
+				s_context_->CSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
 			else if constexpr (std::is_same_v<T, ID3D11HullShader>)
 			{
-				s_context_->HSSetShader(shader->GetShader().Get(), nullptr, 0);
+				s_context_->HSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
 			else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
 			{
-				s_context_->DSSetShader(shader->GetShader().Get(), nullptr, 0);
+				s_context_->DSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
 		}
 
@@ -147,27 +149,27 @@ namespace Engine::Graphic
 				const auto casted = dynamic_cast<VertexShader*>(shader);
 
 				DX::ThrowIfFailed(s_device_->CreateInputLayout(input_descs.data(), input_descs.size(), blob->GetBufferPointer(), blob->GetBufferSize(), casted->GetInputLayout()));
-				DX::ThrowIfFailed(s_device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11HullShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader().GetAddressOf()));
+				DX::ThrowIfFailed(s_device_->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
 			}
 		}
 
@@ -207,9 +209,9 @@ namespace Engine::Graphic
 
 		inline static D3D11_VIEWPORT s_viewport_{};
 
-		inline static Matrix s_world_matrix_ = {};
-		inline static Matrix s_projection_matrix_ = {};
-		inline static Matrix s_ortho_matrix_ = {};
+		inline static XMMATRIX s_world_matrix_ = {};
+		inline static XMMATRIX s_projection_matrix_ = {};
+		inline static XMMATRIX s_ortho_matrix_ = {};
 	};
 
 	inline std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(
@@ -476,7 +478,7 @@ namespace Engine::Graphic
 		UpdateViewport();
 
 		s_world_matrix_ = XMMatrixIdentity();
-		s_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PIDIV4, GetAspectRatio(), g_screen_near, g_screen_far);
+		s_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
 		s_ortho_matrix_ = XMMatrixOrthographicLH(static_cast<float>(g_window_width), static_cast<float>(g_window_height), g_screen_near, g_screen_far);
 
 		RenderPipeline::Initialize();
@@ -492,6 +494,6 @@ namespace Engine::Graphic
 
 	inline void D3Device::Present()
 	{
-		s_swap_chain_->Present(g_vsync_enabled ? 1 : 0, 0);
+		s_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
 	}
 }
