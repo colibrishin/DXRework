@@ -25,13 +25,19 @@ namespace Engine
 		SHADER_GEOMETRY,
 		SHADER_COMPUTE,
 		SHADER_HULL,
-		SHADER_DOMAIN
+		SHADER_DOMAIN,
+		SHADER_UNKNOWN
 	};
 
 	enum eCBType
 	{
 		CB_TYPE_VP = 0,
 		CB_TYPE_TRANSFORM
+	};
+
+	enum eShaderResource
+	{
+		SR_TEXTURE = 0
 	};
 
 	struct GUIDComparer
@@ -81,6 +87,16 @@ namespace Engine
 		{ SHADER_HULL, [](ID3D11Device* device, ID3D11DeviceContext* context, ID3D11Buffer* buffer, UINT start_slot, UINT num_buffers) { context->HSSetConstantBuffers(start_slot, num_buffers, &buffer); } },
 		{ SHADER_DOMAIN, [](ID3D11Device* device, ID3D11DeviceContext* context, ID3D11Buffer* buffer, UINT start_slot, UINT num_buffers) { context->DSSetConstantBuffers(start_slot, num_buffers, &buffer); } }
 	};
+
+	const std::unordered_map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11SamplerState*, UINT, UINT)>> g_shader_sampler_bind_map =
+	{
+			{ SHADER_VERTEX, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->VSSetSamplers(start_slot, num_samplers, &sampler); } },
+			{ SHADER_PIXEL, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->PSSetSamplers(start_slot, num_samplers, &sampler); } },
+			{ SHADER_GEOMETRY, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->GSSetSamplers(start_slot, num_samplers, &sampler); } },
+			{ SHADER_COMPUTE, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->CSSetSamplers(start_slot, num_samplers, &sampler); } },
+			{ SHADER_HULL, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->HSSetSamplers(start_slot, num_samplers, &sampler); } },
+			{ SHADER_DOMAIN, [](ID3D11DeviceContext* context, ID3D11SamplerState* sampler, UINT start_slot, UINT num_samplers) { context->DSSetSamplers(start_slot, num_samplers, &sampler); } }
+		};
 
 	struct VPBuffer
 	{
