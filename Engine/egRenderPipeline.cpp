@@ -18,7 +18,7 @@ namespace Engine::Graphic
 	void RenderPipeline::SetPerspectiveMatrix(const VPBuffer& matrix)
 	{
 		s_vp_buffer_data_.SetData(D3Device::s_context_.Get(), matrix);
-		D3Device::BindConstantBuffer(s_vp_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
+		D3Device::BindConstantBuffer(s_vp_buffer_data_, CB_TYPE_VP, SHADER_VERTEX);
 	}
 
 	void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
