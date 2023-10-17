@@ -42,6 +42,8 @@ namespace Engine::Abstract
 		ComPtr<ID3D11Buffer> m_vertex_buffer_;
 		ComPtr<ID3D11Buffer> m_index_buffer_;
 
+		D3D11_PRIMITIVE_TOPOLOGY m_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 	private:
 		std::filesystem::path m_path_;
 	};
@@ -62,5 +64,6 @@ namespace Engine::Abstract
 	{
 		Graphic::RenderPipeline::BindVertexBuffer(m_vertex_buffer_.Get());
 		Graphic::RenderPipeline::BindIndexBuffer(m_index_buffer_.Get());
+		Graphic::RenderPipeline::SetTopology(m_topology);
 	}
 }

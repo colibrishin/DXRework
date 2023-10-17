@@ -7,8 +7,9 @@ namespace Engine::Object
 	void Camera::Initialize()
 	{
 		AddComponent<Component::Transform>();
-		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -2.0f});
-		m_look_at_ = Vector3::Forward;
+		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -5.0f});
+		m_rotation_ = XMQuaternionIdentity();
+		m_look_at_ = Vector3::Backward;
 	}
 
 	void Camera::PreUpdate()
@@ -43,7 +44,8 @@ namespace Engine::Object
 			const auto w = Graphic::D3Device::GetWorldMatrix();
 			const auto p = Graphic::D3Device::GetProjectionMatrix();
 
-			m_vp_buffer_.viewProjection = w * m_view_matrix_ * p;
+			m_vp_buffer_.view = m_view_matrix_.Transpose();
+			m_vp_buffer_.projection = p.Transpose();
 
 			Graphic::RenderPipeline::SetPerspectiveMatrix(m_vp_buffer_);
 		}

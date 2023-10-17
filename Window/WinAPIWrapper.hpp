@@ -114,7 +114,9 @@ namespace WinAPI
 				{
 					return;
 				}
-
+			}
+			else
+			{
 				Engine::Application::Tick();
 			}
 		}
