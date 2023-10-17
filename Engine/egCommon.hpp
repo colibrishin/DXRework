@@ -84,12 +84,15 @@ namespace Engine
 
 	struct VPBuffer
 	{
-		Matrix viewProjection;
+		Matrix view;
+		Matrix projection;
 	};
 
 	struct TransformBuffer
 	{
-		Matrix world;
+		Matrix scale;
+		Matrix rotation;
+		Matrix translation;
 	};
 }
 

@@ -26,9 +26,9 @@ namespace Engine::Component
 		void Render() override;
 
 	private:
-		DirectX::SimpleMath::Vector3 m_position_;
+		DirectX::SimpleMath::Vector3 m_position_ = Vector3::Zero;
 		DirectX::SimpleMath::Quaternion m_rotation_;
-		DirectX::SimpleMath::Vector3 m_scale_;
+		DirectX::SimpleMath::Vector3 m_scale_ = Vector3::One;
 		TransformBuffer m_transform_buffer_;
 	};
 
@@ -42,7 +42,9 @@ namespace Engine::Component
 
 	inline void Transform::Update()
 	{
-		m_transform_buffer_.world = Matrix::CreateScale(m_scale_) * Matrix::CreateFromQuaternion(m_rotation_) * Matrix::CreateTranslation(m_position_);
+		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
+		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();
+		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
 
 		Graphic::RenderPipeline::SetWorldMatrix(m_transform_buffer_);
 	}
