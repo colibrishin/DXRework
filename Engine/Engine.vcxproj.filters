@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Application">
+      <UniqueIdentifier>{b6856912-57d3-4d6f-b851-90444edaff0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Low-level">
+      <UniqueIdentifier>{0d869fbc-e6b1-4abc-a44d-7e7424318d7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract">
+      <UniqueIdentifier>{ee6b8ed6-3103-45ae-90c4-0b6aece09279}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{c8204c1e-d021-47e5-8bec-7277cb9c93c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component">
+      <UniqueIdentifier>{738eaf93-14fb-42d1-95d8-2fa14b0ee474}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{1b658a79-7504-48f0-9286-d5ab9fbc195f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.hpp" />
+    <ClInclude Include="egApplication.hpp">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="egEntity.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egD3Device.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderable.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egScene.hpp">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="egSceneManager.hpp">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="egManager.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderPipeline.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egMesh.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="StepTimer.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egShader.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egVertexShader.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egIShader.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egObject.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egComponent.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egTransform.hpp">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egCommon.hpp" />
+    <ClInclude Include="egMeshRenderer.hpp">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egCamera.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="egApplication.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderPipeline.cpp">
+      <Filter>Low-level</Filter>
+    </ClCompile>
+    <ClCompile Include="egCamera.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="vs_default.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_default.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+</Project>
