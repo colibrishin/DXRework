@@ -44,10 +44,9 @@ namespace Engine
 
 	void Application::Tick()
 	{
-		PreUpdate();
-
 		s_timer->Tick([&]()
 		{
+			PreUpdate();
 			Update();
 		});
 
