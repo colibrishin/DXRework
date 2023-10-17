@@ -7,7 +7,7 @@ namespace Engine
 {
 	using WeakObject = std::weak_ptr<Abstract::Object>;
 	using StrongObject = std::shared_ptr<Abstract::Object>;
-	using StrongCamera = std::shared_ptr<Object::Camera>;
+	using StrongCamera = std::shared_ptr<Objects::Camera>;
 
 	class Scene : public Abstract::Renderable
 	{
@@ -34,7 +34,7 @@ namespace Engine
 
 	inline Scene::Scene()
 	{
-		m_camera_ = std::make_shared<Object::Camera>();
+		m_camera_ = std::make_shared<Objects::Camera>();
 		m_camera_->Initialize();
 	}
 
