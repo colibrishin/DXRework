@@ -6,7 +6,7 @@
 
 namespace Client::Mesh
 {
-	class TriangleMesh : public Engine::Abstract::Mesh
+	class TriangleMesh : public Engine::Resources::Mesh
 	{
 	public:
 		TriangleMesh();
@@ -21,7 +21,7 @@ namespace Client::Mesh
 		void Load() override;
 	};
 
-	inline TriangleMesh::TriangleMesh()
+	inline TriangleMesh::TriangleMesh() : Mesh("")
 	{
 		TriangleMesh::Initialize();
 	}
@@ -37,7 +37,6 @@ namespace Client::Mesh
 
 	inline void TriangleMesh::Update()
 	{
-		Mesh::Update();
 	}
 
 	inline void TriangleMesh::PreRender()

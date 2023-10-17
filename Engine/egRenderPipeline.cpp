@@ -43,6 +43,11 @@ namespace Engine::Graphic
 		D3Device::UpdateBuffer(size, data, buffer);
 	}
 
+	void RenderPipeline::BindTexture(ID3D11ShaderResourceView* texture)
+	{
+		D3Device::s_context_->PSSetShaderResources((UINT)SR_TEXTURE, 1, &texture);
+	}
+
 	void RenderPipeline::Initialize()
 	{
 		if (s_instance_)
@@ -57,6 +62,7 @@ namespace Engine::Graphic
 
 		CompileShaders();
 
+		InitializeSamplers();
 		D3Device::CreateBlendState(s_blend_state_.GetAddressOf());
 		D3Device::CreateRasterizer(s_rasterizer_state_.GetAddressOf());
 	}
@@ -145,6 +151,31 @@ namespace Engine::Graphic
 					D3Device::CreateShader(std::filesystem::absolute(file), shader.get());
 				}
 			}
+		}
+	}
+
+	void RenderPipeline::InitializeSamplers()
+	{
+		D3D11_SAMPLER_DESC desc{};
+
+		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.MipLODBias = 0.0f;
+		desc.MaxAnisotropy = 1;
+		desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+		desc.BorderColor[0] = 0;
+		desc.BorderColor[1] = 0;
+		desc.BorderColor[2] = 0;
+		desc.BorderColor[3] = 0;
+		desc.MinLOD = 0;
+		desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+		for (UINT i = 0; i < static_cast<UINT>(SHADER_UNKNOWN); ++i)
+		{
+			D3Device::CreateSampler(desc, s_sampler_state_[(eShaderType)i].ReleaseAndGetAddressOf());
+			D3Device::BindSampler(s_sampler_state_[(eShaderType)i].Get(), (eShaderType)i);
 		}
 	}
 

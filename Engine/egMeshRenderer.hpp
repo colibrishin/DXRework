@@ -2,11 +2,14 @@
 #include "egComponent.hpp"
 #include "egMesh.hpp"
 #include "egRenderPipeline.hpp"
+#include "egTexture.hpp"
 
 namespace Engine::Component
 {
-	using WeakMesh = std::weak_ptr<Abstract::Mesh>;
-	using StrongMesh = std::shared_ptr<Abstract::Mesh>;
+	using WeakMesh = std::weak_ptr<Resources::Mesh>;
+	using WeakTexture = std::weak_ptr<Resources::Texture>;
+	using StrongMesh = std::shared_ptr<Resources::Mesh>;
+	using StrongTexture = std::shared_ptr<Resources::Texture>;
 
 	class MeshRenderer : public Abstract::Component
 	{
@@ -17,10 +20,12 @@ namespace Engine::Component
 		void PreRender() override;
 		void Render() override;
 
-		void SetMesh(const StrongMesh& mesh) { m_mesh_ = mesh; }
+		void SetMesh(const WeakMesh& mesh) { m_mesh_ = mesh; }
+		void SetTexture(const WeakTexture& texture) { m_texture_ = texture; }
 
 	private:
-		StrongMesh m_mesh_;
+		WeakMesh m_mesh_;
+		WeakTexture m_texture_;
 	};
 
 	inline void MeshRenderer::Initialize()
@@ -44,9 +49,15 @@ namespace Engine::Component
 		Graphic::RenderPipeline::SetShader(L"vs_default");
 		Graphic::RenderPipeline::SetShader(L"ps_default");
 
-		if(const auto ptr = m_mesh_)
+		if(const auto ptr = m_mesh_.lock())
 		{
 			ptr->Render();
+
+			if(const auto texture = m_texture_.lock())
+			{
+				texture->Render();
+			}
+
 			Graphic::RenderPipeline::DrawIndexed(ptr->GetIndexCount());
 		}
 	}

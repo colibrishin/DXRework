@@ -44,8 +44,8 @@ namespace Engine::Graphic
 		{
 			D3D11_BUFFER_DESC desc{};
 
-			desc.Usage = D3D11_USAGE_DYNAMIC;
-			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.Usage = D3D11_USAGE_IMMUTABLE;
+			desc.CPUAccessFlags = 0;
 			desc.BindFlags = flag;
 			desc.ByteWidth = size * sizeof(T);
 			desc.MiscFlags = 0;
@@ -56,6 +56,8 @@ namespace Engine::Graphic
 
 			DX::ThrowIfFailed(s_device_->CreateBuffer(&desc, &data, buffer));
 		}
+
+		static void CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture, ID3D11ShaderResourceView** shader_resource_view);
 
 		static void FrameBegin();
 		static void Present();
@@ -122,6 +124,11 @@ namespace Engine::Graphic
 			{
 				s_context_->DSSetShader(*(shader->GetShader()), nullptr, 0);
 			}
+		}
+
+		static void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader)
+		{
+			g_shader_sampler_bind_map.at(target_shader)(s_context_.Get(), sampler, (UINT)target_shader, 1);
 		}
 
 		template <typename T>
@@ -458,6 +465,21 @@ namespace Engine::Graphic
 		s_viewport_ = {0.f, 0.f, (float)g_window_width, (float)g_window_height,0.f, 1.f};
 
 		s_context_->RSSetViewports(1, &s_viewport_);
+	}
+
+	inline void D3Device::CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture, ID3D11ShaderResourceView** shader_resource_view)
+	{
+		DX::ThrowIfFailed(CreateWICTextureFromFileEx(
+			s_device_.Get(),
+			path.c_str(), 
+			0, 
+			D3D11_USAGE_DEFAULT, 
+			D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
+			0, 
+			D3D11_RESOURCE_MISC_GENERATE_MIPS, 
+			WIC_LOADER_DEFAULT, 
+			texture, 
+			shader_resource_view));
 	}
 
 	inline void D3Device::Initialize(HWND hwnd)

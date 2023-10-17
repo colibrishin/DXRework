@@ -9,9 +9,20 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{8ec26683-1f11-4f9f-a257-a975e455d9f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Mesh">
+      <UniqueIdentifier>{f9f9ac78-8255-4bfe-a91a-11fbb7ee915a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Texture">
+      <UniqueIdentifier>{7c6a1fc5-8492-4703-9979-e9e7af7b9f50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{f35b906c-66cf-4b65-9a28-80cc3e41846a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{edc00468-205b-4df0-903f-d5a189d31598}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -21,17 +32,17 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="clTriangleMesh.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestScene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Client.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="clTriangleMesh.hpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
     <ClInclude Include="clTestObject.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="clTestScene.hpp">
+      <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -44,5 +55,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Texture.png">
+      <Filter>Resource\Texture</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

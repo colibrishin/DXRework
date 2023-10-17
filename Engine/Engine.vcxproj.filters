@@ -23,6 +23,15 @@
     <Filter Include="Object">
       <UniqueIdentifier>{1b658a79-7504-48f0-9286-d5ab9fbc195f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{5de112d7-ea49-4bdf-807e-cf05f2b180ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Low-level\Interface">
+      <UniqueIdentifier>{e529c217-db97-4f70-9d7c-d390e06af610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Manager">
+      <UniqueIdentifier>{2919f7ab-a0cb-4d02-af65-02d0dc35dc2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -42,28 +51,13 @@
     <ClInclude Include="egScene.hpp">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="egSceneManager.hpp">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
     <ClInclude Include="egRenderPipeline.hpp">
       <Filter>Low-level</Filter>
     </ClInclude>
-    <ClInclude Include="egMesh.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="StepTimer.hpp">
-      <Filter>Low-level</Filter>
-    </ClInclude>
-    <ClInclude Include="egShader.hpp">
-      <Filter>Low-level</Filter>
-    </ClInclude>
     <ClInclude Include="egVertexShader.hpp">
-      <Filter>Low-level</Filter>
-    </ClInclude>
-    <ClInclude Include="egIShader.hpp">
       <Filter>Low-level</Filter>
     </ClInclude>
     <ClInclude Include="egObject.hpp">
@@ -81,6 +75,31 @@
     </ClInclude>
     <ClInclude Include="egCamera.hpp">
       <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egResource.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egMesh.hpp">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egTexture.hpp">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egIShader.hpp">
+      <Filter>Low-level\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="egShader.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="StepTimer.hpp" />
+    <ClInclude Include="egResourceManager.hpp">
+      <Filter>Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="egSceneManager.hpp">
+      <Filter>Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="egManagerHelper.hpp">
+      <Filter>Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

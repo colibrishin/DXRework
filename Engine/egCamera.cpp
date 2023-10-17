@@ -2,7 +2,7 @@
 #include "pch.hpp"
 #include "egTransform.hpp"
 
-namespace Engine::Object
+namespace Engine::Objects
 {
 	void Camera::Initialize()
 	{

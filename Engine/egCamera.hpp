@@ -5,7 +5,7 @@
 #include "egCommon.hpp"
 #include "egObject.hpp"
 
-namespace Engine::Object
+namespace Engine::Objects
 {
 	class Camera : public Abstract::Object
 	{

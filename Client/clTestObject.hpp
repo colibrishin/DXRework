@@ -1,8 +1,10 @@
 #pragma once
 
 #include "clTriangleMesh.hpp"
+#include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egMeshRenderer.hpp"
 #include "../Engine/egObject.hpp"
+#include "../Engine/egResourceManager.hpp"
 #include "../Engine/egTransform.hpp"
 
 namespace Engine::Component
@@ -40,7 +42,8 @@ namespace Client::Object
 		AddComponent<Engine::Component::MeshRenderer>();
 		const auto mr = GetComponent<Engine::Component::MeshRenderer>().lock();
 
-		mr->SetMesh(std::make_shared<Client::Mesh::TriangleMesh>());
+		mr->SetMesh(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"TriangleMesh"));
+		mr->SetTexture(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
 	}
 
 	inline TestObject::~TestObject()

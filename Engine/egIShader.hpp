@@ -12,7 +12,6 @@ namespace Engine::Graphic
 		IShader(const std::wstring& name, const std::filesystem::path& path);
 		~IShader() override = default;
 
-		std::wstring GetName() const { return m_name_; }
 		std::filesystem::path GetPath() const { return m_path_; }
 		ID3D11Buffer* GetBuffer() const { return m_buffer_.Get(); }
 
@@ -27,14 +26,13 @@ namespace Engine::Graphic
 		eShaderType m_type_;
 
 	private:
-		std::wstring m_name_;
 		std::filesystem::path m_path_;
 		ComPtr<ID3D11Buffer> m_buffer_;
 	};
 
 	inline IShader::IShader(const std::wstring& name, const std::filesystem::path& path)
 	{
-		m_name_ = name;
+		SetName(name);
 		m_path_ = path;
 	}
 

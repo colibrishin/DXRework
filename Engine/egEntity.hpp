@@ -17,6 +17,7 @@ namespace Engine::Abstract
 		// 64 bits only;
 		uint64_t GetID() const { return reinterpret_cast<uint64_t>(this); }
 		void SetName(const std::wstring& name) { m_name_ = name; }
+		std::wstring GetName() const { return m_name_; }
 
 		virtual void Initialize() = 0;
 		virtual void PreUpdate() = 0;
