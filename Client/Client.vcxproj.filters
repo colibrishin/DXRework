@@ -24,6 +24,9 @@
     <Filter Include="Scene">
       <UniqueIdentifier>{edc00468-205b-4df0-903f-d5a189d31598}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Normal">
+      <UniqueIdentifier>{5e54c69d-ea83-42da-9ce5-924bee7376ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -47,6 +50,9 @@
     <ClInclude Include="clCudeMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="clSphereMesh.hpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -62,6 +68,9 @@
   <ItemGroup>
     <CopyFileToFolders Include="Texture.png">
       <Filter>Resource\Texture</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Texture-Normal.png">
+      <Filter>Resource\Normal</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>
