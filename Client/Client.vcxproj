@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="clCudeMesh.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clTestObject.hpp" />
     <ClInclude Include="clTestScene.hpp" />
