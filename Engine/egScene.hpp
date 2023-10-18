@@ -26,14 +26,16 @@ namespace Engine
 		void PreRender() override;
 		void Render() override;
 
+		template <typename T>
 		void AddGameObject(const StrongObject& obj, eLayerType layer)
 		{
-			m_layers[layer]->AddGameObject(obj);
+			m_layers[layer]->AddGameObject<T>(obj);
 		}
 
+		template <typename T>
 		void RemoveGameObject(const uint64_t id, eLayerType layer)
 		{
-			m_layers[layer]->RemoveGameObject(id);
+			m_layers[layer]->RemoveGameObject<T>(id);
 		}
 
 	private:
@@ -49,10 +51,10 @@ namespace Engine
 		}
 
 		const auto camera = Instantiate<Objects::Camera>();
-		AddGameObject(camera, LAYER_CAMERA);
+		AddGameObject<Objects::Camera>(camera, LAYER_CAMERA);
 
 		const auto light = Instantiate<Objects::Light>();
-		AddGameObject(light, LAYER_LIGHT);
+		AddGameObject<Objects::Light>(light, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate()

@@ -46,6 +46,6 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
-		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
+		AddGameObject<Object::TestObject>(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
 	}
 }
