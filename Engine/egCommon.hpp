@@ -32,7 +32,8 @@ namespace Engine
 	enum eCBType
 	{
 		CB_TYPE_VP = 0,
-		CB_TYPE_TRANSFORM
+		CB_TYPE_TRANSFORM,
+		CB_TYPE_LIGHT
 	};
 
 	enum eShaderResource
@@ -109,6 +110,13 @@ namespace Engine
 		Matrix scale;
 		Matrix rotation;
 		Matrix translation;
+	};
+
+	struct LightBuffer
+	{
+		Vector4 color;
+		Vector3 direction;
+		float PADDING0;
 	};
 }
 

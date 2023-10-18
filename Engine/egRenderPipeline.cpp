@@ -21,6 +21,12 @@ namespace Engine::Graphic
 		D3Device::BindConstantBuffer(s_vp_buffer_data_, CB_TYPE_VP, SHADER_VERTEX);
 	}
 
+	void RenderPipeline::SetLight(const LightBuffer& light)
+	{
+		s_light_buffer_data_.SetData(D3Device::s_context_.Get(), light);
+		D3Device::BindConstantBuffer(s_light_buffer_data_, CB_TYPE_LIGHT, SHADER_PIXEL);
+	}
+
 	void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
 	{
 		D3Device::s_context_->IASetPrimitiveTopology(topology);
@@ -59,6 +65,7 @@ namespace Engine::Graphic
 
 		D3Device::CreateConstantBuffer(s_vp_buffer_data_);
 		D3Device::CreateConstantBuffer(s_transform_buffer_data_);
+		D3Device::CreateConstantBuffer(s_light_buffer_data_);
 
 		CompileShaders();
 
