@@ -26,8 +26,9 @@ namespace Engine::Objects
 
 	inline void Light::Initialize()
 	{
+		m_light_buffer_.ambient = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
 		m_light_buffer_.color = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
-		m_light_buffer_.direction = Vector3{0.0f, 0.0f, 1.0f};
+		m_light_buffer_.direction = Vector3{1.0f, 0.0f, 0.0f};
 	}
 
 	inline void Light::PreUpdate()
