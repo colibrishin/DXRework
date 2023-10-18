@@ -11,6 +11,8 @@ using namespace DirectX::SimpleMath;
 
 namespace Engine
 {
+	constexpr int g_max_lights = 8;
+
 	struct VertexElement
 	{
 		Vector3 position;
@@ -34,7 +36,8 @@ namespace Engine
 	{
 		CB_TYPE_VP = 0,
 		CB_TYPE_TRANSFORM,
-		CB_TYPE_LIGHT
+		CB_TYPE_LIGHT_POSITION,
+		CB_TYPE_LIGHT_COLOR,
 	};
 
 	enum eLayerType
@@ -202,12 +205,15 @@ namespace Engine
 		Matrix translation;
 	};
 
-	struct LightBuffer
+	struct LightPositionBuffer
 	{
-		Vector4 ambient;
-		Vector4 color;
-		Vector3 direction;
-		float PADDING0;
+		// due to padding, type is vector4 instead of vector3
+		Vector4 position[g_max_lights];
+	};
+
+	struct LightColorBuffer
+	{
+		Vector4 color[g_max_lights];
 	};
 }
 
