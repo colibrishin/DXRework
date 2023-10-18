@@ -46,6 +46,6 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
-		AddGameObject(std::make_shared<Client::Object::TestObject>());
+		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
 	}
 }
