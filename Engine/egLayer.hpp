@@ -20,24 +20,43 @@ namespace Engine
 		void PreRender() override;
 		void Render() override;
 
+		template <typename T>
 		void AddGameObject (const StrongObject& obj)
 		{
-			m_objects_.emplace(obj->GetID(), std::move(obj));
+			if constexpr (std::is_base_of_v<Abstract::Object, T>)
+			{
+				if(m_objects_.contains(obj->GetID()))
+				{
+					return;
+				}
+
+				m_objects_.insert_or_assign(obj->GetID(), obj);
+			}
 		}
 
+		template <typename T>
 		void RemoveGameObject (uint64_t id)
 		{
-			m_objects_.erase(id);
+			if constexpr (std::is_base_of_v<Abstract::Object, T>)
+			{
+				if (m_objects_.contains(id))
+				{
+					m_objects_.erase(id);
+				}
+			}
 		}
 
 		template <typename T>
 		std::weak_ptr<T> GetGameObject (uint64_t id)
 		{
-			for (const auto& object : m_objects_)
+			if constexpr (std::is_base_of_v<Abstract::Object, T>)
 			{
-				if(object.first == id)
+				for (const auto& object : m_objects_)
 				{
-					return std::reinterpret_pointer_cast<T>(object.second);
+					if(object.first == id)
+					{
+						return std::reinterpret_pointer_cast<T>(object.second);
+					}
 				}
 			}
 
