@@ -1,85 +1,89 @@
 #pragma once
+#include <ranges>
+
 #include "egObject.hpp"
 #include "egRenderable.hpp"
 #include "egCamera.hpp"
+#include "egLayer.hpp"
 #include "egLight.hpp"
+#include "egHelper.hpp"
 
 namespace Engine
 {
-	using WeakObject = std::weak_ptr<Abstract::Object>;
-	using StrongObject = std::shared_ptr<Abstract::Object>;
 	using StrongCamera = std::shared_ptr<Objects::Camera>;
 	using StrongLight = std::shared_ptr<Objects::Light>;
+	using StrongLayer = std::shared_ptr<Layer>;
 
 	class Scene : public Abstract::Renderable
 	{
 	public:
 		Scene();
 		Scene(const Scene& other) = default;
-		virtual ~Scene() override = default;
+		~Scene() override = default;
 
 		void PreUpdate() override;
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
 
-		void AddGameObject(const StrongObject& obj)
+		void AddGameObject(const StrongObject& obj, eLayerType layer)
 		{
-			m_objects_.emplace(std::reinterpret_pointer_cast<Abstract::Object>(obj));
+			m_layers[layer]->AddGameObject(obj);
+		}
+
+		void RemoveGameObject(const uint64_t id, eLayerType layer)
+		{
+			m_layers[layer]->RemoveGameObject(id);
 		}
 
 	private:
-		StrongCamera m_camera_;
-		StrongLight m_light_;
-		std::set<StrongObject> m_objects_;
+		std::map<eLayerType, StrongLayer> m_layers;
 
 	};
 
 	inline Scene::Scene()
 	{
-		m_camera_ = std::make_shared<Objects::Camera>();
-		m_camera_->Initialize();
+		for(int i = 0; i < LAYER_MAX; ++i)
+		{
+			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
+		}
 
-		m_light_ = std::make_shared<Objects::Light>();
-		m_light_->Initialize();
+		const auto camera = Instantiate<Objects::Camera>();
+		AddGameObject(camera, LAYER_CAMERA);
+
+		const auto light = Instantiate<Objects::Light>();
+		AddGameObject(light, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate()
 	{
-		m_camera_->PreUpdate();
-		for (auto& obj : m_objects_)
+		for (const auto& val : m_layers | std::views::values)
 		{
-			obj->PreUpdate();
+			val->PreUpdate();
 		}
 	}
 
 	inline void Scene::Update()
 	{
-		m_light_->Update();
-		m_camera_->Update();
-		for (auto& obj : m_objects_)
+		for (const auto& val : m_layers | std::views::values)
 		{
-			obj->Update();
+			val->Update();
 		}
 	}
 
 	inline void Scene::PreRender()
 	{
-		m_light_->PreRender();
-		m_camera_->PreRender();
-		for (auto& obj : m_objects_)
+		for (const auto& val : m_layers | std::views::values)
 		{
-			obj->PreRender();
+			val->PreRender();
 		}
 	}
 
 	inline void Scene::Render()
 	{
-		m_light_->Render();
-		m_camera_->Render();
-		for (auto& obj : m_objects_)
+		for (const auto& val : m_layers | std::views::values)
 		{
-			obj->Render();
+			val->Render();
 		}
 	}
 }

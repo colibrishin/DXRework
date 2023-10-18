@@ -37,6 +37,15 @@ namespace Engine
 		CB_TYPE_LIGHT
 	};
 
+	enum eLayerType
+	{
+		LAYER_LIGHT = 0,
+		LAYER_CAMERA,
+		LAYER_DEFAULT,
+		LAYER_UI,
+		LAYER_MAX
+	};
+
 	enum eShaderResource
 	{
 		SR_TEXTURE = 0
