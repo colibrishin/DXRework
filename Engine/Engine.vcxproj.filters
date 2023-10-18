@@ -32,6 +32,9 @@
     <Filter Include="Manager">
       <UniqueIdentifier>{2919f7ab-a0cb-4d02-af65-02d0dc35dc2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{2a1a57a7-cb69-4a5e-91ca-b592e3bdd8f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -69,7 +72,6 @@
     <ClInclude Include="egTransform.hpp">
       <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="egCommon.hpp" />
     <ClInclude Include="egMeshRenderer.hpp">
       <Filter>Component</Filter>
     </ClInclude>
@@ -103,6 +105,15 @@
     </ClInclude>
     <ClInclude Include="egLight.hpp">
       <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egLayer.hpp">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="egCommon.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egHelper.hpp">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

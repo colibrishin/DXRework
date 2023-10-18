@@ -12,7 +12,7 @@ namespace Engine::Resources
 			Texture::Initialize();
 		}
 
-		virtual ~Texture() override = default;
+		~Texture() override = default;
 
 		void Initialize() override;
 		void PreUpdate() override;
@@ -56,7 +56,8 @@ namespace Engine::Resources
 
 	inline void Texture::Load()
 	{
-		Graphic::D3Device::CreateTextureFromFile(std::filesystem::absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(), m_texture_view_.ReleaseAndGetAddressOf());
+		Graphic::D3Device::CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
+		                                         m_texture_view_.ReleaseAndGetAddressOf());
 
 		ComPtr<ID3D11Texture2D> texture;
 		m_texture_.As<ID3D11Texture2D>(&texture);

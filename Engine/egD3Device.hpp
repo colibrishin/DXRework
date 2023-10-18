@@ -19,7 +19,10 @@ namespace Engine::Graphic
 
 		static void Initialize(HWND hwnd);
 
-		static float GetAspectRatio() { return static_cast<float>(g_window_width) / static_cast<float>(g_window_height); }
+		static float GetAspectRatio()
+		{
+			return static_cast<float>(g_window_width) / static_cast<float>(g_window_height);
+		}
 
 		static void UpdateRenderTarget();
 		static void UpdateViewport();
@@ -57,7 +60,8 @@ namespace Engine::Graphic
 			DX::ThrowIfFailed(s_device_->CreateBuffer(&desc, &data, buffer));
 		}
 
-		static void CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture, ID3D11ShaderResourceView** shader_resource_view);
+		static void CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture,
+		                                  ID3D11ShaderResourceView** shader_resource_view);
 
 		static void FrameBegin();
 		static void Present();
@@ -72,9 +76,9 @@ namespace Engine::Graphic
 		{
 			D3D11_MAPPED_SUBRESOURCE mapped_resource{};
 
-			DX::ThrowIfFailed(D3Device::s_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource));
+			DX::ThrowIfFailed(s_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource));
 			memcpy(mapped_resource.pData, data, size);
-			D3Device::s_context_->Unmap(buffer, 0);
+			s_context_->Unmap(buffer, 0);
 		}
 
 		D3Device() = default;
@@ -93,14 +97,15 @@ namespace Engine::Graphic
 			g_shader_cb_bind_map.at(target_shader)(s_device_.Get(), s_context_.Get(), buffer.GetBuffer(), type, 1);
 		}
 
-		static std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(Shader<ID3D11VertexShader>* shader, ID3DBlob* blob);
+		static std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
+			Shader<ID3D11VertexShader>* shader, ID3DBlob* blob);
 
 		template <typename T>
 		static void BindShader(Shader<T>* shader)
 		{
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
 			{
-				VertexShader* casting = static_cast<VertexShader*>(shader);
+				auto casting = static_cast<VertexShader*>(shader);
 				s_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
 				s_context_->IASetInputLayout(*casting->GetInputLayout());
 			}
@@ -128,7 +133,7 @@ namespace Engine::Graphic
 
 		static void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader)
 		{
-			g_shader_sampler_bind_map.at(target_shader)(s_context_.Get(), sampler, (UINT)target_shader, 1);
+			g_shader_sampler_bind_map.at(target_shader)(s_context_.Get(), sampler, static_cast<UINT>(target_shader), 1);
 		}
 
 		template <typename T>
@@ -140,14 +145,14 @@ namespace Engine::Graphic
 
 			DX::ThrowIfFailed(
 				D3DCompileFromFile(
-					path.c_str(), 
-					nullptr, 
-					nullptr, 
-					"main", 
-					g_shader_target_map.at(type).c_str(), 
-					D3DCOMPILE_DEBUG, 
-					0, 
-					&blob, 
+					path.c_str(),
+					nullptr,
+					nullptr,
+					"main",
+					g_shader_target_map.at(type).c_str(),
+					D3DCOMPILE_DEBUG,
+					0,
+					&blob,
 					&error));
 
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
@@ -155,28 +160,36 @@ namespace Engine::Graphic
 				const auto input_descs = GenerateInputDescription(shader, blob.Get());
 				const auto casted = dynamic_cast<VertexShader*>(shader);
 
-				DX::ThrowIfFailed(s_device_->CreateInputLayout(input_descs.data(), input_descs.size(), blob->GetBufferPointer(), blob->GetBufferSize(), casted->GetInputLayout()));
-				DX::ThrowIfFailed(s_device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreateInputLayout(input_descs.data(), input_descs.size(),
+				                                               blob->GetBufferPointer(), blob->GetBufferSize(),
+				                                               casted->GetInputLayout()));
+				DX::ThrowIfFailed(s_device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(),
+				                                                nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr,
+				                                               shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(),
+				                                                  nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(),
+				                                                 nullptr, shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11HullShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr,
+				                                              shader->GetShader()));
 			}
 			else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
 			{
-				DX::ThrowIfFailed(s_device_->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader->GetShader()));
+				DX::ThrowIfFailed(s_device_->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(),
+				                                                nullptr, shader->GetShader()));
 			}
 		}
 
@@ -227,7 +240,8 @@ namespace Engine::Graphic
 		ComPtr<ID3D11ShaderReflection> reflection = nullptr;
 		const auto casted = dynamic_cast<VertexShader*>(shader);
 
-		D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(), IID_ID3D11ShaderReflection, reinterpret_cast<void**>(reflection.GetAddressOf()));
+		D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(), IID_ID3D11ShaderReflection,
+		           reinterpret_cast<void**>(reflection.GetAddressOf()));
 
 		std::vector<D3D11_INPUT_ELEMENT_DESC> input_descs;
 
@@ -242,42 +256,53 @@ namespace Engine::Graphic
 			D3D11_INPUT_ELEMENT_DESC input_desc{};
 			reflection->GetInputParameterDesc(i, &param_desc);
 
-			input_desc.SemanticName = param_desc.SemanticName;      
-	        input_desc.SemanticIndex = param_desc.SemanticIndex;
-	        input_desc.InputSlot = 0;
-	        input_desc.AlignedByteOffset = byteOffset;
-	        input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	        input_desc.InstanceDataStepRate = 0;  
-	 
-	        // determine DXGI format
-	        if ( param_desc.Mask == 1 )
-	        {
-	            if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32 ) input_desc.Format = DXGI_FORMAT_R32_UINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32 ) input_desc.Format = DXGI_FORMAT_R32_SINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32 ) input_desc.Format = DXGI_FORMAT_R32_FLOAT;
-	            byteOffset += 4;
-	        }
-	        else if ( param_desc.Mask <= 3 )
-	        {
-	            if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32 ) input_desc.Format = DXGI_FORMAT_R32G32_UINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32 ) input_desc.Format = DXGI_FORMAT_R32G32_SINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32 ) input_desc.Format = DXGI_FORMAT_R32G32_FLOAT;
-	            byteOffset += 8;
-	        }
-	        else if ( param_desc.Mask <= 7 )
-	        {
-	            if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32_UINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32_SINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	            byteOffset += 12;
-	        }
-	        else if ( param_desc.Mask <= 15 )
-	        {
-	            if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32A32_UINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32A32_SINT;
-	            else if ( param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32 ) input_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	            byteOffset += 16;
-	        }
+			input_desc.SemanticName = param_desc.SemanticName;
+			input_desc.SemanticIndex = param_desc.SemanticIndex;
+			input_desc.InputSlot = 0;
+			input_desc.AlignedByteOffset = byteOffset;
+			input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			input_desc.InstanceDataStepRate = 0;
+
+			// determine DXGI format
+			if (param_desc.Mask == 1)
+			{
+				if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) input_desc.Format = DXGI_FORMAT_R32_UINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) input_desc.Format =
+					DXGI_FORMAT_R32_SINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) input_desc.Format =
+					DXGI_FORMAT_R32_FLOAT;
+				byteOffset += 4;
+			}
+			else if (param_desc.Mask <= 3)
+			{
+				if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32_UINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32_SINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) input_desc.Format =
+					DXGI_FORMAT_R32G32_FLOAT;
+				byteOffset += 8;
+			}
+			else if (param_desc.Mask <= 7)
+			{
+				if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32_UINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32_SINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32_FLOAT;
+				byteOffset += 12;
+			}
+			else if (param_desc.Mask <= 15)
+			{
+				if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32A32_UINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32A32_SINT;
+				else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) input_desc.Format =
+					DXGI_FORMAT_R32G32B32A32_FLOAT;
+				byteOffset += 16;
+			}
 
 			input_descs.push_back(input_desc);
 		}
@@ -312,15 +337,18 @@ namespace Engine::Graphic
 		DX::ThrowIfFailed(CreateDXGIFactory(__uuidof(IDXGIFactory), &factory));
 		DX::ThrowIfFailed(factory->EnumAdapters(0, &adapter));
 		DX::ThrowIfFailed(adapter->EnumOutputs(0, &monitor));
-		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &mode_count, nullptr));
+		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED,
+		                                              &mode_count, nullptr));
 
 		display_mode_list = std::unique_ptr<DXGI_MODE_DESC>(new DXGI_MODE_DESC[mode_count]);
 
-		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &mode_count, display_mode_list.get()));
+		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED,
+		                                              &mode_count, display_mode_list.get()));
 
 		for (UINT i = 0; i < mode_count; ++i)
 		{
-			if (display_mode_list.get()[i].Width == g_window_width && display_mode_list.get()[i].Height == g_window_height)
+			if (display_mode_list.get()[i].Width == g_window_width && display_mode_list.get()[i].Height ==
+				g_window_height)
 			{
 				s_refresh_rate_numerator_ = display_mode_list.get()[i].RefreshRate.Numerator;
 				s_refresh_rate_denominator_ = display_mode_list.get()[i].RefreshRate.Denominator;
@@ -351,7 +379,7 @@ namespace Engine::Graphic
 		swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 		swap_chain_desc.Flags = 0;
 
-		if(g_vsync_enabled)
+		if (g_vsync_enabled)
 		{
 			swap_chain_desc.BufferDesc.RefreshRate.Numerator = s_refresh_rate_numerator_;
 			swap_chain_desc.BufferDesc.RefreshRate.Denominator = s_refresh_rate_denominator_;
@@ -367,10 +395,13 @@ namespace Engine::Graphic
 		UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 
 #if defined(_DEBUG)
-        creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+		creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-		DX::ThrowIfFailed(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags, &feature_level, 1, D3D11_SDK_VERSION, &swap_chain_desc, s_swap_chain_.GetAddressOf(), s_device_.GetAddressOf(), nullptr, s_context_.GetAddressOf()));
+		DX::ThrowIfFailed(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
+		                                                &feature_level, 1, D3D11_SDK_VERSION, &swap_chain_desc,
+		                                                s_swap_chain_.GetAddressOf(), s_device_.GetAddressOf(), nullptr,
+		                                                s_context_.GetAddressOf()));
 	}
 
 	inline void D3Device::InitializeRenderTargetView()
@@ -378,7 +409,9 @@ namespace Engine::Graphic
 		ComPtr<ID3D11Texture2D> back_buffer;
 
 		DX::ThrowIfFailed(s_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &back_buffer));
-		DX::ThrowIfFailed(s_device_->CreateRenderTargetView(back_buffer.Get(), nullptr, s_render_target_view_.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(
+			s_device_->CreateRenderTargetView(back_buffer.Get(), nullptr,
+			                                  s_render_target_view_.ReleaseAndGetAddressOf()));
 	}
 
 	inline void D3Device::InitializeDepthStencil()
@@ -397,7 +430,8 @@ namespace Engine::Graphic
 		depth_stencil_desc.CPUAccessFlags = 0;
 		depth_stencil_desc.MiscFlags = 0;
 
-		DX::ThrowIfFailed(s_device_->CreateTexture2D(&depth_stencil_desc, nullptr, s_depth_stencil_buffer_.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(s_device_->CreateTexture2D(&depth_stencil_desc, nullptr,
+		                                             s_depth_stencil_buffer_.ReleaseAndGetAddressOf()));
 
 		D3D11_DEPTH_STENCIL_DESC depth_stencil_state_desc{};
 
@@ -421,7 +455,9 @@ namespace Engine::Graphic
 		depth_stencil_state_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		depth_stencil_state_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-		DX::ThrowIfFailed(s_device_->CreateDepthStencilState(&depth_stencil_state_desc, s_depth_stencil_state_.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(
+			s_device_->CreateDepthStencilState(&depth_stencil_state_desc,
+			                                   s_depth_stencil_state_.ReleaseAndGetAddressOf()));
 
 		s_context_->OMSetDepthStencilState(s_depth_stencil_state_.Get(), 1);
 
@@ -431,7 +467,8 @@ namespace Engine::Graphic
 		depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		depth_stencil_view_desc.Texture2D.MipSlice = 0;
 
-		DX::ThrowIfFailed(s_device_->CreateDepthStencilView(s_depth_stencil_buffer_.Get(), &depth_stencil_view_desc, s_depth_stencil_view_.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(s_device_->CreateDepthStencilView(s_depth_stencil_buffer_.Get(), &depth_stencil_view_desc,
+		                                                    s_depth_stencil_view_.ReleaseAndGetAddressOf()));
 
 		s_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
 	}
@@ -451,7 +488,8 @@ namespace Engine::Graphic
 		rasterizer_desc.ScissorEnable = false;
 		rasterizer_desc.SlopeScaledDepthBias = 0.0f;
 
-		DX::ThrowIfFailed(s_device_->CreateRasterizerState(&rasterizer_desc, s_rasterizer_state_.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(
+			s_device_->CreateRasterizerState(&rasterizer_desc, s_rasterizer_state_.ReleaseAndGetAddressOf()));
 		s_context_->RSSetState(s_rasterizer_state_.Get());
 	}
 
@@ -462,29 +500,30 @@ namespace Engine::Graphic
 
 	inline void D3Device::UpdateViewport()
 	{
-		s_viewport_ = {0.f, 0.f, (float)g_window_width, (float)g_window_height,0.f, 1.f};
+		s_viewport_ = {0.f, 0.f, static_cast<float>(g_window_width), static_cast<float>(g_window_height), 0.f, 1.f};
 
 		s_context_->RSSetViewports(1, &s_viewport_);
 	}
 
-	inline void D3Device::CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture, ID3D11ShaderResourceView** shader_resource_view)
+	inline void D3Device::CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture,
+	                                            ID3D11ShaderResourceView** shader_resource_view)
 	{
 		DX::ThrowIfFailed(CreateWICTextureFromFileEx(
 			s_device_.Get(),
-			path.c_str(), 
-			0, 
-			D3D11_USAGE_DEFAULT, 
+			path.c_str(),
+			0,
+			D3D11_USAGE_DEFAULT,
 			D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
-			0, 
-			D3D11_RESOURCE_MISC_GENERATE_MIPS, 
-			WIC_LOADER_DEFAULT, 
-			texture, 
+			0,
+			D3D11_RESOURCE_MISC_GENERATE_MIPS,
+			WIC_LOADER_DEFAULT,
+			texture,
 			shader_resource_view));
 	}
 
 	inline void D3Device::Initialize(HWND hwnd)
 	{
-		if(s_instance_)
+		if (s_instance_)
 		{
 			return;
 		}
@@ -501,7 +540,7 @@ namespace Engine::Graphic
 
 		s_world_matrix_ = XMMatrixIdentity();
 		s_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
-		s_ortho_matrix_ = XMMatrixOrthographicLH(static_cast<float>(g_window_width), static_cast<float>(g_window_height), g_screen_near, g_screen_far);
+		s_ortho_matrix_ = XMMatrixOrthographicLH(g_window_width, g_window_height, g_screen_near, g_screen_far);
 
 		RenderPipeline::Initialize();
 	}

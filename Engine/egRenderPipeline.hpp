@@ -43,7 +43,7 @@ namespace Engine::Graphic
 		inline static std::unordered_map<std::wstring, std::shared_ptr<IShader>> s_shader_map_{};
 
 		inline static ConstantBuffer<VPBuffer> s_vp_buffer_data_{};
-		inline static ConstantBuffer<TransformBuffer>  s_transform_buffer_data_{};
+		inline static ConstantBuffer<TransformBuffer> s_transform_buffer_data_{};
 		inline static ConstantBuffer<LightBuffer> s_light_buffer_data_{};
 
 		inline static std::unordered_map<eShaderType, ComPtr<ID3D11SamplerState>> s_sampler_state_{};

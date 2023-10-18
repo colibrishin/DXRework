@@ -21,10 +21,10 @@ namespace Engine::Resources
 	class Mesh : public Abstract::Resource
 	{
 	public:
-		virtual ~Mesh() override = default;
+		~Mesh() override = default;
 		void Initialize() override;
 		void Render() override;
-		
+
 		void Unload() override;
 
 		virtual void SetPath(const std::filesystem::path& path) { m_path_ = path; }
@@ -32,7 +32,9 @@ namespace Engine::Resources
 		UINT GetIndexCount() const { return m_indices_.size(); }
 
 	protected:
-		Mesh(std::filesystem::path path) : Resource(std::move(path)) { }
+		Mesh(std::filesystem::path path) : Resource(std::move(path))
+		{
+		}
 
 	protected:
 		std::vector<VertexElement> m_vertices_;
@@ -51,8 +53,10 @@ namespace Engine::Resources
 	{
 		Load();
 
-		Graphic::D3Device::CreateBuffer<VertexElement>(D3D11_BIND_VERTEX_BUFFER, m_vertices_.size(), m_vertex_buffer_.ReleaseAndGetAddressOf(), m_vertices_.data());
-		Graphic::D3Device::CreateBuffer<UINT>(D3D11_BIND_INDEX_BUFFER, m_indices_.size(), m_index_buffer_.ReleaseAndGetAddressOf(), m_indices_.data());
+		Graphic::D3Device::CreateBuffer<VertexElement>(D3D11_BIND_VERTEX_BUFFER, m_vertices_.size(),
+		                                               m_vertex_buffer_.ReleaseAndGetAddressOf(), m_vertices_.data());
+		Graphic::D3Device::CreateBuffer<UINT>(D3D11_BIND_INDEX_BUFFER, m_indices_.size(),
+		                                      m_index_buffer_.ReleaseAndGetAddressOf(), m_indices_.data());
 	}
 
 	inline void Mesh::Render()

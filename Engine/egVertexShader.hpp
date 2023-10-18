@@ -21,13 +21,13 @@ namespace Engine::Graphic
 		ComPtr<ID3D11VertexShader> m_shader_ = nullptr;
 	};
 
-	inline VertexShader::VertexShader(const std::wstring& name, const std::filesystem::path& path) : Shader<ID3D11VertexShader>(name, path)
+	inline VertexShader::VertexShader(const std::wstring& name,
+	                                  const std::filesystem::path& path) : Shader<ID3D11VertexShader>(name, path)
 	{
 	}
 
 	inline void VertexShader::GenerateInputLayout()
 	{
-		
 	}
 
 	inline void VertexShader::Initialize()
