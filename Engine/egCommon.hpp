@@ -204,6 +204,7 @@ namespace Engine
 
 	struct LightBuffer
 	{
+		Vector4 ambient;
 		Vector4 color;
 		Vector3 direction;
 		float PADDING0;
