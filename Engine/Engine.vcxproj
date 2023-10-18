@@ -25,7 +25,9 @@
     <ClInclude Include="egD3Device.hpp" />
     <ClInclude Include="egApplication.hpp" />
     <ClInclude Include="egEntity.hpp" />
+    <ClInclude Include="egHelper.hpp" />
     <ClInclude Include="egIShader.hpp" />
+    <ClInclude Include="egLayer.hpp" />
     <ClInclude Include="egLight.hpp" />
     <ClInclude Include="egManager.hpp" />
     <ClInclude Include="egManagerHelper.hpp" />

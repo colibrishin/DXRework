@@ -7,7 +7,7 @@ namespace Engine::Abstract
 	class Component : public Renderable
 	{
 	public:
-		virtual ~Component() override = default;
+		~Component() override = default;
 		Component(const Component&) = default;
 
 	protected:

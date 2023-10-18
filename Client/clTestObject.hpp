@@ -29,7 +29,6 @@ namespace Client::Object
 
 	inline TestObject::TestObject()
 	{
-		TestObject::Initialize();
 	}
 
 	inline void TestObject::Initialize()

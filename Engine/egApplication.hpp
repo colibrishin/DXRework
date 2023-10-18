@@ -14,6 +14,8 @@ namespace Engine
 	inline std::atomic<float> g_screen_near = 0.1f;
 	inline std::atomic<float> g_screen_far = 1000.0f;
 
+	using namespace DirectX;
+
 	class Application final
 	{
 	public:
@@ -39,8 +41,8 @@ namespace Engine
 		static std::unique_ptr<Application> s_Instance;
 		inline static HWND s_WindowHandle = nullptr;
 
-		inline static std::unique_ptr<DirectX::Keyboard> s_keyboard = nullptr;
-		inline static std::unique_ptr<DirectX::Mouse> s_mouse = nullptr;
+		inline static std::unique_ptr<Keyboard> s_keyboard = nullptr;
+		inline static std::unique_ptr<Mouse> s_mouse = nullptr;
 		inline static std::unique_ptr<DX::StepTimer> s_timer = nullptr;
 	};
 }

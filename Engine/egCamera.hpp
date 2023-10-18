@@ -13,9 +13,9 @@ namespace Engine::Objects
 		Camera() = default;
 		~Camera() override = default;
 
-		void SetLookAt(DirectX::SimpleMath::Vector3 lookAt);
-		void SetPosition(DirectX::SimpleMath::Vector3 position);
-		void SetRotation(DirectX::SimpleMath::Quaternion rotation);
+		void SetLookAt(Vector3 lookAt);
+		void SetPosition(Vector3 position);
+		void SetRotation(Quaternion rotation);
 
 		void GetViewMatrix(DirectX::XMMATRIX& viewMatrix);
 
@@ -26,7 +26,7 @@ namespace Engine::Objects
 		void Render() override;
 
 	private:
-		DirectX::SimpleMath::Matrix m_view_matrix_;
+		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;
 
 		Vector3 m_look_at_;

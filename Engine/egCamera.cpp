@@ -20,7 +20,7 @@ namespace Engine::Objects
 	void Camera::Update()
 	{
 		Object::Update();
-		if(const auto transform = GetComponent<Component::Transform>().lock())
+		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();
 

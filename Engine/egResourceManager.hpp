@@ -15,7 +15,7 @@ namespace Engine::Manager
 
 		static ResourceManager* GetInstance()
 		{
-			if(!m_instance_)
+			if (!m_instance_)
 			{
 				m_instance_ = std::unique_ptr<ResourceManager>(new ResourceManager);
 				m_instance_->Initialize();
@@ -39,7 +39,7 @@ namespace Engine::Manager
 				m_resources_.end(),
 				[&name](const auto& resource)
 				{
-					if(const auto ptr = std::dynamic_pointer_cast<T>(resource))
+					if (const auto ptr = std::dynamic_pointer_cast<T>(resource))
 					{
 						return ptr->GetName() == name;
 					}

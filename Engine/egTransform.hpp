@@ -13,9 +13,9 @@ namespace Engine::Component
 		Transform(const Transform&) = default;
 		~Transform() override = default;
 
-		void SetPosition(const DirectX::SimpleMath::Vector3& position) { m_position_ = position; }
-		void SetRotation(const DirectX::SimpleMath::Quaternion& rotation) { m_rotation_ = rotation; }
-		void SetScale(const DirectX::SimpleMath::Vector3& scale) { m_scale_ = scale; }
+		void SetPosition(const Vector3& position) { m_position_ = position; }
+		void SetRotation(const Quaternion& rotation) { m_rotation_ = rotation; }
+		void SetScale(const Vector3& scale) { m_scale_ = scale; }
 
 		Vector3 GetPosition() const { return m_position_; }
 
@@ -26,9 +26,9 @@ namespace Engine::Component
 		void Render() override;
 
 	private:
-		DirectX::SimpleMath::Vector3 m_position_ = Vector3::Zero;
-		DirectX::SimpleMath::Quaternion m_rotation_;
-		DirectX::SimpleMath::Vector3 m_scale_ = Vector3::One;
+		Vector3 m_position_ = Vector3::Zero;
+		Quaternion m_rotation_;
+		Vector3 m_scale_ = Vector3::One;
 		TransformBuffer m_transform_buffer_;
 	};
 

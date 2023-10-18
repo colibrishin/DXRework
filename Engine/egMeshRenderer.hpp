@@ -49,11 +49,11 @@ namespace Engine::Component
 		Graphic::RenderPipeline::SetShader(L"vs_default");
 		Graphic::RenderPipeline::SetShader(L"ps_default");
 
-		if(const auto ptr = m_mesh_.lock())
+		if (const auto ptr = m_mesh_.lock())
 		{
 			ptr->Render();
 
-			if(const auto texture = m_texture_.lock())
+			if (const auto texture = m_texture_.lock())
 			{
 				texture->Render();
 			}

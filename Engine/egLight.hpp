@@ -11,8 +11,8 @@ namespace Engine::Objects
 		Light() = default;
 		~Light() override = default;
 
-		void SetColor(DirectX::SimpleMath::Vector4 color);
-		void SetDirection(DirectX::SimpleMath::Vector3 direction);
+		void SetColor(Vector4 color);
+		void SetDirection(Vector3 direction);
 
 		void Initialize() override;
 		void PreUpdate() override;
@@ -26,8 +26,8 @@ namespace Engine::Objects
 
 	inline void Light::Initialize()
 	{
-		m_light_buffer_.color = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-		m_light_buffer_.direction = Vector3{ 0.0f, 0.0f, 1.0f };
+		m_light_buffer_.color = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
+		m_light_buffer_.direction = Vector3{0.0f, 0.0f, 1.0f};
 	}
 
 	inline void Light::PreUpdate()

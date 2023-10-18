@@ -17,8 +17,7 @@ namespace Engine::Manager
 		template <typename T, typename... Args>
 		void AddScene(Args&&... args)
 		{
-			auto scene = std::make_shared<T>(std::forward<Args>(args)...);
-			scene->Initialize();
+			auto scene = Instantiate<T>(std::forward<Args>(args)...);
 			m_scenes_.insert(scene);
 		}
 
@@ -26,9 +25,9 @@ namespace Engine::Manager
 		void SetActive()
 		{
 			auto it = std::find_if(
-						m_scenes_.begin(), 
-							m_scenes_.end(), 
-							[](const auto& scene)
+				m_scenes_.begin(),
+				m_scenes_.end(),
+				[](const auto& scene)
 				{
 					return std::dynamic_pointer_cast<T>(scene) != nullptr;
 				}
@@ -44,9 +43,9 @@ namespace Engine::Manager
 		void RemoveScene()
 		{
 			auto it = std::find_if(
-				m_scenes_.begin(), 
-				m_scenes_.end(), 
-				[](const auto& scene) 
+				m_scenes_.begin(),
+				m_scenes_.end(),
+				[](const auto& scene)
 				{
 					return std::dynamic_pointer_cast<T>(scene) != nullptr;
 				}

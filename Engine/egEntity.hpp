@@ -9,6 +9,7 @@ namespace Engine::Abstract
 	public:
 		Entity(const Entity& other) = default;
 		virtual ~Entity() = default;
+
 		bool operator ==(const Entity& other) const
 		{
 			return GetID() == other.GetID();
