@@ -4,20 +4,20 @@
 Texture2D shaderTexture : register(t0);
 SamplerState SampleType : register(s1);
 
-cbuffer LightBuffer : register(b2)
+#define MAX_NUM_LIGHTS 8
+
+cbuffer LightColorBuffer : register(b3)
 {
-    float4 ambientColor;
-	float4 diffuseColor;
-	float3 lightDirection;
-	float _p0;
+    float4 lightColor[MAX_NUM_LIGHTS];
 }
 
 struct PixelInputType
 {
-	float4 position : SV_POSITION;
-	float3 normal : NORMAL;
-	float4 color : COLOR;
-	float2 tex : TEXCOORD0;
+    float4 position : SV_POSITION;
+    float3 normal : NORMAL;
+    float4 color : COLOR;
+    float2 tex : TEXCOORD0;
+    float3 lightPos[MAX_NUM_LIGHTS] : TEXCOORD1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,22 +25,27 @@ struct PixelInputType
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
-    float4 color;
-    float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
+	const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
 
-    color = ambientColor;
-	
-	const float3 lightDir = -lightDirection;
-	const float lightIntensity = saturate(dot(input.normal, lightDir));
+    float lightIntensity[MAX_NUM_LIGHTS];
+    float4 colorArray[MAX_NUM_LIGHTS];
 
-    if (lightIntensity > 0.0f)
+    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        color += (diffuseColor * lightIntensity);
+	    lightIntensity[i] = saturate(dot(input.normal, input.lightPos[i]));
+        colorArray[i] = lightColor[i] * lightIntensity[i];
     }
 
-    color = saturate(color);
+    float4 colorSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
-    color *= textureColor;
+    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    {
+        colorSum.r += colorArray[i].r;
+        colorSum.g += colorArray[i].g;
+        colorSum.b += colorArray[i].b;
+    }
+
+    float4 color = saturate(colorSum) * textureColor;
 
 	return color;
 }

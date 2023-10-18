@@ -143,10 +143,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="vs_default.hlsl">
+    <CopyFileToFolders Include="ps_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_default.hlsl">
+    <CopyFileToFolders Include="vs_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

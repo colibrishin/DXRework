@@ -53,8 +53,13 @@ namespace Engine
 		const auto camera = Instantiate<Objects::Camera>();
 		AddGameObject<Objects::Camera>(camera, LAYER_CAMERA);
 
-		const auto light = Instantiate<Objects::Light>();
-		AddGameObject<Objects::Light>(light, LAYER_LIGHT);
+		const auto light1 = Instantiate<Objects::Light>();
+		AddGameObject<Objects::Light>(light1, LAYER_LIGHT);
+
+		const auto light2 = Instantiate<Objects::Light>();
+		light2->GetComponent<Component::Transform>().lock()->SetPosition(Vector3(-1.0f, 0.0f, 0.0f));
+		light2->SetColor(Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+		AddGameObject<Objects::Light>(light2, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate()
@@ -83,6 +88,8 @@ namespace Engine
 
 	inline void Scene::Render()
 	{
+		Graphic::RenderPipeline::BindLightBuffers();
+
 		for (const auto& val : m_layers | std::views::values)
 		{
 			val->Render();
