@@ -24,6 +24,11 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
+				if (m_components_.contains(typeid(T)))
+				{
+					return;
+				}
+
 				std::shared_ptr<T> component = std::make_shared<T>();
 				component->Initialize();
 
@@ -47,7 +52,11 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				m_components_.erase(typeid(T));
+				if (m_components_.contains(typeid(T)))
+				{
+					m_components_.erase(typeid(T));
+					return;
+				}
 			}
 		}
 

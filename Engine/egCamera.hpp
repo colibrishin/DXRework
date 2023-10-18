@@ -17,8 +17,6 @@ namespace Engine::Objects
 		void SetPosition(Vector3 position);
 		void SetRotation(Quaternion rotation);
 
-		void GetViewMatrix(DirectX::XMMATRIX& viewMatrix);
-
 		void Initialize() override;
 		void PreUpdate() override;
 		void Update() override;

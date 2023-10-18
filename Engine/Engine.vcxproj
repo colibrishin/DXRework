@@ -42,6 +42,7 @@
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egTexture.hpp" />
+    <ClInclude Include="egToolkitAPI.hpp" />
     <ClInclude Include="egTransform.hpp" />
     <ClInclude Include="egVertexShader.hpp" />
     <ClInclude Include="framework.h" />
@@ -51,6 +52,7 @@
   <ItemGroup>
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
+    <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,12 @@
     <Filter Include="Common">
       <UniqueIdentifier>{2a1a57a7-cb69-4a5e-91ca-b592e3bdd8f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Low-level\API">
+      <UniqueIdentifier>{7c04419b-49ad-4b32-aa80-1a3bce2f11f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Low-level\DirectX">
+      <UniqueIdentifier>{6650a2f9-e734-4213-83db-84b7b8266b1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -45,9 +51,6 @@
     <ClInclude Include="egEntity.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
-    <ClInclude Include="egD3Device.hpp">
-      <Filter>Low-level</Filter>
-    </ClInclude>
     <ClInclude Include="egRenderable.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
@@ -56,9 +59,6 @@
     </ClInclude>
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egRenderPipeline.hpp">
-      <Filter>Low-level</Filter>
     </ClInclude>
     <ClInclude Include="egVertexShader.hpp">
       <Filter>Low-level</Filter>
@@ -115,6 +115,15 @@
     <ClInclude Include="egHelper.hpp">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="egToolkitAPI.hpp">
+      <Filter>Low-level\API</Filter>
+    </ClInclude>
+    <ClInclude Include="egD3Device.hpp">
+      <Filter>Low-level\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderPipeline.hpp">
+      <Filter>Low-level\DirectX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -123,11 +132,14 @@
     <ClCompile Include="egApplication.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="egRenderPipeline.cpp">
-      <Filter>Low-level</Filter>
-    </ClCompile>
     <ClCompile Include="egCamera.cpp">
       <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderPipeline.cpp">
+      <Filter>Low-level\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="egD3Device.cpp">
+      <Filter>Low-level\DirectX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
