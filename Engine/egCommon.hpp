@@ -5,6 +5,7 @@
 #include <string>
 #include <d3d11.h>
 #include <exception>
+#include "egApplication.hpp"
 
 using namespace DirectX::SimpleMath;
 
@@ -118,6 +119,11 @@ namespace Engine
 		Vector3 direction;
 		float PADDING0;
 	};
+
+	inline float GetDeltaTime()
+	{
+		return Application::GetDeltaTime();
+	}
 }
 
 namespace DX
