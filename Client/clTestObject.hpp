@@ -41,7 +41,7 @@ namespace Client::Object
 		AddComponent<Engine::Component::MeshRenderer>();
 		const auto mr = GetComponent<Engine::Component::MeshRenderer>().lock();
 
-		mr->SetMesh(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"TriangleMesh"));
+		mr->SetMesh(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		mr->SetTexture(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
 	}
 

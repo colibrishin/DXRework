@@ -3,6 +3,8 @@
 
 #include "pch.h"
 #include "Client.h"
+
+#include "clCudeMesh.hpp"
 #include "clTestScene.hpp"
 #include "framework.h"
 #include "../Engine/egResourceManager.hpp"
@@ -15,6 +17,7 @@ namespace Client
 	{
 		Engine::GetResourceManager()->AddResource<Engine::Resources::Texture>(L"TestTexture", std::make_shared<Engine::Resources::Texture>(L"./Texture.png"));
 		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"TriangleMesh", std::make_shared<Client::Mesh::TriangleMesh>());
+		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"CubeMesh", std::make_shared<Client::Mesh::CubeMesh>());
 
 		Engine::GetSceneManager()->AddScene<Scene::TestScene>();
 		Engine::GetSceneManager()->SetActive<Scene::TestScene>();
