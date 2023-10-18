@@ -50,6 +50,8 @@
 #include <dxcapi.h>
 #include <directxmath.h>
 
+#include "egHelper.hpp"
+
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
