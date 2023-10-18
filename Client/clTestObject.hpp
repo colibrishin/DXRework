@@ -53,6 +53,16 @@ namespace Client::Object
 	inline void TestObject::PreUpdate()
 	{
 		Object::PreUpdate();
+		static float angle = 0.0f;
+
+		GetComponent<Engine::Component::Transform>().lock()->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
+
+		angle += Engine::GetDeltaTime();
+
+		if(angle > XMConvertToRadians(360.0f))
+		{
+			angle = 0.0f;
+		}
 	}
 
 	inline void TestObject::Update()
