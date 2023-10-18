@@ -7,7 +7,7 @@
 
 namespace Engine::Objects
 {
-	class Camera : public Abstract::Object
+	class Camera final : public Abstract::Object
 	{
 	public:
 		Camera() = default;

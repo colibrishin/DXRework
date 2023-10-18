@@ -5,6 +5,7 @@
 #include <string>
 #include <d3d11.h>
 #include <exception>
+#include "egApplication.hpp"
 
 using namespace DirectX::SimpleMath;
 
@@ -32,7 +33,8 @@ namespace Engine
 	enum eCBType
 	{
 		CB_TYPE_VP = 0,
-		CB_TYPE_TRANSFORM
+		CB_TYPE_TRANSFORM,
+		CB_TYPE_LIGHT
 	};
 
 	enum eShaderResource
@@ -110,6 +112,18 @@ namespace Engine
 		Matrix rotation;
 		Matrix translation;
 	};
+
+	struct LightBuffer
+	{
+		Vector4 color;
+		Vector3 direction;
+		float PADDING0;
+	};
+
+	inline float GetDeltaTime()
+	{
+		return Application::GetDeltaTime();
+	}
 }
 
 namespace DX

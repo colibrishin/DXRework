@@ -43,10 +43,13 @@ PixelInputType main(VertexInputType input)
     // Change the position vector to be 4 units for proper matrix calculations.
     output.position = float4(input.position, 1.0f);
 
+    matrix world = mul(mul(scale, rotation), translation);
+
     // Calculate the position of the vertex against the world, view, and projection matrices.
-    output.position = mul(output.position, scale);
-    output.position = mul(output.position, rotation);
-    output.position = mul(output.position, translation);
+    output.position = mul(output.position, world);
+
+    output.normal = mul(input.normal, (float3x3) world);
+    output.normal = normalize(output.normal);
 
     output.position = mul(output.position, view);
     output.position = mul(output.position, projection);
@@ -54,7 +57,6 @@ PixelInputType main(VertexInputType input)
     // Store the input color for the pixel shader to use.
     output.color = input.color;
     output.tex = input.tex;
-    output.normal = input.normal;
     
     return output;
 }

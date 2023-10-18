@@ -18,6 +18,8 @@ namespace Engine::Graphic
 
 		static void SetWorldMatrix(const TransformBuffer& matrix);
 		static void SetPerspectiveMatrix(const VPBuffer& matrix);
+		static void SetLight(const LightBuffer& light);
+
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
 		static void BindVertexBuffer(ID3D11Buffer* buffer);
@@ -42,6 +44,7 @@ namespace Engine::Graphic
 
 		inline static ConstantBuffer<VPBuffer> s_vp_buffer_data_{};
 		inline static ConstantBuffer<TransformBuffer>  s_transform_buffer_data_{};
+		inline static ConstantBuffer<LightBuffer> s_light_buffer_data_{};
 
 		inline static std::unordered_map<eShaderType, ComPtr<ID3D11SamplerState>> s_sampler_state_{};
 		inline static ComPtr<ID3D11BlendState> s_blend_state_ = nullptr;
