@@ -1,6 +1,10 @@
 #pragma once
+#include <ranges>
+#include <map>
+
 #include "egComponent.hpp"
 #include <set>
+#include <typeindex>
 
 #include "egRenderable.hpp"
 
@@ -18,20 +22,21 @@ namespace Engine::Abstract
 		template <typename T>
 		void AddComponent()
 		{
-			std::shared_ptr<T> component = std::make_shared<T>();
-			component->Initialize();
-			m_components_.emplace(component);
+			if constexpr (std::is_base_of_v<Component, T>)
+			{
+				std::shared_ptr<T> component = std::make_shared<T>();
+				component->Initialize();
+
+				m_components_.insert_or_assign(typeid(T), std::reinterpret_pointer_cast<Component>(component));
+			}
 		}
 
 		template <typename T>
 		std::weak_ptr<T> GetComponent()
 		{
-			for (const auto& component : m_components_)
+			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (const auto casted = std::dynamic_pointer_cast<T>(component))
-				{
-					return casted;
-				}
+				return std::reinterpret_pointer_cast<T>(m_components_[typeid(T)]);
 			}
 
 			return {};
@@ -40,15 +45,14 @@ namespace Engine::Abstract
 		template <typename T>
 		void RemoveComponent()
 		{
-			m_components_.erase(
-				std::remove_if(
-					m_components_.begin(), 
-					m_components_.end(), 
-					[](const ComponentPtr& component)
+			if constexpr (std::is_base_of_v<Component, T>)
 			{
-					return std::dynamic_pointer_cast<T>(component) != nullptr;
-			}));
+				m_components_.erase(typeid(T));
+			}
 		}
+
+		void SetActive(bool active) { m_active_ = active; }
+		bool GetActive() const { return m_active_; }
 
 	protected:
 		Object() = default;
@@ -60,12 +64,13 @@ namespace Engine::Abstract
 		void Render() override;
 
 	private:
-		std::set<ComponentPtr> m_components_;
+		bool m_active_ = true;
+		std::map<const std::type_index, ComponentPtr> m_components_;
 	};
 
 	inline void Object::PreUpdate()
 	{
-		for (const auto& component : m_components_)
+		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->PreUpdate();
 		}
@@ -73,7 +78,7 @@ namespace Engine::Abstract
 
 	inline void Object::PreRender()
 	{
-		for (const auto& component : m_components_)
+		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->PreRender();
 		}
@@ -81,7 +86,7 @@ namespace Engine::Abstract
 
 	inline void Object::Render()
 	{
-		for (const auto& component : m_components_)
+		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->Render();
 		}
@@ -89,7 +94,7 @@ namespace Engine::Abstract
 
 	inline void Object::Update()
 	{
-		for (const auto& component : m_components_)
+		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->Update();
 		}
