@@ -192,6 +192,11 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Engine\Engine.vcxproj">
+      <Project>{8e154f61-e984-4491-9894-7665ec2d18f9}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets')" />

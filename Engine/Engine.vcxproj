@@ -25,6 +25,7 @@
     <ClInclude Include="egD3Device.hpp" />
     <ClInclude Include="egApplication.hpp" />
     <ClInclude Include="egEntity.hpp" />
+    <ClInclude Include="egFont.hpp" />
     <ClInclude Include="egHelper.hpp" />
     <ClInclude Include="egIShader.hpp" />
     <ClInclude Include="egLayer.hpp" />
@@ -32,7 +33,6 @@
     <ClInclude Include="egManager.hpp" />
     <ClInclude Include="egManagerHelper.hpp" />
     <ClInclude Include="egMesh.hpp" />
-    <ClInclude Include="egMeshRenderer.hpp" />
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egRenderable.hpp" />
     <ClInclude Include="egRenderPipeline.hpp" />
@@ -54,8 +54,10 @@
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
+    <ClCompile Include="egShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="consolas.spritefont" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
