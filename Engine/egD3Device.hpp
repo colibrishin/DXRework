@@ -63,80 +63,6 @@ namespace Engine::Graphic
 		static void CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture,
 		                                  ID3D11ShaderResourceView** shader_resource_view);
 
-		static void FrameBegin();
-		static void Present();
-
-		static Matrix GetWorldMatrix() { return s_world_matrix_; }
-		static Matrix GetProjectionMatrix() { return s_projection_matrix_; }
-
-	private:
-		friend class RenderPipeline;
-		friend class ToolkitAPI;
-
-		static void UpdateBuffer(UINT size, const void* data, ID3D11Buffer* buffer)
-		{
-			D3D11_MAPPED_SUBRESOURCE mapped_resource{};
-
-			DX::ThrowIfFailed(s_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource));
-			memcpy(mapped_resource.pData, data, size);
-			s_context_->Unmap(buffer, 0);
-		}
-
-		D3Device() = default;
-
-		static void CreateInputLayout(const std::vector<D3D11_INPUT_ELEMENT_DESC>& input_layout);
-
-		template <typename T>
-		static void CreateConstantBuffer(ConstantBuffer<T>& buffer)
-		{
-			buffer.Create(s_device_.Get());
-		}
-
-		template <typename T>
-		static void BindConstantBuffer(ConstantBuffer<T>& buffer, eCBType type, eShaderType target_shader)
-		{
-			g_shader_cb_bind_map.at(target_shader)(s_device_.Get(), s_context_.Get(), buffer.GetBuffer(), type, 1);
-		}
-
-		static std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
-			Shader<ID3D11VertexShader>* shader, ID3DBlob* blob);
-
-		template <typename T>
-		static void BindShader(Shader<T>* shader)
-		{
-			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
-			{
-				auto casting = static_cast<VertexShader*>(shader);
-				s_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
-				s_context_->IASetInputLayout(*casting->GetInputLayout());
-			}
-			else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
-			{
-				s_context_->PSSetShader(*(shader->GetShader()), nullptr, 0);
-			}
-			else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
-			{
-				s_context_->GSSetShader(*(shader->GetShader()), nullptr, 0);
-			}
-			else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
-			{
-				s_context_->CSSetShader(*(shader->GetShader()), nullptr, 0);
-			}
-			else if constexpr (std::is_same_v<T, ID3D11HullShader>)
-			{
-				s_context_->HSSetShader(*(shader->GetShader()), nullptr, 0);
-			}
-			else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
-			{
-				s_context_->DSSetShader(*(shader->GetShader()), nullptr, 0);
-			}
-		}
-
-		static void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader)
-		{
-			g_shader_sampler_bind_map.at(target_shader)(s_context_.Get(), sampler, static_cast<UINT>(target_shader), 1);
-		}
-
 		template <typename T>
 		static void CreateShader(const std::filesystem::path& path, Shader<T>* shader)
 		{
@@ -192,6 +118,79 @@ namespace Engine::Graphic
 				DX::ThrowIfFailed(s_device_->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(),
 				                                                nullptr, shader->GetShader()));
 			}
+		}
+
+		static void FrameBegin();
+		static void Present();
+
+		static Matrix GetWorldMatrix() { return s_world_matrix_; }
+		static Matrix GetProjectionMatrix() { return s_projection_matrix_; }
+		static ID3D11Device* GetDevice() { return s_device_.Get(); }
+
+	private:
+		friend class RenderPipeline;
+		friend class ToolkitAPI;
+
+		D3Device() = default;
+
+		static void UpdateBuffer(UINT size, const void* data, ID3D11Buffer* buffer)
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped_resource{};
+
+			DX::ThrowIfFailed(s_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource));
+			memcpy(mapped_resource.pData, data, size);
+			s_context_->Unmap(buffer, 0);
+		}
+
+		template <typename T>
+		static void CreateConstantBuffer(ConstantBuffer<T>& buffer)
+		{
+			buffer.Create(s_device_.Get());
+		}
+
+		template <typename T>
+		static void BindConstantBuffer(ConstantBuffer<T>& buffer, eCBType type, eShaderType target_shader)
+		{
+			g_shader_cb_bind_map.at(target_shader)(s_device_.Get(), s_context_.Get(), buffer.GetBuffer(), type, 1);
+		}
+
+		static std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
+			Shader<ID3D11VertexShader>* shader, ID3DBlob* blob);
+
+		template <typename T>
+		static void BindShader(Shader<T>* shader)
+		{
+			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
+			{
+				auto casting = static_cast<VertexShader*>(shader);
+				s_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
+				s_context_->IASetInputLayout(*casting->GetInputLayout());
+			}
+			else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
+			{
+				s_context_->PSSetShader(*(shader->GetShader()), nullptr, 0);
+			}
+			else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
+			{
+				s_context_->GSSetShader(*(shader->GetShader()), nullptr, 0);
+			}
+			else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
+			{
+				s_context_->CSSetShader(*(shader->GetShader()), nullptr, 0);
+			}
+			else if constexpr (std::is_same_v<T, ID3D11HullShader>)
+			{
+				s_context_->HSSetShader(*(shader->GetShader()), nullptr, 0);
+			}
+			else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
+			{
+				s_context_->DSSetShader(*(shader->GetShader()), nullptr, 0);
+			}
+		}
+
+		static void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader)
+		{
+			g_shader_sampler_bind_map.at(target_shader)(s_context_.Get(), sampler, static_cast<UINT>(target_shader), 1);
 		}
 
 		static void CreateSampler(const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state)
