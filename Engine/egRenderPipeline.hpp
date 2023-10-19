@@ -2,19 +2,19 @@
 #include "pch.hpp"
 
 #include <filesystem>
-
 #include "egCommon.hpp"
-#include "egShader.hpp"
 
 namespace Engine::Graphic
 {
+	class IShader;
+
 	class RenderPipeline final
 	{
 	public:
 		~RenderPipeline() = default;
 
 		static void Initialize();
-		static void SetShader(const std::wstring& name);
+		static void SetShader(IShader* shader);
 
 		static void SetWorldMatrix(const TransformBuffer& matrix);
 		static void SetPerspectiveMatrix(const VPBuffer& matrix);
@@ -34,16 +34,16 @@ namespace Engine::Graphic
 		static void DrawIndexed(UINT index_count);
 
 	private:
+		friend class ToolkitAPI;
+
 		RenderPipeline() = default;
 
-		static void CompileShaders();
+		static void PrecompileShaders();
 		static void InitializeSamplers();
 
 		inline static std::unique_ptr<RenderPipeline> s_instance_ = nullptr;
 
 		inline static ComPtr<ID3D11InputLayout> s_input_layout_ = nullptr;
-
-		inline static std::unordered_map<std::wstring, std::shared_ptr<IShader>> s_shader_map_{};
 
 		inline static ConstantBuffer<VPBuffer> s_vp_buffer_data_{};
 		inline static ConstantBuffer<TransformBuffer> s_transform_buffer_data_{};

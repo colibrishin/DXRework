@@ -7,17 +7,24 @@
 #include <typeindex>
 
 #include "egRenderable.hpp"
+#include "egResource.hpp"
 
 namespace Engine::Abstract
 {
 	using WeakComponentPtr = std::weak_ptr<Component>;
 	using ComponentPtr = std::shared_ptr<Component>;
+	using WeakResourcePtr = std::weak_ptr<Resource>;
 
 	class Object : public Renderable
 	{
 	public:
 		~Object() override = default;
 		Object(const Object&) = default;
+
+		void AddResource(const WeakResourcePtr& resource)
+		{
+			m_resources_.insert(resource);
+		}
 
 		template <typename T>
 		void AddComponent()
@@ -73,8 +80,22 @@ namespace Engine::Abstract
 		void Render() override;
 
 	private:
+		struct ResourcePriorityComparer
+		{
+			bool operator()(const WeakResourcePtr& Left, const WeakResourcePtr& Right) const
+			{
+				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
+				{
+					return Left.lock()->GetPriority() < Right.lock()->GetPriority();
+				}
+
+				return Left.lock()->GetID() < Right.lock()->GetID();
+			}
+		};
+
 		bool m_active_ = true;
 		std::map<const std::type_index, ComponentPtr> m_components_;
+		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
 	};
 
 	inline void Object::PreUpdate()
@@ -82,6 +103,14 @@ namespace Engine::Abstract
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->PreUpdate();
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->PreUpdate();
+			}
 		}
 	}
 
@@ -91,6 +120,14 @@ namespace Engine::Abstract
 		{
 			component->PreRender();
 		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->PreRender();
+			}
+		}
 	}
 
 	inline void Object::Render()
@@ -99,6 +136,14 @@ namespace Engine::Abstract
 		{
 			component->Render();
 		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->Render();
+			}
+		}
 	}
 
 	inline void Object::Update()
@@ -106,6 +151,14 @@ namespace Engine::Abstract
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			component->Update();
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->Update();
+			}
 		}
 	}
 }

@@ -2,10 +2,11 @@
 
 #include "clTriangleMesh.hpp"
 #include "../Engine/egManagerHelper.hpp"
-#include "../Engine/egMeshRenderer.hpp"
+#include "../Engine/egTexture.hpp"
 #include "../Engine/egObject.hpp"
 #include "../Engine/egResourceManager.hpp"
 #include "../Engine/egTransform.hpp"
+#include "../Engine/egIShader.hpp"
 
 namespace Engine::Component
 {
@@ -38,11 +39,10 @@ namespace Client::Object
 		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
 		tr->SetScale(Vector3::One);
 
-		AddComponent<Engine::Component::MeshRenderer>();
-		const auto mr = GetComponent<Engine::Component::MeshRenderer>().lock();
-
-		mr->SetMesh(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
-		mr->SetTexture(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
 	}
 
 	inline TestObject::~TestObject()
