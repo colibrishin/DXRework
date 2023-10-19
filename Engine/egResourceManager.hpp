@@ -69,6 +69,17 @@ namespace Engine::Manager
 
 	inline void ResourceManager::PreUpdate()
 	{
+		for (const auto& resource : m_resources_)
+		{
+			if (resource->weak_from_this().use_count() == 0 && resource->IsLoaded())
+			{
+				resource->Unload();
+			}
+			else if (resource->weak_from_this().use_count() != 0 && !resource->IsLoaded())
+			{
+				resource->Load();
+			}
+		}
 	}
 
 	inline void ResourceManager::Update()

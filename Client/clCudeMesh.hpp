@@ -13,7 +13,7 @@ namespace Client::Mesh
 		void PreUpdate() override;
 		void Update() override;
 		void PreRender() override;
-		void Load() override;
+		void Load_INTERNAL() override;
 		void Initialize() override;
 
 	private:
@@ -37,7 +37,7 @@ namespace Client::Mesh
 	{
 	}
 
-	inline void CubeMesh::Load()
+	inline void CubeMesh::Load_INTERNAL()
 	{
 		GeometricPrimitive::VertexCollection vertices;
 		GeometricPrimitive::IndexCollection indices;
@@ -52,6 +52,8 @@ namespace Client::Mesh
 		{
 			m_indices_.push_back(static_cast<UINT>(index));
 		}
+
+		Mesh::Load_INTERNAL();
 	}
 
 	inline void CubeMesh::Initialize()

@@ -1,23 +1,22 @@
 #pragma once
 #include <filesystem>
 
-#include "egCommon.hpp"
 #include "egEntity.hpp"
+#include "egRenderable.hpp"
+#include "egRenderPipeline.hpp"
+#include "egResource.hpp"
 
 namespace Engine::Graphic
 {
-	class IShader : public Abstract::Entity
+	class IShader : public Abstract::Resource
 	{
 	public:
 		IShader(const std::wstring& name, const std::filesystem::path& path);
 		~IShader() override = default;
 
-		std::filesystem::path GetPath() const { return m_path_; }
 		ID3D11Buffer* GetBuffer() const { return m_buffer_.Get(); }
 
-		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
+		void Render() override;
 
 		virtual void SetShaderType() = 0;
 		eShaderType GetType() const { return m_type_; }
@@ -30,21 +29,14 @@ namespace Engine::Graphic
 		ComPtr<ID3D11Buffer> m_buffer_;
 	};
 
-	inline IShader::IShader(const std::wstring& name, const std::filesystem::path& path)
+	inline IShader::IShader(const std::wstring& name, const std::filesystem::path& path): Resource(path, RESOURCE_PRIORITY_SHADER)
 	{
 		SetName(name);
 		m_path_ = path;
 	}
 
-	inline void IShader::Initialize()
+	inline void IShader::Render()
 	{
-	}
-
-	inline void IShader::PreUpdate()
-	{
-	}
-
-	inline void IShader::Update()
-	{
+		Graphic::RenderPipeline::SetShader(this);
 	}
 }

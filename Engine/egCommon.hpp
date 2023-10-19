@@ -49,6 +49,14 @@ namespace Engine
 		LAYER_MAX
 	};
 
+	enum eResourcePriority
+	{
+		RESOURCE_PRIORITY_SHADER = 0,
+		RESOURCE_PRIORITY_TEXTURE,
+		RESOURCE_PRIORITY_MESH,
+		RESOURCE_PRIORITY_FONT
+	};
+
 	enum eShaderResource
 	{
 		SR_TEXTURE = 0

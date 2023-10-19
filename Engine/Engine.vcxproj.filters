@@ -72,9 +72,6 @@
     <ClInclude Include="egTransform.hpp">
       <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="egMeshRenderer.hpp">
-      <Filter>Component</Filter>
-    </ClInclude>
     <ClInclude Include="egCamera.hpp">
       <Filter>Object</Filter>
     </ClInclude>
@@ -124,9 +121,15 @@
     <ClInclude Include="egRenderPipeline.hpp">
       <Filter>Low-level\DirectX</Filter>
     </ClInclude>
+    <ClInclude Include="egFont.hpp">
+      <Filter>Resource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="consolas.spritefont">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="egApplication.cpp">
@@ -140,6 +143,9 @@
     </ClCompile>
     <ClCompile Include="egD3Device.cpp">
       <Filter>Low-level\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="egShader.cpp">
+      <Filter>Low-level</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
