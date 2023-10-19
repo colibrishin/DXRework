@@ -7,7 +7,7 @@ namespace Engine::Resources
 	class Texture : public Abstract::Resource
 	{
 	public:
-		explicit Texture(std::filesystem::path path) : Resource(std::move(path)), m_texture_desc_()
+		explicit Texture(std::filesystem::path path) : Resource(std::move(path), RESOURCE_PRIORITY_TEXTURE), m_texture_desc_()
 		{
 			Texture::Initialize();
 		}
@@ -19,8 +19,8 @@ namespace Engine::Resources
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
-		void Load() override;
-		void Unload() override;
+		void Load_INTERNAL() override;
+		void Unload_INTERNAL() override;
 
 		UINT GetWidth() const { return m_texture_desc_.Width; }
 		UINT GetHeight() const { return m_texture_desc_.Height; }
@@ -34,7 +34,6 @@ namespace Engine::Resources
 
 	inline void Texture::Initialize()
 	{
-		Load();
 	}
 
 	inline void Texture::PreUpdate()
@@ -54,7 +53,7 @@ namespace Engine::Resources
 		Graphic::RenderPipeline::BindTexture(m_texture_view_.Get());
 	}
 
-	inline void Texture::Load()
+	inline void Texture::Load_INTERNAL()
 	{
 		Graphic::D3Device::CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
 		                                         m_texture_view_.ReleaseAndGetAddressOf());
@@ -65,7 +64,7 @@ namespace Engine::Resources
 		texture->GetDesc(&m_texture_desc_);
 	}
 
-	inline void Texture::Unload()
+	inline void Texture::Unload_INTERNAL()
 	{
 		m_texture_view_->Release();
 		m_texture_->Release();
