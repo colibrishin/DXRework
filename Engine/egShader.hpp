@@ -14,11 +14,18 @@ namespace Engine::Graphic
 		Shader(const std::wstring& name, const std::filesystem::path& path);
 		~Shader() override = default;
 
-		T** GetShader() { return m_shader_.GetAddressOf(); }
 		void Initialize() override;
 		void PreUpdate() override;
 		void Update() override;
 		void SetShaderType() override;
+		void PreRender() override;
+
+		T** GetShader() { return m_shader_.GetAddressOf(); }
+		void Render() override;
+
+	protected:
+		void Load_INTERNAL() override;
+		void Unload_INTERNAL() override;
 
 	private:
 		ComPtr<T> m_shader_;
@@ -72,5 +79,22 @@ namespace Engine::Graphic
 		{
 			m_type_ = SHADER_COMPUTE;
 		}
+	}
+
+	template <typename T>
+	void Shader<T>::PreRender()
+	{
+	}
+
+	template <typename T>
+	void Shader<T>::Unload_INTERNAL()
+	{
+		m_shader_->Release();
+	}
+
+	template <typename T>
+	void Shader<T>::Render()
+	{
+		IShader::Render();
 	}
 }
