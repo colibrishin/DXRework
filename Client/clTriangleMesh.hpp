@@ -18,7 +18,7 @@ namespace Client::Mesh
 		void PreRender() override;
 		void Render() override;
 
-		void Load() override;
+		void Load_INTERNAL() override;
 	};
 
 	inline TriangleMesh::TriangleMesh() : Mesh("")
@@ -48,7 +48,7 @@ namespace Client::Mesh
 		Mesh::Render();
 	}
 
-	inline void TriangleMesh::Load()
+	inline void TriangleMesh::Load_INTERNAL()
 	{
 		m_vertices_.emplace_back(Engine::VertexElement{
 			{-1.0f, -1.0f, 0.0f},
@@ -74,5 +74,7 @@ namespace Client::Mesh
 		m_indices_.emplace_back(0);
 		m_indices_.emplace_back(1);
 		m_indices_.emplace_back(2);
+
+		Mesh::Load_INTERNAL();
 	}
 }
