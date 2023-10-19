@@ -2,7 +2,9 @@
 #include "egApplication.hpp"
 
 #include "egD3Device.hpp"
+#include "egManagerHelper.hpp"
 #include "egSceneManager.hpp"
+#include "egToolkitAPI.hpp"
 
 namespace Engine
 {
@@ -57,23 +59,29 @@ namespace Engine
 
 	void Application::PreUpdate()
 	{
-		Manager::SceneManager::GetInstance()->PreUpdate();
+		GetSceneManager()->PreUpdate();
+		GetResourceManager()->PreUpdate();
 	}
 
 	void Application::Update()
 	{
-		Manager::SceneManager::GetInstance()->Update();
+		GetSceneManager()->Update();
+		GetResourceManager()->Update();
 	}
 
 	void Application::PreRender()
 	{
-		Manager::SceneManager::GetInstance()->PreRender();
+		Graphic::ToolkitAPI::FrameBegin();
+		GetSceneManager()->PreRender();
+		GetResourceManager()->PreRender();
 		Graphic::D3Device::FrameBegin();
 	}
 
 	void Application::Render()
 	{
-		Manager::SceneManager::GetInstance()->Render();
+		GetSceneManager()->Render();
+		GetResourceManager()->Render();
+		Graphic::ToolkitAPI::FrameEnd();
 		Graphic::D3Device::Present();
 	}
 
