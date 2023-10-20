@@ -34,7 +34,9 @@ namespace Engine::Manager
 		template <typename T>
 		static std::weak_ptr<T> GetResource(const std::wstring& name)
 		{
-			auto it = std::find_if(
+			if constexpr (std::is_base_of_v<Abstract::Resource, T>)
+			{
+				auto it = std::find_if(
 				m_resources_.begin(),
 				m_resources_.end(),
 				[&name](const auto& resource)
@@ -46,11 +48,13 @@ namespace Engine::Manager
 
 					return false;
 				}
-			);
+				);
 
-			if (it != m_resources_.end())
-			{
-				return std::dynamic_pointer_cast<T>(*it);
+				if (it != m_resources_.end())
+				{
+					(*it)->Load();
+					return std::dynamic_pointer_cast<T>(*it);
+				}
 			}
 
 			return {};
@@ -65,6 +69,17 @@ namespace Engine::Manager
 
 	inline void ResourceManager::Initialize()
 	{
+		for (const auto& resource : m_resources_)
+		{
+			if (resource->weak_from_this().use_count() == 0 && resource->IsLoaded())
+			{
+				resource->Unload();
+			}
+			else if (resource->weak_from_this().use_count() != 0 && !resource->IsLoaded())
+			{
+				resource->Load();
+			}
+		}
 	}
 
 	inline void ResourceManager::PreUpdate()
