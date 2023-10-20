@@ -5,6 +5,8 @@
 #include <string>
 #include <d3d11.h>
 #include <exception>
+#include <typeindex>
+
 #include "egApplication.hpp"
 
 using namespace DirectX::SimpleMath;
@@ -57,9 +59,23 @@ namespace Engine
 		RESOURCE_PRIORITY_FONT
 	};
 
+	enum eBoundingType
+	{
+		BOUNDING_TYPE_BOX = 0,
+		BOUNDING_TYPE_FRUSTUM,
+		BOUNDING_TYPE_SPHERE,
+	};
+
 	enum eShaderResource
 	{
 		SR_TEXTURE = 0
+	};
+
+	union BoundingGroup
+	{
+		BoundingOrientedBox box;
+		BoundingSphere sphere;
+		BoundingFrustum frustum;
 	};
 
 	struct GUIDComparer
