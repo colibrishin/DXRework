@@ -37,6 +37,11 @@ namespace Client::Object
 
 	inline void TestObject::Initialize()
 	{
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
+
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
@@ -45,15 +50,11 @@ namespace Client::Object
 		AddComponent<Engine::Component::Collider>();
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
+		cldr->SetDirtyWithTransform(true);
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetVelocity({1.f, 0.f, 0.f});
-
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
 	}
 
 	inline TestObject::~TestObject()
