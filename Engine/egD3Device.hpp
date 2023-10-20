@@ -70,6 +70,12 @@ namespace Engine::Graphic
 			ComPtr<ID3DBlob> error;
 			const eShaderType type = g_shader_enum_type_map.at(__uuidof(T));
 
+			UINT flag = D3DCOMPILE_ENABLE_STRICTNESS;
+
+#if defined(_DEBUG)
+			flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
+#endif
+
 			DX::ThrowIfFailed(
 				D3DCompileFromFile(
 					path.c_str(),
@@ -77,7 +83,7 @@ namespace Engine::Graphic
 					nullptr,
 					"main",
 					g_shader_target_map.at(type).c_str(),
-					D3DCOMPILE_DEBUG,
+					flag,
 					0,
 					&blob,
 					&error));
