@@ -8,9 +8,11 @@
 #include "../Engine/egResourceManager.hpp"
 #include "../Engine/egTransform.hpp"
 #include "../Engine/egIShader.hpp"
+#include "../Engine/egRigidbody.hpp"
 
 namespace Engine::Component
 {
+	class Rigidbody;
 	class Transform;
 }
 
@@ -44,6 +46,10 @@ namespace Client::Object
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
 
+		AddComponent<Engine::Component::Rigidbody>();
+		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+		rb->SetVelocity({1.f, 0.f, 0.f});
+
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
@@ -59,7 +65,8 @@ namespace Client::Object
 		Object::PreUpdate();
 		static float angle = 0.0f;
 
-		GetComponent<Engine::Component::Transform>().lock()->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
+		const auto tr = GetComponent<Engine::Component::Transform>().lock();
+		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
 
 		angle += Engine::GetDeltaTime();
 
@@ -67,6 +74,19 @@ namespace Client::Object
 		{
 			angle = 0.0f;
 		}
+
+		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+		const auto position = tr->GetPosition();
+
+		if (position.x > 1.99f && position.x > 2.0f)
+		{
+			rb->SetVelocity({-1.f, 0.f, 0.f});
+		}
+		else if (position.x < -1.99f && position.x < -2.0f)
+		{
+			rb->SetVelocity({1.f, 0.f, 0.f});
+		}
+		
 	}
 
 	inline void TestObject::Update()
