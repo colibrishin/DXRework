@@ -21,6 +21,12 @@ namespace Engine::Component
 	void Collider::SetType(const eBoundingType type)
 	{
 		m_type_ = type;
+
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		{
+			GenerateFromMesh(mesh);
+		}
+
 		UpdateBoundings();
 	}
 
