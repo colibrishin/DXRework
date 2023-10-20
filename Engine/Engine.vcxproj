@@ -40,6 +40,7 @@
     <ClInclude Include="egRenderPipeline.hpp" />
     <ClInclude Include="egResource.hpp" />
     <ClInclude Include="egResourceManager.hpp" />
+    <ClInclude Include="egRigidbody.hpp" />
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
