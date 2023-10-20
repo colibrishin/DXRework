@@ -65,7 +65,7 @@ namespace Engine
 			return {};
 		}
 
-		std::vector<WeakObject>& GetGameObjects()
+		const std::vector<WeakObject>& GetGameObjects()
 		{
 			return m_weak_objects_cache_;
 		}
