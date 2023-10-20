@@ -94,7 +94,7 @@ namespace Engine::Component
 		}
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
+			SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
 			SetSize_GENERAL_TYPE(m_boundings_.sphere, m_size_);
 			m_rotation_ = Quaternion::Identity;
 		}
