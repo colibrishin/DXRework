@@ -31,6 +31,7 @@ namespace Engine
 				}
 
 				m_objects_.insert_or_assign(obj->GetID(), obj);
+				m_weak_objects_cache_.push_back(obj);
 			}
 		}
 
@@ -42,6 +43,7 @@ namespace Engine
 				if (m_objects_.contains(id))
 				{
 					m_objects_.erase(id);
+					m_weak_objects_cache_.erase(std::remove_if(m_weak_objects_cache_.begin(), m_weak_objects_cache_.end(), [id](const auto& obj) { return obj.lock()->GetID() == id; }), m_weak_objects_cache_.end());
 				}
 			}
 		}
@@ -63,9 +65,16 @@ namespace Engine
 			return {};
 		}
 
+		std::vector<WeakObject>& GetGameObjects()
+		{
+			return m_weak_objects_cache_;
+		}
+
 	private:
 		eLayerType m_layer_type_;
+		std::vector<WeakObject> m_weak_objects_cache_;
 		std::map<const uint64_t, StrongObject> m_objects_;
+
 	};
 
 	inline void Layer::Initialize()
