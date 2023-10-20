@@ -1,6 +1,6 @@
 #pragma once
 #include <filesystem>
-
+#include "egCommon.hpp"
 #include "egRenderable.hpp"
 
 namespace Engine::Abstract
@@ -23,7 +23,7 @@ namespace Engine::Abstract
 			return m_path_;
 		}
 
-		void SetPath(std::filesystem::path path)
+		void SetPath(const std::filesystem::path& path)
 		{
 			m_path_ = std::move(path);
 		}

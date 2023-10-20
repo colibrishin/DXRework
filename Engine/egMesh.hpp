@@ -13,6 +13,11 @@
 #include "egResource.hpp"
 
 
+namespace Engine::Component
+{
+	class Collider;
+}
+
 namespace Engine::Resources
 {
 	using namespace DirectX::SimpleMath;
@@ -25,11 +30,11 @@ namespace Engine::Resources
 		void Initialize() override;
 		void Render() override;
 
-		virtual void SetPath(const std::filesystem::path& path) { m_path_ = path; }
-
 		UINT GetIndexCount() const { return m_indices_.size(); }
 
 	protected:
+		friend class Component::Collider;
+
 		Mesh(std::filesystem::path path) : Resource(std::move(path), RESOURCE_PRIORITY_MESH)
 		{
 		}
@@ -37,7 +42,6 @@ namespace Engine::Resources
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
-	protected:
 		std::vector<VertexElement> m_vertices_;
 		std::vector<UINT> m_indices_;
 

@@ -4,13 +4,20 @@
 
 namespace Engine::Abstract
 {
+	class Object;
+
 	class Component : public Renderable
 	{
 	public:
 		~Component() override = default;
 		Component(const Component&) = default;
 
+		std::weak_ptr<Object> GetOwner() const { return m_owner_; }
+
 	protected:
-		Component() = default;
+		Component(const std::weak_ptr<Object>& owner) : m_owner_(owner) {}
+
+	private:
+		std::weak_ptr<Object> m_owner_;
 	};
 }

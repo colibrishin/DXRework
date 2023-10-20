@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egApplication.hpp"
 
+#include "egCollisionManager.hpp"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
 #include "egSceneManager.hpp"
@@ -61,12 +62,14 @@ namespace Engine
 	{
 		GetSceneManager()->PreUpdate();
 		GetResourceManager()->PreUpdate();
+		Manager::CollisionManager::GetInstance()->PreUpdate();
 	}
 
 	void Application::Update()
 	{
 		GetSceneManager()->Update();
 		GetResourceManager()->Update();
+		Manager::CollisionManager::GetInstance()->Update();
 	}
 
 	void Application::PreRender()
@@ -74,6 +77,7 @@ namespace Engine
 		Graphic::ToolkitAPI::FrameBegin();
 		GetSceneManager()->PreRender();
 		GetResourceManager()->PreRender();
+		Manager::CollisionManager::GetInstance()->PreRender();
 		Graphic::D3Device::FrameBegin();
 	}
 
@@ -81,6 +85,7 @@ namespace Engine
 	{
 		GetSceneManager()->Render();
 		GetResourceManager()->Render();
+		Manager::CollisionManager::GetInstance()->Render();
 		Graphic::ToolkitAPI::FrameEnd();
 		Graphic::D3Device::Present();
 	}

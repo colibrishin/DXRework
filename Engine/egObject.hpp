@@ -9,6 +9,11 @@
 #include "egRenderable.hpp"
 #include "egResource.hpp"
 
+namespace Engine::Component
+{
+	class Collider;
+}
+
 namespace Engine::Abstract
 {
 	using WeakComponentPtr = std::weak_ptr<Component>;
@@ -36,7 +41,9 @@ namespace Engine::Abstract
 					return;
 				}
 
-				std::shared_ptr<T> component = std::make_shared<T>();
+				const auto thisObject = std::reinterpret_pointer_cast<Object>(shared_from_this());
+
+				std::shared_ptr<T> component = std::make_shared<T>(thisObject);
 				component->Initialize();
 
 				m_components_.insert_or_assign(typeid(T), std::reinterpret_pointer_cast<Component>(component));
@@ -48,6 +55,11 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
+				if (!m_components_.contains(typeid(T)))
+				{
+					return {};
+				}
+
 				return std::reinterpret_pointer_cast<T>(m_components_[typeid(T)]);
 			}
 
@@ -66,6 +78,29 @@ namespace Engine::Abstract
 				}
 			}
 		}
+
+		template <typename T>
+		std::weak_ptr<T> GetResource() const
+		{
+			if constexpr (std::is_base_of_v<Resource, T>)
+			{
+				for (const auto& resource : m_resources_)
+				{
+					if (const auto locked = resource.lock())
+					{
+						if (typeid(T) == typeid(*locked))
+						{
+							return std::reinterpret_pointer_cast<T>(locked);
+						}
+					}
+				}
+			}
+
+			return {};
+		}
+
+		template <typename T = Component>
+		void DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp);
 
 		void SetActive(bool active) { m_active_ = active; }
 		bool GetActive() const { return m_active_; }
@@ -92,6 +127,9 @@ namespace Engine::Abstract
 				return Left.lock()->GetID() < Right.lock()->GetID();
 			}
 		};
+
+		virtual void OnCollisionEnter(const Engine::Component::Collider& other);
+		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
 		bool m_active_ = true;
 		std::map<const std::type_index, ComponentPtr> m_components_;

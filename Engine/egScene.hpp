@@ -38,6 +38,11 @@ namespace Engine
 			m_layers[layer]->RemoveGameObject<T>(id);
 		}
 
+		std::vector<WeakObject> GetGameObjects(eLayerType layer)
+		{
+			return m_layers[layer]->GetGameObjects();
+		}
+
 	private:
 		std::map<eLayerType, StrongLayer> m_layers;
 
