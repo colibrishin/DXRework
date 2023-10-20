@@ -88,7 +88,7 @@ namespace Engine::Component
 			}
 			else if constexpr (std::is_same_v<T, BoundingSphere>)
 			{
-				value.Radius = size.Length();
+				value.Radius = size.x / 2;
 			}
 			else if constexpr (std::is_same_v<T, BoundingFrustum>)
 			{
