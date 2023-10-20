@@ -48,11 +48,6 @@ namespace Engine::Component
 
 	inline void Transform::Update()
 	{
-		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
-		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();
-		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
-
-		Graphic::RenderPipeline::SetWorldMatrix(m_transform_buffer_);
 	}
 
 	inline void Transform::PreRender()
@@ -61,5 +56,10 @@ namespace Engine::Component
 
 	inline void Transform::Render()
 	{
+		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
+		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();
+		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
+
+		Graphic::RenderPipeline::SetWorldMatrix(m_transform_buffer_);
 	}
 }
