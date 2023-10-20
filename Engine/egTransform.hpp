@@ -9,7 +9,7 @@ namespace Engine::Component
 	class Transform : public Abstract::Component
 	{
 	public:
-		Transform() = default;
+		Transform(const std::weak_ptr<Abstract::Object>& owner);
 		Transform(const Transform&) = default;
 		~Transform() override = default;
 
@@ -18,6 +18,8 @@ namespace Engine::Component
 		void SetScale(const Vector3& scale) { m_scale_ = scale; }
 
 		Vector3 GetPosition() const { return m_position_; }
+		Quaternion GetRotation() const { return m_rotation_; }
+		Vector3 GetScale() const { return m_scale_; }
 
 		void Initialize() override;
 		void PreUpdate() override;
@@ -31,6 +33,10 @@ namespace Engine::Component
 		Vector3 m_scale_ = Vector3::One;
 		TransformBuffer m_transform_buffer_;
 	};
+
+	inline Transform::Transform(const std::weak_ptr<Abstract::Object>& owner) : Component(owner)
+	{
+	}
 
 	inline void Transform::Initialize()
 	{
