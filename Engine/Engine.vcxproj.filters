@@ -124,6 +124,12 @@
     <ClInclude Include="egFont.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
+    <ClInclude Include="egCollider.hpp">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollisionManager.hpp">
+      <Filter>Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -146,6 +152,12 @@
     </ClCompile>
     <ClCompile Include="egShader.cpp">
       <Filter>Low-level</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollider.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="egObject.cpp">
+      <Filter>Abstract</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

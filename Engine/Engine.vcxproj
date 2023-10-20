@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="egCamera.hpp" />
+    <ClInclude Include="egCollider.hpp" />
+    <ClInclude Include="egCollisionManager.hpp" />
     <ClInclude Include="egCommon.hpp" />
     <ClInclude Include="egComponent.hpp" />
     <ClInclude Include="egD3Device.hpp" />
@@ -52,7 +54,9 @@
   <ItemGroup>
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
+    <ClCompile Include="egCollider.cpp" />
     <ClCompile Include="egD3Device.cpp" />
+    <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
     <ClCompile Include="egShader.cpp" />
   </ItemGroup>
