@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clTriangleMesh.hpp"
+#include "../Engine/egCollider.hpp"
 #include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egTexture.hpp"
 #include "../Engine/egObject.hpp"
@@ -38,6 +39,10 @@ namespace Client::Object
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
 		tr->SetScale(Vector3::One);
+
+		AddComponent<Engine::Component::Collider>();
+		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+		cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
 
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
