@@ -1,4 +1,5 @@
 #pragma once
+#include "clTestCube.hpp"
 #include "clTestObject.hpp"
 #include "../Engine/egScene.hpp"
 
@@ -46,6 +47,7 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
+		AddGameObject<Object::TestCube>(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
 		AddGameObject<Object::TestObject>(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
 	}
 }
