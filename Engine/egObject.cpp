@@ -2,6 +2,7 @@
 
 #include "egObject.hpp"
 #include "egCollider.hpp"
+#include "egRigidbody.hpp"
 
 namespace Engine::Abstract
 {
@@ -32,6 +33,22 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
+
+		if (const auto rb = GetComponent<Engine::Component::Rigidbody>().lock())
+		{
+			if (const auto rb_other = other.GetOwner().lock()->GetComponent<Engine::Component::Rigidbody>().lock())
+			{
+				const auto tr = GetComponent<Engine::Component::Transform>().lock();
+				const auto tr_other = other.GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
+
+				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
+				dir.Normalize();
+				XMVector3Rotate(dir, Quaternion::CreateFromAxisAngle(Vector3::Forward, XMConvertToRadians(180.f)));
+				dir = XMVectorAbs(dir);
+
+				rb->AddFriction(dir * rb->GetFriction());
+			}
+		}
 	}
 
 	void Object::OnCollisionExit(const Engine::Component::Collider& other)
@@ -39,6 +56,22 @@ namespace Engine::Abstract
 		if (!GetComponent<Engine::Component::Collider>().lock())
 		{
 			throw std::exception("Object has no collider");
+		}
+
+		if (const auto rb = GetComponent<Engine::Component::Rigidbody>().lock())
+		{
+			if (const auto rb_other = other.GetOwner().lock()->GetComponent<Engine::Component::Rigidbody>().lock())
+			{
+				const auto tr = GetComponent<Engine::Component::Transform>().lock();
+				const auto tr_other = other.GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
+
+				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
+				dir.Normalize();
+				XMVector3Rotate(dir, Quaternion::CreateFromAxisAngle(Vector3::Forward, XMConvertToRadians(180.f)));
+				dir = XMVectorAbs(dir);
+
+				rb->SubtractFriction(dir * rb->GetFriction());
+			}
 		}
 	}
 }
