@@ -53,6 +53,9 @@
     <ClInclude Include="clSphereMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="clTestCube.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
