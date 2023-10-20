@@ -61,7 +61,6 @@ namespace Engine::Objects
 		}
 
 		AddComponent<Component::Transform>();
-		GetComponent<Component::Transform>().lock()->SetPosition(Vector3{1.0f, 0.0f, 0.0f});
 		m_color_ = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
 	}
 
