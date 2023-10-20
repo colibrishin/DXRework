@@ -88,9 +88,9 @@ namespace Engine::Abstract
 				{
 					if (const auto locked = resource.lock())
 					{
-						if (typeid(T) == typeid(*locked))
+						if (const auto t = std::dynamic_pointer_cast<T>(locked))
 						{
-							return std::reinterpret_pointer_cast<T>(locked);
+							return t;
 						}
 					}
 				}

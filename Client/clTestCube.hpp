@@ -18,12 +18,12 @@ namespace Engine::Component
 
 namespace Client::Object
 {
-	class TestObject : public Engine::Abstract::Object
+	class TestCube : public Engine::Abstract::Object
 	{
 	public:
-		TestObject();
+		TestCube();
 		void Initialize() override;
-		~TestObject() override;
+		~TestCube() override;
 
 		inline void PreUpdate() override;
 		inline void Update() override;
@@ -31,76 +31,52 @@ namespace Client::Object
 		inline void Render() override;
 	};
 
-	inline TestObject::TestObject()
+	inline TestCube::TestCube()
 	{
 	}
 
-	inline void TestObject::Initialize()
+	inline void TestCube::Initialize()
 	{
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
+		tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
 		tr->SetScale(Vector3::One);
 
 		AddComponent<Engine::Component::Collider>();
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
-		cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
+		cldr->SetType(Engine::BOUNDING_TYPE_BOX);
 		cldr->SetDirtyWithTransform(true);
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		rb->SetVelocity({1.f, 0.f, 0.f});
+		rb->SetVelocity({0.f, 0.f, 0.f});
 	}
 
-	inline TestObject::~TestObject()
+	inline TestCube::~TestCube()
 	{
 	}
 
-	inline void TestObject::PreUpdate()
+	inline void TestCube::PreUpdate()
 	{
 		Object::PreUpdate();
-		static float angle = 0.0f;
-
-		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
-
-		angle += Engine::GetDeltaTime();
-
-		if(angle > XMConvertToRadians(360.0f))
-		{
-			angle = 0.0f;
-		}
-
-		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto position = tr->GetPosition();
-
-		if (position.x > 1.99f && position.x > 2.0f)
-		{
-			rb->SetVelocity({-1.f, 0.f, 0.f});
-		}
-		else if (position.x < -1.99f && position.x < -2.0f)
-		{
-			rb->SetVelocity({1.f, 0.f, 0.f});
-		}
-		
 	}
 
-	inline void TestObject::Update()
+	inline void TestCube::Update()
 	{
 		Object::Update();
 	}
 
-	inline void TestObject::PreRender()
+	inline void TestCube::PreRender()
 	{
 		Object::PreRender();
 	}
 
-	inline void TestObject::Render()
+	inline void TestCube::Render()
 	{
 		Object::Render();
 	}

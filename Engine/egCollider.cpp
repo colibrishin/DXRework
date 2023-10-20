@@ -21,6 +21,12 @@ namespace Engine::Component
 	void Collider::SetType(const eBoundingType type)
 	{
 		m_type_ = type;
+
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		{
+			GenerateFromMesh(mesh);
+		}
+
 		UpdateBoundings();
 	}
 
@@ -65,7 +71,7 @@ namespace Engine::Component
 		const auto mesh_obj = mesh.lock();
 
 		std::vector<Vector3> vertices;
-		std::transform(std::execution::par, mesh_obj->m_vertices_.begin(), mesh_obj->m_vertices_.end(), vertices.begin(), [](const auto& vertex)
+		std::ranges::transform(mesh_obj->m_vertices_, std::back_inserter(vertices), [](const auto vertex)
 		{
 			return vertex.position;
 		});
@@ -94,7 +100,7 @@ namespace Engine::Component
 		}
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
+			SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
 			SetSize_GENERAL_TYPE(m_boundings_.sphere, m_size_);
 			m_rotation_ = Quaternion::Identity;
 		}
