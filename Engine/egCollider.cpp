@@ -71,7 +71,7 @@ namespace Engine::Component
 		const auto mesh_obj = mesh.lock();
 
 		std::vector<Vector3> vertices;
-		std::transform(std::execution::par, mesh_obj->m_vertices_.begin(), mesh_obj->m_vertices_.end(), vertices.begin(), [](const auto& vertex)
+		std::ranges::transform(mesh_obj->m_vertices_, std::back_inserter(vertices), [](const auto vertex)
 		{
 			return vertex.position;
 		});
