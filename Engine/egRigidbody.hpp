@@ -9,7 +9,7 @@ namespace Engine::Component
 	{
 	public:
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(object), m_bGravity(false), m_mass(1.0f),
-		                                               m_friction(0), m_initial_velocity(Vector3::Zero), m_Acceleration(Vector3::Zero)
+		                                               m_env_friction(), m_initial_velocity(Vector3::Zero), m_Acceleration(Vector3::Zero)
 		{
 		}
 
@@ -19,10 +19,16 @@ namespace Engine::Component
 
 		void SetGravity(bool gravity) { m_bGravity = gravity; }
 		void SetMass(float mass) { m_mass = mass; }
-		void SetFriction(float fraction) { m_friction = fraction; }
+		void SetFriction(float friction) { m_base_friction = friction; }
 
 		void SetVelocity(const Vector3& force) { m_initial_velocity = force; }
 		void SetAcceleration(const Vector3& acceleration) { m_Acceleration = acceleration; }
+
+		float GetFriction() const { return m_base_friction; }
+
+		void AddFriction(const Vector3& friction) { m_env_friction = friction; }
+
+		void SubtractFriction(const Vector3& friction) { m_env_friction -= friction; }
 
 		void PreUpdate() override;
 		void Update() override;
@@ -33,8 +39,9 @@ namespace Engine::Component
 		bool m_bGravity;
 
 		float m_mass;
-		float m_friction;
+		float m_base_friction;
 
+		Vector3 m_env_friction;
 		Vector3 m_initial_velocity;
 		Vector3 m_Acceleration;
 
@@ -58,7 +65,7 @@ namespace Engine::Component
 
 		const auto velocity_over_time = (m_initial_velocity * GetDeltaTime() + (m_Acceleration * GetDeltaTime()));
 		const auto kinetic = ((m_mass * 0.5f) * (velocity_over_time * velocity_over_time));
-		const auto friction = (m_friction * m_mass * g_gravity_acc * GetDeltaTime()) * Vector3{1.0f, 0.0f, 1.0f};
+		const auto friction = (m_env_friction * m_mass * g_gravity_acc * GetDeltaTime()) * Vector3{1.0f, 0.0f, 1.0f};
 
 		const Vector3 velocity_polarity = { std::copysign(1.f, velocity_over_time.x), std::copysign(1.f, velocity_over_time.y), std::copysign(1.f, velocity_over_time.z) };
 
@@ -77,12 +84,9 @@ namespace Engine::Component
 			velocity.z = 0;
 		}
 
-		tr->SetPosition(tr->GetPosition() + velocity_over_time);
+		const auto gravity = Vector3(0, g_gravity_acc, 0) * GetDeltaTime();
 
-		if (m_bGravity)
-		{
-			tr->SetPosition(tr->GetPosition() - Vector3(0, g_gravity_acc, 0) * GetDeltaTime());
-		}
+		tr->SetPosition(tr->GetPosition() + velocity_over_time - (m_bGravity ? gravity : Vector3::Zero));
 	}
 
 	inline void Rigidbody::PreRender()
