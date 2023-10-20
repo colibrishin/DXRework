@@ -134,7 +134,7 @@ namespace Engine::Component
 		}
 
 		template <typename T>
-		T As() 
+		T& As() 
 		{
 			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
 			{
