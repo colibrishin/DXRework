@@ -33,7 +33,7 @@ namespace Engine
 
 		static LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 		static HWND GetWindowHandle() { return s_WindowHandle; }
-		static float GetDeltaTime() { return s_timer->GetElapsedSeconds(); }
+		static float GetDeltaTime() { return static_cast<float>(s_timer->GetElapsedSeconds()); }
 
 	private:
 		Application() = default;
