@@ -13,6 +13,7 @@ using namespace DirectX::SimpleMath;
 
 namespace Engine
 {
+	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
 
 	struct VertexElement
