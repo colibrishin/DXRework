@@ -43,10 +43,9 @@ namespace Engine::Abstract
 
 				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
 				dir.Normalize();
-				XMVector3Rotate(dir, Quaternion::CreateFromAxisAngle(Vector3::Forward, XMConvertToRadians(180.f)));
-				dir = XMVectorAbs(dir);
+				dir = XMVector3Orthogonal(dir);
 
-				rb->AddFriction(dir * rb->GetFriction());
+				rb->AddFriction(dir * rb_other->GetFriction());
 			}
 		}
 	}
@@ -67,10 +66,9 @@ namespace Engine::Abstract
 
 				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
 				dir.Normalize();
-				XMVector3Rotate(dir, Quaternion::CreateFromAxisAngle(Vector3::Forward, XMConvertToRadians(180.f)));
-				dir = XMVectorAbs(dir);
+				dir = XMVector3Orthogonal(dir);
 
-				rb->SubtractFriction(dir * rb->GetFriction());
+				rb->SubtractFriction(dir * rb_other->GetFriction());
 			}
 		}
 	}
