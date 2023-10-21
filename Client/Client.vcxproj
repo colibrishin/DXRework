@@ -202,6 +202,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets')" />
     <Import Project="..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets" Condition="Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" />
+    <Import Project="..\DX\packages\directxmesh_desktop_win10.2023.4.28.1\build\native\directxmesh_desktop_win10.targets" Condition="Exists('..\DX\packages\directxmesh_desktop_win10.2023.4.28.1\build\native\directxmesh_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -209,5 +210,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtk_desktop_win10.2023.9.6.1\build\native\directxtk_desktop_win10.targets'))" />
     <Error Condition="!Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets'))" />
+    <Error Condition="!Exists('..\DX\packages\directxmesh_desktop_win10.2023.4.28.1\build\native\directxmesh_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxmesh_desktop_win10.2023.4.28.1\build\native\directxmesh_desktop_win10.targets'))" />
   </Target>
 </Project>
