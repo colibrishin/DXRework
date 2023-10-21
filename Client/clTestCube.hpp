@@ -55,6 +55,7 @@ namespace Client::Object
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetVelocity({0.f, 0.f, 0.f});
+		rb->SetFriction(0.25f);
 	}
 
 	inline TestCube::~TestCube()
