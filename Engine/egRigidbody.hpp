@@ -9,7 +9,7 @@ namespace Engine::Component
 	{
 	public:
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(object), m_bGravity(false), m_mass(1.0f),
-		                                               m_env_friction(), m_initial_velocity(Vector3::Zero), m_Acceleration(Vector3::Zero)
+		                                               m_base_friction(0.0f), m_env_friction(), m_initial_velocity(Vector3::Zero), m_Acceleration(Vector3::Zero)
 		{
 		}
 
@@ -63,13 +63,14 @@ namespace Engine::Component
 	{
 		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-		const auto velocity_over_time = (m_initial_velocity * GetDeltaTime() + (m_Acceleration * GetDeltaTime()));
+		const auto velocity_over_time = (m_initial_velocity + (m_Acceleration));
 		const auto kinetic = ((m_mass * 0.5f) * (velocity_over_time * velocity_over_time));
-		const auto friction = (m_env_friction * m_mass * g_gravity_acc * GetDeltaTime()) * Vector3{1.0f, 0.0f, 1.0f};
+		const auto friction = (m_env_friction * m_mass * g_gravity_acc) * Vector3{1.0f, 0.0f, 1.0f};
 
 		const Vector3 velocity_polarity = { std::copysign(1.f, velocity_over_time.x), std::copysign(1.f, velocity_over_time.y), std::copysign(1.f, velocity_over_time.z) };
+		const Vector3 active_force = velocity_over_time / velocity_over_time;
 
-		Vector3 velocity = velocity_over_time + ((kinetic + friction) * -velocity_polarity);
+		Vector3 velocity = (kinetic * velocity_polarity) + ((friction) * -velocity_polarity * active_force);
 
 		if (std::copysign(1.f, velocity.x) != std::copysign(1.f, velocity_over_time.x))
 		{
@@ -86,7 +87,7 @@ namespace Engine::Component
 
 		const auto gravity = Vector3(0, g_gravity_acc, 0) * GetDeltaTime();
 
-		tr->SetPosition(tr->GetPosition() + velocity_over_time - (m_bGravity ? gravity : Vector3::Zero));
+		tr->SetPosition(tr->GetPosition() + (velocity * GetDeltaTime()) - (m_bGravity ? gravity : Vector3::Zero));
 	}
 
 	inline void Rigidbody::PreRender()
