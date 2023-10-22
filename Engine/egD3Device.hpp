@@ -205,6 +205,7 @@ namespace Engine::Graphic
 		}
 
 		static void CreateBlendState(ID3D11BlendState** blend_state);
+		static void CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state);
 
 		static void InitializeAdapter();
 		static void InitializeDevice();
@@ -229,9 +230,6 @@ namespace Engine::Graphic
 		inline static ComPtr<ID3D11RenderTargetView> s_render_target_view_ = nullptr;
 		inline static ComPtr<ID3D11Texture2D> s_depth_stencil_buffer_ = nullptr;
 		inline static ComPtr<ID3D11DepthStencilView> s_depth_stencil_view_ = nullptr;
-
-		inline static ComPtr<ID3D11DepthStencilState> s_depth_stencil_state_ = nullptr;
-		inline static ComPtr<ID3D11RasterizerState> s_rasterizer_state_ = nullptr;
 
 		inline static D3D11_VIEWPORT s_viewport_{};
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "../Engine/egMesh.hpp"
+
 #include "GeometricPrimitive.h"
 
 namespace Client::Mesh
@@ -43,17 +44,18 @@ namespace Client::Mesh
 		GeometricPrimitive::IndexCollection indices;
 		GeometricPrimitive::CreateSphere(vertices, indices, 1.f, 16, false);
 
+		m_vertices_.resize(1);
+		m_indices_.resize(1);
+
 		for (const auto vertex : vertices)
 		{
-			m_vertices_.push_back(Engine::VertexElement{ vertex.position, vertex.normal, {1.0f, 0.0f, 0.0f, 1.0f}, vertex.textureCoordinate });
+			m_vertices_[0].push_back(Engine::VertexElement{ vertex.position, vertex.normal, {1.0f, 0.0f, 0.0f, 1.0f}, vertex.textureCoordinate });
 		}
 
 		for (const auto index : indices)
 		{
-			m_indices_.push_back(static_cast<UINT>(index));
+			m_indices_[0].push_back(static_cast<UINT>(index));
 		}
-
-		Mesh::Load_INTERNAL();
 	}
 
 	inline void SphereMesh::Initialize()

@@ -5,6 +5,7 @@
 
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
+#include "egToolkitAPI.hpp"
 #include "egVertexShader.hpp"
 
 namespace Engine::Graphic
@@ -82,10 +83,11 @@ namespace Engine::Graphic
 		D3Device::CreateConstantBuffer(s_light_color_buffer_data_);
 
 		PrecompileShaders();
-
 		InitializeSamplers();
+
 		D3Device::CreateBlendState(s_blend_state_.GetAddressOf());
 		D3Device::CreateRasterizer(s_rasterizer_state_.GetAddressOf());
+		D3Device::CreateDepthStencilState(s_depth_stencil_state_.GetAddressOf());
 	}
 
 	void RenderPipeline::SetShader(IShader* shader)
@@ -175,27 +177,23 @@ namespace Engine::Graphic
 
 	void RenderPipeline::InitializeSamplers()
 	{
-		D3D11_SAMPLER_DESC desc{};
+		s_sampler_state_[SHADER_VERTEX] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_VERTEX], SHADER_VERTEX);
 
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 1;
-		desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		desc.BorderColor[0] = 0;
-		desc.BorderColor[1] = 0;
-		desc.BorderColor[2] = 0;
-		desc.BorderColor[3] = 0;
-		desc.MinLOD = 0;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
+		s_sampler_state_[SHADER_PIXEL] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_PIXEL], SHADER_PIXEL);
 
-		for (UINT i = 0; i < static_cast<UINT>(SHADER_UNKNOWN); ++i)
-		{
-			D3Device::CreateSampler(desc, s_sampler_state_[static_cast<eShaderType>(i)].ReleaseAndGetAddressOf());
-			D3Device::BindSampler(s_sampler_state_[static_cast<eShaderType>(i)].Get(), static_cast<eShaderType>(i));
-		}
+		s_sampler_state_[SHADER_GEOMETRY] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_GEOMETRY], SHADER_GEOMETRY);
+
+		s_sampler_state_[SHADER_COMPUTE] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_COMPUTE], SHADER_COMPUTE);
+
+		s_sampler_state_[SHADER_HULL] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_HULL], SHADER_HULL);
+
+		s_sampler_state_[SHADER_DOMAIN] = ToolkitAPI::m_states_->LinearWrap();
+		D3Device::BindSampler(s_sampler_state_[SHADER_DOMAIN], SHADER_DOMAIN);
 	}
 
 	void RenderPipeline::DrawIndexed(UINT index_count)

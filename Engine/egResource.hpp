@@ -10,7 +10,7 @@ namespace Engine::Abstract
 	public:
 		~Resource() override = default;
 
-		void Load();
+		virtual void Load();
 		void Unload();
 
 		bool IsLoaded() const
