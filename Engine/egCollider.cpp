@@ -70,19 +70,23 @@ namespace Engine::Component
 	{
 		const auto mesh_obj = mesh.lock();
 
-		std::vector<Vector3> vertices;
-		std::ranges::transform(mesh_obj->m_vertices_, std::back_inserter(vertices), [](const auto vertex)
+		std::vector<Vector3> serialized_vertices;
+
+		std::ranges::for_each(mesh_obj->m_vertices_, [&](const Resources::Shape& shape)
 		{
-			return vertex.position;
+			for (int i = 0; i < shape.size(); ++i)
+			{
+				serialized_vertices.emplace_back(shape[i].position);
+			}
 		});
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
-			BoundingOrientedBox::CreateFromPoints(m_boundings_.box, mesh_obj->m_vertices_.size(), vertices.data(), sizeof(Vector3));
+			BoundingOrientedBox::CreateFromPoints(m_boundings_.box, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
 		}
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			BoundingSphere::CreateFromPoints(m_boundings_.sphere, mesh_obj->m_vertices_.size(), vertices.data(), sizeof(Vector3));
+			BoundingSphere::CreateFromPoints(m_boundings_.sphere, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
 		}
 		else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
 		{
