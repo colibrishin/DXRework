@@ -47,13 +47,19 @@
     <ClInclude Include="clTestScene.hpp">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="clCudeMesh.hpp">
+    <ClInclude Include="clCubeMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="clSphereMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="clTestCube.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="clGiftBox.hpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="clGiftboxObject.hpp">
       <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,6 +80,9 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="Texture-Normal.png">
       <Filter>Resource\Normal</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="giftbox.obj">
+      <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

@@ -162,12 +162,18 @@
     <ClCompile Include="egObject.cpp">
       <Filter>Abstract</Filter>
     </ClCompile>
+    <ClCompile Include="egMesh.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="ps_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="vs_default.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_color.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
