@@ -35,6 +35,7 @@ namespace Engine::Graphic
 
 	private:
 		friend class ToolkitAPI;
+		friend class D3Device;
 
 		RenderPipeline() = default;
 
@@ -54,7 +55,7 @@ namespace Engine::Graphic
 		inline static ConstantBuffer<LightPositionBuffer> s_light_position_buffer_data_{};
 		inline static ConstantBuffer<LightColorBuffer> s_light_color_buffer_data_{};
 
-		inline static std::unordered_map<eShaderType, ComPtr<ID3D11SamplerState>> s_sampler_state_{};
+		inline static std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
 		inline static ComPtr<ID3D11BlendState> s_blend_state_ = nullptr;
 		inline static ComPtr<ID3D11RasterizerState> s_rasterizer_state_ = nullptr;
 
