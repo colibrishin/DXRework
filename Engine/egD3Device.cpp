@@ -96,6 +96,37 @@ namespace Engine::Graphic
 		s_device_->CreateBlendState(&desc, blend_state);
 	}
 
+	void D3Device::CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state)
+	{
+		D3D11_DEPTH_STENCIL_DESC depth_stencil_state_desc{};
+
+		depth_stencil_state_desc.DepthEnable = true;
+		depth_stencil_state_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depth_stencil_state_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+
+		depth_stencil_state_desc.StencilEnable = true;
+		depth_stencil_state_desc.StencilReadMask = 0xFF;
+		depth_stencil_state_desc.StencilWriteMask = 0xFF;
+
+		// Stencil operations if pixel is front-facing.
+		depth_stencil_state_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depth_stencil_state_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		depth_stencil_state_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depth_stencil_state_desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		// Stencil operations if pixel is back-facing.
+		depth_stencil_state_desc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depth_stencil_state_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		depth_stencil_state_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depth_stencil_state_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		DX::ThrowIfFailed(
+			s_device_->CreateDepthStencilState(&depth_stencil_state_desc,
+												depth_stencil_state));
+
+		s_context_->OMSetDepthStencilState(*depth_stencil_state, 1);
+	}
+
 	void D3Device::InitializeAdapter()
 	{
 		ComPtr<IDXGIFactory> factory;
@@ -204,34 +235,6 @@ namespace Engine::Graphic
 		DX::ThrowIfFailed(s_device_->CreateTexture2D(&depth_stencil_desc, nullptr,
 		                                             s_depth_stencil_buffer_.ReleaseAndGetAddressOf()));
 
-		D3D11_DEPTH_STENCIL_DESC depth_stencil_state_desc{};
-
-		depth_stencil_state_desc.DepthEnable = true;
-		depth_stencil_state_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depth_stencil_state_desc.DepthFunc = D3D11_COMPARISON_LESS;
-
-		depth_stencil_state_desc.StencilEnable = true;
-		depth_stencil_state_desc.StencilReadMask = 0xFF;
-		depth_stencil_state_desc.StencilWriteMask = 0xFF;
-
-		// Stencil operations if pixel is front-facing.
-		depth_stencil_state_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depth_stencil_state_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		depth_stencil_state_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depth_stencil_state_desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		// Stencil operations if pixel is back-facing.
-		depth_stencil_state_desc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depth_stencil_state_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-		depth_stencil_state_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depth_stencil_state_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		DX::ThrowIfFailed(
-			s_device_->CreateDepthStencilState(&depth_stencil_state_desc,
-			                                   s_depth_stencil_state_.ReleaseAndGetAddressOf()));
-
-		s_context_->OMSetDepthStencilState(s_depth_stencil_state_.Get(), 1);
-
 		D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
 
 		depth_stencil_view_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -260,13 +263,13 @@ namespace Engine::Graphic
 		rasterizer_desc.SlopeScaledDepthBias = 0.0f;
 
 		DX::ThrowIfFailed(
-			s_device_->CreateRasterizerState(&rasterizer_desc, s_rasterizer_state_.ReleaseAndGetAddressOf()));
-		s_context_->RSSetState(s_rasterizer_state_.Get());
+			s_device_->CreateRasterizerState(&rasterizer_desc, RenderPipeline::s_rasterizer_state_.ReleaseAndGetAddressOf()));
+		s_context_->RSSetState(RenderPipeline::s_rasterizer_state_.Get());
 	}
 
 	void D3Device::UpdateRenderTarget()
 	{
-		s_context_->OMSetRenderTargets(1, &s_render_target_view_, s_depth_stencil_view_.Get());
+		s_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
 	}
 
 	void D3Device::UpdateViewport()
@@ -313,8 +316,8 @@ namespace Engine::Graphic
 		s_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
 		s_ortho_matrix_ = XMMatrixOrthographicLH(g_window_width, g_window_height, g_screen_near, g_screen_far);
 
-		RenderPipeline::Initialize();
 		ToolkitAPI::Initialize();
+		RenderPipeline::Initialize();
 	}
 
 	void D3Device::FrameBegin()
@@ -322,7 +325,12 @@ namespace Engine::Graphic
 		float color[4] = {0.f, 0.f, 0.f, 1.f};
 
 		s_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
-		s_context_->ClearDepthStencilView(s_depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH, 1.f, 0);
+		s_context_->ClearDepthStencilView(s_depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+		
+		// ** overriding DirectXTK common state
+		D3Device::s_context_->RSSetState(RenderPipeline::s_rasterizer_state_.Get());
+		D3Device::s_context_->OMSetBlendState(RenderPipeline::s_blend_state_.Get(), nullptr, 0xFFFFFFFF);
+		D3Device::s_context_->OMSetDepthStencilState(RenderPipeline::s_depth_stencil_state_.Get(), 1);
 	}
 
 	void D3Device::Present()

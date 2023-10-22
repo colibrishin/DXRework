@@ -58,6 +58,7 @@ namespace Engine::Graphic
 		inline static std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
 		inline static ComPtr<ID3D11BlendState> s_blend_state_ = nullptr;
 		inline static ComPtr<ID3D11RasterizerState> s_rasterizer_state_ = nullptr;
+		inline static ComPtr<ID3D11DepthStencilState> s_depth_stencil_state_ = nullptr;
 
 		inline static std::vector<D3D11_INPUT_ELEMENT_DESC> s_input_element_desc_;
 	};

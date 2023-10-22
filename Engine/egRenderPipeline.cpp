@@ -5,6 +5,7 @@
 
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
+#include "egToolkitAPI.hpp"
 #include "egVertexShader.hpp"
 
 namespace Engine::Graphic
@@ -82,10 +83,11 @@ namespace Engine::Graphic
 		D3Device::CreateConstantBuffer(s_light_color_buffer_data_);
 
 		PrecompileShaders();
-
 		InitializeSamplers();
+
 		D3Device::CreateBlendState(s_blend_state_.GetAddressOf());
 		D3Device::CreateRasterizer(s_rasterizer_state_.GetAddressOf());
+		D3Device::CreateDepthStencilState(s_depth_stencil_state_.GetAddressOf());
 	}
 
 	void RenderPipeline::SetShader(IShader* shader)
