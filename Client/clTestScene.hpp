@@ -1,4 +1,5 @@
 #pragma once
+#include "clGiftboxObject.hpp"
 #include "clTestCube.hpp"
 #include "clTestObject.hpp"
 #include "../Engine/egScene.hpp"
@@ -49,5 +50,6 @@ namespace Client::Scene
 	{
 		AddGameObject<Object::TestCube>(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
 		AddGameObject<Object::TestObject>(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
+		AddGameObject<Object::Giftbox>(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
 	}
 }
