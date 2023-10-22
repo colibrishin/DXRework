@@ -50,31 +50,32 @@ namespace Client::Mesh
 
 	inline void TriangleMesh::Load_INTERNAL()
 	{
-		m_vertices_.emplace_back(Engine::VertexElement{
+		m_vertices_.resize(1);
+		m_indices_.resize(1);
+
+		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{-1.0f, -1.0f, 0.0f},
 			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
 			{1.0f, 0.0f}
 		});
 
-		m_vertices_.emplace_back(Engine::VertexElement{
+		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{0.0f, 1.0f, 0.0f},
 			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
 			{0.5f, 1.0f}
 		});
 
-		m_vertices_.emplace_back(Engine::VertexElement{
+		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{1.0f, -1.0f, 0.0f},
 			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
 			{1.0f, 1.0f}
 		});
 
-		m_indices_.emplace_back(0);
-		m_indices_.emplace_back(1);
-		m_indices_.emplace_back(2);
-
-		Mesh::Load_INTERNAL();
+		m_indices_[0].emplace_back(0);
+		m_indices_[0].emplace_back(1);
+		m_indices_[0].emplace_back(2);
 	}
 }
