@@ -85,12 +85,12 @@ namespace Engine::Graphic
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.RenderTarget[0].BlendEnable = true;
-		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_COLOR;
-		desc.RenderTarget[0].DestBlend = D3D11_BLEND_BLEND_FACTOR;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
 		desc.RenderTarget[0].RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
 
 		s_device_->CreateBlendState(&desc, blend_state);
