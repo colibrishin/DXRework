@@ -76,13 +76,8 @@ PixelInputType main(VertexInputType input)
     }
 
     output.normal = mul(input.normal, (float3x3)world);
-    output.normal = normalize(output.normal);
-
 	output.tangent = mul(input.tangent, (float3x3)world);
-	output.tangent = normalize(output.tangent);
-
 	output.binormal = mul(input.binormal, (float3x3)world);
-	output.binormal = normalize(output.binormal);
 
     return output;
 }

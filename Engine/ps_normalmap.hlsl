@@ -32,10 +32,10 @@ float4 main(PixelInputType input) : SV_TARGET
     float lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];
     float4 normalMap = shaderNormalMap.Sample(SampleType, input.tex);
-    float3 bumpNormal;
 
     normalMap = (normalMap * 2.0f) - 1.0f;
-    bumpNormal = (normalMap.x * input.tangent) + (normalMap.y * input.binormal) + (normalMap.z * input.normal);
+
+    float3 bumpNormal = (normalMap.x * input.tangent) + (normalMap.y * input.binormal) + (normalMap.z * input.normal);
     bumpNormal = normalize(bumpNormal);
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
