@@ -39,11 +39,14 @@ namespace Client::Object
 	{
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"Giftbox"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_color"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_metalic"));
+
+		Engine::Graphic::RenderPipeline::SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
+		Engine::Graphic::RenderPipeline::SetSpecularPower(100.0f);
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
+		tr->SetPosition(Vector3(0.0f, -1.0f, 10.0f));
 		tr->SetScale(Vector3::One);
 
 		AddComponent<Engine::Component::Collider>();
