@@ -32,6 +32,20 @@ namespace Engine::Graphic
 		s_light_color_buffer_.color[id] = color;
 	}
 
+	void RenderPipeline::SetSpecularPower(float power)
+	{
+		s_specular_buffer_.specular_power = power;
+		s_specular_buffer_data_.SetData(D3Device::s_context_.Get(), s_specular_buffer_);
+		D3Device::BindConstantBuffer(s_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
+	}
+
+	void RenderPipeline::SetSpecularColor(const Color& color)
+	{
+		s_specular_buffer_.specular_color = color;
+		s_specular_buffer_data_.SetData(D3Device::s_context_.Get(), s_specular_buffer_);
+		D3Device::BindConstantBuffer(s_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
+	}
+
 	void RenderPipeline::BindLightBuffers()
 	{
 		s_light_position_buffer_data_.SetData(D3Device::s_context_.Get(), s_light_position_buffer_);
@@ -81,6 +95,7 @@ namespace Engine::Graphic
 		D3Device::CreateConstantBuffer(s_transform_buffer_data_);
 		D3Device::CreateConstantBuffer(s_light_position_buffer_data_);
 		D3Device::CreateConstantBuffer(s_light_color_buffer_data_);
+		D3Device::CreateConstantBuffer(s_specular_buffer_data_);
 
 		PrecompileShaders();
 		InitializeSamplers();

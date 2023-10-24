@@ -43,6 +43,7 @@ namespace Engine
 		CB_TYPE_TRANSFORM,
 		CB_TYPE_LIGHT_POSITION,
 		CB_TYPE_LIGHT_COLOR,
+		CB_TYPE_SPECULAR
 	};
 
 	enum eLayerType
@@ -241,7 +242,14 @@ namespace Engine
 
 	struct LightColorBuffer
 	{
-		Vector4 color[g_max_lights];
+		Color color[g_max_lights];
+	};
+
+	struct SpecularBuffer
+	{
+		float specular_power;
+		float padding[3];
+		Color specular_color;
 	};
 }
 
