@@ -39,8 +39,9 @@ namespace Client::Object
 	{
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestNormalMap"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

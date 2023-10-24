@@ -25,9 +25,11 @@ namespace Engine::Resources
 		UINT GetWidth() const { return m_texture_desc_.Width; }
 		UINT GetHeight() const { return m_texture_desc_.Height; }
 
+	protected:
+		ComPtr<ID3D11ShaderResourceView> m_texture_view_;
+
 	private:
 		ComPtr<ID3D11Resource> m_texture_;
-		ComPtr<ID3D11ShaderResourceView> m_texture_view_;
 
 		D3D11_TEXTURE2D_DESC m_texture_desc_;
 	};
@@ -50,7 +52,7 @@ namespace Engine::Resources
 
 	inline void Texture::Render()
 	{
-		Graphic::RenderPipeline::BindTexture(m_texture_view_.Get());
+		Graphic::RenderPipeline::BindResource(SR_TEXTURE, m_texture_view_.Get());
 	}
 
 	inline void Texture::Load_INTERNAL()

@@ -9,6 +9,12 @@
 #include "../Engine/egTransform.hpp"
 #include "../Engine/egIShader.hpp"
 #include "../Engine/egRigidbody.hpp"
+#include "../Engine/egNormalMap.hpp"
+
+namespace Engine::Resources
+{
+	class NormalMap;
+}
 
 namespace Engine::Component
 {
@@ -39,8 +45,9 @@ namespace Client::Object
 	{
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default"));
+		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -70,6 +77,18 @@ namespace Client::Object
 	inline void TestCube::Update()
 	{
 		Object::Update();
+
+		static float angle = 0.0f;
+
+		const auto tr = GetComponent<Engine::Component::Transform>().lock();
+		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
+
+		angle += Engine::GetDeltaTime();
+
+		if(angle > XMConvertToRadians(360.0f))
+		{
+			angle = 0.0f;
+		}
 	}
 
 	inline void TestCube::PreRender()

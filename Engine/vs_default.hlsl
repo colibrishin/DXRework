@@ -30,6 +30,8 @@ struct VertexInputType
 	float3 normal : NORMAL;
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
+    float3 tangent : TANGENT;
+    float3 binormal : BINOARML;
 };
 
 struct PixelInputType
@@ -39,6 +41,8 @@ struct PixelInputType
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
     float3 lightPos[MAX_NUM_LIGHTS] : TEXCOORD1;
+    float3 tangent : TANGENT;
+    float3 binormal : BINOARML;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,9 +60,6 @@ PixelInputType main(VertexInputType input)
 	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(output.position, world);
 
-	output.normal = mul(input.normal, (float3x3)world);
-	output.normal = normalize(output.normal);
-
 	output.position = mul(output.position, view);
 	output.position = mul(output.position, projection);
 
@@ -73,6 +74,10 @@ PixelInputType main(VertexInputType input)
         output.lightPos[i] = lightPosition[i].xyz - worldPosition.xyz;
         output.lightPos[i] = normalize(output.lightPos[i]);
     }
+
+    output.normal = mul(input.normal, (float3x3)world);
+	output.tangent = mul(input.tangent, (float3x3)world);
+	output.binormal = mul(input.binormal, (float3x3)world);
 
     return output;
 }

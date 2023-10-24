@@ -29,7 +29,7 @@ namespace Engine::Graphic
 		static void BindIndexBuffer(ID3D11Buffer* buffer);
 		static void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
 
-		static void BindTexture(ID3D11ShaderResourceView* texture);
+		static void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
 
 		static void DrawIndexed(UINT index_count);
 

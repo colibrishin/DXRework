@@ -8,7 +8,7 @@ namespace Engine::Resources
 	class Font : public Abstract::Resource
 	{
 	public:
-		Font();
+		Font(const std::filesystem::path& path);
 		~Font() override = default;
 
 		void Initialize() override;
@@ -43,7 +43,7 @@ namespace Engine::Resources
 
 	};
 
-	inline Font::Font() : Abstract::Resource("", RESOURCE_PRIORITY_FONT), m_lazy_reload_(false), m_rotation_radian_(0), m_scale_(1)
+	inline Font::Font(const std::filesystem::path& path) : Abstract::Resource(path, RESOURCE_PRIORITY_FONT), m_lazy_reload_(false), m_rotation_radian_(0), m_scale_(1)
 	{
 	}
 
@@ -63,8 +63,8 @@ namespace Engine::Resources
 	{
 		if (m_lazy_reload_)
 		{
-			Unload_INTERNAL();
-			Load_INTERNAL();
+			Unload();
+			Load();
 			m_lazy_reload_ = false;
 		}
 	}
