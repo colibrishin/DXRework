@@ -88,4 +88,71 @@ namespace Engine::Resources
 
 		});
 	}
+
+	void Mesh::GenerateTangentBinormal(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector2& uv0,
+		const Vector2& uv1, const Vector2& uv2, Vector3& tangent, Vector3& binormal)
+	{
+		const Vector3 edge1 = v1 - v0;
+		const Vector3 edge2 = v2 - v0;
+
+		const Vector2 deltaUV1 = uv1 - uv0;
+		const Vector2 deltaUV2 = uv2 - uv0;
+
+		const float delta = (deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x);
+		const float denominator = 1.0f / delta;
+
+		tangent.x = denominator * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent.y = denominator * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent.z = denominator * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+		binormal.x = denominator * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		binormal.y = denominator * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		binormal.z = denominator * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+		tangent.Normalize();
+		binormal.Normalize();
+	}
+
+	void Mesh::UpdateTangentBinormal()
+	{
+		for (auto& shape : m_vertices_) 
+		{
+			std::vector<int> index;
+			std::mutex shape_lock;
+			const size_t face = shape.size() / 3;
+
+			std::generate_n(std::back_inserter(index), face, [i = 0]() mutable { return i++; });
+			std::ranges::for_each(index, [](int& i)
+			{
+				i *= 3;
+			});
+
+			std::for_each(std::execution::par, index.begin(), index.end(), [&](const int& i)
+			{
+				const Vector3& v0 = shape[i].position;
+				const Vector3& v1 = shape[i + 1].position;
+				const Vector3& v2 = shape[i + 2].position;
+
+				const Vector2& uv0 = shape[i].texCoord;
+				const Vector2& uv1 = shape[i + 1].texCoord;
+				const Vector2& uv2 = shape[i + 2].texCoord;
+
+				Vector3 tangent;
+				Vector3 binormal;
+
+				GenerateTangentBinormal(v0, v1, v2, uv0, uv1, uv2, tangent, binormal);
+				
+				{
+					std::lock_guard sl(shape_lock);
+					shape[i].tangent = tangent;
+					shape[i + 1].tangent = tangent;
+					shape[i + 2].tangent = tangent;
+
+					shape[i].binormal = binormal;
+					shape[i + 1].binormal = binormal;
+					shape[i + 2].binormal = binormal;
+				}
+			});
+		}
+	}
 }

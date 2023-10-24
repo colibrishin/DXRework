@@ -52,6 +52,9 @@ namespace Engine::Resources
 		void Load() override;
 		void Unload_INTERNAL() override;
 
+		static void GenerateTangentBinormal(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2, Vector3& tangent, Vector3& binormal);
+		void UpdateTangentBinormal();
+
 		std::vector<Shape> m_vertices_;
 		std::vector<IndexCollection> m_indices_;
 
@@ -78,7 +81,7 @@ namespace Engine::Resources
 			Graphic::RenderPipeline::DrawIndexed(m_indices_[i].size());
 		}
 
-		Graphic::RenderPipeline::BindTexture(nullptr);
+		Graphic::RenderPipeline::BindResource(SR_TEXTURE, nullptr);
 	}
 
 	inline void Mesh::Load()
@@ -92,6 +95,8 @@ namespace Engine::Resources
 				ReadOBJFile();
 			}
 		}
+
+		UpdateTangentBinormal();
 
 		m_vertex_buffers_.resize(m_vertices_.size());
 		m_index_buffers_.resize(m_indices_.size());
