@@ -63,9 +63,9 @@ namespace Engine::Graphic
 		D3Device::UpdateBuffer(size, data, buffer);
 	}
 
-	void RenderPipeline::BindTexture(ID3D11ShaderResourceView* texture)
+	void RenderPipeline::BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture)
 	{
-		D3Device::s_context_->PSSetShaderResources(SR_TEXTURE, 1, &texture);
+		D3Device::s_context_->PSSetShaderResources(resource, 1, &texture);
 	}
 
 	void RenderPipeline::Initialize()
