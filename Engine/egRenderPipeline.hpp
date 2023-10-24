@@ -21,6 +21,9 @@ namespace Engine::Graphic
 
 		static void SetLightPosition(UINT id, const Vector3& position);
 		static void SetLightColor(UINT id, const Vector4& color);
+
+		static void SetSpecularPower(float power);
+		static void SetSpecularColor(const Color& color);
 		static void BindLightBuffers();
 
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
@@ -51,9 +54,11 @@ namespace Engine::Graphic
 		
 		inline static LightPositionBuffer s_light_position_buffer_{};
 		inline static LightColorBuffer s_light_color_buffer_{};
+		inline static SpecularBuffer s_specular_buffer_{};
 
 		inline static ConstantBuffer<LightPositionBuffer> s_light_position_buffer_data_{};
 		inline static ConstantBuffer<LightColorBuffer> s_light_color_buffer_data_{};
+		inline static ConstantBuffer<SpecularBuffer> s_specular_buffer_data_{};
 
 		inline static std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
 		inline static ComPtr<ID3D11BlendState> s_blend_state_ = nullptr;
