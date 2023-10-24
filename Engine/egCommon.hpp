@@ -22,6 +22,8 @@ namespace Engine
 		Vector3 normal;
 		Vector4 color;
 		Vector2 texCoord;
+		Vector3 tangent;
+		Vector3 binormal;
 	};
 
 	enum eShaderType
@@ -69,7 +71,8 @@ namespace Engine
 
 	enum eShaderResource
 	{
-		SR_TEXTURE = 0
+		SR_TEXTURE = 0,
+		SR_NORMAL_MAP,
 	};
 
 	union BoundingGroup
