@@ -2,6 +2,7 @@
 // TYPEDEFS //
 //////////////
 Texture2D shaderTexture : register(t0);
+Texture2D shaderNormalMap : register(t1);
 SamplerState SampleType : register(s1);
 
 #define MAX_NUM_LIGHTS 8
@@ -27,14 +28,19 @@ struct PixelInputType
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
-	const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
-
+    const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
     float lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];
+    float4 normalMap = shaderNormalMap.Sample(SampleType, input.tex);
+    float3 bumpNormal;
+
+    normalMap = (normalMap * 2.0f) - 1.0f;
+    bumpNormal = (normalMap.x * input.tangent) + (normalMap.y * input.binormal) + (normalMap.z * input.normal);
+    bumpNormal = normalize(bumpNormal);
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-	    lightIntensity[i] = saturate(dot(input.normal, input.lightPos[i]));
+        lightIntensity[i] = saturate(dot(input.lightPos[i], bumpNormal));
         colorArray[i] = lightColor[i] * lightIntensity[i];
     }
 
@@ -49,5 +55,5 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 color = saturate(colorSum) * textureColor;
 
-	return color;
+    return color;
 }
