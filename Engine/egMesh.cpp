@@ -95,19 +95,19 @@ namespace Engine::Resources
 		const Vector3 edge1 = v1 - v0;
 		const Vector3 edge2 = v2 - v0;
 
-		const Vector2 deltaUV1 = uv1 - uv0;
-		const Vector2 deltaUV2 = uv2 - uv0;
+		const Vector2 deltaUV1 = {uv1.x - uv0.x, uv2.x - uv0.x};
+		const Vector2 deltaUV2 = {uv1.y - uv0.y, uv2.y - uv0.y};
 
 		const float delta = (deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x);
 		const float denominator = 1.0f / delta;
 
-		tangent.x = denominator * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-		tangent.y = denominator * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-		tangent.z = denominator * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent.x = denominator * (deltaUV2.y * edge1.x - deltaUV2.y * edge2.x);
+		tangent.y = denominator * (deltaUV2.y * edge1.y - deltaUV2.y * edge2.y);
+		tangent.z = denominator * (deltaUV2.y * edge1.z - deltaUV2.y * edge2.z);
 
-		binormal.x = denominator * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-		binormal.y = denominator * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-		binormal.z = denominator * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		binormal.x = denominator * (deltaUV1.x * edge2.x - deltaUV1.y * edge1.x);
+		binormal.y = denominator * (deltaUV1.x * edge2.y - deltaUV1.y * edge1.y);
+		binormal.z = denominator * (deltaUV1.x * edge2.z - deltaUV1.y * edge1.z);
 
 		tangent.Normalize();
 		binormal.Normalize();
@@ -115,42 +115,56 @@ namespace Engine::Resources
 
 	void Mesh::UpdateTangentBinormal()
 	{
-		for (auto& shape : m_vertices_) 
+		struct FacePair
 		{
-			std::vector<int> index;
-			std::mutex shape_lock;
-			const size_t face = shape.size() / 3;
+			VertexElement* o[3];
+		};
 
-			std::generate_n(std::back_inserter(index), face, [i = 0]() mutable { return i++; });
-			std::ranges::for_each(index, [](int& i)
+		for (size_t shape_count = 0; shape_count < m_vertices_.size(); shape_count++)
+		{
+			auto& shape = m_vertices_[shape_count];
+
+			if (m_vertices_[shape_count].size() == 0)
 			{
-				i *= 3;
-			});
+				break;
+			}
 
-			std::for_each(std::execution::par, index.begin(), index.end(), [&](const int& i)
+			const auto& indices = m_indices_[shape_count];
+			std::vector<FacePair> faces;
+
+			for (size_t i = 0; i < indices.size(); i += 3)
 			{
-				const Vector3& v0 = shape[i].position;
-				const Vector3& v1 = shape[i + 1].position;
-				const Vector3& v2 = shape[i + 2].position;
+				const auto& i0 = indices[i];
+				const auto& i1 = indices[i + 1];
+				const auto& i2 = indices[i + 2];
 
-				const Vector2& uv0 = shape[i].texCoord;
-				const Vector2& uv1 = shape[i + 1].texCoord;
-				const Vector2& uv2 = shape[i + 2].texCoord;
+				FacePair face = {
+					{&shape[i0], &shape[i1], &shape[i2]}
+				};
 
+				faces.push_back(face);
+			}
+
+			std::mutex commit_lock;
+
+			std::for_each(std::execution::par, faces.begin(), faces.end(), [&](const FacePair& face)
+			{
 				Vector3 tangent;
 				Vector3 binormal;
 
-				GenerateTangentBinormal(v0, v1, v2, uv0, uv1, uv2, tangent, binormal);
-				
-				{
-					std::lock_guard sl(shape_lock);
-					shape[i].tangent = tangent;
-					shape[i + 1].tangent = tangent;
-					shape[i + 2].tangent = tangent;
+				GenerateTangentBinormal(face.o[0]->position, face.o[1]->position, face.o[2]->position,
+										face.o[0]->texCoord, face.o[1]->texCoord, face.o[2]->texCoord, tangent,
+										binormal);
 
-					shape[i].binormal = binormal;
-					shape[i + 1].binormal = binormal;
-					shape[i + 2].binormal = binormal;
+				{
+					std::lock_guard cl(commit_lock);
+					face.o[0]->tangent = tangent;
+					face.o[1]->tangent = tangent;
+					face.o[2]->tangent = tangent;
+
+					face.o[0]->binormal = binormal;
+					face.o[1]->binormal = binormal;
+					face.o[2]->binormal = binormal;
 				}
 			});
 		}
