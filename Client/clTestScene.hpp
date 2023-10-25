@@ -1,5 +1,7 @@
 #pragma once
+#include "clFPSCounter.hpp"
 #include "clGiftboxObject.hpp"
+#include "clMousePosition.hpp"
 #include "clTestCube.hpp"
 #include "clTestObject.hpp"
 #include "../Engine/egScene.hpp"
@@ -48,8 +50,10 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
-		AddGameObject<Object::TestCube>(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
-		AddGameObject<Object::TestObject>(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
-		AddGameObject<Object::Giftbox>(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
+		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
 	}
 }
