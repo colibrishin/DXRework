@@ -24,7 +24,7 @@ namespace Client
 		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"CubeMesh", std::make_shared<Client::Mesh::CubeMesh>());
 		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"Giftbox", std::make_shared<Client::Mesh::GiftBox>());
 		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"SphereMesh", std::make_shared<Client::Mesh::SphereMesh>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Font>(L"TestFont", std::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
+		Engine::GetResourceManager()->AddResource<Engine::Resources::Font>(L"DefaultFont", std::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
 
 		Engine::GetSceneManager()->AddScene<Scene::TestScene>();
 		Engine::GetSceneManager()->SetActive<Scene::TestScene>();
