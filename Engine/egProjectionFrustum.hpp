@@ -29,6 +29,7 @@ namespace Engine::Manager
 		inline static std::unique_ptr<ProjectionFrustum> m_instance = nullptr;
 
 		BoundingFrustum m_frustum;
+		BoundingSphere m_sphere;
 	};
 
 	inline void ProjectionFrustum::Initialize()
@@ -60,6 +61,8 @@ namespace Engine::Manager
 				BoundingFrustum::CreateFromMatrix(m_frustum, camera->GetViewMatrix() * Graphic::D3Device::GetProjectionMatrix());
 
 				m_frustum.Origin = camera->GetComponent<Component::Transform>().lock()->GetPosition() + camera->GetLookAt();
+
+				BoundingSphere::CreateFromFrustum(m_sphere, m_frustum);
 			}
 		}
 	}
@@ -79,9 +82,11 @@ namespace Engine::Manager
 				tr->GetRotation()
 			};
 
-			const auto check_res = m_frustum.Contains(box);
+			const auto check_plane = m_frustum.Contains(box);
+			const auto check_sphere = m_sphere.Contains(box);
 
-			if (check_res != ContainmentType::DISJOINT)
+			if (check_plane != ContainmentType::DISJOINT || 
+				check_sphere != ContainmentType::DISJOINT)
 			{
 				return true;
 			}
