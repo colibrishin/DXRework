@@ -46,6 +46,7 @@
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
+    <ClInclude Include="egText.hpp" />
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
     <ClInclude Include="egTransform.hpp" />

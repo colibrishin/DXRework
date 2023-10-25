@@ -139,6 +139,9 @@
     <ClInclude Include="egProjectionFrustum.hpp">
       <Filter>Manager</Filter>
     </ClInclude>
+    <ClInclude Include="egText.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
