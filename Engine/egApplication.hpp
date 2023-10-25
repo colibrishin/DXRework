@@ -34,8 +34,10 @@ namespace Engine
 		static LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 		static HWND GetWindowHandle() { return s_WindowHandle; }
 		static float GetDeltaTime() { return static_cast<float>(s_timer->GetElapsedSeconds()); }
+		static uint32_t GetFPS() { return s_timer->GetFramesPerSecond(); }
 
 		static Keyboard::State GetKeyState() { return s_keyboard->GetState(); }
+		static Mouse::State GetMouseState() { return s_mouse->GetState(); }
 
 	private:
 		Application() = default;
