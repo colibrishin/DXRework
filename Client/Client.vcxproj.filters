@@ -62,6 +62,9 @@
     <ClInclude Include="clGiftboxObject.hpp">
       <Filter>Object</Filter>
     </ClInclude>
+    <ClInclude Include="clPlaneObject.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
