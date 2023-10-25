@@ -1,5 +1,6 @@
 #include "pch.hpp"
 
+#include "egProjectionFrustum.hpp"
 #include "egObject.hpp"
 #include "egCollider.hpp"
 #include "egRigidbody.hpp"
@@ -69,6 +70,27 @@ namespace Engine::Abstract
 				dir = XMVector3Orthogonal(dir);
 
 				rb->SubtractFriction(dir * rb_other->GetFriction());
+			}
+		}
+	}
+
+	void Object::Render()
+	{
+		if (!Engine::Manager::ProjectionFrustum::GetInstance()->CheckRender(GetWeakPtr<Object>()))
+		{
+			return;
+		}
+
+		for (const auto& component : m_components_ | std::views::values)
+		{
+			component->Render();
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->Render();
 			}
 		}
 	}
