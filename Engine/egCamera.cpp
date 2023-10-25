@@ -1,5 +1,6 @@
-#include "egCamera.hpp"
 #include "pch.hpp"
+
+#include "egCamera.hpp"
 #include "egTransform.hpp"
 
 namespace Engine::Objects
@@ -8,7 +9,6 @@ namespace Engine::Objects
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -5.0f});
-		m_rotation_ = XMQuaternionIdentity();
 		m_look_at_ = Vector3::Backward;
 	}
 
@@ -20,16 +20,43 @@ namespace Engine::Objects
 	void Camera::Update()
 	{
 		Object::Update();
+
+		const auto tr = GetComponent<Component::Transform>().lock();
+		auto pos = tr->GetPosition();
+		const auto movement_speed = 1.0f * GetDeltaTime();
+
+		if (Application::GetKeyState().W)
+		{
+			pos.z += movement_speed;
+			tr->SetPosition(pos);
+		}
+		if (Application::GetKeyState().A)
+		{
+			pos.x -= movement_speed;
+			tr->SetPosition(pos);
+		}
+		if (Application::GetKeyState().S)
+		{
+			pos.z -= movement_speed;
+			tr->SetPosition(pos);
+		}
+		if (Application::GetKeyState().D)
+		{
+			pos.x += movement_speed;
+			tr->SetPosition(pos);
+		}
+
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();
+			const auto rotation = transform->GetRotation();
 
 			XMVECTOR upVector = XMLoadFloat3(&Vector3::Up);
 			const XMVECTOR positionVector = XMLoadFloat3(&position);
 			XMVECTOR lookAtVector = XMLoadFloat3(&m_look_at_);
 
 			// Create the rotation matrix from the yaw, pitch, and roll values.
-			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(m_rotation_);
+			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
 
 			// Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
 			lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
