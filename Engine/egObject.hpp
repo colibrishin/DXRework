@@ -1,10 +1,10 @@
 #pragma once
-#include <ranges>
 #include <map>
+#include <ranges>
 
-#include "egComponent.hpp"
 #include <set>
 #include <typeindex>
+#include "egComponent.hpp"
 
 #include "egRenderable.hpp"
 #include "egResource.hpp"
@@ -164,22 +164,6 @@ namespace Engine::Abstract
 			if (const auto locked = resource.lock())
 			{
 				locked->PreRender();
-			}
-		}
-	}
-
-	inline void Object::Render()
-	{
-		for (const auto& component : m_components_ | std::views::values)
-		{
-			component->Render();
-		}
-
-		for (const auto& resource : m_resources_)
-		{
-			if (const auto locked = resource.lock())
-			{
-				locked->Render();
 			}
 		}
 	}

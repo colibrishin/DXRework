@@ -11,7 +11,7 @@ namespace Engine
 	inline std::atomic<UINT> g_window_width = 800;
 	inline std::atomic<UINT> g_window_height = 600;
 
-	inline std::atomic<float> g_screen_near = 0.1f;
+	inline std::atomic<float> g_screen_near = 0.0001f;
 	inline std::atomic<float> g_screen_far = 1000.0f;
 
 	using namespace DirectX;
@@ -34,6 +34,8 @@ namespace Engine
 		static LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 		static HWND GetWindowHandle() { return s_WindowHandle; }
 		static float GetDeltaTime() { return static_cast<float>(s_timer->GetElapsedSeconds()); }
+
+		static Keyboard::State GetKeyState() { return s_keyboard->GetState(); }
 
 	private:
 		Application() = default;

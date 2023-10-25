@@ -28,6 +28,7 @@
     <ClInclude Include="egApplication.hpp" />
     <ClInclude Include="egEntity.hpp" />
     <ClInclude Include="egFont.hpp" />
+    <ClInclude Include="egProjectionFrustum.hpp" />
     <ClInclude Include="egHelper.hpp" />
     <ClInclude Include="egIShader.hpp" />
     <ClInclude Include="egLayer.hpp" />

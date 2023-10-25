@@ -136,6 +136,9 @@
     <ClInclude Include="egNormalMap.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
+    <ClInclude Include="egProjectionFrustum.hpp">
+      <Filter>Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

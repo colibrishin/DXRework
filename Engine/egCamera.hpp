@@ -4,6 +4,7 @@
 
 #include "egCommon.hpp"
 #include "egObject.hpp"
+#include "egTransform.hpp"
 
 namespace Engine::Objects
 {
@@ -13,9 +14,23 @@ namespace Engine::Objects
 		Camera() = default;
 		~Camera() override = default;
 
-		void SetLookAt(Vector3 lookAt);
-		void SetPosition(Vector3 position);
-		void SetRotation(Quaternion rotation);
+		void SetLookAt(Vector3 lookAt)
+		{
+			m_look_at_ = lookAt;
+		}
+
+		void SetPosition(Vector3 position)
+		{
+			GetComponent<Component::Transform>().lock()->SetPosition(position);
+		}
+
+		void SetRotation(Quaternion rotation)
+		{
+			GetComponent<Component::Transform>().lock()->SetRotation(rotation);
+		}
+
+		Matrix GetViewMatrix() const { return m_view_matrix_; }
+		Vector3 GetLookAt() const { return m_look_at_; }
 
 		void Initialize() override;
 		void PreUpdate() override;
@@ -28,6 +43,5 @@ namespace Engine::Objects
 		VPBuffer m_vp_buffer_;
 
 		Vector3 m_look_at_;
-		Quaternion m_rotation_;
 	};
 }

@@ -20,6 +20,18 @@ namespace Engine::Abstract
 		void SetName(const std::wstring& name) { m_name_ = name; }
 		std::wstring GetName() const { return m_name_; }
 
+		template <typename T>
+		std::weak_ptr<T> GetWeakPtr()
+		{
+			return std::reinterpret_pointer_cast<T>(shared_from_this());
+		}
+
+		template <typename T>
+		std::shared_ptr<T> GetSharedPtr()
+		{
+			return std::reinterpret_pointer_cast<T>(shared_from_this());
+		}
+
 		virtual void Initialize() = 0;
 		virtual void PreUpdate() = 0;
 		virtual void Update() = 0;
