@@ -4,6 +4,7 @@
 #include "egCollisionManager.hpp"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
+#include "egProjectionFrustum.hpp"
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 
@@ -61,6 +62,7 @@ namespace Engine
 	void Application::PreUpdate()
 	{
 		GetSceneManager()->PreUpdate();
+		Manager::ProjectionFrustum::GetInstance()->PreUpdate();
 		GetResourceManager()->PreUpdate();
 		Manager::CollisionManager::GetInstance()->PreUpdate();
 	}
@@ -68,6 +70,7 @@ namespace Engine
 	void Application::Update()
 	{
 		GetSceneManager()->Update();
+		Manager::ProjectionFrustum::GetInstance()->Update();
 		GetResourceManager()->Update();
 		Manager::CollisionManager::GetInstance()->Update();
 	}
@@ -76,6 +79,7 @@ namespace Engine
 	{
 		Graphic::ToolkitAPI::FrameBegin();
 		GetSceneManager()->PreRender();
+		Manager::ProjectionFrustum::GetInstance()->PreRender();
 		GetResourceManager()->PreRender();
 		Manager::CollisionManager::GetInstance()->PreRender();
 		Graphic::D3Device::FrameBegin();
@@ -84,6 +88,7 @@ namespace Engine
 	void Application::Render()
 	{
 		GetSceneManager()->Render();
+		Manager::ProjectionFrustum::GetInstance()->Render();
 		GetResourceManager()->Render();
 		Manager::CollisionManager::GetInstance()->Render();
 		Graphic::ToolkitAPI::FrameEnd();
