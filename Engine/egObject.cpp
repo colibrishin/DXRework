@@ -76,7 +76,7 @@ namespace Engine::Abstract
 
 	void Object::Render()
 	{
-		if (!Engine::Manager::ProjectionFrustum::GetInstance()->CheckRender(GetWeakPtr<Object>()))
+		if (m_culled_ && !Engine::Manager::ProjectionFrustum::GetInstance()->CheckRender(GetWeakPtr<Object>()))
 		{
 			return;
 		}

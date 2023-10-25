@@ -151,10 +151,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="clCubeMesh.hpp" />
+    <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="clGiftBox.hpp" />
     <ClInclude Include="clGiftboxObject.hpp" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="clPlaneObject.hpp" />
+    <ClInclude Include="clMousePosition.hpp" />
     <ClInclude Include="clSphereMesh.hpp" />
     <ClInclude Include="clTestCube.hpp" />
     <ClInclude Include="clTestObject.hpp" />

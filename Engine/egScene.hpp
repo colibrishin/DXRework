@@ -27,7 +27,7 @@ namespace Engine
 		void Render() override;
 
 		template <typename T>
-		void AddGameObject(const StrongObject& obj, eLayerType layer)
+		void AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
 		{
 			m_layers[layer]->AddGameObject<T>(obj);
 		}
@@ -56,16 +56,16 @@ namespace Engine
 		}
 
 		const auto camera = Instantiate<Objects::Camera>();
-		AddGameObject<Objects::Camera>(camera, LAYER_CAMERA);
+		AddGameObject(camera, LAYER_CAMERA);
 
 		const auto light1 = Instantiate<Objects::Light>();
-		AddGameObject<Objects::Light>(light1, LAYER_LIGHT);
+		AddGameObject(light1, LAYER_LIGHT);
 		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
 
 		const auto light2 = Instantiate<Objects::Light>();
 		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
 		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		AddGameObject<Objects::Light>(light2, LAYER_LIGHT);
+		AddGameObject(light2, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate()

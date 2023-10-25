@@ -104,6 +104,7 @@ namespace Engine::Abstract
 
 		void SetActive(bool active) { m_active_ = active; }
 		bool GetActive() const { return m_active_; }
+		void SetCulled(bool culled) { m_culled_ = culled; }
 
 	protected:
 		Object() = default;
@@ -132,6 +133,8 @@ namespace Engine::Abstract
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
 		bool m_active_ = true;
+		bool m_culled_ = true;
+
 		std::map<const std::type_index, ComponentPtr> m_components_;
 		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
 	};

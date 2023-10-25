@@ -62,8 +62,11 @@
     <ClInclude Include="clGiftboxObject.hpp">
       <Filter>Object</Filter>
     </ClInclude>
-    <ClInclude Include="clPlaneObject.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="clFPSCounter.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="clMousePosition.hpp">
+      <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
