@@ -2,6 +2,7 @@
 #include "clFPSCounter.hpp"
 #include "clGiftboxObject.hpp"
 #include "clMousePosition.hpp"
+#include "clSkyBox.hpp"
 #include "clTestCube.hpp"
 #include "clTestObject.hpp"
 #include "../Engine/egScene.hpp"
@@ -55,5 +56,6 @@ namespace Client::Scene
 		AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
 		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
+		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
 	}
 }
