@@ -68,6 +68,12 @@
     <ClInclude Include="clMousePosition.hpp">
       <Filter>Object</Filter>
     </ClInclude>
+    <ClInclude Include="clBackSphereMesh.hpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="clSkyBox.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -89,6 +95,9 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="giftbox.obj">
       <Filter>Resource\Mesh</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Sky.jpg">
+      <Filter>Resource\Texture</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

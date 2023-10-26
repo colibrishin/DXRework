@@ -197,5 +197,8 @@
     <CopyFileToFolders Include="ps_normalmap_metalic.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_default_nolight.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
