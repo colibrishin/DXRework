@@ -21,6 +21,7 @@ namespace Engine::Resources
 		void Render() override;
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
+		void FixedUpdate() override;
 
 		UINT GetWidth() const { return m_texture_desc_.Width; }
 		UINT GetHeight() const { return m_texture_desc_.Height; }
@@ -71,5 +72,9 @@ namespace Engine::Resources
 		m_texture_view_->Release();
 		m_texture_->Release();
 		m_texture_desc_ = {};
+	}
+
+	inline void Texture::FixedUpdate()
+	{
 	}
 }

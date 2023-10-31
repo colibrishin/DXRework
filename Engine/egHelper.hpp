@@ -15,4 +15,9 @@ namespace Engine
 		object->Initialize();
 		return object;
 	}
+
+	static bool IsSamePolarity(const float v1, const float v2)
+	{
+		return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);
+	}
 }

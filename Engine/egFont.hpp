@@ -17,6 +17,7 @@ namespace Engine::Resources
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 		void SetText(const std::wstring& text) { m_text_ = text; }
 		void SetPosition(const Vector2& position) { m_position_ = position; }
@@ -72,6 +73,10 @@ namespace Engine::Resources
 	inline void Font::Render()
 	{
 		m_font_->DrawString(Graphic::ToolkitAPI::GetSpriteBatch(), m_text_.c_str(), m_position_, m_color_, m_rotation_radian_, Vector2::Zero, m_scale_);
+	}
+
+	inline void Font::FixedUpdate()
+	{
 	}
 
 	inline void Font::Unload_INTERNAL()

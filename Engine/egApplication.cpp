@@ -48,11 +48,20 @@ namespace Engine
 
 	void Application::Tick()
 	{
+		static float elapsed = 0.0f;
+
 		s_timer->Tick([&]()
 		{
 			PreUpdate();
 			Update();
 		});
+
+		elapsed += s_timer->GetElapsedSeconds();
+
+		if (elapsed <= 1.0f / 33.0f)
+		{
+			FixedUpdate();
+		}
 
 		PreRender();
 
@@ -65,6 +74,14 @@ namespace Engine
 		Manager::ProjectionFrustum::GetInstance()->PreUpdate();
 		GetResourceManager()->PreUpdate();
 		Manager::CollisionManager::GetInstance()->PreUpdate();
+	}
+
+	void Application::FixedUpdate()
+	{
+		GetSceneManager()->FixedUpdate();
+		Manager::ProjectionFrustum::GetInstance()->FixedUpdate();
+		GetResourceManager()->FixedUpdate();
+		Manager::CollisionManager::GetInstance()->FixedUpdate();
 	}
 
 	void Application::Update()

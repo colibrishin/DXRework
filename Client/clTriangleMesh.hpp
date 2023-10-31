@@ -19,6 +19,7 @@ namespace Client::Mesh
 		void Render() override;
 
 		void Load_INTERNAL() override;
+		void FixedUpdate() override;
 	};
 
 	inline TriangleMesh::TriangleMesh() : Mesh("")
@@ -77,5 +78,9 @@ namespace Client::Mesh
 		m_indices_[0].emplace_back(0);
 		m_indices_[0].emplace_back(1);
 		m_indices_[0].emplace_back(2);
+	}
+
+	inline void TriangleMesh::FixedUpdate()
+	{
 	}
 }

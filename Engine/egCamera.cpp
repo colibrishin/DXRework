@@ -8,7 +8,7 @@ namespace Engine::Objects
 	void Camera::Initialize()
 	{
 		AddComponent<Component::Transform>();
-		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -5.0f});
+		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -10.0f});
 		m_look_at_ = Vector3::Backward;
 	}
 
@@ -20,31 +20,6 @@ namespace Engine::Objects
 	void Camera::Update()
 	{
 		Object::Update();
-
-		const auto tr = GetComponent<Component::Transform>().lock();
-		auto pos = tr->GetPosition();
-		const auto movement_speed = 1.0f * GetDeltaTime();
-
-		if (Application::GetKeyState().W)
-		{
-			pos.z += movement_speed;
-			tr->SetPosition(pos);
-		}
-		if (Application::GetKeyState().A)
-		{
-			pos.x -= movement_speed;
-			tr->SetPosition(pos);
-		}
-		if (Application::GetKeyState().S)
-		{
-			pos.z -= movement_speed;
-			tr->SetPosition(pos);
-		}
-		if (Application::GetKeyState().D)
-		{
-			pos.x += movement_speed;
-			tr->SetPosition(pos);
-		}
 
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{

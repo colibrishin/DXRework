@@ -24,12 +24,12 @@ namespace Engine::Component
 
 namespace Client::Object
 {
-	class TestCube : public Engine::Abstract::Object
+	class PlaneObject : public Engine::Abstract::Object
 	{
 	public:
-		TestCube();
+		PlaneObject();
 		void Initialize() override;
-		~TestCube() override;
+		~PlaneObject() override;
 
 		inline void PreUpdate() override;
 		inline void Update() override;
@@ -37,11 +37,11 @@ namespace Client::Object
 		inline void Render() override;
 	};
 
-	inline TestCube::TestCube()
+	inline PlaneObject::PlaneObject()
 	{
 	}
 
-	inline void TestCube::Initialize()
+	inline void PlaneObject::Initialize()
 	{
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
@@ -51,8 +51,8 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, 20.0f, 0.0f));
-		tr->SetScale(Vector3::One);
+		tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
+		tr->SetScale({10.0f, 1.0f, 10.0f});
 
 		AddComponent<Engine::Component::Collider>();
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
@@ -62,63 +62,32 @@ namespace Client::Object
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetVelocity({0.f, 0.f, 0.f});
-		rb->SetMass(1.0f);
-		rb->SetGravityOverride(true);
-		rb->SetElastic(true);
+		rb->SetMass(1000.0f);
+
+		rb->SetElastic(false);
+		rb->SetGravityOverride(false);
 	}
 
-	inline TestCube::~TestCube()
+	inline PlaneObject::~PlaneObject()
 	{
 	}
 
-	inline void TestCube::PreUpdate()
+	inline void PlaneObject::PreUpdate()
 	{
 		Object::PreUpdate();
 	}
 
-	inline void TestCube::Update()
+	inline void PlaneObject::Update()
 	{
 		Object::Update();
-
-		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto vel = rb->GetVelocity();
-
-		if (Engine::Application::GetKeyState().W)
-		{
-			rb->SetVelocity({vel.x, vel.y, 0.01f});
-		}
-		if (Engine::Application::GetKeyState().A)
-		{
-			rb->SetVelocity({-0.01f, vel.y, vel.z });
-		}
-		if (Engine::Application::GetKeyState().S)
-		{
-			rb->SetVelocity({vel.x, vel.y, -0.01f});
-		}
-		if (Engine::Application::GetKeyState().D)
-		{
-			rb->SetVelocity({0.01f, vel.y, vel.z });
-		}
-
-		static float angle = 0.0f;
-
-		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
-
-		angle += Engine::GetDeltaTime();
-
-		if(angle > XMConvertToRadians(360.0f))
-		{
-			angle = 0.0f;
-		}
 	}
 
-	inline void TestCube::PreRender()
+	inline void PlaneObject::PreRender()
 	{
 		Object::PreRender();
 	}
 
-	inline void TestCube::Render()
+	inline void PlaneObject::Render()
 	{
 		Object::Render();
 	}

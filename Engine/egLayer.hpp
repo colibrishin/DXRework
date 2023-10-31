@@ -19,6 +19,7 @@ namespace Engine
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 		template <typename T>
 		void AddGameObject (const StrongObject& obj)
@@ -130,6 +131,19 @@ namespace Engine
 			}
 
 			object->Render();
+		}
+	}
+
+	inline void Layer::FixedUpdate()
+	{
+		for (const auto& object : m_objects_ | std::views::values)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
+
+			object->FixedUpdate();
 		}
 	}
 }

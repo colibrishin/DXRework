@@ -16,6 +16,7 @@ namespace Client::Mesh
 		void PreRender() override;
 		void Load_INTERNAL() override;
 		void Initialize() override;
+		void FixedUpdate() override;
 
 	private:
 
@@ -61,5 +62,9 @@ namespace Client::Mesh
 	inline void SphereMesh::Initialize()
 	{
 		Mesh::Initialize();
+	}
+
+	inline void SphereMesh::FixedUpdate()
+	{
 	}
 }

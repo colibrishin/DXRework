@@ -55,7 +55,10 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		rb->SetVelocity({3.f, 0.f, 0.f});
+		rb->SetVelocity({0.0f, 0.f, 0.f});
+		rb->SetElastic(true);
+		rb->SetGravityOverride(false);
+		rb->SetInternalVelocityOverride(true);
 	}
 
 	inline TestObject::~TestObject()
@@ -82,11 +85,11 @@ namespace Client::Object
 
 		if (position.x > 1.99f && position.x > 2.0f)
 		{
-			rb->SetVelocity({-3.f, 0.f, 0.f});
+			rb->SetVelocity({-0.1f, 0.f, 0.f});
 		}
 		else if (position.x < -1.99f && position.x < -2.0f)
 		{
-			rb->SetVelocity({3.f, 0.f, 0.f});
+			rb->SetVelocity({0.1f, 0.f, 0.f});
 		}
 		
 	}
