@@ -13,6 +13,11 @@ using namespace DirectX::SimpleMath;
 
 namespace Engine
 {
+	namespace Abstract
+	{
+		class Object;
+	}
+
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
 
@@ -61,6 +66,14 @@ namespace Engine
 		RESOURCE_PRIORITY_TEXTURE,
 		RESOURCE_PRIORITY_MESH,
 		RESOURCE_PRIORITY_FONT
+	};
+
+	enum eComponentPriority
+	{
+		COMPONENT_PRIORITY_DEFAULT = 0,
+		COMPONENT_PRIORITY_TRANSFORM,
+		COMPONENT_PRIORITY_RIGIDBODY,
+		COMPONENT_PRIORITY_COLLIDER
 	};
 
 	enum eBoundingType
@@ -250,6 +263,14 @@ namespace Engine
 		float specular_power;
 		float padding[3];
 		Color specular_color;
+	};
+
+	struct WeakObjComparer
+	{
+		bool operator()(const std::weak_ptr<Abstract::Object>& lhs, const std::weak_ptr<Abstract::Object>& rhs) const
+		{
+			return lhs.lock().get() < rhs.lock().get();
+		}
 	};
 }
 

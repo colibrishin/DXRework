@@ -26,6 +26,7 @@ namespace Engine::Component
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 	private:
 		Vector3 m_position_ = Vector3::Zero;
@@ -34,7 +35,7 @@ namespace Engine::Component
 		TransformBuffer m_transform_buffer_;
 	};
 
-	inline Transform::Transform(const std::weak_ptr<Abstract::Object>& owner) : Component(owner)
+	inline Transform::Transform(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner)
 	{
 	}
 
@@ -61,5 +62,9 @@ namespace Engine::Component
 		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
 
 		Graphic::RenderPipeline::SetWorldMatrix(m_transform_buffer_);
+	}
+
+	inline void Transform::FixedUpdate()
+	{
 	}
 }
