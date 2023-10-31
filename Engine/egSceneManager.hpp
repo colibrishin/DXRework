@@ -9,9 +9,11 @@ namespace Engine::Manager
 	using WeakScene = std::weak_ptr<Scene>;
 	using ConcreteScenePtr = std::shared_ptr<Scene>;
 
-	class SceneManager final : Abstract::Manager
+	class SceneManager final : public Abstract::Manager<SceneManager>
 	{
 	public:
+		explicit SceneManager(SINGLETON_LOCK_TOKEN) : Manager() {}
+
 		WeakScene GetActiveScene() const { return m_active_scene_; }
 
 		template <typename T, typename... Args>
@@ -62,25 +64,12 @@ namespace Engine::Manager
 		void PreUpdate() override;
 		void PreRender() override;
 		void Render() override;
-
-		static SceneManager* GetInstance()
-		{
-			if (m_instance_ == nullptr)
-			{
-				m_instance_ = std::unique_ptr<SceneManager>(new SceneManager);
-				m_instance_->Initialize();
-			}
-
-			return m_instance_.get();
-		}
+		void FixedUpdate() override;
 
 	private:
-		SceneManager() = default;
-
-		inline static std::unique_ptr<SceneManager> m_instance_ = nullptr;
-
 		WeakScene m_active_scene_;
 		std::set<ConcreteScenePtr> m_scenes_;
+
 	};
 
 	inline void SceneManager::Initialize()
@@ -105,5 +94,10 @@ namespace Engine::Manager
 	inline void SceneManager::Render()
 	{
 		m_active_scene_.lock()->Render();
+	}
+
+	inline void SceneManager::FixedUpdate()
+	{
+		m_active_scene_.lock()->FixedUpdate();
 	}
 }

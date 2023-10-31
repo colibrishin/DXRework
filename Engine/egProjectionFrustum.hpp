@@ -7,10 +7,10 @@
 
 namespace Engine::Manager
 {
-	class ProjectionFrustum final : public Abstract::Manager
+	class ProjectionFrustum final : public Abstract::Manager<ProjectionFrustum>
 	{
 	public:
-		ProjectionFrustum() = default;
+		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN) : Manager() {}
 		~ProjectionFrustum() override = default;
 
 		void Initialize() override;
@@ -18,18 +18,17 @@ namespace Engine::Manager
 		void PreUpdate() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 		bool CheckRender(const WeakObject& object) const;
 
 		bool IsInFrustum(const Vector3& position, float radius) const;
 		bool IsInFrustum(const Vector3& position, const Vector3& size) const;
-		static ProjectionFrustum* GetInstance();
 
 	private:
-		inline static std::unique_ptr<ProjectionFrustum> m_instance = nullptr;
-
 		BoundingFrustum m_frustum;
 		BoundingSphere m_sphere;
+
 	};
 
 	inline void ProjectionFrustum::Initialize()
@@ -97,14 +96,7 @@ namespace Engine::Manager
 		return false;
 	}
 
-	inline ProjectionFrustum* ProjectionFrustum::GetInstance()
+	inline void ProjectionFrustum::FixedUpdate()
 	{
-		if(m_instance == nullptr)
-		{
-			m_instance = std::make_unique<ProjectionFrustum>();
-			m_instance->Initialize();
-		}
-
-		return m_instance.get();
 	}
 }
