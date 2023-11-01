@@ -27,6 +27,7 @@ namespace Engine
 		static void Tick();
 
 		static void PreUpdate();
+		static void FixedUpdate();
 		static void Update();
 		static void PreRender();
 		static void Render();

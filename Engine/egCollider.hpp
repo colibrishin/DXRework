@@ -23,6 +23,7 @@ namespace Engine::Component
 		void SetRotation(const Quaternion& rotation);
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
+
 		void SetCollided(const bool collided) { m_bCollided = collided; }
 
 		bool Intersects(Collider& other) const;
@@ -31,6 +32,7 @@ namespace Engine::Component
 		bool GetCollided() const { return m_bCollided; }
 		bool HasCollisionStarted() const { return !m_bPreviousCollided && m_bCollided; }
 		bool HasCollisionEnd() const { return m_bPreviousCollided && !m_bCollided; }
+		Vector3 GetPosition() const { return m_position_; }
 
 		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 
@@ -39,6 +41,7 @@ namespace Engine::Component
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 	private:
 		template <typename T>
@@ -154,6 +157,7 @@ namespace Engine::Component
 
 		void UpdateBoundings();
 
+	private:
 		bool m_bDirtyByTransform;
 		bool m_bPreviousCollided;
 		bool m_bCollided;
@@ -167,15 +171,16 @@ namespace Engine::Component
 
 	};
 
-	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(owner),
-	                                                                          m_bDirtyByTransform(false),
-	                                                                          m_bPreviousCollided(false),
-	                                                                          m_bCollided(false),
-	                                                                          m_position_(Vector3::Zero),
-	                                                                          m_size_(Vector3::One),
-	                                                                          m_rotation_(Quaternion::Identity),
-	                                                                          m_type_(BOUNDING_TYPE_BOX),
-	                                                                          m_boundings_({})
+	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_COLLIDER,
+																				owner),
+																			m_bDirtyByTransform(false),
+																			m_bPreviousCollided(false),
+																			m_bCollided(false),
+																			m_position_(Vector3::Zero),
+																			m_size_(Vector3::One),
+																			m_rotation_(Quaternion::Identity),
+																			m_type_(BOUNDING_TYPE_BOX),
+																			m_boundings_({})
 	{
 	}
 

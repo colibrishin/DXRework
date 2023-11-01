@@ -94,6 +94,10 @@ namespace Engine::Component
 		}
 	}
 
+	void Collider::FixedUpdate()
+	{
+	}
+
 	void Collider::UpdateBoundings()
 	{
 		if (m_type_ == BOUNDING_TYPE_BOX)

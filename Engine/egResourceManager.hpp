@@ -4,25 +4,17 @@
 
 namespace Engine::Manager
 {
-	class ResourceManager : public Abstract::Manager
+	class ResourceManager : public Abstract::Manager<ResourceManager>
 	{
 	public:
+		explicit ResourceManager(SINGLETON_LOCK_TOKEN) : Manager() {}
+
 		void Initialize() override;
 		void PreUpdate() override;
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
-
-		static ResourceManager* GetInstance()
-		{
-			if (!m_instance_)
-			{
-				m_instance_ = std::unique_ptr<ResourceManager>(new ResourceManager);
-				m_instance_->Initialize();
-			}
-
-			return m_instance_.get();
-		}
+		void FixedUpdate() override;
 
 		template <typename T>
 		static void AddResource(const std::wstring& name, const std::shared_ptr<T>& resource)
@@ -61,10 +53,8 @@ namespace Engine::Manager
 		}
 
 	private:
-		ResourceManager() = default;
-
 		inline static std::set<std::shared_ptr<Abstract::Resource>> m_resources_ = {};
-		inline static std::unique_ptr<ResourceManager> m_instance_ = nullptr;
+
 	};
 
 	inline void ResourceManager::Initialize()
@@ -106,6 +96,10 @@ namespace Engine::Manager
 	}
 
 	inline void ResourceManager::Render()
+	{
+	}
+
+	inline void ResourceManager::FixedUpdate()
 	{
 	}
 }

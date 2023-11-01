@@ -47,6 +47,7 @@ namespace Engine::Abstract
 				component->Initialize();
 
 				m_components_.insert_or_assign(typeid(T), std::reinterpret_pointer_cast<Component>(component));
+				m_priority_sorted_.insert(std::reinterpret_pointer_cast<Component>(component));
 			}
 		}
 
@@ -73,6 +74,8 @@ namespace Engine::Abstract
 			{
 				if (m_components_.contains(typeid(T)))
 				{
+					const auto obj = m_components_[typeid(T)];
+					m_priority_sorted_.erase(obj);
 					m_components_.erase(typeid(T));
 					return;
 				}
@@ -114,11 +117,25 @@ namespace Engine::Abstract
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 	private:
 		struct ResourcePriorityComparer
 		{
 			bool operator()(const WeakResourcePtr& Left, const WeakResourcePtr& Right) const
+			{
+				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
+				{
+					return Left.lock()->GetPriority() < Right.lock()->GetPriority();
+				}
+
+				return Left.lock()->GetID() < Right.lock()->GetID();
+			}
+		};
+
+		struct ComponentPriorityComparer
+		{
+			bool operator()(const WeakComponentPtr& Left, const WeakComponentPtr& Right) const
 			{
 				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
 				{
@@ -136,12 +153,14 @@ namespace Engine::Abstract
 		bool m_culled_ = true;
 
 		std::map<const std::type_index, ComponentPtr> m_components_;
+		std::set<ComponentPtr, ComponentPriorityComparer> m_priority_sorted_;
+
 		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
 	};
 
 	inline void Object::PreUpdate()
 	{
-		for (const auto& component : m_components_ | std::views::values)
+		for (const auto& component : m_priority_sorted_)
 		{
 			component->PreUpdate();
 		}
@@ -157,7 +176,7 @@ namespace Engine::Abstract
 
 	inline void Object::PreRender()
 	{
-		for (const auto& component : m_components_ | std::views::values)
+		for (const auto& component : m_priority_sorted_)
 		{
 			component->PreRender();
 		}
@@ -173,7 +192,7 @@ namespace Engine::Abstract
 
 	inline void Object::Update()
 	{
-		for (const auto& component : m_components_ | std::views::values)
+		for (const auto& component : m_priority_sorted_)
 		{
 			component->Update();
 		}

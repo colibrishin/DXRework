@@ -157,6 +157,7 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
     <ClInclude Include="clBackSphereMesh.hpp" />
+    <ClInclude Include="clPlaneObject.hpp" />
     <ClInclude Include="clSkyBox.hpp" />
     <ClInclude Include="clSphereMesh.hpp" />
     <ClInclude Include="clTestCube.hpp" />

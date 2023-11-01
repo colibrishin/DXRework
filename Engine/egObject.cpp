@@ -3,6 +3,7 @@
 #include "egProjectionFrustum.hpp"
 #include "egObject.hpp"
 #include "egCollider.hpp"
+#include "egCollisionManager.hpp"
 #include "egRigidbody.hpp"
 
 namespace Engine::Abstract
@@ -16,11 +17,14 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_same_v<Engine::Component::Collider, T>)
 			{
-				if (thisComp->HasCollisionStarted())
+				const auto collision_check = Engine::Manager::CollisionManager::GetInstance()->IsCollided(
+					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+
+				if (collision_check)
 				{
 					thisComp->GetOwner().lock()->OnCollisionEnter(*otherComp);
 				}
-				else if (thisComp->HasCollisionEnd())				
+				else if (!collision_check)
 				{
 					thisComp->GetOwner().lock()->OnCollisionExit(*otherComp);
 				}
@@ -34,21 +38,6 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
-
-		if (const auto rb = GetComponent<Engine::Component::Rigidbody>().lock())
-		{
-			if (const auto rb_other = other.GetOwner().lock()->GetComponent<Engine::Component::Rigidbody>().lock())
-			{
-				const auto tr = GetComponent<Engine::Component::Transform>().lock();
-				const auto tr_other = other.GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
-
-				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
-				dir.Normalize();
-				dir = XMVector3Orthogonal(dir);
-
-				rb->AddFriction(dir * rb_other->GetFriction());
-			}
-		}
 	}
 
 	void Object::OnCollisionExit(const Engine::Component::Collider& other)
@@ -56,21 +45,6 @@ namespace Engine::Abstract
 		if (!GetComponent<Engine::Component::Collider>().lock())
 		{
 			throw std::exception("Object has no collider");
-		}
-
-		if (const auto rb = GetComponent<Engine::Component::Rigidbody>().lock())
-		{
-			if (const auto rb_other = other.GetOwner().lock()->GetComponent<Engine::Component::Rigidbody>().lock())
-			{
-				const auto tr = GetComponent<Engine::Component::Transform>().lock();
-				const auto tr_other = other.GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
-
-				Vector3 dir = tr->GetPosition() - tr_other->GetPosition();
-				dir.Normalize();
-				dir = XMVector3Orthogonal(dir);
-
-				rb->SubtractFriction(dir * rb_other->GetFriction());
-			}
 		}
 	}
 
@@ -91,6 +65,22 @@ namespace Engine::Abstract
 			if (const auto locked = resource.lock())
 			{
 				locked->Render();
+			}
+		}
+	}
+
+	void Object::FixedUpdate()
+	{
+		for (const auto& component : m_components_ | std::views::values)
+		{
+			component->FixedUpdate();
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->FixedUpdate();
 			}
 		}
 	}

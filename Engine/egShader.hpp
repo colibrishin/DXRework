@@ -19,6 +19,7 @@ namespace Engine::Graphic
 		void Update() override;
 		void SetShaderType() override;
 		void PreRender() override;
+		void FixedUpdate() override;
 
 		T** GetShader() { return m_shader_.GetAddressOf(); }
 		void Render() override;
@@ -26,6 +27,7 @@ namespace Engine::Graphic
 	protected:
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
+
 
 	private:
 		ComPtr<T> m_shader_;
@@ -49,6 +51,11 @@ namespace Engine::Graphic
 
 	template <typename T>
 	void Shader<T>::Update()
+	{
+	}
+
+	template <typename T>
+	void Shader<T>::FixedUpdate()
 	{
 	}
 

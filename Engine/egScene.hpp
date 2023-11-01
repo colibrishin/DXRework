@@ -25,6 +25,7 @@ namespace Engine
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 		template <typename T>
 		void AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
@@ -99,6 +100,14 @@ namespace Engine
 		for (const auto& val : m_layers | std::views::values)
 		{
 			val->Render();
+		}
+	}
+
+	inline void Scene::FixedUpdate()
+	{
+		for (const auto& val : m_layers | std::views::values)
+		{
+			val->FixedUpdate();
 		}
 	}
 }

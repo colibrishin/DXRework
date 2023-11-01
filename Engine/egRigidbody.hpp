@@ -5,11 +5,18 @@
 
 namespace Engine::Component
 {
+	constexpr Vector3 g_gravity_vec = Vector3(0, -9.8f, 0);
+
 	class Rigidbody : public Abstract::Component
 	{
 	public:
-		explicit Rigidbody(const WeakObject& object) : Abstract::Component(object), m_bGravity(false), m_mass(1.0f),
-		                                               m_base_friction(0.0f), m_env_friction(), m_initial_velocity(Vector3::Zero), m_Acceleration(Vector3::Zero)
+		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object), m_bFreefalling(false),
+														m_bGravityOverride(false), m_bElastic(true), m_mass_(1.0f),
+														m_kinetic_friction(0),
+														m_static_friction(0),
+														m_xz_friction_(),
+														m_velocity_(Vector3::Zero),
+														m_acceleration_(Vector3::Zero)
 		{
 		}
 
@@ -17,33 +24,91 @@ namespace Engine::Component
 
 		void Initialize() override;
 
-		void SetGravity(bool gravity) { m_bGravity = gravity; }
-		void SetMass(float mass) { m_mass = mass; }
-		void SetFriction(float friction) { m_base_friction = friction; }
+		void SetGravityOverride(bool gravity)
+		{
+			m_bGravityOverride = gravity;
+			m_bFreefalling = gravity;
+		}
+		void SetFreefalling(bool gravity) { m_bFreefalling = gravity; }
+		void SetElastic(bool elastic) { m_bElastic = elastic; }
+		void SetMass(float mass) { m_mass_ = mass; }
+		void SetInternalVelocityOverride(bool override) { m_bInternalVOverride = override; }
 
-		void SetVelocity(const Vector3& force) { m_initial_velocity = force; }
-		void SetAcceleration(const Vector3& acceleration) { m_Acceleration = acceleration; }
+		void SetVelocity(const Vector3& force) { m_velocity_ = force; }
+		void AddInternalVelocity(const Vector3& force) { m_velocity_internal_ += force; }
+		void SetAcceleration(const Vector3& acceleration) { m_acceleration_ = acceleration; }
 
-		float GetFriction() const { return m_base_friction; }
+		float GetMass() const { return m_mass_; }
+		bool GetElastic() const { return m_bElastic; }
+		bool GetGravity() const { return m_bFreefalling; }
+		Vector3 GetVelocity() const { return m_velocity_; }
 
-		void AddFriction(const Vector3& friction) { m_env_friction = friction; }
+		Vector3 GetVerlet() const
+		{
+			return (m_velocity_ + m_velocity_internal_) + ((m_acceleration_ + (IsFreefalling()
+																					? g_gravity_vec
+																					: Vector3::Zero)) * GetDeltaTime());
+		}
+		bool IsFreefalling() const { return m_bFreefalling && m_bGravityOverride; }
 
-		void SubtractFriction(const Vector3& friction) { m_env_friction -= friction; }
+		void AddFrictionMap(const WeakObject& obj, const Vector3& friction)
+		{
+			if (m_friction_map_.contains(obj))
+			{
+				return;
+			}
+
+			m_xz_friction_ += friction;
+			m_friction_map_.insert(std::make_pair(obj, friction));
+		}
+
+		void RemoveFrictionMap(const WeakObject& obj)
+		{
+			if (!m_friction_map_.contains(obj))
+			{
+				return;
+			}
+
+			m_xz_friction_ -= m_friction_map_.at(obj);
+			m_friction_map_.erase(obj);
+		}
 
 		void PreUpdate() override;
 		void Update() override;
 		void PreRender() override;
 		void Render() override;
+		void FixedUpdate() override;
 
 	private:
-		bool m_bGravity;
+		static void ClampFriction(const Vector3& v0, Vector3& v1);
+		static Vector3 GetPolarity(const Vector3& v)
+		{
+			return {std::copysign(1.0f, v.x), std::copysign(1.0f, v.y), std::copysign(1.0f, v.z)};
+		}
 
-		float m_mass;
-		float m_base_friction;
+		static Vector3 GetActiveForce(const Vector3& v)
+		{
+			return { v.x != 0.f ? 1.0f : 0.0f, v.y != 0.f ? 1.0f : 0.0f, v.z != 0.f ? 1.0f : 0.0f};
+		}
 
-		Vector3 m_env_friction;
-		Vector3 m_initial_velocity;
-		Vector3 m_Acceleration;
+	private:
+		bool m_bFreefalling;
+		bool m_bInternalVOverride;
+		bool m_bGravityOverride;
+		bool m_bElastic;
+
+		float m_mass_;
+
+		float m_kinetic_friction;
+		float m_static_friction;
+
+		Vector3 m_velocity_;
+		Vector3 m_velocity_internal_;
+		Vector3 m_acceleration_;
+
+		Vector3 m_xz_friction_;
+
+		std::map<WeakObject, Vector3, WeakObjComparer> m_friction_map_;
 
 	};
 
@@ -59,35 +124,54 @@ namespace Engine::Component
 	{
 	}
 
+	inline void Rigidbody::ClampFriction(const Vector3& v0, Vector3& v1)
+	{
+		if (!IsSamePolarity(v0.x, v1.x))
+		{
+			v1.x = 0.0f;
+		}
+		else if (!IsSamePolarity(v0.y, v1.y))
+		{
+			v1.y = 0.0f;
+		}
+		else if (!IsSamePolarity(v0.z, v1.z))
+		{
+			v1.z = 0.0f;
+		}
+	}
+
 	inline void Rigidbody::Update()
 	{
 		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-		const auto velocity_over_time = (m_initial_velocity + (m_Acceleration));
-		const auto kinetic = ((m_mass * 0.5f) * (velocity_over_time * velocity_over_time));
-		const auto friction = (m_env_friction * m_mass * g_gravity_acc) * Vector3{1.0f, 0.0f, 1.0f};
+		auto force = GetVerlet();
 
-		const Vector3 velocity_polarity = { std::copysign(1.f, velocity_over_time.x), std::copysign(1.f, velocity_over_time.y), std::copysign(1.f, velocity_over_time.z) };
-		const Vector3 active_force = velocity_over_time / velocity_over_time;
-
-		Vector3 velocity = (kinetic * velocity_polarity) + ((friction) * -velocity_polarity * active_force);
-
-		if (std::copysign(1.f, velocity.x) != std::copysign(1.f, velocity_over_time.x))
+		if (m_bInternalVOverride && m_velocity_ != Vector3::Zero)
 		{
-			velocity.x = 0;
-		}
-		if (std::copysign(1.f, velocity.y) != std::copysign(1.f, velocity_over_time.y))
-		{
-			velocity.y = 0;
-		}
-		if (std::copysign(1.f, velocity.z) != std::copysign(1.f, velocity_over_time.z))
-		{
-			velocity.z = 0;
+			force -= m_velocity_internal_;
 		}
 
-		const auto gravity = Vector3(0, g_gravity_acc, 0) * GetDeltaTime();
+		tr->SetPosition(tr->GetPosition() + force);
 
-		tr->SetPosition(tr->GetPosition() + (velocity * GetDeltaTime()) - (m_bGravity ? gravity : Vector3::Zero));
+		if (m_velocity_internal_.Length() >= 0.f)
+		{
+			auto reduced = m_velocity_internal_ - Vector3::One * GetDeltaTime() * GetDeltaTime();
+
+			if (!IsSamePolarity(reduced.x, m_velocity_internal_.x))
+			{
+				reduced.x = 0.f;
+			}
+			if (!IsSamePolarity(reduced.y, m_velocity_internal_.y))
+			{
+				reduced.y = 0.f;
+			}
+			if (!IsSamePolarity(reduced.z, m_velocity_internal_.z))
+			{
+				reduced.z = 0.f;
+			}
+
+			m_velocity_internal_ = reduced;
+		}
 	}
 
 	inline void Rigidbody::PreRender()
@@ -95,6 +179,10 @@ namespace Engine::Component
 	}
 
 	inline void Rigidbody::Render()
+	{
+	}
+
+	inline void Rigidbody::FixedUpdate()
 	{
 	}
 }
