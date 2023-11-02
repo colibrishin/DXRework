@@ -1,16 +1,20 @@
 #pragma once
+#include "egCommon.hpp"
+#include "egDXCommon.h"
+
+#include "egSceneManager.hpp"
+#include "egCamera.hpp"
 #include "egD3Device.hpp"
 #include "egLayer.hpp"
 #include "egManager.hpp"
-#include "egManagerHelper.hpp"
 #include "egTransform.hpp"
 
 namespace Engine::Manager
 {
-	class ProjectionFrustum final : public Abstract::Manager<ProjectionFrustum>
+	class ProjectionFrustum final : public Abstract::Singleton<ProjectionFrustum>
 	{
 	public:
-		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN) : Manager() {}
+		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN) : Singleton() {}
 		~ProjectionFrustum() override = default;
 
 		void Initialize() override;
@@ -45,19 +49,19 @@ namespace Engine::Manager
 
 	inline void ProjectionFrustum::PreRender()
 	{
-		if (const auto scene = GetSceneManager()->GetActiveScene().lock())
+		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
 			const auto camera_layer = scene->GetGameObjects(LAYER_CAMERA);
 
 			if (camera_layer.empty())
 			{
-				BoundingFrustum::CreateFromMatrix(m_frustum, Graphic::D3Device::GetProjectionMatrix());
+				BoundingFrustum::CreateFromMatrix(m_frustum, GetD3Device().GetProjectionMatrix());
 			}
 			else
 			{
 				const auto camera = camera_layer.front().lock()->GetSharedPtr<Objects::Camera>();
 
-				BoundingFrustum::CreateFromMatrix(m_frustum, camera->GetViewMatrix() * Graphic::D3Device::GetProjectionMatrix());
+				BoundingFrustum::CreateFromMatrix(m_frustum, camera->GetViewMatrix() * GetD3Device().GetProjectionMatrix());
 
 				m_frustum.Origin = camera->GetComponent<Component::Transform>().lock()->GetPosition() + camera->GetLookAt();
 

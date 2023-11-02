@@ -9,10 +9,10 @@ namespace Engine::Manager
 	using WeakScene = std::weak_ptr<Scene>;
 	using ConcreteScenePtr = std::shared_ptr<Scene>;
 
-	class SceneManager final : public Abstract::Manager<SceneManager>
+	class SceneManager final : public Abstract::Singleton<SceneManager>
 	{
 	public:
-		explicit SceneManager(SINGLETON_LOCK_TOKEN) : Manager() {}
+		explicit SceneManager(SINGLETON_LOCK_TOKEN) : Singleton() {}
 
 		WeakScene GetActiveScene() const { return m_active_scene_; }
 

@@ -1,6 +1,9 @@
 #include "pch.hpp"
 #include "egApplication.hpp"
 
+#include "Keyboard.h"
+#include "Mouse.h"
+
 #include "egCollisionManager.hpp"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
@@ -8,10 +11,8 @@
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 
-namespace Engine
+namespace Engine::Manager
 {
-	std::unique_ptr<Application> Application::s_Instance = nullptr;
-
 	void Application::UpdateWindowSize(HWND hWnd)
 	{
 		SetWindowPos(
@@ -30,33 +31,33 @@ namespace Engine
 
 	void Application::Initialize(HWND hWnd)
 	{
-		if (!s_Instance)
-		{
-			s_Instance = std::unique_ptr<Application>(new Application());
-		}
-
-		s_WindowHandle = hWnd;
-
-		s_keyboard = std::make_unique<Keyboard>();
-		s_mouse = std::make_unique<Mouse>();
-		s_mouse->SetWindow(hWnd);
-		s_timer = std::make_unique<DX::StepTimer>();
-
-		Graphic::D3Device::Initialize(hWnd);
+		m_keyboard = std::make_unique<Keyboard>();
+		m_mouse = std::make_unique<Mouse>();
+		m_mouse->SetWindow(hWnd);
+		m_timer = std::make_unique<DX::StepTimer>();
 		UpdateWindowSize(hWnd);
+
+		GetD3Device().Initialize(hWnd);
+		GetToolkitAPI().Initialize();
+		GetRenderPipeline().Initialize();
+
+		GetCollisionManager().Initialize();
+		GetProjectionFrustum().Initialize();
+		GetResourceManager().Initialize();
+		GetSceneManager().Initialize();
 	}
 
 	void Application::Tick()
 	{
 		static float elapsed = 0.0f;
 
-		s_timer->Tick([&]()
+		m_timer->Tick([&]()
 		{
 			PreUpdate();
 			Update();
 		});
 
-		elapsed += s_timer->GetElapsedSeconds();
+		elapsed += static_cast<float>(m_timer->GetElapsedSeconds());
 
 		if (elapsed <= 1.0f / 33.0f)
 		{
@@ -70,46 +71,50 @@ namespace Engine
 
 	void Application::PreUpdate()
 	{
-		GetSceneManager()->PreUpdate();
-		Manager::ProjectionFrustum::GetInstance()->PreUpdate();
-		GetResourceManager()->PreUpdate();
-		Manager::CollisionManager::GetInstance()->PreUpdate();
+		GetSceneManager().PreUpdate();
+		GetProjectionFrustum().PreUpdate();
+		GetResourceManager().PreUpdate();
+		GetCollisionManager().PreUpdate();
+		GetD3Device().PreUpdate();
 	}
 
 	void Application::FixedUpdate()
 	{
-		GetSceneManager()->FixedUpdate();
-		Manager::ProjectionFrustum::GetInstance()->FixedUpdate();
-		GetResourceManager()->FixedUpdate();
-		Manager::CollisionManager::GetInstance()->FixedUpdate();
+		GetSceneManager().FixedUpdate();
+		GetProjectionFrustum().FixedUpdate();
+		GetResourceManager().FixedUpdate();
+		GetCollisionManager().FixedUpdate();
+		GetD3Device().FixedUpdate();
 	}
 
 	void Application::Update()
 	{
-		GetSceneManager()->Update();
-		Manager::ProjectionFrustum::GetInstance()->Update();
-		GetResourceManager()->Update();
-		Manager::CollisionManager::GetInstance()->Update();
+		GetSceneManager().Update();
+		GetProjectionFrustum().Update();
+		GetResourceManager().Update();
+		GetCollisionManager().Update();
+		GetD3Device().Update();
 	}
 
 	void Application::PreRender()
 	{
-		Graphic::ToolkitAPI::FrameBegin();
-		GetSceneManager()->PreRender();
-		Manager::ProjectionFrustum::GetInstance()->PreRender();
-		GetResourceManager()->PreRender();
-		Manager::CollisionManager::GetInstance()->PreRender();
-		Graphic::D3Device::FrameBegin();
+		GetToolkitAPI().PreRender();
+		GetSceneManager().PreRender();
+		GetProjectionFrustum().PreRender();
+		GetResourceManager().PreRender();
+		GetCollisionManager().PreRender();
+		GetRenderPipeline().PreRender();
+		GetD3Device().PreRender();
 	}
 
 	void Application::Render()
 	{
-		GetSceneManager()->Render();
-		Manager::ProjectionFrustum::GetInstance()->Render();
-		GetResourceManager()->Render();
-		Manager::CollisionManager::GetInstance()->Render();
-		Graphic::ToolkitAPI::FrameEnd();
-		Graphic::D3Device::Present();
+		GetSceneManager().Render();
+		GetProjectionFrustum().Render();
+		GetResourceManager().Render();
+		GetCollisionManager().Render();
+		GetToolkitAPI().Render();
+		GetD3Device().Render();
 	}
 
 	LRESULT Application::MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -138,6 +143,7 @@ namespace Engine
 		case WM_SYSKEYDOWN:
 			Keyboard::ProcessMessage(msg, wparam, lparam);
 			break;
+
 		default:
 			return DefWindowProc(hwnd, msg, wparam, lparam);
 		}

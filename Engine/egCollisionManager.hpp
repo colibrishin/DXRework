@@ -10,10 +10,10 @@
 
 namespace Engine::Manager
 {
-	class CollisionManager : public Abstract::Manager<CollisionManager>
+	class CollisionManager : public Abstract::Singleton<CollisionManager>
 	{
 	public:
-		explicit CollisionManager(SINGLETON_LOCK_TOKEN) : Manager() {}
+		explicit CollisionManager(SINGLETON_LOCK_TOKEN) : Singleton() {}
 		~CollisionManager() override = default;
 
 		void Initialize() override;
@@ -136,7 +136,7 @@ namespace Engine::Manager
 
 	inline void CollisionManager::Update()
 	{
-		const auto scene = SceneManager::GetInstance()->GetActiveScene().lock();
+		const auto scene = GetSceneManager().GetActiveScene().lock();
 
 		for (int i = 0; i < LAYER_MAX; ++i)
 		{

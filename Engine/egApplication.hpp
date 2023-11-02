@@ -1,53 +1,49 @@
 #pragma once
 #include <memory>
-#include "Keyboard.h"
-#include "Mouse.h"
+
+#include <Keyboard.h>
+#include <Mouse.h>
+
+#include "egManager.hpp"
 #include "StepTimer.hpp"
 
-namespace Engine
+namespace Engine::Manager
 {
-	inline std::atomic<bool> g_full_screen = false;
-	inline std::atomic<bool> g_vsync_enabled = true;
-	inline std::atomic<UINT> g_window_width = 800;
-	inline std::atomic<UINT> g_window_height = 600;
-
-	inline std::atomic<float> g_screen_near = 0.0001f;
-	inline std::atomic<float> g_screen_far = 1000.0f;
-
 	using namespace DirectX;
 
-	class Application final
+	class Application final : public Abstract::Singleton<Application, HWND>
 	{
 	public:
-		~Application() = default;
-		Application(const Application& other) = delete;
+		Application(SINGLETON_LOCK_TOKEN) : Singleton() { }
+		~Application() override = default;
 
+		void Initialize(HWND hwnd) override;
 		static void UpdateWindowSize(HWND hWnd);
-		static void Initialize(HWND hWnd);
-		static void Tick();
+		void Tick();
 
-		static void PreUpdate();
-		static void FixedUpdate();
-		static void Update();
-		static void PreRender();
-		static void Render();
+		LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-		static LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-		static HWND GetWindowHandle() { return s_WindowHandle; }
-		static float GetDeltaTime() { return static_cast<float>(s_timer->GetElapsedSeconds()); }
-		static uint32_t GetFPS() { return s_timer->GetFramesPerSecond(); }
+		float GetDeltaTime() const { return static_cast<float>(m_timer->GetElapsedSeconds()); }
+		uint32_t GetFPS() const { return m_timer->GetFramesPerSecond(); }
 
-		static Keyboard::State GetKeyState() { return s_keyboard->GetState(); }
-		static Mouse::State GetMouseState() { return s_mouse->GetState(); }
+		Keyboard::State GetKeyState() const { return m_keyboard->GetState(); }
+		Mouse::State GetMouseState() const { return m_mouse->GetState(); }
 
 	private:
-		Application() = default;
+		void PreUpdate() override;
+		void FixedUpdate() override;
+		void Update() override;
+		void PreRender() override;
+		void Render() override;
 
-		static std::unique_ptr<Application> s_Instance;
-		inline static HWND s_WindowHandle = nullptr;
+	private:
+		HWND m_hWnd = nullptr;
 
-		inline static std::unique_ptr<Keyboard> s_keyboard = nullptr;
-		inline static std::unique_ptr<Mouse> s_mouse = nullptr;
-		inline static std::unique_ptr<DX::StepTimer> s_timer = nullptr;
+		// Input
+		std::unique_ptr<Keyboard> m_keyboard;
+		std::unique_ptr<Mouse> m_mouse;
+
+		// Time
+		std::unique_ptr<DX::StepTimer> m_timer;
 	};
 }
