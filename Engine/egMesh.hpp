@@ -5,17 +5,13 @@
 #include <d3d11.h>
 #include <filesystem>
 #include <vector>
-#include <list>
-#include <windows.h>
 #include <SimpleMath.h>
 #include <wrl/client.h>
 
 #include "egCommon.hpp"
-#include "egD3Device.hpp"
-#include "egRenderPipeline.hpp"
+#include "egDXCommon.h"
 #include "egRenderable.hpp"
 #include "egResource.hpp"
-
 
 namespace Engine::Component
 {
@@ -40,7 +36,7 @@ namespace Engine::Resources
 		void Render() override;
 		void ReadOBJFile();
 
-		UINT GetIndexCount() const { return m_indices_.size(); }
+		UINT GetIndexCount() const { return static_cast<UINT>(m_indices_.size()); }
 
 	protected:
 		friend class Component::Collider;
@@ -66,64 +62,4 @@ namespace Engine::Resources
 	private:
 		std::filesystem::path m_path_;
 	};
-
-	inline void Mesh::Initialize()
-	{
-	}
-
-	inline void Mesh::Render()
-	{
-		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
-		{
-			Graphic::RenderPipeline::BindVertexBuffer(m_vertex_buffers_[i].Get());
-			Graphic::RenderPipeline::BindIndexBuffer(m_index_buffers_[i].Get());
-			Graphic::RenderPipeline::SetTopology(m_topology);
-			Graphic::RenderPipeline::DrawIndexed(m_indices_[i].size());
-		}
-
-		Graphic::RenderPipeline::BindResource(SR_TEXTURE, nullptr);
-	}
-
-	inline void Mesh::Load()
-	{
-		Resource::Load();
-
-		if (!GetPath().empty())
-		{
-			if (GetPath().extension() == ".obj")
-			{
-				ReadOBJFile();
-			}
-		}
-
-		UpdateTangentBinormal();
-
-		m_vertex_buffers_.resize(m_vertices_.size());
-		m_index_buffers_.resize(m_indices_.size());
-
-		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
-		{
-			Graphic::D3Device::CreateBuffer<VertexElement>(D3D11_BIND_VERTEX_BUFFER, m_vertices_[i].size(),
-		                                               m_vertex_buffers_[i].ReleaseAndGetAddressOf(), m_vertices_[i].data());
-		}
-
-		for(int i = 0; i < m_index_buffers_.size(); ++i)
-		{
-			Graphic::D3Device::CreateBuffer<UINT>(D3D11_BIND_INDEX_BUFFER, m_indices_[i].size(),
-			                                      m_index_buffers_[i].ReleaseAndGetAddressOf(), m_indices_[i].data());
-		}
-	}
-
-	inline void Mesh::Unload_INTERNAL()
-	{
-		for (const auto& buffer : m_vertex_buffers_)
-		{
-			buffer->Release();
-		}
-
-		for (const auto& buffer : m_index_buffers_)
-		{
-			buffer->Release();
-		}
-	}
 }

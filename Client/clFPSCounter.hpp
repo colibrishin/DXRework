@@ -32,7 +32,7 @@ namespace Client::Object
 		inline void Render() override;
 	};
 
-	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager()->GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 
@@ -57,7 +57,7 @@ namespace Client::Object
 	inline void FPSCounter::Update()
 	{
 		Text::Update();
-		SetText(L"FPS: " + std::to_wstring(Engine::Application::GetFPS()));
+		SetText(L"FPS: " + std::to_wstring(Engine::GetApplication().GetFPS()));
 	}
 
 	inline void FPSCounter::PreRender()

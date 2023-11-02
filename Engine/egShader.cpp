@@ -1,7 +1,6 @@
 #include "pch.hpp"
 #include "egShader.hpp"
-
-#include "egD3Device.hpp"
+#include "egManagerHelper.hpp"
 
 namespace Engine::Graphic
 {
@@ -16,6 +15,6 @@ namespace Engine::Graphic
 	template <typename T>
 	void Shader<T>::Load_INTERNAL()
 	{
-		D3Device::CreateShader(GetPath(), this);
+		GetD3Device().CreateShader(GetPath(), this);
 	}
 }

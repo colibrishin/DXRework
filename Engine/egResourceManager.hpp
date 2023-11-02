@@ -4,10 +4,10 @@
 
 namespace Engine::Manager
 {
-	class ResourceManager : public Abstract::Manager<ResourceManager>
+	class ResourceManager : public Abstract::Singleton<ResourceManager>
 	{
 	public:
-		explicit ResourceManager(SINGLETON_LOCK_TOKEN) : Manager() {}
+		explicit ResourceManager(SINGLETON_LOCK_TOKEN) : Singleton() {}
 
 		void Initialize() override;
 		void PreUpdate() override;

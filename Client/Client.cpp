@@ -19,18 +19,18 @@ namespace Client
 {
 	void fnClient()
 	{
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Texture>(L"TestTexture", std::make_shared<Engine::Resources::Texture>(L"./Texture.png"));
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Texture>(L"Sky", std::make_shared<Engine::Resources::Texture>(L"./Sky.jpg"));
-		Engine::GetResourceManager()->AddResource<Engine::Resources::NormalMap>(L"TestNormalMap", std::make_shared<Engine::Resources::NormalMap>(L"./Texture-Normal.png"));
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"TriangleMesh", std::make_shared<Client::Mesh::TriangleMesh>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"CubeMesh", std::make_shared<Client::Mesh::CubeMesh>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"Giftbox", std::make_shared<Client::Mesh::GiftBox>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"SphereMesh", std::make_shared<Client::Mesh::SphereMesh>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Mesh>(L"BackSphereMesh", std::make_shared<Client::Mesh::BackSphereMesh>());
-		Engine::GetResourceManager()->AddResource<Engine::Resources::Font>(L"DefaultFont", std::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
+		Engine::GetResourceManager().AddResource<Engine::Resources::Texture>(L"TestTexture", std::make_shared<Engine::Resources::Texture>(L"./Texture.png"));
+		Engine::GetResourceManager().AddResource<Engine::Resources::Texture>(L"Sky", std::make_shared<Engine::Resources::Texture>(L"./Sky.jpg"));
+		Engine::GetResourceManager().AddResource<Engine::Resources::NormalMap>(L"TestNormalMap", std::make_shared<Engine::Resources::NormalMap>(L"./Texture-Normal.png"));
+		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"TriangleMesh", std::make_shared<Client::Mesh::TriangleMesh>());
+		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"CubeMesh", std::make_shared<Client::Mesh::CubeMesh>());
+		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"Giftbox", std::make_shared<Client::Mesh::GiftBox>());
+		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"SphereMesh", std::make_shared<Client::Mesh::SphereMesh>());
+		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"BackSphereMesh", std::make_shared<Client::Mesh::BackSphereMesh>());
+		Engine::GetResourceManager().AddResource<Engine::Resources::Font>(L"DefaultFont", std::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
 
-		Engine::GetSceneManager()->AddScene<Scene::TestScene>();
-		Engine::GetSceneManager()->SetActive<Scene::TestScene>();
+		Engine::GetSceneManager().AddScene<Scene::TestScene>();
+		Engine::GetSceneManager().SetActive<Scene::TestScene>();
 	}
 }
 

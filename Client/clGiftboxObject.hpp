@@ -37,12 +37,12 @@ namespace Client::Object
 
 	inline void Giftbox::Initialize()
 	{
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"Giftbox"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"Giftbox"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_metalic"));
 
-		Engine::Graphic::RenderPipeline::SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
-		Engine::Graphic::RenderPipeline::SetSpecularPower(100.0f);
+		Engine::GetRenderPipeline().SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
+		Engine::GetRenderPipeline().SetSpecularPower(100.0f);
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

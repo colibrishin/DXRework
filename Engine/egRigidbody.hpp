@@ -1,4 +1,5 @@
 #pragma once
+#include "egCommon.hpp"
 #include "egComponent.hpp"
 #include "egLayer.hpp"
 #include "egTransform.hpp"
@@ -10,7 +11,8 @@ namespace Engine::Component
 	class Rigidbody : public Abstract::Component
 	{
 	public:
-		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object), m_bFreefalling(false),
+		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
+														m_bFreefalling(false), m_bInternalVOverride(false),
 														m_bGravityOverride(false), m_bElastic(true), m_mass_(1.0f),
 														m_kinetic_friction(0),
 														m_static_friction(0),

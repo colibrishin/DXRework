@@ -1,33 +1,43 @@
 #pragma once
-#include "pch.hpp"
-
 #include <filesystem>
+#include <BufferHelpers.h>
+
+#include "egDXCommon.h"
 #include "egCommon.hpp"
+#include "egD3Device.hpp"
 
 namespace Engine::Graphic
 {
 	class IShader;
+}
 
-	class RenderPipeline final
+namespace Engine::Manager::Graphics
+{
+	using Microsoft::WRL::ComPtr;
+	using DirectX::ConstantBuffer;
+
+	class RenderPipeline final : public Abstract::Singleton<RenderPipeline>
 	{
 	public:
-		~RenderPipeline() = default;
+		RenderPipeline(SINGLETON_LOCK_TOKEN) : Singleton() {}
+		~RenderPipeline() override = default;
 
-		static void Initialize();
-		static void SetShader(IShader* shader);
+		void Initialize() override;
+		void PreRender() override;
 
-		static void SetWorldMatrix(const TransformBuffer& matrix);
-		static void SetPerspectiveMatrix(const VPBuffer& matrix);
+		static void SetShader(Graphic::IShader* shader);
 
-		static void SetLightPosition(UINT id, const Vector3& position);
-		static void SetLightColor(UINT id, const Vector4& color);
+		void SetWorldMatrix(const TransformBuffer& matrix);
+		void SetPerspectiveMatrix(const VPBuffer& matrix);
 
-		static void SetSpecularPower(float power);
-		static void SetSpecularColor(const Color& color);
-		static void BindLightBuffers();
+		void SetLightPosition(UINT id, const Vector3& position);
+		void SetLightColor(UINT id, const Vector4& color);
+		void SetSpecularPower(float power);
+		void SetSpecularColor(const Color& color);
 
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
+		void BindLightBuffers();
 		static void BindVertexBuffer(ID3D11Buffer* buffer);
 		static void BindIndexBuffer(ID3D11Buffer* buffer);
 		static void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
@@ -40,31 +50,33 @@ namespace Engine::Graphic
 		friend class ToolkitAPI;
 		friend class D3Device;
 
-		RenderPipeline() = default;
+		void PrecompileShaders();
+		void InitializeSamplers();
 
-		static void PrecompileShaders();
-		static void InitializeSamplers();
+		void PreUpdate() override {}
+		void Update() override {}
+		void Render() override {}
+		void FixedUpdate() override {}
 
-		inline static std::unique_ptr<RenderPipeline> s_instance_ = nullptr;
+	private:
+		ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;
 
-		inline static ComPtr<ID3D11InputLayout> s_input_layout_ = nullptr;
-
-		inline static ConstantBuffer<VPBuffer> s_vp_buffer_data_{};
-		inline static ConstantBuffer<TransformBuffer> s_transform_buffer_data_{};
+		ConstantBuffer<VPBuffer> m_vp_buffer_data_{};
+		ConstantBuffer<TransformBuffer> m_transform_buffer_data_{};
 		
-		inline static LightPositionBuffer s_light_position_buffer_{};
-		inline static LightColorBuffer s_light_color_buffer_{};
-		inline static SpecularBuffer s_specular_buffer_{};
+		LightPositionBuffer m_light_position_buffer_{};
+		LightColorBuffer m_light_color_buffer_{};
+		SpecularBuffer m_specular_buffer_{};
 
-		inline static ConstantBuffer<LightPositionBuffer> s_light_position_buffer_data_{};
-		inline static ConstantBuffer<LightColorBuffer> s_light_color_buffer_data_{};
-		inline static ConstantBuffer<SpecularBuffer> s_specular_buffer_data_{};
+		ConstantBuffer<LightPositionBuffer> m_light_position_buffer_data_{};
+		ConstantBuffer<LightColorBuffer> m_light_color_buffer_data_{};
+		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 
-		inline static std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
-		inline static ComPtr<ID3D11BlendState> s_blend_state_ = nullptr;
-		inline static ComPtr<ID3D11RasterizerState> s_rasterizer_state_ = nullptr;
-		inline static ComPtr<ID3D11DepthStencilState> s_depth_stencil_state_ = nullptr;
+		std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
+		ComPtr<ID3D11BlendState> m_blend_state_ = nullptr;
+		ComPtr<ID3D11RasterizerState> m_rasterizer_state_ = nullptr;
+		ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
 
-		inline static std::vector<D3D11_INPUT_ELEMENT_DESC> s_input_element_desc_;
+		std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
 	};
 }

@@ -44,6 +44,13 @@ namespace Engine::Component
 		void FixedUpdate() override;
 
 	private:
+		union BoundingGroup
+		{
+			DirectX::BoundingOrientedBox box;
+			DirectX::BoundingSphere sphere;
+			DirectX::BoundingFrustum frustum;
+		};
+
 		template <typename T>
 		bool Intersects_GENERAL_TYPE(const T& other)
 		{

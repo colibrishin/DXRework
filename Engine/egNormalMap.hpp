@@ -43,7 +43,7 @@ namespace Engine::Resources
 
 	inline void NormalMap::Render()
 	{
-		Graphic::RenderPipeline::BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
+		GetRenderPipeline().BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
 	}
 
 	inline void NormalMap::Load_INTERNAL()

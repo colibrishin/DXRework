@@ -1,35 +1,69 @@
 #pragma once
+#include <SpriteBatch.h>
+#include <CommonStates.h>
+
+#include "egCommon.hpp"
+#include "egDXCommon.h"
 #include "egD3Device.hpp"
 #include "GeometricPrimitive.h"
 
-namespace Engine::Graphic
+namespace Engine::Manager::Graphics
 {
-	class ToolkitAPI
+	class ToolkitAPI final : public Abstract::Singleton<ToolkitAPI>
 	{
 	public:
-		static void Initialize();
+		ToolkitAPI(SINGLETON_LOCK_TOKEN) : Singleton() {}
+		void Initialize() override;
 
-		static void FrameBegin();
-		static void FrameEnd();
+		void PreUpdate() override;
+		void Update() override;
+		void PreRender() override;
+		void Render() override;
+		void FixedUpdate() override;
 
-		static SpriteBatch* GetSpriteBatch() { return m_sprite_batch_.get(); }
+		SpriteBatch* GetSpriteBatch() const { return m_sprite_batch_.get(); }
+		CommonStates* GetCommonStates() const { return m_states_.get(); }
 
 	private:
-		friend class RenderPipeline;
+		void FrameBegin();
+		void FrameEnd();
 
-		inline static std::unique_ptr<CommonStates> m_states_ = nullptr;
-		inline static std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
-		inline static std::unique_ptr<SpriteBatch> m_sprite_batch_ = nullptr;
+	private:
+		std::unique_ptr<CommonStates> m_states_ = nullptr;
+		std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
+		std::unique_ptr<SpriteBatch> m_sprite_batch_ = nullptr;
 
 	};
 
 	inline void ToolkitAPI::Initialize()
 	{
-		m_states_ = std::make_unique<CommonStates>(D3Device::s_device_.Get());
-		m_geometric_primitive_ = GeometricPrimitive::CreateTeapot(D3Device::s_context_.Get());
+		m_states_ = std::make_unique<CommonStates>(GetD3Device().GetDevice());
+		m_geometric_primitive_ = GeometricPrimitive::CreateTeapot(GetD3Device().GetContext());
 		GeometricPrimitive::SetDepthBufferMode(true);
 
-		m_sprite_batch_ = std::make_unique<SpriteBatch>(D3Device::s_context_.Get());
+		m_sprite_batch_ = std::make_unique<SpriteBatch>(GetD3Device().GetContext());
+	}
+
+	inline void ToolkitAPI::PreUpdate()
+	{
+	}
+
+	inline void ToolkitAPI::Update()
+	{
+	}
+
+	inline void ToolkitAPI::PreRender()
+	{
+		FrameBegin();
+	}
+
+	inline void ToolkitAPI::Render()
+	{
+		FrameEnd();
+	}
+
+	inline void ToolkitAPI::FixedUpdate()
+	{
 	}
 
 	inline void ToolkitAPI::FrameBegin()

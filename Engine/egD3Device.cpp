@@ -1,15 +1,24 @@
 #include "pch.hpp"
-#include "egD3Device.hpp"
 
+#include "egD3Device.hpp"
+#include "egShader.hpp"
 #include "egToolkitAPI.hpp"
 
-namespace Engine::Graphic
+namespace Engine::Manager::Graphics
 {
+	void D3Device::UpdateBuffer(UINT size, const void* data, ID3D11Buffer* buffer) const
+	{
+		D3D11_MAPPED_SUBRESOURCE mapped_resource{};
+
+		DX::ThrowIfFailed(m_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource));
+		memcpy(mapped_resource.pData, data, size);
+		m_context_->Unmap(buffer, 0);
+	}
+
 	std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(
-		Shader<ID3D11VertexShader>* shader, ID3DBlob* blob)
+		Graphic::Shader<ID3D11VertexShader>* shader, ID3DBlob* blob)
 	{
 		ComPtr<ID3D11ShaderReflection> reflection = nullptr;
-		const auto casted = dynamic_cast<VertexShader*>(shader);
 
 		D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(), IID_ID3D11ShaderReflection,
 		           reinterpret_cast<void**>(reflection.GetAddressOf()));
@@ -81,7 +90,17 @@ namespace Engine::Graphic
 		return input_descs;
 	}
 
-	void D3Device::CreateBlendState(ID3D11BlendState** blend_state)
+	void D3Device::BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader) const
+	{
+		g_shader_sampler_bind_map.at(target_shader)(m_context_.Get(), sampler, static_cast<UINT>(target_shader), 1);
+	}
+
+	void D3Device::CreateSampler(const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const
+	{
+		m_device_->CreateSamplerState(&desc, state);
+	}
+
+	void D3Device::CreateBlendState(ID3D11BlendState** blend_state) const
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.RenderTarget[0].BlendEnable = true;
@@ -93,10 +112,10 @@ namespace Engine::Graphic
 		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
 		desc.RenderTarget[0].RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
 
-		s_device_->CreateBlendState(&desc, blend_state);
+		m_device_->CreateBlendState(&desc, blend_state);
 	}
 
-	void D3Device::CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state)
+	void D3Device::CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state) const
 	{
 		D3D11_DEPTH_STENCIL_DESC depth_stencil_state_desc{};
 
@@ -121,10 +140,10 @@ namespace Engine::Graphic
 		depth_stencil_state_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
 		DX::ThrowIfFailed(
-			s_device_->CreateDepthStencilState(&depth_stencil_state_desc,
+			m_device_->CreateDepthStencilState(&depth_stencil_state_desc,
 												depth_stencil_state));
 
-		s_context_->OMSetDepthStencilState(*depth_stencil_state, 1);
+		m_context_->OMSetDepthStencilState(*depth_stencil_state, 1);
 	}
 
 	void D3Device::InitializeAdapter()
@@ -174,7 +193,7 @@ namespace Engine::Graphic
 		swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swap_chain_desc.SampleDesc.Count = 1;
 		swap_chain_desc.SampleDesc.Quality = 0;
-		swap_chain_desc.OutputWindow = s_hwnd_;
+		swap_chain_desc.OutputWindow = m_hwnd_;
 		swap_chain_desc.Windowed = !g_full_screen;
 		swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
@@ -202,8 +221,8 @@ namespace Engine::Graphic
 
 		DX::ThrowIfFailed(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
 		                                                &feature_level, 1, D3D11_SDK_VERSION, &swap_chain_desc,
-		                                                s_swap_chain_.GetAddressOf(), s_device_.GetAddressOf(), nullptr,
-		                                                s_context_.GetAddressOf()));
+		                                                s_swap_chain_.GetAddressOf(), m_device_.GetAddressOf(), nullptr,
+		                                                m_context_.GetAddressOf()));
 	}
 
 	void D3Device::InitializeRenderTargetView()
@@ -212,7 +231,7 @@ namespace Engine::Graphic
 
 		DX::ThrowIfFailed(s_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &back_buffer));
 		DX::ThrowIfFailed(
-			s_device_->CreateRenderTargetView(back_buffer.Get(), nullptr,
+			m_device_->CreateRenderTargetView(back_buffer.Get(), nullptr,
 			                                  s_render_target_view_.ReleaseAndGetAddressOf()));
 	}
 
@@ -232,7 +251,7 @@ namespace Engine::Graphic
 		depth_stencil_desc.CPUAccessFlags = 0;
 		depth_stencil_desc.MiscFlags = 0;
 
-		DX::ThrowIfFailed(s_device_->CreateTexture2D(&depth_stencil_desc, nullptr,
+		DX::ThrowIfFailed(m_device_->CreateTexture2D(&depth_stencil_desc, nullptr,
 		                                             s_depth_stencil_buffer_.ReleaseAndGetAddressOf()));
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
@@ -241,13 +260,13 @@ namespace Engine::Graphic
 		depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		depth_stencil_view_desc.Texture2D.MipSlice = 0;
 
-		DX::ThrowIfFailed(s_device_->CreateDepthStencilView(s_depth_stencil_buffer_.Get(), &depth_stencil_view_desc,
+		DX::ThrowIfFailed(m_device_->CreateDepthStencilView(s_depth_stencil_buffer_.Get(), &depth_stencil_view_desc,
 		                                                    s_depth_stencil_view_.ReleaseAndGetAddressOf()));
 
-		s_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
+		m_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
 	}
 
-	void D3Device::CreateRasterizer(ID3D11RasterizerState** state)
+	void D3Device::CreateRasterizer(ID3D11RasterizerState** state) const
 	{
 		D3D11_RASTERIZER_DESC rasterizer_desc{};
 
@@ -263,27 +282,27 @@ namespace Engine::Graphic
 		rasterizer_desc.SlopeScaledDepthBias = 0.0f;
 
 		DX::ThrowIfFailed(
-			s_device_->CreateRasterizerState(&rasterizer_desc, RenderPipeline::s_rasterizer_state_.ReleaseAndGetAddressOf()));
-		s_context_->RSSetState(RenderPipeline::s_rasterizer_state_.Get());
+			m_device_->CreateRasterizerState(&rasterizer_desc, state));
+		m_context_->RSSetState(*state);
 	}
 
 	void D3Device::UpdateRenderTarget()
 	{
-		s_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
+		m_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
 	}
 
 	void D3Device::UpdateViewport()
 	{
 		s_viewport_ = {0.f, 0.f, static_cast<float>(g_window_width), static_cast<float>(g_window_height), 0.f, 1.f};
 
-		s_context_->RSSetViewports(1, &s_viewport_);
+		m_context_->RSSetViewports(1, &s_viewport_);
 	}
 
 	void D3Device::CreateTextureFromFile(const std::filesystem::path& path, ID3D11Resource** texture,
-	                                            ID3D11ShaderResourceView** shader_resource_view)
+	                                            ID3D11ShaderResourceView** shader_resource_view) const
 	{
 		DX::ThrowIfFailed(CreateWICTextureFromFileEx(
-			s_device_.Get(),
+			m_device_.Get(),
 			path.c_str(),
 			0,
 			D3D11_USAGE_DEFAULT,
@@ -295,16 +314,31 @@ namespace Engine::Graphic
 			shader_resource_view));
 	}
 
+	void D3Device::PreUpdate()
+	{
+	}
+
+	void D3Device::Update()
+	{
+	}
+
+	void D3Device::PreRender()
+	{
+		FrameBegin();
+	}
+
+	void D3Device::Render()
+	{
+		Present();
+	}
+
+	void D3Device::FixedUpdate()
+	{
+	}
+
 	void D3Device::Initialize(HWND hwnd)
 	{
-		if (s_instance_)
-		{
-			return;
-		}
-
-		s_instance_ = std::unique_ptr<D3Device>(new D3Device);
-
-		s_hwnd_ = hwnd;
+		m_hwnd_ = hwnd;
 
 		InitializeAdapter();
 		InitializeDevice();
@@ -312,28 +346,24 @@ namespace Engine::Graphic
 		InitializeDepthStencil();
 		UpdateViewport();
 
-		s_world_matrix_ = XMMatrixIdentity();
-		s_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
-		s_ortho_matrix_ = XMMatrixOrthographicLH(g_window_width, g_window_height, g_screen_near, g_screen_far);
+		m_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
+		s_ortho_matrix_ = XMMatrixOrthographicLH(static_cast<float>(g_window_width), static_cast<float>(g_window_height), g_screen_near, g_screen_far);
+	}
 
-		ToolkitAPI::Initialize();
-		RenderPipeline::Initialize();
+	float D3Device::GetAspectRatio()
+	{
+		return static_cast<float>(g_window_width) / static_cast<float>(g_window_height);
 	}
 
 	void D3Device::FrameBegin()
 	{
-		float color[4] = {0.f, 0.f, 0.f, 1.f};
+		constexpr float color[4] = {0.f, 0.f, 0.f, 1.f};
 
-		s_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
-		s_context_->ClearDepthStencilView(s_depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
-		
-		// ** overriding DirectXTK common state
-		D3Device::s_context_->RSSetState(RenderPipeline::s_rasterizer_state_.Get());
-		D3Device::s_context_->OMSetBlendState(RenderPipeline::s_blend_state_.Get(), nullptr, 0xFFFFFFFF);
-		D3Device::s_context_->OMSetDepthStencilState(RenderPipeline::s_depth_stencil_state_.Get(), 1);
+		m_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
+		m_context_->ClearDepthStencilView(s_depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 	}
 
-	void D3Device::Present()
+	void D3Device::Present() const
 	{
 		s_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
 	}

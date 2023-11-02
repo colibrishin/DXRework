@@ -37,10 +37,10 @@ namespace Client::Object
 
 	inline void SkyBox::Initialize()
 	{
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"BackSphereMesh"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"Sky"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_default_nolight"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"BackSphereMesh"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"Sky"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_default_nolight"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

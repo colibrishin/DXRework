@@ -3,6 +3,7 @@
 
 #include <execution>
 #include <tiny_obj_loader.h>
+#include "egManagerHelper.hpp"
 
 namespace Engine::Resources
 {
@@ -167,6 +168,66 @@ namespace Engine::Resources
 					face.o[2]->binormal = binormal;
 				}
 			});
+		}
+	}
+
+	void Mesh::Initialize()
+	{
+	}
+
+	void Mesh::Render()
+	{
+		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
+		{
+			GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[i].Get());
+			GetRenderPipeline().BindIndexBuffer(m_index_buffers_[i].Get());
+			GetRenderPipeline().SetTopology(m_topology);
+			GetRenderPipeline().DrawIndexed(m_indices_[i].size());
+		}
+
+		GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
+	}
+
+	void Mesh::Load()
+	{
+		Resource::Load();
+
+		if (!GetPath().empty())
+		{
+			if (GetPath().extension() == ".obj")
+			{
+				ReadOBJFile();
+			}
+		}
+
+		UpdateTangentBinormal();
+
+		m_vertex_buffers_.resize(m_vertices_.size());
+		m_index_buffers_.resize(m_indices_.size());
+
+		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
+		{
+			GetD3Device().CreateBuffer<VertexElement>(D3D11_BIND_VERTEX_BUFFER, static_cast<UINT>(m_vertices_[i].size()),
+		                                               m_vertex_buffers_[i].ReleaseAndGetAddressOf(), m_vertices_[i].data());
+		}
+
+		for(int i = 0; i < m_index_buffers_.size(); ++i)
+		{
+			GetD3Device().CreateBuffer<UINT>(D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_[i].size()),
+			                                      m_index_buffers_[i].ReleaseAndGetAddressOf(), m_indices_[i].data());
+		}
+	}
+
+	void Mesh::Unload_INTERNAL()
+	{
+		for (const auto& buffer : m_vertex_buffers_)
+		{
+			buffer->Release();
+		}
+
+		for (const auto& buffer : m_index_buffers_)
+		{
+			buffer->Release();
 		}
 	}
 }

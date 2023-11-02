@@ -3,29 +3,23 @@
 
 namespace Engine::Abstract
 {
-	template <typename T>
-	class Manager
+	template <typename T, typename... InitArgs>
+	class Singleton
 	{
 	public:
-		virtual ~Manager() = default;
-		Manager(const Manager&) = delete;
-		Manager(Manager&&) = delete;
-		Manager& operator=(const Manager&) = delete;
+		virtual ~Singleton() = default;
+		Singleton(const Singleton&) = delete;
+		Singleton(Singleton&&) = delete;
+		Singleton& operator=(const Singleton&) = delete;
 
-		static T* GetInstance()
+		static T& GetInstance()
 		{
-		    static std::unique_ptr<T> instance;
+			static T instance{SINGLETON_LOCK_TOKEN{}};
 
-			if (instance == nullptr)
-			{
-				instance = std::unique_ptr<T>(new T{SINGLETON_LOCK_TOKEN{}});
-				instance->Initialize();
-			}
-
-		    return instance.get();
+		    return instance;
 		}
 
-		virtual void Initialize() = 0;
+		virtual void Initialize(InitArgs... args) = 0;
 		virtual void PreUpdate() = 0;
 		virtual void Update() = 0;
 		virtual void PreRender() = 0;
@@ -33,7 +27,7 @@ namespace Engine::Abstract
 		virtual void FixedUpdate() = 0;
 
 	protected:
-		Manager() = default;
+		Singleton() = default;
 		struct SINGLETON_LOCK_TOKEN final {};
 
 	};

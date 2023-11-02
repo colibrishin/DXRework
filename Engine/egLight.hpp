@@ -1,5 +1,6 @@
 #pragma once
 #include <bitset>
+
 #include "egCommon.hpp"
 #include "egObject.hpp"
 #include "egRenderPipeline.hpp"
@@ -31,8 +32,8 @@ namespace Engine::Objects
 	inline Light::~Light()
 	{
 		s_light_map_.reset(m_light_id_);
-		Graphic::RenderPipeline::SetLightColor(m_light_id_, Vector4{0.0f, 0.0f, 0.0f, 1.0f});
-		Graphic::RenderPipeline::SetLightPosition(m_light_id_, Vector3{0.0f, 0.0f, 0.0f});
+		GetRenderPipeline().SetLightColor(m_light_id_, Vector4{0.0f, 0.0f, 0.0f, 1.0f});
+		GetRenderPipeline().SetLightPosition(m_light_id_, Vector3{0.0f, 0.0f, 0.0f});
 	}
 
 	inline void Light::SetColor(Vector4 color)
@@ -77,8 +78,8 @@ namespace Engine::Objects
 	inline void Light::PreRender()
 	{
 		Object::PreRender();
-		Graphic::RenderPipeline::SetLightColor(m_light_id_, m_color_);
-		Graphic::RenderPipeline::SetLightPosition(m_light_id_, GetComponent<Component::Transform>().lock()->GetPosition());
+		GetRenderPipeline().SetLightColor(m_light_id_, m_color_);
+		GetRenderPipeline().SetLightPosition(m_light_id_, GetComponent<Component::Transform>().lock()->GetPosition());
 	}
 
 	inline void Light::Render()

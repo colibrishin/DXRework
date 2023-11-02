@@ -29,25 +29,25 @@
     <Filter Include="Low-level\Interface">
       <UniqueIdentifier>{e529c217-db97-4f70-9d7c-d390e06af610}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Manager">
-      <UniqueIdentifier>{2919f7ab-a0cb-4d02-af65-02d0dc35dc2d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{2a1a57a7-cb69-4a5e-91ca-b592e3bdd8f2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Low-level\API">
       <UniqueIdentifier>{7c04419b-49ad-4b32-aa80-1a3bce2f11f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Low-level\DirectX">
-      <UniqueIdentifier>{6650a2f9-e734-4213-83db-84b7b8266b1d}</UniqueIdentifier>
+    <Filter Include="Singleton">
+      <UniqueIdentifier>{2919f7ab-a0cb-4d02-af65-02d0dc35dc2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal">
+      <UniqueIdentifier>{ab92eb7c-bda8-4afb-8694-517c2da2267c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics">
+      <UniqueIdentifier>{d9353498-ccbd-4680-9920-5c2d0fe19bcb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.hpp" />
-    <ClInclude Include="egApplication.hpp">
-      <Filter>Application</Filter>
-    </ClInclude>
     <ClInclude Include="egEntity.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
@@ -91,15 +91,6 @@
       <Filter>Low-level</Filter>
     </ClInclude>
     <ClInclude Include="StepTimer.hpp" />
-    <ClInclude Include="egResourceManager.hpp">
-      <Filter>Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="egSceneManager.hpp">
-      <Filter>Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="egManagerHelper.hpp">
-      <Filter>Manager</Filter>
-    </ClInclude>
     <ClInclude Include="egLight.hpp">
       <Filter>Object</Filter>
     </ClInclude>
@@ -115,20 +106,11 @@
     <ClInclude Include="egToolkitAPI.hpp">
       <Filter>Low-level\API</Filter>
     </ClInclude>
-    <ClInclude Include="egD3Device.hpp">
-      <Filter>Low-level\DirectX</Filter>
-    </ClInclude>
-    <ClInclude Include="egRenderPipeline.hpp">
-      <Filter>Low-level\DirectX</Filter>
-    </ClInclude>
     <ClInclude Include="egFont.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
     <ClInclude Include="egCollider.hpp">
       <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="egCollisionManager.hpp">
-      <Filter>Manager</Filter>
     </ClInclude>
     <ClInclude Include="egRigidbody.hpp">
       <Filter>Component</Filter>
@@ -136,28 +118,43 @@
     <ClInclude Include="egNormalMap.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
-    <ClInclude Include="egProjectionFrustum.hpp">
-      <Filter>Manager</Filter>
-    </ClInclude>
     <ClInclude Include="egText.hpp">
       <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egApplication.hpp">
+      <Filter>Singleton</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollisionManager.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egProjectionFrustum.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egResourceManager.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egSceneManager.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderPipeline.hpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="egD3Device.hpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXCommon.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egManagerHelper.hpp">
+      <Filter>Singleton</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="egApplication.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
     <ClCompile Include="egCamera.cpp">
       <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egRenderPipeline.cpp">
-      <Filter>Low-level\DirectX</Filter>
-    </ClCompile>
-    <ClCompile Include="egD3Device.cpp">
-      <Filter>Low-level\DirectX</Filter>
     </ClCompile>
     <ClCompile Include="egShader.cpp">
       <Filter>Low-level</Filter>
@@ -171,21 +168,36 @@
     <ClCompile Include="egMesh.cpp">
       <Filter>Resource</Filter>
     </ClCompile>
+    <ClCompile Include="egApplication.cpp">
+      <Filter>Singleton</Filter>
+    </ClCompile>
+    <ClCompile Include="egD3Device.cpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderPipeline.cpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="egIShader.cpp">
+      <Filter>Low-level\Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="egTransform.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="egFont.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="ps_default.hlsl">
+    <CopyFileToFolders Include="consolas.spritefont">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ps_color.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="consolas.spritefont">
+    <CopyFileToFolders Include="ps_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="vs_default.hlsl">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_normalmap.hlsl">
+    <CopyFileToFolders Include="ps_default_nolight.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ps_metalic.hlsl">
@@ -194,10 +206,13 @@
     <CopyFileToFolders Include="ps_metalic_texture.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_normalmap.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="ps_normalmap_metalic.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_default_nolight.hlsl">
+    <CopyFileToFolders Include="vs_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
