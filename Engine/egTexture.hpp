@@ -53,12 +53,12 @@ namespace Engine::Resources
 
 	inline void Texture::Render()
 	{
-		Graphic::RenderPipeline::BindResource(SR_TEXTURE, m_texture_view_.Get());
+		GetRenderPipeline().BindResource(SR_TEXTURE, m_texture_view_.Get());
 	}
 
 	inline void Texture::Load_INTERNAL()
 	{
-		Graphic::D3Device::CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
+		GetD3Device().CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
 		                                         m_texture_view_.ReleaseAndGetAddressOf());
 
 		ComPtr<ID3D11Texture2D> texture;

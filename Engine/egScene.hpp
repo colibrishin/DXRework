@@ -95,7 +95,7 @@ namespace Engine
 
 	inline void Scene::Render()
 	{
-		Graphic::RenderPipeline::BindLightBuffers();
+		GetRenderPipeline().BindLightBuffers();
 
 		for (const auto& val : m_layers | std::views::values)
 		{

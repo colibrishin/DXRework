@@ -43,11 +43,11 @@ namespace Client::Object
 
 	inline void TestCube::Initialize()
 	{
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::Texture>(L"TestTexture"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager()->GetResource<Engine::Graphic::IShader>(L"ps_normalmap_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap_metalic"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -83,19 +83,19 @@ namespace Client::Object
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
 		const auto vel = rb->GetVelocity();
 
-		if (Engine::Application::GetKeyState().W)
+		if (Engine::GetApplication().GetKeyState().W)
 		{
 			rb->SetVelocity({vel.x, vel.y, 0.01f});
 		}
-		if (Engine::Application::GetKeyState().A)
+		if (Engine::GetApplication().GetKeyState().A)
 		{
 			rb->SetVelocity({-0.01f, vel.y, vel.z });
 		}
-		if (Engine::Application::GetKeyState().S)
+		if (Engine::GetApplication().GetKeyState().S)
 		{
 			rb->SetVelocity({vel.x, vel.y, -0.01f});
 		}
-		if (Engine::Application::GetKeyState().D)
+		if (Engine::GetApplication().GetKeyState().D)
 		{
 			rb->SetVelocity({0.01f, vel.y, vel.z });
 		}

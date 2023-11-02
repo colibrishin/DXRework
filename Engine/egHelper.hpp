@@ -1,11 +1,12 @@
 #pragma once
 #include "egApplication.hpp"
+#include "egCommon.hpp"
 
 namespace Engine
 {
 	inline float GetDeltaTime()
 	{
-		return Application::GetDeltaTime();
+		return GetApplication().GetDeltaTime();
 	}
 
 	template <typename T, typename... Arg>

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "../Engine/egApplication.hpp"
+#include "../Engine/egManagerHelper.hpp"
 #include "WinAPIWrapper.hpp"
 #include "../Client/Client.h"
 
@@ -7,7 +7,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 {
 	// Create the system object.
 	const auto hwnd = WinAPI::WinAPIWrapper::Initialize(hInstance);
-	Engine::Application::Initialize(hwnd);
+	Engine::GetApplication().Initialize(hwnd);
 	Client::fnClient();
 
 	WinAPI::WinAPIWrapper::Update();
@@ -30,7 +30,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
 		// All other messages pass to the message handler in the system class.
 		default:
 		{
-			return Engine::Application::MessageHandler(hwnd, umessage, wparam, lparam);
+			return Engine::GetApplication().MessageHandler(hwnd, umessage, wparam, lparam);
 		}
 	}
 }

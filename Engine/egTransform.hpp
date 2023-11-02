@@ -2,7 +2,7 @@
 #include "egComponent.hpp"
 #include <SimpleMath.h>
 
-#include "egD3Device.hpp"
+#include "egDXCommon.h"
 
 namespace Engine::Component
 {
@@ -34,37 +34,4 @@ namespace Engine::Component
 		Vector3 m_scale_ = Vector3::One;
 		TransformBuffer m_transform_buffer_;
 	};
-
-	inline Transform::Transform(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner)
-	{
-	}
-
-	inline void Transform::Initialize()
-	{
-	}
-
-	inline void Transform::PreUpdate()
-	{
-	}
-
-	inline void Transform::Update()
-	{
-	}
-
-	inline void Transform::PreRender()
-	{
-	}
-
-	inline void Transform::Render()
-	{
-		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
-		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();
-		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
-
-		Graphic::RenderPipeline::SetWorldMatrix(m_transform_buffer_);
-	}
-
-	inline void Transform::FixedUpdate()
-	{
-	}
 }

@@ -1,9 +1,8 @@
 #include "pch.hpp"
 
-#include "egProjectionFrustum.hpp"
+#include "egManagerHelper.hpp"
 #include "egObject.hpp"
 #include "egCollider.hpp"
-#include "egCollisionManager.hpp"
 #include "egRigidbody.hpp"
 
 namespace Engine::Abstract
@@ -17,7 +16,7 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_same_v<Engine::Component::Collider, T>)
 			{
-				const auto collision_check = Engine::Manager::CollisionManager::GetInstance()->IsCollided(
+				const auto collision_check = GetCollisionManager().IsCollided(
 					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
 
 				if (collision_check)
@@ -50,7 +49,7 @@ namespace Engine::Abstract
 
 	void Object::Render()
 	{
-		if (m_culled_ && !Engine::Manager::ProjectionFrustum::GetInstance()->CheckRender(GetWeakPtr<Object>()))
+		if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
 		{
 			return;
 		}

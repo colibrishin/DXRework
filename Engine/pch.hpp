@@ -50,7 +50,11 @@
 #include <dxcapi.h>
 #include <directxmath.h>
 
+#include "egCommon.hpp"
+#include "egDXCommon.h"
 #include "egHelper.hpp"
+#include "egManagerHelper.hpp"
+#include "egApplication.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

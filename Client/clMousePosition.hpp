@@ -32,7 +32,7 @@ namespace Client::Object
 		inline void Render() override;
 	};
 
-	inline MousePositionText::MousePositionText() : Text(Engine::GetResourceManager()->GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline MousePositionText::MousePositionText() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 
@@ -57,7 +57,7 @@ namespace Client::Object
 	inline void MousePositionText::Update()
 	{
 		Text::Update();
-		SetText(L"X: " + std::to_wstring(Engine::Application::GetMouseState().x) + L", Y: " + std::to_wstring(Engine::Application::GetMouseState().y));
+		SetText(L"X: " + std::to_wstring(Engine::GetApplication().GetMouseState().x) + L", Y: " + std::to_wstring(Engine::GetApplication().GetMouseState().y));
 	}
 
 	inline void MousePositionText::PreRender()
