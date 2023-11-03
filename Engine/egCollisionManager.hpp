@@ -52,7 +52,7 @@ namespace Engine::Manager
 	{
 		Component::Collider copy = *left;
 
-		copy.SetPosition(copy.GetPosition() - Vector3{0.0f, GetDeltaTime(), 0.0f});
+		copy.SetPosition(copy.GetPosition() - Vector3{0.0f, g_epsilon, 0.0f});
 
 		if (copy.Intersects(*right))
 		{
@@ -102,6 +102,7 @@ namespace Engine::Manager
 					{
 						ApplyReflection(i_rb.get(), j_rb.get());
 						CheckGravity(obj_i_collider.get(), obj_j_collider.get());
+
 						stage_collision_table[obj_i_locked->GetID()].insert(obj_j_locked->GetID());
 						stage_collision_table[obj_j_locked->GetID()].insert(obj_i_locked->GetID());
 					}
@@ -184,23 +185,32 @@ namespace Engine::Manager
 			const auto new_vel = ((mass - mass_other) / (mass + mass_other)) * vel;
 			const auto new_vel_other = (2 * mass / (mass + mass_other)) * vel;
 
-			auto new_vel_reduced = new_vel - (new_vel * GetDeltaTime());
-			auto new_vel_other_reduced = new_vel_other - (new_vel_other * GetDeltaTime());
-
-			left->AddInternalVelocity(new_vel * 0.75f);
-			right->AddInternalVelocity(new_vel_other * 0.75f);
+			left->SetInternalVelocity(new_vel);
+			right->SetInternalVelocity(new_vel_other);
 		}
 		else if (left->GetElastic() ^ right->GetElastic())
 		{
+			if (!left->GetElastic()) 
+			{
+				return;
+			}
+
 			const auto vel = left->GetVerlet();
 			const auto vel_other = right->GetVerlet();
+
+			const auto length = vel.Length();
+
+			if (length <= g_epsilon)
+			{
+				return;
+			}
 
 			const auto mass = left->GetMass();
 			const auto mass_other = right->GetMass();
 
 			const auto new_vel = (vel * (mass - mass_other) + 2.0f * mass_other * vel_other) / (mass + mass_other);
 
-			left->AddInternalVelocity(new_vel * 0.75f);
+			left->SetInternalVelocity(new_vel);
 		}
 	}
 }

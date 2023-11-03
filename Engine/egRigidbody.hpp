@@ -37,7 +37,7 @@ namespace Engine::Component
 		void SetInternalVelocityOverride(bool override) { m_bInternalVOverride = override; }
 
 		void SetVelocity(const Vector3& force) { m_velocity_ = force; }
-		void AddInternalVelocity(const Vector3& force) { m_velocity_internal_ += force; }
+		void SetInternalVelocity(const Vector3& force) { m_velocity_internal_ = force; }
 		void SetAcceleration(const Vector3& acceleration) { m_acceleration_ = acceleration; }
 
 		float GetMass() const { return m_mass_; }

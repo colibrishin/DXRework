@@ -28,7 +28,6 @@ namespace Engine::Graphic
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
-
 	private:
 		ComPtr<T> m_shader_;
 	};
