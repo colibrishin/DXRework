@@ -16,6 +16,8 @@ namespace Engine::Component
 		void SetPosition(const Vector3& position) { m_position_ = position; }
 		void SetRotation(const Quaternion& rotation) { m_rotation_ = rotation; }
 		void SetScale(const Vector3& scale) { m_scale_ = scale; }
+		
+		void Translate(Vector3 translation);
 
 		Vector3 GetPosition() const { return m_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
