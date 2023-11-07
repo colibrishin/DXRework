@@ -41,9 +41,6 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_metalic"));
 
-		Engine::GetRenderPipeline().SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
-		Engine::GetRenderPipeline().SetSpecularPower(100.0f);
-
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetPosition(Vector3(0.0f, -1.0f, 10.0f));
