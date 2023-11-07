@@ -71,48 +71,48 @@ namespace Engine::Manager
 
 	void Application::PreUpdate()
 	{
+		GetCollisionManager().PreUpdate();
 		GetSceneManager().PreUpdate();
 		GetProjectionFrustum().PreUpdate();
 		GetResourceManager().PreUpdate();
-		GetCollisionManager().PreUpdate();
 		GetD3Device().PreUpdate();
 	}
 
 	void Application::FixedUpdate()
 	{
+		GetCollisionManager().FixedUpdate();
 		GetSceneManager().FixedUpdate();
 		GetProjectionFrustum().FixedUpdate();
 		GetResourceManager().FixedUpdate();
-		GetCollisionManager().FixedUpdate();
 		GetD3Device().FixedUpdate();
 	}
 
 	void Application::Update()
 	{
+		GetCollisionManager().Update();
 		GetSceneManager().Update();
 		GetProjectionFrustum().Update();
 		GetResourceManager().Update();
-		GetCollisionManager().Update();
 		GetD3Device().Update();
 	}
 
 	void Application::PreRender()
 	{
 		GetToolkitAPI().PreRender();
+		GetCollisionManager().PreRender();
 		GetSceneManager().PreRender();
 		GetProjectionFrustum().PreRender();
 		GetResourceManager().PreRender();
-		GetCollisionManager().PreRender();
 		GetRenderPipeline().PreRender();
 		GetD3Device().PreRender();
 	}
 
 	void Application::Render()
 	{
+		GetCollisionManager().Render();
 		GetSceneManager().Render();
 		GetProjectionFrustum().Render();
 		GetResourceManager().Render();
-		GetCollisionManager().Render();
 		GetToolkitAPI().Render();
 		GetD3Device().Render();
 	}

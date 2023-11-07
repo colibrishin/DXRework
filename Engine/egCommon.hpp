@@ -33,6 +33,7 @@ namespace Engine
 	extern Manager::ProjectionFrustum& GetProjectionFrustum();
 	extern Manager::CollisionManager& GetCollisionManager();
 
+	constexpr float g_epsilon = 0.0001f;
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
 

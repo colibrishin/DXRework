@@ -22,6 +22,15 @@ namespace Engine::Objects
 	{
 		Object::Update();
 
+		if (GetApplication().GetMouseState().scrollWheelValue > 1)
+		{
+			GetComponent<Component::Transform>().lock()->Translate(Vector3::Forward * 0.1f);
+		}
+		else if (GetApplication().GetMouseState().scrollWheelValue < 0)
+		{
+			GetComponent<Component::Transform>().lock()->Translate(Vector3::Backward * 0.1f);
+		}
+
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();

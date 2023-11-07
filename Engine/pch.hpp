@@ -52,9 +52,9 @@
 
 #include "egCommon.hpp"
 #include "egDXCommon.h"
+#include "egPhysics.h"
 #include "egHelper.hpp"
 #include "egManagerHelper.hpp"
-#include "egApplication.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

@@ -9,6 +9,11 @@ namespace Engine::Component
 	{
 	}
 
+	void Transform::Translate(Vector3 translation)
+	{
+		m_position_ += translation;
+	}
+
 	void Transform::Initialize()
 	{
 	}

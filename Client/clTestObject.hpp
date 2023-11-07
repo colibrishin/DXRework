@@ -21,19 +21,15 @@ namespace Client::Object
 	class TestObject : public Engine::Abstract::Object
 	{
 	public:
-		TestObject();
+		TestObject() = default;
 		void Initialize() override;
-		~TestObject() override;
+		~TestObject() override = default;
 
 		inline void PreUpdate() override;
 		inline void Update() override;
 		inline void PreRender() override;
 		inline void Render() override;
 	};
-
-	inline TestObject::TestObject()
-	{
-	}
 
 	inline void TestObject::Initialize()
 	{
@@ -45,24 +41,20 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
+		tr->SetPosition(Vector3(0.0f, 2.0f, 0.0f));
 		tr->SetScale(Vector3::One);
 
 		AddComponent<Engine::Component::Collider>();
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
 		cldr->SetDirtyWithTransform(true);
+		cldr->SetMass(1.0f);
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		rb->SetVelocity({0.0f, 0.f, 0.f});
-		rb->SetElastic(true);
-		rb->SetGravityOverride(false);
-		rb->SetInternalVelocityOverride(true);
-	}
-
-	inline TestObject::~TestObject()
-	{
+		rb->SetFrictionCoefficient(0.f);
+		rb->SetElasticity(0.5f);
+		rb->SetGravityOverride(true);
 	}
 
 	inline void TestObject::PreUpdate()
@@ -78,18 +70,6 @@ namespace Client::Object
 		if(angle > XMConvertToRadians(360.0f))
 		{
 			angle = 0.0f;
-		}
-
-		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto position = tr->GetPosition();
-
-		if (position.x > 1.99f && position.x > 2.0f)
-		{
-			rb->SetVelocity({-0.1f, 0.f, 0.f});
-		}
-		else if (position.x < -1.99f && position.x < -2.0f)
-		{
-			rb->SetVelocity({0.1f, 0.f, 0.f});
 		}
 		
 	}

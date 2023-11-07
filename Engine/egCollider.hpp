@@ -23,20 +23,27 @@ namespace Engine::Component
 		void SetRotation(const Quaternion& rotation);
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
-
-		void SetCollided(const bool collided) { m_bCollided = collided; }
+		void SetMass(const float mass) { m_mass_ = mass; }
 
 		bool Intersects(Collider& other) const;
 		bool Contains(Collider& other) const;
 
-		bool GetCollided() const { return m_bCollided; }
-		bool HasCollisionStarted() const { return !m_bPreviousCollided && m_bCollided; }
-		bool HasCollisionEnd() const { return m_bPreviousCollided && !m_bCollided; }
+		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
+		void RemoveCollidedObject(const uint64_t id) { m_collided_objects_.erase(id); }
+		bool IsCollidedObject(const uint64_t id) const { return m_collided_objects_.contains(id); }
+		const std::set<uint64_t>& GetCollidedObjects() const { return m_collided_objects_; }
+
 		Vector3 GetPosition() const { return m_position_; }
+		Quaternion GetRotation() const { return m_rotation_; }
+		Vector3 GetSize() const { return m_size_; }
+		float GetMass() const { return m_mass_; }
+		float GetInverseMass() const { return 1.0f / m_mass_; }
+		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
 
 		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 
 		void Initialize() override;
+		void UpdateDataFromTransform();
 		void PreUpdate() override;
 		void Update() override;
 		void PreRender() override;
@@ -64,7 +71,7 @@ namespace Engine::Component
 			}
 			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
 			{
-				assert(false);
+				throw std::exception("Not implemented");
 			}
 
 			return false;
@@ -83,7 +90,7 @@ namespace Engine::Component
 			}
 			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
 			{
-				assert(false);
+				throw std::exception("Not implemented");
 			}
 
 			return false;
@@ -102,7 +109,7 @@ namespace Engine::Component
 			}
 			else if constexpr (std::is_same_v<T, BoundingFrustum>)
 			{
-				assert(false);
+				throw std::exception("Not implemented");
 			}
 			else
 			{
@@ -156,18 +163,21 @@ namespace Engine::Component
 			}
 			else if constexpr (std::is_same_v<T, BoundingFrustum>)
 			{
-				assert(false);
+				throw std::exception("Not implemented");
 			}
 
 			throw std::exception("Invalid type");
 		}
 
 		void UpdateBoundings();
+		void UpdateInertiaTensor();
+		void GenerateInertiaCube();
+		void GenerateInertiaSphere();
 
 	private:
+		std::set<uint64_t> m_collided_objects_;
+
 		bool m_bDirtyByTransform;
-		bool m_bPreviousCollided;
-		bool m_bCollided;
 
 		Vector3 m_position_;
 		Vector3 m_size_;
@@ -176,19 +186,38 @@ namespace Engine::Component
 		eBoundingType m_type_;
 		BoundingGroup m_boundings_;
 
+		float m_mass_;
+		Vector3 m_inverse_inertia_;
+		XMFLOAT3X3 m_inertia_tensor_;
+
 	};
 
 	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_COLLIDER,
 																				owner),
 																			m_bDirtyByTransform(false),
-																			m_bPreviousCollided(false),
-																			m_bCollided(false),
 																			m_position_(Vector3::Zero),
 																			m_size_(Vector3::One),
 																			m_rotation_(Quaternion::Identity),
 																			m_type_(BOUNDING_TYPE_BOX),
-																			m_boundings_({})
+																			m_boundings_({}), m_mass_(1.0f)
 	{
+	}
+
+	inline void Collider::GenerateInertiaCube()
+	{
+		const Vector3 dimensions_squared = GetSize() * GetSize();
+
+		m_inverse_inertia_.x = (12.0f * GetInverseMass()) / (dimensions_squared.y + dimensions_squared.z);
+		m_inverse_inertia_.y = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.z);
+		m_inverse_inertia_.z = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.y);
+	}
+
+	inline void Collider::GenerateInertiaSphere()
+	{
+		const float radius = GetSize().x;
+		const float i = 2.5f * GetInverseMass() / (radius*radius);
+
+		m_inverse_inertia_ = Vector3(i, i, i);
 	}
 
 	inline void Collider::Initialize()
@@ -198,6 +227,25 @@ namespace Engine::Component
 			GenerateFromMesh(mesh);
 		}
 
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+		else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
+		{
+			throw std::exception("Not implemented");
+		}
+
+		UpdateInertiaTensor();
+		UpdateDataFromTransform();
+	}
+
+	inline void Collider::UpdateDataFromTransform()
+	{
 		if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock(); m_bDirtyByTransform)
 		{
 			m_position_ = tr->GetPosition();
@@ -210,19 +258,14 @@ namespace Engine::Component
 
 	inline void Collider::PreUpdate()
 	{
-		m_bPreviousCollided = m_bCollided;
+		UpdateDataFromTransform();
+		UpdateInertiaTensor();
 	}
 
 	inline void Collider::Update()
 	{
-		if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock(); m_bDirtyByTransform)
-		{
-			m_position_ = tr->GetPosition();
-			m_size_ = tr->GetScale();
-			m_rotation_ = tr->GetRotation();
-
-			UpdateBoundings();
-		}
+		UpdateDataFromTransform();
+		UpdateInertiaTensor();
 	}
 
 	inline void Collider::PreRender()

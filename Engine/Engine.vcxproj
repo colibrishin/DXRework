@@ -29,6 +29,7 @@
     <ClInclude Include="egApplication.hpp" />
     <ClInclude Include="egEntity.hpp" />
     <ClInclude Include="egFont.hpp" />
+    <ClInclude Include="egPhysics.h" />
     <ClInclude Include="egProjectionFrustum.hpp" />
     <ClInclude Include="egHelper.hpp" />
     <ClInclude Include="egIShader.hpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
+    <ClInclude Include="egTensor3.hpp" />
     <ClInclude Include="egText.hpp" />
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
@@ -60,12 +62,17 @@
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
+    <ClCompile Include="egCollisionManager.cpp" />
     <ClCompile Include="egD3Device.cpp" />
+    <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egFont.cpp" />
+    <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egIShader.cpp" />
+    <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egMesh.cpp" />
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
+    <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egTransform.cpp" />
   </ItemGroup>

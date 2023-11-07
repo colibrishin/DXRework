@@ -117,4 +117,18 @@ namespace Engine::Component
 			assert(false);
 		}
 	}
+
+	void Collider::UpdateInertiaTensor()
+	{
+		const Quaternion rotation = m_rotation_;
+		Quaternion conjugate;
+
+		rotation.Conjugate(conjugate);
+		const Matrix invOrientation = Matrix::CreateFromQuaternion(conjugate);
+		const Matrix orientation = Matrix::CreateFromQuaternion(rotation);
+
+		const Matrix matrix = orientation * XMMatrixScaling(GetSize().x, GetSize().y, GetSize().z) * invOrientation;
+
+		XMStoreFloat3x3(&m_inertia_tensor_, matrix);
+	}
 }

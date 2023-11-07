@@ -19,19 +19,33 @@ namespace Engine::Abstract
 				const auto collision_check = GetCollisionManager().IsCollided(
 					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
 
-				if (collision_check)
+				if (collision_check && !thisComp->IsCollidedObject(otherComp->GetOwner().lock()->GetID()))
 				{
 					thisComp->GetOwner().lock()->OnCollisionEnter(*otherComp);
+					thisComp->AddCollidedObject(otherComp->GetOwner().lock()->GetID());
+				}
+				else if (collision_check && thisComp->IsCollidedObject(otherComp->GetOwner().lock()->GetID()))
+				{
+					thisComp->GetOwner().lock()->OnCollisionContinue(*otherComp);
 				}
 				else if (!collision_check)
 				{
 					thisComp->GetOwner().lock()->OnCollisionExit(*otherComp);
+					thisComp->RemoveCollidedObject(otherComp->GetOwner().lock()->GetID());
 				}
 			}
 		}
 	}
 
 	void Object::OnCollisionEnter(const Engine::Component::Collider& other)
+	{
+		if (!GetComponent<Engine::Component::Collider>().lock())
+		{
+			throw std::exception("Object has no collider");
+		}
+	}
+
+	void Object::OnCollisionContinue(const Engine::Component::Collider& other)
 	{
 		if (!GetComponent<Engine::Component::Collider>().lock())
 		{

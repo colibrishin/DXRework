@@ -99,6 +99,9 @@ namespace Engine::Manager::Graphics
 		GetD3Device().CreateBlendState(m_blend_state_.GetAddressOf());
 		GetD3Device().CreateRasterizer(m_rasterizer_state_.GetAddressOf());
 		GetD3Device().CreateDepthStencilState(m_depth_stencil_state_.GetAddressOf());
+
+		Engine::GetRenderPipeline().SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
+		Engine::GetRenderPipeline().SetSpecularPower(100.0f);
 	}
 
 	void RenderPipeline::SetShader(Graphic::IShader* shader)

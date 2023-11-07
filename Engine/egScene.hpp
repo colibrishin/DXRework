@@ -31,12 +31,14 @@ namespace Engine
 		void AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
 		{
 			m_layers[layer]->AddGameObject<T>(obj);
+			m_gameObjects_.emplace(obj->GetID(), obj);
 		}
 
 		template <typename T>
 		void RemoveGameObject(const uint64_t id, eLayerType layer)
 		{
 			m_layers[layer]->RemoveGameObject<T>(id);
+			m_gameObjects_.erase(id);
 		}
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer)
@@ -44,8 +46,19 @@ namespace Engine
 			return m_layers[layer]->GetGameObjects();
 		}
 
+		WeakObject FindGameObject(uint64_t id)
+		{
+			if (m_gameObjects_.contains(id))
+			{
+				return m_gameObjects_[id];
+			}
+
+			return {};
+		}
+
 	private:
 		std::map<eLayerType, StrongLayer> m_layers;
+		std::map<uint64_t, WeakObject> m_gameObjects_;
 
 	};
 
