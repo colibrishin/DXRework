@@ -2,11 +2,8 @@
 #include <bitset>
 #include <array>
 
-#include "egCollider.hpp"
 #include "egCommon.hpp"
 #include "egManager.hpp"
-#include "egRigidbody.hpp"
-#include "egSceneManager.hpp"
 
 namespace Engine::Manager
 {
@@ -17,7 +14,6 @@ namespace Engine::Manager
 		~CollisionManager() override = default;
 
 		void Initialize() override;
-		static void CheckGravity(const Component::Collider* left, Component::Collider* right);
 		void CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
 
 		void Update() override;
@@ -29,13 +25,15 @@ namespace Engine::Manager
 		bool IsCollided(uint64_t id) const { return !m_collision_map_.at(id).empty(); }
 		bool IsCollided(uint64_t id1, uint64_t id2) const { return m_collision_map_.at(id1).contains(id2); }
 
+
 	private:
-		static void ApplyReflection(Component::Rigidbody* left, Component::Rigidbody* right);
+		void ResolveCollision(const std::shared_ptr<Abstract::Object>& lhs, const std::shared_ptr<Abstract::Object>& rhs);
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<uint64_t, std::set<uint64_t>> m_collision_map_;
 
 	};
+<<<<<<< refs/remotes/origin/rigidbody-v2
 
 	inline void CollisionManager::Initialize()
 	{
@@ -213,4 +211,6 @@ namespace Engine::Manager
 			left->SetInternalVelocity(new_vel);
 		}
 	}
+=======
+>>>>>>> collisionManager: split dec/impl and rework collision
 }
