@@ -58,13 +58,14 @@ namespace Client::Object
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_BOX);
 		cldr->SetDirtyWithTransform(true);
+		cldr->SetMass(1.0f);
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		rb->SetVelocity({0.f, 0.f, 0.f});
-		rb->SetMass(1.0f);
+
+		rb->SetElasticity(0.5f);
+		rb->SetFrictionCoefficient(0.5f);
 		rb->SetGravityOverride(true);
-		rb->SetElastic(true);
 	}
 
 	inline TestCube::~TestCube()
@@ -81,23 +82,28 @@ namespace Client::Object
 		Object::Update();
 
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto vel = rb->GetVelocity();
+		const auto accel = rb->GetAcceleration();
 
-		if (Engine::GetApplication().GetKeyState().W)
+		float speed = 0.1f;
+
+		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
-			rb->SetVelocity({vel.x, vel.y, 0.01f});
+			rb->SetAcceleration({accel.x, accel.y, speed});
 		}
-		if (Engine::GetApplication().GetKeyState().A)
+
+		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
 		{
-			rb->SetVelocity({-0.01f, vel.y, vel.z });
+			rb->SetAcceleration({-speed, accel.y, accel.z });
 		}
-		if (Engine::GetApplication().GetKeyState().S)
+
+		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
 		{
-			rb->SetVelocity({vel.x, vel.y, -0.01f});
+			rb->SetAcceleration({accel.x, accel.y, -speed});
 		}
-		if (Engine::GetApplication().GetKeyState().D)
+
+		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
 		{
-			rb->SetVelocity({0.01f, vel.y, vel.z });
+			rb->SetAcceleration({speed, accel.y, accel.z });
 		}
 
 		static float angle = 0.0f;
