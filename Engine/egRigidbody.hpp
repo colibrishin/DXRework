@@ -29,14 +29,9 @@ namespace Engine::Component
 			m_bFreefalling = gravity;
 		}
 
-<<<<<<< refs/remotes/origin/rigidbody-v2
-		void SetVelocity(const Vector3& force) { m_velocity_ = force; }
-		void SetInternalVelocity(const Vector3& force) { m_velocity_internal_ = force; }
-=======
 		void SetFrictionCoefficient(float mu) { m_friction_mu_ = mu; }
 		void SetFixed(bool fixed) { m_bFixed = fixed; }
 		void SetElasticity(float elasticity) { m_elasticity_ = elasticity; }
->>>>>>> rigidbody: split dec/impl, check gravity and friction
 		void SetAcceleration(const Vector3& acceleration) { m_acceleration_ = acceleration; }
 		void SetLinearMomentum(const Vector3& momentum) { m_linear_momentum_ = momentum; }
 		void SetAngularMomentum(const Vector3& momentum) { m_angular_momentum_ = momentum; }

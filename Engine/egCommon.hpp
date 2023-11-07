@@ -33,14 +33,7 @@ namespace Engine
 	extern Manager::ProjectionFrustum& GetProjectionFrustum();
 	extern Manager::CollisionManager& GetCollisionManager();
 
-<<<<<<< refs/remotes/origin/rigidbody-v2
-<<<<<<< refs/remotes/origin/rigidbody-v2
 	constexpr float g_epsilon = 0.0001f;
-=======
->>>>>>> update changes, some cleanups
-=======
-	constexpr float g_epsilon = 0.00001f;
->>>>>>> common: add float epsilon
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
 
