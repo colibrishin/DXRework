@@ -66,6 +66,22 @@ namespace Engine::Component
 		return false;
 	}
 
+	void Collider::GetPenetration(Collider& other, Vector3& normal, float& depth) const
+	{
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			return other.GetPenetration_GENERAL_TYPE(m_boundings_.box, normal, depth);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			return other.GetPenetration_GENERAL_TYPE(m_boundings_.sphere, normal, depth);
+		}
+		else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
+		{
+			assert(false);
+		}
+	}
+
 	void Collider::GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh)
 	{
 		const auto mesh_obj = mesh.lock();
