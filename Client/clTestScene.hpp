@@ -54,7 +54,7 @@ namespace Client::Scene
 	{
 		AddGameObject(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
-		AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
+		//AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
 		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
 		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
