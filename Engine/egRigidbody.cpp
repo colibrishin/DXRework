@@ -144,6 +144,8 @@ namespace Engine::Component
 		m_acceleration_ = Vector3::Zero;
 		m_gravity_ = Vector3::Zero;
 		m_friction_ = Vector3::Zero;
+		m_linear_momentum_ = Vector3::Zero;
+		m_angular_momentum_ = Vector3::Zero;
 	}
 
 	void Rigidbody::PreRender()
