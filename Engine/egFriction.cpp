@@ -12,7 +12,6 @@ namespace Engine::Physics
 
 		invVel = (invVel * mu);
 
-		// limit to zero
 		if (vel.LengthSquared() < mu * dt)
 		{
 			return invVel * dt;

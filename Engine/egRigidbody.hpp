@@ -13,9 +13,7 @@ namespace Engine::Component
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
 														m_bFreefalling(true), m_bGravityOverride(false),
 														m_bFixed(false), m_friction_mu_(0.0f),
-														m_elasticity_(1.0f),
-														m_velocity_(Vector3::Zero),
-														m_acceleration_(Vector3::Zero)
+														m_elasticity_(1.0f)
 		{
 		}
 
@@ -32,15 +30,17 @@ namespace Engine::Component
 		void SetFrictionCoefficient(float mu) { m_friction_mu_ = mu; }
 		void SetFixed(bool fixed) { m_bFixed = fixed; }
 		void SetElasticity(float elasticity) { m_elasticity_ = elasticity; }
-		void SetAcceleration(const Vector3& acceleration) { m_acceleration_ = acceleration; }
-		void SetLinearMomentum(const Vector3& momentum) { m_linear_momentum_ = momentum; }
-		void SetAngularMomentum(const Vector3& momentum) { m_angular_momentum_ = momentum; }
+
+		void AddForce(const Vector3& acceleration) { m_force_ += acceleration; }
+		void AddLinearMomentum(const Vector3& momentum) { m_linear_momentum_ += momentum; }
+		void AddAngularMomentum(const Vector3& momentum) { m_angular_momentum_ += momentum; }
 
 		float GetFrictionCoefficient() const { return m_friction_mu_; }
 		Vector3 GetGravity() const { return m_gravity_; }
-		Vector3 GetVelocity() const { return m_velocity_; }
+		Vector3 GetLinearMomentum() const { return m_linear_momentum_; }
+		Vector3 GetAngularMomentum() const { return m_angular_momentum_; }
 		float GetElasticity() const { return m_elasticity_; }
-		Vector3 GetAcceleration() const { return m_acceleration_; }
+		Vector3 GetForce() const { return m_force_; }
 
 		bool IsGravityAllowed() const { return m_bGravityOverride; }
 		bool IsFreefalling() const { return m_bFreefalling && m_bGravityOverride; }
@@ -56,7 +56,7 @@ namespace Engine::Component
 		void CheckFloorForGravity();
 		void EvaluateFriction();
 
-		void FrictionVelocityGuard(Vector3& evaluated_velocity) const;
+		void FrictionVelocityGuard(Vector3& evaluated_velocity, const Vector3& friction) const;
 
 		bool m_bFreefalling;
 		bool m_bGravityOverride;
@@ -68,12 +68,10 @@ namespace Engine::Component
 		Vector3 m_linear_momentum_;
 		Vector3 m_angular_momentum_;
 
-		Vector3 m_previous_velocity_;
-		Vector3 m_velocity_;
 		Vector3 m_friction_;
 		Vector3 m_gravity_;
-		Vector3 m_acceleration_;
-		Vector3 m_net_force_;
+
+		Vector3 m_force_;
 
 	};
 }

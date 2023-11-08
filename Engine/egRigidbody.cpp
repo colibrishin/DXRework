@@ -82,7 +82,7 @@ namespace Engine::Component
 
 				if (const auto other_rb = obj->GetComponent<Rigidbody>().lock())
 				{
-					m_friction_ += Physics::EvalFriction(m_velocity_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
+					m_friction_ += Physics::EvalFriction(m_linear_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
 				}
 			}
 		}
@@ -103,7 +103,7 @@ namespace Engine::Component
 
 			if (m_bFreefalling)
 			{
-				m_gravity_ = Physics::EvalGravity(collider->GetMass(), GetDeltaTime());
+				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
 			}
 			else
 			{
@@ -115,22 +115,24 @@ namespace Engine::Component
 			m_gravity_ = Vector3::Zero;
 		}
 
-		EvaluateFriction();
+		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, GetDeltaTime());
 
-		m_velocity_ = Physics::EvalVerlet(m_velocity_, m_acceleration_, GetDeltaTime());
+		EvaluateFriction();
 	}
 
-	void Rigidbody::FrictionVelocityGuard(Vector3& evaluated_velocity) const
+	void Rigidbody::FrictionVelocityGuard(Vector3& evaluated_velocity, const Vector3& friction) const
 	{
-		if (!IsSamePolarity(evaluated_velocity.x, m_velocity_.x))
+		const Vector3 Undo = evaluated_velocity - friction;
+
+		if (!IsSamePolarity(evaluated_velocity.x, Undo.x))
 		{
 			evaluated_velocity.x = 0.0f;
 		}
-		if (!IsSamePolarity(evaluated_velocity.y, m_velocity_.y))
+		if (!IsSamePolarity(evaluated_velocity.y, Undo.y))
 		{
 			evaluated_velocity.y = 0.0f;
 		}
-		if (!IsSamePolarity(evaluated_velocity.z, m_velocity_.z))
+		if (!IsSamePolarity(evaluated_velocity.z, Undo.z))
 		{
 			evaluated_velocity.z = 0.0f;
 		}
@@ -145,16 +147,15 @@ namespace Engine::Component
 
 		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-		m_velocity_ += m_friction_ + m_linear_momentum_;
-		FrictionVelocityGuard(m_velocity_);
+		m_linear_momentum_ += m_friction_;
+		FrictionVelocityGuard(m_linear_momentum_, m_friction_);
 
-		tr->SetPosition(tr->GetPosition() + m_velocity_ + m_gravity_);
+		tr->SetPosition(tr->GetPosition() + m_linear_momentum_ + m_gravity_);
 
-		m_acceleration_ = Vector3::Zero;
+		m_force_ = Vector3::Zero;
 		m_gravity_ = Vector3::Zero;
 		m_friction_ = Vector3::Zero;
-		m_linear_momentum_ = Vector3::Zero;
-		m_angular_momentum_ = Vector3::Zero;
+
 	}
 
 	void Rigidbody::PreRender()
