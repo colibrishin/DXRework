@@ -63,6 +63,11 @@ namespace Engine::Physics
 		float distance = XMVectorGetX(SphereRadius) - LocalPoint.Length();
 		normal = XMVector3Normalize(LocalPoint);
 
+		if (normal == Vector3::Zero)
+		{
+			normal = XMVector3Normalize(SphereCenter - BoxCenter);
+		}
+
 		return distance;
 	}
 
