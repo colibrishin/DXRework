@@ -45,7 +45,16 @@ namespace Engine::Component
 				// if any of the collided objects are intersecting by the floor, then we are not freefalling.
 				if (const bool is_grounded = copy.Intersects(*other_collider))
 				{
+					Vector3 normal;
+					float penetration;
+
 					m_bFreefalling = false;
+					collider->GetPenetration(*other_collider, normal, penetration);
+
+					const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
+
+					tr->SetPosition(tr->GetPosition() + (normal * penetration));
+
 					return;
 				}
 			}
