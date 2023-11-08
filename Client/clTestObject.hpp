@@ -59,19 +59,7 @@ namespace Client::Object
 
 	inline void TestObject::PreUpdate()
 	{
-		Object::PreUpdate();
-		static float angle = 0.0f;
-
-		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
-
-		angle += Engine::GetDeltaTime();
-
-		if(angle > XMConvertToRadians(360.0f))
-		{
-			angle = 0.0f;
-		}
-		
+		Object::PreUpdate();		
 	}
 
 	inline void TestObject::Update()

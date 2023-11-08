@@ -105,18 +105,6 @@ namespace Client::Object
 		{
 			rb->SetAcceleration({speed, accel.y, accel.z });
 		}
-
-		static float angle = 0.0f;
-
-		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
-
-		angle += Engine::GetDeltaTime();
-
-		if(angle > XMConvertToRadians(360.0f))
-		{
-			angle = 0.0f;
-		}
 	}
 
 	inline void TestCube::PreRender()

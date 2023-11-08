@@ -28,4 +28,13 @@ namespace Engine
 	{
 		return std::max(std::max(v.x, v.y), v.z);
 	}
+
+	static Vector3 XMTensorCross(const DirectX::XMFLOAT3X3& lhs, const Vector3& rhs)
+	{
+		return {
+			lhs._11 * rhs.x + lhs._12 * rhs.y + lhs._13 * rhs.z,
+			lhs._21 * rhs.x + lhs._22 * rhs.y + lhs._23 * rhs.z,
+			lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
+		};
+	}
 }
