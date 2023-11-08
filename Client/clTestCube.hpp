@@ -82,28 +82,27 @@ namespace Client::Object
 		Object::Update();
 
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto accel = rb->GetAcceleration();
 
 		float speed = 0.1f;
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
-			rb->SetAcceleration({accel.x, accel.y, speed});
+			rb->AddForce({0, 0, speed});
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
 		{
-			rb->SetAcceleration({-speed, accel.y, accel.z });
+			rb->AddForce({-speed, 0, 0 });
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
 		{
-			rb->SetAcceleration({accel.x, accel.y, -speed});
+			rb->AddForce({0, 0, -speed});
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
 		{
-			rb->SetAcceleration({speed, accel.y, accel.z });
+			rb->AddForce({speed, 0, 0 });
 		}
 	}
 

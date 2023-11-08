@@ -148,8 +148,8 @@ namespace Engine::Manager
 
 
 		Physics::EvalImpulse(pos, other_pos, point, penetration, normal, cl->GetInverseMass(),
-							cl_other->GetInverseMass(), cl->GetRotation().ToEuler(),
-							cl_other->GetRotation().ToEuler(), rb->GetVelocity(), rb_other->GetVelocity(),
+							cl_other->GetInverseMass(), rb->GetAngularMomentum(),
+							rb_other->GetAngularMomentum(), rb->GetLinearMomentum(), rb_other->GetLinearMomentum(),
 							cl->GetInertiaTensor(), cl_other->GetInertiaTensor(), linear_vel,
 							other_linear_vel, angular_vel, other_angular_vel);
 
@@ -163,10 +163,10 @@ namespace Engine::Manager
 			tr_other->SetPosition(other_pos);
 		}
 
-		rb->SetLinearMomentum(linear_vel);
-		rb->SetAngularMomentum(angular_vel);
+		rb->AddLinearMomentum(linear_vel);
+		rb->AddAngularMomentum(angular_vel);
 
-		rb_other->SetLinearMomentum(other_linear_vel);
-		rb_other->SetAngularMomentum(other_angular_vel);
+		rb_other->AddLinearMomentum(other_linear_vel);
+		rb_other->AddAngularMomentum(other_angular_vel);
 	}
 }
