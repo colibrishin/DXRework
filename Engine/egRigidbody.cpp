@@ -17,6 +17,19 @@ namespace Engine::Component
 		}
 	}
 
+	void Rigidbody::AddLinearMomentum(const Vector3& momentum)
+	{
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+		m_linear_momentum_ += momentum * cl->GetInverseMass();
+	}
+
+	void Rigidbody::AddAngularMomentum(const Vector3& momentum)
+	{
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+
+		m_angular_momentum_ += XMTensorCross(cl->GetInertiaTensor(), momentum);
+	}
+
 	void Rigidbody::CheckFloorForGravity()
 	{
 		if (const auto collider = GetOwner().lock()->GetComponent<Collider>().lock())
@@ -116,6 +129,8 @@ namespace Engine::Component
 		}
 
 		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, GetDeltaTime());
+
+		m_angular_momentum_ = Physics::EvalAngular(m_angular_momentum_, m_torque_, GetDeltaTime());
 
 		EvaluateFriction();
 	}
