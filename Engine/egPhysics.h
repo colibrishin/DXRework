@@ -2,6 +2,8 @@
 #include <SimpleMath.h>
 #include <DirectXCollision.h>
 
+#include "egRigidbody.hpp"
+
 namespace Engine::Physics
 {
 	using namespace DirectX::SimpleMath;
@@ -30,4 +32,5 @@ namespace Engine::Physics
 							const Vector3& vel2, const DirectX::XMFLOAT3X3& inertiaT1,
 							const DirectX::XMFLOAT3X3& inertiaT2, Vector3& linear1, Vector3& linear2,
 							Vector3& angular1, Vector3& angular2);
+	extern Vector3 EvalAngular(const Vector3& angular, const Vector3& torque, float dt);
 }
