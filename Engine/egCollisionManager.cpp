@@ -56,7 +56,6 @@ namespace Engine::Manager
 					{
 						obj_i_locked->DispatchComponentEvent(obj_i_collider, obj_j_collider);
 						obj_j_locked->DispatchComponentEvent(obj_j_collider, obj_i_collider);
-						ResolveCollision(obj_i_locked, obj_j_locked);
 						continue;
 					}
 
@@ -66,6 +65,7 @@ namespace Engine::Manager
 					obj_i_locked->DispatchComponentEvent(obj_i_collider, obj_j_collider);
 					obj_j_locked->DispatchComponentEvent(obj_j_collider, obj_i_collider);
 
+					ResolveCollision(obj_i_locked, obj_j_locked);
 				}
 				else
 				{
@@ -140,11 +140,11 @@ namespace Engine::Manager
 		const Vector3 delta = (pos - other_pos);
 
 		Vector3 normal;
-		delta.Normalize(normal);
+		float penetration;
 
 		const float distance = Vector3::Distance(pos, other_pos);
-		const float penetration = ((normal * (cl->GetSize() / 2)) + (normal * (cl_other->GetSize() / 2))).Length() - distance;
-		const Vector3 point = pos + (normal * (distance / 2));
+		cl->GetPenetration(*cl_other, normal, penetration);
+		const Vector3 point = pos + (normal * cl->GetSize());
 
 
 		Physics::EvalImpulse(pos, other_pos, point, penetration, normal, cl->GetInverseMass(),

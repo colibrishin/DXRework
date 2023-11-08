@@ -1,5 +1,6 @@
 #pragma once
 #include <SimpleMath.h>
+#include <DirectXCollision.h>
 
 namespace Engine::Physics
 {
@@ -16,7 +17,12 @@ namespace Engine::Physics
 	extern Vector3 EvalDrag(const Vector3& vel, float k);
 	extern Vector3 EvalGravity(float mass, float dt);
 
-	extern Vector3 EvalCollision(const Vector3& v1, const Vector3& v2, const Vector3& n, float m1, float m2, float e);
+	extern float GetCollisionPenetrationDepth(const DirectX::BoundingOrientedBox& box, 
+												const DirectX::BoundingSphere& sphere, Vector3& normal);
+	extern float GetCollisionPenetrationDepth(const DirectX::BoundingSphere& sphere1, const DirectX::BoundingSphere& sphere2, Vector3& normal);
+	extern float GetCollisionPenetrationDepth(const DirectX::BoundingOrientedBox& box1,
+											const DirectX::BoundingOrientedBox& box2, Vector3& normal);
+
 
 	extern void EvalImpulse(Vector3& pos1, Vector3& pos2, const Vector3& point, float penetration,
 							const Vector3& normal,

@@ -2,6 +2,7 @@
 #include <DirectXCollision.h>
 #include <execution>
 
+#include "egPhysics.h"
 #include "egComponent.hpp"
 #include "egMesh.hpp"
 #include "egTransform.hpp"
@@ -36,6 +37,7 @@ namespace Engine::Component
 		Vector3 GetPosition() const { return m_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetSize() const { return m_size_; }
+		void GetPenetration(Collider& other, Vector3& normal, float& depth) const;
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
 		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
@@ -169,6 +171,23 @@ namespace Engine::Component
 			throw std::exception("Invalid type");
 		}
 
+		template <typename T>
+		void GetPenetration_GENERAL_TYPE(const T& value, Vector3& normal, float& penetration)
+		{
+			if (m_type_ == BOUNDING_TYPE_BOX)
+			{
+				penetration = Physics::GetCollisionPenetrationDepth(As<BoundingOrientedBox>(), value, normal);
+			}
+			else if (m_type_ == BOUNDING_TYPE_SPHERE)
+			{
+				penetration = Physics::GetCollisionPenetrationDepth(value, As<BoundingSphere>(), normal);
+			}
+			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
+			{
+				throw std::exception("Not implemented");
+			}
+		}
+
 		void UpdateBoundings();
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
@@ -199,7 +218,8 @@ namespace Engine::Component
 																			m_size_(Vector3::One),
 																			m_rotation_(Quaternion::Identity),
 																			m_type_(BOUNDING_TYPE_BOX),
-																			m_boundings_({}), m_mass_(1.0f)
+																			m_boundings_({}), m_mass_(1.0f),
+																			m_inertia_tensor_()
 	{
 	}
 
