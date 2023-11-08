@@ -14,9 +14,23 @@ namespace Engine::Abstract
 
 		static T& GetInstance()
 		{
-			static T instance{SINGLETON_LOCK_TOKEN{}};
+			if (s_instance_ == nullptr)
+			{
+				s_instance_ = std::unique_ptr<T>(new T(SINGLETON_LOCK_TOKEN{}));
+			}
 
-		    return instance;
+		    return *s_instance_;
+		}
+
+		/**
+		 * \brief Free the singleton instance manually.
+		 */
+		static void Destroy()
+		{
+			if (s_instance_)
+			{
+				s_instance_.reset();
+			}
 		}
 
 		virtual void Initialize(InitArgs... args) = 0;
@@ -27,8 +41,18 @@ namespace Engine::Abstract
 		virtual void FixedUpdate() = 0;
 
 	protected:
-		Singleton() = default;
+		Singleton();
+
 		struct SINGLETON_LOCK_TOKEN final {};
+		inline static std::unique_ptr<T> s_instance_ = nullptr;
 
 	};
+
+	template <typename T, typename ... InitArgs>
+	Singleton<T, InitArgs...>::Singleton()
+	{
+		// Add singleton destroyer when the program exits.
+		// however, this can be removed due to usage of unique_ptr but added for the note.
+		std::atexit(&Destroy);
+	}
 }
