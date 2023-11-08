@@ -51,6 +51,11 @@ namespace Engine::Manager
 	{
 		static float elapsed = 0.0f;
 
+		if (m_keyboard->GetState().Escape)
+		{
+			PostQuitMessage(0);
+		}
+
 		m_timer->Tick([&]()
 		{
 			PreUpdate();
