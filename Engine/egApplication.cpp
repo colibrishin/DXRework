@@ -4,7 +4,7 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 
-#include "egCollisionManager.hpp"
+#include "egCollisionDetector.hpp"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
 #include "egProjectionFrustum.hpp"
@@ -41,7 +41,7 @@ namespace Engine::Manager
 		GetToolkitAPI().Initialize();
 		GetRenderPipeline().Initialize();
 
-		GetCollisionManager().Initialize();
+		GetCollisionDetector().Initialize();
 		GetProjectionFrustum().Initialize();
 		GetResourceManager().Initialize();
 		GetSceneManager().Initialize();
@@ -60,64 +60,64 @@ namespace Engine::Manager
 		{
 			PreUpdate();
 			Update();
+
+			elapsed += static_cast<float>(m_timer->GetElapsedSeconds());
+
+			if (elapsed >= 1.0f)
+			{
+				FixedUpdate();
+				elapsed = 0.0f;
+			}
+
+			PreRender();
+			Render();
 		});
-
-		elapsed += static_cast<float>(m_timer->GetElapsedSeconds());
-
-		if (elapsed <= 1.0f / 33.0f)
-		{
-			FixedUpdate();
-		}
-
-		PreRender();
-
-		Render();
 	}
 
 	void Application::PreUpdate()
 	{
-		GetCollisionManager().PreUpdate();
 		GetSceneManager().PreUpdate();
 		GetProjectionFrustum().PreUpdate();
 		GetResourceManager().PreUpdate();
+		GetCollisionDetector().PreUpdate();
 		GetD3Device().PreUpdate();
 	}
 
 	void Application::FixedUpdate()
 	{
-		GetCollisionManager().FixedUpdate();
 		GetSceneManager().FixedUpdate();
 		GetProjectionFrustum().FixedUpdate();
 		GetResourceManager().FixedUpdate();
+		GetCollisionDetector().FixedUpdate();
 		GetD3Device().FixedUpdate();
 	}
 
 	void Application::Update()
 	{
-		GetCollisionManager().Update();
 		GetSceneManager().Update();
 		GetProjectionFrustum().Update();
 		GetResourceManager().Update();
+		GetCollisionDetector().Update();
 		GetD3Device().Update();
 	}
 
 	void Application::PreRender()
 	{
 		GetToolkitAPI().PreRender();
-		GetCollisionManager().PreRender();
 		GetSceneManager().PreRender();
 		GetProjectionFrustum().PreRender();
 		GetResourceManager().PreRender();
+		GetCollisionDetector().PreRender();
 		GetRenderPipeline().PreRender();
 		GetD3Device().PreRender();
 	}
 
 	void Application::Render()
 	{
-		GetCollisionManager().Render();
 		GetSceneManager().Render();
 		GetProjectionFrustum().Render();
 		GetResourceManager().Render();
+		GetCollisionDetector().Render();
 		GetToolkitAPI().Render();
 		GetD3Device().Render();
 	}

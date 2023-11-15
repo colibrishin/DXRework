@@ -17,55 +17,46 @@ namespace Engine::Component
 		}
 	}
 
-	void Rigidbody::CheckFloorForGravity()
+	void Rigidbody::AddForceAtPosition(const Vector3& acceleration, const Vector3& position)
 	{
-		if (const auto collider = GetOwner().lock()->GetComponent<Collider>().lock())
-		{
-			const auto collided_objects = collider->GetCollidedObjects();
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-			// we have no objects to check against. gravity is applied.
-			if (collided_objects.empty())
-			{
-				m_bFreefalling = true;
-				return;
-			}
+		auto r = position - tr->GetPosition();
+		r.Normalize();
 
-			// floor check
-			Collider copy = *collider;
-			copy.SetPosition(collider->GetPosition() + Vector3{0.0f, -g_epsilon, 0.0f});
+		m_force_ += acceleration;
+		m_torque_ += r.Cross(acceleration);
+	}
 
-			for (const auto& id : collided_objects)
-			{
-				const auto obj = GetSceneManager().GetActiveScene().lock()->FindGameObject(id).lock();
-				const auto other_collider = obj->GetComponent<Collider>().lock();
+	void Rigidbody::AddLinearMomentum(const Vector3& momentum)
+	{
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+		m_linear_momentum_ += momentum * cl->GetInverseMass();
+	}
 
-				// Collider must be present in the collided object
-				assert(other_collider);
+	void Rigidbody::AddAngularMomentum(const Vector3& momentum)
+	{
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+		m_angular_momentum_ += XMTensorCross(cl->GetInertiaTensor(), momentum);
+	}
 
-				// if any of the collided objects are intersecting by the floor, then we are not freefalling.
-				if (const bool is_grounded = copy.Intersects(*other_collider))
-				{
-					Vector3 normal;
-					float penetration;
+	void Rigidbody::SetForceAtPosition(const Vector3& acceleration, const Vector3& position)
+	{
+		const auto cl = GetOwner().lock()->GetComponent<Collider>().lock();
+		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-					m_bFreefalling = false;
-					collider->GetPenetration(*other_collider, normal, penetration);
+		auto r = position - tr->GetPosition();
+		r.Normalize();
 
-					const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
-
-					tr->SetPosition(tr->GetPosition() + (normal * penetration));
-
-					return;
-				}
-			}
-
-			// if none of the collided objects are intersecting by the floor, then we are freefalling.
-			m_bFreefalling = true;
-		}
+		m_force_ = acceleration;
+		m_torque_ = r.Cross(acceleration);
 	}
 
 	void Rigidbody::EvaluateFriction()
 	{
+		m_drag_force_ = Physics::EvalDrag(m_linear_momentum_, Physics::g_drag_coefficient);
+
 		if (const auto collider = GetOwner().lock()->GetComponent<Collider>().lock())
 		{
 			const auto collided_objects = collider->GetCollidedObjects();
@@ -73,7 +64,7 @@ namespace Engine::Component
 			// we have no objects to check against. friction is not applied.
 			if (collided_objects.empty())
 			{
-				m_friction_ = Vector3::Zero;
+				m_linear_friction_ = Vector3::Zero;
 			}
 
 			for (const auto& id : collided_objects)
@@ -82,7 +73,8 @@ namespace Engine::Component
 
 				if (const auto other_rb = obj->GetComponent<Rigidbody>().lock())
 				{
-					m_friction_ += Physics::EvalFriction(m_linear_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
+					m_linear_friction_ += Physics::EvalFriction(m_linear_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
+					m_angular_friction_ += Physics::EvalFriction(m_angular_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
 				}
 			}
 		}
@@ -90,34 +82,15 @@ namespace Engine::Component
 
 	void Rigidbody::PreUpdate()
 	{
-		const auto collider = GetOwner().lock()->GetComponent<Collider>().lock();
+		m_bPreviousGrounded = m_bGrounded;
+		m_bGrounded = false;
 
-		if (m_bFixed)
-		{
-			return;
-		}
-
-		if (m_bGravityOverride)
-		{
-			CheckFloorForGravity();
-
-			if (m_bFreefalling)
-			{
-				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
-			}
-			else
-			{
-				m_gravity_ = Vector3::Zero;
-			}
-		}
-		else
-		{
-			m_gravity_ = Vector3::Zero;
-		}
-
-		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, GetDeltaTime());
-
-		EvaluateFriction();
+		m_force_ = Vector3::Zero;
+		m_torque_ = Vector3::Zero;
+		m_gravity_ = Vector3::Zero;
+		m_drag_force_ = Vector3::Zero;
+		m_linear_friction_ = Vector3::Zero;
+		m_angular_friction_ = Vector3::Zero;
 	}
 
 	void Rigidbody::FrictionVelocityGuard(Vector3& evaluated_velocity, const Vector3& friction) const
@@ -145,21 +118,61 @@ namespace Engine::Component
 			return;
 		}
 
+		const auto collider = GetOwner().lock()->GetComponent<Collider>().lock();
 		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-		m_linear_momentum_ += m_friction_;
-		FrictionVelocityGuard(m_linear_momentum_, m_friction_);
+		if (m_bGravityOverride)
+		{
+			if (!m_bPreviousGrounded && m_bGrounded)
+			{
+				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
+			}
+			else if (m_bGrounded)
+			{
+				m_gravity_ = Vector3::Zero;
+			}
+			else
+			{
+				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
+			}
+		}
+		else
+		{
+			m_gravity_ = Vector3::Zero;
+		}
 
-		tr->SetPosition(tr->GetPosition() + m_linear_momentum_ + m_gravity_);
+		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, GetDeltaTime());
+		m_angular_momentum_ = Physics::EvalAngular(m_angular_momentum_, m_torque_, GetDeltaTime());
 
-		m_force_ = Vector3::Zero;
-		m_gravity_ = Vector3::Zero;
-		m_friction_ = Vector3::Zero;
+		EvaluateFriction();
 
+		m_linear_momentum_ += m_linear_friction_;
+		FrictionVelocityGuard(m_linear_momentum_, m_linear_friction_);
+
+		m_linear_momentum_ += m_drag_force_;
+		FrictionVelocityGuard(m_linear_momentum_, m_drag_force_);
+
+		m_linear_momentum_ += m_gravity_;
+
+		//m_angular_momentum_ += m_angular_friction_;
+		//FrictionVelocityGuard(m_angular_momentum_, m_angular_friction_);
 	}
 
 	void Rigidbody::PreRender()
 	{
+		// after CollisionManager resolves collision, update the position lately.
+		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
+
+		m_previous_position_ = tr->GetPosition();
+		m_next_position_ = tr->GetPosition() + m_linear_momentum_;
+
+		tr->SetPosition(m_next_position_);
+
+		Quaternion orientation = tr->GetRotation();
+		orientation += Quaternion{m_angular_momentum_ * GetDeltaTime() * 0.5f, 0.0f} * orientation;
+		orientation.Normalize();
+
+		tr->SetRotation(orientation);
 	}
 
 	void Rigidbody::Render()
@@ -168,5 +181,7 @@ namespace Engine::Component
 
 	void Rigidbody::FixedUpdate()
 	{
+		m_previous_collision_count_ = m_collision_count_;
+		m_collision_count_.clear();
 	}
 }

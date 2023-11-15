@@ -8,8 +8,8 @@ namespace Engine::Physics
 		return vel + (acc * dt);
 	}
 
-	inline Vector3 EvalGravity(float mass, float dt)
+	inline Vector3 EvalAngular(const Vector3& ang_vel, const Vector3& torque, float dt)
 	{
-		return 0.5f * mass * g_gravity_vec * dt;
+		return ang_vel + (torque * dt);
 	}
 }

@@ -19,7 +19,7 @@ namespace Engine
 		class ResourceManager;
 		class SceneManager;
 		class ProjectionFrustum;
-		class CollisionManager;
+		class CollisionDetector;
 	}
 
 	namespace Abstract
@@ -31,7 +31,7 @@ namespace Engine
 	extern Manager::ResourceManager& GetResourceManager();
 	extern Manager::SceneManager& GetSceneManager();
 	extern Manager::ProjectionFrustum& GetProjectionFrustum();
-	extern Manager::CollisionManager& GetCollisionManager();
+	extern Manager::CollisionDetector& GetCollisionDetector();
 
 	constexpr float g_epsilon = 0.0001f;
 	constexpr float g_gravity_acc = 9.8f;
@@ -86,8 +86,8 @@ namespace Engine
 	{
 		COMPONENT_PRIORITY_DEFAULT = 0,
 		COMPONENT_PRIORITY_TRANSFORM,
-		COMPONENT_PRIORITY_RIGIDBODY,
-		COMPONENT_PRIORITY_COLLIDER
+		COMPONENT_PRIORITY_COLLIDER,
+		COMPONENT_PRIORITY_RIGIDBODY
 	};
 
 	enum eBoundingType

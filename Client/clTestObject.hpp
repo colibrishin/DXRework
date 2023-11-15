@@ -41,7 +41,7 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, 2.0f, 0.0f));
+		tr->SetPosition(Vector3(0.0f, 4.0f, 0.0f));
 		tr->SetScale(Vector3::One);
 
 		AddComponent<Engine::Component::Collider>();
@@ -53,7 +53,6 @@ namespace Client::Object
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetFrictionCoefficient(0.f);
-		rb->SetElasticity(0.5f);
 		rb->SetGravityOverride(true);
 	}
 

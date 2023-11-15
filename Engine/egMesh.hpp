@@ -36,6 +36,8 @@ namespace Engine::Resources
 		void Render() override;
 		void ReadOBJFile();
 
+		const std::vector<Shape>& GetShapes() { return m_vertices_; }
+
 		UINT GetIndexCount() const { return static_cast<UINT>(m_indices_.size()); }
 
 	protected:

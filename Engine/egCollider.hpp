@@ -4,6 +4,7 @@
 
 #include "egPhysics.h"
 #include "egComponent.hpp"
+#include "egHelper.hpp"
 #include "egMesh.hpp"
 #include "egTransform.hpp"
 #include "egObject.hpp"
@@ -28,6 +29,7 @@ namespace Engine::Component
 
 		bool Intersects(Collider& other) const;
 		bool Contains(Collider& other) const;
+		bool Intersects(const Ray& other, float dist) const;
 
 		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
 		void RemoveCollidedObject(const uint64_t id) { m_collided_objects_.erase(id); }
@@ -41,6 +43,8 @@ namespace Engine::Component
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
 		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
+
+		Vector3 GetSupportPoint(const Vector3& dir) const;
 
 		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 

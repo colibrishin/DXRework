@@ -10,10 +10,11 @@ namespace Engine::Component
 	class Rigidbody : public Abstract::Component
 	{
 	public:
+		using CollisionCountPair = std::pair<uint64_t, UINT>;
+
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
-														m_bFreefalling(true), m_bGravityOverride(false),
-														m_bFixed(false), m_friction_mu_(0.0f),
-														m_elasticity_(1.0f)
+														m_bGrounded(false), m_bGravityOverride(false),
+														m_bFixed(false), m_friction_mu_(0.0f)
 		{
 		}
 
@@ -21,30 +22,39 @@ namespace Engine::Component
 
 		void Initialize() override;
 
-		void SetGravityOverride(bool gravity)
-		{
-			m_bGravityOverride = gravity;
-			m_bFreefalling = gravity;
-		}
+		void SetGravityOverride(bool gravity) { m_bGravityOverride = gravity;}
 
 		void SetFrictionCoefficient(float mu) { m_friction_mu_ = mu; }
 		void SetFixed(bool fixed) { m_bFixed = fixed; }
-		void SetElasticity(float elasticity) { m_elasticity_ = elasticity; }
+		void SetGrounded(bool grounded) { m_bGrounded = grounded;}
 
 		void AddForce(const Vector3& acceleration) { m_force_ += acceleration; }
-		void AddLinearMomentum(const Vector3& momentum) { m_linear_momentum_ += momentum; }
-		void AddAngularMomentum(const Vector3& momentum) { m_angular_momentum_ += momentum; }
+		void AddForceAtPosition(const Vector3& acceleration, const Vector3& position);
+		void AddLinearMomentum(const Vector3& momentum);
+		void AddAngularMomentum(const Vector3& momentum);
+		void AddCollisionCount(uint64_t id) { m_collision_count_[id]++; }
+
+		void SetForceAtPosition(const Vector3& acceleration, const Vector3& position);
 
 		float GetFrictionCoefficient() const { return m_friction_mu_; }
 		Vector3 GetGravity() const { return m_gravity_; }
 		Vector3 GetLinearMomentum() const { return m_linear_momentum_; }
 		Vector3 GetAngularMomentum() const { return m_angular_momentum_; }
-		float GetElasticity() const { return m_elasticity_; }
 		Vector3 GetForce() const { return m_force_; }
+		UINT GetCollisionCount(uint64_t id) const
+		{
+			if (!m_collision_count_.contains(id))
+			{
+				return 0;
+			}
+
+			return m_collision_count_.at(id);
+		}
 
 		bool IsGravityAllowed() const { return m_bGravityOverride; }
-		bool IsFreefalling() const { return m_bFreefalling && m_bGravityOverride; }
 		bool IsFixed() const { return m_bFixed; }
+		bool IsGrounded() const { return m_bGrounded; }
+		bool HasGroundedChangedInFrame() const { return m_bGrounded != m_bPreviousGrounded; }
 
 		void PreUpdate() override;
 		void Update() override;
@@ -53,25 +63,35 @@ namespace Engine::Component
 		void FixedUpdate() override;
 
 	private:
-		void CheckFloorForGravity();
 		void EvaluateFriction();
-
 		void FrictionVelocityGuard(Vector3& evaluated_velocity, const Vector3& friction) const;
 
-		bool m_bFreefalling;
+		std::map<uint64_t, UINT> m_previous_collision_count_;
+		std::map<uint64_t, UINT> m_collision_count_;
+
+		// Ground check flag for CollisionDetector
+		bool m_bPreviousGrounded;
+		bool m_bGrounded;
+		
 		bool m_bGravityOverride;
 		bool m_bFixed;
 
 		float m_friction_mu_;
-		float m_elasticity_;
+
+		Vector3 m_previous_position_;
+		Vector3 m_next_position_;
 
 		Vector3 m_linear_momentum_;
 		Vector3 m_angular_momentum_;
 
-		Vector3 m_friction_;
+		Vector3 m_linear_friction_;
+		Vector3 m_angular_friction_;
+		Vector3 m_drag_force_;
+
 		Vector3 m_gravity_;
 
 		Vector3 m_force_;
+		Vector3 m_torque_;
 
 	};
 }

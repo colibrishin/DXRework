@@ -127,7 +127,7 @@
     <ClInclude Include="egApplication.hpp">
       <Filter>Singleton</Filter>
     </ClInclude>
-    <ClInclude Include="egCollisionManager.hpp">
+    <ClInclude Include="egCollisionDetector.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
     <ClInclude Include="egProjectionFrustum.hpp">
@@ -202,11 +202,14 @@
     <ClCompile Include="egFriction.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="egCollisionManager.cpp">
+    <ClCompile Include="egCollisionDetector.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
     <ClCompile Include="egRigidbody.cpp">
       <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="egGravity.cpp">
+      <Filter>Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
