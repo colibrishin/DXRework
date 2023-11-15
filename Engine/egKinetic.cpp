@@ -12,9 +12,4 @@ namespace Engine::Physics
 	{
 		return ang_vel + (torque * dt);
 	}
-
-	inline Vector3 EvalGravity(float mass, float dt)
-	{
-		return 0.5f * mass * g_gravity_vec * dt;
-	}
 }

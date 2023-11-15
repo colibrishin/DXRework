@@ -6,16 +6,19 @@ namespace Engine::Component
 	void Collider::SetPosition(const Vector3& position)
 	{
 		m_position_ = position;
+		SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
 	}
 
 	void Collider::SetRotation(const Quaternion& rotation)
 	{
 		m_rotation_	= rotation;
+		SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
 	}
 
 	void Collider::SetSize(const Vector3& size)
 	{
 		m_size_ = size;
+		SetSize_GENERAL_TYPE(m_boundings_.box, m_size_);
 	}
 
 	void Collider::SetType(const eBoundingType type)
@@ -66,6 +69,34 @@ namespace Engine::Component
 		return false;
 	}
 
+	bool Collider::Intersects(const Ray& other, float dist) const
+	{
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			float intersection_distance = 0.f;
+
+			const bool test = Physics::TestRayOBBIntersection(
+				other.position, 
+				other.direction, 
+				-Vector3(m_boundings_.box.Extents), 
+				m_boundings_.box.Extents, 
+				Physics::CreateWorldMatrix(m_boundings_.box.Center, m_boundings_.box.Orientation, m_size_),
+				intersection_distance);
+
+			return test && intersection_distance > 0.f && intersection_distance <= dist;
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			return other.Intersects(m_boundings_.sphere, dist);
+		}
+		else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
+		{
+			assert(false);
+		}
+
+		return false;
+	}
+
 	void Collider::GetPenetration(Collider& other, Vector3& normal, float& depth) const
 	{
 		if (m_type_ == BOUNDING_TYPE_BOX)
@@ -80,6 +111,37 @@ namespace Engine::Component
 		{
 			assert(false);
 		}
+	}
+
+	Vector3 Collider::GetSupportPoint(const Vector3& dir) const
+	{
+		const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock();
+
+		float best_projection = -FLT_MAX;
+		Vector3 target_vertex = Vector3::Zero;
+
+		// @todo: Performance hungry. need to be optimized.
+
+		if (mesh)
+		{
+			const auto shapes = mesh->GetShapes();
+
+			for (const auto& vertices : shapes)
+			{
+				for (const auto& vertex : vertices)
+				{
+					const float projection = vertex.position.Dot(dir);
+
+					if (projection > best_projection)
+					{
+						best_projection = projection;
+						target_vertex = vertex.position;
+					}
+				}
+			}
+		}
+
+		return target_vertex;
 	}
 
 	void Collider::GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh)

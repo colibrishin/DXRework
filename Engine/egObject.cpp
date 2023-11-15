@@ -16,7 +16,7 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_same_v<Engine::Component::Collider, T>)
 			{
-				const auto collision_check = GetCollisionManager().IsCollided(
+				const auto collision_check = GetCollisionDetector().IsCollided(
 					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
 
 				if (collision_check && !thisComp->IsCollidedObject(otherComp->GetOwner().lock()->GetID()))
@@ -43,6 +43,11 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
+
+		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+
+		Physics::ResolveCollision(*this, *other.GetOwner().lock());
+		rb->AddCollisionCount(other.GetOwner().lock()->GetID());
 	}
 
 	void Object::OnCollisionContinue(const Engine::Component::Collider& other)
@@ -51,6 +56,7 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
+		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 	}
 
 	void Object::OnCollisionExit(const Engine::Component::Collider& other)
