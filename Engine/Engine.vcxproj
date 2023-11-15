@@ -22,7 +22,7 @@
     <ClInclude Include="egDXCommon.h" />
     <ClInclude Include="egCamera.hpp" />
     <ClInclude Include="egCollider.hpp" />
-    <ClInclude Include="egCollisionManager.hpp" />
+    <ClInclude Include="egCollisionDetector.hpp" />
     <ClInclude Include="egCommon.hpp" />
     <ClInclude Include="egComponent.hpp" />
     <ClInclude Include="egD3Device.hpp" />
@@ -62,11 +62,12 @@
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
-    <ClCompile Include="egCollisionManager.cpp" />
+    <ClCompile Include="egCollisionDetector.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egFont.cpp" />
     <ClCompile Include="egFriction.cpp" />
+    <ClCompile Include="egGravity.cpp" />
     <ClCompile Include="egIShader.cpp" />
     <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egMesh.cpp" />
