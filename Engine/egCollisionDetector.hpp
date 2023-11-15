@@ -7,15 +7,13 @@
 
 namespace Engine::Manager
 {
-	class CollisionManager : public Abstract::Singleton<CollisionManager>
+	class CollisionDetector : public Abstract::Singleton<CollisionDetector>
 	{
 	public:
-		explicit CollisionManager(SINGLETON_LOCK_TOKEN) : Singleton() {}
-		~CollisionManager() override = default;
+		explicit CollisionDetector(SINGLETON_LOCK_TOKEN) : Singleton() {}
+		~CollisionDetector() override = default;
 
 		void Initialize() override;
-		void CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
-
 		void Update() override;
 		void PreUpdate() override;
 		void PreRender() override;
@@ -27,7 +25,9 @@ namespace Engine::Manager
 
 
 	private:
-		void ResolveCollision(const std::shared_ptr<Abstract::Object>& lhs, const std::shared_ptr<Abstract::Object>& rhs);
+		void CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
+		void CheckGrounded(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
+		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& obj, const std::shared_ptr<Abstract::Object>& obj_other);
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<uint64_t, std::set<uint64_t>> m_collision_map_;

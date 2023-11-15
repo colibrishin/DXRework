@@ -3,7 +3,7 @@
 #include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
-#include "egCollisionManager.hpp"
+#include "egCollisionDetector.hpp"
 
 namespace Engine
 {
@@ -22,9 +22,9 @@ namespace Engine
 		return Manager::ProjectionFrustum::GetInstance();
 	}
 
-	inline Manager::CollisionManager& GetCollisionManager()
+	inline Manager::CollisionDetector& GetCollisionDetector()
 	{
-		return Manager::CollisionManager::GetInstance();
+		return Manager::CollisionDetector::GetInstance();
 	}
 
 	inline Manager::Application& GetApplication()
