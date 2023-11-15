@@ -58,14 +58,13 @@ namespace Client::Object
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_BOX);
 		cldr->SetDirtyWithTransform(true);
-		cldr->SetMass(1.0f);
+		cldr->SetMass(100000.0f);
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 
 		rb->SetFixed(true);
 		rb->SetFrictionCoefficient(0.2f);
-		rb->SetElasticity(0.f);
 		rb->SetGravityOverride(false);
 	}
 

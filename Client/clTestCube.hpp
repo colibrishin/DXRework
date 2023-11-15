@@ -63,7 +63,6 @@ namespace Client::Object
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 
-		rb->SetElasticity(0.5f);
 		rb->SetFrictionCoefficient(0.5f);
 		rb->SetGravityOverride(true);
 	}
@@ -83,7 +82,7 @@ namespace Client::Object
 
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
 
-		float speed = 0.1f;
+		float speed = 0.5f;
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
