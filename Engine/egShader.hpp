@@ -15,14 +15,14 @@ namespace Engine::Graphic
 		~Shader() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
 		void SetShaderType() override;
-		void PreRender() override;
-		void FixedUpdate() override;
+		void PreRender(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		T** GetShader() { return m_shader_.GetAddressOf(); }
-		void Render() override;
+		void Render(const float dt) override;
 
 	protected:
 		void Load_INTERNAL() override;
@@ -44,17 +44,17 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
-	void Shader<T>::PreUpdate()
+	void Shader<T>::PreUpdate(const float& dt)
 	{
 	}
 
 	template <typename T>
-	void Shader<T>::Update()
+	void Shader<T>::Update(const float& dt)
 	{
 	}
 
 	template <typename T>
-	void Shader<T>::FixedUpdate()
+	void Shader<T>::FixedUpdate(const float& dt)
 	{
 	}
 
@@ -88,7 +88,7 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
-	void Shader<T>::PreRender()
+	void Shader<T>::PreRender(const float dt)
 	{
 	}
 
@@ -99,8 +99,8 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
-	void Shader<T>::Render()
+	void Shader<T>::Render(const float dt)
 	{
-		IShader::Render();
+		IShader::Render(dt);
 	}
 }

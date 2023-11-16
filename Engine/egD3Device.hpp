@@ -251,11 +251,11 @@ namespace Engine::Manager::Graphics
 			}
 		}
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
 		ID3D11Device* GetDevice() const { return m_device_.Get(); }

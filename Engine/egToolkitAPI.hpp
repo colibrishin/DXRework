@@ -15,11 +15,11 @@ namespace Engine::Manager::Graphics
 		ToolkitAPI(SINGLETON_LOCK_TOKEN) : Singleton() {}
 		void Initialize() override;
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		SpriteBatch* GetSpriteBatch() const { return m_sprite_batch_.get(); }
 		CommonStates* GetCommonStates() const { return m_states_.get(); }
@@ -44,25 +44,25 @@ namespace Engine::Manager::Graphics
 		m_sprite_batch_ = std::make_unique<SpriteBatch>(GetD3Device().GetContext());
 	}
 
-	inline void ToolkitAPI::PreUpdate()
+	inline void ToolkitAPI::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void ToolkitAPI::Update()
+	inline void ToolkitAPI::Update(const float& dt)
 	{
 	}
 
-	inline void ToolkitAPI::PreRender()
+	inline void ToolkitAPI::PreRender(const float& dt)
 	{
 		FrameBegin();
 	}
 
-	inline void ToolkitAPI::Render()
+	inline void ToolkitAPI::Render(const float& dt)
 	{
 		FrameEnd();
 	}
 
-	inline void ToolkitAPI::FixedUpdate()
+	inline void ToolkitAPI::FixedUpdate(const float& dt)
 	{
 	}
 

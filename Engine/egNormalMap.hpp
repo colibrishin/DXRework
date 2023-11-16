@@ -12,10 +12,10 @@ namespace Engine::Resources
 		~NormalMap() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
@@ -26,22 +26,22 @@ namespace Engine::Resources
 		Texture::Initialize();
 	}
 
-	inline void NormalMap::PreUpdate()
+	inline void NormalMap::PreUpdate(const float& dt)
 	{
-		Texture::PreUpdate();
+		Texture::PreUpdate(dt);
 	}
 
-	inline void NormalMap::Update()
+	inline void NormalMap::Update(const float& dt)
 	{
-		Texture::Update();
+		Texture::Update(dt);
 	}
 
-	inline void NormalMap::PreRender()
+	inline void NormalMap::PreRender(const float dt)
 	{
-		Texture::PreRender();
+		Texture::PreRender(dt);
 	}
 
-	inline void NormalMap::Render()
+	inline void NormalMap::Render(const float dt)
 	{
 		GetRenderPipeline().BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
 	}

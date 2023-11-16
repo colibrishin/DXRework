@@ -17,10 +17,10 @@ namespace Client::Scene
 		~TestScene() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 	private:
 
@@ -30,24 +30,24 @@ namespace Client::Scene
 	{
 	}
 
-	inline void TestScene::PreUpdate()
+	inline void TestScene::PreUpdate(const float& dt)
 	{
-		Scene::PreUpdate();
+		Scene::PreUpdate(dt);
 	}
 
-	inline void TestScene::Update()
+	inline void TestScene::Update(const float& dt)
 	{
-		Scene::Update();
+		Scene::Update(dt);
 	}
 
-	inline void TestScene::PreRender()
+	inline void TestScene::PreRender(const float dt)
 	{
-		Scene::PreRender();
+		Scene::PreRender(dt);
 	}
 
-	inline void TestScene::Render()
+	inline void TestScene::Render(const float dt)
 	{
-		Scene::Render();
+		Scene::Render(dt);
 	}
 
 	inline void TestScene::Initialize()

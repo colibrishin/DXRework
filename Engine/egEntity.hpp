@@ -33,9 +33,9 @@ namespace Engine::Abstract
 		}
 
 		virtual void Initialize() = 0;
-		virtual void PreUpdate() = 0;
-		virtual void Update() = 0;
-		virtual void FixedUpdate() = 0;
+		virtual void PreUpdate(const float& dt) = 0;
+		virtual void Update(const float& dt) = 0;
+		virtual void FixedUpdate(const float& dt) = 0;
 
 	protected:
 		Entity() = default;

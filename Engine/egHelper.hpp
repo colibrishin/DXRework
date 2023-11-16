@@ -6,11 +6,6 @@
 
 namespace Engine
 {
-	inline float GetDeltaTime()
-	{
-		return GetApplication().GetDeltaTime();
-	}
-
 	template <typename T, typename... Arg>
 	inline static std::shared_ptr<T> Instantiate(Arg&&... args)
 	{

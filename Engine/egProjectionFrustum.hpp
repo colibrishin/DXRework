@@ -18,11 +18,11 @@ namespace Engine::Manager
 		~ProjectionFrustum() override = default;
 
 		void Initialize() override;
-		void Update() override;
-		void PreUpdate() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void Update(const float& dt) override;
+		void PreUpdate(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		bool CheckRender(const WeakObject& object) const;
 
@@ -39,15 +39,15 @@ namespace Engine::Manager
 	{
 	}
 
-	inline void ProjectionFrustum::Update()
+	inline void ProjectionFrustum::Update(const float& dt)
 	{
 	}
 
-	inline void ProjectionFrustum::PreUpdate()
+	inline void ProjectionFrustum::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void ProjectionFrustum::PreRender()
+	inline void ProjectionFrustum::PreRender(const float& dt)
 	{
 		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
@@ -70,7 +70,7 @@ namespace Engine::Manager
 		}
 	}
 
-	inline void ProjectionFrustum::Render()
+	inline void ProjectionFrustum::Render(const float& dt)
 	{
 	}
 
@@ -100,7 +100,7 @@ namespace Engine::Manager
 		return false;
 	}
 
-	inline void ProjectionFrustum::FixedUpdate()
+	inline void ProjectionFrustum::FixedUpdate(const float& dt)
 	{
 	}
 }

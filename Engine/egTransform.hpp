@@ -24,11 +24,11 @@ namespace Engine::Component
 		Vector3 GetScale() const { return m_scale_; }
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 		Vector3 m_position_ = Vector3::Zero;

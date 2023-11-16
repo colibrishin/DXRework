@@ -31,10 +31,10 @@ namespace Client::Object
 		void Initialize() override;
 		~TestCube() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline TestCube::TestCube()
@@ -71,14 +71,14 @@ namespace Client::Object
 	{
 	}
 
-	inline void TestCube::PreUpdate()
+	inline void TestCube::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void TestCube::Update()
+	inline void TestCube::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
 
@@ -105,13 +105,13 @@ namespace Client::Object
 		}
 	}
 
-	inline void TestCube::PreRender()
+	inline void TestCube::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void TestCube::Render()
+	inline void TestCube::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }

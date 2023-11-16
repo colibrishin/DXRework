@@ -14,11 +14,11 @@ namespace Engine::Manager
 		~CollisionDetector() override = default;
 
 		void Initialize() override;
-		void Update() override;
-		void PreUpdate() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void Update(const float& dt) override;
+		void PreUpdate(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		bool IsCollided(uint64_t id) const { return !m_collision_map_.at(id).empty(); }
 		bool IsCollided(uint64_t id1, uint64_t id2) const { return m_collision_map_.at(id1).contains(id2); }

@@ -15,13 +15,13 @@ namespace Engine::Resources
 		~Texture() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
-		void FixedUpdate() override;
+		void FixedUpdate(const float& dt) override;
 
 		UINT GetWidth() const { return m_texture_desc_.Width; }
 		UINT GetHeight() const { return m_texture_desc_.Height; }
@@ -39,19 +39,19 @@ namespace Engine::Resources
 	{
 	}
 
-	inline void Texture::PreUpdate()
+	inline void Texture::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void Texture::Update()
+	inline void Texture::Update(const float& dt)
 	{
 	}
 
-	inline void Texture::PreRender()
+	inline void Texture::PreRender(const float dt)
 	{
 	}
 
-	inline void Texture::Render()
+	inline void Texture::Render(const float dt)
 	{
 		GetRenderPipeline().BindResource(SR_TEXTURE, m_texture_view_.Get());
 	}
@@ -74,7 +74,7 @@ namespace Engine::Resources
 		m_texture_desc_ = {};
 	}
 
-	inline void Texture::FixedUpdate()
+	inline void Texture::FixedUpdate(const float& dt)
 	{
 	}
 }

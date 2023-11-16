@@ -314,25 +314,25 @@ namespace Engine::Manager::Graphics
 			shader_resource_view));
 	}
 
-	void D3Device::PreUpdate()
+	void D3Device::PreUpdate(const float& dt)
 	{
 	}
 
-	void D3Device::Update()
+	void D3Device::Update(const float& dt)
 	{
 	}
 
-	void D3Device::PreRender()
+	void D3Device::PreRender(const float& dt)
 	{
 		FrameBegin();
 	}
 
-	void D3Device::Render()
+	void D3Device::Render(const float& dt)
 	{
 		Present();
 	}
 
-	void D3Device::FixedUpdate()
+	void D3Device::FixedUpdate(const float& dt)
 	{
 	}
 

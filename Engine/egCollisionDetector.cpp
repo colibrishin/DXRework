@@ -172,7 +172,7 @@ namespace Engine::Manager
 		}
 	}
 
-	void CollisionDetector::Update()
+	void CollisionDetector::Update(const float& dt)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
 
@@ -193,7 +193,7 @@ namespace Engine::Manager
 		}
 	}
 
-	void CollisionDetector::PreUpdate()
+	void CollisionDetector::PreUpdate(const float& dt)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
 
@@ -214,15 +214,15 @@ namespace Engine::Manager
 		}
 	}
 
-	void CollisionDetector::PreRender()
+	void CollisionDetector::PreRender(const float& dt)
 	{
 	}
 
-	void CollisionDetector::Render()
+	void CollisionDetector::Render(const float& dt)
 	{
 	}
 
-	void CollisionDetector::FixedUpdate()
+	void CollisionDetector::FixedUpdate(const float& dt)
 	{
 	}
 }

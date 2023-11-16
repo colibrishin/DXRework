@@ -6,7 +6,7 @@ namespace Engine::Abstract
 	class Renderable : public Entity
 	{
 	public:
-		virtual void PreRender() = 0;
-		virtual void Render() = 0;
+		virtual void PreRender(const float dt) = 0;
+		virtual void Render(const float dt) = 0;
 	};
 }

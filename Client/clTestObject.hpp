@@ -25,10 +25,10 @@ namespace Client::Object
 		void Initialize() override;
 		~TestObject() override = default;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline void TestObject::Initialize()
@@ -56,23 +56,23 @@ namespace Client::Object
 		rb->SetGravityOverride(true);
 	}
 
-	inline void TestObject::PreUpdate()
+	inline void TestObject::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();		
+		Object::PreUpdate(dt);		
 	}
 
-	inline void TestObject::Update()
+	inline void TestObject::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 	}
 
-	inline void TestObject::PreRender()
+	inline void TestObject::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void TestObject::Render()
+	inline void TestObject::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }

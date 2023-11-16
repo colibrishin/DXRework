@@ -25,10 +25,10 @@ namespace Client::Object
 		void Initialize() override;
 		~Giftbox() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline Giftbox::Giftbox()
@@ -59,20 +59,20 @@ namespace Client::Object
 	{
 	}
 
-	inline void Giftbox::PreUpdate()
+	inline void Giftbox::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void Giftbox::Update()
+	inline void Giftbox::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 		static float angle = 0.0f;
 
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetRotation(Quaternion::CreateFromYawPitchRoll(angle, 0.0f, 0.0f));
 
-		angle += Engine::GetDeltaTime();
+		angle += dt;
 
 		if(angle > XMConvertToRadians(360.0f))
 		{
@@ -80,13 +80,13 @@ namespace Client::Object
 		}
 	}
 
-	inline void Giftbox::PreRender()
+	inline void Giftbox::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void Giftbox::Render()
+	inline void Giftbox::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }
