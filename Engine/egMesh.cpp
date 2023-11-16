@@ -175,7 +175,7 @@ namespace Engine::Resources
 	{
 	}
 
-	void Mesh::Render()
+	void Mesh::Render(const float dt)
 	{
 		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
 		{

@@ -214,7 +214,7 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindSampler(s_sampler_state_[SHADER_DOMAIN], SHADER_DOMAIN);
 	}
 
-	void RenderPipeline::PreRender()
+	void RenderPipeline::PreRender(const float& dt)
 	{
 		// ** overriding DirectXTK common state
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());

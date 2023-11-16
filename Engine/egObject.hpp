@@ -113,11 +113,11 @@ namespace Engine::Abstract
 		Object() = default;
 
 	public:
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 		struct ResourcePriorityComparer
@@ -159,50 +159,50 @@ namespace Engine::Abstract
 		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
 	};
 
-	inline void Object::PreUpdate()
+	inline void Object::PreUpdate(const float& dt)
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->PreUpdate();
+			component->PreUpdate(dt);
 		}
 
 		for (const auto& resource : m_resources_)
 		{
 			if (const auto locked = resource.lock())
 			{
-				locked->PreUpdate();
+				locked->PreUpdate(dt);
 			}
 		}
 	}
 
-	inline void Object::PreRender()
+	inline void Object::PreRender(const float dt)
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->PreRender();
+			component->PreRender(dt);
 		}
 
 		for (const auto& resource : m_resources_)
 		{
 			if (const auto locked = resource.lock())
 			{
-				locked->PreRender();
+				locked->PreRender(dt);
 			}
 		}
 	}
 
-	inline void Object::Update()
+	inline void Object::Update(const float& dt)
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->Update();
+			component->Update(dt);
 		}
 
 		for (const auto& resource : m_resources_)
 		{
 			if (const auto locked = resource.lock())
 			{
-				locked->Update();
+				locked->Update(dt);
 			}
 		}
 	}

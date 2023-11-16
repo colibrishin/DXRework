@@ -58,68 +58,69 @@ namespace Engine::Manager
 
 		m_timer->Tick([&]()
 		{
-			PreUpdate();
-			Update();
+			const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
 
-			elapsed += static_cast<float>(m_timer->GetElapsedSeconds());
+			elapsed += dt;
 
 			if (elapsed >= 1.0f)
 			{
-				FixedUpdate();
+				FixedUpdate(dt);
 				elapsed = 0.0f;
 			}
 
-			PreRender();
-			Render();
+			PreUpdate(dt);
+			Update(dt);
+			PreRender(dt);
+			Render(dt);
 		});
 	}
 
-	void Application::PreUpdate()
+	void Application::PreUpdate(const float& dt)
 	{
-		GetSceneManager().PreUpdate();
-		GetProjectionFrustum().PreUpdate();
-		GetResourceManager().PreUpdate();
-		GetCollisionDetector().PreUpdate();
-		GetD3Device().PreUpdate();
+		GetSceneManager().PreUpdate(dt);
+		GetProjectionFrustum().PreUpdate(dt);
+		GetResourceManager().PreUpdate(dt);
+		GetCollisionDetector().PreUpdate(dt);
+		GetD3Device().PreUpdate(dt);
 	}
 
-	void Application::FixedUpdate()
+	void Application::FixedUpdate(const float& dt)
 	{
-		GetSceneManager().FixedUpdate();
-		GetProjectionFrustum().FixedUpdate();
-		GetResourceManager().FixedUpdate();
-		GetCollisionDetector().FixedUpdate();
-		GetD3Device().FixedUpdate();
+		GetSceneManager().FixedUpdate(dt);
+		GetProjectionFrustum().FixedUpdate(dt);
+		GetResourceManager().FixedUpdate(dt);
+		GetCollisionDetector().FixedUpdate(dt);
+		GetD3Device().FixedUpdate(dt);
 	}
 
-	void Application::Update()
+	void Application::Update(const float& dt)
 	{
-		GetSceneManager().Update();
-		GetProjectionFrustum().Update();
-		GetResourceManager().Update();
-		GetCollisionDetector().Update();
-		GetD3Device().Update();
+		GetSceneManager().Update(dt);
+		GetProjectionFrustum().Update(dt);
+		GetResourceManager().Update(dt);
+		GetCollisionDetector().Update(dt);
+		GetD3Device().Update(dt);
 	}
 
-	void Application::PreRender()
+	void Application::PreRender(const float& dt)
 	{
-		GetToolkitAPI().PreRender();
-		GetSceneManager().PreRender();
-		GetProjectionFrustum().PreRender();
-		GetResourceManager().PreRender();
-		GetCollisionDetector().PreRender();
-		GetRenderPipeline().PreRender();
-		GetD3Device().PreRender();
+		GetToolkitAPI().PreRender(dt);
+		GetSceneManager().PreRender(dt);
+		GetProjectionFrustum().PreRender(dt);
+		GetResourceManager().PreRender(dt);
+		GetCollisionDetector().PreRender(dt);
+		GetRenderPipeline().PreRender(dt);
+		GetD3Device().PreRender(dt);
 	}
 
-	void Application::Render()
+	void Application::Render(const float& dt)
 	{
-		GetSceneManager().Render();
-		GetProjectionFrustum().Render();
-		GetResourceManager().Render();
-		GetCollisionDetector().Render();
-		GetToolkitAPI().Render();
-		GetD3Device().Render();
+		GetSceneManager().Render(dt);
+		GetProjectionFrustum().Render(dt);
+		GetResourceManager().Render(dt);
+		GetCollisionDetector().Render(dt);
+		GetToolkitAPI().Render(dt);
+		GetD3Device().Render(dt);
 	}
 
 	LRESULT Application::MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

@@ -11,7 +11,7 @@ namespace Engine::Graphic
 		m_path_ = path;
 	}
 
-	void IShader::Render()
+	void IShader::Render(const float dt)
 	{
 		GetRenderPipeline().SetShader(this);
 	}

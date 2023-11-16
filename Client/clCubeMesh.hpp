@@ -10,12 +10,12 @@ namespace Client::Mesh
 		CubeMesh();
 		~CubeMesh() override = default;
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
 		void Load_INTERNAL() override;
 		void Initialize() override;
-		void FixedUpdate() override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 
@@ -26,15 +26,15 @@ namespace Client::Mesh
 		CubeMesh::Initialize();
 	}
 
-	inline void CubeMesh::PreUpdate()
+	inline void CubeMesh::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void CubeMesh::Update()
+	inline void CubeMesh::Update(const float& dt)
 	{
 	}
 
-	inline void CubeMesh::PreRender()
+	inline void CubeMesh::PreRender(const float dt)
 	{
 	}
 
@@ -63,7 +63,7 @@ namespace Client::Mesh
 		Mesh::Initialize();
 	}
 
-	inline void CubeMesh::FixedUpdate()
+	inline void CubeMesh::FixedUpdate(const float& dt)
 	{
 	}
 }

@@ -26,10 +26,10 @@ namespace Client::Object
 		void Initialize() override;
 		~MousePositionText() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline MousePositionText::MousePositionText() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
@@ -49,24 +49,24 @@ namespace Client::Object
 	{
 	}
 
-	inline void MousePositionText::PreUpdate()
+	inline void MousePositionText::PreUpdate(const float& dt)
 	{
-		Text::PreUpdate();
+		Text::PreUpdate(dt);
 	}
 
-	inline void MousePositionText::Update()
+	inline void MousePositionText::Update(const float& dt)
 	{
-		Text::Update();
+		Text::Update(dt);
 		SetText(L"X: " + std::to_wstring(Engine::GetApplication().GetMouseState().x) + L", Y: " + std::to_wstring(Engine::GetApplication().GetMouseState().y));
 	}
 
-	inline void MousePositionText::PreRender()
+	inline void MousePositionText::PreRender(const float dt)
 	{
-		Text::PreRender();
+		Text::PreRender(dt);
 	}
 
-	inline void MousePositionText::Render()
+	inline void MousePositionText::Render(const float dt)
 	{
-		Text::Render();
+		Text::Render(dt);
 	}
 }

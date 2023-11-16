@@ -11,12 +11,12 @@ namespace Client::Mesh
 		SphereMesh();
 		~SphereMesh() override = default;
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
 		void Load_INTERNAL() override;
 		void Initialize() override;
-		void FixedUpdate() override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 
@@ -27,15 +27,15 @@ namespace Client::Mesh
 		SphereMesh::Initialize();
 	}
 
-	inline void SphereMesh::PreUpdate()
+	inline void SphereMesh::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void SphereMesh::Update()
+	inline void SphereMesh::Update(const float& dt)
 	{
 	}
 
-	inline void SphereMesh::PreRender()
+	inline void SphereMesh::PreRender(const float dt)
 	{
 	}
 
@@ -64,7 +64,7 @@ namespace Client::Mesh
 		Mesh::Initialize();
 	}
 
-	inline void SphereMesh::FixedUpdate()
+	inline void SphereMesh::FixedUpdate(const float& dt)
 	{
 	}
 }

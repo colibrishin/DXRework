@@ -33,10 +33,10 @@ namespace Engine::Objects
 		Vector3 GetLookAt() const { return m_look_at_; }
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 	private:
 		Matrix m_view_matrix_;

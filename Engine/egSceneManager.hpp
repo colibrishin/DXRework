@@ -60,11 +60,11 @@ namespace Engine::Manager
 		}
 
 		void Initialize() override;
-		void Update() override;
-		void PreUpdate() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void Update(const float& dt) override;
+		void PreUpdate(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 		WeakScene m_active_scene_;
@@ -76,28 +76,28 @@ namespace Engine::Manager
 	{
 	}
 
-	inline void SceneManager::Update()
+	inline void SceneManager::Update(const float& dt)
 	{
-		m_active_scene_.lock()->Update();
+		m_active_scene_.lock()->Update(dt);
 	}
 
-	inline void SceneManager::PreUpdate()
+	inline void SceneManager::PreUpdate(const float& dt)
 	{
-		m_active_scene_.lock()->PreUpdate();
+		m_active_scene_.lock()->PreUpdate(dt);
 	}
 
-	inline void SceneManager::PreRender()
+	inline void SceneManager::PreRender(const float& dt)
 	{
-		m_active_scene_.lock()->PreRender();
+		m_active_scene_.lock()->PreRender(dt);
 	}
 
-	inline void SceneManager::Render()
+	inline void SceneManager::Render(const float& dt)
 	{
-		m_active_scene_.lock()->Render();
+		m_active_scene_.lock()->Render(dt);
 	}
 
-	inline void SceneManager::FixedUpdate()
+	inline void SceneManager::FixedUpdate(const float& dt)
 	{
-		m_active_scene_.lock()->FixedUpdate();
+		m_active_scene_.lock()->FixedUpdate(dt);
 	}
 }

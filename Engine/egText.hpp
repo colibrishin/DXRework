@@ -21,10 +21,10 @@ namespace Engine::Objects
 		~Text() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 		void SetText(const std::wstring& text) { m_text_ = text; }
 		void SetPosition(const Vector2& position) { m_position_ = position; }
@@ -44,22 +44,22 @@ namespace Engine::Objects
 	{
 	}
 
-	inline void Text::PreUpdate()
+	inline void Text::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void Text::Update()
+	inline void Text::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 	}
 
-	inline void Text::PreRender()
+	inline void Text::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void Text::Render()
+	inline void Text::Render(const float dt)
 	{
 		if (const auto font = GetResource<Resources::Font>().lock())
 		{
@@ -69,7 +69,7 @@ namespace Engine::Objects
 			font->SetRotation(m_rotation_radian_);
 			font->SetScale(m_scale_);
 
-			Object::Render();
+			Object::Render(dt);
 
 			font->SetText(L"");
 			font->SetPosition({0.0f, 0.0f});

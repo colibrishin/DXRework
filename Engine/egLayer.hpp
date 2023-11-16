@@ -15,11 +15,11 @@ namespace Engine
 		virtual ~Layer() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
 		void AddGameObject (const StrongObject& obj)
@@ -82,7 +82,7 @@ namespace Engine
 	{
 	}
 
-	inline void Layer::PreUpdate()
+	inline void Layer::PreUpdate(const float& dt)
 	{
 		for (const auto& object : m_objects_ | std::views::values)
 		{
@@ -91,11 +91,11 @@ namespace Engine
 				continue;
 			}
 
-			object->PreUpdate();
+			object->PreUpdate(dt);
 		}
 	}
 
-	inline void Layer::Update()
+	inline void Layer::Update(const float& dt)
 	{
 		for (const auto& object : m_objects_ | std::views::values)
 		{
@@ -104,11 +104,11 @@ namespace Engine
 				continue;
 			}
 
-			object->Update();
+			object->Update(dt);
 		}
 	}
 
-	inline void Layer::PreRender()
+	inline void Layer::PreRender(const float dt)
 	{
 		for (const auto& object : m_objects_ | std::views::values)
 		{
@@ -117,11 +117,11 @@ namespace Engine
 				continue;
 			}
 
-			object->PreRender();
+			object->PreRender(dt);
 		}
 	}
 
-	inline void Layer::Render()
+	inline void Layer::Render(const float dt)
 	{
 		for (const auto& object : m_objects_ | std::views::values)
 		{
@@ -130,11 +130,11 @@ namespace Engine
 				continue;
 			}
 
-			object->Render();
+			object->Render(dt);
 		}
 	}
 
-	inline void Layer::FixedUpdate()
+	inline void Layer::FixedUpdate(const float& dt)
 	{
 		for (const auto& object : m_objects_ | std::views::values)
 		{
@@ -143,7 +143,7 @@ namespace Engine
 				continue;
 			}
 
-			object->FixedUpdate();
+			object->FixedUpdate(dt);
 		}
 	}
 }

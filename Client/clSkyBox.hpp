@@ -25,10 +25,10 @@ namespace Client::Object
 		void Initialize() override;
 		~SkyBox() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline SkyBox::SkyBox()
@@ -52,23 +52,23 @@ namespace Client::Object
 	{
 	}
 
-	inline void SkyBox::PreUpdate()
+	inline void SkyBox::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void SkyBox::Update()
+	inline void SkyBox::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 	}
 
-	inline void SkyBox::PreRender()
+	inline void SkyBox::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void SkyBox::Render()
+	inline void SkyBox::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }

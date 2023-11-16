@@ -172,7 +172,7 @@ namespace Engine::Component
 		}
 	}
 
-	void Collider::FixedUpdate()
+	void Collider::FixedUpdate(const float& dt)
 	{
 	}
 

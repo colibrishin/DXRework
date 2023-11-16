@@ -13,13 +13,13 @@ namespace Client::Mesh
 		~TriangleMesh() override = default;
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 		void Load_INTERNAL() override;
-		void FixedUpdate() override;
+		void FixedUpdate(const float& dt) override;
 	};
 
 	inline TriangleMesh::TriangleMesh() : Mesh("")
@@ -32,21 +32,21 @@ namespace Client::Mesh
 		Mesh::Initialize();
 	}
 
-	inline void TriangleMesh::PreUpdate()
+	inline void TriangleMesh::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void TriangleMesh::Update()
+	inline void TriangleMesh::Update(const float& dt)
 	{
 	}
 
-	inline void TriangleMesh::PreRender()
+	inline void TriangleMesh::PreRender(const float dt)
 	{
 	}
 
-	inline void TriangleMesh::Render()
+	inline void TriangleMesh::Render(const float dt)
 	{
-		Mesh::Render();
+		Mesh::Render(dt);
 	}
 
 	inline void TriangleMesh::Load_INTERNAL()
@@ -80,7 +80,7 @@ namespace Client::Mesh
 		m_indices_[0].emplace_back(2);
 	}
 
-	inline void TriangleMesh::FixedUpdate()
+	inline void TriangleMesh::FixedUpdate(const float& dt)
 	{
 	}
 }

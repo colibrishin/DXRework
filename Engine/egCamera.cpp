@@ -13,14 +13,14 @@ namespace Engine::Objects
 		m_look_at_ = Vector3::Backward;
 	}
 
-	void Camera::PreUpdate()
+	void Camera::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	void Camera::Update()
+	void Camera::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
@@ -62,13 +62,13 @@ namespace Engine::Objects
 		}
 	}
 
-	void Camera::PreRender()
+	void Camera::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	void Camera::Render()
+	void Camera::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }

@@ -17,7 +17,7 @@ namespace Engine::Graphic
 
 		ID3D11Buffer* GetBuffer() const { return m_buffer_.Get(); }
 
-		void Render() override;
+		void Render(const float dt) override;
 
 		virtual void SetShaderType() = 0;
 		eShaderType GetType() const { return m_type_; }

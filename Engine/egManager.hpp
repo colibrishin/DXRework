@@ -34,11 +34,11 @@ namespace Engine::Abstract
 		}
 
 		virtual void Initialize(InitArgs... args) = 0;
-		virtual void PreUpdate() = 0;
-		virtual void Update() = 0;
-		virtual void PreRender() = 0;
-		virtual void Render() = 0;
-		virtual void FixedUpdate() = 0;
+		virtual void PreUpdate(const float& dt) = 0;
+		virtual void Update(const float& dt) = 0;
+		virtual void PreRender(const float& dt) = 0;
+		virtual void Render(const float& dt) = 0;
+		virtual void FixedUpdate(const float& dt) = 0;
 
 	protected:
 		Singleton();

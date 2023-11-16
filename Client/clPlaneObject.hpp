@@ -31,10 +31,10 @@ namespace Client::Object
 		void Initialize() override;
 		~PlaneObject() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline PlaneObject::PlaneObject()
@@ -72,23 +72,23 @@ namespace Client::Object
 	{
 	}
 
-	inline void PlaneObject::PreUpdate()
+	inline void PlaneObject::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void PlaneObject::Update()
+	inline void PlaneObject::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 	}
 
-	inline void PlaneObject::PreRender()
+	inline void PlaneObject::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 	}
 
-	inline void PlaneObject::Render()
+	inline void PlaneObject::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }

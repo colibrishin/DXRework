@@ -18,19 +18,19 @@ namespace Engine::Component
 	{
 	}
 
-	void Transform::PreUpdate()
+	void Transform::PreUpdate(const float& dt)
 	{
 	}
 
-	void Transform::Update()
+	void Transform::Update(const float& dt)
 	{
 	}
 
-	void Transform::PreRender()
+	void Transform::PreRender(const float dt)
 	{
 	}
 
-	void Transform::Render()
+	void Transform::Render(const float dt)
 	{
 		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
 		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();
@@ -39,7 +39,7 @@ namespace Engine::Component
 		GetRenderPipeline().SetWorldMatrix(m_transform_buffer_);
 	}
 
-	void Transform::FixedUpdate()
+	void Transform::FixedUpdate(const float& dt)
 	{
 	}
 }

@@ -10,11 +10,11 @@ namespace Engine::Manager
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) : Singleton() {}
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
 		static void AddResource(const std::wstring& name, const std::shared_ptr<T>& resource)
@@ -72,7 +72,7 @@ namespace Engine::Manager
 		}
 	}
 
-	inline void ResourceManager::PreUpdate()
+	inline void ResourceManager::PreUpdate(const float& dt)
 	{
 		for (const auto& resource : m_resources_)
 		{
@@ -87,19 +87,19 @@ namespace Engine::Manager
 		}
 	}
 
-	inline void ResourceManager::Update()
+	inline void ResourceManager::Update(const float& dt)
 	{
 	}
 
-	inline void ResourceManager::PreRender()
+	inline void ResourceManager::PreRender(const float& dt)
 	{
 	}
 
-	inline void ResourceManager::Render()
+	inline void ResourceManager::Render(const float& dt)
 	{
 	}
 
-	inline void ResourceManager::FixedUpdate()
+	inline void ResourceManager::FixedUpdate(const float& dt)
 	{
 	}
 }

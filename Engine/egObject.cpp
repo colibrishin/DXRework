@@ -67,7 +67,7 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::Render()
+	void Object::Render(const float dt)
 	{
 		if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
 		{
@@ -76,30 +76,30 @@ namespace Engine::Abstract
 
 		for (const auto& component : m_components_ | std::views::values)
 		{
-			component->Render();
+			component->Render(dt);
 		}
 
 		for (const auto& resource : m_resources_)
 		{
 			if (const auto locked = resource.lock())
 			{
-				locked->Render();
+				locked->Render(dt);
 			}
 		}
 	}
 
-	void Object::FixedUpdate()
+	void Object::FixedUpdate(const float& dt)
 	{
 		for (const auto& component : m_components_ | std::views::values)
 		{
-			component->FixedUpdate();
+			component->FixedUpdate(dt);
 		}
 
 		for (const auto& resource : m_resources_)
 		{
 			if (const auto locked = resource.lock())
 			{
-				locked->FixedUpdate();
+				locked->FixedUpdate(dt);
 			}
 		}
 	}

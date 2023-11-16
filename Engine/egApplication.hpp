@@ -30,11 +30,11 @@ namespace Engine::Manager
 		Mouse::State GetMouseState() const { return m_mouse->GetState(); }
 
 	private:
-		void PreUpdate() override;
-		void FixedUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
 
 	private:
 		HWND m_hWnd = nullptr;

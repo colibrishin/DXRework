@@ -53,7 +53,7 @@ namespace Engine::Component
 		m_torque_ = r.Cross(acceleration);
 	}
 
-	void Rigidbody::EvaluateFriction()
+	void Rigidbody::EvaluateFriction(const float dt)
 	{
 		m_drag_force_ = Physics::EvalDrag(m_linear_momentum_, Physics::g_drag_coefficient);
 
@@ -73,14 +73,14 @@ namespace Engine::Component
 
 				if (const auto other_rb = obj->GetComponent<Rigidbody>().lock())
 				{
-					m_linear_friction_ += Physics::EvalFriction(m_linear_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
-					m_angular_friction_ += Physics::EvalFriction(m_angular_momentum_, other_rb->GetFrictionCoefficient(), GetDeltaTime());
+					m_linear_friction_ += Physics::EvalFriction(m_linear_momentum_, other_rb->GetFrictionCoefficient(), dt);
+					m_angular_friction_ += Physics::EvalFriction(m_angular_momentum_, other_rb->GetFrictionCoefficient(), dt);
 				}
 			}
 		}
 	}
 
-	void Rigidbody::PreUpdate()
+	void Rigidbody::PreUpdate(const float& dt)
 	{
 		m_bPreviousGrounded = m_bGrounded;
 		m_bGrounded = false;
@@ -111,7 +111,7 @@ namespace Engine::Component
 		}
 	}
 
-	void Rigidbody::Update()
+	void Rigidbody::Update(const float& dt)
 	{
 		if (m_bFixed)
 		{
@@ -125,7 +125,7 @@ namespace Engine::Component
 		{
 			if (!m_bPreviousGrounded && m_bGrounded)
 			{
-				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
+				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), dt);
 			}
 			else if (m_bGrounded)
 			{
@@ -133,7 +133,7 @@ namespace Engine::Component
 			}
 			else
 			{
-				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), GetDeltaTime());
+				m_gravity_ = Physics::EvalGravity(collider->GetInverseMass(), dt);
 			}
 		}
 		else
@@ -141,10 +141,10 @@ namespace Engine::Component
 			m_gravity_ = Vector3::Zero;
 		}
 
-		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, GetDeltaTime());
-		m_angular_momentum_ = Physics::EvalAngular(m_angular_momentum_, m_torque_, GetDeltaTime());
+		m_linear_momentum_ = Physics::EvalVerlet(m_linear_momentum_, m_force_, dt);
+		m_angular_momentum_ = Physics::EvalAngular(m_angular_momentum_, m_torque_, dt);
 
-		EvaluateFriction();
+		EvaluateFriction(dt);
 
 		m_linear_momentum_ += m_linear_friction_;
 		FrictionVelocityGuard(m_linear_momentum_, m_linear_friction_);
@@ -158,7 +158,7 @@ namespace Engine::Component
 		//FrictionVelocityGuard(m_angular_momentum_, m_angular_friction_);
 	}
 
-	void Rigidbody::PreRender()
+	void Rigidbody::PreRender(const float dt)
 	{
 		// after CollisionManager resolves collision, update the position lately.
 		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
@@ -169,17 +169,17 @@ namespace Engine::Component
 		tr->SetPosition(m_next_position_);
 
 		Quaternion orientation = tr->GetRotation();
-		orientation += Quaternion{m_angular_momentum_ * GetDeltaTime() * 0.5f, 0.0f} * orientation;
+		orientation += Quaternion{m_angular_momentum_ * dt * 0.5f, 0.0f} * orientation;
 		orientation.Normalize();
 
 		tr->SetRotation(orientation);
 	}
 
-	void Rigidbody::Render()
+	void Rigidbody::Render(const float dt)
 	{
 	}
 
-	void Rigidbody::FixedUpdate()
+	void Rigidbody::FixedUpdate(const float& dt)
 	{
 		m_previous_collision_count_ = m_collision_count_;
 		m_collision_count_.clear();

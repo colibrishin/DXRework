@@ -23,7 +23,7 @@ namespace Engine::Manager::Graphics
 		~RenderPipeline() override = default;
 
 		void Initialize() override;
-		void PreRender() override;
+		void PreRender(const float& dt) override;
 
 		static void SetShader(Graphic::IShader* shader);
 
@@ -53,10 +53,10 @@ namespace Engine::Manager::Graphics
 		void PrecompileShaders();
 		void InitializeSamplers();
 
-		void PreUpdate() override {}
-		void Update() override {}
-		void Render() override {}
-		void FixedUpdate() override {}
+		void PreUpdate(const float& dt) override {}
+		void Update(const float& dt) override {}
+		void Render(const float& dt) override {}
+		void FixedUpdate(const float& dt) override {}
 
 	private:
 		ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;

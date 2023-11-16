@@ -26,10 +26,10 @@ namespace Client::Object
 		void Initialize() override;
 		~FPSCounter() override;
 
-		inline void PreUpdate() override;
-		inline void Update() override;
-		inline void PreRender() override;
-		inline void Render() override;
+		inline void PreUpdate(const float& dt) override;
+		inline void Update(const float& dt) override;
+		inline void PreRender(const float dt) override;
+		inline void Render(const float dt) override;
 	};
 
 	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
@@ -49,24 +49,24 @@ namespace Client::Object
 	{
 	}
 
-	inline void FPSCounter::PreUpdate()
+	inline void FPSCounter::PreUpdate(const float& dt)
 	{
-		Text::PreUpdate();
+		Text::PreUpdate(dt);
 	}
 
-	inline void FPSCounter::Update()
+	inline void FPSCounter::Update(const float& dt)
 	{
-		Text::Update();
+		Text::Update(dt);
 		SetText(L"FPS: " + std::to_wstring(Engine::GetApplication().GetFPS()));
 	}
 
-	inline void FPSCounter::PreRender()
+	inline void FPSCounter::PreRender(const float dt)
 	{
-		Text::PreRender();
+		Text::PreRender(dt);
 	}
 
-	inline void FPSCounter::Render()
+	inline void FPSCounter::Render(const float dt)
 	{
-		Text::Render();
+		Text::Render(dt);
 	}
 }

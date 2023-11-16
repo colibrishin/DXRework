@@ -11,15 +11,15 @@ namespace Engine::Resources
 	{
 	}
 
-	void Font::PreUpdate()
+	void Font::PreUpdate(const float& dt)
 	{
 	}
 
-	void Font::Update()
+	void Font::Update(const float& dt)
 	{
 	}
 
-	void Font::PreRender()
+	void Font::PreRender(const float dt)
 	{
 		if (m_lazy_reload_)
 		{
@@ -29,12 +29,12 @@ namespace Engine::Resources
 		}
 	}
 
-	void Font::Render()
+	void Font::Render(const float dt)
 	{
 		m_font_->DrawString(GetToolkitAPI().GetSpriteBatch(), m_text_.c_str(), m_position_, m_color_, m_rotation_radian_, Vector2::Zero, m_scale_);
 	}
 
-	void Font::FixedUpdate()
+	void Font::FixedUpdate(const float& dt)
 	{
 	}
 

@@ -56,14 +56,14 @@ namespace Engine::Component
 		bool IsGrounded() const { return m_bGrounded; }
 		bool HasGroundedChangedInFrame() const { return m_bGrounded != m_bPreviousGrounded; }
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
-		void EvaluateFriction();
+		void EvaluateFriction(const float dt);
 		void FrictionVelocityGuard(Vector3& evaluated_velocity, const Vector3& friction) const;
 
 		std::map<uint64_t, UINT> m_previous_collision_count_;

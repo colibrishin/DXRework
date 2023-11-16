@@ -11,12 +11,12 @@ namespace Client::Mesh
 		BackSphereMesh();
 		~BackSphereMesh() override = default;
 
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
 		void Load_INTERNAL() override;
 		void Initialize() override;
-		void FixedUpdate() override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 
@@ -27,15 +27,15 @@ namespace Client::Mesh
 		BackSphereMesh::Initialize();
 	}
 
-	inline void BackSphereMesh::PreUpdate()
+	inline void BackSphereMesh::PreUpdate(const float& dt)
 	{
 	}
 
-	inline void BackSphereMesh::Update()
+	inline void BackSphereMesh::Update(const float& dt)
 	{
 	}
 
-	inline void BackSphereMesh::PreRender()
+	inline void BackSphereMesh::PreRender(const float dt)
 	{
 	}
 
@@ -66,7 +66,7 @@ namespace Client::Mesh
 		Mesh::Initialize();
 	}
 
-	inline void BackSphereMesh::FixedUpdate()
+	inline void BackSphereMesh::FixedUpdate(const float& dt)
 	{
 	}
 }

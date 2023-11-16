@@ -50,11 +50,11 @@ namespace Engine::Component
 
 		void Initialize() override;
 		void UpdateDataFromTransform();
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
-		void FixedUpdate() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 	private:
 		union BoundingGroup
@@ -280,23 +280,23 @@ namespace Engine::Component
 		}
 	}
 
-	inline void Collider::PreUpdate()
+	inline void Collider::PreUpdate(const float& dt)
 	{
 		UpdateDataFromTransform();
 		UpdateInertiaTensor();
 	}
 
-	inline void Collider::Update()
+	inline void Collider::Update(const float& dt)
 	{
 		UpdateDataFromTransform();
 		UpdateInertiaTensor();
 	}
 
-	inline void Collider::PreRender()
+	inline void Collider::PreRender(const float dt)
 	{
 	}
 
-	inline void Collider::Render()
+	inline void Collider::Render(const float dt)
 	{
 	}
 }

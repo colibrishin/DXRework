@@ -18,10 +18,10 @@ namespace Engine::Objects
 		void SetPosition(Vector3 position);
 
 		void Initialize() override;
-		void PreUpdate() override;
-		void Update() override;
-		void PreRender() override;
-		void Render() override;
+		void PreUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
 
 	private:
 		UINT m_light_id_;
@@ -65,25 +65,25 @@ namespace Engine::Objects
 		m_color_ = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
 	}
 
-	inline void Light::PreUpdate()
+	inline void Light::PreUpdate(const float& dt)
 	{
-		Object::PreUpdate();
+		Object::PreUpdate(dt);
 	}
 
-	inline void Light::Update()
+	inline void Light::Update(const float& dt)
 	{
-		Object::Update();
+		Object::Update(dt);
 	}
 
-	inline void Light::PreRender()
+	inline void Light::PreRender(const float dt)
 	{
-		Object::PreRender();
+		Object::PreRender(dt);
 		GetRenderPipeline().SetLightColor(m_light_id_, m_color_);
 		GetRenderPipeline().SetLightPosition(m_light_id_, GetComponent<Component::Transform>().lock()->GetPosition());
 	}
 
-	inline void Light::Render()
+	inline void Light::Render(const float dt)
 	{
-		Object::Render();
+		Object::Render(dt);
 	}
 }
