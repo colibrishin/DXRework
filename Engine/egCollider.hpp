@@ -29,7 +29,6 @@ namespace Engine::Component
 
 		bool Intersects(Collider& other) const;
 		bool Contains(Collider& other) const;
-		bool Intersects(const Ray& other, float dist) const;
 
 		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
 		void RemoveCollidedObject(const uint64_t id) { m_collided_objects_.erase(id); }
@@ -39,12 +38,13 @@ namespace Engine::Component
 		Vector3 GetPosition() const { return m_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetSize() const { return m_size_; }
-		void GetPenetration(Collider& other, Vector3& normal, float& depth) const;
+		void GetPenetration(const Collider& other, Vector3& normal, float& depth) const;
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
 		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
 
-		Vector3 GetSupportPoint(const Vector3& dir) const;
+		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>().lock()->GetVertices(); }
+		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
 
 		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 
@@ -61,7 +61,6 @@ namespace Engine::Component
 		{
 			DirectX::BoundingOrientedBox box;
 			DirectX::BoundingSphere sphere;
-			DirectX::BoundingFrustum frustum;
 		};
 
 		template <typename T>
@@ -74,10 +73,6 @@ namespace Engine::Component
 			else if (m_type_ == BOUNDING_TYPE_SPHERE)
 			{
 				return As<BoundingSphere>().Intersects(other);
-			}
-			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
-			{
-				throw std::exception("Not implemented");
 			}
 
 			return false;
@@ -94,10 +89,6 @@ namespace Engine::Component
 			{
 				return As<BoundingSphere>().Contains(other);
 			}
-			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
-			{
-				throw std::exception("Not implemented");
-			}
 
 			return false;
 		}
@@ -113,14 +104,6 @@ namespace Engine::Component
 			{
 				value.Radius = size.x / 2;
 			}
-			else if constexpr (std::is_same_v<T, BoundingFrustum>)
-			{
-				throw std::exception("Not implemented");
-			}
-			else
-			{
-				throw std::exception("Invalid type");
-			}
 		}
 
 		template <typename T>
@@ -134,25 +117,11 @@ namespace Engine::Component
 			{
 				return;
 			}
-			else if constexpr (std::is_same_v<T, BoundingFrustum>)
-			{
-				assert(false);
-			}
-			else
-			{
-				throw std::exception("Invalid type");
-			}
 		}
 
 		template <typename T>
 		void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
 		{
-			if constexpr (std::is_same_v<T, BoundingFrustum>)
-			{
-				value.Origin = position;
-				return;
-			}
-
 			As<T>().Center = position;
 		}
 
@@ -167,29 +136,8 @@ namespace Engine::Component
 			{
 				return m_boundings_.sphere;
 			}
-			else if constexpr (std::is_same_v<T, BoundingFrustum>)
-			{
-				throw std::exception("Not implemented");
-			}
 
 			throw std::exception("Invalid type");
-		}
-
-		template <typename T>
-		void GetPenetration_GENERAL_TYPE(const T& value, Vector3& normal, float& penetration)
-		{
-			if (m_type_ == BOUNDING_TYPE_BOX)
-			{
-				penetration = Physics::GetCollisionPenetrationDepth(As<BoundingOrientedBox>(), value, normal);
-			}
-			else if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				penetration = Physics::GetCollisionPenetrationDepth(value, As<BoundingSphere>(), normal);
-			}
-			else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
-			{
-				throw std::exception("Not implemented");
-			}
 		}
 
 		void UpdateBoundings();
@@ -212,6 +160,7 @@ namespace Engine::Component
 		float m_mass_;
 		Vector3 m_inverse_inertia_;
 		XMFLOAT3X3 m_inertia_tensor_;
+		Matrix m_world_matrix_;
 
 	};
 
@@ -246,9 +195,13 @@ namespace Engine::Component
 
 	inline void Collider::Initialize()
 	{
-		if(const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
 		{
 			GenerateFromMesh(mesh);
+		}
+		else
+		{
+			throw std::exception("Mesh is not loaded");
 		}
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
@@ -258,10 +211,6 @@ namespace Engine::Component
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
 			GenerateInertiaSphere();
-		}
-		else if (m_type_ == BOUNDING_TYPE_FRUSTUM)
-		{
-			throw std::exception("Not implemented");
 		}
 
 		UpdateInertiaTensor();
