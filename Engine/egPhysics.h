@@ -1,39 +1,70 @@
 #pragma once
+#include <array>
 #include <SimpleMath.h>
 #include <DirectXCollision.h>
 
 #include "egRigidbody.hpp"
 
+#undef min
+
 namespace Engine::Physics
 {
 	using namespace DirectX::SimpleMath;
+
+	struct Simplex
+	{
+	private:
+		std::array<Vector3, 4> m_points_;
+		int m_size_;
+
+	public:
+		Simplex() : m_size_(0) {}
+		Simplex& operator=(std::initializer_list<Vector3> list)
+		{
+			m_size_ = 0;
+			for (const auto& point : list)
+			{
+				m_points_[m_size_++] = point;
+			}
+
+			return *this;
+		}
+
+		void push_front(const Vector3& point)
+		{
+			m_points_ = { point, m_points_[0], m_points_[1], m_points_[2] };
+			m_size_ = std::min(m_size_ + 1, 4);
+		}
+
+		const Vector3& operator[](const int index) const
+		{
+			return m_points_[index];
+		}
+		size_t size() const
+		{
+			return m_size_;
+		}
+
+		auto begin() const { return m_points_.begin(); }
+		auto end() const { return m_points_.end() - (4 - m_size_); }
+	};
+
+	inline Vector3 GetActivePolarity(const Vector3& vel)
+	{
+		return {std::copysignf(vel.x, 1.f), std::copysignf(vel.y, 1.f), std::copysignf(vel.z, 1.f)};
+	}
 
 	constexpr float g_gravity_acc = 9.81f;
 	constexpr Vector3 g_gravity_vec = Vector3(0.0f, -g_gravity_acc, 0.0f);
 	constexpr float g_restitution_coefficient = 0.5f;
 	constexpr float g_drag_coefficient = 0.47f;
-	constexpr float g_floating_epsilon = 0.000001f;
+	constexpr float g_floating_epsilon = g_epsilon;
+	constexpr float g_penetration_epsilon = g_epsilon;
 
-	extern Vector3 EvalVerlet(const Vector3& vel, const Vector3& acc, float dt);
+	constexpr size_t g_gjk_max_iteration = 64;
+	constexpr size_t g_epa_max_iteration = 64;
+	
 	extern Vector3 EvalFriction(const Vector3& vel, float mu, float dt);
 	extern Vector3 EvalDrag(const Vector3& vel, float k);
 	extern Vector3 EvalGravity(float invMass, float dt);
-
-	extern float GetCollisionPenetrationDepth(const DirectX::BoundingOrientedBox& box, 
-												const DirectX::BoundingSphere& sphere, Vector3& normal);
-	extern float GetCollisionPenetrationDepth(const DirectX::BoundingSphere& sphere1, const DirectX::BoundingSphere& sphere2, Vector3& normal);
-	extern float GetCollisionPenetrationDepth(const DirectX::BoundingOrientedBox& box1, const DirectX::BoundingOrientedBox& box2, Vector3& normal);
-
-	extern Vector3 EvalAngular(const Vector3& angular, const Vector3& torque, float dt);
-	
-	extern Vector3 GetActivePolarity(const Vector3& vel);
-
-	extern bool TestRayOBBIntersection(const Vector3& ray_origin, const Vector3& ray_direction, const Vector3& aabb_min,
-										const Vector3& aabb_max, const Matrix& ModelMatrix,
-										float& intersection_distance);
-
-	extern Matrix CreateWorldMatrix(const Vector3& position, const Quaternion& rotation, const Vector3& scale);
-
-	extern bool CheckGrounded(Abstract::Object& lhs, Abstract::Object& rhs);
-	extern void ResolveCollision(Abstract::Object& lhs, Abstract::Object& rhs);
 }
