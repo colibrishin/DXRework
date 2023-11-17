@@ -25,6 +25,7 @@ namespace Engine::Manager
 
 	private:
 		void ResolveTunneling(const std::shared_ptr<Abstract::Object>& obj, const std::shared_ptr<Abstract::Object>& obj_other);
+		void ResolveCollision(Abstract::Object* lhs, Abstract::Object* rhs);
 		void CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
 		void CheckGrounded(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
 		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& obj,
