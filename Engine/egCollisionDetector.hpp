@@ -23,11 +23,12 @@ namespace Engine::Manager
 		bool IsCollided(uint64_t id) const { return !m_collision_map_.at(id).empty(); }
 		bool IsCollided(uint64_t id1, uint64_t id2) const { return m_collision_map_.at(id1).contains(id2); }
 
-
 	private:
+		void ResolveTunneling(const std::shared_ptr<Abstract::Object>& obj, const std::shared_ptr<Abstract::Object>& obj_other);
 		void CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
 		void CheckGrounded(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j);
-		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& obj, const std::shared_ptr<Abstract::Object>& obj_other);
+		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& obj,
+							const std::shared_ptr<Abstract::Object>& obj_other);
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<uint64_t, std::set<uint64_t>> m_collision_map_;

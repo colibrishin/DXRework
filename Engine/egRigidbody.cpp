@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egRigidbody.hpp"
 #include "egCollider.hpp"
+#include "egKinetic.h"
 
 namespace Engine::Component
 {

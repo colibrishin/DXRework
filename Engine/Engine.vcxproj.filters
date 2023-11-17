@@ -155,6 +155,18 @@
       <Filter>Physics</Filter>
     </ClInclude>
     <ClInclude Include="egTensor3.hpp" />
+    <ClInclude Include="egPhysicsManager.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollision.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egElastic.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egKinetic.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -209,6 +221,9 @@
       <Filter>Component</Filter>
     </ClCompile>
     <ClCompile Include="egGravity.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollision.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
   </ItemGroup>

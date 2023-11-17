@@ -3,6 +3,7 @@
 #include "egManagerHelper.hpp"
 #include "egObject.hpp"
 #include "egCollider.hpp"
+#include "egCollision.h"
 #include "egRigidbody.hpp"
 
 namespace Engine::Abstract

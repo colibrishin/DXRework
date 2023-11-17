@@ -37,6 +37,7 @@ namespace Engine::Resources
 		void ReadOBJFile();
 
 		const std::vector<Shape>& GetShapes() { return m_vertices_; }
+		const std::vector<const Vector3*>& GetVertices() { return m_flatten_vertices_; }
 
 		UINT GetIndexCount() const { return static_cast<UINT>(m_indices_.size()); }
 
@@ -54,6 +55,7 @@ namespace Engine::Resources
 		void UpdateTangentBinormal();
 
 		std::vector<Shape> m_vertices_;
+		std::vector<const Vector3*> m_flatten_vertices_;
 		std::vector<IndexCollection> m_indices_;
 
 		VertexBufferCollection m_vertex_buffers_;

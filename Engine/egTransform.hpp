@@ -20,6 +20,7 @@ namespace Engine::Component
 		void Translate(Vector3 translation);
 
 		Vector3 GetPosition() const { return m_position_; }
+		Vector3 GetPreviousPosition() const { return m_previous_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetScale() const { return m_scale_; }
 
@@ -31,9 +32,10 @@ namespace Engine::Component
 		void FixedUpdate(const float& dt) override;
 
 	private:
-		Vector3 m_position_ = Vector3::Zero;
+		Vector3 m_previous_position_;
+		Vector3 m_position_;
 		Quaternion m_rotation_;
-		Vector3 m_scale_ = Vector3::One;
+		Vector3 m_scale_;
 		TransformBuffer m_transform_buffer_;
 	};
 }

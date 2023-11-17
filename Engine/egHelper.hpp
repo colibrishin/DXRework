@@ -33,15 +33,12 @@ namespace Engine
 		};
 	}
 
-	static Matrix GenerateWorldMatrix(const DirectX::BoundingOrientedBox& box)
+	template <typename T>
+	std::vector<T> flatten(const std::vector<std::vector<T>>& orig)
 	{
-		Matrix world = Matrix::CreateWorld(Vector3::Zero, Vector3::Forward, Vector3::Up);
-
-		const Matrix S = Matrix::CreateScale(box.Extents * 2.f);
-		const Matrix R = Matrix::CreateFromQuaternion(box.Orientation);
-		const Matrix T = Matrix::CreateTranslation(box.Center);
-
-		world *= S * R * T;
-		return world;
-	}
+		std::vector<T> ret;
+		for (const auto& v : orig)
+			ret.insert(ret.end(), v.begin(), v.end());
+		return ret;
+	}  
 }

@@ -20,6 +20,7 @@ namespace Engine::Component
 
 	void Transform::PreUpdate(const float& dt)
 	{
+		m_previous_position_ = m_position_;
 	}
 
 	void Transform::Update(const float& dt)
