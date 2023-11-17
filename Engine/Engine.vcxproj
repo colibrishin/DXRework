@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="egCollision.h" />
     <ClInclude Include="egDXCommon.h" />
     <ClInclude Include="egCamera.hpp" />
     <ClInclude Include="egCollider.hpp" />
@@ -27,9 +28,12 @@
     <ClInclude Include="egComponent.hpp" />
     <ClInclude Include="egD3Device.hpp" />
     <ClInclude Include="egApplication.hpp" />
+    <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
     <ClInclude Include="egFont.hpp" />
+    <ClInclude Include="egKinetic.h" />
     <ClInclude Include="egPhysics.h" />
+    <ClInclude Include="egPhysicsManager.hpp" />
     <ClInclude Include="egProjectionFrustum.hpp" />
     <ClInclude Include="egHelper.hpp" />
     <ClInclude Include="egIShader.hpp" />
@@ -62,6 +66,7 @@
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
+    <ClCompile Include="egCollision.cpp" />
     <ClCompile Include="egCollisionDetector.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />
