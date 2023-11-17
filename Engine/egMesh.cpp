@@ -202,6 +202,14 @@ namespace Engine::Resources
 
 		UpdateTangentBinormal();
 
+		for (const auto& shape : m_vertices_)
+		{
+			for (const auto & vertex : shape)
+			{
+				m_flatten_vertices_.push_back(&vertex.position);
+			}
+		}
+
 		m_vertex_buffers_.resize(m_vertices_.size());
 		m_index_buffers_.resize(m_indices_.size());
 
