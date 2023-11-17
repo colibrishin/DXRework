@@ -4,6 +4,8 @@
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 #include "egCollisionDetector.hpp"
+#include "egPhysicsManager.hpp"
+#include "egTransformLerpManager.hpp"
 
 namespace Engine
 {
@@ -45,5 +47,15 @@ namespace Engine
 	inline Manager::Graphics::ToolkitAPI& GetToolkitAPI()
 	{
 		return Manager::Graphics::ToolkitAPI::GetInstance();
+	}
+
+	inline Manager::Physics::TransformLerpManager& GetTransformLerpManager()
+	{
+		return Manager::Physics::TransformLerpManager::GetInstance();
+	}
+
+	inline Manager::Physics::PhysicsManager& GetPhysicsManager()
+	{
+		return Manager::Physics::PhysicsManager::GetInstance();
 	}
 }
