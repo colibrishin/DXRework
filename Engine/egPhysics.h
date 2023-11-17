@@ -58,8 +58,6 @@ namespace Engine::Physics
 	constexpr Vector3 g_gravity_vec = Vector3(0.0f, -g_gravity_acc, 0.0f);
 	constexpr float g_restitution_coefficient = 0.5f;
 	constexpr float g_drag_coefficient = 0.47f;
-	constexpr float g_floating_epsilon = g_epsilon;
-	constexpr float g_penetration_epsilon = g_epsilon;
 
 	constexpr size_t g_gjk_max_iteration = 64;
 	constexpr size_t g_epa_max_iteration = 64;

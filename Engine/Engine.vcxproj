@@ -31,6 +31,7 @@
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
     <ClInclude Include="egFont.hpp" />
+    <ClInclude Include="egFriction.h" />
     <ClInclude Include="egKinetic.h" />
     <ClInclude Include="egPhysics.h" />
     <ClInclude Include="egPhysicsManager.hpp" />
@@ -57,6 +58,7 @@
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
     <ClInclude Include="egTransform.hpp" />
+    <ClInclude Include="egTransformLerpManager.hpp" />
     <ClInclude Include="egVertexShader.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.hpp" />
@@ -77,10 +79,12 @@
     <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egMesh.cpp" />
     <ClCompile Include="egObject.cpp" />
+    <ClCompile Include="egPhysicsManager.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egTransform.cpp" />
+    <ClCompile Include="egTransfromLerpManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">

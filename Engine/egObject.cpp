@@ -44,11 +44,6 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
-
-		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-
-		Physics::ResolveCollision(*this, *other.GetOwner().lock());
-		rb->AddCollisionCount(other.GetOwner().lock()->GetID());
 	}
 
 	void Object::OnCollisionContinue(const Engine::Component::Collider& other)
@@ -57,7 +52,6 @@ namespace Engine::Abstract
 		{
 			throw std::exception("Object has no collider");
 		}
-		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 	}
 
 	void Object::OnCollisionExit(const Engine::Component::Collider& other)

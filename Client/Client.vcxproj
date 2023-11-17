@@ -180,6 +180,7 @@
     <ClInclude Include="clTestObject.hpp" />
     <ClInclude Include="clTestScene.hpp" />
     <ClInclude Include="clTriangleMesh.hpp" />
+    <ClInclude Include="clVelocityCounter.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

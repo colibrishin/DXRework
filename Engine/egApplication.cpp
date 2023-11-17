@@ -59,17 +59,18 @@ namespace Engine::Manager
 		m_timer->Tick([&]()
 		{
 			const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
-
 			elapsed += dt;
 
-			if (elapsed >= 1.0f)
+			PreUpdate(dt);
+
+			if (elapsed >= g_fixed_update_interval)
 			{
 				FixedUpdate(dt);
 				elapsed = 0.0f;
 			}
 
-			PreUpdate(dt);
 			Update(dt);
+
 			PreRender(dt);
 			Render(dt);
 		});
@@ -80,6 +81,8 @@ namespace Engine::Manager
 		GetSceneManager().PreUpdate(dt);
 		GetProjectionFrustum().PreUpdate(dt);
 		GetResourceManager().PreUpdate(dt);
+		GetPhysicsManager().PreUpdate(dt);
+		GetTransformLerpManager().PreUpdate(dt);
 		GetCollisionDetector().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
 	}
@@ -89,6 +92,8 @@ namespace Engine::Manager
 		GetSceneManager().FixedUpdate(dt);
 		GetProjectionFrustum().FixedUpdate(dt);
 		GetResourceManager().FixedUpdate(dt);
+		GetPhysicsManager().FixedUpdate(dt);
+		GetTransformLerpManager().FixedUpdate(dt);
 		GetCollisionDetector().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
 	}
@@ -98,6 +103,8 @@ namespace Engine::Manager
 		GetSceneManager().Update(dt);
 		GetProjectionFrustum().Update(dt);
 		GetResourceManager().Update(dt);
+		GetPhysicsManager().Update(dt);
+		GetTransformLerpManager().Update(dt);
 		GetCollisionDetector().Update(dt);
 		GetD3Device().Update(dt);
 	}
@@ -108,6 +115,8 @@ namespace Engine::Manager
 		GetSceneManager().PreRender(dt);
 		GetProjectionFrustum().PreRender(dt);
 		GetResourceManager().PreRender(dt);
+		GetPhysicsManager().PreRender(dt);
+		GetTransformLerpManager().PreRender(dt);
 		GetCollisionDetector().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
@@ -118,6 +127,8 @@ namespace Engine::Manager
 		GetSceneManager().Render(dt);
 		GetProjectionFrustum().Render(dt);
 		GetResourceManager().Render(dt);
+		GetPhysicsManager().Render(dt);
+		GetTransformLerpManager().Render(dt);
 		GetCollisionDetector().Render(dt);
 		GetToolkitAPI().Render(dt);
 		GetD3Device().Render(dt);
