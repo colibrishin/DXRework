@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clTriangleMesh.hpp"
+#include "clVelocityCounter.hpp"
 #include "../Engine/egCollider.hpp"
 #include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egTexture.hpp"
@@ -29,6 +30,10 @@ namespace Client::Object
 		inline void Update(const float& dt) override;
 		inline void PreRender(const float dt) override;
 		inline void Render(const float dt) override;
+
+	private:
+		std::shared_ptr<VelocityCounter> m_velocity_counter_;
+
 	};
 
 	inline void TestObject::Initialize()
@@ -38,6 +43,8 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestNormalMap"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
+
+		m_velocity_counter_ = Engine::Instantiate<VelocityCounter>();
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -64,6 +71,8 @@ namespace Client::Object
 	inline void TestObject::Update(const float& dt)
 	{
 		Object::Update(dt);
+		m_velocity_counter_->SetVelocity(GetComponent<Engine::Component::Rigidbody>().lock()->GetLinearMomentum());
+		m_velocity_counter_->Update(dt);
 	}
 
 	inline void TestObject::PreRender(const float dt)
@@ -74,5 +83,6 @@ namespace Client::Object
 	inline void TestObject::Render(const float dt)
 	{
 		Object::Render(dt);
+		m_velocity_counter_->Render(dt);
 	}
 }
