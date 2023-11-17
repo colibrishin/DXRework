@@ -18,37 +18,6 @@ namespace Engine::Manager
 		}
 	}
 
-	bool CollisionDetector::CheckRaycasting(const std::shared_ptr<Abstract::Object>& obj, const std::shared_ptr<Abstract::Object>& obj_other)
-	{
-		const auto tr = obj->GetComponent<Component::Transform>().lock();
-		const auto tr_other = obj_other->GetComponent<Component::Transform>().lock();
-
-		const auto cl = obj->GetComponent<Component::Collider>().lock();
-		const auto cl_other = obj_other->GetComponent<Component::Collider>().lock();
-
-		if (const auto rb = obj->GetComponent<Component::Rigidbody>().lock())
-		{
-			if (rb->IsFixed())
-			{
-				return false;
-			}
-
-			Vector3 dir;
-			const Vector3 velocity = rb->GetLinearMomentum();
-			const Vector3 delta = (tr->GetPosition() - tr_other->GetPosition());
-			const float length = velocity.Length();
-
-			velocity.Normalize(dir);
-
-			if (const Ray velocity_ray(tr->GetPosition(), dir); cl_other->Intersects(velocity_ray, length))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	void CollisionDetector::CheckCollision(const std::vector<WeakObject>& layer_i, const std::vector<WeakObject>& layer_j)
 	{
 		for (const auto& obj_i : layer_i)
@@ -73,23 +42,6 @@ namespace Engine::Manager
 
 				if (!cl || !cl_other)
 				{
-					continue;
-				}
-
-				if (CheckRaycasting(obj, obj_other))
-				{
-					if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
-					{
-						obj->DispatchComponentEvent(cl, cl_other);
-						obj_other->DispatchComponentEvent(cl_other, cl);
-						continue;
-					}
-
-					m_collision_map_[obj->GetID()].insert(obj_other->GetID());
-					m_collision_map_[obj_other->GetID()].insert(obj->GetID());
-
-					obj->DispatchComponentEvent(cl, cl_other);
-					obj_other->DispatchComponentEvent(cl_other, cl);
 					continue;
 				}
 
@@ -188,6 +140,7 @@ namespace Engine::Manager
 				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
 				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
 
+				CheckGrounded(layer_i, layer_j);
 				CheckCollision(layer_i, layer_j);
 			}
 		}
@@ -195,23 +148,6 @@ namespace Engine::Manager
 
 	void CollisionDetector::PreUpdate(const float& dt)
 	{
-		const auto scene = GetSceneManager().GetActiveScene().lock();
-
-		for (int i = 0; i < LAYER_MAX; ++i)
-		{
-			for (int j = 0; j < LAYER_MAX; ++j)
-			{
-				if (!m_layer_mask_[i].test(j))
-				{
-					continue;
-				}
-
-				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
-				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
-
-				CheckGrounded(layer_i, layer_j);
-			}
-		}
 	}
 
 	void CollisionDetector::PreRender(const float& dt)
