@@ -49,6 +49,25 @@ namespace Engine::Component
 		return false;
 	}
 
+	bool Collider::Intersects(const Ray& ray, float distance, float& intersection) const
+	{
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			const Vector3 Extents = m_boundings_.box.Extents;
+			const auto test = Engine::Physics::Ray::TestRayOBBIntersection(ray.position, ray.direction, -Extents, Extents, m_world_matrix_, intersection);
+
+			return test && intersection <= distance;
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			const auto test = Engine::Physics::Ray::TestRaySphereIntersection(ray, m_boundings_.sphere.Center, m_boundings_.sphere.Radius, intersection);
+
+			return test && intersection <= distance;
+		}
+
+		return false;
+	}
+
 	bool Collider::Contains(Collider& other) const
 	{
 		if (m_type_ == BOUNDING_TYPE_BOX)
@@ -74,7 +93,7 @@ namespace Engine::Component
 		auto dir = other.GetPosition() - GetPosition();
 		dir.Normalize();
 
-		Physics::GJKAlgorithm(*this, other, dir, normal, depth);
+		Physics::GJK::GJKAlgorithm(*this, other, dir, normal, depth);
 	}
 
 	void Collider::GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh)

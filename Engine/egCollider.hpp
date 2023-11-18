@@ -26,8 +26,10 @@ namespace Engine::Component
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
 		void SetMass(const float mass) { m_mass_ = mass; }
+		void SetResolved(const bool resolved) { m_resolved = resolved; }
 
 		bool Intersects(Collider& other) const;
+		bool Intersects(const Ray& ray, float distance, float& intersection) const;
 		bool Contains(Collider& other) const;
 
 		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
@@ -42,6 +44,7 @@ namespace Engine::Component
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
 		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
+		bool GetResolved() const { return m_resolved; }
 
 		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>().lock()->GetVertices(); }
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
@@ -149,6 +152,7 @@ namespace Engine::Component
 		std::set<uint64_t> m_collided_objects_;
 
 		bool m_bDirtyByTransform;
+		bool m_resolved;
 
 		Vector3 m_position_;
 		Vector3 m_size_;
@@ -167,6 +171,7 @@ namespace Engine::Component
 	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_COLLIDER,
 																				owner),
 																			m_bDirtyByTransform(false),
+																			m_resolved(false),
 																			m_position_(Vector3::Zero),
 																			m_size_(Vector3::One),
 																			m_rotation_(Quaternion::Identity),
@@ -231,6 +236,7 @@ namespace Engine::Component
 
 	inline void Collider::PreUpdate(const float& dt)
 	{
+		m_resolved = false;
 		UpdateDataFromTransform();
 		UpdateInertiaTensor();
 	}
