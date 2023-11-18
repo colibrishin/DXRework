@@ -59,7 +59,7 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-		rb->SetFrictionCoefficient(0.f);
+		rb->SetFrictionCoefficient(0.1f);
 		rb->SetGravityOverride(true);
 	}
 
