@@ -52,7 +52,7 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
-		//AddGameObject(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
 		//AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);

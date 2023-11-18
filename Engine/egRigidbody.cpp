@@ -18,7 +18,7 @@ namespace Engine::Component
 		}
 	}
 
-	void Rigidbody::PreUpdate(const float& dt)
+	void Rigidbody::Reset()
 	{
 		m_bGrounded = false;
 
@@ -27,6 +27,10 @@ namespace Engine::Component
 		m_drag_force_ = Vector3::Zero;
 		m_linear_friction_ = Vector3::Zero;
 		m_angular_friction_ = Vector3::Zero;
+	}
+
+	void Rigidbody::PreUpdate(const float& dt)
+	{
 	}
 
 	void Rigidbody::Update(const float& dt)

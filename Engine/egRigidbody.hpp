@@ -46,6 +46,8 @@ namespace Engine::Component
 		Vector3 GetForce() const { return m_force_; }
 		Vector3 GetTorque() const { return m_torque_; }
 
+		void Reset();
+
 		bool IsGravityAllowed() const { return m_bGravityOverride; }
 		bool IsFixed() const { return m_bFixed; }
 		bool IsGrounded() const { return m_bGrounded; }
