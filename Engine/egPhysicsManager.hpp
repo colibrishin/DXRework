@@ -26,6 +26,7 @@ namespace Engine::Manager::Physics
 
 	private:
 		static void UpdateGravity(Engine::Component::Rigidbody* rb);
+		static void EpsilonGuard(Vector3& linear_momentum);
 		static void UpdateObject(Component::Rigidbody* rb, const float& dt);
 
 	};

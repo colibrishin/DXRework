@@ -64,7 +64,18 @@ namespace Engine::Manager::Physics
 
 		const auto cl = rb->GetOwner().lock()->GetComponent<Component::Collider>().lock();
 
-		rb->AddForce(Engine::Physics::g_gravity_vec * cl->GetInverseMass());
+		if (!rb->IsGrounded())
+		{
+			rb->AddForce(Engine::Physics::g_gravity_vec * cl->GetInverseMass());
+		}
+	}
+
+	void PhysicsManager::EpsilonGuard(Vector3& linear_momentum)
+	{
+		if (linear_momentum.Length() < g_epsilon)
+		{
+			linear_momentum = Vector3::Zero;
+		}
 	}
 
 	void PhysicsManager::UpdateObject(Component::Rigidbody* rb, const float& dt)
