@@ -1,4 +1,6 @@
 #include "pch.hpp"
+
+#include "egCollider.hpp"
 #include "egTransformLerpManager.hpp"
 
 namespace Engine::Manager::Physics
@@ -30,12 +32,16 @@ namespace Engine::Manager::Physics
 						const auto previous = tr->GetPreviousPosition();
 						const auto current = tr->GetPosition();
 
-						if (previous == current)
+						tr->SetPosition(Vector3::Lerp(previous, current, m_elapsedTime_ / g_fixed_update_interval));
+
+						const auto cl = obj->GetComponent<Component::Collider>().lock();
+
+						if (!cl)
 						{
 							continue;
 						}
 
-						tr->SetPosition(Vector3::Lerp(previous, current, m_elapsedTime_ / g_fixed_update_interval));
+						cl->SetPosition(tr->GetPosition());
 					}
 				}
 			}
