@@ -81,9 +81,10 @@ namespace Engine::Manager
 		GetSceneManager().PreUpdate(dt);
 		GetProjectionFrustum().PreUpdate(dt);
 		GetResourceManager().PreUpdate(dt);
-		GetPhysicsManager().PreUpdate(dt);
-		GetTransformLerpManager().PreUpdate(dt);
 		GetCollisionDetector().PreUpdate(dt);
+		GetPhysicsManager().PreUpdate(dt);
+		GetConstraintSolver().PreUpdate(dt);
+		GetTransformLerpManager().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
 	}
 
@@ -92,9 +93,10 @@ namespace Engine::Manager
 		GetSceneManager().FixedUpdate(dt);
 		GetProjectionFrustum().FixedUpdate(dt);
 		GetResourceManager().FixedUpdate(dt);
-		GetPhysicsManager().FixedUpdate(dt);
-		GetTransformLerpManager().FixedUpdate(dt);
 		GetCollisionDetector().FixedUpdate(dt);
+		GetPhysicsManager().FixedUpdate(dt);
+		GetConstraintSolver().FixedUpdate(dt);
+		GetTransformLerpManager().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
 	}
 
@@ -103,9 +105,10 @@ namespace Engine::Manager
 		GetSceneManager().Update(dt);
 		GetProjectionFrustum().Update(dt);
 		GetResourceManager().Update(dt);
-		GetPhysicsManager().Update(dt);
-		GetTransformLerpManager().Update(dt);
 		GetCollisionDetector().Update(dt);
+		GetPhysicsManager().Update(dt);
+		GetConstraintSolver().Update(dt);
+		GetTransformLerpManager().Update(dt);
 		GetD3Device().Update(dt);
 	}
 
@@ -115,9 +118,10 @@ namespace Engine::Manager
 		GetSceneManager().PreRender(dt);
 		GetProjectionFrustum().PreRender(dt);
 		GetResourceManager().PreRender(dt);
-		GetPhysicsManager().PreRender(dt);
-		GetTransformLerpManager().PreRender(dt);
 		GetCollisionDetector().PreRender(dt);
+		GetPhysicsManager().PreRender(dt);
+		GetConstraintSolver().PreRender(dt);
+		GetTransformLerpManager().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
 	}
@@ -127,9 +131,10 @@ namespace Engine::Manager
 		GetSceneManager().Render(dt);
 		GetProjectionFrustum().Render(dt);
 		GetResourceManager().Render(dt);
-		GetPhysicsManager().Render(dt);
-		GetTransformLerpManager().Render(dt);
 		GetCollisionDetector().Render(dt);
+		GetPhysicsManager().Render(dt);
+		GetConstraintSolver().PreRender(dt);
+		GetTransformLerpManager().Render(dt);
 		GetToolkitAPI().Render(dt);
 		GetD3Device().Render(dt);
 	}
