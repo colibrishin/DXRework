@@ -2,6 +2,8 @@
 #include <SpriteBatch.h>
 #include <CommonStates.h>
 
+#include <Audio.h>
+
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 #include "egD3Device.hpp"
@@ -23,6 +25,7 @@ namespace Engine::Manager::Graphics
 
 		SpriteBatch* GetSpriteBatch() const { return m_sprite_batch_.get(); }
 		CommonStates* GetCommonStates() const { return m_states_.get(); }
+		AudioEngine* GetAudioEngine() const { return m_audio_engine_.get(); }
 
 	private:
 		void FrameBegin();
@@ -32,6 +35,7 @@ namespace Engine::Manager::Graphics
 		std::unique_ptr<CommonStates> m_states_ = nullptr;
 		std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
 		std::unique_ptr<SpriteBatch> m_sprite_batch_ = nullptr;
+		std::unique_ptr<AudioEngine> m_audio_engine_ = nullptr;
 
 	};
 
@@ -42,6 +46,13 @@ namespace Engine::Manager::Graphics
 		GeometricPrimitive::SetDepthBufferMode(true);
 
 		m_sprite_batch_ = std::make_unique<SpriteBatch>(GetD3Device().GetContext());
+
+		AUDIO_ENGINE_FLAGS flag = AudioEngine_EnvironmentalReverb;
+#ifdef _DEBUG
+		flag |= AudioEngine_Debug;
+#endif
+
+		m_audio_engine_ = std::make_unique<AudioEngine>(flag);
 	}
 
 	inline void ToolkitAPI::PreUpdate(const float& dt)
