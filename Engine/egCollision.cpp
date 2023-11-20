@@ -422,8 +422,13 @@ namespace Engine::Physics
 			float tMin = 0.f;
 			float tMax = FLT_MAX;
 
+			const Matrix inv_world = world.Invert();
+
+			const Vector3 local_origin = Vector3::Transform(origin, inv_world);
+			const Vector3 local_dir = Vector3::TransformNormal(dir, inv_world);
+
 			const Vector3 world_position = {world._41, world._42, world._43};
-			const Vector3 delta = world_position - origin;
+			const Vector3 delta = world_position - local_origin;
 
 			const auto x = Vector3{world._11, world._12, world._13};
 			const auto y = Vector3{world._21, world._22, world._23};
@@ -431,21 +436,27 @@ namespace Engine::Physics
 
 			const std::initializer_list<std::tuple<Vector3, float, float>> list = 
 			{
-				{x, aabb_min.x, aabb_max.y},
+				{x, aabb_min.x, aabb_max.x},
 				{y, aabb_min.y, aabb_max.y},
 				{z, aabb_min.z, aabb_max.z}
 			};
 
 			for (const auto& [axis, min, max] : list)
 			{
-				if (!TestAxis(axis, delta, dir, min, max , tMin, tMax))
+				if (!TestAxis(axis, delta, local_dir, min, max, tMin, tMax))
 				{
 					intersection_distance = 0.f;
 					return false;
 				}
 			}
 
-			intersection_distance = tMin + g_epsilon;
+			intersection_distance = tMin;
+
+			if (intersection_distance < 0.0f)
+			{
+				intersection_distance = tMax;
+			}
+
 			return true;
 		}
 
@@ -495,7 +506,7 @@ namespace Engine::Physics
 				}
 			}
 
-			intersection_distance = t0 + g_epsilon;
+			intersection_distance = t0;
 			return true;
 		}
 	}
