@@ -3,6 +3,7 @@
 #include "egCollider.hpp"
 #include "egRigidbody.hpp"
 #include "egCollisionDetector.hpp"
+#include "egTransformLerpManager.hpp"
 #include "egSceneManager.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
@@ -20,162 +21,92 @@ namespace Engine::Manager
 		}
 	}
 
-	void CollisionDetector::ResolveCollision(Abstract::Object* lhs, Abstract::Object* rhs)
-	{
-		const auto rb = lhs->GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto tr = lhs->GetComponent<Engine::Component::Transform>().lock();
-		const auto cl = lhs->GetComponent<Engine::Component::Collider>().lock();
-
-		const auto cl_other = rhs->GetComponent<Engine::Component::Collider>().lock();
-		const auto rb_other = rhs->GetComponent<Engine::Component::Rigidbody>().lock();
-		const auto tr_other = rhs->GetComponent<Engine::Component::Transform>().lock();
-
-		if(rb && cl && rb_other && cl_other)
-		{
-			if (rb->IsFixed())
-			{
-				return;
-			}
-
-			if (m_collision_resolved_set_.contains({ lhs->GetID(), rhs->GetID() }) ||
-				m_collision_resolved_set_.contains({ rhs->GetID(), lhs->GetID() }))
-			{
-				return;
-			}
-
-			Vector3 linear_vel;
-			Vector3 angular_vel;
-
-			Vector3 other_linear_vel;
-			Vector3 other_angular_vel;
-
-			Vector3 pos = tr->GetPosition();
-			Vector3 other_pos = tr_other->GetPosition();
-
-			const Vector3 delta = (other_pos - pos);
-			Vector3 dir;
-			delta.Normalize(dir);
-
-			Vector3 normal;
-			float penetration;
-
-			cl->GetPenetration(*cl_other, normal, penetration);
-			const Vector3 point = cl->GetPosition() + normal * penetration;
-
-
-			Engine::Physics::EvalImpulse(pos, other_pos, point, penetration, normal, cl->GetInverseMass(),
-								cl_other->GetInverseMass(), rb->GetAngularMomentum(),
-								rb_other->GetAngularMomentum(), rb->GetLinearMomentum(), rb_other->GetLinearMomentum(),
-								cl->GetInertiaTensor(), cl_other->GetInertiaTensor(), linear_vel,
-								other_linear_vel, angular_vel, other_angular_vel);
-
-			// @todo: lerp is not applied here.
-			tr->SetPosition(pos);
-			rb->AddLinearMomentum(linear_vel);
-			rb->AddAngularMomentum(angular_vel);
-
-			if (!rb_other->IsFixed())
-			{
-				tr_other->SetPosition(other_pos);
-				rb_other->AddLinearMomentum(other_linear_vel);
-				rb_other->AddAngularMomentum(other_angular_vel);
-			}
-
-			m_collision_resolved_set_.insert({ lhs->GetID(), rhs->GetID() });
-		}
-	}
-
-	void CollisionDetector::SpeculateCollision(Abstract::Object* lhs, Abstract::Object* rhs)
-	{
-		const auto rb = lhs->GetComponent<Component::Rigidbody>().lock();
-		const auto cl = lhs->GetComponent<Component::Collider>().lock();
-		const auto tr = lhs->GetComponent<Component::Transform>().lock();
-
-		const auto rb_other = rhs->GetComponent<Component::Rigidbody>().lock();
-		const auto cl_other = rhs->GetComponent<Component::Collider>().lock();
-		const auto tr_other = rhs->GetComponent<Component::Transform>().lock();
-
-		if (rb && cl && tr && rb_other && cl_other && tr_other)
-		{
-			if (m_speculative_resolved_set_.contains({ lhs->GetID(), rhs->GetID() }) ||
-				m_speculative_resolved_set_.contains({ rhs->GetID(), lhs->GetID() }))
-			{
-				return;
-			}
-
-			Ray ray{};
-			ray.position = tr->GetPosition();
-			const auto normal = tr_other->GetPosition() - tr->GetPosition();
-			normal.Normalize(ray.direction);
-
-			const auto velocity = rb->GetLinearMomentum();
-			const auto length = velocity.Length();
-
-			float intersection_distance = 0.0f;
-			if (cl->Intersects(ray, length, intersection_distance))
-			{
-				const Vector3 speculated_pos = tr->GetPreviousPosition() + (ray.direction * intersection_distance);
-				tr->SetPosition(speculated_pos);
-				cl->SetPosition(speculated_pos);
-
-				m_speculative_resolved_set_.insert({ lhs->GetID(), rhs->GetID() });
-			}
-		}
-	}
-
 	void CollisionDetector::CheckCollision(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs)
 	{
 		for (const auto& lhs_obj : lhs)
 		{
+			const auto obj = lhs_obj.lock();
+			const auto tr = obj->GetComponent<Component::Transform>().lock();
+			const auto rb = obj->GetComponent<Component::Rigidbody>().lock();
+			const auto cl = obj->GetComponent<Component::Collider>().lock();
+
+			if (!tr || !cl || !obj->GetActive())
+			{
+				continue;
+			}
+
+			BoundingSphere speculation_area{};
+
+			const auto velocity = rb ? rb->GetLinearMomentum().Length() : g_epsilon;
+			const auto speculation_radius = velocity;
+
+			speculation_area.Center = tr->GetPreviousPosition();
+			speculation_area.Radius = speculation_radius;
+
 			for (const auto& rhs_obj : rhs)
 			{
-				const auto obj = lhs_obj.lock();
 				const auto obj_other = rhs_obj.lock();
+				const auto cl_other = obj_other->GetComponent<Component::Collider>().lock();
 
 				if (obj == obj_other)
 				{
 					continue;
 				}
 
-				if (!obj->GetActive() || !obj_other->GetActive())
+				if (!obj_other->GetActive())
 				{
 					continue;
 				}
 
-				const auto cl = obj->GetComponent<Component::Collider>().lock();
-				const auto cl_other = obj_other->GetComponent<Component::Collider>().lock();
-
-				if (!cl || !cl_other)
+				if (!cl_other)
 				{
 					continue;
 				}
 
+				bool speculation = false;
+
+				if (cl_other->GetType() == BOUNDING_TYPE_BOX)
+				{
+					speculation = speculation_area.Intersects(cl_other->As<BoundingOrientedBox>());
+				}
+				else if (cl_other->GetType() == BOUNDING_TYPE_SPHERE)
+				{
+					speculation = speculation_area.Intersects(cl_other->As<BoundingSphere>());
+				}
+
+				if (speculation || CheckRaycasting(obj, obj_other))
+				{
+					if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
+					{
+						m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
+
+						m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
+
+						obj->DispatchComponentEvent(cl, cl_other);
+					}
+				}
 
 				if (cl->Intersects(*cl_other))
 				{
 					if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
 					{
+						m_collision_map_[obj->GetID()].insert(obj_other->GetID());
+
 						obj->DispatchComponentEvent(cl, cl_other);
-						obj_other->DispatchComponentEvent(cl_other, cl);
-						ResolveCollision(obj.get(), obj_other.get());
 						continue;
 					}
 
-					m_collision_map_[obj->GetID()].insert(obj_other->GetID());
-					m_collision_map_[obj_other->GetID()].insert(obj->GetID());
+					m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
 
 					obj->DispatchComponentEvent(cl, cl_other);
-					obj_other->DispatchComponentEvent(cl_other, cl);
 				}
 				else
 				{
 					if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
 					{
 						m_collision_map_[obj->GetID()].erase(obj_other->GetID());
-						m_collision_map_[obj_other->GetID()].erase(obj->GetID());
 
 						obj->DispatchComponentEvent(cl, cl_other);
-						obj_other->DispatchComponentEvent(cl_other, cl);
 					}
 				}
 			}
@@ -219,11 +150,6 @@ namespace Engine::Manager
 					continue;
 				}
 
-				if (obj_i_collider->GetPosition().y < obj_j_collider->GetPosition().y)
-				{
-					continue;
-				}
-
 				Component::Collider copy = *obj_i_collider;
 				copy.SetPosition(tr->GetPosition() + Vector3::Down * g_epsilon);
 
@@ -250,10 +176,10 @@ namespace Engine::Manager
 		if (rb && cl && tr && rb_other && cl_other && tr_other)
 		{
 			static Ray ray{};
-			ray.position = tr->GetPosition();
-			ray.direction = tr_other->GetPosition() - tr->GetPosition();
-
+			ray.position = tr->GetPreviousPosition();
 			const auto velocity = rb->GetLinearMomentum();
+			velocity.Normalize(ray.direction);
+
 			const auto length = velocity.Length();
 			float dist;
 
@@ -279,17 +205,35 @@ namespace Engine::Manager
 				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
 				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
 
-				CheckGrounded(layer_i, layer_j);
 				CheckCollision(layer_i, layer_j);
 			}
 		}
-
-		m_collision_resolved_set_.clear();
-		m_speculative_resolved_set_.clear();
 	}
 
 	void CollisionDetector::PreUpdate(const float& dt)
 	{
+		m_collision_map_.merge(m_frame_collision_map_);
+		
+		m_frame_collision_map_.clear();
+		m_speculation_map_.clear();
+
+		const auto scene = GetSceneManager().GetActiveScene().lock();
+
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			for (int j = 0; j < LAYER_MAX; ++j)
+			{
+				if (!m_layer_mask_[i].test(j))
+				{
+					continue;
+				}
+
+				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
+				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
+
+				CheckGrounded(layer_i, layer_j);
+			}
+		}
 	}
 
 	void CollisionDetector::PreRender(const float& dt)

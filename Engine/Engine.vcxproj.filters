@@ -29,9 +29,6 @@
     <Filter Include="Common">
       <UniqueIdentifier>{2a1a57a7-cb69-4a5e-91ca-b592e3bdd8f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Low-level\API">
-      <UniqueIdentifier>{7c04419b-49ad-4b32-aa80-1a3bce2f11f8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Singleton">
       <UniqueIdentifier>{2919f7ab-a0cb-4d02-af65-02d0dc35dc2d}</UniqueIdentifier>
     </Filter>
@@ -106,9 +103,6 @@
     <ClInclude Include="egHelper.hpp">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="egToolkitAPI.hpp">
-      <Filter>Low-level\API</Filter>
-    </ClInclude>
     <ClInclude Include="egFont.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
@@ -154,7 +148,6 @@
     <ClInclude Include="egPhysics.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="egTensor3.hpp" />
     <ClInclude Include="egCollision.h">
       <Filter>Physics</Filter>
     </ClInclude>
@@ -172,6 +165,12 @@
     </ClInclude>
     <ClInclude Include="egFriction.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egToolkitAPI.hpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="egConstraintSolver.hpp">
+      <Filter>Singleton\Internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -232,10 +231,13 @@
     <ClCompile Include="egCollision.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="egTransfromLerpManager.cpp">
+    <ClCompile Include="egPhysicsManager.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
-    <ClCompile Include="egPhysicsManager.cpp">
+    <ClCompile Include="egConstraintSolver.cpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="egTransfromLerpManager.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
   </ItemGroup>

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="egCollision.h" />
+    <ClInclude Include="egConstraintSolver.hpp" />
     <ClInclude Include="egDXCommon.h" />
     <ClInclude Include="egCamera.hpp" />
     <ClInclude Include="egCollider.hpp" />
@@ -53,7 +54,6 @@
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
-    <ClInclude Include="egTensor3.hpp" />
     <ClInclude Include="egText.hpp" />
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
@@ -70,6 +70,7 @@
     <ClCompile Include="egCollider.cpp" />
     <ClCompile Include="egCollision.cpp" />
     <ClCompile Include="egCollisionDetector.cpp" />
+    <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egFont.cpp" />
@@ -267,6 +268,11 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\octree\octree.vcxproj">
+      <Project>{5554f591-ccb5-43e8-afab-e9348cb9aace}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

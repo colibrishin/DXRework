@@ -4,6 +4,7 @@
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 #include "egCollisionDetector.hpp"
+#include "egConstraintSolver.hpp"
 #include "egPhysicsManager.hpp"
 #include "egTransformLerpManager.hpp"
 
@@ -57,5 +58,10 @@ namespace Engine
 	inline Manager::Physics::PhysicsManager& GetPhysicsManager()
 	{
 		return Manager::Physics::PhysicsManager::GetInstance();
+	}
+
+	inline Manager::Physics::ConstraintSolver& GetConstraintSolver()
+	{
+		return Manager::Physics::ConstraintSolver::GetInstance();
 	}
 }

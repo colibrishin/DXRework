@@ -9,7 +9,7 @@ namespace Engine::Objects
 	void Camera::Initialize()
 	{
 		AddComponent<Component::Transform>();
-		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -10.0f});
+		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
 		m_look_at_ = Vector3::Backward;
 	}
 

@@ -22,10 +22,26 @@ namespace Engine::Manager
 
 		bool IsCollided(uint64_t id) const { return !m_collision_map_.at(id).empty(); }
 		bool IsCollided(uint64_t id1, uint64_t id2) const { return m_collision_map_.at(id1).contains(id2); }
+		bool IsSpeculated(uint64_t id1, uint64_t id2) const
+		{
+			if (!m_speculation_map_.contains(id1))
+			{
+				return false;
+			}
+
+			return m_speculation_map_.at(id1).contains(id2);
+		}
+		bool IsCollidedInFrame(uint64_t id1, uint64_t id2) const
+		{
+			if (!m_frame_collision_map_.contains(id1))
+			{
+				return false;
+			}
+
+			return m_frame_collision_map_.at(id1).contains(id2);
+		}
 
 	private:
-		void ResolveCollision(Abstract::Object* lhs, Abstract::Object* rhs);
-		void SpeculateCollision(Abstract::Object* lhs, Abstract::Object* rhs);
 		void CheckCollision(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs);
 		void CheckGrounded(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs);
 		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& lhs,
@@ -33,8 +49,8 @@ namespace Engine::Manager
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<uint64_t, std::set<uint64_t>> m_collision_map_;
-		std::set<std::pair<uint64_t, uint64_t>> m_collision_resolved_set_;
-		std::set<std::pair<uint64_t, uint64_t>> m_speculative_resolved_set_;
+		std::map<uint64_t, std::set<uint64_t>> m_frame_collision_map_;
+		std::map<uint64_t, std::set<uint64_t>> m_speculation_map_;
 
 	};
 }

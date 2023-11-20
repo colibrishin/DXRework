@@ -17,6 +17,8 @@ namespace Engine::Manager::Physics
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		float GetLerpFactor() const;
+
 	private:
 		float m_elapsedTime_;
 

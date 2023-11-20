@@ -68,6 +68,10 @@ namespace Engine::Manager::Physics
 		{
 			rb->AddForce(Engine::Physics::g_gravity_vec * cl->GetInverseMass());
 		}
+		else
+		{
+			rb->AddForce(Vector3::Zero);
+		}
 	}
 
 	void PhysicsManager::EpsilonGuard(Vector3& linear_momentum)

@@ -17,19 +17,31 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_same_v<Engine::Component::Collider, T>)
 			{
+				const auto speculation_check = GetCollisionDetector().IsSpeculated(
+					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+
+				if (speculation_check)
+				{
+					thisComp->AddSpeculationObject(otherComp->GetOwner().lock()->GetID());
+					return;
+				}
+
 				const auto collision_check = GetCollisionDetector().IsCollided(
 					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
 
-				if (collision_check && !thisComp->IsCollidedObject(otherComp->GetOwner().lock()->GetID()))
+				const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
+					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+
+				if (collision_frame)
 				{
 					thisComp->GetOwner().lock()->OnCollisionEnter(*otherComp);
 					thisComp->AddCollidedObject(otherComp->GetOwner().lock()->GetID());
 				}
-				else if (collision_check && thisComp->IsCollidedObject(otherComp->GetOwner().lock()->GetID()))
+				else if (collision_check)
 				{
 					thisComp->GetOwner().lock()->OnCollisionContinue(*otherComp);
 				}
-				else if (!collision_check)
+				else if (!collision_check && !collision_frame)
 				{
 					thisComp->GetOwner().lock()->OnCollisionExit(*otherComp);
 					thisComp->RemoveCollidedObject(otherComp->GetOwner().lock()->GetID());

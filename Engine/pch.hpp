@@ -20,6 +20,9 @@
 #include "framework.h"
 #include <wrl/client.h>
 
+#include "Audio.h"
+#define _USE_MATH_DEFINES
+
 #include "BufferHelpers.h"
 #include "CommonStates.h"
 #include "DDSTextureLoader.h"

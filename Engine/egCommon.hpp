@@ -36,7 +36,7 @@ namespace Engine
 	constexpr float g_epsilon = 0.001f;
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
-	constexpr float g_fixed_update_interval = 0.07f;
+	constexpr float g_fixed_update_interval = 0.02f;
 
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;

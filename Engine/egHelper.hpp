@@ -24,6 +24,11 @@ namespace Engine
 		return std::max(std::max(v.x, v.y), v.z);
 	}
 
+	static bool FloatCompare(const float a, const float b)
+	{
+		return std::fabs(a - b) < g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
+	}
+
 	static Vector3 XMTensorCross(const DirectX::XMFLOAT3X3& lhs, const Vector3& rhs)
 	{
 		return {
