@@ -32,7 +32,7 @@ namespace Engine::Manager::Physics
 						const auto previous = tr->GetPreviousPosition();
 						const auto current = tr->GetPosition();
 
-						tr->SetPosition(Vector3::Lerp(previous, current, m_elapsedTime_ / g_fixed_update_interval));
+						tr->SetPosition(Vector3::Lerp(previous, current, 1.0f - (m_elapsedTime_ / g_fixed_update_interval)));
 
 						const auto cl = obj->GetComponent<Component::Collider>().lock();
 
@@ -68,5 +68,10 @@ namespace Engine::Manager::Physics
 	void TransformLerpManager::FixedUpdate(const float& dt)
 	{
 		Reset();
+	}
+
+	float TransformLerpManager::GetLerpFactor() const
+	{
+		return m_elapsedTime_ / g_fixed_update_interval;
 	}
 }
