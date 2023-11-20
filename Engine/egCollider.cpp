@@ -8,19 +8,50 @@ namespace Engine::Component
 	void Collider::SetPosition(const Vector3& position)
 	{
 		m_position_ = position;
-		SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
+		}
+
+		UpdateBoundings();
 	}
 
 	void Collider::SetRotation(const Quaternion& rotation)
 	{
 		m_rotation_	= rotation;
-		SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
+		}
+
+		UpdateBoundings();
+		UpdateInertiaTensor();
 	}
 
 	void Collider::SetSize(const Vector3& size)
 	{
 		m_size_ = size;
-		SetSize_GENERAL_TYPE(m_boundings_.box, m_size_);
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			SetSize_GENERAL_TYPE(m_boundings_.box, m_size_);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			SetSize_GENERAL_TYPE(m_boundings_.sphere, m_size_);
+		}
+
+		UpdateBoundings();
 	}
 
 	void Collider::SetType(const eBoundingType type)
@@ -122,6 +153,18 @@ namespace Engine::Component
 
 	void Collider::FixedUpdate(const float& dt)
 	{
+	}
+
+	void Collider::UpdateFromTransform()
+	{
+		if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock(); m_bDirtyByTransform)
+		{
+			m_position_ = tr->GetPosition();
+			m_rotation_ = tr->GetRotation();
+			m_size_ = tr->GetScale();
+
+			UpdateBoundings();
+		}
 	}
 
 	void Collider::UpdateBoundings()

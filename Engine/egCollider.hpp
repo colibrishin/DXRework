@@ -26,25 +26,33 @@ namespace Engine::Component
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
 		void SetMass(const float mass) { m_mass_ = mass; }
-		void SetResolved(const bool resolved) { m_resolved = resolved; }
 
 		bool Intersects(Collider& other) const;
 		bool Intersects(const Ray& ray, float distance, float& intersection) const;
 		bool Contains(Collider& other) const;
 
 		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
+		void AddSpeculationObject(const uint64_t id) { m_speculative_collision_candidates_.insert(id); }
+
 		void RemoveCollidedObject(const uint64_t id) { m_collided_objects_.erase(id); }
+		void RemoveSpeculationObject(const uint64_t id) { m_speculative_collision_candidates_.erase(id); }
+
 		bool IsCollidedObject(const uint64_t id) const { return m_collided_objects_.contains(id); }
 		const std::set<uint64_t>& GetCollidedObjects() const { return m_collided_objects_; }
+		const std::set<uint64_t>& GetSpeculation() const { return m_speculative_collision_candidates_; }
+
+		bool GetDirtyFlag() const { return m_bDirtyByTransform; }
 
 		Vector3 GetPosition() const { return m_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetSize() const { return m_size_; }
 		void GetPenetration(const Collider& other, Vector3& normal, float& depth) const;
+
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
 		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
-		bool GetResolved() const { return m_resolved; }
+
+		eBoundingType GetType() const { return m_type_; }
 
 		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>().lock()->GetVertices(); }
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
@@ -52,12 +60,26 @@ namespace Engine::Component
 		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 
 		void Initialize() override;
-		void UpdateDataFromTransform();
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+
+		template <typename T>
+		T& As() 
+		{
+			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+			{
+				return m_boundings_.box;
+			}
+			else if constexpr (std::is_same_v<T, BoundingSphere>)
+			{
+				return m_boundings_.sphere;
+			}
+
+			throw std::exception("Invalid type");
+		}
 
 	private:
 		union BoundingGroup
@@ -128,21 +150,7 @@ namespace Engine::Component
 			As<T>().Center = position;
 		}
 
-		template <typename T>
-		T& As() 
-		{
-			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-			{
-				return m_boundings_.box;
-			}
-			else if constexpr (std::is_same_v<T, BoundingSphere>)
-			{
-				return m_boundings_.sphere;
-			}
-
-			throw std::exception("Invalid type");
-		}
-
+		void UpdateFromTransform();
 		void UpdateBoundings();
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
@@ -150,9 +158,9 @@ namespace Engine::Component
 
 	private:
 		std::set<uint64_t> m_collided_objects_;
+		std::set<uint64_t> m_speculative_collision_candidates_;
 
 		bool m_bDirtyByTransform;
-		bool m_resolved;
 
 		Vector3 m_position_;
 		Vector3 m_size_;
@@ -171,7 +179,6 @@ namespace Engine::Component
 	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_COLLIDER,
 																				owner),
 																			m_bDirtyByTransform(false),
-																			m_resolved(false),
 																			m_position_(Vector3::Zero),
 																			m_size_(Vector3::One),
 																			m_rotation_(Quaternion::Identity),
@@ -218,32 +225,19 @@ namespace Engine::Component
 			GenerateInertiaSphere();
 		}
 
+		UpdateFromTransform();
 		UpdateInertiaTensor();
-		UpdateDataFromTransform();
-	}
-
-	inline void Collider::UpdateDataFromTransform()
-	{
-		if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock(); m_bDirtyByTransform)
-		{
-			m_position_ = tr->GetPosition();
-			m_size_ = tr->GetScale();
-			m_rotation_ = tr->GetRotation();
-
-			UpdateBoundings();
-		}
 	}
 
 	inline void Collider::PreUpdate(const float& dt)
 	{
-		m_resolved = false;
-		UpdateDataFromTransform();
+		UpdateFromTransform();
 		UpdateInertiaTensor();
 	}
 
 	inline void Collider::Update(const float& dt)
 	{
-		UpdateDataFromTransform();
+		UpdateFromTransform();
 		UpdateInertiaTensor();
 	}
 
