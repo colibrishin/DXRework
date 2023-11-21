@@ -38,6 +38,8 @@ namespace Engine::Objects
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 
+		Vector2 GetWorldMousePosition();
+
 	private:
 		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;

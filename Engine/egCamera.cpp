@@ -71,4 +71,24 @@ namespace Engine::Objects
 	{
 		Object::Render(dt);
 	}
+
+	Vector2 Camera::GetWorldMousePosition()
+	{
+		const DirectX::XMMATRIX vp = m_vp_buffer_.projection * m_vp_buffer_.view;
+		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(vp);
+		const Vector2 actual_mouse_position
+		{
+			static_cast<float>(GetApplication().GetMouseState().x),
+			static_cast<float>(GetApplication().GetMouseState().y)
+		};
+
+		const DirectX::XMMATRIX invProjectionView = DirectX::XMMatrixInverse(&det, vp);
+
+		const float x = (((2.0f * actual_mouse_position.x) / g_window_width) - 1);
+		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
+
+		const DirectX::XMVECTOR mousePosition = DirectX::XMVectorSet(x, y, GetComponent<Component::Transform>().lock()->GetPosition().z, 0.0f);
+
+		return DirectX::XMVector3Transform(mousePosition, invProjectionView);
+	}
 }
