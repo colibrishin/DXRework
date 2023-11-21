@@ -47,12 +47,6 @@
     <ClInclude Include="clTestScene.hpp">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="clCubeMesh.hpp">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="clSphereMesh.hpp">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="clTestCube.hpp">
       <Filter>Object</Filter>
     </ClInclude>
