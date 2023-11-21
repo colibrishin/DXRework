@@ -20,9 +20,9 @@ namespace Engine::Manager
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		bool IsCollided(uint64_t id) const { return !m_collision_map_.at(id).empty(); }
-		bool IsCollided(uint64_t id1, uint64_t id2) const { return m_collision_map_.at(id1).contains(id2); }
-		bool IsSpeculated(uint64_t id1, uint64_t id2) const
+		bool IsCollided(EntityID id) const { return !m_collision_map_.at(id).empty(); }
+		bool IsCollided(EntityID id1, EntityID id2) const { return m_collision_map_.at(id1).contains(id2); }
+		bool IsSpeculated(EntityID id1, EntityID id2) const
 		{
 			if (!m_speculation_map_.contains(id1))
 			{
@@ -31,7 +31,7 @@ namespace Engine::Manager
 
 			return m_speculation_map_.at(id1).contains(id2);
 		}
-		bool IsCollidedInFrame(uint64_t id1, uint64_t id2) const
+		bool IsCollidedInFrame(EntityID id1, EntityID id2) const
 		{
 			if (!m_frame_collision_map_.contains(id1))
 			{
@@ -48,9 +48,9 @@ namespace Engine::Manager
 							const std::shared_ptr<Abstract::Object>& rhs);
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
-		std::map<uint64_t, std::set<uint64_t>> m_collision_map_;
-		std::map<uint64_t, std::set<uint64_t>> m_frame_collision_map_;
-		std::map<uint64_t, std::set<uint64_t>> m_speculation_map_;
+		std::map<EntityID, std::set<EntityID>> m_collision_map_;
+		std::map<EntityID, std::set<EntityID>> m_frame_collision_map_;
+		std::map<EntityID, std::set<EntityID>> m_speculation_map_;
 
 	};
 }

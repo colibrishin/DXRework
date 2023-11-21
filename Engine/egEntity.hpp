@@ -2,6 +2,8 @@
 #include <string>
 #include <memory>
 
+#include "egType.hpp"
+
 namespace Engine::Abstract
 {
 	class Entity : public std::enable_shared_from_this<Entity>
@@ -15,8 +17,7 @@ namespace Engine::Abstract
 			return GetID() == other.GetID();
 		}
 
-		// 64 bits only;
-		uint64_t GetID() const { return reinterpret_cast<uint64_t>(this); }
+		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
 		void SetName(const std::wstring& name) { m_name_ = name; }
 		std::wstring GetName() const { return m_name_; }
 

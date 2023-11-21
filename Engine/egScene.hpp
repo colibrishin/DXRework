@@ -29,14 +29,15 @@ namespace Engine
 		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
-		void AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
+		EntityID AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
 		{
 			m_layers[layer]->AddGameObject<T>(obj);
 			m_gameObjects_.emplace(obj->GetID(), obj);
+			return obj->GetID();
 		}
 
 		template <typename T>
-		void RemoveGameObject(const uint64_t id, eLayerType layer)
+		void RemoveGameObject(const EntityID id, eLayerType layer)
 		{
 			m_layers[layer]->RemoveGameObject<T>(id);
 			m_gameObjects_.erase(id);
@@ -47,7 +48,7 @@ namespace Engine
 			return m_layers[layer]->GetGameObjects();
 		}
 
-		WeakObject FindGameObject(uint64_t id)
+		WeakObject FindGameObject(EntityID id)
 		{
 			if (m_gameObjects_.contains(id))
 			{
@@ -62,7 +63,7 @@ namespace Engine
 			return m_mainCamera_;
 		}
 
-		void ChangeLayer(uint64_t id, eLayerType type)
+		void ChangeLayer(EntityID id, eLayerType type)
 		{
 			if (const auto obj = FindGameObject(id).lock())
 			{
@@ -74,7 +75,7 @@ namespace Engine
 	private:
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
-		std::map<uint64_t, WeakObject> m_gameObjects_;
+		std::map<EntityID, WeakObject> m_gameObjects_;
 
 	};
 

@@ -10,8 +10,6 @@ namespace Engine::Component
 	class Rigidbody : public Abstract::Component
 	{
 	public:
-		using CollisionCountPair = std::pair<uint64_t, UINT>;
-
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
 														m_bGrounded(false), m_bGravityOverride(false),
 														m_bFixed(false), m_friction_mu_(0.0f)

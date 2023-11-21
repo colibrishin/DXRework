@@ -8,6 +8,7 @@
 
 #include "egRenderable.hpp"
 #include "egResource.hpp"
+#include "egType.hpp"
 
 namespace Engine::Component
 {
@@ -16,17 +17,13 @@ namespace Engine::Component
 
 namespace Engine::Abstract
 {
-	using WeakComponentPtr = std::weak_ptr<Component>;
-	using ComponentPtr = std::shared_ptr<Component>;
-	using WeakResourcePtr = std::weak_ptr<Resource>;
-
 	class Object : public Renderable
 	{
 	public:
 		~Object() override = default;
 		Object(const Object&) = default;
 
-		void AddResource(const WeakResourcePtr& resource)
+		void AddResource(const WeakResource& resource)
 		{
 			m_resources_.insert(resource);
 		}
@@ -65,7 +62,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetComponent(uint64_t id)
+		std::weak_ptr<T> GetComponent(EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -119,7 +116,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		void RemoveComponent(const uint64_t id)
+		void RemoveComponent(const EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -197,7 +194,7 @@ namespace Engine::Abstract
 	private:
 		struct ResourcePriorityComparer
 		{
-			bool operator()(const WeakResourcePtr& Left, const WeakResourcePtr& Right) const
+			bool operator()(const WeakResource& Left, const WeakResource& Right) const
 			{
 				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
 				{
@@ -210,7 +207,7 @@ namespace Engine::Abstract
 
 		struct ComponentPriorityComparer
 		{
-			bool operator()(const WeakComponentPtr& Left, const WeakComponentPtr& Right) const
+			bool operator()(const WeakComponent& Left, const WeakComponent& Right) const
 			{
 				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
 				{
@@ -229,10 +226,9 @@ namespace Engine::Abstract
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
-		std::map<const std::type_index, std::set<ComponentPtr, ComponentPriorityComparer>> m_components_;
-		std::set<WeakComponentPtr, ComponentPriorityComparer> m_priority_sorted_;
-
-		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
+		std::map<const std::type_index, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+		std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
+		std::set<WeakResource, ResourcePriorityComparer> m_resources_;
 	};
 
 	inline void Object::PreUpdate(const float& dt)
