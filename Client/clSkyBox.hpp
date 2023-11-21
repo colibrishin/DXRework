@@ -46,6 +46,7 @@ namespace Client::Object
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
 		tr->SetScale(Vector3::One * 15.0f);
+		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline SkyBox::~SkyBox()

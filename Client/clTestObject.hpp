@@ -61,6 +61,8 @@ namespace Client::Object
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetFrictionCoefficient(0.1f);
 		rb->SetGravityOverride(true);
+
+		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline void TestObject::PreUpdate(const float& dt)

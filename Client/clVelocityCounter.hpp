@@ -48,6 +48,7 @@ namespace Client::Object
 		SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		SetRotation(0.0f);
 		SetScale(1.0f);
+		SetLayer(Engine::LAYER_UI);
 	}
 
 	inline VelocityCounter::~VelocityCounter()

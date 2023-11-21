@@ -65,6 +65,8 @@ namespace Client::Object
 
 		rb->SetFrictionCoefficient(0.1f);
 		rb->SetGravityOverride(true);
+
+		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline TestCube::~TestCube()
