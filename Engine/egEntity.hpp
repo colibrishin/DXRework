@@ -16,9 +16,10 @@ namespace Engine::Abstract
 		{
 			return GetID() == other.GetID();
 		}
+		
+		void SetName(const std::wstring& name) { m_name_ = name; }
 
 		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
-		void SetName(const std::wstring& name) { m_name_ = name; }
 		std::wstring GetName() const { return m_name_; }
 
 		template <typename T>
@@ -41,7 +42,11 @@ namespace Engine::Abstract
 	protected:
 		Entity() = default;
 
+		void SetGarbage(const bool bGarbage) { m_bGarbage_ = bGarbage; }
+
 	private:
 		std::wstring m_name_;
+		bool m_bGarbage_;
+
 	};
 }
