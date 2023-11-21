@@ -92,7 +92,14 @@ namespace Engine::Abstract
 
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->Render(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->Render(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -101,6 +108,10 @@ namespace Engine::Abstract
 			{
 				locked->Render(dt);
 			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
 		}
 	}
 
@@ -108,7 +119,14 @@ namespace Engine::Abstract
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->FixedUpdate(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->FixedUpdate(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -116,6 +134,10 @@ namespace Engine::Abstract
 			if (const auto locked = resource.lock())
 			{
 				locked->FixedUpdate(dt);
+			}
+			else 			
+			{
+				m_resources_.erase(resource);
 			}
 		}
 	}

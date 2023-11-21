@@ -36,17 +36,12 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (m_components_.contains(typeid(T)))
-				{
-					return;
-				}
-
 				const auto thisObject = std::reinterpret_pointer_cast<Object>(shared_from_this());
 
 				std::shared_ptr<T> component = std::make_shared<T>(thisObject);
 				component->Initialize();
 
-				m_components_.insert_or_assign(typeid(T), std::reinterpret_pointer_cast<Component>(component));
+				m_components_[typeid(T)].insert(std::reinterpret_pointer_cast<Component>(component));
 				m_priority_sorted_.insert(std::reinterpret_pointer_cast<Component>(component));
 			}
 		}
@@ -61,7 +56,37 @@ namespace Engine::Abstract
 					return {};
 				}
 
-				return std::reinterpret_pointer_cast<T>(m_components_[typeid(T)]);
+				const auto& comp_set = m_components_[typeid(T)];
+
+				return std::reinterpret_pointer_cast<T>(*comp_set.begin());
+			}
+
+			return {};
+		}
+
+		template <typename T>
+		std::weak_ptr<T> GetComponent(uint64_t id)
+		{
+			if constexpr (std::is_base_of_v<Component, T>)
+			{
+				if (!m_components_.contains(typeid(T)))
+				{
+					return {};
+				}
+
+				const auto& comp_set = m_components_[typeid(T)];
+
+				const auto found = std::find_if(comp_set.begin(), comp_set.end(), [id](const auto& comp)
+				{
+					return comp.lock()->GetID() == id;
+				});
+
+				if (found == comp_set.end())
+				{
+					return {};
+				}
+
+				return std::reinterpret_pointer_cast<T>(*found);
 			}
 
 			return {};
@@ -74,10 +99,56 @@ namespace Engine::Abstract
 			{
 				if (m_components_.contains(typeid(T)))
 				{
-					const auto obj = m_components_[typeid(T)];
-					m_priority_sorted_.erase(obj);
-					m_components_.erase(typeid(T));
-					return;
+					const auto& comp_set = m_components_[typeid(T)];
+
+					if (comp_set.empty())
+					{
+						return;
+					}
+
+					const auto first = *comp_set.begin();
+					m_priority_sorted_.erase(first);
+					m_components_[typeid(T)].erase(first);
+
+					if (comp_set.empty())
+					{
+						m_components_.erase(typeid(T));
+					}
+				}
+			}
+		}
+
+		template <typename T>
+		void RemoveComponent(const uint64_t id)
+		{
+			if constexpr (std::is_base_of_v<Component, T>)
+			{
+				if (m_components_.contains(typeid(T)))
+				{
+					const auto& comp_set = m_components_[typeid(T)];
+
+					if (comp_set.empty())
+					{
+						return;
+					}
+
+					const auto found = std::find_if(comp_set.begin(), comp_set.end(), [id](const auto& comp)
+					{
+						return comp.lock()->GetID() == id;
+					});
+
+					if (found == comp_set.end())
+					{
+						return;
+					}
+
+					m_priority_sorted_.erase(found);
+					m_components_[typeid(T)].erase(found);
+
+					if (comp_set.empty())
+					{
+						m_components_.erase(typeid(T));
+					}
 				}
 			}
 		}
@@ -114,7 +185,7 @@ namespace Engine::Abstract
 		eLayerType GetLayer() const { return m_layer_; }
 
 	protected:
-		Object() : m_layer_(LAYER_NONE), m_active_(true), m_culled_(true) {}
+		Object() : m_layer_(LAYER_NONE), m_active_(true), m_culled_(true) {};
 
 	public:
 		void PreUpdate(const float& dt) override;
@@ -158,8 +229,8 @@ namespace Engine::Abstract
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
-		std::map<const std::type_index, ComponentPtr> m_components_;
-		std::set<ComponentPtr, ComponentPriorityComparer> m_priority_sorted_;
+		std::map<const std::type_index, std::set<ComponentPtr, ComponentPriorityComparer>> m_components_;
+		std::set<WeakComponentPtr, ComponentPriorityComparer> m_priority_sorted_;
 
 		std::set<WeakResourcePtr, ResourcePriorityComparer> m_resources_;
 	};
@@ -168,7 +239,14 @@ namespace Engine::Abstract
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->PreUpdate(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->PreUpdate(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -177,6 +255,10 @@ namespace Engine::Abstract
 			{
 				locked->PreUpdate(dt);
 			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
 		}
 	}
 
@@ -184,7 +266,14 @@ namespace Engine::Abstract
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->PreRender(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->PreRender(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -193,6 +282,10 @@ namespace Engine::Abstract
 			{
 				locked->PreRender(dt);
 			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
 		}
 	}
 
@@ -200,7 +293,14 @@ namespace Engine::Abstract
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
-			component->Update(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->Update(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -208,6 +308,10 @@ namespace Engine::Abstract
 			if (const auto locked = resource.lock())
 			{
 				locked->Update(dt);
+			}
+			else
+			{
+				m_resources_.erase(resource);
 			}
 		}
 	}
