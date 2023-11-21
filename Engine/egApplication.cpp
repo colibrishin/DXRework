@@ -45,6 +45,7 @@ namespace Engine::Manager
 		GetProjectionFrustum().Initialize();
 		GetResourceManager().Initialize();
 		GetSceneManager().Initialize();
+		GetDebugger().Initialize();
 	}
 
 	void Application::Tick()
@@ -65,6 +66,8 @@ namespace Engine::Manager
 
 			if (elapsed >= g_fixed_update_interval)
 			{
+				const std::wstring log = L"FixedUpdate Called";
+				GetDebugger().Log(log);
 				FixedUpdate(dt);
 				elapsed = 0.0f;
 			}
@@ -85,6 +88,7 @@ namespace Engine::Manager
 		GetPhysicsManager().PreUpdate(dt);
 		GetConstraintSolver().PreUpdate(dt);
 		GetTransformLerpManager().PreUpdate(dt);
+		GetDebugger().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
 	}
 
@@ -97,6 +101,7 @@ namespace Engine::Manager
 		GetPhysicsManager().FixedUpdate(dt);
 		GetConstraintSolver().FixedUpdate(dt);
 		GetTransformLerpManager().FixedUpdate(dt);
+		GetDebugger().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
 	}
 
@@ -109,6 +114,7 @@ namespace Engine::Manager
 		GetPhysicsManager().Update(dt);
 		GetConstraintSolver().Update(dt);
 		GetTransformLerpManager().Update(dt);
+		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
 	}
 
@@ -122,6 +128,7 @@ namespace Engine::Manager
 		GetPhysicsManager().PreRender(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetTransformLerpManager().PreRender(dt);
+		GetDebugger().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
 	}
@@ -135,6 +142,7 @@ namespace Engine::Manager
 		GetPhysicsManager().Render(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetTransformLerpManager().Render(dt);
+		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
 		GetD3Device().Render(dt);
 	}
