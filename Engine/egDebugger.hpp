@@ -18,13 +18,8 @@ namespace Engine::Manager
 
 		void Initialize() override
 		{
-#ifdef _DEBUG
 			m_bDebug = true;
-
 			m_font_ = std::make_unique<SpriteFont>(GetD3Device().GetDevice(), L"consolas.spritefont");
-#else
-			m_bDebug = false;
-#endif
 		}
 
 		void Log(const std::wstring& str)

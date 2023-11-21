@@ -63,6 +63,16 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
 	}
 
+	void RenderPipeline::SetWireframeState() const
+	{
+		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_wire_.Get());
+	}
+
+	void RenderPipeline::SetFillState() const
+	{
+		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());
+	}
+
 	void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
 	{
 		constexpr UINT stride = sizeof(VertexElement);
@@ -97,7 +107,8 @@ namespace Engine::Manager::Graphics
 		InitializeSamplers();
 
 		GetD3Device().CreateBlendState(m_blend_state_.GetAddressOf());
-		GetD3Device().CreateRasterizer(m_rasterizer_state_.GetAddressOf());
+		GetD3Device().CreateRasterizer(m_rasterizer_state_.GetAddressOf(), D3D11_FILL_SOLID);
+		GetD3Device().CreateRasterizer(m_rasterizer_state_wire_.GetAddressOf(), D3D11_FILL_WIREFRAME);
 		GetD3Device().CreateDepthStencilState(m_depth_stencil_state_.GetAddressOf());
 
 		Engine::GetRenderPipeline().SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});

@@ -1,7 +1,12 @@
 #include "pch.hpp"
 #include "egCollider.hpp"
-
+#include "egResourceManager.hpp"
 #include "egCollision.h"
+#include "egCubeMesh.hpp"
+#include "egD3Device.hpp"
+#include "egDebugObject.hpp"
+#include "egSceneManager.hpp"
+#include "egSphereMesh.hpp"
 
 namespace Engine::Component
 {
@@ -38,6 +43,34 @@ namespace Engine::Component
 		UpdateInertiaTensor();
 	}
 
+	void Collider::Initialize()
+	{
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		{
+			GenerateFromMesh(mesh);
+		}
+		else
+		{
+			throw std::exception("Mesh is not loaded");
+		}
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+
+#ifdef _DEBUG
+		GenerateDebugMesh();
+#endif
+
+		UpdateFromTransform();
+		UpdateInertiaTensor();
+	}
+
 	void Collider::SetSize(const Vector3& size)
 	{
 		m_size_ = size;
@@ -62,6 +95,10 @@ namespace Engine::Component
 		{
 			GenerateFromMesh(mesh);
 		}
+
+#ifdef _DEBUG
+		GenerateDebugMesh();
+#endif
 
 		UpdateBoundings();
 	}
@@ -151,8 +188,52 @@ namespace Engine::Component
 		}
 	}
 
+#ifdef _DEBUG
+	void Collider::GenerateDebugMesh()
+	{
+		if (m_debug_mesh_)
+		{
+			m_debug_mesh_.reset();
+		}
+
+		m_debug_mesh_ = Instantiate<Object::DebugObject>();
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GetResourceManager().AddResource(L"CubeMesh", std::make_shared<Mesh::CubeMesh>());
+			m_debug_mesh_->AddResource(
+				GetResourceManager().GetResource<Mesh::CubeMesh>(L"CubeMesh"));
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GetResourceManager().AddResource(L"SphereMesh", std::make_shared<Mesh::SphereMesh>());
+			m_debug_mesh_->AddResource(
+				GetResourceManager().GetResource<Mesh::SphereMesh>(L"SphereMesh"));
+		}
+	}
+#endif
+
 	void Collider::FixedUpdate(const float& dt)
 	{
+	}
+
+	void Collider::Render(const float dt)
+	{
+#ifdef _DEBUG
+		if (m_debug_mesh_)
+		{
+			if (m_collided_objects_.size() > 0)
+			{
+				m_debug_mesh_->SetCollided(true);
+			}
+			else
+			{
+				m_debug_mesh_->SetCollided(false);
+			}
+
+			m_debug_mesh_->Render(dt);
+		}
+#endif
 	}
 
 	void Collider::UpdateFromTransform()

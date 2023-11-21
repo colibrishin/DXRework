@@ -37,6 +37,10 @@ namespace Engine::Manager::Graphics
 
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
+		void OverrideColor(const Color& color);
+		void SetWireframeState() const;
+		void SetFillState() const;
+
 		void BindLightBuffers();
 		static void BindVertexBuffer(ID3D11Buffer* buffer);
 		static void BindIndexBuffer(ID3D11Buffer* buffer);
@@ -75,6 +79,7 @@ namespace Engine::Manager::Graphics
 		std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
 		ComPtr<ID3D11BlendState> m_blend_state_ = nullptr;
 		ComPtr<ID3D11RasterizerState> m_rasterizer_state_ = nullptr;
+		ComPtr<ID3D11RasterizerState> m_rasterizer_state_wire_ = nullptr;
 		ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
 
 		std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
