@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
+#include "egManager.hpp"
 
 namespace Engine::Manager
 {

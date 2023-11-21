@@ -320,7 +320,7 @@ namespace Engine::Manager::Graphics
 
 		void CreateBlendState(ID3D11BlendState** blend_state) const;
 		void CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state) const;
-		void CreateRasterizer(ID3D11RasterizerState** state) const;
+		void CreateRasterizer(ID3D11RasterizerState** state, D3D11_FILL_MODE fill_mode) const;
 
 	private:
 		void InitializeAdapter();

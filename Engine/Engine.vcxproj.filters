@@ -44,6 +44,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{8ee7f0e6-8819-4a8d-add7-41905cfc04be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mesh">
+      <UniqueIdentifier>{258c4e9f-9245-457a-b6dc-021cb9bee28b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -180,6 +183,15 @@
     </ClInclude>
     <ClInclude Include="egDebugger.hpp">
       <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egDebugObject.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egCubeMesh.hpp">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="egSphereMesh.hpp">
+      <Filter>Mesh</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

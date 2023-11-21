@@ -4,10 +4,16 @@
 
 #include "egPhysics.h"
 #include "egComponent.hpp"
+#include "egDebugObject.hpp"
 #include "egHelper.hpp"
 #include "egMesh.hpp"
 #include "egTransform.hpp"
 #include "egObject.hpp"
+
+namespace Engine::Manager
+{
+	class Debugger;
+}
 
 namespace Engine::Component
 {
@@ -56,8 +62,6 @@ namespace Engine::Component
 
 		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>().lock()->GetVertices(); }
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
-
-		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
@@ -157,10 +161,19 @@ namespace Engine::Component
 		void GenerateInertiaSphere();
 
 	private:
+		friend class Manager::Debugger;
+
+		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
+
 		std::set<EntityID> m_collided_objects_;
 		std::set<EntityID> m_speculative_collision_candidates_;
 
 		bool m_bDirtyByTransform;
+
+#ifdef _DEBUG
+		void GenerateDebugMesh();
+		std::shared_ptr<Object::DebugObject> m_debug_mesh_;
+#endif
 
 		Vector3 m_position_;
 		Vector3 m_size_;
@@ -205,30 +218,6 @@ namespace Engine::Component
 		m_inverse_inertia_ = Vector3(i, i, i);
 	}
 
-	inline void Collider::Initialize()
-	{
-		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
-		{
-			GenerateFromMesh(mesh);
-		}
-		else
-		{
-			throw std::exception("Mesh is not loaded");
-		}
-
-		if (m_type_ == BOUNDING_TYPE_BOX)
-		{
-			GenerateInertiaCube();
-		}
-		else if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			GenerateInertiaSphere();
-		}
-
-		UpdateFromTransform();
-		UpdateInertiaTensor();
-	}
-
 	inline void Collider::PreUpdate(const float& dt)
 	{
 		UpdateFromTransform();
@@ -239,13 +228,18 @@ namespace Engine::Component
 	{
 		UpdateFromTransform();
 		UpdateInertiaTensor();
+
+#ifdef _DEBUG
+		if (const auto tr = m_debug_mesh_->GetComponent<Transform>().lock())
+		{
+			tr->SetPosition(GetPosition());
+			tr->SetRotation(GetRotation());
+			tr->SetScale(GetSize());
+		}
+#endif
 	}
 
 	inline void Collider::PreRender(const float dt)
-	{
-	}
-
-	inline void Collider::Render(const float dt)
 	{
 	}
 }

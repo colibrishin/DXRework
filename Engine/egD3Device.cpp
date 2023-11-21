@@ -266,20 +266,20 @@ namespace Engine::Manager::Graphics
 		m_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
 	}
 
-	void D3Device::CreateRasterizer(ID3D11RasterizerState** state) const
+	void D3Device::CreateRasterizer(ID3D11RasterizerState** state, D3D11_FILL_MODE fill_mode) const
 	{
 		D3D11_RASTERIZER_DESC rasterizer_desc{};
 
 		rasterizer_desc.AntialiasedLineEnable = false;
 		rasterizer_desc.CullMode = D3D11_CULL_BACK;
-		rasterizer_desc.DepthBias = 0;
-		rasterizer_desc.DepthBiasClamp = 0.0f;
+		rasterizer_desc.DepthBias = fill_mode == D3D11_FILL_WIREFRAME ? -1000 : 0;
+		rasterizer_desc.DepthBiasClamp = fill_mode == D3D11_FILL_WIREFRAME ? 0.0001f : 0.0f;
 		rasterizer_desc.DepthClipEnable = true;
-		rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+		rasterizer_desc.FillMode = fill_mode;
 		rasterizer_desc.FrontCounterClockwise = false;
 		rasterizer_desc.MultisampleEnable = false;
 		rasterizer_desc.ScissorEnable = false;
-		rasterizer_desc.SlopeScaledDepthBias = 0.0f;
+		rasterizer_desc.SlopeScaledDepthBias = fill_mode == D3D11_FILL_WIREFRAME ? 0.01f : 0.0f;
 
 		DX::ThrowIfFailed(
 			m_device_->CreateRasterizerState(&rasterizer_desc, state));
