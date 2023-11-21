@@ -22,6 +22,15 @@ namespace Engine::Objects
 	{
 		Object::Update(dt);
 
+		if (const auto companion = m_bound_object_.lock())
+		{
+			if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
+			{
+				const auto tr = GetComponent<Component::Transform>().lock();
+				tr->SetPosition(tr_other->GetPosition() + m_offset_);
+			}
+		}
+
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
 			GetComponent<Component::Transform>().lock()->Translate(Vector3::Forward * 0.1f);
@@ -70,6 +79,16 @@ namespace Engine::Objects
 	void Camera::Render(const float dt)
 	{
 		Object::Render(dt);
+	}
+
+	void Camera::BindObject(const WeakObject& object)
+	{
+		m_bound_object_ = object;
+	}
+
+	void Camera::SetOffset(Vector3 offset)
+	{
+		m_offset_ = offset;
 	}
 
 	Vector2 Camera::GetWorldMousePosition()
