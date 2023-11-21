@@ -1,10 +1,10 @@
 #pragma once
-#include "../Engine/egMesh.hpp"
+#include "egMesh.hpp"
 #include "GeometricPrimitive.h"
 
-namespace Client::Mesh
+namespace Engine::Mesh
 {
-	class CubeMesh final : public Engine::Resources::Mesh
+	class CubeMesh final : public Resources::Mesh
 	{
 	public:
 		CubeMesh();
