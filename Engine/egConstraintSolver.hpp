@@ -2,6 +2,7 @@
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
+#include "egManager.hpp"
 
 namespace Engine::Manager::Physics
 {

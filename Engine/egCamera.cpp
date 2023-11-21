@@ -1,5 +1,5 @@
 #include "pch.hpp"
-
+#include "egApplication.hpp"
 #include "egManagerHelper.hpp"
 #include "egCamera.hpp"
 #include "egTransform.hpp"

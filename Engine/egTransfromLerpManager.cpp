@@ -1,5 +1,5 @@
 #include "pch.hpp"
-
+#include "egSceneManager.hpp"
 #include "egCollider.hpp"
 #include "egTransformLerpManager.hpp"
 
