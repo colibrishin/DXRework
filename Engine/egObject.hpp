@@ -105,12 +105,16 @@ namespace Engine::Abstract
 		template <typename T = Component>
 		void DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp);
 
+		void SetLayer(eLayerType type);
+
 		void SetActive(bool active) { m_active_ = active; }
-		bool GetActive() const { return m_active_; }
 		void SetCulled(bool culled) { m_culled_ = culled; }
 
+		bool GetActive() const { return m_active_; }
+		eLayerType GetLayer() const { return m_layer_; }
+
 	protected:
-		Object() = default;
+		Object() : m_layer_(LAYER_NONE), m_active_(true), m_culled_(true) {}
 
 	public:
 		void PreUpdate(const float& dt) override;
@@ -150,6 +154,7 @@ namespace Engine::Abstract
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
+		eLayerType m_layer_;
 		bool m_active_ = true;
 		bool m_culled_ = true;
 

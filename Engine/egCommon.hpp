@@ -68,12 +68,15 @@ namespace Engine
 
 	enum eLayerType
 	{
-		LAYER_LIGHT = 0,
+		LAYER_NONE = 0,
+		LAYER_LIGHT,
 		LAYER_CAMERA,
 		LAYER_DEFAULT,
 		LAYER_UI,
 		LAYER_MAX
 	};
+	
+	constexpr eLayerType g_early_update_layer_end = LAYER_DEFAULT;
 
 	enum eResourcePriority
 	{
