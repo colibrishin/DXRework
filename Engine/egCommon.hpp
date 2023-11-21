@@ -36,7 +36,12 @@ namespace Engine
 	constexpr float g_epsilon = 0.001f;
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
+
 	constexpr float g_fixed_update_interval = 0.02f;
+	constexpr int g_debug_y_movement = 15;
+	constexpr int g_debug_y_initial = 0;
+	constexpr float g_debug_message_life_time = 1.0f;
+	constexpr size_t g_debug_message_max = 20;
 
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;
@@ -68,12 +73,15 @@ namespace Engine
 
 	enum eLayerType
 	{
-		LAYER_LIGHT = 0,
+		LAYER_NONE = 0,
+		LAYER_LIGHT,
 		LAYER_CAMERA,
 		LAYER_DEFAULT,
 		LAYER_UI,
 		LAYER_MAX
 	};
+	
+	constexpr eLayerType g_early_update_layer_end = LAYER_DEFAULT;
 
 	enum eResourcePriority
 	{

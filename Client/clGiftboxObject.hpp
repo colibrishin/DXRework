@@ -53,6 +53,8 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+
+		SetLayer(Engine::LAYER_UI);
 	}
 
 	inline Giftbox::~Giftbox()

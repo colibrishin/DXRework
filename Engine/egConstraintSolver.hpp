@@ -2,6 +2,7 @@
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
+#include "egManager.hpp"
 
 namespace Engine::Manager::Physics
 {
@@ -24,8 +25,8 @@ namespace Engine::Manager::Physics
 		void ResolveCollision(Abstract::Object& lhs, Abstract::Object& rhs);
 		void ResolveSpeculation(Abstract::Object& lhs, Abstract::Object& rhs);
 
-		std::set<std::pair<uint64_t, uint64_t>> m_collision_resolved_set_;
-		std::set<std::pair<uint64_t, uint64_t>> m_speculative_resolved_set_;
+		std::set<std::pair<EntityID, EntityID>> m_collision_resolved_set_;
+		std::set<std::pair<EntityID, EntityID>> m_speculative_resolved_set_;
 
 	};
 }

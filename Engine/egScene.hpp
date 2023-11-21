@@ -11,6 +11,7 @@
 namespace Engine
 {
 	using StrongCamera = std::shared_ptr<Objects::Camera>;
+	using WeakCamera = std::weak_ptr<Objects::Camera>;
 	using StrongLight = std::shared_ptr<Objects::Light>;
 	using StrongLayer = std::shared_ptr<Layer>;
 
@@ -28,14 +29,15 @@ namespace Engine
 		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
-		void AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
+		EntityID AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
 		{
 			m_layers[layer]->AddGameObject<T>(obj);
 			m_gameObjects_.emplace(obj->GetID(), obj);
+			return obj->GetID();
 		}
 
 		template <typename T>
-		void RemoveGameObject(const uint64_t id, eLayerType layer)
+		void RemoveGameObject(const EntityID id, eLayerType layer)
 		{
 			m_layers[layer]->RemoveGameObject<T>(id);
 			m_gameObjects_.erase(id);
@@ -46,7 +48,7 @@ namespace Engine
 			return m_layers[layer]->GetGameObjects();
 		}
 
-		WeakObject FindGameObject(uint64_t id)
+		WeakObject FindGameObject(EntityID id)
 		{
 			if (m_gameObjects_.contains(id))
 			{
@@ -56,9 +58,24 @@ namespace Engine
 			return {};
 		}
 
+		WeakCamera GetMainCamera() const
+		{
+			return m_mainCamera_;
+		}
+
+		void ChangeLayer(EntityID id, eLayerType type)
+		{
+			if (const auto obj = FindGameObject(id).lock())
+			{
+				m_layers[obj->GetLayer()]->RemoveGameObject<Abstract::Object>(id);
+				m_layers[type]->AddGameObject<Abstract::Object>(obj);
+			}
+		}
+
 	private:
+		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
-		std::map<uint64_t, WeakObject> m_gameObjects_;
+		std::map<EntityID, WeakObject> m_gameObjects_;
 
 	};
 
@@ -72,6 +89,8 @@ namespace Engine
 		const auto camera = Instantiate<Objects::Camera>();
 		AddGameObject(camera, LAYER_CAMERA);
 
+		m_mainCamera_ = camera;
+
 		const auto light1 = Instantiate<Objects::Light>();
 		AddGameObject(light1, LAYER_LIGHT);
 		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
@@ -84,25 +103,34 @@ namespace Engine
 
 	inline void Scene::PreUpdate(const float& dt)
 	{
-		for (const auto& val : m_layers | std::views::values)
+		m_layers[LAYER_LIGHT]->PreUpdate(dt);
+		m_layers[LAYER_CAMERA]->PreUpdate(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
-			val->PreUpdate(dt);
+			m_layers[static_cast<eLayerType>(i)]->PreUpdate(dt);
 		}
 	}
 
 	inline void Scene::Update(const float& dt)
 	{
-		for (const auto& val : m_layers | std::views::values)
+		m_layers[LAYER_LIGHT]->Update(dt);
+		m_layers[LAYER_CAMERA]->Update(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
-			val->Update(dt);
+			m_layers[static_cast<eLayerType>(i)]->Update(dt);
 		}
 	}
 
 	inline void Scene::PreRender(const float dt)
 	{
-		for (const auto& val : m_layers | std::views::values)
+		m_layers[LAYER_LIGHT]->PreRender(dt);
+		m_layers[LAYER_CAMERA]->PreRender(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
-			val->PreRender(dt);
+			m_layers[static_cast<eLayerType>(i)]->PreRender(dt);
 		}
 	}
 
@@ -110,17 +138,23 @@ namespace Engine
 	{
 		GetRenderPipeline().BindLightBuffers();
 
-		for (const auto& val : m_layers | std::views::values)
+		m_layers[LAYER_LIGHT]->Render(dt);
+		m_layers[LAYER_CAMERA]->Render(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
-			val->Render(dt);
+			m_layers[static_cast<eLayerType>(i)]->Render(dt);
 		}
 	}
 
 	inline void Scene::FixedUpdate(const float& dt)
 	{
-		for (const auto& val : m_layers | std::views::values)
+		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
+		m_layers[LAYER_CAMERA]->FixedUpdate(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
-			val->FixedUpdate(dt);
+			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
 	}
 }

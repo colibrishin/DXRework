@@ -66,6 +66,8 @@ namespace Client::Object
 		rb->SetFixed(true);
 		rb->SetFrictionCoefficient(0.2f);
 		rb->SetGravityOverride(false);
+
+		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline PlaneObject::~PlaneObject()

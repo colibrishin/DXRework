@@ -1,5 +1,4 @@
 #pragma once
-#include "egApplication.hpp"
 #include "egCommon.hpp"
 
 #undef max

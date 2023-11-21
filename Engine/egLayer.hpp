@@ -37,7 +37,7 @@ namespace Engine
 		}
 
 		template <typename T>
-		void RemoveGameObject (uint64_t id)
+		void RemoveGameObject (EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Abstract::Object, T>)
 			{
@@ -50,7 +50,7 @@ namespace Engine
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetGameObject (uint64_t id)
+		std::weak_ptr<T> GetGameObject (EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Abstract::Object, T>)
 			{
@@ -74,7 +74,7 @@ namespace Engine
 	private:
 		eLayerType m_layer_type_;
 		std::vector<WeakObject> m_weak_objects_cache_;
-		std::map<const uint64_t, StrongObject> m_objects_;
+		std::map<const EntityID, StrongObject> m_objects_;
 
 	};
 

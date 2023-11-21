@@ -74,6 +74,15 @@ namespace Engine::Abstract
 		}
 	}
 
+	void Object::SetLayer(eLayerType type)
+	{
+		if (const auto scene = GetSceneManager().GetActiveScene().lock())
+		{
+			scene->ChangeLayer(GetID(), type);
+			m_layer_ = type;
+		}
+	}
+
 	void Object::Render(const float dt)
 	{
 		if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
@@ -81,9 +90,16 @@ namespace Engine::Abstract
 			return;
 		}
 
-		for (const auto& component : m_components_ | std::views::values)
+		for (const auto& component : m_priority_sorted_)
 		{
-			component->Render(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->Render(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -92,14 +108,25 @@ namespace Engine::Abstract
 			{
 				locked->Render(dt);
 			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
 		}
 	}
 
 	void Object::FixedUpdate(const float& dt)
 	{
-		for (const auto& component : m_components_ | std::views::values)
+		for (const auto& component : m_priority_sorted_)
 		{
-			component->FixedUpdate(dt);
+			if (const auto locked = component.lock())
+			{
+				locked->FixedUpdate(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
 		}
 
 		for (const auto& resource : m_resources_)
@@ -107,6 +134,10 @@ namespace Engine::Abstract
 			if (const auto locked = resource.lock())
 			{
 				locked->FixedUpdate(dt);
+			}
+			else 			
+			{
+				m_resources_.erase(resource);
 			}
 		}
 	}

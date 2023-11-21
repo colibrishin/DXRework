@@ -31,15 +31,15 @@ namespace Engine::Component
 		bool Intersects(const Ray& ray, float distance, float& intersection) const;
 		bool Contains(Collider& other) const;
 
-		void AddCollidedObject(const uint64_t id) { m_collided_objects_.insert(id); }
-		void AddSpeculationObject(const uint64_t id) { m_speculative_collision_candidates_.insert(id); }
+		void AddCollidedObject(const EntityID id) { m_collided_objects_.insert(id); }
+		void AddSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.insert(id); }
 
-		void RemoveCollidedObject(const uint64_t id) { m_collided_objects_.erase(id); }
-		void RemoveSpeculationObject(const uint64_t id) { m_speculative_collision_candidates_.erase(id); }
+		void RemoveCollidedObject(const EntityID id) { m_collided_objects_.erase(id); }
+		void RemoveSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.erase(id); }
 
-		bool IsCollidedObject(const uint64_t id) const { return m_collided_objects_.contains(id); }
-		const std::set<uint64_t>& GetCollidedObjects() const { return m_collided_objects_; }
-		const std::set<uint64_t>& GetSpeculation() const { return m_speculative_collision_candidates_; }
+		bool IsCollidedObject(const EntityID id) const { return m_collided_objects_.contains(id); }
+		const std::set<EntityID>& GetCollidedObjects() const { return m_collided_objects_; }
+		const std::set<EntityID>& GetSpeculation() const { return m_speculative_collision_candidates_; }
 
 		bool GetDirtyFlag() const { return m_bDirtyByTransform; }
 
@@ -157,8 +157,8 @@ namespace Engine::Component
 		void GenerateInertiaSphere();
 
 	private:
-		std::set<uint64_t> m_collided_objects_;
-		std::set<uint64_t> m_speculative_collision_candidates_;
+		std::set<EntityID> m_collided_objects_;
+		std::set<EntityID> m_speculative_collision_candidates_;
 
 		bool m_bDirtyByTransform;
 

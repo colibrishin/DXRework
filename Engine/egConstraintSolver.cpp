@@ -1,4 +1,7 @@
 #include "pch.hpp"
+#include "egConstraintSolver.hpp"
+#include "egSceneManager.hpp"
+#include "egCollisionDetector.hpp"
 
 namespace Engine::Manager::Physics
 {

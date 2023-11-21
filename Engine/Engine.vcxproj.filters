@@ -172,6 +172,15 @@
     <ClInclude Include="egConstraintSolver.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
+    <ClInclude Include="egType.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egTaskScheduler.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egDebugger.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

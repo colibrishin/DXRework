@@ -2,6 +2,8 @@
 #include <string>
 #include <memory>
 
+#include "egType.hpp"
+
 namespace Engine::Abstract
 {
 	class Entity : public std::enable_shared_from_this<Entity>
@@ -14,10 +16,10 @@ namespace Engine::Abstract
 		{
 			return GetID() == other.GetID();
 		}
-
-		// 64 bits only;
-		uint64_t GetID() const { return reinterpret_cast<uint64_t>(this); }
+		
 		void SetName(const std::wstring& name) { m_name_ = name; }
+
+		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
 		std::wstring GetName() const { return m_name_; }
 
 		template <typename T>
@@ -40,7 +42,11 @@ namespace Engine::Abstract
 	protected:
 		Entity() = default;
 
+		void SetGarbage(const bool bGarbage) { m_bGarbage_ = bGarbage; }
+
 	private:
 		std::wstring m_name_;
+		bool m_bGarbage_;
+
 	};
 }

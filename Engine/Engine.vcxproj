@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstraintSolver.hpp" />
+    <ClInclude Include="egDebugger.hpp" />
     <ClInclude Include="egDXCommon.h" />
     <ClInclude Include="egCamera.hpp" />
     <ClInclude Include="egCollider.hpp" />
@@ -54,11 +55,13 @@
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
+    <ClInclude Include="egTaskScheduler.hpp" />
     <ClInclude Include="egText.hpp" />
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
     <ClInclude Include="egTransform.hpp" />
     <ClInclude Include="egTransformLerpManager.hpp" />
+    <ClInclude Include="egType.hpp" />
     <ClInclude Include="egVertexShader.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.hpp" />

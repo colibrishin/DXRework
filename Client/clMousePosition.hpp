@@ -43,6 +43,8 @@ namespace Client::Object
 		SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		SetRotation(0.0f);
 		SetScale(1.0f);
+
+		SetLayer(Engine::LAYER_UI);
 	}
 
 	inline MousePositionText::~MousePositionText()
@@ -57,7 +59,8 @@ namespace Client::Object
 	inline void MousePositionText::Update(const float& dt)
 	{
 		Text::Update(dt);
-		SetText(L"X: " + std::to_wstring(Engine::GetApplication().GetMouseState().x) + L", Y: " + std::to_wstring(Engine::GetApplication().GetMouseState().y));
+		const Vector2 pos = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetWorldMousePosition();
+		SetText(L"X: " + std::to_wstring(pos.x) + L", Y: " + std::to_wstring(pos.y));
 	}
 
 	inline void MousePositionText::PreRender(const float dt)

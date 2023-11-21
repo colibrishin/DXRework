@@ -1,10 +1,12 @@
 #pragma once
+#include "egApplication.hpp"
 #include "egProjectionFrustum.hpp"
 #include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 #include "egCollisionDetector.hpp"
 #include "egConstraintSolver.hpp"
+#include "egDebugger.hpp"
 #include "egPhysicsManager.hpp"
 #include "egTransformLerpManager.hpp"
 
@@ -63,5 +65,10 @@ namespace Engine
 	inline Manager::Physics::ConstraintSolver& GetConstraintSolver()
 	{
 		return Manager::Physics::ConstraintSolver::GetInstance();
+	}
+
+	inline Manager::Debugger& GetDebugger()
+	{
+		return Manager::Debugger::GetInstance();
 	}
 }

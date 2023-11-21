@@ -1,5 +1,5 @@
 #include "pch.hpp"
-
+#include "egApplication.hpp"
 #include "egManagerHelper.hpp"
 #include "egCamera.hpp"
 #include "egTransform.hpp"
@@ -21,6 +21,15 @@ namespace Engine::Objects
 	void Camera::Update(const float& dt)
 	{
 		Object::Update(dt);
+
+		if (const auto companion = m_bound_object_.lock())
+		{
+			if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
+			{
+				const auto tr = GetComponent<Component::Transform>().lock();
+				tr->SetPosition(tr_other->GetPosition() + m_offset_);
+			}
+		}
 
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
@@ -70,5 +79,35 @@ namespace Engine::Objects
 	void Camera::Render(const float dt)
 	{
 		Object::Render(dt);
+	}
+
+	void Camera::BindObject(const WeakObject& object)
+	{
+		m_bound_object_ = object;
+	}
+
+	void Camera::SetOffset(Vector3 offset)
+	{
+		m_offset_ = offset;
+	}
+
+	Vector2 Camera::GetWorldMousePosition()
+	{
+		const DirectX::XMMATRIX vp = m_vp_buffer_.projection * m_vp_buffer_.view;
+		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(vp);
+		const Vector2 actual_mouse_position
+		{
+			static_cast<float>(GetApplication().GetMouseState().x),
+			static_cast<float>(GetApplication().GetMouseState().y)
+		};
+
+		const DirectX::XMMATRIX invProjectionView = DirectX::XMMatrixInverse(&det, vp);
+
+		const float x = (((2.0f * actual_mouse_position.x) / g_window_width) - 1);
+		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
+
+		const DirectX::XMVECTOR mousePosition = DirectX::XMVectorSet(x, y, GetComponent<Component::Transform>().lock()->GetPosition().z, 0.0f);
+
+		return DirectX::XMVector3Transform(mousePosition, invProjectionView);
 	}
 }

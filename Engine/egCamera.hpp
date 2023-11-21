@@ -38,10 +38,18 @@ namespace Engine::Objects
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 
+		void BindObject(const WeakObject& object);
+		void SetOffset(Vector3 offset);
+
+		Vector2 GetWorldMousePosition();
+
 	private:
 		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;
 
 		Vector3 m_look_at_;
+
+		Vector3 m_offset_;
+		WeakObject m_bound_object_;
 	};
 }
