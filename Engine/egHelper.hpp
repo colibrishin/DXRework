@@ -28,6 +28,16 @@ namespace Engine
 		return std::fabs(a - b) < g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
 	}
 
+	static Vector3 VectorElementAdd(const Vector3& lhs, const float value)
+	{
+		return { lhs.x + value, lhs.y + value, lhs.z + value };
+	}
+
+	static bool VectorElementInRange(const Vector3& lhs, const float value)
+	{
+		return std::max(std::max(lhs.x, lhs.y), lhs.z) < value;
+	}
+
 	static Vector3 XMTensorCross(const DirectX::XMFLOAT3X3& lhs, const Vector3& rhs)
 	{
 		return {
