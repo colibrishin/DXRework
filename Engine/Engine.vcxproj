@@ -89,6 +89,7 @@
     <ClCompile Include="egPhysicsManager.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
+    <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egTransform.cpp" />
     <ClCompile Include="egTransfromLerpManager.cpp" />
