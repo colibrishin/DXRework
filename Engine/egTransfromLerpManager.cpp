@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egSceneManager.hpp"
 #include "egCollider.hpp"
+#include "egManagerHelper.hpp"
 #include "egTransformLerpManager.hpp"
 
 namespace Engine::Manager::Physics
@@ -42,6 +43,11 @@ namespace Engine::Manager::Physics
 						}
 
 						cl->SetPosition(tr->GetPosition());
+
+						GetTaskScheduler().AddTask([obj](const float& dt)
+						{
+							GetSceneManager().GetActiveScene().lock()->UpdatePosition(obj);
+						});
 					}
 				}
 			}
