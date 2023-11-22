@@ -60,6 +60,6 @@ namespace Client::Scene
 		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_DEFAULT);
 
-		//GetMainCamera().lock()->BindObject(FindGameObject(companion_id));
+		GetMainCamera().lock()->BindObject(FindGameObject(companion_id));
 	}
 }
