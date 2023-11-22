@@ -74,18 +74,18 @@ namespace Engine
 	{
 		const auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
 
-		if (!VectorElementInRange(pos_rounded, g_max_map_size))
+		for (auto i = static_cast<size_t>(pos_rounded.x) - range; i < static_cast<size_t>(pos_rounded.x) + range; ++i)
 		{
-			GetDebugger().Log(L"Position is out of range");
-			return;
-		}
-
-		for (int i = static_cast<int>(pos_rounded.x); i < static_cast<int>(pos_rounded.x) + range; ++i)
-		{
-			for (int j = static_cast<int>(pos_rounded.y); j < static_cast<int>(pos_rounded.y) + range; ++j)
+			for (auto j = static_cast<size_t>(pos_rounded.y) - range; j < static_cast<size_t>(pos_rounded.y) + range; ++j)
 			{
-				for (int k = static_cast<int>(pos_rounded.z); k < static_cast<int>(pos_rounded.z) + range; ++k)
+				for (auto k = static_cast<size_t>(pos_rounded.z) - range; k < static_cast<size_t>(pos_rounded.z) + range; ++k)
 				{
+					if (!VectorElementInRange(pos_rounded, g_max_map_size))
+					{
+						GetDebugger().Log(L"Position is out of range");
+						continue;
+					}
+
 					const auto& set = m_object_position_tree_(i, j, k);
 
 					for (const auto& obj : set)
@@ -97,6 +97,28 @@ namespace Engine
 					}
 				}
 			}
+		}
+	}
+
+	void Scene::SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust)
+	{
+		auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
+		float accumulated_length = 0.f;
+
+		while (static_cast<int>(accumulated_length) < exhaust)
+		{
+			const auto& current_tree = m_object_position_tree_(static_cast<int>(pos_rounded.x), static_cast<int>(pos_rounded.y), static_cast<int>(pos_rounded.z));
+
+			for (const auto& obj : current_tree)
+			{
+				if (const auto obj_ptr = obj.lock())
+				{
+					out.insert(obj_ptr);
+				}
+			}
+
+			pos_rounded += dir;
+			accumulated_length += dir.Length();
 		}
 	}
 }

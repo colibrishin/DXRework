@@ -51,9 +51,9 @@ namespace Engine::Physics
 
 	inline Vector3 GetActivePolarity(const Vector3& vel)
 	{
-		const auto signx = vel.x > 0.f ? 1.f : (vel.x == g_epsilon ? 0.f : -1.f);
-		const auto signy = vel.y > 0.f ? 1.f : (vel.y == g_epsilon ? 0.f : -1.f);
-		const auto signz = vel.z > 0.f ? 1.f : (vel.z == g_epsilon ? 0.f : -1.f);
+		const auto signx = vel.x > 0.f ? 1.f : (std::fabsf(vel.x) == g_epsilon ? 0.f : -1.f);
+		const auto signy = vel.y > 0.f ? 1.f : (std::fabsf(vel.y) == g_epsilon ? 0.f : -1.f);
+		const auto signz = vel.z > 0.f ? 1.f : (std::fabsf(vel.z) == g_epsilon ? 0.f : -1.f);
 
 		return {signx, signy, signz};
 	}

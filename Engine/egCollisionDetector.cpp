@@ -7,6 +7,7 @@
 #include "egSceneManager.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
+#include "egManagerHelper.hpp"
 
 namespace Engine::Manager
 {
@@ -246,5 +247,39 @@ namespace Engine::Manager
 
 	void CollisionDetector::FixedUpdate(const float& dt)
 	{
+	}
+
+	void CollisionDetector::GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out)
+	{
+		const auto scene = GetSceneManager().GetActiveScene().lock();
+
+		if (!scene)
+		{
+			GetDebugger().Log(L"CollisionDetector: Scene has not loaded.");
+			out = {};
+		}
+
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+		{
+			const auto layer = scene->GetGameObjects((eLayerType)i);
+
+			for (const auto& obj : layer)
+			{
+				const auto obj_locked = obj.lock();
+				const auto cl = obj_locked->GetComponent<Component::Collider>().lock();
+
+				if (!cl)
+				{
+					continue;
+				}
+
+				float intersection;
+
+				if (cl->Intersects(ray, distance, intersection))
+				{
+					out.insert(obj);
+				}
+			}
+		}
 	}
 }
