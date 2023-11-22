@@ -20,6 +20,7 @@ namespace Engine::Manager
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		static void GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
 		bool IsCollided(EntityID id) const { return !m_collision_map_.at(id).empty(); }
 		bool IsCollided(EntityID id1, EntityID id2) const { return m_collision_map_.at(id1).contains(id2); }
 		bool IsSpeculated(EntityID id1, EntityID id2) const
