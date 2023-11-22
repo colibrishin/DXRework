@@ -40,6 +40,12 @@ namespace Engine::Objects
 			GetComponent<Component::Transform>().lock()->Translate(Vector3::Backward * 0.1f);
 		}
 
+		const auto current_mouse = GetNormalizedMousePosition();
+		Vector2 delta;
+		(m_previous_mouse_position_ - current_mouse).Normalize(delta);
+
+		m_look_at_ = Vector3::Transform(m_look_at_, Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f));
+
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();
@@ -74,6 +80,7 @@ namespace Engine::Objects
 	void Camera::PreRender(const float dt)
 	{
 		Object::PreRender(dt);
+		m_previous_mouse_position_ = GetNormalizedMousePosition();
 	}
 
 	void Camera::Render(const float dt)
@@ -109,5 +116,19 @@ namespace Engine::Objects
 		const DirectX::XMVECTOR mousePosition = DirectX::XMVectorSet(x, y, GetComponent<Component::Transform>().lock()->GetPosition().z, 0.0f);
 
 		return DirectX::XMVector3Transform(mousePosition, invProjectionView);
+	}
+
+	Vector2 Camera::GetNormalizedMousePosition()
+	{
+		const Vector2 actual_mouse_position
+		{
+			static_cast<float>(GetApplication().GetMouseState().x),
+			static_cast<float>(GetApplication().GetMouseState().y)
+		};
+
+		const float x = (((2.0f * actual_mouse_position.x) / g_window_width) - 1);
+		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
+
+		return {x, y};
 	}
 }

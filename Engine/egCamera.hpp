@@ -42,6 +42,8 @@ namespace Engine::Objects
 		void SetOffset(Vector3 offset);
 
 		Vector2 GetWorldMousePosition();
+		static Vector2 GetNormalizedMousePosition();
+		Vector3 GetLookAtVector() const { return m_look_at_; }
 
 	private:
 		Matrix m_view_matrix_;
@@ -49,6 +51,7 @@ namespace Engine::Objects
 
 		Vector3 m_look_at_;
 
+		Vector2 m_previous_mouse_position_;
 		Vector3 m_offset_;
 		WeakObject m_bound_object_;
 	};
