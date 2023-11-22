@@ -261,6 +261,9 @@
     <ClCompile Include="egTransfromLerpManager.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
+    <ClCompile Include="egScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">

@@ -88,6 +88,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().PreUpdate(dt);
 		GetDebugger().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
+		GetTaskScheduler().PreUpdate(dt);
 	}
 
 	void Application::FixedUpdate(const float& dt)
@@ -101,6 +102,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().FixedUpdate(dt);
 		GetDebugger().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
+		GetTaskScheduler().FixedUpdate(dt);
 	}
 
 	void Application::Update(const float& dt)
@@ -114,6 +116,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().Update(dt);
 		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
+		GetTaskScheduler().Update(dt);
 	}
 
 	void Application::PreRender(const float& dt)
@@ -129,6 +132,7 @@ namespace Engine::Manager
 		GetDebugger().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
+		GetTaskScheduler().PreRender(dt);
 	}
 
 	void Application::Render(const float& dt)
@@ -143,6 +147,7 @@ namespace Engine::Manager
 		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
 		GetD3Device().Render(dt);
+		GetTaskScheduler().Render(dt);
 	}
 
 	LRESULT Application::MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

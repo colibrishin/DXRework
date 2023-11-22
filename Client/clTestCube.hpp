@@ -24,7 +24,7 @@ namespace Engine::Component
 
 namespace Client::Object
 {
-	class TestCube : public Engine::Abstract::Object
+	class TestCube final : public Engine::Abstract::Object
 	{
 	public:
 		TestCube();
@@ -35,6 +35,7 @@ namespace Client::Object
 		inline void Update(const float& dt) override;
 		inline void PreRender(const float dt) override;
 		inline void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 	};
 
 	inline TestCube::TestCube()
@@ -88,11 +89,6 @@ namespace Client::Object
 		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAtVector();
 		const auto forward = lookAt * Vector3{1.f, 0.f, 1.f};
 
-		Engine::GetDebugger().Log(L"LookAt: " +
-			std::to_wstring(lookAt.x) + L", " + 
-			std::to_wstring(lookAt.y) + L", " +
-			std::to_wstring(lookAt.z));
-
 		const auto ortho = XMVector3Orthogonal(forward);
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
@@ -114,6 +110,23 @@ namespace Client::Object
 		{
 			rb->AddForce(ortho);
 		}
+
+		if (Engine::GetApplication().GetMouseState().leftButton)
+		{
+			const auto tr = GetComponent<Engine::Component::Transform>().lock();
+			std::vector<Engine::WeakObject> out;
+
+			Engine::GetSceneManager().GetActiveScene().lock()->GetNearbyObjects(tr->GetPosition(), 2, out);
+
+			for (const auto& obj : out)
+			{
+				if (const auto locked = obj.lock())
+				{
+					Engine::GetDebugger().Log(L"Near object id : " + std::to_wstring(locked->GetID()));
+				}
+			}
+
+		}
 	}
 
 	inline void TestCube::PreRender(const float dt)
@@ -124,5 +137,10 @@ namespace Client::Object
 	inline void TestCube::Render(const float dt)
 	{
 		Object::Render(dt);
+	}
+
+	inline void TestCube::FixedUpdate(const float& dt)
+	{
+		Object::FixedUpdate(dt);
 	}
 }

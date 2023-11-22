@@ -42,6 +42,9 @@ namespace Engine
 	constexpr int g_debug_y_initial = 0;
 	constexpr float g_debug_message_life_time = 1.0f;
 	constexpr size_t g_debug_message_max = 20;
+	
+	constexpr size_t g_max_map_size = 2048; // only in power of 2
+	constexpr size_t g_octree_negative_round_up = g_max_map_size / 2;
 
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;

@@ -7,6 +7,7 @@
 #include "egLayer.hpp"
 #include "egLight.hpp"
 #include "egHelper.hpp"
+#include "../octree/octree.h"
 
 namespace Engine
 {
@@ -32,15 +33,50 @@ namespace Engine
 		EntityID AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
 		{
 			m_layers[layer]->AddGameObject<T>(obj);
-			m_gameObjects_.emplace(obj->GetID(), obj);
+			m_cached_objects_.emplace(obj->GetID(), obj);
+			if (const auto tr = obj->template GetComponent<Component::Transform>().lock())
+			{
+				UpdatePosition(obj);
+			}
+
 			return obj->GetID();
 		}
 
 		template <typename T>
 		void RemoveGameObject(const EntityID id, eLayerType layer)
 		{
+			const auto obj = m_cached_objects_[id];
+
+			if (const auto locked = obj.lock())
+			{
+				const auto tr = locked->GetComponent<Component::Transform>().lock();
+				bool updated = false;
+
+				if (tr)
+				{
+					const auto prev_pos = tr->GetPreviousPosition();
+					const auto pos = tr->GetPosition();
+
+					if (m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).contains(obj))
+					{
+						m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).erase(obj);
+						updated = true;
+					}
+					if (m_object_position_tree_(pos.x, pos.y, pos.z).contains(obj))
+					{
+						m_object_position_tree_(pos.x, pos.y, pos.z).erase(obj);
+						updated = true;
+					}
+				}
+
+				if (!updated)
+				{
+					// @todo: add task for refreshing octree.
+				}
+			}
+
+			m_cached_objects_.erase(id);
 			m_layers[layer]->RemoveGameObject<T>(id);
-			m_gameObjects_.erase(id);
 		}
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer)
@@ -50,9 +86,9 @@ namespace Engine
 
 		WeakObject FindGameObject(EntityID id)
 		{
-			if (m_gameObjects_.contains(id))
+			if (m_cached_objects_.contains(id))
 			{
-				return m_gameObjects_[id];
+				return m_cached_objects_[id];
 			}
 
 			return {};
@@ -72,14 +108,19 @@ namespace Engine
 			}
 		}
 
+		void UpdatePosition(const WeakObject& obj);
+		void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
+		void GetNearbyObjects(const Vector3& pos, const size_t range, std::vector<WeakObject>& out);
+
 	private:
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
-		std::map<EntityID, WeakObject> m_gameObjects_;
+		std::map<EntityID, WeakObject> m_cached_objects_;
+		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;
 
 	};
 
-	inline Scene::Scene()
+	inline Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
 	{
 		for(int i = 0; i < LAYER_MAX; ++i)
 		{

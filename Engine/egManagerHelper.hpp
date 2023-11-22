@@ -8,6 +8,7 @@
 #include "egConstraintSolver.hpp"
 #include "egDebugger.hpp"
 #include "egPhysicsManager.hpp"
+#include "egTaskScheduler.hpp"
 #include "egTransformLerpManager.hpp"
 
 namespace Engine
@@ -70,5 +71,10 @@ namespace Engine
 	inline Manager::Debugger& GetDebugger()
 	{
 		return Manager::Debugger::GetInstance();
+	}
+
+	inline Manager::TaskScheduler& GetTaskScheduler()
+	{
+		return Manager::TaskScheduler::GetInstance();
 	}
 }

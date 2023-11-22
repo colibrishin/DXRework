@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <queue>
 #include <functional>
 #include "egManager.hpp"
 
@@ -18,8 +18,13 @@ namespace Engine::Manager
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		void AddTask(const TaskSchedulerFunc& task)
+		{
+			m_tasks_.push(task);
+		}
+
 	private:
-		std::vector<std::function<void()>> m_tasks_;
+		std::queue<TaskSchedulerFunc> m_tasks_;
 
 	};
 
@@ -33,12 +38,11 @@ namespace Engine::Manager
 
 	inline void TaskScheduler::Update(const float& dt)
 	{
-		for (const auto& f : m_tasks_)
+		while (!m_tasks_.empty())
 		{
-			f();
+			m_tasks_.front()(dt);
+			m_tasks_.pop();
 		}
-
-		m_tasks_.clear();
 	}
 
 	inline void TaskScheduler::PreRender(const float& dt)
