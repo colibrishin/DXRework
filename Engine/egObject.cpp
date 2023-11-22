@@ -76,11 +76,14 @@ namespace Engine::Abstract
 
 	void Object::SetLayer(eLayerType type)
 	{
-		if (const auto scene = GetSceneManager().GetActiveScene().lock())
+		GetTaskScheduler().AddTask([this, type](const float& dt)
 		{
-			scene->ChangeLayer(GetID(), type);
-			m_layer_ = type;
-		}
+			if (const auto scene = GetSceneManager().GetActiveScene().lock())
+			{
+				scene->ChangeLayer(GetID(), type);
+				m_layer_ = type;
+			}
+		});
 	}
 
 	void Object::Render(const float dt)
