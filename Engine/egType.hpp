@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <Windows.h>
+#include <functional>
 
 namespace Engine
 {
@@ -20,4 +21,6 @@ namespace Engine
 	using StrongResource = std::shared_ptr<Abstract::Resource>;
 
 	using EntityID = LONG_PTR;
+
+	using TaskSchedulerFunc = std::function<void(const float&)>;
 }
