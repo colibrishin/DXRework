@@ -51,7 +51,11 @@ namespace Engine::Physics
 
 	inline Vector3 GetActivePolarity(const Vector3& vel)
 	{
-		return {std::copysignf(vel.x, 1.f), std::copysignf(vel.y, 1.f), std::copysignf(vel.z, 1.f)};
+		const auto signx = vel.x > 0.f ? 1.f : (vel.x == g_epsilon ? 0.f : -1.f);
+		const auto signy = vel.y > 0.f ? 1.f : (vel.y == g_epsilon ? 0.f : -1.f);
+		const auto signz = vel.z > 0.f ? 1.f : (vel.z == g_epsilon ? 0.f : -1.f);
+
+		return {signx, signy, signz};
 	}
 
 	constexpr float g_gravity_acc = 9.81f;

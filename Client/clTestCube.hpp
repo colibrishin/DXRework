@@ -85,25 +85,34 @@ namespace Client::Object
 		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
 
 		float speed = 1.0f;
+		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAtVector();
+		const auto forward = lookAt * Vector3{1.f, 0.f, 1.f};
+
+		Engine::GetDebugger().Log(L"LookAt: " +
+			std::to_wstring(lookAt.x) + L", " + 
+			std::to_wstring(lookAt.y) + L", " +
+			std::to_wstring(lookAt.z));
+
+		const auto ortho = XMVector3Orthogonal(forward);
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
-			rb->AddForce({0, 0, speed});
+			rb->AddForce(forward);
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
 		{
-			rb->AddForce({-speed, 0, 0 });
+			rb->AddForce(-ortho);
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
 		{
-			rb->AddForce({0, 0, -speed});
+			rb->AddForce(-forward);
 		}
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
 		{
-			rb->AddForce({speed, 0, 0 });
+			rb->AddForce(ortho);
 		}
 	}
 

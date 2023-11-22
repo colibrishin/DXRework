@@ -66,8 +66,6 @@ namespace Engine::Manager
 
 			if (elapsed >= g_fixed_update_interval)
 			{
-				const std::wstring log = L"FixedUpdate Called";
-				GetDebugger().Log(log);
 				FixedUpdate(dt);
 				elapsed = 0.0f;
 			}
