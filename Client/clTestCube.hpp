@@ -131,34 +131,7 @@ namespace Client::Object
 
 			constexpr float distance = 5.f;
 
-			Engine::GetSceneManager().GetActiveScene().lock()->SearchObjects(tr->GetPosition(), lookAt, out, static_cast<int>(distance));
-
-			for (const auto& obj : out)
-			{
-				if (const auto locked = obj.lock())
-				{
-					if (const auto cl = locked->GetComponent<Engine::Component::Collider>().lock())
-					{
-						float penetration = 0.f;
-						if (cl->Intersects(ray, distance, penetration))
-						{
-							Engine::GetDebugger().Log(L"Octree Hit! : " + std::to_wstring(cl->GetOwner().lock()->GetID()));
-						}
-					}
-				}
-			}
-
-			out = {};
-
-			Engine::GetCollisionDetector().GetCollidedObjects(ray, distance, out);
-
-			for (const auto& obj : out)
-			{
-				if (const auto locked = obj.lock())
-				{
-					Engine::GetDebugger().Log(L"Bruteforce Hit! : " + std::to_wstring(locked->GetID()));
-				}
-			}
+			Engine::GetCollisionDetector().Hitscan(ray, distance, out);
 		}
 	}
 

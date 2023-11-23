@@ -108,6 +108,16 @@ namespace Engine
 			}
 		}
 
+		auto serialized_layer_begin() noexcept
+		{
+			return m_layers.begin();
+		}
+
+		auto serialized_layer_end() noexcept
+		{
+			return m_layers.end();
+		}
+
 		void UpdatePosition(const WeakObject& obj);
 		void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
 		void GetNearbyObjects(const Vector3& pos, const size_t range, std::vector<WeakObject>& out);
