@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <SpriteFont.h>
+#include "egToolkitAPI.hpp"
 #include "egD3Device.hpp"
 #include "egCommon.hpp"
 #include "egApplication.hpp"
@@ -80,7 +81,10 @@ namespace Engine::Manager
 
 		if (m_render_queue.size() > g_debug_message_max)
 		{
-			m_render_queue.erase(m_render_queue.begin());
+			while (m_render_queue.size() > g_debug_message_max)
+			{
+				m_render_queue.erase(m_render_queue.begin());
+			}
 		}
 
 		for (int i = 0; i < m_render_queue.size(); ++i)
