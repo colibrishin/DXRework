@@ -41,8 +41,14 @@ namespace Engine::Manager::Physics
 					{
 						const auto tr = obj->GetComponent<Component::Transform>().lock();
 						const auto rb = obj->GetComponent<Component::Rigidbody>().lock();
+						const auto cl = obj->GetComponent<Component::Collider>().lock();
 
 						if (!rb)
+						{
+							continue;
+						}
+
+						if (!cl->GetSpeculation().empty())
 						{
 							continue;
 						}

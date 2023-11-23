@@ -84,10 +84,14 @@ namespace Engine::Manager
 						if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
 						{
 							m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
+							m_speculation_map_[obj_other->GetID()].insert(obj->GetID());
 
 							m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
+							m_frame_collision_map_[obj_other->GetID()].insert(obj->GetID());
 
 							obj->DispatchComponentEvent(cl, cl_other);
+							obj->DispatchComponentEvent(cl_other, cl);
+							continue;
 						}
 					}
 
@@ -96,22 +100,28 @@ namespace Engine::Manager
 						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
 						{
 							m_collision_map_[obj->GetID()].insert(obj_other->GetID());
+							m_collision_map_[obj_other->GetID()].insert(obj->GetID());
 
 							obj->DispatchComponentEvent(cl, cl_other);
+							obj->DispatchComponentEvent(cl_other, cl);
 							continue;
 						}
 
 						m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
+						m_frame_collision_map_[obj_other->GetID()].insert(obj->GetID());
 
 						obj->DispatchComponentEvent(cl, cl_other);
+						obj->DispatchComponentEvent(cl_other, cl);
 					}
 					else
 					{
 						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
 						{
 							m_collision_map_[obj->GetID()].erase(obj_other->GetID());
+							m_collision_map_[obj_other->GetID()].erase(obj->GetID());
 
 							obj->DispatchComponentEvent(cl, cl_other);
+							obj->DispatchComponentEvent(cl_other, cl);
 						}
 					}
 				}
