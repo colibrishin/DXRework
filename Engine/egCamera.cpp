@@ -42,7 +42,7 @@ namespace Engine::Objects
 
 		const auto current_mouse = GetNormalizedMousePosition();
 		Vector2 delta;
-		(m_previous_mouse_position_ - current_mouse).Normalize(delta);
+		(current_mouse - m_previous_mouse_position_).Normalize(delta);
 
 		m_look_at_ = Vector3::Transform(m_look_at_, Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f));
 
