@@ -22,14 +22,18 @@ namespace Engine::Objects
 	{
 		Object::Update(dt);
 
-		if (const auto companion = m_bound_object_.lock())
+		// @todo: fixme, camera does not synchronized with object!
+		GetTaskScheduler().AddTask([this](const float& dt)
 		{
-			if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
+			if (const auto companion = m_bound_object_.lock())
 			{
-				const auto tr = GetComponent<Component::Transform>().lock();
-				tr->SetPosition(tr_other->GetPosition() + m_offset_);
+				if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
+				{
+					const auto tr = GetComponent<Component::Transform>().lock();
+					tr->SetPosition(tr_other->GetPosition() + m_offset_);
+				}
 			}
-		}
+		});
 
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
@@ -86,6 +90,11 @@ namespace Engine::Objects
 	void Camera::Render(const float dt)
 	{
 		Object::Render(dt);
+	}
+
+	void Camera::FixedUpdate(const float& dt)
+	{
+		Object::FixedUpdate(dt);
 	}
 
 	void Camera::BindObject(const WeakObject& object)

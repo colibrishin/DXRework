@@ -37,6 +37,7 @@ namespace Engine::Objects
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
+		void FixedUpdate(const float& dt) override;
 
 		void BindObject(const WeakObject& object);
 		void SetOffset(Vector3 offset);
