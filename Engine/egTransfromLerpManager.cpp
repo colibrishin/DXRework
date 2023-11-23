@@ -35,10 +35,7 @@ namespace Engine::Manager::Physics
 
 						tr->SetPosition(Vector3::Lerp(previous, current, 1.0f - (m_elapsedTime_ / g_fixed_update_interval)));
 
-						GetTaskScheduler().AddTask([obj](const float& dt)
-						{
-							GetSceneManager().GetActiveScene().lock()->UpdatePosition(obj);
-						});
+						GetSceneManager().GetActiveScene().lock()->UpdatePosition(obj);
 
 						const auto cl = obj->GetComponent<Component::Collider>().lock();
 
