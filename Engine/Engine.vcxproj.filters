@@ -193,6 +193,9 @@
     <ClInclude Include="egSphereMesh.hpp">
       <Filter>Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="egStateController.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

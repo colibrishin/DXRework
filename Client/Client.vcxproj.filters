@@ -27,6 +27,9 @@
     <Filter Include="Resource\Normal">
       <UniqueIdentifier>{5e54c69d-ea83-42da-9ce5-924bee7376ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="State">
+      <UniqueIdentifier>{e1e610d3-8d69-45e9-b2eb-d054c6d18df9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="clVelocityCounter.hpp">
       <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="clCharacterController.hpp">
+      <Filter>State</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

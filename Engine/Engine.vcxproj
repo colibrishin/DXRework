@@ -58,6 +58,7 @@
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egSphereMesh.hpp" />
+    <ClInclude Include="egStateController.hpp" />
     <ClInclude Include="egTaskScheduler.hpp" />
     <ClInclude Include="egText.hpp" />
     <ClInclude Include="egTexture.hpp" />
