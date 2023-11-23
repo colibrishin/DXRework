@@ -57,7 +57,7 @@ namespace Client::State
 	inline void CharacterController::CheckMove(const std::shared_ptr<Engine::Component::Rigidbody>& rb)
 	{
 		float speed = 1.0f;
-		const auto ortho = XMVector3Orthogonal(m_offset_);
+		const auto ortho = Vector3(XMVector3Orthogonal(m_offset_)) * Vector3{1.0f, 0.f, 1.0f};
 		bool pressed = false;
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))

@@ -78,9 +78,9 @@ namespace Engine
 	{
 		LAYER_NONE = 0,
 		LAYER_LIGHT,
-		LAYER_CAMERA,
 		LAYER_DEFAULT,
 		LAYER_UI,
+		LAYER_CAMERA,
 		LAYER_MAX
 	};
 	
