@@ -47,67 +47,72 @@ namespace Engine::Manager
 			for (const auto& rhs_obj : rhs)
 			{
 				const auto obj_other = rhs_obj.lock();
-				const auto cl_other = obj_other->GetComponent<Component::Collider>().lock();
+				const auto cls_other = obj_other->GetComponents<Component::Collider>();
 
-				if (obj == obj_other)
+				for (const auto& cl_next : cls_other)
 				{
-					continue;
-				}
+					const auto cl_other = cl_next.lock();
 
-				if (!obj_other->GetActive())
-				{
-					continue;
-				}
-
-				if (!cl_other)
-				{
-					continue;
-				}
-
-				bool speculation = false;
-
-				if (cl_other->GetType() == BOUNDING_TYPE_BOX)
-				{
-					speculation = speculation_area.Intersects(cl_other->As<BoundingOrientedBox>());
-				}
-				else if (cl_other->GetType() == BOUNDING_TYPE_SPHERE)
-				{
-					speculation = speculation_area.Intersects(cl_other->As<BoundingSphere>());
-				}
-
-				if (speculation || CheckRaycasting(obj, obj_other))
-				{
-					if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
+					if (obj == obj_other)
 					{
-						m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
+						continue;
+					}
+
+					if (!obj_other->GetActive())
+					{
+						continue;
+					}
+
+					if (!cl_other)
+					{
+						continue;
+					}
+
+					bool speculation = false;
+
+					if (cl_other->GetType() == BOUNDING_TYPE_BOX)
+					{
+						speculation = speculation_area.Intersects(cl_other->As<BoundingOrientedBox>());
+					}
+					else if (cl_other->GetType() == BOUNDING_TYPE_SPHERE)
+					{
+						speculation = speculation_area.Intersects(cl_other->As<BoundingSphere>());
+					}
+
+					if (speculation || CheckRaycasting(obj, obj_other))
+					{
+						if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
+						{
+							m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
+
+							m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
+
+							obj->DispatchComponentEvent(cl, cl_other);
+						}
+					}
+
+					if (cl->Intersects(*cl_other))
+					{
+						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
+						{
+							m_collision_map_[obj->GetID()].insert(obj_other->GetID());
+
+							obj->DispatchComponentEvent(cl, cl_other);
+							continue;
+						}
 
 						m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
 
 						obj->DispatchComponentEvent(cl, cl_other);
 					}
-				}
-
-				if (cl->Intersects(*cl_other))
-				{
-					if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
+					else
 					{
-						m_collision_map_[obj->GetID()].insert(obj_other->GetID());
+						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
+						{
+							m_collision_map_[obj->GetID()].erase(obj_other->GetID());
 
-						obj->DispatchComponentEvent(cl, cl_other);
-						continue;
-					}
-
-					m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
-
-					obj->DispatchComponentEvent(cl, cl_other);
-				}
-				else
-				{
-					if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
-					{
-						m_collision_map_[obj->GetID()].erase(obj_other->GetID());
-
-						obj->DispatchComponentEvent(cl, cl_other);
+							obj->DispatchComponentEvent(cl, cl_other);
+						}
 					}
 				}
 			}
@@ -144,20 +149,25 @@ namespace Engine::Manager
 					continue;
 				}
 
-				const auto obj_j_collider = obj_j_locked->GetComponent<Component::Collider>().lock();
+				const auto obj_j_colliders = obj_j_locked->GetComponents<Component::Collider>();
 
-				if (!obj_j_collider)
+				for (const auto& obj_j_cl : obj_j_colliders)
 				{
-					continue;
-				}
+					const auto obj_j_collider = obj_j_cl.lock();
 
-				Component::Collider copy = *obj_i_collider;
-				copy.SetPosition(tr->GetPosition() + Vector3::Down * g_epsilon);
+					if (!obj_j_collider)
+					{
+						continue;
+					}
 
-				if (copy.Intersects(*obj_j_collider))
-				{
-					// Ground flag is automatically set to false on the start of the frame.
-					i_rb->SetGrounded(true);
+					Component::Collider copy = *obj_i_collider;
+					copy.SetPosition(tr->GetPosition() + Vector3::Down * g_epsilon);
+
+					if (copy.Intersects(*obj_j_collider))
+					{
+						// Ground flag is automatically set to false on the start of the frame.
+						i_rb->SetGrounded(true);
+					}
 				}
 			}
 		}
@@ -171,20 +181,30 @@ namespace Engine::Manager
 		const auto tr = lhs->GetComponent<Component::Transform>().lock();
 
 		const auto rb_other = rhs->GetComponent<Component::Rigidbody>().lock();
-		const auto cl_other = rhs->GetComponent<Component::Collider>().lock();
+		const auto cls_other = rhs->GetComponents<Component::Collider>();
 		const auto tr_other = rhs->GetComponent<Component::Transform>().lock();
 
-		if (rb && cl && tr && rb_other && cl_other && tr_other)
+		if (rb && cl && tr && rb_other && tr_other)
 		{
-			static Ray ray{};
-			ray.position = tr->GetPreviousPosition();
-			const auto velocity = rb->GetLinearMomentum();
-			velocity.Normalize(ray.direction);
+			for (const auto cl_other_unlock : cls_other)
+			{
+				const auto cl_other = cl_other_unlock.lock();
 
-			const auto length = velocity.Length();
-			float dist;
+				if (!cl_other)
+				{
+					continue;
+				}
 
-			return cl_other->Intersects(ray, length, dist);
+				static Ray ray{};
+				ray.position = tr->GetPreviousPosition();
+				const auto velocity = rb->GetLinearMomentum();
+				velocity.Normalize(ray.direction);
+
+				const auto length = velocity.Length();
+				float dist;
+
+				return cl_other->Intersects(ray, length, dist);
+			}
 		}
 
 		return false;
@@ -259,27 +279,111 @@ namespace Engine::Manager
 			out = {};
 		}
 
-		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
-		{
-			const auto layer = scene->GetGameObjects((eLayerType)i);
+		std::mutex out_mutex;
 
-			for (const auto& obj : layer)
+		std::for_each(std::execution::par, scene->serialized_layer_begin(), scene->serialized_layer_end(), [ray, &distance, &out, &out_mutex](const std::pair<const eLayerType, StrongLayer>& layer)
+		{
+			const auto objects = layer.second->GetGameObjects();
+
+			std::for_each(std::execution::par, objects.begin(), objects.end(), [ray, &distance, &out, &out_mutex](const WeakObject& obj)
 			{
 				const auto obj_locked = obj.lock();
-				const auto cl = obj_locked->GetComponent<Component::Collider>().lock();
+				const auto cls = obj_locked->GetComponents<Component::Collider>();
 
-				if (!cl)
+				for (const auto& collider : cls)
 				{
-					continue;
+					const auto cl = collider.lock();
+
+					if (!cl)
+					{
+						continue;
+					}
+
+					float intersection;
+
+					if (cl->Intersects(ray, distance, intersection))
+					{
+						{
+							std::lock_guard lock(out_mutex);
+							out.insert(obj);
+						}
+					}
 				}
+			});
+		});
+	}
 
-				float intersection;
+	bool CollisionDetector::Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out)
+	{
+		std::set<WeakObject, WeakObjComparer> intermid_out;
+		Engine::GetSceneManager().GetActiveScene().lock()->SearchObjects(
+			ray.position, ray.direction, intermid_out, static_cast<int>(distance));
 
-				if (cl->Intersects(ray, distance, intersection))
+		bool hit = false;
+
+		std::mutex out_mutex;
+
+		std::for_each(
+			std::execution::par,
+			intermid_out.begin(),
+			intermid_out.end(),
+			[ray, distance, &hit, &out, &out_mutex](const WeakObject& obj)
+			{
+				if (const auto locked = obj.lock())
 				{
-					out.insert(obj);
+					const auto cls = locked->GetComponents<Engine::Component::Collider>();
+
+					std::for_each(
+						std::execution::par,
+						cls.begin(),
+						cls.end(),
+						[ray, distance, &hit, &out, &out_mutex, &obj, locked](const std::weak_ptr<Engine::Component::Collider>& cl_o)
+						{
+							const auto cl = cl_o.lock();
+
+							if (!cl)
+							{
+								return;
+							}
+
+							float ground;
+
+							if (cl->Intersects(ray, distance, ground))
+							{
+								Engine::GetDebugger().Log(L"Octree Hit! : " + std::to_wstring(locked->GetID()));
+
+								{
+									std::lock_guard lock(out_mutex);
+									hit |= true;
+									out.insert(obj);
+								}
+							}
+						});
+				}
+			});
+
+		if (hit)
+		{
+			return true;
+		}
+
+		if (out.empty())
+		{
+			Engine::GetDebugger().Log(L"Octree hits nothing, trying with bruteforce...");
+
+			Engine::GetCollisionDetector().GetCollidedObjects(ray, distance, out);
+
+			for (const auto& obj : out)
+			{
+				if (const auto locked = obj.lock())
+				{
+					Engine::GetDebugger().Log(L"Bruteforce Hit! : " + std::to_wstring(locked->GetID()));
 				}
 			}
+
+			return true;
 		}
+
+		return false;
 	}
 }

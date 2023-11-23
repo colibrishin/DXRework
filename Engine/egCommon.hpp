@@ -130,6 +130,15 @@ namespace Engine
 			return lhs.lock().get() < rhs.lock().get();
 		}
 	};
+
+	template <typename T>
+	struct WeakComparer
+	{
+		bool operator()(const std::weak_ptr<T>& lhs, const std::weak_ptr<T>& rhs) const
+		{
+			return lhs.lock().get() < rhs.lock().get();
+		}
+	};
 }
 
 namespace DX

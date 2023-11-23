@@ -14,6 +14,7 @@ namespace Engine
 			if (!tr)
 			{
 				GetDebugger().Log(L"Object has no transform component");
+				return;
 			}
 
 			const auto prev_pos = VectorElementAdd(tr->GetPreviousPosition(), g_octree_negative_round_up);

@@ -62,6 +62,31 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
+		std::set<std::weak_ptr<T>, WeakComparer<T>> GetComponents()
+		{
+			if constexpr (std::is_base_of_v<Component, T>)
+			{
+				if (!m_components_.contains(typeid(T)))
+				{
+					return {};
+				}
+
+				const auto& comp_set = m_components_[typeid(T)];
+
+				std::set<std::weak_ptr<T>, WeakComparer<T>> result;
+
+				for (const auto& comp : comp_set)
+				{
+					result.insert(std::reinterpret_pointer_cast<T>(comp));
+				}
+
+				return result;
+			}
+
+			return {};
+		}
+
+		template <typename T>
 		std::weak_ptr<T> GetComponent(EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)

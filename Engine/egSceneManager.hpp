@@ -4,6 +4,9 @@
 #include <set>
 #include <memory>
 
+#include "egDebugger.hpp"
+#include "egTaskScheduler.hpp"
+
 namespace Engine::Manager
 {
 	using WeakScene = std::weak_ptr<Scene>;
@@ -37,7 +40,10 @@ namespace Engine::Manager
 
 			if (it != m_scenes_.end())
 			{
-				m_active_scene_ = *it;
+				TaskScheduler::GetInstance().AddTask([this, it](const float& dt)
+				{
+					m_active_scene_ = *it;
+				});
 			}
 		}
 
@@ -55,7 +61,16 @@ namespace Engine::Manager
 
 			if (it != m_scenes_.end())
 			{
-				m_scenes_.erase(it);
+				TaskScheduler::GetInstance().AddTask([this, it](const float& dt)
+				{
+					if (*it == m_active_scene_.lock())
+					{
+						Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
+						m_active_scene_.reset();
+					}
+						
+					m_scenes_.erase(it);
+				});
 			}
 		}
 

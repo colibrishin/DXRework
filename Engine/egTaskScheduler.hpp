@@ -34,15 +34,15 @@ namespace Engine::Manager
 
 	inline void TaskScheduler::PreUpdate(const float& dt)
 	{
-	}
-
-	inline void TaskScheduler::Update(const float& dt)
-	{
 		while (!m_tasks_.empty())
 		{
 			m_tasks_.front()(dt);
 			m_tasks_.pop();
 		}
+	}
+
+	inline void TaskScheduler::Update(const float& dt)
+	{
 	}
 
 	inline void TaskScheduler::PreRender(const float& dt)
