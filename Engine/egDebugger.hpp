@@ -7,6 +7,7 @@
 #include "egD3Device.hpp"
 #include "egCommon.hpp"
 #include "egApplication.hpp"
+#include "egToolkitAPI.hpp"
 
 namespace Engine::Manager
 {
