@@ -1,5 +1,6 @@
 #pragma once
 
+#include "clCharacterController.hpp"
 #include "clTriangleMesh.hpp"
 #include "../Engine/egCollider.hpp"
 #include "../Engine/egManagerHelper.hpp"
@@ -67,6 +68,8 @@ namespace Client::Object
 		rb->SetFrictionCoefficient(0.1f);
 		rb->SetGravityOverride(true);
 
+		AddComponent<Client::State::CharacterController>();
+
 		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
@@ -82,57 +85,6 @@ namespace Client::Object
 	inline void TestCube::Update(const float& dt)
 	{
 		Object::Update(dt);
-
-		const auto rb  = GetComponent<Engine::Component::Rigidbody>().lock();
-
-		float speed = 1.0f;
-		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAtVector();
-		const auto forward = lookAt * Vector3{1.f, 0.f, 1.f};
-
-		const auto ortho = XMVector3Orthogonal(forward);
-
-		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
-		{
-			rb->AddForce(forward);
-		}
-
-		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
-		{
-			rb->AddForce(-ortho);
-		}
-
-		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
-		{
-			rb->AddForce(-forward);
-		}
-
-		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
-		{
-			rb->AddForce(ortho);
-		}
-
-		static float shoot_interval = 0.f;
-
-		if (Engine::GetApplication().GetMouseState().leftButton)
-		{
-			if (shoot_interval < 0.5f)
-			{
-				shoot_interval += dt;
-				return;
-			}
-
-			shoot_interval = 0.f;
-			const auto tr = GetComponent<Engine::Component::Transform>().lock();
-			std::set<Engine::WeakObject, Engine::WeakObjComparer> out;
-
-			Ray ray;
-			ray.position = tr->GetPosition();
-			ray.direction = lookAt;
-
-			constexpr float distance = 5.f;
-
-			Engine::GetCollisionDetector().Hitscan(ray, distance, out);
-		}
 	}
 
 	inline void TestCube::PreRender(const float dt)

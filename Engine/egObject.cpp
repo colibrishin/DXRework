@@ -23,7 +23,6 @@ namespace Engine::Abstract
 				if (speculation_check)
 				{
 					thisComp->AddSpeculationObject(otherComp->GetOwner().lock()->GetID());
-					return;
 				}
 
 				const auto collision_check = GetCollisionDetector().IsCollided(

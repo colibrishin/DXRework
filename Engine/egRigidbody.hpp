@@ -43,6 +43,7 @@ namespace Engine::Component
 		Vector3 GetAngularMomentum() const { return m_angular_momentum_; }
 		Vector3 GetForce() const { return m_force_; }
 		Vector3 GetTorque() const { return m_torque_; }
+		bool GetGrounded() const { return m_bGrounded; }
 
 		void Reset();
 

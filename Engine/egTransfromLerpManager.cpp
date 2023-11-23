@@ -33,12 +33,11 @@ namespace Engine::Manager::Physics
 						const auto previous = tr->GetPreviousPosition();
 						const auto current = tr->GetPosition();
 
-						tr->SetPosition(Vector3::Lerp(previous, current, 1.0f - (m_elapsedTime_ / g_fixed_update_interval)));
+						const auto lerping = Vector3::Lerp(previous, current, GetLerpFactor());
 
-						GetTaskScheduler().AddTask([obj](const float& dt)
-						{
-							GetSceneManager().GetActiveScene().lock()->UpdatePosition(obj);
-						});
+						tr->SetPosition(lerping);
+
+						GetSceneManager().GetActiveScene().lock()->UpdatePosition(obj);
 
 						const auto cl = obj->GetComponent<Component::Collider>().lock();
 
@@ -78,6 +77,8 @@ namespace Engine::Manager::Physics
 
 	float TransformLerpManager::GetLerpFactor() const
 	{
-		return m_elapsedTime_ / g_fixed_update_interval;
+		auto factor = (m_elapsedTime_ / g_fixed_update_interval);
+		factor = std::clamp(factor, 0.0f, 1.0f);
+		return factor;
 	}
 }

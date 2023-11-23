@@ -183,8 +183,7 @@ namespace Engine::Manager::Physics
 
 		if (rb && cl && tr && rb_other && cl_other && tr_other)
 		{
-			if (m_speculative_resolved_set_.contains({ lhs.GetID(), rhs.GetID() }) ||
-				m_speculative_resolved_set_.contains({ rhs.GetID(), lhs.GetID() }))
+			if (m_speculative_resolved_set_.contains({ lhs.GetID(), rhs.GetID() }))
 			{
 				return;
 			}

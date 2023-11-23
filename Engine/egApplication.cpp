@@ -46,6 +46,7 @@ namespace Engine::Manager
 		GetResourceManager().Initialize();
 		GetSceneManager().Initialize();
 		GetDebugger().Initialize();
+		GetTaskScheduler().Initialize();
 	}
 
 	void Application::Tick()
@@ -80,10 +81,10 @@ namespace Engine::Manager
 	void Application::PreUpdate(const float& dt)
 	{
 		GetTaskScheduler().PreUpdate(dt);
+		GetCollisionDetector().PreUpdate(dt);
 		GetSceneManager().PreUpdate(dt);
 		GetProjectionFrustum().PreUpdate(dt);
 		GetResourceManager().PreUpdate(dt);
-		GetCollisionDetector().PreUpdate(dt);
 		GetPhysicsManager().PreUpdate(dt);
 		GetConstraintSolver().PreUpdate(dt);
 		GetTransformLerpManager().PreUpdate(dt);
@@ -94,10 +95,10 @@ namespace Engine::Manager
 	void Application::FixedUpdate(const float& dt)
 	{
 		GetTaskScheduler().FixedUpdate(dt);
+		GetCollisionDetector().FixedUpdate(dt);
 		GetSceneManager().FixedUpdate(dt);
 		GetProjectionFrustum().FixedUpdate(dt);
 		GetResourceManager().FixedUpdate(dt);
-		GetCollisionDetector().FixedUpdate(dt);
 		GetPhysicsManager().FixedUpdate(dt);
 		GetConstraintSolver().FixedUpdate(dt);
 		GetTransformLerpManager().FixedUpdate(dt);
@@ -108,10 +109,10 @@ namespace Engine::Manager
 	void Application::Update(const float& dt)
 	{
 		GetTaskScheduler().Update(dt);
+		GetCollisionDetector().Update(dt);
 		GetSceneManager().Update(dt);
 		GetProjectionFrustum().Update(dt);
 		GetResourceManager().Update(dt);
-		GetCollisionDetector().Update(dt);
 		GetPhysicsManager().Update(dt);
 		GetConstraintSolver().Update(dt);
 		GetTransformLerpManager().Update(dt);
@@ -122,11 +123,11 @@ namespace Engine::Manager
 	void Application::PreRender(const float& dt)
 	{
 		GetTaskScheduler().PreRender(dt);
+		GetCollisionDetector().PreRender(dt);
 		GetToolkitAPI().PreRender(dt);
 		GetSceneManager().PreRender(dt);
 		GetProjectionFrustum().PreRender(dt);
 		GetResourceManager().PreRender(dt);
-		GetCollisionDetector().PreRender(dt);
 		GetPhysicsManager().PreRender(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetTransformLerpManager().PreRender(dt);
@@ -138,10 +139,10 @@ namespace Engine::Manager
 	void Application::Render(const float& dt)
 	{
 		GetTaskScheduler().Render(dt);
+		GetCollisionDetector().Render(dt);
 		GetSceneManager().Render(dt);
 		GetProjectionFrustum().Render(dt);
 		GetResourceManager().Render(dt);
-		GetCollisionDetector().Render(dt);
 		GetPhysicsManager().Render(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetTransformLerpManager().Render(dt);
