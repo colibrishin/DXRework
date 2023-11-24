@@ -30,7 +30,7 @@ namespace Engine::Objects
 		}
 
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
-		Vector3 GetLookAt() const { return m_look_at_; }
+		Vector3 GetLookAt() const;
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
@@ -53,6 +53,8 @@ namespace Engine::Objects
 		Vector3 m_look_at_;
 
 		Vector2 m_previous_mouse_position_;
+		Vector2 m_current_mouse_position_;
+
 		Vector3 m_offset_;
 		WeakObject m_bound_object_;
 	};
