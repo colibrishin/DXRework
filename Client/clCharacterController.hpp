@@ -60,6 +60,8 @@ namespace Client::State
 		const auto ortho = Vector3(XMVector3Orthogonal(m_offset_)) * Vector3{1.0f, 0.f, 1.0f};
 		bool pressed = false;
 
+		// @todo: sometimes left right movement is inverted.
+
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
 			rb->AddForce(m_offset_);
