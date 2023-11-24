@@ -6,6 +6,11 @@
 
 namespace Engine::Objects
 {
+	Vector3 Camera::GetLookAt() const
+	{
+		return m_look_at_;
+	}
+
 	void Camera::Initialize()
 	{
 		AddComponent<Component::Transform>();
@@ -16,24 +21,32 @@ namespace Engine::Objects
 	void Camera::PreUpdate(const float& dt)
 	{
 		Object::PreUpdate(dt);
+
+		m_current_mouse_position_ = GetWorldMousePosition();
+		Vector2 delta;
+		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
+
+		m_look_at_ = Vector3::Transform(m_look_at_, Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f));
+		m_look_at_.Normalize();
 	}
 
 	void Camera::Update(const float& dt)
 	{
 		Object::Update(dt);
+	}
 
-		// @todo: fixme, camera does not synchronized with object!
-		GetTaskScheduler().AddTask([this](const float& dt)
+	void Camera::PreRender(const float dt)
+	{
+		Object::PreRender(dt);
+
+		if (const auto companion = m_bound_object_.lock())
 		{
-			if (const auto companion = m_bound_object_.lock())
+			if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
 			{
-				if (const auto tr_other = companion->GetComponent<Component::Transform>().lock())
-				{
-					const auto tr = GetComponent<Component::Transform>().lock();
-					tr->SetPosition(tr_other->GetPosition() + m_offset_);
-				}
+				const auto tr = GetComponent<Component::Transform>().lock();
+				tr->SetPosition(tr_other->GetPosition() + m_offset_);
 			}
-		});
+		}
 
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
@@ -43,12 +56,6 @@ namespace Engine::Objects
 		{
 			GetComponent<Component::Transform>().lock()->Translate(Vector3::Backward * 0.1f);
 		}
-
-		const auto current_mouse = GetNormalizedMousePosition();
-		Vector2 delta;
-		(current_mouse - m_previous_mouse_position_).Normalize(delta);
-
-		m_look_at_ = Vector3::Transform(m_look_at_, Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f));
 
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
@@ -81,15 +88,10 @@ namespace Engine::Objects
 		}
 	}
 
-	void Camera::PreRender(const float dt)
-	{
-		Object::PreRender(dt);
-		m_previous_mouse_position_ = GetNormalizedMousePosition();
-	}
-
 	void Camera::Render(const float dt)
 	{
 		Object::Render(dt);
+		m_previous_mouse_position_ = m_current_mouse_position_;
 	}
 
 	void Camera::FixedUpdate(const float& dt)
@@ -109,7 +111,7 @@ namespace Engine::Objects
 
 	Vector2 Camera::GetWorldMousePosition()
 	{
-		const DirectX::XMMATRIX vp = m_vp_buffer_.projection * m_vp_buffer_.view;
+		const DirectX::XMMATRIX vp = GetD3Device().GetProjectionMatrix() * m_view_matrix_;
 		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(vp);
 		const Vector2 actual_mouse_position
 		{
