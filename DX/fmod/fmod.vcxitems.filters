@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{ddfa3b13-4cad-4f95-8dda-5a4fdfa64aca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{364d1351-240a-4ac2-b4c9-da7a349e4a5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\x64">
+      <UniqueIdentifier>{84ca30bb-b540-44c4-8a0f-c3e9b5b7ab97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\x86">
+      <UniqueIdentifier>{947cf4d2-c31a-46ef-89a4-4537a752f437}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod.cs">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.cs">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_errors.cs">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_studio.cs">
+      <Filter>inc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.hpp">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_codec.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_common.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp_effects.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_errors.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_output.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.hpp">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio_common.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x86\fmod_vc.lib">
+      <Filter>lib\x86</Filter>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x64\fmod_vc.lib">
+      <Filter>lib\x64</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x64\fmod.dll">
+      <Filter>lib\x64</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x86\fmod.dll">
+      <Filter>lib\x86</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+</Project>

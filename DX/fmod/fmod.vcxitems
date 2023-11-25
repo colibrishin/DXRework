@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{70beac34-4ab1-485a-afb7-81f047d85bfe}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod.cs" />
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.cs" />
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_errors.cs" />
+    <None Include="$(MSBuildThisFileDirectory)inc\fmod_studio.cs" />
+    <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x64\fmod.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x86\fmod.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_common.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp_effects.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_errors.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_output.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio_common.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x64\fmod_vc.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x86\fmod_vc.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </Library>
+  </ItemGroup>
+</Project>
