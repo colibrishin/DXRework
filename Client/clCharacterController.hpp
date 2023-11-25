@@ -57,7 +57,7 @@ namespace Client::State
 	inline void CharacterController::CheckMove(const std::shared_ptr<Engine::Component::Rigidbody>& rb)
 	{
 		float speed = 1.0f;
-		const auto ortho = Vector3(XMVector3Orthogonal(m_offset_)) * Vector3{1.0f, 0.f, 1.0f};
+		const auto ortho = Vector3::Transform(m_offset_, Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) * speed;
 		bool pressed = false;
 
 		// @todo: sometimes left right movement is inverted.
@@ -70,7 +70,7 @@ namespace Client::State
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
 		{
-			rb->AddForce(-ortho);
+			rb->AddForce(ortho);
 			pressed = true;
 		}
 
@@ -82,7 +82,7 @@ namespace Client::State
 
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
 		{
-			rb->AddForce(ortho);
+			rb->AddForce(-ortho);
 			pressed = true;
 		}
 
