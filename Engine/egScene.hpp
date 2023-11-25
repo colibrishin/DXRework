@@ -156,7 +156,6 @@ namespace Engine
 	inline void Scene::PreUpdate(const float& dt)
 	{
 		m_layers[LAYER_LIGHT]->PreUpdate(dt);
-		m_layers[LAYER_CAMERA]->PreUpdate(dt);
 
 		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
@@ -167,7 +166,6 @@ namespace Engine
 	inline void Scene::Update(const float& dt)
 	{
 		m_layers[LAYER_LIGHT]->Update(dt);
-		m_layers[LAYER_CAMERA]->Update(dt);
 
 		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
@@ -178,7 +176,6 @@ namespace Engine
 	inline void Scene::PreRender(const float dt)
 	{
 		m_layers[LAYER_LIGHT]->PreRender(dt);
-		m_layers[LAYER_CAMERA]->PreRender(dt);
 
 		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
@@ -191,7 +188,6 @@ namespace Engine
 		GetRenderPipeline().BindLightBuffers();
 
 		m_layers[LAYER_LIGHT]->Render(dt);
-		m_layers[LAYER_CAMERA]->Render(dt);
 
 		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
@@ -202,7 +198,6 @@ namespace Engine
 	inline void Scene::FixedUpdate(const float& dt)
 	{
 		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
-		m_layers[LAYER_CAMERA]->FixedUpdate(dt);
 
 		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
 		{
