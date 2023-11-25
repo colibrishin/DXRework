@@ -8,7 +8,7 @@ namespace Engine::Abstract
 	class Resource : public Renderable
 	{
 	public:
-		~Resource() override = default;
+		~Resource() override;
 
 		virtual void Load();
 		void Unload();
@@ -47,6 +47,11 @@ namespace Engine::Abstract
 		eResourcePriority m_priority_;
 
 	};
+
+	inline Resource::~Resource()
+	{
+		Unload();
+	}
 
 	inline void Resource::Load()
 	{
