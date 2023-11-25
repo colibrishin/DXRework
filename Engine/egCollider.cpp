@@ -45,7 +45,7 @@ namespace Engine::Component
 
 	void Collider::Initialize()
 	{
-		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock())
 		{
 			GenerateFromMesh(mesh);
 		}
@@ -91,7 +91,7 @@ namespace Engine::Component
 	{
 		m_type_ = type;
 
-		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock())
+		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock())
 		{
 			GenerateFromMesh(mesh);
 		}
@@ -152,8 +152,8 @@ namespace Engine::Component
 
 	void Collider::GetPenetration(const Collider& other, Vector3& normal, float& depth) const
 	{
-		const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>().lock();
-		const auto other_mesh = other.GetOwner().lock()->GetResource<Resources::Mesh>().lock();
+		const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock();
+		const auto other_mesh = other.GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock();
 
 		const auto vertices = mesh->GetVertices();
 		const auto other_vertices = other_mesh->GetVertices();

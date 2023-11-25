@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <exception>
+#include <fmod_common.h>
 #include <typeindex>
 
 namespace Engine
@@ -91,7 +92,8 @@ namespace Engine
 		RESOURCE_PRIORITY_SHADER = 0,
 		RESOURCE_PRIORITY_TEXTURE,
 		RESOURCE_PRIORITY_MESH,
-		RESOURCE_PRIORITY_FONT
+		RESOURCE_PRIORITY_FONT,
+		RESOURCE_PRIORITY_SOUND,
 	};
 
 	enum eComponentPriority
@@ -170,6 +172,38 @@ namespace DX
 		if (FAILED(hr))
 		{
 			throw com_exception(hr);
+		}
+	}
+}
+
+namespace FMOD::DX
+{
+	// Helper class for COM exceptions
+	class fmod_exception : public std::exception
+	{
+	public:
+		fmod_exception(FMOD_RESULT hr) : result(hr)
+		{
+		}
+
+		const char* what() const noexcept override
+		{
+			static char s_str[64] = {};
+			sprintf_s(s_str, "Failure with FMOD_RESULT of %08X",
+			          static_cast<unsigned int>(result));
+			return s_str;
+		}
+
+	private:
+		HRESULT result;
+	};
+
+	// Helper utility converts D3D API failures into exceptions.
+	inline void ThrowIfFailed(FMOD_RESULT hr)
+	{
+		if (hr != FMOD_OK)
+		{
+			throw fmod_exception(hr);
 		}
 	}
 }

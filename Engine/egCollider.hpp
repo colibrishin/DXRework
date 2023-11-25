@@ -60,7 +60,7 @@ namespace Engine::Component
 
 		eBoundingType GetType() const { return m_type_; }
 
-		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>().lock()->GetVertices(); }
+		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock()->GetVertices(); }
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
 
 		void Initialize() override;

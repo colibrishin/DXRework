@@ -23,6 +23,20 @@ namespace Engine
 		return std::max(std::max(v.x, v.y), v.z);
 	}
 
+	static Vector3 MaxUnitVector(const Vector3& v)
+	{
+		const auto x = std::fabs(v.x);
+		const auto y = std::fabs(v.y);
+		const auto z = std::fabs(v.z);
+
+		if (x > y && x > z)
+			return { std::copysign(1.0f, v.x), 0.0f, 0.0f };
+		else if (y > x && y > z)
+			return { 0.0f, std::copysign(1.0f, v.y), 0.0f };
+		else
+			return { 0.0f, 0.0f, std::copysign(1.0f, v.z) };
+	}
+
 	static bool FloatCompare(const float a, const float b)
 	{
 		return std::fabs(a - b) < g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));

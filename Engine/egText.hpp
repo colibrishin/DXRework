@@ -61,7 +61,7 @@ namespace Engine::Objects
 
 	inline void Text::Render(const float dt)
 	{
-		if (const auto font = GetResource<Resources::Font>().lock())
+		if (const auto font = GetResource<Resources::Font>(L"").lock())
 		{
 			font->SetText(m_text_);
 			font->SetPosition(m_position_);
