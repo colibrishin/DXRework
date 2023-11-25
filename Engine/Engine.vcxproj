@@ -57,6 +57,7 @@
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egShader.hpp" />
+    <ClInclude Include="egSound.hpp" />
     <ClInclude Include="egSphereMesh.hpp" />
     <ClInclude Include="egStateController.hpp" />
     <ClInclude Include="egTaskScheduler.hpp" />
@@ -320,6 +321,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="..\DX\fmod\fmod.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -337,6 +339,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -345,6 +349,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -375,6 +381,7 @@
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -383,10 +390,14 @@
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
     </FxCompile>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -425,6 +436,7 @@
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -433,10 +445,14 @@
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
     </FxCompile>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -477,4 +493,28 @@
     <Error Condition="!Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets'))" />
     <Error Condition="!Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets'))" />
   </Target>
+  <ItemGroup>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmodL.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmod.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmodL.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
+      <FileType>Document</FileType>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmodL.dll">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
 </Project>
