@@ -54,6 +54,11 @@
 #include <dxcapi.h>
 #include <directxmath.h>
 
+#include <fmod_common.h>
+#include <fmod.hpp>
+
+#pragma comment(lib, "fmod_vc.lib")
+
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 #include "egPhysics.h"

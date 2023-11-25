@@ -176,7 +176,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetResource() const
+		std::weak_ptr<T> GetResource(const std::wstring& name) const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -186,7 +186,14 @@ namespace Engine::Abstract
 					{
 						if (const auto t = std::dynamic_pointer_cast<T>(locked))
 						{
-							return t;
+							if (!name.empty() && t->GetName() == name)
+							{
+								return t;
+							}
+							if (name.empty())
+							{
+								return t;
+							}
 						}
 					}
 				}

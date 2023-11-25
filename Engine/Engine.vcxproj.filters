@@ -41,9 +41,6 @@
     <Filter Include="Physics">
       <UniqueIdentifier>{3fd363a3-2336-44b5-b71c-8dacd0ec5a8e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Math">
-      <UniqueIdentifier>{8ee7f0e6-8819-4a8d-add7-41905cfc04be}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Mesh">
       <UniqueIdentifier>{258c4e9f-9245-457a-b6dc-021cb9bee28b}</UniqueIdentifier>
     </Filter>
@@ -195,6 +192,9 @@
     </ClInclude>
     <ClInclude Include="egStateController.hpp">
       <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egSound.hpp">
+      <Filter>Resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

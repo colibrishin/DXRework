@@ -14,6 +14,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "..\Client\Client.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "octree", "..\octree\octree.vcxproj", "{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmod", "fmod\fmod.vcxitems", "{70BEAC34-4AB1-485A-AFB7-81F047D85BFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -46,8 +48,8 @@ Global
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x64.Build.0 = Release|x64
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.ActiveCfg = Release|Win32
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.Build.0 = Release|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.ActiveCfg = Debug|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.Build.0 = Debug|Win32
+		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.ActiveCfg = Debug|x64
+		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.Build.0 = Debug|x64
 		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x86.ActiveCfg = Debug|Win32
 		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x86.Build.0 = Debug|Win32
 		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Release|x64.ActiveCfg = Release|Win32
@@ -60,5 +62,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {036DBBA2-0644-447C-AAAB-F0A347C22A16}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		fmod\fmod.vcxitems*{2181c64a-d09c-4cd0-aa59-7ef53399af82}*SharedItemsImports = 4
+		fmod\fmod.vcxitems*{70beac34-4ab1-485a-afb7-81f047d85bfe}*SharedItemsImports = 9
+		fmod\fmod.vcxitems*{8e154f61-e984-4491-9894-7665ec2d18f9}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

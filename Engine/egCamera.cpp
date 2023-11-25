@@ -15,19 +15,12 @@ namespace Engine::Objects
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
-		m_look_at_ = Vector3::Backward;
+		m_look_at_ = Vector3::Forward;
 	}
 
 	void Camera::PreUpdate(const float& dt)
 	{
 		Object::PreUpdate(dt);
-
-		m_current_mouse_position_ = GetWorldMousePosition();
-		Vector2 delta;
-		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
-
-		m_look_at_ = Vector3::Transform(m_look_at_, Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f));
-		m_look_at_.Normalize();
 	}
 
 	void Camera::Update(const float& dt)
@@ -45,6 +38,7 @@ namespace Engine::Objects
 			{
 				const auto tr = GetComponent<Component::Transform>().lock();
 				tr->SetPosition(tr_other->GetPosition() + m_offset_);
+				tr->SetRotation(tr_other->GetRotation());
 			}
 		}
 
@@ -57,21 +51,29 @@ namespace Engine::Objects
 			GetComponent<Component::Transform>().lock()->Translate(Vector3::Backward * 0.1f);
 		}
 
+		m_current_mouse_position_ = GetNormalizedMousePosition();
+		Vector2 delta;
+		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
+
+		const auto scale_matrix = Matrix::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
+
+		m_look_at_ = Vector3::TransformNormal(m_look_at_, scale_matrix);
+
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();
 			const auto rotation = transform->GetRotation();
 
-			XMVECTOR upVector = XMLoadFloat3(&Vector3::Up);
+			Vector3 upVector = Vector3::Up;
 			const XMVECTOR positionVector = XMLoadFloat3(&position);
-			XMVECTOR lookAtVector = XMLoadFloat3(&m_look_at_);
+			Vector3 lookAtVector = XMLoadFloat3(&m_look_at_);
 
 			// Create the rotation matrix from the yaw, pitch, and roll values.
 			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
 
 			// Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
-			lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
-			upVector = XMVector3TransformCoord(upVector, rotationMatrix);
+			m_look_at_ = XMVector3TransformNormal(lookAtVector, rotationMatrix);
+			upVector = XMVector3TransformNormal(upVector, rotationMatrix);
 
 			// Translate the rotated camera position to the location of the viewer.
 			lookAtVector = XMVectorAdd(positionVector, lookAtVector);
@@ -85,6 +87,28 @@ namespace Engine::Objects
 			m_vp_buffer_.projection = p.Transpose();
 
 			GetRenderPipeline().SetPerspectiveMatrix(m_vp_buffer_);
+
+			Vector3 velocity = Vector3::Zero;
+
+			if (const auto bound = m_bound_object_.lock())
+			{
+				if (const auto rb = bound->GetComponent<Component::Rigidbody>().lock())
+				{
+					velocity = rb->GetLinearMomentum();
+				}
+			}
+
+			auto sound_up = Vector3::TransformNormal(m_look_at_, Matrix::CreateFromYawPitchRoll(0.f, XMConvertToRadians(-90.f), 0.f));
+
+			auto max_forward = MaxUnitVector(m_look_at_);
+			auto max_up = MaxUnitVector(sound_up);
+
+			GetToolkitAPI().Set3DListener(
+				{position.x, position.y, position.z},
+				{velocity.x, velocity.y, velocity.z},
+				{max_forward.x, max_forward.y, max_forward.z},
+				{max_up.x, max_up.y, max_up.z}
+			);
 		}
 	}
 

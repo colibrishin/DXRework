@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clTriangleMesh.hpp"
+#include "egSound.hpp"
 #include "../Engine/egCollider.hpp"
 #include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egTexture.hpp"
@@ -48,6 +49,7 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>(L"AmbientSound"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -68,6 +70,8 @@ namespace Client::Object
 		rb->SetGravityOverride(false);
 
 		SetLayer(Engine::LAYER_DEFAULT);
+		const auto test = GetResource<Engine::Resources::Sound>(L"AmbientSound");
+		test.lock()->PlayLoop(GetSharedPtr<Object>());
 	}
 
 	inline PlaneObject::~PlaneObject()

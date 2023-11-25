@@ -13,6 +13,7 @@
 #include "../Engine/egSceneManager.hpp"
 #include "../Engine/egCubeMesh.hpp"
 #include "../Engine/egSphereMesh.hpp"
+#include "egSound.hpp"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -29,6 +30,7 @@ namespace Client
 
 		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>(L"BackSphereMesh", std::make_shared<Client::Mesh::BackSphereMesh>());
 		Engine::GetResourceManager().AddResource<Engine::Resources::Font>(L"DefaultFont", std::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
+		Engine::GetResourceManager().AddResource<Engine::Resources::Sound>(L"AmbientSound", std::make_shared<Engine::Resources::Sound>("./crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3"));
 
 		Engine::GetSceneManager().AddScene<Scene::TestScene>();
 		Engine::GetSceneManager().SetActive<Scene::TestScene>();

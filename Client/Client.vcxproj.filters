@@ -30,6 +30,9 @@
     <Filter Include="State">
       <UniqueIdentifier>{e1e610d3-8d69-45e9-b2eb-d054c6d18df9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Sound">
+      <UniqueIdentifier>{17fa9dbc-6f7a-4745-95b6-84114aa6dedc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -105,5 +108,10 @@
     <CopyFileToFolders Include="Sky.jpg">
       <Filter>Resource\Texture</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3">
+      <Filter>Resource\Sound</Filter>
+    </Media>
   </ItemGroup>
 </Project>
