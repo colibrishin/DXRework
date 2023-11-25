@@ -32,6 +32,9 @@ namespace Engine::Manager::Graphics
 		void FrameEnd();
 
 	private:
+		void FrameBegin() const;
+		void FrameEnd() const;
+
 		std::unique_ptr<CommonStates> m_states_ = nullptr;
 		std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
 		std::unique_ptr<SpriteBatch> m_sprite_batch_ = nullptr;
@@ -79,10 +82,15 @@ namespace Engine::Manager::Graphics
 
 	inline void ToolkitAPI::FrameBegin()
 	{
-		m_sprite_batch_->Begin();
+		m_sprite_batch_->Begin(
+			SpriteSortMode_Deferred, 
+			GetRenderPipeline().m_blend_state_.Get(), 
+			GetRenderPipeline().s_sampler_state_[eShaderType::SHADER_PIXEL],
+			GetRenderPipeline().m_depth_stencil_state_.Get(),
+			GetRenderPipeline().m_rasterizer_state_.Get());
 	}
 
-	inline void ToolkitAPI::FrameEnd()
+	inline void ToolkitAPI::FrameEnd() const
 	{
 		m_sprite_batch_->End();
 	}
