@@ -90,6 +90,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().PreUpdate(dt);
 		GetDebugger().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
+		GetToolkitAPI().PreUpdate(dt);
 	}
 
 	void Application::FixedUpdate(const float& dt)
@@ -104,6 +105,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().FixedUpdate(dt);
 		GetDebugger().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
+		GetToolkitAPI().FixedUpdate(dt);
 	}
 
 	void Application::Update(const float& dt)
@@ -118,6 +120,7 @@ namespace Engine::Manager
 		GetTransformLerpManager().Update(dt);
 		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
+		GetToolkitAPI().Update(dt);
 	}
 
 	void Application::PreRender(const float& dt)
