@@ -37,7 +37,6 @@ namespace Engine::Manager::Graphics
 
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
-		void OverrideColor(const Color& color);
 		void SetWireframeState() const;
 		void SetFillState() const;
 
