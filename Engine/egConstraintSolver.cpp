@@ -166,8 +166,9 @@ namespace Engine::Manager::Physics
 				rb_other->AddLinearMomentum(other_linear_vel);
 				rb_other->AddAngularMomentum(other_angular_vel);
 			}
-
+			
 			m_collision_resolved_set_.insert({ lhs.GetID(), rhs.GetID() });
+			m_collision_resolved_set_.insert({ rhs.GetID(), lhs.GetID() });
 		}
 	}
 
@@ -183,7 +184,8 @@ namespace Engine::Manager::Physics
 
 		if (rb && cl && tr && rb_other && cl_other && tr_other)
 		{
-			if (m_speculative_resolved_set_.contains({ lhs.GetID(), rhs.GetID() }))
+			if (m_speculative_resolved_set_.contains({ lhs.GetID(), rhs.GetID() }) ||
+				m_speculative_resolved_set_.contains({ rhs.GetID(), lhs.GetID() }))
 			{
 				return;
 			}
@@ -204,9 +206,10 @@ namespace Engine::Manager::Physics
 				cl->SetPosition(speculated_pos);
 
 				m_speculative_resolved_set_.insert({ lhs.GetID(), rhs.GetID() });
+				m_speculative_resolved_set_.insert({ rhs.GetID(), lhs.GetID() });
 			}
-		}
 
-		cl->RemoveSpeculationObject(rhs.GetID());
+			cl->RemoveSpeculationObject(rhs.GetID());
+		}
 	}
 }
