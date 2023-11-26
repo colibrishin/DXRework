@@ -36,14 +36,6 @@ namespace Engine::Manager
 				continue;
 			}
 
-			BoundingSphere speculation_area{};
-
-			const auto velocity = rb ? rb->GetLinearMomentum().Length() : g_epsilon;
-			const auto speculation_radius = velocity;
-
-			speculation_area.Center = tr->GetPreviousPosition();
-			speculation_area.Radius = speculation_radius;
-
 			for (const auto& rhs_obj : rhs)
 			{
 				const auto obj_other = rhs_obj.lock();
@@ -68,26 +60,14 @@ namespace Engine::Manager
 						continue;
 					}
 
-					bool speculation = false;
-
-					if (cl_other->GetType() == BOUNDING_TYPE_BOX)
-					{
-						speculation = speculation_area.Intersects(cl_other->As<BoundingOrientedBox>());
-					}
-					else if (cl_other->GetType() == BOUNDING_TYPE_SPHERE)
-					{
-						speculation = speculation_area.Intersects(cl_other->As<BoundingSphere>());
-					}
-
-					if (speculation || CheckRaycasting(obj, obj_other))
+					if (CheckRaycasting(obj, obj_other))
 					{
 						if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
 						{
 							m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
 							m_speculation_map_[obj_other->GetID()].insert(obj->GetID());
 
-							m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
-							m_frame_collision_map_[obj_other->GetID()].insert(obj->GetID());
+							GetDebugger().Log(L"Speculation Hit! : " + std::to_wstring(obj->GetID()) + L" " + std::to_wstring(obj_other->GetID()));
 
 							obj->DispatchComponentEvent(cl, cl_other);
 							obj->DispatchComponentEvent(cl_other, cl);

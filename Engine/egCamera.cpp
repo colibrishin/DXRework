@@ -101,7 +101,8 @@ namespace Engine::Objects
 			auto sound_up = Vector3::TransformNormal(m_look_at_, Matrix::CreateFromYawPitchRoll(0.f, XMConvertToRadians(-90.f), 0.f));
 
 			auto max_forward = MaxUnitVector(m_look_at_);
-			auto max_up = MaxUnitVector(sound_up);
+			const auto forward_mask = RemoveVectorElement(sound_up, max_forward);
+			auto max_up = MaxUnitVector(forward_mask);
 
 			GetToolkitAPI().Set3DListener(
 				{position.x, position.y, position.z},
