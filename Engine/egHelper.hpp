@@ -37,6 +37,14 @@ namespace Engine
 			return { 0.0f, 0.0f, std::copysign(1.0f, v.z) };
 	}
 
+	static Vector3 RemoveVectorElement(const Vector3& v, const Vector3& condition)
+	{
+		return {
+			std::fabsf(condition.x) == 1.0f ? 0.f : v.x,
+			std::fabsf(condition.y) == 1.0f ? 0.f : v.y,
+			std::fabsf(condition.z) == 1.0f ? 0.f : v.z };
+	}
+
 	static bool FloatCompare(const float a, const float b)
 	{
 		return std::fabs(a - b) < g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
