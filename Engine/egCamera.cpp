@@ -15,7 +15,7 @@ namespace Engine::Objects
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
-		m_look_at_ = Vector3::Forward;
+		m_look_at_ = Vector3::Backward;
 	}
 
 	void Camera::PreUpdate(const float& dt)
