@@ -157,12 +157,14 @@ namespace Engine::Manager::Physics
 
 
 			tr->SetPosition(pos);
+			cl->SetPosition(pos);
 			rb->AddLinearMomentum(linear_vel);
 			rb->AddAngularMomentum(angular_vel);
 
 			if (!rb_other->IsFixed())
 			{
 				tr_other->SetPosition(other_pos);
+				cl_other->SetPosition(other_pos);
 				rb_other->AddLinearMomentum(other_linear_vel);
 				rb_other->AddAngularMomentum(other_angular_vel);
 			}
