@@ -4,7 +4,6 @@
 
 #include "egCommon.hpp"
 #include "egObject.hpp"
-#include "egTransform.hpp"
 
 namespace Engine::Objects
 {
@@ -19,15 +18,8 @@ namespace Engine::Objects
 			m_look_at_ = lookAt;
 		}
 
-		void SetPosition(Vector3 position)
-		{
-			GetComponent<Component::Transform>().lock()->SetPosition(position);
-		}
-
-		void SetRotation(Quaternion rotation)
-		{
-			GetComponent<Component::Transform>().lock()->SetRotation(rotation);
-		}
+		void SetPosition(Vector3 position);
+		void SetRotation(Quaternion rotation);
 
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
 		Vector3 GetLookAt() const;
