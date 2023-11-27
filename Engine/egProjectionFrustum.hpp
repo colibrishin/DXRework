@@ -86,10 +86,10 @@ namespace Engine::Manager
 				tr->GetRotation()
 			};
 
-			const auto check_plane = m_frustum.Intersects(box);
-			const auto check_sphere = m_sphere.Intersects(box);
+			const auto check_plane = m_frustum.Contains(box);
+			const auto check_sphere = m_sphere.Contains(box);
 
-			return check_plane || check_sphere;
+			return check_plane != DISJOINT || check_sphere != DISJOINT;
 		}
 
 		return false;
