@@ -11,6 +11,8 @@ namespace Engine::Physics
 		// @todo: gravity check and apply
 		Vector3 invVel = -vel;
 
+		invVel.y = 0.f;
+
 		invVel = (invVel * mu);
 
 		if (vel.Length() < mu * dt)

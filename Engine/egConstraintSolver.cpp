@@ -203,7 +203,7 @@ namespace Engine::Manager::Physics
 			// Forward collision check
 			if (cl_other->Intersects(ray, length, intersection_distance))
 			{
-				const Vector3 speculated_pos = tr->GetPreviousPosition() + (ray.direction * intersection_distance);
+				const Vector3 speculated_pos = tr->GetPosition() - (ray.direction * intersection_distance);
 				tr->SetPosition(speculated_pos);
 				cl->SetPosition(speculated_pos);
 
@@ -212,6 +212,7 @@ namespace Engine::Manager::Physics
 			}
 
 			cl->RemoveSpeculationObject(rhs.GetID());
+			cl_other->RemoveSpeculationObject(lhs.GetID());
 		}
 	}
 }
