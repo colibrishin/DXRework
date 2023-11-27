@@ -118,6 +118,7 @@ namespace Engine::Manager::Physics
 		rb->SetAngularMomentum(angular_momentum);
 
 		tr->SetPosition(tr->GetPosition() + linear_momentum);
+		cl->SetPosition(tr->GetPosition());
 
 		//Quaternion orientation = tr->GetRotation();
 		//orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} * orientation;
