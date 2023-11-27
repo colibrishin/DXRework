@@ -15,7 +15,7 @@ namespace Engine::Objects
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
-		m_look_at_ = Vector3::Backward;
+		m_look_at_ = g_forward;
 	}
 
 	void Camera::PreUpdate(const float& dt)
@@ -44,20 +44,20 @@ namespace Engine::Objects
 
 		if (GetApplication().GetMouseState().scrollWheelValue > 1)
 		{
-			GetComponent<Component::Transform>().lock()->Translate(Vector3::Forward * 0.1f);
+			GetComponent<Component::Transform>().lock()->Translate(g_forward * 0.1f);
 		}
 		else if (GetApplication().GetMouseState().scrollWheelValue < 0)
 		{
-			GetComponent<Component::Transform>().lock()->Translate(Vector3::Backward * 0.1f);
+			GetComponent<Component::Transform>().lock()->Translate(g_backward * 0.1f);
 		}
 
 		m_current_mouse_position_ = GetNormalizedMousePosition();
 		Vector2 delta;
 		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
 
-		const auto scale_matrix = Matrix::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
-
-		m_look_at_ = Vector3::TransformNormal(m_look_at_, scale_matrix);
+		const auto lookRotation = Matrix::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
+		
+		m_look_at_ = Vector3::TransformNormal(m_look_at_, lookRotation);
 
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
@@ -98,17 +98,12 @@ namespace Engine::Objects
 				}
 			}
 
-			auto sound_up = Vector3::TransformNormal(m_look_at_, Matrix::CreateFromYawPitchRoll(0.f, XMConvertToRadians(-90.f), 0.f));
-
-			auto max_forward = MaxUnitVector(m_look_at_);
-			const auto forward_mask = RemoveVectorElement(sound_up, max_forward);
-			auto max_up = MaxUnitVector(forward_mask);
-
+			// @todo: fixme, somehow the origin is not correct, without reverse up.
 			GetToolkitAPI().Set3DListener(
-				{position.x, position.y, position.z},
+				{lookAtVector.x, lookAtVector.y, lookAtVector.z},
 				{velocity.x, velocity.y, velocity.z},
-				{max_forward.x, max_forward.y, max_forward.z},
-				{max_up.x, max_up.y, max_up.z}
+				{g_forward.x, g_forward.y, g_forward.z},
+				{-Vector3::Up.x, -Vector3::Up.y, -Vector3::Up.z}
 			);
 		}
 	}
