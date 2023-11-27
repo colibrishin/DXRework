@@ -1,4 +1,5 @@
 #pragma once
+#include <SimpleMath.h>
 #include <DirectXCollision.h>
 #include <execution>
 
@@ -22,7 +23,7 @@ namespace Engine::Component
 	class Collider : public Abstract::Component
 	{
 	public:
-		Collider(const std::weak_ptr<Abstract::Object>& owner);
+		Collider(const std::weak_ptr<Abstract::Object>& owner, const WeakMesh& mesh = {});
 		~Collider() override = default;
 
 		void SetDirtyWithTransform(const bool dirty) { m_bDirtyByTransform = dirty; }
@@ -32,6 +33,7 @@ namespace Engine::Component
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
 		void SetMass(const float mass) { m_mass_ = mass; }
+		void SetMesh(const WeakMesh& mesh);
 
 		bool Intersects(Collider& other) const;
 		bool Intersects(const Ray& ray, float distance, float& intersection) const;
@@ -60,7 +62,7 @@ namespace Engine::Component
 
 		eBoundingType GetType() const { return m_type_; }
 
-		const std::vector<const Vector3*>& GetVertices() const { return GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock()->GetVertices(); }
+		virtual const std::vector<const Vector3*>& GetVertices() const;
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
 
 		void Initialize() override;
@@ -86,6 +88,9 @@ namespace Engine::Component
 		}
 
 	private:
+		static void InitializeStockVertices();
+		void GenerateFromMesh(const WeakMesh& mesh);
+
 		union BoundingGroup
 		{
 			DirectX::BoundingOrientedBox box;
@@ -160,10 +165,13 @@ namespace Engine::Component
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
 
-	private:
 		friend class Manager::Debugger;
 
-		void GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh);
+		inline static std::vector<Vector3> m_cube_stock_ = {};
+		inline static std::vector<Vector3> m_sphere_stock_ = {};
+
+		inline static std::vector<const Vector3*> m_cube_stock_ref_ = {};
+		inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
 
 		std::set<EntityID> m_collided_objects_;
 		std::set<EntityID> m_speculative_collision_candidates_;
@@ -186,10 +194,11 @@ namespace Engine::Component
 		Vector3 m_inverse_inertia_;
 		XMFLOAT3X3 m_inertia_tensor_;
 		Matrix m_world_matrix_;
+		WeakMesh m_mesh_;
 
 	};
 
-	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_COLLIDER,
+	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
 																				owner),
 																			m_bDirtyByTransform(false),
 																			m_position_(Vector3::Zero),
@@ -197,7 +206,8 @@ namespace Engine::Component
 																			m_rotation_(Quaternion::Identity),
 																			m_type_(BOUNDING_TYPE_BOX),
 																			m_boundings_({}), m_mass_(1.0f),
-																			m_inertia_tensor_()
+																			m_inertia_tensor_(),
+																			m_mesh_(mesh)
 	{
 	}
 

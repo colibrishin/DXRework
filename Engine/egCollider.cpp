@@ -43,15 +43,90 @@ namespace Engine::Component
 		UpdateInertiaTensor();
 	}
 
+	const std::vector<const Vector3*>& Collider::GetVertices() const
+	{
+		if (const auto mesh = m_mesh_.lock())
+		{
+			return mesh->GetVertices();
+		}
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			return m_cube_stock_ref_;
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			return m_sphere_stock_ref_;
+		}
+
+		return {};
+	}
+
+	void Collider::InitializeStockVertices()
+	{
+		GeometricPrimitive::IndexCollection index;
+		GeometricPrimitive::VertexCollection vertex;
+
+		if (m_cube_stock_.empty())
+		{
+			GeometricPrimitive::CreateBox(vertex, index, Vector3::One, false);
+
+			for (const auto& v : vertex)
+			{
+				m_cube_stock_.push_back(v.position);
+			}
+
+			for (const auto & v : m_cube_stock_)
+			{
+				m_cube_stock_ref_.push_back(&v);
+			}
+		}
+		if (m_sphere_stock_.empty())
+		{
+			GeometricPrimitive::CreateSphere(vertex, index, 1.f, 16, false);
+
+			for (const auto& v : vertex)
+			{
+				m_sphere_stock_.push_back(v.position);
+			}
+
+			for (const auto & v : m_sphere_stock_)
+			{
+				m_sphere_stock_ref_.push_back(&v);
+			}
+		}
+	}
+
+	inline void Collider::GenerateFromMesh(const WeakMesh& mesh)
+	{
+		const auto mesh_obj = mesh.lock();
+
+		std::vector<Vector3> serialized_vertices;
+
+		std::ranges::for_each(mesh_obj->m_vertices_, [&](const Resources::Shape& shape)
+		{
+			for (int i = 0; i < shape.size(); ++i)
+			{
+				serialized_vertices.emplace_back(shape[i].position);
+			}
+		});
+
+		if (GetType() == BOUNDING_TYPE_BOX)
+		{
+			BoundingOrientedBox::CreateFromPoints(m_boundings_.box, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
+		}
+		else if (GetType() == BOUNDING_TYPE_SPHERE)
+		{
+			BoundingSphere::CreateFromPoints(m_boundings_.sphere, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
+		}
+	}
+
 	void Collider::Initialize()
 	{
-		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock())
+		InitializeStockVertices();
+		if (const auto mesh = m_mesh_.lock())
 		{
 			GenerateFromMesh(mesh);
-		}
-		else
-		{
-			throw std::exception("Mesh is not loaded");
 		}
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
@@ -91,7 +166,7 @@ namespace Engine::Component
 	{
 		m_type_ = type;
 
-		if (const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock())
+		if (const auto mesh = m_mesh_.lock())
 		{
 			GenerateFromMesh(mesh);
 		}
@@ -101,6 +176,15 @@ namespace Engine::Component
 #endif
 
 		UpdateBoundings();
+	}
+
+	void Collider::SetMesh(const WeakMesh& mesh)
+	{
+		if (const auto locked = mesh.lock())
+		{
+			m_mesh_ = mesh;
+			GenerateFromMesh(mesh);
+		}
 	}
 
 	bool Collider::Intersects(Collider& other) const
@@ -152,40 +236,10 @@ namespace Engine::Component
 
 	void Collider::GetPenetration(const Collider& other, Vector3& normal, float& depth) const
 	{
-		const auto mesh = GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock();
-		const auto other_mesh = other.GetOwner().lock()->GetResource<Resources::Mesh>(L"").lock();
-
-		const auto vertices = mesh->GetVertices();
-		const auto other_vertices = other_mesh->GetVertices();
-
 		auto dir = other.GetPosition() - GetPosition();
 		dir.Normalize();
 
 		Physics::GJK::GJKAlgorithm(*this, other, dir, normal, depth);
-	}
-
-	void Collider::GenerateFromMesh(const std::weak_ptr<Resources::Mesh>& mesh)
-	{
-		const auto mesh_obj = mesh.lock();
-
-		std::vector<Vector3> serialized_vertices;
-
-		std::ranges::for_each(mesh_obj->m_vertices_, [&](const Resources::Shape& shape)
-		{
-			for (int i = 0; i < shape.size(); ++i)
-			{
-				serialized_vertices.emplace_back(shape[i].position);
-			}
-		});
-
-		if (m_type_ == BOUNDING_TYPE_BOX)
-		{
-			BoundingOrientedBox::CreateFromPoints(m_boundings_.box, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
-		}
-		else if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			BoundingSphere::CreateFromPoints(m_boundings_.sphere, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
-		}
 	}
 
 #ifdef _DEBUG
