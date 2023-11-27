@@ -263,7 +263,7 @@ namespace Engine::Component
 			m_rotation_ = Quaternion::Identity;
 		}
 
-		m_world_matrix_ = Matrix::CreateWorld(Vector3::Zero, Vector3::Forward, Vector3::Up);
+		m_world_matrix_ = Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up);
 		m_world_matrix_ *= Matrix::CreateScale(m_size_);
 		m_world_matrix_ *= Matrix::CreateFromQuaternion(m_rotation_);
 		m_world_matrix_ *= Matrix::CreateTranslation(m_position_);
