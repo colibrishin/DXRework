@@ -3,8 +3,8 @@
 
 namespace Engine
 {
-	inline FMOD_VECTOR g_fmod_forward_ = { 0, 0, -1.f };
-	inline FMOD_VECTOR g_fmod_up_ = { 0, 1, 0.f };
+	inline const FMOD_VECTOR g_fmod_forward = { 0, 0, -1.f };
+	inline const FMOD_VECTOR g_fmod_up = { 0, 1, 0.f };
 }
 
 namespace Engine::Resources
@@ -12,9 +12,11 @@ namespace Engine::Resources
 	class Sound : public Abstract::Resource
 	{
 	public:
-		Sound(const std::string& path) : Resource(path, RESOURCE_PRIORITY_SOUND)
+		explicit Sound(const std::string& path) : Resource(path, RESOURCE_PRIORITY_SOUND), m_mode_(FMOD_3D),
+												m_min_distance_(0.f), m_max_distance_(3.f)
 		{
 		}
+
 		~Sound() override = default;
 
 		void Initialize() override;
@@ -30,13 +32,53 @@ namespace Engine::Resources
 		void Stop(const WeakObject& origin);
 		void StopLoop(const WeakObject& origin);
 
+		void SetRollOff(const FMOD_MODE& roll_off) const
+		{
+			if (m_sound_)
+			{
+				if (!(roll_off ^ FMOD_3D_LINEARROLLOFF) ||
+					!(roll_off ^ FMOD_3D_INVERSETAPEREDROLLOFF) ||
+					!(roll_off ^ FMOD_3D_LINEARSQUAREROLLOFF))
+				{
+					m_sound_->setMode(roll_off);
+				}
+				else
+				{
+					GetDebugger().Log(L"Invalid roll off mode given.");
+				}
+			}
+		}
+		void SetMinDistance(const float& min_distance)
+		{
+			m_min_distance_ = min_distance;
+			CommitDistance();
+		}
+		void SetMaxDistance(const float& max_distance)
+		{
+			m_max_distance_ = max_distance;
+			CommitDistance();
+		}
+
 	protected:
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:
+		void CommitDistance() const
+		{
+			if (m_sound_)
+			{
+				m_sound_->set3DMinMaxDistance(m_min_distance_, m_max_distance_);
+			}
+		}
+		void Play_INTERNAL(const WeakObject& origin);
+
 		FMOD::Sound* m_sound_ = nullptr;
 		std::map<WeakObject, FMOD::Channel*, WeakObjComparer> m_channel_map_;
+		FMOD_MODE m_mode_;
+
+		float m_min_distance_;
+		float m_max_distance_;
 
 	};
 
@@ -64,7 +106,7 @@ namespace Engine::Resources
 	{
 	}
 
-	inline void Sound::Play(const WeakObject& origin)
+	inline void Sound::Play_INTERNAL(const WeakObject& origin)
 	{
 		FMOD_VECTOR pos{};
 		FMOD_VECTOR vel{};
@@ -79,12 +121,22 @@ namespace Engine::Resources
 			vel = {rb->GetLinearMomentum().x, rb->GetLinearMomentum().y, rb->GetLinearMomentum().z};
 		}
 
+		m_sound_->setMode(m_mode_);
 		GetToolkitAPI().PlaySound(m_sound_, pos, vel, &m_channel_map_[origin]);
+	}
+
+	inline void Sound::Play(const WeakObject& origin)
+	{
+		m_mode_ |= FMOD_LOOP_OFF;
+		m_mode_ &= ~FMOD_LOOP_NORMAL;
+		Play_INTERNAL(origin);
 	}
 
 	inline void Sound::PlayLoop(const WeakObject& origin)
 	{
-		m_sound_->setMode(FMOD_LOOP_NORMAL);
+		m_mode_ &= ~FMOD_LOOP_OFF;
+		m_mode_ |= FMOD_LOOP_NORMAL;
+		m_sound_->setMode(m_mode_);
 		Play(origin);
 	}
 
@@ -103,18 +155,21 @@ namespace Engine::Resources
 
 	inline void Sound::StopLoop(const WeakObject& origin)
 	{
-		m_sound_->setMode(FMOD_3D | FMOD_LOOP_OFF);
+		m_mode_ |= FMOD_LOOP_OFF;
+		m_mode_ &= ~FMOD_LOOP_NORMAL;
+		m_sound_->setMode(FMOD_3D);
 		Stop(origin);
 	}
 
 	inline void Sound::Load_INTERNAL()
 	{
 		GetToolkitAPI().LoadSound(&m_sound_, GetPath().generic_string());
-		m_sound_->set3DMinMaxDistance(0.f, 3.f);
+		CommitDistance();
 	}
 
 	inline void Sound::Unload_INTERNAL()
 	{
 		m_sound_->release();
+		m_sound_ = nullptr;
 	}
 }
