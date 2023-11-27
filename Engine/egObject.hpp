@@ -28,14 +28,14 @@ namespace Engine::Abstract
 			m_resources_.insert(resource);
 		}
 
-		template <typename T>
-		void AddComponent()
+		template <typename T, typename... Args>
+		void AddComponent(Args&&... args)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
 				const auto thisObject = std::reinterpret_pointer_cast<Object>(shared_from_this());
 
-				std::shared_ptr<T> component = std::make_shared<T>(thisObject);
+				std::shared_ptr<T> component = std::make_shared<T>(thisObject, std::forward<Args>(args)...);
 				component->Initialize();
 
 				m_components_[typeid(T)].insert(std::reinterpret_pointer_cast<Component>(component));
@@ -176,6 +176,26 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
+		std::weak_ptr<T> GetResource() const
+		{
+			if constexpr (std::is_base_of_v<Resource, T>)
+			{
+				for (const auto& resource : m_resources_)
+				{
+					if (const auto locked = resource.lock())
+					{
+						if (const auto t = std::dynamic_pointer_cast<T>(locked))
+						{
+							return t;
+						}
+					}
+				}
+			}
+
+			return {};
+		}
+
+		template <typename T>
 		std::weak_ptr<T> GetResource(const std::wstring& name) const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
@@ -187,10 +207,6 @@ namespace Engine::Abstract
 						if (const auto t = std::dynamic_pointer_cast<T>(locked))
 						{
 							if (!name.empty() && t->GetName() == name)
-							{
-								return t;
-							}
-							if (name.empty())
 							{
 								return t;
 							}

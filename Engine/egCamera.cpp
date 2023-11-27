@@ -6,6 +6,16 @@
 
 namespace Engine::Objects
 {
+	void Camera::SetPosition(Vector3 position)
+	{
+		GetComponent<Component::Transform>().lock()->SetPosition(position);
+	}
+
+	void Camera::SetRotation(Quaternion rotation)
+	{
+		GetComponent<Component::Transform>().lock()->SetRotation(rotation);
+	}
+
 	Vector3 Camera::GetLookAt() const
 	{
 		return m_look_at_;
