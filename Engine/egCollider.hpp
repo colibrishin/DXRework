@@ -228,7 +228,10 @@ namespace Engine::Component
 	{
 		UpdateFromTransform();
 		UpdateInertiaTensor();
+	}
 
+	inline void Collider::PreRender(const float dt)
+	{
 #ifdef _DEBUG
 		if (const auto tr = m_debug_mesh_->GetComponent<Transform>().lock())
 		{
@@ -237,9 +240,5 @@ namespace Engine::Component
 			tr->SetScale(GetSize());
 		}
 #endif
-	}
-
-	inline void Collider::PreRender(const float dt)
-	{
 	}
 }
