@@ -61,9 +61,10 @@ namespace Engine::Manager
 			{
 				const auto camera = camera_layer.front().lock()->GetSharedPtr<Objects::Camera>();
 
-				BoundingFrustum::CreateFromMatrix(m_frustum, camera->GetViewMatrix() * GetD3Device().GetProjectionMatrix());
+				BoundingFrustum::CreateFromMatrix(m_frustum, GetD3Device().GetProjectionMatrix());
 
-				m_frustum.Origin = camera->GetComponent<Component::Transform>().lock()->GetPosition() + camera->GetLookAt();
+				m_frustum.Origin = camera->GetComponent<Component::Transform>().lock()->GetPosition();
+				m_frustum.Orientation = Quaternion::CreateFromYawPitchRoll(camera->GetLookAt());
 
 				BoundingSphere::CreateFromFrustum(m_sphere, m_frustum);
 			}
@@ -85,16 +86,10 @@ namespace Engine::Manager
 				tr->GetRotation()
 			};
 
-			const auto check_plane = m_frustum.Contains(box);
-			const auto check_sphere = m_sphere.Contains(box);
+			const auto check_plane = m_frustum.Intersects(box);
+			const auto check_sphere = m_sphere.Intersects(box);
 
-			if (check_plane != ContainmentType::DISJOINT || 
-				check_sphere != ContainmentType::DISJOINT)
-			{
-				return true;
-			}
-
-			return false;
+			return check_plane || check_sphere;
 		}
 
 		return false;
