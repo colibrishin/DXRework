@@ -6,6 +6,7 @@
 #include <exception>
 #include <fmod_common.h>
 #include <typeindex>
+#include <SimpleMath.h>
 
 namespace Engine
 {
@@ -43,6 +44,9 @@ namespace Engine
 	constexpr int g_debug_y_initial = 0;
 	constexpr float g_debug_message_life_time = 1.0f;
 	constexpr size_t g_debug_message_max = 20;
+
+	constexpr DirectX::SimpleMath::Vector3 g_forward = {0.f, 0.f, -1.f};
+	constexpr DirectX::SimpleMath::Vector3 g_backward = {0.f, 0.f, 1.f};
 	
 	constexpr size_t g_max_map_size = 2048; // only in power of 2
 	constexpr size_t g_octree_negative_round_up = g_max_map_size / 2;
