@@ -18,13 +18,13 @@ namespace Engine::Abstract
 		eLayerType GetLayer() const { return m_layer_; }
 		WeakScene GetScene() const { return m_assigned_scene_; }
 
-	protected:
-		explicit Actor(const WeakScene& scene) : m_assigned_scene_(scene), m_layer_(LAYER_NONE)
-		{
-		}
-
 		void SetLayer(eLayerType layer);
 		void SetScene(EntityID scene_id);
+
+	protected:
+		explicit Actor(const WeakScene& scene, const eLayerType layer) : m_assigned_scene_(scene), m_layer_(layer)
+		{
+		}
 
 	private:
 		WeakScene m_assigned_scene_;
