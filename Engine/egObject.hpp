@@ -228,9 +228,11 @@ namespace Engine::Abstract
 		bool GetActive() const { return m_active_; }
 
 	protected:
-		Object(const WeakScene& initial_scene) : Actor(initial_scene), m_active_(true), m_culled_(true) {};
+		Object(const WeakScene& initial_scene, const eLayerType initial_layer) : Actor(initial_scene, initial_layer), m_active_(true), m_culled_(true) {};
 
 	public:
+		void Initialize() final;
+		virtual void Initialize_INTERNAL() = 0;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -243,8 +245,12 @@ namespace Engine::Abstract
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
 	protected:
+		void OnCreate() override;
+		void OnDestroy() override;
 		void OnLayerChanging() override;
 		void OnLayerChanged() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
 
 	private:
 		bool m_active_ = true;
