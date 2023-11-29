@@ -5,6 +5,28 @@
 
 namespace Engine
 {
+	void Scene::Initialize()
+	{
+		for(int i = 0; i < LAYER_MAX; ++i)
+		{
+			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
+		}
+
+		const auto camera = InstantiateObject<Objects::Camera>(GetSharedPtr<Scene>());
+		AddGameObject(camera, LAYER_CAMERA);
+
+		m_mainCamera_ = camera;
+
+		const auto light1 = InstantiateObject<Objects::Light>(GetSharedPtr<Scene>());
+		AddGameObject(light1, LAYER_LIGHT);
+		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
+
+		const auto light2 = InstantiateObject<Objects::Light>(GetSharedPtr<Scene>());
+		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
+		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+		AddGameObject(light2, LAYER_LIGHT);
+	}
+
 	void Scene::UpdatePosition(const WeakObject& obj)
 	{
 		if (const auto obj_ptr = obj.lock())

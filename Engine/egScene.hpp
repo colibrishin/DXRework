@@ -23,6 +23,7 @@ namespace Engine
 		Scene(const Scene& other) = default;
 		~Scene() override = default;
 
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -53,8 +54,8 @@ namespace Engine
 
 				if (tr)
 				{
-					const auto prev_pos = tr->GetPreviousPosition();
-					const auto pos = tr->GetPosition();
+					const auto prev_pos = tr->GetPreviousPosition() + Vector3::One * g_octree_negative_round_up;
+					const auto pos = tr->GetPosition() + Vector3::One * g_octree_negative_round_up;
 
 					auto& prev_pos_set = m_object_position_tree_(static_cast<int>(prev_pos.x), static_cast<int>(prev_pos.y), static_cast<int>(prev_pos.z));
 					auto& pos_set = m_object_position_tree_(static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(pos.z));
@@ -135,24 +136,6 @@ namespace Engine
 
 	inline Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
 	{
-		for(int i = 0; i < LAYER_MAX; ++i)
-		{
-			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
-		}
-
-		const auto camera = Instantiate<Objects::Camera>();
-		AddGameObject(camera, LAYER_CAMERA);
-
-		m_mainCamera_ = camera;
-
-		const auto light1 = Instantiate<Objects::Light>();
-		AddGameObject(light1, LAYER_LIGHT);
-		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
-
-		const auto light2 = Instantiate<Objects::Light>();
-		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
-		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		AddGameObject(light2, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate(const float& dt)
