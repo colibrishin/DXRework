@@ -48,7 +48,8 @@ namespace Engine::Resources
 		{
 		}
 
-		void Load() override;
+		void Load_INTERNAL() final;
+		virtual void Load_CUSTOM() = 0;
 		void Unload_INTERNAL() override;
 
 		static void GenerateTangentBinormal(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2, Vector3& tangent, Vector3& binormal);

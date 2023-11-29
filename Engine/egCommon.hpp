@@ -8,6 +8,8 @@
 #include <typeindex>
 #include <SimpleMath.h>
 
+#include "egType.hpp"
+
 namespace Engine
 {
 	namespace Manager
@@ -145,6 +147,16 @@ namespace Engine
 		{
 			return lhs.lock().get() < rhs.lock().get();
 		}
+	};
+
+	struct ResourcePriorityComparer
+	{
+		bool operator()(const WeakResource& Left, const WeakResource& Right) const;
+	};
+
+	struct ComponentPriorityComparer
+	{
+		bool operator()(const WeakComponent& Left, const WeakComponent& Right) const;
 	};
 }
 

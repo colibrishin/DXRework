@@ -11,13 +11,16 @@ namespace Engine::Objects
 	class Light final : public Abstract::Object
 	{
 	public:
-		Light() = default;
+		explicit Light(const WeakScene& scene) : Object(scene, LAYER_LIGHT), m_light_id_(0)
+		{
+		}
+
 		~Light() override;
 
 		void SetColor(Vector4 color);
 		void SetPosition(Vector3 position);
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -47,7 +50,7 @@ namespace Engine::Objects
 		transform.lock()->SetPosition(position);
 	}
 
-	inline void Light::Initialize()
+	inline void Light::Initialize_INTERNAL()
 	{
 		assert(s_light_map_.count() < g_max_lights);
 

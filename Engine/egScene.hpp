@@ -23,61 +23,15 @@ namespace Engine
 		Scene(const Scene& other) = default;
 		~Scene() override = default;
 
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		template <typename T>
-		EntityID AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
-		{
-			m_layers[layer]->AddGameObject<T>(obj);
-			m_cached_objects_.emplace(obj->GetID(), obj);
-			if (const auto tr = obj->template GetComponent<Component::Transform>().lock())
-			{
-				UpdatePosition(obj);
-			}
-
-			return obj->GetID();
-		}
-
-		template <typename T>
-		void RemoveGameObject(const EntityID id, eLayerType layer)
-		{
-			const auto obj = m_cached_objects_[id];
-
-			if (const auto locked = obj.lock())
-			{
-				const auto tr = locked->GetComponent<Component::Transform>().lock();
-				bool updated = false;
-
-				if (tr)
-				{
-					const auto prev_pos = tr->GetPreviousPosition();
-					const auto pos = tr->GetPosition();
-
-					if (m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).contains(obj))
-					{
-						m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).erase(obj);
-						updated = true;
-					}
-					if (m_object_position_tree_(pos.x, pos.y, pos.z).contains(obj))
-					{
-						m_object_position_tree_(pos.x, pos.y, pos.z).erase(obj);
-						updated = true;
-					}
-				}
-
-				if (!updated)
-				{
-					// @todo: add task for refreshing octree.
-				}
-			}
-
-			m_cached_objects_.erase(id);
-			m_layers[layer]->RemoveGameObject<T>(id);
-		}
+		EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
+		void RemoveGameObject(const EntityID id, eLayerType layer);
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer)
 		{
@@ -99,15 +53,6 @@ namespace Engine
 			return m_mainCamera_;
 		}
 
-		void ChangeLayer(EntityID id, eLayerType type)
-		{
-			if (const auto obj = FindGameObject(id).lock())
-			{
-				m_layers[obj->GetLayer()]->RemoveGameObject<Abstract::Object>(id);
-				m_layers[type]->AddGameObject<Abstract::Object>(obj);
-			}
-		}
-
 		auto serialized_layer_begin() noexcept
 		{
 			return m_layers.begin();
@@ -116,6 +61,30 @@ namespace Engine
 		auto serialized_layer_end() noexcept
 		{
 			return m_layers.end();
+		}
+
+		template <typename T>
+		void AddComponent(const WeakComponent& component)
+		{
+			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
+			{
+				m_cached_components_[typeid(T)].insert(component);
+			}
+		}
+
+		template <typename T>
+		void RemoveComponent(const WeakComponent& component)
+		{
+			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
+			{
+				m_cached_components_[typeid(T)].erase(component);
+			}
+		}
+
+		template <typename T>
+		const std::set<WeakComponent, ComponentPriorityComparer>& GetComponents()
+		{
+			return m_cached_components_[typeid(T)];
 		}
 
 		void UpdatePosition(const WeakObject& obj);
@@ -127,30 +96,13 @@ namespace Engine
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
 		std::map<EntityID, WeakObject> m_cached_objects_;
+		std::map<const std::type_index, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
 		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;
 
 	};
 
 	inline Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
 	{
-		for(int i = 0; i < LAYER_MAX; ++i)
-		{
-			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
-		}
-
-		const auto camera = Instantiate<Objects::Camera>();
-		AddGameObject(camera, LAYER_CAMERA);
-
-		m_mainCamera_ = camera;
-
-		const auto light1 = Instantiate<Objects::Light>();
-		AddGameObject(light1, LAYER_LIGHT);
-		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
-
-		const auto light2 = Instantiate<Objects::Light>();
-		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
-		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		AddGameObject(light2, LAYER_LIGHT);
 	}
 
 	inline void Scene::PreUpdate(const float& dt)

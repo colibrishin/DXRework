@@ -5,6 +5,80 @@
 
 namespace Engine
 {
+	void Scene::Initialize()
+	{
+		for(int i = 0; i < LAYER_MAX; ++i)
+		{
+			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
+		}
+
+		const auto camera = Instantiate<Objects::Camera>(GetSharedPtr<Scene>());
+		AddGameObject(camera, LAYER_CAMERA);
+
+		m_mainCamera_ = camera;
+
+		const auto light1 = Instantiate<Objects::Light>(GetSharedPtr<Scene>());
+		AddGameObject(light1, LAYER_LIGHT);
+		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
+
+		const auto light2 = Instantiate<Objects::Light>(GetSharedPtr<Scene>());
+		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
+		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+		AddGameObject(light2, LAYER_LIGHT);
+	}
+
+	EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
+	{
+		m_layers[layer]->AddGameObject(obj);
+		m_cached_objects_.emplace(obj->GetID(), obj);
+
+		if (const auto tr = obj->GetComponent<Component::Transform>().lock())
+		{
+			UpdatePosition(obj);
+		}
+
+		return obj->GetID();
+	}
+
+	void Scene::RemoveGameObject(const EntityID id, eLayerType layer)
+	{
+		const auto obj = m_cached_objects_[id];
+
+		if (const auto locked = obj.lock())
+		{
+			const auto tr = locked->GetComponent<Component::Transform>().lock();
+			bool updated = false;
+
+			if (tr)
+			{
+				const auto prev_pos = tr->GetPreviousPosition() + Vector3::One * g_octree_negative_round_up;
+				const auto pos = tr->GetPosition() + Vector3::One * g_octree_negative_round_up;
+
+				auto& prev_pos_set = m_object_position_tree_(static_cast<int>(prev_pos.x), static_cast<int>(prev_pos.y), static_cast<int>(prev_pos.z));
+				auto& pos_set = m_object_position_tree_(static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(pos.z));
+
+				if (prev_pos_set.contains(obj))
+				{
+					prev_pos_set.erase(obj);
+					updated = true;
+				}
+				if (pos_set.contains(obj))
+				{
+					pos_set.erase(obj);
+					updated = true;
+				}
+			}
+
+			if (!updated)
+			{
+				// @todo: add task for refreshing octree.
+			}
+		}
+
+		m_cached_objects_.erase(id);
+		m_layers[layer]->RemoveGameObject(id);
+	}
+
 	void Scene::UpdatePosition(const WeakObject& obj)
 	{
 		if (const auto obj_ptr = obj.lock())

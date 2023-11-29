@@ -21,45 +21,33 @@ namespace Engine
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		template <typename T>
-		void AddGameObject (const StrongObject& obj)
+		void AddGameObject(const StrongObject& obj)
 		{
-			if constexpr (std::is_base_of_v<Abstract::Object, T>)
+			if(m_objects_.contains(obj->GetID()))
 			{
-				if(m_objects_.contains(obj->GetID()))
-				{
-					return;
-				}
+				return;
+			}
 
-				m_objects_.insert_or_assign(obj->GetID(), obj);
-				m_weak_objects_cache_.push_back(obj);
+			m_objects_.insert_or_assign(obj->GetID(), obj);
+			m_weak_objects_cache_.push_back(obj);
+		}
+
+		void RemoveGameObject(EntityID id)
+		{
+			if (m_objects_.contains(id))
+			{
+				m_objects_.erase(id);
+				std::erase_if(m_weak_objects_cache_, [id](const auto& obj) { return obj.lock()->GetID() == id; });
 			}
 		}
 
-		template <typename T>
-		void RemoveGameObject (EntityID id)
+		WeakObject GetGameObject (EntityID id) const
 		{
-			if constexpr (std::is_base_of_v<Abstract::Object, T>)
+			for (const auto& object : m_objects_)
 			{
-				if (m_objects_.contains(id))
+				if(object.first == id)
 				{
-					m_objects_.erase(id);
-					m_weak_objects_cache_.erase(std::remove_if(m_weak_objects_cache_.begin(), m_weak_objects_cache_.end(), [id](const auto& obj) { return obj.lock()->GetID() == id; }), m_weak_objects_cache_.end());
-				}
-			}
-		}
-
-		template <typename T>
-		std::weak_ptr<T> GetGameObject (EntityID id)
-		{
-			if constexpr (std::is_base_of_v<Abstract::Object, T>)
-			{
-				for (const auto& object : m_objects_)
-				{
-					if(object.first == id)
-					{
-						return std::reinterpret_pointer_cast<T>(object.second);
-					}
+					return object.second;
 				}
 			}
 

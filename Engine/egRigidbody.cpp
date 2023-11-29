@@ -2,6 +2,7 @@
 #include "egRigidbody.hpp"
 #include "egCollider.hpp"
 #include "egKinetic.h"
+#include "egScene.hpp"
 
 namespace Engine::Component
 {
@@ -47,5 +48,39 @@ namespace Engine::Component
 
 	void Rigidbody::FixedUpdate(const float& dt)
 	{
+	}
+
+	void Rigidbody::OnLayerChanging()
+	{
+	}
+
+	void Rigidbody::OnLayerChanged()
+	{
+	}
+
+	void Rigidbody::OnCreate()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->AddComponent<Rigidbody>(GetSharedPtr<Rigidbody>());
+		}
+	}
+
+	void Rigidbody::OnDestroy()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->RemoveComponent<Rigidbody>(GetSharedPtr<Rigidbody>());
+		}
+	}
+
+	void Rigidbody::OnSceneChanging()
+	{
+		OnDestroy();
+	}
+
+	void Rigidbody::OnSceneChanged()
+	{
+		OnCreate();
 	}
 }

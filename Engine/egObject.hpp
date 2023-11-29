@@ -4,6 +4,8 @@
 
 #include <set>
 #include <typeindex>
+
+#include "egActor.hpp"
 #include "egComponent.hpp"
 
 #include "egRenderable.hpp"
@@ -17,11 +19,10 @@ namespace Engine::Component
 
 namespace Engine::Abstract
 {
-	class Object : public Renderable
+	class Object : public Actor
 	{
 	public:
 		~Object() override = default;
-		Object(const Object&) = default;
 
 		void AddResource(const WeakResource& resource)
 		{
@@ -218,21 +219,20 @@ namespace Engine::Abstract
 			return {};
 		}
 
-		template <typename T = Component>
-		void DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp);
-
-		void SetLayer(eLayerType type);
+		template <typename T>
+		void DispatchComponentEvent(T& lhs, T& rhs);
 
 		void SetActive(bool active) { m_active_ = active; }
 		void SetCulled(bool culled) { m_culled_ = culled; }
 
 		bool GetActive() const { return m_active_; }
-		eLayerType GetLayer() const { return m_layer_; }
 
 	protected:
-		Object() : m_layer_(LAYER_NONE), m_active_(true), m_culled_(true) {};
+		Object(const WeakScene& initial_scene, const eLayerType initial_layer) : Actor(initial_scene, initial_layer), m_active_(true), m_culled_(true) {};
 
 	public:
+		void Initialize() final;
+		virtual void Initialize_INTERNAL() = 0;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -240,37 +240,19 @@ namespace Engine::Abstract
 		void FixedUpdate(const float& dt) override;
 
 	private:
-		struct ResourcePriorityComparer
-		{
-			bool operator()(const WeakResource& Left, const WeakResource& Right) const
-			{
-				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
-				{
-					return Left.lock()->GetPriority() < Right.lock()->GetPriority();
-				}
-
-				return Left.lock()->GetID() < Right.lock()->GetID();
-			}
-		};
-
-		struct ComponentPriorityComparer
-		{
-			bool operator()(const WeakComponent& Left, const WeakComponent& Right) const
-			{
-				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
-				{
-					return Left.lock()->GetPriority() > Right.lock()->GetPriority();
-				}
-
-				return Left.lock()->GetID() > Right.lock()->GetID();
-			}
-		};
-
 		virtual void OnCollisionEnter(const Engine::Component::Collider& other);
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
-		eLayerType m_layer_;
+	protected:
+		void OnCreate() override;
+		void OnDestroy() override;
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
+
+	private:
 		bool m_active_ = true;
 		bool m_culled_ = true;
 

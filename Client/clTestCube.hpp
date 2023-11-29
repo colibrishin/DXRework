@@ -28,8 +28,8 @@ namespace Client::Object
 	class TestCube final : public Engine::Abstract::Object
 	{
 	public:
-		TestCube();
-		void Initialize() override;
+		explicit TestCube(const Engine::WeakScene& scene, const Engine::eLayerType layer);
+		void Initialize_INTERNAL() override;
 		~TestCube() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -39,11 +39,11 @@ namespace Client::Object
 		void FixedUpdate(const float& dt) override;
 	};
 
-	inline TestCube::TestCube()
+	inline TestCube::TestCube(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
 	{
 	}
 
-	inline void TestCube::Initialize()
+	inline void TestCube::Initialize_INTERNAL()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
@@ -69,8 +69,6 @@ namespace Client::Object
 		rb->SetGravityOverride(true);
 
 		AddComponent<Client::State::CharacterController>();
-
-		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline TestCube::~TestCube()

@@ -10,7 +10,6 @@ namespace Engine::Component
 	{
 	public:
 		Transform(const std::weak_ptr<Abstract::Object>& owner);
-		Transform(const Transform&) = default;
 		~Transform() override = default;
 
 		void SetPosition(const Vector3& position) { m_position_ = position; }
@@ -30,6 +29,14 @@ namespace Engine::Component
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+
+	protected:
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
+		void OnCreate() override;
+		void OnDestroy() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
 
 	private:
 		Vector3 m_previous_position_;

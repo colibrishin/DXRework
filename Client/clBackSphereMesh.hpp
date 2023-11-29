@@ -14,7 +14,7 @@ namespace Client::Mesh
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
-		void Load_INTERNAL() override;
+		void Load_CUSTOM() override;
 		void Initialize() override;
 		void FixedUpdate(const float& dt) override;
 
@@ -39,7 +39,7 @@ namespace Client::Mesh
 	{
 	}
 
-	inline void BackSphereMesh::Load_INTERNAL()
+	inline void BackSphereMesh::Load_CUSTOM()
 	{
 		GeometricPrimitive::VertexCollection vertices;
 		GeometricPrimitive::IndexCollection indices;

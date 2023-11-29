@@ -18,7 +18,7 @@ namespace Client::Mesh
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 
-		void Load_INTERNAL() override;
+		void Load_CUSTOM() override;
 		void FixedUpdate(const float& dt) override;
 	};
 
@@ -49,7 +49,7 @@ namespace Client::Mesh
 		Mesh::Render(dt);
 	}
 
-	inline void TriangleMesh::Load_INTERNAL()
+	inline void TriangleMesh::Load_CUSTOM()
 	{
 		m_vertices_.resize(1);
 		m_indices_.resize(1);

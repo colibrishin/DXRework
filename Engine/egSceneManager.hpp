@@ -47,6 +47,23 @@ namespace Engine::Manager
 			}
 		}
 
+		WeakScene GetScene(EntityID id) const
+		{
+			auto it = std::find_if(
+				m_scenes_.begin(),
+				m_scenes_.end(),
+				[id](const auto& scene)
+				{
+					return scene->GetID() == id;
+				}
+			);
+
+			if (it != m_scenes_.end())
+				return *it;
+
+			return {};
+		}
+
 		template <typename T>
 		void RemoveScene()
 		{

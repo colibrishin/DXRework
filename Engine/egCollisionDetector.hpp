@@ -45,10 +45,10 @@ namespace Engine::Manager
 		}
 
 	private:
-		void CheckCollision(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs);
-		void CheckGrounded(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs);
-		bool CheckRaycasting(const std::shared_ptr<Abstract::Object>& lhs,
-							const std::shared_ptr<Abstract::Object>& rhs);
+		void CheckCollision(Component::Collider& lhs, Component::Collider& rhs);
+		void CheckGrounded(const Component::Collider& lhs, Component::Collider& rhs);
+		bool CheckRaycasting(const Component::Collider& lhs,
+							const Component::Collider& rhs);
 
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<EntityID, std::set<EntityID>> m_collision_map_;

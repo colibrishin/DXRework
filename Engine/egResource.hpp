@@ -10,7 +10,7 @@ namespace Engine::Abstract
 	public:
 		~Resource() override;
 
-		virtual void Load();
+		virtual void Load() final;
 		void Unload();
 
 		bool IsLoaded() const
@@ -34,7 +34,7 @@ namespace Engine::Abstract
 		}
 
 	protected:
-		Resource(std::filesystem::path path, eResourcePriority priority) : m_path_(std::move(path)), m_priority_(priority)
+		Resource(std::filesystem::path path, eResourcePriority priority) : m_bLoaded_(false), m_path_(std::move(path)), m_priority_(priority)
 		{
 		}
 
@@ -42,7 +42,7 @@ namespace Engine::Abstract
 		virtual void Unload_INTERNAL() = 0;
 
 	private:
-		bool m_bLoaded_ = false;
+		bool m_bLoaded_;
 		std::filesystem::path m_path_;
 		eResourcePriority m_priority_;
 

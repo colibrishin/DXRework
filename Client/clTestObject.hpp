@@ -22,8 +22,8 @@ namespace Client::Object
 	class TestObject : public Engine::Abstract::Object
 	{
 	public:
-		TestObject() = default;
-		void Initialize() override;
+		explicit TestObject(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer) { }
+		void Initialize_INTERNAL() override;
 		~TestObject() override = default;
 
 		inline void PreUpdate(const float& dt) override;
@@ -36,7 +36,7 @@ namespace Client::Object
 
 	};
 
-	inline void TestObject::Initialize()
+	inline void TestObject::Initialize_INTERNAL()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
@@ -44,7 +44,7 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
 
-		m_velocity_counter_ = Engine::Instantiate<VelocityCounter>();
+		m_velocity_counter_ = Engine::InstantiateObject<VelocityCounter>(GetScene(), Engine::LAYER_UI);
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -61,8 +61,6 @@ namespace Client::Object
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
 		rb->SetFrictionCoefficient(0.1f);
 		rb->SetGravityOverride(true);
-
-		SetLayer(Engine::LAYER_DEFAULT);
 	}
 
 	inline void TestObject::PreUpdate(const float& dt)

@@ -8,42 +8,42 @@
 
 namespace Engine::Abstract
 {
-	template void Object::DispatchComponentEvent(const std::shared_ptr<Engine::Component::Collider>& thisComp, const std::shared_ptr<Engine::Component::Collider>& otherComp);
+	template void Object::DispatchComponentEvent(Engine::Component::Collider& lhs, Engine::Component::Collider& rhs);
 
 	template <typename T>
-	void Object::DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp)
+	void Object::DispatchComponentEvent(T& lhs, T& rhs)
 	{
 		if constexpr (std::is_base_of_v<Component, T>)
 		{
 			if constexpr (std::is_same_v<Engine::Component::Collider, T>)
 			{
 				const auto speculation_check = GetCollisionDetector().IsSpeculated(
-					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+					lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
 
 				if (speculation_check)
 				{
-					thisComp->AddSpeculationObject(otherComp->GetOwner().lock()->GetID());
+					lhs.AddSpeculationObject(rhs.GetOwner().lock()->GetID());
 				}
 
 				const auto collision_check = GetCollisionDetector().IsCollided(
-					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+					lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
 
 				const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
-					thisComp->GetOwner().lock()->GetID(), otherComp->GetOwner().lock()->GetID());
+					lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
 
 				if (collision_frame)
 				{
-					thisComp->GetOwner().lock()->OnCollisionEnter(*otherComp);
-					thisComp->AddCollidedObject(otherComp->GetOwner().lock()->GetID());
+					lhs.GetOwner().lock()->OnCollisionEnter(rhs);
+					lhs.AddCollidedObject(rhs.GetOwner().lock()->GetID());
 				}
 				else if (collision_check)
 				{
-					thisComp->GetOwner().lock()->OnCollisionContinue(*otherComp);
+					lhs.GetOwner().lock()->OnCollisionContinue(rhs);
 				}
 				else if (!collision_check && !collision_frame)
 				{
-					thisComp->GetOwner().lock()->OnCollisionExit(*otherComp);
-					thisComp->RemoveCollidedObject(otherComp->GetOwner().lock()->GetID());
+					lhs.GetOwner().lock()->OnCollisionExit(rhs);
+					lhs.RemoveCollidedObject(rhs.GetOwner().lock()->GetID());
 				}
 			}
 		}
@@ -73,16 +73,86 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::SetLayer(eLayerType type)
+	void Object::OnCreate()
 	{
-		GetTaskScheduler().AddTask([this, type](const float& dt)
+		if (const auto scene = GetScene().lock())
 		{
-			if (const auto scene = GetSceneManager().GetActiveScene().lock())
+			scene->AddGameObject(GetSharedPtr<Object>(), GetLayer());
+		}
+
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
 			{
-				scene->ChangeLayer(GetID(), type);
-				m_layer_ = type;
+				locked->GetSharedPtr<ActorInterface>()->OnCreate();
 			}
-		});
+		}
+	}
+
+	void Object::OnDestroy()
+	{
+		if (const auto scene = GetScene().lock())
+		{
+			scene->RemoveGameObject(GetID(), GetLayer());
+		}
+
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
+			{
+				locked->GetSharedPtr<ActorInterface>()->OnDestroy();
+			}
+		}
+	}
+
+	void Object::OnLayerChanging()
+	{
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
+			{
+				locked->GetSharedPtr<ActorInterface>()->OnLayerChanging();
+			}
+		}
+	}
+
+	void Object::OnLayerChanged()
+	{
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
+			{
+				locked->GetSharedPtr<ActorInterface>()->OnLayerChanged();
+			}
+		}
+	}
+
+	void Object::OnSceneChanging()
+	{
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
+			{
+				locked->GetSharedPtr<ActorInterface>()->OnSceneChanging();
+			}
+		}
+	}
+
+	void Object::OnSceneChanged()
+	{
+		for (const auto& comp : m_priority_sorted_) 		
+		{
+			if (const auto locked = comp.lock())
+			{
+				locked->GetSharedPtr<ActorInterface>()->OnSceneChanged();
+			}
+		}
+	}
+
+	void Object::Initialize()
+	{
+		Initialize_INTERNAL();
+		OnCreate();
 	}
 
 	void Object::Render(const float dt)
