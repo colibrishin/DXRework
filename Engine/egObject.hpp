@@ -238,32 +238,6 @@ namespace Engine::Abstract
 		void FixedUpdate(const float& dt) override;
 
 	private:
-		struct ResourcePriorityComparer
-		{
-			bool operator()(const WeakResource& Left, const WeakResource& Right) const
-			{
-				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
-				{
-					return Left.lock()->GetPriority() < Right.lock()->GetPriority();
-				}
-
-				return Left.lock()->GetID() < Right.lock()->GetID();
-			}
-		};
-
-		struct ComponentPriorityComparer
-		{
-			bool operator()(const WeakComponent& Left, const WeakComponent& Right) const
-			{
-				if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
-				{
-					return Left.lock()->GetPriority() > Right.lock()->GetPriority();
-				}
-
-				return Left.lock()->GetID() > Right.lock()->GetID();
-			}
-		};
-
 		virtual void OnCollisionEnter(const Engine::Component::Collider& other);
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
