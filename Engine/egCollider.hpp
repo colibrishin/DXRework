@@ -51,6 +51,7 @@ namespace Engine::Component
 
 		bool GetDirtyFlag() const { return m_bDirtyByTransform; }
 
+		Vector3 GetPreviousPosition() const { return m_previous_position_; }
 		Vector3 GetPosition() const { return m_position_; }
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetSize() const { return m_size_; }
@@ -86,8 +87,12 @@ namespace Engine::Component
 
 			throw std::exception("Invalid type");
 		}
-
+		
 	protected:
+		void OnCreate() override;
+		void OnDestroy() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
 		void OnLayerChanging() override;
 		void OnLayerChanged() override;
 
@@ -184,9 +189,12 @@ namespace Engine::Component
 
 #ifdef _DEBUG
 		void GenerateDebugMesh();
+
+	private:
 		std::shared_ptr<Object::DebugObject> m_debug_mesh_;
 #endif
 
+		Vector3 m_previous_position_;
 		Vector3 m_position_;
 		Vector3 m_size_;
 		Quaternion m_rotation_;
@@ -234,6 +242,7 @@ namespace Engine::Component
 
 	inline void Collider::PreUpdate(const float& dt)
 	{
+		m_previous_position_ = m_position_;
 		UpdateFromTransform();
 		UpdateInertiaTensor();
 	}

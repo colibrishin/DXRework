@@ -18,6 +18,10 @@ namespace Engine::Abstract
 		void SetState(StateEnum state) { m_state_ = state; }
 		void OnLayerChanging() override;
 		void OnLayerChanged() override;
+		void OnCreate() override;
+		void OnDestroy() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
 
 	private:
 		StateEnum m_state_;
@@ -46,5 +50,35 @@ namespace Engine::Abstract
 	template <typename StateEnum>
 	void StateController<StateEnum>::OnLayerChanged()
 	{
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnCreate()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->AddComponent<StateController<StateEnum>>(GetSharedPtr<StateController<StateEnum>>());
+		}
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnDestroy()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->RemoveComponent<StateController<StateEnum>>(GetSharedPtr<StateController<StateEnum>>());
+		}
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnSceneChanging()
+	{
+		OnDestroy();
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnSceneChanged()
+	{
+		OnCreate();
 	}
 }

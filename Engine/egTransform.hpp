@@ -33,6 +33,10 @@ namespace Engine::Component
 	protected:
 		void OnLayerChanging() override;
 		void OnLayerChanged() override;
+		void OnCreate() override;
+		void OnDestroy() override;
+		void OnSceneChanging() override;
+		void OnSceneChanged() override;
 
 	private:
 		Vector3 m_previous_position_;

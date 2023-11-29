@@ -51,4 +51,30 @@ namespace Engine::Component
 	void Transform::OnLayerChanged()
 	{
 	}
+
+	void Transform::OnCreate()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->AddComponent<Transform>(GetSharedPtr<Transform>());
+		}
+	}
+
+	void Transform::OnDestroy()
+	{
+		if (const auto scene = GetOwner().lock()->GetScene().lock())
+		{
+			scene->RemoveComponent<Transform>(GetSharedPtr<Transform>());
+		}
+	}
+
+	void Transform::OnSceneChanging()
+	{
+		OnDestroy();
+	}
+
+	void Transform::OnSceneChanged()
+	{
+		OnCreate();
+	}
 }
