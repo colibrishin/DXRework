@@ -188,16 +188,18 @@ namespace Engine::Resources
 		GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
 	}
 
-	void Mesh::Load()
+	void Mesh::Load_INTERNAL()
 	{
-		Resource::Load();
-
 		if (!GetPath().empty())
 		{
 			if (GetPath().extension() == ".obj")
 			{
 				ReadOBJFile();
 			}
+		}
+		else
+		{
+			Load_CUSTOM();
 		}
 
 		UpdateTangentBinormal();
