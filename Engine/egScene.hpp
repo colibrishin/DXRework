@@ -29,12 +29,12 @@ namespace Engine
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		template <typename T>
-		EntityID AddGameObject(const std::shared_ptr<T>& obj, eLayerType layer)
+		EntityID AddGameObject(const StrongObject& obj, eLayerType layer)
 		{
-			m_layers[layer]->AddGameObject<T>(obj);
+			m_layers[layer]->AddGameObject(obj);
 			m_cached_objects_.emplace(obj->GetID(), obj);
-			if (const auto tr = obj->template GetComponent<Component::Transform>().lock())
+
+			if (const auto tr = obj->GetComponent<Component::Transform>().lock())
 			{
 				UpdatePosition(obj);
 			}
@@ -42,7 +42,6 @@ namespace Engine
 			return obj->GetID();
 		}
 
-		template <typename T>
 		void RemoveGameObject(const EntityID id, eLayerType layer)
 		{
 			const auto obj = m_cached_objects_[id];
@@ -57,14 +56,17 @@ namespace Engine
 					const auto prev_pos = tr->GetPreviousPosition();
 					const auto pos = tr->GetPosition();
 
-					if (m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).contains(obj))
+					auto& prev_pos_set = m_object_position_tree_(static_cast<int>(prev_pos.x), static_cast<int>(prev_pos.y), static_cast<int>(prev_pos.z));
+					auto& pos_set = m_object_position_tree_(static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(pos.z));
+
+					if (prev_pos_set.contains(obj))
 					{
-						m_object_position_tree_(prev_pos.x, prev_pos.y, prev_pos.z).erase(obj);
+						prev_pos_set.erase(obj);
 						updated = true;
 					}
-					if (m_object_position_tree_(pos.x, pos.y, pos.z).contains(obj))
+					if (pos_set.contains(obj))
 					{
-						m_object_position_tree_(pos.x, pos.y, pos.z).erase(obj);
+						pos_set.erase(obj);
 						updated = true;
 					}
 				}
@@ -76,7 +78,7 @@ namespace Engine
 			}
 
 			m_cached_objects_.erase(id);
-			m_layers[layer]->RemoveGameObject<T>(id);
+			m_layers[layer]->RemoveGameObject(id);
 		}
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer)
@@ -103,8 +105,8 @@ namespace Engine
 		{
 			if (const auto obj = FindGameObject(id).lock())
 			{
-				m_layers[obj->GetLayer()]->RemoveGameObject<Abstract::Object>(id);
-				m_layers[type]->AddGameObject<Abstract::Object>(obj);
+				m_layers[obj->GetLayer()]->RemoveGameObject(id);
+				m_layers[type]->AddGameObject(obj);
 			}
 		}
 
