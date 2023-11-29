@@ -21,11 +21,11 @@ namespace Engine::Objects
 		return m_look_at_;
 	}
 
-	void Camera::Initialize()
+	void Camera::Initialize_INTERNAL()
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
-		m_look_at_ = g_forward;
+		m_look_at_ = g_backward;
 	}
 
 	void Camera::PreUpdate(const float& dt)
@@ -113,7 +113,7 @@ namespace Engine::Objects
 				{lookAtVector.x, lookAtVector.y, lookAtVector.z},
 				{velocity.x, velocity.y, velocity.z},
 				{g_forward.x, g_forward.y, g_forward.z},
-				{-Vector3::Up.x, -Vector3::Up.y, -Vector3::Up.z}
+				{Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}
 			);
 		}
 	}
