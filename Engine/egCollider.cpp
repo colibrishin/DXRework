@@ -271,6 +271,14 @@ namespace Engine::Component
 	{
 	}
 
+	void Collider::OnLayerChanging()
+	{
+	}
+
+	void Collider::OnLayerChanged()
+	{
+	}
+
 	void Collider::Render(const float dt)
 	{
 #ifdef _DEBUG

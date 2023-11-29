@@ -48,4 +48,12 @@ namespace Engine::Component
 	void Rigidbody::FixedUpdate(const float& dt)
 	{
 	}
+
+	void Rigidbody::OnLayerChanging()
+	{
+	}
+
+	void Rigidbody::OnLayerChanged()
+	{
+	}
 }

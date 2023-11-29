@@ -43,4 +43,12 @@ namespace Engine::Component
 	void Transform::FixedUpdate(const float& dt)
 	{
 	}
+
+	void Transform::OnLayerChanging()
+	{
+	}
+
+	void Transform::OnLayerChanged()
+	{
+	}
 }

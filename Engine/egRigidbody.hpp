@@ -57,6 +57,10 @@ namespace Engine::Component
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
+	protected:
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
+
 	private:
 		bool m_bGrounded;
 		

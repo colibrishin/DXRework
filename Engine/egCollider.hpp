@@ -87,6 +87,10 @@ namespace Engine::Component
 			throw std::exception("Invalid type");
 		}
 
+	protected:
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
+
 	private:
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);

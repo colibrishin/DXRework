@@ -16,6 +16,8 @@ namespace Engine::Abstract
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void SetState(StateEnum state) { m_state_ = state; }
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
 
 	private:
 		StateEnum m_state_;
@@ -34,5 +36,15 @@ namespace Engine::Abstract
 	void StateController<StateEnum>::PreUpdate(const float& dt)
 	{
 		m_previous_state_ = m_state_;
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnLayerChanging()
+	{
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::OnLayerChanged()
+	{
 	}
 }
