@@ -7,6 +7,7 @@
 #include "egSceneManager.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
+#include "egObject.hpp"
 #include "egManagerHelper.hpp"
 
 namespace Engine::Manager
@@ -17,184 +18,105 @@ namespace Engine::Manager
 		{
 			for(int j = 0; j < LAYER_MAX; ++j)
 			{
-				m_layer_mask_[i].set(j, true);
-			}
-		}
-	}
-
-	void CollisionDetector::CheckCollision(const std::vector<WeakObject>& lhs, const std::vector<WeakObject>& rhs)
-	{
-		for (const auto& lhs_obj : lhs)
-		{
-			const auto obj = lhs_obj.lock();
-			const auto tr = obj->GetComponent<Component::Transform>().lock();
-			const auto rb = obj->GetComponent<Component::Rigidbody>().lock();
-			const auto cl = obj->GetComponent<Component::Collider>().lock();
-
-			if (!tr || !cl || !obj->GetActive())
-			{
-				continue;
-			}
-
-			for (const auto& rhs_obj : rhs)
-			{
-				const auto obj_other = rhs_obj.lock();
-				const auto cls_other = obj_other->GetComponents<Component::Collider>();
-
-				for (const auto& cl_next : cls_other)
+				if(i == j)
 				{
-					const auto cl_other = cl_next.lock();
-
-					if (obj == obj_other)
-					{
-						continue;
-					}
-
-					if (!obj_other->GetActive())
-					{
-						continue;
-					}
-
-					if (!cl_other)
-					{
-						continue;
-					}
-
-					if (CheckRaycasting(obj, obj_other))
-					{
-						if (!m_speculation_map_[obj->GetID()].contains(obj_other->GetID()))
-						{
-							m_speculation_map_[obj->GetID()].insert(obj_other->GetID());
-							m_speculation_map_[obj_other->GetID()].insert(obj->GetID());
-
-							GetDebugger().Log(L"Speculation Hit! : " + std::to_wstring(obj->GetID()) + L" " + std::to_wstring(obj_other->GetID()));
-
-							obj->DispatchComponentEvent(cl, cl_other);
-							obj->DispatchComponentEvent(cl_other, cl);
-							continue;
-						}
-					}
-
-					if (cl->Intersects(*cl_other))
-					{
-						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
-						{
-							m_collision_map_[obj->GetID()].insert(obj_other->GetID());
-							m_collision_map_[obj_other->GetID()].insert(obj->GetID());
-
-							obj->DispatchComponentEvent(cl, cl_other);
-							obj->DispatchComponentEvent(cl_other, cl);
-							continue;
-						}
-
-						m_frame_collision_map_[obj->GetID()].insert(obj_other->GetID());
-						m_frame_collision_map_[obj_other->GetID()].insert(obj->GetID());
-
-						obj->DispatchComponentEvent(cl, cl_other);
-						obj->DispatchComponentEvent(cl_other, cl);
-					}
-					else
-					{
-						if (m_collision_map_[obj->GetID()].contains(obj_other->GetID()))
-						{
-							m_collision_map_[obj->GetID()].erase(obj_other->GetID());
-							m_collision_map_[obj_other->GetID()].erase(obj->GetID());
-
-							obj->DispatchComponentEvent(cl, cl_other);
-							obj->DispatchComponentEvent(cl_other, cl);
-						}
-					}
+					m_layer_mask_[i].set(j, true);
+					m_layer_mask_[j].set(i, true);
+				}
+				else
+				{
+					m_layer_mask_[i].set(j, false);
+					m_layer_mask_[j].set(i, false);
 				}
 			}
 		}
 	}
 
-	void CollisionDetector::CheckGrounded(const std::vector<WeakObject>& lhs,
-		const std::vector<WeakObject>& rhs)
+	void CollisionDetector::CheckCollision(Component::Collider& lhs, Component::Collider& rhs)
 	{
-		for (const auto& obj_i : lhs)
-		{
-			const auto obj_i_locked = obj_i.lock();
-			const auto i_rb = obj_i_locked->GetComponent<Component::Rigidbody>().lock();
-			const auto obj_i_collider = obj_i_locked->GetComponent<Component::Collider>().lock();
+		const auto lhs_owner = lhs.GetOwner().lock();
+		const auto rhs_owner = rhs.GetOwner().lock();
 
-			if (!i_rb || !obj_i_locked->GetActive() || !obj_i_collider || i_rb->IsGrounded() || i_rb->IsFixed())
+		if (CheckRaycasting(lhs, rhs))
+		{
+			if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
 			{
-				continue;
+				m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+				m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+
+				GetDebugger().Log(
+					L"Speculation Hit! : " + std::to_wstring(lhs_owner->GetID()) + L" " + std::to_wstring(
+						rhs_owner->GetID()));
+
+				lhs_owner->DispatchComponentEvent(lhs, rhs);
+				rhs_owner->DispatchComponentEvent(rhs, lhs);
+				return;
+			}
+		}
+
+		if (lhs.Intersects(rhs))
+		{
+			if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+			{
+				m_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+				m_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+
+				lhs_owner->DispatchComponentEvent(lhs, rhs);
+				rhs_owner->DispatchComponentEvent(rhs, lhs);
+				return;
 			}
 
-			const auto tr = obj_i_locked->GetComponent<Component::Transform>().lock();
+			m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+			m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
-			for (const auto& obj_j : rhs)
+			lhs_owner->DispatchComponentEvent(lhs, rhs);
+			rhs_owner->DispatchComponentEvent(rhs, lhs);
+		}
+		else
+		{
+			if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
 			{
-				const auto obj_j_locked = obj_j.lock();
+				m_collision_map_[lhs_owner->GetID()].erase(rhs_owner->GetID());
+				m_collision_map_[rhs_owner->GetID()].erase(lhs_owner->GetID());
 
-				if (obj_i_locked == obj_j_locked)
-				{
-					continue;
-				}
-
-				if (!obj_j_locked->GetActive())
-				{
-					continue;
-				}
-
-				const auto obj_j_colliders = obj_j_locked->GetComponents<Component::Collider>();
-
-				for (const auto& obj_j_cl : obj_j_colliders)
-				{
-					const auto obj_j_collider = obj_j_cl.lock();
-
-					if (!obj_j_collider)
-					{
-						continue;
-					}
-
-					Component::Collider copy = *obj_i_collider;
-					copy.SetPosition(tr->GetPosition() + Vector3::Down * g_epsilon);
-
-					if (copy.Intersects(*obj_j_collider))
-					{
-						// Ground flag is automatically set to false on the start of the frame.
-						i_rb->SetGrounded(true);
-					}
-				}
+				lhs_owner->DispatchComponentEvent(lhs, rhs);
+				rhs_owner->DispatchComponentEvent(rhs, lhs);
 			}
 		}
 	}
 
-	bool CollisionDetector::CheckRaycasting(const std::shared_ptr<Abstract::Object>& lhs,
-		const std::shared_ptr<Abstract::Object>& rhs)
+	void CollisionDetector::CheckGrounded(const Component::Collider& lhs, Component::Collider& rhs)
 	{
-		const auto rb = lhs->GetComponent<Component::Rigidbody>().lock();
-		const auto cl = lhs->GetComponent<Component::Collider>().lock();
-		const auto tr = lhs->GetComponent<Component::Transform>().lock();
+		Component::Collider copy = lhs;
+		copy.SetPosition(lhs.GetPosition() + Vector3::Down * g_epsilon);
 
-		const auto rb_other = rhs->GetComponent<Component::Rigidbody>().lock();
-		const auto cls_other = rhs->GetComponents<Component::Collider>();
-		const auto tr_other = rhs->GetComponent<Component::Transform>().lock();
-
-		if (rb && cl && tr && rb_other && tr_other)
+		if (copy.Intersects(rhs))
 		{
-			for (const auto cl_other_unlock : cls_other)
+			if (const auto rb = lhs.GetOwner().lock()->GetComponent<Component::Rigidbody>().lock())
 			{
-				const auto cl_other = cl_other_unlock.lock();
-
-				if (!cl_other)
-				{
-					continue;
-				}
-
-				static Ray ray{};
-				ray.position = tr->GetPreviousPosition();
-				const auto velocity = rb->GetLinearMomentum();
-				velocity.Normalize(ray.direction);
-
-				const auto length = velocity.Length();
-				float dist;
-
-				return cl_other->Intersects(ray, length, dist);
+				// Ground flag is automatically set to false on the start of the frame.
+				rb->SetGrounded(true);
 			}
+		}
+	}
+
+	bool CollisionDetector::CheckRaycasting(const Component::Collider& lhs, const Component::Collider& rhs)
+	{
+		const auto rb = lhs.GetOwner().lock()->GetComponent<Component::Rigidbody>().lock();
+
+		const auto rb_other = rhs.GetOwner().lock()->GetComponent<Component::Rigidbody>().lock();
+
+		if (rb && rb_other)
+		{
+			static Ray ray{};
+			ray.position = lhs.GetPreviousPosition();
+			const auto velocity = rb->GetLinearMomentum();
+			velocity.Normalize(ray.direction);
+
+			const auto length = velocity.Length();
+			float dist;
+
+			return rhs.Intersects(ray, length, dist);
 		}
 
 		return false;
@@ -203,20 +125,32 @@ namespace Engine::Manager
 	void CollisionDetector::Update(const float& dt)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
+		const auto& colliders = scene->GetComponents<Component::Collider>();
 
-		for (int i = 0; i < LAYER_MAX; ++i)
+		for (const auto& cl : colliders)
 		{
-			for (int j = 0; j < LAYER_MAX; ++j)
+			for (const auto& cl_other : colliders)
 			{
-				if (!m_layer_mask_[i].test(j))
+				if (cl.lock() == cl_other.lock())
 				{
 					continue;
 				}
 
-				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
-				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
+				const auto cl_locked = cl.lock();
+				const auto cl_other_locked = cl_other.lock();
 
-				CheckCollision(layer_i, layer_j);
+				if (!cl_locked || !cl_other_locked)
+				{
+					continue;
+				}
+
+				if (!m_layer_mask_[cl_locked->GetOwner().lock()->GetLayer()].test(cl_other_locked->GetOwner().lock()->GetLayer()))
+				{
+					continue;
+				}
+
+				CheckCollision(
+					*cl_locked->GetSharedPtr<Component::Collider>(), *cl_other_locked->GetSharedPtr<Component::Collider>());
 			}
 		}
 	}
@@ -229,20 +163,32 @@ namespace Engine::Manager
 		m_speculation_map_.clear();
 
 		const auto scene = GetSceneManager().GetActiveScene().lock();
+		const auto& colliders = scene->GetComponents<Component::Collider>();
 
-		for (int i = 0; i < LAYER_MAX; ++i)
+		for (const auto& cl : colliders)
 		{
-			for (int j = 0; j < LAYER_MAX; ++j)
+			for (const auto& cl_other : colliders)
 			{
-				if (!m_layer_mask_[i].test(j))
+				if (cl.lock() == cl_other.lock())
 				{
 					continue;
 				}
 
-				const auto& layer_i = scene->GetGameObjects((eLayerType)i);
-				const auto& layer_j = scene->GetGameObjects((eLayerType)j);
+				const auto cl_locked = cl.lock();
+				const auto cl_other_locked = cl_other.lock();
 
-				CheckGrounded(layer_i, layer_j);
+				if (!cl_locked || !cl_other_locked)
+				{
+					continue;
+				}
+
+				if (!m_layer_mask_[cl_locked->GetOwner().lock()->GetLayer()].test(cl_other_locked->GetOwner().lock()->GetLayer()))
+				{
+					continue;
+				}
+
+				CheckGrounded(
+					*cl_locked->GetSharedPtr<Component::Collider>(), *cl_other_locked->GetSharedPtr<Component::Collider>());
 			}
 		}
 	}

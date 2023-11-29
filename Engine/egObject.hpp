@@ -219,8 +219,8 @@ namespace Engine::Abstract
 			return {};
 		}
 
-		template <typename T = Component>
-		void DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp);
+		template <typename T>
+		void DispatchComponentEvent(T& lhs, T& rhs);
 
 		void SetActive(bool active) { m_active_ = active; }
 		void SetCulled(bool culled) { m_culled_ = culled; }
