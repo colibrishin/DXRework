@@ -28,8 +28,8 @@ namespace Client::Object
 	class PlaneObject : public Engine::Abstract::Object
 	{
 	public:
-		explicit PlaneObject(const Engine::WeakScene& scene);
-		void Initialize() override;
+		explicit PlaneObject(const Engine::WeakScene& scene, const Engine::eLayerType layer);
+		void Initialize_INTERNAL() override;
 		~PlaneObject() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -38,11 +38,11 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline PlaneObject::PlaneObject(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
+	inline PlaneObject::PlaneObject(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
 	{
 	}
 
-	inline void PlaneObject::Initialize()
+	inline void PlaneObject::Initialize_INTERNAL()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
@@ -69,7 +69,6 @@ namespace Client::Object
 		rb->SetFrictionCoefficient(0.2f);
 		rb->SetGravityOverride(false);
 
-		SetLayer(Engine::LAYER_DEFAULT);
 		const auto test = GetResource<Engine::Resources::Sound>(L"AmbientSound");
 		test.lock()->PlayLoop(GetSharedPtr<Object>());
 	}

@@ -21,8 +21,8 @@ namespace Client::Object
 	class Giftbox : public Engine::Abstract::Object
 	{
 	public:
-		explicit Giftbox(const Engine::WeakScene& scene);
-		void Initialize() override;
+		explicit Giftbox(const Engine::WeakScene& scene, const Engine::eLayerType layer);
+		void Initialize_INTERNAL() override;
 		~Giftbox() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -31,11 +31,11 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline Giftbox::Giftbox(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
+	inline Giftbox::Giftbox(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
 	{
 	}
 
-	inline void Giftbox::Initialize()
+	inline void Giftbox::Initialize_INTERNAL()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"Giftbox"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
@@ -53,8 +53,6 @@ namespace Client::Object
 
 		AddComponent<Engine::Component::Rigidbody>();
 		const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
-
-		SetLayer(Engine::LAYER_UI);
 	}
 
 	inline Giftbox::~Giftbox()

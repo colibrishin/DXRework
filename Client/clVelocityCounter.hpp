@@ -22,8 +22,8 @@ namespace Client::Object
 	class VelocityCounter : public Engine::Objects::Text
 	{
 	public:
-		explicit VelocityCounter(const Engine::WeakScene& scene);
-		void Initialize() override;
+		explicit VelocityCounter(const Engine::WeakScene& scene, const Engine::eLayerType layer);
+		void Initialize_INTERNAL() override;
 		~VelocityCounter() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -37,18 +37,17 @@ namespace Client::Object
 		Vector3 m_velocity_;
 	};
 
-	inline VelocityCounter::VelocityCounter(const Engine::WeakScene& scene) : Text(scene, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline VelocityCounter::VelocityCounter(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Text(scene, layer, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 
-	inline void VelocityCounter::Initialize()
+	inline void VelocityCounter::Initialize_INTERNAL()
 	{
 		SetText(L"Velocity: 0");
 		SetPosition(Vector2(0.0f, 64.0f));
 		SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		SetRotation(0.0f);
 		SetScale(1.0f);
-		SetLayer(Engine::LAYER_UI);
 	}
 
 	inline VelocityCounter::~VelocityCounter()

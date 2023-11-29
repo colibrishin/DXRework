@@ -8,7 +8,7 @@ namespace Engine::Objects
 	class Text : public Abstract::Object
 	{
 	public:
-		explicit Text(const WeakScene& initial_scene, const WeakFontPtr& font) : Object(initial_scene), m_rotation_radian_(0), m_scale_(1)
+		explicit Text(const WeakScene& initial_scene, const eLayerType layer, const WeakFontPtr& font) : Object(initial_scene, layer), m_rotation_radian_(0), m_scale_(1)
 		{
 			SetCulled(false);
 
@@ -20,7 +20,6 @@ namespace Engine::Objects
 
 		~Text() override = default;
 
-		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -39,10 +38,6 @@ namespace Engine::Objects
 		float m_scale_;
 		std::wstring m_text_;
 	};
-
-	inline void Text::Initialize()
-	{
-	}
 
 	inline void Text::PreUpdate(const float& dt)
 	{

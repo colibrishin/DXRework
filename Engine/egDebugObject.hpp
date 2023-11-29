@@ -7,10 +7,10 @@ namespace Engine::Object
 	class DebugObject : public Abstract::Object
 	{
 	public:
-		explicit DebugObject(const WeakScene& initial_scene) : Object(initial_scene) {}
-		void Initialize() override;
+		explicit DebugObject(const WeakScene& initial_scene, const eLayerType layer) : Object(initial_scene, layer) {}
 		~DebugObject() override;
 
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -24,7 +24,7 @@ namespace Engine::Object
 
 	};
 
-	inline void DebugObject::Initialize()
+	inline void DebugObject::Initialize_INTERNAL()
 	{
 		AddComponent<Component::Transform>();
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
