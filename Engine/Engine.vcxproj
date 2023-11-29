@@ -81,6 +81,7 @@
     <ClCompile Include="egCollider.cpp" />
     <ClCompile Include="egCollision.cpp" />
     <ClCompile Include="egCollisionDetector.cpp" />
+    <ClCompile Include="egCommon.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />
@@ -92,6 +93,7 @@
     <ClCompile Include="egMesh.cpp" />
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egPhysicsManager.cpp" />
+    <ClCompile Include="egProjectionFrustum.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egScene.cpp" />

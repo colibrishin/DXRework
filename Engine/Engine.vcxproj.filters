@@ -190,11 +190,17 @@
     <ClInclude Include="egSphereMesh.hpp">
       <Filter>Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="egStateController.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
     <ClInclude Include="egSound.hpp">
       <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egActor.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egActorInterfce.hpp">
+      <Filter>Abstract</Filter>
+    </ClInclude>
+    <ClInclude Include="egStateController.hpp">
+      <Filter>Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -266,6 +272,13 @@
     </ClCompile>
     <ClCompile Include="egScene.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="egProjectionFrustum.cpp" />
+    <ClCompile Include="egActor.cpp">
+      <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egCommon.cpp">
+      <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
