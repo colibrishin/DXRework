@@ -22,7 +22,7 @@ namespace Client::Object
 	class MousePositionText : public Engine::Objects::Text
 	{
 	public:
-		MousePositionText();
+		MousePositionText(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~MousePositionText() override;
 
@@ -32,7 +32,7 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline MousePositionText::MousePositionText() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline MousePositionText::MousePositionText(const Engine::WeakScene& scene) : Text(scene, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 

@@ -250,7 +250,7 @@ namespace Engine::Component
 			m_debug_mesh_.reset();
 		}
 
-		m_debug_mesh_ = Instantiate<Object::DebugObject>();
+		m_debug_mesh_ = InstantiateObject<Object::DebugObject>(GetOwner().lock()->GetScene());
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{

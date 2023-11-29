@@ -11,7 +11,10 @@ namespace Engine::Objects
 	class Light final : public Abstract::Object
 	{
 	public:
-		Light() = default;
+		explicit Light(const WeakScene& scene) : Object(scene), m_light_id_(0)
+		{
+		}
+
 		~Light() override;
 
 		void SetColor(Vector4 color);

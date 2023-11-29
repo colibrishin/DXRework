@@ -8,7 +8,7 @@ namespace Engine::Objects
 	class Text : public Abstract::Object
 	{
 	public:
-		explicit Text(const WeakFontPtr& font) : m_rotation_radian_(0), m_scale_(1)
+		explicit Text(const WeakScene& initial_scene, const WeakFontPtr& font) : Object(initial_scene), m_rotation_radian_(0), m_scale_(1)
 		{
 			SetCulled(false);
 

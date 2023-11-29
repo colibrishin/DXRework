@@ -10,7 +10,7 @@ namespace Engine::Objects
 	class Camera final : public Abstract::Object
 	{
 	public:
-		Camera() = default;
+		explicit Camera(const WeakScene& scene) : Object(scene) {}
 		~Camera() override = default;
 
 		void SetLookAt(Vector3 lookAt)

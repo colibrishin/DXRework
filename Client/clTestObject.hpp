@@ -22,7 +22,7 @@ namespace Client::Object
 	class TestObject : public Engine::Abstract::Object
 	{
 	public:
-		TestObject() = default;
+		explicit TestObject(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene) { }
 		void Initialize() override;
 		~TestObject() override = default;
 
@@ -44,7 +44,7 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
 
-		m_velocity_counter_ = Engine::Instantiate<VelocityCounter>();
+		m_velocity_counter_ = Engine::InstantiateObject<VelocityCounter>(GetScene());
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

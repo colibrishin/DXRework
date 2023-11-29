@@ -21,7 +21,7 @@ namespace Client::Object
 	class Giftbox : public Engine::Abstract::Object
 	{
 	public:
-		Giftbox();
+		explicit Giftbox(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~Giftbox() override;
 
@@ -31,7 +31,7 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline Giftbox::Giftbox()
+	inline Giftbox::Giftbox(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
 	{
 	}
 

@@ -52,13 +52,15 @@ namespace Client::Scene
 
 	inline void TestScene::Initialize()
 	{
-		const auto companion_id = AddGameObject(Engine::Instantiate<Object::TestCube>(), Engine::LAYER_DEFAULT);
-		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
-		//AddGameObject(Engine::Instantiate<Object::Giftbox>(), Engine::LAYER_DEFAULT);
-		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
-		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
-		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
-		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_DEFAULT);
+		Scene::Initialize();
+
+		const auto companion_id = AddGameObject(Engine::InstantiateObject<Object::TestCube>(GetSharedPtr<Scene>()), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::InstantiateObject<Object::TestObject>(GetSharedPtr<Scene>()), Engine::LAYER_DEFAULT);
+		//AddGameObject(Engine::InstantiateObject<Object::Giftbox>(GetSharedPtr<Scene>()), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::InstantiateObject<Object::FPSCounter>(GetSharedPtr<Scene>()), Engine::LAYER_UI);
+		AddGameObject(Engine::InstantiateObject<Object::MousePositionText>(GetSharedPtr<Scene>()), Engine::LAYER_UI);
+		AddGameObject(Engine::InstantiateObject<Object::SkyBox>(GetSharedPtr<Scene>()), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::InstantiateObject<Object::PlaneObject>(GetSharedPtr<Scene>()), Engine::LAYER_DEFAULT);
 
 		GetMainCamera().lock()->BindObject(FindGameObject(companion_id));
 	}

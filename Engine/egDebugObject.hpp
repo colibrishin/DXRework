@@ -7,6 +7,7 @@ namespace Engine::Object
 	class DebugObject : public Abstract::Object
 	{
 	public:
+		explicit DebugObject(const WeakScene& initial_scene) : Object(initial_scene) {}
 		void Initialize() override;
 		~DebugObject() override;
 

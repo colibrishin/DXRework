@@ -28,7 +28,7 @@ namespace Client::Object
 	class PlaneObject : public Engine::Abstract::Object
 	{
 	public:
-		PlaneObject();
+		explicit PlaneObject(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~PlaneObject() override;
 
@@ -38,7 +38,7 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline PlaneObject::PlaneObject()
+	inline PlaneObject::PlaneObject(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
 	{
 	}
 

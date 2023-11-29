@@ -22,7 +22,7 @@ namespace Client::Object
 	class VelocityCounter : public Engine::Objects::Text
 	{
 	public:
-		VelocityCounter();
+		explicit VelocityCounter(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~VelocityCounter() override;
 
@@ -37,7 +37,7 @@ namespace Client::Object
 		Vector3 m_velocity_;
 	};
 
-	inline VelocityCounter::VelocityCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline VelocityCounter::VelocityCounter(const Engine::WeakScene& scene) : Text(scene, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 

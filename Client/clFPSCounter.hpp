@@ -22,7 +22,7 @@ namespace Client::Object
 	class FPSCounter : public Engine::Objects::Text
 	{
 	public:
-		FPSCounter();
+		explicit FPSCounter(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~FPSCounter() override;
 
@@ -32,7 +32,7 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline FPSCounter::FPSCounter(const Engine::WeakScene& scene) : Text(scene, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 

@@ -28,7 +28,7 @@ namespace Client::Object
 	class TestCube final : public Engine::Abstract::Object
 	{
 	public:
-		TestCube();
+		explicit TestCube(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~TestCube() override;
 
@@ -39,7 +39,7 @@ namespace Client::Object
 		void FixedUpdate(const float& dt) override;
 	};
 
-	inline TestCube::TestCube()
+	inline TestCube::TestCube(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
 	{
 	}
 

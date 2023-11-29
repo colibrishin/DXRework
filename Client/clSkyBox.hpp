@@ -21,7 +21,7 @@ namespace Client::Object
 	class SkyBox : public Engine::Abstract::Object
 	{
 	public:
-		SkyBox();
+		explicit SkyBox(const Engine::WeakScene& scene);
 		void Initialize() override;
 		~SkyBox() override;
 
@@ -31,7 +31,7 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline SkyBox::SkyBox()
+	inline SkyBox::SkyBox(const Engine::WeakScene& scene) : Engine::Abstract::Object(scene)
 	{
 	}
 
