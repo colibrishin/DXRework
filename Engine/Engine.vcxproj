@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="egActor.hpp" />
+    <ClInclude Include="egActorInterfce.hpp" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstraintSolver.hpp" />
     <ClInclude Include="egCubeMesh.hpp" />
@@ -73,6 +75,7 @@
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
