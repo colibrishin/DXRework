@@ -1,4 +1,5 @@
 #pragma once
+#include "egActorInterfce.hpp"
 #include "egCommon.hpp"
 #include "egEntity.hpp"
 #include "egRenderable.hpp"
@@ -7,7 +8,7 @@ namespace Engine::Abstract
 {
 	class Object;
 
-	class Component : public Renderable
+	class Component : public ActorInterface
 	{
 	public:
 		~Component() override = default;

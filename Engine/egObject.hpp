@@ -4,6 +4,8 @@
 
 #include <set>
 #include <typeindex>
+
+#include "egActor.hpp"
 #include "egComponent.hpp"
 
 #include "egRenderable.hpp"
@@ -17,11 +19,10 @@ namespace Engine::Component
 
 namespace Engine::Abstract
 {
-	class Object : public Renderable
+	class Object : public Actor
 	{
 	public:
 		~Object() override = default;
-		Object(const Object&) = default;
 
 		void AddResource(const WeakResource& resource)
 		{
@@ -221,16 +222,13 @@ namespace Engine::Abstract
 		template <typename T = Component>
 		void DispatchComponentEvent(const std::shared_ptr<T>& thisComp, const std::shared_ptr<T>& otherComp);
 
-		void SetLayer(eLayerType type);
-
 		void SetActive(bool active) { m_active_ = active; }
 		void SetCulled(bool culled) { m_culled_ = culled; }
 
 		bool GetActive() const { return m_active_; }
-		eLayerType GetLayer() const { return m_layer_; }
 
 	protected:
-		Object() : m_layer_(LAYER_NONE), m_active_(true), m_culled_(true) {};
+		Object(const WeakScene& initial_scene) : Actor(initial_scene), m_active_(true), m_culled_(true) {};
 
 	public:
 		void PreUpdate(const float& dt) override;
@@ -270,7 +268,11 @@ namespace Engine::Abstract
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
-		eLayerType m_layer_;
+	protected:
+		void OnLayerChanging() override;
+		void OnLayerChanged() override;
+
+	private:
 		bool m_active_ = true;
 		bool m_culled_ = true;
 

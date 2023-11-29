@@ -73,16 +73,12 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::SetLayer(eLayerType type)
+	void Object::OnLayerChanging()
 	{
-		GetTaskScheduler().AddTask([this, type](const float& dt)
-		{
-			if (const auto scene = GetSceneManager().GetActiveScene().lock())
-			{
-				scene->ChangeLayer(GetID(), type);
-				m_layer_ = type;
-			}
-		});
+	}
+
+	void Object::OnLayerChanged()
+	{
 	}
 
 	void Object::Render(const float dt)
