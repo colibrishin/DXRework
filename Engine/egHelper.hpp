@@ -14,9 +14,9 @@ namespace Engine
 	}
 
 	template <typename T = Abstract::Object, typename... Arg>
-	inline static std::shared_ptr<T> InstantiateObject(const WeakScene& initial_scene, Arg&&... args)
+	inline static std::shared_ptr<T> InstantiateObject(const WeakScene& initial_scene, const eLayerType layer, Arg&&... args)
 	{
-		const auto obj = std::make_shared<T>(initial_scene, std::forward<Arg>(args)...);
+		const auto obj = std::make_shared<T>(initial_scene, layer, std::forward<Arg>(args)...);
 		obj->Initialize();
 		return obj;
 	}
