@@ -14,13 +14,12 @@ namespace Engine::Component
 		m_position_ += translation;
 	}
 
-	void Transform::Initialize()
+	void Transform::Initialize_INTERNAL()
 	{
 	}
 
 	void Transform::PreUpdate(const float& dt)
 	{
-		m_previous_position_ = m_position_;
 	}
 
 	void Transform::Update(const float& dt)
@@ -38,6 +37,7 @@ namespace Engine::Component
 		m_transform_buffer_.translation = Matrix::CreateTranslation(m_position_).Transpose();
 
 		GetRenderPipeline().SetWorldMatrix(m_transform_buffer_);
+		m_previous_position_ = m_position_;
 	}
 
 	void Transform::FixedUpdate(const float& dt)

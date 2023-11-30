@@ -6,7 +6,7 @@
 
 namespace Engine::Component
 {
-	void Rigidbody::Initialize()
+	void Rigidbody::Initialize_INTERNAL()
 	{
 		if (!GetOwner().lock()->GetComponent<Transform>().lock())
 		{
