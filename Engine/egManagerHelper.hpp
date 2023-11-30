@@ -7,9 +7,9 @@
 #include "egCollisionDetector.hpp"
 #include "egConstraintSolver.hpp"
 #include "egDebugger.hpp"
+#include "egLerpManager.hpp"
 #include "egPhysicsManager.hpp"
 #include "egTaskScheduler.hpp"
-#include "egTransformLerpManager.hpp"
 
 namespace Engine
 {
@@ -53,9 +53,9 @@ namespace Engine
 		return Manager::Graphics::ToolkitAPI::GetInstance();
 	}
 
-	inline Manager::Physics::TransformLerpManager& GetTransformLerpManager()
+	inline Manager::Physics::LerpManager& GetTransformLerpManager()
 	{
-		return Manager::Physics::TransformLerpManager::GetInstance();
+		return Manager::Physics::LerpManager::GetInstance();
 	}
 
 	inline Manager::Physics::PhysicsManager& GetPhysicsManager()
