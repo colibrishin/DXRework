@@ -17,21 +17,14 @@ namespace Engine::Manager::Physics
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
 
-		for (int i = 0; i < LAYER_MAX; ++i)
+		const auto& rbs = scene->GetComponents<Component::Rigidbody>();
+
+		for (const auto& rb : rbs)
 		{
-			const auto& objs = scene->GetGameObjects((eLayerType)i);
-
-			for (auto& object : objs)
+			if (const auto locked = rb.lock())
 			{
-				const auto obj = object.lock();
-
-				if (!obj)
-				{
-					continue;
-				}
-				
-				CheckSpeculation(*obj);
-				CheckCollision(*obj);
+				CheckSpeculation(*locked->GetOwner().lock());
+				CheckCollision(*locked->GetOwner().lock());
 			}
 		}
 
