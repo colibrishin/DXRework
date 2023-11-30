@@ -33,30 +33,12 @@ namespace Engine::Manager::Physics
 	{
 		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())
 		{
-			for (int i = 0; i < LAYER_MAX; ++i)
+			const auto& rbs = scene->GetComponents<Component::Rigidbody>();
+
+			for (const auto rb : rbs)
 			{
-				for (const auto& object : scene->GetGameObjects((eLayerType)i))
-				{
-					if (const auto obj = object.lock())
-					{
-						const auto tr = obj->GetComponent<Component::Transform>().lock();
-						const auto rb = obj->GetComponent<Component::Rigidbody>().lock();
-						const auto cl = obj->GetComponent<Component::Collider>().lock();
-
-						if (!rb)
-						{
-							continue;
-						}
-
-						if (!cl->GetSpeculation().empty())
-						{
-							continue;
-						}
-
-						UpdateGravity(rb.get());
-						UpdateObject(rb.get(), dt);
-					}
-				}
+				UpdateGravity(rb.lock()->GetSharedPtr<Component::Rigidbody>().get());
+				UpdateObject(rb.lock()->GetSharedPtr<Component::Rigidbody>().get(), dt);
 			}
 		}
 	}
@@ -95,22 +77,33 @@ namespace Engine::Manager::Physics
 			return;
 		}
 
-		const auto cl = rb->GetOwner().lock()->GetComponent<Component::Collider>().lock();
-		const auto tr = rb->GetOwner().lock()->GetComponent<Component::Transform>().lock();
+		const auto& cl = rb->GetMainCollider().lock();
+		const auto& tr = rb->GetOwner().lock()->GetComponent<Component::Transform>().lock();
 
-		Vector3 linear_momentum = rb->GetLinearMomentum() + (rb->GetForce() * cl->GetInverseMass() * dt);
+		float mass = 1.f;
+
+		if (cl)
+		{
+			mass = cl->GetInverseMass();
+		}
+
+		Vector3 linear_momentum = rb->GetLinearMomentum() + (rb->GetForce() * mass * dt);
 		const Vector3 linear_friction = Engine::Physics::EvalFriction(linear_momentum, rb->GetFrictionCoefficient(), dt);
-		//const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, dt);
 
-		const Vector3 angular_momentum = rb->GetAngularMomentum() + rb->GetTorque() * cl->GetInverseMass() * dt;
+		const Vector3 angular_momentum = rb->GetAngularMomentum() + rb->GetTorque() * mass * dt;
 
 		rb->SetLinearFriction(linear_friction);
 		linear_momentum += linear_friction;
 		Engine::Physics::FrictionVelocityGuard(linear_momentum, linear_friction);
 
-		//rb->SetDragForce(drag_force);
-		//linear_momentum += drag_force;
-		//Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
+
+		if (!rb->IsGrounded())
+		{
+			const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, dt);
+			rb->SetDragForce(drag_force);
+			linear_momentum += drag_force;
+			Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
+		}
 
 		EpsilonGuard(linear_momentum);
 
@@ -118,7 +111,16 @@ namespace Engine::Manager::Physics
 		rb->SetAngularMomentum(angular_momentum);
 
 		tr->SetPosition(tr->GetPosition() + linear_momentum);
-		cl->SetPosition(tr->GetPosition());
+
+		const auto& cls = rb->GetOwner().lock()->GetComponents<Component::Collider>();
+
+		for (const auto child : cls)
+		{
+			if (const auto locked = child.lock())
+			{
+				locked->SetPosition(locked->GetPosition() + linear_momentum);
+			}
+		}
 
 		//Quaternion orientation = tr->GetRotation();
 		//orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} * orientation;
