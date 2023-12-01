@@ -40,7 +40,7 @@ namespace Engine::Component
 
 		float GetFrictionCoefficient() const { return m_friction_mu_; }
 
-		WeakCollider GetMainCollider() const { return m_main_collider_; }
+		WeakCollider GetMainCollider() const;
 		Vector3 GetLinearMomentum() const { return m_linear_momentum_; }
 		Vector3 GetAngularMomentum() const { return m_angular_momentum_; }
 		Vector3 GetForce() const { return m_force_; }

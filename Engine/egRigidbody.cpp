@@ -19,6 +19,16 @@ namespace Engine::Component
 		}
 	}
 
+	WeakCollider Rigidbody::GetMainCollider() const
+	{
+		if (!m_main_collider_.lock())
+		{
+			return GetOwner().lock()->GetComponent<Collider>();
+		}
+
+		return m_main_collider_;
+	}
+
 	void Rigidbody::Reset()
 	{
 		m_bGrounded = false;
