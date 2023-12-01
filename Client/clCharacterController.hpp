@@ -135,7 +135,7 @@ namespace Client::State
 			return;
 		}
 
-		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAtVector();
+		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAt();
 		m_offset_ = lookAt * Vector3{1.f, 0.f, 1.f};
 
 		CheckJump(rb);
