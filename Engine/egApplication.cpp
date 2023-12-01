@@ -29,6 +29,13 @@ namespace Engine::Manager
 		SetFocus(hWnd);
 	}
 
+	Application::~Application()
+	{
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+	}
+
 	void Application::Initialize(HWND hWnd)
 	{
 		m_keyboard = std::make_unique<Keyboard>();
@@ -36,6 +43,12 @@ namespace Engine::Manager
 		m_mouse->SetWindow(hWnd);
 		m_timer = std::make_unique<DX::StepTimer>();
 		UpdateWindowSize(hWnd);
+
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
 		GetD3Device().Initialize(hWnd);
 		GetToolkitAPI().Initialize();
@@ -47,6 +60,9 @@ namespace Engine::Manager
 		GetSceneManager().Initialize();
 		GetDebugger().Initialize();
 		GetTaskScheduler().Initialize();
+
+		ImGui_ImplWin32_Init(hWnd);
+		ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
 	}
 
 	void Application::Tick()
@@ -62,6 +78,11 @@ namespace Engine::Manager
 		{
 			const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
 			elapsed += dt;
+
+			ImGui_ImplDX11_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+			ImGui::ShowDemoWindow();
 
 			PreUpdate(dt);
 
@@ -151,6 +172,10 @@ namespace Engine::Manager
 		GetTransformLerpManager().Render(dt);
 		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
+
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
 		GetD3Device().Render(dt);
 	}
 

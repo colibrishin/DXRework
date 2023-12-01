@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "octree", "..\octree\octree.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmod", "fmod\fmod.vcxitems", "{70BEAC34-4AB1-485A-AFB7-81F047D85BFE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui\imgui.vcxitems", "{B06DEDD4-4E9B-43C2-9E80-D3D135CD61E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -67,5 +69,7 @@ Global
 		fmod\fmod.vcxitems*{2181c64a-d09c-4cd0-aa59-7ef53399af82}*SharedItemsImports = 4
 		fmod\fmod.vcxitems*{70beac34-4ab1-485a-afb7-81f047d85bfe}*SharedItemsImports = 9
 		fmod\fmod.vcxitems*{8e154f61-e984-4491-9894-7665ec2d18f9}*SharedItemsImports = 4
+		imgui\imgui.vcxitems*{8e154f61-e984-4491-9894-7665ec2d18f9}*SharedItemsImports = 4
+		imgui\imgui.vcxitems*{b06dedd4-4e9b-43c2-9e80-d3d135cd61e5}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
