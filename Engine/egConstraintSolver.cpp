@@ -103,11 +103,12 @@ namespace Engine::Manager::Physics
 	{
 		const auto rb = lhs.GetComponent<Engine::Component::Rigidbody>().lock();
 		const auto tr = lhs.GetComponent<Engine::Component::Transform>().lock();
-		const auto cl = lhs.GetComponent<Engine::Component::Collider>().lock();
+		// Main collider is considered as the collider that wraps the object.
+		const auto cl = rb->GetMainCollider().lock();
 
-		const auto cl_other = rhs.GetComponent<Engine::Component::Collider>().lock();
 		const auto rb_other = rhs.GetComponent<Engine::Component::Rigidbody>().lock();
 		const auto tr_other = rhs.GetComponent<Engine::Component::Transform>().lock();
+		const auto cl_other = rb_other->GetMainCollider().lock();
 
 		if (rb && cl && rb_other && cl_other)
 		{
@@ -128,8 +129,8 @@ namespace Engine::Manager::Physics
 			Vector3 other_linear_vel;
 			Vector3 other_angular_vel;
 
-			Vector3 pos = tr->GetPosition();
-			Vector3 other_pos = tr_other->GetPosition();
+			const Vector3 pos = cl->GetPosition();
+			const Vector3 other_pos = cl_other->GetPosition();
 
 			const Vector3 delta = (other_pos - pos);
 			Vector3 dir;
@@ -138,28 +139,54 @@ namespace Engine::Manager::Physics
 			Vector3 normal;
 			float penetration;
 
+			// Calculate the penetration and the normal with main collider which is the wrapper of the object.
 			cl->GetPenetration(*cl_other, normal, penetration);
 			const Vector3 point = cl->GetPosition() + normal * penetration;
 
+			Vector3 lhs_penetration;
+			Vector3 rhs_penetration;
 
 			Engine::Physics::EvalImpulse(pos, other_pos, point, penetration, normal, cl->GetInverseMass(),
 								cl_other->GetInverseMass(), rb->GetAngularMomentum(),
 								rb_other->GetAngularMomentum(), rb->GetLinearMomentum(), rb_other->GetLinearMomentum(),
 								cl->GetInertiaTensor(), cl_other->GetInertiaTensor(), linear_vel,
-								other_linear_vel, angular_vel, other_angular_vel);
+								other_linear_vel, angular_vel, other_angular_vel, lhs_penetration, rhs_penetration);
 
+			tr->SetPosition(pos - lhs_penetration);
 
-			tr->SetPosition(pos);
-			cl->SetPosition(pos);
-			rb->AddLinearMomentum(linear_vel);
-			rb->AddAngularMomentum(angular_vel);
+			// Apply the changes to the every colliders.
+			for (const auto& child : lhs.GetComponents<Component::Collider>())
+			{
+				if (const auto locked = child.lock())
+				{
+					locked->SetPosition(locked->GetPosition() - lhs_penetration);
+				}
+			}
+
+			const auto collided_count = cl->GetCollisionCount(rhs.GetID());
+			const auto fps = GetApplication().GetFPS();
+
+			auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
+			ratio = std::clamp(ratio, 0.f, 1.f);
+			const auto ratio_inv = 1.0f - ratio;
+
+			rb->AddLinearMomentum(linear_vel * ratio_inv);
+			rb->AddAngularMomentum(angular_vel * ratio_inv);
 
 			if (!rb_other->IsFixed())
 			{
-				tr_other->SetPosition(other_pos);
-				cl_other->SetPosition(other_pos);
-				rb_other->AddLinearMomentum(other_linear_vel);
-				rb_other->AddAngularMomentum(other_angular_vel);
+				tr_other->SetPosition(other_pos + rhs_penetration);
+
+				for (const auto& child : rhs.GetComponents<Component::Collider>())
+				{
+					if (const auto locked = child.lock())
+					{
+						locked->SetPosition(locked->GetPosition() + rhs_penetration);
+					}
+				}
+
+				rb_other->AddLinearMomentum(other_linear_vel * ratio_inv);
+				rb_other->AddAngularMomentum(other_angular_vel * ratio_inv);
 			}
 			
 			m_collision_resolved_set_.insert({ lhs.GetID(), rhs.GetID() });
@@ -170,11 +197,11 @@ namespace Engine::Manager::Physics
 	void ConstraintSolver::ResolveSpeculation(Abstract::Object& lhs, Abstract::Object& rhs)
 	{
 		const auto rb = lhs.GetComponent<Component::Rigidbody>().lock();
-		const auto cl = lhs.GetComponent<Component::Collider>().lock();
+		const auto cl = rb->GetMainCollider().lock();
 		const auto tr = lhs.GetComponent<Component::Transform>().lock();
 
 		const auto rb_other = rhs.GetComponent<Component::Rigidbody>().lock();
-		const auto cl_other = rhs.GetComponent<Component::Collider>().lock();
+		const auto cl_other = rb_other->GetMainCollider().lock();
 		const auto tr_other = rhs.GetComponent<Component::Transform>().lock();
 
 		if (rb && cl && tr && rb_other && cl_other && tr_other)
@@ -186,7 +213,7 @@ namespace Engine::Manager::Physics
 			}
 
 			Ray ray{};
-			ray.position = tr->GetPreviousPosition();
+			ray.position = cl->GetPreviousPosition();
 			const auto velocity = rb->GetLinearMomentum();
 			velocity.Normalize(ray.direction);
 
@@ -196,9 +223,16 @@ namespace Engine::Manager::Physics
 			// Forward collision check
 			if (cl_other->Intersects(ray, length, intersection_distance))
 			{
-				const Vector3 speculated_pos = tr->GetPosition() - (ray.direction * intersection_distance);
-				tr->SetPosition(speculated_pos);
-				cl->SetPosition(speculated_pos);
+				const Vector3 minimum_penetration = ray.direction * intersection_distance;
+				tr->SetPosition(tr->GetPosition() - minimum_penetration);
+
+				for (const auto& child : lhs.GetComponents<Component::Collider>())
+				{
+					if (const auto locked = child.lock())
+					{
+						locked->SetPosition(locked->GetPosition() - minimum_penetration);
+					}
+				}
 
 				m_speculative_resolved_set_.insert({ lhs.GetID(), rhs.GetID() });
 				m_speculative_resolved_set_.insert({ rhs.GetID(), lhs.GetID() });
