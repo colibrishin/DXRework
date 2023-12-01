@@ -67,7 +67,7 @@
     <ClInclude Include="egTexture.hpp" />
     <ClInclude Include="egToolkitAPI.hpp" />
     <ClInclude Include="egTransform.hpp" />
-    <ClInclude Include="egTransformLerpManager.hpp" />
+    <ClInclude Include="egLerpManager.hpp" />
     <ClInclude Include="egType.hpp" />
     <ClInclude Include="egVertexShader.hpp" />
     <ClInclude Include="framework.h" />
@@ -99,7 +99,7 @@
     <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egTransform.cpp" />
-    <ClCompile Include="egTransfromLerpManager.cpp" />
+    <ClCompile Include="egLerpManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
