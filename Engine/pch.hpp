@@ -7,6 +7,10 @@
 #ifndef PCH_H
 #define PCH_H
 
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx11.h"
+
 // add headers that you want to pre-compile here
 #include <memory>
 #include <map>

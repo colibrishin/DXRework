@@ -7,6 +7,11 @@
 #include "egManager.hpp"
 #include "StepTimer.hpp"
 
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace Engine::Manager
 {
 	using namespace DirectX;
@@ -15,7 +20,7 @@ namespace Engine::Manager
 	{
 	public:
 		Application(SINGLETON_LOCK_TOKEN) : Singleton() { }
-		~Application() override = default;
+		~Application() override;
 
 		void Initialize(HWND hwnd) override;
 		static void UpdateWindowSize(HWND hWnd);
