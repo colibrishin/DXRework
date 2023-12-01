@@ -235,6 +235,27 @@ namespace Engine::Manager::Graphics
 			                                  s_render_target_view_.ReleaseAndGetAddressOf()));
 	}
 
+	void D3Device::InitializeD2D()
+	{
+		ComPtr<ID2D1Factory> d2d_factory;
+		DX::ThrowIfFailed(s_swap_chain_->GetBuffer(0, IID_PPV_ARGS(&m_dxgi_device_)));
+
+		DX::ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d_factory.GetAddressOf()));
+
+		float dpiX = GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX);
+		float dpiY = GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY);
+
+		const D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(
+			D2D1_RENDER_TARGET_TYPE_DEFAULT,
+			D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
+			dpiX,
+			dpiY
+		);
+
+		d2d_factory->CreateDxgiSurfaceRenderTarget(m_surface_.Get(), &props, m_d2d_render_target_view_.GetAddressOf());
+
+	}
+
 	void D3Device::InitializeDepthStencil()
 	{
 		D3D11_TEXTURE2D_DESC depth_stencil_desc{};

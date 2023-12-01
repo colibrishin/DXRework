@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 
+#include <d2d1.h>
 #include <d3dcompiler.h>
 #include "egManager.hpp"
 #include "egVertexShader.hpp"
@@ -326,6 +327,7 @@ namespace Engine::Manager::Graphics
 		void InitializeAdapter();
 		void InitializeDevice();
 		void InitializeRenderTargetView();
+		void InitializeD2D();
 		void InitializeDepthStencil();
 
 		void FrameBegin();
@@ -335,6 +337,10 @@ namespace Engine::Manager::Graphics
 
 		ComPtr<ID3D11Device> m_device_ = nullptr;
 		ComPtr<ID3D11DeviceContext> m_context_ = nullptr;
+
+		ComPtr<IDXGISurface> m_surface_ = nullptr;
+		ComPtr<IDXGIDevice> m_dxgi_device_ = nullptr;
+		ComPtr<ID2D1RenderTarget> m_d2d_render_target_view_ = nullptr;
 
 		UINT s_video_card_memory_ = 0;
 		UINT s_refresh_rate_numerator_ = 0;
