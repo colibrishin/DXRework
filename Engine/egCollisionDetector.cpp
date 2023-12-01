@@ -3,7 +3,6 @@
 #include "egCollider.hpp"
 #include "egRigidbody.hpp"
 #include "egCollisionDetector.hpp"
-#include "egTransformLerpManager.hpp"
 #include "egSceneManager.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
@@ -169,15 +168,15 @@ namespace Engine::Manager
 		{
 			for (const auto& cl_other : colliders)
 			{
-				if (cl.lock() == cl_other.lock())
-				{
-					continue;
-				}
-
 				const auto cl_locked = cl.lock();
 				const auto cl_other_locked = cl_other.lock();
 
 				if (!cl_locked || !cl_other_locked)
+				{
+					continue;
+				}
+
+				if (cl_locked == cl_other_locked)
 				{
 					continue;
 				}

@@ -18,8 +18,9 @@ namespace Engine::Component
 
 		~Rigidbody() override = default;
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 
+		void SetMainCollider(const WeakCollider& collider) { m_main_collider_ = collider; }
 		void SetGravityOverride(bool gravity) { m_bGravityOverride = gravity;}
 		void SetGrounded(bool grounded) { m_bGrounded = grounded;}
 
@@ -38,7 +39,8 @@ namespace Engine::Component
 		void AddTorque(const Vector3& torque) { m_torque_ += torque; }
 
 		float GetFrictionCoefficient() const { return m_friction_mu_; }
-		
+
+		WeakCollider GetMainCollider() const { return m_main_collider_; }
 		Vector3 GetLinearMomentum() const { return m_linear_momentum_; }
 		Vector3 GetAngularMomentum() const { return m_angular_momentum_; }
 		Vector3 GetForce() const { return m_force_; }
@@ -82,6 +84,8 @@ namespace Engine::Component
 
 		Vector3 m_force_;
 		Vector3 m_torque_;
+
+		WeakCollider m_main_collider_;
 
 	};
 }

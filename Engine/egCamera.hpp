@@ -21,7 +21,9 @@ namespace Engine::Objects
 		void SetPosition(Vector3 position);
 		void SetRotation(Quaternion rotation);
 
+		Vector3 GetPosition();
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
+		Quaternion GetMouseRotation() const { return m_mouse_rotation_; }
 		Vector3 GetLookAt() const;
 
 		void Initialize_INTERNAL() override;
@@ -36,13 +38,14 @@ namespace Engine::Objects
 
 		Vector2 GetWorldMousePosition();
 		static Vector2 GetNormalizedMousePosition();
-		Vector3 GetLookAtVector() const { return m_look_at_; }
 
 	private:
 		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;
 
 		Vector3 m_look_at_;
+		Quaternion m_mouse_rotation_;
+		Matrix m_mouse_rotation_matrix_;
 
 		Vector2 m_previous_mouse_position_;
 		Vector2 m_current_mouse_position_;

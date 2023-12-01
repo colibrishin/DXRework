@@ -26,7 +26,14 @@ namespace Engine::Component
 		Collider(const std::weak_ptr<Abstract::Object>& owner, const WeakMesh& mesh = {});
 		~Collider() override = default;
 
-		void SetDirtyWithTransform(const bool dirty) { m_bDirtyByTransform = dirty; }
+		void SetDirtyWithTransform(const bool dirty)
+		{
+			m_bDirtyByTransform = dirty;
+			if (dirty)
+			{
+				UpdateFromTransform();
+			}
+		}
 
 		void SetPosition(const Vector3& position);
 		void SetRotation(const Quaternion& rotation);
@@ -66,7 +73,7 @@ namespace Engine::Component
 		virtual const std::vector<const Vector3*>& GetVertices() const;
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -242,7 +249,6 @@ namespace Engine::Component
 
 	inline void Collider::PreUpdate(const float& dt)
 	{
-		m_previous_position_ = m_position_;
 		UpdateFromTransform();
 		UpdateInertiaTensor();
 	}

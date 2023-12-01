@@ -13,7 +13,7 @@ namespace Engine::Abstract
 	protected:
 		StateController(const WeakObject& owner) : Component(COMPONENT_PRIORITY_STATE, owner) {}
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void SetState(StateEnum state) { m_state_ = state; }
 		void OnLayerChanging() override;
@@ -30,7 +30,7 @@ namespace Engine::Abstract
 	};
 
 	template <typename StateEnum>
-	void StateController<StateEnum>::Initialize()
+	void StateController<StateEnum>::Initialize_INTERNAL()
 	{
 		m_state_ = (StateEnum)0;
 		m_previous_state_ = (StateEnum)0;

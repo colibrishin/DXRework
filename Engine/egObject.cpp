@@ -157,11 +157,6 @@ namespace Engine::Abstract
 
 	void Object::Render(const float dt)
 	{
-		if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
-		{
-			return;
-		}
-
 		for (const auto& component : m_priority_sorted_)
 		{
 			if (const auto locked = component.lock())
@@ -172,6 +167,11 @@ namespace Engine::Abstract
 			{
 				m_priority_sorted_.erase(component);
 			}
+		}
+
+		if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
+		{
+			return;
 		}
 
 		for (const auto& resource : m_resources_)

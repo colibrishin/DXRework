@@ -14,6 +14,8 @@ namespace Engine::Abstract
 		~Component() override = default;
 		Component(const Component&) = default;
 
+		void Initialize() final;
+		virtual void Initialize_INTERNAL() = 0;
 		std::weak_ptr<Object> GetOwner() const { return m_owner_; }
 		eComponentPriority GetPriority() const { return m_priority_; }
 
@@ -25,4 +27,10 @@ namespace Engine::Abstract
 		eComponentPriority m_priority_;
 
 	};
+
+	inline void Component::Initialize()
+	{
+		Initialize_INTERNAL();
+		OnCreate();
+	}
 }

@@ -62,6 +62,33 @@ namespace Engine::Component
 		return {};
 	}
 
+	void Collider::Initialize_INTERNAL()
+	{
+		InitializeStockVertices();
+		if (const auto mesh = m_mesh_.lock())
+		{
+			GenerateFromMesh(mesh);
+		}
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+
+#ifdef _DEBUG
+		GenerateDebugMesh();
+#endif
+
+		UpdateFromTransform();
+		UpdateInertiaTensor();
+
+		m_previous_position_ = m_position_;
+	}
+
 	void Collider::InitializeStockVertices()
 	{
 		GeometricPrimitive::IndexCollection index;
@@ -119,31 +146,6 @@ namespace Engine::Component
 		{
 			BoundingSphere::CreateFromPoints(m_boundings_.sphere, mesh_obj->m_vertices_.size(), serialized_vertices.data(), sizeof(Vector3));
 		}
-	}
-
-	void Collider::Initialize()
-	{
-		InitializeStockVertices();
-		if (const auto mesh = m_mesh_.lock())
-		{
-			GenerateFromMesh(mesh);
-		}
-
-		if (m_type_ == BOUNDING_TYPE_BOX)
-		{
-			GenerateInertiaCube();
-		}
-		else if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			GenerateInertiaSphere();
-		}
-
-#ifdef _DEBUG
-		GenerateDebugMesh();
-#endif
-
-		UpdateFromTransform();
-		UpdateInertiaTensor();
 	}
 
 	void Collider::SetSize(const Vector3& size)
@@ -322,6 +324,7 @@ namespace Engine::Component
 			m_debug_mesh_->Render(dt);
 		}
 #endif
+		m_previous_position_ = m_position_;
 	}
 
 	void Collider::UpdateFromTransform()

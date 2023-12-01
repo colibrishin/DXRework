@@ -14,7 +14,7 @@ namespace Client::State
 		{
 		}
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
@@ -32,7 +32,7 @@ namespace Client::State
 
 	};
 
-	inline void CharacterController::Initialize()
+	inline void CharacterController::Initialize_INTERNAL()
 	{
 		SetState(CHAR_STATE_IDLE);
 	}
@@ -135,7 +135,7 @@ namespace Client::State
 			return;
 		}
 
-		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAtVector();
+		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAt();
 		m_offset_ = lookAt * Vector3{1.f, 0.f, 1.f};
 
 		CheckJump(rb);

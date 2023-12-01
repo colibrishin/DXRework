@@ -16,16 +16,21 @@ namespace Engine::Objects
 		GetComponent<Component::Transform>().lock()->SetRotation(rotation);
 	}
 
+	Vector3 Camera::GetPosition()
+	{
+		return GetComponent<Component::Transform>().lock()->GetPosition();
+	}
+
 	Vector3 Camera::GetLookAt() const
 	{
-		return m_look_at_;
+		return Vector3::Transform(m_look_at_, m_mouse_rotation_matrix_);
 	}
 
 	void Camera::Initialize_INTERNAL()
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
-		m_look_at_ = g_backward;
+		m_look_at_ = g_forward;
 	}
 
 	void Camera::PreUpdate(const float& dt)
@@ -65,9 +70,9 @@ namespace Engine::Objects
 		Vector2 delta;
 		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
 
-		const auto lookRotation = Matrix::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
-		
-		m_look_at_ = Vector3::TransformNormal(m_look_at_, lookRotation);
+		const auto lookRotation = Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
+		m_mouse_rotation_ = Quaternion::Concatenate(m_mouse_rotation_, lookRotation);
+		m_mouse_rotation_matrix_ = Matrix::CreateFromQuaternion(m_mouse_rotation_);
 
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
@@ -82,8 +87,9 @@ namespace Engine::Objects
 			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
 
 			// Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
-			m_look_at_ = XMVector3TransformNormal(lookAtVector, rotationMatrix);
+			lookAtVector = XMVector3TransformNormal(lookAtVector, rotationMatrix);
 			upVector = XMVector3TransformNormal(upVector, rotationMatrix);
+			lookAtVector = XMVector3TransformNormal(lookAtVector, m_mouse_rotation_matrix_);
 
 			// Translate the rotated camera position to the location of the viewer.
 			lookAtVector = XMVectorAdd(positionVector, lookAtVector);
@@ -108,9 +114,8 @@ namespace Engine::Objects
 				}
 			}
 
-			// @todo: fixme, somehow the origin is not correct, without reverse up.
 			GetToolkitAPI().Set3DListener(
-				{lookAtVector.x, lookAtVector.y, lookAtVector.z},
+				{m_view_matrix_._41, m_view_matrix_._42, m_view_matrix_._43},
 				{velocity.x, velocity.y, velocity.z},
 				{g_forward.x, g_forward.y, g_forward.z},
 				{Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}

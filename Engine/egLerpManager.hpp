@@ -1,12 +1,13 @@
 #pragma once
+#include "egManager.hpp"
 
 namespace Engine::Manager::Physics
 {
-	class TransformLerpManager : public Abstract::Singleton<TransformLerpManager>
+	class LerpManager : public Abstract::Singleton<LerpManager>
 	{
 	public:
-		TransformLerpManager(SINGLETON_LOCK_TOKEN) : Singleton(), m_elapsedTime_(0.f) {}
-		~TransformLerpManager() override = default;
+		LerpManager(SINGLETON_LOCK_TOKEN) : Singleton(), m_elapsedTime_(0.f) {}
+		~LerpManager() override = default;
 
 		void Initialize() override;
 		void Update(const float& dt) override;

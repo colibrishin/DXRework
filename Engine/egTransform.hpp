@@ -23,7 +23,7 @@ namespace Engine::Component
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetScale() const { return m_scale_; }
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;

@@ -30,9 +30,7 @@ namespace Engine::Manager
 				const auto camera = camera_layer.front().lock()->GetSharedPtr<Objects::Camera>();
 
 				BoundingFrustum::CreateFromMatrix(m_frustum, GetD3Device().GetProjectionMatrix());
-
-				m_frustum.Origin = camera->GetComponent<Component::Transform>().lock()->GetPosition();
-				m_frustum.Orientation = Quaternion::CreateFromYawPitchRoll(camera->GetLookAt());
+				m_frustum.Transform(m_frustum, 1.f, camera->GetMouseRotation(), camera->GetPosition());
 
 				BoundingSphere::CreateFromFrustum(m_sphere, m_frustum);
 			}
