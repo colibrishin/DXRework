@@ -236,12 +236,36 @@ namespace Engine::Component
 		return false;
 	}
 
+	void Collider::AddCollidedObject(const EntityID id)
+	{
+		m_collided_objects_.insert(id);
+
+		if (!m_collision_count_.contains(id))
+		{
+			m_collision_count_.insert({ id, 1 });
+		}
+		else
+		{
+			m_collision_count_[id]++;
+		}
+	}
+
 	void Collider::GetPenetration(const Collider& other, Vector3& normal, float& depth) const
 	{
 		auto dir = other.GetPosition() - GetPosition();
 		dir.Normalize();
 
 		Physics::GJK::GJKAlgorithm(*this, other, dir, normal, depth);
+	}
+
+	UINT Collider::GetCollisionCount(const EntityID id) const
+	{
+		if (!m_collision_count_.contains(id))
+		{
+			return 0;
+		}
+
+		return m_collision_count_.at(id);
 	}
 
 #ifdef _DEBUG

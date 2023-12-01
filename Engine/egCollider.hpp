@@ -46,7 +46,7 @@ namespace Engine::Component
 		bool Intersects(const Ray& ray, float distance, float& intersection) const;
 		bool Contains(Collider& other) const;
 
-		void AddCollidedObject(const EntityID id) { m_collided_objects_.insert(id); }
+		void AddCollidedObject(const EntityID id);
 		void AddSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.insert(id); }
 
 		void RemoveCollidedObject(const EntityID id) { m_collided_objects_.erase(id); }
@@ -63,6 +63,7 @@ namespace Engine::Component
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetSize() const { return m_size_; }
 		void GetPenetration(const Collider& other, Vector3& normal, float& depth) const;
+		UINT GetCollisionCount(const EntityID id) const;
 
 		float GetMass() const { return m_mass_; }
 		float GetInverseMass() const { return 1.0f / m_mass_; }
@@ -190,6 +191,7 @@ namespace Engine::Component
 		inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
 
 		std::set<EntityID> m_collided_objects_;
+		std::map<EntityID, UINT> m_collision_count_;
 		std::set<EntityID> m_speculative_collision_candidates_;
 
 		bool m_bDirtyByTransform;
@@ -249,6 +251,15 @@ namespace Engine::Component
 
 	inline void Collider::PreUpdate(const float& dt)
 	{
+		static float second_counter = 0.f;
+
+		if (second_counter >= 1.f)
+		{
+			m_collision_count_.clear();
+		}
+
+		second_counter += dt;
+
 		UpdateFromTransform();
 		UpdateInertiaTensor();
 	}
