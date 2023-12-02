@@ -77,9 +77,6 @@
     <ClInclude Include="clPlaneObject.hpp">
       <Filter>Object</Filter>
     </ClInclude>
-    <ClInclude Include="clVelocityCounter.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="clCharacterController.hpp">
       <Filter>State</Filter>
     </ClInclude>
