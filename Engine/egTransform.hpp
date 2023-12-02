@@ -9,7 +9,9 @@ namespace Engine::Component
 	class Transform : public Abstract::Component
 	{
 	public:
-		Transform(const std::weak_ptr<Abstract::Object>& owner);
+		typedef Transform type;
+
+		Transform(const WeakObject& owner);
 		~Transform() override = default;
 
 		void SetPosition(const Vector3& position) { m_position_ = position; }

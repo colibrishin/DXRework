@@ -3,10 +3,11 @@
 #include <memory>
 
 #include "egType.hpp"
+#include <boost/enable_shared_from_this.hpp>
 
 namespace Engine::Abstract
 {
-	class Entity : public std::enable_shared_from_this<Entity>
+	class Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
 		Entity(const Entity& other) = default;
@@ -23,15 +24,15 @@ namespace Engine::Abstract
 		std::wstring GetName() const { return m_name_; }
 
 		template <typename T>
-		std::weak_ptr<T> GetWeakPtr()
+		boost::weak_ptr<T> GetWeakPtr()
 		{
-			return std::reinterpret_pointer_cast<T>(shared_from_this());
+			return boost::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
 		template <typename T>
-		std::shared_ptr<T> GetSharedPtr()
+		boost::shared_ptr<T> GetSharedPtr()
 		{
-			return std::reinterpret_pointer_cast<T>(shared_from_this());
+			return boost::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
 		virtual void Initialize() = 0;

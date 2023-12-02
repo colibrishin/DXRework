@@ -11,11 +11,6 @@
 
 namespace Engine
 {
-	using StrongCamera = std::shared_ptr<Objects::Camera>;
-	using WeakCamera = std::weak_ptr<Objects::Camera>;
-	using StrongLight = std::shared_ptr<Objects::Light>;
-	using StrongLayer = std::shared_ptr<Layer>;
-
 	class Scene : public Abstract::Renderable
 	{
 	public:

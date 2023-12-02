@@ -5,9 +5,6 @@
 
 namespace Engine
 {
-	using StrongObject = std::shared_ptr<Abstract::Object>;
-	using WeakObject = std::weak_ptr<Abstract::Object>;
-
 	class Layer : public Abstract::Renderable
 	{
 	public:

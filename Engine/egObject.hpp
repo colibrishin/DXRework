@@ -11,6 +11,7 @@
 #include "egRenderable.hpp"
 #include "egResource.hpp"
 #include "egType.hpp"
+#include <boost/make_shared.hpp>
 
 namespace Engine::Component
 {
@@ -34,18 +35,18 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				const auto thisObject = std::reinterpret_pointer_cast<Object>(shared_from_this());
+				const auto thisObject = boost::reinterpret_pointer_cast<Object>(shared_from_this());
 
-				std::shared_ptr<T> component = std::make_shared<T>(thisObject, std::forward<Args>(args)...);
+				boost::shared_ptr<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 				component->Initialize();
 
-				m_components_[typeid(T)].insert(std::reinterpret_pointer_cast<Component>(component));
-				m_priority_sorted_.insert(std::reinterpret_pointer_cast<Component>(component));
+				m_components_[typeid(T)].insert(boost::reinterpret_pointer_cast<Component>(component));
+				m_priority_sorted_.insert(boost::reinterpret_pointer_cast<Component>(component));
 			}
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetComponent()
+		boost::weak_ptr<T> GetComponent()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -56,14 +57,14 @@ namespace Engine::Abstract
 
 				const auto& comp_set = m_components_[typeid(T)];
 
-				return std::reinterpret_pointer_cast<T>(*comp_set.begin());
+				return boost::reinterpret_pointer_cast<T>(*comp_set.begin());
 			}
 
 			return {};
 		}
 
 		template <typename T>
-		std::set<std::weak_ptr<T>, WeakComparer<T>> GetComponents()
+		std::set<boost::weak_ptr<T>, WeakComparer<T>> GetComponents()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -74,11 +75,11 @@ namespace Engine::Abstract
 
 				const auto& comp_set = m_components_[typeid(T)];
 
-				std::set<std::weak_ptr<T>, WeakComparer<T>> result;
+				std::set<boost::weak_ptr<T>, WeakComparer<T>> result;
 
 				for (const auto& comp : comp_set)
 				{
-					result.insert(std::reinterpret_pointer_cast<T>(comp));
+					result.insert(boost::reinterpret_pointer_cast<T>(comp));
 				}
 
 				return result;
@@ -88,7 +89,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetComponent(EntityID id)
+		boost::weak_ptr<T> GetComponent(EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -109,7 +110,7 @@ namespace Engine::Abstract
 					return {};
 				}
 
-				return std::reinterpret_pointer_cast<T>(*found);
+				return boost::reinterpret_pointer_cast<T>(*found);
 			}
 
 			return {};
@@ -177,7 +178,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetResource() const
+		boost::weak_ptr<T> GetResource() const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -185,7 +186,7 @@ namespace Engine::Abstract
 				{
 					if (const auto locked = resource.lock())
 					{
-						if (const auto t = std::dynamic_pointer_cast<T>(locked))
+						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
 						{
 							return t;
 						}
@@ -197,7 +198,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetResource(const std::wstring& name) const
+		boost::weak_ptr<T> GetResource(const std::wstring& name) const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -205,7 +206,7 @@ namespace Engine::Abstract
 				{
 					if (const auto locked = resource.lock())
 					{
-						if (const auto t = std::dynamic_pointer_cast<T>(locked))
+						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
 						{
 							if (!name.empty() && t->GetName() == name)
 							{

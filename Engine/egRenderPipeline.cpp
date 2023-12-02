@@ -153,14 +153,14 @@ namespace Engine::Manager::Graphics
 
 				if (prefix.starts_with(L"vs"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11VertexShader>> shader = std::make_shared<Graphic::VertexShader>(filename_without_extension, file);
+					boost::shared_ptr<Graphic::Shader<ID3D11VertexShader>> shader = boost::make_shared<Graphic::VertexShader>(filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());
-					GetResourceManager().AddResource<Graphic::VertexShader>(filename_without_extension, std::reinterpret_pointer_cast<Graphic::VertexShader>(shader));
+					GetResourceManager().AddResource<Graphic::VertexShader>(filename_without_extension, boost::reinterpret_pointer_cast<Graphic::VertexShader>(shader));
 				}
 				else if (prefix.starts_with(L"ps"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11PixelShader>> shader = std::make_shared<Graphic::Shader<ID3D11PixelShader>>(
+					boost::shared_ptr<Graphic::Shader<ID3D11PixelShader>> shader = boost::make_shared<Graphic::Shader<ID3D11PixelShader>>(
 						filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());
@@ -168,7 +168,7 @@ namespace Engine::Manager::Graphics
 				}
 				else if (prefix.starts_with(L"gs"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11GeometryShader>> shader = std::make_shared<Graphic::Shader<ID3D11GeometryShader>>(
+					boost::shared_ptr<Graphic::Shader<ID3D11GeometryShader>> shader = boost::make_shared<Graphic::Shader<ID3D11GeometryShader>>(
 						filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());
@@ -176,7 +176,7 @@ namespace Engine::Manager::Graphics
 				}
 				else if (prefix.starts_with(L"cs"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11ComputeShader>> shader = std::make_shared<Graphic::Shader<ID3D11ComputeShader>>(
+					boost::shared_ptr<Graphic::Shader<ID3D11ComputeShader>> shader = boost::make_shared<Graphic::Shader<ID3D11ComputeShader>>(
 						filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());
@@ -184,7 +184,7 @@ namespace Engine::Manager::Graphics
 				}
 				else if (prefix.starts_with(L"hs"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11HullShader>> shader = std::make_shared<Graphic::Shader<ID3D11HullShader>>(
+					boost::shared_ptr<Graphic::Shader<ID3D11HullShader>> shader = boost::make_shared<Graphic::Shader<ID3D11HullShader>>(
 						filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());
@@ -192,7 +192,7 @@ namespace Engine::Manager::Graphics
 				}
 				else if (prefix.starts_with(L"ds"))
 				{
-					std::shared_ptr<Graphic::Shader<ID3D11DomainShader>> shader = std::make_shared<Graphic::Shader<ID3D11DomainShader>>(
+					boost::shared_ptr<Graphic::Shader<ID3D11DomainShader>> shader = boost::make_shared<Graphic::Shader<ID3D11DomainShader>>(
 						filename_without_extension, file);
 
 					GetD3Device().CreateShader(absolute(file), shader.get());

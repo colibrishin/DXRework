@@ -17,14 +17,14 @@ namespace Engine::Manager
 		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
-		static void AddResource(const std::wstring& name, const std::shared_ptr<T>& resource)
+		static void AddResource(const std::wstring& name, const boost::shared_ptr<T>& resource)
 		{
 			m_resources_.insert(resource);
 			resource->SetName(name);
 		}
 
 		template <typename T>
-		static std::weak_ptr<T> GetResource(const std::wstring& name)
+		static boost::weak_ptr<T> GetResource(const std::wstring& name)
 		{
 			if constexpr (std::is_base_of_v<Abstract::Resource, T>)
 			{
@@ -33,7 +33,7 @@ namespace Engine::Manager
 				m_resources_.end(),
 				[&name](const auto& resource)
 				{
-					if (const auto ptr = std::dynamic_pointer_cast<T>(resource))
+					if (const auto ptr = boost::dynamic_pointer_cast<T>(resource))
 					{
 						return ptr->GetName() == name;
 					}
@@ -45,7 +45,7 @@ namespace Engine::Manager
 				if (it != m_resources_.end())
 				{
 					(*it)->Load();
-					return std::dynamic_pointer_cast<T>(*it);
+					return boost::dynamic_pointer_cast<T>(*it);
 				}
 			}
 
@@ -53,7 +53,7 @@ namespace Engine::Manager
 		}
 
 	private:
-		inline static std::set<std::shared_ptr<Abstract::Resource>> m_resources_ = {};
+		inline static std::set<StrongResource> m_resources_ = {};
 
 	};
 

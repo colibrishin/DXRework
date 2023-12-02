@@ -23,7 +23,9 @@ namespace Engine::Component
 	class Collider : public Abstract::Component
 	{
 	public:
-		Collider(const std::weak_ptr<Abstract::Object>& owner, const WeakMesh& mesh = {});
+		typedef Collider type;
+
+		Collider(const WeakObject& owner, const WeakMesh& mesh = {});
 		~Collider() override = default;
 
 		void SetDirtyWithTransform(const bool dirty)
@@ -200,7 +202,7 @@ namespace Engine::Component
 		void GenerateDebugMesh();
 
 	private:
-		std::shared_ptr<Object::DebugObject> m_debug_mesh_;
+		boost::shared_ptr<Object::DebugObject> m_debug_mesh_;
 #endif
 
 		Vector3 m_previous_position_;
@@ -219,7 +221,7 @@ namespace Engine::Component
 
 	};
 
-	inline Collider::Collider(const std::weak_ptr<Abstract::Object>& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
+	inline Collider::Collider(const WeakObject& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
 																				owner),
 																			m_bDirtyByTransform(false),
 																			m_position_(Vector3::Zero),

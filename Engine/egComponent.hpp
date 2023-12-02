@@ -16,14 +16,14 @@ namespace Engine::Abstract
 
 		void Initialize() final;
 		virtual void Initialize_INTERNAL() = 0;
-		std::weak_ptr<Object> GetOwner() const { return m_owner_; }
+		WeakObject GetOwner() const { return m_owner_; }
 		eComponentPriority GetPriority() const { return m_priority_; }
 
 	protected:
-		Component(eComponentPriority priority, const std::weak_ptr<Object>& owner) : m_owner_(owner), m_priority_(priority) {}
+		Component(eComponentPriority priority, const WeakObject& owner) : m_owner_(owner), m_priority_(priority) {}
 
 	private:
-		std::weak_ptr<Object> m_owner_;
+		WeakObject m_owner_;
 		eComponentPriority m_priority_;
 
 	};
