@@ -6,17 +6,17 @@
 namespace Engine
 {
 	template <typename T, typename... Arg>
-	inline static std::shared_ptr<T> Instantiate(Arg&&... args)
+	inline static boost::shared_ptr<T> Instantiate(Arg&&... args)
 	{
-		const auto inst = std::make_shared<T>(std::forward<Arg>(args)...);
+		const auto inst = boost::make_shared<T>(std::forward<Arg>(args)...);
 		inst->Initialize();
 		return inst;
 	}
 
 	template <typename T = Abstract::Object, typename... Arg>
-	inline static std::shared_ptr<T> InstantiateObject(const WeakScene& initial_scene, const eLayerType layer, Arg&&... args)
+	inline static boost::shared_ptr<T> InstantiateObject(const WeakScene& initial_scene, const eLayerType layer, Arg&&... args)
 	{
-		const auto obj = std::make_shared<T>(initial_scene, layer, std::forward<Arg>(args)...);
+		const auto obj = boost::make_shared<T>(initial_scene, layer, std::forward<Arg>(args)...);
 		obj->Initialize();
 		return obj;
 	}

@@ -5,9 +5,6 @@
 
 namespace Engine
 {
-	using StrongObject = std::shared_ptr<Abstract::Object>;
-	using WeakObject = std::weak_ptr<Abstract::Object>;
-
 	class Layer : public Abstract::Renderable
 	{
 	public:
@@ -60,6 +57,8 @@ namespace Engine
 		}
 
 	private:
+		friend class boost::serialization::access;
+
 		eLayerType m_layer_type_;
 		std::vector<WeakObject> m_weak_objects_cache_;
 		std::map<const EntityID, StrongObject> m_objects_;

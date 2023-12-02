@@ -134,7 +134,7 @@ namespace Engine
 
 	struct WeakObjComparer
 	{
-		bool operator()(const std::weak_ptr<Abstract::Object>& lhs, const std::weak_ptr<Abstract::Object>& rhs) const
+		bool operator()(const WeakObject& lhs, const WeakObject& rhs) const
 		{
 			return lhs.lock().get() < rhs.lock().get();
 		}
@@ -143,7 +143,7 @@ namespace Engine
 	template <typename T>
 	struct WeakComparer
 	{
-		bool operator()(const std::weak_ptr<T>& lhs, const std::weak_ptr<T>& rhs) const
+		bool operator()(const boost::weak_ptr<T>& lhs, const boost::weak_ptr<T>& rhs) const
 		{
 			return lhs.lock().get() < rhs.lock().get();
 		}

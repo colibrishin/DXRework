@@ -10,6 +10,8 @@ namespace Engine::Component
 	class Rigidbody : public Abstract::Component
 	{
 	public:
+		typedef Rigidbody type;
+
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
 														m_bGrounded(false), m_bGravityOverride(false),
 														m_bFixed(false), m_friction_mu_(0.0f)
@@ -68,6 +70,7 @@ namespace Engine::Component
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_bGrounded;
 		
 		bool m_bGravityOverride;

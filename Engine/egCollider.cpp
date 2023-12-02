@@ -280,13 +280,13 @@ namespace Engine::Component
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
-			GetResourceManager().AddResource(L"CubeMesh", std::make_shared<Mesh::CubeMesh>());
+			GetResourceManager().AddResource(L"CubeMesh", boost::make_shared<Mesh::CubeMesh>());
 			m_debug_mesh_->AddResource(
 				GetResourceManager().GetResource<Mesh::CubeMesh>(L"CubeMesh"));
 		}
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			GetResourceManager().AddResource(L"SphereMesh", std::make_shared<Mesh::SphereMesh>());
+			GetResourceManager().AddResource(L"SphereMesh", boost::make_shared<Mesh::SphereMesh>());
 			m_debug_mesh_->AddResource(
 				GetResourceManager().GetResource<Mesh::SphereMesh>(L"SphereMesh"));
 		}

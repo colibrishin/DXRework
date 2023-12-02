@@ -11,11 +11,6 @@
 
 namespace Engine
 {
-	using StrongCamera = std::shared_ptr<Objects::Camera>;
-	using WeakCamera = std::weak_ptr<Objects::Camera>;
-	using StrongLight = std::shared_ptr<Objects::Light>;
-	using StrongLayer = std::shared_ptr<Layer>;
-
 	class Scene : public Abstract::Renderable
 	{
 	public:
@@ -68,7 +63,7 @@ namespace Engine
 		{
 			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 			{
-				m_cached_components_[typeid(T)].insert(component);
+				m_cached_components_[typeid(T).name()].insert(component);
 			}
 		}
 
@@ -77,14 +72,14 @@ namespace Engine
 		{
 			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 			{
-				m_cached_components_[typeid(T)].erase(component);
+				m_cached_components_[typeid(T).name()].erase(component);
 			}
 		}
 
 		template <typename T>
 		const std::set<WeakComponent, ComponentPriorityComparer>& GetComponents()
 		{
-			return m_cached_components_[typeid(T)];
+			return m_cached_components_[typeid(T).name()];
 		}
 
 		void UpdatePosition(const WeakObject& obj);
@@ -93,10 +88,11 @@ namespace Engine
 		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust = 100);
 
 	private:
+		friend class boost::serialization::access;
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
 		std::map<EntityID, WeakObject> m_cached_objects_;
-		std::map<const std::type_index, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
+		std::map<const std::string, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
 		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;
 
 	};

@@ -32,6 +32,7 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_lazy_reload_;
 
 		Vector2 m_position_;

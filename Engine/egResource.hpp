@@ -42,6 +42,7 @@ namespace Engine::Abstract
 		virtual void Unload_INTERNAL() = 0;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_bLoaded_;
 		std::filesystem::path m_path_;
 		eResourcePriority m_priority_;

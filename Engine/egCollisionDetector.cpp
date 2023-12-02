@@ -272,7 +272,7 @@ namespace Engine::Manager
 						std::execution::par,
 						cls.begin(),
 						cls.end(),
-						[ray, distance, &hit, &out, &out_mutex, &obj, locked](const std::weak_ptr<Engine::Component::Collider>& cl_o)
+						[ray, distance, &hit, &out, &out_mutex, &obj, locked](const WeakCollider& cl_o)
 						{
 							const auto cl = cl_o.lock();
 

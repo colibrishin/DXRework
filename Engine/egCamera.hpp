@@ -40,6 +40,7 @@ namespace Engine::Objects
 		static Vector2 GetNormalizedMousePosition();
 
 	private:
+		friend class boost::serialization::access;
 		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;
 

@@ -22,8 +22,8 @@ namespace Client::State
 		void Render(const float dt) override;
 
 	private:
-		void CheckJump(const std::shared_ptr<Engine::Component::Rigidbody>& rb);
-		void CheckMove(const std::shared_ptr<Engine::Component::Rigidbody>& rb);
+		void CheckJump(const boost::shared_ptr<Engine::Component::Rigidbody>& rb);
+		void CheckMove(const boost::shared_ptr<Engine::Component::Rigidbody>& rb);
 		bool CheckAttack(const float& dt);
 
 		Vector3 m_offset_;
@@ -42,7 +42,7 @@ namespace Client::State
 		StateController::PreUpdate(dt);
 	}
 
-	inline void CharacterController::CheckJump(const std::shared_ptr<Engine::Component::Rigidbody>& rb)
+	inline void CharacterController::CheckJump(const boost::shared_ptr<Engine::Component::Rigidbody>& rb)
 	{
 		if (!rb->GetGrounded())
 		{
@@ -54,7 +54,7 @@ namespace Client::State
 		}
 	}
 
-	inline void CharacterController::CheckMove(const std::shared_ptr<Engine::Component::Rigidbody>& rb)
+	inline void CharacterController::CheckMove(const boost::shared_ptr<Engine::Component::Rigidbody>& rb)
 	{
 		float speed = 1.0f;
 		const auto ortho = Vector3::Transform(m_offset_, Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) * speed;

@@ -9,9 +9,6 @@
 
 namespace Engine::Manager
 {
-	using WeakScene = std::weak_ptr<Scene>;
-	using ConcreteScenePtr = std::shared_ptr<Scene>;
-
 	class SceneManager final : public Abstract::Singleton<SceneManager>
 	{
 	public:
@@ -34,7 +31,7 @@ namespace Engine::Manager
 				m_scenes_.end(),
 				[](const auto& scene)
 				{
-					return std::dynamic_pointer_cast<T>(scene) != nullptr;
+					return boost::dynamic_pointer_cast<T>(scene) != nullptr;
 				}
 			);
 
@@ -72,7 +69,7 @@ namespace Engine::Manager
 				m_scenes_.end(),
 				[](const auto& scene)
 				{
-					return std::dynamic_pointer_cast<T>(scene) != nullptr;
+					return boost::dynamic_pointer_cast<T>(scene) != nullptr;
 				}
 			);
 
@@ -100,7 +97,7 @@ namespace Engine::Manager
 
 	private:
 		WeakScene m_active_scene_;
-		std::set<ConcreteScenePtr> m_scenes_;
+		std::set<StrongScene> m_scenes_;
 
 	};
 

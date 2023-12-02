@@ -21,6 +21,11 @@
 #include <cstring>
 #define WIN32_LEAN_AND_MEAN
 
+#include <boost/smart_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/serialization/access.hpp>
+
 #include "framework.h"
 #include <wrl/client.h>
 
@@ -49,10 +54,10 @@
 #include "StepTimer.hpp"
 
 #pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "dxguid.lib")
 
 #include <d3d11.h>
 #include <d2d1.h>
@@ -66,9 +71,13 @@
 #pragma comment(lib, "fmod_vc.lib")
 
 #include "egCommon.hpp"
+#include "egType.hpp"
 #include "egDXCommon.h"
 #include "egPhysics.h"
 #include "egHelper.hpp"
+
+#include "egActorInterfce.hpp"
+#include "egActor.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

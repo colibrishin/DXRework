@@ -20,7 +20,7 @@
 #include "framework.h"
 #include <wrl/client.h>
 
-#include "Audio.h"
+#include <boost/smart_ptr.hpp>
 #define _USE_MATH_DEFINES
 
 #include "BufferHelpers.h"
@@ -44,10 +44,13 @@
 #include "WICTextureLoader.h"
 
 #pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 #include <d3d11.h>
+#include <d2d1.h>
 #include <d3dcompiler.h>
 #include <dxcapi.h>
 #include <directxmath.h>

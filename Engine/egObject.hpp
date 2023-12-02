@@ -11,6 +11,7 @@
 #include "egRenderable.hpp"
 #include "egResource.hpp"
 #include "egType.hpp"
+#include <boost/make_shared.hpp>
 
 namespace Engine::Component
 {
@@ -34,51 +35,51 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				const auto thisObject = std::reinterpret_pointer_cast<Object>(shared_from_this());
+				const auto thisObject = boost::reinterpret_pointer_cast<Object>(shared_from_this());
 
-				std::shared_ptr<T> component = std::make_shared<T>(thisObject, std::forward<Args>(args)...);
+				boost::shared_ptr<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 				component->Initialize();
 
-				m_components_[typeid(T)].insert(std::reinterpret_pointer_cast<Component>(component));
-				m_priority_sorted_.insert(std::reinterpret_pointer_cast<Component>(component));
+				m_components_[typeid(T).name()].insert(boost::reinterpret_pointer_cast<Component>(component));
+				m_priority_sorted_.insert(boost::reinterpret_pointer_cast<Component>(component));
 			}
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetComponent()
+		boost::weak_ptr<T> GetComponent()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
-				return std::reinterpret_pointer_cast<T>(*comp_set.begin());
+				return boost::reinterpret_pointer_cast<T>(*comp_set.begin());
 			}
 
 			return {};
 		}
 
 		template <typename T>
-		std::set<std::weak_ptr<T>, WeakComparer<T>> GetComponents()
+		std::set<boost::weak_ptr<T>, WeakComparer<T>> GetComponents()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
-				std::set<std::weak_ptr<T>, WeakComparer<T>> result;
+				std::set<boost::weak_ptr<T>, WeakComparer<T>> result;
 
 				for (const auto& comp : comp_set)
 				{
-					result.insert(std::reinterpret_pointer_cast<T>(comp));
+					result.insert(boost::reinterpret_pointer_cast<T>(comp));
 				}
 
 				return result;
@@ -88,16 +89,16 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetComponent(EntityID id)
+		boost::weak_ptr<T> GetComponent(EntityID id)
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
 				const auto found = std::find_if(comp_set.begin(), comp_set.end(), [id](const auto& comp)
 				{
@@ -109,7 +110,7 @@ namespace Engine::Abstract
 					return {};
 				}
 
-				return std::reinterpret_pointer_cast<T>(*found);
+				return boost::reinterpret_pointer_cast<T>(*found);
 			}
 
 			return {};
@@ -120,9 +121,9 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (m_components_.contains(typeid(T)))
+				if (m_components_.contains(typeid(T).name()))
 				{
-					const auto& comp_set = m_components_[typeid(T)];
+					const auto& comp_set = m_components_[typeid(T).name()];
 
 					if (comp_set.empty())
 					{
@@ -131,11 +132,11 @@ namespace Engine::Abstract
 
 					const auto first = *comp_set.begin();
 					m_priority_sorted_.erase(first);
-					m_components_[typeid(T)].erase(first);
+					m_components_[typeid(T).name()].erase(first);
 
 					if (comp_set.empty())
 					{
-						m_components_.erase(typeid(T));
+						m_components_.erase(typeid(T).name());
 					}
 				}
 			}
@@ -146,9 +147,9 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (m_components_.contains(typeid(T)))
+				if (m_components_.contains(typeid(T).name()))
 				{
-					const auto& comp_set = m_components_[typeid(T)];
+					const auto& comp_set = m_components_[typeid(T).name()];
 
 					if (comp_set.empty())
 					{
@@ -166,18 +167,18 @@ namespace Engine::Abstract
 					}
 
 					m_priority_sorted_.erase(found);
-					m_components_[typeid(T)].erase(found);
+					m_components_[typeid(T).name()].erase(found);
 
 					if (comp_set.empty())
 					{
-						m_components_.erase(typeid(T));
+						m_components_.erase(typeid(T).name());
 					}
 				}
 			}
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetResource() const
+		boost::weak_ptr<T> GetResource() const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -185,7 +186,7 @@ namespace Engine::Abstract
 				{
 					if (const auto locked = resource.lock())
 					{
-						if (const auto t = std::dynamic_pointer_cast<T>(locked))
+						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
 						{
 							return t;
 						}
@@ -197,7 +198,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		std::weak_ptr<T> GetResource(const std::wstring& name) const
+		boost::weak_ptr<T> GetResource(const std::wstring& name) const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -205,7 +206,7 @@ namespace Engine::Abstract
 				{
 					if (const auto locked = resource.lock())
 					{
-						if (const auto t = std::dynamic_pointer_cast<T>(locked))
+						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
 						{
 							if (!name.empty() && t->GetName() == name)
 							{
@@ -253,10 +254,11 @@ namespace Engine::Abstract
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
-		std::map<const std::type_index, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+		std::map<const std::string, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
 		std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
 		std::set<WeakResource, ResourcePriorityComparer> m_resources_;
 	};

@@ -27,6 +27,7 @@ namespace Engine::Abstract
 		}
 
 	private:
+		friend class boost::serialization::access;
 		WeakScene m_assigned_scene_;
 		eLayerType m_layer_;
 

@@ -6,6 +6,8 @@ namespace Engine::Abstract
 	class StateController : public Component
 	{
 	public:
+		typedef StateController<StateEnum> type;
+
 		StateEnum GetState() const { return m_state_; }
 		StateEnum GetPreviousState() const { return m_previous_state_; }
 		bool HasStateChanged() const { return m_state_ != m_previous_state_; }
@@ -24,6 +26,7 @@ namespace Engine::Abstract
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		StateEnum m_state_;
 		StateEnum m_previous_state_;
 

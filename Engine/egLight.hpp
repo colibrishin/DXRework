@@ -27,6 +27,7 @@ namespace Engine::Objects
 		void Render(const float dt) override;
 
 	private:
+		friend class boost::serialization::access;
 		UINT m_light_id_;
 		Vector4 m_color_;
 		inline static std::bitset<g_max_lights> s_light_map_{};

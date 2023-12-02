@@ -5,7 +5,7 @@
 
 namespace Engine::Component 
 {
-	Component::Transform::Transform(const std::weak_ptr<Abstract::Object>& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner), m_position_(Vector3::Zero), m_previous_position_(Vector3::Zero), m_scale_(Vector3::One), m_rotation_(Quaternion::Identity)
+	Component::Transform::Transform(const WeakObject& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner), m_position_(Vector3::Zero), m_previous_position_(Vector3::Zero), m_scale_(Vector3::One), m_rotation_(Quaternion::Identity)
 	{
 	}
 

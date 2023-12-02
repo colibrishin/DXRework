@@ -9,7 +9,9 @@ namespace Engine::Component
 	class Transform : public Abstract::Component
 	{
 	public:
-		Transform(const std::weak_ptr<Abstract::Object>& owner);
+		typedef Transform type;
+
+		Transform(const WeakObject& owner);
 		~Transform() override = default;
 
 		void SetPosition(const Vector3& position) { m_position_ = position; }
@@ -39,6 +41,7 @@ namespace Engine::Component
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
 		Quaternion m_rotation_;
