@@ -254,6 +254,7 @@ namespace Engine::Abstract
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_active_ = true;
 		bool m_culled_ = true;
 

@@ -4,6 +4,7 @@
 
 #include "egType.hpp"
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/serialization/access.hpp>
 
 namespace Engine::Abstract
 {
@@ -46,6 +47,7 @@ namespace Engine::Abstract
 		void SetGarbage(const bool bGarbage) { m_bGarbage_ = bGarbage; }
 
 	private:
+		friend class boost::serialization::access;
 		std::wstring m_name_;
 		bool m_bGarbage_;
 

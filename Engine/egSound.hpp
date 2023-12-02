@@ -64,6 +64,7 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		friend class boost::serialization::access;
 		void CommitDistance() const
 		{
 			if (m_sound_)

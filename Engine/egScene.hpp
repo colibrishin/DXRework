@@ -88,6 +88,7 @@ namespace Engine
 		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust = 100);
 
 	private:
+		friend class boost::serialization::access;
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
 		std::map<EntityID, WeakObject> m_cached_objects_;

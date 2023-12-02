@@ -41,6 +41,7 @@ namespace Engine::Component
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
 		Quaternion m_rotation_;

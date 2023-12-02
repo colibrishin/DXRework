@@ -26,6 +26,7 @@ namespace Engine::Graphic
 		eShaderType m_type_;
 
 	private:
+		friend class boost::serialization::access;
 		std::filesystem::path m_path_;
 		ComPtr<ID3D11Buffer> m_buffer_;
 	};

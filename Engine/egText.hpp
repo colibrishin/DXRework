@@ -31,6 +31,7 @@ namespace Engine::Objects
 		void SetScale(const float scale) { m_scale_ = scale; }
 
 	private:
+		friend class boost::serialization::access;
 		Vector2 m_position_;
 		Vector4 m_color_;
 		float m_rotation_radian_;

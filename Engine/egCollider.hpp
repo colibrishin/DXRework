@@ -107,6 +107,7 @@ namespace Engine::Component
 		void OnLayerChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);
 

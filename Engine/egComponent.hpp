@@ -23,6 +23,7 @@ namespace Engine::Abstract
 		Component(eComponentPriority priority, const WeakObject& owner) : m_owner_(owner), m_priority_(priority) {}
 
 	private:
+		friend class boost::serialization::access;
 		WeakObject m_owner_;
 		eComponentPriority m_priority_;
 

@@ -26,6 +26,7 @@ namespace Engine::Abstract
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		StateEnum m_state_;
 		StateEnum m_previous_state_;
 

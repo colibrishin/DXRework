@@ -70,6 +70,7 @@ namespace Engine::Component
 		void OnSceneChanged() override;
 
 	private:
+		friend class boost::serialization::access;
 		bool m_bGrounded;
 		
 		bool m_bGravityOverride;
