@@ -40,7 +40,7 @@ namespace Engine::Abstract
 				boost::shared_ptr<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 				component->Initialize();
 
-				m_components_[typeid(T)].insert(boost::reinterpret_pointer_cast<Component>(component));
+				m_components_[typeid(T).name()].insert(boost::reinterpret_pointer_cast<Component>(component));
 				m_priority_sorted_.insert(boost::reinterpret_pointer_cast<Component>(component));
 			}
 		}
@@ -50,12 +50,12 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
 				return boost::reinterpret_pointer_cast<T>(*comp_set.begin());
 			}
@@ -68,12 +68,12 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
 				std::set<boost::weak_ptr<T>, WeakComparer<T>> result;
 
@@ -93,12 +93,12 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(typeid(T)))
+				if (!m_components_.contains(typeid(T).name()))
 				{
 					return {};
 				}
 
-				const auto& comp_set = m_components_[typeid(T)];
+				const auto& comp_set = m_components_[typeid(T).name()];
 
 				const auto found = std::find_if(comp_set.begin(), comp_set.end(), [id](const auto& comp)
 				{
@@ -121,9 +121,9 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (m_components_.contains(typeid(T)))
+				if (m_components_.contains(typeid(T).name()))
 				{
-					const auto& comp_set = m_components_[typeid(T)];
+					const auto& comp_set = m_components_[typeid(T).name()];
 
 					if (comp_set.empty())
 					{
@@ -132,11 +132,11 @@ namespace Engine::Abstract
 
 					const auto first = *comp_set.begin();
 					m_priority_sorted_.erase(first);
-					m_components_[typeid(T)].erase(first);
+					m_components_[typeid(T).name()].erase(first);
 
 					if (comp_set.empty())
 					{
-						m_components_.erase(typeid(T));
+						m_components_.erase(typeid(T).name());
 					}
 				}
 			}
@@ -147,9 +147,9 @@ namespace Engine::Abstract
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (m_components_.contains(typeid(T)))
+				if (m_components_.contains(typeid(T).name()))
 				{
-					const auto& comp_set = m_components_[typeid(T)];
+					const auto& comp_set = m_components_[typeid(T).name()];
 
 					if (comp_set.empty())
 					{
@@ -167,11 +167,11 @@ namespace Engine::Abstract
 					}
 
 					m_priority_sorted_.erase(found);
-					m_components_[typeid(T)].erase(found);
+					m_components_[typeid(T).name()].erase(found);
 
 					if (comp_set.empty())
 					{
-						m_components_.erase(typeid(T));
+						m_components_.erase(typeid(T).name());
 					}
 				}
 			}
@@ -258,7 +258,7 @@ namespace Engine::Abstract
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
-		std::map<const std::type_index, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+		std::map<const std::string, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
 		std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
 		std::set<WeakResource, ResourcePriorityComparer> m_resources_;
 	};
