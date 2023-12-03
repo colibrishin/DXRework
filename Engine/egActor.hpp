@@ -9,23 +9,26 @@ namespace Engine::Abstract
 	public:
 		~Actor() override = default;
 
-		eLayerType GetLayer() const { return m_layer_; }
-		WeakScene GetScene() const { return m_assigned_scene_; }
+		eLayerType GetLayer() const;
+		WeakScene GetScene() const;
+		ActorID GetLocalID() const;
 
 	protected:
-		explicit Actor() : m_assigned_scene_({}), m_layer_(LAYER_NONE)
+		explicit Actor() : m_assigned_scene_({}), m_layer_(LAYER_NONE), m_local_id_(g_invalid_id)
 		{
 		}
 
 	private:
-		friend class boost::serialization::access;
-		friend class Scene;
+		SERIALIZER_ACCESS
+		friend class Engine::Scene;
 
-		void SetLayer(eLayerType layer) { m_layer_ = layer; }
-		void SetScene(const WeakScene& scene) { m_assigned_scene_ = scene; }
+		void SetLayer(eLayerType layer);
+		void SetScene(const WeakScene& scene);
+		void SetLocalID(const ActorID id);
 
 		WeakScene m_assigned_scene_;
 		eLayerType m_layer_;
+		ActorID m_local_id_;
 
 	};
 }
