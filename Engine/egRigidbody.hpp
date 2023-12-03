@@ -5,6 +5,8 @@
 #include "egTransform.hpp"
 #include "egPhysics.h"
 
+#include <boost/serialization/export.hpp>
+
 namespace Engine::Component
 {
 	class Rigidbody : public Abstract::Component
@@ -59,10 +61,12 @@ namespace Engine::Component
 		void FixedUpdate(const float& dt) override;
 
 	protected:
+		Rigidbody();
 		void AfterDeserialized() override;
 
 	private:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
+
 		bool m_bGrounded;
 		
 		bool m_bGravityOverride;
@@ -84,3 +88,5 @@ namespace Engine::Component
 
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Component::Rigidbody)

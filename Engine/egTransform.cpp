@@ -3,6 +3,14 @@
 
 #include "egManagerHelper.hpp"
 
+SERIALIZER_ACCESS_IMPL(Engine::Component::Transform,
+	_ARTAG(_BSTSUPER(Component))
+	_ARTAG(m_previous_position_)
+	_ARTAG(m_position_)
+	_ARTAG(m_rotation_)
+	_ARTAG(m_scale_)
+)
+
 namespace Engine::Component 
 {
 	Component::Transform::Transform(const WeakObject& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner), m_position_(Vector3::Zero), m_previous_position_(Vector3::Zero), m_scale_(Vector3::One), m_rotation_(Quaternion::Identity)
@@ -41,6 +49,10 @@ namespace Engine::Component
 	}
 
 	void Transform::FixedUpdate(const float& dt)
+	{
+	}
+
+	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {})
 	{
 	}
 

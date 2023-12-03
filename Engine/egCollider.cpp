@@ -8,6 +8,16 @@
 #include "egSceneManager.hpp"
 #include "egSphereMesh.hpp"
 
+SERIALIZER_ACCESS_IMPL(Engine::Component::Collider,
+	_ARTAG(_BSTSUPER(Engine::Abstract::Component))
+	_ARTAG(m_bDirtyByTransform)
+	_ARTAG(m_position_)
+	_ARTAG(m_rotation_)
+	_ARTAG(m_size_)
+	_ARTAG(m_type_)
+	_ARTAG(m_mass_)
+)
+
 namespace Engine::Component
 {
 	void Collider::SetPosition(const Vector3& position)
@@ -186,6 +196,7 @@ namespace Engine::Component
 		{
 			m_mesh_ = mesh;
 			GenerateFromMesh(mesh);
+			m_mesh_name_ = locked->GetName();
 		}
 	}
 
@@ -291,12 +302,47 @@ namespace Engine::Component
 				GetResourceManager().GetResource<Mesh::SphereMesh>(L"SphereMesh"));
 		}
 	}
+#endif
+
+	Collider::Collider() :
+		Component(COMPONENT_PRIORITY_COLLIDER, {}),
+		m_bDirtyByTransform(false),
+		m_previous_position_(Vector3::Zero),
+		m_position_(Vector3::Zero),
+		m_size_(Vector3::One),
+		m_rotation_(Quaternion::Identity),
+		m_type_(BOUNDING_TYPE_BOX),
+		m_mass_(1.f),
+		m_boundings_({}),
+		m_inertia_tensor_(),
+		m_world_matrix_()
+	{
+	}
 
 	void Collider::AfterDeserialized()
 	{
-		// @todo: can we reconstruct the weak mesh pointer?
-	}
+#ifdef _DEBUG
+		GenerateDebugMesh();
 #endif
+
+		InitializeStockVertices();
+		if (!m_mesh_name_.empty())
+		{
+			m_mesh_ = GetResourceManager().GetResource<Resources::Mesh>(m_mesh_name_);
+		}
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+
+		UpdateInertiaTensor();
+		UpdateBoundings();
+	}
 
 	void Collider::FixedUpdate(const float& dt)
 	{
@@ -367,5 +413,72 @@ namespace Engine::Component
 		const Matrix matrix = orientation * XMMatrixScaling(GetSize().x, GetSize().y, GetSize().z) * invOrientation;
 
 		XMStoreFloat3x3(&m_inertia_tensor_, matrix);
+	}
+
+	Collider::Collider(const WeakObject& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
+		                                                                           owner),
+																			m_bDirtyByTransform(false),
+																			m_position_(Vector3::Zero),
+																			m_size_(Vector3::One),
+																			m_rotation_(Quaternion::Identity),
+																			m_type_(BOUNDING_TYPE_BOX),
+																			m_mass_(1.0f), m_boundings_({}),
+																			m_inertia_tensor_(),
+																			m_mesh_(mesh)
+	{
+		if (const auto locked = m_mesh_.lock())
+		{
+			m_mesh_name_ = locked->GetName();
+		}
+	}
+
+	void Collider::GenerateInertiaCube()
+	{
+		const Vector3 dimensions_squared = GetSize() * GetSize();
+
+		m_inverse_inertia_.x = (12.0f * GetInverseMass()) / (dimensions_squared.y + dimensions_squared.z);
+		m_inverse_inertia_.y = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.z);
+		m_inverse_inertia_.z = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.y);
+	}
+
+	void Collider::GenerateInertiaSphere()
+	{
+		const float radius = GetSize().x;
+		const float i = 2.5f * GetInverseMass() / (radius*radius);
+
+		m_inverse_inertia_ = Vector3(i, i, i);
+	}
+
+	void Collider::PreUpdate(const float& dt)
+	{
+		static float second_counter = 0.f;
+
+		if (second_counter >= 1.f)
+		{
+			m_collision_count_.clear();
+		}
+
+		second_counter += dt;
+
+		UpdateFromTransform();
+		UpdateInertiaTensor();
+	}
+
+	void Collider::Update(const float& dt)
+	{
+		UpdateFromTransform();
+		UpdateInertiaTensor();
+	}
+
+	void Collider::PreRender(const float dt)
+	{
+#ifdef _DEBUG
+		if (const auto tr = m_debug_mesh_->GetComponent<Transform>().lock())
+		{
+			tr->SetPosition(GetPosition());
+			tr->SetRotation(GetRotation());
+			tr->SetScale(GetSize());
+		}
+#endif
 	}
 }

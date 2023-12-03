@@ -1,8 +1,10 @@
 #pragma once
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace Engine::Abstract
 {
-	template <typename StateEnum>
+	template <typename StateEnum, class EC = std::enable_if_t<std::is_enum_v<StateEnum>>>
 	class StateController : public Component
 	{
 	public:
@@ -14,33 +16,44 @@ namespace Engine::Abstract
 		void PreUpdate(const float& dt) override;
 
 	protected:
+		StateController() : Component(COMPONENT_PRIORITY_STATE, {}) {}
 		StateController(const WeakObject& owner) : Component(COMPONENT_PRIORITY_STATE, owner) {}
 		void SetState(StateEnum state) { m_state_ = state; }
-
-	private:
 		void AfterDeserialized() override;
 
+	private:
+		friend class Engine::Serializer;
 		friend class boost::serialization::access;
+
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int file_version)
+		{
+			ar & boost::serialization::base_object<Engine::Abstract::Component>(*this);
+			ar & m_state_;
+			ar & m_previous_state_;
+		}
+
 		StateEnum m_state_;
 		StateEnum m_previous_state_;
 
 	};
 
-	template <typename StateEnum>
-	void StateController<StateEnum>::Initialize()
+	template <typename StateEnum, class EC>
+	void StateController<StateEnum, EC>::Initialize()
 	{
-		m_state_ = (StateEnum)0;
-		m_previous_state_ = (StateEnum)0;
+		m_state_ = static_cast<StateEnum>(0);
+		m_previous_state_ = static_cast<StateEnum>(0);
 	}
 
-	template <typename StateEnum>
-	void StateController<StateEnum>::PreUpdate(const float& dt)
+	template <typename StateEnum, class EC>
+	void StateController<StateEnum, EC>::PreUpdate(const float& dt)
 	{
 		m_previous_state_ = m_state_;
 	}
 
-	template <typename StateEnum>
-	void StateController<StateEnum>::AfterDeserialized()
+	template <typename StateEnum, class EC>
+	void StateController<StateEnum, EC>::AfterDeserialized()
 	{
 	}
 }
+
