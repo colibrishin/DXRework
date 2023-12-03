@@ -55,6 +55,15 @@
 #include <dxcapi.h>
 #include <directxmath.h>
 
+#include "../Engine/egCollider.hpp"
+#include "../Engine/egManagerHelper.hpp"
+#include "../Engine/egTexture.hpp"
+#include "../Engine/egObject.hpp"
+#include "../Engine/egResourceManager.hpp"
+#include "../Engine/egTransform.hpp"
+#include "../Engine/egIShader.hpp"
+#include "../Engine/egRigidbody.hpp"
+
 #include "../Engine/pch.hpp"
 
 using namespace DirectX;
