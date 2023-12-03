@@ -53,7 +53,7 @@ namespace Engine
 	{
 		class Collider;
 		class Transform;
-		class RigidBody;
+		class Rigidbody;
 	}
 
 	class Scene;
