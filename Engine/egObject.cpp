@@ -9,7 +9,8 @@
 SERIALIZER_ACCESS_IMPL(
 	Engine::Abstract::Object,
 	_ARTAG(_BSTSUPER(Actor))
-	_ARTAG(m_components_))
+	_ARTAG(m_components_)
+	_ARTAG(m_resource_names_))
 
 namespace Engine::Abstract
 {
