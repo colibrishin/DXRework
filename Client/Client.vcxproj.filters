@@ -59,9 +59,6 @@
     <ClInclude Include="clGiftBox.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clGiftboxObject.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="clFPSCounter.hpp">
       <Filter>Object</Filter>
     </ClInclude>
@@ -90,6 +87,27 @@
     </ClCompile>
     <ClCompile Include="clCharacterController.cpp">
       <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestObject.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestCube.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="clSkyBox.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlaneObject.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="clMousePosition.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="clFPSCounter.cpp">
+      <Filter>Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
