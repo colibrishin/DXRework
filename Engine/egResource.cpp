@@ -5,9 +5,8 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
-SERIALIZER_ACCESS_IMPL(Engine::Abstract::Resource)
-SERIALIZER_ACCESS_IMPL2(Engine::Abstract::Resource,
-	_ARTAG(_BASEOBJECT(Renderable))
+SERIALIZER_ACCESS_IMPL(Engine::Abstract::Resource,
+	_ARTAG(_BSTSUPER(Renderable))
 	_ARTAG(m_bLoaded_)
 	_ARTAG(m_path_wstr_)
 	_ARTAG(m_priority_))
