@@ -1,6 +1,20 @@
 #include "pch.hpp"
 #include "egFont.hpp"
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/export.hpp>
+#include "egSerialization.hpp"
+
+SERIALIZER_ACCESS_IMPL3(Engine::Resources::Font,
+	_ARTAG(_BASEOBJECT(Resource))
+	_ARTAG(m_position_)
+	_ARTAG(m_color_)
+	_ARTAG(m_rotation_radian_)
+	_ARTAG(m_scale_)
+	_ARTAG(m_text_)
+)
+
 namespace Engine::Resources
 {
 	Font::Font(const std::filesystem::path& path) : Abstract::Resource(path, RESOURCE_PRIORITY_FONT), m_lazy_reload_(false), m_rotation_radian_(0), m_scale_(1)
@@ -43,8 +57,13 @@ namespace Engine::Resources
 		m_font_.reset();
 	}
 
+	Font::Font(): Abstract::Resource("", RESOURCE_PRIORITY_FONT), m_rotation_radian_(0), m_scale_(1),
+	              m_lazy_reload_(false)
+	{
+	}
+
 	void Font::Load_INTERNAL()
 	{
-		m_font_ = std::make_unique<SpriteFont>(GetD3Device().GetDevice(), std::filesystem::absolute(GetPath()).c_str());
+		m_font_ = std::make_unique<SpriteFont>(GetD3Device().GetDevice(), GetPath().c_str());
 	}
 }
