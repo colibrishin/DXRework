@@ -5,5 +5,5 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
-SERIALIZER_ACCESS_IMPL3(Engine::Abstract::Renderable,
-	_ARTAG(_BASEOBJECT(Entity)))
+SERIALIZER_ACCESS_IMPL(Engine::Abstract::Renderable,
+	_ARTAG(_BSTSUPER(Entity)))

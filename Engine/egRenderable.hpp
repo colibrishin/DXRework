@@ -1,6 +1,5 @@
 #pragma once
 #include "egEntity.hpp"
-#include "egSerialization.hpp"
 
 namespace Engine::Abstract
 {

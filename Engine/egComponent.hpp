@@ -13,16 +13,32 @@ namespace Engine::Abstract
 
 		WeakObject GetOwner() const { return m_owner_; }
 		eComponentPriority GetPriority() const { return m_priority_; }
+		ComponentID GetLocalID() const { return m_local_id_; }
 
 	protected:
-		Component(eComponentPriority priority, const WeakObject& owner) : m_owner_(owner), m_priority_(priority) {}
+		Component(eComponentPriority priority, const WeakObject& owner);
 
 	private:
-		friend class boost::serialization::access;
-		void SetOwner(const WeakObject& owner) { m_owner_ = owner; }
+		SERIALIZER_ACCESS
+		friend class Object;
 
-		WeakObject m_owner_;
+		void SetOwner(const WeakObject& owner)
+		{
+			m_owner_ = owner;
+		}
+		void SetLocalID(ComponentID id)
+		{
+			if (const auto locked = m_owner_.lock())
+			{
+				m_local_id_ = id;
+			}
+		}
+
+		ComponentID m_local_id_;
 		eComponentPriority m_priority_;
+
+		// Non-serialized
+		WeakObject m_owner_;
 
 	};
 }

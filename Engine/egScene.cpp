@@ -4,6 +4,11 @@
 #include "egLight.hpp"
 #include "egManagerHelper.hpp"
 
+SERIALIZER_ACCESS_IMPL(Engine::Scene,
+	_ARTAG(_BSTSUPER(Renderable))
+	_ARTAG(m_main_camera_local_id_)
+	_ARTAG(m_layers))
+
 namespace Engine
 {
 	void Scene::Initialize()
@@ -17,6 +22,7 @@ namespace Engine
 		AddGameObject(camera, LAYER_CAMERA);
 
 		m_mainCamera_ = camera;
+		m_main_camera_local_id_ = camera->GetLocalID();
 
 		const auto light1 = Instantiate<Objects::Light>();
 		AddGameObject(light1, LAYER_LIGHT);
@@ -40,6 +46,26 @@ namespace Engine
 
 		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
 		obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
+
+		ActorID id = 0;
+
+		while (true)
+		{
+			if (id == g_invalid_id)
+			{
+				throw std::exception("Actor ID overflow");
+			}
+
+			if (!m_assigned_actor_ids_.contains(id))
+			{
+				m_assigned_actor_ids_.emplace(id);
+				break;
+			}
+
+			++id;
+		}
+
+		obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
 
 		if (const auto tr = obj->GetComponent<Component::Transform>().lock())
 		{
@@ -91,6 +117,7 @@ namespace Engine
 
 		m_cached_objects_.erase(id);
 		m_layers[layer]->RemoveGameObject(id);
+		m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
 	}
 
 	std::vector<WeakObject> Scene::GetGameObjects(eLayerType layer)
@@ -240,6 +267,7 @@ namespace Engine
 			for (const auto& obj : layer->GetGameObjects())
 			{
 				m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+				m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID());
 
 				for (const auto& comp : obj.lock()->GetAllComponents())
 				{
@@ -248,11 +276,10 @@ namespace Engine
 			}
 		}
 
-		// @todo: rebuild octree, and check whether weakcamera point persist after deserialization.
-		GetDebugger().Log(L"SCENE : TODO IS HERE!");
+		// @todo: rebuild octree.
 	}
 
-	Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
+	Scene::Scene() : m_main_camera_local_id_(g_invalid_id), m_object_position_tree_(g_max_map_size, {})
 	{
 	}
 

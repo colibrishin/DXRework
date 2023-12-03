@@ -6,6 +6,11 @@
 #include "egCollision.h"
 #include "egRigidbody.hpp"
 
+SERIALIZER_ACCESS_IMPL(
+	Engine::Abstract::Object,
+	_ARTAG(_BSTSUPER(Actor))
+	_ARTAG(m_components_))
+
 namespace Engine::Abstract
 {
 	template void Object::DispatchComponentEvent(Engine::Component::Collider& lhs, Engine::Component::Collider& rhs);

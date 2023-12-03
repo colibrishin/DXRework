@@ -11,8 +11,8 @@
 	template<class Archive> \
 	void serialize(Archive & ar, const unsigned int file_version); \
 
-// part of serialization access implementation
-#define SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE) \
+// part of serialization access implementation, forward declaration of serialize function
+#define SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE) \
 		template void NAMESPACE_TYPE::serialize<boost::archive::text_iarchive>( \
 			boost::archive::text_iarchive& ar, \
 			const unsigned int file_version); \
@@ -21,10 +21,12 @@
 			const unsigned int file_version); \
 		BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE) \
 
-
+// serialization macros
 #define _ARTAG(TYPENAME) ar & TYPENAME;
-#define _BASEOBJECT(BASE) boost::serialization::base_object<BASE>(*this)
+// serialization macros, requires if object is inherited from another object
+#define _BSTSUPER(BASE) boost::serialization::base_object<BASE>(*this)
 
+// part of serialization access implementation, serialize function implementation
 #define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, ...) \
 		template <class Archive> \
 		void NAMESPACE_TYPE::serialize(Archive& ar, const unsigned int file_version) \
@@ -33,38 +35,70 @@
 		} \
 
 // full serialization access implementation for a class only in the cpp file, requires a boost include
-#define SERIALIZER_ACCESS_IMPL3(NAMESPACE_TYPE, ...) \
-		SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE) \
+#define SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE, ...) \
+		SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE) \
 		SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) \
 
 namespace Engine
 {
-	class Layer;
-
 	namespace Objects
 	{
 		class Light;
 		class Camera;
+		class Text;
+		class DebugObject;
 	}
 
 	namespace Component
 	{
 		class Collider;
+		class Transform;
+		class RigidBody;
 	}
 
 	class Scene;
+	class Layer;
+	class Serializer;
+
+	namespace Graphic
+	{
+		class IShader;
+		class VertexShader;
+	}
 
 	namespace Resources
 	{
 		class Font;
 		class Mesh;
+		class Sound;
+		class Texture;
+		class NormalMap;
 	}
 
 	namespace Abstract
 	{
+		class Entity;
 		class Object;
 		class Component;
+		class Actor;
+		class Renderable;
 		class Resource;
+	}
+
+	namespace Manager
+	{
+		class SceneManager;
+		class ResourceManager;
+		class D3Device;
+		class ProjectionFrustum;
+		class RenderPipeline;
+		class ToolkitAPI;
+		class CollisionManager;
+		class PhysicsManager;
+		class ConstraintSolver;
+		class Debugger;
+		class TaskScheduler;
+		class Application;
 	}
 
 	using WeakObject = boost::weak_ptr<Abstract::Object>;
@@ -86,6 +120,8 @@ namespace Engine
 	using StrongFont = boost::shared_ptr<Resources::Font>;
 
 	using EntityID = LONG_PTR;
+	using ComponentID = LONG_PTR;
+	using ActorID = LONG_PTR;
 
 	using TaskSchedulerFunc = std::function<void(const float&)>;
 }

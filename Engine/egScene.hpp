@@ -1,9 +1,7 @@
 #pragma once
 #include <ranges>
 
-#include "egObject.hpp"
 #include "egRenderable.hpp"
-#include "egHelper.hpp"
 #include "../octree/octree.h"
 
 namespace Engine
@@ -70,12 +68,14 @@ namespace Engine
 		void AfterDeserialized() override;
 
 	private:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
 
-		WeakCamera m_mainCamera_;
+		ActorID m_main_camera_local_id_;
 		std::map<eLayerType, StrongLayer> m_layers;
 
 		// Non-serialized
+		WeakCamera m_mainCamera_;
+		std::set<ActorID> m_assigned_actor_ids_;
 		std::map<EntityID, WeakObject> m_cached_objects_;
 		std::map<const std::string, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
 		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;

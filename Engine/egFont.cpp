@@ -6,8 +6,8 @@
 #include <boost/serialization/export.hpp>
 #include "egSerialization.hpp"
 
-SERIALIZER_ACCESS_IMPL3(Engine::Resources::Font,
-	_ARTAG(_BASEOBJECT(Resource))
+SERIALIZER_ACCESS_IMPL(Engine::Resources::Font,
+	_ARTAG(_BSTSUPER(Resource))
 	_ARTAG(m_position_)
 	_ARTAG(m_color_)
 	_ARTAG(m_rotation_radian_)

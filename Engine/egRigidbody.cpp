@@ -3,6 +3,7 @@
 #include "egCollider.hpp"
 #include "egKinetic.h"
 #include "egScene.hpp"
+#include "egCollider.hpp"
 
 namespace Engine::Component
 {
@@ -19,14 +20,19 @@ namespace Engine::Component
 		}
 	}
 
+	void Rigidbody::SetMainCollider(const WeakCollider& collider)
+	{
+		m_main_collider_ = collider.lock()->GetLocalID();
+	}
+
 	WeakCollider Rigidbody::GetMainCollider() const
 	{
-		if (!m_main_collider_.lock())
+		if (m_main_collider_ == 0)
 		{
 			return GetOwner().lock()->GetComponent<Collider>();
 		}
 
-		return m_main_collider_;
+		return GetOwner().lock()->GetComponentByLocal<Collider>(m_main_collider_);
 	}
 
 	void Rigidbody::Reset()

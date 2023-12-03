@@ -1,6 +1,7 @@
 #pragma once
 #include "egRenderPipeline.hpp"
 #include "egResourceManager.hpp"
+#include "egObject.hpp"
 
 namespace Engine::Object
 {
