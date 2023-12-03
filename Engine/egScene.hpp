@@ -66,6 +66,9 @@ namespace Engine
 		void GetNearbyObjects(const Vector3& pos, const size_t range, std::vector<WeakObject>& out);
 		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust = 100);
 
+	protected:
+		void AfterDeserialized() override;
+
 	private:
 		friend class boost::serialization::access;
 
