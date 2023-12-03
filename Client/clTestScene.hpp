@@ -62,6 +62,9 @@ namespace Client::Scene
 		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_DEFAULT);
 
+		Engine::Serializer::Serialize("companion.txt", companion);
+		const auto deserialized = Engine::Serializer::Deserialize<Object::TestCube>("companion.txt");
+
 		GetMainCamera().lock()->BindObject(companion);
 	}
 }
