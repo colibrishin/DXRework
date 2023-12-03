@@ -157,9 +157,6 @@
     <ClInclude Include="egKinetic.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="egTransformLerpManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
     <ClInclude Include="egPhysicsManager.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
@@ -196,15 +193,17 @@
     <ClInclude Include="egActor.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
-    <ClInclude Include="egActorInterfce.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
     <ClInclude Include="egStateController.hpp">
       <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egLerpManager.hpp" />
+    <ClInclude Include="egSerialization.hpp">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="egCamera.cpp">
@@ -267,18 +266,23 @@
     <ClCompile Include="egConstraintSolver.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
-    <ClCompile Include="egTransfromLerpManager.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
     <ClCompile Include="egScene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="egProjectionFrustum.cpp" />
-    <ClCompile Include="egActor.cpp">
-      <Filter>Abstract</Filter>
-    </ClCompile>
     <ClCompile Include="egCommon.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="egLayer.cpp" />
+    <ClCompile Include="egLerpManager.cpp" />
+    <ClCompile Include="egEntity.cpp">
+      <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderable.cpp">
+      <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egResource.cpp">
+      <Filter>Abstract</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
