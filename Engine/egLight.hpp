@@ -28,6 +28,8 @@ namespace Engine::Objects
 		void Render(const float dt) override;
 
 	private:
+		void AfterDeserialized() override;
+
 		friend class boost::serialization::access;
 		UINT m_light_id_;
 		Vector4 m_color_;
@@ -90,5 +92,11 @@ namespace Engine::Objects
 	inline void Light::Render(const float dt)
 	{
 		Object::Render(dt);
+	}
+
+	inline void Light::AfterDeserialized()
+	{
+		Object::AfterDeserialized();
+		// @todo: use same light id?
 	}
 }
