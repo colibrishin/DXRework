@@ -9,8 +9,6 @@ namespace Engine::Component
 	class Transform : public Abstract::Component
 	{
 	public:
-		typedef Transform type;
-
 		Transform(const WeakObject& owner);
 		~Transform() override = default;
 
@@ -25,20 +23,12 @@ namespace Engine::Component
 		Quaternion GetRotation() const { return m_rotation_; }
 		Vector3 GetScale() const { return m_scale_; }
 
-		void Initialize_INTERNAL() override;
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
-
-	protected:
-		void OnLayerChanging() override;
-		void OnLayerChanged() override;
-		void OnCreate() override;
-		void OnDestroy() override;
-		void OnSceneChanging() override;
-		void OnSceneChanged() override;
 
 	private:
 		friend class boost::serialization::access;

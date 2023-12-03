@@ -28,8 +28,8 @@ namespace Client::Object
 	class TestCube final : public Engine::Abstract::Object
 	{
 	public:
-		explicit TestCube(const Engine::WeakScene& scene, const Engine::eLayerType layer);
-		void Initialize_INTERNAL() override;
+		TestCube();
+		void Initialize() override;
 		~TestCube() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -39,11 +39,11 @@ namespace Client::Object
 		void FixedUpdate(const float& dt) override;
 	};
 
-	inline TestCube::TestCube(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
+	inline TestCube::TestCube() : Engine::Abstract::Object()
 	{
 	}
 
-	inline void TestCube::Initialize_INTERNAL()
+	inline void TestCube::Initialize()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));

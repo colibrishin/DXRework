@@ -14,7 +14,7 @@ namespace Client::State
 		{
 		}
 
-		void Initialize_INTERNAL() override;
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
@@ -32,7 +32,7 @@ namespace Client::State
 
 	};
 
-	inline void CharacterController::Initialize_INTERNAL()
+	inline void CharacterController::Initialize()
 	{
 		SetState(CHAR_STATE_IDLE);
 	}

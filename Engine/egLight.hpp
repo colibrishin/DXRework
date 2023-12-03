@@ -5,13 +5,14 @@
 #include "egObject.hpp"
 #include "egRenderPipeline.hpp"
 #include "egTransform.hpp"
+#include "egObject.hpp"
 
 namespace Engine::Objects
 {
 	class Light final : public Abstract::Object
 	{
 	public:
-		explicit Light(const WeakScene& scene) : Object(scene, LAYER_LIGHT), m_light_id_(0)
+		Light() : Object(), m_light_id_(0)
 		{
 		}
 
@@ -20,7 +21,7 @@ namespace Engine::Objects
 		void SetColor(Vector4 color);
 		void SetPosition(Vector3 position);
 
-		void Initialize_INTERNAL() override;
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -51,7 +52,7 @@ namespace Engine::Objects
 		transform.lock()->SetPosition(position);
 	}
 
-	inline void Light::Initialize_INTERNAL()
+	inline void Light::Initialize()
 	{
 		assert(s_light_map_.count() < g_max_lights);
 

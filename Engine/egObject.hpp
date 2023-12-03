@@ -10,8 +10,9 @@
 
 #include "egRenderable.hpp"
 #include "egResource.hpp"
-#include "egType.hpp"
 #include <boost/make_shared.hpp>
+
+#include "egScene.hpp"
 
 namespace Engine::Component
 {
@@ -42,6 +43,11 @@ namespace Engine::Abstract
 
 				m_components_[typeid(T).name()].insert(boost::reinterpret_pointer_cast<Component>(component));
 				m_priority_sorted_.insert(boost::reinterpret_pointer_cast<Component>(component));
+
+				if (const auto scene = GetScene().lock())
+				{
+					scene->AddCacheComponent(component);
+				}
 			}
 		}
 
@@ -61,6 +67,11 @@ namespace Engine::Abstract
 			}
 
 			return {};
+		}
+
+		const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents() const
+		{
+			return m_priority_sorted_;
 		}
 
 		template <typename T>
@@ -134,6 +145,11 @@ namespace Engine::Abstract
 					m_priority_sorted_.erase(first);
 					m_components_[typeid(T).name()].erase(first);
 
+					if (const auto scene = GetScene().lock())
+					{
+						scene->RemoveCacheComponent(first);
+					}
+
 					if (comp_set.empty())
 					{
 						m_components_.erase(typeid(T).name());
@@ -168,6 +184,11 @@ namespace Engine::Abstract
 
 					m_priority_sorted_.erase(found);
 					m_components_[typeid(T).name()].erase(found);
+
+					if (const auto scene = GetScene().lock())
+					{
+						scene->RemoveCacheComponent(*found);
+					}
 
 					if (comp_set.empty())
 					{
@@ -229,11 +250,9 @@ namespace Engine::Abstract
 		bool GetActive() const { return m_active_; }
 
 	protected:
-		Object(const WeakScene& initial_scene, const eLayerType initial_layer) : Actor(initial_scene, initial_layer), m_active_(true), m_culled_(true) {};
+		Object() : Actor(), m_active_(true), m_culled_(true) {};
 
 	public:
-		void Initialize() final;
-		virtual void Initialize_INTERNAL() = 0;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -245,102 +264,14 @@ namespace Engine::Abstract
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
-	protected:
-		void OnCreate() override;
-		void OnDestroy() override;
-		void OnLayerChanging() override;
-		void OnLayerChanged() override;
-		void OnSceneChanging() override;
-		void OnSceneChanged() override;
-
-	private:
 		friend class boost::serialization::access;
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
 		std::map<const std::string, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+
+		// Non-serialized
 		std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
 		std::set<WeakResource, ResourcePriorityComparer> m_resources_;
 	};
-
-	inline void Object::PreUpdate(const float& dt)
-	{
-		for (const auto& component : m_priority_sorted_)
-		{
-			if (const auto locked = component.lock())
-			{
-				locked->PreUpdate(dt);
-			}
-			else
-			{
-				m_priority_sorted_.erase(component);
-			}
-		}
-
-		for (const auto& resource : m_resources_)
-		{
-			if (const auto locked = resource.lock())
-			{
-				locked->PreUpdate(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
-		}
-	}
-
-	inline void Object::PreRender(const float dt)
-	{
-		for (const auto& component : m_priority_sorted_)
-		{
-			if (const auto locked = component.lock())
-			{
-				locked->PreRender(dt);
-			}
-			else
-			{
-				m_priority_sorted_.erase(component);
-			}
-		}
-
-		for (const auto& resource : m_resources_)
-		{
-			if (const auto locked = resource.lock())
-			{
-				locked->PreRender(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
-		}
-	}
-
-	inline void Object::Update(const float& dt)
-	{
-		for (const auto& component : m_priority_sorted_)
-		{
-			if (const auto locked = component.lock())
-			{
-				locked->Update(dt);
-			}
-			else
-			{
-				m_priority_sorted_.erase(component);
-			}
-		}
-
-		for (const auto& resource : m_resources_)
-		{
-			if (const auto locked = resource.lock())
-			{
-				locked->Update(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
-		}
-	}
 }

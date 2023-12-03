@@ -23,8 +23,6 @@ namespace Engine::Component
 	class Collider : public Abstract::Component
 	{
 	public:
-		typedef Collider type;
-
 		Collider(const WeakObject& owner, const WeakMesh& mesh = {});
 		~Collider() override = default;
 
@@ -76,7 +74,7 @@ namespace Engine::Component
 		virtual const std::vector<const Vector3*>& GetVertices() const;
 		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
 
-		void Initialize_INTERNAL() override;
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -97,14 +95,6 @@ namespace Engine::Component
 
 			throw std::exception("Invalid type");
 		}
-		
-	protected:
-		void OnCreate() override;
-		void OnDestroy() override;
-		void OnSceneChanging() override;
-		void OnSceneChanged() override;
-		void OnLayerChanging() override;
-		void OnLayerChanged() override;
 
 	private:
 		friend class boost::serialization::access;
@@ -184,8 +174,6 @@ namespace Engine::Component
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
-
-		friend class Manager::Debugger;
 
 		inline static std::vector<Vector3> m_cube_stock_ = {};
 		inline static std::vector<Vector3> m_sphere_stock_ = {};

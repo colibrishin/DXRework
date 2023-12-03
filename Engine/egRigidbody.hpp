@@ -10,8 +10,6 @@ namespace Engine::Component
 	class Rigidbody : public Abstract::Component
 	{
 	public:
-		typedef Rigidbody type;
-
 		explicit Rigidbody(const WeakObject& object) : Abstract::Component(COMPONENT_PRIORITY_RIGIDBODY, object),
 														m_bGrounded(false), m_bGravityOverride(false),
 														m_bFixed(false), m_friction_mu_(0.0f)
@@ -19,8 +17,6 @@ namespace Engine::Component
 		}
 
 		~Rigidbody() override = default;
-
-		void Initialize_INTERNAL() override;
 
 		void SetMainCollider(const WeakCollider& collider) { m_main_collider_ = collider; }
 		void SetGravityOverride(bool gravity) { m_bGravityOverride = gravity;}
@@ -55,19 +51,12 @@ namespace Engine::Component
 		bool IsFixed() const { return m_bFixed; }
 		bool IsGrounded() const { return m_bGrounded; }
 
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
-
-	protected:
-		void OnLayerChanging() override;
-		void OnLayerChanged() override;
-		void OnCreate() override;
-		void OnDestroy() override;
-		void OnSceneChanging() override;
-		void OnSceneChanged() override;
 
 	private:
 		friend class boost::serialization::access;

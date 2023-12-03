@@ -124,7 +124,7 @@ namespace Engine::Manager
 	void CollisionDetector::Update(const float& dt)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
-		const auto& colliders = scene->GetComponents<Component::Collider>();
+		const auto& colliders = scene->GetCachedComponents<Component::Collider>();
 
 		for (const auto& cl : colliders)
 		{
@@ -162,7 +162,7 @@ namespace Engine::Manager
 		m_speculation_map_.clear();
 
 		const auto scene = GetSceneManager().GetActiveScene().lock();
-		const auto& colliders = scene->GetComponents<Component::Collider>();
+		const auto& colliders = scene->GetCachedComponents<Component::Collider>();
 
 		for (const auto& cl : colliders)
 		{

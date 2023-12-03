@@ -22,8 +22,8 @@ namespace Client::Object
 	class MousePositionText : public Engine::Objects::Text
 	{
 	public:
-		MousePositionText(const Engine::WeakScene& scene, const Engine::eLayerType layer);
-		void Initialize_INTERNAL() override;
+		MousePositionText();
+		void Initialize() override;
 		~MousePositionText() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -32,11 +32,11 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline MousePositionText::MousePositionText(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Text(scene, layer, Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline MousePositionText::MousePositionText() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
 	{
 	}
 
-	inline void MousePositionText::Initialize_INTERNAL()
+	inline void MousePositionText::Initialize()
 	{
 		SetText(L"X: 0, Y: 0");
 		SetPosition(Vector2(0.0f, 32.0f));

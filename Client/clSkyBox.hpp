@@ -21,8 +21,8 @@ namespace Client::Object
 	class SkyBox : public Engine::Abstract::Object
 	{
 	public:
-		explicit SkyBox(const Engine::WeakScene& scene, const Engine::eLayerType layer);
-		void Initialize_INTERNAL() override;
+		SkyBox();
+		void Initialize() override;
 		~SkyBox() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -31,11 +31,11 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline SkyBox::SkyBox(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
+	inline SkyBox::SkyBox() : Engine::Abstract::Object()
 	{
 	}
 
-	inline void SkyBox::Initialize_INTERNAL()
+	inline void SkyBox::Initialize()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"BackSphereMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"Sky"));

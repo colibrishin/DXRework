@@ -11,4 +11,6 @@
 #include <cmath>
 #include <cstring>
 
+#include "../Engine/pch.hpp"
+
 #include "WinAPIWrapper.hpp"

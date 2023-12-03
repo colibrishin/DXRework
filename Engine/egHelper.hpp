@@ -13,14 +13,6 @@ namespace Engine
 		return inst;
 	}
 
-	template <typename T = Abstract::Object, typename... Arg>
-	inline static boost::shared_ptr<T> InstantiateObject(const WeakScene& initial_scene, const eLayerType layer, Arg&&... args)
-	{
-		const auto obj = boost::make_shared<T>(initial_scene, layer, std::forward<Arg>(args)...);
-		obj->Initialize();
-		return obj;
-	}
-
 	static bool IsSamePolarity(const float v1, const float v2)
 	{
 		return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);

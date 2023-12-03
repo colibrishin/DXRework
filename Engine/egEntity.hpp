@@ -23,6 +23,7 @@ namespace Engine::Abstract
 
 		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
 		std::wstring GetName() const { return m_name_; }
+		std::string ToString() const { return typeid(*this).name(); }
 
 		template <typename T>
 		boost::weak_ptr<T> GetWeakPtr()
@@ -44,12 +45,9 @@ namespace Engine::Abstract
 	protected:
 		Entity() = default;
 
-		void SetGarbage(const bool bGarbage) { m_bGarbage_ = bGarbage; }
-
 	private:
 		friend class boost::serialization::access;
 		std::wstring m_name_;
-		bool m_bGarbage_;
 
 	};
 }

@@ -75,8 +75,6 @@
 #include "egDXCommon.h"
 #include "egPhysics.h"
 #include "egHelper.hpp"
-
-#include "egActorInterfce.hpp"
 #include "egActor.hpp"
 
 using namespace DirectX;
