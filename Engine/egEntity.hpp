@@ -38,20 +38,21 @@ namespace Engine::Abstract
 			return boost::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
-		virtual void Initialize() = 0;
+		virtual void Initialize();
 		virtual void PreUpdate(const float& dt) = 0;
 		virtual void Update(const float& dt) = 0;
 		virtual void FixedUpdate(const float& dt) = 0;
 
+		virtual void OnDeserialized();
+
 	protected:
-		Entity() = default;
-		// @todo: serialization status check flag for preventing the call of AfterDeserialized(multiple times
-		virtual void AfterDeserialized() = 0;
+		Entity() : m_b_initialized_(false) {}
 
 	private:
 		SERIALIZER_ACCESS
 
 		std::wstring m_name_;
+		bool m_b_initialized_;
 
 	};
 }
