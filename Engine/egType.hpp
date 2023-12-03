@@ -39,6 +39,28 @@
 		SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE) \
 		SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) \
 
+#define CLIENT_OBJECT_IMPL(NAMESPACE_TYPE) \
+		SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE, \
+			_ARTAG(_BSTSUPER(Engine::Abstract::Object))) \
+
+#define CLIENT_OBJECT_HEADER_DECLARATION(NAMESPACE, NAME) \
+	namespace NAMESPACE { \
+		class NAME : public Engine::Abstract::Object \
+		{ \
+		public: \
+			NAME(); \
+			~NAME() override; \
+			void Initialize() override; \
+			void PreUpdate(const float& dt) override; \
+			void Update(const float& dt) override; \
+			void PreRender(const float& dt) override; \
+			void Render(const float& dt) override; \
+		private: \
+			SERIALIZER_ACCESS \
+		} \
+	} \
+	BOOST_CLASS_EXPORT_KEY(NAMESPACE::NAME) \
+
 namespace Engine
 {
 	namespace Objects
