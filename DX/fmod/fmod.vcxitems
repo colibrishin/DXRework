@@ -14,10 +14,6 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)inc\fmod.cs" />
-    <None Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.cs" />
-    <None Include="$(MSBuildThisFileDirectory)inc\fmod_errors.cs" />
-    <None Include="$(MSBuildThisFileDirectory)inc\fmod_studio.cs" />
     <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x64\fmod.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -32,19 +28,6 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_codec.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_common.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_dsp_effects.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_errors.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_output.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)inc\fmod_studio_common.h" />
-  </ItemGroup>
-  <ItemGroup>
     <Library Include="$(MSBuildThisFileDirectory)lib\x64\fmod_vc.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -53,5 +36,24 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)fmod.cs" />
+    <None Include="$(MSBuildThisFileDirectory)fmod_dsp.cs" />
+    <None Include="$(MSBuildThisFileDirectory)fmod_errors.cs" />
+    <None Include="$(MSBuildThisFileDirectory)fmod_studio.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_common.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_dsp.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_dsp_effects.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_errors.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_output.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio_common.h" />
   </ItemGroup>
 </Project>
