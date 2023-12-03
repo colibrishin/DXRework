@@ -24,7 +24,7 @@ namespace Engine::Abstract
 
 		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
 		std::wstring GetName() const { return m_name_; }
-		std::string ToString() const { return typeid(*this).name(); }
+		std::string ToTypeName() const { return typeid(*this).name(); }
 
 		template <typename T>
 		boost::weak_ptr<T> GetWeakPtr()
