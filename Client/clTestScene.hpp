@@ -54,13 +54,13 @@ namespace Client::Scene
 	{
 		Scene::Initialize();
 
-		const auto companion = Engine::InstantiateObject<Object::TestCube>(GetSharedPtr<Scene>(), Engine::LAYER_DEFAULT);
-		Engine::InstantiateObject<Object::TestObject>(GetSharedPtr<Scene>(), Engine::LAYER_DEFAULT);
-		//Engine::InstantiateObject<Object::Giftbox>(GetSharedPtr<Scene>(), Engine::LAYER_DEFAULT);
-		Engine::InstantiateObject<Object::FPSCounter>(GetSharedPtr<Scene>(), Engine::LAYER_UI);
-		Engine::InstantiateObject<Object::MousePositionText>(GetSharedPtr<Scene>(), Engine::LAYER_UI);
-		Engine::InstantiateObject<Object::SkyBox>(GetSharedPtr<Scene>(), Engine::LAYER_DEFAULT);
-		Engine::InstantiateObject<Object::PlaneObject>(GetSharedPtr<Scene>(), Engine::LAYER_DEFAULT);
+		const auto companion = Engine::Instantiate<Object::TestCube>();
+		AddGameObject(companion, Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
+		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
+		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_DEFAULT);
 
 		GetMainCamera().lock()->BindObject(companion);
 	}

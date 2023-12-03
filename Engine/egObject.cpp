@@ -73,88 +73,6 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::OnCreate()
-	{
-		if (const auto scene = GetScene().lock())
-		{
-			scene->AddGameObject(GetSharedPtr<Object>(), GetLayer());
-		}
-
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnCreate();
-			}
-		}
-	}
-
-	void Object::OnDestroy()
-	{
-		if (const auto scene = GetScene().lock())
-		{
-			scene->RemoveGameObject(GetID(), GetLayer());
-		}
-
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnDestroy();
-			}
-		}
-	}
-
-	void Object::OnLayerChanging()
-	{
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnLayerChanging();
-			}
-		}
-	}
-
-	void Object::OnLayerChanged()
-	{
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnLayerChanged();
-			}
-		}
-	}
-
-	void Object::OnSceneChanging()
-	{
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnSceneChanging();
-			}
-		}
-	}
-
-	void Object::OnSceneChanged()
-	{
-		for (const auto& comp : m_priority_sorted_) 		
-		{
-			if (const auto locked = comp.lock())
-			{
-				locked->GetSharedPtr<ActorInterface>()->OnSceneChanged();
-			}
-		}
-	}
-
-	void Object::Initialize()
-	{
-		Initialize_INTERNAL();
-		OnCreate();
-	}
-
 	void Object::Render(const float dt)
 	{
 		for (const auto& component : m_priority_sorted_)
@@ -208,6 +126,87 @@ namespace Engine::Abstract
 				locked->FixedUpdate(dt);
 			}
 			else 			
+			{
+				m_resources_.erase(resource);
+			}
+		}
+	}
+
+	void Object::PreUpdate(const float& dt)
+	{
+		for (const auto& component : m_priority_sorted_)
+		{
+			if (const auto locked = component.lock())
+			{
+				locked->PreUpdate(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->PreUpdate(dt);
+			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
+		}
+	}
+
+	void Object::PreRender(const float dt)
+	{
+		for (const auto& component : m_priority_sorted_)
+		{
+			if (const auto locked = component.lock())
+			{
+				locked->PreRender(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->PreRender(dt);
+			}
+			else
+			{
+				m_resources_.erase(resource);
+			}
+		}
+	}
+
+	void Object::Update(const float& dt)
+	{
+		for (const auto& component : m_priority_sorted_)
+		{
+			if (const auto locked = component.lock())
+			{
+				locked->Update(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			if (const auto locked = resource.lock())
+			{
+				locked->Update(dt);
+			}
+			else
 			{
 				m_resources_.erase(resource);
 			}

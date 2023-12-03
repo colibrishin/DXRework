@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egScene.hpp"
-
+#include "egCamera.hpp"
+#include "egLight.hpp"
 #include "egManagerHelper.hpp"
 
 namespace Engine
@@ -12,16 +13,16 @@ namespace Engine
 			m_layers.emplace(static_cast<eLayerType>(i), Instantiate<Layer>(static_cast<eLayerType>(i)));
 		}
 
-		const auto camera = Instantiate<Objects::Camera>(GetSharedPtr<Scene>());
+		const auto camera = Instantiate<Objects::Camera>();
 		AddGameObject(camera, LAYER_CAMERA);
 
 		m_mainCamera_ = camera;
 
-		const auto light1 = Instantiate<Objects::Light>(GetSharedPtr<Scene>());
+		const auto light1 = Instantiate<Objects::Light>();
 		AddGameObject(light1, LAYER_LIGHT);
 		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
 
-		const auto light2 = Instantiate<Objects::Light>(GetSharedPtr<Scene>());
+		const auto light2 = Instantiate<Objects::Light>();
 		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
 		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		AddGameObject(light2, LAYER_LIGHT);
@@ -31,6 +32,14 @@ namespace Engine
 	{
 		m_layers[layer]->AddGameObject(obj);
 		m_cached_objects_.emplace(obj->GetID(), obj);
+
+		for (const auto& comp : obj->GetAllComponents())
+		{
+			m_cached_components_[comp.lock()->ToString()].emplace(comp);
+		}
+
+		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
+		obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
 
 		if (const auto tr = obj->GetComponent<Component::Transform>().lock())
 		{
@@ -75,8 +84,34 @@ namespace Engine
 			}
 		}
 
+		for (const auto& comp : obj.lock()->GetAllComponents())
+		{
+			m_cached_components_[comp.lock()->ToString()].erase(comp);
+		}
+
 		m_cached_objects_.erase(id);
 		m_layers[layer]->RemoveGameObject(id);
+	}
+
+	std::vector<WeakObject> Scene::GetGameObjects(eLayerType layer)
+	{
+		return m_layers[layer]->GetGameObjects();
+	}
+
+	void Scene::AddCacheComponent(const WeakComponent& component)
+	{
+		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
+		{
+			m_cached_components_[component.lock()->ToString()].insert(component);
+		}
+	}
+
+	void Scene::RemoveCacheComponent(const WeakComponent& component)
+	{
+		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
+		{
+			m_cached_components_[component.lock()->ToString()].erase(component);
+		}
 	}
 
 	void Scene::UpdatePosition(const WeakObject& obj)
@@ -194,6 +229,62 @@ namespace Engine
 
 			pos_rounded += dir;
 			accumulated_length += dir.Length();
+		}
+	}
+
+	Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
+	{
+	}
+
+	void Scene::PreUpdate(const float& dt)
+	{
+		m_layers[LAYER_LIGHT]->PreUpdate(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->PreUpdate(dt);
+		}
+	}
+
+	void Scene::Update(const float& dt)
+	{
+		m_layers[LAYER_LIGHT]->Update(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->Update(dt);
+		}
+	}
+
+	void Scene::PreRender(const float dt)
+	{
+		m_layers[LAYER_LIGHT]->PreRender(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->PreRender(dt);
+		}
+	}
+
+	void Scene::Render(const float dt)
+	{
+		GetRenderPipeline().BindLightBuffers();
+
+		m_layers[LAYER_LIGHT]->Render(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->Render(dt);
+		}
+	}
+
+	void Scene::FixedUpdate(const float& dt)
+	{
+		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
+
+		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
 	}
 }

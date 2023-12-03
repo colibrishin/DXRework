@@ -62,7 +62,7 @@ namespace Engine::Component
 		return {};
 	}
 
-	void Collider::Initialize_INTERNAL()
+	void Collider::Initialize()
 	{
 		InitializeStockVertices();
 		if (const auto mesh = m_mesh_.lock())
@@ -276,7 +276,7 @@ namespace Engine::Component
 			m_debug_mesh_.reset();
 		}
 
-		m_debug_mesh_ = InstantiateObject<Object::DebugObject>(GetOwner().lock()->GetScene(), eLayerType::LAYER_UI);
+		m_debug_mesh_ = Instantiate<Object::DebugObject>();
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
@@ -294,40 +294,6 @@ namespace Engine::Component
 #endif
 
 	void Collider::FixedUpdate(const float& dt)
-	{
-	}
-
-	void Collider::OnCreate()
-	{
-		if (const auto scene = GetOwner().lock()->GetScene().lock())
-		{
-			scene->AddComponent<Collider>(GetSharedPtr<Collider>());
-		}
-	}
-
-	void Collider::OnDestroy()
-	{
-		if (const auto scene = GetOwner().lock()->GetScene().lock())
-		{
-			scene->RemoveComponent<Collider>(GetSharedPtr<Collider>());
-		}
-	}
-
-	void Collider::OnSceneChanging()
-	{
-		OnDestroy();
-	}
-
-	void Collider::OnSceneChanged()
-	{
-		OnCreate();
-	}
-
-	void Collider::OnLayerChanging()
-	{
-	}
-
-	void Collider::OnLayerChanged()
 	{
 	}
 

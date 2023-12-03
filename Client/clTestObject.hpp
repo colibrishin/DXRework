@@ -21,8 +21,8 @@ namespace Client::Object
 	class TestObject : public Engine::Abstract::Object
 	{
 	public:
-		explicit TestObject(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer) { }
-		void Initialize_INTERNAL() override;
+		TestObject() : Engine::Abstract::Object() { }
+		void Initialize() override;
 		~TestObject() override = default;
 
 		inline void PreUpdate(const float& dt) override;
@@ -32,7 +32,7 @@ namespace Client::Object
 
 	};
 
-	inline void TestObject::Initialize_INTERNAL()
+	inline void TestObject::Initialize()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));

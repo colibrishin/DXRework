@@ -33,7 +33,7 @@ namespace Engine::Manager::Physics
 	{
 		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())
 		{
-			const auto& rbs = scene->GetComponents<Component::Rigidbody>();
+			const auto& rbs = scene->GetCachedComponents<Component::Rigidbody>();
 
 			for (const auto rb : rbs)
 			{

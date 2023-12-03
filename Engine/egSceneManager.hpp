@@ -37,10 +37,7 @@ namespace Engine::Manager
 
 			if (it != m_scenes_.end())
 			{
-				TaskScheduler::GetInstance().AddTask([this, it](const float& dt)
-				{
-					m_active_scene_ = *it;
-				});
+				m_active_scene_ = *it;
 			}
 		}
 
@@ -75,16 +72,13 @@ namespace Engine::Manager
 
 			if (it != m_scenes_.end())
 			{
-				TaskScheduler::GetInstance().AddTask([this, it](const float& dt)
+				if (*it == m_active_scene_.lock())
 				{
-					if (*it == m_active_scene_.lock())
-					{
-						Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
-						m_active_scene_.reset();
-					}
-						
-					m_scenes_.erase(it);
-				});
+					Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
+					m_active_scene_.reset();
+				}
+					
+				m_scenes_.erase(it);
 			}
 		}
 

@@ -3,9 +3,6 @@
 
 #include "egObject.hpp"
 #include "egRenderable.hpp"
-#include "egCamera.hpp"
-#include "egLayer.hpp"
-#include "egLight.hpp"
 #include "egHelper.hpp"
 #include "../octree/octree.h"
 
@@ -28,10 +25,7 @@ namespace Engine
 		EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
 		void RemoveGameObject(const EntityID id, eLayerType layer);
 
-		std::vector<WeakObject> GetGameObjects(eLayerType layer)
-		{
-			return m_layers[layer]->GetGameObjects();
-		}
+		std::vector<WeakObject> GetGameObjects(eLayerType layer);
 
 		WeakObject FindGameObject(EntityID id)
 		{
@@ -58,26 +52,11 @@ namespace Engine
 			return m_layers.end();
 		}
 
-		template <typename T>
-		void AddComponent(const WeakComponent& component)
-		{
-			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
-			{
-				m_cached_components_[typeid(T).name()].insert(component);
-			}
-		}
+		void AddCacheComponent(const WeakComponent& component);
+		void RemoveCacheComponent(const WeakComponent& component);
 
 		template <typename T>
-		void RemoveComponent(const WeakComponent& component)
-		{
-			if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
-			{
-				m_cached_components_[typeid(T).name()].erase(component);
-			}
-		}
-
-		template <typename T>
-		const std::set<WeakComponent, ComponentPriorityComparer>& GetComponents()
+		const std::set<WeakComponent, ComponentPriorityComparer>& GetCachedComponents()
 		{
 			return m_cached_components_[typeid(T).name()];
 		}
@@ -89,67 +68,14 @@ namespace Engine
 
 	private:
 		friend class boost::serialization::access;
+
 		WeakCamera m_mainCamera_;
 		std::map<eLayerType, StrongLayer> m_layers;
+
+		// Non-serialized
 		std::map<EntityID, WeakObject> m_cached_objects_;
 		std::map<const std::string, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
 		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;
 
 	};
-
-	inline Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
-	{
-	}
-
-	inline void Scene::PreUpdate(const float& dt)
-	{
-		m_layers[LAYER_LIGHT]->PreUpdate(dt);
-
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
-		{
-			m_layers[static_cast<eLayerType>(i)]->PreUpdate(dt);
-		}
-	}
-
-	inline void Scene::Update(const float& dt)
-	{
-		m_layers[LAYER_LIGHT]->Update(dt);
-
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
-		{
-			m_layers[static_cast<eLayerType>(i)]->Update(dt);
-		}
-	}
-
-	inline void Scene::PreRender(const float dt)
-	{
-		m_layers[LAYER_LIGHT]->PreRender(dt);
-
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
-		{
-			m_layers[static_cast<eLayerType>(i)]->PreRender(dt);
-		}
-	}
-
-	inline void Scene::Render(const float dt)
-	{
-		GetRenderPipeline().BindLightBuffers();
-
-		m_layers[LAYER_LIGHT]->Render(dt);
-
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
-		{
-			m_layers[static_cast<eLayerType>(i)]->Render(dt);
-		}
-	}
-
-	inline void Scene::FixedUpdate(const float& dt)
-	{
-		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
-
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
-		{
-			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
-		}
-	}
 }

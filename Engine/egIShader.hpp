@@ -2,7 +2,6 @@
 #include <filesystem>
 
 #include "egCommon.hpp"
-#include "egEntity.hpp"
 #include "egResource.hpp"
 
 namespace Engine::Graphic

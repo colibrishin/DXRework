@@ -10,7 +10,7 @@ namespace Engine::Objects
 	class Camera final : public Abstract::Object
 	{
 	public:
-		explicit Camera(const WeakScene& scene) : Object(scene, LAYER_CAMERA) {}
+		Camera() : Object() {}
 		~Camera() override = default;
 
 		void SetLookAt(Vector3 lookAt)
@@ -26,7 +26,7 @@ namespace Engine::Objects
 		Quaternion GetMouseRotation() const { return m_mouse_rotation_; }
 		Vector3 GetLookAt() const;
 
-		void Initialize_INTERNAL() override;
+		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;

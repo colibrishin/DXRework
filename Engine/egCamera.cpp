@@ -26,7 +26,7 @@ namespace Engine::Objects
 		return Vector3::Transform(m_look_at_, m_mouse_rotation_matrix_);
 	}
 
-	void Camera::Initialize_INTERNAL()
+	void Camera::Initialize()
 	{
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});

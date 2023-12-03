@@ -28,8 +28,8 @@ namespace Client::Object
 	class PlaneObject : public Engine::Abstract::Object
 	{
 	public:
-		explicit PlaneObject(const Engine::WeakScene& scene, const Engine::eLayerType layer);
-		void Initialize_INTERNAL() override;
+		PlaneObject();
+		void Initialize() override;
 		~PlaneObject() override;
 
 		inline void PreUpdate(const float& dt) override;
@@ -38,11 +38,11 @@ namespace Client::Object
 		inline void Render(const float dt) override;
 	};
 
-	inline PlaneObject::PlaneObject(const Engine::WeakScene& scene, const Engine::eLayerType layer) : Engine::Abstract::Object(scene, layer)
+	inline PlaneObject::PlaneObject()
 	{
 	}
 
-	inline void PlaneObject::Initialize_INTERNAL()
+	inline void PlaneObject::Initialize()
 	{
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
