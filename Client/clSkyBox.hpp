@@ -29,46 +29,10 @@ namespace Client::Object
 		inline void Update(const float& dt) override;
 		inline void PreRender(const float dt) override;
 		inline void Render(const float dt) override;
+
+	private:
+		SERIALIZER_ACCESS
 	};
-
-	inline SkyBox::SkyBox() : Engine::Abstract::Object()
-	{
-	}
-
-	inline void SkyBox::Initialize()
-	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"BackSphereMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"Sky"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_default_nolight"));
-
-		AddComponent<Engine::Component::Transform>();
-		const auto tr = GetComponent<Engine::Component::Transform>().lock();
-		tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
-		tr->SetScale(Vector3::One * 15.0f);
-	}
-
-	inline SkyBox::~SkyBox()
-	{
-	}
-
-	inline void SkyBox::PreUpdate(const float& dt)
-	{
-		Object::PreUpdate(dt);
-	}
-
-	inline void SkyBox::Update(const float& dt)
-	{
-		Object::Update(dt);
-	}
-
-	inline void SkyBox::PreRender(const float dt)
-	{
-		Object::PreRender(dt);
-	}
-
-	inline void SkyBox::Render(const float dt)
-	{
-		Object::Render(dt);
-	}
 }
+
+BOOST_CLASS_EXPORT_KEY(Client::Object::SkyBox);
