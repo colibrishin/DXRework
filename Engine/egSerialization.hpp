@@ -56,6 +56,40 @@ namespace boost
 			ar & x.z;
 			ar & x.w;
 		}
+
+		// Quaternion serialization
+		template <class Archive>
+		void serialize(Archive& ar, Quaternion& x, const unsigned int version)
+		{
+			ar & x.x;
+			ar & x.y;
+			ar & x.z;
+			ar & x.w;
+		}
+
+		// Matrix serialization
+		template <class Archive>
+		void serialize(Archive& ar, Matrix& x, const unsigned int version)
+		{
+			ar & x._11;
+			ar & x._12;
+			ar & x._13;
+			ar & x._14;
+			ar & x._21;
+			ar & x._22;
+			ar & x._23;
+			ar & x._24;
+			ar & x._31;
+			ar & x._32;
+			ar & x._33;
+			ar & x._34;
+			ar & x._41;
+			ar & x._42;
+			ar & x._43;
+			ar & x._44;
+		}
+
+		//
 	}
 }
 
