@@ -5,12 +5,28 @@
 
 namespace Engine
 {
+	// instantiate a object, scene, layer.
 	template <typename T, typename... Arg>
 	inline static boost::shared_ptr<T> Instantiate(Arg&&... args)
 	{
-		const auto inst = boost::make_shared<T>(std::forward<Arg>(args)...);
-		inst->Initialize();
-		return inst;
+		if constexpr (
+			std::is_base_of_v<Engine::Abstract::Object, T> ||
+			std::is_base_of_v<Engine::Scene, T> ||
+			std::is_base_of_v<Engine::Layer, T>)
+		{
+				const auto inst = boost::make_shared<T>(std::forward<Arg>(args)...);
+				inst->Initialize();
+				return inst;
+		}
+		else
+		{
+			throw std::runtime_error("Instantiate: Invalid type" + typeid(T).name());
+		}
+	}
+
+	inline static bool IsAssigned(const LONG_PTR id)
+	{
+		return id != g_invalid_id;
 	}
 
 	static bool IsSamePolarity(const float v1, const float v2)
