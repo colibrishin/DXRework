@@ -81,8 +81,25 @@ namespace Engine::Abstract
 
 	void Object::AfterDeserialized()
 	{
-		// @todo: implement
-		throw std::exception("Not implemented");
+		for (const auto& val : m_components_ | std::views::values)
+		{
+			for (const auto& comps : val)
+			{
+				m_assigned_component_ids_.insert(comps->GetLocalID());
+				m_priority_sorted_.insert(comps);
+			}
+		}
+
+		for (const auto& name : m_resource_names_)
+		{
+			// @todo: what if object is not loaded yet?
+			const auto resource = GetResourceManager().GetResource(name);
+
+			if (const auto locked = resource.lock())
+			{
+				m_resources_.insert(locked);
+			}
+		}
 	}
 
 	void Object::Render(const float dt)
