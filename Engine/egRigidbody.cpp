@@ -5,6 +5,22 @@
 #include "egScene.hpp"
 #include "egCollider.hpp"
 
+SERIALIZER_ACCESS_IMPL(Engine::Component::Rigidbody,
+	_ARTAG(_BSTSUPER(Engine::Abstract::Component))
+	_ARTAG(m_bGrounded)
+	_ARTAG(m_bGravityOverride)
+	_ARTAG(m_bFixed)
+	_ARTAG(m_friction_mu_)
+	_ARTAG(m_linear_momentum_)
+	_ARTAG(m_angular_momentum_)
+	_ARTAG(m_linear_friction_)
+	_ARTAG(m_angular_friction_)
+	_ARTAG(m_drag_force_)
+	_ARTAG(m_force_)
+	_ARTAG(m_torque_)
+	_ARTAG(m_main_collider_)
+)
+
 namespace Engine::Component
 {
 	void Rigidbody::Initialize()
@@ -66,9 +82,14 @@ namespace Engine::Component
 	{
 	}
 
+	Rigidbody::Rigidbody() : Component(COMPONENT_PRIORITY_RIGIDBODY, {}), m_bGrounded(false), m_bGravityOverride(false),
+	                         m_bFixed(false),
+	                         m_friction_mu_(0),
+	                         m_main_collider_(0)
+	{
+	}
+
 	void Rigidbody::AfterDeserialized()
 	{
-		// @todo: can weak collider be serialized as intended?
-		throw new std::exception("Not implemented");
 	}
 }

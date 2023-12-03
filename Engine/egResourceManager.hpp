@@ -52,6 +52,25 @@ namespace Engine::Manager
 			return {};
 		}
 
+		static WeakResource GetResource(const std::wstring& name)
+		{
+			const auto it = std::ranges::find_if(m_resources_
+			                               ,
+			                               [&name](const auto& resource)
+			                               {
+				                               return resource->GetName() == name;
+			                               }
+			);
+
+			if (it != m_resources_.end())
+			{
+				(*it)->Load();
+				return *it;
+			}
+
+			return {};
+		}
+
 	private:
 		inline static std::set<StrongResource> m_resources_ = {};
 

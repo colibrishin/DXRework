@@ -41,7 +41,7 @@ namespace Engine
 
 		for (const auto& comp : obj->GetAllComponents())
 		{
-			m_cached_components_[comp.lock()->ToString()].emplace(comp);
+			m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
 		}
 
 		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
@@ -112,7 +112,7 @@ namespace Engine
 
 		for (const auto& comp : obj.lock()->GetAllComponents())
 		{
-			m_cached_components_[comp.lock()->ToString()].erase(comp);
+			m_cached_components_[comp.lock()->ToTypeName()].erase(comp);
 		}
 
 		m_cached_objects_.erase(id);
@@ -129,7 +129,7 @@ namespace Engine
 	{
 		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 		{
-			m_cached_components_[component.lock()->ToString()].insert(component);
+			m_cached_components_[component.lock()->ToTypeName()].insert(component);
 		}
 	}
 
@@ -137,7 +137,7 @@ namespace Engine
 	{
 		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 		{
-			m_cached_components_[component.lock()->ToString()].erase(component);
+			m_cached_components_[component.lock()->ToTypeName()].erase(component);
 		}
 	}
 
@@ -271,7 +271,7 @@ namespace Engine
 
 				for (const auto& comp : obj.lock()->GetAllComponents())
 				{
-					m_cached_components_[comp.lock()->ToString()].emplace(comp);
+					m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
 				}
 			}
 		}

@@ -3,6 +3,7 @@
 #include <DirectXCollision.h>
 #include <execution>
 
+#include <boost/serialization/export.hpp>
 #include "egPhysics.h"
 #include "egComponent.hpp"
 #include "egDebugObject.hpp"
@@ -96,8 +97,12 @@ namespace Engine::Component
 			throw std::exception("Invalid type");
 		}
 
+	protected:
+		Collider();
+		void AfterDeserialized() override;
+
 	private:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);
 
@@ -174,25 +179,12 @@ namespace Engine::Component
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
-
-		inline static std::vector<Vector3> m_cube_stock_ = {};
-		inline static std::vector<Vector3> m_sphere_stock_ = {};
-
-		inline static std::vector<const Vector3*> m_cube_stock_ref_ = {};
-		inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
-
-		std::set<EntityID> m_collided_objects_;
-		std::map<EntityID, UINT> m_collision_count_;
-		std::set<EntityID> m_speculative_collision_candidates_;
-
-		bool m_bDirtyByTransform;
-
 #ifdef _DEBUG
 		void GenerateDebugMesh();
-		void AfterDeserialized() override;
-
-		boost::shared_ptr<Object::DebugObject> m_debug_mesh_;
 #endif
+
+
+		bool m_bDirtyByTransform;
 
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
@@ -200,76 +192,33 @@ namespace Engine::Component
 		Quaternion m_rotation_;
 
 		eBoundingType m_type_;
-		BoundingGroup m_boundings_;
+		std::wstring m_mesh_name_;
 
 		float m_mass_;
+
+		// Non-serialized
+#ifdef _DEBUG
+		boost::shared_ptr<Object::DebugObject> m_debug_mesh_;
+#endif
+		inline static std::vector<Vector3> m_cube_stock_ = {};
+		inline static std::vector<Vector3> m_sphere_stock_ = {};
+
+		inline static std::vector<const Vector3*> m_cube_stock_ref_ = {};
+		inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
+
+		BoundingGroup m_boundings_;
+
+		std::set<EntityID> m_collided_objects_;
+		std::map<EntityID, UINT> m_collision_count_;
+		std::set<EntityID> m_speculative_collision_candidates_;
+
 		Vector3 m_inverse_inertia_;
 		XMFLOAT3X3 m_inertia_tensor_;
 		Matrix m_world_matrix_;
+
 		WeakMesh m_mesh_;
 
 	};
-
-	inline Collider::Collider(const WeakObject& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
-																				owner),
-																			m_bDirtyByTransform(false),
-																			m_position_(Vector3::Zero),
-																			m_size_(Vector3::One),
-																			m_rotation_(Quaternion::Identity),
-																			m_type_(BOUNDING_TYPE_BOX),
-																			m_boundings_({}), m_mass_(1.0f),
-																			m_inertia_tensor_(),
-																			m_mesh_(mesh)
-	{
-	}
-
-	inline void Collider::GenerateInertiaCube()
-	{
-		const Vector3 dimensions_squared = GetSize() * GetSize();
-
-		m_inverse_inertia_.x = (12.0f * GetInverseMass()) / (dimensions_squared.y + dimensions_squared.z);
-		m_inverse_inertia_.y = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.z);
-		m_inverse_inertia_.z = (12.0f * GetInverseMass()) / (dimensions_squared.x + dimensions_squared.y);
-	}
-
-	inline void Collider::GenerateInertiaSphere()
-	{
-		const float radius = GetSize().x;
-		const float i = 2.5f * GetInverseMass() / (radius*radius);
-
-		m_inverse_inertia_ = Vector3(i, i, i);
-	}
-
-	inline void Collider::PreUpdate(const float& dt)
-	{
-		static float second_counter = 0.f;
-
-		if (second_counter >= 1.f)
-		{
-			m_collision_count_.clear();
-		}
-
-		second_counter += dt;
-
-		UpdateFromTransform();
-		UpdateInertiaTensor();
-	}
-
-	inline void Collider::Update(const float& dt)
-	{
-		UpdateFromTransform();
-		UpdateInertiaTensor();
-	}
-
-	inline void Collider::PreRender(const float dt)
-	{
-#ifdef _DEBUG
-		if (const auto tr = m_debug_mesh_->GetComponent<Transform>().lock())
-		{
-			tr->SetPosition(GetPosition());
-			tr->SetRotation(GetRotation());
-			tr->SetScale(GetSize());
-		}
-#endif
-	}
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Component::Collider)

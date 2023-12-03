@@ -1,7 +1,7 @@
 #pragma once
 #include "egComponent.hpp"
 #include <SimpleMath.h>
-
+#include <boost/serialization/export.hpp>
 #include "egDXCommon.h"
 
 namespace Engine::Component
@@ -30,14 +30,21 @@ namespace Engine::Component
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
-	private:
+	protected:
+		Transform();
 		void AfterDeserialized() override;
 
-		friend class boost::serialization::access;
+	private:
+		SERIALIZER_ACCESS
+
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
 		Quaternion m_rotation_;
 		Vector3 m_scale_;
+
+		// Non-serialized
 		TransformBuffer m_transform_buffer_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Component::Transform)

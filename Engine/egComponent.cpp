@@ -8,8 +8,8 @@ SERIALIZER_ACCESS_IMPL(Engine::Abstract::Component,
 
 namespace Engine::Abstract
 {
-	Component::Component(eComponentPriority priority, const WeakObject& owner): m_local_id_(g_invalid_id), m_owner_(owner),
-		m_priority_(priority)
+	Component::Component(eComponentPriority priority, const WeakObject& owner): m_local_id_(g_invalid_id), m_priority_(priority),
+	                                                                            m_owner_(owner)
 	{
 	}
 }

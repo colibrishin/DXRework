@@ -23,6 +23,7 @@ namespace Engine::Abstract
 		void AddResource(const WeakResource& resource)
 		{
 			m_resources_.insert(resource);
+			m_resource_names_.insert(resource.lock()->GetName());
 		}
 
 		template <typename T, typename... Args>
@@ -303,6 +304,7 @@ namespace Engine::Abstract
 		bool m_culled_ = true;
 
 		std::map<const std::string, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+		std::set<std::wstring> m_resource_names_;
 
 		// Non-serialized
 		std::set<ComponentID> m_assigned_component_ids_;
