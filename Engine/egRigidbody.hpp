@@ -18,7 +18,7 @@ namespace Engine::Component
 
 		~Rigidbody() override = default;
 
-		void SetMainCollider(const WeakCollider& collider) { m_main_collider_ = collider; }
+		void SetMainCollider(const WeakCollider& collider);
 		void SetGravityOverride(bool gravity) { m_bGravityOverride = gravity;}
 		void SetGrounded(bool grounded) { m_bGrounded = grounded;}
 
@@ -80,7 +80,7 @@ namespace Engine::Component
 		Vector3 m_force_;
 		Vector3 m_torque_;
 
-		WeakCollider m_main_collider_;
+		ComponentID m_main_collider_;
 
 	};
 }
