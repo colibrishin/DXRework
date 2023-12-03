@@ -242,8 +242,8 @@ namespace Engine::Manager::Graphics
 
 		DX::ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d_factory.GetAddressOf()));
 
-		float dpiX = GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX);
-		float dpiY = GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY);
+		const float dpiX = static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX));
+		const float dpiY = static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY));
 
 		const D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(
 			D2D1_RENDER_TARGET_TYPE_DEFAULT,
