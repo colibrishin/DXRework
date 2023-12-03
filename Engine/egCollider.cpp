@@ -291,6 +291,11 @@ namespace Engine::Component
 				GetResourceManager().GetResource<Mesh::SphereMesh>(L"SphereMesh"));
 		}
 	}
+
+	void Collider::AfterDeserialized()
+	{
+		// @todo: can we reconstruct the weak mesh pointer?
+	}
 #endif
 
 	void Collider::FixedUpdate(const float& dt)

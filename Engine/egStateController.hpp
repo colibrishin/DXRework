@@ -18,6 +18,8 @@ namespace Engine::Abstract
 		void SetState(StateEnum state) { m_state_ = state; }
 
 	private:
+		void AfterDeserialized() override;
+
 		friend class boost::serialization::access;
 		StateEnum m_state_;
 		StateEnum m_previous_state_;
@@ -35,5 +37,10 @@ namespace Engine::Abstract
 	void StateController<StateEnum>::PreUpdate(const float& dt)
 	{
 		m_previous_state_ = m_state_;
+	}
+
+	template <typename StateEnum>
+	void StateController<StateEnum>::AfterDeserialized()
+	{
 	}
 }

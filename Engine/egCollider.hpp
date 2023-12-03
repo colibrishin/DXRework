@@ -189,8 +189,8 @@ namespace Engine::Component
 
 #ifdef _DEBUG
 		void GenerateDebugMesh();
+		void AfterDeserialized() override;
 
-	private:
 		boost::shared_ptr<Object::DebugObject> m_debug_mesh_;
 #endif
 

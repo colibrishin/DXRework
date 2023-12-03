@@ -43,4 +43,8 @@ namespace Engine::Component
 	void Transform::FixedUpdate(const float& dt)
 	{
 	}
+
+	void Transform::AfterDeserialized()
+	{
+	}
 }

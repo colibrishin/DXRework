@@ -31,6 +31,8 @@ namespace Engine::Component
 		void FixedUpdate(const float& dt) override;
 
 	private:
+		void AfterDeserialized() override;
+
 		friend class boost::serialization::access;
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
