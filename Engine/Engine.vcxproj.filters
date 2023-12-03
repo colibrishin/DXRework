@@ -298,6 +298,8 @@
     <ClCompile Include="egProjectionFrustum.cpp">
       <Filter>Singleton\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="egLight.cpp" />
+    <ClCompile Include="egText.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
