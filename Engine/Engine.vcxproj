@@ -75,12 +75,14 @@
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
     <ClCompile Include="egCollision.cpp" />
     <ClCompile Include="egCollisionDetector.cpp" />
     <ClCompile Include="egCommon.cpp" />
+    <ClCompile Include="egComponent.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />

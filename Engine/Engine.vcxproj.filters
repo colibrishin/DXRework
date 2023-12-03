@@ -124,9 +124,6 @@
     <ClInclude Include="egCollisionDetector.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="egProjectionFrustum.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
     <ClInclude Include="egResourceManager.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
@@ -196,9 +193,14 @@
     <ClInclude Include="egStateController.hpp">
       <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="egLerpManager.hpp" />
     <ClInclude Include="egSerialization.hpp">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egLerpManager.hpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="egProjectionFrustum.hpp">
+      <Filter>Singleton\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -269,12 +271,9 @@
     <ClCompile Include="egScene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="egProjectionFrustum.cpp" />
     <ClCompile Include="egCommon.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="egLayer.cpp" />
-    <ClCompile Include="egLerpManager.cpp" />
     <ClCompile Include="egEntity.cpp">
       <Filter>Abstract</Filter>
     </ClCompile>
@@ -283,6 +282,21 @@
     </ClCompile>
     <ClCompile Include="egResource.cpp">
       <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egLayer.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="egLerpManager.cpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="egActor.cpp">
+      <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egComponent.cpp">
+      <Filter>Abstract</Filter>
+    </ClCompile>
+    <ClCompile Include="egProjectionFrustum.cpp">
+      <Filter>Singleton\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
