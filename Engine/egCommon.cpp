@@ -1,4 +1,8 @@
 #include "pch.hpp"
+#include "egObject.hpp"
+#include "egScene.hpp"
+#include "egLayer.hpp"
+#include "egResource.hpp"
 
 namespace Engine
 {
