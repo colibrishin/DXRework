@@ -15,11 +15,12 @@ namespace Engine::Abstract
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 
+		void OnDeserialized() override;
+
 	protected:
 		StateController() : Component(COMPONENT_PRIORITY_STATE, {}) {}
 		StateController(const WeakObject& owner) : Component(COMPONENT_PRIORITY_STATE, owner) {}
 		void SetState(StateEnum state) { m_state_ = state; }
-		void AfterDeserialized() override;
 
 	private:
 		friend class Engine::Serializer;
@@ -41,6 +42,7 @@ namespace Engine::Abstract
 	template <typename StateEnum, class EC>
 	void StateController<StateEnum, EC>::Initialize()
 	{
+		Component::Initialize();
 		m_state_ = static_cast<StateEnum>(0);
 		m_previous_state_ = static_cast<StateEnum>(0);
 	}
@@ -52,8 +54,9 @@ namespace Engine::Abstract
 	}
 
 	template <typename StateEnum, class EC>
-	void StateController<StateEnum, EC>::AfterDeserialized()
+	void StateController<StateEnum, EC>::OnDeserialized()
 	{
+		Component::OnDeserialized();
 	}
 }
 

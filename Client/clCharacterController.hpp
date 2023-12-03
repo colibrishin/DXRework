@@ -1,7 +1,7 @@
 #pragma once
 
-#include "clGiftboxObject.hpp"
 #include "Client.h"
+#include "egObject.hpp"
 #include "egStateController.hpp"
 
 namespace Client::State

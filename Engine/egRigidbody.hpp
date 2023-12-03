@@ -60,9 +60,10 @@ namespace Engine::Component
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		void OnDeserialized() override;
+
 	protected:
 		Rigidbody();
-		void AfterDeserialized() override;
 
 	private:
 		SERIALIZER_ACCESS

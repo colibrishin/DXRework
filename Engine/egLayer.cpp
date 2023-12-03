@@ -77,6 +77,19 @@ namespace Engine
 		}
 	}
 
+	void Layer::OnDeserialized()
+	{
+		Renderable::OnDeserialized();
+
+		// rebuild cache
+		for (const auto& object : m_objects_)
+		{
+			object->OnDeserialized();
+			m_weak_objects_cache_[object->GetID()] = object;
+			m_weak_objects_.emplace_back(object);
+		}
+	}
+
 	void Layer::AddGameObject(const StrongObject& obj)
 	{
 		if (m_objects_.contains(obj))
@@ -118,15 +131,5 @@ namespace Engine
 	const std::vector<WeakObject>& Layer::GetGameObjects()
 	{
 		return m_weak_objects_;
-	}
-
-	void Layer::AfterDeserialized()
-	{
-		// rebuild cache
-		for (const auto& object : m_objects_)
-		{
-			m_weak_objects_cache_[object->GetID()] = object;
-			m_weak_objects_.emplace_back(object);
-		}
 	}
 }

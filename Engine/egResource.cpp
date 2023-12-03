@@ -40,7 +40,7 @@ namespace Engine::Abstract
 		m_path_wstr_ = m_path_.wstring();
 	}
 
-	void Resource::AfterDeserialized()
+	void Resource::OnDeserialized()
 	{
 		m_bLoaded_ = false;
 		m_path_ = m_path_wstr_;

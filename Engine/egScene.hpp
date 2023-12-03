@@ -3,6 +3,7 @@
 
 #include "egRenderable.hpp"
 #include "../octree/octree.h"
+#include <boost/serialization/export.hpp>
 
 namespace Engine
 {
@@ -19,6 +20,7 @@ namespace Engine
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+		void OnDeserialized() override;
 
 		EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
 		void RemoveGameObject(const EntityID id, eLayerType layer);
@@ -64,9 +66,6 @@ namespace Engine
 		void GetNearbyObjects(const Vector3& pos, const size_t range, std::vector<WeakObject>& out);
 		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust = 100);
 
-	protected:
-		void AfterDeserialized() override;
-
 	private:
 		SERIALIZER_ACCESS
 
@@ -82,3 +81,5 @@ namespace Engine
 
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Scene)

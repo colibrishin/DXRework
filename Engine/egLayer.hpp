@@ -16,14 +16,12 @@ namespace Engine
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+		void OnDeserialized() override;
 
 		void AddGameObject(const StrongObject& obj);
 		void RemoveGameObject(EntityID id);
 		WeakObject GetGameObject (EntityID id) const;
 		const std::vector<WeakObject>& GetGameObjects();
-
-	protected:
-		void AfterDeserialized() override;
 
 	private:
 		Layer() : m_layer_type_(eLayerType::LAYER_NONE) {}

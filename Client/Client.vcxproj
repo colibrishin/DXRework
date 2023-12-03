@@ -173,7 +173,6 @@
   <ItemGroup>
     <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="clGiftBox.hpp" />
-    <ClInclude Include="clGiftboxObject.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
     <ClInclude Include="clBackSphereMesh.hpp" />
@@ -189,7 +188,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clCharacterController.cpp" />
+    <ClCompile Include="clFPSCounter.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="clMousePosition.cpp" />
+    <ClCompile Include="clPlaneObject.cpp" />
+    <ClCompile Include="clSkyBox.cpp" />
+    <ClCompile Include="clTestCube.cpp" />
+    <ClCompile Include="clTestObject.cpp" />
+    <ClCompile Include="clTestScene.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -29,10 +29,10 @@ namespace Engine::Component
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+		void OnDeserialized() override;
 
 	protected:
 		Transform();
-		void AfterDeserialized() override;
 
 	private:
 		SERIALIZER_ACCESS

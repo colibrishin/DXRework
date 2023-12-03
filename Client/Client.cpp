@@ -40,6 +40,10 @@ namespace Client
 
 		Engine::GetSceneManager().AddScene<Scene::TestScene>();
 		Engine::GetSceneManager().SetActive<Scene::TestScene>();
+
+		const auto currentScene = Engine::GetSceneManager().GetActiveScene().lock()->GetSharedPtr<Scene::TestScene>();
+		Engine::Serializer::Serialize("scene.txt", currentScene);
+		const auto deserializedScene = Engine::Serializer::Deserialize<Scene::TestScene>("scene.txt");
 	}
 }
 

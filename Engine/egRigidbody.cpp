@@ -25,6 +25,8 @@ namespace Engine::Component
 {
 	void Rigidbody::Initialize()
 	{
+		Component::Initialize();
+
 		if (!GetOwner().lock()->GetComponent<Transform>().lock())
 		{
 			throw std::exception("Rigidbody must have a transform component");
@@ -82,14 +84,15 @@ namespace Engine::Component
 	{
 	}
 
+	void Rigidbody::OnDeserialized()
+	{
+		Component::OnDeserialized();
+	}
+
 	Rigidbody::Rigidbody() : Component(COMPONENT_PRIORITY_RIGIDBODY, {}), m_bGrounded(false), m_bGravityOverride(false),
 	                         m_bFixed(false),
 	                         m_friction_mu_(0),
 	                         m_main_collider_(0)
-	{
-	}
-
-	void Rigidbody::AfterDeserialized()
 	{
 	}
 }
