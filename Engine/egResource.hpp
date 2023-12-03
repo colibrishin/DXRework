@@ -26,6 +26,7 @@ namespace Engine::Abstract
 		void SetPath(const std::filesystem::path& path)
 		{
 			m_path_ = std::move(path);
+			m_path_wstr_ = m_path_.generic_wstring();
 		}
 
 		eResourcePriority GetPriority() const
@@ -34,41 +35,19 @@ namespace Engine::Abstract
 		}
 
 	protected:
-		Resource(std::filesystem::path path, eResourcePriority priority) : m_bLoaded_(false), m_path_(std::move(path)), m_priority_(priority)
-		{
-		}
+		Resource(std::filesystem::path path, eResourcePriority priority);
 
 		virtual void Load_INTERNAL() = 0;
 		virtual void Unload_INTERNAL() = 0;
+		void AfterDeserialized() override;
 
 	private:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
+
 		bool m_bLoaded_;
 		std::filesystem::path m_path_;
+		std::wstring m_path_wstr_; // for serialization
 		eResourcePriority m_priority_;
 
 	};
-
-	inline Resource::~Resource()
-	{
-		Unload();
-	}
-
-	inline void Resource::Load()
-	{
-		if (!m_bLoaded_)
-		{
-			Load_INTERNAL();
-			m_bLoaded_ = true;
-		}
-	}
-
-	inline void Resource::Unload()
-	{
-		if (m_bLoaded_)
-		{
-			Unload_INTERNAL();
-			m_bLoaded_ = false;
-		}
-	}
 }

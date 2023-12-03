@@ -1,0 +1,14 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define SERIALIZER_ACCESS friend class boost::serialization::access; template<class Archive> void serialize(Archive & ar, const unsigned int file_version);
+#define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) template <class Archive> void NAMESPACE_TYPE::serialize(Archive& ar, const unsigned int file_version) { __VA_ARGS__ }
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) template <class Archive> void NAMESPACE_TYPE::serialize(Archive& ar, const unsigned int file_version) { __VA_ARGS__ }
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) template <class Archive> void NAMESPACE_TYPE::serialize(Archive& ar, const unsigned int file_version) { __VA_ARGS__ }
+#define SERIALIZER_ACCESS_IMPL3(NAMESPACE_TYPE, __VA_ARGS__) SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE) SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)

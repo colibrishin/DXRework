@@ -70,4 +70,13 @@ namespace Engine
 			object->FixedUpdate(dt);
 		}
 	}
+
+	void Layer::AfterDeserialized()
+	{
+		// rebuild cache
+		for (const auto& object : m_objects_ | std::views::values)
+		{
+			m_weak_objects_cache_.emplace_back(object);
+		}
+	}
 }

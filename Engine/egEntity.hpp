@@ -5,6 +5,7 @@
 #include "egType.hpp"
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/serialization/access.hpp>
+#include "egSerialization.hpp"
 
 namespace Engine::Abstract
 {
@@ -44,9 +45,12 @@ namespace Engine::Abstract
 
 	protected:
 		Entity() = default;
+		// @todo: serialization status check flag for preventing the call of AfterDeserialized(multiple times
+		virtual void AfterDeserialized() = 0;
 
 	private:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
+
 		std::wstring m_name_;
 
 	};

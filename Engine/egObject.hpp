@@ -251,6 +251,7 @@ namespace Engine::Abstract
 
 	protected:
 		Object() : Actor(), m_active_(true), m_culled_(true) {};
+		void AfterDeserialized() override;
 
 	public:
 		void PreUpdate(const float& dt) override;

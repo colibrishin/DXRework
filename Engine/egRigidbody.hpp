@@ -58,6 +58,9 @@ namespace Engine::Component
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
+	protected:
+		void AfterDeserialized() override;
+
 	private:
 		friend class boost::serialization::access;
 		bool m_bGrounded;

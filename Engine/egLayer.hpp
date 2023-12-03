@@ -56,12 +56,17 @@ namespace Engine
 			return m_weak_objects_cache_;
 		}
 
+	protected:
+		void AfterDeserialized() override;
+
 	private:
 		friend class boost::serialization::access;
 
 		eLayerType m_layer_type_;
-		std::vector<WeakObject> m_weak_objects_cache_;
 		std::map<const EntityID, StrongObject> m_objects_;
+
+		// Non-serialized
+		std::vector<WeakObject> m_weak_objects_cache_;
 
 	};
 }

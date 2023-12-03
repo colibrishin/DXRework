@@ -59,4 +59,10 @@ namespace Engine::Component
 	void Rigidbody::FixedUpdate(const float& dt)
 	{
 	}
+
+	void Rigidbody::AfterDeserialized()
+	{
+		// @todo: can weak collider be serialized as intended?
+		throw new std::exception("Not implemented");
+	}
 }

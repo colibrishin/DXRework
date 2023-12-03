@@ -232,6 +232,26 @@ namespace Engine
 		}
 	}
 
+	void Scene::AfterDeserialized()
+	{
+		// rebuild cache
+		for (const auto& layer : m_layers | std::views::values)
+		{
+			for (const auto& obj : layer->GetGameObjects())
+			{
+				m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+
+				for (const auto& comp : obj.lock()->GetAllComponents())
+				{
+					m_cached_components_[comp.lock()->ToString()].emplace(comp);
+				}
+			}
+		}
+
+		// @todo: rebuild octree, and check whether weakcamera point persist after deserialization.
+		GetDebugger().Log(L"SCENE : TODO IS HERE!");
+	}
+
 	Scene::Scene() : m_object_position_tree_(g_max_map_size, {})
 	{
 	}

@@ -28,12 +28,12 @@ namespace Engine::Resources
 		void ChangeFont(const std::filesystem::path& path) { SetPath(path); m_lazy_reload_ = true; }
 
 	protected:
+		Font(); // for serialization
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:
-		friend class boost::serialization::access;
-		bool m_lazy_reload_;
+		SERIALIZER_ACCESS
 
 		Vector2 m_position_;
 		Vector4 m_color_;
@@ -41,7 +41,7 @@ namespace Engine::Resources
 		float m_scale_;
 		std::wstring m_text_;
 
+		bool m_lazy_reload_;
 		std::unique_ptr<SpriteFont> m_font_;
-
 	};
 }

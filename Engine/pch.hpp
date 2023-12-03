@@ -25,6 +25,9 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/export.hpp>
 
 #include "framework.h"
 #include <wrl/client.h>
@@ -75,6 +78,8 @@
 #include "egDXCommon.h"
 #include "egPhysics.h"
 #include "egHelper.hpp"
+#include "egSerialization.hpp"
+
 #include "egActor.hpp"
 
 using namespace DirectX;

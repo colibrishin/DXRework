@@ -57,6 +57,7 @@
     <ClInclude Include="egRigidbody.hpp" />
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
+    <ClInclude Include="egSerialization.hpp" />
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egSound.hpp" />
     <ClInclude Include="egSphereMesh.hpp" />
@@ -83,6 +84,7 @@
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egElastic.cpp" />
+    <ClCompile Include="egEntity.cpp" />
     <ClCompile Include="egFont.cpp" />
     <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egGravity.cpp" />
@@ -93,7 +95,9 @@
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egPhysicsManager.cpp" />
     <ClCompile Include="egProjectionFrustum.cpp" />
+    <ClCompile Include="egRenderable.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
+    <ClCompile Include="egResource.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egShader.cpp" />
@@ -112,6 +116,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
+    <None Include="cpp.hint" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
