@@ -4,6 +4,16 @@
 #include "egCamera.hpp"
 #include "egTransform.hpp"
 
+SERIALIZER_ACCESS_IMPL(
+	Engine::Objects::Camera,
+	_ARTAG(_BSTSUPER(Engine::Abstract::Object))
+	_ARTAG(m_look_at_)
+	_ARTAG(m_mouse_rotation_)
+	_ARTAG(m_previous_mouse_position_)
+	_ARTAG(m_current_mouse_position_)
+	_ARTAG(m_offset_)
+	_ARTAG(m_bound_object_id_))
+
 namespace Engine::Objects
 {
 	void Camera::SetPosition(Vector3 position)
@@ -28,6 +38,8 @@ namespace Engine::Objects
 
 	void Camera::Initialize()
 	{
+		Object::Initialize();
+
 		AddComponent<Component::Transform>();
 		GetComponent<Component::Transform>().lock()->SetPosition({0.0f, 0.0f, -20.0f});
 		m_look_at_ = g_forward;
@@ -137,6 +149,7 @@ namespace Engine::Objects
 	void Camera::BindObject(const WeakObject& object)
 	{
 		m_bound_object_ = object;
+		m_bound_object_id_ = object.lock()->GetLocalID();
 	}
 
 	void Camera::SetOffset(Vector3 offset)
@@ -176,5 +189,10 @@ namespace Engine::Objects
 		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
 
 		return {x, y};
+	}
+
+	void Camera::OnDeserialized()
+	{
+		Object::OnDeserialized();
 	}
 }

@@ -24,6 +24,7 @@ namespace Engine::Component
 
 	void Transform::Initialize()
 	{
+		Component::Initialize();
 	}
 
 	void Transform::PreUpdate(const float& dt)
@@ -52,11 +53,12 @@ namespace Engine::Component
 	{
 	}
 
-	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {})
+	void Transform::OnDeserialized()
 	{
+		Component::OnDeserialized();
 	}
 
-	void Transform::AfterDeserialized()
+	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {})
 	{
 	}
 }

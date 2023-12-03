@@ -115,7 +115,7 @@ namespace Engine
 			std::fstream stream(filename, std::ios::in);
 			boost::archive::text_iarchive archive(stream);
 			archive >> object;
-			object->AfterDeserialized();
+			object->OnDeserialized();
 			return object;
 		}
 	};

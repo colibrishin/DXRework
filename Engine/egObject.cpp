@@ -79,29 +79,6 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::AfterDeserialized()
-	{
-		for (const auto& val : m_components_ | std::views::values)
-		{
-			for (const auto& comps : val)
-			{
-				m_assigned_component_ids_.insert(comps->GetLocalID());
-				m_priority_sorted_.insert(comps);
-			}
-		}
-
-		for (const auto& name : m_resource_names_)
-		{
-			// @todo: what if object is not loaded yet?
-			const auto resource = GetResourceManager().GetResource(name);
-
-			if (const auto locked = resource.lock())
-			{
-				m_resources_.insert(locked);
-			}
-		}
-	}
-
 	void Object::Render(const float dt)
 	{
 		for (const auto& component : m_priority_sorted_)
@@ -157,6 +134,33 @@ namespace Engine::Abstract
 			else 			
 			{
 				m_resources_.erase(resource);
+			}
+		}
+	}
+
+	void Object::OnDeserialized()
+	{
+		Actor::OnDeserialized();
+
+		for (const auto& val : m_components_ | std::views::values)
+		{
+			for (const auto& comps : val)
+			{
+				comps->OnDeserialized();
+				m_assigned_component_ids_.insert(comps->GetLocalID());
+				m_priority_sorted_.insert(comps);
+			}
+		}
+
+		for (const auto& name : m_resource_names_)
+		{
+			// @todo: what if object is not loaded yet?
+			const auto resource = GetResourceManager().GetResource(name);
+
+			if (const auto locked = resource.lock())
+			{
+				locked->OnDeserialized();
+				m_resources_.insert(locked);
 			}
 		}
 	}

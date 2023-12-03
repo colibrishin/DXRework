@@ -13,6 +13,8 @@ namespace Engine::Abstract
 		virtual void Load() final;
 		void Unload();
 
+		void OnDeserialized() override;
+
 		bool IsLoaded() const
 		{
 			return m_bLoaded_;
@@ -39,7 +41,6 @@ namespace Engine::Abstract
 
 		virtual void Load_INTERNAL() = 0;
 		virtual void Unload_INTERNAL() = 0;
-		void AfterDeserialized() override;
 
 	private:
 		SERIALIZER_ACCESS

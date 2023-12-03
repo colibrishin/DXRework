@@ -10,7 +10,10 @@ namespace Engine::Objects
 	class Camera final : public Abstract::Object
 	{
 	public:
-		Camera() : Object() {}
+		Camera() : Object(), m_bound_object_id_(g_invalid_id)
+		{
+		}
+
 		~Camera() override = default;
 
 		void SetLookAt(Vector3 lookAt)
@@ -32,6 +35,7 @@ namespace Engine::Objects
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+		void OnDeserialized() override;
 
 		void BindObject(const WeakObject& object);
 		void SetOffset(Vector3 offset);
@@ -40,18 +44,23 @@ namespace Engine::Objects
 		static Vector2 GetNormalizedMousePosition();
 
 	private:
-		friend class boost::serialization::access;
-		Matrix m_view_matrix_;
-		VPBuffer m_vp_buffer_;
+		SERIALIZER_ACCESS
 
 		Vector3 m_look_at_;
 		Quaternion m_mouse_rotation_;
-		Matrix m_mouse_rotation_matrix_;
 
 		Vector2 m_previous_mouse_position_;
 		Vector2 m_current_mouse_position_;
 
 		Vector3 m_offset_;
+		ActorID m_bound_object_id_;
+
+		// Non-serialized
+		Matrix m_mouse_rotation_matrix_;
+		Matrix m_view_matrix_;
+		VPBuffer m_vp_buffer_;
 		WeakObject m_bound_object_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Objects::Camera)

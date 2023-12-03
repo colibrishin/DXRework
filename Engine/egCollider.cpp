@@ -74,6 +74,8 @@ namespace Engine::Component
 
 	void Collider::Initialize()
 	{
+		Component::Initialize();
+
 		InitializeStockVertices();
 		if (const auto mesh = m_mesh_.lock())
 		{
@@ -319,8 +321,13 @@ namespace Engine::Component
 	{
 	}
 
-	void Collider::AfterDeserialized()
+	void Collider::FixedUpdate(const float& dt)
 	{
+	}
+
+	void Collider::OnDeserialized()
+	{
+		Component::OnDeserialized();
 #ifdef _DEBUG
 		GenerateDebugMesh();
 #endif
@@ -342,10 +349,6 @@ namespace Engine::Component
 
 		UpdateInertiaTensor();
 		UpdateBoundings();
-	}
-
-	void Collider::FixedUpdate(const float& dt)
-	{
 	}
 
 	void Collider::Render(const float dt)

@@ -259,26 +259,6 @@ namespace Engine
 		}
 	}
 
-	void Scene::AfterDeserialized()
-	{
-		// rebuild cache
-		for (const auto& layer : m_layers | std::views::values)
-		{
-			for (const auto& obj : layer->GetGameObjects())
-			{
-				m_cached_objects_.emplace(obj.lock()->GetID(), obj);
-				m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID());
-
-				for (const auto& comp : obj.lock()->GetAllComponents())
-				{
-					m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
-				}
-			}
-		}
-
-		// @todo: rebuild octree.
-	}
-
 	Scene::Scene() : m_main_camera_local_id_(g_invalid_id), m_object_position_tree_(g_max_map_size, {})
 	{
 	}
@@ -333,5 +313,48 @@ namespace Engine
 		{
 			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
+	}
+
+	void Scene::OnDeserialized()
+	{
+		Renderable::OnDeserialized();
+
+		// rebuild cache
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->OnDeserialized();
+
+			for (const auto& obj : m_layers[static_cast<eLayerType>(i)]->GetGameObjects())
+			{
+				m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+				obj.lock()->SetScene(GetSharedPtr<Scene>());
+				obj.lock()->SetLayer(static_cast<eLayerType>(i));
+				m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID());
+
+				for (const auto& comp : obj.lock()->GetAllComponents())
+				{
+					m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
+				}
+			}
+		}
+
+		const auto& cameras = m_layers[LAYER_CAMERA]->GetGameObjects();
+
+		const auto it = std::ranges::find_if(cameras, [this](const auto& obj)
+		{
+			if (obj.lock()->GetLocalID() == m_main_camera_local_id_)
+			{
+				return true;
+			}
+
+			return false;
+		});
+
+		if (it != cameras.end())
+			m_mainCamera_ = it->lock()->GetSharedPtr<Engine::Objects::Camera>();
+		else
+			m_mainCamera_ = cameras.begin()->lock()->GetSharedPtr<Engine::Objects::Camera>();
+
+		// @todo: rebuild octree.
 	}
 }
