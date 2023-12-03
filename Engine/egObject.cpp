@@ -73,6 +73,12 @@ namespace Engine::Abstract
 		}
 	}
 
+	void Object::AfterDeserialized()
+	{
+		// @todo: implement
+		throw std::exception("Not implemented");
+	}
+
 	void Object::Render(const float dt)
 	{
 		for (const auto& component : m_priority_sorted_)
