@@ -69,6 +69,9 @@ namespace Engine
 	private:
 		SERIALIZER_ACCESS
 
+		void Synchronize(const WeakScene& scene);
+		void OpenLoadPopup(bool& is_load_open);
+
 		ActorID m_main_camera_local_id_;
 		std::map<eLayerType, StrongLayer> m_layers;
 
