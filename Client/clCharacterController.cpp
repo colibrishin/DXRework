@@ -43,8 +43,6 @@ namespace Client::State
 		const auto ortho = Vector3::Transform(m_offset_, Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) * speed;
 		bool pressed = false;
 
-		// @todo: sometimes left right movement is inverted.
-
 		if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
 		{
 			rb->AddForce(m_offset_);
