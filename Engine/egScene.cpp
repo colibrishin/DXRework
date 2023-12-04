@@ -303,6 +303,69 @@ namespace Engine
 		{
 			m_layers[static_cast<eLayerType>(i)]->Render(dt);
 		}
+
+#ifdef _DEBUG
+		if (ImGui::Begin(ToTypeName().c_str()), nullptr, ImGuiWindowFlags_MenuBar)
+		{
+			if (ImGui::BeginMainMenuBar())
+			{
+				if (ImGui::BeginMenu("Add"))
+				{
+					if (ImGui::MenuItem("Camera"))
+					{
+						const auto camera = Instantiate<Objects::Camera>();
+						AddGameObject(camera, LAYER_CAMERA);
+					}
+
+					if (ImGui::MenuItem("Light"))
+					{
+						const auto light = Instantiate<Objects::Light>();
+						AddGameObject(light, LAYER_LIGHT);
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Save"))
+				{
+					if (ImGui::MenuItem("Scene"))
+					{
+						auto name = std::to_string(GetID()) + " " + typeid(*this).name();
+						std::ranges::replace(name, ' ', '_');
+						std::ranges::replace(name, ':', '_');
+						name += ".txt";
+
+						Serializer::Serialize(name, GetSharedPtr<Scene>());
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndMainMenuBar();
+			}
+
+			for (const auto& layer : m_layers | std::views::values)
+			{
+				for (const auto& obj : layer->GetGameObjects())
+				{
+					if (const auto obj_ptr = obj.lock())
+					{
+						if (ImGui::Button(obj_ptr->ToTypeName().c_str()))
+						{
+							obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+						}
+
+						if (obj_ptr->GetImGuiOpen())
+						{
+							obj_ptr->OnImGui();
+						}
+					}
+				}
+			}
+
+			ImGui::End();
+		}
+#endif
 	}
 
 	void Scene::FixedUpdate(const float& dt)
