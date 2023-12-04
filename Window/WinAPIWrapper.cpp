@@ -62,9 +62,12 @@ namespace WinAPI
 		ShowWindow(hwnd, SW_SHOW);
 		SetForegroundWindow(hwnd);
 		SetFocus(hwnd);
-
-		// Hide the mouse cursor.
 		ShowCursor(false);
+
+#ifdef _DEBUG
+		// Hide the mouse cursor.
+		ShowCursor(true);
+#endif
 
 		return hwnd;
 	}

@@ -82,6 +82,7 @@ namespace Engine::Component
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
+		void OnImGui() override;
 
 		template <typename T>
 		T& As() 
@@ -103,6 +104,7 @@ namespace Engine::Component
 
 	private:
 		SERIALIZER_ACCESS
+
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);
 
@@ -192,7 +194,7 @@ namespace Engine::Component
 		Quaternion m_rotation_;
 
 		eBoundingType m_type_;
-		std::wstring m_mesh_name_;
+		EntityName m_mesh_name_;
 
 		float m_mass_;
 

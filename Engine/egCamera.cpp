@@ -12,7 +12,8 @@ SERIALIZER_ACCESS_IMPL(
 	_ARTAG(m_previous_mouse_position_)
 	_ARTAG(m_current_mouse_position_)
 	_ARTAG(m_offset_)
-	_ARTAG(m_bound_object_id_))
+	_ARTAG(m_bound_object_id_)
+	_ARTAG(m_b_orthogonal_))
 
 namespace Engine::Objects
 {
@@ -109,7 +110,7 @@ namespace Engine::Objects
 			// Finally create the view matrix from the three updated vectors.
 			m_view_matrix_ = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 
-			const auto p = GetD3Device().GetProjectionMatrix();
+			const auto p = m_b_orthogonal_ ? GetD3Device().GetOrthogonalMatrix() : GetD3Device().GetProjectionMatrix();
 
 			m_vp_buffer_.view = m_view_matrix_.Transpose();
 			m_vp_buffer_.projection = p.Transpose();

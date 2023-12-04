@@ -22,6 +22,16 @@ namespace Engine::Abstract
 		return m_local_id_;
 	}
 
+	void Actor::OnImGui()
+	{
+		Renderable::OnImGui();
+		ImGui::BulletText("Actor");
+		ImGui::Indent(2);
+		ImGui::Text("Layer: %d", m_layer_);
+		ImGui::Text("Local ID: %d", m_local_id_);
+		ImGui::Unindent(2);
+	}
+
 	void Actor::SetLayer(eLayerType layer)
 	{
 		m_layer_ = layer;

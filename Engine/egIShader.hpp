@@ -11,7 +11,7 @@ namespace Engine::Graphic
 	class IShader : public Abstract::Resource
 	{
 	public:
-		IShader(const std::wstring& name, const std::filesystem::path& path);
+		IShader(const EntityName& name, const std::filesystem::path& path);
 		~IShader() override = default;
 
 		ID3D11Buffer* GetBuffer() const { return m_buffer_.Get(); }

@@ -5,13 +5,13 @@ CLIENT_OBJECT_IMPL(Client::Object::FPSCounter)
 
 namespace Client::Object
 {
-	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>(L"DefaultFont"))
+	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>("DefaultFont"))
 	{
 	}
 
 	inline void FPSCounter::Initialize()
 	{
-		SetText(L"FPS: 0");
+		SetText("FPS: 0");
 		SetPosition(Vector2(0.0f, 0.0f));
 		SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		SetRotation(0.0f);
@@ -30,7 +30,7 @@ namespace Client::Object
 	inline void FPSCounter::Update(const float& dt)
 	{
 		Text::Update(dt);
-		SetText(L"FPS: " + std::to_wstring(Engine::GetApplication().GetFPS()));
+		SetText("FPS: " + std::to_string(Engine::GetApplication().GetFPS()));
 	}
 
 	inline void FPSCounter::PreRender(const float dt)

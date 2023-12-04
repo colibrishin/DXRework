@@ -15,6 +15,8 @@ namespace Engine::Abstract
 		eComponentPriority GetPriority() const { return m_priority_; }
 		ComponentID GetLocalID() const { return m_local_id_; }
 
+		void OnImGui() override;
+
 	protected:
 		Component(eComponentPriority priority, const WeakObject& owner);
 

@@ -202,6 +202,9 @@
     <ClInclude Include="egProjectionFrustum.hpp">
       <Filter>Singleton\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="egEditorScene.hpp">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -300,6 +303,9 @@
     </ClCompile>
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egText.cpp" />
+    <ClCompile Include="egEditorScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">

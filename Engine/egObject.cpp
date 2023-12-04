@@ -165,6 +165,57 @@ namespace Engine::Abstract
 		}
 	}
 
+	void Object::OnImGui()
+	{
+		const auto id = ToTypeName() + " " + GetName() + " " + std::to_string(GetID());
+
+		if (ImGui::Begin(id.c_str()))
+		{
+			ImGui::BulletText("Object");
+			Actor::OnImGui();
+			ImGui::Indent(2);
+			ImGui::Checkbox("Active", &m_active_);
+			ImGui::Checkbox("Culling", &m_culled_);
+
+			if (ImGui::TreeNode("Components"))
+			{
+				for (const auto& pointer : m_components_ | std::views::values)
+				{
+					for (const auto& comp : pointer)
+					{
+						if (ImGui::TreeNode(comp->ToTypeName().c_str()))
+						{
+							comp->OnImGui();
+							ImGui::TreePop();
+							ImGui::Spacing();
+						}
+						
+					}
+				}
+
+				ImGui::TreePop();
+				ImGui::Spacing();
+			}
+
+			if (ImGui::TreeNode("Resources"))
+			{
+				for (const auto& resource : m_resources_)
+				{
+					if (const auto locked = resource.lock())
+					{
+						locked->OnImGui();
+					}
+				}
+
+				ImGui::TreePop();
+				ImGui::Spacing();
+			}
+
+			ImGui::Unindent(2);
+			ImGui::End();
+		}
+	}
+
 	void Object::PreUpdate(const float& dt)
 	{
 		for (const auto& component : m_priority_sorted_)

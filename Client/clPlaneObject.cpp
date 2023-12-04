@@ -13,12 +13,12 @@ namespace Client::Object
 
 	inline void PlaneObject::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap_metalic"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>(L"AmbientSound"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("CubeMesh"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_normalmap_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>("AmbientSound"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
@@ -38,7 +38,7 @@ namespace Client::Object
 		rb->SetFrictionCoefficient(0.2f);
 		rb->SetGravityOverride(false);
 
-		const auto test = GetResource<Engine::Resources::Sound>(L"AmbientSound");
+		const auto test = GetResource<Engine::Resources::Sound>("AmbientSound");
 		test.lock()->PlayLoop(GetSharedPtr<Object>());
 	}
 

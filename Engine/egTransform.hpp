@@ -29,6 +29,8 @@ namespace Engine::Component
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
+
+		void OnImGui() override;
 		void OnDeserialized() override;
 
 	protected:

@@ -53,6 +53,25 @@ namespace Engine::Component
 	{
 	}
 
+	void Transform::OnImGui()
+	{
+		Component::OnImGui();
+		ImGui::Indent(2);
+
+		ImGui::Text("Previous Position");
+		ImGuiVector3Editable(m_previous_position_);
+
+		ImGui::Text("Position");
+		ImGuiVector3Editable(m_position_);
+
+		ImGui::Text("Rotation");
+		ImGuiQuaternionEditable(m_rotation_);
+
+		ImGui::Text("Scale");
+		ImGuiVector3Editable(m_scale_);
+		ImGui::Unindent(2);
+	}
+
 	void Transform::OnDeserialized()
 	{
 		Component::OnDeserialized();

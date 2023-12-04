@@ -1,5 +1,6 @@
 #pragma once
 #include "egCommon.hpp"
+#include <imgui.h>
 
 #undef max
 
@@ -92,5 +93,28 @@ namespace Engine
 		for (const auto& v : orig)
 			ret.insert(ret.end(), v.begin(), v.end());
 		return ret;
-	}  
+	}
+
+	inline static void ImGuiVector3Editable(Vector3& v)
+	{
+		ImGui::InputFloat("x: ", &v.x);
+		ImGui::InputFloat("y: ", &v.y);
+		ImGui::InputFloat("z: ", &v.z);
+	}
+
+	inline static void ImGuiQuaternionEditable(Quaternion& v)
+	{
+		ImGui::InputFloat("x: ", &v.x);
+		ImGui::InputFloat("y: ", &v.y);
+		ImGui::InputFloat("z: ", &v.z);
+		ImGui::InputFloat("w: ", &v.w);
+	}
+
+	inline static void Vector3CheckNanException(const Vector3& v)
+	{
+		if (std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z))
+		{
+			throw std::runtime_error("Vector3CheckNan: NaN detected");
+		}
+	}
 }

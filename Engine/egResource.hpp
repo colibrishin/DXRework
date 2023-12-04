@@ -28,13 +28,15 @@ namespace Engine::Abstract
 		void SetPath(const std::filesystem::path& path)
 		{
 			m_path_ = std::move(path);
-			m_path_wstr_ = m_path_.generic_wstring();
+			m_path_str_ = m_path_.generic_string();
 		}
 
 		eResourcePriority GetPriority() const
 		{
 			return m_priority_;
 		}
+
+		void OnImGui() override;
 
 	protected:
 		Resource(std::filesystem::path path, eResourcePriority priority);
@@ -47,7 +49,7 @@ namespace Engine::Abstract
 
 		bool m_bLoaded_;
 		std::filesystem::path m_path_;
-		std::wstring m_path_wstr_; // for serialization
+		std::string m_path_str_; // for serialization
 		eResourcePriority m_priority_;
 
 	};

@@ -27,7 +27,7 @@ namespace Engine::Objects
 		void Render(const float dt) override;
 		void OnDeserialized() override;
 
-		void SetText(const std::wstring& text) { m_text_ = text; }
+		void SetText(const std::string& text) { m_text_ = text; }
 		void SetPosition(const Vector2& position) { m_position_ = position; }
 		void SetColor(const Vector4& color) { m_color_ = color; }
 		void SetRotation(const float radian) { m_rotation_radian_ = radian; }
@@ -43,8 +43,8 @@ namespace Engine::Objects
 		Vector4 m_color_;
 		float m_rotation_radian_;
 		float m_scale_;
-		std::wstring m_font_name_;
-		std::wstring m_text_;
+		EntityName m_font_name_;
+		std::string m_text_;
 	};
 }
 

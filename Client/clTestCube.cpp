@@ -11,18 +11,18 @@ namespace Client::Object
 
 	inline void TestCube::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(L"TestNormalMap"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("CubeMesh"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_normalmap_metalic"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
 		tr->SetPosition(Vector3(2.0f, 4.0f, 0.0f));
 		tr->SetScale(Vector3::One);
 
-		AddComponent<Engine::Component::Collider>(GetResource<Engine::Resources::Mesh>(L"CubeMesh"));
+		AddComponent<Engine::Component::Collider>(GetResource<Engine::Resources::Mesh>("CubeMesh"));
 		const auto cldr = GetComponent<Engine::Component::Collider>().lock();
 		cldr->SetType(Engine::BOUNDING_TYPE_BOX);
 		cldr->SetDirtyWithTransform(true);

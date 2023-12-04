@@ -28,8 +28,8 @@ namespace Engine::Object
 	inline void DebugObject::Initialize()
 	{
 		AddComponent<Component::Transform>();
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_default_nolight"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_default_nolight"));
 	}
 
 	inline DebugObject::~DebugObject()

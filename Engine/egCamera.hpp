@@ -10,7 +10,7 @@ namespace Engine::Objects
 	class Camera final : public Abstract::Object
 	{
 	public:
-		Camera() : Object(), m_bound_object_id_(g_invalid_id)
+		Camera() : Object(), m_bound_object_id_(g_invalid_id), m_b_orthogonal_(false)
 		{
 		}
 
@@ -39,9 +39,11 @@ namespace Engine::Objects
 
 		void BindObject(const WeakObject& object);
 		void SetOffset(Vector3 offset);
+		void SetOrthogonal(bool bOrthogonal) { m_b_orthogonal_ = bOrthogonal; }
 
 		Vector2 GetWorldMousePosition();
 		static Vector2 GetNormalizedMousePosition();
+		bool GetOrthogonal() const { return m_b_orthogonal_; }
 
 	private:
 		SERIALIZER_ACCESS
@@ -54,6 +56,8 @@ namespace Engine::Objects
 
 		Vector3 m_offset_;
 		ActorID m_bound_object_id_;
+
+		bool m_b_orthogonal_;
 
 		// Non-serialized
 		Matrix m_mouse_rotation_matrix_;

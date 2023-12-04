@@ -89,6 +89,39 @@ namespace Engine::Component
 		Component::OnDeserialized();
 	}
 
+	void Rigidbody::OnImGui()
+	{
+		Component::OnImGui();
+
+		ImGui::Indent(2);
+		ImGui::Checkbox("Grounded", &m_bGrounded);
+		ImGui::Checkbox("Gravity Override", &m_bGravityOverride);
+		ImGui::Checkbox("Fixed", &m_bFixed);
+
+		ImGui::DragFloat("Friction", &m_friction_mu_, 0.01f, 0, 1);
+
+		ImGui::Text("Linear Momentum");
+		ImGuiVector3Editable(m_linear_momentum_);
+		ImGui::Text("Angular Momentum");
+		ImGuiVector3Editable(m_angular_momentum_);
+
+		ImGui::Text("Linear Friction");
+		ImGuiVector3Editable(m_linear_friction_);
+
+		ImGui::Text("Angular Friction");
+		ImGuiVector3Editable(m_angular_friction_);
+		ImGui::Text("Drag Force");
+		ImGuiVector3Editable(m_drag_force_);
+
+		ImGui::Text("Force");
+		ImGuiVector3Editable(m_force_);
+		ImGui::Text("Torque");
+		ImGuiVector3Editable(m_torque_);
+
+		ImGui::Text("Main Collider: %d", m_main_collider_);
+		ImGui::Unindent(2);
+	}
+
 	Rigidbody::Rigidbody() : Component(COMPONENT_PRIORITY_RIGIDBODY, {}), m_bGrounded(false), m_bGravityOverride(false),
 	                         m_bFixed(false),
 	                         m_friction_mu_(0),

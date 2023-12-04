@@ -7,11 +7,11 @@ namespace Client::Object
 {
 	inline void TestObject::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>(L"SphereMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestTexture"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>(L"TestNormalMap"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>(L"ps_normalmap"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("SphereMesh"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestNormalMap"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_normalmap"));
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

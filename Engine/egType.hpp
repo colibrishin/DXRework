@@ -144,6 +144,8 @@ namespace Engine
 	using EntityID = LONG_PTR;
 	using ComponentID = LONG_PTR;
 	using ActorID = LONG_PTR;
+	using EntityName = std::string;
+	using TypeName = std::string;
 
 	using TaskSchedulerFunc = std::function<void(const float&)>;
 }

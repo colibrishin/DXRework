@@ -39,7 +39,7 @@ namespace Engine::Objects
 
 			Object::Render(dt);
 
-			font->SetText(L"");
+			font->SetText("");
 			font->SetPosition({0.0f, 0.0f});
 			font->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 			font->SetRotation(0);
