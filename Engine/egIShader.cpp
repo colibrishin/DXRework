@@ -5,7 +5,7 @@
 
 namespace Engine::Graphic
 {
-	IShader::IShader(const std::wstring& name, const std::filesystem::path& path): Resource(path, RESOURCE_PRIORITY_SHADER)
+	IShader::IShader(const EntityName& name, const std::filesystem::path& path): Resource(path, RESOURCE_PRIORITY_SHADER)
 	{
 		SetName(name);
 		m_path_ = path;

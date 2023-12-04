@@ -19,7 +19,7 @@ namespace Engine::Resources
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		void SetText(const std::wstring& text) { m_text_ = text; }
+		void SetText(const std::string& text) { m_text_ = text; }
 		void SetPosition(const Vector2& position) { m_position_ = position; }
 		void SetColor(const Vector4& color) { m_color_ = color; }
 		void SetRotation(const float radian) { m_rotation_radian_ = radian; }
@@ -39,7 +39,7 @@ namespace Engine::Resources
 		Vector4 m_color_;
 		float m_rotation_radian_;
 		float m_scale_;
-		std::wstring m_text_;
+		std::string m_text_;
 
 		bool m_lazy_reload_;
 		std::unique_ptr<SpriteFont> m_font_;

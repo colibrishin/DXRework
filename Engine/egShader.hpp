@@ -11,7 +11,7 @@ namespace Engine::Graphic
 	class Shader : public IShader
 	{
 	public:
-		Shader(const std::wstring& name, const std::filesystem::path& path);
+		Shader(const EntityName& name, const std::filesystem::path& path);
 		~Shader() override = default;
 
 		void Initialize() override;
@@ -33,7 +33,7 @@ namespace Engine::Graphic
 	};
 
 	template <typename T>
-	Shader<T>::Shader(const std::wstring& name, const std::filesystem::path& path) : IShader(name, path)
+	Shader<T>::Shader(const EntityName& name, const std::filesystem::path& path) : IShader(name, path)
 	{
 		Shader<T>::SetShaderType();
 	}

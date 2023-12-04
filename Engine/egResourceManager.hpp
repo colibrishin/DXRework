@@ -17,14 +17,14 @@ namespace Engine::Manager
 		void FixedUpdate(const float& dt) override;
 
 		template <typename T>
-		static void AddResource(const std::wstring& name, const boost::shared_ptr<T>& resource)
+		static void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
 		{
 			m_resources_.insert(resource);
 			resource->SetName(name);
 		}
 
 		template <typename T>
-		static boost::weak_ptr<T> GetResource(const std::wstring& name)
+		static boost::weak_ptr<T> GetResource(const EntityName& name)
 		{
 			if constexpr (std::is_base_of_v<Abstract::Resource, T>)
 			{
@@ -52,7 +52,7 @@ namespace Engine::Manager
 			return {};
 		}
 
-		static WeakResource GetResource(const std::wstring& name)
+		static WeakResource GetResource(const EntityName& name)
 		{
 			const auto it = std::ranges::find_if(m_resources_
 			                               ,
