@@ -16,7 +16,7 @@ namespace Engine::Physics
 		const float penetration1 = (penetration * (invm1 / total_mass));
 		const float penetration2 = (penetration * (invm2 / total_mass));
 
-		penetrationA = normal * penetration1;
+		penetrationA = -normal * penetration1;
 		penetrationB = normal * penetration2;
 
 		const Vector3 rel1 = point - pos1;

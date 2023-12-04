@@ -52,6 +52,8 @@ namespace Engine
 	constexpr size_t g_max_map_size = 2048; // only in power of 2
 	constexpr size_t g_octree_negative_round_up = g_max_map_size / 2;
 
+	inline std::atomic<UINT> g_collision_energy_reduction_multiplier = 2;
+
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;
 	inline std::atomic<UINT> g_window_width = 800;

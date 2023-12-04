@@ -155,14 +155,14 @@ namespace Engine::Manager::Physics
 								cl->GetInertiaTensor(), cl_other->GetInertiaTensor(), linear_vel,
 								other_linear_vel, angular_vel, other_angular_vel, lhs_penetration, rhs_penetration);
 
-			tr->SetPosition(pos - lhs_penetration);
+			tr->SetPosition(pos + lhs_penetration);
 
 			// Apply the changes to the every colliders.
 			for (const auto& child : lhs.GetComponents<Component::Collider>())
 			{
 				if (const auto locked = child.lock())
 				{
-					locked->SetPosition(locked->GetPosition() - lhs_penetration);
+					locked->SetPosition(locked->GetPosition() + lhs_penetration);
 				}
 			}
 
@@ -170,11 +170,19 @@ namespace Engine::Manager::Physics
 			const auto fps = GetApplication().GetFPS();
 
 			auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
+
+			if (collided_count > fps)
+			{
+				ratio = 0.0f;
+			}
+
 			ratio = std::clamp(ratio, 0.f, 1.f);
 			const auto ratio_inv = 1.0f - ratio;
 
-			rb->AddLinearMomentum(linear_vel * ratio_inv);
-			rb->AddAngularMomentum(angular_vel * ratio_inv);
+			const auto collision_reduction = std::pow(collided_count, g_collision_energy_reduction_multiplier.load());
+
+			rb->SetLinearMomentum(linear_vel * ratio_inv / collision_reduction);
+			rb->SetAngularMomentum(angular_vel * ratio_inv / collision_reduction);
 
 			if (!rb_other->IsFixed())
 			{
@@ -188,8 +196,8 @@ namespace Engine::Manager::Physics
 					}
 				}
 
-				rb_other->AddLinearMomentum(other_linear_vel * ratio_inv);
-				rb_other->AddAngularMomentum(other_angular_vel * ratio_inv);
+				rb_other->SetLinearMomentum(other_linear_vel * ratio_inv / collision_reduction);
+				rb_other->SetAngularMomentum(other_angular_vel * ratio_inv / collision_reduction);
 			}
 			
 			m_collision_resolved_set_.insert({ lhs.GetID(), rhs.GetID() });
