@@ -36,7 +36,7 @@ namespace Engine::Manager
 		const auto lhs_owner = lhs.GetOwner().lock();
 		const auto rhs_owner = rhs.GetOwner().lock();
 
-		if (CheckRaycasting(lhs, rhs))
+		if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
 		{
 			if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
 			{
@@ -168,15 +168,15 @@ namespace Engine::Manager
 		{
 			for (const auto& cl_other : colliders)
 			{
-				const auto cl_locked = cl.lock();
-				const auto cl_other_locked = cl_other.lock();
-
-				if (!cl_locked || !cl_other_locked)
+				if (cl.lock() == cl_other.lock())
 				{
 					continue;
 				}
 
-				if (cl_locked == cl_other_locked)
+				const auto cl_locked = cl.lock();
+				const auto cl_other_locked = cl_other.lock();
+
+				if (!cl_locked || !cl_other_locked)
 				{
 					continue;
 				}

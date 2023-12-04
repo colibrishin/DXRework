@@ -23,7 +23,10 @@ namespace Engine::Manager::Physics
 		{
 			if (const auto locked = rb.lock())
 			{
-				CheckSpeculation(*locked->GetOwner().lock());
+				if (g_speculation_enabled)
+				{
+					CheckSpeculation(*locked->GetOwner().lock());
+				}
 				CheckCollision(*locked->GetOwner().lock());
 			}
 		}
