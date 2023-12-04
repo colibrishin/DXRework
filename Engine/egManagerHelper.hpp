@@ -53,7 +53,7 @@ namespace Engine
 		return Manager::Graphics::ToolkitAPI::GetInstance();
 	}
 
-	inline Manager::Physics::LerpManager& GetTransformLerpManager()
+	inline Manager::Physics::LerpManager& GetLerpManager()
 	{
 		return Manager::Physics::LerpManager::GetInstance();
 	}
