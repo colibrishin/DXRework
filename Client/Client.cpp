@@ -16,6 +16,7 @@
 #include "egSound.hpp"
 #include "egSerialization.hpp"
 
+
 // TODO: This is an example of a library function
 namespace Client
 {
@@ -32,11 +33,6 @@ namespace Client
 		Engine::GetResourceManager().AddResource<Engine::Resources::Mesh>("BackSphereMesh", boost::make_shared<Client::Mesh::BackSphereMesh>());
 		Engine::GetResourceManager().AddResource<Engine::Resources::Font>("DefaultFont", boost::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
 		Engine::GetResourceManager().AddResource<Engine::Resources::Sound>("AmbientSound", boost::make_shared<Engine::Resources::Sound>("./crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3"));
-
-
-		const auto font = Engine::GetResourceManager().GetResource<Engine::Resources::Font>("DefaultFont").lock();
-		Engine::Serializer::Serialize("test.txt", font);
-		const auto deserialized = Engine::Serializer::Deserialize<Engine::Resources::Font>("test.txt");
 
 		Engine::GetSceneManager().AddScene<Scene::TestScene>();
 		Engine::GetSceneManager().SetActive<Scene::TestScene>();

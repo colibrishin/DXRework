@@ -16,8 +16,13 @@ namespace Engine::Abstract
 		ImGui::Unindent(2);
 	}
 
+	void Component::Render(const float dt)
+	{
+		m_b_ticked_ = true;
+	}
+
 	Component::Component(eComponentPriority priority, const WeakObject& owner): m_local_id_(g_invalid_id), m_priority_(priority),
-	                                                                            m_owner_(owner)
+	                                                                            m_owner_(owner), m_b_ticked_(false)
 	{
 	}
 }

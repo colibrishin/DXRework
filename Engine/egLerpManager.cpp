@@ -8,13 +8,20 @@ namespace Engine::Manager::Physics
 {
 	void LerpManager::Initialize()
 	{
-		m_elapsedTime_ = 0.0f;
+		m_elapsedTime_ = g_epsilon;
 	}
 
 	void LerpManager::Update(const float& dt)
 	{
-		m_elapsedTime_ += dt;
+	}
 
+	void LerpManager::Reset()
+	{
+		m_elapsedTime_ = g_epsilon;
+	}
+
+	void LerpManager::PreUpdate(const float& dt)
+	{
 		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
 			const auto& rbs = scene->GetCachedComponents<Component::Rigidbody>();
@@ -28,6 +35,11 @@ namespace Engine::Manager::Physics
 
 					if (tr)
 					{
+						if (!tr->IsTicked())
+						{
+							tr->m_previous_position_ = tr->m_position_;
+						}
+
 						const auto previous = tr->GetPreviousPosition();
 						const auto current = tr->GetPosition();
 						const auto lerp = Vector3::Lerp(previous, current, GetLerpFactor());
@@ -40,26 +52,27 @@ namespace Engine::Manager::Physics
 					{
 						if (const auto collider = cl.lock())
 						{
+							if (!collider->IsTicked())
+							{
+																collider->m_previous_position_ = collider->m_position_;
+							}
+
 							const auto previous = collider->GetPreviousPosition();
 							const auto current = collider->GetPosition();
 							const auto lerp = Vector3::Lerp(previous, current, GetLerpFactor());
 							Vector3CheckNanException(lerp);
 
-							collider->SetPosition(lerp);
+							if (collider->IsTicked())
+							{
+								collider->SetPosition(lerp);
+							}
 						}
 					}
 				}
 			}
 		}
-	}
 
-	void LerpManager::Reset()
-	{
-		m_elapsedTime_ = 0.0f;
-	}
-
-	void LerpManager::PreUpdate(const float& dt)
-	{
+		m_elapsedTime_ += dt;
 	}
 
 	void LerpManager::PreRender(const float& dt)
@@ -81,10 +94,10 @@ namespace Engine::Manager::Physics
 
 		if (!std::isfinite(factor))
 		{
-			factor = 0.0f;
+			factor = g_epsilon;
 		}
 
-		factor = std::clamp(factor, 0.0f, 1.0f);
+		factor = std::clamp(factor, g_epsilon, 1.0f);
 		return factor;
 	}
 }

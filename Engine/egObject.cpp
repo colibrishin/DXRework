@@ -169,7 +169,7 @@ namespace Engine::Abstract
 	{
 		const auto id = ToTypeName() + " " + GetName() + " " + std::to_string(GetID());
 
-		if (ImGui::Begin(id.c_str()))
+		if (ImGui::Begin(id.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::BulletText("Object");
 			Actor::OnImGui();

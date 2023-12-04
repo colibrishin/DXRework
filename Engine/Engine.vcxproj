@@ -33,7 +33,6 @@
     <ClInclude Include="egComponent.hpp" />
     <ClInclude Include="egD3Device.hpp" />
     <ClInclude Include="egApplication.hpp" />
-    <ClInclude Include="egEditorScene.hpp" />
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
     <ClInclude Include="egFont.hpp" />
@@ -86,7 +85,6 @@
     <ClCompile Include="egComponent.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
-    <ClCompile Include="egEditorScene.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egEntity.cpp" />
     <ClCompile Include="egFont.cpp" />

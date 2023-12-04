@@ -42,6 +42,8 @@ namespace Engine
 	constexpr float g_debug_message_life_time = 1.0f;
 	constexpr size_t g_debug_message_max = 20;
 
+	constexpr bool g_speculation_enabled = false;
+
 	constexpr LONG_PTR g_invalid_id = -1;
 
 	constexpr DirectX::SimpleMath::Vector3 g_forward = {0.f, 0.f, 1.f};
@@ -49,6 +51,8 @@ namespace Engine
 	
 	constexpr size_t g_max_map_size = 2048; // only in power of 2
 	constexpr size_t g_octree_negative_round_up = g_max_map_size / 2;
+
+	inline std::atomic<UINT> g_collision_energy_reduction_multiplier = 2;
 
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;

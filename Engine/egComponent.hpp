@@ -14,12 +14,14 @@ namespace Engine::Abstract
 		WeakObject GetOwner() const { return m_owner_; }
 		eComponentPriority GetPriority() const { return m_priority_; }
 		ComponentID GetLocalID() const { return m_local_id_; }
+		bool IsTicked() const { return m_b_ticked_; }
 
 		void OnImGui() override;
+		void Render(const float dt) override;
 
 	protected:
 		Component(eComponentPriority priority, const WeakObject& owner);
-
+		
 	private:
 		SERIALIZER_ACCESS
 		friend class Object;
@@ -41,6 +43,7 @@ namespace Engine::Abstract
 
 		// Non-serialized
 		WeakObject m_owner_;
+		bool m_b_ticked_;
 
 	};
 }

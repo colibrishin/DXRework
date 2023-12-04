@@ -263,6 +263,60 @@ namespace Engine
 	{
 	}
 
+	void Scene::Synchronize(const WeakScene& scene)
+	{
+		GetTaskScheduler().AddTask([this, scene](const float& dt)
+		{
+			GetDebugger().Log(L"Scene synchronization started.");
+
+			if (const auto locked = scene.lock())
+			{
+				m_layers = locked->m_layers;
+
+				m_main_camera_local_id_ = locked->m_main_camera_local_id_;
+				m_mainCamera_ = locked->m_mainCamera_;
+				m_cached_objects_ = locked->m_cached_objects_;
+				m_cached_components_ = locked->m_cached_components_;
+				m_object_position_tree_ = locked->m_object_position_tree_;
+				m_assigned_actor_ids_ = locked->m_assigned_actor_ids_;
+			}
+		});
+	}
+
+	void Scene::OpenLoadPopup(bool& is_load_open)
+	{
+		if (is_load_open)
+		{
+			if (ImGui::Begin("Load Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				static char buf[256] = {0};
+
+				ImGui::InputText("Filename", buf, IM_ARRAYSIZE(buf));
+
+				if (ImGui::Button("Load"))
+				{
+					// todo: reset all the object of current scene.
+					const auto scene = Serializer::Deserialize<Scene>(buf);
+
+					Synchronize(scene);
+
+					is_load_open = false;
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("Cancel"))
+				{
+					is_load_open = false;
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::End();
+			}
+		}
+	}
+
 	void Scene::PreUpdate(const float& dt)
 	{
 		m_layers[LAYER_LIGHT]->PreUpdate(dt);
@@ -305,6 +359,8 @@ namespace Engine
 		}
 
 #ifdef _DEBUG
+		static bool is_load_open = false;
+
 		if (ImGui::Begin(ToTypeName().c_str()), nullptr, ImGuiWindowFlags_MenuBar)
 		{
 			if (ImGui::BeginMainMenuBar())
@@ -321,6 +377,16 @@ namespace Engine
 					{
 						const auto light = Instantiate<Objects::Light>();
 						AddGameObject(light, LAYER_LIGHT);
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Load"))
+				{
+					if (ImGui::MenuItem("Scene"))
+					{
+						is_load_open = true;
 					}
 
 					ImGui::EndMenu();
@@ -344,9 +410,11 @@ namespace Engine
 				ImGui::EndMainMenuBar();
 			}
 
-			for (const auto& layer : m_layers | std::views::values)
+			OpenLoadPopup(is_load_open);
+
+			for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 			{
-				for (const auto& obj : layer->GetGameObjects())
+				for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
 				{
 					if (const auto obj_ptr = obj.lock())
 					{

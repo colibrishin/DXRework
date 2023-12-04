@@ -107,7 +107,7 @@ namespace Engine::Manager
 		GetResourceManager().PreUpdate(dt);
 		GetPhysicsManager().PreUpdate(dt);
 		GetConstraintSolver().PreUpdate(dt);
-		GetTransformLerpManager().PreUpdate(dt);
+		GetLerpManager().PreUpdate(dt);
 		GetDebugger().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
 		GetToolkitAPI().PreUpdate(dt);
@@ -122,7 +122,7 @@ namespace Engine::Manager
 		GetResourceManager().FixedUpdate(dt);
 		GetPhysicsManager().FixedUpdate(dt);
 		GetConstraintSolver().FixedUpdate(dt);
-		GetTransformLerpManager().FixedUpdate(dt);
+		GetLerpManager().FixedUpdate(dt);
 		GetDebugger().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
 		GetToolkitAPI().FixedUpdate(dt);
@@ -137,7 +137,7 @@ namespace Engine::Manager
 		GetResourceManager().Update(dt);
 		GetPhysicsManager().Update(dt);
 		GetConstraintSolver().Update(dt);
-		GetTransformLerpManager().Update(dt);
+		GetLerpManager().Update(dt);
 		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
 		GetToolkitAPI().Update(dt);
@@ -153,7 +153,7 @@ namespace Engine::Manager
 		GetResourceManager().PreRender(dt);
 		GetPhysicsManager().PreRender(dt);
 		GetConstraintSolver().PreRender(dt);
-		GetTransformLerpManager().PreRender(dt);
+		GetLerpManager().PreRender(dt);
 		GetDebugger().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
@@ -168,7 +168,7 @@ namespace Engine::Manager
 		GetResourceManager().Render(dt);
 		GetPhysicsManager().Render(dt);
 		GetConstraintSolver().PreRender(dt);
-		GetTransformLerpManager().Render(dt);
+		GetLerpManager().Render(dt);
 		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
 

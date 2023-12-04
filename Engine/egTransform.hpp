@@ -4,6 +4,11 @@
 #include <boost/serialization/export.hpp>
 #include "egDXCommon.h"
 
+namespace Engine::Manager::Physics
+{
+	class LerpManager;
+}
+
 namespace Engine::Component
 {
 	class Transform : public Abstract::Component
@@ -37,6 +42,7 @@ namespace Engine::Component
 		Transform();
 
 	private:
+		friend class Manager::Physics::LerpManager;
 		SERIALIZER_ACCESS
 
 		Vector3 m_previous_position_;

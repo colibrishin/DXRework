@@ -12,5 +12,6 @@
 #include <cstring>
 
 #include "../Engine/pch.hpp"
+#include "../Client/pch.h"
 
 #include "WinAPIWrapper.hpp"

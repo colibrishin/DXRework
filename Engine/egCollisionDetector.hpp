@@ -23,8 +23,24 @@ namespace Engine::Manager
 		static void GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
 		static bool Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
 
-		bool IsCollided(EntityID id) const { return !m_collision_map_.at(id).empty(); }
-		bool IsCollided(EntityID id1, EntityID id2) const { return m_collision_map_.at(id1).contains(id2); }
+		bool IsCollided(EntityID id) const
+		{
+			if (!m_collision_map_.contains(id))
+			{
+				return false;
+			}
+
+			return !m_collision_map_.at(id).empty();
+		}
+		bool IsCollided(EntityID id1, EntityID id2) const
+		{
+			if (!m_collision_map_.contains(id1))
+			{
+				return false;
+			}
+
+			return m_collision_map_.at(id1).contains(id2);
+		}
 		bool IsSpeculated(EntityID id1, EntityID id2) const
 		{
 			if (!m_speculation_map_.contains(id1))
