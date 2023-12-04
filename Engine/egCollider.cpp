@@ -175,6 +175,17 @@ namespace Engine::Component
 		}
 
 		UpdateBoundings();
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+
+		UpdateInertiaTensor();
 	}
 
 	void Collider::SetType(const eBoundingType type)
@@ -189,6 +200,17 @@ namespace Engine::Component
 #ifdef _DEBUG
 		GenerateDebugMesh();
 #endif
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
+
+		UpdateInertiaTensor();
 
 		UpdateBoundings();
 	}
@@ -262,6 +284,11 @@ namespace Engine::Component
 		{
 			m_collision_count_[id]++;
 		}
+	}
+
+	void Collider::AddSpeculationObject(const EntityID id)
+	{
+		m_speculative_collision_candidates_.insert(id);
 	}
 
 	void Collider::GetPenetration(const Collider& other, Vector3& normal, float& depth) const
@@ -446,15 +473,15 @@ namespace Engine::Component
 	}
 
 	Collider::Collider(const WeakObject& owner, const WeakMesh& mesh) : Component(COMPONENT_PRIORITY_COLLIDER,
-		                                                                           owner),
-																			m_bDirtyByTransform(false),
-																			m_position_(Vector3::Zero),
-																			m_size_(Vector3::One),
-																			m_rotation_(Quaternion::Identity),
-																			m_type_(BOUNDING_TYPE_BOX),
-																			m_mass_(1.0f), m_boundings_({}),
-																			m_inertia_tensor_(),
-																			m_mesh_(mesh)
+		                                                                    owner),
+	                                                                    m_bDirtyByTransform(false),
+	                                                                    m_position_(Vector3::Zero),
+	                                                                    m_size_(Vector3::One),
+	                                                                    m_rotation_(Quaternion::Identity),
+	                                                                    m_type_(BOUNDING_TYPE_BOX),
+	                                                                    m_mass_(1.0f), m_boundings_({}),
+	                                                                    m_inertia_tensor_(),
+	                                                                    m_mesh_(mesh)
 	{
 		if (const auto locked = m_mesh_.lock())
 		{

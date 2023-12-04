@@ -13,7 +13,7 @@ SERIALIZER_ACCESS_IMPL(Engine::Component::Transform,
 
 namespace Engine::Component 
 {
-	Component::Transform::Transform(const WeakObject& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner), m_position_(Vector3::Zero), m_previous_position_(Vector3::Zero), m_scale_(Vector3::One), m_rotation_(Quaternion::Identity)
+	Component::Transform::Transform(const WeakObject& owner) : Component(COMPONENT_PRIORITY_TRANSFORM, owner), m_previous_position_(Vector3::Zero), m_position_(Vector3::Zero), m_rotation_(Quaternion::Identity), m_scale_(Vector3::One)
 	{
 	}
 
@@ -25,6 +25,7 @@ namespace Engine::Component
 	void Transform::Initialize()
 	{
 		Component::Initialize();
+		m_previous_position_ = m_position_;
 	}
 
 	void Transform::PreUpdate(const float& dt)
@@ -77,7 +78,7 @@ namespace Engine::Component
 		Component::OnDeserialized();
 	}
 
-	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {})
+	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {}), m_previous_position_(Vector3::Zero), m_position_(Vector3::Zero), m_rotation_(Quaternion::Identity), m_scale_(Vector3::One)
 	{
 	}
 }

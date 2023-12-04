@@ -6,7 +6,7 @@ namespace Engine::Manager::Physics
 	class LerpManager : public Abstract::Singleton<LerpManager>
 	{
 	public:
-		LerpManager(SINGLETON_LOCK_TOKEN) : Singleton(), m_elapsedTime_(0.f) {}
+		LerpManager(SINGLETON_LOCK_TOKEN) : Singleton(), m_elapsedTime_(g_epsilon) {}
 		~LerpManager() override = default;
 
 		void Initialize() override;

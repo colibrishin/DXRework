@@ -48,7 +48,7 @@ namespace Engine::Component
 		bool Contains(Collider& other) const;
 
 		void AddCollidedObject(const EntityID id);
-		void AddSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.insert(id); }
+		void AddSpeculationObject(const EntityID id);
 
 		void RemoveCollidedObject(const EntityID id) { m_collided_objects_.erase(id); }
 		void RemoveSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.erase(id); }
@@ -104,6 +104,7 @@ namespace Engine::Component
 
 	private:
 		SERIALIZER_ACCESS
+		friend class Manager::Physics::LerpManager;
 
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);
