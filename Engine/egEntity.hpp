@@ -20,11 +20,11 @@ namespace Engine::Abstract
 			return GetID() == other.GetID();
 		}
 		
-		void SetName(const std::wstring& name) { m_name_ = name; }
+		void SetName(const EntityName& name) { m_name_ = name; }
 
 		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
-		std::wstring GetName() const { return m_name_; }
-		std::string ToTypeName() const { return typeid(*this).name(); }
+		EntityName GetName() const { return m_name_; }
+		TypeName ToTypeName() const { return typeid(*this).name(); }
 
 		template <typename T>
 		boost::weak_ptr<T> GetWeakPtr()
@@ -44,6 +44,7 @@ namespace Engine::Abstract
 		virtual void FixedUpdate(const float& dt) = 0;
 
 		virtual void OnDeserialized();
+		virtual void OnImGui();
 
 	protected:
 		Entity() : m_b_initialized_(false) {}
@@ -51,7 +52,7 @@ namespace Engine::Abstract
 	private:
 		SERIALIZER_ACCESS
 
-		std::wstring m_name_;
+		EntityName m_name_;
 		bool m_b_initialized_;
 
 	};
