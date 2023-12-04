@@ -26,6 +26,7 @@ namespace Engine::Abstract
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
+		void OnImGui() override;
 
 		void AddResource(const WeakResource& resource)
 		{
@@ -237,7 +238,7 @@ namespace Engine::Abstract
 		}
 
 		template <typename T>
-		boost::weak_ptr<T> GetResource(const std::wstring& name) const
+		boost::weak_ptr<T> GetResource(const EntityName& name) const
 		{
 			if constexpr (std::is_base_of_v<Resource, T>)
 			{
@@ -264,11 +265,14 @@ namespace Engine::Abstract
 
 		void SetActive(bool active) { m_active_ = active; }
 		void SetCulled(bool culled) { m_culled_ = culled; }
+		void SetImGuiOpen(bool open) { m_imgui_open_ = open; }
 
 		bool GetActive() const { return m_active_; }
+		bool GetCulled() const { return m_culled_; }
+		bool GetImGuiOpen() const { return m_imgui_open_; }
 
 	protected:
-		Object() : Actor(), m_active_(true), m_culled_(true)
+		Object() : Actor(), m_active_(true), m_culled_(true), m_imgui_open_(false)
 		{
 		};
 
@@ -301,8 +305,10 @@ namespace Engine::Abstract
 		bool m_active_ = true;
 		bool m_culled_ = true;
 
-		std::map<const std::string, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
-		std::set<std::wstring> m_resource_names_;
+		bool m_imgui_open_ = false;
+
+		std::map<const TypeName, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
+		std::set<EntityName> m_resource_names_;
 
 		// Non-serialized
 		std::set<ComponentID> m_assigned_component_ids_;

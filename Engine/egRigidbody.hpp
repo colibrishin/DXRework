@@ -61,6 +61,7 @@ namespace Engine::Component
 		void FixedUpdate(const float& dt) override;
 
 		void OnDeserialized() override;
+		void OnImGui() override;
 
 	protected:
 		Rigidbody();

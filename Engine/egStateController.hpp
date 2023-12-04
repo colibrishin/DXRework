@@ -16,6 +16,7 @@ namespace Engine::Abstract
 		void PreUpdate(const float& dt) override;
 
 		void OnDeserialized() override;
+		void OnImGui() override;
 
 	protected:
 		StateController() : Component(COMPONENT_PRIORITY_STATE, {}) {}
@@ -57,6 +58,14 @@ namespace Engine::Abstract
 	void StateController<StateEnum, EC>::OnDeserialized()
 	{
 		Component::OnDeserialized();
+	}
+
+	template <typename StateEnum, class EC>
+	void StateController<StateEnum, EC>::OnImGui()
+	{
+		Component::OnImGui();
+		ImGui::Text("State: %d", m_state_);
+		ImGui::Text("Previous State: %d", m_previous_state_);
 	}
 }
 

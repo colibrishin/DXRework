@@ -13,6 +13,8 @@ namespace Engine::Abstract
 		WeakScene GetScene() const;
 		ActorID GetLocalID() const;
 
+		void OnImGui() override;
+
 	protected:
 		explicit Actor() : m_assigned_scene_({}), m_layer_(LAYER_NONE), m_local_id_(g_invalid_id)
 		{

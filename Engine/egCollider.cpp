@@ -7,6 +7,7 @@
 #include "egDebugObject.hpp"
 #include "egSceneManager.hpp"
 #include "egSphereMesh.hpp"
+#include <imgui_stdlib.h>
 
 SERIALIZER_ACCESS_IMPL(Engine::Component::Collider,
 	_ARTAG(_BSTSUPER(Engine::Abstract::Component))
@@ -293,15 +294,15 @@ namespace Engine::Component
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
-			GetResourceManager().AddResource(L"CubeMesh", boost::make_shared<Mesh::CubeMesh>());
+			GetResourceManager().AddResource("CubeMesh", boost::make_shared<Mesh::CubeMesh>());
 			m_debug_mesh_->AddResource(
-				GetResourceManager().GetResource<Mesh::CubeMesh>(L"CubeMesh"));
+				GetResourceManager().GetResource<Mesh::CubeMesh>("CubeMesh"));
 		}
 		else if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			GetResourceManager().AddResource(L"SphereMesh", boost::make_shared<Mesh::SphereMesh>());
+			GetResourceManager().AddResource("SphereMesh", boost::make_shared<Mesh::SphereMesh>());
 			m_debug_mesh_->AddResource(
-				GetResourceManager().GetResource<Mesh::SphereMesh>(L"SphereMesh"));
+				GetResourceManager().GetResource<Mesh::SphereMesh>("SphereMesh"));
 		}
 	}
 #endif
@@ -349,6 +350,32 @@ namespace Engine::Component
 
 		UpdateInertiaTensor();
 		UpdateBoundings();
+	}
+
+	void Collider::OnImGui()
+	{
+		Component::OnImGui();
+		ImGui::Indent(2);
+		ImGui::Checkbox("Dirty by Transform", &m_bDirtyByTransform);
+
+		ImGui::Text("Previous Position");
+		ImGuiVector3Editable(m_previous_position_);
+
+		ImGui::Text("Position");
+		ImGuiVector3Editable(m_position_);
+
+		ImGui::Text("Size");
+		ImGuiVector3Editable(m_size_);
+
+		ImGui::Text("Rotation");
+		ImGuiQuaternionEditable(m_rotation_);
+
+		ImGui::InputInt("Type", reinterpret_cast<int*>(&m_type_));
+
+		ImGui::Text("Mesh : %s", m_mesh_name_.c_str());
+		ImGui::InputFloat("Mass", &m_mass_);
+
+		// TODO: colliding objects
 	}
 
 	void Collider::Render(const float dt)
