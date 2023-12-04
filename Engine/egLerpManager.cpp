@@ -31,6 +31,7 @@ namespace Engine::Manager::Physics
 						const auto previous = tr->GetPreviousPosition();
 						const auto current = tr->GetPosition();
 						const auto lerp = Vector3::Lerp(previous, current, GetLerpFactor());
+						Vector3CheckNanException(lerp);
 
 						tr->SetPosition(lerp);
 					}
@@ -42,6 +43,7 @@ namespace Engine::Manager::Physics
 							const auto previous = collider->GetPreviousPosition();
 							const auto current = collider->GetPosition();
 							const auto lerp = Vector3::Lerp(previous, current, GetLerpFactor());
+							Vector3CheckNanException(lerp);
 
 							collider->SetPosition(lerp);
 						}
@@ -75,7 +77,13 @@ namespace Engine::Manager::Physics
 
 	float LerpManager::GetLerpFactor() const
 	{
-		auto factor = (m_elapsedTime_ / g_fixed_update_interval);
+		auto factor = (static_cast<float>(m_elapsedTime_) / static_cast<float>(g_fixed_update_interval));
+
+		if (!std::isfinite(factor))
+		{
+			factor = 0.0f;
+		}
+
 		factor = std::clamp(factor, 0.0f, 1.0f);
 		return factor;
 	}
