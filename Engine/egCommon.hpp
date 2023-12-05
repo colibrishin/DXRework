@@ -91,6 +91,11 @@ namespace Engine
 		LAYER_CAMERA,
 		LAYER_MAX
 	};
+
+	enum eObserverState
+	{
+		OBSERVER_STATE_NONE,
+	};
 	
 	constexpr eLayerType g_early_update_layer_end = LAYER_DEFAULT;
 
