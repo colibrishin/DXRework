@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egScene.hpp"
 #include "egCamera.hpp"
+#include "egIStateController.hpp"
 #include "egLight.hpp"
 #include "egManagerHelper.hpp"
 #include "egObserver.hpp"
@@ -33,6 +34,40 @@ namespace Engine
 		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
 		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		AddGameObject(light2, LAYER_LIGHT);
+
+		Initialize_INTERNAL();
+
+#ifdef _DEBUG
+		for (const auto& comps : m_cached_components_ | std::views::values)
+		{
+			if (comps.empty())
+			{
+				continue;
+			}
+
+			if (const auto sample = comps.begin()->lock())
+			{
+				const auto cast_check = boost::dynamic_pointer_cast<Abstract::IStateController>(sample);
+
+				if (!cast_check) 
+				{
+					continue;
+				}
+
+				for (const auto& comp : comps)
+				{
+					if (const auto comp_ptr = comp.lock())
+					{
+						comp_ptr->SetActive(false);
+					}
+				}
+			}
+		}
+
+		const auto observer = Instantiate<Objects::Observer>();
+		AddGameObject(observer, LAYER_UI);
+		GetMainCamera().lock()->BindObject(observer);
+#endif
 	}
 
 	EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
