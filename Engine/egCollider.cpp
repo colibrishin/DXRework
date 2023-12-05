@@ -386,21 +386,21 @@ namespace Engine::Component
 		ImGui::Checkbox("Dirty by Transform", &m_bDirtyByTransform);
 
 		ImGui::Text("Previous Position");
-		ImGuiVector3Editable(m_previous_position_);
+		ImGuiVector3Editable(GetID(), "previous_position", m_previous_position_);
 
 		ImGui::Text("Position");
-		ImGuiVector3Editable(m_position_);
+		ImGuiVector3Editable(GetID(), "position", m_position_);
 
 		ImGui::Text("Size");
-		ImGuiVector3Editable(m_size_);
+		ImGuiVector3Editable(GetID(), "size", m_size_);
 
 		ImGui::Text("Rotation");
-		ImGuiQuaternionEditable(m_rotation_);
+		ImGuiQuaternionEditable(GetID(), "rotation", m_rotation_);
 
-		ImGui::InputInt("Type", reinterpret_cast<int*>(&m_type_));
+		ImGui::InputInt("Collider Type", reinterpret_cast<int*>(&m_type_));
 
-		ImGui::Text("Mesh : %s", m_mesh_name_.c_str());
-		ImGui::InputFloat("Mass", &m_mass_);
+		ImGui::Text("Collider Mesh : %s", m_mesh_name_.c_str());
+		ImGui::InputFloat("Collider Mass", &m_mass_);
 
 		// TODO: colliding objects
 	}

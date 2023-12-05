@@ -95,19 +95,34 @@ namespace Engine
 		return ret;
 	}
 
-	inline static void ImGuiVector3Editable(Vector3& v)
+	inline static void ImGuiVector3Editable(const EntityID id, const std::string& var_name, Vector3& v)
 	{
-		ImGui::InputFloat("x: ", &v.x);
-		ImGui::InputFloat("y: ", &v.y);
-		ImGui::InputFloat("z: ", &v.z);
+		const auto unique_id = std::to_string(id) + var_name;
+		ImGui::PushID(unique_id.c_str());
+		ImGui::InputFloat("x", &v.x);
+		ImGui::InputFloat("y", &v.y);
+		ImGui::InputFloat("z", &v.z);
+		ImGui::PopID();
 	}
 
-	inline static void ImGuiQuaternionEditable(Quaternion& v)
+	inline static void ImGuiQuaternionEditable(const EntityID id, const std::string& var_name, Quaternion& v)
 	{
-		ImGui::InputFloat("x: ", &v.x);
-		ImGui::InputFloat("y: ", &v.y);
-		ImGui::InputFloat("z: ", &v.z);
-		ImGui::InputFloat("w: ", &v.w);
+		const auto unique_id = std::to_string(id) + var_name;
+		ImGui::PushID(unique_id.c_str());
+		ImGui::InputFloat("x", &v.x);
+		ImGui::InputFloat("y", &v.y);
+		ImGui::InputFloat("z", &v.z);
+		ImGui::InputFloat("w", &v.w);
+		ImGui::PopID();
+	}
+
+	inline static void ImGuiVector2Editable(const EntityID id, const std::string& var_name, Vector2& v)
+	{
+		const auto unique_id = std::to_string(id) + var_name;
+		ImGui::PushID(unique_id.c_str());
+		ImGui::InputFloat("x", &v.x);
+		ImGui::InputFloat("y", &v.y);
+		ImGui::PopID();
 	}
 
 	inline static void Vector3CheckNanException(const Vector3& v)

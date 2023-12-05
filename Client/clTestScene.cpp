@@ -30,6 +30,15 @@ namespace Client::Scene
 		Scene::Render(dt);
 	}
 
+	void TestScene::AddCustomObject()
+	{
+		if (ImGui::MenuItem("PlaneObject"))
+		{
+			const auto plane = Engine::Instantiate<Object::PlaneObject>();
+			AddGameObject(plane, Engine::LAYER_DEFAULT);
+		}
+	}
+
 	inline void TestScene::Initialize()
 	{
 		Scene::Initialize();

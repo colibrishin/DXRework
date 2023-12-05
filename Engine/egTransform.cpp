@@ -60,16 +60,16 @@ namespace Engine::Component
 		ImGui::Indent(2);
 
 		ImGui::Text("Previous Position");
-		ImGuiVector3Editable(m_previous_position_);
+		ImGuiVector3Editable(GetID(), "previous_position", m_previous_position_);
 
 		ImGui::Text("Position");
-		ImGuiVector3Editable(m_position_);
+		ImGuiVector3Editable(GetID(), "position", m_position_);
 
 		ImGui::Text("Rotation");
-		ImGuiQuaternionEditable(m_rotation_);
+		ImGuiQuaternionEditable(GetID(), "rotation", m_rotation_);
 
 		ImGui::Text("Scale");
-		ImGuiVector3Editable(m_scale_);
+		ImGuiVector3Editable(GetID(), "scale", m_scale_);
 		ImGui::Unindent(2);
 	}
 
