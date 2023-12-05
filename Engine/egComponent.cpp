@@ -13,6 +13,7 @@ namespace Engine::Abstract
 		Renderable::OnImGui();
 		ImGui::Indent(2);
 		ImGui::Text("Component Local ID: %d", m_local_id_);
+		ImGui::Checkbox("Component Active", &m_b_active_);
 		ImGui::Unindent(2);
 	}
 
@@ -21,8 +22,9 @@ namespace Engine::Abstract
 		m_b_ticked_ = true;
 	}
 
-	Component::Component(eComponentPriority priority, const WeakObject& owner): m_local_id_(g_invalid_id), m_priority_(priority),
-	                                                                            m_owner_(owner), m_b_ticked_(false)
+	Component::Component(eComponentPriority priority, const WeakObject& owner): m_local_id_(g_invalid_id),
+		m_priority_(priority),
+		m_owner_(owner), m_b_ticked_(false), m_b_active_(true)
 	{
 	}
 }
