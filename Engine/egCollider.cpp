@@ -56,6 +56,27 @@ namespace Engine::Component
 		UpdateInertiaTensor();
 	}
 
+	void Collider::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
+	{
+		m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
+		m_rotation_ = Quaternion::CreateFromYawPitchRoll(
+			DirectX::XMConvertToRadians(yaw_pitch_roll.x), 
+			DirectX::XMConvertToRadians(yaw_pitch_roll.y), 
+			DirectX::XMConvertToRadians(yaw_pitch_roll.z));
+
+		if (m_type_ == BOUNDING_TYPE_BOX)
+		{
+						SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+						SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
+		}
+
+		UpdateBoundings();
+		UpdateInertiaTensor();
+	}
+
 	const std::vector<const Vector3*>& Collider::GetVertices() const
 	{
 		if (const auto mesh = m_mesh_.lock())
@@ -489,5 +510,9 @@ namespace Engine::Component
 
 	void Collider::PreRender(const float dt)
 	{
+		m_rotation_ = Quaternion::CreateFromYawPitchRoll(
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x), 
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.y), 
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
 	}
 }

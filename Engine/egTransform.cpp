@@ -30,6 +30,10 @@ namespace Engine::Component
 
 	void Transform::PreUpdate(const float& dt)
 	{
+		m_rotation_ = Quaternion::CreateFromYawPitchRoll(
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x), 
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.y), 
+			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
 	}
 
 	void Transform::Update(const float& dt)
@@ -66,7 +70,7 @@ namespace Engine::Component
 		ImGuiVector3Editable(GetID(), "position", m_position_);
 
 		ImGui::Text("Rotation");
-		ImGuiQuaternionEditable(GetID(), "rotation", m_rotation_);
+		ImGuiVector3Editable(GetID(), "yaw_pitch_roll", m_yaw_pitch_roll_degree_);
 
 		ImGui::Text("Scale");
 		ImGuiVector3Editable(GetID(), "scale", m_scale_);
