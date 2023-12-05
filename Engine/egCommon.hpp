@@ -3,35 +3,50 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <set>
+#include <vector>
 #include <exception>
 #include <fmod_common.h>
 #include <typeindex>
+#include <execution>
+#include <algorithm>
+#include <string>
+#include <execution>
+#include <memory>
+#include <functional>
+
+#include <wrl/client.h>
+
 #include <SimpleMath.h>
+#include <DirectXCollision.h>
+
+#include <boost/make_shared.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/weak_ptr.hpp>
 
 #include "egType.hpp"
+#include "egSerialization.hpp"
+
+using namespace DirectX::SimpleMath;
+using namespace Microsoft::WRL;
 
 namespace Engine
 {
-	namespace Manager
-	{
-		namespace Graphics
-		{
-			class ToolkitAPI;
-		}
-
-		class Application;
-		class ResourceManager;
-		class SceneManager;
-		class ProjectionFrustum;
-		class CollisionDetector;
-	}
-
-	extern Manager::Application& GetApplication();
 	extern Manager::ResourceManager& GetResourceManager();
 	extern Manager::SceneManager& GetSceneManager();
 	extern Manager::ProjectionFrustum& GetProjectionFrustum();
 	extern Manager::CollisionDetector& GetCollisionDetector();
-
+	extern Manager::Application& GetApplication();
+	extern Manager::Graphics::D3Device& GetD3Device();
+	extern Manager::Graphics::RenderPipeline& GetRenderPipeline();
+	extern Manager::Graphics::ToolkitAPI& GetToolkitAPI();
+	extern Manager::Physics::LerpManager& GetLerpManager();
+	extern Manager::Physics::PhysicsManager& GetPhysicsManager();
+	extern Manager::Physics::ConstraintSolver& GetConstraintSolver();
+	extern Manager::Debugger& GetDebugger();
+	extern Manager::TaskScheduler& GetTaskScheduler();
+	extern Manager::MouseManager& GetMouseManager();
+	
 	constexpr float g_epsilon = 0.001f;
 	constexpr float g_gravity_acc = 9.8f;
 	constexpr int g_max_lights = 8;
