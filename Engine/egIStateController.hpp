@@ -15,5 +15,9 @@ namespace Engine::Abstract
 			: Component(priority, owner)
 		{
 		}
+
+	private:
+		SERIALIZER_ACCESS
+
 	};
 }
