@@ -19,6 +19,14 @@ namespace Engine::Component
 
 		void SetPosition(const Vector3& position) { m_position_ = position; }
 		void SetRotation(const Quaternion& rotation) { m_rotation_ = rotation; }
+		void SetYawPitchRoll(const Vector3& yaw_pitch_roll)
+		{
+			m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
+			m_rotation_ = Quaternion::CreateFromYawPitchRoll(
+				DirectX::XMConvertToRadians(yaw_pitch_roll.x),
+					DirectX::XMConvertToRadians(yaw_pitch_roll.y),
+					DirectX::XMConvertToRadians(yaw_pitch_roll.z));
+		}
 		void SetScale(const Vector3& scale) { m_scale_ = scale; }
 		
 		void Translate(Vector3 translation);
@@ -47,6 +55,7 @@ namespace Engine::Component
 
 		Vector3 m_previous_position_;
 		Vector3 m_position_;
+		Vector3 m_yaw_pitch_roll_degree_;
 		Quaternion m_rotation_;
 		Vector3 m_scale_;
 

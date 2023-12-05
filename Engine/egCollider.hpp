@@ -38,6 +38,7 @@ namespace Engine::Component
 
 		void SetPosition(const Vector3& position);
 		void SetRotation(const Quaternion& rotation);
+		void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
 		void SetSize(const Vector3& size);
 		void SetType(const eBoundingType type);
 		void SetMass(const float mass) { m_mass_ = mass; }
@@ -183,6 +184,7 @@ namespace Engine::Component
 		Vector3 m_position_;
 		Vector3 m_size_;
 		Quaternion m_rotation_;
+		Vector3 m_yaw_pitch_roll_degree_;
 
 		eBoundingType m_type_;
 		EntityName m_mesh_name_;

@@ -116,40 +116,46 @@ namespace Client::State
 			return;
 		}
 
-		const auto lookAt = Engine::GetSceneManager().GetActiveScene().lock()->GetMainCamera().lock()->GetLookAt();
-		m_offset_ = lookAt * Vector3{1.f, 0.f, 1.f};
-
-		CheckJump(rb);
-		CheckMove(rb);
-		CheckAttack(dt);
-
-		switch (GetState())
+		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())
 		{
-		case CHAR_STATE_IDLE:
-			if (HasStateChanged())
-				Engine::GetDebugger().Log(L"Idle");
-			break;
-		case CHAR_STATE_WALK:
-			if (HasStateChanged())
-				Engine::GetDebugger().Log(L"Walk");
-			break;
-		case CHAR_STATE_RUN:
-			break;
-		case CHAR_STATE_JUMP:
-			if (HasStateChanged())
-				Engine::GetDebugger().Log(L"Jump");
-			break;
-		case CHAR_STATE_ATTACK:
-			if (HasStateChanged())
-				Engine::GetDebugger().Log(L"Attack");
-			break;
-		case CHAR_STATE_DIE:
-			break;
-		case CHAR_STATE_HIT:
-			break;
-		case CHAR_STATE_MAX:
-		default:
-			break;
+			const auto camera = scene->GetMainCamera().lock();
+
+			camera->SetLookAtRotation(Engine::GetMouseManager().GetMouseRotation());
+
+			m_offset_ = camera->GetLookAt() * Vector3{1.f, 0.f, 1.f};
+
+			CheckJump(rb);
+			CheckMove(rb);
+			CheckAttack(dt);
+
+			switch (GetState())
+			{
+			case CHAR_STATE_IDLE:
+				if (HasStateChanged())
+					Engine::GetDebugger().Log(L"Idle");
+				break;
+			case CHAR_STATE_WALK:
+				if (HasStateChanged())
+					Engine::GetDebugger().Log(L"Walk");
+				break;
+			case CHAR_STATE_RUN:
+				break;
+			case CHAR_STATE_JUMP:
+				if (HasStateChanged())
+					Engine::GetDebugger().Log(L"Jump");
+				break;
+			case CHAR_STATE_ATTACK:
+				if (HasStateChanged())
+					Engine::GetDebugger().Log(L"Attack");
+				break;
+			case CHAR_STATE_DIE:
+				break;
+			case CHAR_STATE_HIT:
+				break;
+			case CHAR_STATE_MAX:
+			default:
+				break;
+			}
 		}
 	}
 

@@ -23,12 +23,15 @@ namespace Engine::Objects
 
 		void SetPosition(Vector3 position);
 		void SetRotation(Quaternion rotation);
+		void SetLookAtRotation(Quaternion rotation) { m_look_at_rotation_ = rotation; }
 
+		Quaternion GetRotation();
 		Vector3 GetPosition();
+		Quaternion GetLookAtRotation() { return m_look_at_rotation_; }
+
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
 		Matrix GetProjectionMatrix() const { return m_vp_buffer_.projection.Transpose(); }
-		Quaternion GetMouseRotation() const { return m_mouse_rotation_; }
-		Vector3 GetLookAt() const;
+		Vector3 GetLookAt();
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
@@ -44,17 +47,13 @@ namespace Engine::Objects
 		void SetOrthogonal(bool bOrthogonal) { m_b_orthogonal_ = bOrthogonal; }
 
 		Vector2 GetWorldMousePosition();
-		static Vector2 GetNormalizedMousePosition();
 		bool GetOrthogonal() const { return m_b_orthogonal_; }
 
 	private:
 		SERIALIZER_ACCESS
 
 		Vector3 m_look_at_;
-		Quaternion m_mouse_rotation_;
-
-		Vector2 m_previous_mouse_position_;
-		Vector2 m_current_mouse_position_;
+		Quaternion m_look_at_rotation_;
 
 		Vector3 m_offset_;
 		ActorID m_bound_object_id_;
@@ -62,7 +61,6 @@ namespace Engine::Objects
 		bool m_b_orthogonal_;
 
 		// Non-serialized
-		Matrix m_mouse_rotation_matrix_;
 		Matrix m_view_matrix_;
 		VPBuffer m_vp_buffer_;
 		WeakObject m_bound_object_;

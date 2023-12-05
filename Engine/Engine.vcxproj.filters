@@ -44,6 +44,9 @@
     <Filter Include="Mesh">
       <UniqueIdentifier>{258c4e9f-9245-457a-b6dc-021cb9bee28b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Singleton\Internal\Physics">
+      <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -121,9 +124,6 @@
     <ClInclude Include="egApplication.hpp">
       <Filter>Singleton</Filter>
     </ClInclude>
-    <ClInclude Include="egCollisionDetector.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
     <ClInclude Include="egResourceManager.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
@@ -154,17 +154,11 @@
     <ClInclude Include="egKinetic.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="egPhysicsManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
     <ClInclude Include="egFriction.h">
       <Filter>Physics</Filter>
     </ClInclude>
     <ClInclude Include="egToolkitAPI.hpp">
       <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="egConstraintSolver.hpp">
-      <Filter>Singleton\Internal</Filter>
     </ClInclude>
     <ClInclude Include="egType.hpp">
       <Filter>Common</Filter>
@@ -196,14 +190,26 @@
     <ClInclude Include="egSerialization.hpp">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="egLerpManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
     <ClInclude Include="egProjectionFrustum.hpp">
       <Filter>Singleton\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="DebugDraw.h">
       <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollisionDetector.hpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egConstraintSolver.hpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egPhysicsManager.hpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egLerpManager.hpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egMouseManager.hpp">
+      <Filter>Singleton\Internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -253,9 +259,6 @@
     <ClCompile Include="egFriction.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="egCollisionDetector.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
     <ClCompile Include="egRigidbody.cpp">
       <Filter>Component</Filter>
     </ClCompile>
@@ -264,12 +267,6 @@
     </ClCompile>
     <ClCompile Include="egCollision.cpp">
       <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egPhysicsManager.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
-    <ClCompile Include="egConstraintSolver.cpp">
-      <Filter>Singleton\Internal</Filter>
     </ClCompile>
     <ClCompile Include="egScene.cpp">
       <Filter>Scene</Filter>
@@ -289,9 +286,6 @@
     <ClCompile Include="egLayer.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="egLerpManager.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
     <ClCompile Include="egActor.cpp">
       <Filter>Abstract</Filter>
     </ClCompile>
@@ -310,6 +304,21 @@
       <Filter>Singleton\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="egDebugger.cpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollisionDetector.cpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="egConstraintSolver.cpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="egPhysicsManager.cpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="egLerpManager.cpp">
+      <Filter>Singleton\Internal\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="egMouseManager.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
   </ItemGroup>

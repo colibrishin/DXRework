@@ -8,6 +8,7 @@
 #include "egConstraintSolver.hpp"
 #include "egDebugger.hpp"
 #include "egLerpManager.hpp"
+#include "egMouseManager.hpp"
 #include "egPhysicsManager.hpp"
 #include "egTaskScheduler.hpp"
 
@@ -76,5 +77,10 @@ namespace Engine
 	inline Manager::TaskScheduler& GetTaskScheduler()
 	{
 		return Manager::TaskScheduler::GetInstance();
+	}
+
+	inline Manager::MouseManager& GetMouseManager()
+	{
+		return Manager::MouseManager::GetInstance();
 	}
 }

@@ -8,9 +8,6 @@ SERIALIZER_ACCESS_IMPL(
 	Engine::Objects::Camera,
 	_ARTAG(_BSTSUPER(Engine::Abstract::Object))
 	_ARTAG(m_look_at_)
-	_ARTAG(m_mouse_rotation_)
-	_ARTAG(m_previous_mouse_position_)
-	_ARTAG(m_current_mouse_position_)
 	_ARTAG(m_offset_)
 	_ARTAG(m_bound_object_id_)
 	_ARTAG(m_b_orthogonal_))
@@ -20,6 +17,11 @@ namespace Engine::Objects
 	void Camera::SetPosition(Vector3 position)
 	{
 		GetComponent<Component::Transform>().lock()->SetPosition(position);
+	}
+
+	Quaternion Camera::GetRotation()
+	{
+		return GetComponent<Component::Transform>().lock()->GetRotation();
 	}
 
 	void Camera::SetRotation(Quaternion rotation)
@@ -32,9 +34,9 @@ namespace Engine::Objects
 		return GetComponent<Component::Transform>().lock()->GetPosition();
 	}
 
-	Vector3 Camera::GetLookAt() const
+	Vector3 Camera::GetLookAt()
 	{
-		return Vector3::Transform(m_look_at_, m_mouse_rotation_matrix_);
+		return Vector3::Transform(m_look_at_, m_look_at_rotation_);
 	}
 
 	void Camera::Initialize()
@@ -79,14 +81,6 @@ namespace Engine::Objects
 			GetComponent<Component::Transform>().lock()->Translate(g_backward * 0.1f);
 		}
 
-		m_current_mouse_position_ = GetNormalizedMousePosition();
-		Vector2 delta;
-		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
-
-		const auto lookRotation = Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
-		m_mouse_rotation_ = Quaternion::Concatenate(m_mouse_rotation_, lookRotation);
-		m_mouse_rotation_matrix_ = Matrix::CreateFromQuaternion(m_mouse_rotation_);
-
 		if (const auto transform = GetComponent<Component::Transform>().lock())
 		{
 			const auto position = transform->GetPosition();
@@ -98,11 +92,12 @@ namespace Engine::Objects
 
 			// Create the rotation matrix from the yaw, pitch, and roll values.
 			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
+			const XMMATRIX lookAtMatrix = XMMatrixRotationQuaternion(m_look_at_rotation_);
 
 			// Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
 			lookAtVector = XMVector3TransformNormal(lookAtVector, rotationMatrix);
+			lookAtVector = XMVector3TransformNormal(lookAtVector, lookAtMatrix);
 			upVector = XMVector3TransformNormal(upVector, rotationMatrix);
-			lookAtVector = XMVector3TransformNormal(lookAtVector, m_mouse_rotation_matrix_);
 
 			// Translate the rotated camera position to the location of the viewer.
 			lookAtVector = XMVectorAdd(positionVector, lookAtVector);
@@ -144,11 +139,9 @@ namespace Engine::Objects
 		BoundingFrustum frustum;
 
 		BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
-		frustum.Transform(frustum, 1.f, GetMouseRotation(), GetPosition());
+		frustum.Transform(frustum, 1.f, Quaternion::Concatenate(GetRotation(), GetLookAtRotation()), GetPosition());
 		GetDebugger().Draw(frustum, Colors::WhiteSmoke);
 #endif
-
-		m_previous_mouse_position_ = m_current_mouse_position_;
 	}
 
 	void Camera::FixedUpdate(const float& dt)
@@ -187,20 +180,6 @@ namespace Engine::Objects
 		return DirectX::XMVector3Transform(mousePosition, invProjectionView);
 	}
 
-	Vector2 Camera::GetNormalizedMousePosition()
-	{
-		const Vector2 actual_mouse_position
-		{
-			static_cast<float>(GetApplication().GetMouseState().x),
-			static_cast<float>(GetApplication().GetMouseState().y)
-		};
-
-		const float x = (((2.0f * actual_mouse_position.x) / g_window_width) - 1);
-		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
-
-		return {x, y};
-	}
-
 	void Camera::OnDeserialized()
 	{
 		Object::OnDeserialized();
@@ -222,13 +201,6 @@ namespace Engine::Objects
 			ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
 
 			ImGui::Text("Bound object: %d", m_bound_object_id_);
-
-			ImGui::Text("Mouse rotation");
-			ImGuiQuaternionEditable(GetID(), "mouse_rotation", m_mouse_rotation_);
-
-			ImGui::Text("Previous mouse position");
-			ImGuiVector2Editable(GetID(), "previous_mouse_position", m_previous_mouse_position_);
-
 			ImGui::End();
 		}
 	}
