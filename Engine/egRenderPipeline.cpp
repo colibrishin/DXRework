@@ -231,6 +231,8 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());
 		GetD3Device().GetContext()->OMSetBlendState(RenderPipeline::m_blend_state_.Get(), nullptr, 0xFFFFFFFF);
 		GetD3Device().GetContext()->OMSetDepthStencilState(RenderPipeline::m_depth_stencil_state_.Get(), 1);
+
+		GetD3Device().GetContext()->IASetInputLayout(GetRenderPipeline().m_input_layout_.Get());
 	}
 
 	void RenderPipeline::DrawIndexed(UINT index_count)
