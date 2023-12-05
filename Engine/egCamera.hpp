@@ -36,6 +36,7 @@ namespace Engine::Objects
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
+		void OnImGui() override;
 
 		void BindObject(const WeakObject& object);
 		void SetOffset(Vector3 offset);

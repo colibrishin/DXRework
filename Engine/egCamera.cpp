@@ -196,4 +196,31 @@ namespace Engine::Objects
 	{
 		Object::OnDeserialized();
 	}
+
+	void Camera::OnImGui()
+	{
+		Object::OnImGui();
+
+		if (ImGui::Begin("Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse))
+		{
+			ImGui::Text("Look at");
+			ImGuiVector3Editable(GetID(), "look_at", m_look_at_);
+
+			ImGui::Text("Offset");
+			ImGuiVector3Editable(GetID(), "offset", m_offset_);
+
+			ImGui::Text("Orthogonal");
+			ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
+
+			ImGui::Text("Bound object: %d", m_bound_object_id_);
+
+			ImGui::Text("Mouse rotation");
+			ImGuiQuaternionEditable(GetID(), "mouse_rotation", m_mouse_rotation_);
+
+			ImGui::Text("Previous mouse position");
+			ImGuiVector2Editable(GetID(), "previous_mouse_position", m_previous_mouse_position_);
+
+			ImGui::End();
+		}
+	}
 }
