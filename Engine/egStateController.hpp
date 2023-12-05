@@ -1,11 +1,11 @@
 #pragma once
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/export.hpp>
+#include "egCommon.hpp"
+#include "egIStateController.hpp"
 
 namespace Engine::Abstract
 {
 	template <typename StateEnum, class EC = std::enable_if_t<std::is_enum_v<StateEnum>>>
-	class StateController : public Component
+	class StateController : public IStateController
 	{
 	public:
 		StateEnum GetState() const { return m_state_; }
@@ -19,8 +19,8 @@ namespace Engine::Abstract
 		void OnImGui() override;
 
 	protected:
-		StateController() : Component(COMPONENT_PRIORITY_STATE, {}) {}
-		StateController(const WeakObject& owner) : Component(COMPONENT_PRIORITY_STATE, owner) {}
+		StateController() : IStateController(COMPONENT_PRIORITY_STATE, {}) {}
+		StateController(const WeakObject& owner) : IStateController(COMPONENT_PRIORITY_STATE, owner) {}
 		void SetState(StateEnum state) { m_state_ = state; }
 
 	private:

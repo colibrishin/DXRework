@@ -1,13 +1,15 @@
 #include "pch.hpp"
 #include "egScene.hpp"
 #include "egCamera.hpp"
+#include "egIStateController.hpp"
 #include "egLight.hpp"
 #include "egManagerHelper.hpp"
+#include "egObserver.hpp"
 
 SERIALIZER_ACCESS_IMPL(Engine::Scene,
-	_ARTAG(_BSTSUPER(Renderable))
-	_ARTAG(m_main_camera_local_id_)
-	_ARTAG(m_layers))
+                       _ARTAG(_BSTSUPER(Renderable))
+                       _ARTAG(m_main_camera_local_id_)
+                       _ARTAG(m_layers))
 
 namespace Engine
 {
@@ -32,6 +34,40 @@ namespace Engine
 		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
 		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		AddGameObject(light2, LAYER_LIGHT);
+
+		Initialize_INTERNAL();
+
+#ifdef _DEBUG
+		for (const auto& comps : m_cached_components_ | std::views::values)
+		{
+			if (comps.empty())
+			{
+				continue;
+			}
+
+			if (const auto sample = comps.begin()->lock())
+			{
+				const auto cast_check = boost::dynamic_pointer_cast<Abstract::IStateController>(sample);
+
+				if (!cast_check) 
+				{
+					continue;
+				}
+
+				for (const auto& comp : comps)
+				{
+					if (const auto comp_ptr = comp.lock())
+					{
+						comp_ptr->SetActive(false);
+					}
+				}
+			}
+		}
+
+		const auto observer = Instantiate<Objects::Observer>();
+		AddGameObject(observer, LAYER_UI);
+		GetMainCamera().lock()->BindObject(observer);
+#endif
 	}
 
 	EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
@@ -351,6 +387,16 @@ namespace Engine
 		}
 	}
 
+	void Scene::Save()
+	{
+		auto name = std::to_string(GetID()) + " " + typeid(*this).name();
+		std::ranges::replace(name, ' ', '_');
+		std::ranges::replace(name, ':', '_');
+		name += ".txt";
+
+		Serializer::Serialize(name, GetSharedPtr<Scene>());
+	}
+
 	void Scene::Render(const float dt)
 	{
 		GetRenderPipeline().BindLightBuffers();
@@ -402,12 +448,7 @@ namespace Engine
 				{
 					if (ImGui::MenuItem("Scene"))
 					{
-						auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-						std::ranges::replace(name, ' ', '_');
-						std::ranges::replace(name, ':', '_');
-						name += ".txt";
-
-						Serializer::Serialize(name, GetSharedPtr<Scene>());
+						Save();
 					}
 
 					ImGui::EndMenu();

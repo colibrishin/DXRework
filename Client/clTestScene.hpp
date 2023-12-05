@@ -15,7 +15,7 @@ namespace Client::Scene
 		TestScene();
 		~TestScene() override = default;
 
-		void Initialize() override;
+		void Initialize_INTERNAL() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;

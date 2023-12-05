@@ -1,4 +1,5 @@
 #pragma once
+#include "egCommon.hpp"
 #include "egEntity.hpp"
 
 namespace Engine::Abstract

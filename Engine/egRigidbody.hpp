@@ -1,12 +1,6 @@
 #pragma once
 #include "egCommon.hpp"
 #include "egComponent.hpp"
-#include "egLayer.hpp"
-#include "egTransform.hpp"
-#include "egPhysics.h"
-
-#include <boost/serialization/export.hpp>
-
 namespace Engine::Component
 {
 	class Rigidbody : public Abstract::Component

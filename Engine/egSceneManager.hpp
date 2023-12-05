@@ -1,9 +1,8 @@
 #pragma once
+#include "egCommon.hpp"
+#include "egHelper.hpp"
 #include "egManager.hpp"
 #include "egScene.hpp"
-#include <set>
-#include <memory>
-
 #include "egDebugger.hpp"
 #include "egTaskScheduler.hpp"
 

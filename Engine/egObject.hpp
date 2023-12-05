@@ -1,17 +1,8 @@
 #pragma once
-#include <map>
-#include <set>
-
+#include "egCommon.hpp"
 #include "egActor.hpp"
-#include "egComponent.hpp"
 #include "egScene.hpp"
 #include "egResource.hpp"
-#include <boost/make_shared.hpp>
-
-namespace Engine::Component
-{
-	class Collider;
-}
 
 namespace Engine::Abstract
 {

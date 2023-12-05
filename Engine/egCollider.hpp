@@ -1,21 +1,6 @@
 #pragma once
-#include <SimpleMath.h>
-#include <DirectXCollision.h>
-#include <execution>
-
-#include <boost/serialization/export.hpp>
-#include "egPhysics.h"
+#include "egCommon.hpp"
 #include "egComponent.hpp"
-#include "egDebugObject.hpp"
-#include "egHelper.hpp"
-#include "egMesh.hpp"
-#include "egTransform.hpp"
-#include "egObject.hpp"
-
-namespace Engine::Manager
-{
-	class Debugger;
-}
 
 namespace Engine::Component
 {

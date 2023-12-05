@@ -40,6 +40,8 @@
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egKinetic.h" />
     <ClInclude Include="egMouseManager.hpp" />
+    <ClInclude Include="egObserverController.hpp" />
+    <ClInclude Include="egObserver.hpp" />
     <ClInclude Include="egPhysics.h" />
     <ClInclude Include="egPhysicsManager.hpp" />
     <ClInclude Include="egProjectionFrustum.hpp" />
@@ -73,6 +75,7 @@
     <ClInclude Include="egType.hpp" />
     <ClInclude Include="egVertexShader.hpp" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="egIStateController.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
@@ -100,7 +103,9 @@
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egMesh.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
+    <ClCompile Include="egObserverController.cpp" />
     <ClCompile Include="egObject.cpp" />
+    <ClCompile Include="egObserver.cpp" />
     <ClCompile Include="egPhysicsManager.cpp" />
     <ClCompile Include="egProjectionFrustum.cpp" />
     <ClCompile Include="egRenderable.cpp" />

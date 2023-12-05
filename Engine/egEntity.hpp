@@ -1,11 +1,5 @@
 #pragma once
-#include <string>
-#include <memory>
-
-#include "egType.hpp"
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/serialization/access.hpp>
-#include "egSerialization.hpp"
+#include "egCommon.hpp"
 
 namespace Engine::Abstract
 {

@@ -1,6 +1,5 @@
 #pragma once
 #include "egCommon.hpp"
-#include "egEntity.hpp"
 #include "egRenderable.hpp"
 
 namespace Engine::Abstract
@@ -15,6 +14,9 @@ namespace Engine::Abstract
 		eComponentPriority GetPriority() const { return m_priority_; }
 		ComponentID GetLocalID() const { return m_local_id_; }
 		bool IsTicked() const { return m_b_ticked_; }
+
+		void SetActive(bool active) { m_b_active_ = active; }
+		bool GetActive() const { return m_b_active_; }
 
 		void OnImGui() override;
 		void Render(const float dt) override;
@@ -44,6 +46,7 @@ namespace Engine::Abstract
 		// Non-serialized
 		WeakObject m_owner_;
 		bool m_b_ticked_;
+		bool m_b_active_;
 
 	};
 }

@@ -14,10 +14,12 @@ namespace Engine
 		Scene(const Scene& other) = default;
 		~Scene() override = default;
 
-		void Initialize() override;
+		virtual void Initialize_INTERNAL() = 0;
+		void Initialize() final;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
+		void Save();
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;

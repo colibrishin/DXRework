@@ -1,7 +1,4 @@
 #pragma once
-#include <memory>
-#include <SimpleMath.h>
-
 #include "egCommon.hpp"
 #include "egObject.hpp"
 

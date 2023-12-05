@@ -47,6 +47,12 @@
     <Filter Include="Singleton\Internal\Physics">
       <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene\Scene">
+      <UniqueIdentifier>{77e09a51-443b-4a44-96b8-3c16e0bcbc73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Layer">
+      <UniqueIdentifier>{0658d10f-684b-4eb3-9b2e-3a02057fb474}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -56,9 +62,6 @@
     </ClInclude>
     <ClInclude Include="egRenderable.hpp">
       <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egScene.hpp">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
@@ -96,9 +99,6 @@
     <ClInclude Include="StepTimer.hpp" />
     <ClInclude Include="egLight.hpp">
       <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="egLayer.hpp">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="egCommon.hpp">
       <Filter>Common</Filter>
@@ -211,6 +211,21 @@
     <ClInclude Include="egMouseManager.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
+    <ClInclude Include="egIStateController.hpp">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egScene.hpp">
+      <Filter>Scene\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="egLayer.hpp">
+      <Filter>Scene\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="egObserver.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egObserverController.hpp">
+      <Filter>Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -268,9 +283,6 @@
     <ClCompile Include="egCollision.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="egScene.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="egCommon.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -282,9 +294,6 @@
     </ClCompile>
     <ClCompile Include="egResource.cpp">
       <Filter>Abstract</Filter>
-    </ClCompile>
-    <ClCompile Include="egLayer.cpp">
-      <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="egActor.cpp">
       <Filter>Abstract</Filter>
@@ -320,6 +329,18 @@
     </ClCompile>
     <ClCompile Include="egMouseManager.cpp">
       <Filter>Singleton\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="egScene.cpp">
+      <Filter>Scene\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="egLayer.cpp">
+      <Filter>Scene\Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="egObserver.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="egObserverController.cpp">
+      <Filter>Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

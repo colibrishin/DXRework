@@ -69,6 +69,7 @@ namespace Engine
 		class Camera;
 		class Text;
 		class DebugObject;
+		class Observer;
 	}
 
 	namespace Component
@@ -76,6 +77,7 @@ namespace Engine
 		class Collider;
 		class Transform;
 		class Rigidbody;
+		class ObserverController;
 	}
 
 	class Scene;
@@ -105,22 +107,35 @@ namespace Engine
 		class Actor;
 		class Renderable;
 		class Resource;
+		class IStateController;
 	}
 
 	namespace Manager
 	{
-		class SceneManager;
-		class ResourceManager;
-		class D3Device;
+		namespace Graphics
+		{
+			class ToolkitAPI;
+			class RenderPipeline;
+			class D3Device;
+		}
+
+		namespace Physics
+		{
+			class PhysicsManager;
+			class LerpManager;
+			class ConstraintSolver;
+		}
+
 		class ProjectionFrustum;
-		class RenderPipeline;
-		class ToolkitAPI;
-		class CollisionManager;
-		class PhysicsManager;
-		class ConstraintSolver;
-		class Debugger;
-		class TaskScheduler;
 		class Application;
+		class ResourceManager;
+		class SceneManager;
+		class ProjectionFrustum;
+		class CollisionDetector;
+		class Debugger;
+		class MouseManager;
+		class Application;
+		class TaskScheduler;
 	}
 
 	using WeakObject = boost::weak_ptr<Abstract::Object>;

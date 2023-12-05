@@ -6,6 +6,8 @@
 #include "egElastic.h"
 #include "egRigidbody.hpp"
 #include "egFriction.h"
+#include "egObject.hpp"	
+#include "egTransform.hpp"
 
 namespace Engine::Manager::Physics
 {
