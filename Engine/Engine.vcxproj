@@ -98,6 +98,7 @@
     <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egGravity.cpp" />
     <ClCompile Include="egIShader.cpp" />
+    <ClCompile Include="egIStateController.cpp" />
     <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egLayer.cpp" />
     <ClCompile Include="egLight.cpp" />
