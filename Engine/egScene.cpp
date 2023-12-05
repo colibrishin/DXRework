@@ -317,6 +317,10 @@ namespace Engine
 		}
 	}
 
+	void Scene::AddCustomObject()
+	{
+	}
+
 	void Scene::PreUpdate(const float& dt)
 	{
 		m_layers[LAYER_LIGHT]->PreUpdate(dt);
@@ -379,6 +383,8 @@ namespace Engine
 						AddGameObject(light, LAYER_LIGHT);
 					}
 
+					AddCustomObject();
+
 					ImGui::EndMenu();
 				}
 
@@ -418,7 +424,9 @@ namespace Engine
 				{
 					if (const auto obj_ptr = obj.lock())
 					{
-						if (ImGui::Button(obj_ptr->ToTypeName().c_str()))
+						const auto unique_name = obj_ptr->GetName() + " " + obj_ptr->ToTypeName()+ " " + std::to_string(obj_ptr->GetID());
+
+						if (ImGui::Button(unique_name.c_str()))
 						{
 							obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
 						}
