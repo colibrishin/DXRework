@@ -60,6 +60,7 @@ namespace Engine::Manager
 		GetSceneManager().Initialize();
 		GetDebugger().Initialize();
 		GetTaskScheduler().Initialize();
+		GetMouseManager().Initialize();
 
 		ImGui_ImplWin32_Init(hWnd);
 		ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -101,6 +102,7 @@ namespace Engine::Manager
 	void Application::PreUpdate(const float& dt)
 	{
 		GetTaskScheduler().PreUpdate(dt);
+		GetMouseManager().PreUpdate(dt);
 		GetCollisionDetector().PreUpdate(dt);
 		GetSceneManager().PreUpdate(dt);
 		GetProjectionFrustum().PreUpdate(dt);
@@ -116,6 +118,7 @@ namespace Engine::Manager
 	void Application::FixedUpdate(const float& dt)
 	{
 		GetTaskScheduler().FixedUpdate(dt);
+		GetMouseManager().FixedUpdate(dt);
 		GetCollisionDetector().FixedUpdate(dt);
 		GetSceneManager().FixedUpdate(dt);
 		GetProjectionFrustum().FixedUpdate(dt);
@@ -131,6 +134,7 @@ namespace Engine::Manager
 	void Application::Update(const float& dt)
 	{
 		GetTaskScheduler().Update(dt);
+		GetMouseManager().Update(dt);
 		GetCollisionDetector().Update(dt);
 		GetSceneManager().Update(dt);
 		GetProjectionFrustum().Update(dt);
@@ -146,6 +150,7 @@ namespace Engine::Manager
 	void Application::PreRender(const float& dt)
 	{
 		GetTaskScheduler().PreRender(dt);
+		GetMouseManager().PreRender(dt);
 		GetCollisionDetector().PreRender(dt);
 		GetToolkitAPI().PreRender(dt);
 		GetSceneManager().PreRender(dt);
@@ -162,6 +167,7 @@ namespace Engine::Manager
 	void Application::Render(const float& dt)
 	{
 		GetTaskScheduler().Render(dt);
+		GetMouseManager().Render(dt);
 		GetCollisionDetector().Render(dt);
 		GetSceneManager().Render(dt);
 		GetProjectionFrustum().Render(dt);
