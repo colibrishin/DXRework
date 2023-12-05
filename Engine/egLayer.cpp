@@ -1,8 +1,9 @@
 #include "pch.hpp"
 #include "egObject.hpp"
+#include "egLayer.hpp"
 
 SERIALIZER_ACCESS_IMPL(Engine::Layer,
-	_ARTAG(_BSTSUPER(Renderable))
+	_ARTAG(_BSTSUPER(Engine::Abstract::Renderable))
 	_ARTAG(m_layer_type_)
 	_ARTAG(m_objects_))
 

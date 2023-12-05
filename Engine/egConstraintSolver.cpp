@@ -1,6 +1,8 @@
 #include "pch.hpp"
+#include "egObject.hpp"
 #include "egConstraintSolver.hpp"
 #include "egSceneManager.hpp"
+#include "egTransform.hpp"
 #include "egCollisionDetector.hpp"
 
 namespace Engine::Manager::Physics

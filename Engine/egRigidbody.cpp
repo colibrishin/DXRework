@@ -1,8 +1,10 @@
 #include "pch.hpp"
+#include "egObject.hpp"
 #include "egRigidbody.hpp"
 #include "egCollider.hpp"
 #include "egKinetic.h"
 #include "egScene.hpp"
+#include "egTransform.hpp"
 #include "egCollider.hpp"
 
 SERIALIZER_ACCESS_IMPL(Engine::Component::Rigidbody,
