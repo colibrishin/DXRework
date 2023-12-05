@@ -139,6 +139,15 @@ namespace Engine::Objects
 	void Camera::Render(const float dt)
 	{
 		Object::Render(dt);
+
+#ifdef _DEBUG
+		BoundingFrustum frustum;
+
+		BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
+		frustum.Transform(frustum, 1.f, GetMouseRotation(), GetPosition());
+		GetDebugger().Draw(frustum, Colors::WhiteSmoke);
+#endif
+
 		m_previous_mouse_position_ = m_current_mouse_position_;
 	}
 

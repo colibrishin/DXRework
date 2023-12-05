@@ -26,6 +26,7 @@ namespace Engine::Objects
 
 		Vector3 GetPosition();
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
+		Matrix GetProjectionMatrix() const { return m_vp_buffer_.projection.Transpose(); }
 		Quaternion GetMouseRotation() const { return m_mouse_rotation_; }
 		Vector3 GetLookAt() const;
 

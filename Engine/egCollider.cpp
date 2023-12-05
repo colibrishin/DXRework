@@ -9,14 +9,16 @@
 #include "egSphereMesh.hpp"
 #include <imgui_stdlib.h>
 
+#include "egManagerHelper.hpp"
+
 SERIALIZER_ACCESS_IMPL(Engine::Component::Collider,
-	_ARTAG(_BSTSUPER(Engine::Abstract::Component))
-	_ARTAG(m_bDirtyByTransform)
-	_ARTAG(m_position_)
-	_ARTAG(m_rotation_)
-	_ARTAG(m_size_)
-	_ARTAG(m_type_)
-	_ARTAG(m_mass_)
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Component))
+                       _ARTAG(m_bDirtyByTransform)
+                       _ARTAG(m_position_)
+                       _ARTAG(m_rotation_)
+                       _ARTAG(m_size_)
+                       _ARTAG(m_type_)
+                       _ARTAG(m_mass_)
 )
 
 namespace Engine::Component
@@ -91,10 +93,6 @@ namespace Engine::Component
 		{
 			GenerateInertiaSphere();
 		}
-
-#ifdef _DEBUG
-		GenerateDebugMesh();
-#endif
 
 		UpdateFromTransform();
 		UpdateInertiaTensor();
@@ -196,10 +194,6 @@ namespace Engine::Component
 		{
 			GenerateFromMesh(mesh);
 		}
-
-#ifdef _DEBUG
-		GenerateDebugMesh();
-#endif
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
@@ -309,31 +303,6 @@ namespace Engine::Component
 		return m_collision_count_.at(id);
 	}
 
-#ifdef _DEBUG
-	void Collider::GenerateDebugMesh()
-	{
-		if (m_debug_mesh_)
-		{
-			m_debug_mesh_.reset();
-		}
-
-		m_debug_mesh_ = Instantiate<Object::DebugObject>();
-
-		if (m_type_ == BOUNDING_TYPE_BOX)
-		{
-			GetResourceManager().AddResource("CubeMesh", boost::make_shared<Mesh::CubeMesh>());
-			m_debug_mesh_->AddResource(
-				GetResourceManager().GetResource<Mesh::CubeMesh>("CubeMesh"));
-		}
-		else if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			GetResourceManager().AddResource("SphereMesh", boost::make_shared<Mesh::SphereMesh>());
-			m_debug_mesh_->AddResource(
-				GetResourceManager().GetResource<Mesh::SphereMesh>("SphereMesh"));
-		}
-	}
-#endif
-
 	Collider::Collider() :
 		Component(COMPONENT_PRIORITY_COLLIDER, {}),
 		m_bDirtyByTransform(false),
@@ -356,9 +325,6 @@ namespace Engine::Component
 	void Collider::OnDeserialized()
 	{
 		Component::OnDeserialized();
-#ifdef _DEBUG
-		GenerateDebugMesh();
-#endif
 
 		InitializeStockVertices();
 		if (!m_mesh_name_.empty())
@@ -407,21 +373,15 @@ namespace Engine::Component
 
 	void Collider::Render(const float dt)
 	{
-#ifdef _DEBUG
-		if (m_debug_mesh_)
+		if (m_collided_objects_.empty())
 		{
-			if (m_collided_objects_.size() > 0)
-			{
-				m_debug_mesh_->SetCollided(true);
-			}
-			else
-			{
-				m_debug_mesh_->SetCollided(false);
-			}
-
-			m_debug_mesh_->Render(dt);
+			GetDebugger().Draw(m_type_, Colors::OrangeRed, m_boundings_);
 		}
-#endif
+		else
+		{
+			GetDebugger().Draw(m_type_, Colors::GreenYellow, m_boundings_);
+		}
+		
 		m_previous_position_ = m_position_;
 	}
 
@@ -529,13 +489,5 @@ namespace Engine::Component
 
 	void Collider::PreRender(const float dt)
 	{
-#ifdef _DEBUG
-		if (const auto tr = m_debug_mesh_->GetComponent<Transform>().lock())
-		{
-			tr->SetPosition(GetPosition());
-			tr->SetRotation(GetRotation());
-			tr->SetScale(GetSize());
-		}
-#endif
 	}
 }

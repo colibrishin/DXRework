@@ -202,8 +202,8 @@
     <ClInclude Include="egProjectionFrustum.hpp">
       <Filter>Singleton\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="egEditorScene.hpp">
-      <Filter>Scene</Filter>
+    <ClInclude Include="DebugDraw.h">
+      <Filter>Low-level</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -303,8 +303,14 @@
     </ClCompile>
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egText.cpp" />
-    <ClCompile Include="egEditorScene.cpp">
-      <Filter>Scene</Filter>
+    <ClCompile Include="DebugDraw.cpp">
+      <Filter>Low-level</Filter>
+    </ClCompile>
+    <ClCompile Include="egToolkitAPI.cpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="egDebugger.cpp">
+      <Filter>Singleton\Internal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
