@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.hpp" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstraintSolver.hpp" />
@@ -75,6 +76,7 @@
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egCamera.cpp" />
@@ -85,6 +87,7 @@
     <ClCompile Include="egComponent.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egD3Device.cpp" />
+    <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egEntity.cpp" />
     <ClCompile Include="egFont.cpp" />
@@ -105,6 +108,7 @@
     <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egText.cpp" />
+    <ClCompile Include="egToolkitAPI.cpp" />
     <ClCompile Include="egTransform.cpp" />
     <ClCompile Include="egLerpManager.cpp" />
   </ItemGroup>
