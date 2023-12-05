@@ -342,6 +342,9 @@
     <ClCompile Include="egObserverController.cpp">
       <Filter>Component</Filter>
     </ClCompile>
+    <ClCompile Include="egIStateController.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
