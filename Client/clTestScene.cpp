@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "clTestScene.hpp"
 
+#include "egHelper.hpp"
+
 SERIALIZER_ACCESS_IMPL(Client::Scene::TestScene,
 	_ARTAG(_BSTSUPER(Engine::Scene)))
 
@@ -39,10 +41,8 @@ namespace Client::Scene
 		}
 	}
 
-	inline void TestScene::Initialize()
+	inline void TestScene::Initialize_INTERNAL()
 	{
-		Scene::Initialize();
-
 		const auto companion = Engine::Instantiate<Object::TestCube>();
 		AddGameObject(companion, Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
