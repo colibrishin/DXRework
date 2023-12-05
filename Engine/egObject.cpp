@@ -85,6 +85,11 @@ namespace Engine::Abstract
 		{
 			if (const auto locked = component.lock())
 			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
 				locked->Render(dt);
 			}
 			else
@@ -117,6 +122,11 @@ namespace Engine::Abstract
 		{
 			if (const auto locked = component.lock())
 			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
 				locked->FixedUpdate(dt);
 			}
 			else
@@ -222,6 +232,11 @@ namespace Engine::Abstract
 		{
 			if (const auto locked = component.lock())
 			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
 				locked->PreUpdate(dt);
 			}
 			else
@@ -249,6 +264,11 @@ namespace Engine::Abstract
 		{
 			if (const auto locked = component.lock())
 			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
 				locked->PreRender(dt);
 			}
 			else
@@ -276,6 +296,11 @@ namespace Engine::Abstract
 		{
 			if (const auto locked = component.lock())
 			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
 				locked->Update(dt);
 			}
 			else
