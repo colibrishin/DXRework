@@ -109,12 +109,6 @@ namespace Engine::Component
 		static void InitializeStockVertices();
 		void GenerateFromMesh(const WeakMesh& mesh);
 
-		union BoundingGroup
-		{
-			DirectX::BoundingOrientedBox box;
-			DirectX::BoundingSphere sphere;
-		};
-
 		template <typename T>
 		bool Intersects_GENERAL_TYPE(const T& other)
 		{
@@ -182,10 +176,6 @@ namespace Engine::Component
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
-#ifdef _DEBUG
-		void GenerateDebugMesh();
-#endif
-
 
 		bool m_bDirtyByTransform;
 
@@ -200,9 +190,6 @@ namespace Engine::Component
 		float m_mass_;
 
 		// Non-serialized
-#ifdef _DEBUG
-		boost::shared_ptr<Object::DebugObject> m_debug_mesh_;
-#endif
 		inline static std::vector<Vector3> m_cube_stock_ = {};
 		inline static std::vector<Vector3> m_sphere_stock_ = {};
 

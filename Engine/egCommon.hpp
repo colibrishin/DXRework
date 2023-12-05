@@ -159,6 +159,12 @@ namespace Engine
 	{
 		bool operator()(const WeakComponent& Left, const WeakComponent& Right) const;
 	};
+
+	union BoundingGroup
+	{
+		DirectX::BoundingOrientedBox box;
+		DirectX::BoundingSphere sphere;
+	};
 }
 
 namespace DX
