@@ -18,6 +18,7 @@ namespace Engine
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
+		void Save();
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;

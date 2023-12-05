@@ -3,11 +3,12 @@
 #include "egCamera.hpp"
 #include "egLight.hpp"
 #include "egManagerHelper.hpp"
+#include "egObserver.hpp"
 
 SERIALIZER_ACCESS_IMPL(Engine::Scene,
-	_ARTAG(_BSTSUPER(Renderable))
-	_ARTAG(m_main_camera_local_id_)
-	_ARTAG(m_layers))
+                       _ARTAG(_BSTSUPER(Renderable))
+                       _ARTAG(m_main_camera_local_id_)
+                       _ARTAG(m_layers))
 
 namespace Engine
 {
@@ -351,6 +352,16 @@ namespace Engine
 		}
 	}
 
+	void Scene::Save()
+	{
+		auto name = std::to_string(GetID()) + " " + typeid(*this).name();
+		std::ranges::replace(name, ' ', '_');
+		std::ranges::replace(name, ':', '_');
+		name += ".txt";
+
+		Serializer::Serialize(name, GetSharedPtr<Scene>());
+	}
+
 	void Scene::Render(const float dt)
 	{
 		GetRenderPipeline().BindLightBuffers();
@@ -402,12 +413,7 @@ namespace Engine
 				{
 					if (ImGui::MenuItem("Scene"))
 					{
-						auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-						std::ranges::replace(name, ' ', '_');
-						std::ranges::replace(name, ':', '_');
-						name += ".txt";
-
-						Serializer::Serialize(name, GetSharedPtr<Scene>());
+						Save();
 					}
 
 					ImGui::EndMenu();
