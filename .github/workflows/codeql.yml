@@ -50,7 +50,6 @@ jobs:
 
         vcpkgCommitId: [ '830f86fb309ad7167468a433a890b7415fbb90a5' ]
 
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -84,12 +83,6 @@ jobs:
         # `**/path/from/root/of/repo/to/vcpkg.json` to match the desired `vcpkg.json`.
         vcpkgJsonGlob: '**/vcpkg.json'
 
-    - name: Cache vcpkg for later build
-      uses: actions/cache@v3
-      with:
-        path: |
-          vcpkg
-
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
@@ -109,6 +102,10 @@ jobs:
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.SOLUTION_FILE_PATH}}
+      run: nuget restore
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
