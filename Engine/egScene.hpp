@@ -71,7 +71,7 @@ namespace Engine
 	private:
 		SERIALIZER_ACCESS
 
-		void Synchronize(const WeakScene& scene);
+		void Synchronize(const StrongScene& scene);
 		void OpenLoadPopup(bool& is_load_open);
 
 		virtual void AddCustomObject();
@@ -80,6 +80,7 @@ namespace Engine
 		std::map<eLayerType, StrongLayer> m_layers;
 
 		// Non-serialized
+		WeakObject m_observer_;
 		WeakCamera m_mainCamera_;
 		std::set<ActorID> m_assigned_actor_ids_;
 		std::map<EntityID, WeakObject> m_cached_objects_;

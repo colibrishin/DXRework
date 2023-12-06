@@ -80,6 +80,12 @@ namespace Engine::Component
 	void Transform::OnDeserialized()
 	{
 		Component::OnDeserialized();
+		const auto euler = m_rotation_.ToEuler();
+
+		m_yaw_pitch_roll_degree_ = Vector3(
+			DirectX::XMConvertToDegrees(euler.y),
+			DirectX::XMConvertToDegrees(euler.x),
+			DirectX::XMConvertToDegrees(euler.z));
 	}
 
 	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {}), m_previous_position_(Vector3::Zero), m_position_(Vector3::Zero), m_rotation_(Quaternion::Identity), m_scale_(Vector3::One)

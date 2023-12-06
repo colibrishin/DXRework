@@ -6,8 +6,11 @@
 #include "egMouseManager.hpp"
 #include "egCamera.hpp"
 #include "egTransform.hpp"
+#include "egStateController.hpp"
 
-SERIALIZER_ACCESS_IMPL(Engine::Component::ObserverController,)
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Abstract::StateController<Engine::eObserverState>)
+SERIALIZER_ACCESS_IMPL(Engine::Component::ObserverController,
+	_ARTAG(_BSTSUPER(Engine::Abstract::StateController<eObserverState>)))
 
 namespace Engine::Component
 {
@@ -45,6 +48,11 @@ namespace Engine::Component
 		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())
 		{
 			const auto mouse = GetApplication().GetMouseState();
+
+			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
+			{
+				return;
+			}
 
 			if (mouse.leftButton)
 			{

@@ -33,6 +33,9 @@
     <Filter Include="Resource\Sound">
       <UniqueIdentifier>{17fa9dbc-6f7a-4745-95b6-84114aa6dedc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Scene">
+      <UniqueIdentifier>{1dbb809b-8ffa-49c9-adb8-c43a4dbb7f37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -125,6 +128,9 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="Sky.jpg">
       <Filter>Resource\Texture</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="testscene.txt">
+      <Filter>Resource\Scene</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

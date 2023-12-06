@@ -347,6 +347,13 @@ namespace Engine::Component
 	{
 		Component::OnDeserialized();
 
+		const auto euler = m_rotation_.ToEuler();
+
+		m_yaw_pitch_roll_degree_ = Vector3(
+			DirectX::XMConvertToDegrees(euler.y),
+			DirectX::XMConvertToDegrees(euler.x),
+			DirectX::XMConvertToDegrees(euler.z));
+
 		InitializeStockVertices();
 		if (!m_mesh_name_.empty())
 		{
