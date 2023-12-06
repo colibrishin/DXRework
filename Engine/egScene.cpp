@@ -65,8 +65,9 @@ namespace Engine
 		}
 
 		const auto observer = Instantiate<Objects::Observer>();
+		m_observer_ = observer;
 		AddGameObject(observer, LAYER_UI);
-		GetMainCamera().lock()->BindObject(observer);
+		GetMainCamera().lock()->BindObject(m_observer_);
 #endif
 	}
 
@@ -299,23 +300,20 @@ namespace Engine
 	{
 	}
 
-	void Scene::Synchronize(const WeakScene& scene)
+	void Scene::Synchronize(const StrongScene& scene)
 	{
 		GetTaskScheduler().AddTask([this, scene](const float& dt)
 		{
 			GetDebugger().Log(L"Scene synchronization started.");
 
-			if (const auto locked = scene.lock())
-			{
-				m_layers = locked->m_layers;
+			m_layers = scene->m_layers;
 
-				m_main_camera_local_id_ = locked->m_main_camera_local_id_;
-				m_mainCamera_ = locked->m_mainCamera_;
-				m_cached_objects_ = locked->m_cached_objects_;
-				m_cached_components_ = locked->m_cached_components_;
-				m_object_position_tree_ = locked->m_object_position_tree_;
-				m_assigned_actor_ids_ = locked->m_assigned_actor_ids_;
-			}
+			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
+			m_mainCamera_ = scene->m_mainCamera_;
+			m_cached_objects_ = scene->m_cached_objects_;
+			m_cached_components_ = scene->m_cached_components_;
+			m_object_position_tree_ = scene->m_object_position_tree_;
+			m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
 		});
 	}
 
@@ -331,7 +329,6 @@ namespace Engine
 
 				if (ImGui::Button("Load"))
 				{
-					// todo: reset all the object of current scene.
 					const auto scene = Serializer::Deserialize<Scene>(buf);
 
 					Synchronize(scene);
@@ -499,6 +496,18 @@ namespace Engine
 	{
 		Renderable::OnDeserialized();
 
+		auto& ui = m_layers[LAYER_UI]->GetGameObjects();
+
+		// remove observer of previous scene
+		for (int i = 0; i < ui.size(); ++i)
+		{
+			if (boost::dynamic_pointer_cast<Objects::Observer>(ui[i].lock()))
+			{
+				m_layers[LAYER_UI]->RemoveGameObject(ui[i].lock()->GetID());
+				i--;
+			}
+		}
+
 		// rebuild cache
 		for (int i = 0; i < LAYER_MAX; ++i)
 		{
@@ -536,5 +545,39 @@ namespace Engine
 			m_mainCamera_ = cameras.begin()->lock()->GetSharedPtr<Engine::Objects::Camera>();
 
 		// @todo: rebuild octree.
+
+#ifdef _DEBUG
+		// remove controller if it is debug state
+		for (const auto& comps : m_cached_components_ | std::views::values)
+		{
+			if (comps.empty())
+			{
+				continue;
+			}
+
+			if (const auto sample = comps.begin()->lock())
+			{
+				const auto cast_check = boost::dynamic_pointer_cast<Abstract::IStateController>(sample);
+
+				if (!cast_check)
+				{
+					continue;
+				}
+
+				for (const auto& comp : comps)
+				{
+					if (const auto comp_ptr = comp.lock())
+					{
+						comp_ptr->SetActive(false);
+					}
+				}
+			}
+		}
+
+		const auto observer = Instantiate<Objects::Observer>();
+		m_observer_ = observer;
+		AddGameObject(observer, LAYER_UI);
+		GetMainCamera().lock()->BindObject(m_observer_);
+#endif
 	}
 }
