@@ -88,7 +88,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          vcpkg_installed
+          vcpkg
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
