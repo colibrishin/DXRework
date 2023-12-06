@@ -5,7 +5,8 @@
 #include "egRigidbody.hpp"
 #include "egObserverController.hpp"
 
-SERIALIZER_ACCESS_IMPL(Engine::Objects::Observer,) // will not be serialized
+SERIALIZER_ACCESS_IMPL(Engine::Objects::Observer,
+	_ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Engine::Objects
 {
