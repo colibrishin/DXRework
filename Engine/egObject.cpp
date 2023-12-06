@@ -157,6 +157,7 @@ namespace Engine::Abstract
 			for (const auto& comps : val)
 			{
 				comps->OnDeserialized();
+				comps->SetOwner(GetSharedPtr<Object>());
 				m_assigned_component_ids_.insert(comps->GetLocalID());
 				m_priority_sorted_.insert(comps);
 			}
