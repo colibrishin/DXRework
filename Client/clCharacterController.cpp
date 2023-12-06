@@ -97,6 +97,8 @@ namespace Client::State
 
 			constexpr float distance = 5.f;
 
+			Engine::GetDebugger().Draw(ray, Colors::AliceBlue);
+
 			if (Engine::GetCollisionDetector().Hitscan(ray, distance, out))
 			{
 				SetState(CHAR_STATE_ATTACK);

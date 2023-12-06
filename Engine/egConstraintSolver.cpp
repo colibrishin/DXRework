@@ -244,6 +244,7 @@ namespace Engine::Manager::Physics
 					if (const auto locked = child.lock())
 					{
 						locked->SetPosition(locked->GetPosition() - minimum_penetration);
+						GetDebugger().Draw(locked->GetPreviousPosition(), locked->GetPosition(), Colors::Cyan);
 					}
 				}
 

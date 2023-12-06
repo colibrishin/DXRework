@@ -23,6 +23,8 @@ namespace Engine::Manager
 		void Initialize() override;
 
 		void Log(const std::wstring& str);
+		void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
+		void Draw(Ray& ray, const XMVECTORF32& color);
 		void Draw(const eBoundingType type, const XMVECTORF32& color, const BoundingGroup& group);
 		void Draw(const DirectX::BoundingFrustum& frustum, const XMVECTORF32& color);
 

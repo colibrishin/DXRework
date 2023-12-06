@@ -81,6 +81,24 @@ namespace Engine::Manager
 		});
 	}
 
+	void Debugger::Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color)
+	{
+		Push(Message{}, [start, end, color](Message& msg, const float& dt)
+		{
+			DX::DrawRay(GetToolkitAPI().GetPrimitiveBatch(), start, end, false, color);
+			msg.elapsed_time += dt;
+		});
+	}
+
+	void Debugger::Draw(Ray& ray, const XMVECTORF32& color)
+	{
+		Push(Message{}, [ray, color](Message& msg, const float& dt)
+		{
+			DX::DrawRay(GetToolkitAPI().GetPrimitiveBatch(), ray.position, ray.direction, true, color);
+			msg.elapsed_time += dt;
+		});
+	}
+
 	void Debugger::Draw(const eBoundingType type, const XMVECTORF32& color, const BoundingGroup& group)
 	{
 		Push(Message{}, [type, color, group](Message& msg, const float& dt)
