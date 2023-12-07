@@ -20,15 +20,17 @@ namespace Engine
 	struct VertexElement
 	{
 		Vector3 position;
-		Vector3 normal;
 		Vector4 color;
 		Vector2 texCoord;
+
+		Vector3 normal;
 		Vector3 tangent;
 		Vector3 binormal;
 	};
 
-	struct VPBuffer
+	struct PerspectiveBuffer
 	{
+		Matrix world;
 		Matrix view;
 		Matrix projection;
 	};
