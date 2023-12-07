@@ -110,6 +110,8 @@ namespace Engine::Objects
 			m_vp_buffer_.view = m_view_matrix_.Transpose();
 			m_vp_buffer_.projection = p.Transpose();
 
+			const auto inverted = m_view_matrix_.Invert();
+
 			GetRenderPipeline().SetPerspectiveMatrix(m_vp_buffer_);
 
 			Vector3 velocity = Vector3::Zero;
@@ -123,7 +125,7 @@ namespace Engine::Objects
 			}
 
 			GetToolkitAPI().Set3DListener(
-				{m_view_matrix_._41, m_view_matrix_._42, m_view_matrix_._43},
+				{inverted._41, inverted._42, inverted._43},
 				{velocity.x, velocity.y, velocity.z},
 				{g_forward.x, g_forward.y, g_forward.z},
 				{Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}
@@ -139,7 +141,7 @@ namespace Engine::Objects
 		BoundingFrustum frustum;
 
 		BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
-		frustum.Transform(frustum, 1.f, Quaternion::Concatenate(GetRotation(), GetLookAtRotation()), GetPosition());
+		frustum.Transform(frustum, GetViewMatrix().Invert());
 		GetDebugger().Draw(frustum, Colors::WhiteSmoke);
 #endif
 	}
