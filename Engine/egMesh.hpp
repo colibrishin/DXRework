@@ -64,8 +64,6 @@ namespace Engine::Resources
 		VertexBufferCollection m_vertex_buffers_;
 		IndexBufferCollection m_index_buffers_;
 
-		D3D11_PRIMITIVE_TOPOLOGY m_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
 	private:
 		std::filesystem::path m_path_;
 	};

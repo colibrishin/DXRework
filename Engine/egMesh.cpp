@@ -184,7 +184,6 @@ namespace Engine::Resources
 		{
 			GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[i].Get());
 			GetRenderPipeline().BindIndexBuffer(m_index_buffers_[i].Get());
-			GetRenderPipeline().SetTopology(m_topology);
 			GetRenderPipeline().DrawIndexed(m_indices_[i].size());
 		}
 

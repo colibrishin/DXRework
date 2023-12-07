@@ -11,11 +11,15 @@ namespace Engine::Graphic
 
 		ID3D11InputLayout** GetInputLayout() { return m_input_layout_.GetAddressOf(); }
 
+		void Render(const float dt) override;
+
 	protected:
 		VertexShaderInternal() : Shader<ID3D11VertexShader>("", {}) {}
 
 	private:
 		SERIALIZER_ACCESS
+
+		D3D11_PRIMITIVE_TOPOLOGY m_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 		ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;
 	};
