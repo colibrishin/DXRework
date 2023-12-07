@@ -1,4 +1,5 @@
 #pragma once
+#include "egCommon.hpp"
 #include "egManager.hpp"
 #include "egResource.hpp"
 
@@ -16,35 +17,42 @@ namespace Engine::Manager
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		template <typename T>
-		static void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
+		void AddResource(const StrongResource& resource)
 		{
-			m_resources_.insert(resource);
+			m_resources_[resource->ToTypeName()].insert(resource);
+		}
+
+		void AddResource(const EntityName& name, const StrongResource& resource)
+		{
+			m_resources_[resource->ToTypeName()].insert(resource);
 			resource->SetName(name);
 		}
 
 		template <typename T>
-		static boost::weak_ptr<T> GetResource(const EntityName& name)
+		boost::weak_ptr<T> GetResource(const EntityName& name)
 		{
 			if constexpr (std::is_base_of_v<Abstract::Resource, T>)
 			{
-				auto it = std::find_if(
-				m_resources_.begin(),
-				m_resources_.end(),
-				[&name](const auto& resource)
-				{
-					if (const auto ptr = boost::dynamic_pointer_cast<T>(resource))
-					{
-						return ptr->GetName() == name;
-					}
+				const auto target = m_resources_[typeid(T).name()];
 
-					return false;
+				if (target.empty())
+				{
+					return {};
 				}
-				);
 
-				if (it != m_resources_.end())
+				const auto it = std::ranges::find_if(
+					target,
+                   [&name](const auto& resource)
+                   {
+                       return resource->GetName() == name;
+                   });
+
+				if (it != target.end())
 				{
-					(*it)->Load();
+					if (!(*it)->IsLoaded())
+					{
+						(*it)->Load();
+					}
 					return boost::dynamic_pointer_cast<T>(*it);
 				}
 			}
@@ -52,19 +60,28 @@ namespace Engine::Manager
 			return {};
 		}
 
-		static WeakResource GetResource(const EntityName& name)
+		WeakResource GetResource(const TypeName& type, const EntityName& name)
 		{
-			const auto it = std::ranges::find_if(m_resources_
-			                               ,
-			                               [&name](const auto& resource)
-			                               {
-				                               return resource->GetName() == name;
-			                               }
-			);
+			const auto target = m_resources_[type];
 
-			if (it != m_resources_.end())
+			if (target.empty())
 			{
-				(*it)->Load();
+				return {};
+			}
+
+			const auto it = std::ranges::find_if(
+				target,
+               [&name](const auto& resource)
+               {
+                   return resource->GetName() == name;
+               });
+
+			if (it != target.end())
+			{
+				if (!(*it)->IsLoaded())
+				{
+					(*it)->Load();
+				}
 				return *it;
 			}
 
@@ -72,36 +89,24 @@ namespace Engine::Manager
 		}
 
 	private:
-		inline static std::set<StrongResource> m_resources_ = {};
+		std::map<const std::string, std::set<StrongResource>> m_resources_;
 
 	};
 
 	inline void ResourceManager::Initialize()
 	{
-		for (const auto& resource : m_resources_)
-		{
-			if (resource->weak_from_this().use_count() == 0 && resource->IsLoaded())
-			{
-				resource->Unload();
-			}
-			else if (resource->weak_from_this().use_count() != 0 && !resource->IsLoaded())
-			{
-				resource->Load();
-			}
-		}
 	}
 
 	inline void ResourceManager::PreUpdate(const float& dt)
 	{
-		for (const auto& resource : m_resources_)
+		for (const auto& resources : m_resources_ | std::views::values)
 		{
-			if (resource->weak_from_this().use_count() == 0 && resource->IsLoaded())
+			for (const auto& res : resources)
 			{
-				resource->Unload();
-			}
-			else if (resource->weak_from_this().use_count() != 0 && !resource->IsLoaded())
-			{
-				resource->Load();
+				if (res.use_count() == 1 && res->IsLoaded())
+				{
+					res->Unload();
+				}
 			}
 		}
 	}

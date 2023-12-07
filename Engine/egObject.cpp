@@ -10,7 +10,7 @@ SERIALIZER_ACCESS_IMPL(
 	Engine::Abstract::Object,
 	_ARTAG(_BSTSUPER(Actor))
 	_ARTAG(m_components_)
-	_ARTAG(m_resource_names_))
+	_ARTAG(m_resources_))
 
 namespace Engine::Abstract
 {
@@ -105,14 +105,7 @@ namespace Engine::Abstract
 
 		for (const auto& resource : m_resources_)
 		{
-			if (const auto locked = resource.lock())
-			{
-				locked->Render(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
+			resource->Render(dt);
 		}
 	}
 
@@ -137,14 +130,7 @@ namespace Engine::Abstract
 
 		for (const auto& resource : m_resources_)
 		{
-			if (const auto locked = resource.lock())
-			{
-				locked->FixedUpdate(dt);
-			}
-			else 			
-			{
-				m_resources_.erase(resource);
-			}
+			resource->FixedUpdate(dt);
 		}
 	}
 
@@ -163,17 +149,29 @@ namespace Engine::Abstract
 			}
 		}
 
-		for (const auto& name : m_resource_names_)
-		{
-			// @todo: what if object is not loaded yet?
-			const auto resource = GetResourceManager().GetResource(name);
+		std::set<StrongResource, ResourcePriorityComparer> resources;
 
-			if (const auto locked = resource.lock())
+		for (auto it = m_resources_.begin(); it != m_resources_.end(); ++it)
+		{
+			const auto resource = *it;
+
+			const auto res = GetResourceManager().GetResource(resource->ToTypeName(), resource->GetName());
+
+			resource->OnDeserialized();
+
+			if (const auto& locked = res.lock())
 			{
-				locked->OnDeserialized();
-				m_resources_.insert(locked);
+				resources.insert(locked);
+			}
+			else
+			{
+				GetResourceManager().AddResource(resource);
+				resource->Load();
+				resources.insert(resource);
 			}
 		}
+
+		m_resources_ = resources;
 	}
 
 	void Object::OnImGui()
@@ -212,10 +210,7 @@ namespace Engine::Abstract
 			{
 				for (const auto& resource : m_resources_)
 				{
-					if (const auto locked = resource.lock())
-					{
-						locked->OnImGui();
-					}
+					resource->OnImGui();
 				}
 
 				ImGui::TreePop();
@@ -248,14 +243,7 @@ namespace Engine::Abstract
 
 		for (const auto& resource : m_resources_)
 		{
-			if (const auto locked = resource.lock())
-			{
-				locked->PreUpdate(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
+			resource->PreUpdate(dt);
 		}
 	}
 
@@ -280,14 +268,7 @@ namespace Engine::Abstract
 
 		for (const auto& resource : m_resources_)
 		{
-			if (const auto locked = resource.lock())
-			{
-				locked->PreRender(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
+			resource->PreUpdate(dt);
 		}
 	}
 
@@ -312,14 +293,7 @@ namespace Engine::Abstract
 
 		for (const auto& resource : m_resources_)
 		{
-			if (const auto locked = resource.lock())
-			{
-				locked->Update(dt);
-			}
-			else
-			{
-				m_resources_.erase(resource);
-			}
+			resource->PreUpdate(dt);
 		}
 	}
 }
