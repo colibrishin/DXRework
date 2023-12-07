@@ -17,7 +17,6 @@ namespace Engine::Graphic
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
-		void SetShaderType() override;
 		void PreRender(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 
@@ -25,82 +24,33 @@ namespace Engine::Graphic
 		void Render(const float dt) override;
 
 	protected:
+		Shader() : IShader("", "") {}
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
+		void OnDeserialized() override;
+
 	private:
+		friend class Engine::Serializer;
+		friend class boost::serialization::access;
+
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int file_version)
+		{
+			ar & boost::serialization::base_object<Engine::Graphic::IShader>(*this);
+		}
+
+		void SetShaderType() override;
+
 		ComPtr<T> m_shader_;
+		ComPtr<ID3D11Buffer> m_buffer_;
+
 	};
-
-	template <typename T>
-	Shader<T>::Shader(const EntityName& name, const std::filesystem::path& path) : IShader(name, path)
-	{
-		Shader<T>::SetShaderType();
-	}
-
-	template <typename T>
-	void Shader<T>::Initialize()
-	{
-	}
-
-	template <typename T>
-	void Shader<T>::PreUpdate(const float& dt)
-	{
-	}
-
-	template <typename T>
-	void Shader<T>::Update(const float& dt)
-	{
-	}
-
-	template <typename T>
-	void Shader<T>::FixedUpdate(const float& dt)
-	{
-	}
-
-	template <typename T>
-	void Shader<T>::SetShaderType()
-	{
-		if constexpr (std::is_same_v<T, ID3D11VertexShader>)
-		{
-			m_type_ = SHADER_VERTEX;
-		}
-		else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
-		{
-			m_type_ = SHADER_PIXEL;
-		}
-		else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
-		{
-			m_type_ = SHADER_GEOMETRY;
-		}
-		else if constexpr (std::is_same_v<T, ID3D11HullShader>)
-		{
-			m_type_ = SHADER_HULL;
-		}
-		else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
-		{
-			m_type_ = SHADER_DOMAIN;
-		}
-		else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
-		{
-			m_type_ = SHADER_COMPUTE;
-		}
-	}
-
-	template <typename T>
-	void Shader<T>::PreRender(const float dt)
-	{
-	}
-
-	template <typename T>
-	void Shader<T>::Unload_INTERNAL()
-	{
-		m_shader_->Release();
-	}
-
-	template <typename T>
-	void Shader<T>::Render(const float dt)
-	{
-		IShader::Render(dt);
-	}
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11VertexShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11PixelShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11GeometryShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11ComputeShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11HullShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11DomainShader>);

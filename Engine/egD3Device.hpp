@@ -4,7 +4,7 @@
 #include <d2d1.h>
 #include <d3dcompiler.h>
 #include "egManager.hpp"
-#include "egVertexShader.hpp"
+#include "egVertexShaderInternal.hpp"
 
 namespace Engine::Manager::Graphics
 {
@@ -195,6 +195,7 @@ namespace Engine::Manager::Graphics
 			ComPtr<ID3DBlob> blob;
 			ComPtr<ID3DBlob> error;
 			const eShaderType type = g_shader_enum_type_map.at(__uuidof(T));
+			shader->Initialize();
 
 			UINT flag = D3DCOMPILE_ENABLE_STRICTNESS;
 
@@ -217,7 +218,7 @@ namespace Engine::Manager::Graphics
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
 			{
 				const auto input_descs = GenerateInputDescription(shader, blob.Get());
-				const auto casted = dynamic_cast<Graphic::VertexShader*>(shader);
+				const auto casted = dynamic_cast<Graphic::VertexShaderInternal*>(shader);
 
 				DX::ThrowIfFailed(m_device_->CreateInputLayout(input_descs.data(), input_descs.size(),
 				                                               blob->GetBufferPointer(), blob->GetBufferSize(),
@@ -291,7 +292,7 @@ namespace Engine::Manager::Graphics
 		{
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
 			{
-				const auto casting = static_cast<Graphic::VertexShader*>(shader);
+				const auto casting = static_cast<Graphic::VertexShaderInternal*>(shader);
 				m_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
 				m_context_->IASetInputLayout(*casting->GetInputLayout());
 			}
