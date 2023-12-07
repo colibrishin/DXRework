@@ -200,7 +200,7 @@ namespace Engine::Objects
 			ImGui::Text("Orthogonal");
 			ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
 
-			ImGui::Text("Bound object: %d", m_bound_object_id_);
+			ImGui::Text("Bound object: %lld", m_bound_object_id_);
 			ImGui::End();
 		}
 	}
