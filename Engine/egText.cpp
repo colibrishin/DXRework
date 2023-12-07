@@ -50,10 +50,5 @@ namespace Engine::Objects
 	void Text::OnDeserialized()
 	{
 		Object::OnDeserialized();
-
-		if (const auto font = GetResourceManager().GetResource(m_font_name_).lock())
-		{
-			AddResource(font);
-		}
 	}
 }
