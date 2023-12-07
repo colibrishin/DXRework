@@ -120,7 +120,7 @@ namespace Engine::Component
 		ImGui::Text("Rigidbody Torque");
 		ImGuiVector3Editable(GetID(), "torque", m_torque_);
 
-		ImGui::Text("Rigidbody Main Collider: %d", m_main_collider_);
+		ImGui::Text("Rigidbody Main Collider: %lld", m_main_collider_);
 		ImGui::Unindent(2);
 	}
 

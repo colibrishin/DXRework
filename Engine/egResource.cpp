@@ -43,7 +43,7 @@ namespace Engine::Abstract
 		Renderable::OnImGui();
 		ImGui::Indent(2);
 		ImGui::Checkbox("Loaded", &m_bLoaded_);
-		ImGui::Text("Path : %s", m_path_str_);
+		ImGui::Text("Path : %s", m_path_str_.c_str());
 		ImGui::Unindent(2);
 	}
 

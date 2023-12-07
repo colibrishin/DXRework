@@ -29,7 +29,7 @@ void Engine::Abstract::Entity::OnDeserialized()
 void Engine::Abstract::Entity::OnImGui()
 {
 	ImGui::Indent(2);
-	ImGui::Text("Entity ID: %d", GetID());
+	ImGui::Text("Entity ID: %lld", GetID());
 	ImGui::InputText("Entity Name", &m_name_);
 	ImGui::Unindent(2);
 }

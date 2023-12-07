@@ -12,7 +12,7 @@ namespace Engine::Abstract
 	{
 		Renderable::OnImGui();
 		ImGui::Indent(2);
-		ImGui::Text("Component Local ID: %d", m_local_id_);
+		ImGui::Text("Component Local ID: %lld", m_local_id_);
 		ImGui::Checkbox("Component Active", &m_b_active_);
 		ImGui::Unindent(2);
 	}

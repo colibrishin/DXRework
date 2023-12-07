@@ -28,7 +28,7 @@ namespace Engine::Abstract
 		ImGui::BulletText("Actor");
 		ImGui::Indent(2);
 		ImGui::Text("Layer: %d", m_layer_);
-		ImGui::Text("Local ID: %d", m_local_id_);
+		ImGui::Text("Local ID: %lld", m_local_id_);
 		ImGui::Unindent(2);
 	}
 
