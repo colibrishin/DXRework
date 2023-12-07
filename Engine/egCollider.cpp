@@ -4,7 +4,6 @@
 #include "egCollision.h"
 #include "egCubeMesh.hpp"
 #include "egD3Device.hpp"
-#include "egDebugObject.hpp"
 #include "egSceneManager.hpp"
 #include "egSphereMesh.hpp"
 #include <imgui_stdlib.h>

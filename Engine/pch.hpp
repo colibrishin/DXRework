@@ -81,6 +81,8 @@
 #include "egSerialization.hpp"
 
 #include "egActor.hpp"
+#include "egApplication.hpp"
+#include "egEntity.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
