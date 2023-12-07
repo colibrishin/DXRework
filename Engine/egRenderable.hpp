@@ -14,3 +14,5 @@ namespace Engine::Abstract
 		SERIALIZER_ACCESS
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Renderable)
