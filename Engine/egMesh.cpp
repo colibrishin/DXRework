@@ -5,6 +5,9 @@
 #include <tiny_obj_loader.h>
 #include "egManagerHelper.hpp"
 
+SERIALIZER_ACCESS_IMPL(Engine::Resources::Mesh,
+	_ARTAG(_BSTSUPER(Engine::Abstract::Resource)))
+
 namespace Engine::Resources
 {
 	void Mesh::ReadOBJFile()

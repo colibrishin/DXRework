@@ -27,54 +27,16 @@ namespace Engine::Resources
 		UINT GetHeight() const { return m_texture_desc_.Height; }
 
 	protected:
+		Texture() : Resource("", RESOURCE_PRIORITY_TEXTURE), m_texture_desc_() {}
 		ComPtr<ID3D11ShaderResourceView> m_texture_view_;
 
 	private:
+		SERIALIZER_ACCESS
+
 		ComPtr<ID3D11Resource> m_texture_;
 
 		D3D11_TEXTURE2D_DESC m_texture_desc_;
 	};
-
-	inline void Texture::Initialize()
-	{
-	}
-
-	inline void Texture::PreUpdate(const float& dt)
-	{
-	}
-
-	inline void Texture::Update(const float& dt)
-	{
-	}
-
-	inline void Texture::PreRender(const float dt)
-	{
-	}
-
-	inline void Texture::Render(const float dt)
-	{
-		GetRenderPipeline().BindResource(SR_TEXTURE, m_texture_view_.Get());
-	}
-
-	inline void Texture::Load_INTERNAL()
-	{
-		GetD3Device().CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
-		                                         m_texture_view_.ReleaseAndGetAddressOf());
-
-		ComPtr<ID3D11Texture2D> texture;
-		m_texture_.As<ID3D11Texture2D>(&texture);
-
-		texture->GetDesc(&m_texture_desc_);
-	}
-
-	inline void Texture::Unload_INTERNAL()
-	{
-		m_texture_view_->Release();
-		m_texture_->Release();
-		m_texture_desc_ = {};
-	}
-
-	inline void Texture::FixedUpdate(const float& dt)
-	{
-	}
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

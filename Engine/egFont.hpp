@@ -45,3 +45,5 @@ namespace Engine::Resources
 		std::unique_ptr<SpriteFont> m_font_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Font)
