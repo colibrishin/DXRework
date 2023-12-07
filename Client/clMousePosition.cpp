@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "clMousePosition.hpp"
 
-CLIENT_OBJECT_IMPL(Client::Object::MousePositionText)
+SERIALIZER_ACCESS_IMPL(Client::Object::MousePositionText,
+	_ARTAG(_BSTSUPER(Text)))
 
 namespace Client::Object
 {

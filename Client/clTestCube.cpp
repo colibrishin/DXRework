@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "clTestCube.hpp"
 
+#include "egCubeMesh.hpp"
+
 CLIENT_OBJECT_IMPL(Client::Object::TestCube)
 
 namespace Client::Object
@@ -11,11 +13,11 @@ namespace Client::Object
 
 	inline void TestCube::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("CubeMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_normalmap_metalic"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_normalmap_metalic").lock());
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

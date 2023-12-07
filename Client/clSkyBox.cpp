@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "clSkyBox.hpp"
 
+#include "clBackSphereMesh.hpp"
+
 CLIENT_OBJECT_IMPL(Client::Object::SkyBox)
 
 namespace Client::Object
@@ -11,10 +13,10 @@ namespace Client::Object
 
 	inline void SkyBox::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("BackSphereMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("Sky"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_default_nolight"));
+		AddResource(Engine::GetResourceManager().GetResource<Client::Mesh::BackSphereMesh>("BackSphereMesh").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("Sky").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_default_nolight").lock());
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();
