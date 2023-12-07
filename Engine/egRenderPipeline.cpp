@@ -19,10 +19,10 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
 	}
 
-	void RenderPipeline::SetPerspectiveMatrix(const VPBuffer& matrix)
+	void RenderPipeline::SetPerspectiveMatrix(const PerspectiveBuffer& matrix)
 	{
-		m_vp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-		GetD3Device().BindConstantBuffer(m_vp_buffer_data_, CB_TYPE_VP, SHADER_VERTEX);
+		m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_VERTEX);
 	}
 
 	void RenderPipeline::SetLightPosition(UINT id, const Vector3& position)
@@ -97,7 +97,7 @@ namespace Engine::Manager::Graphics
 
 	void RenderPipeline::Initialize()
 	{
-		GetD3Device().CreateConstantBuffer(m_vp_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_light_position_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_light_color_buffer_data_);

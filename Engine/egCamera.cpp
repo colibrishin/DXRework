@@ -94,6 +94,8 @@ namespace Engine::Objects
 			const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
 			const XMMATRIX lookAtMatrix = XMMatrixRotationQuaternion(m_look_at_rotation_);
 
+			m_world_matrix_ = Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up) * rotationMatrix* XMMatrixTranslation(position.x, position.y, position.z);
+
 			// Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
 			lookAtVector = XMVector3TransformNormal(lookAtVector, rotationMatrix);
 			lookAtVector = XMVector3TransformNormal(lookAtVector, lookAtMatrix);
@@ -107,12 +109,13 @@ namespace Engine::Objects
 
 			const auto p = m_b_orthogonal_ ? GetD3Device().GetOrthogonalMatrix() : GetD3Device().GetProjectionMatrix();
 
-			m_vp_buffer_.view = m_view_matrix_.Transpose();
-			m_vp_buffer_.projection = p.Transpose();
+			m_wvp_buffer_.world = m_world_matrix_.Transpose();
+			m_wvp_buffer_.view = m_view_matrix_.Transpose();
+			m_wvp_buffer_.projection = p.Transpose();
 
 			const auto inverted = m_view_matrix_.Invert();
 
-			GetRenderPipeline().SetPerspectiveMatrix(m_vp_buffer_);
+			GetRenderPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
 
 			Vector3 velocity = Vector3::Zero;
 

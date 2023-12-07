@@ -70,6 +70,7 @@ namespace Engine
 
 	inline std::atomic<UINT> g_collision_energy_reduction_multiplier = 2;
 
+	inline std::atomic<float> g_fov = DirectX::XM_PI / 4.f;
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;
 	inline std::atomic<UINT> g_window_width = 1920;
@@ -91,7 +92,7 @@ namespace Engine
 
 	enum eCBType
 	{
-		CB_TYPE_VP = 0,
+		CB_TYPE_WVP = 0,
 		CB_TYPE_TRANSFORM,
 		CB_TYPE_LIGHT_POSITION,
 		CB_TYPE_LIGHT_COLOR,
