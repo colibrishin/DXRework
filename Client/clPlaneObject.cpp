@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "clPlaneObject.hpp"
+
+#include "egCubeMesh.hpp"
 #include "egSound.hpp"
 #include "egObject.hpp"
+#include "egVertexShaderInternal.hpp"
 
 CLIENT_OBJECT_IMPL(Client::Object::PlaneObject)
 
@@ -13,12 +16,12 @@ namespace Client::Object
 
 	inline void PlaneObject::Initialize()
 	{
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Mesh>("CubeMesh"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("vs_default"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::IShader>("ps_normalmap_metalic"));
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>("AmbientSound"));
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_normalmap_metalic").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>("AmbientSound").lock());
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

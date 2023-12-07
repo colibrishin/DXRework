@@ -23,9 +23,6 @@
     <Filter Include="Resource">
       <UniqueIdentifier>{5de112d7-ea49-4bdf-807e-cf05f2b180ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Low-level\Interface">
-      <UniqueIdentifier>{e529c217-db97-4f70-9d7c-d390e06af610}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{2a1a57a7-cb69-4a5e-91ca-b592e3bdd8f2}</UniqueIdentifier>
     </Filter>
@@ -66,7 +63,7 @@
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
-    <ClInclude Include="egVertexShader.hpp">
+    <ClInclude Include="egVertexShaderInternal.hpp">
       <Filter>Low-level</Filter>
     </ClInclude>
     <ClInclude Include="egObject.hpp">
@@ -89,9 +86,6 @@
     </ClInclude>
     <ClInclude Include="egTexture.hpp">
       <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egIShader.hpp">
-      <Filter>Low-level\Interface</Filter>
     </ClInclude>
     <ClInclude Include="egShader.hpp">
       <Filter>Low-level</Filter>
@@ -169,9 +163,6 @@
     <ClInclude Include="egDebugger.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="egDebugObject.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="egCubeMesh.hpp">
       <Filter>Mesh</Filter>
     </ClInclude>
@@ -226,6 +217,9 @@
     <ClInclude Include="egObserverController.hpp">
       <Filter>Component</Filter>
     </ClInclude>
+    <ClInclude Include="egIShader.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -255,9 +249,6 @@
     </ClCompile>
     <ClCompile Include="egRenderPipeline.cpp">
       <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="egIShader.cpp">
-      <Filter>Low-level\Interface</Filter>
     </ClCompile>
     <ClCompile Include="egTransform.cpp">
       <Filter>Component</Filter>
@@ -304,8 +295,6 @@
     <ClCompile Include="egProjectionFrustum.cpp">
       <Filter>Singleton\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="egLight.cpp" />
-    <ClCompile Include="egText.cpp" />
     <ClCompile Include="DebugDraw.cpp">
       <Filter>Low-level</Filter>
     </ClCompile>
@@ -344,6 +333,33 @@
     </ClCompile>
     <ClCompile Include="egIStateController.cpp">
       <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="egNormalMap.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="egSound.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="egTexture.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="egText.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="egLight.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="egIShader.cpp">
+      <Filter>Low-level</Filter>
+    </ClCompile>
+    <ClCompile Include="egVertexShaderInternal.cpp">
+      <Filter>Low-level</Filter>
+    </ClCompile>
+    <ClCompile Include="egCubeMesh.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="egSphereMesh.cpp">
+      <Filter>Mesh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

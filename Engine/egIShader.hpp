@@ -17,16 +17,17 @@ namespace Engine::Graphic
 		ID3D11Buffer* GetBuffer() const { return m_buffer_.Get(); }
 
 		void Render(const float dt) override;
-
-		virtual void SetShaderType() = 0;
 		eShaderType GetType() const { return m_type_; }
 
 	protected:
+		virtual void SetShaderType() = 0;
 		eShaderType m_type_;
 
 	private:
-		friend class boost::serialization::access;
-		std::filesystem::path m_path_;
+		SERIALIZER_ACCESS
+
 		ComPtr<ID3D11Buffer> m_buffer_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphic::IShader)

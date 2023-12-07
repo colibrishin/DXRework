@@ -14,6 +14,7 @@
 #include <execution>
 #include <memory>
 #include <functional>
+#include <ranges>
 
 #include <wrl/client.h>
 
@@ -172,7 +173,7 @@ namespace Engine
 
 	struct ResourcePriorityComparer
 	{
-		bool operator()(const WeakResource& Left, const WeakResource& Right) const;
+		bool operator()(const StrongResource& Left, const StrongResource& Right) const;
 	};
 
 	struct ComponentPriorityComparer

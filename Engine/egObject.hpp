@@ -19,10 +19,9 @@ namespace Engine::Abstract
 		void OnDeserialized() override;
 		void OnImGui() override;
 
-		void AddResource(const WeakResource& resource)
+		void AddResource(const StrongResource& resource)
 		{
 			m_resources_.insert(resource);
-			m_resource_names_.insert(resource.lock()->GetName());
 		}
 
 		template <typename T, typename... Args>
@@ -215,12 +214,9 @@ namespace Engine::Abstract
 			{
 				for (const auto& resource : m_resources_)
 				{
-					if (const auto locked = resource.lock())
+					if (const auto t = boost::dynamic_pointer_cast<T>(resource))
 					{
-						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
-						{
-							return t;
-						}
+						return t;
 					}
 				}
 			}
@@ -235,14 +231,11 @@ namespace Engine::Abstract
 			{
 				for (const auto& resource : m_resources_)
 				{
-					if (const auto locked = resource.lock())
+					if (const auto t = boost::dynamic_pointer_cast<T>(resource))
 					{
-						if (const auto t = boost::dynamic_pointer_cast<T>(locked))
+						if (!name.empty() && t->GetName() == name)
 						{
-							if (!name.empty() && t->GetName() == name)
-							{
-								return t;
-							}
+							return t;
 						}
 					}
 				}
@@ -299,12 +292,11 @@ namespace Engine::Abstract
 		bool m_imgui_open_ = false;
 
 		std::map<const TypeName, std::set<StrongComponent, ComponentPriorityComparer>> m_components_;
-		std::set<EntityName> m_resource_names_;
+		std::set<StrongResource, ResourcePriorityComparer> m_resources_;
 
 		// Non-serialized
 		std::set<ComponentID> m_assigned_component_ids_;
 		std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
-		std::set<WeakResource, ResourcePriorityComparer> m_resources_;
 	};
 }
 

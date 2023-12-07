@@ -86,8 +86,17 @@ namespace Engine
 
 	namespace Graphic
 	{
+		template <typename T> class Shader;
 		class IShader;
-		class VertexShader;
+		class VertexShaderInternal;
+
+		using VertexShader = VertexShaderInternal;
+		using PixelShader = Shader<ID3D11PixelShader>;
+		using GeometryShader = Shader<ID3D11GeometryShader>;
+		using HullShader = Shader<ID3D11HullShader>;
+		using DomainShader = Shader<ID3D11DomainShader>;
+		using ComputeShader = Shader<ID3D11ComputeShader>;
+
 	}
 
 	namespace Resources

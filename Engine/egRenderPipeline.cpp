@@ -7,8 +7,8 @@
 #include "egManagerHelper.hpp"
 #include "egToolkitAPI.hpp"
 
-#include "egVertexShader.hpp"
-#include "egIShader.hpp"
+#include "egVertexShaderInternal.hpp"
+#include "egShader.hpp"
 
 
 namespace Engine::Manager::Graphics
@@ -123,19 +123,19 @@ namespace Engine::Manager::Graphics
 			GetD3Device().BindShader(reinterpret_cast<Graphic::VertexShader*>(shader));
 			break;
 		case SHADER_PIXEL:
-			GetD3Device().BindShader(reinterpret_cast<Graphic::Shader<ID3D11PixelShader>*>(shader));
+			GetD3Device().BindShader(reinterpret_cast<Graphic::PixelShader*>(shader));
 			break;
 		case SHADER_GEOMETRY:
-			GetD3Device().BindShader(reinterpret_cast<Graphic::Shader<ID3D11GeometryShader>*>(shader));
+			GetD3Device().BindShader(reinterpret_cast<Graphic::GeometryShader*>(shader));
 			break;
 		case SHADER_COMPUTE:
-			GetD3Device().BindShader(reinterpret_cast<Graphic::Shader<ID3D11ComputeShader>*>(shader));
+			GetD3Device().BindShader(reinterpret_cast<Graphic::ComputeShader*>(shader));
 			break;
 		case SHADER_HULL:
-			GetD3Device().BindShader(reinterpret_cast<Graphic::Shader<ID3D11HullShader>*>(shader));
+			GetD3Device().BindShader(reinterpret_cast<Graphic::HullShader*>(shader));
 			break;
 		case SHADER_DOMAIN:
-			GetD3Device().BindShader(reinterpret_cast<Graphic::Shader<ID3D11DomainShader>*>(shader));
+			GetD3Device().BindShader(reinterpret_cast<Graphic::DomainShader*>(shader));
 			break;
 		default: 
 			assert(nullptr);
@@ -155,47 +155,47 @@ namespace Engine::Manager::Graphics
 				{
 					boost::shared_ptr<Graphic::Shader<ID3D11VertexShader>> shader = boost::make_shared<Graphic::VertexShader>(filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
-					GetResourceManager().AddResource<Graphic::VertexShader>(filename_without_extension, boost::reinterpret_pointer_cast<Graphic::VertexShader>(shader));
+					shader->Load();
+					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 				else if (prefix.starts_with("ps"))
 				{
-					boost::shared_ptr<Graphic::Shader<ID3D11PixelShader>> shader = boost::make_shared<Graphic::Shader<ID3D11PixelShader>>(
+					boost::shared_ptr<Graphic::PixelShader> shader = boost::make_shared<Graphic::PixelShader>(
 						filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
+					shader->Load();
 					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 				else if (prefix.starts_with("gs"))
 				{
-					boost::shared_ptr<Graphic::Shader<ID3D11GeometryShader>> shader = boost::make_shared<Graphic::Shader<ID3D11GeometryShader>>(
+					boost::shared_ptr<Graphic::GeometryShader> shader = boost::make_shared<Graphic::GeometryShader>(
 						filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
+					shader->Load();
 					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 				else if (prefix.starts_with("cs"))
 				{
-					boost::shared_ptr<Graphic::Shader<ID3D11ComputeShader>> shader = boost::make_shared<Graphic::Shader<ID3D11ComputeShader>>(
+					boost::shared_ptr<Graphic::ComputeShader> shader = boost::make_shared<Graphic::ComputeShader>(
 						filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
+					shader->Load();
 					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 				else if (prefix.starts_with("hs"))
 				{
-					boost::shared_ptr<Graphic::Shader<ID3D11HullShader>> shader = boost::make_shared<Graphic::Shader<ID3D11HullShader>>(
+					boost::shared_ptr<Graphic::HullShader> shader = boost::make_shared<Graphic::HullShader>(
 						filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
+					shader->Load();
 					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 				else if (prefix.starts_with("ds"))
 				{
-					boost::shared_ptr<Graphic::Shader<ID3D11DomainShader>> shader = boost::make_shared<Graphic::Shader<ID3D11DomainShader>>(
+					boost::shared_ptr<Graphic::DomainShader> shader = boost::make_shared<Graphic::DomainShader>(
 						filename_without_extension, file);
 
-					GetD3Device().CreateShader(absolute(file), shader.get());
+					shader->Load();
 					GetResourceManager().AddResource(filename_without_extension, shader);
 				}
 			}

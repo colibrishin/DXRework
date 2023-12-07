@@ -1,5 +1,6 @@
 #pragma once
 #include "egToolkitAPI.hpp"
+#include "egResource.hpp"
 
 namespace Engine
 {
@@ -32,38 +33,21 @@ namespace Engine::Resources
 		void Stop(const WeakObject& origin);
 		void StopLoop(const WeakObject& origin);
 
-		void SetRollOff(const FMOD_MODE& roll_off) const
-		{
-			if (m_sound_)
-			{
-				if (!(roll_off ^ FMOD_3D_LINEARROLLOFF) ||
-					!(roll_off ^ FMOD_3D_INVERSETAPEREDROLLOFF) ||
-					!(roll_off ^ FMOD_3D_LINEARSQUAREROLLOFF))
-				{
-					m_sound_->setMode(roll_off);
-				}
-				else
-				{
-					GetDebugger().Log(L"Invalid roll off mode given.");
-				}
-			}
-		}
-		void SetMinDistance(const float& min_distance)
-		{
-			m_min_distance_ = min_distance;
-			CommitDistance();
-		}
-		void SetMaxDistance(const float& max_distance)
-		{
-			m_max_distance_ = max_distance;
-			CommitDistance();
-		}
+		void SetRollOff(const FMOD_MODE& roll_off) const;
+		void SetMinDistance(const float& min_distance);
+		void SetMaxDistance(const float& max_distance);
 
 	protected:
+		Sound() : Resource("", RESOURCE_PRIORITY_SOUND), m_mode_(FMOD_3D), m_min_distance_(0.f), m_max_distance_(3.f)
+		{
+		}
+
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:
+		SERIALIZER_ACCESS
+
 		friend class boost::serialization::access;
 		void CommitDistance() const
 		{
@@ -82,95 +66,6 @@ namespace Engine::Resources
 		float m_max_distance_;
 
 	};
-
-	inline void Sound::Initialize()
-	{
-	}
-
-	inline void Sound::PreUpdate(const float& dt)
-	{
-	}
-
-	inline void Sound::Update(const float& dt)
-	{
-	}
-
-	inline void Sound::FixedUpdate(const float& dt)
-	{
-	}
-
-	inline void Sound::PreRender(const float dt)
-	{
-	}
-
-	inline void Sound::Render(const float dt)
-	{
-	}
-
-	inline void Sound::Play_INTERNAL(const WeakObject& origin)
-	{
-		FMOD_VECTOR pos{};
-		FMOD_VECTOR vel{};
-
-		if (const auto tr = origin.lock()->GetComponent<Component::Transform>().lock())
-		{
-			pos = {tr->GetPosition().x, tr->GetPosition().y, tr->GetPosition().z};
-		}
-
-		if (const auto rb = origin.lock()->GetComponent<Component::Rigidbody>().lock())
-		{
-			vel = {rb->GetLinearMomentum().x, rb->GetLinearMomentum().y, rb->GetLinearMomentum().z};
-		}
-
-		m_sound_->setMode(m_mode_);
-		GetToolkitAPI().PlaySound(m_sound_, pos, vel, &m_channel_map_[origin]);
-	}
-
-	inline void Sound::Play(const WeakObject& origin)
-	{
-		m_mode_ |= FMOD_LOOP_OFF;
-		m_mode_ &= ~FMOD_LOOP_NORMAL;
-		Play_INTERNAL(origin);
-	}
-
-	inline void Sound::PlayLoop(const WeakObject& origin)
-	{
-		m_mode_ &= ~FMOD_LOOP_OFF;
-		m_mode_ |= FMOD_LOOP_NORMAL;
-		m_sound_->setMode(m_mode_);
-		Play(origin);
-	}
-
-	inline bool Sound::IsPlaying(const WeakObject& origin)
-	{
-		bool is_playing = false;
-		m_channel_map_[origin]->isPlaying(&is_playing);
-		return is_playing;
-	}
-
-	inline void Sound::Stop(const WeakObject& origin)
-	{
-		GetToolkitAPI().StopSound(m_sound_, &m_channel_map_[origin]);
-		m_channel_map_.erase(origin);
-	}
-
-	inline void Sound::StopLoop(const WeakObject& origin)
-	{
-		m_mode_ |= FMOD_LOOP_OFF;
-		m_mode_ &= ~FMOD_LOOP_NORMAL;
-		m_sound_->setMode(FMOD_3D);
-		Stop(origin);
-	}
-
-	inline void Sound::Load_INTERNAL()
-	{
-		GetToolkitAPI().LoadSound(&m_sound_, GetPath().generic_string());
-		CommitDistance();
-	}
-
-	inline void Sound::Unload_INTERNAL()
-	{
-		m_sound_->release();
-		m_sound_ = nullptr;
-	}
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Sound)

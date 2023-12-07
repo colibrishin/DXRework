@@ -112,6 +112,9 @@
     <ClCompile Include="clFPSCounter.cpp">
       <Filter>Object</Filter>
     </ClCompile>
+    <ClCompile Include="clBackSphereMesh.cpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

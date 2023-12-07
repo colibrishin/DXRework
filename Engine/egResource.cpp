@@ -56,6 +56,5 @@ namespace Engine::Abstract
 	{
 		m_bLoaded_ = false;
 		m_path_ = m_path_str_;
-		Load();
 	}
 }

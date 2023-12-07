@@ -6,14 +6,14 @@
 
 namespace Engine
 {
-	bool ResourcePriorityComparer::operator()(const WeakResource& Left, const WeakResource& Right) const
+	bool ResourcePriorityComparer::operator()(const StrongResource& Left, const StrongResource& Right) const
 	{
-		if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
+		if (Left->GetPriority() != Right->GetPriority())
 		{
-			return Left.lock()->GetPriority() < Right.lock()->GetPriority();
+			return Left->GetPriority() < Right->GetPriority();
 		}
 
-		return Left.lock()->GetID() < Right.lock()->GetID();
+		return Left->GetID() < Right->GetID();
 	}
 
 	bool ComponentPriorityComparer::operator()(const WeakComponent& Left, const WeakComponent& Right) const

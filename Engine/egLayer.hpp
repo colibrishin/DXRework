@@ -36,3 +36,5 @@ namespace Engine
 
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Layer)

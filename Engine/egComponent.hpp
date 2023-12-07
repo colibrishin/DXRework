@@ -50,3 +50,5 @@ namespace Engine::Abstract
 
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Component)

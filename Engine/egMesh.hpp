@@ -42,7 +42,8 @@ namespace Engine::Resources
 		UINT GetIndexCount() const { return static_cast<UINT>(m_indices_.size()); }
 
 	protected:
-		friend class boost::serialization::access;
+		SERIALIZER_ACCESS
+
 		friend class Component::Collider;
 
 		Mesh(std::filesystem::path path) : Resource(std::move(path), RESOURCE_PRIORITY_MESH)
@@ -69,3 +70,5 @@ namespace Engine::Resources
 		std::filesystem::path m_path_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Mesh)

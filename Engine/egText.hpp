@@ -15,7 +15,6 @@ namespace Engine::Objects
 			if (const auto font_ptr = font.lock())
 			{
 				AddResource(font_ptr);
-				m_font_name_ = font_ptr->GetName();
 			}
 		}
 
@@ -43,7 +42,6 @@ namespace Engine::Objects
 		Vector4 m_color_;
 		float m_rotation_radian_;
 		float m_scale_;
-		EntityName m_font_name_;
 		std::string m_text_;
 	};
 }
