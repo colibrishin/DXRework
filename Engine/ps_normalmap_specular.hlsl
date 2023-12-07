@@ -13,6 +13,8 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
+    float3 reflection[MAX_NUM_LIGHTS];
+    float4 specular[MAX_NUM_LIGHTS];
 
     float4 normalMap = shaderNormalMap.Sample(SampleType, input.tex);
 
@@ -28,6 +30,9 @@ float4 main(PixelInputType input) : SV_TARGET
 
         normalColorArray[i] = lightColor[i] * normalLightIntensity[i];
         textureColorArray[i] = lightColor[i] * textureLightIntensity[i];
+
+        reflection[i] = normalize(2.0f * normalLightIntensity[i] * input.normal - input.lightDirection[i]);
+        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), specularPower);
     }
 
     float4 normalLightColor = ambientColor;
@@ -48,7 +53,16 @@ float4 main(PixelInputType input) : SV_TARGET
         textureLightColor.b += textureColorArray[i].b;
     }
 
-    float4 color = saturate(textureLightColor) * saturate(normalLightColor) * textureColor;
+    float4 specularSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    {
+        specularSum.r += specular[i].r;
+        specularSum.g += specular[i].g;
+        specularSum.b += specular[i].b;
+    }
+
+    float4 color = saturate(textureLightColor) * saturate(normalLightColor) * textureColor + specularSum;
 
     return color;
 }
