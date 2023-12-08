@@ -22,6 +22,7 @@ namespace Engine::Resources
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 		void FixedUpdate(const float& dt) override;
+		TypeName GetVirtualTypeName() const override;
 
 		UINT GetWidth() const { return m_texture_desc_.Width; }
 		UINT GetHeight() const { return m_texture_desc_.Height; }

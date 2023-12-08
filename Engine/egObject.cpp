@@ -5,6 +5,8 @@
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egRigidbody.hpp"
+#include "egMesh.hpp"
+#include "egTransform.hpp"
 
 SERIALIZER_ACCESS_IMPL(
 	Engine::Abstract::Object,
@@ -107,6 +109,9 @@ namespace Engine::Abstract
 		{
 			resource->Render(dt);
 		}
+
+		// Assuming other object will initialize vertex shader or so.
+		GetRenderPipeline().ResetShaders();
 	}
 
 	void Object::FixedUpdate(const float& dt)
@@ -155,7 +160,7 @@ namespace Engine::Abstract
 		{
 			const auto resource = *it;
 
-			const auto res = GetResourceManager().GetResource(resource->ToTypeName(), resource->GetName());
+			const auto res = GetResourceManager().GetResource(resource->GetTypeName(), resource->GetName());
 
 			resource->OnDeserialized();
 
@@ -176,7 +181,7 @@ namespace Engine::Abstract
 
 	void Object::OnImGui()
 	{
-		const auto id = ToTypeName() + " " + GetName() + " " + std::to_string(GetID());
+		const auto id = GetTypeName() + " " + GetName() + " " + std::to_string(GetID());
 
 		if (ImGui::Begin(id.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse))
 		{
@@ -192,7 +197,7 @@ namespace Engine::Abstract
 				{
 					for (const auto& comp : pointer)
 					{
-						if (ImGui::TreeNode(comp->ToTypeName().c_str()))
+						if (ImGui::TreeNode(comp->GetTypeName().c_str()))
 						{
 							comp->OnImGui();
 							ImGui::TreePop();
@@ -220,6 +225,11 @@ namespace Engine::Abstract
 			ImGui::Unindent(2);
 			ImGui::End();
 		}
+	}
+
+	TypeName Object::GetVirtualTypeName() const
+	{
+		return typeid(Object).name();
 	}
 
 	void Object::PreUpdate(const float& dt)

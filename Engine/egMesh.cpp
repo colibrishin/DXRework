@@ -188,6 +188,12 @@ namespace Engine::Resources
 		}
 
 		GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
+		GetRenderPipeline().BindResource(SR_NORMAL_MAP, nullptr);
+	}
+
+	TypeName Mesh::GetVirtualTypeName() const
+	{
+		return typeid(Mesh).name();
 	}
 
 	void Mesh::Load_INTERNAL()

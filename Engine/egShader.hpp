@@ -23,6 +23,8 @@ namespace Engine::Graphic
 		T** GetShader() { return m_shader_.GetAddressOf(); }
 		void Render(const float dt) override;
 
+		TypeName GetVirtualTypeName() const final;
+
 	protected:
 		Shader() : IShader("", "") {}
 		void Load_INTERNAL() override;

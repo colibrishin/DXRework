@@ -26,6 +26,7 @@ namespace Engine::Resources
 		void FixedUpdate(const float& dt) override;
 		void PreRender(const float dt) override;
 		void Render(const float dt) override;
+		TypeName GetVirtualTypeName() const final;
 
 		void Play(const WeakObject& origin);
 		void PlayLoop(const WeakObject& origin);

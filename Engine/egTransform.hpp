@@ -45,12 +45,15 @@ namespace Engine::Component
 
 		void OnImGui() override;
 		void OnDeserialized() override;
+		TypeName GetVirtualTypeName() const override;
 
 	protected:
 		Transform();
 
 	private:
 		friend class Manager::Physics::LerpManager;
+		friend class Manager::Graphics::ShadowManager;
+
 		SERIALIZER_ACCESS
 
 		Vector3 m_previous_position_;

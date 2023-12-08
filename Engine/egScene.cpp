@@ -78,7 +78,7 @@ namespace Engine
 
 		for (const auto& comp : obj->GetAllComponents())
 		{
-			m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
+			m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
 		}
 
 		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
@@ -114,7 +114,7 @@ namespace Engine
 
 	void Scene::RemoveGameObject(const EntityID id, eLayerType layer)
 	{
-		const auto obj = m_cached_objects_[id];
+		const auto& obj = m_cached_objects_[id];
 
 		if (const auto locked = obj.lock())
 		{
@@ -149,7 +149,7 @@ namespace Engine
 
 		for (const auto& comp : obj.lock()->GetAllComponents())
 		{
-			m_cached_components_[comp.lock()->ToTypeName()].erase(comp);
+			m_cached_components_[comp.lock()->GetTypeName()].erase(comp);
 		}
 
 		m_cached_objects_.erase(id);
@@ -166,7 +166,7 @@ namespace Engine
 	{
 		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 		{
-			m_cached_components_[component.lock()->ToTypeName()].insert(component);
+			m_cached_components_[component.lock()->GetTypeName()].insert(component);
 		}
 	}
 
@@ -174,7 +174,7 @@ namespace Engine
 	{
 		if (m_cached_objects_.contains(component.lock()->GetOwner().lock()->GetID()))
 		{
-			m_cached_components_[component.lock()->ToTypeName()].erase(component);
+			m_cached_components_[component.lock()->GetTypeName()].erase(component);
 		}
 	}
 
@@ -358,7 +358,7 @@ namespace Engine
 	{
 		m_layers[LAYER_LIGHT]->PreUpdate(dt);
 
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->PreUpdate(dt);
 		}
@@ -368,7 +368,7 @@ namespace Engine
 	{
 		m_layers[LAYER_LIGHT]->Update(dt);
 
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->Update(dt);
 		}
@@ -378,7 +378,7 @@ namespace Engine
 	{
 		m_layers[LAYER_LIGHT]->PreRender(dt);
 
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->PreRender(dt);
 		}
@@ -400,7 +400,7 @@ namespace Engine
 
 		m_layers[LAYER_LIGHT]->Render(dt);
 
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->Render(dt);
 		}
@@ -408,7 +408,7 @@ namespace Engine
 #ifdef _DEBUG
 		static bool is_load_open = false;
 
-		if (ImGui::Begin(ToTypeName().c_str()), nullptr, ImGuiWindowFlags_MenuBar)
+		if (ImGui::Begin(GetTypeName().c_str()), nullptr, ImGuiWindowFlags_MenuBar)
 		{
 			if (ImGui::BeginMainMenuBar())
 			{
@@ -462,7 +462,7 @@ namespace Engine
 				{
 					if (const auto obj_ptr = obj.lock())
 					{
-						const auto unique_name = obj_ptr->GetName() + " " + obj_ptr->ToTypeName()+ " " + std::to_string(obj_ptr->GetID());
+						const auto unique_name = obj_ptr->GetName() + " " + obj_ptr->GetTypeName()+ " " + std::to_string(obj_ptr->GetID());
 
 						if (ImGui::Button(unique_name.c_str()))
 						{
@@ -486,7 +486,7 @@ namespace Engine
 	{
 		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
 
-		for (int i = g_early_update_layer_end; i < LAYER_MAX; ++i)
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
@@ -522,7 +522,7 @@ namespace Engine
 
 				for (const auto& comp : obj.lock()->GetAllComponents())
 				{
-					m_cached_components_[comp.lock()->ToTypeName()].emplace(comp);
+					m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
 				}
 			}
 		}
@@ -579,5 +579,10 @@ namespace Engine
 		AddGameObject(observer, LAYER_UI);
 		GetMainCamera().lock()->BindObject(m_observer_);
 #endif
+	}
+
+	TypeName Scene::GetVirtualTypeName() const
+	{
+		return typeid(Scene).name();
 	}
 }

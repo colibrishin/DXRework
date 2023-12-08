@@ -91,6 +91,11 @@ namespace Engine
 		}
 	}
 
+	TypeName Layer::GetVirtualTypeName() const
+	{
+		return typeid(Layer).name();
+	}
+
 	void Layer::AddGameObject(const StrongObject& obj)
 	{
 		if (m_objects_.contains(obj))

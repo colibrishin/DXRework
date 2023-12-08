@@ -18,6 +18,7 @@ namespace Engine::Abstract
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
 		void OnImGui() override;
+		TypeName GetVirtualTypeName() const final;
 
 		void AddResource(const StrongResource& resource)
 		{
@@ -262,8 +263,9 @@ namespace Engine::Abstract
 
 	private:
 		SERIALIZER_ACCESS
-
 		friend class Engine::Scene;
+		friend class Engine::Manager::Graphics::ShadowManager;
+
 		template <typename T>
 		void RemoveComponentCommon(StrongComponent& value)
 		{
@@ -286,6 +288,7 @@ namespace Engine::Abstract
 		virtual void OnCollisionContinue(const Engine::Component::Collider& other);
 		virtual void OnCollisionExit(const Engine::Component::Collider& other);
 
+	private:
 		bool m_active_ = true;
 		bool m_culled_ = true;
 

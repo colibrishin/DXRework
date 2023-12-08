@@ -398,6 +398,11 @@ namespace Engine::Component
 		// TODO: colliding objects
 	}
 
+	TypeName Collider::GetVirtualTypeName() const
+	{
+		return typeid(Collider).name();
+	}
+
 	void Collider::Render(const float dt)
 	{
 		if (m_collided_objects_.empty())

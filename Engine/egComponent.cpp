@@ -8,6 +8,11 @@ SERIALIZER_ACCESS_IMPL(Engine::Abstract::Component,
 
 namespace Engine::Abstract
 {
+	TypeName Component::GetVirtualTypeName() const
+	{
+		return typeid(Component).name();
+	}
+
 	void Component::OnImGui()
 	{
 		Renderable::OnImGui();

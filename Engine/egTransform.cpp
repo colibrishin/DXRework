@@ -88,6 +88,11 @@ namespace Engine::Component
 			DirectX::XMConvertToDegrees(euler.z));
 	}
 
+	TypeName Transform::GetVirtualTypeName() const
+	{
+		return typeid(Transform).name();
+	}
+
 	Transform::Transform(): Component(COMPONENT_PRIORITY_TRANSFORM, {}), m_previous_position_(Vector3::Zero), m_position_(Vector3::Zero), m_rotation_(Quaternion::Identity), m_scale_(Vector3::One)
 	{
 	}

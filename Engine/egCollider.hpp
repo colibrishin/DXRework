@@ -69,6 +69,7 @@ namespace Engine::Component
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
 		void OnImGui() override;
+		TypeName GetVirtualTypeName() const final;
 
 		template <typename T>
 		T& As() 
