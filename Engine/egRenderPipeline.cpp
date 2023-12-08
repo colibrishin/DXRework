@@ -25,14 +25,11 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_VERTEX);
 	}
 
-	void RenderPipeline::SetLightPosition(UINT id, const Vector3& position)
+	void RenderPipeline::SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color)
 	{
-		m_light_position_buffer_.position[id] = Vector4(position.x, position.y, position.z, 1.0f);
-	}
-
-	void RenderPipeline::SetLightColor(UINT id, const Vector4& color)
-	{
-		m_light_color_buffer_.color[id] = color;
+		m_light_buffer_.world[id] = world;
+		m_light_buffer_.vp[id] = vp;
+		m_light_buffer_.color[id] = color;
 	}
 
 	void RenderPipeline::SetSpecularPower(float power)
@@ -49,13 +46,13 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
 	}
 
-	void RenderPipeline::BindLightBuffers()
+	void RenderPipeline::BindLightBuffer()
 	{
-		m_light_position_buffer_data_.SetData(GetD3Device().GetContext(), m_light_position_buffer_);
-		GetD3Device().BindConstantBuffer(m_light_position_buffer_data_, CB_TYPE_LIGHT_POSITION, SHADER_VERTEX);
+		m_light_buffer_data.SetData(GetD3Device().GetContext(), m_light_buffer_);
 
-		m_light_color_buffer_data_.SetData(GetD3Device().GetContext(), m_light_color_buffer_);
-		GetD3Device().BindConstantBuffer(m_light_color_buffer_data_, CB_TYPE_LIGHT_COLOR, SHADER_PIXEL);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_VERTEX);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_PIXEL);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_GEOMETRY);
 	}
 
 	void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
@@ -99,8 +96,7 @@ namespace Engine::Manager::Graphics
 	{
 		GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-		GetD3Device().CreateConstantBuffer(m_light_position_buffer_data_);
-		GetD3Device().CreateConstantBuffer(m_light_color_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_light_buffer_data);
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
 
 		PrecompileShaders();

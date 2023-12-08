@@ -14,8 +14,8 @@ PixelInputType main(VertexInputType input)
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(output.position, world);
-	output.position = mul(output.position, view);
-	output.position = mul(output.position, projection);
+	output.position = mul(output.position, cam_view);
+	output.position = mul(output.position, cam_projection);
 
 	// Store the input color for the pixel shader to use.
 	output.color = input.color;
@@ -25,7 +25,8 @@ PixelInputType main(VertexInputType input)
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        output.lightDirection[i] = lightPosition[i].xyz - worldPosition.xyz;
+		const float4 light_position = float4(lightWorld[i]._41, lightWorld[i]._42, lightWorld[i]._43, 1.0f);
+        output.lightDirection[i] = light_position.xyz - worldPosition.xyz;
         output.lightDirection[i] = normalize(output.lightDirection[i]);
     }
 

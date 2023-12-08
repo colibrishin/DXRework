@@ -5,11 +5,14 @@ Texture2D shaderTexture : register(t0);
 SamplerState SampleType : register(s1);
 Texture2D shaderNormalMap : register(t1);
 
+Texture2DArray cascadeShadowMap : register(t2);
+SamplerComparisonState shadowSampler : register(s2);
+
 cbuffer PerspectiveBuffer : register(b0)
 {
     matrix cam_world;
-    matrix view;
-    matrix projection;
+    matrix cam_view;
+    matrix cam_projection;
 };
 
 cbuffer TransformBuffer : register(b1)
@@ -19,22 +22,32 @@ cbuffer TransformBuffer : register(b1)
     matrix translation;
 };
 
-cbuffer LightPositionBuffer : register(b2)
+cbuffer LightBuffer : register(b2)
 {
-    float4 lightPosition[MAX_NUM_LIGHTS];
-}
-
-cbuffer LightColorBuffer : register(b3)
-{
+    matrix lightWorld[MAX_NUM_LIGHTS];
+    matrix lightVP[MAX_NUM_LIGHTS];
     float4 lightColor[MAX_NUM_LIGHTS];
 }
 
-cbuffer SpecularBuffer : register(b4)
+cbuffer SpecularBuffer : register(b3)
 {
     float specularPower;
     float3 _p0;
     float4 specularColor;
 }
+
+struct GeometryInputType
+{
+    float2 tex : texcoord;
+    float4 position : SV_POSITION;
+};
+
+struct GeometryOutputType
+{
+    float2 tex : texcoord;
+    float4 position : SV_POSITION;
+    uint RTIndex : SV_RenderTargetArrayIndex;
+};
 
 struct VertexInputType
 {

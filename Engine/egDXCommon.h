@@ -42,14 +42,11 @@ namespace Engine
 		Matrix translation;
 	};
 
-	struct LightPositionBuffer
+	struct LightBuffer
 	{
 		// due to padding, type is vector4 instead of vector3
-		Vector4 position[g_max_lights];
-	};
-
-	struct LightColorBuffer
-	{
+		Matrix world[g_max_lights];
+		Matrix vp[g_max_lights];
 		Color color[g_max_lights];
 	};
 

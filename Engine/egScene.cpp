@@ -396,7 +396,7 @@ namespace Engine
 
 	void Scene::Render(const float dt)
 	{
-		GetRenderPipeline().BindLightBuffers();
+		GetRenderPipeline().BindLightBuffer();
 
 		m_layers[LAYER_LIGHT]->Render(dt);
 
