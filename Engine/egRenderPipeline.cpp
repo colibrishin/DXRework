@@ -60,6 +60,89 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
 	}
 
+	/*
+	void RenderPipeline::GetCascadeShadowByLightDir(const Vector3& light_dir, PerspectiveBuffer vp[3]) const
+	{
+		// https://cutecatgame.tistory.com/6
+
+		if (const auto scene = GetSceneManager().GetActiveScene().lock())
+		{
+			if (const auto camera = scene->GetMainCamera().lock())
+			{
+				const auto view_inv = camera->GetViewMatrix().Invert();
+				const float fov = g_fov;
+				const float aspect = GetD3Device().GetAspectRatio();
+				const float near_plane = g_screen_near;
+				const float far_plane = g_screen_far;
+
+				const float tan_hf_v = std::tanf(XMConvertToRadians(fov / 2.f));
+				const float tan_hf_h = tan_hf_v * aspect;
+
+				const float cascadeEnds[]
+				{
+					near_plane, 6.f, 18.f, far_plane
+				};
+
+				// frustum = near points 4 + far points 4
+				// for cascade shadow mapping, total 3 parts are used.
+				// (near, 6), (6, 18), (18, far)
+				for (auto i = 0; i < 3; ++i)
+				{
+					const float xn = cascadeEnds[i] * tan_hf_h;
+					const float xf = cascadeEnds[i + 1] * tan_hf_h;
+
+					const float yn = cascadeEnds[i] * tan_hf_v;
+					const float yf = cascadeEnds[i + 1] * tan_hf_v;
+
+					Vector4 current_corner[8] =
+					{
+						// near plane
+						{xn, yn, cascadeEnds[i], 1.f},
+						{-xn, yn, cascadeEnds[i], 1.f},
+						{xn, -yn, cascadeEnds[i], 1.f},
+						{-xn, -yn, cascadeEnds[i], 1.f},
+
+						// far plane
+						{xf, yf, cascadeEnds[i + 1], 1.f},
+						{-xf, yf, cascadeEnds[i + 1], 1.f},
+						{xf, -yf, cascadeEnds[i + 1], 1.f},
+						{-xf, -yf, cascadeEnds[i + 1], 1.f}
+					};
+
+					Vector4 center{};
+
+					// Move to world space
+					for (auto& corner : current_corner)
+					{
+						corner = Vector4::Transform(corner, view_inv);
+						center += corner;
+					}
+
+					// Get center by averaging
+					center /= 8.f;
+
+					float radius = 0.f;
+					for (auto& corner : current_corner)
+					{
+						float distance = Vector4::Distance(center, corner);
+						radius = std::max(radius, distance);
+					}
+					
+					radius = std::ceil(radius * 16.f) / 16.f;
+
+					Vector3 maxExtent = Vector3{radius, radius, radius};
+					Vector3 minExtent = -maxExtent;
+
+					Vector3 shadowCameraPos = center + (light_dir * -minExtent.z);
+					vp[i].view = XMMatrixLookAtLH(shadowCameraPos, Vector3(center), Vector3::Up);
+					const Vector3 cascadeExtents = maxExtent - minExtent;
+					vp[i].projection = XMMatrixOrthographicOffCenterLH(minExtent.x, maxExtent.x, minExtent.y, maxExtent.y, 0.f, cascadeExtents.z);
+				}
+			}
+		}
+	}
+	*/
+
 	void RenderPipeline::SetWireframeState() const
 	{
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_wire_.Get());
