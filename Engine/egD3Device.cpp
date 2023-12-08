@@ -367,7 +367,7 @@ namespace Engine::Manager::Graphics
 		InitializeDepthStencil();
 		UpdateViewport();
 
-		m_projection_matrix_ = XMMatrixPerspectiveFovLH(XM_PI / 4.0f, GetAspectRatio(), g_screen_near, g_screen_far);
+		m_projection_matrix_ = XMMatrixPerspectiveFovLH(g_fov, GetAspectRatio(), g_screen_near, g_screen_far);
 		s_ortho_matrix_ = XMMatrixOrthographicLH(static_cast<float>(g_window_width), static_cast<float>(g_window_height), g_screen_near, g_screen_far);
 	}
 

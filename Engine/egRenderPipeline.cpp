@@ -19,20 +19,17 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
 	}
 
-	void RenderPipeline::SetPerspectiveMatrix(const VPBuffer& matrix)
+	void RenderPipeline::SetPerspectiveMatrix(const PerspectiveBuffer& matrix)
 	{
-		m_vp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-		GetD3Device().BindConstantBuffer(m_vp_buffer_data_, CB_TYPE_VP, SHADER_VERTEX);
+		m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_VERTEX);
 	}
 
-	void RenderPipeline::SetLightPosition(UINT id, const Vector3& position)
+	void RenderPipeline::SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color)
 	{
-		m_light_position_buffer_.position[id] = Vector4(position.x, position.y, position.z, 1.0f);
-	}
-
-	void RenderPipeline::SetLightColor(UINT id, const Vector4& color)
-	{
-		m_light_color_buffer_.color[id] = color;
+		m_light_buffer_.world[id] = world;
+		m_light_buffer_.vp[id] = vp;
+		m_light_buffer_.color[id] = color;
 	}
 
 	void RenderPipeline::SetSpecularPower(float power)
@@ -49,19 +46,102 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
 	}
 
-	void RenderPipeline::BindLightBuffers()
+	void RenderPipeline::BindLightBuffer()
 	{
-		m_light_position_buffer_data_.SetData(GetD3Device().GetContext(), m_light_position_buffer_);
-		GetD3Device().BindConstantBuffer(m_light_position_buffer_data_, CB_TYPE_LIGHT_POSITION, SHADER_VERTEX);
+		m_light_buffer_data.SetData(GetD3Device().GetContext(), m_light_buffer_);
 
-		m_light_color_buffer_data_.SetData(GetD3Device().GetContext(), m_light_color_buffer_);
-		GetD3Device().BindConstantBuffer(m_light_color_buffer_data_, CB_TYPE_LIGHT_COLOR, SHADER_PIXEL);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_VERTEX);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_PIXEL);
+		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_GEOMETRY);
 	}
 
 	void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
 	{
 		GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
 	}
+
+	/*
+	void RenderPipeline::GetCascadeShadowByLightDir(const Vector3& light_dir, PerspectiveBuffer vp[3]) const
+	{
+		// https://cutecatgame.tistory.com/6
+
+		if (const auto scene = GetSceneManager().GetActiveScene().lock())
+		{
+			if (const auto camera = scene->GetMainCamera().lock())
+			{
+				const auto view_inv = camera->GetViewMatrix().Invert();
+				const float fov = g_fov;
+				const float aspect = GetD3Device().GetAspectRatio();
+				const float near_plane = g_screen_near;
+				const float far_plane = g_screen_far;
+
+				const float tan_hf_v = std::tanf(XMConvertToRadians(fov / 2.f));
+				const float tan_hf_h = tan_hf_v * aspect;
+
+				const float cascadeEnds[]
+				{
+					near_plane, 6.f, 18.f, far_plane
+				};
+
+				// frustum = near points 4 + far points 4
+				// for cascade shadow mapping, total 3 parts are used.
+				// (near, 6), (6, 18), (18, far)
+				for (auto i = 0; i < 3; ++i)
+				{
+					const float xn = cascadeEnds[i] * tan_hf_h;
+					const float xf = cascadeEnds[i + 1] * tan_hf_h;
+
+					const float yn = cascadeEnds[i] * tan_hf_v;
+					const float yf = cascadeEnds[i + 1] * tan_hf_v;
+
+					Vector4 current_corner[8] =
+					{
+						// near plane
+						{xn, yn, cascadeEnds[i], 1.f},
+						{-xn, yn, cascadeEnds[i], 1.f},
+						{xn, -yn, cascadeEnds[i], 1.f},
+						{-xn, -yn, cascadeEnds[i], 1.f},
+
+						// far plane
+						{xf, yf, cascadeEnds[i + 1], 1.f},
+						{-xf, yf, cascadeEnds[i + 1], 1.f},
+						{xf, -yf, cascadeEnds[i + 1], 1.f},
+						{-xf, -yf, cascadeEnds[i + 1], 1.f}
+					};
+
+					Vector4 center{};
+
+					// Move to world space
+					for (auto& corner : current_corner)
+					{
+						corner = Vector4::Transform(corner, view_inv);
+						center += corner;
+					}
+
+					// Get center by averaging
+					center /= 8.f;
+
+					float radius = 0.f;
+					for (auto& corner : current_corner)
+					{
+						float distance = Vector4::Distance(center, corner);
+						radius = std::max(radius, distance);
+					}
+					
+					radius = std::ceil(radius * 16.f) / 16.f;
+
+					Vector3 maxExtent = Vector3{radius, radius, radius};
+					Vector3 minExtent = -maxExtent;
+
+					Vector3 shadowCameraPos = center + (light_dir * -minExtent.z);
+					vp[i].view = XMMatrixLookAtLH(shadowCameraPos, Vector3(center), Vector3::Up);
+					const Vector3 cascadeExtents = maxExtent - minExtent;
+					vp[i].projection = XMMatrixOrthographicOffCenterLH(minExtent.x, maxExtent.x, minExtent.y, maxExtent.y, 0.f, cascadeExtents.z);
+				}
+			}
+		}
+	}
+	*/
 
 	void RenderPipeline::SetWireframeState() const
 	{
@@ -97,10 +177,9 @@ namespace Engine::Manager::Graphics
 
 	void RenderPipeline::Initialize()
 	{
-		GetD3Device().CreateConstantBuffer(m_vp_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-		GetD3Device().CreateConstantBuffer(m_light_position_buffer_data_);
-		GetD3Device().CreateConstantBuffer(m_light_color_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_light_buffer_data);
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
 
 		PrecompileShaders();

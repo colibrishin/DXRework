@@ -17,7 +17,7 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_normalmap_metalic").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_normalmap_specular").lock());
 
 		AddComponent<Engine::Component::Transform>();
 		const auto tr = GetComponent<Engine::Component::Transform>().lock();

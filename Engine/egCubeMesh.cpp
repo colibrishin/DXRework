@@ -35,7 +35,7 @@ namespace Engine::Mesh
 
 		for (const auto vertex : vertices)
 		{
-			m_vertices_[0].push_back(Engine::VertexElement{ vertex.position, vertex.normal, {1.0f, 0.0f, 0.0f, 1.0f}, vertex.textureCoordinate });
+			m_vertices_[0].push_back(Engine::VertexElement{ vertex.position,  {1.0f, 0.0f, 0.0f, 1.0f}, vertex.textureCoordinate, vertex.normal });
 		}
 
 		for (const auto index : indices)

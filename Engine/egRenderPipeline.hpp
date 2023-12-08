@@ -28,19 +28,19 @@ namespace Engine::Manager::Graphics
 		static void SetShader(Graphic::IShader* shader);
 
 		void SetWorldMatrix(const TransformBuffer& matrix);
-		void SetPerspectiveMatrix(const VPBuffer& matrix);
+		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
 
-		void SetLightPosition(UINT id, const Vector3& position);
-		void SetLightColor(UINT id, const Vector4& color);
+		void SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
 
 		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
+		static void GetViewFrustum(BoundingFrustum& frustum);
 		void SetWireframeState() const;
 		void SetFillState() const;
 
-		void BindLightBuffers();
+		void BindLightBuffer();
 		static void BindVertexBuffer(ID3D11Buffer* buffer);
 		static void BindIndexBuffer(ID3D11Buffer* buffer);
 		static void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
@@ -64,15 +64,13 @@ namespace Engine::Manager::Graphics
 	private:
 		ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;
 
-		ConstantBuffer<VPBuffer> m_vp_buffer_data_{};
+		ConstantBuffer<PerspectiveBuffer> m_wvp_buffer_data_{};
 		ConstantBuffer<TransformBuffer> m_transform_buffer_data_{};
 		
-		LightPositionBuffer m_light_position_buffer_{};
-		LightColorBuffer m_light_color_buffer_{};
+		LightBuffer m_light_buffer_{};
 		SpecularBuffer m_specular_buffer_{};
 
-		ConstantBuffer<LightPositionBuffer> m_light_position_buffer_data_{};
-		ConstantBuffer<LightColorBuffer> m_light_color_buffer_data_{};
+		ConstantBuffer<LightBuffer> m_light_buffer_data{};
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 
 		std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};

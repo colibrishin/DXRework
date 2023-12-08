@@ -56,23 +56,23 @@ namespace Client::Mesh
 
 		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{-1.0f, -1.0f, 0.0f},
-			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
-			{1.0f, 0.0f}
+			{1.0f, 0.0f},
+			{0.0f, 0.0f, -1.0f},
 		});
 
 		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{0.0f, 1.0f, 0.0f},
-			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
-			{0.5f, 1.0f}
+			{0.5f, 1.0f},
+			{0.0f, 0.0f, -1.0f},
 		});
 
 		m_vertices_[0].emplace_back(Engine::VertexElement{
 			{1.0f, -1.0f, 0.0f},
-			{0.0f, 0.0f, -1.0f},
 			{1.0f, 0.0f, 0.0f, 1.0f},
-			{1.0f, 1.0f}
+			{1.0f, 1.0f},
+			{0.0f, 0.0f, -1.0f},
 		});
 
 		m_indices_[0].emplace_back(0);

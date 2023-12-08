@@ -27,7 +27,7 @@ namespace Engine::Objects
 		Quaternion GetLookAtRotation() { return m_look_at_rotation_; }
 
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
-		Matrix GetProjectionMatrix() const { return m_vp_buffer_.projection.Transpose(); }
+		Matrix GetProjectionMatrix() const { return m_wvp_buffer_.projection.Transpose(); }
 		Vector3 GetLookAt();
 
 		void Initialize() override;
@@ -58,8 +58,11 @@ namespace Engine::Objects
 		bool m_b_orthogonal_;
 
 		// Non-serialized
+		Matrix m_world_matrix_;
 		Matrix m_view_matrix_;
-		VPBuffer m_vp_buffer_;
+		Matrix m_projection_matrix_;
+
+		PerspectiveBuffer m_wvp_buffer_;
 		WeakObject m_bound_object_;
 	};
 }
