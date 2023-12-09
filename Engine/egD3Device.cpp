@@ -100,6 +100,11 @@ namespace Engine::Manager::Graphics
 		m_device_->CreateSamplerState(&desc, state);
 	}
 
+	void D3Device::CreateTexture(const D3D11_TEXTURE2D_DESC& desc, ID3D11Texture2D** texture) const
+	{
+		DX::ThrowIfFailed(m_device_->CreateTexture2D(&desc, nullptr, texture));
+	}
+
 	void D3Device::CreateBlendState(ID3D11BlendState** blend_state) const
 	{
 		D3D11_BLEND_DESC desc{};

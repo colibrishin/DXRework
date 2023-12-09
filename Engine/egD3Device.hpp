@@ -197,14 +197,14 @@ namespace Engine::Manager::Graphics
 			const eShaderType type = g_shader_enum_type_map.at(__uuidof(T));
 			shader->Initialize();
 
-			UINT flag = D3DCOMPILE_ENABLE_STRICTNESS;
+			UINT flag = 0;
 
 #if defined(_DEBUG)
 			flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
 #endif
 
 
-			DX::ThrowIfFailed(D3DCompileFromFile(
+			D3DCompileFromFile(
 				path.c_str(),
 				nullptr,
 				D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -213,7 +213,13 @@ namespace Engine::Manager::Graphics
 				flag,
 				0,
 				&blob,
-				&error));
+				&error);
+
+			if (error)
+			{
+				std::string error_message = static_cast<char*>(error->GetBufferPointer());
+				OutputDebugStringA(error_message.c_str());
+			}
 
 			if constexpr (std::is_same_v<T, ID3D11VertexShader>)
 			{
@@ -321,6 +327,7 @@ namespace Engine::Manager::Graphics
 		void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader) const;
 		void CreateSampler(const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const;
 
+		void CreateTexture(const D3D11_TEXTURE2D_DESC& desc, ID3D11Texture2D** texture) const;
 		void CreateBlendState(ID3D11BlendState** blend_state) const;
 		void CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state) const;
 		void CreateRasterizer(ID3D11RasterizerState** state, D3D11_FILL_MODE fill_mode) const;
