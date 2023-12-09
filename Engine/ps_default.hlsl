@@ -2,7 +2,7 @@
 
 float4 main(PixelInputType input) : SV_TARGET
 {
-	const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
+	const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
 
     float lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];

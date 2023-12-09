@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
-    const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
+    const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
     float normalLightIntensity[MAX_NUM_LIGHTS];
     float textureLightIntensity[MAX_NUM_LIGHTS];
 
@@ -14,7 +14,7 @@ float4 main(PixelInputType input) : SV_TARGET
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
 
-    float4 normalMap = shaderNormalMap.Sample(SampleType, input.tex);
+    float4 normalMap = shaderNormalMap.Sample(PSSampler, input.tex);
 
     normalMap = (normalMap * 2.0f) - 1.0f;
 

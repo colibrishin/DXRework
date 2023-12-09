@@ -25,12 +25,12 @@ PixelInputType main(VertexInputType input)
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-		const float4 light_position = float4(lightWorld[i]._41, lightWorld[i]._42, lightWorld[i]._43, 1.0f);
+        const float4 light_position = GetWorldPosition(lightWorld[i]);
         output.lightDirection[i] = light_position.xyz - worldPosition.xyz;
         output.lightDirection[i] = normalize(output.lightDirection[i]);
     }
 
-    const float3 cam_position = float3(cam_world._41, cam_world._42, cam_world._43);
+    const float3 cam_position = GetWorldPosition(cam_world);
 
     output.viewDirection = cam_position.xyz - worldPosition.xyz;
 	output.viewDirection = normalize(output.viewDirection);
