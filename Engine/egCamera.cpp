@@ -107,11 +107,11 @@ namespace Engine::Objects
 			// Finally create the view matrix from the three updated vectors.
 			m_view_matrix_ = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 
-			const auto p = m_b_orthogonal_ ? GetD3Device().GetOrthogonalMatrix() : GetD3Device().GetProjectionMatrix();
+			m_projection_matrix_ = m_b_orthogonal_ ? GetD3Device().GetOrthogonalMatrix() : GetD3Device().GetProjectionMatrix();
 
 			m_wvp_buffer_.world = m_world_matrix_.Transpose();
 			m_wvp_buffer_.view = m_view_matrix_.Transpose();
-			m_wvp_buffer_.projection = p.Transpose();
+			m_wvp_buffer_.projection = m_projection_matrix_.Transpose();
 
 			const auto inverted = m_view_matrix_.Invert();
 
