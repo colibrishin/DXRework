@@ -40,6 +40,8 @@ namespace Engine::Manager::Graphics
 
 		void SetWireframeState() const;
 		void SetFillState() const;
+		void SetNoneCullState() const;
+		void SetFrontCullState() const;
 
 		void BindLightBuffer();
 		void BindVertexBuffer(ID3D11Buffer* buffer);

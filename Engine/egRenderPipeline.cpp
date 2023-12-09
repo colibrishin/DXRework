@@ -165,6 +165,16 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());
 	}
 
+	void RenderPipeline::SetNoneCullState() const
+	{
+		GetD3Device().GetContext()->RSSetState(GetToolkitAPI().GetCommonStates()->CullNone());
+	}
+
+	void RenderPipeline::SetFrontCullState() const
+	{
+		GetD3Device().GetContext()->RSSetState(GetToolkitAPI().GetCommonStates()->CullClockwise());
+	}
+
 	void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
 	{
 		constexpr UINT stride = sizeof(VertexElement);
