@@ -17,6 +17,9 @@ namespace Engine
 	extern Manager::Graphics::RenderPipeline& GetRenderPipeline();
 	extern Manager::Graphics::ToolkitAPI& GetToolkitAPI();
 
+	constexpr int g_max_lights = 8;
+	constexpr int g_max_shadow_cascades = 3;
+
 	struct VertexElement
 	{
 		Vector3 position;
@@ -46,7 +49,6 @@ namespace Engine
 	{
 		// due to padding, type is vector4 instead of vector3
 		Matrix world[g_max_lights];
-		Matrix vp[g_max_lights];
 		Color color[g_max_lights];
 	};
 
@@ -55,5 +57,13 @@ namespace Engine
 		float specular_power;
 		float padding[3];
 		Color specular_color;
+	};
+
+	struct CascadeShadowBuffer
+	{
+		Vector4 cascade_positions[g_max_shadow_cascades];
+		Matrix view[g_max_shadow_cascades];
+		Matrix proj[g_max_shadow_cascades];
+		Vector4 end_clip_spaces[g_max_shadow_cascades];
 	};
 }
