@@ -25,7 +25,7 @@ namespace Engine::Manager::Graphics
 		void Initialize() override;
 		void PreRender(const float& dt) override;
 
-		static void SetShader(Graphic::IShader* shader);
+		void SetShader(Graphic::IShader* shader);
 
 		void SetWorldMatrix(const TransformBuffer& matrix);
 		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
@@ -34,21 +34,19 @@ namespace Engine::Manager::Graphics
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
 
-		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
+		void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 		void GetCascadeShadow(const Vector3& light_dir, Vector4 position[], Matrix view[], Matrix projection[], Vector4 clip[]) const;
 
-		static void GetViewFrustum(BoundingFrustum& frustum);
 		void SetWireframeState() const;
 		void SetFillState() const;
 
 		void BindLightBuffer();
-		static void BindVertexBuffer(ID3D11Buffer* buffer);
-		static void BindIndexBuffer(ID3D11Buffer* buffer);
-		static void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
+		void BindVertexBuffer(ID3D11Buffer* buffer);
+		void BindIndexBuffer(ID3D11Buffer* buffer);
 
-		static void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
+		void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
 
-		static void DrawIndexed(UINT index_count);
+		void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
 
 	private:
 		friend class ToolkitAPI;
