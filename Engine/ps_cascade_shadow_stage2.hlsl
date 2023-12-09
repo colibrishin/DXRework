@@ -1,8 +1,8 @@
 #include "common.hlsli"
 
-float GetShadowFactor(int cascadeIndex, float4 lightspacepos)
+float GetShadowFactor(int cascadeIndex, float4 cascadeLocalPosition)
 {
-    float3 projCoords = lightspacepos.xyz / lightspacepos.w;
+    float3 projCoords = cascadeLocalPosition.xyz / cascadeLocalPosition.w;
     projCoords.x = projCoords.x * 0.5 + 0.5f;
     projCoords.y = -projCoords.y * 0.5 + 0.5f;
 
@@ -34,20 +34,14 @@ float GetShadowFactor(int cascadeIndex, float4 lightspacepos)
 
 float4 main(PixelShadowStage2InputType input) : SV_TARGET
 {
-    const matrix world = mul(mul(scale, rotation), translation);
-
-    matrix lightOrientedWorld[3];
-	float4 cascadeLightPos[3];
-
-    for (uint i = 0; i < MAX_NUM_CASCADES; ++i)
-    {
-        lightOrientedWorld[i] = lightFrustumView[i] * lightFrustumProj[i];
-    }
+	float4 cascadeLocalPosition[3];
 
 	[unroll]
     for (int i = 0; i < 3; ++i)
     {
-        cascadeLightPos[i] = mul(lightOrientedWorld[i], float4(lightFrustumPosition[i].xyz, 1.f));
+        cascadeLocalPosition[i] = input.position;
+        cascadeLocalPosition[i] = mul(cascadeLocalPosition[i], lightFrustumView[i]);
+        cascadeLocalPosition[i] = mul(cascadeLocalPosition[i], lightFrustumProj[i]);
     }
 
     float shadowFactor = 0.f;
@@ -57,7 +51,7 @@ float4 main(PixelShadowStage2InputType input) : SV_TARGET
     {
         if (input.clipSpacePosZ <= cascadeEndClipSpace[j].z)
         {
-            shadowFactor = GetShadowFactor(j, cascadeLightPos[j]);
+            shadowFactor = GetShadowFactor(j, cascadeLocalPosition[j]);
             break;
         }
     }
