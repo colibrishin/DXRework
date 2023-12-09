@@ -55,6 +55,7 @@
 #include "VertexTypes.h"
 #include "WICTextureLoader.h"
 #include "StepTimer.hpp"
+#include "DebugDraw.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -83,6 +84,14 @@
 #include "egActor.hpp"
 #include "egApplication.hpp"
 #include "egEntity.hpp"
+
+#include "egD3Device.hpp"
+
+#include "egShader.hpp"
+#include "egIShader.hpp"
+#include "egStateController.hpp"
+#include "egIStateController.hpp"
+#include "egVertexShaderInternal.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
