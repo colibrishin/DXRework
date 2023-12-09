@@ -60,8 +60,8 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
 	}
 
-	/*
-	void RenderPipeline::GetCascadeShadowByLightDir(const Vector3& light_dir, PerspectiveBuffer vp[3]) const
+	
+	void RenderPipeline::GetCascadeShadow(const Vector3& light_dir, Vector4 position[3], Matrix view[3], Matrix projection[3], Vector4 clip[3]) const
 	{
 		// https://cutecatgame.tistory.com/6
 
@@ -83,10 +83,9 @@ namespace Engine::Manager::Graphics
 					near_plane, 6.f, 18.f, far_plane
 				};
 
-				// frustum = near points 4 + far points 4
 				// for cascade shadow mapping, total 3 parts are used.
 				// (near, 6), (6, 18), (18, far)
-				for (auto i = 0; i < 3; ++i)
+				for (auto i = 0; i < g_max_shadow_cascades; ++i)
 				{
 					const float xn = cascadeEnds[i] * tan_hf_h;
 					const float xf = cascadeEnds[i + 1] * tan_hf_h;
@@ -94,6 +93,7 @@ namespace Engine::Manager::Graphics
 					const float yn = cascadeEnds[i] * tan_hf_v;
 					const float yf = cascadeEnds[i + 1] * tan_hf_v;
 
+					// frustum = near points 4 + far points 4
 					Vector4 current_corner[8] =
 					{
 						// near plane
@@ -133,10 +133,16 @@ namespace Engine::Manager::Graphics
 					Vector3 maxExtent = Vector3{radius, radius, radius};
 					Vector3 minExtent = -maxExtent;
 
-					Vector3 shadowCameraPos = center + (light_dir * -minExtent.z);
-					vp[i].view = XMMatrixLookAtLH(shadowCameraPos, Vector3(center), Vector3::Up);
+					position[i] = center + (light_dir * minExtent.z);
+
+					view[i] = XMMatrixLookAtLH(position[i], Vector3(center), Vector3::Up);
+
 					const Vector3 cascadeExtents = maxExtent - minExtent;
-					vp[i].projection = XMMatrixOrthographicOffCenterLH(minExtent.x, maxExtent.x, minExtent.y, maxExtent.y, 0.f, cascadeExtents.z);
+
+					projection[i] = XMMatrixOrthographicOffCenterLH(minExtent.x, maxExtent.x, minExtent.y, maxExtent.y, 0.f, cascadeExtents.z);
+
+					clip[i] = Vector4{0.f, 0.f, cascadeEnds[i + 1], 1.f};
+					clip[i] = Vector4::Transform(clip[i], camera->GetProjectionMatrix()); // use z axis
 				}
 			}
 		}
