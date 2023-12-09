@@ -13,7 +13,7 @@ namespace Engine::Objects
 	Light::~Light()
 	{
 		s_light_map_.reset(m_light_id_);
-		GetRenderPipeline().SetLight(m_light_id_, Matrix::Identity, Matrix::Identity, Color{0.0f, 0.0f, 0.0f, 0.0f});
+		GetRenderPipeline().SetLight(m_light_id_, Matrix::Identity, Color{0.0f, 0.0f, 0.0f, 0.0f});
 	}
 
 	void Light::SetColor(Vector4 color)
@@ -44,6 +44,7 @@ namespace Engine::Objects
 		AddComponent<Component::Transform>();
 		m_color_ = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
 		m_offset_ = Vector3::Down;
+		SetCulled(false);
 	}
 
 	void Light::PreUpdate(const float& dt)
@@ -59,6 +60,7 @@ namespace Engine::Objects
 	void Light::PreRender(const float dt)
 	{
 		Object::PreRender(dt);
+
 		const auto tr = GetComponent<Component::Transform>().lock();
 
 		const auto world = Matrix::Identity * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
@@ -70,15 +72,33 @@ namespace Engine::Objects
 			if (const auto camera = scene->GetMainCamera().lock())
 			{
 				vp = Matrix(XMMatrixLookAtLH(tr->GetPosition(), tr->GetPosition() + m_offset_, Vector3::Up)) * camera->GetProjectionMatrix();
+
+				Vector3 light_dir;
+				// [end - start]
+				(camera->GetPosition() - tr->GetPosition()).Normalize(light_dir);
+
+				GetRenderPipeline().GetCascadeShadow(
+					light_dir, 
+					m_shadow_buffer_.cascade_positions,
+					m_shadow_buffer_.view,
+					m_shadow_buffer_.proj, 
+					m_shadow_buffer_.end_clip_spaces);
 			}
 		}
 
-		GetRenderPipeline().SetLight(m_light_id_, world.Transpose(), vp.Transpose(), m_color_);
+		GetRenderPipeline().SetLight(m_light_id_, world.Transpose(), m_color_);	
 	}
 
 	void Light::Render(const float dt)
 	{
 		Object::Render(dt);
+
+		const auto tr = GetComponent<Component::Transform>().lock();
+
+		const auto world = Matrix::Identity * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
+
+		GetRenderPipeline().SetLight(m_light_id_, world.Transpose(), m_color_);	
+		GetRenderPipeline().SetShadow(m_light_id_, m_shadow_buffer_);
 	}
 
 	void Light::OnDeserialized()
