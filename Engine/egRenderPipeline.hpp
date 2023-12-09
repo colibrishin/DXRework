@@ -28,6 +28,7 @@ namespace Engine::Manager::Graphics
 		void SetShader(Graphic::IShader* shader);
 
 		void SetWorldMatrix(const TransformBuffer& matrix);
+		void SetWorldMatrix(const TransformBuffer& matrix, const eShaderType shader);
 		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
 
 		void SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color);

@@ -19,6 +19,12 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
 	}
 
+	void RenderPipeline::SetWorldMatrix(const TransformBuffer& matrix, const eShaderType shader)
+	{
+		m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, shader);
+	}
+
 	void RenderPipeline::SetPerspectiveMatrix(const PerspectiveBuffer& matrix)
 	{
 		m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
