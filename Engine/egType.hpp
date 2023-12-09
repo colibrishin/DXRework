@@ -126,6 +126,7 @@ namespace Engine
 			class ToolkitAPI;
 			class RenderPipeline;
 			class D3Device;
+			class ShadowManager;
 		}
 
 		namespace Physics
