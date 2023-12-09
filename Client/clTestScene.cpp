@@ -48,8 +48,10 @@ namespace Client::Scene
 		AddGameObject(Engine::Instantiate<Object::TestObject>(), Engine::LAYER_DEFAULT);
 		AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
 		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
-		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_DEFAULT);
-		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_DEFAULT);
+		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_SKYBOX);
+		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_ENVIRONMENT);
+
+		Engine::GetCollisionDetector().SetCollisionLayer(Engine::LAYER_DEFAULT, Engine::LAYER_ENVIRONMENT);
 
 		GetMainCamera().lock()->BindObject(companion);
 	}
