@@ -14,6 +14,8 @@ namespace Engine::Manager::Graphics
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		void GetCascadeShadow(const Vector3& light_dir, Vector4 position[3], Matrix view[3], Matrix projection[3], Vector4 clip[3]) const;
+
 	private:
 		void BuildShadowMap(Scene& scene) const;
 		void ApplyShadow(Scene& scene) const;

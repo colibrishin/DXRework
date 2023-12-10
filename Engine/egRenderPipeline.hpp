@@ -37,7 +37,6 @@ namespace Engine::Manager::Graphics
 		void SetSpecularColor(const Color& color);
 
 		void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
-		void GetCascadeShadow(const Vector3& light_dir, Vector4 position[], Matrix view[], Matrix projection[], Vector4 clip[]) const;
 
 		void SetWireframeState() const;
 		void SetFillState() const;
