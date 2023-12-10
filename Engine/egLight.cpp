@@ -72,10 +72,10 @@ namespace Engine::Objects
 			{
 				Vector3 light_dir;
 				// [end - start]
-				(camera->GetPosition() - tr->GetPosition()).Normalize(light_dir);
+				(tr->GetPosition()).Normalize(light_dir);
 
 				GetShadowManager().GetCascadeShadow(
-					light_dir, 
+					-light_dir, 
 					m_shadow_buffer_.cascade_positions,
 					m_shadow_buffer_.view,
 					m_shadow_buffer_.proj, 
