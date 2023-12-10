@@ -28,12 +28,7 @@ namespace Engine
 
 		const auto light1 = Instantiate<Objects::Light>();
 		AddGameObject(light1, LAYER_LIGHT);
-		light1->SetPosition(Vector3(5.0f, 5.0f, 5.0f));
-
-		const auto light2 = Instantiate<Objects::Light>();
-		light2->SetPosition(Vector3(-5.0f, 5.0f, -5.0f));
-		light2->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		AddGameObject(light2, LAYER_LIGHT);
+		light1->SetPosition(Vector3(5.f, 2.f, 5.f));
 
 		Initialize_INTERNAL();
 
