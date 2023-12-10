@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "egLight.hpp"
 #include "egCamera.hpp"
+#include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
 	Engine::Objects::Light,
@@ -65,19 +66,15 @@ namespace Engine::Objects
 
 		const auto world = Matrix::Identity * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
 
-		auto vp = GetD3Device().GetProjectionMatrix();
-
 		if (const auto scene = GetScene().lock())
 		{
 			if (const auto camera = scene->GetMainCamera().lock())
 			{
-				vp = Matrix(XMMatrixLookAtLH(tr->GetPosition(), tr->GetPosition() + m_offset_, Vector3::Up)) * camera->GetProjectionMatrix();
-
 				Vector3 light_dir;
 				// [end - start]
 				(camera->GetPosition() - tr->GetPosition()).Normalize(light_dir);
 
-				GetRenderPipeline().GetCascadeShadow(
+				GetShadowManager().GetCascadeShadow(
 					light_dir, 
 					m_shadow_buffer_.cascade_positions,
 					m_shadow_buffer_.view,
@@ -105,11 +102,11 @@ namespace Engine::Objects
 		Object::Render(dt);
 
 		const auto tr = GetComponent<Component::Transform>().lock();
-
-		const auto world = Matrix::Identity * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
-
-		GetRenderPipeline().SetLight(m_light_id_, world.Transpose(), m_color_);	
 		GetRenderPipeline().SetShadow(m_light_id_, m_shadow_buffer_);
+#ifdef _DEBUG
+		const BoundingSphere sphere (tr->GetPosition(), 0.5f);
+		GetDebugger().Draw(sphere, Colors::Yellow);
+#endif
 	}
 
 	void Light::OnDeserialized()
