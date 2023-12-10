@@ -10,9 +10,9 @@ void main(triangle GeometryShadowInputType input[3], inout TriangleStream<PixelS
 
         for (int j = 0; j < TRIANGLE_MACRO; ++j)
         {
-            element.position = input[j].position;
-            element.position = mul(element.position, lightFrustumView[i]);
-            element.position = mul(element.position, lightFrustumProj[i]);
+            float4 posV = mul(input[j].position, lightFrustumView[i]);
+            posV.z += 2.5f;
+            element.position = mul(posV, lightFrustumProj[i]);
             element.tex = input[i].tex;
             output.Append(element);
         }
