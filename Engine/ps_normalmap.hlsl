@@ -23,7 +23,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        normalLightIntensity[i] = saturate(dot(bumpNormal, -input.lightDirection[i]));
+        normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
         textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
 
         normalColorArray[i] = lightColor[i] * normalLightIntensity[i];

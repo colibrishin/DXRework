@@ -15,7 +15,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        lightIntensity[i] = saturate(dot(input.normal, -input.lightDirection[i]));
+        lightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
         colorArray[i] = lightColor[i] * lightIntensity[i];
         reflection[i] = normalize(2.0f * lightIntensity[i] * input.normal - input.lightDirection[i]);
         specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), specularPower);
