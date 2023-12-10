@@ -83,6 +83,17 @@ namespace Engine::Objects
 					m_shadow_buffer_.view,
 					m_shadow_buffer_.proj, 
 					m_shadow_buffer_.end_clip_spaces);
+
+				// DX11 uses column major matrix
+				for (auto& view : m_shadow_buffer_.view)
+				{
+					view = view.Transpose();
+				}
+
+				for (auto& proj : m_shadow_buffer_.proj)
+				{
+					proj = proj.Transpose();
+				}
 			}
 		}
 
