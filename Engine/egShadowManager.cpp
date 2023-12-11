@@ -9,6 +9,7 @@
 #include "egTransform.hpp"
 #include "egMesh.hpp"
 #include "egCamera.hpp"
+#include "egProjectionFrustum.hpp"
 
 namespace Engine::Manager::Graphics
 {
@@ -56,7 +57,6 @@ namespace Engine::Manager::Graphics
 
 					GetRenderPipeline().UnbindShadowMap();
 					GetRenderPipeline().ResetShadowMap();
-					GetRenderPipeline().SetFillState();
 				}
 			}
 		}
@@ -78,7 +78,7 @@ namespace Engine::Manager::Graphics
 
 		for (int i = 0; i < LAYER_MAX; ++i)
 		{
-			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA || i == LAYER_SKYBOX) continue;
+			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA) continue;
 
 			for (const auto& objects : scene.GetGameObjects((eLayerType)i))
 			{
@@ -112,7 +112,7 @@ namespace Engine::Manager::Graphics
 
 		for (int i = 0; i < LAYER_MAX; ++i)
 		{
-			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA || i == LAYER_SKYBOX) continue;
+			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA) continue;
 
 			for (const auto& objects : scene.GetGameObjects((eLayerType)i))
 			{
@@ -135,6 +135,37 @@ namespace Engine::Manager::Graphics
 		GetRenderPipeline().ResetShaders();
 	}
 
+	void ShadowManager::CreateFrusta(const Matrix& projection, float start, float end, Vector4 cornerPoints[8]) const
+	{
+		BoundingFrustum frustum (projection);
+
+		frustum.Near = start;
+		frustum.Far = end;
+
+	    static constexpr XMVECTORU32 vGrabY = {0x00000000,0xFFFFFFFF,0x00000000,0x00000000};
+	    static constexpr XMVECTORU32 vGrabX = {0xFFFFFFFF,0x00000000,0x00000000,0x00000000};
+
+		const Vector4 rightTopV = {frustum.RightSlope, frustum.TopSlope, 1.f, 1.f};
+		const Vector4 leftBottomV = {frustum.LeftSlope, frustum.BottomSlope, 1.f, 1.f};
+		const Vector4 nearV = {frustum.Near, frustum.Near, frustum.Near, 1.f};
+		const Vector4 farV = {frustum.Far, frustum.Far, frustum.Far, 1.f};
+
+		const Vector4 rightTopNear = rightTopV * nearV;
+		const Vector4 righTopFar = rightTopV * farV;
+		const Vector4 LeftBottomNear = leftBottomV * nearV;
+		const Vector4 LeftBottomFar = leftBottomV * farV;
+
+		cornerPoints[0] = rightTopNear;
+		cornerPoints[1] = XMVectorSelect(rightTopNear, LeftBottomNear, vGrabX);
+		cornerPoints[2] = LeftBottomNear;
+		cornerPoints[3] = XMVectorSelect(rightTopNear, LeftBottomNear, vGrabY);
+
+		cornerPoints[4] = righTopFar;
+		cornerPoints[5] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabX);
+		cornerPoints[6] = LeftBottomFar;
+		cornerPoints[7] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabY);
+	}
+
 	void ShadowManager::GetCascadeShadow(const Vector3& light_dir, Vector4 position[3], Matrix view[3], Matrix projection[3], Vector4 clip[3]) const
 	{
 		// https://cutecatgame.tistory.com/6
@@ -143,14 +174,8 @@ namespace Engine::Manager::Graphics
 		{
 			if (const auto camera = scene->GetMainCamera().lock())
 			{
-				const auto view_inv = camera->GetViewMatrix().Invert();
-				const float fov = g_fov;
-				const float aspect = GetD3Device().GetAspectRatio();
 				const float near_plane = g_screen_near;
 				const float far_plane = g_screen_far;
-
-				const float tan_hf_v = std::tanf(XMConvertToRadians(fov / 2.f));
-				const float tan_hf_h = tan_hf_v * aspect;
 
 				const float cascadeEnds[]
 				{
@@ -161,28 +186,17 @@ namespace Engine::Manager::Graphics
 				// (near, 6), (6, 18), (18, far)
 				for (auto i = 0; i < g_max_shadow_cascades; ++i)
 				{
-					const float xn = cascadeEnds[i] * tan_hf_h;
-					const float xf = cascadeEnds[i + 1] * tan_hf_h;
-
-					const float yn = cascadeEnds[i] * tan_hf_v;
-					const float yf = cascadeEnds[i + 1] * tan_hf_v;
-
 					// frustum = near points 4 + far points 4
-					Vector4 current_corner[8] =
-					{
-						// near plane
-						{xn, yn, cascadeEnds[i], 1.f},
-						{-xn, yn, cascadeEnds[i], 1.f},
-						{xn, -yn, cascadeEnds[i], 1.f},
-						{-xn, -yn, cascadeEnds[i], 1.f},
+					Vector4 current_corner[8]{};
+					CreateFrusta(
+						camera->GetProjectionMatrix(),
+						cascadeEnds[i], 
+						cascadeEnds[i + 1], 
+						current_corner);
 
-						// far plane
-						{xf, yf, cascadeEnds[i + 1], 1.f},
-						{-xf, yf, cascadeEnds[i + 1], 1.f},
-						{xf, -yf, cascadeEnds[i + 1], 1.f},
-						{-xf, -yf, cascadeEnds[i + 1], 1.f}
-					};
+					const auto view_inv = camera->GetViewMatrix().Invert();
 
+					// transform to world space
 					Vector4 center{};
 					for (auto& corner : current_corner)
 					{

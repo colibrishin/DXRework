@@ -17,6 +17,8 @@ namespace Engine::Manager::Graphics
 		void GetCascadeShadow(const Vector3& light_dir, Vector4 position[3], Matrix view[3], Matrix projection[3], Vector4 clip[3]) const;
 
 	private:
+		void CreateFrusta(const Matrix& projection, float start, float end, Vector4 cornerPoints[]) const;
+
 		void BuildShadowMap(Scene& scene) const;
 		void ApplyShadow(Scene& scene) const;
 
