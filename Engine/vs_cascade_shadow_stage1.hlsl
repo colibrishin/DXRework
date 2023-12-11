@@ -7,11 +7,7 @@ GeometryShadowInputType main(VertexInputType input)
 	const matrix world = mul(mul(scale, rotation), translation);
 
 	output.position = float4(input.position, 1.f);
-
 	output.position = mul(output.position, world);
-
-	// Store the input color for the pixel shader to use.
-	output.tex = input.tex;
 
 	return output;
 }

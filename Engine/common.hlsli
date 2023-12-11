@@ -55,20 +55,16 @@ struct VertexInputType
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 binormal : BINOARML;
-
-    float clipSpacePosZ : SV_ClipDistance;
 };
 
 struct GeometryShadowInputType
 {
     float4 position : SV_POSITION;
-    float2 tex : TEXCOORD0;
 };
 
 struct PixelShadowStage1InputType
 {
     float4 position : SV_POSITION;
-    float2 tex : TEXCOORD0;
     uint RTIndex : SV_RenderTargetArrayIndex;
 };
 
