@@ -144,8 +144,8 @@ namespace Engine::Manager
 		GetResourceManager().Update(dt);
 		GetPhysicsManager().Update(dt);
 		GetConstraintSolver().Update(dt);
-		GetShadowManager().Update(dt);
 		GetLerpManager().Update(dt);
+		GetShadowManager().Update(dt);
 		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
 		GetToolkitAPI().Update(dt);
