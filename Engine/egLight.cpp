@@ -44,7 +44,6 @@ namespace Engine::Objects
 
 		AddComponent<Component::Transform>();
 		m_color_ = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
-		m_offset_ = Vector3::Down;
 		SetCulled(false);
 	}
 
@@ -64,35 +63,7 @@ namespace Engine::Objects
 
 		const auto tr = GetComponent<Component::Transform>().lock();
 
-		const auto world = Matrix::Identity * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
-
-		if (const auto scene = GetScene().lock())
-		{
-			if (const auto camera = scene->GetMainCamera().lock())
-			{
-				Vector3 light_dir;
-				// [end - start]
-				(tr->GetPosition()).Normalize(light_dir);
-
-				GetShadowManager().GetCascadeShadow(
-					-light_dir, 
-					m_shadow_buffer_.cascade_positions,
-					m_shadow_buffer_.view,
-					m_shadow_buffer_.proj, 
-					m_shadow_buffer_.end_clip_spaces);
-
-				// DX11 uses column major matrix
-				for (auto& view : m_shadow_buffer_.view)
-				{
-					view = view.Transpose();
-				}
-
-				for (auto& proj : m_shadow_buffer_.proj)
-				{
-					proj = proj.Transpose();
-				}
-			}
-		}
+		const auto world = Matrix::CreateScale(1.f) * Matrix::CreateFromQuaternion(tr->GetRotation()) * Matrix::CreateTranslation(tr->GetPosition());
 
 		GetRenderPipeline().SetLight(m_light_id_, world.Transpose(), m_color_);	
 	}
@@ -100,10 +71,9 @@ namespace Engine::Objects
 	void Light::Render(const float dt)
 	{
 		Object::Render(dt);
-
-		const auto tr = GetComponent<Component::Transform>().lock();
-		GetRenderPipeline().SetShadow(m_light_id_, m_shadow_buffer_);
 #ifdef _DEBUG
+		const auto tr = GetComponent<Component::Transform>().lock();
+
 		const BoundingSphere sphere (tr->GetPosition(), 0.5f);
 		GetDebugger().Draw(sphere, Colors::Yellow);
 #endif

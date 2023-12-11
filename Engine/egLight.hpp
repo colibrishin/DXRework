@@ -35,7 +35,6 @@ namespace Engine::Objects
 		UINT m_light_id_;
 
 		Vector4 m_color_;
-		Vector3 m_offset_;
 
 		CascadeShadowBuffer m_shadow_buffer_;
 
