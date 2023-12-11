@@ -39,5 +39,7 @@ PixelInputType main(VertexInputType input)
 	output.tangent = mul(input.tangent, (float3x3)world);
 	output.binormal = mul(input.binormal, (float3x3)world);
 
+    output.clipSpacePosZ = output.position.z;
+
     return output;
 }
