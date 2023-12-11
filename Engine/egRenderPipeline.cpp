@@ -19,17 +19,31 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, SHADER_VERTEX);
 	}
 
+	void RenderPipeline::SetWorldMatrix(const TransformBuffer& matrix, const eShaderType shader)
+	{
+		m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+		GetD3Device().BindConstantBuffer(m_transform_buffer_data_, CB_TYPE_TRANSFORM, shader);
+	}
+
 	void RenderPipeline::SetPerspectiveMatrix(const PerspectiveBuffer& matrix)
 	{
 		m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
 		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_VERTEX);
+		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_PIXEL);
 	}
 
-	void RenderPipeline::SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color)
+	void RenderPipeline::SetLight(UINT id, const Matrix& world, const Color& color)
 	{
 		m_light_buffer_.world[id] = world;
-		m_light_buffer_.vp[id] = vp;
 		m_light_buffer_.color[id] = color;
+	}
+
+	void RenderPipeline::SetShadow(const CascadeShadowBuffer& shadow_buffer)
+	{
+		m_shadow_buffer_data_.SetData(GetD3Device().GetContext(), shadow_buffer);
+
+		GetD3Device().BindConstantBuffer(m_shadow_buffer_data_, CB_TYPE_SHADOW, SHADER_GEOMETRY);
+		GetD3Device().BindConstantBuffer(m_shadow_buffer_data_, CB_TYPE_SHADOW, SHADER_PIXEL);
 	}
 
 	void RenderPipeline::SetSpecularPower(float power)
@@ -60,97 +74,30 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
 	}
 
-	/*
-	void RenderPipeline::GetCascadeShadowByLightDir(const Vector3& light_dir, PerspectiveBuffer vp[3]) const
+	void RenderPipeline::ResetRenderTarget()
 	{
-		// https://cutecatgame.tistory.com/6
-
-		if (const auto scene = GetSceneManager().GetActiveScene().lock())
-		{
-			if (const auto camera = scene->GetMainCamera().lock())
-			{
-				const auto view_inv = camera->GetViewMatrix().Invert();
-				const float fov = g_fov;
-				const float aspect = GetD3Device().GetAspectRatio();
-				const float near_plane = g_screen_near;
-				const float far_plane = g_screen_far;
-
-				const float tan_hf_v = std::tanf(XMConvertToRadians(fov / 2.f));
-				const float tan_hf_h = tan_hf_v * aspect;
-
-				const float cascadeEnds[]
-				{
-					near_plane, 6.f, 18.f, far_plane
-				};
-
-				// frustum = near points 4 + far points 4
-				// for cascade shadow mapping, total 3 parts are used.
-				// (near, 6), (6, 18), (18, far)
-				for (auto i = 0; i < 3; ++i)
-				{
-					const float xn = cascadeEnds[i] * tan_hf_h;
-					const float xf = cascadeEnds[i + 1] * tan_hf_h;
-
-					const float yn = cascadeEnds[i] * tan_hf_v;
-					const float yf = cascadeEnds[i + 1] * tan_hf_v;
-
-					Vector4 current_corner[8] =
-					{
-						// near plane
-						{xn, yn, cascadeEnds[i], 1.f},
-						{-xn, yn, cascadeEnds[i], 1.f},
-						{xn, -yn, cascadeEnds[i], 1.f},
-						{-xn, -yn, cascadeEnds[i], 1.f},
-
-						// far plane
-						{xf, yf, cascadeEnds[i + 1], 1.f},
-						{-xf, yf, cascadeEnds[i + 1], 1.f},
-						{xf, -yf, cascadeEnds[i + 1], 1.f},
-						{-xf, -yf, cascadeEnds[i + 1], 1.f}
-					};
-
-					Vector4 center{};
-
-					// Move to world space
-					for (auto& corner : current_corner)
-					{
-						corner = Vector4::Transform(corner, view_inv);
-						center += corner;
-					}
-
-					// Get center by averaging
-					center /= 8.f;
-
-					float radius = 0.f;
-					for (auto& corner : current_corner)
-					{
-						float distance = Vector4::Distance(center, corner);
-						radius = std::max(radius, distance);
-					}
-					
-					radius = std::ceil(radius * 16.f) / 16.f;
-
-					Vector3 maxExtent = Vector3{radius, radius, radius};
-					Vector3 minExtent = -maxExtent;
-
-					Vector3 shadowCameraPos = center + (light_dir * -minExtent.z);
-					vp[i].view = XMMatrixLookAtLH(shadowCameraPos, Vector3(center), Vector3::Up);
-					const Vector3 cascadeExtents = maxExtent - minExtent;
-					vp[i].projection = XMMatrixOrthographicOffCenterLH(minExtent.x, maxExtent.x, minExtent.y, maxExtent.y, 0.f, cascadeExtents.z);
-				}
-			}
-		}
+		GetD3Device().GetContext()->OMSetDepthStencilState(m_depth_stencil_state_.Get(), 0);
+		GetD3Device().UpdateRenderTarget();
 	}
-	*/
 
 	void RenderPipeline::SetWireframeState() const
 	{
-		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_wire_.Get());
+		GetD3Device().GetContext()->RSSetState(GetToolkitAPI().GetCommonStates()->Wireframe());
 	}
 
 	void RenderPipeline::SetFillState() const
 	{
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());
+	}
+
+	void RenderPipeline::SetNoneCullState() const
+	{
+		GetD3Device().GetContext()->RSSetState(GetToolkitAPI().GetCommonStates()->CullNone());
+	}
+
+	void RenderPipeline::SetFrontCullState() const
+	{
+		GetD3Device().GetContext()->RSSetState(GetToolkitAPI().GetCommonStates()->CullClockwise());
 	}
 
 	void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
@@ -175,15 +122,92 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->PSSetShaderResources(resource, 1, &texture);
 	}
 
+	void RenderPipeline::InitializeShadowBuffer()
+	{
+		ComPtr<ID3D11Texture2D> shadow_map_texture = nullptr;
+
+		D3D11_TEXTURE2D_DESC desc{};
+		desc.Width = g_window_width;
+		desc.Height = g_window_height;
+		desc.MipLevels = 1;
+		desc.ArraySize = g_max_shadow_cascades;
+		desc.Format = DXGI_FORMAT_R32_TYPELESS;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+		desc.CPUAccessFlags = 0;
+		desc.MiscFlags = 0;
+
+		GetD3Device().CreateTexture(desc, shadow_map_texture.GetAddressOf());
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
+		dsv_desc.Format = DXGI_FORMAT_D32_FLOAT;
+		dsv_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+		dsv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
+		dsv_desc.Texture2DArray.MipSlice = 0;
+		dsv_desc.Texture2DArray.FirstArraySlice = 0;
+		dsv_desc.Flags = 0;
+
+		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilView(
+					shadow_map_texture.Get(), &dsv_desc, m_shadow_map_depth_view_.GetAddressOf()));
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+		srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
+		srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+		srv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
+		srv_desc.Texture2DArray.FirstArraySlice = 0;
+		srv_desc.Texture2DArray.MipLevels = 1;
+		srv_desc.Texture2DArray.MostDetailedMip = 0;
+
+		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateShaderResourceView(
+							shadow_map_texture.Get(), &srv_desc, m_shadow_map_resource_view_.GetAddressOf()));
+
+		D3D11_DEPTH_STENCIL_DESC ds_desc{};
+
+		ds_desc.DepthEnable = true;
+		ds_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		ds_desc.DepthFunc = D3D11_COMPARISON_LESS;
+		ds_desc.StencilEnable = true;
+		ds_desc.StencilReadMask = 0xFF;
+		ds_desc.StencilWriteMask = 0xFF;
+		ds_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		ds_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		ds_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		ds_desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		ds_desc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		ds_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		ds_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		ds_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilState(&ds_desc, m_shadow_map_depth_stencil_state_.GetAddressOf()));
+
+		D3D11_SAMPLER_DESC sampler_desc{};
+		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS;
+		sampler_desc.BorderColor[0] = 1.f;
+		sampler_desc.BorderColor[1] = 1.f;
+		sampler_desc.BorderColor[2] = 1.f;
+		sampler_desc.BorderColor[3] = 1.f;
+
+		GetD3Device().CreateSampler(sampler_desc, m_shadow_map_sampler_state_.GetAddressOf());
+	}
+
 	void RenderPipeline::Initialize()
 	{
 		GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_light_buffer_data);
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
 
 		PrecompileShaders();
 		InitializeSamplers();
+
+		InitializeShadowBuffer();
 
 		GetD3Device().CreateBlendState(m_blend_state_.GetAddressOf());
 		GetD3Device().CreateRasterizer(m_rasterizer_state_.GetAddressOf(), D3D11_FILL_SOLID);
@@ -285,23 +309,8 @@ namespace Engine::Manager::Graphics
 	{
 		const auto sampler = GetToolkitAPI().GetCommonStates()->LinearWrap();
 
-		s_sampler_state_[SHADER_VERTEX] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_VERTEX], SHADER_VERTEX);
-
-		s_sampler_state_[SHADER_PIXEL] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_PIXEL], SHADER_PIXEL);
-
-		s_sampler_state_[SHADER_GEOMETRY] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_GEOMETRY], SHADER_GEOMETRY);
-
-		s_sampler_state_[SHADER_COMPUTE] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_COMPUTE], SHADER_COMPUTE);
-
-		s_sampler_state_[SHADER_HULL] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_HULL], SHADER_HULL);
-
-		s_sampler_state_[SHADER_DOMAIN] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_DOMAIN], SHADER_DOMAIN);
+		m_sampler_state_[SAMPLER_TEXTURE] = sampler;
+		GetD3Device().BindSampler(m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL, SAMPLER_TEXTURE);
 	}
 
 	void RenderPipeline::PreRender(const float& dt)
@@ -317,5 +326,51 @@ namespace Engine::Manager::Graphics
 	void RenderPipeline::DrawIndexed(UINT index_count)
 	{
 		GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0);
+	}
+
+	void RenderPipeline::TargetShadowMap()
+	{
+		ID3D11RenderTargetView* pnullView = nullptr; 
+
+		GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, m_shadow_map_depth_view_.Get());
+		GetD3Device().GetContext()->OMSetDepthStencilState(m_shadow_map_depth_stencil_state_.Get(), 0);
+	}
+
+	void RenderPipeline::BindShadowMap()
+	{
+		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, 1, m_shadow_map_resource_view_.GetAddressOf());
+	}
+
+	void RenderPipeline::UnbindShadowMap()
+	{
+		ID3D11ShaderResourceView* pnullView = nullptr;
+		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, 1, &pnullView);
+	}
+
+	void RenderPipeline::BindShadowSampler()
+	{
+		GetD3Device().BindSampler(m_shadow_map_sampler_state_.Get(), SHADER_PIXEL, SAMPLER_SHADOW);
+	}
+
+	void RenderPipeline::ResetSampler(const eShaderType shader)
+	{
+		GetD3Device().BindSampler(m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL, SAMPLER_TEXTURE);
+	}
+
+	void RenderPipeline::ResetShaders()
+	{
+		GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
+		GetD3Device().GetContext()->PSSetShader(nullptr, nullptr, 0);
+		GetD3Device().GetContext()->GSSetShader(nullptr, nullptr, 0);
+		GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
+		GetD3Device().GetContext()->HSSetShader(nullptr, nullptr, 0);
+		GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
+	}
+
+	void RenderPipeline::ResetShadowMap()
+	{
+		GetD3Device().GetContext()->ClearDepthStencilView(m_shadow_map_depth_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+
+		GetD3Device().GetContext()->OMSetDepthStencilState(m_depth_stencil_state_.Get(), 0);
 	}
 }

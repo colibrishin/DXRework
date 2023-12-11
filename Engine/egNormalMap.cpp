@@ -32,6 +32,11 @@ namespace Engine::Resources
 		GetRenderPipeline().BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
 	}
 
+	TypeName NormalMap::GetVirtualTypeName() const
+	{
+		return typeid(NormalMap).name();
+	}
+
 	void NormalMap::Load_INTERNAL()
 	{
 		Texture::Load_INTERNAL();

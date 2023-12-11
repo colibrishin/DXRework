@@ -5,7 +5,27 @@
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
-    const float4 textureColor = shaderTexture.Sample(SampleType, input.tex);
+    float4 cascadeLocalPosition[3];
+
+    for (int i = 0; i < 3; ++i)
+    {
+        cascadeLocalPosition[i] = mul(input.world_position, mul(lightFrustumView[i], lightFrustumProj[i]));
+    }
+
+    float shadowFactor = 0.f;
+
+    for (int j = 0; j < MAX_NUM_CASCADES; ++j)
+    {
+        if (input.clipSpacePosZ <= cascadeEndClipSpace[j].z)
+        {
+            shadowFactor = GetShadowFactor(j, cascadeLocalPosition[j]);
+            break;
+        }
+    }
+
+    const float4 shadow = float4(lerp(float3(0, 0, 0), float3(1, 1, 1), shadowFactor), 1.f);
+
+    const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
     float normalLightIntensity[MAX_NUM_LIGHTS];
     float textureLightIntensity[MAX_NUM_LIGHTS];
 
@@ -14,7 +34,7 @@ float4 main(PixelInputType input) : SV_TARGET
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
 
-    float4 normalMap = shaderNormalMap.Sample(SampleType, input.tex);
+    float4 normalMap = shaderNormalMap.Sample(PSSampler, input.tex);
 
     normalMap = (normalMap * 2.0f) - 1.0f;
 
@@ -23,11 +43,11 @@ float4 main(PixelInputType input) : SV_TARGET
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        normalLightIntensity[i] = saturate(dot(bumpNormal, -input.lightDirection[i]));
+        normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
         textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
 
-        normalColorArray[i] = lightColor[i] * normalLightIntensity[i];
-        textureColorArray[i] = lightColor[i] * textureLightIntensity[i];
+        normalColorArray[i] = shadow * lightColor[i] * normalLightIntensity[i];
+        textureColorArray[i] = shadow * lightColor[i] * textureLightIntensity[i];
     }
 
     float4 normalLightColor = ambientColor;

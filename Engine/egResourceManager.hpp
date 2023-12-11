@@ -19,12 +19,12 @@ namespace Engine::Manager
 
 		void AddResource(const StrongResource& resource)
 		{
-			m_resources_[resource->ToTypeName()].insert(resource);
+			m_resources_[resource->GetTypeName()].insert(resource);
 		}
 
 		void AddResource(const EntityName& name, const StrongResource& resource)
 		{
-			m_resources_[resource->ToTypeName()].insert(resource);
+			m_resources_[resource->GetTypeName()].insert(resource);
 			resource->SetName(name);
 		}
 

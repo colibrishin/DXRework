@@ -41,6 +41,8 @@ namespace Engine::Resources
 
 		UINT GetIndexCount() const { return static_cast<UINT>(m_indices_.size()); }
 
+		TypeName GetVirtualTypeName() const final;
+
 	protected:
 		SERIALIZER_ACCESS
 

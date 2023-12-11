@@ -14,6 +14,8 @@ PixelInputType main(VertexInputType input)
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(output.position, world);
+	output.world_position = output.position;
+
 	output.position = mul(output.position, cam_view);
 	output.position = mul(output.position, cam_projection);
 
@@ -25,12 +27,12 @@ PixelInputType main(VertexInputType input)
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-		const float4 light_position = float4(lightWorld[i]._41, lightWorld[i]._42, lightWorld[i]._43, 1.0f);
+        const float4 light_position = GetWorldPosition(lightWorld[i]);
         output.lightDirection[i] = light_position.xyz - worldPosition.xyz;
         output.lightDirection[i] = normalize(output.lightDirection[i]);
     }
 
-    const float3 cam_position = float3(cam_world._41, cam_world._42, cam_world._43);
+    const float3 cam_position = GetWorldPosition(cam_world);
 
     output.viewDirection = cam_position.xyz - worldPosition.xyz;
 	output.viewDirection = normalize(output.viewDirection);
@@ -38,6 +40,8 @@ PixelInputType main(VertexInputType input)
     output.normal = mul(input.normal, (float3x3)world);
 	output.tangent = mul(input.tangent, (float3x3)world);
 	output.binormal = mul(input.binormal, (float3x3)world);
+
+    output.clipSpacePosZ = output.position.z;
 
     return output;
 }

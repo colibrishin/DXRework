@@ -17,6 +17,7 @@ namespace Engine::Abstract
 
 		void SetActive(bool active) { m_b_active_ = active; }
 		bool GetActive() const { return m_b_active_; }
+		TypeName GetVirtualTypeName() const override;
 
 		void OnImGui() override;
 		void Render(const float dt) override;
@@ -40,6 +41,7 @@ namespace Engine::Abstract
 			}
 		}
 
+	private:
 		ComponentID m_local_id_;
 		eComponentPriority m_priority_;
 

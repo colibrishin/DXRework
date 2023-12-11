@@ -11,9 +11,6 @@
     <Filter Include="Abstract">
       <UniqueIdentifier>{ee6b8ed6-3103-45ae-90c4-0b6aece09279}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scene">
-      <UniqueIdentifier>{c8204c1e-d021-47e5-8bec-7277cb9c93c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Component">
       <UniqueIdentifier>{738eaf93-14fb-42d1-95d8-2fa14b0ee474}</UniqueIdentifier>
     </Filter>
@@ -44,51 +41,75 @@
     <Filter Include="Singleton\Internal\Physics">
       <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scene\Scene">
-      <UniqueIdentifier>{77e09a51-443b-4a44-96b8-3c16e0bcbc73}</UniqueIdentifier>
+    <Filter Include="Resource Files\Shadow">
+      <UniqueIdentifier>{0a8cbefb-c0be-41f9-8fd4-1d8f83695f5d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scene\Layer">
-      <UniqueIdentifier>{0658d10f-684b-4eb3-9b2e-3a02057fb474}</UniqueIdentifier>
+    <Filter Include="Resource Files\Shadow\stage1">
+      <UniqueIdentifier>{03cea989-7022-4e17-bd74-9aa51d34711d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base">
+      <UniqueIdentifier>{61714c34-6fc6-4b57-9c19-aa7e0b141f27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\Actor">
+      <UniqueIdentifier>{683b0a0d-357b-4fa6-9947-b3920a532e02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\Entity">
+      <UniqueIdentifier>{1465e6ae-12fb-4824-a691-9d01c91bb851}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\Renderable">
+      <UniqueIdentifier>{e12e4132-5563-4657-bca9-895f46f9a7ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Collider">
+      <UniqueIdentifier>{2b1d4e51-d24a-4788-afc8-f242179e5aa0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\StateController">
+      <UniqueIdentifier>{5dbd9091-25cd-4b99-a9ad-cd3387d13a6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\OberserverController">
+      <UniqueIdentifier>{cc20c0a2-4ff3-401a-a24f-651fdcd7d095}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Rigidbody">
+      <UniqueIdentifier>{cc290fb0-3e92-470d-b002-4c81b407ed2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Transform">
+      <UniqueIdentifier>{16a947c7-da29-4f31-91fc-730dcaad5ff0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mesh\CubeMesh">
+      <UniqueIdentifier>{9fdf5b47-8eae-44f2-b816-9bce03afe4f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mesh\SphereMesh">
+      <UniqueIdentifier>{df9fd6c9-4f1f-41b7-a7bb-7d4f7c8a6e39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Component">
+      <UniqueIdentifier>{43156ce7-7a26-479e-adb3-f33cd6dcbc47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Layer">
+      <UniqueIdentifier>{b1c4ed82-4ace-4949-8399-7fceb64293a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Object">
+      <UniqueIdentifier>{d490737a-7dc1-4dff-b8f6-11c0a535ee7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Resource">
+      <UniqueIdentifier>{b3333d7b-b710-4704-bbca-49dea14d86ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Scene">
+      <UniqueIdentifier>{66767e6a-0b0b-4915-b86d-252d283751d0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.hpp" />
-    <ClInclude Include="egEntity.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egRenderable.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
     </ClInclude>
-    <ClInclude Include="egVertexShaderInternal.hpp">
-      <Filter>Low-level</Filter>
-    </ClInclude>
-    <ClInclude Include="egObject.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egComponent.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egTransform.hpp">
-      <Filter>Component</Filter>
-    </ClInclude>
     <ClInclude Include="egCamera.hpp">
       <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="egResource.hpp">
-      <Filter>Abstract</Filter>
     </ClInclude>
     <ClInclude Include="egMesh.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
     <ClInclude Include="egTexture.hpp">
       <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egShader.hpp">
-      <Filter>Low-level</Filter>
     </ClInclude>
     <ClInclude Include="StepTimer.hpp" />
     <ClInclude Include="egLight.hpp">
@@ -102,12 +123,6 @@
     </ClInclude>
     <ClInclude Include="egFont.hpp">
       <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egCollider.hpp">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="egRigidbody.hpp">
-      <Filter>Component</Filter>
     </ClInclude>
     <ClInclude Include="egNormalMap.hpp">
       <Filter>Resource</Filter>
@@ -163,20 +178,8 @@
     <ClInclude Include="egDebugger.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="egCubeMesh.hpp">
-      <Filter>Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="egSphereMesh.hpp">
-      <Filter>Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="egSound.hpp">
       <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egActor.hpp">
-      <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egStateController.hpp">
-      <Filter>Component</Filter>
     </ClInclude>
     <ClInclude Include="egSerialization.hpp">
       <Filter>Common</Filter>
@@ -202,23 +205,68 @@
     <ClInclude Include="egMouseManager.hpp">
       <Filter>Singleton\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="egIStateController.hpp">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="egScene.hpp">
-      <Filter>Scene\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="egLayer.hpp">
-      <Filter>Scene\Layer</Filter>
-    </ClInclude>
     <ClInclude Include="egObserver.hpp">
       <Filter>Object</Filter>
     </ClInclude>
-    <ClInclude Include="egObserverController.hpp">
-      <Filter>Component</Filter>
-    </ClInclude>
     <ClInclude Include="egIShader.hpp">
       <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egShadowManager.hpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="egShader.hpp">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egVertexShaderInternal.hpp">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egActor.hpp">
+      <Filter>Abstract\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="egEntity.hpp">
+      <Filter>Abstract\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderable.hpp">
+      <Filter>Abstract\Renderable</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollider.hpp">
+      <Filter>Component\Collider</Filter>
+    </ClInclude>
+    <ClInclude Include="egIStateController.hpp">
+      <Filter>Component\StateController</Filter>
+    </ClInclude>
+    <ClInclude Include="egStateController.hpp">
+      <Filter>Component\StateController</Filter>
+    </ClInclude>
+    <ClInclude Include="egObserverController.hpp">
+      <Filter>Component\OberserverController</Filter>
+    </ClInclude>
+    <ClInclude Include="egRigidbody.hpp">
+      <Filter>Component\Rigidbody</Filter>
+    </ClInclude>
+    <ClInclude Include="egTransform.hpp">
+      <Filter>Component\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="egCubeMesh.hpp">
+      <Filter>Mesh\CubeMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="egSphereMesh.hpp">
+      <Filter>Mesh\SphereMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="egComponent.hpp">
+      <Filter>Base\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="egLayer.hpp">
+      <Filter>Base\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="egObject.hpp">
+      <Filter>Base\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="egResource.hpp">
+      <Filter>Base\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="egScene.hpp">
+      <Filter>Base\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -228,15 +276,6 @@
   <ItemGroup>
     <ClCompile Include="egCamera.cpp">
       <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egShader.cpp">
-      <Filter>Low-level</Filter>
-    </ClCompile>
-    <ClCompile Include="egCollider.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="egObject.cpp">
-      <Filter>Abstract</Filter>
     </ClCompile>
     <ClCompile Include="egMesh.cpp">
       <Filter>Resource</Filter>
@@ -250,9 +289,6 @@
     <ClCompile Include="egRenderPipeline.cpp">
       <Filter>Singleton\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="egTransform.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
     <ClCompile Include="egFont.cpp">
       <Filter>Resource</Filter>
     </ClCompile>
@@ -265,9 +301,6 @@
     <ClCompile Include="egFriction.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="egRigidbody.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
     <ClCompile Include="egGravity.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
@@ -276,21 +309,6 @@
     </ClCompile>
     <ClCompile Include="egCommon.cpp">
       <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="egEntity.cpp">
-      <Filter>Abstract</Filter>
-    </ClCompile>
-    <ClCompile Include="egRenderable.cpp">
-      <Filter>Abstract</Filter>
-    </ClCompile>
-    <ClCompile Include="egResource.cpp">
-      <Filter>Abstract</Filter>
-    </ClCompile>
-    <ClCompile Include="egActor.cpp">
-      <Filter>Abstract</Filter>
-    </ClCompile>
-    <ClCompile Include="egComponent.cpp">
-      <Filter>Abstract</Filter>
     </ClCompile>
     <ClCompile Include="egProjectionFrustum.cpp">
       <Filter>Singleton\Graphics</Filter>
@@ -319,20 +337,8 @@
     <ClCompile Include="egMouseManager.cpp">
       <Filter>Singleton\Internal</Filter>
     </ClCompile>
-    <ClCompile Include="egScene.cpp">
-      <Filter>Scene\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="egLayer.cpp">
-      <Filter>Scene\Layer</Filter>
-    </ClCompile>
     <ClCompile Include="egObserver.cpp">
       <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egObserverController.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="egIStateController.cpp">
-      <Filter>Component</Filter>
     </ClCompile>
     <ClCompile Include="egNormalMap.cpp">
       <Filter>Resource</Filter>
@@ -352,14 +358,59 @@
     <ClCompile Include="egIShader.cpp">
       <Filter>Low-level</Filter>
     </ClCompile>
+    <ClCompile Include="egShadowManager.cpp">
+      <Filter>Singleton\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="egShader.cpp">
+      <Filter>Resource</Filter>
+    </ClCompile>
     <ClCompile Include="egVertexShaderInternal.cpp">
-      <Filter>Low-level</Filter>
+      <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="egActor.cpp">
+      <Filter>Abstract\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="egEntity.cpp">
+      <Filter>Abstract\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderable.cpp">
+      <Filter>Abstract\Renderable</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollider.cpp">
+      <Filter>Component\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="egIStateController.cpp">
+      <Filter>Component\StateController</Filter>
+    </ClCompile>
+    <ClCompile Include="egObserverController.cpp">
+      <Filter>Component\OberserverController</Filter>
+    </ClCompile>
+    <ClCompile Include="egRigidbody.cpp">
+      <Filter>Component\Rigidbody</Filter>
+    </ClCompile>
+    <ClCompile Include="egTransform.cpp">
+      <Filter>Component\Transform</Filter>
     </ClCompile>
     <ClCompile Include="egCubeMesh.cpp">
-      <Filter>Mesh</Filter>
+      <Filter>Mesh\CubeMesh</Filter>
     </ClCompile>
     <ClCompile Include="egSphereMesh.cpp">
-      <Filter>Mesh</Filter>
+      <Filter>Mesh\SphereMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="egComponent.cpp">
+      <Filter>Base\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="egLayer.cpp">
+      <Filter>Base\Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="egObject.cpp">
+      <Filter>Base\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="egResource.cpp">
+      <Filter>Base\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="egScene.cpp">
+      <Filter>Base\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -375,20 +426,32 @@
     <CopyFileToFolders Include="ps_default_nolight.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_metalic.hlsl">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_metalic_texture.hlsl">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="ps_normalmap.hlsl">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_normalmap_metalic.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="vs_default.hlsl">
       <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_normalmap_specular.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_sepcular_texture.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_specular.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="common.hlsli">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="gs_cascade_shadow_stage1.hlsl">
+      <Filter>Resource Files\Shadow\stage1</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ps_cascade_shadow_stage1.hlsl">
+      <Filter>Resource Files\Shadow\stage1</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="vs_cascade_shadow_stage1.hlsl">
+      <Filter>Resource Files\Shadow\stage1</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

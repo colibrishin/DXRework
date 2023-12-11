@@ -50,7 +50,6 @@ namespace Engine
 	
 	constexpr float g_epsilon = 0.001f;
 	constexpr float g_gravity_acc = 9.8f;
-	constexpr int g_max_lights = 8;
 
 	constexpr float g_fixed_update_interval = 0.02f;
 	constexpr int g_debug_y_movement = 15;
@@ -76,8 +75,8 @@ namespace Engine
 	inline std::atomic<UINT> g_window_width = 1920;
 	inline std::atomic<UINT> g_window_height = 1080;
 
-	inline std::atomic<float> g_screen_near = 0.0001f;
-	inline std::atomic<float> g_screen_far = 1000.0f;
+	inline std::atomic<float> g_screen_near = 1.f;
+	inline std::atomic<float> g_screen_far = 100.0f;
 
 	enum eShaderType
 	{
@@ -95,7 +94,8 @@ namespace Engine
 		CB_TYPE_WVP = 0,
 		CB_TYPE_TRANSFORM,
 		CB_TYPE_LIGHT,
-		CB_TYPE_SPECULAR
+		CB_TYPE_SPECULAR,
+		CB_TYPE_SHADOW
 	};
 
 	enum eLayerType
@@ -103,6 +103,8 @@ namespace Engine
 		LAYER_NONE = 0,
 		LAYER_LIGHT,
 		LAYER_DEFAULT,
+		LAYER_ENVIRONMENT,
+		LAYER_SKYBOX,
 		LAYER_UI,
 		LAYER_CAMERA,
 		LAYER_MAX
@@ -112,8 +114,6 @@ namespace Engine
 	{
 		OBSERVER_STATE_NONE,
 	};
-	
-	constexpr eLayerType g_early_update_layer_end = LAYER_DEFAULT;
 
 	enum eResourcePriority
 	{
@@ -144,6 +144,13 @@ namespace Engine
 	{
 		SR_TEXTURE = 0,
 		SR_NORMAL_MAP,
+		SR_SHADOW_MAP,
+	};
+
+	enum eSampler
+	{
+		SAMPLER_TEXTURE = 0,
+		SAMPLER_SHADOW,
 	};
 
 	struct GUIDComparer

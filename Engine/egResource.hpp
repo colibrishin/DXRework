@@ -37,6 +37,7 @@ namespace Engine::Abstract
 		}
 
 		void OnImGui() override;
+		TypeName GetVirtualTypeName() const override;
 
 	protected:
 		Resource(std::filesystem::path path, eResourcePriority priority);
@@ -47,6 +48,7 @@ namespace Engine::Abstract
 	private:
 		SERIALIZER_ACCESS
 
+	private:
 		bool m_bLoaded_;
 		std::filesystem::path m_path_;
 		std::string m_path_str_; // for serialization

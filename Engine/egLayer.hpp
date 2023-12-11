@@ -4,7 +4,7 @@
 
 namespace Engine
 {
-	class Layer : public Abstract::Renderable
+	class Layer final : public Abstract::Renderable
 	{
 	public:
 		Layer(eLayerType type) : m_layer_type_(type) {}
@@ -17,6 +17,7 @@ namespace Engine
 		void Render(const float dt) override;
 		void FixedUpdate(const float& dt) override;
 		void OnDeserialized() override;
+		TypeName GetVirtualTypeName() const final;
 
 		void AddGameObject(const StrongObject& obj);
 		void RemoveGameObject(EntityID id);

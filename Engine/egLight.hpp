@@ -33,8 +33,10 @@ namespace Engine::Objects
 		SERIALIZER_ACCESS
 
 		UINT m_light_id_;
+
 		Vector4 m_color_;
-		Vector3 m_offset_;
+
+		CascadeShadowBuffer m_shadow_buffer_;
 
 		inline static std::bitset<g_max_lights> s_light_map_{};
 	};

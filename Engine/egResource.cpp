@@ -39,12 +39,17 @@ namespace Engine::Abstract
 
 	void Resource::OnImGui()
 	{
-		ImGui::BulletText(ToTypeName().c_str());
+		ImGui::BulletText(GetTypeName().c_str());
 		Renderable::OnImGui();
 		ImGui::Indent(2);
 		ImGui::Checkbox("Loaded", &m_bLoaded_);
 		ImGui::Text("Path : %s", m_path_str_.c_str());
 		ImGui::Unindent(2);
+	}
+
+	TypeName Resource::GetVirtualTypeName() const
+	{
+		return typeid(Resource).name();
 	}
 
 	Resource::Resource(std::filesystem::path path, eResourcePriority priority): m_bLoaded_(false), m_path_(std::move(path)), m_priority_(priority)

@@ -124,6 +124,15 @@ namespace Engine::Manager
 		});
 	}
 
+	void Debugger::Draw(const DirectX::BoundingSphere& sphere, const XMVECTORF32& color)
+	{
+		Push(Message{}, [sphere, color](Message& msg, const float& dt)
+		{
+			DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), sphere, color);
+			msg.elapsed_time += 2.f;
+		});
+	}
+
 	void Debugger::SetDebugFlag()
 	{
 		m_bDebug = true;

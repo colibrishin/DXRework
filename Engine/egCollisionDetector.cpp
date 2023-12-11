@@ -204,6 +204,12 @@ namespace Engine::Manager
 	{
 	}
 
+	void CollisionDetector::SetCollisionLayer(const eLayerType a, const eLayerType b)
+	{
+		m_layer_mask_[a].set(b, true);
+		m_layer_mask_[b].set(a, true);
+	}
+
 	void CollisionDetector::GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();

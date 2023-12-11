@@ -20,7 +20,7 @@ namespace Client::Object
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
-		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_normalmap_specular").lock());
+		AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
 		AddResource(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>("AmbientSound").lock());
 
 		AddComponent<Engine::Component::Transform>();

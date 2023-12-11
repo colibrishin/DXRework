@@ -25,6 +25,7 @@ namespace Engine::Manager
 		void FixedUpdate(const float& dt) override;
 
 		bool CheckRender(const WeakObject& object) const;
+		BoundingFrustum GetFrustum() const { return m_frustum; }
 
 		bool IsInFrustum(const Vector3& position, float radius) const;
 		bool IsInFrustum(const Vector3& position, const Vector3& size) const;

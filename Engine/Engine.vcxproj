@@ -62,6 +62,7 @@
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egSerialization.hpp" />
     <ClInclude Include="egShader.hpp" />
+    <ClInclude Include="egShadowManager.hpp" />
     <ClInclude Include="egSound.hpp" />
     <ClInclude Include="egSphereMesh.hpp" />
     <ClInclude Include="egStateController.hpp" />
@@ -116,6 +117,7 @@
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egShader.cpp" />
+    <ClCompile Include="egShadowManager.cpp" />
     <ClCompile Include="egSound.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />
     <ClCompile Include="egText.cpp" />
@@ -124,6 +126,24 @@
     <ClCompile Include="egTransform.cpp" />
     <ClCompile Include="egLerpManager.cpp" />
     <ClCompile Include="egVertexShaderInternal.cpp" />
+    <CopyFileToFolders Include="ps_cascade_shadow_stage1.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="vs_cascade_shadow_stage1.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -586,7 +606,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="gs_cascade_shadow.hlsl">
+    <CopyFileToFolders Include="gs_cascade_shadow_stage1.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Geometry</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

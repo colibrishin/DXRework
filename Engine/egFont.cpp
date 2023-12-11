@@ -52,6 +52,11 @@ namespace Engine::Resources
 	{
 	}
 
+	TypeName Font::GetVirtualTypeName() const
+	{
+		return typeid(Font).name();
+	}
+
 	void Font::Unload_INTERNAL()
 	{
 		m_font_.reset();

@@ -105,4 +105,10 @@ namespace Engine::Graphic
 	{
 		GetRenderPipeline().SetShader(this);
 	}
+
+	template <typename T>
+	TypeName Shader<T>::GetVirtualTypeName() const
+	{
+		return typeid(Shader<T>).name();
+	}
 }

@@ -86,6 +86,11 @@ namespace Engine::Component
 	{
 	}
 
+	TypeName Rigidbody::GetVirtualTypeName() const
+	{
+		return typeid(Rigidbody).name();
+	}
+
 	void Rigidbody::OnDeserialized()
 	{
 		Component::OnDeserialized();

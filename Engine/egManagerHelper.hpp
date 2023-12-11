@@ -10,6 +10,7 @@
 #include "egLerpManager.hpp"
 #include "egMouseManager.hpp"
 #include "egPhysicsManager.hpp"
+#include "egShadowManager.hpp"
 #include "egTaskScheduler.hpp"
 
 namespace Engine
@@ -82,5 +83,10 @@ namespace Engine
 	inline Manager::MouseManager& GetMouseManager()
 	{
 		return Manager::MouseManager::GetInstance();
+	}
+
+	inline Manager::Graphics::ShadowManager& GetShadowManager()
+	{
+		return Manager::Graphics::ShadowManager::GetInstance();
 	}
 }

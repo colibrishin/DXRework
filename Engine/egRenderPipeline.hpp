@@ -25,29 +25,44 @@ namespace Engine::Manager::Graphics
 		void Initialize() override;
 		void PreRender(const float& dt) override;
 
-		static void SetShader(Graphic::IShader* shader);
+		void SetShader(Graphic::IShader* shader);
 
 		void SetWorldMatrix(const TransformBuffer& matrix);
+		void SetWorldMatrix(const TransformBuffer& matrix, const eShaderType shader);
 		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
 
-		void SetLight(UINT id, const Matrix& world, const Matrix& vp, const Color& color);
+		void SetLight(UINT id, const Matrix& world, const Color& color);
+		void SetShadow(const CascadeShadowBuffer& shadow_buffer);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
 
-		static void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
+		void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
-		static void GetViewFrustum(BoundingFrustum& frustum);
 		void SetWireframeState() const;
 		void SetFillState() const;
+		void SetNoneCullState() const;
+		void SetFrontCullState() const;
 
 		void BindLightBuffer();
-		static void BindVertexBuffer(ID3D11Buffer* buffer);
-		static void BindIndexBuffer(ID3D11Buffer* buffer);
-		static void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
+		void BindVertexBuffer(ID3D11Buffer* buffer);
+		void BindIndexBuffer(ID3D11Buffer* buffer);
 
-		static void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
+		void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
 
-		static void DrawIndexed(UINT index_count);
+		void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
+		void InitializeShadowBuffer();
+
+		void DrawIndexed(UINT index_count);
+
+		void TargetShadowMap();
+		void BindShadowMap();
+		void UnbindShadowMap();
+		void BindShadowSampler();
+
+		void ResetRenderTarget();
+		void ResetSampler(eShaderType shader);
+		void ResetShaders();
+		void ResetShadowMap();
 
 	private:
 		friend class ToolkitAPI;
@@ -72,12 +87,19 @@ namespace Engine::Manager::Graphics
 
 		ConstantBuffer<LightBuffer> m_light_buffer_data{};
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
+		ConstantBuffer<CascadeShadowBuffer> m_shadow_buffer_data_{};
 
-		std::unordered_map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
+		std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
+
 		ComPtr<ID3D11BlendState> m_blend_state_ = nullptr;
 		ComPtr<ID3D11RasterizerState> m_rasterizer_state_ = nullptr;
 		ComPtr<ID3D11RasterizerState> m_rasterizer_state_wire_ = nullptr;
 		ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
+
+		ComPtr<ID3D11DepthStencilView> m_shadow_map_depth_view_ = nullptr;
+		ComPtr<ID3D11ShaderResourceView> m_shadow_map_resource_view_ = nullptr;
+		ComPtr<ID3D11SamplerState> m_shadow_map_sampler_state_ = nullptr;
+		ComPtr<ID3D11DepthStencilState> m_shadow_map_depth_stencil_state_ = nullptr;
 
 		std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
 	};

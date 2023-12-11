@@ -17,6 +17,7 @@ namespace Engine::Abstract
 
 		void OnDeserialized() override;
 		void OnImGui() override;
+		TypeName GetVirtualTypeName() const final;
 
 	protected:
 		StateController() : IStateController(COMPONENT_PRIORITY_STATE, {}) {}
@@ -66,6 +67,12 @@ namespace Engine::Abstract
 		Component::OnImGui();
 		ImGui::Text("State: %d", m_state_);
 		ImGui::Text("Previous State: %d", m_previous_state_);
+	}
+
+	template <typename StateEnum, class EC>
+	TypeName StateController<StateEnum, EC>::GetVirtualTypeName() const
+	{
+		return typeid(StateController<StateEnum, EC>).name();
 	}
 }
 

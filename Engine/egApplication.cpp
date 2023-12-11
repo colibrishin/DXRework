@@ -61,6 +61,7 @@ namespace Engine::Manager
 		GetDebugger().Initialize();
 		GetTaskScheduler().Initialize();
 		GetMouseManager().Initialize();
+		GetShadowManager().Initialize();
 
 		ImGui_ImplWin32_Init(hWnd);
 		ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -110,6 +111,7 @@ namespace Engine::Manager
 		GetPhysicsManager().PreUpdate(dt);
 		GetConstraintSolver().PreUpdate(dt);
 		GetLerpManager().PreUpdate(dt);
+		GetShadowManager().PreUpdate(dt);
 		GetDebugger().PreUpdate(dt);
 		GetD3Device().PreUpdate(dt);
 		GetToolkitAPI().PreUpdate(dt);
@@ -126,6 +128,7 @@ namespace Engine::Manager
 		GetPhysicsManager().FixedUpdate(dt);
 		GetConstraintSolver().FixedUpdate(dt);
 		GetLerpManager().FixedUpdate(dt);
+		GetShadowManager().FixedUpdate(dt);
 		GetDebugger().FixedUpdate(dt);
 		GetD3Device().FixedUpdate(dt);
 		GetToolkitAPI().FixedUpdate(dt);
@@ -142,6 +145,7 @@ namespace Engine::Manager
 		GetPhysicsManager().Update(dt);
 		GetConstraintSolver().Update(dt);
 		GetLerpManager().Update(dt);
+		GetShadowManager().Update(dt);
 		GetDebugger().Update(dt);
 		GetD3Device().Update(dt);
 		GetToolkitAPI().Update(dt);
@@ -159,6 +163,7 @@ namespace Engine::Manager
 		GetPhysicsManager().PreRender(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetLerpManager().PreRender(dt);
+		GetShadowManager().PreRender(dt);
 		GetDebugger().PreRender(dt);
 		GetRenderPipeline().PreRender(dt);
 		GetD3Device().PreRender(dt);
@@ -175,6 +180,7 @@ namespace Engine::Manager
 		GetPhysicsManager().Render(dt);
 		GetConstraintSolver().PreRender(dt);
 		GetLerpManager().Render(dt);
+		GetShadowManager().Render(dt);
 		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
 

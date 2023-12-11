@@ -27,6 +27,7 @@ namespace Engine::Manager
 		void Draw(Ray& ray, const XMVECTORF32& color);
 		void Draw(const eBoundingType type, const XMVECTORF32& color, const BoundingGroup& group);
 		void Draw(const DirectX::BoundingFrustum& frustum, const XMVECTORF32& color);
+		void Draw(const DirectX::BoundingSphere& sphere, const XMVECTORF32& color);
 
 		void SetDebugFlag();
 		bool GetDebugFlag() const;

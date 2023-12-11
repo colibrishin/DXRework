@@ -27,7 +27,8 @@ namespace Engine::Objects
 		Quaternion GetLookAtRotation() { return m_look_at_rotation_; }
 
 		Matrix GetViewMatrix() const { return m_view_matrix_; }
-		Matrix GetProjectionMatrix() const { return m_wvp_buffer_.projection.Transpose(); }
+		Matrix GetProjectionMatrix() const { return m_projection_matrix_; }
+		Matrix GetWorldMatrix() const { return m_world_matrix_; }
 		Vector3 GetLookAt();
 
 		void Initialize() override;

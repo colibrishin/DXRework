@@ -20,6 +20,8 @@ namespace Engine::Manager
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		void SetCollisionLayer(const eLayerType layer, const eLayerType mask);
+
 		static void GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
 		static bool Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
 

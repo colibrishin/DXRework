@@ -130,7 +130,7 @@ namespace Engine::Manager::Graphics
 		m_sprite_batch_->Begin(
 			SpriteSortMode_Deferred, 
 			GetRenderPipeline().m_blend_state_.Get(), 
-			GetRenderPipeline().s_sampler_state_[eShaderType::SHADER_PIXEL],
+			GetRenderPipeline().m_sampler_state_[SAMPLER_TEXTURE],
 			GetRenderPipeline().m_depth_stencil_state_.Get(),
 			GetRenderPipeline().m_rasterizer_state_.Get());
 	}
