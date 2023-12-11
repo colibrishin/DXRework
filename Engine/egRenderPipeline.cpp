@@ -29,6 +29,7 @@ namespace Engine::Manager::Graphics
 	{
 		m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
 		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_VERTEX);
+		GetD3Device().BindConstantBuffer(m_wvp_buffer_data_, CB_TYPE_WVP, SHADER_PIXEL);
 	}
 
 	void RenderPipeline::SetLight(UINT id, const Matrix& world, const Color& color)
@@ -37,7 +38,7 @@ namespace Engine::Manager::Graphics
 		m_light_buffer_.color[id] = color;
 	}
 
-	void RenderPipeline::SetShadow(UINT id, const CascadeShadowBuffer& shadow_buffer)
+	void RenderPipeline::SetShadow(const CascadeShadowBuffer& shadow_buffer)
 	{
 		m_shadow_buffer_data_.SetData(GetD3Device().GetContext(), shadow_buffer);
 
@@ -324,8 +325,6 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->OMSetDepthStencilState(RenderPipeline::m_depth_stencil_state_.Get(), 1);
 
 		GetD3Device().GetContext()->IASetInputLayout(GetRenderPipeline().m_input_layout_.Get());
-
-		ResetShadowMap();
 	}
 
 	void RenderPipeline::DrawIndexed(UINT index_count)

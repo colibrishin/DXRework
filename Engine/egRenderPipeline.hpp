@@ -32,7 +32,7 @@ namespace Engine::Manager::Graphics
 		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
 
 		void SetLight(UINT id, const Matrix& world, const Color& color);
-		void SetShadow(UINT id, const CascadeShadowBuffer& shadow_buffer);
+		void SetShadow(const CascadeShadowBuffer& shadow_buffer);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
 
