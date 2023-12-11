@@ -109,11 +109,14 @@ namespace Engine::Objects
 
 			m_projection_matrix_ = m_b_orthogonal_ ? GetD3Device().GetOrthogonalMatrix() : GetD3Device().GetProjectionMatrix();
 
+			const auto invView = m_view_matrix_.Invert();
+			const auto invProj = m_projection_matrix_.Invert();
+
 			m_wvp_buffer_.world = m_world_matrix_.Transpose();
 			m_wvp_buffer_.view = m_view_matrix_.Transpose();
 			m_wvp_buffer_.projection = m_projection_matrix_.Transpose();
-
-			const auto inverted = m_view_matrix_.Invert();
+			m_wvp_buffer_.invView = invView.Transpose();
+			m_wvp_buffer_.invProj = invProj.Transpose();
 
 			GetRenderPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
 
@@ -128,7 +131,7 @@ namespace Engine::Objects
 			}
 
 			GetToolkitAPI().Set3DListener(
-				{inverted._41, inverted._42, inverted._43},
+				{invView._41, invView._42, invView._43},
 				{velocity.x, velocity.y, velocity.z},
 				{g_forward.x, g_forward.y, g_forward.z},
 				{Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}
@@ -167,15 +170,15 @@ namespace Engine::Objects
 
 	Vector2 Camera::GetWorldMousePosition()
 	{
-		const DirectX::XMMATRIX vp = GetD3Device().GetProjectionMatrix() * m_view_matrix_;
-		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(vp);
+		const DirectX::XMMATRIX pv = GetD3Device().GetProjectionMatrix() * m_view_matrix_;
+		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(pv);
 		const Vector2 actual_mouse_position
 		{
 			static_cast<float>(GetApplication().GetMouseState().x),
 			static_cast<float>(GetApplication().GetMouseState().y)
 		};
 
-		const DirectX::XMMATRIX invProjectionView = DirectX::XMMatrixInverse(&det, vp);
+		const DirectX::XMMATRIX invProjectionView = DirectX::XMMatrixInverse(&det, pv);
 
 		const float x = (((2.0f * actual_mouse_position.x) / g_window_width) - 1);
 		const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);

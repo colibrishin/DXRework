@@ -36,6 +36,8 @@ namespace Engine
 		Matrix world;
 		Matrix view;
 		Matrix projection;
+		Matrix invView;
+		Matrix invProj;
 	};
 
 	struct TransformBuffer
@@ -61,7 +63,6 @@ namespace Engine
 
 	struct CascadeShadowBuffer
 	{
-		Vector4 cascade_positions[g_max_shadow_cascades];
 		Matrix view[g_max_shadow_cascades];
 		Matrix proj[g_max_shadow_cascades];
 		Vector4 end_clip_spaces[g_max_shadow_cascades];
