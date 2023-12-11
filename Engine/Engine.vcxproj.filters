@@ -47,9 +47,6 @@
     <Filter Include="Resource Files\Shadow\stage1">
       <UniqueIdentifier>{03cea989-7022-4e17-bd74-9aa51d34711d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\Shadow\stage2">
-      <UniqueIdentifier>{48e8a3ff-a375-4942-8c22-483638dfe93d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Base">
       <UniqueIdentifier>{61714c34-6fc6-4b57-9c19-aa7e0b141f27}</UniqueIdentifier>
     </Filter>
@@ -446,12 +443,6 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="common.hlsli">
       <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="vs_cascade_shadow_stage2.hlsl">
-      <Filter>Resource Files\Shadow\stage2</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_cascade_shadow_stage2.hlsl">
-      <Filter>Resource Files\Shadow\stage2</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="gs_cascade_shadow_stage1.hlsl">
       <Filter>Resource Files\Shadow\stage1</Filter>
