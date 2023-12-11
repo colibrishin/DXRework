@@ -72,6 +72,7 @@ struct PixelShadowStage1InputType
 struct PixelInputType
 {
     float4 position : SV_POSITION;
+    float4 world_position : POSITION;
     float4 color : COLOR;
     float2 tex : TEXCOORD0;
 
@@ -92,7 +93,7 @@ float4 GetWorldPosition(in matrix mat)
 
 float GetShadowFactor(int cascadeIndex, float4 cascadeLocalPosition)
 {
-    float3 projCoords = cascadeLocalPosition.xyz / cascadeLocalPosition.w;
+    float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
     projCoords.x = projCoords.x * 0.5 + 0.5f;
     projCoords.y = -projCoords.y * 0.5 + 0.5f;
 
@@ -113,7 +114,11 @@ float GetShadowFactor(int cascadeIndex, float4 cascadeLocalPosition)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            shadow += cascadeShadowMap.SampleCmpLevelZero(PSShadowSampler, samplePos, currentDepth - bias, int2(x, y));
+            shadow += cascadeShadowMap.SampleCmpLevelZero(
+				PSShadowSampler, 
+				samplePos, 
+				currentDepth - bias, 
+				int2(x, y));
         }
     }
 
