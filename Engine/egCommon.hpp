@@ -147,6 +147,12 @@ namespace Engine
 		SR_SHADOW_MAP,
 	};
 
+	enum eSampler
+	{
+		SAMPLER_TEXTURE = 0,
+		SAMPLER_SHADOW,
+	};
+
 	struct GUIDComparer
 	{
 		bool operator()(const GUID& Left, const GUID& Right) const

@@ -312,23 +312,8 @@ namespace Engine::Manager::Graphics
 	{
 		const auto sampler = GetToolkitAPI().GetCommonStates()->LinearWrap();
 
-		s_sampler_state_[SHADER_VERTEX] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_VERTEX], SHADER_VERTEX);
-
-		s_sampler_state_[SHADER_PIXEL] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_PIXEL], SHADER_PIXEL);
-
-		s_sampler_state_[SHADER_GEOMETRY] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_GEOMETRY], SHADER_GEOMETRY);
-
-		s_sampler_state_[SHADER_COMPUTE] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_COMPUTE], SHADER_COMPUTE);
-
-		s_sampler_state_[SHADER_HULL] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_HULL], SHADER_HULL);
-
-		s_sampler_state_[SHADER_DOMAIN] = sampler;
-		GetD3Device().BindSampler(s_sampler_state_[SHADER_DOMAIN], SHADER_DOMAIN);
+		m_sampler_state_[SAMPLER_TEXTURE] = sampler;
+		GetD3Device().BindSampler(m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL, SAMPLER_TEXTURE);
 	}
 
 	void RenderPipeline::PreRender(const float& dt)
@@ -369,12 +354,12 @@ namespace Engine::Manager::Graphics
 
 	void RenderPipeline::BindShadowSampler()
 	{
-		GetD3Device().BindSampler(m_shadow_map_sampler_state_.Get(), SHADER_PIXEL);
+		GetD3Device().BindSampler(m_shadow_map_sampler_state_.Get(), SHADER_PIXEL, SAMPLER_SHADOW);
 	}
 
 	void RenderPipeline::ResetSampler(const eShaderType shader)
 	{
-		GetD3Device().BindSampler(s_sampler_state_[shader], SHADER_PIXEL);
+		GetD3Device().BindSampler(m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL, SAMPLER_TEXTURE);
 	}
 
 	void RenderPipeline::ResetShaders()

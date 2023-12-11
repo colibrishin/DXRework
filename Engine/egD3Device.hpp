@@ -324,7 +324,7 @@ namespace Engine::Manager::Graphics
 			}
 		}
 
-		void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader) const;
+		void BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader, eSampler sampler_type) const;
 		void CreateSampler(const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const;
 
 		void CreateTexture(const D3D11_TEXTURE2D_DESC& desc, ID3D11Texture2D** texture) const;

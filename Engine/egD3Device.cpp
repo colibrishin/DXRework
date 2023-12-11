@@ -90,9 +90,9 @@ namespace Engine::Manager::Graphics
 		return input_descs;
 	}
 
-	void D3Device::BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader) const
+	void D3Device::BindSampler(ID3D11SamplerState* sampler, eShaderType target_shader, eSampler sampler_type) const
 	{
-		g_shader_sampler_bind_map.at(target_shader)(m_context_.Get(), sampler, static_cast<UINT>(target_shader), 1);
+		g_shader_sampler_bind_map.at(target_shader)(m_context_.Get(), sampler, static_cast<UINT>(sampler_type), 1);
 	}
 
 	void D3Device::CreateSampler(const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const

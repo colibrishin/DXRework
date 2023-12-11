@@ -89,7 +89,7 @@ namespace Engine::Manager::Graphics
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 		ConstantBuffer<CascadeShadowBuffer> m_shadow_buffer_data_{};
 
-		std::map<eShaderType, ID3D11SamplerState*> s_sampler_state_{};
+		std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
 
 		ComPtr<ID3D11BlendState> m_blend_state_ = nullptr;
 		ComPtr<ID3D11RasterizerState> m_rasterizer_state_ = nullptr;
