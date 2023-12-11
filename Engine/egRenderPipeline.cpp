@@ -183,15 +183,11 @@ namespace Engine::Manager::Graphics
 		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilState(&ds_desc, m_shadow_map_depth_stencil_state_.GetAddressOf()));
 
 		D3D11_SAMPLER_DESC sampler_desc{};
-		sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
-		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
-		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS;
-		sampler_desc.MinLOD = 0;
-		sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-		sampler_desc.MipLODBias = 0.f;
-		sampler_desc.MaxAnisotropy = 0;
 		sampler_desc.BorderColor[0] = 1.f;
 		sampler_desc.BorderColor[1] = 1.f;
 		sampler_desc.BorderColor[2] = 1.f;
