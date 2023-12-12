@@ -19,6 +19,13 @@ namespace Engine
 
 	constexpr int g_max_lights = 8;
 	constexpr int g_max_shadow_cascades = 3;
+	constexpr int g_max_shadow_map_size = 512;
+
+	struct GraphicShadowBuffer
+	{
+		ComPtr<ID3D11DepthStencilView> depth_stencil_view;
+		ComPtr<ID3D11ShaderResourceView> shader_resource_view;
+	};
 
 	struct VertexElement
 	{
@@ -49,9 +56,10 @@ namespace Engine
 
 	struct LightBuffer
 	{
-		// due to padding, type is vector4 instead of vector3
 		Matrix world[g_max_lights];
 		Color color[g_max_lights];
+		int light_count;
+		float padding[3];
 	};
 
 	struct SpecularBuffer
@@ -61,10 +69,20 @@ namespace Engine
 		Color specular_color;
 	};
 
-	struct CascadeShadowBuffer
+	struct CascadeShadow
 	{
 		Matrix view[g_max_shadow_cascades];
 		Matrix proj[g_max_shadow_cascades];
 		Vector4 end_clip_spaces[g_max_shadow_cascades];
+	};
+
+	struct CascadeShadowBuffer
+	{
+		CascadeShadow shadow;
+	};
+
+	struct CascadeShadowBufferChunk
+	{
+		CascadeShadow lights[g_max_lights];
 	};
 }

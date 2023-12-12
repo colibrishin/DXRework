@@ -95,7 +95,8 @@ namespace Engine
 		CB_TYPE_TRANSFORM,
 		CB_TYPE_LIGHT,
 		CB_TYPE_SPECULAR,
-		CB_TYPE_SHADOW
+		CB_TYPE_SHADOW,
+		CB_TYPE_SHADOW_CHUNK
 	};
 
 	enum eLayerType
