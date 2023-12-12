@@ -5,25 +5,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
-    float4 cascadeLocalPosition[3];
+    float shadowFactor[MAX_NUM_LIGHTS];
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        cascadeLocalPosition[i] = mul(input.world_position, mul(lightFrustumView[i], lightFrustumProj[i]));
+        shadowFactor[i] = 1.0f;
     }
 
-    float shadowFactor = 0.f;
-
-    for (int j = 0; j < MAX_NUM_CASCADES; ++j)
+    [unroll]
+    for (int i = 0; i < lightCount; ++i)
     {
-        if (input.clipSpacePosZ <= cascadeEndClipSpace[j].z)
+        [unroll]
+        for (int j = 0; j < MAX_NUM_CASCADES; ++j)
         {
-            shadowFactor = GetShadowFactor(j, cascadeLocalPosition[j]);
-            break;
+            const matrix vp = mul(cascadeShadowChunk[i].view[j], cascadeShadowChunk[i].proj[j]);
+            const float4 position = mul(input.world_position, vp);
+
+            if (input.clipSpacePosZ <= cascadeShadowChunk[i].z_clip[j].z)
+            {
+                shadowFactor[i] = GetShadowFactor(i, j, position);
+                break;
+            }
         }
     }
-
-    const float4 shadow = float4(lerp(float3(0, 0, 0), float3(1, 1, 1), shadowFactor), 1.f);
 
     const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
     float normalLightIntensity[MAX_NUM_LIGHTS];
@@ -45,6 +49,8 @@ float4 main(PixelInputType input) : SV_TARGET
     {
         normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
         textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
+
+        const float4 shadow = float4(lerp(float3(0, 0, 0), float3(1, 1, 1), shadowFactor[i]), 1.f);
 
         normalColorArray[i] = shadow * lightColor[i] * normalLightIntensity[i];
         textureColorArray[i] = shadow * lightColor[i] * textureLightIntensity[i];

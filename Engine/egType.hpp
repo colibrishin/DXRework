@@ -156,6 +156,7 @@ namespace Engine
 	using WeakCollider = boost::weak_ptr<Component::Collider>;
 	using WeakFont = boost::weak_ptr<Resources::Font>;
 	using WeakCamera = boost::weak_ptr<Objects::Camera>;
+	using WeakLight = boost::weak_ptr<Objects::Light>;
 
 	using StrongObject = boost::shared_ptr<Abstract::Object>;
 	using StrongComponent = boost::shared_ptr<Abstract::Component>;

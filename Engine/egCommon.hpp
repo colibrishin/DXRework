@@ -57,7 +57,7 @@ namespace Engine
 	constexpr float g_debug_message_life_time = 1.0f;
 	constexpr size_t g_debug_message_max = 20;
 
-	constexpr bool g_speculation_enabled = false;
+	constexpr bool g_speculation_enabled = true;
 
 	constexpr LONG_PTR g_invalid_id = -1;
 
@@ -95,7 +95,8 @@ namespace Engine
 		CB_TYPE_TRANSFORM,
 		CB_TYPE_LIGHT,
 		CB_TYPE_SPECULAR,
-		CB_TYPE_SHADOW
+		CB_TYPE_SHADOW,
+		CB_TYPE_SHADOW_CHUNK
 	};
 
 	enum eLayerType
@@ -161,19 +162,20 @@ namespace Engine
 		}
 	};
 
-	struct WeakObjComparer
-	{
-		bool operator()(const WeakObject& lhs, const WeakObject& rhs) const
-		{
-			return lhs.lock().get() < rhs.lock().get();
-		}
-	};
-
 	template <typename T>
 	struct WeakComparer
 	{
 		bool operator()(const boost::weak_ptr<T>& lhs, const boost::weak_ptr<T>& rhs) const
 		{
+			if (!lhs.lock())
+			{
+				return true;
+			}
+			else if (!rhs.lock())
+			{
+				return false;
+			}
+
 			return lhs.lock().get() < rhs.lock().get();
 		}
 	};

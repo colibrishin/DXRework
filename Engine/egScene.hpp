@@ -16,6 +16,8 @@ namespace Engine
 
 		virtual void Initialize_INTERNAL() = 0;
 		void Initialize() final;
+		void AssignLocalIDToObject(const StrongObject& obj);
+		void RegisterLightToManager(const StrongObject& obj);
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float dt) override;
@@ -26,6 +28,9 @@ namespace Engine
 		TypeName GetVirtualTypeName() const final;
 
 		EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
+		void UnregisterLightFromManager(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
+		void RemoveObjectFromCache(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
+		void RemoveObjectFromOctree(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
 		void RemoveGameObject(const EntityID id, eLayerType layer);
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer);
@@ -67,7 +72,7 @@ namespace Engine
 		void UpdatePosition(const WeakObject& obj);
 		void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
 		void GetNearbyObjects(const Vector3& pos, const size_t range, std::vector<WeakObject>& out);
-		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust = 100);
+		void SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakComparer<Abstract::Object>>& out, int exhaust = 100);
 
 	private:
 		SERIALIZER_ACCESS
@@ -86,7 +91,7 @@ namespace Engine
 		std::set<ActorID> m_assigned_actor_ids_;
 		std::map<EntityID, WeakObject> m_cached_objects_;
 		std::map<const std::string, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;
-		Octree<std::set<WeakObject, WeakObjComparer>> m_object_position_tree_;
+		Octree<std::set<WeakObject, WeakComparer<Abstract::Object>>> m_object_position_tree_;
 
 	};
 }

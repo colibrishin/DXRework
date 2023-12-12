@@ -3,12 +3,12 @@
 #define TRIANGLE_MACRO 3
 #define MAX_NUM_CASCADES 3
 
-Texture2D shaderTexture : register(t0);
-Texture2D shaderNormalMap : register(t1);
-Texture2DArray cascadeShadowMap : register(t2);
-
 SamplerState PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
+
+Texture2D shaderTexture : register(t0);
+Texture2D shaderNormalMap : register(t1);
+Texture2DArray cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
 
 cbuffer PerspectiveBuffer : register(b0)
 {
@@ -30,21 +30,33 @@ cbuffer LightBuffer : register(b2)
 {
     matrix lightWorld[MAX_NUM_LIGHTS];
     float4 lightColor[MAX_NUM_LIGHTS];
+    int lightCount;
+    float3 ___p0;
 }
 
 cbuffer SpecularBuffer : register(b3)
 {
     float specularPower;
-    float3 ___p0;
+    float3 ___p1;
     float4 specularColor;
 }
+
+struct CascadeShadow
+{
+    matrix view[MAX_NUM_CASCADES];
+    matrix proj[MAX_NUM_CASCADES];
+    float4 z_clip[MAX_NUM_CASCADES];
+};
 
 // current light view and projection matrix of each cascade
 cbuffer CascadeShadowBuffer : register(b4)
 {
-    matrix lightFrustumView[MAX_NUM_CASCADES];
-    matrix lightFrustumProj[MAX_NUM_CASCADES];
-    float4 cascadeEndClipSpace[MAX_NUM_CASCADES];
+    CascadeShadow currentShadow;
+}
+
+cbuffer CascadeShadowChunk : register(b5)
+{
+    CascadeShadow cascadeShadowChunk[MAX_NUM_LIGHTS];
 }
 
 struct VertexInputType
@@ -88,10 +100,10 @@ struct PixelInputType
 
 float4 GetWorldPosition(in matrix mat)
 {
-    return float4(mat._41, mat._42, mat._43, mat._44);
+    return float4(mat._14, mat._24, mat._34, mat._44);
 }
 
-float GetShadowFactor(int cascadeIndex, float4 cascadeLocalPosition)
+float GetShadowFactor(int lightIndex, int cascadeIndex, float4 cascadeLocalPosition)
 {
     float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
     projCoords.x = projCoords.x * 0.5 + 0.5f;
@@ -114,7 +126,7 @@ float GetShadowFactor(int cascadeIndex, float4 cascadeLocalPosition)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            shadow += cascadeShadowMap.SampleCmpLevelZero(
+            shadow += cascadeShadowMap[lightIndex].SampleCmpLevelZero(
 				PSShadowSampler, 
 				samplePos, 
 				currentDepth - bias, 

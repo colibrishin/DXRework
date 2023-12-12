@@ -32,7 +32,7 @@ namespace Engine::Manager::Graphics
 		void SetPerspectiveMatrix(const PerspectiveBuffer& matrix);
 
 		void SetLight(UINT id, const Matrix& world, const Color& color);
-		void SetShadow(const CascadeShadowBuffer& shadow_buffer);
+		void SetCascadeBuffer(const CascadeShadowBuffer& shadow_buffer);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
 
@@ -43,26 +43,30 @@ namespace Engine::Manager::Graphics
 		void SetNoneCullState() const;
 		void SetFrontCullState() const;
 
-		void BindLightBuffer();
+		void BindLightBuffer(const UINT light_count);
 		void BindVertexBuffer(ID3D11Buffer* buffer);
 		void BindIndexBuffer(ID3D11Buffer* buffer);
 
 		void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
 
 		void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
-		void InitializeShadowBuffer();
+		void InitializeShadowBuffer(GraphicShadowBuffer& buffer);
+		void InitializeShadowProcessors();
 
 		void DrawIndexed(UINT index_count);
 
-		void TargetShadowMap();
-		void BindShadowMap();
-		void UnbindShadowMap();
+		void TargetShadowMap(const GraphicShadowBuffer& buffer);
+		void UseShadowMapViewport();
+		void BindShadowMap(const UINT size, ID3D11ShaderResourceView** p_shadow_maps);
+		void UnbindShadowMap(const UINT size);
 		void BindShadowSampler();
 
 		void ResetRenderTarget();
-		void ResetSampler(eShaderType shader);
+		void ResetViewport();
 		void ResetShaders();
-		void ResetShadowMap();
+		void ResetShadowMap(ID3D11DepthStencilView* view);
+		void ResetDepthStencilState();
+		void BindCascadeBufferChunk(const CascadeShadowBufferChunk& cascade_shadow_buffer_chunk);
 
 	private:
 		friend class ToolkitAPI;
@@ -88,16 +92,14 @@ namespace Engine::Manager::Graphics
 		ConstantBuffer<LightBuffer> m_light_buffer_data{};
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 		ConstantBuffer<CascadeShadowBuffer> m_shadow_buffer_data_{};
+		ConstantBuffer<CascadeShadowBufferChunk> m_shadow_buffer_chunk_data_{};
 
 		std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
 
 		ComPtr<ID3D11BlendState> m_blend_state_ = nullptr;
 		ComPtr<ID3D11RasterizerState> m_rasterizer_state_ = nullptr;
-		ComPtr<ID3D11RasterizerState> m_rasterizer_state_wire_ = nullptr;
 		ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
 
-		ComPtr<ID3D11DepthStencilView> m_shadow_map_depth_view_ = nullptr;
-		ComPtr<ID3D11ShaderResourceView> m_shadow_map_resource_view_ = nullptr;
 		ComPtr<ID3D11SamplerState> m_shadow_map_sampler_state_ = nullptr;
 		ComPtr<ID3D11DepthStencilState> m_shadow_map_depth_stencil_state_ = nullptr;
 

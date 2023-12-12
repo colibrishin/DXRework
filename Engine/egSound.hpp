@@ -60,7 +60,7 @@ namespace Engine::Resources
 		void Play_INTERNAL(const WeakObject& origin);
 
 		FMOD::Sound* m_sound_ = nullptr;
-		std::map<WeakObject, FMOD::Channel*, WeakObjComparer> m_channel_map_;
+		std::map<WeakObject, FMOD::Channel*, WeakComparer<Abstract::Object>> m_channel_map_;
 		FMOD_MODE m_mode_;
 
 		float m_min_distance_;

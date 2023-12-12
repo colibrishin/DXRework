@@ -22,18 +22,29 @@ namespace Engine::Manager::Graphics
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		void SetCascadeShadow(const Vector3& light_dir);
+		void RegisterLight(const WeakLight& light);
+		void UnregisterLight(const WeakLight& light);
 
 	private:
-		void CreateFrusta(const Matrix& projection, float start, float end, Subfrusta& subfrusta) const;
+
+		void CreateSubfrusta(const Matrix& projection, float start, float end, Subfrusta& subfrusta) const;
+		void EvalCascadeVP(const Vector3& light_dir, CascadeShadowBuffer& buffer, const UINT light_index, CascadeShadowBufferChunk& chunk);
 
 		void BuildShadowMap(Scene& scene) const;
+		void BindShadowMapChunk();
+		void ClearShadowBufferChunk();
+		void ClearShadowMaps();
 
 		boost::shared_ptr<Graphic::VertexShader> m_vs_stage1;
 		boost::shared_ptr<Graphic::GeometryShader> m_gs_stage1;
 		boost::shared_ptr<Graphic::PixelShader> m_ps_stage1;
 
 		Subfrusta m_subfrusta_[3];
-		CascadeShadowBuffer m_shadow_buffer_;
+
+		std::set<WeakLight, WeakComparer<Objects::Light>> m_lights_;
+		std::map<WeakLight, GraphicShadowBuffer, WeakComparer<Objects::Light>> m_graphic_shadow_buffer_;
+		std::map<WeakLight, CascadeShadowBuffer, WeakComparer<Objects::Light>> m_cascade_vp_buffer_;
+
+		CascadeShadowBufferChunk m_cascade_shadow_buffer_chunk_;
 	};
 }
