@@ -47,6 +47,12 @@ namespace Engine::Component
 		void OnDeserialized() override;
 		TypeName GetVirtualTypeName() const override;
 
+		Matrix GetWorldMatrix() const
+		{
+			return Matrix::CreateScale(m_scale_) * Matrix::CreateFromQuaternion(m_rotation_) *
+				Matrix::CreateTranslation(m_position_);
+		}
+
 	protected:
 		Transform();
 
