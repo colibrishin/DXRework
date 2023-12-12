@@ -161,19 +161,20 @@ namespace Engine
 		}
 	};
 
-	struct WeakObjComparer
-	{
-		bool operator()(const WeakObject& lhs, const WeakObject& rhs) const
-		{
-			return lhs.lock().get() < rhs.lock().get();
-		}
-	};
-
 	template <typename T>
 	struct WeakComparer
 	{
 		bool operator()(const boost::weak_ptr<T>& lhs, const boost::weak_ptr<T>& rhs) const
 		{
+			if (!lhs.lock())
+			{
+				return true;
+			}
+			else if (!rhs.lock())
+			{
+				return false;
+			}
+
 			return lhs.lock().get() < rhs.lock().get();
 		}
 	};

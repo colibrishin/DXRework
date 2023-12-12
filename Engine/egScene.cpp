@@ -30,6 +30,10 @@ namespace Engine
 		AddGameObject(light1, LAYER_LIGHT);
 		light1->SetPosition(Vector3(5.f, 2.f, 5.f));
 
+		const auto light2 = Instantiate<Objects::Light>();
+		AddGameObject(light2, LAYER_LIGHT);
+		light2->SetPosition(Vector3(-5.f, 2.f, 5.f));
+
 		Initialize_INTERNAL();
 
 #ifdef _DEBUG
@@ -66,19 +70,8 @@ namespace Engine
 #endif
 	}
 
-	EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
+	void Scene::AssignLocalIDToObject(const StrongObject& obj)
 	{
-		m_layers[layer]->AddGameObject(obj);
-		m_cached_objects_.emplace(obj->GetID(), obj);
-
-		for (const auto& comp : obj->GetAllComponents())
-		{
-			m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
-		}
-
-		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
-		obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
-
 		ActorID id = 0;
 
 		while (true)
@@ -98,19 +91,59 @@ namespace Engine
 		}
 
 		obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
+	}
+
+	void Scene::RegisterLightToManager(const StrongObject& obj)
+	{
+		if (obj->GetTypeName() == typeid(Objects::Light).name())
+		{
+			GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
+		}
+	}
+
+	EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
+	{
+		m_layers[layer]->AddGameObject(obj);
+		m_cached_objects_.emplace(obj->GetID(), obj);
+
+		for (const auto& comp : obj->GetAllComponents())
+		{
+			m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
+		}
+
+		obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
+		obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
+
+		AssignLocalIDToObject(obj);
 
 		if (const auto tr = obj->GetComponent<Component::Transform>().lock())
 		{
 			UpdatePosition(obj);
 		}
 
+		RegisterLightToManager(obj);
+
 		return obj->GetID();
 	}
 
-	void Scene::RemoveGameObject(const EntityID id, eLayerType layer)
+	void Scene::UnregisterLightFromManager(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
 	{
-		const auto& obj = m_cached_objects_[id];
+		if (obj.lock()->GetTypeName() == typeid(Objects::Light).name())
+		{
+			GetShadowManager().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>());
+		}
+	}
 
+	void Scene::RemoveObjectFromCache(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
+	{
+		for (const auto& comp : obj.lock()->GetAllComponents())
+		{
+			m_cached_components_[comp.lock()->GetTypeName()].erase(comp);
+		}
+	}
+
+	void Scene::RemoveObjectFromOctree(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
+	{
 		if (const auto locked = obj.lock())
 		{
 			const auto tr = locked->GetComponent<Component::Transform>().lock();
@@ -141,11 +174,15 @@ namespace Engine
 				// @todo: add task for refreshing octree.
 			}
 		}
+	}
 
-		for (const auto& comp : obj.lock()->GetAllComponents())
-		{
-			m_cached_components_[comp.lock()->GetTypeName()].erase(comp);
-		}
+	void Scene::RemoveGameObject(const EntityID id, eLayerType layer)
+	{
+		const auto& obj = m_cached_objects_[id];
+
+		RemoveObjectFromOctree(obj);
+		RemoveObjectFromCache(obj);
+		UnregisterLightFromManager(obj);
 
 		m_cached_objects_.erase(id);
 		m_layers[layer]->RemoveGameObject(id);
@@ -269,7 +306,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakObjComparer>& out, int exhaust)
+	void Scene::SearchObjects(const Vector3& pos, const Vector3& dir, std::set<WeakObject, WeakComparer<Abstract::Object>>& out, int exhaust)
 	{
 		auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
 		float accumulated_length = 0.f;
@@ -391,8 +428,6 @@ namespace Engine
 
 	void Scene::Render(const float dt)
 	{
-		GetRenderPipeline().BindLightBuffer();
-
 		m_layers[LAYER_LIGHT]->Render(dt);
 
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)

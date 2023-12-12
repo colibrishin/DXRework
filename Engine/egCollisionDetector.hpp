@@ -22,8 +22,8 @@ namespace Engine::Manager
 
 		void SetCollisionLayer(const eLayerType layer, const eLayerType mask);
 
-		static void GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
-		static bool Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out);
+		static void GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakComparer<Abstract::Object>>& out);
+		static bool Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakComparer<Abstract::Object>>& out);
 
 		bool IsCollided(EntityID id) const
 		{

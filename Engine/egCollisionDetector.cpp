@@ -210,7 +210,7 @@ namespace Engine::Manager
 		m_layer_mask_[b].set(a, true);
 	}
 
-	void CollisionDetector::GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out)
+	void CollisionDetector::GetCollidedObjects(const Ray& ray, const float distance, std::set<WeakObject, WeakComparer<Abstract::Object>>& out)
 	{
 		const auto scene = GetSceneManager().GetActiveScene().lock();
 
@@ -254,9 +254,9 @@ namespace Engine::Manager
 		});
 	}
 
-	bool CollisionDetector::Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakObjComparer>& out)
+	bool CollisionDetector::Hitscan(const Ray& ray, const float distance, std::set<WeakObject, WeakComparer<Abstract::Object>>& out)
 	{
-		std::set<WeakObject, WeakObjComparer> intermid_out;
+		std::set<WeakObject, WeakComparer<Abstract::Object>> intermid_out;
 		Engine::GetSceneManager().GetActiveScene().lock()->SearchObjects(
 			ray.position, ray.direction, intermid_out, static_cast<int>(distance));
 

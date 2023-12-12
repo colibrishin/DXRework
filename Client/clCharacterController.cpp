@@ -89,7 +89,7 @@ namespace Client::State
 
 			m_shoot_interval = 0.f;
 			const auto tr = GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
-			std::set<Engine::WeakObject, Engine::WeakObjComparer> out;
+			std::set<Engine::WeakObject, Engine::WeakComparer<Engine::Abstract::Object>> out;
 
 			Ray ray;
 			ray.position = tr->GetPosition();
