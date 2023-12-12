@@ -2,6 +2,9 @@
 
 float4 main(PixelInputType input) : SV_TARGET
 {
+    float shadowFactor[MAX_NUM_LIGHTS];
+    GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
+
 	const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
 
     float lightIntensity[MAX_NUM_LIGHTS];
@@ -10,10 +13,10 @@ float4 main(PixelInputType input) : SV_TARGET
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
 	    lightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
-        colorArray[i] = lightColor[i] * lightIntensity[i];
+        colorArray[i] = LerpShadow(shadowFactor[i]) * g_lightColor[i] * lightIntensity[i];
     }
 
-    float4 colorSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    float4 colorSum = g_ambientColor;
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {

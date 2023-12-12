@@ -2,6 +2,9 @@
 
 float4 main(PixelInputType input) : SV_TARGET
 {
+    float shadowFactor[MAX_NUM_LIGHTS];
+    GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
+
     const float4 textureColor = input.color;
 
     float lightIntensity[MAX_NUM_LIGHTS];
@@ -13,13 +16,13 @@ float4 main(PixelInputType input) : SV_TARGET
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         lightIntensity[i] = saturate(dot(input.normal, -input.lightDirection[i]));
-        colorArray[i] = lightColor[i] * lightIntensity[i];
+        colorArray[i] = LerpShadow(shadowFactor[i]) * g_lightColor[i] * lightIntensity[i];
         reflection[i] = normalize(2.0f * lightIntensity[i] * input.normal - input.lightDirection[i]);
-        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), specularPower);
+        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
     }
 
-    float4 colorSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    float4 specularSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    float4 colorSum = g_ambientColor;
+    float4 specularSum = g_ambientColor;
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {

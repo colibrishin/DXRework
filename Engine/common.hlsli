@@ -10,53 +10,68 @@ Texture2D shaderTexture : register(t0);
 Texture2D shaderNormalMap : register(t1);
 Texture2DArray cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
 
+static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
+
 cbuffer PerspectiveBuffer : register(b0)
 {
-    matrix cam_world;
-    matrix cam_view;
-    matrix cam_projection;
-    matrix cam_invView;
-    matrix cam_invProjection;
+    matrix g_cam_world;
+    matrix g_cam_view;
+    matrix g_cam_projection;
+    matrix g_cam_invView;
+    matrix g_cam_invProjection;
+    matrix g_cam_reflectView;
 };
 
 cbuffer TransformBuffer : register(b1)
 {
-    matrix scale;
-    matrix rotation;
-    matrix translation;
+    matrix g_scale;
+    matrix g_rotation;
+    matrix g_translation;
 };
 
 cbuffer LightBuffer : register(b2)
 {
-    matrix lightWorld[MAX_NUM_LIGHTS];
-    float4 lightColor[MAX_NUM_LIGHTS];
-    int lightCount;
+    matrix g_lightWorld[MAX_NUM_LIGHTS];
+    float4 g_lightColor[MAX_NUM_LIGHTS];
+    int g_lightCount;
     float3 ___p0;
 }
 
 cbuffer SpecularBuffer : register(b3)
 {
-    float specularPower;
+    float g_specularPower;
     float3 ___p1;
-    float4 specularColor;
+    float4 g_specularColor;
 }
 
 struct CascadeShadow
 {
-    matrix view[MAX_NUM_CASCADES];
-    matrix proj[MAX_NUM_CASCADES];
-    float4 z_clip[MAX_NUM_CASCADES];
+    matrix g_shadow_view[MAX_NUM_CASCADES];
+    matrix g_shadow_proj[MAX_NUM_CASCADES];
+    float4 g_shadow_z_clip[MAX_NUM_CASCADES];
 };
 
 // current light view and projection matrix of each cascade
 cbuffer CascadeShadowBuffer : register(b4)
 {
-    CascadeShadow currentShadow;
+    CascadeShadow g_currentShadow;
 }
 
 cbuffer CascadeShadowChunk : register(b5)
 {
-    CascadeShadow cascadeShadowChunk[MAX_NUM_LIGHTS];
+    CascadeShadow g_cascadeShadowChunk[MAX_NUM_LIGHTS];
+}
+
+cbuffer WaterBuffer : register(b6)
+{
+    float g_waterTranslation;
+    float g_reflfrScale;
+    float2 ___p2;
+}
+
+cbuffer ClipPlaneBuffer : register(b7)
+{
+    float4 g_clip_plane;
 }
 
 struct VertexInputType
@@ -84,7 +99,7 @@ struct PixelShadowStage1InputType
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-    float4 world_position : POSITION;
+    float4 world_position : POSITION0;
     float4 color : COLOR;
     float2 tex : TEXCOORD0;
 
@@ -92,10 +107,14 @@ struct PixelInputType
     float3 tangent : TANGENT;
     float3 binormal : BINOARML;
 
-    float3 viewDirection : TEXCOORD1;
-    float3 lightDirection[MAX_NUM_LIGHTS] : TEXCOORD2;
+    float4 reflection : POSITION1;
+    float4 refraction : POSITION2;
 
-    float clipSpacePosZ : SV_ClipDistance;
+    float3 viewDirection : TEXCOORD2;
+    float3 lightDirection[MAX_NUM_LIGHTS] : TEXCOORD3;
+
+    float clipSpacePosZ : SV_ClipDistance0;
+    float clipPlane : SV_ClipDistance1;
 };
 
 float4 GetWorldPosition(in matrix mat)
@@ -103,7 +122,7 @@ float4 GetWorldPosition(in matrix mat)
     return float4(mat._14, mat._24, mat._34, mat._44);
 }
 
-float GetShadowFactor(int lightIndex, int cascadeIndex, float4 cascadeLocalPosition)
+float ___GetShadowFactor(int lightIndex, int cascadeIndex, float4 cascadeLocalPosition)
 {
     float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
     projCoords.x = projCoords.x * 0.5 + 0.5f;
@@ -136,6 +155,36 @@ float GetShadowFactor(int lightIndex, int cascadeIndex, float4 cascadeLocalPosit
 
     shadow /= 9.0f;
     return shadow;
+}
+
+void GetShadowFactor(in float4 world_position, in float z_clip, out float shadowFactor[MAX_NUM_LIGHTS])
+{
+    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    {
+        shadowFactor[i] = 1.0f;
+    }
+
+    [unroll]
+    for (int i = 0; i < g_lightCount; ++i)
+    {
+		[unroll]
+        for (int j = 0; j < MAX_NUM_CASCADES; ++j)
+        {
+            const matrix vp = mul(g_cascadeShadowChunk[i].g_shadow_view[j], g_cascadeShadowChunk[i].g_shadow_proj[j]);
+            const float4 position = mul(world_position, vp);
+
+            if (z_clip <= g_cascadeShadowChunk[i].g_shadow_z_clip[j].z)
+            {
+                shadowFactor[i] = ___GetShadowFactor(i, j, position);
+                break;
+            }
+        }
+    }
+}
+
+float4 LerpShadow(in float4 shadowFactor)
+{
+    return lerp(float4(0, 0, 0, 1), float4(1, 1, 1, 1), shadowFactor);
 }
 
 #endif

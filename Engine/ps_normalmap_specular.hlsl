@@ -6,34 +6,11 @@
 float4 main(PixelInputType input) : SV_TARGET
 {
     float shadowFactor[MAX_NUM_LIGHTS];
-
-    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
-    {
-        shadowFactor[i] = 1.0f;
-    }
-
-    [unroll]
-    for (int i = 0; i < lightCount; ++i)
-    {
-		[unroll]
-        for (int j = 0; j < MAX_NUM_CASCADES; ++j)
-        {
-            const matrix vp = mul(cascadeShadowChunk[i].view[j], cascadeShadowChunk[i].proj[j]);
-            const float4 position = mul(input.world_position, vp);
-
-            if (input.clipSpacePosZ <= cascadeShadowChunk[i].z_clip[j].z)
-            {
-                shadowFactor[i] = GetShadowFactor(i, j, position);
-                break;
-            }
-        }
-    }
+    GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
 
     const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
     float normalLightIntensity[MAX_NUM_LIGHTS];
     float textureLightIntensity[MAX_NUM_LIGHTS];
-
-    const float4 ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
@@ -52,16 +29,16 @@ float4 main(PixelInputType input) : SV_TARGET
         textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
         normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
 
-        const float4 shadow = float4(lerp(float3(0, 0, 0), float3(1, 1, 1), shadowFactor[i]), 1.f);
+        const float4 shadow = LerpShadow(shadowFactor[i]);
 
-        normalColorArray[i] = shadow * lightColor[i] * normalLightIntensity[i];
-        textureColorArray[i] = shadow * lightColor[i] * textureLightIntensity[i];
+        normalColorArray[i] = shadow * g_lightColor[i] * normalLightIntensity[i];
+        textureColorArray[i] = shadow * g_lightColor[i] * textureLightIntensity[i];
 
         reflection[i] = normalize(2.0f * normalLightIntensity[i] * input.normal - input.lightDirection[i]);
-        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), specularPower);
+        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
     }
 
-    float4 normalLightColor = ambientColor;
+    float4 normalLightColor = g_ambientColor;
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
@@ -70,7 +47,7 @@ float4 main(PixelInputType input) : SV_TARGET
         normalLightColor.b += normalColorArray[i].b;
     }
 
-    float4 textureLightColor = ambientColor;
+    float4 textureLightColor = g_ambientColor;
 
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
