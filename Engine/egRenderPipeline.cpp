@@ -204,7 +204,7 @@ namespace Engine::Manager::Graphics
 		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilState(&ds_desc, m_shadow_map_depth_stencil_state_.GetAddressOf()));
 
 		D3D11_SAMPLER_DESC sampler_desc{};
-		sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+		sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
