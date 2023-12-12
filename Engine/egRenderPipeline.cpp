@@ -38,7 +38,7 @@ namespace Engine::Manager::Graphics
 		m_light_buffer_.color[id] = color;
 	}
 
-	void RenderPipeline::SetShadow(const CascadeShadowBuffer& shadow_buffer)
+	void RenderPipeline::SetCascadeBuffer(const CascadeShadowBuffer& shadow_buffer)
 	{
 		m_shadow_buffer_data_.SetData(GetD3Device().GetContext(), shadow_buffer);
 
@@ -60,8 +60,9 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
 	}
 
-	void RenderPipeline::BindLightBuffer()
+	void RenderPipeline::BindLightBuffer(const UINT light_count)
 	{
+		m_light_buffer_.light_count = static_cast<int>(light_count);
 		m_light_buffer_data.SetData(GetD3Device().GetContext(), m_light_buffer_);
 
 		GetD3Device().BindConstantBuffer(m_light_buffer_data, CB_TYPE_LIGHT, SHADER_VERTEX);
@@ -78,6 +79,11 @@ namespace Engine::Manager::Graphics
 	{
 		GetD3Device().GetContext()->OMSetDepthStencilState(m_depth_stencil_state_.Get(), 0);
 		GetD3Device().UpdateRenderTarget();
+	}
+
+	void RenderPipeline::ResetViewport()
+	{
+		GetD3Device().UpdateViewport();
 	}
 
 	void RenderPipeline::SetWireframeState() const
@@ -122,13 +128,13 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->PSSetShaderResources(resource, 1, &texture);
 	}
 
-	void RenderPipeline::InitializeShadowBuffer()
+	void RenderPipeline::InitializeShadowBuffer(GraphicShadowBuffer& buffer)
 	{
 		ComPtr<ID3D11Texture2D> shadow_map_texture = nullptr;
 
 		D3D11_TEXTURE2D_DESC desc{};
-		desc.Width = g_window_width;
-		desc.Height = g_window_height;
+		desc.Width = g_max_shadow_map_size;
+		desc.Height = g_max_shadow_map_size;
 		desc.MipLevels = 1;
 		desc.ArraySize = g_max_shadow_cascades;
 		desc.Format = DXGI_FORMAT_R32_TYPELESS;
@@ -150,7 +156,7 @@ namespace Engine::Manager::Graphics
 		dsv_desc.Flags = 0;
 
 		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilView(
-					shadow_map_texture.Get(), &dsv_desc, m_shadow_map_depth_view_.GetAddressOf()));
+					shadow_map_texture.Get(), &dsv_desc, buffer.depth_stencil_view.GetAddressOf()));
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
 		srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -161,8 +167,11 @@ namespace Engine::Manager::Graphics
 		srv_desc.Texture2DArray.MostDetailedMip = 0;
 
 		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateShaderResourceView(
-							shadow_map_texture.Get(), &srv_desc, m_shadow_map_resource_view_.GetAddressOf()));
+							shadow_map_texture.Get(), &srv_desc, buffer.shader_resource_view.GetAddressOf()));
+	}
 
+	void RenderPipeline::InitializeShadowProcessors()
+	{
 		D3D11_DEPTH_STENCIL_DESC ds_desc{};
 
 		ds_desc.DepthEnable = true;
@@ -183,7 +192,7 @@ namespace Engine::Manager::Graphics
 		DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilState(&ds_desc, m_shadow_map_depth_stencil_state_.GetAddressOf()));
 
 		D3D11_SAMPLER_DESC sampler_desc{};
-		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
 		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -203,15 +212,16 @@ namespace Engine::Manager::Graphics
 		GetD3Device().CreateConstantBuffer(m_light_buffer_data);
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_shadow_buffer_chunk_data_);
 
 		PrecompileShaders();
 		InitializeSamplers();
 
-		InitializeShadowBuffer();
+		InitializeShadowProcessors();
+		BindShadowSampler();
 
 		GetD3Device().CreateBlendState(m_blend_state_.GetAddressOf());
 		GetD3Device().CreateRasterizer(m_rasterizer_state_.GetAddressOf(), D3D11_FILL_SOLID);
-		GetD3Device().CreateRasterizer(m_rasterizer_state_wire_.GetAddressOf(), D3D11_FILL_WIREFRAME);
 		GetD3Device().CreateDepthStencilState(m_depth_stencil_state_.GetAddressOf());
 
 		Engine::GetRenderPipeline().SetSpecularColor({0.5f, 0.5f, 0.5f, 1.0f});
@@ -328,33 +338,41 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0);
 	}
 
-	void RenderPipeline::TargetShadowMap()
+	void RenderPipeline::TargetShadowMap(const GraphicShadowBuffer& buffer)
 	{
 		ID3D11RenderTargetView* pnullView = nullptr; 
 
-		GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, m_shadow_map_depth_view_.Get());
+		GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, buffer.depth_stencil_view.Get());
 		GetD3Device().GetContext()->OMSetDepthStencilState(m_shadow_map_depth_stencil_state_.Get(), 0);
 	}
 
-	void RenderPipeline::BindShadowMap()
+	void RenderPipeline::UseShadowMapViewport()
 	{
-		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, 1, m_shadow_map_resource_view_.GetAddressOf());
+		D3D11_VIEWPORT viewport{};
+		viewport.Width = static_cast<float>(g_max_shadow_map_size);
+		viewport.Height = static_cast<float>(g_max_shadow_map_size);
+		viewport.MinDepth = 0.f;
+		viewport.MaxDepth = 1.f;
+		viewport.TopLeftX = 0.f;
+		viewport.TopLeftY = 0.f;
+
+		GetD3Device().GetContext()->RSSetViewports(1, &viewport);
 	}
 
-	void RenderPipeline::UnbindShadowMap()
+	void RenderPipeline::BindShadowMap(const UINT size, ID3D11ShaderResourceView** p_shadow_maps)
 	{
-		ID3D11ShaderResourceView* pnullView = nullptr;
-		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, 1, &pnullView);
+		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, size, p_shadow_maps);
+	}
+
+	void RenderPipeline::UnbindShadowMap(const UINT size)
+	{
+		std::vector<ID3D11ShaderResourceView*> pnullView(size, nullptr);
+		GetD3Device().GetContext()->PSSetShaderResources(SR_SHADOW_MAP, size, pnullView.data());
 	}
 
 	void RenderPipeline::BindShadowSampler()
 	{
 		GetD3Device().BindSampler(m_shadow_map_sampler_state_.Get(), SHADER_PIXEL, SAMPLER_SHADOW);
-	}
-
-	void RenderPipeline::ResetSampler(const eShaderType shader)
-	{
-		GetD3Device().BindSampler(m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL, SAMPLER_TEXTURE);
 	}
 
 	void RenderPipeline::ResetShaders()
@@ -367,10 +385,19 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
 	}
 
-	void RenderPipeline::ResetShadowMap()
+	void RenderPipeline::ResetShadowMap(ID3D11DepthStencilView* view)
 	{
-		GetD3Device().GetContext()->ClearDepthStencilView(m_shadow_map_depth_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+		GetD3Device().GetContext()->ClearDepthStencilView(view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+	}
 
+	void RenderPipeline::ResetDepthStencilState()
+	{
 		GetD3Device().GetContext()->OMSetDepthStencilState(m_depth_stencil_state_.Get(), 0);
+	}
+
+	void RenderPipeline::BindCascadeBufferChunk(const CascadeShadowBufferChunk& cascade_shadow_buffer_chunk)
+	{
+		m_shadow_buffer_chunk_data_.SetData(GetD3Device().GetContext(), cascade_shadow_buffer_chunk);
+		GetD3Device().BindConstantBuffer(m_shadow_buffer_chunk_data_, CB_TYPE_SHADOW_CHUNK, SHADER_PIXEL);
 	}
 }
