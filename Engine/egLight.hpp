@@ -12,7 +12,7 @@ namespace Engine::Objects
 	class Light final : public Abstract::Object
 	{
 	public:
-		Light() : Object(), m_light_id_(0)
+		Light() : Object()
 		{
 		}
 
@@ -29,16 +29,14 @@ namespace Engine::Objects
 
 		void OnDeserialized() override;
 
+		Color GetColor() const
+		{
+			return m_color_;
+		}
+
 	private:
 		SERIALIZER_ACCESS
-
-		UINT m_light_id_;
-
-		Vector4 m_color_;
-
-		CascadeShadowBuffer m_shadow_buffer_;
-
-		inline static std::bitset<g_max_lights> s_light_map_{};
+		Color m_color_;
 	};
 }
 
