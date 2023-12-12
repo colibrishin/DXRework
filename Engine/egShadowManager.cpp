@@ -19,7 +19,6 @@ namespace Engine::Manager::Graphics
 		m_vs_stage1 = GetResourceManager().GetResource<Graphic::VertexShader>("vs_cascade_shadow_stage1").lock();
 		m_gs_stage1 = GetResourceManager().GetResource<Graphic::GeometryShader>("gs_cascade_shadow_stage1").lock();
 		m_ps_stage1 = GetResourceManager().GetResource<Graphic::PixelShader>("ps_cascade_shadow_stage1").lock();
-
 	}
 
 	void ShadowManager::PreUpdate(const float& dt)
@@ -160,7 +159,7 @@ namespace Engine::Manager::Graphics
 	{
 		for (int i = 0; i < LAYER_MAX; ++i)
 		{
-			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA || i == LAYER_SKYBOX) continue;
+			if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA || i == LAYER_SKYBOX || i == LAYER_ENVIRONMENT) continue;
 		
 			for (const auto& objects : scene.GetGameObjects((eLayerType)i))
 			{
