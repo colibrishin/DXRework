@@ -27,6 +27,7 @@
 
 #include "egType.hpp"
 #include "egSerialization.hpp"
+#include "egDXCommon.h"
 
 using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
@@ -78,27 +79,6 @@ namespace Engine
 	inline std::atomic<float> g_screen_near = 1.f;
 	inline std::atomic<float> g_screen_far = 100.0f;
 
-	enum eShaderType
-	{
-		SHADER_VERTEX = 0,
-		SHADER_PIXEL,
-		SHADER_GEOMETRY,
-		SHADER_COMPUTE,
-		SHADER_HULL,
-		SHADER_DOMAIN,
-		SHADER_UNKNOWN
-	};
-
-	enum eCBType
-	{
-		CB_TYPE_WVP = 0,
-		CB_TYPE_TRANSFORM,
-		CB_TYPE_LIGHT,
-		CB_TYPE_SPECULAR,
-		CB_TYPE_SHADOW,
-		CB_TYPE_SHADOW_CHUNK
-	};
-
 	enum eLayerType
 	{
 		LAYER_NONE = 0,
@@ -139,19 +119,6 @@ namespace Engine
 		BOUNDING_TYPE_BOX = 0,
 		BOUNDING_TYPE_FRUSTUM,
 		BOUNDING_TYPE_SPHERE,
-	};
-
-	enum eShaderResource
-	{
-		SR_TEXTURE = 0,
-		SR_NORMAL_MAP,
-		SR_SHADOW_MAP,
-	};
-
-	enum eSampler
-	{
-		SAMPLER_TEXTURE = 0,
-		SAMPLER_SHADOW,
 	};
 
 	struct GUIDComparer

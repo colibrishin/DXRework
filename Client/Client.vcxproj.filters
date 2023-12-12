@@ -141,4 +141,9 @@
       <Filter>Resource\Sound</Filter>
     </Media>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Water-Normal.tga">
+      <Filter>Resource\Normal</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

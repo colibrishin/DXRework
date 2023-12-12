@@ -35,6 +35,8 @@ namespace Engine::Manager::Graphics
 		void SetCascadeBuffer(const CascadeShadowBuffer& shadow_buffer);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
+		void SetWater(const WaterBuffer& water_buffer);
+		void SetClipPlane(const ClipPlaneBuffer& clip_plane_buffer);
 
 		void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
@@ -93,6 +95,8 @@ namespace Engine::Manager::Graphics
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 		ConstantBuffer<CascadeShadowBuffer> m_shadow_buffer_data_{};
 		ConstantBuffer<CascadeShadowBufferChunk> m_shadow_buffer_chunk_data_{};
+		ConstantBuffer<WaterBuffer> m_water_buffer_data_{};
+		ConstantBuffer<ClipPlaneBuffer> m_clip_plane_buffer_data_{};
 
 		std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
 

@@ -298,6 +298,9 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </CopyFileToFolders>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Water-Normal.tga" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets" Condition="Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" />
