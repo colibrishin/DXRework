@@ -1,7 +1,9 @@
 #pragma once
+#include <wrl/client.h>
+
 #include <SimpleMath.h>
 
-#include "egCommon.hpp"
+using namespace Microsoft::WRL;
 
 namespace Engine
 {
@@ -20,6 +22,44 @@ namespace Engine
 	constexpr int g_max_lights = 8;
 	constexpr int g_max_shadow_cascades = 3;
 	constexpr int g_max_shadow_map_size = 512;
+
+	enum eShaderType
+	{
+		SHADER_VERTEX = 0,
+		SHADER_PIXEL,
+		SHADER_GEOMETRY,
+		SHADER_COMPUTE,
+		SHADER_HULL,
+		SHADER_DOMAIN,
+		SHADER_UNKNOWN
+	};
+
+	enum eCBType
+	{
+		CB_TYPE_WVP = 0,
+		CB_TYPE_TRANSFORM,
+		CB_TYPE_LIGHT,
+		CB_TYPE_SPECULAR,
+		CB_TYPE_SHADOW,
+		CB_TYPE_SHADOW_CHUNK,
+		CB_TYPE_WATER,
+		CB_TYPE_CLIP_PLANE,
+	};
+
+	enum eShaderResource
+	{
+		SR_TEXTURE = 0,
+		SR_NORMAL_MAP,
+		SR_SHADOW_MAP,
+		SR_REFLECT_MAP,
+		SR_REFRACT_MAP,
+	};
+
+	enum eSampler
+	{
+		SAMPLER_TEXTURE = 0,
+		SAMPLER_SHADOW,
+	};
 
 	struct GraphicShadowBuffer
 	{
@@ -45,6 +85,7 @@ namespace Engine
 		Matrix projection;
 		Matrix invView;
 		Matrix invProj;
+		Matrix reflectView;
 	};
 
 	struct TransformBuffer
@@ -59,13 +100,13 @@ namespace Engine
 		Matrix world[g_max_lights];
 		Color color[g_max_lights];
 		int light_count;
-		float padding[3];
+		float ___p[3];
 	};
 
 	struct SpecularBuffer
 	{
 		float specular_power;
-		float padding[3];
+		float ___p[3];
 		Color specular_color;
 	};
 
@@ -84,5 +125,17 @@ namespace Engine
 	struct CascadeShadowBufferChunk
 	{
 		CascadeShadow lights[g_max_lights];
+	};
+
+	struct WaterBuffer
+	{
+		float water_translation;
+		float reflect_refract_scale;
+		float ___p[2];
+	};
+
+	struct ClipPlaneBuffer
+	{
+		Vector4 clip_plane;
 	};
 }
