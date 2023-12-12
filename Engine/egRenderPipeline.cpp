@@ -60,6 +60,18 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
 	}
 
+	void RenderPipeline::SetWater(const WaterBuffer& water_buffer)
+	{
+		m_water_buffer_data_.SetData(GetD3Device().GetContext(), water_buffer);
+		GetD3Device().BindConstantBuffer(m_water_buffer_data_, CB_TYPE_WATER, SHADER_PIXEL);
+	}
+
+	void RenderPipeline::SetClipPlane(const ClipPlaneBuffer& clip_plane_buffer)
+	{
+		m_clip_plane_buffer_data_.SetData(GetD3Device().GetContext(), clip_plane_buffer);
+		GetD3Device().BindConstantBuffer(m_clip_plane_buffer_data_, CB_TYPE_CLIP_PLANE, SHADER_VERTEX);
+	}
+
 	void RenderPipeline::BindLightBuffer(const UINT light_count)
 	{
 		m_light_buffer_.light_count = static_cast<int>(light_count);
@@ -213,6 +225,8 @@ namespace Engine::Manager::Graphics
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_shadow_buffer_chunk_data_);
+		GetD3Device().CreateConstantBuffer(m_water_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_clip_plane_buffer_data_);
 
 		PrecompileShaders();
 		InitializeSamplers();
