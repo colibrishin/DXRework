@@ -118,6 +118,21 @@ namespace Engine::Objects
 			m_wvp_buffer_.invView = invView.Transpose();
 			m_wvp_buffer_.invProj = invProj.Transpose();
 
+			// do the same with 180 degree rotation
+
+			Matrix flipRotation = Matrix::Transform(rotationMatrix, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(180.f), 0.f));
+
+			lookAtVector = m_look_at_;
+
+			lookAtVector = XMVector3TransformNormal(lookAtVector, flipRotation);
+			lookAtVector = XMVector3TransformNormal(lookAtVector, lookAtMatrix);
+			upVector = XMVector3TransformNormal(upVector, flipRotation);
+
+			lookAtVector = XMVectorAdd(positionVector, lookAtVector);
+			m_wvp_buffer_.reflectView = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+
+			m_wvp_buffer_.reflectView = m_wvp_buffer_.reflectView.Transpose();
+
 			GetRenderPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
 
 			Vector3 velocity = Vector3::Zero;
