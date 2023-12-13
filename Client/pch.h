@@ -49,6 +49,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include <dxgi1_3.h>
 #include <d3d11.h>
 #include <d2d1.h>
 #include <d3dcompiler.h>
@@ -63,8 +64,6 @@
 #include "../Engine/egTransform.hpp"
 #include "../Engine/egIShader.hpp"
 #include "../Engine/egRigidbody.hpp"
-
-#include "../Engine/pch.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

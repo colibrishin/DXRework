@@ -1,6 +1,8 @@
 #include "pch.hpp"
 
 #include "egD3Device.hpp"
+
+#include "egDebugger.hpp"
 #include "egShader.hpp"
 #include "egToolkitAPI.hpp"
 
@@ -200,22 +202,49 @@ namespace Engine::Manager::Graphics
 		m_context_->OMSetDepthStencilState(*depth_stencil_state, 1);
 	}
 
-	void D3Device::InitializeAdapter()
+	void D3Device::InitializeDevice()
 	{
-		ComPtr<IDXGIFactory> factory;
+		constexpr D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
+
+		UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined(_DEBUG)
+		creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+		ComPtr<ID3D11Device> tmp_dev;
+		ComPtr<ID3D11DeviceContext> tmp_ctx;
+
+		DX::ThrowIfFailed(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags, &feature_level,
+		                                    1, D3D11_SDK_VERSION, tmp_dev.GetAddressOf(), nullptr,
+		                                    tmp_ctx.GetAddressOf()));
+
+		DX::ThrowIfFailed(tmp_dev->QueryInterface(IID_PPV_ARGS(m_device_.GetAddressOf())));
+		DX::ThrowIfFailed(tmp_ctx->QueryInterface(IID_PPV_ARGS(m_context_.GetAddressOf())));
+
+		ComPtr<IDXGIFactory3> factory;
 		ComPtr<IDXGIAdapter> adapter;
+		ComPtr<IDXGIDevice1> dxgi_device;
+
+		DX::ThrowIfFailed(tmp_dev->QueryInterface(IID_PPV_ARGS(dxgi_device.GetAddressOf())));
+		DX::ThrowIfFailed(dxgi_device->GetAdapter(&adapter));
+
+		DX::ThrowIfFailed(adapter->GetParent(IID_PPV_ARGS(factory.GetAddressOf())));
+
+		DXGI_ADAPTER_DESC adapter_desc;
+		DX::ThrowIfFailed(adapter->GetDesc(&adapter_desc));
+
+		s_video_card_memory_ = static_cast<UINT>(adapter_desc.DedicatedVideoMemory / 1024 / 1024);
 
 		ComPtr<IDXGIOutput> monitor;
 		UINT mode_count = 0;
-		std::unique_ptr<DXGI_MODE_DESC> display_mode_list;
 
-		DX::ThrowIfFailed(CreateDXGIFactory(__uuidof(IDXGIFactory), &factory));
 		DX::ThrowIfFailed(factory->EnumAdapters(0, &adapter));
 		DX::ThrowIfFailed(adapter->EnumOutputs(0, &monitor));
 		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED,
-		                                              &mode_count, nullptr));
+					                                              &mode_count, nullptr));
 
-		display_mode_list = std::unique_ptr<DXGI_MODE_DESC>(new DXGI_MODE_DESC[mode_count]);
+		std::unique_ptr<DXGI_MODE_DESC> display_mode_list = std::unique_ptr<DXGI_MODE_DESC>(new DXGI_MODE_DESC[mode_count]);
 
 		DX::ThrowIfFailed(monitor->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED,
 		                                              &mode_count, display_mode_list.get()));
@@ -230,53 +259,40 @@ namespace Engine::Manager::Graphics
 			}
 		}
 
-		DXGI_ADAPTER_DESC adapter_desc;
-		DX::ThrowIfFailed(adapter->GetDesc(&adapter_desc));
 
-		s_video_card_memory_ = static_cast<UINT>(adapter_desc.DedicatedVideoMemory / 1024 / 1024);
-	}
-
-	void D3Device::InitializeDevice()
-	{
-		DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
+		DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
 
 		swap_chain_desc.BufferCount = 2;
-		swap_chain_desc.BufferDesc.Width = g_window_width;
-		swap_chain_desc.BufferDesc.Height = g_window_height;
-		swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swap_chain_desc.Width = g_window_width;
+		swap_chain_desc.Height = g_window_height;
+		swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swap_chain_desc.SampleDesc.Count = 1;
 		swap_chain_desc.SampleDesc.Quality = 0;
-		swap_chain_desc.OutputWindow = m_hwnd_;
-		swap_chain_desc.Windowed = !g_full_screen;
-		swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		swap_chain_desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+		swap_chain_desc.Scaling = DXGI_SCALING_NONE;
 		swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-		swap_chain_desc.Flags = 0;
+		swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC full_screen_desc = {};
+
+		full_screen_desc.Windowed = !g_full_screen;
+		full_screen_desc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 
 		if (g_vsync_enabled)
 		{
-			swap_chain_desc.BufferDesc.RefreshRate.Numerator = s_refresh_rate_numerator_;
-			swap_chain_desc.BufferDesc.RefreshRate.Denominator = s_refresh_rate_denominator_;
+			full_screen_desc.RefreshRate.Denominator = s_refresh_rate_denominator_;
+			full_screen_desc.RefreshRate.Numerator = s_refresh_rate_numerator_;
 		}
 		else
 		{
-			swap_chain_desc.BufferDesc.RefreshRate.Numerator = 0;
-			swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
+			full_screen_desc.RefreshRate.Denominator = 1;
+			full_screen_desc.RefreshRate.Numerator = 0;
 		}
 
-		constexpr D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
+		DX::ThrowIfFailed(factory->CreateSwapChainForHwnd(m_device_.Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc, nullptr, (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()));
 
-		UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-
-#if defined(_DEBUG)
-		creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-
-		DX::ThrowIfFailed(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
-		                                                &feature_level, 1, D3D11_SDK_VERSION, &swap_chain_desc,
-		                                                m_swap_chain_.GetAddressOf(), m_device_.GetAddressOf(), nullptr,
-		                                                m_context_.GetAddressOf()));
+		m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second);
 	}
 
 	void D3Device::InitializeRenderTargetView()
@@ -292,8 +308,6 @@ namespace Engine::Manager::Graphics
 	void D3Device::InitializeD2D()
 	{
 		ComPtr<ID2D1Factory> d2d_factory;
-		DX::ThrowIfFailed(m_swap_chain_->GetBuffer(0, IID_PPV_ARGS(&m_dxgi_device_)));
-
 		DX::ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d_factory.GetAddressOf()));
 
 		const float dpiX = static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX));
@@ -420,7 +434,6 @@ namespace Engine::Manager::Graphics
 	{
 		m_hwnd_ = hwnd;
 
-		InitializeAdapter();
 		InitializeDevice();
 		InitializeRenderTargetView();
 		InitializeDepthStencil();
@@ -437,6 +450,11 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::FrameBegin()
 	{
+		if (WaitForSingleObjectEx(GetSwapchainAwaiter(), g_max_frame_latency_ms, true) != WAIT_OBJECT_0)
+		{
+			GetDebugger().Log(L"Waiting for Swap chain had an issue.");
+		}
+
 		constexpr float color[4] = {0.f, 0.f, 0.f, 1.f};
 
 		m_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
@@ -445,6 +463,12 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::Present() const
 	{
-		m_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
+		DXGI_PRESENT_PARAMETERS params{};
+		params.DirtyRectsCount = 0;
+		params.pDirtyRects = nullptr;
+		params.pScrollRect = nullptr;
+		params.pScrollOffset = nullptr;
+
+		m_swap_chain_->Present1(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT, &params);
 	}
 }
