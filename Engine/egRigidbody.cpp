@@ -74,11 +74,15 @@ namespace Engine::Component
 	{
 	}
 
-	void Rigidbody::PreRender(const float dt)
+	void Rigidbody::PreRender(const float& dt)
 	{
 	}
 
-	void Rigidbody::Render(const float dt)
+	void Rigidbody::Render(const float& dt)
+	{
+	}
+
+	void Rigidbody::PostRender(const float& dt)
 	{
 	}
 

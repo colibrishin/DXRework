@@ -34,15 +34,19 @@ namespace Engine::Component
 	{
 	}
 	
-	void ObserverController::PreRender(const float dt)
+	void ObserverController::PreRender(const float& dt)
 	{
 	}
 	
-	void ObserverController::Render(const float dt)
+	void ObserverController::Render(const float& dt)
 	{
 		StateController::Render(dt);
 	}
-	
+
+	void ObserverController::PostRender(const float& dt)
+	{
+	}
+
 	void ObserverController::Mouse(const float& dt)
 	{
 		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())

@@ -53,14 +53,19 @@ namespace Client::Object
 		Object::Update(dt);
 	}
 
-	inline void TestCube::PreRender(const float dt)
+	inline void TestCube::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	inline void TestCube::Render(const float dt)
+	inline void TestCube::Render(const float& dt)
 	{
 		Object::Render(dt);
+	}
+
+	void TestCube::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 
 	inline void TestCube::FixedUpdate(const float& dt)

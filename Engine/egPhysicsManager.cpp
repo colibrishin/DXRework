@@ -31,6 +31,10 @@ namespace Engine::Manager::Physics
 	{
 	}
 
+	void PhysicsManager::PostRender(const float& dt)
+	{
+	}
+
 	void PhysicsManager::FixedUpdate(const float& dt)
 	{
 		if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())

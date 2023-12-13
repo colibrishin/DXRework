@@ -22,12 +22,12 @@ namespace Engine::Objects
 		Object::Update(dt);
 	}
 
-	void Text::PreRender(const float dt)
+	void Text::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	void Text::Render(const float dt)
+	void Text::Render(const float& dt)
 	{
 		if (const auto font = GetResource<Resources::Font>().lock())
 		{
@@ -45,6 +45,11 @@ namespace Engine::Objects
 			font->SetRotation(0);
 			font->SetScale(1);
 		}
+	}
+
+	void Text::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 
 	void Text::OnDeserialized()

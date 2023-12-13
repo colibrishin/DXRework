@@ -22,13 +22,11 @@ namespace Engine::Manager
 		void PreUpdate(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 		bool CheckRender(const WeakObject& object) const;
 		BoundingFrustum GetFrustum() const { return m_frustum; }
-
-		bool IsInFrustum(const Vector3& position, float radius) const;
-		bool IsInFrustum(const Vector3& position, const Vector3& size) const;
 
 	private:
 		BoundingFrustum m_frustum;

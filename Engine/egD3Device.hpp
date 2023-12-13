@@ -264,11 +264,14 @@ namespace Engine::Manager::Graphics
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
+		void PostRender(const float& dt) override;
 
 		const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
 		const Matrix& GetOrthogonalMatrix()	const { return s_ortho_matrix_; }
 		ID3D11Device* GetDevice() const { return m_device_.Get(); }
 		ID3D11DeviceContext* GetContext() const { return m_context_.Get(); }
+
+		void GetSwapchainCopy(GraphicRenderedBuffer& buffer);
 
 	private:
 		friend class RenderPipeline;
@@ -342,6 +345,7 @@ namespace Engine::Manager::Graphics
 		void FrameBegin();
 		void Present() const;
 
+	private:
 		HWND m_hwnd_ = nullptr;
 
 		ComPtr<ID3D11Device> m_device_ = nullptr;
@@ -357,9 +361,8 @@ namespace Engine::Manager::Graphics
 
 		DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
-		ComPtr<IDXGISwapChain> s_swap_chain_ = nullptr;
+		ComPtr<IDXGISwapChain> m_swap_chain_ = nullptr;
 		ComPtr<ID3D11RenderTargetView> s_render_target_view_ = nullptr;
-		ComPtr<ID3D11Texture2D> s_depth_stencil_buffer_ = nullptr;
 		ComPtr<ID3D11DepthStencilView> s_depth_stencil_view_ = nullptr;
 
 		D3D11_VIEWPORT s_viewport_{};

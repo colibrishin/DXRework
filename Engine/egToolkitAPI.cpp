@@ -56,6 +56,10 @@ namespace Engine::Manager::Graphics
 
 	void ToolkitAPI::Render(const float& dt)
 	{
+	}
+
+	void ToolkitAPI::PostRender(const float& dt)
+	{
 		FrameEnd();
 	}
 

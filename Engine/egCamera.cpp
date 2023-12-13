@@ -58,7 +58,7 @@ namespace Engine::Objects
 		Object::Update(dt);
 	}
 
-	void Camera::PreRender(const float dt)
+	void Camera::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 
@@ -154,7 +154,7 @@ namespace Engine::Objects
 		}
 	}
 
-	void Camera::Render(const float dt)
+	void Camera::Render(const float& dt)
 	{
 		Object::Render(dt);
 
@@ -165,6 +165,11 @@ namespace Engine::Objects
 		frustum.Transform(frustum, GetViewMatrix().Invert());
 		GetDebugger().Draw(frustum, Colors::WhiteSmoke);
 #endif
+	}
+
+	void Camera::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 
 	void Camera::FixedUpdate(const float& dt)

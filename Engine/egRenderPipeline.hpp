@@ -35,8 +35,8 @@ namespace Engine::Manager::Graphics
 		void SetCascadeBuffer(const CascadeShadowBuffer& shadow_buffer);
 		void SetSpecularPower(float power);
 		void SetSpecularColor(const Color& color);
-		void SetWater(const WaterBuffer& water_buffer);
 		void SetClipPlane(const ClipPlaneBuffer& clip_plane_buffer);
+		void SetRefraction(const RefractionBuffer& refraction_buffer);
 
 		void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
@@ -52,6 +52,7 @@ namespace Engine::Manager::Graphics
 		void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
 
 		void BindResource(eShaderResource resource, ID3D11ShaderResourceView* texture);
+
 		void InitializeShadowBuffer(GraphicShadowBuffer& buffer);
 		void InitializeShadowProcessors();
 
@@ -69,6 +70,7 @@ namespace Engine::Manager::Graphics
 		void ResetShadowMap(ID3D11DepthStencilView* view);
 		void ResetDepthStencilState();
 		void BindCascadeBufferChunk(const CascadeShadowBufferChunk& cascade_shadow_buffer_chunk);
+		void UnbindResource(eShaderResource shader_resource);
 
 	private:
 		friend class ToolkitAPI;
@@ -81,10 +83,9 @@ namespace Engine::Manager::Graphics
 		void Update(const float& dt) override {}
 		void Render(const float& dt) override {}
 		void FixedUpdate(const float& dt) override {}
+		void PostRender(const float& dt) override {}
 
 	private:
-		ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;
-
 		ConstantBuffer<PerspectiveBuffer> m_wvp_buffer_data_{};
 		ConstantBuffer<TransformBuffer> m_transform_buffer_data_{};
 		
@@ -95,7 +96,7 @@ namespace Engine::Manager::Graphics
 		ConstantBuffer<SpecularBuffer> m_specular_buffer_data_{};
 		ConstantBuffer<CascadeShadowBuffer> m_shadow_buffer_data_{};
 		ConstantBuffer<CascadeShadowBufferChunk> m_shadow_buffer_chunk_data_{};
-		ConstantBuffer<WaterBuffer> m_water_buffer_data_{};
+		ConstantBuffer<RefractionBuffer> m_refraction_buffer_data_{};
 		ConstantBuffer<ClipPlaneBuffer> m_clip_plane_buffer_data_{};
 
 		std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};

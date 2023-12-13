@@ -20,7 +20,7 @@ namespace Engine::Abstract
 		TypeName GetVirtualTypeName() const override;
 
 		void OnImGui() override;
-		void Render(const float dt) override;
+		void Render(const float& dt) override;
 
 	protected:
 		Component(eComponentPriority priority, const WeakObject& owner);

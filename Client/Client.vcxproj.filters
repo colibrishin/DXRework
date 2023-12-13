@@ -80,6 +80,9 @@
     <ClInclude Include="clCharacterController.hpp">
       <Filter>State</Filter>
     </ClInclude>
+    <ClInclude Include="clWater.hpp">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -115,6 +118,9 @@
     <ClCompile Include="clBackSphereMesh.cpp">
       <Filter>Resource\Mesh</Filter>
     </ClCompile>
+    <ClCompile Include="clWater.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -135,15 +141,13 @@
     <CopyFileToFolders Include="testscene.txt">
       <Filter>Resource\Scene</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="Water-Normal.png">
+      <Filter>Resource\Normal</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Media Include="crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3">
       <Filter>Resource\Sound</Filter>
     </Media>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Water-Normal.tga">
-      <Filter>Resource\Normal</Filter>
-    </Image>
   </ItemGroup>
 </Project>

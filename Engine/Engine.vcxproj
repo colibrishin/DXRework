@@ -74,6 +74,7 @@
     <ClInclude Include="egLerpManager.hpp" />
     <ClInclude Include="egType.hpp" />
     <ClInclude Include="egVertexShaderInternal.hpp" />
+    <ClInclude Include="egDelayedRenderObject.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="egIStateController.hpp" />
     <ClInclude Include="pch.hpp" />
@@ -116,6 +117,7 @@
     <ClCompile Include="egResource.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egScene.cpp" />
+    <ClCompile Include="egSceneManager.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egShadowManager.cpp" />
     <ClCompile Include="egSound.cpp" />
@@ -126,6 +128,7 @@
     <ClCompile Include="egTransform.cpp" />
     <ClCompile Include="egLerpManager.cpp" />
     <ClCompile Include="egVertexShaderInternal.cpp" />
+    <ClCompile Include="egDelayedRenderObject.cpp" />
     <CopyFileToFolders Include="ps_cascade_shadow_stage1.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -592,7 +595,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="ps_water.hlsl">
+    <CopyFileToFolders Include="ps_refraction.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>

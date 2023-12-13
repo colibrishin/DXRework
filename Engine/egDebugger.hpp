@@ -37,6 +37,7 @@ namespace Engine::Manager
 		void Update(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
+		void PostRender(const float& dt) override;
 
 	private:
 		struct Message
@@ -49,6 +50,7 @@ namespace Engine::Manager
 
 		void Push(const Message& msg, const std::function<void(Message&, float)>& func);
 
+	private:
 		bool m_bDebug;
 		int x = 0;
 		int y = g_debug_y_initial;

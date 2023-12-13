@@ -6,6 +6,55 @@
 
 namespace Engine::Manager::Graphics
 {
+	void D3Device::GetSwapchainCopy(GraphicRenderedBuffer& buffer)
+	{
+		ID3D11Texture2D** swapchain_texture = new ID3D11Texture2D*;
+		ID3D11Texture2D** buffer_texture = new ID3D11Texture2D*;
+
+		if (buffer.srv == nullptr)
+		{
+			ComPtr<ID3D11Texture2D> rtn_buffer;
+
+			D3D11_TEXTURE2D_DESC desc{};
+
+			desc.Width = g_window_width;
+			desc.Height = g_window_height;
+			desc.MipLevels = 1;
+			desc.ArraySize = 1;
+			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			desc.SampleDesc.Count = 1;
+			desc.SampleDesc.Quality = 0;
+			desc.Usage = D3D11_USAGE_DEFAULT;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			desc.CPUAccessFlags = 0;
+			desc.MiscFlags = 0;
+
+			DX::ThrowIfFailed(m_device_->CreateTexture2D(&desc, nullptr, rtn_buffer.GetAddressOf()));
+
+			D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+
+			srv_desc.Format = desc.Format;
+			srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srv_desc.Texture2D.MipLevels = desc.MipLevels;
+			srv_desc.Texture2D.MostDetailedMip = 0;
+			srv_desc.Texture2DArray.ArraySize = 1;
+			srv_desc.Texture2DArray.FirstArraySlice = 0;
+
+			DX::ThrowIfFailed(m_device_->CreateShaderResourceView(rtn_buffer.Get(), &srv_desc, buffer.srv.GetAddressOf()));
+		}
+
+		buffer.srv->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture));
+		m_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)swapchain_texture);
+
+		m_context_->CopyResource(*buffer_texture, *swapchain_texture);
+
+		(*swapchain_texture)->Release();
+		(*buffer_texture)->Release();
+
+		delete swapchain_texture;
+		delete buffer_texture;
+	}
+
 	void D3Device::UpdateBuffer(UINT size, const void* data, ID3D11Buffer* buffer) const
 	{
 		D3D11_MAPPED_SUBRESOURCE mapped_resource{};
@@ -191,7 +240,7 @@ namespace Engine::Manager::Graphics
 	{
 		DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
 
-		swap_chain_desc.BufferCount = 1;
+		swap_chain_desc.BufferCount = 2;
 		swap_chain_desc.BufferDesc.Width = g_window_width;
 		swap_chain_desc.BufferDesc.Height = g_window_height;
 		swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -202,7 +251,7 @@ namespace Engine::Manager::Graphics
 		swap_chain_desc.Windowed = !g_full_screen;
 		swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-		swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+		swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 		swap_chain_desc.Flags = 0;
 
 		if (g_vsync_enabled)
@@ -226,7 +275,7 @@ namespace Engine::Manager::Graphics
 
 		DX::ThrowIfFailed(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
 		                                                &feature_level, 1, D3D11_SDK_VERSION, &swap_chain_desc,
-		                                                s_swap_chain_.GetAddressOf(), m_device_.GetAddressOf(), nullptr,
+		                                                m_swap_chain_.GetAddressOf(), m_device_.GetAddressOf(), nullptr,
 		                                                m_context_.GetAddressOf()));
 	}
 
@@ -234,7 +283,7 @@ namespace Engine::Manager::Graphics
 	{
 		ComPtr<ID3D11Texture2D> back_buffer;
 
-		DX::ThrowIfFailed(s_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &back_buffer));
+		DX::ThrowIfFailed(m_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &back_buffer));
 		DX::ThrowIfFailed(
 			m_device_->CreateRenderTargetView(back_buffer.Get(), nullptr,
 			                                  s_render_target_view_.ReleaseAndGetAddressOf()));
@@ -243,7 +292,7 @@ namespace Engine::Manager::Graphics
 	void D3Device::InitializeD2D()
 	{
 		ComPtr<ID2D1Factory> d2d_factory;
-		DX::ThrowIfFailed(s_swap_chain_->GetBuffer(0, IID_PPV_ARGS(&m_dxgi_device_)));
+		DX::ThrowIfFailed(m_swap_chain_->GetBuffer(0, IID_PPV_ARGS(&m_dxgi_device_)));
 
 		DX::ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d_factory.GetAddressOf()));
 
@@ -263,6 +312,7 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::InitializeDepthStencil()
 	{
+		ComPtr<ID3D11Texture2D> depth_stencil_buffer;
 		D3D11_TEXTURE2D_DESC depth_stencil_desc{};
 
 		depth_stencil_desc.Width = g_window_width;
@@ -278,7 +328,7 @@ namespace Engine::Manager::Graphics
 		depth_stencil_desc.MiscFlags = 0;
 
 		DX::ThrowIfFailed(m_device_->CreateTexture2D(&depth_stencil_desc, nullptr,
-		                                             s_depth_stencil_buffer_.ReleaseAndGetAddressOf()));
+		                                             depth_stencil_buffer.ReleaseAndGetAddressOf()));
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
 
@@ -286,7 +336,7 @@ namespace Engine::Manager::Graphics
 		depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		depth_stencil_view_desc.Texture2D.MipSlice = 0;
 
-		DX::ThrowIfFailed(m_device_->CreateDepthStencilView(s_depth_stencil_buffer_.Get(), &depth_stencil_view_desc,
+		DX::ThrowIfFailed(m_device_->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc,
 		                                                    s_depth_stencil_view_.ReleaseAndGetAddressOf()));
 
 		m_context_->OMSetRenderTargets(1, s_render_target_view_.GetAddressOf(), s_depth_stencil_view_.Get());
@@ -355,11 +405,15 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::Render(const float& dt)
 	{
-		Present();
 	}
 
 	void D3Device::FixedUpdate(const float& dt)
 	{
+	}
+
+	void D3Device::PostRender(const float& dt)
+	{
+		Present();
 	}
 
 	void D3Device::Initialize(HWND hwnd)
@@ -391,6 +445,6 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::Present() const
 	{
-		s_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
+		m_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
 	}
 }

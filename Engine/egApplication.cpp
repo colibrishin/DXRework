@@ -11,6 +11,10 @@
 #include "egSceneManager.hpp"
 #include "egToolkitAPI.hpp"
 
+#ifdef _DEBUG
+#include "dxgidebug.h"
+#endif
+
 namespace Engine::Manager
 {
 	void Application::UpdateWindowSize(HWND hWnd)
@@ -34,6 +38,15 @@ namespace Engine::Manager
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
+
+#ifdef _DEBUG
+		HMODULE hModule = GetModuleHandleW(L"dxgidebug.dll");
+		auto DXGIGetDebugInterfaceFunc = reinterpret_cast<decltype(DXGIGetDebugInterface)*>(GetProcAddress(hModule, "DXGIGetDebugInterface"));
+
+		IDXGIDebug* pDXGIDebug;
+		DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
+		pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_DETAIL);
+#endif
 	}
 
 	void Application::Initialize(HWND hWnd)
@@ -97,6 +110,7 @@ namespace Engine::Manager
 
 			PreRender(dt);
 			Render(dt);
+			PostRender(dt);
 		});
 	}
 
@@ -183,11 +197,27 @@ namespace Engine::Manager
 		GetShadowManager().Render(dt);
 		GetDebugger().Render(dt);
 		GetToolkitAPI().Render(dt);
+		GetD3Device().Render(dt);
+	}
+
+	void Application::PostRender(const float& dt)
+	{
+		GetTaskScheduler().PostRender(dt);
+		GetMouseManager().PostRender(dt);
+		GetCollisionDetector().PostRender(dt);
+		GetSceneManager().PostRender(dt);
+		GetProjectionFrustum().PostRender(dt);
+		GetResourceManager().PostRender(dt);
+		GetPhysicsManager().PostRender(dt);
+		GetConstraintSolver().PostRender(dt);
+		GetLerpManager().PostRender(dt);
+		GetShadowManager().PostRender(dt);
+		GetDebugger().PostRender(dt);
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-		GetD3Device().Render(dt);
+		GetToolkitAPI().PostRender(dt);
+		GetD3Device().PostRender(dt);
 	}
 
 	LRESULT Application::MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

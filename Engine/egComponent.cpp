@@ -22,7 +22,7 @@ namespace Engine::Abstract
 		ImGui::Unindent(2);
 	}
 
-	void Component::Render(const float dt)
+	void Component::Render(const float& dt)
 	{
 		m_b_ticked_ = true;
 	}

@@ -19,7 +19,7 @@ namespace Engine::Mesh
 	{
 	}
 
-	inline void SphereMesh::PreRender(const float dt)
+	inline void SphereMesh::PreRender(const float& dt)
 	{
 	}
 

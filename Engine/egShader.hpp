@@ -12,16 +12,17 @@ namespace Engine::Graphic
 	{
 	public:
 		Shader(const EntityName& name, const std::filesystem::path& path);
-		~Shader() override = default;
+		~Shader() override;
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
-		void PreRender(const float dt) override;
+		void PreRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 		T** GetShader() { return m_shader_.GetAddressOf(); }
-		void Render(const float dt) override;
+		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 
 		TypeName GetVirtualTypeName() const final;
 
@@ -45,7 +46,6 @@ namespace Engine::Graphic
 		void SetShaderType() override;
 
 		ComPtr<T> m_shader_;
-		ComPtr<ID3D11Buffer> m_buffer_;
 
 	};
 }

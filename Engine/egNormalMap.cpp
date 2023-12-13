@@ -22,14 +22,19 @@ namespace Engine::Resources
 		Texture::Update(dt);
 	}
 
-	void NormalMap::PreRender(const float dt)
+	void NormalMap::PreRender(const float& dt)
 	{
 		Texture::PreRender(dt);
 	}
 
-	void NormalMap::Render(const float dt)
+	void NormalMap::Render(const float& dt)
 	{
 		GetRenderPipeline().BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
+	}
+
+	void NormalMap::PostRender(const float& dt)
+	{
+		Texture::PostRender(dt);
 	}
 
 	TypeName NormalMap::GetVirtualTypeName() const

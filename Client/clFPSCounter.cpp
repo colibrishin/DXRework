@@ -6,11 +6,11 @@ SERIALIZER_ACCESS_IMPL(Client::Object::FPSCounter,
 
 namespace Client::Object
 {
-	inline FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>("DefaultFont"))
+	FPSCounter::FPSCounter() : Text(Engine::GetResourceManager().GetResource<Engine::Resources::Font>("DefaultFont"))
 	{
 	}
 
-	inline void FPSCounter::Initialize()
+	void FPSCounter::Initialize()
 	{
 		SetText("FPS: 0");
 		SetPosition(Vector2(0.0f, 0.0f));
@@ -19,28 +19,33 @@ namespace Client::Object
 		SetScale(1.0f);
 	}
 
-	inline FPSCounter::~FPSCounter()
+	FPSCounter::~FPSCounter()
 	{
 	}
 
-	inline void FPSCounter::PreUpdate(const float& dt)
+	void FPSCounter::PreUpdate(const float& dt)
 	{
 		Text::PreUpdate(dt);
 	}
 
-	inline void FPSCounter::Update(const float& dt)
+	void FPSCounter::Update(const float& dt)
 	{
 		Text::Update(dt);
 		SetText("FPS: " + std::to_string(Engine::GetApplication().GetFPS()));
 	}
 
-	inline void FPSCounter::PreRender(const float dt)
+	void FPSCounter::PreRender(const float& dt)
 	{
 		Text::PreRender(dt);
 	}
 
-	inline void FPSCounter::Render(const float dt)
+	void FPSCounter::Render(const float& dt)
 	{
 		Engine::Objects::Text::Render(dt);
+	}
+
+	void FPSCounter::PostRender(const float& dt)
+	{
+		Text::PostRender(dt);
 	}
 }

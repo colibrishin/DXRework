@@ -1,13 +1,14 @@
 #pragma once
 #include "egEntity.hpp"
+#include "egRenderable.hpp"
 
 namespace Engine::Abstract
 {
 	template <typename T, typename... InitArgs>
-	class Singleton
+	class Singleton : public Renderable
 	{
 	public:
-		virtual ~Singleton() = default;
+		virtual ~Singleton() override = default;
 		Singleton(const Singleton&) = delete;
 		Singleton(Singleton&&) = delete;
 		Singleton& operator=(const Singleton&) = delete;
@@ -34,15 +35,14 @@ namespace Engine::Abstract
 		}
 
 		virtual void Initialize(InitArgs... args) = 0;
-		virtual void PreUpdate(const float& dt) = 0;
-		virtual void Update(const float& dt) = 0;
-		virtual void PreRender(const float& dt) = 0;
-		virtual void Render(const float& dt) = 0;
-		virtual void FixedUpdate(const float& dt) = 0;
 
 	protected:
 		Singleton();
 
+	public:
+		TypeName GetVirtualTypeName() const final;
+
+	protected:
 		struct SINGLETON_LOCK_TOKEN final {};
 		inline static std::unique_ptr<T> s_instance_ = nullptr;
 
@@ -54,5 +54,11 @@ namespace Engine::Abstract
 		// Add singleton destroyer when the program exits.
 		// however, this can be removed due to usage of unique_ptr but added for the note.
 		std::atexit(&Destroy);
+	}
+
+	template <typename T, typename ... InitArgs>
+	TypeName Singleton<T, InitArgs...>::GetVirtualTypeName() const
+	{
+		return typeid(T).name();
 	}
 }

@@ -126,7 +126,7 @@ namespace Engine
 		return obj->GetID();
 	}
 
-	void Scene::UnregisterLightFromManager(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
+	void Scene::UnregisterLightFromManager(const WeakObject& obj)
 	{
 		if (obj.lock()->GetTypeName() == typeid(Objects::Light).name())
 		{
@@ -134,7 +134,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::RemoveObjectFromCache(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
+	void Scene::RemoveObjectFromCache(const WeakObject& obj)
 	{
 		for (const auto& comp : obj.lock()->GetAllComponents())
 		{
@@ -142,7 +142,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::RemoveObjectFromOctree(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj)
+	void Scene::RemoveObjectFromOctree(const WeakObject& obj)
 	{
 		if (const auto locked = obj.lock())
 		{
@@ -388,8 +388,6 @@ namespace Engine
 
 	void Scene::PreUpdate(const float& dt)
 	{
-		m_layers[LAYER_LIGHT]->PreUpdate(dt);
-
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->PreUpdate(dt);
@@ -398,18 +396,14 @@ namespace Engine
 
 	void Scene::Update(const float& dt)
 	{
-		m_layers[LAYER_LIGHT]->Update(dt);
-
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->Update(dt);
 		}
 	}
 
-	void Scene::PreRender(const float dt)
+	void Scene::PreRender(const float& dt)
 	{
-		m_layers[LAYER_LIGHT]->PreRender(dt);
-
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->PreRender(dt);
@@ -426,12 +420,15 @@ namespace Engine
 		Serializer::Serialize(name, GetSharedPtr<Scene>());
 	}
 
-	void Scene::Render(const float dt)
+	void Scene::Render(const float& dt)
 	{
-		m_layers[LAYER_LIGHT]->Render(dt);
-
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
+			if (i == LAYER_UI)
+			{
+				GetD3Device().GetSwapchainCopy(m_rendered_buffer_);
+			}
+
 			m_layers[static_cast<eLayerType>(i)]->Render(dt);
 		}
 
@@ -514,12 +511,22 @@ namespace Engine
 
 	void Scene::FixedUpdate(const float& dt)
 	{
-		m_layers[LAYER_LIGHT]->FixedUpdate(dt);
-
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
+	}
+
+	void Scene::PostRender(const float& dt)
+	{
+		GetRenderPipeline().BindResource(SR_RENDERED, m_rendered_buffer_.srv.Get());
+
+		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+		{
+			m_layers[static_cast<eLayerType>(i)]->PostRender(dt);
+		}
+
+		GetRenderPipeline().UnbindResource(SR_RENDERED);
 	}
 
 	void Scene::OnDeserialized()

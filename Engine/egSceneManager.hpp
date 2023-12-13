@@ -22,6 +22,8 @@ namespace Engine::Manager
 			m_scenes_.insert(scene);
 		}
 
+		void ChangeScene(const WeakScene& it);
+
 		template <typename T>
 		void SetActive()
 		{
@@ -36,7 +38,7 @@ namespace Engine::Manager
 
 			if (it != m_scenes_.end())
 			{
-				m_active_scene_ = *it;
+				ChangeScene(*it);
 			}
 		}
 
@@ -74,9 +76,10 @@ namespace Engine::Manager
 				if (*it == m_active_scene_.lock())
 				{
 					Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
+					Graphics::ShadowManager::GetInstance().Clear();
 					m_active_scene_.reset();
 				}
-					
+
 				m_scenes_.erase(it);
 			}
 		}
@@ -87,39 +90,11 @@ namespace Engine::Manager
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
+		void PostRender(const float& dt) override;
 
 	private:
 		WeakScene m_active_scene_;
 		std::set<StrongScene> m_scenes_;
 
 	};
-
-	inline void SceneManager::Initialize()
-	{
-	}
-
-	inline void SceneManager::Update(const float& dt)
-	{
-		m_active_scene_.lock()->Update(dt);
-	}
-
-	inline void SceneManager::PreUpdate(const float& dt)
-	{
-		m_active_scene_.lock()->PreUpdate(dt);
-	}
-
-	inline void SceneManager::PreRender(const float& dt)
-	{
-		m_active_scene_.lock()->PreRender(dt);
-	}
-
-	inline void SceneManager::Render(const float& dt)
-	{
-		m_active_scene_.lock()->Render(dt);
-	}
-
-	inline void SceneManager::FixedUpdate(const float& dt)
-	{
-		m_active_scene_.lock()->FixedUpdate(dt);
-	}
 }

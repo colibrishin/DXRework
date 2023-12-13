@@ -12,13 +12,14 @@ namespace Engine::Resources
 			Texture::Initialize();
 		}
 
-		~Texture() override = default;
+		~Texture() override;
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
-		void PreRender(const float dt) override;
-		void Render(const float dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 		void FixedUpdate(const float& dt) override;
@@ -33,8 +34,6 @@ namespace Engine::Resources
 
 	private:
 		SERIALIZER_ACCESS
-
-		ComPtr<ID3D11Resource> m_texture_;
 
 		D3D11_TEXTURE2D_DESC m_texture_desc_;
 	};

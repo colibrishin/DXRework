@@ -43,13 +43,18 @@ namespace Client::Object
 		Object::Update(dt);
 	}
 
-	inline void TestObject::PreRender(const float dt)
+	inline void TestObject::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	inline void TestObject::Render(const float dt)
+	inline void TestObject::Render(const float& dt)
 	{
 		Object::Render(dt);
+	}
+
+	void TestObject::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 }

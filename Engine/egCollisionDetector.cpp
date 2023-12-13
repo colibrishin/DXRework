@@ -200,6 +200,10 @@ namespace Engine::Manager
 	{
 	}
 
+	void CollisionDetector::PostRender(const float& dt)
+	{
+	}
+
 	void CollisionDetector::FixedUpdate(const float& dt)
 	{
 	}

@@ -16,6 +16,7 @@ namespace Engine::Manager::Physics
 		void Update(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 	private:
@@ -25,6 +26,7 @@ namespace Engine::Manager::Physics
 		void ResolveCollision(Abstract::Object& lhs, Abstract::Object& rhs);
 		void ResolveSpeculation(Abstract::Object& lhs, Abstract::Object& rhs);
 
+	private:
 		std::set<std::pair<EntityID, EntityID>> m_collision_resolved_set_;
 		std::set<std::pair<EntityID, EntityID>> m_speculative_resolved_set_;
 

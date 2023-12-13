@@ -45,6 +45,10 @@ namespace Engine::Manager::Physics
 	{
 	}
 
+	void ConstraintSolver::PostRender(const float& dt)
+	{
+	}
+
 	void ConstraintSolver::FixedUpdate(const float& dt)
 	{
 	}
