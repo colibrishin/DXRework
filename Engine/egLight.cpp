@@ -42,12 +42,12 @@ namespace Engine::Objects
 		Object::Update(dt);
 	}
 
-	void Light::PreRender(const float dt)
+	void Light::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	void Light::Render(const float dt)
+	void Light::Render(const float& dt)
 	{
 		Object::Render(dt);
 #ifdef _DEBUG
@@ -56,6 +56,11 @@ namespace Engine::Objects
 		const BoundingSphere sphere (tr->GetPosition(), 0.5f);
 		GetDebugger().Draw(sphere, Colors::Yellow);
 #endif
+	}
+
+	void Light::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 
 	void Light::OnDeserialized()

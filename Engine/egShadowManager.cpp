@@ -143,8 +143,11 @@ namespace Engine::Manager::Graphics
 
 	void ShadowManager::Render(const float& dt)
 	{
-		// Pass 2 Ends, reset shadow map
+	}
 
+	void ShadowManager::PostRender(const float& dt)
+	{
+		// Pass 2 Ends, reset shadow map
 		GetRenderPipeline().UnbindShadowMap(m_lights_.size());
 		ClearShadowMaps();
 		ClearShadowBufferChunk();
@@ -153,6 +156,24 @@ namespace Engine::Manager::Graphics
 
 	void ShadowManager::FixedUpdate(const float& dt)
 	{
+	}
+
+	void ShadowManager::Clear()
+	{
+		// it will not clear the graphic shadow buffer, because it can just overwrite the buffer and reuse it.
+		m_lights_.clear();
+		m_cascade_vp_buffer_.clear();
+
+		for (auto& buffer : m_graphic_shadow_buffer_ | std::views::values)
+		{
+			buffer.depth_stencil_view.Reset();
+			buffer.shader_resource_view.Reset();
+		}
+
+		for (auto& subfrusta : m_subfrusta_)
+		{
+			subfrusta = {};
+		}
 	}
 
 	void ShadowManager::BuildShadowMap(Scene& scene) const

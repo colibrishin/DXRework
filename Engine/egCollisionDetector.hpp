@@ -18,6 +18,7 @@ namespace Engine::Manager
 		void PreUpdate(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 		void SetCollisionLayer(const eLayerType layer, const eLayerType mask);
@@ -68,6 +69,7 @@ namespace Engine::Manager
 		bool CheckRaycasting(const Component::Collider& lhs,
 							const Component::Collider& rhs);
 
+	private:
 		std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 		std::map<EntityID, std::set<EntityID>> m_collision_map_;
 		std::map<EntityID, std::set<EntityID>> m_frame_collision_map_;

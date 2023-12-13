@@ -22,6 +22,7 @@ PixelInputType main(VertexInputType input)
 
     float4 worldPosition = mul(input.position, world);
 
+    [unroll]
     for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         const float4 light_position = GetWorldPosition(g_lightWorld[i]);

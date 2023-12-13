@@ -33,6 +33,15 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
+	Shader<T>::~Shader()
+	{
+		if (m_shader_)
+		{
+			m_shader_.Reset();
+		}
+	}
+
+	template <typename T>
 	void Shader<T>::Initialize()
 	{
 		IShader::Initialize();
@@ -83,14 +92,14 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
-	void Shader<T>::PreRender(const float dt)
+	void Shader<T>::PreRender(const float& dt)
 	{
 	}
 
 	template <typename T>
 	void Shader<T>::Unload_INTERNAL()
 	{
-		m_shader_->Release();
+		m_shader_.Reset();
 	}
 
 	template <typename T>
@@ -101,9 +110,14 @@ namespace Engine::Graphic
 	}
 
 	template <typename T>
-	void Shader<T>::Render(const float dt)
+	void Shader<T>::Render(const float& dt)
 	{
 		GetRenderPipeline().SetShader(this);
+	}
+
+	template <typename T>
+	void Shader<T>::PostRender(const float& dt)
+	{
 	}
 
 	template <typename T>

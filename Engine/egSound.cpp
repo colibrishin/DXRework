@@ -29,11 +29,15 @@ namespace Engine::Resources
 	{
 	}
 
-	void Sound::PreRender(const float dt)
+	void Sound::PreRender(const float& dt)
 	{
 	}
 
-	void Sound::Render(const float dt)
+	void Sound::Render(const float& dt)
+	{
+	}
+
+	void Sound::PostRender(const float& dt)
 	{
 	}
 

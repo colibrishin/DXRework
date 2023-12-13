@@ -38,12 +38,17 @@ namespace Client::Object
 		Object::Update(dt);
 	}
 
-	inline void SkyBox::PreRender(const float dt)
+	void SkyBox::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
+	}
+
+	inline void SkyBox::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	inline void Client::Object::SkyBox::Render(const float dt)
+	inline void Client::Object::SkyBox::Render(const float& dt)
 	{
 		Object::Render(dt);
 	}

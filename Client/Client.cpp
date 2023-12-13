@@ -29,6 +29,7 @@ namespace Client
 		Engine::GetResourceManager().AddResource("Giftbox", boost::make_shared<Client::Mesh::GiftBox>());
 		Engine::GetResourceManager().AddResource("CubeMesh", boost::make_shared<Engine::Mesh::CubeMesh>());
 		Engine::GetResourceManager().AddResource("SphereMesh", boost::make_shared<Engine::Mesh::SphereMesh>());
+		Engine::GetResourceManager().AddResource("WaterNormal", boost::make_shared<Engine::Resources::NormalMap>("./Water-Normal.png"));
 
 		Engine::GetResourceManager().AddResource("BackSphereMesh", boost::make_shared<Client::Mesh::BackSphereMesh>());
 		Engine::GetResourceManager().AddResource("DefaultFont", boost::make_shared<Engine::Resources::Font>("./consolas.spritefont"));

@@ -20,7 +20,7 @@ namespace Engine::Mesh
 	{
 	}
 
-	void CubeMesh::PreRender(const float dt)
+	void CubeMesh::PreRender(const float& dt)
 	{
 	}
 

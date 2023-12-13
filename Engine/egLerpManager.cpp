@@ -83,6 +83,10 @@ namespace Engine::Manager::Physics
 	{
 	}
 
+	void LerpManager::PostRender(const float& dt)
+	{
+	}
+
 	void LerpManager::FixedUpdate(const float& dt)
 	{
 		Reset();

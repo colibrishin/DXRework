@@ -5,6 +5,30 @@ namespace Engine::Manager
 {
 	void Debugger::Render(const float& dt)
 	{
+	}
+
+	void Debugger::PreUpdate(const float& dt)
+	{
+	}
+
+	void Debugger::Update(const float& dt)
+	{
+		if (GetApplication().GetKeyState().Scroll)
+		{
+			m_bDebug = !m_bDebug;
+		}
+	}
+
+	void Debugger::PreRender(const float& dt)
+	{
+	}
+
+	void Debugger::FixedUpdate(const float& dt)
+	{
+	}
+
+	void Debugger::PostRender(const float& dt)
+	{
 		if(!GetDebugFlag())
 		{
 			return;
@@ -34,26 +58,6 @@ namespace Engine::Manager
 		y = g_debug_y_initial;
 
 		GetToolkitAPI().EndPrimitiveBatch();
-	}
-
-	void Debugger::PreUpdate(const float& dt)
-	{
-	}
-
-	void Debugger::Update(const float& dt)
-	{
-		if (GetApplication().GetKeyState().Scroll)
-		{
-			m_bDebug = !m_bDebug;
-		}
-	}
-
-	void Debugger::PreRender(const float& dt)
-	{
-	}
-
-	void Debugger::FixedUpdate(const float& dt)
-	{
 	}
 
 	void Debugger::Initialize()

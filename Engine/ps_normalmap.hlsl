@@ -5,6 +5,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 float4 main(PixelInputType input) : SV_TARGET
 {
+    int i = 0;
+
     float shadowFactor[MAX_NUM_LIGHTS];
     GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
 
@@ -22,7 +24,7 @@ float4 main(PixelInputType input) : SV_TARGET
     float3 bumpNormal = (normalMap.x * input.tangent) + (normalMap.y * input.binormal) + (normalMap.z * input.normal);
     bumpNormal = normalize(bumpNormal);
 
-    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
         textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
@@ -35,7 +37,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 normalLightColor = g_ambientColor;
 
-    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         normalLightColor.r += normalColorArray[i].r;
         normalLightColor.g += normalColorArray[i].g;
@@ -44,7 +46,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 textureLightColor = g_ambientColor;
 
-    for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         textureLightColor.r += textureColorArray[i].r;
         textureLightColor.g += textureColorArray[i].g;

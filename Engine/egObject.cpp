@@ -81,7 +81,7 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::Render(const float dt)
+	void Object::Render(const float& dt)
 	{
 		for (const auto& component : m_priority_sorted_)
 		{
@@ -112,6 +112,31 @@ namespace Engine::Abstract
 
 		// Assuming other object will initialize vertex shader or so.
 		GetRenderPipeline().ResetShaders();
+	}
+
+	void Object::PostRender(const float& dt)
+	{
+		for (const auto& component : m_priority_sorted_)
+		{
+			if (const auto locked = component.lock())
+			{
+				if (!locked->GetActive())
+				{
+					continue;
+				}
+
+				locked->PostRender(dt);
+			}
+			else
+			{
+				m_priority_sorted_.erase(component);
+			}
+		}
+
+		for (const auto& resource : m_resources_)
+		{
+			resource->PostRender(dt);
+		}
 	}
 
 	void Object::FixedUpdate(const float& dt)
@@ -257,7 +282,7 @@ namespace Engine::Abstract
 		}
 	}
 
-	void Object::PreRender(const float dt)
+	void Object::PreRender(const float& dt)
 	{
 		for (const auto& component : m_priority_sorted_)
 		{

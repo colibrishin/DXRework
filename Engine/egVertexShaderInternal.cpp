@@ -15,7 +15,7 @@ namespace Engine::Graphic
 	{
 	}
 
-	void VertexShaderInternal::Render(const float dt)
+	void VertexShaderInternal::Render(const float& dt)
 	{
 		GetRenderPipeline().SetTopology(m_topology_);
 		Shader<ID3D11VertexShader>::Render(dt);

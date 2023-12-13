@@ -165,11 +165,15 @@ namespace Client::State
 	{
 	}
 
-	void CharacterController::PreRender(const float dt)
+	void CharacterController::PreRender(const float& dt)
 	{
 	}
 
-	void CharacterController::Render(const float dt)
+	void CharacterController::Render(const float& dt)
+	{
+	}
+
+	void CharacterController::PostRender(const float& dt)
 	{
 	}
 }

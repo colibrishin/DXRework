@@ -1,8 +1,5 @@
 #include "common.hlsli"
 
-Texture2D reflectionTexture : register(t2);
-Texture2D refractionTexture : register(t3);
-
 float4 main(PixelInputType input) : SV_TARGET
 {
     float2 reflectTex;
@@ -19,8 +16,8 @@ float4 main(PixelInputType input) : SV_TARGET
     reflectTex += normal.xy * g_reflfrScale;
     refractTex += normal.xy * g_reflfrScale;
 
-    const float4 reflectColor = reflectionTexture.Sample(PSSampler, reflectTex);
-    const float4 refractColor = refractionTexture.Sample(PSSampler, refractTex);
+    const float4 reflectColor = renderedTexture.Sample(PSSampler, reflectTex);
+    const float4 refractColor = renderedTexture.Sample(PSSampler, refractTex);
 
     return lerp(reflectColor, refractColor, 0.6f);
 }

@@ -32,14 +32,19 @@ namespace Engine::Objects
 		Object::Update(dt);
 	}
 
-	void Observer::PreRender(const float dt)
+	void Observer::PreRender(const float& dt)
 	{
 		Object::PreRender(dt);
 	}
 
-	void Observer::Render(const float dt)
+	void Observer::Render(const float& dt)
 	{
 		Object::Render(dt);
+	}
+
+	void Observer::PostRender(const float& dt)
+	{
+		Object::PostRender(dt);
 	}
 
 	void Observer::FixedUpdate(const float& dt)

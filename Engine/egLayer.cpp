@@ -39,7 +39,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::PreRender(const float dt)
+	void Layer::PreRender(const float& dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -52,7 +52,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::Render(const float dt)
+	void Layer::Render(const float& dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -62,6 +62,19 @@ namespace Engine
 			}
 
 			object->Render(dt);
+		}
+	}
+
+	void Layer::PostRender(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
+
+			object->PostRender(dt);
 		}
 	}
 

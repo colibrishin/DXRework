@@ -15,6 +15,7 @@ namespace Engine::Manager
 		void Update(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 		void AddResource(const StrongResource& resource)
@@ -120,6 +121,10 @@ namespace Engine::Manager
 	}
 
 	inline void ResourceManager::Render(const float& dt)
+	{
+	}
+
+	inline void ResourceManager::PostRender(const float& dt)
 	{
 	}
 

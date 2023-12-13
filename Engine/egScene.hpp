@@ -16,21 +16,19 @@ namespace Engine
 
 		virtual void Initialize_INTERNAL() = 0;
 		void Initialize() final;
-		void AssignLocalIDToObject(const StrongObject& obj);
-		void RegisterLightToManager(const StrongObject& obj);
+
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
-		void PreRender(const float dt) override;
+		void PreRender(const float& dt) override;
 		void Save();
-		void Render(const float dt) override;
+		void Render(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
+		void PostRender(const float& dt) override;
+
 		void OnDeserialized() override;
 		TypeName GetVirtualTypeName() const final;
 
 		EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
-		void UnregisterLightFromManager(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
-		void RemoveObjectFromCache(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
-		void RemoveObjectFromOctree(const std::map<long long, boost::weak_ptr<Abstract::Object>>::mapped_type& obj);
 		void RemoveGameObject(const EntityID id, eLayerType layer);
 
 		std::vector<WeakObject> GetGameObjects(eLayerType layer);
@@ -80,6 +78,13 @@ namespace Engine
 		void Synchronize(const StrongScene& scene);
 		void OpenLoadPopup(bool& is_load_open);
 
+		void AssignLocalIDToObject(const StrongObject& obj);
+		void RegisterLightToManager(const StrongObject& obj);
+		void UnregisterLightFromManager(const WeakObject& obj);
+
+		void RemoveObjectFromCache(const WeakObject& obj);
+		void RemoveObjectFromOctree(const WeakObject& obj);
+
 		virtual void AddCustomObject();
 
 		ActorID m_main_camera_local_id_;
@@ -88,6 +93,9 @@ namespace Engine
 		// Non-serialized
 		WeakObject m_observer_;
 		WeakCamera m_mainCamera_;
+
+		GraphicRenderedBuffer m_rendered_buffer_;
+
 		std::set<ActorID> m_assigned_actor_ids_;
 		std::map<EntityID, WeakObject> m_cached_objects_;
 		std::map<const std::string, std::set<WeakComponent, ComponentPriorityComparer>> m_cached_components_;

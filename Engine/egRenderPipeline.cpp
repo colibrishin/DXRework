@@ -60,16 +60,16 @@ namespace Engine::Manager::Graphics
 		GetD3Device().BindConstantBuffer(m_specular_buffer_data_, CB_TYPE_SPECULAR, SHADER_PIXEL);
 	}
 
-	void RenderPipeline::SetWater(const WaterBuffer& water_buffer)
-	{
-		m_water_buffer_data_.SetData(GetD3Device().GetContext(), water_buffer);
-		GetD3Device().BindConstantBuffer(m_water_buffer_data_, CB_TYPE_WATER, SHADER_PIXEL);
-	}
-
 	void RenderPipeline::SetClipPlane(const ClipPlaneBuffer& clip_plane_buffer)
 	{
 		m_clip_plane_buffer_data_.SetData(GetD3Device().GetContext(), clip_plane_buffer);
 		GetD3Device().BindConstantBuffer(m_clip_plane_buffer_data_, CB_TYPE_CLIP_PLANE, SHADER_VERTEX);
+	}
+
+	void RenderPipeline::SetRefraction(const RefractionBuffer& refraction_buffer)
+	{
+		m_refraction_buffer_data_.SetData(GetD3Device().GetContext(), refraction_buffer);
+		GetD3Device().BindConstantBuffer(m_refraction_buffer_data_, CB_TYPE_REFRACTION, SHADER_PIXEL);
 	}
 
 	void RenderPipeline::BindLightBuffer(const UINT light_count)
@@ -225,7 +225,7 @@ namespace Engine::Manager::Graphics
 		GetD3Device().CreateConstantBuffer(m_specular_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_shadow_buffer_chunk_data_);
-		GetD3Device().CreateConstantBuffer(m_water_buffer_data_);
+		GetD3Device().CreateConstantBuffer(m_refraction_buffer_data_);
 		GetD3Device().CreateConstantBuffer(m_clip_plane_buffer_data_);
 
 		PrecompileShaders();
@@ -343,8 +343,6 @@ namespace Engine::Manager::Graphics
 		GetD3Device().GetContext()->RSSetState(RenderPipeline::m_rasterizer_state_.Get());
 		GetD3Device().GetContext()->OMSetBlendState(RenderPipeline::m_blend_state_.Get(), nullptr, 0xFFFFFFFF);
 		GetD3Device().GetContext()->OMSetDepthStencilState(RenderPipeline::m_depth_stencil_state_.Get(), 1);
-
-		GetD3Device().GetContext()->IASetInputLayout(GetRenderPipeline().m_input_layout_.Get());
 	}
 
 	void RenderPipeline::DrawIndexed(UINT index_count)
@@ -413,5 +411,11 @@ namespace Engine::Manager::Graphics
 	{
 		m_shadow_buffer_chunk_data_.SetData(GetD3Device().GetContext(), cascade_shadow_buffer_chunk);
 		GetD3Device().BindConstantBuffer(m_shadow_buffer_chunk_data_, CB_TYPE_SHADOW_CHUNK, SHADER_PIXEL);
+	}
+
+	void RenderPipeline::UnbindResource(eShaderResource shader_resource)
+	{
+		ComPtr<ID3D11ShaderResourceView> null_view = nullptr;
+		GetD3Device().GetContext()->PSSetShaderResources(shader_resource, 1, null_view.GetAddressOf());
 	}
 }

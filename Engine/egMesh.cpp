@@ -178,7 +178,7 @@ namespace Engine::Resources
 	{
 	}
 
-	void Mesh::Render(const float dt)
+	void Mesh::Render(const float& dt)
 	{
 		for (int i = 0; i < m_vertex_buffers_.size(); ++i)
 		{
@@ -189,6 +189,10 @@ namespace Engine::Resources
 
 		GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
 		GetRenderPipeline().BindResource(SR_NORMAL_MAP, nullptr);
+	}
+
+	void Mesh::PostRender(const float& dt)
+	{
 	}
 
 	TypeName Mesh::GetVirtualTypeName() const
@@ -238,14 +242,14 @@ namespace Engine::Resources
 
 	void Mesh::Unload_INTERNAL()
 	{
-		for (const auto& buffer : m_vertex_buffers_)
+		for (auto& buffer : m_vertex_buffers_)
 		{
-			buffer->Release();
+			buffer.Reset();
 		}
 
-		for (const auto& buffer : m_index_buffers_)
+		for (auto& buffer : m_index_buffers_)
 		{
-			buffer->Release();
+			buffer.Reset();
 		}
 	}
 }

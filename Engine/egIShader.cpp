@@ -14,7 +14,7 @@ namespace Engine::Graphic
 		SetName(name);
 	}
 
-	void IShader::Render(const float dt)
+	void IShader::Render(const float& dt)
 	{
 		GetRenderPipeline().SetShader(this);
 	}

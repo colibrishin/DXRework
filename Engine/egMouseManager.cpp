@@ -36,6 +36,10 @@ void Engine::Manager::MouseManager::Render(const float& dt)
 	m_previous_mouse_position_ = m_current_mouse_position_;
 }
 
+void Engine::Manager::MouseManager::PostRender(const float& dt)
+{
+}
+
 Vector2 Engine::Manager::MouseManager::GetNormalizedMousePosition()
 {
 	const Vector2 actual_mouse_position

@@ -11,7 +11,7 @@ namespace Engine::Graphic
 
 		ID3D11InputLayout** GetInputLayout() { return m_input_layout_.GetAddressOf(); }
 
-		void Render(const float dt) override;
+		void Render(const float& dt) override;
 
 	protected:
 		VertexShaderInternal() : Shader<ID3D11VertexShader>("", {}) {}

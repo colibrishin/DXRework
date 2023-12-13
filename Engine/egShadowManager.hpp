@@ -15,13 +15,16 @@ namespace Engine::Manager::Graphics
 
 	public:
 		ShadowManager(SINGLETON_LOCK_TOKEN) : Abstract::Singleton<ShadowManager>() {}
+		~ShadowManager() override = default;
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
+		void Clear();
 		void RegisterLight(const WeakLight& light);
 		void UnregisterLight(const WeakLight& light);
 
@@ -35,6 +38,7 @@ namespace Engine::Manager::Graphics
 		void ClearShadowBufferChunk();
 		void ClearShadowMaps();
 
+	private:
 		boost::shared_ptr<Graphic::VertexShader> m_vs_stage1;
 		boost::shared_ptr<Graphic::GeometryShader> m_gs_stage1;
 		boost::shared_ptr<Graphic::PixelShader> m_ps_stage1;

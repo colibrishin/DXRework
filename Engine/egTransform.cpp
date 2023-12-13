@@ -40,11 +40,15 @@ namespace Engine::Component
 	{
 	}
 
-	void Transform::PreRender(const float dt)
+	void Transform::PreRender(const float& dt)
 	{
 	}
 
-	void Transform::Render(const float dt)
+	void Transform::PostRender(const float& dt)
+	{
+	}
+
+	void Transform::Render(const float& dt)
 	{
 		m_transform_buffer_.scale = Matrix::CreateScale(m_scale_).Transpose();
 		m_transform_buffer_.rotation = Matrix::CreateFromQuaternion(m_rotation_).Transpose();

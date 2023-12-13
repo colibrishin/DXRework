@@ -22,8 +22,9 @@ namespace Engine::Objects
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
-		void PreRender(const float dt) override;
-		void Render(const float dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void OnDeserialized() override;
 
 		void SetText(const std::string& text) { m_text_ = text; }

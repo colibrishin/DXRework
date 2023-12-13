@@ -8,6 +8,10 @@ SERIALIZER_ACCESS_IMPL(Engine::Resources::Texture,
 
 namespace Engine::Resources
 {
+	Texture::~Texture()
+	{
+	}
+
 	void Texture::Initialize()
 	{
 	}
@@ -20,30 +24,35 @@ namespace Engine::Resources
 	{
 	}
 
-	void Texture::PreRender(const float dt)
+	void Texture::PreRender(const float& dt)
 	{
 	}
 
-	void Texture::Render(const float dt)
+	void Texture::Render(const float& dt)
 	{
 		GetRenderPipeline().BindResource(SR_TEXTURE, m_texture_view_.Get());
 	}
 
+	void Texture::PostRender(const float& dt)
+	{
+	}
+
 	void Texture::Load_INTERNAL()
 	{
-		GetD3Device().CreateTextureFromFile(absolute(GetPath()), m_texture_.ReleaseAndGetAddressOf(),
-		                                         m_texture_view_.ReleaseAndGetAddressOf());
-
+		ComPtr<ID3D11Resource> resource;
 		ComPtr<ID3D11Texture2D> texture;
-		m_texture_.As<ID3D11Texture2D>(&texture);
 
+		GetD3Device().CreateTextureFromFile(absolute(GetPath()), resource.ReleaseAndGetAddressOf(),
+		                                         m_texture_view_.ReleaseAndGetAddressOf());
+		
+		resource.As<ID3D11Texture2D>(&texture);
 		texture->GetDesc(&m_texture_desc_);
 	}
 
 	void Texture::Unload_INTERNAL()
 	{
 		m_texture_view_->Release();
-		m_texture_->Release();
+		m_texture_view_.Reset();
 		m_texture_desc_ = {};
 	}
 

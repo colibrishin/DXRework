@@ -111,7 +111,6 @@
     <ClInclude Include="egTexture.hpp">
       <Filter>Resource</Filter>
     </ClInclude>
-    <ClInclude Include="StepTimer.hpp" />
     <ClInclude Include="egLight.hpp">
       <Filter>Object</Filter>
     </ClInclude>
@@ -268,7 +267,10 @@
     <ClInclude Include="egScene.hpp">
       <Filter>Base\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="egWater.hpp">
+    <ClInclude Include="StepTimer.hpp">
+      <Filter>Low-level</Filter>
+    </ClInclude>
+    <ClInclude Include="egDelayedRenderObject.hpp">
       <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
@@ -415,7 +417,12 @@
     <ClCompile Include="egScene.cpp">
       <Filter>Base\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="egWater.cpp" />
+    <ClCompile Include="egSceneManager.cpp">
+      <Filter>Singleton\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="egDelayedRenderObject.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -454,13 +461,11 @@
     <CopyFileToFolders Include="vs_cascade_shadow_stage1.hlsl">
       <Filter>Resource Files\Shadow\stage1</Filter>
     </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="ps_water.hlsl">
+    <CopyFileToFolders Include="ps_refraction.hlsl">
       <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="vs_default.hlsl">
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="vs_default.hlsl">
       <Filter>Resource Files</Filter>
-    </FxCompile>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

@@ -403,7 +403,7 @@ namespace Engine::Component
 		return typeid(Collider).name();
 	}
 
-	void Collider::Render(const float dt)
+	void Collider::Render(const float& dt)
 	{
 		if (m_collided_objects_.empty())
 		{
@@ -415,6 +415,10 @@ namespace Engine::Component
 		}
 		
 		m_previous_position_ = m_position_;
+	}
+
+	void Collider::PostRender(const float& dt)
+	{
 	}
 
 	void Collider::UpdateFromTransform()
@@ -519,7 +523,7 @@ namespace Engine::Component
 		UpdateInertiaTensor();
 	}
 
-	void Collider::PreRender(const float dt)
+	void Collider::PreRender(const float& dt)
 	{
 		m_rotation_ = Quaternion::CreateFromYawPitchRoll(
 			DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x), 

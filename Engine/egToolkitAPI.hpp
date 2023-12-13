@@ -22,6 +22,7 @@ namespace Engine::Manager::Graphics
 		void Update(const float& dt) override;
 		void PreRender(const float& dt) override;
 		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
 		void BeginPrimitiveBatch();
@@ -41,6 +42,7 @@ namespace Engine::Manager::Graphics
 		void FrameBegin() const;
 		void FrameEnd() const;
 
+	private:
 		std::unique_ptr<CommonStates> m_states_ = nullptr;
 		std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
 		std::unique_ptr<SpriteBatch> m_sprite_batch_ = nullptr;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "clTestScene.hpp"
 
+#include "clWater.hpp"
 #include "egHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(Client::Scene::TestScene,
@@ -22,14 +23,19 @@ namespace Client::Scene
 		Scene::Update(dt);
 	}
 
-	inline void TestScene::PreRender(const float dt)
+	inline void TestScene::PreRender(const float& dt)
 	{
 		Scene::PreRender(dt);
 	}
 
-	inline void TestScene::Render(const float dt)
+	inline void TestScene::Render(const float& dt)
 	{
 		Scene::Render(dt);
+	}
+
+	void TestScene::PostRender(const float& dt)
+	{
+		Scene::PostRender(dt);
 	}
 
 	void TestScene::AddCustomObject()
@@ -50,6 +56,12 @@ namespace Client::Scene
 		AddGameObject(Engine::Instantiate<Object::MousePositionText>(), Engine::LAYER_UI);
 		AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_SKYBOX);
 		AddGameObject(Engine::Instantiate<Object::PlaneObject>(), Engine::LAYER_ENVIRONMENT);
+
+		const auto water = Engine::Instantiate<Object::Water>();
+
+		water->GetComponent<Engine::Component::Transform>().lock()->SetPosition({0.f, 0.f, -2.f});
+
+		AddGameObject(water, Engine::LAYER_ENVIRONMENT);
 
 		Engine::GetCollisionDetector().SetCollisionLayer(Engine::LAYER_DEFAULT, Engine::LAYER_ENVIRONMENT);
 

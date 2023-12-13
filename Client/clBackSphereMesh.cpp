@@ -19,7 +19,7 @@ namespace Client::Mesh
 	{
 	}
 
-	inline void BackSphereMesh::PreRender(const float dt)
+	inline void BackSphereMesh::PreRender(const float& dt)
 	{
 	}
 

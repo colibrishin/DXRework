@@ -33,7 +33,8 @@ namespace Engine::Resources
 	public:
 		~Mesh() override = default;
 		void Initialize() override;
-		void Render(const float dt) override;
+		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
 		void ReadOBJFile();
 
 		const std::vector<Shape>& GetShapes() { return m_vertices_; }
