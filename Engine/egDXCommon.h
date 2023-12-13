@@ -25,6 +25,9 @@ namespace Engine
 	constexpr int g_max_shadow_map_size = 512;
 	constexpr int g_max_reflect_refract_map_size = 512;
 
+	constexpr UINT g_max_frame_latency_second = 1;
+	constexpr UINT g_max_frame_latency_ms = g_max_frame_latency_second * 1000;
+
 	inline std::atomic<float> g_fov = DirectX::XM_PI / 4.f;
 	inline std::atomic<bool> g_full_screen = false;
 	inline std::atomic<bool> g_vsync_enabled = true;

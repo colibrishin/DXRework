@@ -336,7 +336,6 @@ namespace Engine::Manager::Graphics
 		void CreateRasterizer(ID3D11RasterizerState** state, D3D11_FILL_MODE fill_mode) const;
 
 	private:
-		void InitializeAdapter();
 		void InitializeDevice();
 		void InitializeRenderTargetView();
 		void InitializeD2D();
@@ -348,11 +347,10 @@ namespace Engine::Manager::Graphics
 	private:
 		HWND m_hwnd_ = nullptr;
 
-		ComPtr<ID3D11Device> m_device_ = nullptr;
-		ComPtr<ID3D11DeviceContext> m_context_ = nullptr;
+		ComPtr<ID3D11Device1> m_device_ = nullptr;
+		ComPtr<ID3D11DeviceContext1> m_context_ = nullptr;
 
-		ComPtr<IDXGISurface> m_surface_ = nullptr;
-		ComPtr<IDXGIDevice> m_dxgi_device_ = nullptr;
+		ComPtr<IDXGISurface1> m_surface_ = nullptr;
 		ComPtr<ID2D1RenderTarget> m_d2d_render_target_view_ = nullptr;
 
 		UINT s_video_card_memory_ = 0;
@@ -361,7 +359,7 @@ namespace Engine::Manager::Graphics
 
 		DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
-		ComPtr<IDXGISwapChain> m_swap_chain_ = nullptr;
+		ComPtr<IDXGISwapChain2> m_swap_chain_ = nullptr;
 		ComPtr<ID3D11RenderTargetView> s_render_target_view_ = nullptr;
 		ComPtr<ID3D11DepthStencilView> s_depth_stencil_view_ = nullptr;
 
