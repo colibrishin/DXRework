@@ -1,6 +1,8 @@
 #include "pch.hpp"
 
 #include "egD3Device.hpp"
+
+#include "egDebugger.hpp"
 #include "egShader.hpp"
 #include "egToolkitAPI.hpp"
 
@@ -448,6 +450,11 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::FrameBegin()
 	{
+		if (WaitForSingleObjectEx(GetSwapchainAwaiter(), g_max_frame_latency_ms, true) != WAIT_OBJECT_0)
+		{
+			GetDebugger().Log(L"Waiting for Swap chain had an issue.");
+		}
+
 		constexpr float color[4] = {0.f, 0.f, 0.f, 1.f};
 
 		m_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
@@ -456,6 +463,12 @@ namespace Engine::Manager::Graphics
 
 	void D3Device::Present() const
 	{
-		m_swap_chain_->Present(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT);
+		DXGI_PRESENT_PARAMETERS params{};
+		params.DirtyRectsCount = 0;
+		params.pDirtyRects = nullptr;
+		params.pScrollRect = nullptr;
+		params.pScrollOffset = nullptr;
+
+		m_swap_chain_->Present1(g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT, &params);
 	}
 }

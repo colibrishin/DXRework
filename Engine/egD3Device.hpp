@@ -1,8 +1,8 @@
 #pragma once
-#include <filesystem>
-
+#include "egCommon.hpp"
 #include <d2d1.h>
 #include <d3dcompiler.h>
+#include <filesystem>
 #include "egManager.hpp"
 #include "egVertexShaderInternal.hpp"
 
@@ -272,6 +272,7 @@ namespace Engine::Manager::Graphics
 		ID3D11DeviceContext* GetContext() const { return m_context_.Get(); }
 
 		void GetSwapchainCopy(GraphicRenderedBuffer& buffer);
+		HANDLE GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
 
 	private:
 		friend class RenderPipeline;
