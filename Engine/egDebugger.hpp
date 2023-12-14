@@ -1,62 +1,68 @@
 #pragma once
 #include <Windows.h>
-#include <queue>
 #include <memory>
+#include <queue>
 
 #include <SpriteFont.h>
-#include "egToolkitAPI.hpp"
-#include "egD3Device.hpp"
-#include "egCommon.hpp"
 #include "egApplication.hpp"
+#include "egCommon.hpp"
+#include "egD3Device.hpp"
 #include "egToolkitAPI.hpp"
 
 #include "DebugDraw.h"
 
 namespace Engine::Manager
 {
-	class Debugger final : public Abstract::Singleton<Debugger>
-	{
-	public:
-		explicit Debugger(SINGLETON_LOCK_TOKEN) : Singleton(), m_bDebug(false) {}
-		~Debugger() override = default;
+    class Debugger final : public Abstract::Singleton<Debugger>
+    {
+    public:
+        explicit Debugger(SINGLETON_LOCK_TOKEN)
+        : Singleton(),
+          m_bDebug(false) {}
 
-		void Initialize() override;
+        ~Debugger() override = default;
 
-		void Log(const std::wstring& str);
-		void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
-		void Draw(Ray& ray, const XMVECTORF32& color);
-		void Draw(const eBoundingType type, const XMVECTORF32& color, const BoundingGroup& group);
-		void Draw(const DirectX::BoundingFrustum& frustum, const XMVECTORF32& color);
-		void Draw(const DirectX::BoundingSphere& sphere, const XMVECTORF32& color);
+        void Initialize() override;
 
-		void SetDebugFlag();
-		bool GetDebugFlag() const;
+        void Log(const std::wstring& str);
+        void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
+        void Draw(Ray& ray, const XMVECTORF32& color);
+        void Draw(
+            eBoundingType        type, const XMVECTORF32& color,
+            const BoundingGroup& group);
+        void Draw(const BoundingFrustum& frustum, const XMVECTORF32& color);
+        void Draw(const BoundingSphere& sphere, const XMVECTORF32& color);
 
-		void Render(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void PreRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostRender(const float& dt) override;
+        void SetDebugFlag();
+        bool GetDebugFlag() const;
 
-	private:
-		struct Message
-		{
-			std::wstring log;
-			float elapsed_time;
-		};
+        void Render(const float& dt) override;
+        void PreUpdate(const float& dt) override;
+        void Update(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
+        void PostRender(const float& dt) override;
 
-		using DebugPair = std::pair<Message, std::function<void(Message&, float)>>;
+    private:
+        struct Message
+        {
+            std::wstring log;
+            float        elapsed_time;
+        };
 
-		void Push(const Message& msg, const std::function<void(Message&, float)>& func);
+        using DebugPair = std::pair<Message, std::function<void(Message&, float)>>;
 
-	private:
-		bool m_bDebug;
-		int x = 0;
-		int y = g_debug_y_initial;
+        void Push(
+            const Message&                              msg,
+            const std::function<void(Message&, float)>& func);
 
-		std::unique_ptr<SpriteFont> m_font_;
+    private:
+        bool m_bDebug;
+        int  x = 0;
+        int  y = g_debug_y_initial;
 
-		std::vector<DebugPair> m_render_queue;
-	};
-}
+        std::unique_ptr<SpriteFont> m_font_;
+
+        std::vector<DebugPair> m_render_queue;
+    };
+} // namespace Engine::Manager

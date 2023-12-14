@@ -7,52 +7,62 @@
 
 namespace Engine::Graphic
 {
-	template <typename T>
-	class Shader : public IShader
-	{
-	public:
-		Shader(const EntityName& name, const std::filesystem::path& path);
-		~Shader() override;
+    template <typename T>
+    class Shader : public IShader
+    {
+    public:
+        Shader(const EntityName& name, const std::filesystem::path& path);
+        ~Shader() override;
 
-		void Initialize() override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void PreRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
+        void Initialize() override;
+        void PreUpdate(const float& dt) override;
+        void Update(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
 
-		T** GetShader() { return m_shader_.GetAddressOf(); }
-		void Render(const float& dt) override;
-		void PostRender(const float& dt) override;
+        T** GetShader()
+        {
+            return m_shader_.GetAddressOf();
+        }
 
-		TypeName GetVirtualTypeName() const final;
+        void Render(const float& dt) override;
+        void PostRender(const float& dt) override;
 
-	protected:
-		Shader() : IShader("", "") {}
-		void Load_INTERNAL() override;
-		void Unload_INTERNAL() override;
+        TypeName GetVirtualTypeName() const final;
 
-		void OnDeserialized() override;
+    protected:
+        Shader()
+        : IShader("", "") {}
 
-	private:
-		friend class Engine::Serializer;
-		friend class boost::serialization::access;
+        void Load_INTERNAL() override;
+        void Unload_INTERNAL() override;
 
-		template<class Archive>
-		void serialize(Archive& ar, const unsigned int file_version)
-		{
-			ar & boost::serialization::base_object<Engine::Graphic::IShader>(*this);
-		}
+        void OnDeserialized() override;
 
-		void SetShaderType() override;
+    private:
+        friend class Serializer;
+        friend class boost::serialization::access;
 
-		ComPtr<T> m_shader_;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & boost::serialization::base_object<IShader>(*this);
+        }
 
-	};
-}
+        void SetShaderType() override;
+
+        ComPtr<T> m_shader_;
+    };
+} // namespace Engine::Graphic
 
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11VertexShader>);
+
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11PixelShader>);
+
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11GeometryShader>);
+
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11ComputeShader>);
+
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11HullShader>);
+
 BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11DomainShader>);

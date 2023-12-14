@@ -1,24 +1,26 @@
 // pch.h: This is a precompiled header file.
-// Files listed below are compiled only once, improving build performance for future builds.
-// This also affects IntelliSense performance, including code completion and many code browsing features.
-// However, files listed here are ALL re-compiled if any one of them is updated between builds.
-// Do not add files here that you will be updating frequently as this negates the performance advantage.
+// Files listed below are compiled only once, improving build performance for
+// future builds. This also affects IntelliSense performance, including code
+// completion and many code browsing features. However, files listed here are
+// ALL re-compiled if any one of them is updated between builds. Do not add
+// files here that you will be updating frequently as this negates the
+// performance advantage.
 
 #ifndef PCH_H
 #define PCH_H
 
 // add headers that you want to pre-compile here
-#include <memory>
-#include <map>
-#include <set>
-#include <vector>
-#include <string>
 #include <cmath>
 #include <cstring>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
 #define WIN32_LEAN_AND_MEAN
 
-#include "framework.h"
 #include <wrl/client.h>
+#include "framework.h"
 
 #include <boost/smart_ptr.hpp>
 #define _USE_MATH_DEFINES
@@ -49,24 +51,24 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-#include <dxgi1_3.h>
-#include <d3d11.h>
 #include <d2d1.h>
+#include <d3d11.h>
 #include <d3dcompiler.h>
-#include <dxcapi.h>
 #include <directxmath.h>
+#include <dxcapi.h>
+#include <dxgi1_3.h>
 
 #include "../Engine/egCollider.hpp"
+#include "../Engine/egIShader.hpp"
 #include "../Engine/egManagerHelper.hpp"
-#include "../Engine/egTexture.hpp"
 #include "../Engine/egObject.hpp"
 #include "../Engine/egResourceManager.hpp"
-#include "../Engine/egTransform.hpp"
-#include "../Engine/egIShader.hpp"
 #include "../Engine/egRigidbody.hpp"
+#include "../Engine/egTexture.hpp"
+#include "../Engine/egTransform.hpp"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
-#endif //PCH_H
+#endif // PCH_H

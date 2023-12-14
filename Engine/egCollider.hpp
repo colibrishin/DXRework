@@ -4,201 +4,259 @@
 
 namespace Engine::Component
 {
-	using namespace DirectX;
+    using namespace DirectX;
 
-	class Collider : public Abstract::Component
-	{
-	public:
-		Collider(const WeakObject& owner, const WeakMesh& mesh = {});
-		~Collider() override = default;
+    class Collider : public Abstract::Component
+    {
+    public:
+        Collider(const WeakObject& owner, const WeakMesh& mesh = {});
+        ~Collider() override = default;
 
-		void SetDirtyWithTransform(const bool dirty)
-		{
-			m_bDirtyByTransform = dirty;
-			if (dirty)
-			{
-				UpdateFromTransform();
-			}
-		}
+        void SetDirtyWithTransform(const bool dirty)
+        {
+            m_bDirtyByTransform = dirty;
+            if (dirty)
+            {
+                UpdateFromTransform();
+            }
+        }
 
-		void SetPosition(const Vector3& position);
-		void SetRotation(const Quaternion& rotation);
-		void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
-		void SetSize(const Vector3& size);
-		void SetType(const eBoundingType type);
-		void SetMass(const float mass) { m_mass_ = mass; }
-		void SetMesh(const WeakMesh& mesh);
+        void SetPosition(const Vector3& position);
+        void SetRotation(const Quaternion& rotation);
+        void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
+        void SetSize(const Vector3& size);
+        void SetType(eBoundingType type);
 
-		bool Intersects(Collider& other) const;
-		bool Intersects(const Ray& ray, float distance, float& intersection) const;
-		bool Contains(Collider& other) const;
+        void SetMass(const float mass)
+        {
+            m_mass_ = mass;
+        }
 
-		void AddCollidedObject(const EntityID id);
-		void AddSpeculationObject(const EntityID id);
+        void SetMesh(const WeakMesh& mesh);
 
-		void RemoveCollidedObject(const EntityID id) { m_collided_objects_.erase(id); }
-		void RemoveSpeculationObject(const EntityID id) { m_speculative_collision_candidates_.erase(id); }
+        bool Intersects(Collider& other) const;
+        bool Intersects(const Ray& ray, float distance, float& intersection) const;
+        bool Contains(Collider& other) const;
 
-		bool IsCollidedObject(const EntityID id) const { return m_collided_objects_.contains(id); }
-		const std::set<EntityID>& GetCollidedObjects() const { return m_collided_objects_; }
-		const std::set<EntityID>& GetSpeculation() const { return m_speculative_collision_candidates_; }
+        void AddCollidedObject(EntityID id);
+        void AddSpeculationObject(EntityID id);
 
-		bool GetDirtyFlag() const { return m_bDirtyByTransform; }
+        void RemoveCollidedObject(const EntityID id)
+        {
+            m_collided_objects_.erase(id);
+        }
 
-		Vector3 GetPreviousPosition() const { return m_previous_position_; }
-		Vector3 GetPosition() const { return m_position_; }
-		Quaternion GetRotation() const { return m_rotation_; }
-		Vector3 GetSize() const { return m_size_; }
-		void GetPenetration(const Collider& other, Vector3& normal, float& depth) const;
-		UINT GetCollisionCount(const EntityID id) const;
+        void RemoveSpeculationObject(const EntityID id)
+        {
+            m_speculative_collision_candidates_.erase(id);
+        }
 
-		float GetMass() const { return m_mass_; }
-		float GetInverseMass() const { return 1.0f / m_mass_; }
-		XMFLOAT3X3 GetInertiaTensor() const { return m_inertia_tensor_; }
+        bool IsCollidedObject(const EntityID id) const
+        {
+            return m_collided_objects_.contains(id);
+        }
 
-		eBoundingType GetType() const { return m_type_; }
+        const std::set<EntityID>& GetCollidedObjects() const
+        {
+            return m_collided_objects_;
+        }
 
-		virtual const std::vector<const Vector3*>& GetVertices() const;
-		const Matrix& GetWorldMatrix() const { return m_world_matrix_; }
+        const std::set<EntityID>& GetSpeculation() const
+        {
+            return m_speculative_collision_candidates_;
+        }
 
-		void Initialize() override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void PreRender(const float& dt) override;
-		void Render(const float& dt) override;
-		void PostRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
+        bool GetDirtyFlag() const
+        {
+            return m_bDirtyByTransform;
+        }
 
-		void OnDeserialized() override;
-		void OnImGui() override;
-		TypeName GetVirtualTypeName() const final;
+        Vector3 GetPreviousPosition() const
+        {
+            return m_previous_position_;
+        }
 
-		template <typename T>
-		T& As() 
-		{
-			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-			{
-				return m_boundings_.box;
-			}
-			else if constexpr (std::is_same_v<T, BoundingSphere>)
-			{
-				return m_boundings_.sphere;
-			}
+        Vector3 GetPosition() const
+        {
+            return m_position_;
+        }
 
-			throw std::exception("Invalid type");
-		}
+        Quaternion GetRotation() const
+        {
+            return m_rotation_;
+        }
 
-	protected:
-		Collider();
+        Vector3 GetSize() const
+        {
+            return m_size_;
+        }
 
-	private:
-		SERIALIZER_ACCESS
-		friend class Manager::Physics::LerpManager;
+        void GetPenetration(
+            const Collider& other, Vector3& normal,
+            float&          depth) const;
+        UINT GetCollisionCount(EntityID id) const;
 
-		static void InitializeStockVertices();
-		void GenerateFromMesh(const WeakMesh& mesh);
+        float GetMass() const
+        {
+            return m_mass_;
+        }
 
-		template <typename T>
-		bool Intersects_GENERAL_TYPE(const T& other)
-		{
-			if (m_type_ == BOUNDING_TYPE_BOX)
-			{
-				return As<BoundingOrientedBox>().Intersects(other);
-			}
-			else if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				return As<BoundingSphere>().Intersects(other);
-			}
+        float GetInverseMass() const
+        {
+            return 1.0f / m_mass_;
+        }
 
-			return false;
-		}
+        XMFLOAT3X3 GetInertiaTensor() const
+        {
+            return m_inertia_tensor_;
+        }
 
-		template <typename T>
-		bool Contains_GENERAL_TYPE(const T& other)
-		{
-			if (m_type_ == BOUNDING_TYPE_BOX)
-			{
-				return As<BoundingOrientedBox>().Contains(other);
-			}
-			else if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				return As<BoundingSphere>().Contains(other);
-			}
+        eBoundingType GetType() const
+        {
+            return m_type_;
+        }
 
-			return false;
-		}
+        virtual const std::vector<const Vector3*>& GetVertices() const;
 
-		template <typename T>
-		static void SetSize_GENERAL_TYPE(T& value, const Vector3& size)
-		{
-			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-			{
-				value.Extents = size / 2;
-			}
-			else if constexpr (std::is_same_v<T, BoundingSphere>)
-			{
-				value.Radius = size.x / 2;
-			}
-		}
+        const Matrix& GetWorldMatrix() const
+        {
+            return m_world_matrix_;
+        }
 
-		template <typename T>
-		void SetRotation_GENERAL_TYPE(T& value, const Quaternion& rotation)
-		{
-			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-			{
-				value.Orientation = rotation;
-			}
-			else if constexpr (std::is_same_v<T, BoundingSphere>)
-			{
-				return;
-			}
-		}
+        void Initialize() override;
+        void PreUpdate(const float& dt) override;
+        void Update(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void Render(const float& dt) override;
+        void PostRender(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
 
-		template <typename T>
-		void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
-		{
-			As<T>().Center = position;
-		}
+        void     OnDeserialized() override;
+        void     OnImGui() override;
+        TypeName GetVirtualTypeName() const final;
 
-		void UpdateFromTransform();
-		void UpdateBoundings();
-		void UpdateInertiaTensor();
-		void GenerateInertiaCube();
-		void GenerateInertiaSphere();
+        template <typename T>
+        T& As()
+        {
+            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+            {
+                return m_boundings_.box;
+            }
+            else if constexpr (std::is_same_v<T, BoundingSphere>)
+            {
+                return m_boundings_.sphere;
+            }
 
-		bool m_bDirtyByTransform;
+            throw std::exception("Invalid type");
+        }
 
-		Vector3 m_previous_position_;
-		Vector3 m_position_;
-		Vector3 m_size_;
-		Quaternion m_rotation_;
-		Vector3 m_yaw_pitch_roll_degree_;
+    protected:
+        Collider();
 
-		eBoundingType m_type_;
-		EntityName m_mesh_name_;
+    private:
+        SERIALIZER_ACCESS
+        friend class Manager::Physics::LerpManager;
 
-		float m_mass_;
+        static void InitializeStockVertices();
+        void        GenerateFromMesh(const WeakMesh& mesh);
 
-		// Non-serialized
-		inline static std::vector<Vector3> m_cube_stock_ = {};
-		inline static std::vector<Vector3> m_sphere_stock_ = {};
+        template <typename T>
+        bool Intersects_GENERAL_TYPE(const T& other)
+        {
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                return As<BoundingOrientedBox>().Intersects(other);
+            }
+            if (m_type_ == BOUNDING_TYPE_SPHERE)
+            {
+                return As<BoundingSphere>().Intersects(other);
+            }
 
-		inline static std::vector<const Vector3*> m_cube_stock_ref_ = {};
-		inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
+            return false;
+        }
 
-		BoundingGroup m_boundings_;
+        template <typename T>
+        bool Contains_GENERAL_TYPE(const T& other)
+        {
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                return As<BoundingOrientedBox>().Contains(other);
+            }
+            if (m_type_ == BOUNDING_TYPE_SPHERE)
+            {
+                return As<BoundingSphere>().Contains(other);
+            }
 
-		std::set<EntityID> m_collided_objects_;
-		std::map<EntityID, UINT> m_collision_count_;
-		std::set<EntityID> m_speculative_collision_candidates_;
+            return false;
+        }
 
-		Vector3 m_inverse_inertia_;
-		XMFLOAT3X3 m_inertia_tensor_;
-		Matrix m_world_matrix_;
+        template <typename T>
+        static void SetSize_GENERAL_TYPE(T& value, const Vector3& size)
+        {
+            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+            {
+                value.Extents = size / 2;
+            }
+            else if constexpr (std::is_same_v<T, BoundingSphere>)
+            {
+                value.Radius = size.x / 2;
+            }
+        }
 
-		WeakMesh m_mesh_;
+        template <typename T>
+        void SetRotation_GENERAL_TYPE(T& value, const Quaternion& rotation)
+        {
+            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+            {
+                value.Orientation = rotation;
+            }
+            else if constexpr (std::is_same_v<T, BoundingSphere>) { }
+        }
 
-	};
-}
+        template <typename T>
+        void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
+        {
+            As<T>().Center = position;
+        }
+
+        void UpdateFromTransform();
+        void UpdateBoundings();
+        void UpdateInertiaTensor();
+        void GenerateInertiaCube();
+        void GenerateInertiaSphere();
+
+        bool m_bDirtyByTransform;
+
+        Vector3    m_previous_position_;
+        Vector3    m_position_;
+        Vector3    m_size_;
+        Quaternion m_rotation_;
+        Vector3    m_yaw_pitch_roll_degree_;
+
+        eBoundingType m_type_;
+        EntityName    m_mesh_name_;
+
+        float m_mass_;
+
+        // Non-serialized
+        inline static std::vector<Vector3> m_cube_stock_   = {};
+        inline static std::vector<Vector3> m_sphere_stock_ = {};
+
+        inline static std::vector<const Vector3*> m_cube_stock_ref_   = {};
+        inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
+
+        BoundingGroup m_boundings_;
+
+        std::set<EntityID>       m_collided_objects_;
+        std::map<EntityID, UINT> m_collision_count_;
+        std::set<EntityID>       m_speculative_collision_candidates_;
+
+        Vector3    m_inverse_inertia_;
+        XMFLOAT3X3 m_inertia_tensor_;
+        Matrix     m_world_matrix_;
+
+        WeakMesh m_mesh_;
+    };
+} // namespace Engine::Component
 
 BOOST_CLASS_EXPORT_KEY(Engine::Component::Collider)

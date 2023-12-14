@@ -12,7 +12,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
 
-    float lightIntensity[MAX_NUM_LIGHTS];
+    float  lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];
 
     float3 reflection[MAX_NUM_LIGHTS];
@@ -21,12 +21,16 @@ float4 main(PixelInputType input) : SV_TARGET
     for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         lightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
-        colorArray[i] = LerpShadow(shadowFactor[i]) * g_lightColor[i] * lightIntensity[i];
-        reflection[i] = normalize(2.0f * lightIntensity[i] * input.normal - input.lightDirection[i]);
-        specular[i] = pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
+        colorArray[i]     =
+                LerpShadow(shadowFactor[i]) * g_lightColor[i] * lightIntensity[i];
+        reflection[i] = normalize(
+                                  2.0f * lightIntensity[i] * input.normal -
+                                  input.lightDirection[i]);
+        specular[i] =
+                pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
     }
 
-    float4 colorSum = g_ambientColor;
+    float4 colorSum    = g_ambientColor;
     float4 specularSum = g_ambientColor;
 
     for (i = 0; i < MAX_NUM_LIGHTS; ++i)

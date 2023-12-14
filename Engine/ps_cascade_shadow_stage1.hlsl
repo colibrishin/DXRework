@@ -2,5 +2,5 @@
 
 void main(PixelShadowStage1InputType input)
 {
-	// Passing through
+    // Passing through
 }

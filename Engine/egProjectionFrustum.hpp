@@ -2,35 +2,40 @@
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 
-#include "egSceneManager.hpp"
 #include "egCamera.hpp"
 #include "egD3Device.hpp"
 #include "egLayer.hpp"
 #include "egManager.hpp"
+#include "egSceneManager.hpp"
 #include "egTransform.hpp"
 
 namespace Engine::Manager
 {
-	class ProjectionFrustum final : public Abstract::Singleton<ProjectionFrustum>
-	{
-	public:
-		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN) : Singleton() {}
-		~ProjectionFrustum() override = default;
+    class ProjectionFrustum final : public Abstract::Singleton<ProjectionFrustum>
+    {
+    public:
+        explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN)
+        : Singleton() {}
 
-		void Initialize() override;
-		void Update(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void PreRender(const float& dt) override;
-		void Render(const float& dt) override;
-		void PostRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
+        ~ProjectionFrustum() override = default;
 
-		bool CheckRender(const WeakObject& object) const;
-		BoundingFrustum GetFrustum() const { return m_frustum; }
+        void Initialize() override;
+        void Update(const float& dt) override;
+        void PreUpdate(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void Render(const float& dt) override;
+        void PostRender(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
 
-	private:
-		BoundingFrustum m_frustum;
-		BoundingSphere m_sphere;
+        bool CheckRender(const WeakObject& object) const;
 
-	};
-}
+        BoundingFrustum GetFrustum() const
+        {
+            return m_frustum;
+        }
+
+    private:
+        BoundingFrustum m_frustum;
+        BoundingSphere  m_sphere;
+    };
+} // namespace Engine::Manager

@@ -4,23 +4,22 @@
 
 namespace WinAPI
 {
-	class WinAPIWrapper final
-	{
-	public:
-		~WinAPIWrapper() = default;
-		WinAPIWrapper(const WinAPIWrapper&) = delete;
-		WinAPIWrapper& operator=(const WinAPIWrapper&) = delete;
+    class WinAPIWrapper final
+    {
+    public:
+        ~WinAPIWrapper()                               = default;
+        WinAPIWrapper(const WinAPIWrapper&)            = delete;
+        WinAPIWrapper& operator=(const WinAPIWrapper&) = delete;
 
-		static HWND Initialize(HINSTANCE hInstance);
-		static void Update();
+        static HWND Initialize(HINSTANCE hInstance);
+        static void Update();
 
-	private:
-		WinAPIWrapper() = default;
-		static HWND InitializeWindow(HINSTANCE hInstance);
+    private:
+        WinAPIWrapper() = default;
+        static HWND InitializeWindow(HINSTANCE hInstance);
 
-		inline static std::unique_ptr<WinAPIWrapper> s_instance_ = nullptr;
-		inline static std::wstring s_application_name_ = L"Engine";
-		inline static HINSTANCE s_hinstance_ = nullptr;
-
-	};
-}
+        inline static std::unique_ptr<WinAPIWrapper> s_instance_         = nullptr;
+        inline static std::wstring                   s_application_name_ = L"Engine";
+        inline static HINSTANCE                      s_hinstance_        = nullptr;
+    };
+} // namespace WinAPI

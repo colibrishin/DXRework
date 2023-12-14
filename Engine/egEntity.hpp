@@ -1,56 +1,73 @@
 #pragma once
+#include <boost/smart_ptr/enable_shared_from.hpp>
+
 #include "egCommon.hpp"
 
 namespace Engine::Abstract
 {
-	class Entity : public boost::enable_shared_from_this<Entity>
-	{
-	public:
-		Entity(const Entity& other) = default;
-		virtual ~Entity() = default;
+    class Entity : public boost::enable_shared_from_this<Entity>
+    {
+    public:
+        Entity(const Entity& other) = default;
+        virtual ~Entity()           = default;
 
-		bool operator ==(const Entity& other) const
-		{
-			return GetID() == other.GetID();
-		}
-		
-		void SetName(const EntityName& name) { m_name_ = name; }
+        bool operator==(const Entity& other) const
+        {
+            return GetID() == other.GetID();
+        }
 
-		EntityID GetID() const { return reinterpret_cast<EntityID>(this); }
-		EntityName GetName() const { return m_name_; }
-		TypeName GetTypeName() const { return typeid(*this).name(); }
-		virtual TypeName GetVirtualTypeName() const = 0;
+        void SetName(const EntityName& name)
+        {
+            m_name_ = name;
+        }
 
-		template <typename T>
-		boost::weak_ptr<T> GetWeakPtr()
-		{
-			return boost::reinterpret_pointer_cast<T>(shared_from_this());
-		}
+        EntityID GetID() const
+        {
+            return reinterpret_cast<EntityID>(this);
+        }
 
-		template <typename T>
-		boost::shared_ptr<T> GetSharedPtr()
-		{
-			return boost::reinterpret_pointer_cast<T>(shared_from_this());
-		}
+        EntityName GetName() const
+        {
+            return m_name_;
+        }
 
-		virtual void Initialize();
-		virtual void PreUpdate(const float& dt) = 0;
-		virtual void Update(const float& dt) = 0;
-		virtual void FixedUpdate(const float& dt) = 0;
+        TypeName GetTypeName() const
+        {
+            return typeid(*this).name();
+        }
 
-		virtual void OnDeserialized();
-		virtual void OnImGui();
+        virtual TypeName GetVirtualTypeName() const = 0;
 
-	protected:
-		Entity() : m_b_initialized_(false) {}
+        template <typename T>
+        boost::weak_ptr<T> GetWeakPtr()
+        {
+            return boost::reinterpret_pointer_cast<T>(shared_from_this());
+        }
 
-	private:
-		SERIALIZER_ACCESS
+        template <typename T>
+        boost::shared_ptr<T> GetSharedPtr()
+        {
+            return boost::reinterpret_pointer_cast<T>(shared_from_this());
+        }
 
-		EntityName m_name_;
-		bool m_b_initialized_;
+        virtual void Initialize();
+        virtual void PreUpdate(const float& dt) = 0;
+        virtual void Update(const float& dt) = 0;
+        virtual void FixedUpdate(const float& dt) = 0;
 
-	};
-}
+        virtual void OnDeserialized();
+        virtual void OnImGui();
+
+    protected:
+        Entity()
+        : m_b_initialized_(false) {}
+
+    private:
+        SERIALIZER_ACCESS
+
+        EntityName m_name_;
+        bool       m_b_initialized_;
+    };
+} // namespace Engine::Abstract
 
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Entity)

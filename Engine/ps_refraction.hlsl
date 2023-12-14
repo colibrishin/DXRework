@@ -11,7 +11,7 @@ float4 main(PixelInputType input) : SV_TARGET
     refractTex.y = -input.refraction.y / input.reflection.w / 2.0f + 0.5f;
 
     float4 normalMap = shaderNormalMap.Sample(PSSampler, input.tex);
-    float3 normal = (normalMap.xyz * 2.0f) - 1.0f;
+    float3 normal    = (normalMap.xyz * 2.0f) - 1.0f;
 
     reflectTex += normal.xy * g_reflfrScale;
     refractTex += normal.xy * g_reflfrScale;
