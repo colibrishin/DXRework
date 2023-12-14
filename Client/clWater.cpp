@@ -16,6 +16,7 @@ void Client::Object::Water::Initialize()
 	AddResource(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_refraction").lock());
 
 	AddComponent<Engine::Component::Transform>();
+	AddComponent<Engine::Component::Collider>();
 }
 
 void Client::Object::Water::PreUpdate(const float& dt)

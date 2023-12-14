@@ -116,6 +116,7 @@ namespace Engine::Component
 
 		UpdateFromTransform();
 		UpdateInertiaTensor();
+		UpdateBoundings();
 
 		m_previous_position_ = m_position_;
 	}
