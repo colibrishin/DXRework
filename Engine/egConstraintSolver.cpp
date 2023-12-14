@@ -113,13 +113,11 @@ namespace Engine::Manager::Physics
 		const auto rb = lhs.GetComponent<Engine::Component::Rigidbody>().lock();
 		const auto tr = lhs.GetComponent<Engine::Component::Transform>().lock();
 		// Main collider is considered as the collider that wraps the object.
-		const auto cl = rb->GetMainCollider().lock();
 
 		const auto rb_other = rhs.GetComponent<Engine::Component::Rigidbody>().lock();
 		const auto tr_other = rhs.GetComponent<Engine::Component::Transform>().lock();
-		const auto cl_other = rb_other->GetMainCollider().lock();
 
-		if (rb && cl && rb_other && cl_other)
+		if (rb && rb_other)
 		{
 			if (rb->IsFixed())
 			{
@@ -131,6 +129,15 @@ namespace Engine::Manager::Physics
 			{
 				return;
 			}
+
+			const auto cl = rb->GetMainCollider().lock();
+			const auto cl_other = rb_other->GetMainCollider().lock();
+
+			if (!cl || !cl_other)
+			{
+				return;
+			}
+
 
 			Vector3 linear_vel;
 			Vector3 angular_vel;
@@ -214,17 +221,23 @@ namespace Engine::Manager::Physics
 	void ConstraintSolver::ResolveSpeculation(Abstract::Object& lhs, Abstract::Object& rhs)
 	{
 		const auto rb = lhs.GetComponent<Component::Rigidbody>().lock();
-		const auto cl = rb->GetMainCollider().lock();
 		const auto tr = lhs.GetComponent<Component::Transform>().lock();
 
 		const auto rb_other = rhs.GetComponent<Component::Rigidbody>().lock();
-		const auto cl_other = rb_other->GetMainCollider().lock();
 		const auto tr_other = rhs.GetComponent<Component::Transform>().lock();
 
-		if (rb && cl && tr && rb_other && cl_other && tr_other)
+		if (rb && tr && rb_other && tr_other)
 		{
 			if (m_speculative_resolved_set_.contains({ lhs.GetID(), rhs.GetID() }) ||
 				m_speculative_resolved_set_.contains({ rhs.GetID(), lhs.GetID() }))
+			{
+				return;
+			}
+
+			const auto cl = rb->GetMainCollider().lock();
+			const auto cl_other = rb_other->GetMainCollider().lock();
+
+			if (!cl || !cl_other)
 			{
 				return;
 			}
