@@ -29,11 +29,16 @@ void Client::Object::Water::Initialize()
                 .lock());
 
     AddComponent<Engine::Component::Transform>();
-    AddComponent<Engine::Component::Collider>();
+    
 
-    const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+    const auto cldr = AddComponent<Engine::Component::Collider>().lock();
+
     cldr->SetDirtyWithTransform(true);
     cldr->SetOffset({0.f, 0.5f, 0.f});
+
+    const auto cldr2 = AddComponent<Engine::Component::Collider>().lock();
+
+    cldr2->SetDirtyWithTransform(true);
 }
 
 void Client::Object::Water::PreUpdate(const float& dt)
