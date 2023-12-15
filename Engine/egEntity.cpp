@@ -8,28 +8,27 @@
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity,
-                       _ARTAG(m_name_))
+SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_))
 
 void Engine::Abstract::Entity::Initialize()
 {
-	m_b_initialized_ = true;
+    m_b_initialized_ = true;
 }
 
 void Engine::Abstract::Entity::OnDeserialized()
 {
-	if (m_b_initialized_)
-	{
-		throw std::runtime_error("Entity already initialized");
-	}
+    if (m_b_initialized_)
+    {
+        throw std::runtime_error("Entity already initialized");
+    }
 
-	m_b_initialized_ = true;
+    m_b_initialized_ = true;
 }
 
 void Engine::Abstract::Entity::OnImGui()
 {
-	ImGui::Indent(2);
-	ImGui::Text("Entity ID: %lld", GetID());
-	ImGui::InputText("Entity Name", &m_name_);
-	ImGui::Unindent(2);
+    ImGui::Indent(2);
+    ImGui::Text("Entity ID: %lld", GetID());
+    ImGui::InputText("Entity Name", &m_name_);
+    ImGui::Unindent(2);
 }

@@ -3,13 +3,13 @@
 #define TRIANGLE_MACRO 3
 #define MAX_NUM_CASCADES 3
 
-SamplerState PSSampler : register(s0);
+SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
-Texture2D shaderTexture : register(t0);
-Texture2D shaderNormalMap : register(t1);
+Texture2D      shaderTexture : register(t0);
+Texture2D      shaderNormalMap : register(t1);
 Texture2DArray cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
-Texture2D renderedTexture : register(t3);
+Texture2D      renderedTexture : register(t3);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -34,13 +34,13 @@ cbuffer LightBuffer : register(b2)
 {
     matrix g_lightWorld[MAX_NUM_LIGHTS];
     float4 g_lightColor[MAX_NUM_LIGHTS];
-    int g_lightCount;
+    int    g_lightCount;
     float3 ___p0;
 }
 
 cbuffer SpecularBuffer : register(b3)
 {
-    float g_specularPower;
+    float  g_specularPower;
     float3 ___p1;
     float4 g_specularColor;
 }
@@ -65,8 +65,8 @@ cbuffer CascadeShadowChunk : register(b5)
 
 cbuffer WaterBuffer : register(b6)
 {
-    float g_waterTranslation;
-    float g_reflfrScale;
+    float  g_waterTranslation;
+    float  g_reflfrScale;
     float2 ___p2;
 }
 
@@ -94,7 +94,7 @@ struct GeometryShadowInputType
 struct PixelShadowStage1InputType
 {
     float4 position : SV_POSITION;
-    uint RTIndex : SV_RenderTargetArrayIndex;
+    uint   RTIndex : SV_RenderTargetArrayIndex;
 };
 
 struct PixelInputType
@@ -123,11 +123,13 @@ float4 GetWorldPosition(in matrix mat)
     return float4(mat._14, mat._24, mat._34, mat._44);
 }
 
-float GetShadowFactorImpl(int lightIndex, int cascadeIndex, float4 cascadeLocalPosition)
+float GetShadowFactorImpl(
+    int    lightIndex, int cascadeIndex,
+    float4 cascadeLocalPosition)
 {
     float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
-    projCoords.x = projCoords.x * 0.5 + 0.5f;
-    projCoords.y = -projCoords.y * 0.5 + 0.5f;
+    projCoords.x      = projCoords.x * 0.5 + 0.5f;
+    projCoords.y      = -projCoords.y * 0.5 + 0.5f;
 
     if (projCoords.z > 1.0)
     {
@@ -135,25 +137,21 @@ float GetShadowFactorImpl(int lightIndex, int cascadeIndex, float4 cascadeLocalP
     }
 
     float currentDepth = projCoords.z;
-    float bias = 0.01f;
-    float shadow = 0.0;
+    float bias         = 0.01f;
+    float shadow       = 0.0;
 
     float3 samplePos = float3(projCoords.xyz);
-    samplePos.z = cascadeIndex;
+    samplePos.z      = cascadeIndex;
 
     Texture2DArray shadowMap = cascadeShadowMap[lightIndex];
 
-    [unroll]
-    for (int x = -1; x <= 1; ++x)
+    [unroll] for (int x = -1; x <= 1; ++x)
     {
-        [unroll]
-        for (int y = -1; y <= 1; ++y)
+        [unroll] for (int y = -1; y <= 1; ++y)
         {
             shadow += shadowMap.SampleCmpLevelZero(
-				PSShadowSampler, 
-				samplePos, 
-				currentDepth - bias, 
-				int2(x, y));
+                                                   PSShadowSampler, samplePos,
+                                                   currentDepth - bias, int2(x, y));
         }
     }
 
@@ -161,7 +159,9 @@ float GetShadowFactorImpl(int lightIndex, int cascadeIndex, float4 cascadeLocalP
     return shadow;
 }
 
-void GetShadowFactor(in float4 world_position, in float z_clip, out float shadowFactor[MAX_NUM_LIGHTS])
+void GetShadowFactor(
+    in float4 world_position, in float z_clip,
+    out float shadowFactor[MAX_NUM_LIGHTS])
 {
     int i = 0;
     int j = 0;
@@ -171,13 +171,13 @@ void GetShadowFactor(in float4 world_position, in float z_clip, out float shadow
         shadowFactor[i] = 1.0f;
     }
 
-    [unroll]
-    for (i = 0; i < g_lightCount; ++i)
+    [unroll] for (i = 0; i < g_lightCount; ++i)
     {
-		[unroll]
-        for (j = 0; j < MAX_NUM_CASCADES; ++j)
+        [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
         {
-            const matrix vp = mul(g_cascadeShadowChunk[i].g_shadow_view[j], g_cascadeShadowChunk[i].g_shadow_proj[j]);
+            const matrix vp = mul(
+                                  g_cascadeShadowChunk[i].g_shadow_view[j],
+                                  g_cascadeShadowChunk[i].g_shadow_proj[j]);
             const float4 position = mul(world_position, vp);
 
             if (z_clip <= g_cascadeShadowChunk[i].g_shadow_z_clip[j].z)

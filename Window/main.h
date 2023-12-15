@@ -6,4 +6,6 @@
 
 #include "imgui.h"
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WndProc(
+    HWND   hwnd, UINT umessage, WPARAM wparam,
+    LPARAM lparam);

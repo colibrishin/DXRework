@@ -11,8 +11,8 @@ float4 main(PixelInputType input) : SV_TARGET
     GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
 
     const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
-    float normalLightIntensity[MAX_NUM_LIGHTS];
-    float textureLightIntensity[MAX_NUM_LIGHTS];
+    float        normalLightIntensity[MAX_NUM_LIGHTS];
+    float        textureLightIntensity[MAX_NUM_LIGHTS];
 
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
@@ -21,17 +21,21 @@ float4 main(PixelInputType input) : SV_TARGET
 
     normalMap = (normalMap * 2.0f) - 1.0f;
 
-    float3 bumpNormal = (normalMap.x * input.tangent) + (normalMap.y * input.binormal) + (normalMap.z * input.normal);
+    float3 bumpNormal = (normalMap.x * input.tangent) +
+                        (normalMap.y * input.binormal) +
+                        (normalMap.z * input.normal);
     bumpNormal = normalize(bumpNormal);
 
     for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
-        normalLightIntensity[i] = saturate(dot(bumpNormal, input.lightDirection[i]));
-        textureLightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
+        normalLightIntensity[i] =
+                saturate(dot(bumpNormal, input.lightDirection[i]));
+        textureLightIntensity[i] =
+                saturate(dot(input.normal, input.lightDirection[i]));
 
         const float4 shadow = LerpShadow(shadowFactor[i]);
 
-        normalColorArray[i] = shadow * g_lightColor[i] * normalLightIntensity[i];
+        normalColorArray[i]  = shadow * g_lightColor[i] * normalLightIntensity[i];
         textureColorArray[i] = shadow * g_lightColor[i] * textureLightIntensity[i];
     }
 
@@ -53,7 +57,8 @@ float4 main(PixelInputType input) : SV_TARGET
         textureLightColor.b += textureColorArray[i].b;
     }
 
-    float4 color = saturate(textureLightColor) * saturate(normalLightColor) * textureColor;
+    float4 color =
+            saturate(textureLightColor) * saturate(normalLightColor) * textureColor;
 
     return color;
 }
