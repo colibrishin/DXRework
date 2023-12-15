@@ -4,17 +4,18 @@
 #include "pch.h"
 #include "Client.h"
 
+#include <egCubeMesh.h>
+#include <egSphereMesh.h>
+#include <egFont.h>
+#include <egNormalMap.h>
+#include <egResourceManager.h>
+#include <egSceneManager.hpp>
+#include <egSerialization.hpp>
+#include <egSound.h>
+#include <egSphereMesh.h>
 #include "clBackSphereMesh.hpp"
-#include "clGiftBox.hpp"
 #include "clTestScene.hpp"
-#include "egSerialization.hpp"
-#include "egSound.hpp"
 #include "framework.h"
-#include "../Engine/egCubeMesh.hpp"
-#include "../Engine/egFont.hpp"
-#include "../Engine/egResourceManager.hpp"
-#include "../Engine/egSceneManager.hpp"
-#include "../Engine/egSphereMesh.hpp"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -30,15 +31,14 @@ namespace Client
                                                  "TestNormalMap",
                                                  boost::make_shared<Engine::Resources::NormalMap>(
                                                   "./Texture-Normal.png"));
+
         Engine::GetResourceManager().AddResource(
                                                  "TriangleMesh", boost::make_shared<Mesh::TriangleMesh>());
-        Engine::GetResourceManager().AddResource(
-                                                 "Giftbox",
-                                                 boost::make_shared<Mesh::GiftBox>());
         Engine::GetResourceManager().AddResource(
                                                  "CubeMesh", boost::make_shared<Engine::Mesh::CubeMesh>());
         Engine::GetResourceManager().AddResource(
                                                  "SphereMesh", boost::make_shared<Engine::Mesh::SphereMesh>());
+
         Engine::GetResourceManager().AddResource(
                                                  "WaterNormal",
                                                  boost::make_shared<Engine::Resources::NormalMap>(

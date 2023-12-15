@@ -1,12 +1,13 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egCollider.hpp"
 #include <imgui_stdlib.h>
 #include "egCollision.h"
-#include "egCubeMesh.hpp"
+#include "egCubeMesh.h"
 #include "egD3Device.hpp"
-#include "egResourceManager.hpp"
+#include "egResourceManager.h"
 #include "egSceneManager.hpp"
-#include "egSphereMesh.hpp"
+#include "egSphereMesh.h"
+#include "egTransform.h"
 
 #include "egManagerHelper.hpp"
 

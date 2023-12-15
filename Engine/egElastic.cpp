@@ -1,15 +1,15 @@
-#include "pch.hpp"
+#include "pch.h"
 
 #include "egElastic.h"
 #include "egCollider.hpp"
-#include "egPhysics.h"
+#include "egPhysics.hpp"
 
 #undef max
 #undef min
 
 namespace Engine::Physics
 {
-    void EvalImpulse(
+    void __vectorcall EvalImpulse(
         const Vector3&    pos1, const Vector3&         pos2, const Vector3& point,
         float             penetration, const Vector3&  normal, float        invm1,
         float             invm2, const Vector3&        rv1, const Vector3&  rv2,

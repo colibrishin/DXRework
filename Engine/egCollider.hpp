@@ -1,6 +1,6 @@
 #pragma once
 #include "egCommon.hpp"
-#include "egComponent.hpp"
+#include "egComponent.h"
 
 namespace Engine::Component
 {

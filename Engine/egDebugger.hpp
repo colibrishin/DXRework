@@ -4,10 +4,10 @@
 #include <queue>
 
 #include <SpriteFont.h>
-#include "egApplication.hpp"
+#include "egApplication.h"
 #include "egCommon.hpp"
 #include "egD3Device.hpp"
-#include "egToolkitAPI.hpp"
+#include "egToolkitAPI.h"
 
 #include "DebugDraw.h"
 
@@ -16,9 +16,7 @@ namespace Engine::Manager
     class Debugger final : public Abstract::Singleton<Debugger>
     {
     public:
-        explicit Debugger(SINGLETON_LOCK_TOKEN)
-        : Singleton(),
-          m_bDebug(false) {}
+        explicit Debugger(SINGLETON_LOCK_TOKEN);
 
         ~Debugger() override = default;
 

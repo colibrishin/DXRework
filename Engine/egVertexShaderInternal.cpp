@@ -1,7 +1,7 @@
-#include "pch.hpp"
-#include "egVertexShaderInternal.hpp"
+#include "pch.h"
+#include "egVertexShaderInternal.h"
 
-#include "egRenderPipeline.hpp"
+#include "egRenderPipeline.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Graphic::VertexShaderInternal,
@@ -15,9 +15,15 @@ namespace Engine::Graphic
         const std::filesystem::path& path)
     : Shader<ID3D11VertexShader>(name, path) {}
 
-    void VertexShaderInternal::Render(const float& dt)
+    ID3D11InputLayout** VertexShaderInternal::GetInputLayout() {
+        return m_input_layout_.GetAddressOf();
+    }
+
+    void              VertexShaderInternal::Render(const float& dt)
     {
         GetRenderPipeline().SetTopology(m_topology_);
         Shader<ID3D11VertexShader>::Render(dt);
     }
+
+    VertexShaderInternal::VertexShaderInternal(): Shader<ID3D11VertexShader>("", {}) {}
 } // namespace Engine::Graphic

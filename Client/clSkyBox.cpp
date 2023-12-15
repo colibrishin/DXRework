@@ -3,7 +3,9 @@
 
 #include "clBackSphereMesh.hpp"
 
-CLIENT_OBJECT_IMPL(Client::Object::SkyBox)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::SkyBox,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {

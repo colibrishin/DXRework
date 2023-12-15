@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egMesh.hpp"
+#include "pch.h"
+#include "egMesh.h"
 
 #include <execution>
 #include <tiny_obj_loader.h>
@@ -119,7 +119,25 @@ namespace Engine::Resources
                       });
     }
 
-    void Mesh::GenerateTangentBinormal(
+    const std::vector<Shape>& Mesh::GetShapes()
+    {
+        return m_vertices_;
+    }
+
+    const std::vector<const Vector3*>& Mesh::GetVertices()
+    {
+        return m_flatten_vertices_;
+    }
+
+    UINT Mesh::GetIndexCount() const
+    {
+        return static_cast<UINT>(m_indices_.size());
+    }
+
+    Mesh::Mesh(std::filesystem::path path)
+    : Resource(std::move(path), RESOURCE_PRIORITY_MESH) {}
+
+    void __vectorcall Mesh::GenerateTangentBinormal(
         const Vector3& v0, const Vector3&  v1,
         const Vector3& v2, const Vector2&  uv0,
         const Vector2& uv1, const Vector2& uv2,

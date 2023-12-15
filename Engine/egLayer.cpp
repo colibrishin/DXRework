@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egLayer.hpp"
+#include "pch.h"
+#include "egLayer.h"
 #include "egObject.hpp"
 
 SERIALIZER_ACCESS_IMPL(
@@ -9,6 +9,8 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine
 {
+    Layer::Layer(eLayerType type): m_layer_type_(type) { }
+
     void Layer::Initialize() {}
 
     void Layer::PreUpdate(const float& dt)
@@ -151,4 +153,6 @@ namespace Engine
     {
         return m_weak_objects_;
     }
+
+    Layer::Layer(): m_layer_type_(LAYER_NONE) {}
 } // namespace Engine

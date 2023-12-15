@@ -10,7 +10,7 @@
 
 #include "egDXCommon.h"
 #include "egSerialization.hpp"
-#include "egType.hpp"
+#include "egType.h"
 
 #include <fmod.h>
 

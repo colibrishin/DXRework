@@ -1,9 +1,9 @@
-#include "pch.hpp"
-#include "egSound.hpp"
+#include "pch.h"
+#include "egSound.h"
 #include "egDebugger.hpp"
 #include "egObject.hpp"
-#include "egRigidbody.hpp"
-#include "egTransform.hpp"
+#include "egRigidbody.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Sound,
@@ -12,6 +12,28 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Resources
 {
+    Sound::Sound(const std::string& path)
+    : Resource(path, RESOURCE_PRIORITY_SOUND),
+      m_mode_(FMOD_3D),
+      m_min_distance_(0.f),
+      m_max_distance_(3.f) {}
+
+    Sound::~Sound() = default;
+
+    Sound::Sound()
+    : Resource("", RESOURCE_PRIORITY_SOUND),
+      m_mode_(FMOD_3D),
+      m_min_distance_(0.f),
+      m_max_distance_(3.f) {}
+
+    void Sound::CommitDistance() const
+    {
+        if (m_sound_)
+        {
+            m_sound_->set3DMinMaxDistance(m_min_distance_, m_max_distance_);
+        }
+    }
+
     void Sound::Initialize() {}
 
     void Sound::PreUpdate(const float& dt) {}

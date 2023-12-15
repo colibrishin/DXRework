@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "clTestCube.hpp"
 
-#include "egCubeMesh.hpp"
+#include <egCubeMesh.h>
+#include <egNormalMap.h>
 
-CLIENT_OBJECT_IMPL(Client::Object::TestCube)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::TestCube,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {
@@ -50,8 +53,6 @@ namespace Client::Object
 
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
-
-        AddComponent<State::CharacterController>();
     }
 
     inline TestCube::~TestCube() {}

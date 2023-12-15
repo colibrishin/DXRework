@@ -2,15 +2,7 @@
 
 #include "clCharacterController.hpp"
 #include "clTriangleMesh.hpp"
-#include "../Engine/egCollider.hpp"
-#include "../Engine/egIShader.hpp"
-#include "../Engine/egManagerHelper.hpp"
-#include "../Engine/egNormalMap.hpp"
-#include "../Engine/egObject.hpp"
-#include "../Engine/egResourceManager.hpp"
-#include "../Engine/egRigidbody.hpp"
-#include "../Engine/egTexture.hpp"
-#include "../Engine/egTransform.hpp"
+#include <egObject.hpp>
 
 namespace Client::Object
 {

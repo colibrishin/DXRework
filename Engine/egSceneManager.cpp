@@ -1,4 +1,4 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egSceneManager.hpp"
 #include "egObject.hpp"
 #include "egScene.hpp"

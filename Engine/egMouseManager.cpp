@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egMouseManager.hpp"
+#include "pch.h"
+#include "egMouseManager.h"
 #include "egManagerHelper.hpp"
 
 namespace Engine::Manager

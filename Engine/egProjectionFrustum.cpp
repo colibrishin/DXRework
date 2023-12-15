@@ -1,5 +1,8 @@
-#include "pch.hpp"
-#include "egProjectionFrustum.hpp"
+#include "pch.h"
+#include "egProjectionFrustum.h"
+#include "egSceneManager.hpp"
+#include "egCamera.h"
+#include "egTransform.h"
 
 namespace Engine::Manager
 {
@@ -58,6 +61,10 @@ namespace Engine::Manager
         }
 
         return false;
+    }
+
+    BoundingFrustum ProjectionFrustum::GetFrustum() const {
+        return m_frustum;
     }
 
     void ProjectionFrustum::FixedUpdate(const float& dt) {}

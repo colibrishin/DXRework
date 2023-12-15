@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egTransform.hpp"
+#include "pch.h"
+#include "egTransform.h"
 
 #include "egManagerHelper.hpp"
 
@@ -17,6 +17,50 @@ namespace Engine::Component
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
       m_scale_(Vector3::One) {}
+
+    void Transform::SetPosition(const Vector3& position)
+    {
+        m_position_ = position;
+    }
+
+    void Transform::SetRotation(const Quaternion& rotation)
+    {
+        m_rotation_ = rotation;
+    }
+
+    void Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
+    {
+        m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
+        m_rotation_              = Quaternion::CreateFromYawPitchRoll(
+                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.x),
+                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.y),
+                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.z));
+    }
+
+    void Transform::SetScale(const Vector3& scale)
+    {
+        m_scale_ = scale;
+    }
+
+    Vector3 Transform::GetPosition() const
+    {
+        return m_position_;
+    }
+
+    Vector3 Transform::GetPreviousPosition() const
+    {
+        return m_previous_position_;
+    }
+
+    Quaternion Transform::GetRotation() const
+    {
+        return m_rotation_;
+    }
+
+    Vector3 Transform::GetScale() const
+    {
+        return m_scale_;
+    }
 
     void Transform::Translate(Vector3 translation)
     {
@@ -90,6 +134,13 @@ namespace Engine::Component
     TypeName Transform::GetVirtualTypeName() const
     {
         return typeid(Transform).name();
+    }
+
+    Matrix Transform::GetWorldMatrix() const
+    {
+        return Matrix::CreateScale(m_scale_) *
+               Matrix::CreateFromQuaternion(m_rotation_) *
+               Matrix::CreateTranslation(m_position_);
     }
 
     Transform::Transform()

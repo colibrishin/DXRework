@@ -1,17 +1,18 @@
 #pragma once
-#include "egApplication.hpp"
-#include "egCollisionDetector.hpp"
-#include "egConstraintSolver.hpp"
+#include "egApplication.h"
+#include "egCollisionDetector.h"
+#include "egConstraintSolver.h"
 #include "egDebugger.hpp"
-#include "egLerpManager.hpp"
-#include "egMouseManager.hpp"
-#include "egPhysicsManager.hpp"
-#include "egProjectionFrustum.hpp"
-#include "egResourceManager.hpp"
+#include "egLerpManager.h"
+#include "egMouseManager.h"
+#include "egPhysicsManager.h"
+#include "egProjectionFrustum.h"
+#include "egResourceManager.h"
+#include "egRenderPipeline.h"
 #include "egSceneManager.hpp"
 #include "egShadowManager.hpp"
-#include "egTaskScheduler.hpp"
-#include "egToolkitAPI.hpp"
+#include "egTaskScheduler.h"
+#include "egToolkitAPI.h"
 
 namespace Engine
 {

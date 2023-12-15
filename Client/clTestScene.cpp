@@ -3,6 +3,7 @@
 
 #include "clWater.hpp"
 #include "egHelper.hpp"
+#include <egCamera.h>
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Scene::TestScene,
@@ -49,7 +50,10 @@ namespace Client::Scene
     inline void TestScene::Initialize_INTERNAL()
     {
         const auto companion = Engine::Instantiate<Object::TestCube>();
-        AddGameObject(companion, Engine::LAYER_DEFAULT);
+
+        AddGameObject(
+                      companion,
+                      Engine::LAYER_DEFAULT);
         AddGameObject(
                       Engine::Instantiate<Object::TestObject>(),
                       Engine::LAYER_DEFAULT);

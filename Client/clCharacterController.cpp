@@ -3,6 +3,7 @@
 #include "client.h"
 
 #include <boost/serialization/export.hpp>
+#include <egCamera.h>
 
 BOOST_CLASS_EXPORT_IMPLEMENT(
                              Engine::Abstract::StateController<Client::eCharacterState>)

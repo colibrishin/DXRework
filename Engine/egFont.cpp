@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egFont.hpp"
+#include "pch.h"
+#include "egFont.h"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -51,6 +51,37 @@ namespace Engine::Resources
     TypeName Font::GetVirtualTypeName() const
     {
         return typeid(Font).name();
+    }
+
+    void Font::SetText(const std::string& text)
+    {
+        m_text_ = text;
+    }
+
+    void Font::SetPosition(const Vector2& position)
+    {
+        m_position_ = position;
+    }
+
+    void Font::SetColor(const Vector4& color)
+    {
+        m_color_ = color;
+    }
+
+    void Font::SetRotation(const float radian)
+    {
+        m_rotation_radian_ = radian;
+    }
+
+    void Font::SetScale(const float scale)
+    {
+        m_scale_ = scale;
+    }
+
+    void Font::ChangeFont(const std::filesystem::path& path)
+    {
+        SetPath(path);
+        m_lazy_reload_ = true;
     }
 
     void Font::Unload_INTERNAL()

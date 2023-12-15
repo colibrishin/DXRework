@@ -3,7 +3,7 @@
 
 #include "egCommon.hpp"
 #include "egEntity.hpp"
-#include "egIShader.hpp"
+#include "egIShader.h"
 
 namespace Engine::Graphic
 {

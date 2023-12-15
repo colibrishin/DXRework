@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egSphereMesh.hpp"
+#include "pch.h"
+#include "egSphereMesh.h"
 
 SERIALIZER_ACCESS_IMPL(Engine::Mesh::SphereMesh, _ARTAG(_BSTSUPER(Mesh)))
 

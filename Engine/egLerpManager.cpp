@@ -1,12 +1,17 @@
-#include "pch.hpp"
-#include "egLerpManager.hpp"
+#include "pch.h"
+#include "egLerpManager.h"
 #include "egCollider.hpp"
 #include "egManagerHelper.hpp"
+#include "egRigidbody.h"
 #include "egSceneManager.hpp"
-#include "egRigidbody.hpp"
+#include "egTransform.h"
 
 namespace Engine::Manager::Physics
 {
+    LerpManager::LerpManager(SINGLETON_LOCK_TOKEN)
+    : Singleton(),
+      m_elapsedTime_(g_epsilon) {}
+
     void LerpManager::Initialize()
     {
         m_elapsedTime_ = g_epsilon;

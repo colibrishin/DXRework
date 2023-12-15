@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "clTestObject.hpp"
 
-#include "egNormalMap.hpp"
-#include "egSphereMesh.hpp"
+#include <egNormalMap.h>
+#include <egSphereMesh.h>
 
-CLIENT_OBJECT_IMPL(Client::Object::TestObject)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::TestObject,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {

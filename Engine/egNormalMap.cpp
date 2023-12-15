@@ -1,6 +1,6 @@
-#include "pch.hpp"
-#include "egNormalMap.hpp"
-#include "egRenderPipeline.hpp"
+#include "pch.h"
+#include "egNormalMap.h"
+#include "egRenderPipeline.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::NormalMap,
@@ -8,6 +8,13 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Resources
 {
+    NormalMap::NormalMap(std::filesystem::path path): Texture(std::move(path)) {}
+
+    NormalMap::NormalMap(): Texture({}) {}
+
+    NormalMap::~NormalMap() = default;
+
+
     void NormalMap::Initialize()
     {
         Texture::Initialize();

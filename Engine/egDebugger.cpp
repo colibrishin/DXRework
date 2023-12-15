@@ -1,4 +1,4 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egDebugger.hpp"
 
 namespace Engine::Manager
@@ -51,6 +51,10 @@ namespace Engine::Manager
 
         GetToolkitAPI().EndPrimitiveBatch();
     }
+
+    Debugger::Debugger(SINGLETON_LOCK_TOKEN)
+    : Singleton(),
+      m_bDebug(false) {}
 
     void Debugger::Initialize()
     {

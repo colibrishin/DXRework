@@ -1,10 +1,10 @@
-#include "pch.hpp"
-#include "egRigidbody.hpp"
+#include "pch.h"
+#include "egRigidbody.h"
 #include "egCollider.hpp"
 #include "egKinetic.h"
 #include "egObject.hpp"
 #include "egScene.hpp"
-#include "egTransform.hpp"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Component::Rigidbody,
@@ -32,14 +32,132 @@ namespace Engine::Component
         }
     }
 
+    Rigidbody::Rigidbody(const WeakObject& object)
+    : Component(COMPONENT_PRIORITY_RIGIDBODY, object),
+      m_bGrounded(false),
+      m_bGravityOverride(false),
+      m_bFixed(false),
+      m_friction_mu_(0.0f),
+      m_main_collider_(g_invalid_id) {}
+
     void Rigidbody::SetMainCollider(const WeakCollider& collider)
     {
         m_main_collider_ = collider.lock()->GetLocalID();
     }
 
+    void Rigidbody::SetGravityOverride(bool gravity)
+    {
+        m_bGravityOverride = gravity;
+    }
+
+    void Rigidbody::SetGrounded(bool grounded)
+    {
+        m_bGrounded = grounded;
+    }
+
+    void Rigidbody::SetFrictionCoefficient(float mu)
+    {
+        m_friction_mu_ = mu;
+    }
+
+    void Rigidbody::SetFixed(bool fixed)
+    {
+        m_bFixed = fixed;
+    }
+
+    void Rigidbody::SetLinearMomentum(const Vector3& velocity)
+    {
+        m_linear_momentum_ = velocity;
+    }
+
+    void Rigidbody::SetAngularMomentum(const Vector3& velocity)
+    {
+        m_angular_momentum_ = velocity;
+    }
+
+    void Rigidbody::SetLinearFriction(const Vector3& friction)
+    {
+        m_linear_friction_ = friction;
+    }
+
+    void Rigidbody::SetAngularFriction(const Vector3& friction)
+    {
+        m_angular_friction_ = friction;
+    }
+
+    void Rigidbody::SetDragForce(const Vector3& drag)
+    {
+        m_drag_force_ = drag;
+    }
+
+    void Rigidbody::AddLinearMomentum(const Vector3& velocity)
+    {
+        m_linear_momentum_ += velocity;
+    }
+
+    void Rigidbody::AddAngularMomentum(const Vector3& velocity)
+    {
+        m_angular_momentum_ += velocity;
+    }
+
+    void Rigidbody::AddForce(const Vector3& force)
+    {
+        m_force_ += force;
+    }
+
+    void Rigidbody::AddTorque(const Vector3& torque)
+    {
+        m_torque_ += torque;
+    }
+
+    float Rigidbody::GetFrictionCoefficient() const
+    {
+        return m_friction_mu_;
+    }
+
+    Vector3 Rigidbody::GetLinearMomentum() const
+    {
+        return m_linear_momentum_;
+    }
+
+    Vector3 Rigidbody::GetAngularMomentum() const
+    {
+        return m_angular_momentum_;
+    }
+
+    Vector3 Rigidbody::GetForce() const
+    {
+        return m_force_;
+    }
+
+    Vector3 Rigidbody::GetTorque() const
+    {
+        return m_torque_;
+    }
+
+    bool Rigidbody::GetGrounded() const
+    {
+        return m_bGrounded;
+    }
+
+    bool Rigidbody::IsGravityAllowed() const
+    {
+        return m_bGravityOverride;
+    }
+
+    bool Rigidbody::IsFixed() const
+    {
+        return m_bFixed;
+    }
+
+    bool Rigidbody::IsGrounded() const
+    {
+        return m_bGrounded;
+    }
+
     WeakCollider Rigidbody::GetMainCollider() const
     {
-        if (m_main_collider_ == 0)
+        if (m_main_collider_ == g_invalid_id)
         {
             return GetOwner().lock()->GetComponent<Collider>();
         }
@@ -119,5 +237,5 @@ namespace Engine::Component
       m_bGravityOverride(false),
       m_bFixed(false),
       m_friction_mu_(0),
-      m_main_collider_(0) {}
+      m_main_collider_(g_invalid_id) {}
 } // namespace Engine::Component

@@ -1,7 +1,7 @@
-#include "pch.hpp"
-#include "egLayer.hpp"
+#include "pch.h"
+#include "egLayer.h"
 #include "egObject.hpp"
-#include "egResource.hpp"
+#include "egResource.h"
 #include "egScene.hpp"
 
 namespace Engine

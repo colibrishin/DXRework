@@ -1,6 +1,6 @@
 #pragma once
 #include "egEntity.hpp"
-#include "egRenderable.hpp"
+#include "egRenderable.h"
 
 namespace Engine::Abstract
 {

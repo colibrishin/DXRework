@@ -1,11 +1,11 @@
-#include "pch.hpp"
+#include "pch.h"
 
 #include "egCollider.hpp"
-#include "egPhysics.h"
+#include "egPhysics.hpp"
 
 namespace Engine::Physics
 {
-    inline Vector3 EvalGravity(float invMass, float dt)
+    Vector3 __vectorcall EvalGravity(float invMass, float dt)
     {
         return invMass * g_gravity_vec * dt;
     }

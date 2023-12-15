@@ -1,10 +1,10 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egScene.hpp"
-#include "egCamera.hpp"
-#include "egIStateController.hpp"
-#include "egLight.hpp"
+#include "egCamera.h"
+#include "egIStateController.h"
+#include "egLight.h"
 #include "egManagerHelper.hpp"
-#include "egObserver.hpp"
+#include "egObserver.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Scene,

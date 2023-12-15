@@ -2,7 +2,7 @@
 #include <ranges>
 
 #include <boost/serialization/export.hpp>
-#include "egRenderable.hpp"
+#include "egRenderable.h"
 #include "../octree/octree.h"
 
 namespace Engine

@@ -1,10 +1,10 @@
-#include "pch.hpp"
+#include "pch.h"
 
 #include "egD3Device.hpp"
 
 #include "egDebugger.hpp"
 #include "egShader.hpp"
-#include "egToolkitAPI.hpp"
+#include "egToolkitAPI.h"
 
 namespace Engine::Manager::Graphics
 {

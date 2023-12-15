@@ -5,7 +5,7 @@
 // Licensed under the MIT License.
 //-------------------------------------------------------------------------------------
 
-#include "pch.hpp"
+#include "pch.h"
 #include "DebugDraw.h"
 
 #include <algorithm>

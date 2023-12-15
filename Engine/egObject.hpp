@@ -1,7 +1,7 @@
 #pragma once
-#include "egActor.hpp"
+#include "egActor.h"
 #include "egCommon.hpp"
-#include "egResource.hpp"
+#include "egResource.h"
 #include "egScene.hpp"
 
 namespace Engine::Abstract
@@ -21,10 +21,7 @@ namespace Engine::Abstract
         void     OnImGui() override;
         TypeName GetVirtualTypeName() const final;
 
-        void AddResource(const StrongResource& resource)
-        {
-            m_resources_.insert(resource);
-        }
+        void AddResource(const StrongResource& resource);
 
         template <typename T, typename... Args>
         boost::weak_ptr<T> AddComponent(Args&&... args)
@@ -111,10 +108,7 @@ namespace Engine::Abstract
             return {};
         }
 
-        const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents() const
-        {
-            return m_priority_sorted_;
-        }
+        const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents() const;
 
         template <typename T>
         std::set<boost::weak_ptr<T>, WeakComparer<T>> GetComponents()
@@ -262,35 +256,13 @@ namespace Engine::Abstract
         template <typename T>
         void DispatchComponentEvent(T& lhs, T& rhs);
 
-        void SetActive(bool active)
-        {
-            m_active_ = active;
-        }
+        void SetActive(bool active);
+        void SetCulled(bool culled);
+        void SetImGuiOpen(bool open);
 
-        void SetCulled(bool culled)
-        {
-            m_culled_ = culled;
-        }
-
-        void SetImGuiOpen(bool open)
-        {
-            m_imgui_open_ = open;
-        }
-
-        bool GetActive() const
-        {
-            return m_active_;
-        }
-
-        bool GetCulled() const
-        {
-            return m_culled_;
-        }
-
-        bool GetImGuiOpen() const
-        {
-            return m_imgui_open_;
-        }
+        bool GetActive() const;
+        bool GetCulled() const;
+        bool GetImGuiOpen() const;
 
     protected:
         Object()
