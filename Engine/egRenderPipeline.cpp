@@ -176,7 +176,7 @@ namespace Engine::Manager::Graphics
 
     void RenderPipeline::UpdateBuffer(
         ID3D11Buffer* buffer, const void* data,
-        size_t        size)
+        UINT          size)
     {
         GetD3Device().UpdateBuffer(size, data, buffer);
     }

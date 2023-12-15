@@ -185,8 +185,10 @@ namespace Engine::Manager::Physics
             ratio                = std::clamp(ratio, 0.f, 1.f);
             const auto ratio_inv = 1.0f - ratio;
 
-            const auto collision_reduction = std::pow(
-                                                      collided_count, g_collision_energy_reduction_multiplier.load());
+            const auto collision_reduction = std::powf(
+                                                       static_cast<float>(collided_count),
+                                                       static_cast<float>(g_collision_energy_reduction_multiplier.
+                                                           load()));
 
             rb->SetLinearMomentum(linear_vel * ratio_inv / collision_reduction);
             rb->SetAngularMomentum(angular_vel * ratio_inv / collision_reduction);
