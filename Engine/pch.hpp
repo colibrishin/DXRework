@@ -18,7 +18,8 @@
 #include <atomic>
 #include <exception>
 #include <execution>
-#include <fmod_common.h>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -30,18 +31,24 @@
 #include <vector>
 #define WIN32_LEAN_AND_MEAN
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/smart_ptr.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 
 #include <wrl/client.h>
-#include "framework.h"
 
 #include "Audio.h"
+#include "framework.h"
 #define _USE_MATH_DEFINES
 
 #include "BufferHelpers.h"
@@ -78,42 +85,36 @@
 #include <directxmath.h>
 #include <dxcapi.h>
 #include <dxgi1_3.h>
-
 #include <fmod.hpp>
 #include <fmod_common.h>
 
 #pragma comment(lib, "fmod_vc.lib")
 
-#include "egCommon.hpp"
-#include "egDXCommon.h"
-#include "egHelper.hpp"
-#include "egSerialization.hpp"
-#include "egType.hpp"
-
 #include "egActor.hpp"
-#include "egEntity.hpp"
-#include "egManager.hpp"
-#include "egRenderable.hpp"
-
-#include "egResource.hpp"
-#include "egLayer.hpp"
-#include "egScene.hpp"
-#include "egComponent.hpp"
-#include "egObject.hpp"
-
 #include "egCollision.h"
-#include "egElastic.h"
-#include "egFriction.h"
-#include "egKinetic.h"
-#include "egPhysics.h"
-
+#include "egCommon.hpp"
+#include "egComponent.hpp"
 #include "egD3Device.hpp"
-#include "egRenderPipeline.hpp"
-
+#include "egDXCommon.h"
+#include "egElastic.h"
+#include "egEntity.hpp"
+#include "egFriction.h"
+#include "egHelper.hpp"
 #include "egIShader.hpp"
 #include "egIStateController.hpp"
+#include "egKinetic.h"
+#include "egLayer.hpp"
+#include "egManager.hpp"
+#include "egObject.hpp"
+#include "egPhysics.h"
+#include "egRenderPipeline.hpp"
+#include "egRenderable.hpp"
+#include "egResource.hpp"
+#include "egScene.hpp"
+#include "egSerialization.hpp"
 #include "egShader.hpp"
 #include "egStateController.hpp"
+#include "egType.hpp"
 #include "egVertexShaderInternal.hpp"
 
 #endif // PCH_HPP
