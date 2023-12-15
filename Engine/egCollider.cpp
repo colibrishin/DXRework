@@ -15,7 +15,7 @@ SERIALIZER_ACCESS_IMPL(
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
                        _ARTAG(m_bDirtyByTransform) _ARTAG(m_position_)
                        _ARTAG(m_rotation_) _ARTAG(m_size_)
-                       _ARTAG(m_type_) _ARTAG(m_mass_))
+                       _ARTAG(m_type_) _ARTAG(m_mass_) _ARTAG(m_offset_))
 
 namespace Engine::Component
 {
@@ -234,6 +234,16 @@ namespace Engine::Component
         UpdateBoundings();
     }
 
+    void Collider::SetMass(const float mass)
+    {
+        m_mass_ = mass;
+    }
+
+    void Collider::SetOffset(const Vector3& offset)
+    {
+        m_offset_ = offset;
+    }
+
     void Collider::SetMesh(const WeakMesh& mesh)
     {
         if (const auto locked = mesh.lock())
@@ -319,6 +329,56 @@ namespace Engine::Component
         m_speculative_collision_candidates_.insert(id);
     }
 
+    void Collider::RemoveCollidedObject(const EntityID id)
+    {
+        m_collided_objects_.erase(id);
+    }
+
+    void Collider::RemoveSpeculationObject(const EntityID id)
+    {
+        m_speculative_collision_candidates_.erase(id);
+    }
+
+    bool Collider::IsCollidedObject(const EntityID id) const
+    {
+        return m_collided_objects_.contains(id);
+    }
+
+    const std::set<EntityID>& Collider::GetCollidedObjects() const
+    {
+        return m_collided_objects_;
+    }
+
+    const std::set<EntityID>& Collider::GetSpeculation() const
+    {
+        return m_speculative_collision_candidates_;
+    }
+
+    bool Collider::GetDirtyFlag() const
+    {
+        return m_bDirtyByTransform;
+    }
+
+    Vector3 Collider::GetPreviousPosition() const
+    {
+        return m_previous_position_;
+    }
+
+    Vector3 Collider::GetPosition() const
+    {
+        return m_position_;
+    }
+
+    Quaternion Collider::GetRotation() const
+    {
+        return m_rotation_;
+    }
+
+    Vector3 Collider::GetSize() const
+    {
+        return m_size_;
+    }
+
     void Collider::GetPenetration(
         const Collider& other, Vector3& normal,
         float&          depth) const
@@ -339,6 +399,31 @@ namespace Engine::Component
         return m_collision_count_.at(id);
     }
 
+    float Collider::GetMass() const
+    {
+        return m_mass_;
+    }
+
+    float Collider::GetInverseMass() const
+    {
+        return 1.0f / m_mass_;
+    }
+
+    XMFLOAT3X3 Collider::GetInertiaTensor() const
+    {
+        return m_inertia_tensor_;
+    }
+
+    eBoundingType Collider::GetType() const
+    {
+        return m_type_;
+    }
+
+    const Matrix& Collider::GetWorldMatrix() const
+    {
+        return m_world_matrix_;
+    }
+
     Collider::Collider()
     : Component(COMPONENT_PRIORITY_COLLIDER, {}),
       m_bDirtyByTransform(false),
@@ -346,11 +431,13 @@ namespace Engine::Component
       m_position_(Vector3::Zero),
       m_size_(Vector3::One),
       m_rotation_(Quaternion::Identity),
+      m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.f),
       m_boundings_({}),
       m_inertia_tensor_(),
-      m_world_matrix_() {}
+      m_world_matrix_()
+    {}
 
     void Collider::FixedUpdate(const float& dt) {}
 
@@ -417,6 +504,7 @@ namespace Engine::Component
 
     void Collider::Render(const float& dt)
     {
+#ifdef _DEBUG
         if (m_collided_objects_.empty())
         {
             GetDebugger().Draw(m_type_, Colors::OrangeRed, m_boundings_);
@@ -425,6 +513,7 @@ namespace Engine::Component
         {
             GetDebugger().Draw(m_type_, Colors::GreenYellow, m_boundings_);
         }
+#endif
 
         m_previous_position_ = m_position_;
     }
@@ -461,7 +550,7 @@ namespace Engine::Component
         m_world_matrix_ = Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up);
         m_world_matrix_ *= Matrix::CreateScale(m_size_);
         m_world_matrix_ *= Matrix::CreateFromQuaternion(m_rotation_);
-        m_world_matrix_ *= Matrix::CreateTranslation(m_position_);
+        m_world_matrix_ *= Matrix::CreateTranslation(m_position_ + m_offset_);
     }
 
     void Collider::UpdateInertiaTensor()
@@ -486,6 +575,7 @@ namespace Engine::Component
       m_position_(Vector3::Zero),
       m_size_(Vector3::One),
       m_rotation_(Quaternion::Identity),
+      m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.0f),
       m_boundings_({}),

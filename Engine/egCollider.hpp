@@ -26,11 +26,8 @@ namespace Engine::Component
         void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
         void SetSize(const Vector3& size);
         void SetType(eBoundingType type);
-
-        void SetMass(const float mass)
-        {
-            m_mass_ = mass;
-        }
+        void SetMass(const float mass);
+        void SetOffset(const Vector3& offset);
 
         void SetMesh(const WeakMesh& mesh);
 
@@ -41,87 +38,33 @@ namespace Engine::Component
         void AddCollidedObject(EntityID id);
         void AddSpeculationObject(EntityID id);
 
-        void RemoveCollidedObject(const EntityID id)
-        {
-            m_collided_objects_.erase(id);
-        }
+        void RemoveCollidedObject(const EntityID id);
+        void RemoveSpeculationObject(const EntityID id);
 
-        void RemoveSpeculationObject(const EntityID id)
-        {
-            m_speculative_collision_candidates_.erase(id);
-        }
+        bool IsCollidedObject(const EntityID id) const;
 
-        bool IsCollidedObject(const EntityID id) const
-        {
-            return m_collided_objects_.contains(id);
-        }
+        const std::set<EntityID>& GetCollidedObjects() const;
+        const std::set<EntityID>& GetSpeculation() const;
 
-        const std::set<EntityID>& GetCollidedObjects() const
-        {
-            return m_collided_objects_;
-        }
-
-        const std::set<EntityID>& GetSpeculation() const
-        {
-            return m_speculative_collision_candidates_;
-        }
-
-        bool GetDirtyFlag() const
-        {
-            return m_bDirtyByTransform;
-        }
-
-        Vector3 GetPreviousPosition() const
-        {
-            return m_previous_position_;
-        }
-
-        Vector3 GetPosition() const
-        {
-            return m_position_;
-        }
-
-        Quaternion GetRotation() const
-        {
-            return m_rotation_;
-        }
-
-        Vector3 GetSize() const
-        {
-            return m_size_;
-        }
+        bool GetDirtyFlag() const;
+        Vector3 GetPreviousPosition() const;
+        Vector3 GetPosition() const;
+        Quaternion GetRotation() const;
+        Vector3 GetSize() const;
 
         void GetPenetration(
             const Collider& other, Vector3& normal,
             float&          depth) const;
         UINT GetCollisionCount(EntityID id) const;
 
-        float GetMass() const
-        {
-            return m_mass_;
-        }
+        float      GetMass() const;
+        float      GetInverseMass() const;
+        XMFLOAT3X3 GetInertiaTensor() const;
 
-        float GetInverseMass() const
-        {
-            return 1.0f / m_mass_;
-        }
-
-        XMFLOAT3X3 GetInertiaTensor() const
-        {
-            return m_inertia_tensor_;
-        }
-
-        eBoundingType GetType() const
-        {
-            return m_type_;
-        }
+        eBoundingType GetType() const;
 
         virtual const std::vector<const Vector3*>& GetVertices() const;
-
-        const Matrix& GetWorldMatrix() const
-        {
-            return m_world_matrix_;
-        }
+        const Matrix&                              GetWorldMatrix() const;
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -216,7 +159,7 @@ namespace Engine::Component
         template <typename T>
         void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
         {
-            As<T>().Center = position;
+            As<T>().Center = position + m_offset_;
         }
 
         void UpdateFromTransform();
@@ -232,6 +175,7 @@ namespace Engine::Component
         Vector3    m_size_;
         Quaternion m_rotation_;
         Vector3    m_yaw_pitch_roll_degree_;
+        Vector3    m_offset_;
 
         eBoundingType m_type_;
         EntityName    m_mesh_name_;
