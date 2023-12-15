@@ -51,7 +51,7 @@ namespace Engine::Manager::Graphics
         void BindVertexBuffer(ID3D11Buffer* buffer);
         void BindIndexBuffer(ID3D11Buffer* buffer);
 
-        void UpdateBuffer(ID3D11Buffer* buffer, const void* data, size_t size);
+        void UpdateBuffer(ID3D11Buffer * buffer, const void * data, UINT size);
 
         void BindResource(
             eShaderResource           resource,

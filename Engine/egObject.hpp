@@ -27,12 +27,11 @@ namespace Engine::Abstract
         }
 
         template <typename T, typename... Args>
-        void AddComponent(Args&&... args)
+        boost::weak_ptr<T> AddComponent(Args&&... args)
         {
             if constexpr (std::is_base_of_v<Component, T>)
             {
-                const auto thisObject =
-                        boost::reinterpret_pointer_cast<Object>(shared_from_this());
+                const auto thisObject = GetSharedPtr<Object>();
 
                 boost::shared_ptr<T> component =
                         boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
@@ -66,7 +65,11 @@ namespace Engine::Abstract
                 {
                     scene->AddCacheComponent(component);
                 }
+
+                return component;
             }
+
+            return {};
         }
 
         template <typename T>

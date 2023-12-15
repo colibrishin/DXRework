@@ -242,7 +242,7 @@ namespace Engine::Manager::Graphics
 
                 DX::ThrowIfFailed(
                                   m_device_->CreateInputLayout(
-                                                               input_descs.data(), input_descs.size(),
+                                                               input_descs.data(), static_cast<UINT>(input_descs.size()),
                                                                blob->GetBufferPointer(),
                                                                blob->GetBufferSize(), casted->GetInputLayout()));
                 DX::ThrowIfFailed(

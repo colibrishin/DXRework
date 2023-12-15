@@ -39,7 +39,7 @@ namespace Engine::Manager::Graphics
     {
         for (const auto& light : m_lights_)
         {
-            const int idx = std::distance(m_lights_.begin(), m_lights_.find(light));
+            const UINT idx = static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(light)));
 
             if (const auto locked = light.lock())
             {
@@ -51,13 +51,13 @@ namespace Engine::Manager::Graphics
             }
         }
 
-        GetRenderPipeline().BindLightBuffer(m_lights_.size());
+        GetRenderPipeline().BindLightBuffer(static_cast<UINT>(m_lights_.size()));
     }
 
     void ShadowManager::BindShadowMapChunk()
     {
         ID3D11ShaderResourceView* shadow_maps[g_max_lights];
-        size_t                    idx = 0;
+        UINT                      idx = 0;
 
         for (const auto& buffer : m_graphic_shadow_buffer_ | std::views::values)
         {
@@ -110,8 +110,8 @@ namespace Engine::Manager::Graphics
 
         for (const auto& known_light : m_lights_)
         {
-            const auto idx =
-                    std::distance(m_lights_.begin(), m_lights_.find(known_light));
+            const UINT idx =
+                    static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(known_light)));
 
             if (const auto locked = known_light.lock())
             {
@@ -160,7 +160,7 @@ namespace Engine::Manager::Graphics
     void ShadowManager::PostRender(const float& dt)
     {
         // Pass 2 Ends, reset shadow map
-        GetRenderPipeline().UnbindShadowMap(m_lights_.size());
+        GetRenderPipeline().UnbindShadowMap(static_cast<UINT>(m_lights_.size()));
         ClearShadowMaps();
         ClearShadowBufferChunk();
         GetRenderPipeline().ResetDepthStencilState();
@@ -343,7 +343,7 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::UnregisterLight(const WeakLight& light)
     {
-        int idx = std::distance(m_lights_.begin(), m_lights_.find(light));
+        const UINT idx = static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(light)));
 
         m_lights_.erase(light);
         m_graphic_shadow_buffer_.erase(light);

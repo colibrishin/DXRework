@@ -31,7 +31,7 @@ namespace Engine::Resources
                       std::execution::par, shapes.begin(), shapes.end(),
                       [&](const tinyobj::shape_t& shape)
                       {
-                          size_t          index_offset = 0;
+                          UINT            index_offset = 0;
                           Shape           new_shape;
                           IndexCollection new_indices;
 
@@ -39,11 +39,11 @@ namespace Engine::Resources
                           std::mutex index_lock;
 
                           std::ranges::for_each(
-                                                shape.mesh.num_face_vertices, [&](size_t f)
+                                                shape.mesh.num_face_vertices, [&](UINT f)
                                                 {
-                                                    const size_t fv = shape.mesh.num_face_vertices[f];
+                                                    const UINT fv = shape.mesh.num_face_vertices[f];
 
-                                                    for (size_t v = 0; v < fv; v++)
+                                                    for (UINT v = 0; v < fv; v++)
                                                     {
                                                         VertexElement vertex;
 
@@ -54,13 +54,13 @@ namespace Engine::Resources
 
                                                         const tinyobj::real_t vx =
                                                                 attrib.vertices[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 0];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 0];
                                                         const tinyobj::real_t vy =
                                                                 attrib.vertices[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 1];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 1];
                                                         const tinyobj::real_t vz =
                                                                 attrib.vertices[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 2];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 2];
 
                                                         vertex.position = Vector3(vx, vy, vz);
 
@@ -68,13 +68,13 @@ namespace Engine::Resources
                                                         {
                                                             const tinyobj::real_t nx =
                                                                     attrib.normals[
-                                                                        3 * static_cast<size_t>(idx.normal_index) + 0];
+                                                                        3 * static_cast<UINT>(idx.normal_index) + 0];
                                                             const tinyobj::real_t ny =
                                                                     attrib.normals[
-                                                                        3 * static_cast<size_t>(idx.normal_index) + 1];
+                                                                        3 * static_cast<UINT>(idx.normal_index) + 1];
                                                             const tinyobj::real_t nz =
                                                                     attrib.normals[
-                                                                        3 * static_cast<size_t>(idx.normal_index) + 2];
+                                                                        3 * static_cast<UINT>(idx.normal_index) + 2];
 
                                                             vertex.normal = Vector3(nx, ny, nz);
                                                         }
@@ -83,11 +83,11 @@ namespace Engine::Resources
                                                         {
                                                             const tinyobj::real_t tx =
                                                                     attrib.texcoords[
-                                                                        2 * static_cast<size_t>(idx.texcoord_index) +
+                                                                        2 * static_cast<UINT>(idx.texcoord_index) +
                                                                         0];
                                                             const tinyobj::real_t ty =
                                                                     attrib.texcoords[
-                                                                        2 * static_cast<size_t>(idx.texcoord_index) +
+                                                                        2 * static_cast<UINT>(idx.texcoord_index) +
                                                                         1];
 
                                                             vertex.texCoord = Vector2(tx, ty);
@@ -96,13 +96,13 @@ namespace Engine::Resources
                                                         // Optional: vertex colors
                                                         tinyobj::real_t red =
                                                                 attrib.colors[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 0];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 0];
                                                         tinyobj::real_t green =
                                                                 attrib.colors[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 1];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 1];
                                                         tinyobj::real_t blue =
                                                                 attrib.colors[
-                                                                    3 * static_cast<size_t>(idx.vertex_index) + 2];
+                                                                    3 * static_cast<UINT>(idx.vertex_index) + 2];
 
                                                         vertex.color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                                                         new_shape.push_back(vertex);
@@ -214,7 +214,7 @@ namespace Engine::Resources
         {
             GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[i].Get());
             GetRenderPipeline().BindIndexBuffer(m_index_buffers_[i].Get());
-            GetRenderPipeline().DrawIndexed(m_indices_[i].size());
+            GetRenderPipeline().DrawIndexed(static_cast<UINT>(m_indices_[i].size()));
         }
 
         GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
@@ -258,7 +258,8 @@ namespace Engine::Resources
         for (int i = 0; i < m_vertex_buffers_.size(); ++i)
         {
             GetD3Device().CreateBuffer<VertexElement>(
-                                                      D3D11_BIND_VERTEX_BUFFER, m_vertices_[i].size(),
+                                                      D3D11_BIND_VERTEX_BUFFER,
+                                                      static_cast<UINT>(m_vertices_[i].size()),
                                                       m_vertex_buffers_[i].ReleaseAndGetAddressOf(),
                                                       m_vertices_[i].data());
         }
@@ -266,7 +267,7 @@ namespace Engine::Resources
         for (int i = 0; i < m_index_buffers_.size(); ++i)
         {
             GetD3Device().CreateBuffer<UINT>(
-                                             D3D11_BIND_INDEX_BUFFER, m_indices_[i].size(),
+                                             D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_[i].size()),
                                              m_index_buffers_[i].ReleaseAndGetAddressOf(), m_indices_[i].data());
         }
     }

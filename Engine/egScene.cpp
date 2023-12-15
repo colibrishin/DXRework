@@ -302,19 +302,19 @@ namespace Engine
     }
 
     void Scene::GetNearbyObjects(
-        const Vector3&           pos, const size_t range,
+        const Vector3&           pos, const UINT range,
         std::vector<WeakObject>& out)
     {
         const auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
 
-        for (auto i = static_cast<size_t>(pos_rounded.x) - range;
-             i < static_cast<size_t>(pos_rounded.x) + range; ++i)
+        for (auto i = static_cast<UINT>(pos_rounded.x) - range;
+             i < static_cast<UINT>(pos_rounded.x) + range; ++i)
         {
-            for (auto j = static_cast<size_t>(pos_rounded.y) - range;
-                 j < static_cast<size_t>(pos_rounded.y) + range; ++j)
+            for (auto j = static_cast<UINT>(pos_rounded.y) - range;
+                 j < static_cast<UINT>(pos_rounded.y) + range; ++j)
             {
-                for (auto k = static_cast<size_t>(pos_rounded.z) - range;
-                     k < static_cast<size_t>(pos_rounded.z) + range; ++k)
+                for (auto k = static_cast<UINT>(pos_rounded.z) - range;
+                     k < static_cast<UINT>(pos_rounded.z) + range; ++k)
                 {
                     if (!VectorElementInRange(pos_rounded, g_max_map_size))
                     {

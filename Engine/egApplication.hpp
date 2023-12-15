@@ -37,7 +37,7 @@ namespace Engine::Manager
 
         float GetDeltaTime() const
         {
-            return m_timer->GetElapsedSeconds();
+            return static_cast<float>(m_timer->GetElapsedSeconds());
         }
 
         uint32_t GetFPS() const

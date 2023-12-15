@@ -70,8 +70,8 @@ namespace Engine
         void UpdatePosition(const WeakObject& obj);
         void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
         void GetNearbyObjects(
-            const Vector3&           pos, size_t range,
-            std::vector<WeakObject>& out);
+            const Vector3 &           pos, const UINT range,
+            std::vector<WeakObject> & out);
         void SearchObjects(
             const Vector3&                                        pos, const Vector3& dir,
             std::set<WeakObject, WeakComparer<Abstract::Object>>& out,
