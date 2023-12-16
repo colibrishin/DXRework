@@ -24,30 +24,11 @@ namespace Engine::Component
     {
         m_position_ = position;
         UpdateWorldMatrix();
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
-        }
-        else if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
-        }
-
     }
 
     void Collider::SetRotation(const Quaternion& rotation)
     {
         m_rotation_ = rotation;
-
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
-        }
-        else if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
-        }
-
         UpdateInertiaTensor();
         UpdateWorldMatrix();
     }
@@ -60,16 +41,6 @@ namespace Engine::Component
                                                    XMConvertToRadians(yaw_pitch_roll.x),
                                                    XMConvertToRadians(yaw_pitch_roll.y),
                                                    XMConvertToRadians(yaw_pitch_roll.z));
-
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
-        }
-        else if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
-        }
-
         UpdateInertiaTensor();
     }
 
@@ -97,10 +68,6 @@ namespace Engine::Component
         Component::Initialize();
 
         InitializeStockVertices();
-        if (const auto mesh = m_mesh_.lock())
-        {
-            GenerateFromMesh(mesh);
-        }
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -111,7 +78,6 @@ namespace Engine::Component
             GenerateInertiaSphere();
         }
 
-        UpdateFromTransform();
         UpdateInertiaTensor();
 
         m_previous_position_ = m_position_;
@@ -247,11 +213,11 @@ namespace Engine::Component
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            return other.Intersects_GENERAL_TYPE(m_boundings_.box);
+            return other.Intersects_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            return other.Intersects_GENERAL_TYPE(m_boundings_.sphere);
+            return other.Intersects_GENERAL_TYPE(GetBounding<BoundingSphere>());
         }
 
         return false;
@@ -263,20 +229,22 @@ namespace Engine::Component
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            const Vector3 Extents = m_boundings_.box.Extents;
+            const auto    box     = GetBounding<BoundingOrientedBox>();
+            const Vector3 Extents = box.Extents;
             const auto    test    = Physics::Raycast::TestRayOBBIntersection(
-                                                                             ray.position, ray.direction, -Extents,
-                                                                             Extents,
-                                                                             m_world_matrix_,
-                                                                             intersection);
+                                                                       ray.position, ray.direction, -Extents,
+                                                                       Extents,
+                                                                       m_world_matrix_,
+                                                                       intersection);
 
             return test && intersection <= distance;
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
+            const auto sphere = GetBounding<BoundingSphere>();
             const auto test = Physics::Raycast::TestRaySphereIntersection(
-                                                                          ray, m_boundings_.sphere.Center,
-                                                                          m_boundings_.sphere.Radius,
+                                                                          ray, sphere.Center,
+                                                                          sphere.Radius,
                                                                           intersection);
 
             return test && intersection <= distance;
@@ -289,11 +257,11 @@ namespace Engine::Component
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            return other.Contains_GENERAL_TYPE(m_boundings_.box);
+            return other.Contains_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            return other.Contains_GENERAL_TYPE(m_boundings_.sphere);
+            return other.Contains_GENERAL_TYPE(GetBounding<BoundingSphere>());
         }
 
         return false;
@@ -375,7 +343,9 @@ namespace Engine::Component
         auto dir = other.GetPosition() - GetPosition();
         dir.Normalize();
 
-        Physics::GJK::GJKAlgorithm(*this, other, dir, normal, depth);
+        Physics::GJK::GJKAlgorithm(
+                                   GetWorldMatrix(), other.GetWorldMatrix(), GetVertices(), other.GetVertices(), dir,
+                                   normal, depth);
     }
 
     UINT Collider::GetCollisionCount(const EntityID id) const
@@ -423,7 +393,7 @@ namespace Engine::Component
       m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.f),
-      m_boundings_({}),
+      m_boundings_(),
       m_inertia_tensor_(),
       m_world_matrix_()
     {}
@@ -456,6 +426,7 @@ namespace Engine::Component
             GenerateInertiaSphere();
         }
 
+        UpdateWorldMatrix();
         UpdateInertiaTensor();
     }
 
@@ -495,11 +466,25 @@ namespace Engine::Component
 #ifdef _DEBUG
         if (m_collided_objects_.empty())
         {
-            GetDebugger().Draw(m_type_, Colors::OrangeRed, m_boundings_);
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
+            }
+            else
+            {
+                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
+            }
         }
         else
         {
-            GetDebugger().Draw(m_type_, Colors::GreenYellow, m_boundings_);
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
+            }
+            else
+            {
+                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
+            }
         }
 #endif
 
@@ -543,7 +528,7 @@ namespace Engine::Component
       m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.0f),
-      m_boundings_({}),
+      m_boundings_(),
       m_inertia_tensor_(),
       m_mesh_(mesh)
     {
@@ -555,7 +540,8 @@ namespace Engine::Component
 
     void Collider::GenerateInertiaCube()
     {
-        const Vector3 dimensions_squared = GetSize() * GetSize();
+        const Vector3 dim                = GetBounding<BoundingOrientedBox>().Extents;
+        const Vector3 dimensions_squared = dim * dim;
 
         m_inverse_inertia_.x = (12.0f * GetInverseMass()) /
                                (dimensions_squared.y + dimensions_squared.z);
@@ -567,7 +553,7 @@ namespace Engine::Component
 
     void Collider::GenerateInertiaSphere()
     {
-        const float radius = GetSize().x;
+        const float radius = GetBounding<BoundingSphere>().Radius;
         const float i      = 2.5f * GetInverseMass() / (radius * radius);
 
         m_inverse_inertia_ = Vector3(i, i, i);

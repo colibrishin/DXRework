@@ -137,35 +137,6 @@ namespace Engine::Component
             return false;
         }
 
-        template <typename T>
-        static void SetSize_GENERAL_TYPE(T& value, const Vector3& size)
-        {
-            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-            {
-                value.Extents = size / 2;
-            }
-            else if constexpr (std::is_same_v<T, BoundingSphere>)
-            {
-                value.Radius = size.x / 2;
-            }
-        }
-
-        template <typename T>
-        void SetRotation_GENERAL_TYPE(T& value, const Quaternion& rotation)
-        {
-            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-            {
-                value.Orientation = rotation;
-            }
-            else if constexpr (std::is_same_v<T, BoundingSphere>) { }
-        }
-
-        template <typename T>
-        void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
-        {
-            As<T>().Center = position + m_offset_;
-        }
-
         void UpdateFromTransform();
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
