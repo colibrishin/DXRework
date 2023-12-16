@@ -208,27 +208,38 @@ namespace Engine::Resources
         this_system.DeepConvertScene(fbx_scene);
 
         const auto root = fbx_scene->GetRootNode();
-        const auto child_count = root->GetChildCount();
+        const auto root_child_count = root->GetChildCount();
 
-        if (child_count == 0)
+        if (root_child_count == 0)
         {
             throw std::runtime_error("No child node found");
         }
 
-        for (int i = 0; i < child_count; ++i)
-        {
-            const auto child = root->GetChild(i);
+        std::queue<FbxNode*> node_queue;
+        node_queue.push(root);
 
-            if (child->GetNodeAttribute() == nullptr)
+        while (!node_queue.empty())
+        {
+            const auto node = node_queue.front();
+            node_queue.pop();
+
+            const auto attr = node->GetNodeAttribute();
+
+            if (attr != nullptr)
             {
-                continue;
+                const auto attr_type = attr->GetAttributeType();
+
+                if (attr_type == FbxNodeAttribute::eMesh)
+                {
+                    IterateFBXMesh(node);
+                }
             }
 
-            const auto attr_type = child->GetNodeAttribute()->GetAttributeType();
+            const auto child_count = node->GetChildCount();
 
-            if (attr_type == FbxNodeAttribute::eMesh)
+            for (int i = 0; i < child_count; ++i)
             {
-                IterateFBXMesh(child);
+                node_queue.push(node->GetChild(i));
             }
         }
 
