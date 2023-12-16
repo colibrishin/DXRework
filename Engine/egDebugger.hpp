@@ -25,11 +25,9 @@ namespace Engine::Manager
         void Log(const std::wstring& str);
         void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
         void Draw(Ray& ray, const XMVECTORF32& color);
-        void Draw(
-            eBoundingType        type, const XMVECTORF32& color,
-            const BoundingGroup& group);
         void Draw(const BoundingFrustum& frustum, const XMVECTORF32& color);
         void Draw(const BoundingSphere& sphere, const XMVECTORF32& color);
+        void Draw(const BoundingOrientedBox& obb, const XMVECTORF32& color);
 
         void SetDebugFlag();
         bool GetDebugFlag() const;
