@@ -83,12 +83,6 @@
     <ClInclude Include="clCharacterController.hpp">
       <Filter>State</Filter>
     </ClInclude>
-    <ClInclude Include="clPlayerMesh.h">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="clPlayer.h">
-      <Filter>Object\Player</Filter>
-    </ClInclude>
     <ClInclude Include="clWater.hpp">
       <Filter>Object\Water</Filter>
     </ClInclude>
@@ -113,6 +107,12 @@
     <ClInclude Include="clTestScene.hpp">
       <Filter>Scene\TestScene</Filter>
     </ClInclude>
+    <ClInclude Include="clPlayerMesh.h">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlayer.h">
+      <Filter>Object\Player</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -126,9 +126,6 @@
     </ClCompile>
     <ClCompile Include="clBackSphereMesh.cpp">
       <Filter>Resource\Mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="clPlayer.cpp">
-      <Filter>Object\Player</Filter>
     </ClCompile>
     <ClCompile Include="clWater.cpp">
       <Filter>Object\Water</Filter>
@@ -156,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="clPlayerMesh.cpp">
       <Filter>Resource\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayer.cpp">
+      <Filter>Object\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
