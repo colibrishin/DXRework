@@ -336,14 +336,15 @@ namespace Engine::Physics
         }
 
         bool __vectorcall GJKAlgorithm(
-            const Component::Collider& lhs,
-            const Component::Collider& rhs, const Vector3& dir,
-            Vector3&                   normal, float&      penetration)
+            const Matrix&                      lhs_world,
+            const Matrix&                      rhs_world, const std::vector<const Vector3*>& lhs_vertices,
+            const std::vector<const Vector3*>& rhs_vertices, const Vector3&                  dir,
+            Vector3&                           normal, float&                                penetration)
         {
-            const Matrix lw = lhs.GetWorldMatrix();
-            const Matrix rw = rhs.GetWorldMatrix();
-            const auto   lv = lhs.GetVertices();
-            const auto   rv = rhs.GetVertices();
+            const Matrix& lw = lhs_world;
+            const Matrix& rw = rhs_world;
+            const auto&   lv = lhs_vertices;
+            const auto&   rv = rhs_vertices;
 
             Vector3 support = GetSupportPoint(lv, rv, lw, rw, dir);
 

@@ -6,12 +6,10 @@ namespace Engine::Physics
     namespace GJK
     {
         bool __vectorcall GJKAlgorithm(
-            const Component::Collider& lhs,
-            const Component::Collider& rhs, const Vector3& dir,
-            Vector3&                   normal, float&      penetration);
-        Vector3 __vectorcall GetFurthestPoint(
-            const std::vector<const Vector3*>& points,
-            const Matrix&                      world, const Vector3& dir);
+            const Matrix&                      lhs_world,
+            const Matrix&                      rhs_world, const std::vector<const Vector3*>& lhs_vertices,
+            const std::vector<const Vector3*>& rhs_vertices, const Vector3&                  dir,
+            Vector3&                           normal, float&                                penetration);
     } // namespace GJK
 
     namespace Raycast
