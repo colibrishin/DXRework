@@ -54,9 +54,12 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\ImageContentTask.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\DX\fmod\fmod.vcxitems" Label="Shared" />
+    <Import Project="..\DX\fbx-sdk\fbx-sdk.vcxitems" Label="Shared" />
+    <Import Project="..\DX\imgui\imgui.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -74,6 +77,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
@@ -82,6 +87,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
@@ -184,11 +191,14 @@
     <ProjectReference Include="..\Client\Client.vcxproj">
       <Project>{8f17eb0b-fd49-4998-92ea-e1052985777b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Engine\Engine.vcxproj">
-      <Project>{8e154f61-e984-4491-9894-7665ec2d18f9}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\x64\debug\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\x64\release\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -203,6 +213,48 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
     <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
       <FileType>Document</FileType>
     </Library>
@@ -216,6 +268,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets" Condition="Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" />
     <Import Project="..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\ImageContentTask.targets" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

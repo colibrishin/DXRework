@@ -168,6 +168,9 @@
     <CopyFileToFolders Include="player.obj">
       <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="player.fbx">
+      <Filter>Resource\Mesh</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Media Include="crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3">

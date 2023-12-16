@@ -381,6 +381,7 @@
   <ImportGroup Label="Shared">
     <Import Project="..\DX\fmod\fmod.vcxitems" Label="Shared" />
     <Import Project="..\DX\imgui\imgui.vcxitems" Label="Shared" />
+    <Import Project="..\DX\fbx-sdk\fbx-sdk.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -400,6 +401,8 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -410,6 +413,8 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -450,6 +455,7 @@
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -508,6 +514,7 @@
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -559,6 +566,60 @@
     <Error Condition="!Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets'))" />
   </Target>
   <ItemGroup>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-md.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\x64\debug\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\x64\release\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -573,11 +634,80 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-md.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\release\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
     <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
       <FileType>Document</FileType>
     </Library>
   </ItemGroup>
   <ItemGroup>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-mt.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.dll">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-md.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libxml2-mt.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-md.lib">
+      <FileType>Document</FileType>
+    </None>
+    <None Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\zlib-mt.lib">
+      <FileType>Document</FileType>
+    </None>
     <None Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmodL.dll">
       <FileType>Document</FileType>
     </None>
