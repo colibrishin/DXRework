@@ -170,6 +170,7 @@ namespace Engine::Component
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
+        void UpdateWorldMatrix();
 
         bool m_bDirtyByTransform;
 

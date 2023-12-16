@@ -23,7 +23,7 @@ namespace Engine::Component
     void Collider::SetPosition(const Vector3& position)
     {
         m_position_ = position;
-
+        UpdateWorldMatrix();
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
             SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
@@ -49,6 +49,7 @@ namespace Engine::Component
         }
 
         UpdateInertiaTensor();
+        UpdateWorldMatrix();
     }
 
     void Collider::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
@@ -114,6 +115,7 @@ namespace Engine::Component
         UpdateInertiaTensor();
 
         m_previous_position_ = m_position_;
+        UpdateWorldMatrix();
     }
 
     void Collider::InitializeStockVertices()
@@ -196,6 +198,7 @@ namespace Engine::Component
             GenerateInertiaSphere();
         }
 
+        UpdateWorldMatrix();
         UpdateInertiaTensor();
     }
 
@@ -570,6 +573,13 @@ namespace Engine::Component
         m_inverse_inertia_ = Vector3(i, i, i);
     }
 
+    void Collider::UpdateWorldMatrix()
+    {
+        m_world_matrix_ = Matrix::CreateScale(GetSize()) *
+                          Matrix::CreateFromQuaternion(GetRotation()) *
+                          Matrix::CreateTranslation(GetPosition());
+    }
+
     void Collider::PreUpdate(const float& dt)
     {
         static float second_counter = 0.f;
@@ -582,12 +592,14 @@ namespace Engine::Component
         second_counter += dt;
 
         UpdateFromTransform();
+        UpdateWorldMatrix();
         UpdateInertiaTensor();
     }
 
     void Collider::Update(const float& dt)
     {
         UpdateFromTransform();
+        UpdateWorldMatrix();
         UpdateInertiaTensor();
     }
 
