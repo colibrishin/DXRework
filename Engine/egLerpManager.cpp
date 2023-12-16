@@ -70,10 +70,7 @@ namespace Engine::Manager::Physics
                             const auto lerp     = Vector3::Lerp(previous, current, GetLerpFactor());
                             Vector3CheckNanException(lerp);
 
-                            if (collider->IsTicked())
-                            {
-                                collider->SetPosition(lerp);
-                            }
+                            collider->SetPosition(lerp);
                         }
                     }
                 }
