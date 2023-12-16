@@ -13,6 +13,8 @@
 #include "egRenderable.h"
 #include "egResource.h"
 
+#include <fbxsdk.h>
+
 namespace Engine::Resources
 {
     using Shape = std::vector<VertexElement>;
@@ -27,7 +29,6 @@ namespace Engine::Resources
         void Initialize() override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
-        void ReadOBJFile();
 
         const std::vector<Shape>& GetShapes();
         const std::vector<const Vector3*>& GetVertices();
@@ -45,6 +46,12 @@ namespace Engine::Resources
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM() = 0;
         void         Unload_INTERNAL() override;
+
+        void ReadOBJFile();
+
+        void ReadFBXFile();
+        void RipVertexElementFromFBX(const FbxMesh *const mesh, Shape & shape, IndexCollection & indices, int polygon_idx);
+        void IterateFBXMesh(FbxNode* child);
 
         static void __vectorcall GenerateTangentBinormal(
             const Vector3& v0, const Vector3&  v1,

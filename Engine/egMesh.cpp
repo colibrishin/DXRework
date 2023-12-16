@@ -4,6 +4,7 @@
 #include <execution>
 #include <tiny_obj_loader.h>
 #include "egManagerHelper.hpp"
+#include <fbxsdk.h>
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Mesh,
@@ -117,6 +118,123 @@ namespace Engine::Resources
                               m_indices_.push_back(new_indices);
                           }
                       });
+    }
+
+    void Mesh::RipVertexElementFromFBX(const FbxMesh* const mesh, Shape& shape, IndexCollection& indices, int polygon_idx)
+    {
+        const auto poly_size = mesh->GetPolygonSize(polygon_idx);
+
+        for (int k = 0; k < poly_size; ++k)
+        {
+            const auto idx = mesh->GetPolygonVertex(polygon_idx, k);
+
+            VertexElement vertex;
+
+            const auto control_point = mesh->GetControlPointAt(idx);
+
+            vertex.position = Vector3(
+                                      static_cast<float>(control_point[0]),
+                                      static_cast<float>(control_point[1]),
+                                      static_cast<float>(control_point[2]));
+
+            FbxVector4 normal;
+            auto       flag = mesh->GetPolygonVertexNormal(polygon_idx, k, normal);
+
+            vertex.normal = Vector3(
+                                    static_cast<float>(normal[0]),
+                                    static_cast<float>(normal[1]),
+                                    static_cast<float>(normal[2]));
+
+            FbxVector2 uv;
+            bool       unmapped_uv = false;
+
+            FbxStringList uv_names;
+            mesh->GetUVSetNames(uv_names);
+
+            flag = mesh->GetPolygonVertexUV(polygon_idx, k, uv_names[0], uv, unmapped_uv);
+
+            vertex.texCoord = Vector2(
+                                      static_cast<float>(uv[0]),
+                                      static_cast<float>(uv[1]));
+
+            vertex.color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+            shape[idx] = vertex;
+            indices.push_back(idx);
+        }
+    }
+
+    void Mesh::IterateFBXMesh(FbxNode* const child)
+    {
+        const auto mesh = child->GetMesh();
+
+        const auto vertex_count  = mesh->GetControlPointsCount();
+        const auto polygon_count = mesh->GetPolygonCount();
+
+        Shape           shape;
+        IndexCollection indices;
+
+        shape.resize(vertex_count);
+
+        for (int j = 0; j < polygon_count; ++j)
+        {
+            RipVertexElementFromFBX(mesh, shape, indices, j);
+        }
+
+        m_vertices_.push_back(shape);
+        m_indices_.push_back(indices);
+    }
+
+    void Mesh::ReadFBXFile()
+    {
+        const auto fbx_mgr = FbxManager::Create();
+        if (!fbx_mgr)
+        {
+            throw std::runtime_error("Failed to create FBX manager");
+        }
+
+        const auto fbx_io_settings = FbxIOSettings::Create(fbx_mgr, IOSROOT);
+        fbx_mgr->SetIOSettings(fbx_io_settings);
+        const auto fbx_scene = FbxScene::Create(fbx_mgr, "Scene");
+
+        FbxImporter* fbx_importer = FbxImporter::Create(fbx_mgr, "FBXImporter");
+        fbx_importer->Initialize(GetPath().generic_string().c_str(), -1, fbx_mgr->GetIOSettings());
+        fbx_importer->Import(fbx_scene);
+
+        FbxGeometryConverter fbx_converter(fbx_mgr);
+        fbx_converter.Triangulate(fbx_scene, true);
+
+        const FbxAxisSystem this_system(FbxAxisSystem::eYAxis, FbxAxisSystem::eParityEven, FbxAxisSystem::eLeftHanded);
+        this_system.DeepConvertScene(fbx_scene);
+
+        const auto root = fbx_scene->GetRootNode();
+        const auto child_count = root->GetChildCount();
+
+        if (child_count == 0)
+        {
+            throw std::runtime_error("No child node found");
+        }
+
+        for (int i = 0; i < child_count; ++i)
+        {
+            const auto child = root->GetChild(i);
+
+            if (child->GetNodeAttribute() == nullptr)
+            {
+                continue;
+            }
+
+            const auto attr_type = child->GetNodeAttribute()->GetAttributeType();
+
+            if (attr_type == FbxNodeAttribute::eMesh)
+            {
+                IterateFBXMesh(child);
+            }
+        }
+
+        fbx_importer->Destroy();
+        fbx_scene->Destroy();
+        fbx_mgr->Destroy();
     }
 
     const std::vector<Shape>& Mesh::GetShapes()
@@ -253,6 +371,10 @@ namespace Engine::Resources
             if (GetPath().extension() == ".obj")
             {
                 ReadOBJFile();
+            }
+            if (GetPath().extension() == ".fbx")
+            {
+                ReadFBXFile();
             }
         }
         else

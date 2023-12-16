@@ -162,22 +162,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="Texture.png">
-      <Filter>Resource\Texture</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Texture-Normal.png">
-      <Filter>Resource\Normal</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Sky.jpg">
-      <Filter>Resource\Texture</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="testscene.txt">
       <Filter>Resource\Scene</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="Water-Normal.png">
-      <Filter>Resource\Normal</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="player.obj">
+      <Filter>Resource\Mesh</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="player.fbx">
       <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
   </ItemGroup>
@@ -185,5 +176,19 @@
     <Media Include="crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3">
       <Filter>Resource\Sound</Filter>
     </Media>
+  </ItemGroup>
+  <ItemGroup>
+    <ImageContentTask Include="Texture-Normal.png">
+      <Filter>Resource\Normal</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="Water-Normal.png">
+      <Filter>Resource\Normal</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="Sky.jpg">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="Texture.png">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
   </ItemGroup>
 </Project>

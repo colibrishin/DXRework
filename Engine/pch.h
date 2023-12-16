@@ -86,10 +86,17 @@
 #include <directxmath.h>
 #include <dxcapi.h>
 #include <dxgi1_3.h>
+
 #include <fmod.hpp>
 #include <fmod_common.h>
 
 #pragma comment(lib, "fmod_vc.lib")
+
+#include <fbxsdk.h>
+
+#pragma comment(lib, "libfbxsdk-md.lib")
+#pragma comment(lib, "libxml2-md.lib")
+#pragma comment(lib, "zlib-md.lib")
 
 #include "egActor.h"
 #include "egCollision.h"
