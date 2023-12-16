@@ -1,6 +1,7 @@
 #pragma once
 #include "egCommon.hpp"
 #include "egComponent.h"
+#include "egHelper.hpp"
 
 namespace Engine::Component
 {
@@ -79,18 +80,21 @@ namespace Engine::Component
         TypeName GetVirtualTypeName() const final;
 
         template <typename T>
-        T& As()
+        T GetBounding() const
         {
             if constexpr (std::is_same_v<T, BoundingOrientedBox>)
             {
-                return m_boundings_.box;
+                return m_boundings_.As<BoundingOrientedBox>(m_size_, m_rotation_, m_position_ + m_offset_);
             }
             else if constexpr (std::is_same_v<T, BoundingSphere>)
             {
-                return m_boundings_.sphere;
+                return m_boundings_.As<BoundingSphere>(m_size_, m_rotation_, m_position_ + m_offset_);
             }
-
-            throw std::exception("Invalid type");
+            else
+            {
+                static_assert("Invalid type");
+                throw std::exception("Invalid type");
+            }
         }
 
     protected:
@@ -108,11 +112,11 @@ namespace Engine::Component
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return As<BoundingOrientedBox>().Intersects(other);
+                return GetBounding<BoundingOrientedBox>().Intersects(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return As<BoundingSphere>().Intersects(other);
+                return GetBounding<BoundingSphere>().Intersects(other);
             }
 
             return false;
@@ -123,11 +127,11 @@ namespace Engine::Component
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return As<BoundingOrientedBox>().Contains(other);
+                return GetBounding<BoundingOrientedBox>().Contains(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return As<BoundingSphere>().Contains(other);
+                return GetBounding<BoundingSphere>().Contains(other);
             }
 
             return false;
