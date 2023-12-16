@@ -167,7 +167,6 @@ namespace Engine::Component
         }
 
         void UpdateFromTransform();
-        void UpdateBoundings();
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();

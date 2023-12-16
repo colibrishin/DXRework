@@ -33,7 +33,6 @@ namespace Engine::Component
             SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
         }
 
-        UpdateBoundings();
     }
 
     void Collider::SetRotation(const Quaternion& rotation)
@@ -49,7 +48,6 @@ namespace Engine::Component
             SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
         }
 
-        UpdateBoundings();
         UpdateInertiaTensor();
     }
 
@@ -71,7 +69,6 @@ namespace Engine::Component
             SetRotation_GENERAL_TYPE(m_boundings_.sphere, m_rotation_);
         }
 
-        UpdateBoundings();
         UpdateInertiaTensor();
     }
 
@@ -115,7 +112,6 @@ namespace Engine::Component
 
         UpdateFromTransform();
         UpdateInertiaTensor();
-        UpdateBoundings();
 
         m_previous_position_ = m_position_;
     }
@@ -222,8 +218,6 @@ namespace Engine::Component
         }
 
         UpdateInertiaTensor();
-
-        UpdateBoundings();
     }
 
     void Collider::SetMass(const float mass)
@@ -460,7 +454,6 @@ namespace Engine::Component
         }
 
         UpdateInertiaTensor();
-        UpdateBoundings();
     }
 
     void Collider::OnImGui()
@@ -519,30 +512,7 @@ namespace Engine::Component
             m_position_ = tr->GetPosition();
             m_rotation_ = tr->GetRotation();
             m_size_     = tr->GetScale();
-
-            UpdateBoundings();
         }
-    }
-
-    void Collider::UpdateBoundings()
-    {
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            SetPosition_GENERAL_TYPE(m_boundings_.box, m_position_);
-            SetSize_GENERAL_TYPE(m_boundings_.box, m_size_);
-            SetRotation_GENERAL_TYPE(m_boundings_.box, m_rotation_);
-        }
-        else if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            SetPosition_GENERAL_TYPE(m_boundings_.sphere, m_position_);
-            SetSize_GENERAL_TYPE(m_boundings_.sphere, m_size_);
-            m_rotation_ = Quaternion::Identity;
-        }
-
-        m_world_matrix_ = Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up);
-        m_world_matrix_ *= Matrix::CreateScale(m_size_);
-        m_world_matrix_ *= Matrix::CreateFromQuaternion(m_rotation_);
-        m_world_matrix_ *= Matrix::CreateTranslation(m_position_ + m_offset_);
     }
 
     void Collider::UpdateInertiaTensor()
