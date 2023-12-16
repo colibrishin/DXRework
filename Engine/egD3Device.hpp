@@ -4,7 +4,7 @@
 #include <filesystem>
 #include "egCommon.hpp"
 #include "egManager.hpp"
-#include "egVertexShaderInternal.hpp"
+#include "egVertexShaderInternal.h"
 
 namespace Engine::Manager::Graphics
 {

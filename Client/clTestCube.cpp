@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "clTestCube.hpp"
 
-#include "egCubeMesh.hpp"
+#include <egCubeMesh.h>
+#include <egNormalMap.h>
 
-CLIENT_OBJECT_IMPL(Client::Object::TestCube)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::TestCube,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {
@@ -34,10 +37,6 @@ namespace Client::Object
                     .lock());
 
         AddComponent<Engine::Component::Transform>();
-        const auto tr = GetComponent<Engine::Component::Transform>().lock();
-        tr->SetPosition(Vector3(2.0f, 4.0f, 0.0f));
-        tr->SetScale(Vector3::One);
-
         AddComponent<Engine::Component::Collider>(
                                                   GetResource<Engine::Resources::Mesh>("CubeMesh"));
         const auto cldr = GetComponent<Engine::Component::Collider>().lock();
@@ -50,8 +49,6 @@ namespace Client::Object
 
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
-
-        AddComponent<State::CharacterController>();
     }
 
     inline TestCube::~TestCube() {}

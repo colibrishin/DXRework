@@ -16,36 +16,22 @@ namespace Engine::Abstract
             return GetID() == other.GetID();
         }
 
-        void SetName(const EntityName& name)
-        {
-            m_name_ = name;
-        }
+        void SetName(const EntityName& name);
 
-        EntityID GetID() const
-        {
-            return reinterpret_cast<EntityID>(this);
-        }
-
-        EntityName GetName() const
-        {
-            return m_name_;
-        }
-
-        TypeName GetTypeName() const
-        {
-            return typeid(*this).name();
-        }
+        EntityID   GetID() const;
+        EntityName GetName() const;
+        TypeName   GetTypeName() const;
 
         virtual TypeName GetVirtualTypeName() const = 0;
 
         template <typename T>
-        boost::weak_ptr<T> GetWeakPtr()
+        __forceinline boost::weak_ptr<T> GetWeakPtr()
         {
             return boost::reinterpret_pointer_cast<T>(shared_from_this());
         }
 
         template <typename T>
-        boost::shared_ptr<T> GetSharedPtr()
+        __forceinline boost::shared_ptr<T> GetSharedPtr()
         {
             return boost::reinterpret_pointer_cast<T>(shared_from_this());
         }

@@ -1,8 +1,8 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egCollision.h"
 #include "egCollider.hpp"
 #include "egElastic.h"
-#include "egPhysics.h"
+#include "egPhysics.hpp"
 
 #undef min
 
@@ -10,12 +10,12 @@ namespace Engine::Physics
 {
     namespace GJK
     {
-        inline bool SameDirection(const Vector3& direction, const Vector3& ao)
+        inline bool __vectorcall SameDirection(const Vector3& direction, const Vector3& ao)
         {
             return direction.Dot(ao) > 0.f;
         }
 
-        inline Vector3 GetFurthestPoint(
+        Vector3 __vectorcall GetFurthestPoint(
             const std::vector<const Vector3*>& points,
             const Matrix&                      world, const Vector3& dir)
         {
@@ -37,7 +37,7 @@ namespace Engine::Physics
             return result;
         }
 
-        inline Vector3 GetSupportPoint(
+        Vector3 __vectorcall GetSupportPoint(
             const std::vector<const Vector3*>& lhs,
             const std::vector<const Vector3*>& rhs,
             const Matrix&                      lw, const Matrix& rw,
@@ -49,7 +49,7 @@ namespace Engine::Physics
             return support1 - support2;
         }
 
-        inline bool LineSimplex(Simplex& points, Vector3& direction)
+        inline bool __vectorcall LineSimplex(Simplex& points, Vector3& direction)
         {
             Vector3       a = points[0];
             const Vector3 b = points[1];
@@ -70,7 +70,7 @@ namespace Engine::Physics
             return false;
         }
 
-        inline bool TriangleSimplex(Simplex& points, Vector3& direction)
+        inline bool __vectorcall TriangleSimplex(Simplex& points, Vector3& direction)
         {
             Vector3 a = points[0];
             Vector3 b = points[1];
@@ -114,7 +114,7 @@ namespace Engine::Physics
             return false;
         }
 
-        inline bool TetrahedronSimplex(Simplex& points, Vector3& direction)
+        inline bool __vectorcall TetrahedronSimplex(Simplex& points, Vector3& direction)
         {
             Vector3 a = points[0];
             Vector3 b = points[1];
@@ -148,7 +148,7 @@ namespace Engine::Physics
             return true;
         }
 
-        inline bool NextSimplex(Simplex& points, Vector3& direction)
+        bool NextSimplex(Simplex& points, Vector3& direction)
         {
             switch (points.size())
             {
@@ -206,7 +206,7 @@ namespace Engine::Physics
             return {normals, minTriangle};
         }
 
-        inline void EPAAlgorithm(
+        void __vectorcall EPAAlgorithm(
             const std::vector<const Vector3*>& lhs,
             const std::vector<const Vector3*>& rhs,
             const Matrix&                      lw, const Matrix& rw,
@@ -335,15 +335,16 @@ namespace Engine::Physics
             penetration = minDistance + g_epsilon;
         }
 
-        bool GJKAlgorithm(
-            const Component::Collider& lhs,
-            const Component::Collider& rhs, const Vector3& dir,
-            Vector3&                   normal, float&      penetration)
+        bool __vectorcall GJKAlgorithm(
+            const Matrix&                      lhs_world,
+            const Matrix&                      rhs_world, const std::vector<const Vector3*>& lhs_vertices,
+            const std::vector<const Vector3*>& rhs_vertices, const Vector3&                  dir,
+            Vector3&                           normal, float&                                penetration)
         {
-            const Matrix lw = lhs.GetWorldMatrix();
-            const Matrix rw = rhs.GetWorldMatrix();
-            const auto   lv = lhs.GetVertices();
-            const auto   rv = rhs.GetVertices();
+            const Matrix& lw = lhs_world;
+            const Matrix& rw = rhs_world;
+            const auto&   lv = lhs_vertices;
+            const auto&   rv = rhs_vertices;
 
             Vector3 support = GetSupportPoint(lv, rv, lw, rw, dir);
 
@@ -381,7 +382,7 @@ namespace Engine::Physics
 
     namespace Raycast
     {
-        bool TestAxis(
+        inline bool __vectorcall TestAxis(
             const Vector3& axis, const Vector3& delta, const Vector3& dir,
             const float&   min, const float&    max, float&           tMin, float& tMax)
         {
@@ -426,7 +427,7 @@ namespace Engine::Physics
             return true;
         }
 
-        bool TestRayOBBIntersection(
+        bool __vectorcall TestRayOBBIntersection(
             const Vector3& origin, const Vector3&   dir,
             const Vector3& aabb_min, const Vector3& aabb_max,
             const Matrix&  world, float&            intersection_distance)
@@ -471,7 +472,7 @@ namespace Engine::Physics
             return true;
         }
 
-        bool SolveQuadratic(
+        inline bool __vectorcall SolveQuadratic(
             const float& a, const float& b, const float& c, float& x0,
             float&       x1)
         {
@@ -490,7 +491,7 @@ namespace Engine::Physics
             return true;
         }
 
-        bool TestRaySphereIntersection(
+        bool __vectorcall TestRaySphereIntersection(
             const Ray& ray, const Vector3& center,
             float      radius, float&      intersection_distance)
         {

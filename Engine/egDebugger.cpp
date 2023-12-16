@@ -1,4 +1,4 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egDebugger.hpp"
 
 namespace Engine::Manager
@@ -52,6 +52,10 @@ namespace Engine::Manager
         GetToolkitAPI().EndPrimitiveBatch();
     }
 
+    Debugger::Debugger(SINGLETON_LOCK_TOKEN)
+    : Singleton(),
+      m_bDebug(false) {}
+
     void Debugger::Initialize()
     {
         m_bDebug = true;
@@ -100,25 +104,6 @@ namespace Engine::Manager
              });
     }
 
-    void Debugger::Draw(
-        const eBoundingType  type, const XMVECTORF32& color,
-        const BoundingGroup& group)
-    {
-        Push(
-             Message{}, [type, color, group](Message& msg, const float& dt)
-             {
-                 if (type == BOUNDING_TYPE_BOX)
-                 {
-                     DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), group.box, color);
-                 }
-                 else if (type == BOUNDING_TYPE_SPHERE)
-                 {
-                     DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), group.sphere, color);
-                 }
-                 msg.elapsed_time += 2.f;
-             });
-    }
-
     void Debugger::Draw(const BoundingFrustum& frustum, const XMVECTORF32& color)
     {
         Push(
@@ -135,6 +120,16 @@ namespace Engine::Manager
              Message{}, [sphere, color](Message& msg, const float& dt)
              {
                  DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), sphere, color);
+                 msg.elapsed_time += 2.f;
+             });
+    }
+
+    void Debugger::Draw(const BoundingOrientedBox& obb, const XMVECTORF32& color)
+    {
+        Push(
+             Message{}, [obb, color](Message& msg, const float& dt)
+             {
+                 DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), obb, color);
                  msg.elapsed_time += 2.f;
              });
     }

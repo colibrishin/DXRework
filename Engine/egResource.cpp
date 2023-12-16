@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egResource.hpp"
+#include "pch.h"
+#include "egResource.h"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -61,5 +61,22 @@ namespace Engine::Abstract
     {
         m_bLoaded_ = false;
         m_path_    = m_path_str_;
+    }
+
+    bool Resource::IsLoaded() const {
+        return m_bLoaded_;
+    }
+
+    const std::filesystem::path& Resource::GetPath() const {
+        return m_path_;
+    }
+
+    void Resource::SetPath(const std::filesystem::path& path) {
+        m_path_     = std::move(path);
+        m_path_str_ = m_path_.generic_string();
+    }
+
+    eResourcePriority Resource::GetPriority() const {
+        return m_priority_;
     }
 } // namespace Engine::Abstract

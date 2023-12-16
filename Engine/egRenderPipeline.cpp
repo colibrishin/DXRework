@@ -1,14 +1,14 @@
-#include "pch.hpp"
-#include "egRenderPipeline.hpp"
+#include "pch.h"
+#include "egRenderPipeline.h"
 
 #include <filesystem>
 
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
-#include "egToolkitAPI.hpp"
+#include "egToolkitAPI.h"
 
 #include "egShader.hpp"
-#include "egVertexShaderInternal.hpp"
+#include "egVertexShaderInternal.h"
 
 namespace Engine::Manager::Graphics
 {

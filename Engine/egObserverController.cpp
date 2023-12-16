@@ -1,12 +1,12 @@
-#include "pch.hpp"
-#include "egObserverController.hpp"
-#include "egApplication.hpp"
-#include "egCamera.hpp"
-#include "egMouseManager.hpp"
+#include "pch.h"
+#include "egObserverController.h"
+#include "egApplication.h"
+#include "egCamera.h"
+#include "egMouseManager.h"
 #include "egObject.hpp"
 #include "egSceneManager.hpp"
 #include "egStateController.hpp"
-#include "egTransform.hpp"
+#include "egTransform.h"
 
 BOOST_CLASS_EXPORT_IMPLEMENT(
                              Engine::Abstract::StateController<Engine::eObserverState>)
@@ -17,6 +17,8 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Component
 {
+    ObserverController::ObserverController(const WeakObject& owner): StateController(owner) {}
+
     void ObserverController::Initialize()
     {
         StateController::Initialize();
@@ -43,6 +45,8 @@ namespace Engine::Component
     }
 
     void ObserverController::PostRender(const float& dt) {}
+
+    ObserverController::ObserverController(): StateController() {}
 
     void ObserverController::Mouse(const float& dt)
     {

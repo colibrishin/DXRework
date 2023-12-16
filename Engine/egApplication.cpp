@@ -1,12 +1,12 @@
-#include "pch.hpp"
-#include "egApplication.hpp"
+#include "pch.h"
+#include "egApplication.h"
 
-#include "egCollisionDetector.hpp"
+#include "egCollisionDetector.h"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
-#include "egProjectionFrustum.hpp"
+#include "egProjectionFrustum.h"
 #include "egSceneManager.hpp"
-#include "egToolkitAPI.hpp"
+#include "egToolkitAPI.h"
 
 #ifdef _DEBUG
 #include "dxgidebug.h"
@@ -25,6 +25,29 @@ namespace Engine::Manager
         ShowWindow(hWnd, SW_SHOW);
         SetForegroundWindow(hWnd);
         SetFocus(hWnd);
+    }
+
+    Application::Application(SINGLETON_LOCK_TOKEN)
+    : Singleton() {}
+
+    float Application::GetDeltaTime() const
+    {
+        return static_cast<float>(m_timer->GetElapsedSeconds());
+    }
+
+    uint32_t Application::GetFPS() const
+    {
+        return m_timer->GetFramesPerSecond();
+    }
+
+    Keyboard::State Application::GetKeyState() const
+    {
+        return m_keyboard->GetState();
+    }
+
+    Mouse::State Application::GetMouseState() const
+    {
+        return m_mouse->GetState();
     }
 
     Application::~Application()

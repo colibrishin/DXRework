@@ -1,12 +1,13 @@
-#include "pch.hpp"
+#include "pch.h"
 
 #include "egObject.hpp"
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egManagerHelper.hpp"
-#include "egMesh.hpp"
-#include "egRigidbody.hpp"
-#include "egTransform.hpp"
+#include "egMesh.h"
+#include "egRigidbody.h"
+#include "egTransform.h"
+#include "egComponent.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
@@ -57,6 +58,36 @@ namespace Engine::Abstract
                 }
             }
         }
+    }
+
+    void Object::SetActive(bool active)
+    {
+        m_active_ = active;
+    }
+
+    void Object::SetCulled(bool culled)
+    {
+        m_culled_ = culled;
+    }
+
+    void Object::SetImGuiOpen(bool open)
+    {
+        m_imgui_open_ = open;
+    }
+
+    bool Object::GetActive() const
+    {
+        return m_active_;
+    }
+
+    bool Object::GetCulled() const
+    {
+        return m_culled_;
+    }
+
+    bool Object::GetImGuiOpen() const
+    {
+        return m_imgui_open_;
     }
 
     void Object::OnCollisionEnter(const Engine::Component::Collider& other)
@@ -262,6 +293,15 @@ namespace Engine::Abstract
     TypeName Object::GetVirtualTypeName() const
     {
         return typeid(Object).name();
+    }
+
+    void Object::AddResource(const StrongResource& resource) {
+        m_resources_.insert(resource);
+    }
+
+    const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents() const
+    {
+        return m_priority_sorted_;
     }
 
     void Object::PreUpdate(const float& dt)

@@ -1,7 +1,7 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egShader.hpp"
 #include "egManagerHelper.hpp"
-#include "egRenderPipeline.hpp"
+#include "egRenderPipeline.h"
 
 BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11VertexShader>);
 

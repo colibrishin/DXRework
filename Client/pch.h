@@ -59,13 +59,13 @@
 #include <dxgi1_3.h>
 
 #include "../Engine/egCollider.hpp"
-#include "../Engine/egIShader.hpp"
+#include "../Engine/egIShader.h"
 #include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egObject.hpp"
-#include "../Engine/egResourceManager.hpp"
-#include "../Engine/egRigidbody.hpp"
-#include "../Engine/egTexture.hpp"
-#include "../Engine/egTransform.hpp"
+#include "../Engine/egResourceManager.h"
+#include "../Engine/egRigidbody.h"
+#include "../Engine/egTexture.h"
+#include "../Engine/egTransform.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

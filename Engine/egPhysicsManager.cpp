@@ -1,14 +1,14 @@
-#include "pch.hpp"
-#include "egPhysicsManager.hpp"
+#include "pch.h"
+#include "egPhysicsManager.h"
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egFriction.h"
 #include "egObject.hpp"
-#include "egPhysics.h"
-#include "egRigidbody.hpp"
+#include "egPhysics.hpp"
+#include "egRigidbody.h"
 #include "egSceneManager.hpp"
-#include "egTransform.hpp"
+#include "egTransform.h"
 
 namespace Engine::Manager::Physics
 {

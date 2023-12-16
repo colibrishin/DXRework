@@ -1,6 +1,6 @@
-#include "pch.hpp"
-#include "egLight.hpp"
-#include "egCamera.hpp"
+#include "pch.h"
+#include "egLight.h"
+#include "egCamera.h"
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(

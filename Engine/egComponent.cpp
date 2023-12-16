@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egComponent.hpp"
+#include "pch.h"
+#include "egComponent.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Component,
@@ -8,6 +8,36 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Abstract
 {
+    WeakObject Component::GetOwner() const
+    {
+        return m_owner_;
+    }
+
+    eComponentPriority Component::GetPriority() const
+    {
+        return m_priority_;
+    }
+
+    ComponentID Component::GetLocalID() const
+    {
+        return m_local_id_;
+    }
+
+    bool Component::IsTicked() const
+    {
+        return m_b_ticked_;
+    }
+
+    void Component::SetActive(bool active)
+    {
+        m_b_active_ = active;
+    }
+
+    bool Component::GetActive() const
+    {
+        return m_b_active_;
+    }
+
     TypeName Component::GetVirtualTypeName() const
     {
         return typeid(Component).name();

@@ -1,6 +1,6 @@
 #pragma once
 #include "egCommon.hpp"
-#include "egIStateController.hpp"
+#include "egIStateController.h"
 
 namespace Engine::Abstract
 {

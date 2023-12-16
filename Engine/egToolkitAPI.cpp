@@ -1,6 +1,6 @@
-#include "pch.hpp"
-#include "egToolkitAPI.hpp"
-#include "egCamera.hpp"
+#include "pch.h"
+#include "egToolkitAPI.h"
+#include "egCamera.h"
 #include "egSceneManager.hpp"
 
 namespace Engine::Manager::Graphics
@@ -99,6 +99,21 @@ namespace Engine::Manager::Graphics
                                                            GetRenderPipeline().m_depth_stencil_state_.Get(), 1);
 
         m_primitive_batch_->End();
+    }
+
+    SpriteBatch* ToolkitAPI::GetSpriteBatch() const
+    {
+        return m_sprite_batch_.get();
+    }
+
+    CommonStates* ToolkitAPI::GetCommonStates() const
+    {
+        return m_states_.get();
+    }
+
+    PrimitiveBatch<VertexPositionColor>* ToolkitAPI::GetPrimitiveBatch() const
+    {
+        return m_primitive_batch_.get();
     }
 
     void ToolkitAPI::LoadSound(FMOD::Sound** sound, const std::string& path) const

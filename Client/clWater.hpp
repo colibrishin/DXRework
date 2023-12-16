@@ -1,5 +1,5 @@
 #pragma once
-#include "egDelayedRenderObject.hpp"
+#include "egDelayedRenderObject.h"
 
 namespace Client::Object
 {

@@ -1,4 +1,4 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egEntity.hpp"
 
 #include <boost/archive/text_iarchive.hpp>
@@ -10,7 +10,23 @@
 
 SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_))
 
-void Engine::Abstract::Entity::Initialize()
+void Engine::Abstract::Entity::SetName(const EntityName& name) {
+    m_name_ = name;
+}
+
+Engine::EntityID Engine::Abstract::Entity::GetID() const {
+    return reinterpret_cast<EntityID>(this);
+}
+
+Engine::EntityName Engine::Abstract::Entity::GetName() const {
+    return m_name_;
+}
+
+Engine::TypeName Engine::Abstract::Entity::GetTypeName() const {
+    return typeid(*this).name();
+}
+
+void           Engine::Abstract::Entity::Initialize()
 {
     m_b_initialized_ = true;
 }

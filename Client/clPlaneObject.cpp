@@ -1,12 +1,15 @@
 #include "pch.h"
 #include "clPlaneObject.hpp"
 
-#include "egCubeMesh.hpp"
-#include "egObject.hpp"
-#include "egSound.hpp"
-#include "egVertexShaderInternal.hpp"
+#include <egCubeMesh.h>
+#include <egObject.hpp>
+#include <egSound.h>
+#include <egVertexShaderInternal.h>
+#include <egNormalMap.h>
 
-CLIENT_OBJECT_IMPL(Client::Object::PlaneObject)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::PlaneObject,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {

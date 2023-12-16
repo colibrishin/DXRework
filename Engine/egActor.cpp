@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egActor.hpp"
+#include "pch.h"
+#include "egActor.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Actor,
@@ -31,6 +31,11 @@ namespace Engine::Abstract
         ImGui::Text("Local ID: %lld", m_local_id_);
         ImGui::Unindent(2);
     }
+
+    Actor::Actor()
+    : m_assigned_scene_({}),
+      m_layer_(LAYER_NONE),
+      m_local_id_(g_invalid_id) { }
 
     void Actor::SetLayer(eLayerType layer)
     {

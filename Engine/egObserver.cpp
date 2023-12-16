@@ -1,9 +1,9 @@
-#include "pch.hpp"
-#include "egObserver.hpp"
+#include "pch.h"
+#include "egObserver.h"
 #include "egCollider.hpp"
-#include "egObserverController.hpp"
-#include "egRigidbody.hpp"
-#include "egTransform.hpp"
+#include "egObserverController.h"
+#include "egRigidbody.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::Observer,

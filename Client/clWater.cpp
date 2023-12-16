@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "clWater.hpp"
 
-#include "egCubeMesh.hpp"
-#include "egNormalMap.hpp"
+#include <egCubeMesh.h>
+#include <egNormalMap.h>
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Water,

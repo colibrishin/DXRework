@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egRenderable.hpp"
+#include "pch.h"
+#include "egRenderable.h"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>

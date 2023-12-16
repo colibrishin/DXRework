@@ -95,24 +95,105 @@
     <Filter Include="Base\Scene">
       <UniqueIdentifier>{66767e6a-0b0b-4915-b86d-252d283751d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Camera">
+      <UniqueIdentifier>{f738052e-2873-4fa8-a656-a9c0c23b1bd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\DelayedRenderObject">
+      <UniqueIdentifier>{a935ee61-95d9-415c-a068-6e3b4d4a7f41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Light">
+      <UniqueIdentifier>{a66a35a1-0742-496b-b54b-b28814a26012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Observer">
+      <UniqueIdentifier>{9b011a22-83ce-4905-9864-5acba78ef4cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Text">
+      <UniqueIdentifier>{3d7f7989-6656-4501-aa82-7f5466bfc7ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Font">
+      <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Mesh">
+      <UniqueIdentifier>{8734eb51-6ee9-44c4-8b4f-6b90bb699bb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\NormalMap">
+      <UniqueIdentifier>{f96a8f9a-fd4c-4793-ab46-8c17d6fdc7b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Shader">
+      <UniqueIdentifier>{c41f5685-5d13-42f7-aa15-a89ba3dd3b64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Sound">
+      <UniqueIdentifier>{1d465ce0-22a0-4ad2-9796-1b8ca313b66d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\VertexShader">
+      <UniqueIdentifier>{ab3cdb61-ac59-4ff9-a88f-6e924afd476b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Texture">
+      <UniqueIdentifier>{5fec1756-ea9d-4208-ab0c-968bb9d5f5f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Collision">
+      <UniqueIdentifier>{c7baf94f-02a8-44f2-b662-125275638b15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Elastic">
+      <UniqueIdentifier>{3488f74b-cf6f-4040-b0af-971e057147df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Friction">
+      <UniqueIdentifier>{cc26af0d-978d-4b29-92a2-8e0a62c499a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\Kinetic">
+      <UniqueIdentifier>{cf40390b-3817-4216-9b98-7f59cd0f74a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\D3Device">
+      <UniqueIdentifier>{bfb17544-eec2-4419-aa45-7bd1cb60747d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\ProjectionFrustum">
+      <UniqueIdentifier>{a5afdac3-c978-4191-a4ab-fc89d4e4c227}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\RenderPipeline">
+      <UniqueIdentifier>{680e7f0c-bc78-4e79-ad2d-a13d79d35c2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\ShadowManager">
+      <UniqueIdentifier>{02a9867b-119f-4e33-a4e7-76dc5be6dd86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\ToolkitAPI">
+      <UniqueIdentifier>{e48ba7f2-d575-4f70-bd6a-56f16df1d909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\Physics\CollisionDetector">
+      <UniqueIdentifier>{af9f026d-f741-4fd8-8286-967e877afc86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\Physics\ConstraintSolver">
+      <UniqueIdentifier>{78703bbb-9af2-4201-8def-5a691c883096}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\Physics\LerpManager">
+      <UniqueIdentifier>{c7763e31-2b9c-4baf-babb-b6b6eb307836}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\Physics\PhysicsManager">
+      <UniqueIdentifier>{10f4f611-59a9-4a0f-bc34-c5c7f1582a6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\Debugger">
+      <UniqueIdentifier>{d198ede7-aeae-413f-a6ee-5e585853c522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\MouseManager">
+      <UniqueIdentifier>{3e73e15b-2787-43a0-9c1b-50da1627e820}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\ResourceManager">
+      <UniqueIdentifier>{8c21481d-5119-48d7-b78b-688f6e2644cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\SceneManager">
+      <UniqueIdentifier>{7c2f0a80-5d7f-4670-9738-fb022f6bacd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Application">
+      <UniqueIdentifier>{9048d366-a903-4750-8e2e-5215d0283953}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\TaskScheduler">
+      <UniqueIdentifier>{44be5145-3da7-44b1-b9d6-ad0606f17360}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="pch.hpp" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="egManager.hpp">
       <Filter>Abstract</Filter>
-    </ClInclude>
-    <ClInclude Include="egCamera.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="egMesh.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egTexture.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egLight.hpp">
-      <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="egCommon.hpp">
       <Filter>Common</Filter>
@@ -120,148 +201,70 @@
     <ClInclude Include="egHelper.hpp">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="egFont.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egNormalMap.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egText.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="egApplication.hpp">
-      <Filter>Singleton</Filter>
-    </ClInclude>
-    <ClInclude Include="egResourceManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="egSceneManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="egRenderPipeline.hpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="egD3Device.hpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="egDXCommon.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egManagerHelper.hpp">
       <Filter>Singleton</Filter>
     </ClInclude>
-    <ClInclude Include="egPhysics.h">
+    <ClInclude Include="egPhysics.hpp">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="egCollision.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egElastic.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egKinetic.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egFriction.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egToolkitAPI.hpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="egType.hpp">
+    <ClInclude Include="egType.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="egTaskScheduler.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="egDebugger.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="egSound.hpp">
-      <Filter>Resource</Filter>
     </ClInclude>
     <ClInclude Include="egSerialization.hpp">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="egProjectionFrustum.hpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="DebugDraw.h">
       <Filter>Low-level</Filter>
     </ClInclude>
-    <ClInclude Include="egCollisionDetector.hpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egConstraintSolver.hpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egPhysicsManager.hpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egLerpManager.hpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="egMouseManager.hpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="egObserver.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="egIShader.hpp">
+    <ClInclude Include="egIShader.h">
       <Filter>Low-level</Filter>
     </ClInclude>
-    <ClInclude Include="egShadowManager.hpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="egShader.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egVertexShaderInternal.hpp">
-      <Filter>Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="egActor.hpp">
+    <ClInclude Include="egActor.h">
       <Filter>Abstract\Actor</Filter>
     </ClInclude>
     <ClInclude Include="egEntity.hpp">
       <Filter>Abstract\Entity</Filter>
     </ClInclude>
-    <ClInclude Include="egRenderable.hpp">
+    <ClInclude Include="egRenderable.h">
       <Filter>Abstract\Renderable</Filter>
     </ClInclude>
     <ClInclude Include="egCollider.hpp">
       <Filter>Component\Collider</Filter>
     </ClInclude>
-    <ClInclude Include="egIStateController.hpp">
+    <ClInclude Include="egIStateController.h">
       <Filter>Component\StateController</Filter>
     </ClInclude>
     <ClInclude Include="egStateController.hpp">
       <Filter>Component\StateController</Filter>
     </ClInclude>
-    <ClInclude Include="egObserverController.hpp">
+    <ClInclude Include="egObserverController.h">
       <Filter>Component\OberserverController</Filter>
     </ClInclude>
-    <ClInclude Include="egRigidbody.hpp">
+    <ClInclude Include="egRigidbody.h">
       <Filter>Component\Rigidbody</Filter>
     </ClInclude>
-    <ClInclude Include="egTransform.hpp">
+    <ClInclude Include="egTransform.h">
       <Filter>Component\Transform</Filter>
     </ClInclude>
-    <ClInclude Include="egCubeMesh.hpp">
+    <ClInclude Include="egCubeMesh.h">
       <Filter>Mesh\CubeMesh</Filter>
     </ClInclude>
-    <ClInclude Include="egSphereMesh.hpp">
+    <ClInclude Include="egSphereMesh.h">
       <Filter>Mesh\SphereMesh</Filter>
     </ClInclude>
-    <ClInclude Include="egComponent.hpp">
+    <ClInclude Include="egComponent.h">
       <Filter>Base\Component</Filter>
     </ClInclude>
-    <ClInclude Include="egLayer.hpp">
+    <ClInclude Include="egLayer.h">
       <Filter>Base\Layer</Filter>
     </ClInclude>
     <ClInclude Include="egObject.hpp">
       <Filter>Base\Object</Filter>
     </ClInclude>
-    <ClInclude Include="egResource.hpp">
+    <ClInclude Include="egResource.h">
       <Filter>Base\Resource</Filter>
     </ClInclude>
     <ClInclude Include="egScene.hpp">
@@ -270,8 +273,98 @@
     <ClInclude Include="StepTimer.hpp">
       <Filter>Low-level</Filter>
     </ClInclude>
-    <ClInclude Include="egDelayedRenderObject.hpp">
-      <Filter>Object</Filter>
+    <ClInclude Include="egCamera.h">
+      <Filter>Object\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="egDelayedRenderObject.h">
+      <Filter>Object\DelayedRenderObject</Filter>
+    </ClInclude>
+    <ClInclude Include="egLight.h">
+      <Filter>Object\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="egObserver.h">
+      <Filter>Object\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="egText.h">
+      <Filter>Object\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="egFont.h">
+      <Filter>Resource\Font</Filter>
+    </ClInclude>
+    <ClInclude Include="egMesh.h">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="egNormalMap.h">
+      <Filter>Resource\NormalMap</Filter>
+    </ClInclude>
+    <ClInclude Include="egShader.hpp">
+      <Filter>Resource\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="egSound.h">
+      <Filter>Resource\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="egVertexShaderInternal.h">
+      <Filter>Resource\VertexShader</Filter>
+    </ClInclude>
+    <ClInclude Include="egTexture.h">
+      <Filter>Resource\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollision.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="egElastic.h">
+      <Filter>Physics\Elastic</Filter>
+    </ClInclude>
+    <ClInclude Include="egFriction.h">
+      <Filter>Physics\Friction</Filter>
+    </ClInclude>
+    <ClInclude Include="egKinetic.h">
+      <Filter>Physics\Kinetic</Filter>
+    </ClInclude>
+    <ClInclude Include="egD3Device.hpp">
+      <Filter>Singleton\Graphics\D3Device</Filter>
+    </ClInclude>
+    <ClInclude Include="egProjectionFrustum.h">
+      <Filter>Singleton\Graphics\ProjectionFrustum</Filter>
+    </ClInclude>
+    <ClInclude Include="egRenderPipeline.h">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="egShadowManager.hpp">
+      <Filter>Singleton\Graphics\ShadowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egToolkitAPI.h">
+      <Filter>Singleton\Graphics\ToolkitAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="egCollisionDetector.h">
+      <Filter>Singleton\Internal\Physics\CollisionDetector</Filter>
+    </ClInclude>
+    <ClInclude Include="egConstraintSolver.h">
+      <Filter>Singleton\Internal\Physics\ConstraintSolver</Filter>
+    </ClInclude>
+    <ClInclude Include="egLerpManager.h">
+      <Filter>Singleton\Internal\Physics\LerpManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egPhysicsManager.h">
+      <Filter>Singleton\Internal\Physics\PhysicsManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egDebugger.hpp">
+      <Filter>Singleton\Internal\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="egMouseManager.h">
+      <Filter>Singleton\Internal\MouseManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egResourceManager.h">
+      <Filter>Singleton\Internal\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egSceneManager.hpp">
+      <Filter>Singleton\Internal\SceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="egApplication.h">
+      <Filter>Singleton\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="egTaskScheduler.h">
+      <Filter>Singleton\Internal\TaskScheduler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -279,98 +372,17 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="egCamera.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egMesh.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egApplication.cpp">
-      <Filter>Singleton</Filter>
-    </ClCompile>
-    <ClCompile Include="egD3Device.cpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="egRenderPipeline.cpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="egFont.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egKinetic.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egElastic.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egFriction.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
     <ClCompile Include="egGravity.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egCollision.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
     <ClCompile Include="egCommon.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="egProjectionFrustum.cpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="DebugDraw.cpp">
       <Filter>Low-level</Filter>
     </ClCompile>
-    <ClCompile Include="egToolkitAPI.cpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="egDebugger.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
-    <ClCompile Include="egCollisionDetector.cpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egConstraintSolver.cpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egPhysicsManager.cpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egLerpManager.cpp">
-      <Filter>Singleton\Internal\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="egMouseManager.cpp">
-      <Filter>Singleton\Internal</Filter>
-    </ClCompile>
-    <ClCompile Include="egObserver.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egNormalMap.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egSound.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egTexture.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egText.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="egLight.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="egIShader.cpp">
       <Filter>Low-level</Filter>
-    </ClCompile>
-    <ClCompile Include="egShadowManager.cpp">
-      <Filter>Singleton\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="egShader.cpp">
-      <Filter>Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="egVertexShaderInternal.cpp">
-      <Filter>Resource</Filter>
     </ClCompile>
     <ClCompile Include="egActor.cpp">
       <Filter>Abstract\Actor</Filter>
@@ -417,13 +429,100 @@
     <ClCompile Include="egScene.cpp">
       <Filter>Base\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="egSceneManager.cpp">
-      <Filter>Singleton\Internal</Filter>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="egCamera.cpp">
+      <Filter>Object\Camera</Filter>
     </ClCompile>
     <ClCompile Include="egDelayedRenderObject.cpp">
-      <Filter>Object</Filter>
+      <Filter>Object\DelayedRenderObject</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="egLight.cpp">
+      <Filter>Object\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="egObserver.cpp">
+      <Filter>Object\Observer</Filter>
+    </ClCompile>
+    <ClCompile Include="egText.cpp">
+      <Filter>Object\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="egFont.cpp">
+      <Filter>Resource\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="egMesh.cpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="egNormalMap.cpp">
+      <Filter>Resource\NormalMap</Filter>
+    </ClCompile>
+    <ClCompile Include="egShader.cpp">
+      <Filter>Resource\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="egSound.cpp">
+      <Filter>Resource\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="egVertexShaderInternal.cpp">
+      <Filter>Resource\VertexShader</Filter>
+    </ClCompile>
+    <ClCompile Include="egTexture.cpp">
+      <Filter>Resource\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollision.cpp">
+      <Filter>Physics\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="egElastic.cpp">
+      <Filter>Physics\Elastic</Filter>
+    </ClCompile>
+    <ClCompile Include="egFriction.cpp">
+      <Filter>Physics\Friction</Filter>
+    </ClCompile>
+    <ClCompile Include="egKinetic.cpp">
+      <Filter>Physics\Kinetic</Filter>
+    </ClCompile>
+    <ClCompile Include="egD3Device.cpp">
+      <Filter>Singleton\Graphics\D3Device</Filter>
+    </ClCompile>
+    <ClCompile Include="egProjectionFrustum.cpp">
+      <Filter>Singleton\Graphics\ProjectionFrustum</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderPipeline.cpp">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="egShadowManager.cpp">
+      <Filter>Singleton\Graphics\ShadowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egToolkitAPI.cpp">
+      <Filter>Singleton\Graphics\ToolkitAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="egCollisionDetector.cpp">
+      <Filter>Singleton\Internal\Physics\CollisionDetector</Filter>
+    </ClCompile>
+    <ClCompile Include="egConstraintSolver.cpp">
+      <Filter>Singleton\Internal\Physics\ConstraintSolver</Filter>
+    </ClCompile>
+    <ClCompile Include="egLerpManager.cpp">
+      <Filter>Singleton\Internal\Physics\LerpManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egPhysicsManager.cpp">
+      <Filter>Singleton\Internal\Physics\PhysicsManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egDebugger.cpp">
+      <Filter>Singleton\Internal\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="egMouseManager.cpp">
+      <Filter>Singleton\Internal\MouseManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egResourceManager.cpp">
+      <Filter>Singleton\Internal\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egSceneManager.cpp">
+      <Filter>Singleton\Internal\SceneManager</Filter>
+    </ClCompile>
+    <ClCompile Include="egApplication.cpp">
+      <Filter>Singleton\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="egTaskScheduler.cpp">
+      <Filter>Singleton\Internal\TaskScheduler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">

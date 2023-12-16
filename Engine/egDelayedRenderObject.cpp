@@ -1,13 +1,13 @@
-#include "pch.hpp"
-#include "egDelayedRenderObject.hpp"
+#include "pch.h"
+#include "egDelayedRenderObject.h"
 
-#include "egCubeMesh.hpp"
-#include "egNormalMap.hpp"
-#include "egResourceManager.hpp"
-#include "egVertexShaderInternal.hpp"
+#include "egCubeMesh.h"
+#include "egNormalMap.h"
+#include "egResourceManager.h"
+#include "egVertexShaderInternal.h"
 
 #include "egCollider.hpp"
-#include "egTransform.hpp"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::DelayedRenderObject,

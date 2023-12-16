@@ -1,7 +1,7 @@
 #pragma once
 #include <SimpleMath.h>
 
-#include "egType.hpp"
+#include "egType.h"
 
 namespace Engine
 {

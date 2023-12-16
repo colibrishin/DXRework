@@ -3,6 +3,9 @@
 
 #include "clWater.hpp"
 #include "egHelper.hpp"
+#include <egCamera.h>
+
+#include "clPlayer.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Scene::TestScene,
@@ -48,31 +51,52 @@ namespace Client::Scene
 
     inline void TestScene::Initialize_INTERNAL()
     {
-        const auto companion = Engine::Instantiate<Object::TestCube>();
-        AddGameObject(companion, Engine::LAYER_DEFAULT);
+        const auto cube = Engine::Instantiate<Object::TestCube>();
+        AddGameObject(cube, Engine::LAYER_DEFAULT);
+
+        cube->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+             {2.f, 4.f, 0.f});
+        cube->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+             {2.f, 4.f, 0.f});
+
+        const auto sphere = Engine::Instantiate<Object::TestObject>();
+        AddGameObject(sphere, Engine::LAYER_DEFAULT);
+        sphere->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+            {0.f, 4.f, 0.f});
+        sphere->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+            {0.f, 4.f, 0.f});
+
         AddGameObject(
-                      Engine::Instantiate<Object::TestObject>(),
-                      Engine::LAYER_DEFAULT);
-        AddGameObject(Engine::Instantiate<Object::FPSCounter>(), Engine::LAYER_UI);
+                      Engine::Instantiate<Object::FPSCounter>(),
+                      Engine::LAYER_UI);
         AddGameObject(
                       Engine::Instantiate<Object::MousePositionText>(),
                       Engine::LAYER_UI);
-        AddGameObject(Engine::Instantiate<Object::SkyBox>(), Engine::LAYER_SKYBOX);
+        AddGameObject(
+                      Engine::Instantiate<Object::SkyBox>(),
+                      Engine::LAYER_SKYBOX);
         AddGameObject(
                       Engine::Instantiate<Object::PlaneObject>(),
                       Engine::LAYER_ENVIRONMENT);
 
         const auto water = Engine::Instantiate<Object::Water>();
-
-        water->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
-                                                                                {0.f, 0.f, -2.f});
-
         AddGameObject(water, Engine::LAYER_ENVIRONMENT);
+        water->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+            {0.f, 0.f, -2.f});
+        water->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+            {0.f, 0.f, -2.f});
+
+        const auto player = Engine::Instantiate<Object::Player>();
+        AddGameObject(player, Engine::LAYER_DEFAULT);
+        player->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+             {-2.f, 4.f, -2.f});
+        player->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+            {-2.f, 4.f, -2.f});
+        GetMainCamera().lock()->BindObject(player);
+        
 
         Engine::GetCollisionDetector().SetCollisionLayer(
                                                          Engine::LAYER_DEFAULT,
                                                          Engine::LAYER_ENVIRONMENT);
-
-        GetMainCamera().lock()->BindObject(companion);
     }
 } // namespace Client::Scene

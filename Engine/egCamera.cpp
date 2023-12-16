@@ -1,9 +1,9 @@
-#include "pch.hpp"
-#include "egCamera.hpp"
-#include "egApplication.hpp"
+#include "pch.h"
+#include "egCamera.h"
+#include "egApplication.h"
 #include "egManagerHelper.hpp"
-#include "egTransform.hpp"
-#include "egRigidbody.hpp"
+#include "egTransform.h"
+#include "egRigidbody.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::Camera,
@@ -14,6 +14,36 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Objects
 {
+    void Camera::SetLookAt(Vector3 lookAt)
+    {
+        m_look_at_ = lookAt;
+    }
+
+    void Camera::SetLookAtRotation(Quaternion rotation)
+    {
+        m_look_at_rotation_ = rotation;
+    }
+
+    Quaternion Camera::GetLookAtRotation()
+    {
+        return m_look_at_rotation_;
+    }
+
+    Matrix Camera::GetViewMatrix() const
+    {
+        return m_view_matrix_;
+    }
+
+    Matrix Camera::GetProjectionMatrix() const
+    {
+        return m_projection_matrix_;
+    }
+
+    Matrix Camera::GetWorldMatrix() const
+    {
+        return m_world_matrix_;
+    }
+
     void Camera::SetPosition(Vector3 position)
     {
         GetComponent<Component::Transform>().lock()->SetPosition(position);
@@ -196,6 +226,16 @@ namespace Engine::Objects
     void Camera::SetOffset(Vector3 offset)
     {
         m_offset_ = offset;
+    }
+
+    void Camera::SetOrthogonal(bool bOrthogonal)
+    {
+        m_b_orthogonal_ = bOrthogonal;
+    }
+
+    bool Camera::GetOrthogonal() const
+    {
+        return m_b_orthogonal_;
     }
 
     Vector2 Camera::GetWorldMousePosition()

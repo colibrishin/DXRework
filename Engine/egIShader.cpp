@@ -1,5 +1,5 @@
-#include "pch.hpp"
-#include "egIShader.hpp"
+#include "pch.h"
+#include "egIShader.h"
 
 #include "egManagerHelper.hpp"
 
@@ -16,7 +16,17 @@ namespace Engine::Graphic
         SetName(name);
     }
 
-    void IShader::Render(const float& dt)
+    ID3D11Buffer* IShader::GetBuffer() const
+    {
+        return m_buffer_.Get();
+    }
+
+    eShaderType IShader::GetType() const
+    {
+        return m_type_;
+    }
+
+    void      IShader::Render(const float& dt)
     {
         GetRenderPipeline().SetShader(this);
     }

@@ -4,7 +4,7 @@
 #include "egHelper.hpp"
 #include "egManager.hpp"
 #include "egScene.hpp"
-#include "egTaskScheduler.hpp"
+#include "egShadowManager.hpp"
 
 namespace Engine::Manager
 {

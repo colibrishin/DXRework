@@ -4,10 +4,10 @@
 #include <queue>
 
 #include <SpriteFont.h>
-#include "egApplication.hpp"
+#include "egApplication.h"
 #include "egCommon.hpp"
 #include "egD3Device.hpp"
-#include "egToolkitAPI.hpp"
+#include "egToolkitAPI.h"
 
 #include "DebugDraw.h"
 
@@ -16,9 +16,7 @@ namespace Engine::Manager
     class Debugger final : public Abstract::Singleton<Debugger>
     {
     public:
-        explicit Debugger(SINGLETON_LOCK_TOKEN)
-        : Singleton(),
-          m_bDebug(false) {}
+        explicit Debugger(SINGLETON_LOCK_TOKEN);
 
         ~Debugger() override = default;
 
@@ -27,11 +25,9 @@ namespace Engine::Manager
         void Log(const std::wstring& str);
         void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
         void Draw(Ray& ray, const XMVECTORF32& color);
-        void Draw(
-            eBoundingType        type, const XMVECTORF32& color,
-            const BoundingGroup& group);
         void Draw(const BoundingFrustum& frustum, const XMVECTORF32& color);
         void Draw(const BoundingSphere& sphere, const XMVECTORF32& color);
+        void Draw(const BoundingOrientedBox& obb, const XMVECTORF32& color);
 
         void SetDebugFlag();
         bool GetDebugFlag() const;

@@ -1,6 +1,7 @@
 #pragma once
 #include "egCommon.hpp"
-#include "egComponent.hpp"
+#include "egComponent.h"
+#include "egHelper.hpp"
 
 namespace Engine::Component
 {
@@ -79,18 +80,21 @@ namespace Engine::Component
         TypeName GetVirtualTypeName() const final;
 
         template <typename T>
-        T& As()
+        T GetBounding() const
         {
             if constexpr (std::is_same_v<T, BoundingOrientedBox>)
             {
-                return m_boundings_.box;
+                return m_boundings_.As<BoundingOrientedBox>(m_size_, m_rotation_, m_position_ + m_offset_);
             }
             else if constexpr (std::is_same_v<T, BoundingSphere>)
             {
-                return m_boundings_.sphere;
+                return m_boundings_.As<BoundingSphere>(m_size_, m_rotation_, m_position_ + m_offset_);
             }
-
-            throw std::exception("Invalid type");
+            else
+            {
+                static_assert("Invalid type");
+                throw std::exception("Invalid type");
+            }
         }
 
     protected:
@@ -108,11 +112,11 @@ namespace Engine::Component
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return As<BoundingOrientedBox>().Intersects(other);
+                return GetBounding<BoundingOrientedBox>().Intersects(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return As<BoundingSphere>().Intersects(other);
+                return GetBounding<BoundingSphere>().Intersects(other);
             }
 
             return false;
@@ -123,50 +127,21 @@ namespace Engine::Component
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return As<BoundingOrientedBox>().Contains(other);
+                return GetBounding<BoundingOrientedBox>().Contains(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return As<BoundingSphere>().Contains(other);
+                return GetBounding<BoundingSphere>().Contains(other);
             }
 
             return false;
         }
 
-        template <typename T>
-        static void SetSize_GENERAL_TYPE(T& value, const Vector3& size)
-        {
-            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-            {
-                value.Extents = size / 2;
-            }
-            else if constexpr (std::is_same_v<T, BoundingSphere>)
-            {
-                value.Radius = size.x / 2;
-            }
-        }
-
-        template <typename T>
-        void SetRotation_GENERAL_TYPE(T& value, const Quaternion& rotation)
-        {
-            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
-            {
-                value.Orientation = rotation;
-            }
-            else if constexpr (std::is_same_v<T, BoundingSphere>) { }
-        }
-
-        template <typename T>
-        void SetPosition_GENERAL_TYPE(T& value, const Vector3& position)
-        {
-            As<T>().Center = position + m_offset_;
-        }
-
         void UpdateFromTransform();
-        void UpdateBoundings();
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
+        void UpdateWorldMatrix();
 
         bool m_bDirtyByTransform;
 

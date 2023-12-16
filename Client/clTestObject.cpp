@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "clTestObject.hpp"
 
-#include "egNormalMap.hpp"
-#include "egSphereMesh.hpp"
+#include <egNormalMap.h>
+#include <egSphereMesh.h>
 
-CLIENT_OBJECT_IMPL(Client::Object::TestObject)
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::TestObject,
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
 
 namespace Client::Object
 {
@@ -32,10 +34,6 @@ namespace Client::Object
                     .lock());
 
         AddComponent<Engine::Component::Transform>();
-        const auto tr = GetComponent<Engine::Component::Transform>().lock();
-        tr->SetPosition(Vector3(0.0f, 4.0f, 0.0f));
-        tr->SetScale(Vector3::One);
-
         AddComponent<Engine::Component::Collider>();
         const auto cldr = GetComponent<Engine::Component::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);

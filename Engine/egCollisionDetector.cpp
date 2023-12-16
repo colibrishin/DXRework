@@ -1,12 +1,12 @@
-#include "pch.hpp"
+#include "pch.h"
 
-#include "egCollisionDetector.hpp"
+#include "egCollisionDetector.h"
 #include "egCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egManagerHelper.hpp"
 #include "egObject.hpp"
-#include "egRigidbody.hpp"
+#include "egRigidbody.h"
 #include "egSceneManager.hpp"
 
 namespace Engine::Manager
@@ -37,6 +37,11 @@ namespace Engine::Manager
     {
         const auto lhs_owner = lhs.GetOwner().lock();
         const auto rhs_owner = rhs.GetOwner().lock();
+
+        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+        {
+            return;
+        }
 
         if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
         {
@@ -93,6 +98,11 @@ namespace Engine::Manager
     {
         Component::Collider copy = lhs;
         copy.SetPosition(lhs.GetPosition() + Vector3::Down * g_epsilon);
+
+        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+        {
+            return;
+        }
 
         if (copy.Intersects(rhs))
         {
@@ -352,5 +362,45 @@ namespace Engine::Manager
         }
 
         return false;
+    }
+
+    bool CollisionDetector::IsCollided(EntityID id) const
+    {
+        if (!m_collision_map_.contains(id))
+        {
+            return false;
+        }
+
+        return !m_collision_map_.at(id).empty();
+    }
+
+    bool CollisionDetector::IsCollided(EntityID id1, EntityID id2) const
+    {
+        if (!m_collision_map_.contains(id1))
+        {
+            return false;
+        }
+
+        return m_collision_map_.at(id1).contains(id2);
+    }
+
+    bool CollisionDetector::IsSpeculated(EntityID id1, EntityID id2) const
+    {
+        if (!m_speculation_map_.contains(id1))
+        {
+            return false;
+        }
+
+        return m_speculation_map_.at(id1).contains(id2);
+    }
+
+    bool CollisionDetector::IsCollidedInFrame(EntityID id1, EntityID id2) const
+    {
+        if (!m_frame_collision_map_.contains(id1))
+        {
+            return false;
+        }
+
+        return m_frame_collision_map_.at(id1).contains(id2);
     }
 } // namespace Engine::Manager

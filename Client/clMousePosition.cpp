@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "clMousePosition.hpp"
+#include <egCamera.h>
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::MousePositionText,

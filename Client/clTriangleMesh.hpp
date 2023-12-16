@@ -2,7 +2,7 @@
 #include <SimpleMath.h>
 #include <filesystem>
 #include <string>
-#include "../Engine/egMesh.hpp"
+#include <egMesh.h>
 
 namespace Client::Mesh
 {

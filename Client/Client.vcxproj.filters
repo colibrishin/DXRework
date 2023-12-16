@@ -36,6 +36,33 @@
     <Filter Include="Resource\Scene">
       <UniqueIdentifier>{1dbb809b-8ffa-49c9-adb8-c43a4dbb7f37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Player">
+      <UniqueIdentifier>{9191c412-5fba-4843-8146-fd0240bbe22b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Water">
+      <UniqueIdentifier>{ac99b7d1-311b-4750-b5f4-1c862985b516}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\TestCube">
+      <UniqueIdentifier>{963fc1d0-8671-474a-b9db-9594b0838310}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\MousePosition">
+      <UniqueIdentifier>{bf74148a-6bd7-44bd-ab90-91a9719db0bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\FPSCounter">
+      <UniqueIdentifier>{5ad0c76d-f91b-43e9-aa58-c0276bb60549}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\PlaneObject">
+      <UniqueIdentifier>{efdfa963-3918-436d-9908-77ed70e5f3b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\SkyBox">
+      <UniqueIdentifier>{7807774c-1bb6-48c6-9239-86a8011559d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\TestObject">
+      <UniqueIdentifier>{d6ddae5c-4a7b-4c36-aa52-cdc366835b09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\TestScene">
+      <UniqueIdentifier>{6f6bdb31-6658-4833-a2b4-74327a4b0da3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -50,38 +77,41 @@
     <ClInclude Include="clTriangleMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clTestObject.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestScene.hpp">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestCube.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="clGiftBox.hpp">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="clFPSCounter.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="clMousePosition.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="clBackSphereMesh.hpp">
       <Filter>Resource\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="clSkyBox.hpp">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="clPlaneObject.hpp">
-      <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="clCharacterController.hpp">
       <Filter>State</Filter>
     </ClInclude>
     <ClInclude Include="clWater.hpp">
-      <Filter>Object</Filter>
+      <Filter>Object\Water</Filter>
+    </ClInclude>
+    <ClInclude Include="clTestCube.hpp">
+      <Filter>Object\TestCube</Filter>
+    </ClInclude>
+    <ClInclude Include="clMousePosition.hpp">
+      <Filter>Object\MousePosition</Filter>
+    </ClInclude>
+    <ClInclude Include="clFPSCounter.hpp">
+      <Filter>Object\FPSCounter</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlaneObject.hpp">
+      <Filter>Object\PlaneObject</Filter>
+    </ClInclude>
+    <ClInclude Include="clSkyBox.hpp">
+      <Filter>Object\SkyBox</Filter>
+    </ClInclude>
+    <ClInclude Include="clTestObject.hpp">
+      <Filter>Object\TestObject</Filter>
+    </ClInclude>
+    <ClInclude Include="clTestScene.hpp">
+      <Filter>Scene\TestScene</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlayerMesh.h">
+      <Filter>Resource\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlayer.h">
+      <Filter>Object\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -94,32 +124,38 @@
     <ClCompile Include="clCharacterController.cpp">
       <Filter>State</Filter>
     </ClCompile>
-    <ClCompile Include="clTestScene.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestObject.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestCube.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="clSkyBox.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="clPlaneObject.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="clMousePosition.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="clFPSCounter.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="clBackSphereMesh.cpp">
       <Filter>Resource\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="clWater.cpp">
-      <Filter>Object</Filter>
+      <Filter>Object\Water</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestCube.cpp">
+      <Filter>Object\TestCube</Filter>
+    </ClCompile>
+    <ClCompile Include="clMousePosition.cpp">
+      <Filter>Object\MousePosition</Filter>
+    </ClCompile>
+    <ClCompile Include="clFPSCounter.cpp">
+      <Filter>Object\FPSCounter</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlaneObject.cpp">
+      <Filter>Object\PlaneObject</Filter>
+    </ClCompile>
+    <ClCompile Include="clSkyBox.cpp">
+      <Filter>Object\SkyBox</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestObject.cpp">
+      <Filter>Object\TestObject</Filter>
+    </ClCompile>
+    <ClCompile Include="clTestScene.cpp">
+      <Filter>Scene\TestScene</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayerMesh.cpp">
+      <Filter>Resource\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayer.cpp">
+      <Filter>Object\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -132,9 +168,6 @@
     <CopyFileToFolders Include="Texture-Normal.png">
       <Filter>Resource\Normal</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="giftbox.obj">
-      <Filter>Resource\Mesh</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="Sky.jpg">
       <Filter>Resource\Texture</Filter>
     </CopyFileToFolders>
@@ -143,6 +176,9 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="Water-Normal.png">
       <Filter>Resource\Normal</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="player.obj">
+      <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

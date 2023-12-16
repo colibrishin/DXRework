@@ -20,64 +20,64 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
-    <ClInclude Include="egActor.hpp" />
+    <ClInclude Include="egActor.h" />
     <ClInclude Include="egCollision.h" />
-    <ClInclude Include="egConstraintSolver.hpp" />
-    <ClInclude Include="egCubeMesh.hpp" />
+    <ClInclude Include="egConstraintSolver.h" />
+    <ClInclude Include="egCubeMesh.h" />
     <ClInclude Include="egDebugger.hpp" />
     <ClInclude Include="egDXCommon.h" />
-    <ClInclude Include="egCamera.hpp" />
+    <ClInclude Include="egCamera.h" />
     <ClInclude Include="egCollider.hpp" />
-    <ClInclude Include="egCollisionDetector.hpp" />
+    <ClInclude Include="egCollisionDetector.h" />
     <ClInclude Include="egCommon.hpp" />
-    <ClInclude Include="egComponent.hpp" />
+    <ClInclude Include="egComponent.h" />
     <ClInclude Include="egD3Device.hpp" />
-    <ClInclude Include="egApplication.hpp" />
+    <ClInclude Include="egApplication.h" />
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
-    <ClInclude Include="egFont.hpp" />
+    <ClInclude Include="egFont.h" />
     <ClInclude Include="egFriction.h" />
-    <ClInclude Include="egIShader.hpp" />
+    <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
-    <ClInclude Include="egMouseManager.hpp" />
-    <ClInclude Include="egObserverController.hpp" />
-    <ClInclude Include="egObserver.hpp" />
-    <ClInclude Include="egPhysics.h" />
-    <ClInclude Include="egPhysicsManager.hpp" />
-    <ClInclude Include="egProjectionFrustum.hpp" />
+    <ClInclude Include="egMouseManager.h" />
+    <ClInclude Include="egObserverController.h" />
+    <ClInclude Include="egObserver.h" />
+    <ClInclude Include="egPhysics.hpp" />
+    <ClInclude Include="egPhysicsManager.h" />
+    <ClInclude Include="egProjectionFrustum.h" />
     <ClInclude Include="egHelper.hpp" />
-    <ClInclude Include="egLayer.hpp" />
-    <ClInclude Include="egLight.hpp" />
+    <ClInclude Include="egLayer.h" />
+    <ClInclude Include="egLight.h" />
     <ClInclude Include="egManager.hpp" />
     <ClInclude Include="egManagerHelper.hpp" />
-    <ClInclude Include="egMesh.hpp" />
-    <ClInclude Include="egNormalMap.hpp" />
+    <ClInclude Include="egMesh.h" />
+    <ClInclude Include="egNormalMap.h" />
     <ClInclude Include="egObject.hpp" />
-    <ClInclude Include="egRenderable.hpp" />
-    <ClInclude Include="egRenderPipeline.hpp" />
-    <ClInclude Include="egResource.hpp" />
-    <ClInclude Include="egResourceManager.hpp" />
-    <ClInclude Include="egRigidbody.hpp" />
+    <ClInclude Include="egRenderable.h" />
+    <ClInclude Include="egRenderPipeline.h" />
+    <ClInclude Include="egResource.h" />
+    <ClInclude Include="egResourceManager.h" />
+    <ClInclude Include="egRigidbody.h" />
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />
     <ClInclude Include="egSerialization.hpp" />
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egShadowManager.hpp" />
-    <ClInclude Include="egSound.hpp" />
-    <ClInclude Include="egSphereMesh.hpp" />
+    <ClInclude Include="egSound.h" />
+    <ClInclude Include="egSphereMesh.h" />
     <ClInclude Include="egStateController.hpp" />
-    <ClInclude Include="egTaskScheduler.hpp" />
-    <ClInclude Include="egText.hpp" />
-    <ClInclude Include="egTexture.hpp" />
-    <ClInclude Include="egToolkitAPI.hpp" />
-    <ClInclude Include="egTransform.hpp" />
-    <ClInclude Include="egLerpManager.hpp" />
-    <ClInclude Include="egType.hpp" />
-    <ClInclude Include="egVertexShaderInternal.hpp" />
-    <ClInclude Include="egDelayedRenderObject.hpp" />
+    <ClInclude Include="egTaskScheduler.h" />
+    <ClInclude Include="egText.h" />
+    <ClInclude Include="egTexture.h" />
+    <ClInclude Include="egToolkitAPI.h" />
+    <ClInclude Include="egTransform.h" />
+    <ClInclude Include="egLerpManager.h" />
+    <ClInclude Include="egType.h" />
+    <ClInclude Include="egVertexShaderInternal.h" />
+    <ClInclude Include="egDelayedRenderObject.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="egIStateController.hpp" />
-    <ClInclude Include="pch.hpp" />
+    <ClInclude Include="egIStateController.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +115,7 @@
     <ClCompile Include="egRenderable.cpp" />
     <ClCompile Include="egRenderPipeline.cpp" />
     <ClCompile Include="egResource.cpp" />
+    <ClCompile Include="egResourceManager.cpp" />
     <ClCompile Include="egRigidbody.cpp" />
     <ClCompile Include="egScene.cpp" />
     <ClCompile Include="egSceneManager.cpp" />
@@ -122,6 +123,7 @@
     <ClCompile Include="egShadowManager.cpp" />
     <ClCompile Include="egSound.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />
+    <ClCompile Include="egTaskScheduler.cpp" />
     <ClCompile Include="egText.cpp" />
     <ClCompile Include="egTexture.cpp" />
     <ClCompile Include="egToolkitAPI.cpp" />
@@ -435,7 +437,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -465,7 +467,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -493,7 +495,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -523,7 +525,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>

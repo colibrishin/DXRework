@@ -1,16 +1,16 @@
-#include "pch.hpp"
+#include "pch.h"
 #include "egShadowManager.hpp"
 
 #include "egObject.hpp"
-#include "egResourceManager.hpp"
+#include "egResourceManager.h"
 #include "egScene.hpp"
 #include "egSceneManager.hpp"
 
-#include "egCamera.hpp"
-#include "egLight.hpp"
-#include "egMesh.hpp"
-#include "egProjectionFrustum.hpp"
-#include "egTransform.hpp"
+#include "egCamera.h"
+#include "egLight.h"
+#include "egMesh.h"
+#include "egProjectionFrustum.h"
+#include "egTransform.h"
 
 namespace Engine::Manager::Graphics
 {

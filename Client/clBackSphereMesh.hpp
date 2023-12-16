@@ -1,5 +1,5 @@
 #pragma once
-#include "../Engine/egMesh.hpp"
+#include <egMesh.h>
 
 #include "GeometricPrimitive.h"
 

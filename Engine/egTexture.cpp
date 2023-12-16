@@ -1,12 +1,33 @@
-#include "pch.hpp"
-#include "egTexture.hpp"
+#include "pch.h"
+#include "egTexture.h"
 #include "egD3Device.hpp"
-#include "egRenderPipeline.hpp"
+#include "egRenderPipeline.h"
 
 SERIALIZER_ACCESS_IMPL(Engine::Resources::Texture, _ARTAG(_BSTSUPER(Resource)))
 
 namespace Engine::Resources
 {
+    Texture::Texture(std::filesystem::path path)
+    : Resource(std::move(path), RESOURCE_PRIORITY_TEXTURE),
+      m_texture_desc_()
+    {
+        Texture::Initialize();
+    }
+
+    UINT Texture::GetWidth() const
+    {
+        return m_texture_desc_.Width;
+    }
+
+    UINT Texture::GetHeight() const
+    {
+        return m_texture_desc_.Height;
+    }
+
+    Texture::Texture()
+    : Resource("", RESOURCE_PRIORITY_TEXTURE),
+      m_texture_desc_() {}
+
     Texture::~Texture() {}
 
     void Texture::Initialize() {}
