@@ -38,6 +38,11 @@ namespace Engine::Manager
         const auto lhs_owner = lhs.GetOwner().lock();
         const auto rhs_owner = rhs.GetOwner().lock();
 
+        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+        {
+            return;
+        }
+
         if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
         {
             if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
@@ -93,6 +98,11 @@ namespace Engine::Manager
     {
         Component::Collider copy = lhs;
         copy.SetPosition(lhs.GetPosition() + Vector3::Down * g_epsilon);
+
+        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+        {
+            return;
+        }
 
         if (copy.Intersects(rhs))
         {
