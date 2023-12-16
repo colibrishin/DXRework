@@ -23,64 +23,9 @@ namespace Engine
         }
     }
 
-    inline static bool IsAssigned(const LONG_PTR id)
-    {
-        return id != g_invalid_id;
-    }
-
     inline static bool __vectorcall IsSamePolarity(const float v1, const float v2)
     {
         return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);
-    }
-
-    inline static float __vectorcall MaxElement(const Vector3& v)
-    {
-        return std::max(std::max(v.x, v.y), v.z);
-    }
-
-    inline static Vector3 __vectorcall MaxUnitVector(const Vector3& v)
-    {
-        const auto x = std::fabs(v.x);
-        const auto y = std::fabs(v.y);
-        const auto z = std::fabs(v.z);
-
-        if (x > y && x > z) return {std::copysign(1.0f, v.x), 0.0f, 0.0f};
-        if (y > x && y > z) return {0.0f, std::copysign(1.0f, v.y), 0.0f};
-        return {0.0f, 0.0f, std::copysign(1.0f, v.z)};
-    }
-
-    inline static Vector3 __vectorcall RemoveVectorElement(const Vector3& v, const Vector3& condition)
-    {
-        return {
-            std::fabsf(condition.x) == 1.0f ? 0.f : v.x,
-            std::fabsf(condition.y) == 1.0f ? 0.f : v.y,
-            std::fabsf(condition.z) == 1.0f ? 0.f : v.z
-        };
-    }
-
-    inline static bool __vectorcall FloatCompare(const float a, const float b)
-    {
-        return std::fabs(a - b) <
-               g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
-    }
-
-    inline static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
-    {
-        return {lhs.x + value, lhs.y + value, lhs.z + value};
-    }
-
-    inline static bool __vectorcall VectorElementInRange(const Vector3& lhs, const float value)
-    {
-        return std::max(std::max(lhs.x, lhs.y), lhs.z) < value;
-    }
-
-    inline static Vector3 __vectorcall XMTensorCross(const XMFLOAT3X3& lhs, const Vector3& rhs)
-    {
-        return {
-            lhs._11 * rhs.x + lhs._12 * rhs.y + lhs._13 * rhs.z,
-            lhs._21 * rhs.x + lhs._22 * rhs.y + lhs._23 * rhs.z,
-            lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
-        };
     }
 
     template <typename T>
