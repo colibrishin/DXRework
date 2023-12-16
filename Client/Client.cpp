@@ -25,13 +25,13 @@ namespace Client
     {
         Engine::GetResourceManager().AddResource(
                                                  "TestTexture",
-                                                 boost::make_shared<Engine::Resources::Texture>("./Texture.png"));
+                                                 boost::make_shared<Engine::Resources::Texture>("./Texture.dds"));
         Engine::GetResourceManager().AddResource(
-                                                 "Sky", boost::make_shared<Engine::Resources::Texture>("./Sky.jpg"));
+                                                 "Sky", boost::make_shared<Engine::Resources::Texture>("./Sky.dds"));
         Engine::GetResourceManager().AddResource(
                                                  "TestNormalMap",
                                                  boost::make_shared<Engine::Resources::NormalMap>(
-                                                  "./Texture-Normal.png"));
+                                                  "./Texture-Normal.dds"));
 
         Engine::GetResourceManager().AddResource(
                                                  "TriangleMesh", boost::make_shared<Mesh::TriangleMesh>());
@@ -45,7 +45,7 @@ namespace Client
         Engine::GetResourceManager().AddResource(
                                                  "WaterNormal",
                                                  boost::make_shared<Engine::Resources::NormalMap>(
-                                                  "./Water-Normal.png"));
+                                                  "./Water-Normal.dds"));
 
         Engine::GetResourceManager().AddResource(
                                                  "BackSphereMesh", boost::make_shared<Mesh::BackSphereMesh>());

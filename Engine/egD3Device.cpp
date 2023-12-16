@@ -478,11 +478,11 @@ namespace Engine::Manager::Graphics
         ID3D11ShaderResourceView**   shader_resource_view) const
     {
         DX::ThrowIfFailed(
-                          CreateWICTextureFromFileEx(
-                                                     m_device_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT,
-                                                     D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0,
-                                                     D3D11_RESOURCE_MISC_GENERATE_MIPS, WIC_LOADER_DEFAULT, texture,
-                                                     shader_resource_view));
+                          CreateDDSTextureFromFileEx(
+                                                   m_device_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT,
+                                                   D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0,
+                                                   D3D11_RESOURCE_MISC_GENERATE_MIPS, DDS_LOADER_DEFAULT, texture,
+                                                   shader_resource_view));
     }
 
     void D3Device::PreUpdate(const float& dt) {}
