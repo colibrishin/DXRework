@@ -3,7 +3,7 @@
 
 namespace Client::Mesh
 {
-    PlayerMesh::PlayerMesh() : Engine::Resources::Mesh("./player.obj") {}
+    PlayerMesh::PlayerMesh() : Engine::Resources::Mesh("./player.fbx") {}
 
 	void PlayerMesh::PreUpdate(const float& dt) {}
 
