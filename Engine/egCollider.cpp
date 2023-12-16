@@ -173,32 +173,23 @@ namespace Engine::Component
 
         if (GetType() == BOUNDING_TYPE_BOX)
         {
-            BoundingOrientedBox::CreateFromPoints(
-                                                  m_boundings_.box, mesh_obj->m_vertices_.size(),
-                                                  serialized_vertices.data(), sizeof(Vector3));
+            m_boundings_.CreateFromPoints<BoundingBox>(
+                                                       serialized_vertices.size(),
+                                                       serialized_vertices.data(),
+                                                       sizeof(Vector3));
         }
         else if (GetType() == BOUNDING_TYPE_SPHERE)
         {
-            BoundingSphere::CreateFromPoints(
-                                             m_boundings_.sphere, mesh_obj->m_vertices_.size(),
-                                             serialized_vertices.data(), sizeof(Vector3));
+            m_boundings_.CreateFromPoints<BoundingSphere>(
+                                                          serialized_vertices.size(),
+                                                          serialized_vertices.data(),
+                                                          sizeof(Vector3));
         }
     }
 
     void Collider::SetSize(const Vector3& size)
     {
         m_size_ = size;
-
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            SetSize_GENERAL_TYPE(m_boundings_.box, m_size_);
-        }
-        else if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            SetSize_GENERAL_TYPE(m_boundings_.sphere, m_size_);
-        }
-
-        UpdateBoundings();
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
