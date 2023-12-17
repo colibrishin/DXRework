@@ -96,6 +96,7 @@ namespace Engine::Manager
         GetTaskScheduler().Initialize();
         GetMouseManager().Initialize();
         GetShadowManager().Initialize();
+        GetFBXLoader().Initialize();
 
         ImGui_ImplWin32_Init(hWnd);
         ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());

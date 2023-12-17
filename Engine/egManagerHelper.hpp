@@ -3,6 +3,7 @@
 #include "egCollisionDetector.h"
 #include "egConstraintSolver.h"
 #include "egDebugger.hpp"
+#include "egFBXLoader.h"
 #include "egLerpManager.h"
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
@@ -89,5 +90,10 @@ namespace Engine
     inline Manager::Graphics::ShadowManager& GetShadowManager()
     {
         return Manager::Graphics::ShadowManager::GetInstance();
+    }
+
+    inline Manager::FBXLoader& GetFBXLoader()
+    {
+        return Manager::FBXLoader::GetInstance();
     }
 } // namespace Engine

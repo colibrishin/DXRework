@@ -42,8 +42,8 @@ namespace Engine::Resources
         Mesh();
 
         friend class Component::Collider;
+        friend class Manager::FBXLoader;
 
-        Mesh(std::filesystem::path path);
 
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();
@@ -51,9 +51,6 @@ namespace Engine::Resources
 
         void ReadOBJFile();
 
-        void ReadFBXFile();
-        void RipVertexElementFromFBX(const FbxMesh *const mesh, Shape & shape, IndexCollection & indices, int polygon_idx);
-        void IterateFBXMesh(FbxNode* child);
 
         static void __vectorcall GenerateTangentBinormal(
             const Vector3& v0, const Vector3&  v1,
@@ -73,6 +70,7 @@ namespace Engine::Resources
         std::vector<Shape>           m_vertices_;
         std::vector<const Vector3*>  m_flatten_vertices_;
         std::vector<IndexCollection> m_indices_;
+        JointMap                     m_joints_;
 
         VertexBufferCollection m_vertex_buffers_;
         IndexBufferCollection  m_index_buffers_;

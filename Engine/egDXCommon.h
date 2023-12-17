@@ -99,6 +99,12 @@ namespace Engine
         Vector4 end_clip_spaces[g_max_shadow_cascades];
     };
 
+    struct Deformation
+    {
+        UINT    joint_index;
+        float   weight;
+    };
+
     struct VertexElement
     {
         Vector3 position;
@@ -108,6 +114,44 @@ namespace Engine
         Vector3 normal;
         Vector3 tangent;
         Vector3 binormal;
+
+        Deformation deformation[4];
+    };
+
+    struct KeyFrame
+    {
+        std::string name;
+        UINT        frame;
+        UINT        start_frame;
+        UINT        end_frame;
+        Matrix      global_transform;
+        KeyFrame*   next;
+
+        ~KeyFrame()
+        {
+            if (next != nullptr)
+            {
+                delete next;
+            }
+        }
+    };
+
+    struct Joint
+    {
+        std::string name;
+        UINT        index;
+        UINT        parent_index;
+        Matrix      global_transform;
+        Matrix      local_transform;
+        KeyFrame*   key_frames;
+
+        ~Joint()
+        {
+            if (key_frames != nullptr)
+            {
+                delete key_frames;
+            }
+        }
     };
 
     struct PerspectiveBuffer
