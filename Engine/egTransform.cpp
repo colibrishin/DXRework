@@ -20,6 +20,7 @@ namespace Engine::Component
 
     void Transform::SetPosition(const Vector3& position)
     {
+        Vector3CheckNanException(position);
         m_position_ = position;
     }
 

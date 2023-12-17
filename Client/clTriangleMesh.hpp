@@ -33,11 +33,20 @@ namespace Client::Mesh
         Mesh::Initialize();
     }
 
-    inline void TriangleMesh::PreUpdate(const float& dt) {}
+    inline void TriangleMesh::PreUpdate(const float& dt)
+    {
+        Mesh::PreUpdate(dt);
+    }
 
-    inline void TriangleMesh::Update(const float& dt) {}
+    inline void TriangleMesh::Update(const float& dt)
+    {
+        Mesh::Update(dt);
+    }
 
-    inline void TriangleMesh::PreRender(const float& dt) {}
+    inline void TriangleMesh::PreRender(const float& dt)
+    {
+        Mesh::PreRender(dt);
+    }
 
     inline void TriangleMesh::Render(const float& dt)
     {

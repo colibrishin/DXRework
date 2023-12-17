@@ -67,11 +67,13 @@ namespace Engine::Component
 
     void Rigidbody::SetLinearMomentum(const Vector3& velocity)
     {
+        Vector3CheckNanException(velocity);
         m_linear_momentum_ = velocity;
     }
 
     void Rigidbody::SetAngularMomentum(const Vector3& velocity)
     {
+        Vector3CheckNanException(velocity);
         m_angular_momentum_ = velocity;
     }
 
@@ -92,11 +94,13 @@ namespace Engine::Component
 
     void Rigidbody::AddLinearMomentum(const Vector3& velocity)
     {
+        Vector3CheckNanException(velocity);
         m_linear_momentum_ += velocity;
     }
 
     void Rigidbody::AddAngularMomentum(const Vector3& velocity)
     {
+        Vector3CheckNanException(velocity);
         m_angular_momentum_ += velocity;
     }
 

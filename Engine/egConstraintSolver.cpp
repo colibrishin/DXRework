@@ -190,8 +190,16 @@ namespace Engine::Manager::Physics
                                                        static_cast<float>(g_collision_energy_reduction_multiplier.
                                                            load()));
 
-            rb->SetLinearMomentum(linear_vel * ratio_inv / collision_reduction);
-            rb->SetAngularMomentum(angular_vel * ratio_inv / collision_reduction);
+            auto reduction = (ratio_inv / collision_reduction);
+
+            // nan guard
+            if (!isfinite(reduction))
+            {
+                reduction = ratio_inv;
+            }
+
+            rb->SetLinearMomentum(linear_vel * reduction);
+            rb->SetAngularMomentum(angular_vel * reduction);
 
             if (!rb_other->IsFixed())
             {
@@ -206,11 +214,9 @@ namespace Engine::Manager::Physics
                 }
 
                 rb_other->SetLinearMomentum(
-                                            other_linear_vel * ratio_inv /
-                                            collision_reduction);
+                                            other_linear_vel * reduction);
                 rb_other->SetAngularMomentum(
-                                             other_angular_vel * ratio_inv /
-                                             collision_reduction);
+                                             other_angular_vel * reduction);
             }
 
             m_collision_resolved_set_.insert({lhs.GetID(), rhs.GetID()});

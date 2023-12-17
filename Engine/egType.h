@@ -55,6 +55,7 @@
 
 namespace Engine
 {
+    struct Joint;
     using DirectX::SimpleMath::Color;
     using DirectX::SimpleMath::Matrix;
     using DirectX::SimpleMath::Quaternion;
@@ -167,6 +168,7 @@ namespace Engine
         class MouseManager;
         class Application;
         class TaskScheduler;
+        class FBXLoader;
     } // namespace Manager
 
     using WeakObject = boost::weak_ptr<Abstract::Object>;
@@ -187,6 +189,9 @@ namespace Engine
     using StrongLayer = boost::shared_ptr<Layer>;
     using StrongCamera = boost::shared_ptr<Objects::Camera>;
     using StrongFont = boost::shared_ptr<Resources::Font>;
+    using StrongMesh = boost::shared_ptr<Resources::Mesh>;
+
+    using JointMap = std::map<std::string, Joint>;
 
     using EntityID = LONG_PTR;
     using ComponentID = LONG_PTR;
@@ -210,4 +215,5 @@ namespace Engine
     extern Manager::Debugger&                  GetDebugger();
     extern Manager::TaskScheduler&             GetTaskScheduler();
     extern Manager::MouseManager&              GetMouseManager();
+    extern Manager::FBXLoader&                 GetFBXLoader();
 } // namespace Engine

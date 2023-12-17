@@ -25,6 +25,7 @@ namespace Engine::Resources
     class Mesh : public Abstract::Resource
     {
     public:
+        Mesh(std::filesystem::path path);
         ~Mesh() override = default;
         void Initialize() override;
         void Render(const float& dt) override;
@@ -38,20 +39,18 @@ namespace Engine::Resources
 
     protected:
         SERIALIZER_ACCESS
+        Mesh();
 
         friend class Component::Collider;
+        friend class Manager::FBXLoader;
 
-        Mesh(std::filesystem::path path);
 
         void         Load_INTERNAL() final;
-        virtual void Load_CUSTOM() = 0;
+        virtual void Load_CUSTOM();
         void         Unload_INTERNAL() override;
 
         void ReadOBJFile();
 
-        void ReadFBXFile();
-        void RipVertexElementFromFBX(const FbxMesh *const mesh, Shape & shape, IndexCollection & indices, int polygon_idx);
-        void IterateFBXMesh(FbxNode* child);
 
         static void __vectorcall GenerateTangentBinormal(
             const Vector3& v0, const Vector3&  v1,
@@ -60,9 +59,18 @@ namespace Engine::Resources
             Vector3&       tangent, Vector3&   binormal);
         void UpdateTangentBinormal();
 
+    public:
+        void PreUpdate(const float& dt) override;
+        void Update(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void OnDeserialized() override;
+
+    protected:
         std::vector<Shape>           m_vertices_;
         std::vector<const Vector3*>  m_flatten_vertices_;
         std::vector<IndexCollection> m_indices_;
+        JointMap                     m_joints_;
 
         VertexBufferCollection m_vertex_buffers_;
         IndexBufferCollection  m_index_buffers_;

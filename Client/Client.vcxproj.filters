@@ -107,11 +107,14 @@
     <ClInclude Include="clTestScene.hpp">
       <Filter>Scene\TestScene</Filter>
     </ClInclude>
+    <ClInclude Include="clPlayer.h">
+      <Filter>Object\Player</Filter>
+    </ClInclude>
     <ClInclude Include="clPlayerMesh.h">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clPlayer.h">
-      <Filter>Object\Player</Filter>
+    <ClInclude Include="clTestMesh.h">
+      <Filter>Resource\Mesh</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -151,11 +154,14 @@
     <ClCompile Include="clTestScene.cpp">
       <Filter>Scene\TestScene</Filter>
     </ClCompile>
+    <ClCompile Include="clPlayer.cpp">
+      <Filter>Object\Player</Filter>
+    </ClCompile>
     <ClCompile Include="clPlayerMesh.cpp">
       <Filter>Resource\Mesh</Filter>
     </ClCompile>
-    <ClCompile Include="clPlayer.cpp">
-      <Filter>Object\Player</Filter>
+    <ClCompile Include="clTestMesh.cpp">
+      <Filter>Resource\Mesh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +175,9 @@
       <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="player.fbx">
+      <Filter>Resource\Mesh</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="bob_lamp_update.fbx">
       <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
   </ItemGroup>
