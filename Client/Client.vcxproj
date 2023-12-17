@@ -191,6 +191,7 @@
     <ClInclude Include="clPlayerMesh.h" />
     <ClInclude Include="clSkyBox.hpp" />
     <ClInclude Include="clTestCube.hpp" />
+    <ClInclude Include="clTestMesh.h" />
     <ClInclude Include="clTestObject.hpp" />
     <ClInclude Include="clTestScene.hpp" />
     <ClInclude Include="clTriangleMesh.hpp" />
@@ -210,6 +211,7 @@
     <ClCompile Include="clPlayerMesh.cpp" />
     <ClCompile Include="clSkyBox.cpp" />
     <ClCompile Include="clTestCube.cpp" />
+    <ClCompile Include="clTestMesh.cpp" />
     <ClCompile Include="clTestObject.cpp" />
     <ClCompile Include="clTestScene.cpp" />
     <ClCompile Include="clWater.cpp" />
@@ -221,6 +223,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="bob_lamp_update.fbx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
