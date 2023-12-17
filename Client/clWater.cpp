@@ -4,29 +4,19 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
+#include "egMeshRenderer.h"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Water,
                        _ARTAG(_BSTSUPER(Engine::Objects::DelayedRenderObject)))
 
 void Client::Object::Water::Initialize()
 {
-    AddResource(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Mesh::CubeMesh>("CubeMesh")
-                .lock());
-    AddResource(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Resources::NormalMap>("WaterNormal")
-                .lock());
-
-    AddResource(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                .lock());
-    AddResource(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::PixelShader>("ps_refraction")
-                .lock());
+    const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+    mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
+    mr->AddNormalMap(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("WaterNormal").lock());
+    mr->AddVertexShader(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+    mr->AddPixelShader(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_refraction").lock());
 
     AddComponent<Engine::Components::Transform>();
     

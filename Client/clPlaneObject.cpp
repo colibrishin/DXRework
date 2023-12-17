@@ -7,6 +7,8 @@
 #include <egVertexShaderInternal.h>
 #include <egNormalMap.h>
 
+#include "egMeshRenderer.h"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::PlaneObject,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
@@ -17,30 +19,16 @@ namespace Client::Object
 
     void PlaneObject::Initialize()
     {
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Mesh::CubeMesh>("CubeMesh")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Texture>("TestTexture")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_color")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Sound>("AmbientSound")
-                    .lock());
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
+        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
+        mr->AddNormalMap(
+                         Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(
+                          "TestNormalMap").lock());
+        mr->AddVertexShader(
+                            Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").
+                                                         lock());
+        mr->AddPixelShader(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
 
         AddComponent<Engine::Components::Transform>();
         const auto tr = GetComponent<Engine::Components::Transform>().lock();
@@ -59,9 +47,6 @@ namespace Client::Object
         rb->SetFixed(true);
         rb->SetFrictionCoefficient(0.2f);
         rb->SetGravityOverride(false);
-
-        const auto test = GetResource<Engine::Resources::Sound>("AmbientSound");
-        test.lock()->PlayLoop(GetSharedPtr<Object>());
     }
 
     PlaneObject::~PlaneObject() {}

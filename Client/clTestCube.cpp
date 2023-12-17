@@ -4,6 +4,8 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
+#include "egMeshRenderer.h"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestCube,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
@@ -15,30 +17,17 @@ namespace Client::Object
 
     inline void TestCube::Initialize()
     {
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Mesh::CubeMesh>("CubeMesh")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Texture>("TestTexture")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_normalmap_specular")
-                    .lock());
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh"));
+        mr->AddNormalMap(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
+        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+        mr->AddVertexShader(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->AddPixelShader(
+                           Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>(
+                                "ps_normalmap_specular"));
 
         AddComponent<Engine::Components::Transform>();
-        AddComponent<Engine::Components::Collider>(
-                                                  GetResource<Engine::Resources::Mesh>("CubeMesh"));
+        AddComponent<Engine::Components::Collider>();
         const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);

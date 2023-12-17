@@ -2,6 +2,7 @@
 #include "clSkyBox.hpp"
 
 #include "clBackSphereMesh.hpp"
+#include "egMeshRenderer.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::SkyBox,
@@ -14,22 +15,15 @@ namespace Client::Object
 
     inline void SkyBox::Initialize()
     {
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Mesh::BackSphereMesh>("BackSphereMesh")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Texture>("Sky")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_default_nolight")
-                    .lock());
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(Engine::GetResourceManager().GetResource<Client::Mesh::BackSphereMesh>("BackSphereMesh").lock());
+        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("Sky").lock());
+        mr->AddVertexShader(
+                            Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").
+                                                         lock());
+        mr->AddPixelShader(
+                           Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_default_nolight").
+                                                        lock());
 
         AddComponent<Engine::Components::Transform>();
         const auto tr = GetComponent<Engine::Components::Transform>().lock();

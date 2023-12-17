@@ -4,6 +4,8 @@
 #include <egNormalMap.h>
 #include <egSphereMesh.h>
 
+#include "egMeshRenderer.h"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestObject,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
@@ -12,26 +14,22 @@ namespace Client::Object
 {
     inline void TestObject::Initialize()
     {
-        AddResource(
-                    Engine::GetResourceManager()
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(Engine::GetResourceManager()
                     .GetResource<Engine::Mesh::SphereMesh>("SphereMesh")
                     .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Texture>("TestTexture")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
-                    .lock());
+        mr->AddTexture(Engine::GetResourceManager()
+                       .GetResource<Engine::Resources::Texture>("TestTexture")
+                       .lock());
+        mr->AddVertexShader(Engine::GetResourceManager()
+                            .GetResource<Engine::Graphic::VertexShader>("vs_default")
+                            .lock());
+        mr->AddPixelShader(Engine::GetResourceManager()
+                           .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
+                           .lock());
+        mr->AddNormalMap(Engine::GetResourceManager()
+                         .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
+                         .lock());
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

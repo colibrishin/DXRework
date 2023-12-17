@@ -4,6 +4,7 @@
 #include "clCharacterController.hpp"
 #include "clPlayerMesh.h"
 #include "clTestMesh.h"
+#include "egMeshRenderer.h"
 
 namespace Client::Object
 {
@@ -14,15 +15,15 @@ namespace Client::Object
         const auto mesh = Engine::GetResourceManager()
                           .GetResource<Mesh::TestMesh>("TestMesh").lock();
 
-        AddResource(mesh);
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(mesh);
+        mr->AddVertexShader(
+                            Engine::GetResourceManager()
+                            .GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+        mr->AddPixelShader(
+                           Engine::GetResourceManager()
+                           .GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
 
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
-
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
 
         AddComponent<Engine::Components::Transform>();
         const auto cldr = AddComponent<Engine::Components::Collider>().lock();
