@@ -15,6 +15,7 @@
 #include <egSphereMesh.h>
 #include "clBackSphereMesh.hpp"
 #include "clPlayerMesh.h"
+#include "clTestMesh.h"
 #include "clTestScene.hpp"
 #include "framework.h"
 
@@ -41,6 +42,8 @@ namespace Client
                                                  "SphereMesh", boost::make_shared<Engine::Mesh::SphereMesh>());
         Engine::GetResourceManager().AddResource(
                                                  "PlayerMesh", boost::make_shared<Mesh::PlayerMesh>());
+        Engine::GetResourceManager().AddResource(
+                                                 "TestMesh", boost::make_shared<Mesh::TestMesh>());
 
         Engine::GetResourceManager().AddResource(
                                                  "WaterNormal",
