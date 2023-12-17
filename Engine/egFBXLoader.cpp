@@ -138,7 +138,16 @@ namespace Engine::Manager
         {
             const auto idx = mesh->GetPolygonVertex(polygon_idx, k);
 
-            VertexElement vertex;
+            VertexElement vertex
+            {
+                Vector3::Zero,
+                Vector4::Zero,
+                Vector2::Zero,
+                Vector3::Zero,
+                Vector3::Zero,
+                Vector3::Zero,
+                {}
+            };
 
             const auto control_point = mesh->GetControlPointAt(idx);
 
