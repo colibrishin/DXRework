@@ -21,8 +21,6 @@ namespace Engine::Abstract
         void     OnImGui() override;
         TypeName GetVirtualTypeName() const final;
 
-        void AddResource(const StrongResource& resource);
-
         template <typename T, typename... Args>
         boost::weak_ptr<T> AddComponent(Args&&... args)
         {
@@ -217,43 +215,6 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        boost::weak_ptr<T> GetResource() const
-        {
-            if constexpr (std::is_base_of_v<Resource, T>)
-            {
-                for (const auto& resource : m_resources_)
-                {
-                    if (const auto t = boost::dynamic_pointer_cast<T>(resource))
-                    {
-                        return t;
-                    }
-                }
-            }
-
-            return {};
-        }
-
-        template <typename T>
-        boost::weak_ptr<T> GetResource(const EntityName& name) const
-        {
-            if constexpr (std::is_base_of_v<Resource, T>)
-            {
-                for (const auto& resource : m_resources_)
-                {
-                    if (const auto t = boost::dynamic_pointer_cast<T>(resource))
-                    {
-                        if (!name.empty() && t->GetName() == name)
-                        {
-                            return t;
-                        }
-                    }
-                }
-            }
-
-            return {};
-        }
-
-        template <typename T>
         void DispatchComponentEvent(T& lhs, T& rhs);
 
         void SetActive(bool active);
@@ -306,7 +267,6 @@ namespace Engine::Abstract
 
         std::map<const TypeName, std::set<StrongComponent, ComponentPriorityComparer>>
         m_components_;
-        std::set<StrongResource, ResourcePriorityComparer> m_resources_;
 
         // Non-serialized
         std::set<ComponentID>                              m_assigned_component_ids_;

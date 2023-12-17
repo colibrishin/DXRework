@@ -11,8 +11,7 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
-                       _ARTAG(_BSTSUPER(Actor)) _ARTAG(m_components_)
-                       _ARTAG(m_resources_))
+                       _ARTAG(_BSTSUPER(Actor)) _ARTAG(m_components_))
 
 namespace Engine::Abstract
 {
@@ -116,6 +115,11 @@ namespace Engine::Abstract
 
     void Object::Render(const float& dt)
     {
+        if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
+        {
+            return;
+        }
+
         for (const auto& component : m_priority_sorted_)
         {
             if (const auto locked = component.lock())
@@ -132,19 +136,6 @@ namespace Engine::Abstract
                 m_priority_sorted_.erase(component);
             }
         }
-
-        if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>()))
-        {
-            return;
-        }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->Render(dt);
-        }
-
-        // Assuming other object will initialize vertex shader or so.
-        GetRenderPipeline().ResetShaders();
     }
 
     void Object::PostRender(const float& dt)
@@ -164,11 +155,6 @@ namespace Engine::Abstract
             {
                 m_priority_sorted_.erase(component);
             }
-        }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->PostRender(dt);
         }
     }
 
@@ -190,11 +176,6 @@ namespace Engine::Abstract
                 m_priority_sorted_.erase(component);
             }
         }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->FixedUpdate(dt);
-        }
     }
 
     void Object::OnDeserialized()
@@ -211,32 +192,6 @@ namespace Engine::Abstract
                 m_priority_sorted_.insert(comps);
             }
         }
-
-        std::set<StrongResource, ResourcePriorityComparer> resources;
-
-        for (auto it = m_resources_.begin(); it != m_resources_.end(); ++it)
-        {
-            const auto resource = *it;
-
-            const auto res = GetResourceManager().GetResource(
-                                                              resource->GetTypeName(),
-                                                              resource->GetName());
-
-            resource->OnDeserialized();
-
-            if (const auto& locked = res.lock())
-            {
-                resources.insert(locked);
-            }
-            else
-            {
-                GetResourceManager().AddResource(resource);
-                resource->Load();
-                resources.insert(resource);
-            }
-        }
-
-        m_resources_ = resources;
     }
 
     void Object::OnImGui()
@@ -274,17 +229,6 @@ namespace Engine::Abstract
                 ImGui::Spacing();
             }
 
-            if (ImGui::TreeNode("Resources"))
-            {
-                for (const auto& resource : m_resources_)
-                {
-                    resource->OnImGui();
-                }
-
-                ImGui::TreePop();
-                ImGui::Spacing();
-            }
-
             ImGui::Unindent(2);
             ImGui::End();
         }
@@ -293,10 +237,6 @@ namespace Engine::Abstract
     TypeName Object::GetVirtualTypeName() const
     {
         return typeid(Object).name();
-    }
-
-    void Object::AddResource(const StrongResource& resource) {
-        m_resources_.insert(resource);
     }
 
     const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents() const
@@ -322,11 +262,6 @@ namespace Engine::Abstract
                 m_priority_sorted_.erase(component);
             }
         }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->PreUpdate(dt);
-        }
     }
 
     void Object::PreRender(const float& dt)
@@ -347,11 +282,6 @@ namespace Engine::Abstract
                 m_priority_sorted_.erase(component);
             }
         }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->PreUpdate(dt);
-        }
     }
 
     void Object::Update(const float& dt)
@@ -371,11 +301,6 @@ namespace Engine::Abstract
             {
                 m_priority_sorted_.erase(component);
             }
-        }
-
-        for (const auto& resource : m_resources_)
-        {
-            resource->PreUpdate(dt);
         }
     }
 } // namespace Engine::Abstract
