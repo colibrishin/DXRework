@@ -9,6 +9,7 @@
 #include "egCamera.h"
 #include "egLight.h"
 #include "egMesh.h"
+#include "egMeshRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
 
@@ -201,12 +202,21 @@ namespace Engine::Manager::Graphics
                 if (const auto locked = objects.lock())
                 {
                     const auto tr   = locked->GetComponent<Components::Transform>().lock();
-                    const auto mesh = locked->GetResource<Resources::Mesh>().lock();
+                    const auto mr = locked->GetComponent<Components::MeshRenderer>().lock();
+                    const auto mesh = mr->GetMesh().lock();
 
                     if (tr && mesh)
                     {
                         tr->Render(placeholder);
-                        mesh->Render(placeholder);
+
+                        const auto render_targets = mesh->GetRemainingRenderIndex();
+
+                        for (auto j = 0; j < render_targets; ++j)
+                        {
+                            mesh->Render(placeholder);
+                        }
+
+                        mesh->ResetRenderIndex();
                     }
                 }
             }
