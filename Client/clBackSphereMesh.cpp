@@ -11,11 +11,20 @@ namespace Client::Mesh
         BackSphereMesh::Initialize();
     }
 
-    inline void BackSphereMesh::PreUpdate(const float& dt) {}
+    inline void BackSphereMesh::PreUpdate(const float& dt)
+    {
+        Mesh::PreUpdate(dt);
+    }
 
-    inline void BackSphereMesh::Update(const float& dt) {}
+    inline void BackSphereMesh::Update(const float& dt)
+    {
+        Mesh::Update(dt);
+    }
 
-    inline void BackSphereMesh::PreRender(const float& dt) {}
+    inline void BackSphereMesh::PreRender(const float& dt)
+    {
+        Mesh::PreRender(dt);
+    }
 
     inline void BackSphereMesh::Load_CUSTOM()
     {
