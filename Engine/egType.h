@@ -180,6 +180,11 @@ namespace Engine
     using WeakFont = boost::weak_ptr<Resources::Font>;
     using WeakCamera = boost::weak_ptr<Objects::Camera>;
     using WeakLight = boost::weak_ptr<Objects::Light>;
+    using WeakTexture = boost::weak_ptr<Resources::Texture>;
+    using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
+
+    using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
+    using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
 
     using StrongObject = boost::shared_ptr<Abstract::Object>;
     using StrongComponent = boost::shared_ptr<Abstract::Component>;
