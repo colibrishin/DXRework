@@ -110,9 +110,6 @@
     <Filter Include="Object\Text">
       <UniqueIdentifier>{3d7f7989-6656-4501-aa82-7f5466bfc7ca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Font">
-      <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Mesh">
       <UniqueIdentifier>{8734eb51-6ee9-44c4-8b4f-6b90bb699bb9}</UniqueIdentifier>
     </Filter>
@@ -187,6 +184,18 @@
     </Filter>
     <Filter Include="Singleton\Internal\TaskScheduler">
       <UniqueIdentifier>{44be5145-3da7-44b1-b9d6-ad0606f17360}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Internal\FBXLoader">
+      <UniqueIdentifier>{cb2e5582-b223-4f51-9d4b-010eb6127966}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Animation">
+      <UniqueIdentifier>{0d3e2e5b-ded7-472a-b3a8-9b46edf5d5fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Model">
+      <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Font">
+      <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -366,6 +375,12 @@
     <ClInclude Include="egTaskScheduler.h">
       <Filter>Singleton\Internal\TaskScheduler</Filter>
     </ClInclude>
+    <ClInclude Include="egFBXLoader.h">
+      <Filter>Singleton\Internal\FBXLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="egModel.h">
+      <Filter>Resource\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -522,6 +537,9 @@
     </ClCompile>
     <ClCompile Include="egTaskScheduler.cpp">
       <Filter>Singleton\Internal\TaskScheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="egFBXLoader.cpp">
+      <Filter>Singleton\Internal\FBXLoader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

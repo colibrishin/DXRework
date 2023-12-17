@@ -35,10 +35,12 @@
     <ClInclude Include="egApplication.h" />
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
+    <ClInclude Include="egFBXLoader.h" />
     <ClInclude Include="egFont.h" />
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
+    <ClInclude Include="egModel.h" />
     <ClInclude Include="egMouseManager.h" />
     <ClInclude Include="egObserverController.h" />
     <ClInclude Include="egObserver.h" />
@@ -96,6 +98,7 @@
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egEntity.cpp" />
+    <ClCompile Include="egFBXLoader.cpp" />
     <ClCompile Include="egFont.cpp" />
     <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egGravity.cpp" />
