@@ -125,7 +125,7 @@ namespace Engine
         UINT        start_frame;
         UINT        end_frame;
         Matrix      global_transform;
-        KeyFrame*   next;
+        KeyFrame*   next = nullptr;
 
         ~KeyFrame()
         {
@@ -143,7 +143,7 @@ namespace Engine
         UINT        parent_index;
         Matrix      global_transform;
         Matrix      local_transform;
-        KeyFrame*   key_frames;
+        KeyFrame*   key_frames  = nullptr;
 
         ~Joint()
         {
