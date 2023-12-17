@@ -13,14 +13,10 @@ namespace Engine::Objects
     Text::Text(const WeakFont& font)
     : Object(),
       m_rotation_radian_(0),
-      m_scale_(1)
+      m_scale_(1),
+      m_font_(font.lock())
     {
         SetCulled(false);
-
-        if (const auto font_ptr = font.lock())
-        {
-            AddResource(font_ptr);
-        }
     }
 
     Text::~Text() = default;
@@ -72,22 +68,20 @@ namespace Engine::Objects
 
     void Text::Render(const float& dt)
     {
-        if (const auto font = GetResource<Resources::Font>().lock())
-        {
-            font->SetText(m_text_);
-            font->SetPosition(m_position_);
-            font->SetColor(m_color_);
-            font->SetRotation(m_rotation_radian_);
-            font->SetScale(m_scale_);
+        m_font_->SetText(m_text_);
+        m_font_->SetPosition(m_position_);
+        m_font_->SetColor(m_color_);
+        m_font_->SetRotation(m_rotation_radian_);
+        m_font_->SetScale(m_scale_);
 
-            Object::Render(dt);
+        Object::Render(dt);
+        m_font_->Render(dt);
 
-            font->SetText("");
-            font->SetPosition({0.0f, 0.0f});
-            font->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
-            font->SetRotation(0);
-            font->SetScale(1);
-        }
+        m_font_->SetText("");
+        m_font_->SetPosition({0.0f, 0.0f});
+        m_font_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+        m_font_->SetRotation(0);
+        m_font_->SetScale(1);
     }
 
     void Text::PostRender(const float& dt)
