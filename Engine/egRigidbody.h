@@ -2,7 +2,7 @@
 #include "egCommon.hpp"
 #include "egComponent.h"
 
-namespace Engine::Component
+namespace Engine::Components
 {
     class Rigidbody : public Abstract::Component
     {
@@ -84,4 +84,4 @@ namespace Engine::Component
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Component::Rigidbody)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Rigidbody)

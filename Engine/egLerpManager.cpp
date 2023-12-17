@@ -28,7 +28,7 @@ namespace Engine::Manager::Physics
     {
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
-            const auto& rbs = scene->GetCachedComponents<Component::Rigidbody>();
+            const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
             for (const auto& rb : rbs)
             {
@@ -36,10 +36,10 @@ namespace Engine::Manager::Physics
                 {
                     const auto tr = rigidbody->GetOwner()
                                              .lock()
-                                             ->GetComponent<Component::Transform>()
+                                             ->GetComponent<Components::Transform>()
                                              .lock();
                     const auto cls =
-                            rigidbody->GetOwner().lock()->GetComponents<Component::Collider>();
+                            rigidbody->GetOwner().lock()->GetComponents<Components::Collider>();
 
                     if (tr)
                     {

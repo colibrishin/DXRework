@@ -4,12 +4,12 @@
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Component::Transform,
+                       Engine::Components::Transform,
                        _ARTAG(_BSTSUPER(Component)) _ARTAG(m_previous_position_)
                        _ARTAG(m_position_) _ARTAG(m_rotation_)
                        _ARTAG(m_scale_))
 
-namespace Engine::Component
+namespace Engine::Components
 {
     Transform::Transform(const WeakObject& owner)
     : Component(COMPONENT_PRIORITY_TRANSFORM, owner),
@@ -86,7 +86,10 @@ namespace Engine::Component
 
     void Transform::PreRender(const float& dt) {}
 
-    void Transform::PostRender(const float& dt) {}
+    void Transform::PostRender(const float& dt)
+    {
+        m_previous_position_ = m_position_;
+    }
 
     void Transform::Render(const float& dt)
     {
@@ -97,7 +100,6 @@ namespace Engine::Component
                 Matrix::CreateTranslation(m_position_).Transpose();
 
         GetRenderPipeline().SetWorldMatrix(m_transform_buffer_);
-        m_previous_position_ = m_position_;
     }
 
     void Transform::FixedUpdate(const float& dt) {}

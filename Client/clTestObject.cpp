@@ -4,6 +4,8 @@
 #include <egNormalMap.h>
 #include <egSphereMesh.h>
 
+#include "egMeshRenderer.h"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestObject,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Object)))
@@ -12,36 +14,32 @@ namespace Client::Object
 {
     inline void TestObject::Initialize()
     {
-        AddResource(
-                    Engine::GetResourceManager()
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(Engine::GetResourceManager()
                     .GetResource<Engine::Mesh::SphereMesh>("SphereMesh")
                     .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::Texture>("TestTexture")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                    .lock());
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
-                    .lock());
+        mr->AddTexture(Engine::GetResourceManager()
+                       .GetResource<Engine::Resources::Texture>("TestTexture")
+                       .lock());
+        mr->AddVertexShader(Engine::GetResourceManager()
+                            .GetResource<Engine::Graphic::VertexShader>("vs_default")
+                            .lock());
+        mr->AddPixelShader(Engine::GetResourceManager()
+                           .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
+                           .lock());
+        mr->AddNormalMap(Engine::GetResourceManager()
+                         .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
+                         .lock());
 
-        AddComponent<Engine::Component::Transform>();
-        AddComponent<Engine::Component::Collider>();
-        const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+        AddComponent<Engine::Components::Transform>();
+        AddComponent<Engine::Components::Collider>();
+        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        AddComponent<Engine::Component::Rigidbody>();
-        const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+        AddComponent<Engine::Components::Rigidbody>();
+        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
     }

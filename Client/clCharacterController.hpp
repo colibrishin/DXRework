@@ -32,8 +32,8 @@ namespace Client::State
     private:
         SERIALIZER_ACCESS
 
-        void CheckJump(const boost::shared_ptr<Engine::Component::Rigidbody>& rb);
-        void CheckMove(const boost::shared_ptr<Engine::Component::Rigidbody>& rb);
+        void CheckJump(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
+        void CheckMove(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
         bool CheckAttack(const float& dt);
 
         Vector3 m_offset_;

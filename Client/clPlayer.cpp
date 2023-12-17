@@ -4,6 +4,7 @@
 #include "clCharacterController.hpp"
 #include "clPlayerMesh.h"
 #include "clTestMesh.h"
+#include "egMeshRenderer.h"
 
 namespace Client::Object
 {
@@ -14,19 +15,19 @@ namespace Client::Object
         const auto mesh = Engine::GetResourceManager()
                           .GetResource<Mesh::TestMesh>("TestMesh").lock();
 
-        AddResource(mesh);
+        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
+        mr->SetMesh(mesh);
+        mr->AddVertexShader(
+                            Engine::GetResourceManager()
+                            .GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
+        mr->AddPixelShader(
+                           Engine::GetResourceManager()
+                           .GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
 
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
 
-        AddResource(
-                    Engine::GetResourceManager()
-                    .GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
-
-        AddComponent<Engine::Component::Transform>();
-        const auto cldr = AddComponent<Engine::Component::Collider>().lock();
-        const auto rb   = AddComponent<Engine::Component::Rigidbody>().lock();
+        AddComponent<Engine::Components::Transform>();
+        const auto cldr = AddComponent<Engine::Components::Collider>().lock();
+        const auto rb   = AddComponent<Engine::Components::Rigidbody>().lock();
         AddComponent<Client::State::CharacterController>();
 
         cldr->SetMesh(mesh);
@@ -34,7 +35,7 @@ namespace Client::Object
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        const auto head_cldr = AddComponent<Engine::Component::Collider>().lock();
+        const auto head_cldr = AddComponent<Engine::Components::Collider>().lock();
         head_cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
         head_cldr->SetDirtyWithTransform(true);
         head_cldr->SetMass(1.0f);

@@ -40,7 +40,7 @@
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
-    <ClInclude Include="egModel.h" />
+    <ClInclude Include="egMeshRenderer.h" />
     <ClInclude Include="egMouseManager.h" />
     <ClInclude Include="egObserverController.h" />
     <ClInclude Include="egObserver.h" />
@@ -108,6 +108,7 @@
     <ClCompile Include="egLayer.cpp" />
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egMesh.cpp" />
+    <ClCompile Include="egMeshRenderer.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
     <ClCompile Include="egNormalMap.cpp" />
     <ClCompile Include="egObserverController.cpp" />

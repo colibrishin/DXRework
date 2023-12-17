@@ -94,7 +94,7 @@ namespace Engine
         class Observer;
     } // namespace Objects
 
-    namespace Component
+    namespace Components
     {
         class Collider;
         class Transform;
@@ -176,10 +176,15 @@ namespace Engine
     using WeakResource = boost::weak_ptr<Abstract::Resource>;
     using WeakMesh = boost::weak_ptr<Resources::Mesh>;
     using WeakScene = boost::weak_ptr<Scene>;
-    using WeakCollider = boost::weak_ptr<Component::Collider>;
+    using WeakCollider = boost::weak_ptr<Components::Collider>;
     using WeakFont = boost::weak_ptr<Resources::Font>;
     using WeakCamera = boost::weak_ptr<Objects::Camera>;
     using WeakLight = boost::weak_ptr<Objects::Light>;
+    using WeakTexture = boost::weak_ptr<Resources::Texture>;
+    using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
+
+    using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
+    using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
 
     using StrongObject = boost::shared_ptr<Abstract::Object>;
     using StrongComponent = boost::shared_ptr<Abstract::Component>;

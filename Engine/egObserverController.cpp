@@ -12,10 +12,10 @@ BOOST_CLASS_EXPORT_IMPLEMENT(
                              Engine::Abstract::StateController<Engine::eObserverState>)
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Component::ObserverController,
+                       Engine::Components::ObserverController,
                        _ARTAG(_BSTSUPER(Engine::Abstract::StateController<eObserverState>)))
 
-namespace Engine::Component
+namespace Engine::Components
 {
     ObserverController::ObserverController(const WeakObject& owner): StateController(owner) {}
 

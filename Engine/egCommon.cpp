@@ -24,9 +24,9 @@ namespace Engine
     {
         if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
         {
-            return Left.lock()->GetPriority() > Right.lock()->GetPriority();
+            return Left.lock()->GetPriority() < Right.lock()->GetPriority();
         }
 
-        return Left.lock()->GetID() > Right.lock()->GetID();
+        return Left.lock()->GetID() < Right.lock()->GetID();
     }
 } // namespace Engine

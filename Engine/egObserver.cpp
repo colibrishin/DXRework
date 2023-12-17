@@ -15,8 +15,8 @@ namespace Engine::Objects
     {
         Object::Initialize();
 
-        AddComponent<Component::Transform>();
-        AddComponent<Component::ObserverController>();
+        AddComponent<Components::Transform>();
+        AddComponent<Components::ObserverController>();
     }
 
     Observer::~Observer() {}

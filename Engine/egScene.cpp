@@ -119,7 +119,7 @@ namespace Engine
 
         AssignLocalIDToObject(obj);
 
-        if (const auto tr = obj->GetComponent<Component::Transform>().lock())
+        if (const auto tr = obj->GetComponent<Components::Transform>().lock())
         {
             UpdatePosition(obj);
         }
@@ -150,7 +150,7 @@ namespace Engine
     {
         if (const auto locked = obj.lock())
         {
-            const auto tr      = locked->GetComponent<Component::Transform>().lock();
+            const auto tr      = locked->GetComponent<Components::Transform>().lock();
             bool       updated = false;
 
             if (tr)
@@ -227,7 +227,7 @@ namespace Engine
     {
         if (const auto obj_ptr = obj.lock())
         {
-            const auto tr = obj_ptr->GetComponent<Component::Transform>().lock();
+            const auto tr = obj_ptr->GetComponent<Components::Transform>().lock();
 
             if (!tr)
             {

@@ -3,7 +3,7 @@
 #include "egComponent.h"
 #include "egHelper.hpp"
 
-namespace Engine::Component
+namespace Engine::Components
 {
     using namespace DirectX;
 
@@ -178,4 +178,4 @@ namespace Engine::Component
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Component::Collider)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)

@@ -59,13 +59,13 @@ namespace Engine::Resources
         FMOD_VECTOR vel{};
 
         if (const auto tr =
-                origin.lock()->GetComponent<Component::Transform>().lock())
+                origin.lock()->GetComponent<Components::Transform>().lock())
         {
             pos = {tr->GetPosition().x, tr->GetPosition().y, tr->GetPosition().z};
         }
 
         if (const auto rb =
-                origin.lock()->GetComponent<Component::Rigidbody>().lock())
+                origin.lock()->GetComponent<Components::Rigidbody>().lock())
         {
             vel = {
                 rb->GetLinearMomentum().x, rb->GetLinearMomentum().y,

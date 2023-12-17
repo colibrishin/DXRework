@@ -26,7 +26,7 @@ namespace Client::State
     }
 
     void CharacterController::CheckJump(
-        const boost::shared_ptr<Engine::Component::Rigidbody>& rb)
+        const boost::shared_ptr<Engine::Components::Rigidbody>& rb)
     {
         if (!rb->GetGrounded())
         {
@@ -39,7 +39,7 @@ namespace Client::State
     }
 
     void CharacterController::CheckMove(
-        const boost::shared_ptr<Engine::Component::Rigidbody>& rb)
+        const boost::shared_ptr<Engine::Components::Rigidbody>& rb)
     {
         float      speed = 1.0f;
         const auto ortho =
@@ -95,7 +95,7 @@ namespace Client::State
 
             m_shoot_interval = 0.f;
             const auto tr    =
-                    GetOwner().lock()->GetComponent<Engine::Component::Transform>().lock();
+                    GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock();
             std::set<Engine::WeakObject, Engine::WeakComparer<Engine::Abstract::Object>>
                     out;
 
@@ -120,7 +120,7 @@ namespace Client::State
     void CharacterController::Update(const float& dt)
     {
         const auto rb =
-                GetOwner().lock()->GetComponent<Engine::Component::Rigidbody>().lock();
+                GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
 
         if (!rb)
         {

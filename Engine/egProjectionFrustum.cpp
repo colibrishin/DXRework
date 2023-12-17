@@ -46,7 +46,7 @@ namespace Engine::Manager
     bool ProjectionFrustum::CheckRender(const WeakObject& object) const
     {
         if (const auto tr =
-                object.lock()->GetComponent<Component::Transform>().lock())
+                object.lock()->GetComponent<Components::Transform>().lock())
         {
             BoundingOrientedBox box{
                 tr->GetPosition(), tr->GetScale() * 0.5f,

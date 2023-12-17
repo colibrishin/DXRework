@@ -36,6 +36,7 @@ namespace Engine::Objects
         float       m_rotation_radian_;
         float       m_scale_;
         std::string m_text_;
+        StrongFont  m_font_;
     };
 } // namespace Engine::Objects
 

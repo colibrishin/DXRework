@@ -1,7 +1,7 @@
 #pragma once
 #include "egManager.hpp"
 
-namespace Engine::Component
+namespace Engine::Components
 {
     class Rigidbody;
 }
@@ -25,8 +25,8 @@ namespace Engine::Manager::Physics
         void FixedUpdate(const float& dt) override;
 
     private:
-        static void UpdateGravity(Component::Rigidbody* rb);
+        static void UpdateGravity(Components::Rigidbody* rb);
         static void EpsilonGuard(Vector3& linear_momentum);
-        static void UpdateObject(Component::Rigidbody* rb, const float& dt);
+        static void UpdateObject(Components::Rigidbody* rb, const float& dt);
     };
 } // namespace Engine::Manager::Physics
