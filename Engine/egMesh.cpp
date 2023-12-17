@@ -130,13 +130,25 @@ namespace Engine::Resources
         return m_flatten_vertices_;
     }
 
+    UINT Mesh::GetRenderIndex() const
+    {
+        return m_render_index_;
+    }
+
+    UINT Mesh::GetRemainingRenderIndex() const
+    {
+        const auto remain = static_cast<UINT>(m_vertices_.size()) - m_render_index_;
+        return remain < 0 ? 0 : remain;
+    }
+
     UINT Mesh::GetIndexCount() const
     {
         return static_cast<UINT>(m_indices_.size());
     }
 
     Mesh::Mesh(std::filesystem::path path)
-    : Resource(std::move(path), RESOURCE_PRIORITY_MESH) {}
+    : Resource(std::move(path), RESOURCE_PRIORITY_MESH),
+      m_render_index_(0) {}
 
     void __vectorcall Mesh::GenerateTangentBinormal(
         const Vector3& v0, const Vector3&  v1,
@@ -242,15 +254,15 @@ namespace Engine::Resources
 
     void Mesh::Render(const float& dt)
     {
-        for (int i = 0; i < m_vertex_buffers_.size(); ++i)
+        if (m_render_index_ >= m_vertices_.size())
         {
-            GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[i].Get());
-            GetRenderPipeline().BindIndexBuffer(m_index_buffers_[i].Get());
-            GetRenderPipeline().DrawIndexed(static_cast<UINT>(m_indices_[i].size()));
+            return;
         }
 
-        GetRenderPipeline().BindResource(SR_TEXTURE, nullptr);
-        GetRenderPipeline().BindResource(SR_NORMAL_MAP, nullptr);
+        GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[m_render_index_].Get());
+        GetRenderPipeline().BindIndexBuffer(m_index_buffers_[m_render_index_].Get());
+        GetRenderPipeline().DrawIndexed(static_cast<UINT>(m_indices_[m_render_index_].size()));
+        m_render_index_++;
     }
 
     void Mesh::PostRender(const float& dt) {}
@@ -260,8 +272,14 @@ namespace Engine::Resources
         return typeid(Mesh).name();
     }
 
+    void Mesh::ResetRenderIndex()
+    {
+        m_render_index_ = 0;
+    }
+
     Mesh::Mesh()
-    : Resource("", RESOURCE_PRIORITY_MESH) {}
+    : Resource("", RESOURCE_PRIORITY_MESH),
+      m_render_index_(0) {}
 
     void Mesh::Load_INTERNAL()
     {

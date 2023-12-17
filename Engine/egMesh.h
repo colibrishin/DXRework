@@ -34,8 +34,12 @@ namespace Engine::Resources
         const std::vector<Shape>& GetShapes();
         const std::vector<const Vector3*>& GetVertices();
 
-        UINT GetIndexCount() const;
+        UINT     GetRenderIndex() const;
+        UINT     GetRemainingRenderIndex() const;
+        UINT     GetIndexCount() const;
         TypeName GetVirtualTypeName() const final;
+
+        void ResetRenderIndex();
 
     protected:
         SERIALIZER_ACCESS
@@ -67,6 +71,7 @@ namespace Engine::Resources
         void OnDeserialized() override;
 
     protected:
+        UINT                         m_render_index_;
         std::vector<Shape>           m_vertices_;
         std::vector<const Vector3*>  m_flatten_vertices_;
         std::vector<IndexCollection> m_indices_;
@@ -75,8 +80,6 @@ namespace Engine::Resources
         VertexBufferCollection m_vertex_buffers_;
         IndexBufferCollection  m_index_buffers_;
 
-    private:
-        std::filesystem::path m_path_;
     };
 } // namespace Engine::Resources
 
