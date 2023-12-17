@@ -22,6 +22,7 @@ namespace Engine::Component
 {
     void Collider::SetPosition(const Vector3& position)
     {
+        Vector3CheckNanException(position);
         m_position_ = position;
         UpdateWorldMatrix();
     }
