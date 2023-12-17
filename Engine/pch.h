@@ -24,8 +24,10 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <queue>
 #include <ranges>
 #include <set>
+#include <stack>
 #include <string>
 #include <typeindex>
 #include <unordered_map>

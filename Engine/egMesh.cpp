@@ -215,13 +215,13 @@ namespace Engine::Resources
             throw std::runtime_error("No child node found");
         }
 
-        std::queue<FbxNode*> node_queue;
-        node_queue.push(root);
+        std::stack<FbxNode*> node_stack;
+        node_stack.push(root);
 
-        while (!node_queue.empty())
+        while (!node_stack.empty())
         {
-            const auto node = node_queue.front();
-            node_queue.pop();
+            const auto node = node_stack.top();
+            node_stack.pop();
 
             const auto attr = node->GetNodeAttribute();
 
@@ -237,9 +237,9 @@ namespace Engine::Resources
 
             const auto child_count = node->GetChildCount();
 
-            for (int i = 0; i < child_count; ++i)
+            for (int i = child_count - 1; i >= 0; --i)
             {
-                node_queue.push(node->GetChild(i));
+                node_stack.push(node->GetChild(i));
             }
         }
 
