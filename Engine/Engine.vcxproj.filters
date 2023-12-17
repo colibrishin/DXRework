@@ -197,6 +197,9 @@
     <Filter Include="Resource\Font">
       <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Component\MeshRenderer">
+      <UniqueIdentifier>{f171939c-b0da-4abc-970b-a40a797503b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -378,8 +381,8 @@
     <ClInclude Include="egFBXLoader.h">
       <Filter>Singleton\Internal\FBXLoader</Filter>
     </ClInclude>
-    <ClInclude Include="egModel.h">
-      <Filter>Resource\Model</Filter>
+    <ClInclude Include="egMeshRenderer.h">
+      <Filter>Component\MeshRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -540,6 +543,9 @@
     </ClCompile>
     <ClCompile Include="egFBXLoader.cpp">
       <Filter>Singleton\Internal\FBXLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="egMeshRenderer.cpp">
+      <Filter>Component\MeshRenderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
