@@ -180,8 +180,6 @@ namespace Engine::Manager
 
             shape[idx] = vertex;
             indices.push_back(idx);
-            // @todo: this could be optimized or be used in other way (e.g., replacing mesh flat vertex elements)
-            m_flat_vertex_elements_.push_back(&shape[idx]);
         }
     }
 
@@ -285,7 +283,7 @@ namespace Engine::Manager
 
                     const auto vertex_index = control_point_index;
 
-                    auto& vertex = *m_flat_vertex_elements_[vertex_index];
+                    auto& vertex = AccessShapeSerialized(shape, vertex_index);
 
                     for (int m = 0; m < 4; ++m)
                     {

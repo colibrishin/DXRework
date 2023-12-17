@@ -27,7 +27,8 @@ namespace Engine::Manager
         void IterateFBXMesh(FbxNode* child, Engine::Resources::Mesh& target_mesh);
         void IterateFBXSkeleton(FbxNode* node, UINT depth, Engine::Resources::Mesh& target_mesh);
         void IterateFBXSkin(FbxNode* child, Engine::Resources::Mesh& target_mesh);
-        void RipDeformation(const FbxMesh * mesh, std::vector<Resources::Shape> & shape, const JointMap & joints);
+        void RipDeformation(
+            const FbxMesh * mesh, std::vector<Resources::Shape> & shape, const JointMap & joints);
         void RipVertexElementFromFBX(
             const FbxMesh* mesh, Resources::Shape& shape, Resources::IndexCollection& indices, int polygon_idx);
 
@@ -35,6 +36,5 @@ namespace Engine::Manager
         FbxScene*    m_fbx_scene_    = nullptr;
         FbxImporter* m_fbx_importer_ = nullptr;
 
-        std::vector<VertexElement*> m_flat_vertex_elements_;
     };
 }
