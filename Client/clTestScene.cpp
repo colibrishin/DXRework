@@ -54,16 +54,16 @@ namespace Client::Scene
         const auto cube = Engine::Instantiate<Object::TestCube>();
         AddGameObject(cube, Engine::LAYER_DEFAULT);
 
-        cube->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+        cube->GetComponent<Engine::Components::Transform>().lock()->SetPosition(
              {2.f, 4.f, 0.f});
-        cube->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+        cube->GetComponent<Engine::Components::Collider>().lock()->SetPosition(
              {2.f, 4.f, 0.f});
 
         const auto sphere = Engine::Instantiate<Object::TestObject>();
         AddGameObject(sphere, Engine::LAYER_DEFAULT);
-        sphere->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+        sphere->GetComponent<Engine::Components::Transform>().lock()->SetPosition(
             {0.f, 4.f, 0.f});
-        sphere->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+        sphere->GetComponent<Engine::Components::Collider>().lock()->SetPosition(
             {0.f, 4.f, 0.f});
 
         AddGameObject(
@@ -81,16 +81,16 @@ namespace Client::Scene
 
         const auto water = Engine::Instantiate<Object::Water>();
         AddGameObject(water, Engine::LAYER_ENVIRONMENT);
-        water->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+        water->GetComponent<Engine::Components::Transform>().lock()->SetPosition(
             {0.f, 0.f, -2.f});
-        water->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+        water->GetComponent<Engine::Components::Collider>().lock()->SetPosition(
             {0.f, 0.f, -2.f});
 
         const auto player = Engine::Instantiate<Object::Player>();
         AddGameObject(player, Engine::LAYER_DEFAULT);
-        player->GetComponent<Engine::Component::Transform>().lock()->SetPosition(
+        player->GetComponent<Engine::Components::Transform>().lock()->SetPosition(
              {-2.f, 4.f, -2.f});
-        player->GetComponent<Engine::Component::Collider>().lock()->SetPosition(
+        player->GetComponent<Engine::Components::Collider>().lock()->SetPosition(
             {-2.f, 4.f, -2.f});
         GetMainCamera().lock()->BindObject(player);
         

@@ -28,15 +28,15 @@ void Client::Object::Water::Initialize()
                 .GetResource<Engine::Graphic::PixelShader>("ps_refraction")
                 .lock());
 
-    AddComponent<Engine::Component::Transform>();
+    AddComponent<Engine::Components::Transform>();
     
 
-    const auto cldr = AddComponent<Engine::Component::Collider>().lock();
+    const auto cldr = AddComponent<Engine::Components::Collider>().lock();
 
     cldr->SetDirtyWithTransform(true);
     cldr->SetOffset({0.f, 0.5f, 0.f});
 
-    const auto cldr2 = AddComponent<Engine::Component::Collider>().lock();
+    const auto cldr2 = AddComponent<Engine::Components::Collider>().lock();
 
     cldr2->SetDirtyWithTransform(true);
 }

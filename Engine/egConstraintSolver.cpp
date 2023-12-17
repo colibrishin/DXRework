@@ -16,7 +16,7 @@ namespace Engine::Manager::Physics
     {
         const auto scene = GetSceneManager().GetActiveScene().lock();
 
-        const auto& rbs = scene->GetCachedComponents<Component::Rigidbody>();
+        const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
         for (const auto& rb : rbs)
         {
@@ -44,7 +44,7 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::CheckCollision(Abstract::Object& obj)
     {
-        const auto cl = obj.GetComponent<Component::Collider>().lock();
+        const auto cl = obj.GetComponent<Components::Collider>().lock();
 
         if (!cl)
         {
@@ -73,7 +73,7 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::CheckSpeculation(Abstract::Object& obj)
     {
-        const auto cl = obj.GetComponent<Component::Collider>().lock();
+        const auto cl = obj.GetComponent<Components::Collider>().lock();
 
         if (!cl)
         {
@@ -101,12 +101,12 @@ namespace Engine::Manager::Physics
         Abstract::Object& lhs,
         Abstract::Object& rhs)
     {
-        const auto rb = lhs.GetComponent<Component::Rigidbody>().lock();
-        const auto tr = lhs.GetComponent<Component::Transform>().lock();
+        const auto rb = lhs.GetComponent<Components::Rigidbody>().lock();
+        const auto tr = lhs.GetComponent<Components::Transform>().lock();
         // Main collider is considered as the collider that wraps the object.
 
-        const auto rb_other = rhs.GetComponent<Component::Rigidbody>().lock();
-        const auto tr_other = rhs.GetComponent<Component::Transform>().lock();
+        const auto rb_other = rhs.GetComponent<Components::Rigidbody>().lock();
+        const auto tr_other = rhs.GetComponent<Components::Transform>().lock();
 
         if (rb && rb_other)
         {
@@ -164,7 +164,7 @@ namespace Engine::Manager::Physics
             tr->SetPosition(pos + lhs_penetration);
 
             // Apply the changes to the every colliders.
-            for (const auto& child : lhs.GetComponents<Component::Collider>())
+            for (const auto& child : lhs.GetComponents<Components::Collider>())
             {
                 if (const auto locked = child.lock())
                 {
@@ -205,7 +205,7 @@ namespace Engine::Manager::Physics
             {
                 tr_other->SetPosition(other_pos + rhs_penetration);
 
-                for (const auto& child : rhs.GetComponents<Component::Collider>())
+                for (const auto& child : rhs.GetComponents<Components::Collider>())
                 {
                     if (const auto locked = child.lock())
                     {
@@ -228,11 +228,11 @@ namespace Engine::Manager::Physics
         Abstract::Object& lhs,
         Abstract::Object& rhs)
     {
-        const auto rb = lhs.GetComponent<Component::Rigidbody>().lock();
-        const auto tr = lhs.GetComponent<Component::Transform>().lock();
+        const auto rb = lhs.GetComponent<Components::Rigidbody>().lock();
+        const auto tr = lhs.GetComponent<Components::Transform>().lock();
 
-        const auto rb_other = rhs.GetComponent<Component::Rigidbody>().lock();
-        const auto tr_other = rhs.GetComponent<Component::Transform>().lock();
+        const auto rb_other = rhs.GetComponent<Components::Rigidbody>().lock();
+        const auto tr_other = rhs.GetComponent<Components::Transform>().lock();
 
         if (rb && tr && rb_other && tr_other)
         {
@@ -264,7 +264,7 @@ namespace Engine::Manager::Physics
                 const Vector3 minimum_penetration = ray.direction * intersection_distance;
                 tr->SetPosition(tr->GetPosition() - minimum_penetration);
 
-                for (const auto& child : lhs.GetComponents<Component::Collider>())
+                for (const auto& child : lhs.GetComponents<Components::Collider>())
                 {
                     if (const auto locked = child.lock())
                     {

@@ -7,7 +7,7 @@
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Component::Rigidbody,
+                       Engine::Components::Rigidbody,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component)) _ARTAG(m_bGrounded)
                        _ARTAG(m_bGravityOverride) _ARTAG(m_bFixed) _ARTAG(m_friction_mu_)
                        _ARTAG(m_linear_momentum_) _ARTAG(m_angular_momentum_)
@@ -15,7 +15,7 @@ SERIALIZER_ACCESS_IMPL(
                        _ARTAG(m_drag_force_) _ARTAG(m_force_) _ARTAG(m_torque_)
                        _ARTAG(m_main_collider_))
 
-namespace Engine::Component
+namespace Engine::Components
 {
     void Rigidbody::Initialize()
     {

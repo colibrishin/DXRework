@@ -32,8 +32,8 @@ namespace Engine::Manager
     }
 
     void CollisionDetector::CheckCollision(
-        Component::Collider& lhs,
-        Component::Collider& rhs)
+        Components::Collider& lhs,
+        Components::Collider& rhs)
     {
         const auto lhs_owner = lhs.GetOwner().lock();
         const auto rhs_owner = rhs.GetOwner().lock();
@@ -93,10 +93,10 @@ namespace Engine::Manager
     }
 
     void CollisionDetector::CheckGrounded(
-        const Component::Collider& lhs,
-        Component::Collider&       rhs)
+        const Components::Collider& lhs,
+        Components::Collider&       rhs)
     {
-        Component::Collider copy = lhs;
+        Components::Collider copy = lhs;
         copy.SetPosition(lhs.GetPosition() + Vector3::Down * g_epsilon);
 
         if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
@@ -108,7 +108,7 @@ namespace Engine::Manager
         {
             if (const auto rb = lhs.GetOwner()
                                    .lock()
-                                   ->GetComponent<Component::Rigidbody>()
+                                   ->GetComponent<Components::Rigidbody>()
                                    .lock())
             {
                 // Ground flag is automatically set to false on the start of the frame.
@@ -118,14 +118,14 @@ namespace Engine::Manager
     }
 
     bool CollisionDetector::CheckRaycasting(
-        const Component::Collider& lhs,
-        const Component::Collider& rhs)
+        const Components::Collider& lhs,
+        const Components::Collider& rhs)
     {
         const auto rb =
-                lhs.GetOwner().lock()->GetComponent<Component::Rigidbody>().lock();
+                lhs.GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
 
         const auto rb_other =
-                rhs.GetOwner().lock()->GetComponent<Component::Rigidbody>().lock();
+                rhs.GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
 
         if (rb && rb_other)
         {
@@ -146,7 +146,7 @@ namespace Engine::Manager
     void CollisionDetector::Update(const float& dt)
     {
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Component::Collider>();
+        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
 
         for (const auto& cl : colliders)
         {
@@ -172,8 +172,8 @@ namespace Engine::Manager
                 }
 
                 CheckCollision(
-                               *cl_locked->GetSharedPtr<Component::Collider>(),
-                               *cl_other_locked->GetSharedPtr<Component::Collider>());
+                               *cl_locked->GetSharedPtr<Components::Collider>(),
+                               *cl_other_locked->GetSharedPtr<Components::Collider>());
             }
         }
     }
@@ -186,7 +186,7 @@ namespace Engine::Manager
         m_speculation_map_.clear();
 
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Component::Collider>();
+        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
 
         for (const auto& cl : colliders)
         {
@@ -212,8 +212,8 @@ namespace Engine::Manager
                 }
 
                 CheckGrounded(
-                              *cl_locked->GetSharedPtr<Component::Collider>(),
-                              *cl_other_locked->GetSharedPtr<Component::Collider>());
+                              *cl_locked->GetSharedPtr<Components::Collider>(),
+                              *cl_other_locked->GetSharedPtr<Components::Collider>());
             }
         }
     }
@@ -261,7 +261,7 @@ namespace Engine::Manager
                                         [ray, &distance, &out, &out_mutex](const WeakObject& obj)
                                         {
                                             const auto obj_locked = obj.lock();
-                                            const auto cls        = obj_locked->GetComponents<Component::Collider>();
+                                            const auto cls        = obj_locked->GetComponents<Components::Collider>();
 
                                             for (const auto& collider : cls)
                                             {
@@ -305,7 +305,7 @@ namespace Engine::Manager
                       {
                           if (const auto locked = obj.lock())
                           {
-                              const auto cls = locked->GetComponents<Component::Collider>();
+                              const auto cls = locked->GetComponents<Components::Collider>();
 
                               std::for_each(
                                             std::execution::par, cls.begin(), cls.end(),

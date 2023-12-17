@@ -31,8 +31,8 @@ namespace Client::Object
                     .GetResource<Engine::Graphic::PixelShader>("ps_default_nolight")
                     .lock());
 
-        AddComponent<Engine::Component::Transform>();
-        const auto tr = GetComponent<Engine::Component::Transform>().lock();
+        AddComponent<Engine::Components::Transform>();
+        const auto tr = GetComponent<Engine::Components::Transform>().lock();
         tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
         tr->SetScale(Vector3::One * 15.0f);
     }

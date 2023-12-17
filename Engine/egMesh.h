@@ -41,7 +41,7 @@ namespace Engine::Resources
         SERIALIZER_ACCESS
         Mesh();
 
-        friend class Component::Collider;
+        friend class Components::Collider;
         friend class Manager::FBXLoader;
 
 

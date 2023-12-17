@@ -28,17 +28,17 @@ namespace Engine::Manager::Physics
     {
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
-            const auto& rbs = scene->GetCachedComponents<Component::Rigidbody>();
+            const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
             for (const auto rb : rbs)
             {
-                UpdateGravity(rb.lock()->GetSharedPtr<Component::Rigidbody>().get());
-                UpdateObject(rb.lock()->GetSharedPtr<Component::Rigidbody>().get(), dt);
+                UpdateGravity(rb.lock()->GetSharedPtr<Components::Rigidbody>().get());
+                UpdateObject(rb.lock()->GetSharedPtr<Components::Rigidbody>().get(), dt);
             }
         }
     }
 
-    void PhysicsManager::UpdateGravity(Component::Rigidbody* rb)
+    void PhysicsManager::UpdateGravity(Components::Rigidbody* rb)
     {
         if (rb->IsFixed() || !rb->IsGravityAllowed())
         {
@@ -46,7 +46,7 @@ namespace Engine::Manager::Physics
         }
 
         const auto cl =
-                rb->GetOwner().lock()->GetComponent<Component::Collider>().lock();
+                rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
 
         if (!rb->IsGrounded())
         {
@@ -66,7 +66,7 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void PhysicsManager::UpdateObject(Component::Rigidbody* rb, const float& dt)
+    void PhysicsManager::UpdateObject(Components::Rigidbody* rb, const float& dt)
     {
         if (rb->IsFixed())
         {
@@ -75,7 +75,7 @@ namespace Engine::Manager::Physics
 
         const auto& cl = rb->GetMainCollider().lock();
         const auto& tr =
-                rb->GetOwner().lock()->GetComponent<Component::Transform>().lock();
+                rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
 
         float mass = 1.f;
 
@@ -112,7 +112,7 @@ namespace Engine::Manager::Physics
 
         tr->SetPosition(tr->GetPosition() + linear_momentum);
 
-        const auto& cls = rb->GetOwner().lock()->GetComponents<Component::Collider>();
+        const auto& cls = rb->GetOwner().lock()->GetComponents<Components::Collider>();
 
         for (const auto child : cls)
         {

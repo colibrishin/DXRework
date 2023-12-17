@@ -17,15 +17,15 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Abstract
 {
     template void Object::DispatchComponentEvent(
-        Engine::Component::Collider& lhs,
-        Engine::Component::Collider& rhs);
+        Engine::Components::Collider& lhs,
+        Engine::Components::Collider& rhs);
 
     template <typename T>
     void Object::DispatchComponentEvent(T& lhs, T& rhs)
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
-            if constexpr (std::is_same_v<Engine::Component::Collider, T>)
+            if constexpr (std::is_same_v<Engine::Components::Collider, T>)
             {
                 const auto speculation_check = GetCollisionDetector().IsSpeculated(
                  lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
@@ -90,25 +90,25 @@ namespace Engine::Abstract
         return m_imgui_open_;
     }
 
-    void Object::OnCollisionEnter(const Engine::Component::Collider& other)
+    void Object::OnCollisionEnter(const Engine::Components::Collider& other)
     {
-        if (!GetComponent<Engine::Component::Collider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionContinue(const Engine::Component::Collider& other)
+    void Object::OnCollisionContinue(const Engine::Components::Collider& other)
     {
-        if (!GetComponent<Engine::Component::Collider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionExit(const Engine::Component::Collider& other)
+    void Object::OnCollisionExit(const Engine::Components::Collider& other)
     {
-        if (!GetComponent<Engine::Component::Collider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }

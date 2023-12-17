@@ -33,15 +33,15 @@ namespace Client::Object
                     .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
                     .lock());
 
-        AddComponent<Engine::Component::Transform>();
-        AddComponent<Engine::Component::Collider>();
-        const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+        AddComponent<Engine::Components::Transform>();
+        AddComponent<Engine::Components::Collider>();
+        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        AddComponent<Engine::Component::Rigidbody>();
-        const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+        AddComponent<Engine::Components::Rigidbody>();
+        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
     }

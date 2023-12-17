@@ -42,19 +42,19 @@ namespace Client::Object
                     .GetResource<Engine::Resources::Sound>("AmbientSound")
                     .lock());
 
-        AddComponent<Engine::Component::Transform>();
-        const auto tr = GetComponent<Engine::Component::Transform>().lock();
+        AddComponent<Engine::Components::Transform>();
+        const auto tr = GetComponent<Engine::Components::Transform>().lock();
         tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetScale({10.0f, 1.0f, 10.0f});
 
-        AddComponent<Engine::Component::Collider>();
-        const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+        AddComponent<Engine::Components::Collider>();
+        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(100000.0f);
 
-        AddComponent<Engine::Component::Rigidbody>();
-        const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+        AddComponent<Engine::Components::Rigidbody>();
+        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
 
         rb->SetFixed(true);
         rb->SetFrictionCoefficient(0.2f);

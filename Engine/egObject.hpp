@@ -294,9 +294,9 @@ namespace Engine::Abstract
             }
         }
 
-        virtual void OnCollisionEnter(const Engine::Component::Collider& other);
-        virtual void OnCollisionContinue(const Engine::Component::Collider& other);
-        virtual void OnCollisionExit(const Engine::Component::Collider& other);
+        virtual void OnCollisionEnter(const Engine::Components::Collider& other);
+        virtual void OnCollisionContinue(const Engine::Components::Collider& other);
+        virtual void OnCollisionExit(const Engine::Components::Collider& other);
 
     private:
         bool m_active_ = true;

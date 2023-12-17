@@ -43,7 +43,7 @@ namespace Engine::Manager::Graphics
 
             if (const auto locked = light.lock())
             {
-                const auto tr = locked->GetComponent<Component::Transform>().lock();
+                const auto tr = locked->GetComponent<Components::Transform>().lock();
 
                 const auto world = tr->GetWorldMatrix();
 
@@ -115,7 +115,7 @@ namespace Engine::Manager::Graphics
 
             if (const auto locked = known_light.lock())
             {
-                const auto tr = locked->GetComponent<Component::Transform>().lock();
+                const auto tr = locked->GetComponent<Components::Transform>().lock();
 
                 GetRenderPipeline().TargetShadowMap(
                                                     m_graphic_shadow_buffer_[known_light]);
@@ -200,7 +200,7 @@ namespace Engine::Manager::Graphics
             {
                 if (const auto locked = objects.lock())
                 {
-                    const auto tr   = locked->GetComponent<Component::Transform>().lock();
+                    const auto tr   = locked->GetComponent<Components::Transform>().lock();
                     const auto mesh = locked->GetResource<Resources::Mesh>().lock();
 
                     if (tr && mesh)

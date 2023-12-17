@@ -4,7 +4,7 @@
 #include "egComponent.h"
 #include "egDXCommon.h"
 
-namespace Engine::Component
+namespace Engine::Components
 {
     class Transform : public Abstract::Component
     {
@@ -57,4 +57,4 @@ namespace Engine::Component
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Component::Transform)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Transform)

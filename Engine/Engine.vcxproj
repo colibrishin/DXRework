@@ -40,6 +40,7 @@
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
+    <ClInclude Include="egMeshRenderer.h" />
     <ClInclude Include="egModel.h" />
     <ClInclude Include="egMouseManager.h" />
     <ClInclude Include="egObserverController.h" />

@@ -39,11 +39,11 @@ namespace Engine::Manager
         bool IsSpeculated(EntityID id1, EntityID id2) const;
 
     private:
-        void CheckCollision(Component::Collider& lhs, Component::Collider& rhs);
-        void CheckGrounded(const Component::Collider& lhs, Component::Collider& rhs);
+        void CheckCollision(Components::Collider& lhs, Components::Collider& rhs);
+        void CheckGrounded(const Components::Collider& lhs, Components::Collider& rhs);
         bool CheckRaycasting(
-            const Component::Collider& lhs,
-            const Component::Collider& rhs);
+            const Components::Collider& lhs,
+            const Components::Collider& rhs);
 
     private:
         std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;

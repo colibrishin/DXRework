@@ -12,13 +12,13 @@
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Component::Collider,
+                       Engine::Components::Collider,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
                        _ARTAG(m_bDirtyByTransform) _ARTAG(m_position_)
                        _ARTAG(m_rotation_) _ARTAG(m_size_)
                        _ARTAG(m_type_) _ARTAG(m_mass_) _ARTAG(m_offset_))
 
-namespace Engine::Component
+namespace Engine::Components
 {
     void Collider::SetPosition(const Vector3& position)
     {

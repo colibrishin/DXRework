@@ -4,12 +4,12 @@
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Component::Transform,
+                       Engine::Components::Transform,
                        _ARTAG(_BSTSUPER(Component)) _ARTAG(m_previous_position_)
                        _ARTAG(m_position_) _ARTAG(m_rotation_)
                        _ARTAG(m_scale_))
 
-namespace Engine::Component
+namespace Engine::Components
 {
     Transform::Transform(const WeakObject& owner)
     : Component(COMPONENT_PRIORITY_TRANSFORM, owner),

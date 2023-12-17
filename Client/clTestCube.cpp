@@ -36,16 +36,16 @@ namespace Client::Object
                     .GetResource<Engine::Graphic::PixelShader>("ps_normalmap_specular")
                     .lock());
 
-        AddComponent<Engine::Component::Transform>();
-        AddComponent<Engine::Component::Collider>(
+        AddComponent<Engine::Components::Transform>();
+        AddComponent<Engine::Components::Collider>(
                                                   GetResource<Engine::Resources::Mesh>("CubeMesh"));
-        const auto cldr = GetComponent<Engine::Component::Collider>().lock();
+        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        AddComponent<Engine::Component::Rigidbody>();
-        const auto rb = GetComponent<Engine::Component::Rigidbody>().lock();
+        AddComponent<Engine::Components::Rigidbody>();
+        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
 
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);

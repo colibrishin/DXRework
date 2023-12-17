@@ -46,22 +46,22 @@ namespace Engine::Objects
 
     void Camera::SetPosition(Vector3 position)
     {
-        GetComponent<Component::Transform>().lock()->SetPosition(position);
+        GetComponent<Components::Transform>().lock()->SetPosition(position);
     }
 
     Quaternion Camera::GetRotation()
     {
-        return GetComponent<Component::Transform>().lock()->GetRotation();
+        return GetComponent<Components::Transform>().lock()->GetRotation();
     }
 
     void Camera::SetRotation(Quaternion rotation)
     {
-        GetComponent<Component::Transform>().lock()->SetRotation(rotation);
+        GetComponent<Components::Transform>().lock()->SetRotation(rotation);
     }
 
     Vector3 Camera::GetPosition()
     {
-        return GetComponent<Component::Transform>().lock()->GetPosition();
+        return GetComponent<Components::Transform>().lock()->GetPosition();
     }
 
     Vector3 Camera::GetLookAt()
@@ -73,8 +73,8 @@ namespace Engine::Objects
     {
         Object::Initialize();
 
-        AddComponent<Component::Transform>();
-        GetComponent<Component::Transform>().lock()->SetPosition(
+        AddComponent<Components::Transform>();
+        GetComponent<Components::Transform>().lock()->SetPosition(
                                                                  {0.0f, 0.0f, -20.0f});
         m_look_at_ = g_forward;
     }
@@ -96,9 +96,9 @@ namespace Engine::Objects
         if (const auto companion = m_bound_object_.lock())
         {
             if (const auto tr_other =
-                    companion->GetComponent<Component::Transform>().lock())
+                    companion->GetComponent<Components::Transform>().lock())
             {
-                const auto tr = GetComponent<Component::Transform>().lock();
+                const auto tr = GetComponent<Components::Transform>().lock();
                 tr->SetPosition(tr_other->GetPosition() + m_offset_);
                 tr->SetRotation(tr_other->GetRotation());
             }
@@ -106,14 +106,14 @@ namespace Engine::Objects
 
         if (GetApplication().GetMouseState().scrollWheelValue > 1)
         {
-            GetComponent<Component::Transform>().lock()->Translate(g_forward * 0.1f);
+            GetComponent<Components::Transform>().lock()->Translate(g_forward * 0.1f);
         }
         else if (GetApplication().GetMouseState().scrollWheelValue < 0)
         {
-            GetComponent<Component::Transform>().lock()->Translate(g_backward * 0.1f);
+            GetComponent<Components::Transform>().lock()->Translate(g_backward * 0.1f);
         }
 
-        if (const auto transform = GetComponent<Component::Transform>().lock())
+        if (const auto transform = GetComponent<Components::Transform>().lock())
         {
             const auto position = transform->GetPosition();
             const auto rotation = transform->GetRotation();
@@ -180,7 +180,7 @@ namespace Engine::Objects
 
             if (const auto bound = m_bound_object_.lock())
             {
-                if (const auto rb = bound->GetComponent<Component::Rigidbody>().lock())
+                if (const auto rb = bound->GetComponent<Components::Rigidbody>().lock())
                 {
                     velocity = rb->GetLinearMomentum();
                 }
@@ -252,7 +252,7 @@ namespace Engine::Objects
         const float y = -(((2.0f * actual_mouse_position.y) / g_window_height) - 1);
 
         const Vector3 mousePosition = DirectX::XMVectorSet(
-                                                           x, y, GetComponent<Component::Transform>().lock()->
+                                                           x, y, GetComponent<Components::Transform>().lock()->
                                                            GetPosition().z, 0.0f);
 
         return XMVector3Transform(mousePosition, invProjectionView);
