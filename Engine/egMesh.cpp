@@ -353,6 +353,19 @@ namespace Engine::Resources
         }
     }
 
+    void Mesh::PreUpdate(const float& dt) {}
+
+    void Mesh::Update(const float& dt) {}
+
+    void Mesh::FixedUpdate(const float& dt) {}
+
+    void Mesh::PreRender(const float& dt) {}
+
+    void Mesh::OnDeserialized()
+    {
+        Resource::OnDeserialized();
+    }
+
     void Mesh::Initialize() {}
 
     void Mesh::Render(const float& dt)
@@ -374,6 +387,9 @@ namespace Engine::Resources
     {
         return typeid(Mesh).name();
     }
+
+    Mesh::Mesh()
+    : Resource("", RESOURCE_PRIORITY_MESH) {}
 
     void Mesh::Load_INTERNAL()
     {
@@ -422,6 +438,8 @@ namespace Engine::Resources
                                              m_index_buffers_[i].ReleaseAndGetAddressOf(), m_indices_[i].data());
         }
     }
+
+    void Mesh::Load_CUSTOM() {}
 
     void Mesh::Unload_INTERNAL()
     {
