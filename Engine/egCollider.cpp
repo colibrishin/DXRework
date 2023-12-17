@@ -488,11 +488,12 @@ namespace Engine::Components
             }
         }
 #endif
-
-        m_previous_position_ = m_position_;
     }
 
-    void Collider::PostRender(const float& dt) {}
+    void Collider::PostRender(const float& dt)
+    {
+        m_previous_position_ = m_position_;
+    }
 
     void Collider::UpdateFromTransform()
     {

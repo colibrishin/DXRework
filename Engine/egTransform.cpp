@@ -86,7 +86,10 @@ namespace Engine::Components
 
     void Transform::PreRender(const float& dt) {}
 
-    void Transform::PostRender(const float& dt) {}
+    void Transform::PostRender(const float& dt)
+    {
+        m_previous_position_ = m_position_;
+    }
 
     void Transform::Render(const float& dt)
     {
@@ -97,7 +100,6 @@ namespace Engine::Components
                 Matrix::CreateTranslation(m_position_).Transpose();
 
         GetRenderPipeline().SetWorldMatrix(m_transform_buffer_);
-        m_previous_position_ = m_position_;
     }
 
     void Transform::FixedUpdate(const float& dt) {}
