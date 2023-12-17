@@ -8,9 +8,6 @@ namespace Engine::Manager
 {
     FBXLoader::~FBXLoader()
     {
-        m_fbx_importer_->Destroy();
-        m_fbx_scene_->Destroy();
-        m_fbx_manager_->Destroy();
     }
 
     void FBXLoader::PreUpdate(const float& dt) { }
@@ -174,6 +171,8 @@ namespace Engine::Manager
 
             shape[idx] = vertex;
             indices.push_back(idx);
+            // @todo: this could be optimized or be used in other way (e.g., replacing mesh flat vertex elements)
+            m_flat_vertex_elements_.push_back(&shape[idx]);
         }
     }
 
@@ -239,11 +238,11 @@ namespace Engine::Manager
 
         for (int j = 0; j < shape_count; ++j)
         {
-            RipDeformation(mesh, target_mesh.m_vertices_[j], target_mesh.m_indices_[j], target_mesh.m_joints_, j);
+            RipDeformation(mesh, target_mesh.m_vertices_, target_mesh.m_joints_);
         }
     }
 
-    void FBXLoader::RipDeformation(const FbxMesh* mesh, Resources::Shape& shape, const Resources::IndexCollection& vector, const JointMap& joints, int i)
+    void FBXLoader::RipDeformation(const FbxMesh* mesh, std::vector<Resources::Shape>& shape, const JointMap& joints)
     {
         const auto deformer_count = mesh->GetDeformerCount();
 
@@ -268,15 +267,16 @@ namespace Engine::Manager
                 }
 
                 const auto joint_index = joint->second.index;
+                const auto influence_count = cluster->GetControlPointIndicesCount();
 
-                for (int l = 0; l < cluster->GetControlPointIndicesCount(); ++l)
+                for (int l = 0; l < influence_count; ++l)
                 {
                     const auto control_point_index  = cluster->GetControlPointIndices()[l];
                     const auto control_point_weight = cluster->GetControlPointWeights()[l];
 
-                    const auto vertex_index = vector[control_point_index];
+                    const auto vertex_index = control_point_index;
 
-                    auto& vertex = shape[vertex_index];
+                    auto& vertex = *m_flat_vertex_elements_[vertex_index];
 
                     for (int m = 0; m < 4; ++m)
                     {

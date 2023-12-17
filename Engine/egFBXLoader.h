@@ -22,17 +22,19 @@ namespace Engine::Manager
         //void LoadFBXFile(const std::filesystem::path& path, std::vector<StrongTexture>& mesh);
 
     private:
+        using IdxVtxPair = std::map<int, VertexElement*>;
+
         void IterateFBXMesh(FbxNode* child, Engine::Resources::Mesh& target_mesh);
         void IterateFBXSkeleton(FbxNode* node, UINT depth, Engine::Resources::Mesh& target_mesh);
         void IterateFBXSkin(FbxNode* child, Engine::Resources::Mesh& target_mesh);
-        void RipDeformation(
-            const FbxMesh* mesh, Resources::Shape& shape, const Resources::IndexCollection& vector, const JointMap& joints, int i);
+        void RipDeformation(const FbxMesh * mesh, std::vector<Resources::Shape> & shape, const JointMap & joints);
         void RipVertexElementFromFBX(
             const FbxMesh* mesh, Resources::Shape& shape, Resources::IndexCollection& indices, int polygon_idx);
-
 
         FbxManager*  m_fbx_manager_  = nullptr;
         FbxScene*    m_fbx_scene_    = nullptr;
         FbxImporter* m_fbx_importer_ = nullptr;
+
+        std::vector<VertexElement*> m_flat_vertex_elements_;
     };
 }
