@@ -73,6 +73,7 @@ namespace Engine
         COMPONENT_PRIORITY_COLLIDER,
         COMPONENT_PRIORITY_RIGIDBODY,
         COMPONENT_PRIORITY_STATE
+        , COMPONENT_PRIORITY_MESH_RENDERER
     };
 
     enum eBoundingType
