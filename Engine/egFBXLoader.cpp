@@ -280,10 +280,10 @@ namespace Engine::Manager
 
                     for (int m = 0; m < 4; ++m)
                     {
-                        if (vertex.deformation[m].weight == 0.0f)
+                        if (vertex.deformations[m].weight == 0.0f)
                         {
-                            vertex.deformation[m].joint_index = joint_index;
-                            vertex.deformation[m].weight      = static_cast<float>(control_point_weight);
+                            vertex.deformations[m].joint_index = joint_index;
+                            vertex.deformations[m].weight      = static_cast<float>(control_point_weight);
                             break;
                         }
                     }

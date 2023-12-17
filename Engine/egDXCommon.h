@@ -115,7 +115,7 @@ namespace Engine
         Vector3 tangent;
         Vector3 binormal;
 
-        Deformation deformation[4];
+        Deformation deformations[4];
     };
 
     struct KeyFrame
