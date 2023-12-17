@@ -3,6 +3,7 @@
 
 #include "clCharacterController.hpp"
 #include "clPlayerMesh.h"
+#include "clTestMesh.h"
 
 namespace Client::Object
 {
@@ -11,7 +12,7 @@ namespace Client::Object
         Object::Initialize();
 
         const auto mesh = Engine::GetResourceManager()
-                          .GetResource<Mesh::PlayerMesh>("PlayerMesh").lock();
+                          .GetResource<Mesh::TestMesh>("TestMesh").lock();
 
         AddResource(mesh);
 
