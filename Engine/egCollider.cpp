@@ -16,7 +16,8 @@ SERIALIZER_ACCESS_IMPL(
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
                        _ARTAG(m_bDirtyByTransform) _ARTAG(m_position_)
                        _ARTAG(m_rotation_) _ARTAG(m_size_)
-                       _ARTAG(m_type_) _ARTAG(m_mass_) _ARTAG(m_offset_))
+                       _ARTAG(m_type_) _ARTAG(m_mass_) _ARTAG(m_offset_)
+                       _ARTAG(m_mesh_name_))
 
 namespace Engine::Components
 {
@@ -416,6 +417,7 @@ namespace Engine::Components
         if (!m_mesh_name_.empty())
         {
             m_mesh_ = GetResourceManager().GetResource<Resources::Mesh>(m_mesh_name_);
+            GenerateFromMesh(m_mesh_);
         }
 
         if (m_type_ == BOUNDING_TYPE_BOX)
