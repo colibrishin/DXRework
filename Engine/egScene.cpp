@@ -529,6 +529,15 @@ namespace Engine
             }
         }
 
+        GetShadowManager().Clear();
+
+        auto& lights = m_layers[LAYER_LIGHT]->GetGameObjects();
+
+        for (const auto& light : lights)
+        {
+            RegisterLightToManager(light.lock()->GetSharedPtr<Objects::Light>());
+        }
+
         // rebuild cache
         for (int i = 0; i < LAYER_MAX; ++i)
         {
