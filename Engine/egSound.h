@@ -13,6 +13,8 @@ namespace Engine::Resources
     class Sound : public Abstract::Resource
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SOUND)
+
         explicit Sound(const std::string& path);
 
         ~Sound() override;
@@ -24,7 +26,6 @@ namespace Engine::Resources
         void     PreRender(const float& dt) override;
         void     Render(const float& dt) override;
         void     PostRender(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void Play(const WeakObject& origin);
         void PlayLoop(const WeakObject& origin);

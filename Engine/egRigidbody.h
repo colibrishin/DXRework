@@ -4,9 +4,11 @@
 
 namespace Engine::Components
 {
-    class Rigidbody : public Abstract::Component
+    class Rigidbody final : public Abstract::Component
     {
     public:
+        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_RIDIGBODY)
+
         explicit Rigidbody(const WeakObject& object);
 
         ~Rigidbody() override = default;
@@ -52,7 +54,6 @@ namespace Engine::Components
         void     Render(const float& dt) override;
         void     PostRender(const float& dt) override;
         void     FixedUpdate(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void OnDeserialized() override;
         void OnImGui() override;

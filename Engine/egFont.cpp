@@ -15,7 +15,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Resources
 {
     Font::Font(const std::filesystem::path& path)
-    : Resource(path, RESOURCE_PRIORITY_FONT),
+    : Resource(path, RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
       m_lazy_reload_(false) {}
@@ -47,11 +47,6 @@ namespace Engine::Resources
     void Font::FixedUpdate(const float& dt) {}
 
     void Font::PostRender(const float& dt) {}
-
-    TypeName Font::GetVirtualTypeName() const
-    {
-        return typeid(Font).name();
-    }
 
     void Font::SetText(const std::string& text)
     {
@@ -90,7 +85,7 @@ namespace Engine::Resources
     }
 
     Font::Font()
-    : Resource("", RESOURCE_PRIORITY_FONT),
+    : Resource("", RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
       m_lazy_reload_(false) {}

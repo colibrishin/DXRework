@@ -13,7 +13,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Resources
 {
     Sound::Sound(const std::string& path)
-    : Resource(path, RESOURCE_PRIORITY_SOUND),
+    : Resource(path, RES_T_SOUND),
       m_mode_(FMOD_3D),
       m_min_distance_(0.f),
       m_max_distance_(3.f) {}
@@ -21,7 +21,7 @@ namespace Engine::Resources
     Sound::~Sound() = default;
 
     Sound::Sound()
-    : Resource("", RESOURCE_PRIORITY_SOUND),
+    : Resource("", RES_T_SOUND),
       m_mode_(FMOD_3D),
       m_min_distance_(0.f),
       m_max_distance_(3.f) {}
@@ -47,11 +47,6 @@ namespace Engine::Resources
     void Sound::Render(const float& dt) {}
 
     void Sound::PostRender(const float& dt) {}
-
-    TypeName Sound::GetVirtualTypeName() const
-    {
-        return typeid(Sound).name();
-    }
 
     void Sound::Play_INTERNAL(const WeakObject& origin)
     {

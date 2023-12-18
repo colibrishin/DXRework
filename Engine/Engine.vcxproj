@@ -58,7 +58,7 @@
     <ClInclude Include="egRenderable.h" />
     <ClInclude Include="egRenderPipeline.h" />
     <ClInclude Include="egResource.h" />
-    <ClInclude Include="egResourceManager.h" />
+    <ClInclude Include="egResourceManager.hpp" />
     <ClInclude Include="egRigidbody.h" />
     <ClInclude Include="egScene.hpp" />
     <ClInclude Include="egSceneManager.hpp" />

@@ -14,9 +14,9 @@ void Client::Object::Water::Initialize()
 {
     const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
     mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
-    mr->AddNormalMap(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("WaterNormal").lock());
-    mr->AddVertexShader(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
-    mr->AddPixelShader(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_refraction").lock());
+    mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("WaterNormal"));
+    mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
+    mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_refraction"));
 
     AddComponent<Engine::Components::Transform>();
     

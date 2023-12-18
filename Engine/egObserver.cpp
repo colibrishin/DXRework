@@ -11,6 +11,8 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Objects
 {
+    Observer::Observer() : Object(DEF_OBJ_T_OBSERVER) {}
+
     void Observer::Initialize()
     {
         Object::Initialize();

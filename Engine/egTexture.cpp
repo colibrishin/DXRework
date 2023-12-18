@@ -8,7 +8,7 @@ SERIALIZER_ACCESS_IMPL(Engine::Resources::Texture, _ARTAG(_BSTSUPER(Resource)))
 namespace Engine::Resources
 {
     Texture::Texture(std::filesystem::path path)
-    : Resource(std::move(path), RESOURCE_PRIORITY_TEXTURE),
+    : Resource(std::move(path), RES_T_TEX),
       m_texture_desc_()
     {
         Texture::Initialize();
@@ -25,7 +25,7 @@ namespace Engine::Resources
     }
 
     Texture::Texture()
-    : Resource("", RESOURCE_PRIORITY_TEXTURE),
+    : Resource("", RES_T_TEX),
       m_texture_desc_() {}
 
     Texture::~Texture() {}
@@ -67,9 +67,4 @@ namespace Engine::Resources
     }
 
     void Texture::FixedUpdate(const float& dt) {}
-
-    TypeName Texture::GetVirtualTypeName() const
-    {
-        return typeid(Texture).name();
-    }
 } // namespace Engine::Resources

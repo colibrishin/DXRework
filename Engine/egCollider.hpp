@@ -7,9 +7,11 @@ namespace Engine::Components
 {
     using namespace DirectX;
 
-    class Collider : public Abstract::Component
+    class Collider final : public Abstract::Component
     {
     public:
+        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_COLLIDER)
+
         Collider(const WeakObject& owner, const WeakMesh& mesh = {});
         ~Collider() override = default;
 
@@ -77,7 +79,6 @@ namespace Engine::Components
 
         void     OnDeserialized() override;
         void     OnImGui() override;
-        TypeName GetVirtualTypeName() const final;
 
         template <typename T>
         T GetBounding() const

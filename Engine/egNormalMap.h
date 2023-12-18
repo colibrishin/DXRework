@@ -6,6 +6,8 @@ namespace Engine::Resources
     class NormalMap : public Texture
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_NORMAL)
+
         explicit NormalMap(std::filesystem::path path);
 
         ~NormalMap() override;
@@ -16,7 +18,6 @@ namespace Engine::Resources
         void     PreRender(const float& dt) override;
         void     Render(const float& dt) override;
         void     PostRender(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;

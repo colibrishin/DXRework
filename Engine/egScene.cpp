@@ -9,7 +9,9 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Scene,
                        _ARTAG(_BSTSUPER(Renderable))
-                       _ARTAG(m_main_camera_local_id_) _ARTAG(m_layers))
+                       _ARTAG(m_main_camera_local_id_) 
+                       _ARTAG(m_layers)
+                       _ARTAG(m_type_))
 
 namespace Engine
 {
@@ -39,31 +41,12 @@ namespace Engine
         Initialize_INTERNAL();
 
 #ifdef _DEBUG
-        for (const auto& comps : m_cached_components_ | std::views::values)
+        const auto& states = m_cached_components_[COM_T_STATE];
+
+        for (const auto& state : states)
         {
-            if (comps.empty())
-            {
-                continue;
-            }
-
-            if (const auto sample = comps.begin()->lock())
-            {
-                const auto cast_check =
-                        boost::dynamic_pointer_cast<Abstract::IStateController>(sample);
-
-                if (!cast_check)
-                {
-                    continue;
-                }
-
-                for (const auto& comp : comps)
-                {
-                    if (const auto comp_ptr = comp.lock())
-                    {
-                        comp_ptr->SetActive(false);
-                    }
-                }
-            }
+            const auto locked = state.lock();
+            locked->SetActive(false);
         }
 
         const auto observer = Instantiate<Objects::Observer>();
@@ -96,53 +79,21 @@ namespace Engine
         obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
     }
 
-    void Scene::RegisterLightToManager(const StrongObject& obj)
+    void Scene::RegisterLightToManager(const StrongLight& obj)
     {
-        if (obj->GetTypeName() == typeid(Objects::Light).name())
-        {
-            GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
-        }
+        GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
     }
 
-    EntityID Scene::AddGameObject(const StrongObject& obj, eLayerType layer)
+    void Scene::UnregisterLightFromManager(const StrongLight& obj)
     {
-        m_layers[layer]->AddGameObject(obj);
-        m_cached_objects_.emplace(obj->GetID(), obj);
-
-        for (const auto& comp : obj->GetAllComponents())
-        {
-            m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
-        }
-
-        obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
-        obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
-
-        AssignLocalIDToObject(obj);
-
-        if (const auto tr = obj->GetComponent<Components::Transform>().lock())
-        {
-            UpdatePosition(obj);
-        }
-
-        RegisterLightToManager(obj);
-
-        return obj->GetID();
-    }
-
-    void Scene::UnregisterLightFromManager(const WeakObject& obj)
-    {
-        if (obj.lock()->GetTypeName() == typeid(Objects::Light).name())
-        {
-            GetShadowManager().UnregisterLight(
-                                               obj.lock()->GetSharedPtr<Objects::Light>());
-        }
+        GetShadowManager().UnregisterLight(obj);
     }
 
     void Scene::RemoveObjectFromCache(const WeakObject& obj)
     {
         for (const auto& comp : obj.lock()->GetAllComponents())
         {
-            m_cached_components_[comp.lock()->GetTypeName()].erase(comp);
+            m_cached_components_[comp.lock()->GetComponentType()].erase(comp);
         }
     }
 
@@ -193,7 +144,11 @@ namespace Engine
 
         RemoveObjectFromOctree(obj);
         RemoveObjectFromCache(obj);
-        UnregisterLightFromManager(obj);
+
+        if (layer == LAYER_LIGHT)
+        {
+            UnregisterLightFromManager(obj.lock()->GetSharedPtr<Objects::Light>());
+        }
 
         m_cached_objects_.erase(id);
         m_layers[layer]->RemoveGameObject(id);
@@ -205,25 +160,12 @@ namespace Engine
         return m_layers[layer]->GetGameObjects();
     }
 
-    void Scene::AddCacheComponent(const WeakComponent& component)
+    eSceneType Scene::GetType() const
     {
-        if (m_cached_objects_.contains(
-                                       component.lock()->GetOwner().lock()->GetID()))
-        {
-            m_cached_components_[component.lock()->GetTypeName()].insert(component);
-        }
+        return m_type_;
     }
 
-    void Scene::RemoveCacheComponent(const WeakComponent& component)
-    {
-        if (m_cached_objects_.contains(
-                                       component.lock()->GetOwner().lock()->GetID()))
-        {
-            m_cached_components_[component.lock()->GetTypeName()].erase(component);
-        }
-    }
-
-    void Scene::UpdatePosition(const WeakObject& obj)
+    void     Scene::UpdatePosition(const WeakObject& obj)
     {
         if (const auto obj_ptr = obj.lock())
         {
@@ -365,6 +307,7 @@ namespace Engine
 
     Scene::Scene()
     : m_main_camera_local_id_(g_invalid_id),
+      m_type_(),
       m_object_position_tree_(g_max_map_size, {}) {}
 
     void Scene::Synchronize(const StrongScene& scene)
@@ -576,10 +519,13 @@ namespace Engine
         // remove observer of previous scene
         for (int i = 0; i < ui.size(); ++i)
         {
-            if (boost::dynamic_pointer_cast<Objects::Observer>(ui[i].lock()))
+            if (const auto locked = ui[i].lock())
             {
-                m_layers[LAYER_UI]->RemoveGameObject(ui[i].lock()->GetID());
-                i--;
+                if (locked->GetObjectType() == DEF_OBJ_T_OBSERVER)
+                {
+                    m_layers[LAYER_UI]->RemoveGameObject(ui[i].lock()->GetID());
+                    i--;
+                }
             }
         }
 
@@ -598,7 +544,7 @@ namespace Engine
 
                 for (const auto& comp : obj.lock()->GetAllComponents())
                 {
-                    m_cached_components_[comp.lock()->GetTypeName()].emplace(comp);
+                    m_cached_components_[comp.lock()->GetComponentType()].emplace(comp);
                 }
             }
         }
@@ -623,30 +569,13 @@ namespace Engine
 
 #ifdef _DEBUG
         // remove controller if it is debug state
-        for (const auto& comps : m_cached_components_ | std::views::values)
+        const auto& states = m_cached_components_[COM_T_STATE];
+
+        for (auto& state : states)
         {
-            if (comps.empty())
+            if (const auto locked = state.lock())
             {
-                continue;
-            }
-
-            if (const auto sample = comps.begin()->lock())
-            {
-                const auto cast_check =
-                        boost::dynamic_pointer_cast<Abstract::IStateController>(sample);
-
-                if (!cast_check)
-                {
-                    continue;
-                }
-
-                for (const auto& comp : comps)
-                {
-                    if (const auto comp_ptr = comp.lock())
-                    {
-                        comp_ptr->SetActive(false);
-                    }
-                }
+                locked->SetActive(false);
             }
         }
 
@@ -655,10 +584,5 @@ namespace Engine
         AddGameObject(observer, LAYER_UI);
         GetMainCamera().lock()->BindObject(m_observer_);
 #endif
-    }
-
-    TypeName Scene::GetVirtualTypeName() const
-    {
-        return typeid(Scene).name();
     }
 } // namespace Engine

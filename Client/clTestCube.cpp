@@ -19,12 +19,12 @@ namespace Client::Object
     {
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh"));
-        mr->AddNormalMap(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
-        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
-        mr->AddVertexShader(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
-        mr->AddPixelShader(
-                           Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>(
-                                "ps_normalmap_specular"));
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->Add(
+                Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>(
+                     "ps_normalmap_specular"));
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

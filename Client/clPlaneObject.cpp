@@ -21,14 +21,13 @@ namespace Client::Object
     {
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
-        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
-        mr->AddNormalMap(
-                         Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(
-                          "TestNormalMap").lock());
-        mr->AddVertexShader(
-                            Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").
-                                                         lock());
-        mr->AddPixelShader(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
+        mr->Add(
+                Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(
+                     "TestNormalMap"));
+        mr->Add(
+                Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_color"));
 
         AddComponent<Engine::Components::Transform>();
         const auto tr = GetComponent<Engine::Components::Transform>().lock();

@@ -45,11 +45,6 @@ namespace Engine::Resources
         Texture::PostRender(dt);
     }
 
-    TypeName NormalMap::GetVirtualTypeName() const
-    {
-        return typeid(NormalMap).name();
-    }
-
     void NormalMap::Load_INTERNAL()
     {
         Texture::Load_INTERNAL();

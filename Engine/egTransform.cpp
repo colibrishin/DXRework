@@ -12,7 +12,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Components
 {
     Transform::Transform(const WeakObject& owner)
-    : Component(COMPONENT_PRIORITY_TRANSFORM, owner),
+    : Component(COM_T_TRANSFORM, owner),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
@@ -134,11 +134,6 @@ namespace Engine::Components
                         XMConvertToDegrees(euler.z));
     }
 
-    TypeName Transform::GetVirtualTypeName() const
-    {
-        return typeid(Transform).name();
-    }
-
     Matrix Transform::GetWorldMatrix() const
     {
         return Matrix::CreateScale(m_scale_) *
@@ -147,7 +142,7 @@ namespace Engine::Components
     }
 
     Transform::Transform()
-    : Component(COMPONENT_PRIORITY_TRANSFORM, {}),
+    : Component(COM_T_TRANSFORM, {}),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),

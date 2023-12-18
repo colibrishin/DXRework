@@ -6,6 +6,9 @@
 #include "clTestMesh.h"
 #include "egMeshRenderer.h"
 
+SERIALIZER_ACCESS_IMPL(Client::Object::Player,
+    _ARTAG(_BSTSUPER(Object)))
+
 namespace Client::Object
 {
     void Player::Initialize()
@@ -17,12 +20,12 @@ namespace Client::Object
 
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(mesh);
-        mr->AddVertexShader(
-                            Engine::GetResourceManager()
-                            .GetResource<Engine::Graphic::VertexShader>("vs_default").lock());
-        mr->AddPixelShader(
-                           Engine::GetResourceManager()
-                           .GetResource<Engine::Graphic::PixelShader>("ps_color").lock());
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Graphic::PixelShader>("ps_color"));
 
 
         AddComponent<Engine::Components::Transform>();

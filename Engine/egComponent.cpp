@@ -4,7 +4,7 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Component,
                        _ARTAG(_BSTSUPER(Renderable)) _ARTAG(m_local_id_)
-                       _ARTAG(m_priority_))
+                       _ARTAG(m_type_))
 
 namespace Engine::Abstract
 {
@@ -13,9 +13,9 @@ namespace Engine::Abstract
         return m_owner_;
     }
 
-    eComponentPriority Component::GetPriority() const
+    eComponentType Component::GetComponentType() const
     {
-        return m_priority_;
+        return m_type_;
     }
 
     ComponentID Component::GetLocalID() const
@@ -38,11 +38,6 @@ namespace Engine::Abstract
         return m_b_active_;
     }
 
-    TypeName Component::GetVirtualTypeName() const
-    {
-        return typeid(Component).name();
-    }
-
     void Component::OnImGui()
     {
         Renderable::OnImGui();
@@ -57,9 +52,9 @@ namespace Engine::Abstract
         m_b_ticked_ = true;
     }
 
-    Component::Component(eComponentPriority priority, const WeakObject& owner)
+    Component::Component(eComponentType type, const WeakObject& owner)
     : m_local_id_(g_invalid_id),
-      m_priority_(priority),
+      m_type_(type),
       m_owner_(owner),
       m_b_ticked_(false),
       m_b_active_(true) {}

@@ -4,7 +4,7 @@
 #include "egCollision.h"
 #include "egCubeMesh.h"
 #include "egD3Device.hpp"
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
 #include "egTransform.h"
@@ -385,7 +385,7 @@ namespace Engine::Components
     }
 
     Collider::Collider()
-    : Component(COMPONENT_PRIORITY_COLLIDER, {}),
+    : Component(COM_T_COLLIDER, {}),
       m_bDirtyByTransform(false),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
@@ -457,11 +457,6 @@ namespace Engine::Components
         // TODO: colliding objects
     }
 
-    TypeName Collider::GetVirtualTypeName() const
-    {
-        return typeid(Collider).name();
-    }
-
     void Collider::Render(const float& dt)
     {
 #ifdef _DEBUG
@@ -522,7 +517,7 @@ namespace Engine::Components
     }
 
     Collider::Collider(const WeakObject& owner, const WeakMesh& mesh)
-    : Component(COMPONENT_PRIORITY_COLLIDER, owner),
+    : Component(COM_T_COLLIDER, owner),
       m_bDirtyByTransform(false),
       m_position_(Vector3::Zero),
       m_size_(Vector3::One),

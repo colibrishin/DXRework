@@ -39,9 +39,6 @@ namespace Engine::Abstract
     protected:
         Singleton();
 
-    public:
-        TypeName GetVirtualTypeName() const final;
-
     protected:
         struct SINGLETON_LOCK_TOKEN final {};
 
@@ -55,11 +52,5 @@ namespace Engine::Abstract
         // however, this can be removed due to usage of unique_ptr but added for the
         // note.
         std::atexit(&Destroy);
-    }
-
-    template <typename T, typename... InitArgs>
-    TypeName Singleton<T, InitArgs...>::GetVirtualTypeName() const
-    {
-        return typeid(T).name();
     }
 } // namespace Engine::Abstract

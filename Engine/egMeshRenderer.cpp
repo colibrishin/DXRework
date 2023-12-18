@@ -5,7 +5,7 @@
 #include "egMesh.h"
 #include "egTexture.h"
 #include "egNormalMap.h"
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 #include "egVertexShaderInternal.h"
 #include "egShader.hpp"
 
@@ -15,7 +15,7 @@ SERIALIZER_ACCESS_IMPL(Engine::Components::MeshRenderer,
 
 namespace Engine::Components
 {
-    MeshRenderer::MeshRenderer(const WeakObject& owner) : Component(COMPONENT_PRIORITY_MESH_RENDERER, owner) {}
+    MeshRenderer::MeshRenderer(const WeakObject& owner) : Component(COM_T_MESH_RENDERER, owner) {}
 
     void MeshRenderer::PreUpdate(const float& dt) {}
 
@@ -87,25 +87,23 @@ namespace Engine::Components
         {
             for (const auto& name : names)
             {
-                if (type == typeid(Resources::Mesh).name())
+                if (type == RES_T_MESH)
                 {
                     SetMesh(GetResourceManager().GetResource<Resources::Mesh>(name));
                 }
-                else if (type == typeid(Resources::Texture).name())
+                else if (type == RES_T_TEX)
                 {
-                    AddTexture(GetResourceManager().GetResource<Resources::Texture>(name));
+                    Add(GetResourceManager().GetResource<Resources::Texture>(name));
                 }
-                else if (type == typeid(Resources::NormalMap).name())
+                else if (type == RES_T_NORMAL)
                 {
-                    AddNormalMap(GetResourceManager().GetResource<Resources::NormalMap>(name));
+                    Add(GetResourceManager().GetResource<Resources::NormalMap>(name));
                 }
-                else if (type == typeid(Graphic::VertexShader).name())
+                else if (type == RES_T_SHADER)
                 {
-                    AddVertexShader(GetResourceManager().GetResource<Graphic::VertexShader>(name));
-                }
-                else if (type == typeid(Graphic::PixelShader).name())
-                {
-                    AddPixelShader(GetResourceManager().GetResource<Graphic::PixelShader>(name));
+                    // todo: need to recognize shader type
+                    Add(GetResourceManager().GetResource<Graphic::VertexShader>(name));
+                    Add(GetResourceManager().GetResource<Graphic::PixelShader>(name));
                 }
                 else
                 {
@@ -119,71 +117,7 @@ namespace Engine::Components
     {
         m_mesh_ = mesh;
         m_resources_.insert(mesh.lock());
-        m_resource_map_[mesh.lock()->GetVirtualTypeName()].emplace(mesh.lock()->GetName());
-    }
-
-    void MeshRenderer::AddTexture(const WeakTexture& texture)
-    {
-        m_textures_.emplace_back(texture);
-        m_resources_.insert(texture.lock());
-        m_resource_map_[texture.lock()->GetVirtualTypeName()].emplace(texture.lock()->GetName());
-    }
-
-    void MeshRenderer::AddNormalMap(const WeakNormalMap& normal_map)
-    {
-        m_normal_maps_.emplace_back(normal_map);
-        m_resources_.insert(normal_map.lock());
-        m_resource_map_[normal_map.lock()->GetVirtualTypeName()].emplace(normal_map.lock()->GetName());
-    }
-
-    void MeshRenderer::AddVertexShader(const WeakVertexShader& vertex_shader)
-    {
-        m_vertex_shaders_.emplace_back(vertex_shader);
-        m_resources_.insert(vertex_shader.lock());
-        m_resource_map_[vertex_shader.lock()->GetVirtualTypeName()].emplace(vertex_shader.lock()->GetName());
-    }
-
-    void MeshRenderer::AddPixelShader(const WeakPixelShader& pixel_shader)
-    {
-        m_pixel_shaders_.emplace_back(pixel_shader);
-        m_resources_.insert(pixel_shader.lock());
-        m_resource_map_[pixel_shader.lock()->GetVirtualTypeName()].emplace(pixel_shader.lock()->GetName());
-    }
-
-    void MeshRenderer::RemoveMesh()
-    {
-        m_resources_.erase(m_mesh_.lock());
-        m_resource_map_.erase(m_mesh_.lock()->GetTypeName());
-        m_resource_map_[m_mesh_.lock()->GetVirtualTypeName()].erase(m_mesh_.lock()->GetName());
-        m_mesh_.reset();
-    }
-
-    void MeshRenderer::RemoveTexture(const WeakTexture& texture)
-    {
-        std::erase_if(m_textures_, [&texture](const auto& t) { return t.lock() == texture.lock(); });
-        m_resources_.erase(texture.lock());
-        m_resource_map_[texture.lock()->GetVirtualTypeName()].erase(texture.lock()->GetName());
-    }
-
-    void MeshRenderer::RemoveNormalMap(const WeakNormalMap& normal_map)
-    {
-        std::erase_if(m_normal_maps_, [&normal_map](const auto& n) { return n.lock() == normal_map.lock(); });
-        m_resources_.erase(normal_map.lock());
-        m_resource_map_[normal_map.lock()->GetVirtualTypeName()].erase(normal_map.lock()->GetName());
-    }
-
-    void MeshRenderer::RemoveVertexShader(const WeakVertexShader& vertex_shader)
-    {
-        std::erase_if(m_vertex_shaders_, [&vertex_shader](const auto& v) { return v.lock() == vertex_shader.lock(); });
-        m_resources_.erase(vertex_shader.lock());
-        m_resource_map_[vertex_shader.lock()->GetVirtualTypeName()].erase(vertex_shader.lock()->GetName());
-    }
-
-    void MeshRenderer::RemovePixelShader(const WeakPixelShader& pixel_shader)
-    {
-        std::erase_if(m_pixel_shaders_, [&pixel_shader](const auto& p) { return p.lock() == pixel_shader.lock(); });
-        m_resources_.erase(pixel_shader.lock());
-        m_resource_map_[pixel_shader.lock()->GetVirtualTypeName()].erase(pixel_shader.lock()->GetName());
+        m_resource_map_[mesh.lock()->GetResourceType()].emplace(mesh.lock()->GetName());
     }
 
     const WeakMesh& MeshRenderer::GetMesh() const
@@ -191,10 +125,5 @@ namespace Engine::Components
         return m_mesh_;
     }
 
-    MeshRenderer::MeshRenderer() : Component(COMPONENT_PRIORITY_MESH_RENDERER, {}) {}
-
-    TypeName MeshRenderer::GetVirtualTypeName() const
-    {
-        return typeid(MeshRenderer).name();
-    }
+    MeshRenderer::MeshRenderer() : Component(COM_T_MESH_RENDERER, {}) {}
 }

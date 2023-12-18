@@ -8,6 +8,8 @@ namespace Engine::Objects
     class Text : public Abstract::Object
     {
     public:
+        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_TEXT)
+
         explicit Text(const WeakFont& font);
 
         ~Text() override;

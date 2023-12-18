@@ -57,30 +57,70 @@ namespace Engine
         OBSERVER_STATE_NONE,
     };
 
-    enum eResourcePriority
+    enum eResourceType
     {
-        RESOURCE_PRIORITY_SHADER = 0,
-        RESOURCE_PRIORITY_TEXTURE,
-        RESOURCE_PRIORITY_MESH,
-        RESOURCE_PRIORITY_FONT,
-        RESOURCE_PRIORITY_SOUND,
+        RES_T_UNK = 0,
+        RES_T_SHADER,
+        RES_T_TEX,
+        RES_T_NORMAL,
+        RES_T_MESH,
+        RES_T_FONT,
+        RES_T_SOUND,
     };
 
-    enum eComponentPriority
+    enum eComponentType
     {
-        COMPONENT_PRIORITY_DEFAULT = 0,
-        COMPONENT_PRIORITY_TRANSFORM,
-        COMPONENT_PRIORITY_COLLIDER,
-        COMPONENT_PRIORITY_RIGIDBODY,
-        COMPONENT_PRIORITY_STATE
-        , COMPONENT_PRIORITY_MESH_RENDERER
+        COM_T_UNK = 0,
+        COM_T_TRANSFORM,
+        COM_T_COLLIDER,
+        COM_T_RIDIGBODY,
+        COM_T_STATE,
+        COM_T_MESH_RENDERER
     };
+
+    enum eDefObjectType
+    {
+        DEF_OBJ_T_UNK = 0,
+        DEF_OBJ_T_NONE,
+        DEF_OBJ_T_CAMERA,
+        DEF_OBJ_T_LIGHT,
+        DEF_OBJ_T_OBSERVER,
+        DEF_OBJ_T_TEXT,
+        DEF_OBJ_T_DELAY_OBJ
+    };
+
+    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
+    enum eSceneType : UINT;
 
     enum eBoundingType
     {
         BOUNDING_TYPE_BOX = 0,
         BOUNDING_TYPE_FRUSTUM,
         BOUNDING_TYPE_SPHERE,
+    };
+
+    template <typename T>
+    struct which_resource
+    {
+        static constexpr eResourceType value = T::rtype;
+    };
+
+    template <typename T>
+    struct which_component
+    {
+        static constexpr eComponentType value = T::ctype;
+    };
+
+    template <typename T>
+    struct which_def_object
+    {
+        static constexpr eDefObjectType value = T::dotype;
+    };
+
+    template <typename T>
+    struct which_scene
+    {
+        static constexpr eSceneType value = T::stype;
     };
 
     struct GUIDComparer

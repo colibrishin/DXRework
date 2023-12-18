@@ -2,7 +2,7 @@
 #include "egShadowManager.hpp"
 
 #include "egObject.hpp"
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 #include "egScene.hpp"
 #include "egSceneManager.hpp"
 

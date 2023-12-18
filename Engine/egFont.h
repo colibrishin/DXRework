@@ -8,6 +8,8 @@ namespace Engine::Resources
     class Font : public Abstract::Resource
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_FONT)
+
         Font(const std::filesystem::path& path);
         ~Font() override = default;
 
@@ -19,7 +21,6 @@ namespace Engine::Resources
         void     Render(const float& dt) override;
         void     FixedUpdate(const float& dt) override;
         void     PostRender(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void SetText(const std::string& text);
         void SetPosition(const Vector2& position);

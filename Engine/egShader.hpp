@@ -11,6 +11,8 @@ namespace Engine::Graphic
     class Shader : public IShader
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHADER)
+
         Shader(const EntityName& name, const std::filesystem::path& path);
         ~Shader() override;
 
@@ -27,8 +29,6 @@ namespace Engine::Graphic
 
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
-
-        TypeName GetVirtualTypeName() const final;
 
     protected:
         Shader()

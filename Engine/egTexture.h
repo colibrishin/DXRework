@@ -7,6 +7,8 @@ namespace Engine::Resources
     class Texture : public Abstract::Resource
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_TEX)
+
         explicit Texture(std::filesystem::path path);
 
         ~Texture() override;
@@ -20,7 +22,6 @@ namespace Engine::Resources
         void     Load_INTERNAL() override;
         void     Unload_INTERNAL() override;
         void     FixedUpdate(const float& dt) override;
-        TypeName GetVirtualTypeName() const override;
 
         UINT GetWidth() const;
         UINT GetHeight() const;

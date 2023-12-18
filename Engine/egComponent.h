@@ -11,20 +11,18 @@ namespace Engine::Abstract
         Component(const Component&) = default;
 
         WeakObject         GetOwner() const;
-        eComponentPriority GetPriority() const;
+        eComponentType GetComponentType() const;
         ComponentID        GetLocalID() const;
         bool               IsTicked() const;
         bool               GetActive() const;
 
         void SetActive(bool active);
 
-        TypeName GetVirtualTypeName() const override;
-
         void OnImGui() override;
         void Render(const float& dt) override;
 
     protected:
-        Component(eComponentPriority priority, const WeakObject& owner);
+        Component(eComponentType type, const WeakObject& owner);
 
     private:
         SERIALIZER_ACCESS
@@ -45,7 +43,7 @@ namespace Engine::Abstract
 
     private:
         ComponentID        m_local_id_;
-        eComponentPriority m_priority_;
+        eComponentType m_type_;
 
         // Non-serialized
         WeakObject m_owner_;

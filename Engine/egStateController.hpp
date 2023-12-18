@@ -9,6 +9,8 @@ namespace Engine::Abstract
     class StateController : public IStateController
     {
     public:
+        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_STATE)
+
         StateEnum GetState() const
         {
             return m_state_;
@@ -29,14 +31,13 @@ namespace Engine::Abstract
 
         void     OnDeserialized() override;
         void     OnImGui() override;
-        TypeName GetVirtualTypeName() const final;
 
     protected:
         StateController()
-        : IStateController(COMPONENT_PRIORITY_STATE, {}) {}
+        : IStateController(COM_T_STATE, {}) {}
 
         StateController(const WeakObject& owner)
-        : IStateController(COMPONENT_PRIORITY_STATE, owner) {}
+        : IStateController(COM_T_STATE, owner) {}
 
         void SetState(StateEnum state)
         {
@@ -85,11 +86,5 @@ namespace Engine::Abstract
         Component::OnImGui();
         ImGui::Text("State: %d", m_state_);
         ImGui::Text("Previous State: %d", m_previous_state_);
-    }
-
-    template <typename StateEnum, class EC>
-    TypeName StateController<StateEnum, EC>::GetVirtualTypeName() const
-    {
-        return typeid(StateController<StateEnum, EC>).name();
     }
 } // namespace Engine::Abstract

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egText.h"
 
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::Text,
@@ -11,7 +11,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Objects
 {
     Text::Text(const WeakFont& font)
-    : Object(),
+    : Object(DEF_OBJ_T_TEXT),
       m_rotation_radian_(0),
       m_scale_(1),
       m_font_(font.lock())
@@ -47,7 +47,7 @@ namespace Engine::Objects
     }
 
     Text::Text()
-    : Object(),
+    : Object(DEF_OBJ_T_TEXT),
       m_rotation_radian_(0),
       m_scale_(1) {}
 

@@ -11,8 +11,9 @@ namespace Engine::Objects
     class Light final : public Abstract::Object
     {
     public:
-        Light()
-        : Object() {}
+        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_LIGHT)
+
+        Light();
 
         ~Light() override;
 

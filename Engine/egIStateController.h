@@ -11,7 +11,7 @@ namespace Engine::Abstract
 
         explicit IStateController(const Component& component);
 
-        IStateController(eComponentPriority priority, const WeakObject& owner);
+        IStateController(eComponentType priority, const WeakObject& owner);
 
     private:
         SERIALIZER_ACCESS

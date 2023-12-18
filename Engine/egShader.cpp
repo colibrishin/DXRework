@@ -115,10 +115,4 @@ namespace Engine::Graphic
 
     template <typename T>
     void Shader<T>::PostRender(const float& dt) {}
-
-    template <typename T>
-    TypeName Shader<T>::GetVirtualTypeName() const
-    {
-        return typeid(Shader<T>).name();
-    }
 } // namespace Engine::Graphic

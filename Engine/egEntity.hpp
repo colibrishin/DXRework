@@ -22,8 +22,6 @@ namespace Engine::Abstract
         EntityName GetName() const;
         TypeName   GetTypeName() const;
 
-        virtual TypeName GetVirtualTypeName() const = 0;
-
         template <typename T>
         __forceinline boost::weak_ptr<T> GetWeakPtr()
         {

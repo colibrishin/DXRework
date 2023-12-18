@@ -4,7 +4,7 @@
 
 namespace Engine::Components
 {
-    class ObserverController : public Abstract::StateController<eObserverState>
+    class ObserverController final : public Abstract::StateController<eObserverState>
     {
     public:
         explicit ObserverController(const WeakObject& owner);
