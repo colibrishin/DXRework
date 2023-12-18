@@ -15,5 +15,11 @@ namespace Client::Object
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
+
+    private:
+        SERIALIZER_ACCESS
+
     };
 }
+
+BOOST_CLASS_EXPORT_KEY(Client::Object::Player)
