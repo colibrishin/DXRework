@@ -19,11 +19,11 @@ namespace Engine::Manager
             return m_active_scene_;
         }
 
-        template <typename T, typename... Args>
+        template <typename T, typename... Args, typename SceneLock = std::enable_if_t<std::is_base_of_v<Scene, T>>>
         void AddScene(Args&&... args)
         {
             auto scene = Instantiate<T>(std::forward<Args>(args)...);
-            m_scenes_.insert(scene);
+            m_scenes_[which_scene<T>::value] = scene;
         }
 
         void ChangeScene(const WeakScene& it);
@@ -31,30 +31,19 @@ namespace Engine::Manager
         template <typename T>
         void SetActive()
         {
-            auto it =
-                    std::find_if(
-                                 m_scenes_.begin(), m_scenes_.end(), [](const auto& scene)
-                                 {
-                                     return boost::dynamic_pointer_cast<T>(scene) != nullptr;
-                                 });
-
-            if (it != m_scenes_.end())
+            if (m_scenes_.contains(which_scene<T>::value))
             {
-                ChangeScene(*it);
+                ChangeScene(m_scenes_[which_scene<T>::value]);
             }
         }
 
-        WeakScene GetScene(EntityID id) const
+        template <typename T>
+        std::weak_ptr<T> GetScene() const
         {
-            auto it =
-                    std::find_if(
-                                 m_scenes_.begin(), m_scenes_.end(),
-                                 [id](const auto& scene)
-                                 {
-                                     return scene->GetID() == id;
-                                 });
-
-            if (it != m_scenes_.end()) return *it;
+            if (m_scenes_.contains(which_scene<T>::value))
+            {
+                return m_scenes_[which_scene<T>::value];
+            }
 
             return {};
         }
@@ -62,23 +51,18 @@ namespace Engine::Manager
         template <typename T>
         void RemoveScene()
         {
-            auto it =
-                    std::find_if(
-                                 m_scenes_.begin(), m_scenes_.end(), [](const auto& scene)
-                                 {
-                                     return boost::dynamic_pointer_cast<T>(scene) != nullptr;
-                                 });
-
-            if (it != m_scenes_.end())
+            if (m_scenes_.contains(which_scene<T>::value))
             {
-                if (*it == m_active_scene_.lock())
+                const auto scene = m_scenes_[which_scene<T>::value];
+
+                if (scene == m_active_scene_.lock())
                 {
                     Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
                     Graphics::ShadowManager::GetInstance().Clear();
                     m_active_scene_.reset();
                 }
 
-                m_scenes_.erase(it);
+                m_scenes_.erase(which_scene<T>::value);
             }
         }
 
@@ -91,7 +75,7 @@ namespace Engine::Manager
         void PostRender(const float& dt) override;
 
     private:
-        WeakScene             m_active_scene_;
-        std::set<StrongScene> m_scenes_;
+        WeakScene                         m_active_scene_;
+        std::map<eSceneType, StrongScene> m_scenes_;
     };
 } // namespace Engine::Manager
