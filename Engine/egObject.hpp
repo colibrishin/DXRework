@@ -9,6 +9,8 @@ namespace Engine::Abstract
     class Object : public Actor
     {
     public:
+        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_NONE)
+
         ~Object() override = default;
 
         void     PreUpdate(const float& dt) override;
@@ -223,13 +225,17 @@ namespace Engine::Abstract
         bool GetActive() const;
         bool GetCulled() const;
         bool GetImGuiOpen() const;
+        eDefObjectType GetObjectType() const;
 
     protected:
-        Object()
+        Object(eDefObjectType type = DEF_OBJ_T_NONE)
         : Actor(),
+          m_type_(type),
           m_active_(true),
           m_culled_(true),
-          m_imgui_open_(false) {};
+          m_imgui_open_(false)
+        {
+        };
 
     private:
         SERIALIZER_ACCESS
@@ -259,8 +265,9 @@ namespace Engine::Abstract
         virtual void OnCollisionExit(const Engine::Components::Collider& other);
 
     private:
-        bool m_active_ = true;
-        bool m_culled_ = true;
+        eDefObjectType m_type_;
+        bool           m_active_ = true;
+        bool           m_culled_ = true;
 
         bool m_imgui_open_ = false;
 

@@ -11,6 +11,8 @@ namespace Engine::Graphic
     class Shader : public IShader
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHADER)
+
         Shader(const EntityName& name, const std::filesystem::path& path);
         ~Shader() override;
 

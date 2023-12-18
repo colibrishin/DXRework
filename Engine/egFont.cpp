@@ -15,7 +15,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Resources
 {
     Font::Font(const std::filesystem::path& path)
-    : Resource(path, RESOURCE_PRIORITY_FONT),
+    : Resource(path, RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
       m_lazy_reload_(false) {}
@@ -85,7 +85,7 @@ namespace Engine::Resources
     }
 
     Font::Font()
-    : Resource("", RESOURCE_PRIORITY_FONT),
+    : Resource("", RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
       m_lazy_reload_(false) {}

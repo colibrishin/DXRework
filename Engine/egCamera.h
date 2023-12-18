@@ -7,8 +7,10 @@ namespace Engine::Objects
     class Camera final : public Abstract::Object
     {
     public:
+        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_CAMERA)
+
         Camera()
-        : Object(),
+        : Object(DEF_OBJ_T_CAMERA),
           m_bound_object_id_(g_invalid_id),
           m_b_orthogonal_(false) {}
 

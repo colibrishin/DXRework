@@ -4,9 +4,11 @@
 
 namespace Engine::Components
 {
-    class Rigidbody : public Abstract::Component
+    class Rigidbody final : public Abstract::Component
     {
     public:
+        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_RIDIGBODY)
+
         explicit Rigidbody(const WeakObject& object);
 
         ~Rigidbody() override = default;

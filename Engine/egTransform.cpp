@@ -12,7 +12,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Components
 {
     Transform::Transform(const WeakObject& owner)
-    : Component(COMPONENT_PRIORITY_TRANSFORM, owner),
+    : Component(COM_T_TRANSFORM, owner),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
@@ -142,7 +142,7 @@ namespace Engine::Components
     }
 
     Transform::Transform()
-    : Component(COMPONENT_PRIORITY_TRANSFORM, {}),
+    : Component(COM_T_TRANSFORM, {}),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),

@@ -9,6 +9,8 @@ namespace Engine::Abstract
     class StateController : public IStateController
     {
     public:
+        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_STATE)
+
         StateEnum GetState() const
         {
             return m_state_;
@@ -32,10 +34,10 @@ namespace Engine::Abstract
 
     protected:
         StateController()
-        : IStateController(COMPONENT_PRIORITY_STATE, {}) {}
+        : IStateController(COM_T_STATE, {}) {}
 
         StateController(const WeakObject& owner)
-        : IStateController(COMPONENT_PRIORITY_STATE, owner) {}
+        : IStateController(COM_T_STATE, owner) {}
 
         void SetState(StateEnum state)
         {

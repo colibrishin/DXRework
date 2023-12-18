@@ -8,5 +8,5 @@ SERIALIZER_ACCESS_IMPL(
 Engine::Abstract::IStateController::IStateController(const Component& component)
 : Component(component) {}
 
-Engine::Abstract::IStateController::IStateController(eComponentPriority priority, const WeakObject& owner)
+Engine::Abstract::IStateController::IStateController(eComponentType priority, const WeakObject& owner)
 : Component(priority, owner) {}

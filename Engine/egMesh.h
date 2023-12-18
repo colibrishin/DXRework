@@ -25,6 +25,8 @@ namespace Engine::Resources
     class Mesh : public Abstract::Resource
     {
     public:
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MESH)
+
         Mesh(std::filesystem::path path);
         ~Mesh() override = default;
         void Initialize() override;

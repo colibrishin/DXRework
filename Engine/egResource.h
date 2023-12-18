@@ -18,14 +18,14 @@ namespace Engine::Abstract
         bool IsLoaded() const;
 
         const std::filesystem::path& GetPath() const;
-        eResourcePriority            GetPriority() const;
+        eResourceType                GetResourceType() const;
 
         void SetPath(const std::filesystem::path& path);
 
         void     OnImGui() override;
 
     protected:
-        Resource(std::filesystem::path path, eResourcePriority priority);
+        Resource(std::filesystem::path path, eResourceType type);
 
         virtual void Load_INTERNAL() = 0;
         virtual void Unload_INTERNAL() = 0;
@@ -37,7 +37,7 @@ namespace Engine::Abstract
         bool                  m_bLoaded_;
         std::filesystem::path m_path_;
         std::string           m_path_str_; // for serialization
-        eResourcePriority     m_priority_;
+        eResourceType         m_type_;
     };
 } // namespace Engine::Abstract
 

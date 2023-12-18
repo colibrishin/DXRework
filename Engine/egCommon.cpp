@@ -10,9 +10,9 @@ namespace Engine
         const StrongResource& Left,
         const StrongResource& Right) const
     {
-        if (Left->GetPriority() != Right->GetPriority())
+        if (Left->GetResourceType() != Right->GetResourceType())
         {
-            return Left->GetPriority() < Right->GetPriority();
+            return Left->GetResourceType() < Right->GetResourceType();
         }
 
         return Left->GetID() < Right->GetID();
@@ -22,9 +22,9 @@ namespace Engine
         const WeakComponent& Left,
         const WeakComponent& Right) const
     {
-        if (Left.lock()->GetPriority() != Right.lock()->GetPriority())
+        if (Left.lock()->GetComponentType() != Right.lock()->GetComponentType())
         {
-            return Left.lock()->GetPriority() < Right.lock()->GetPriority();
+            return Left.lock()->GetComponentType() < Right.lock()->GetComponentType();
         }
 
         return Left.lock()->GetID() < Right.lock()->GetID();

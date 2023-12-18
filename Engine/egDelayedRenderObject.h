@@ -7,6 +7,9 @@ namespace Engine::Objects
     class DelayedRenderObject : public Abstract::Object
     {
     public:
+        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_DELAY_OBJ)
+
+        DelayedRenderObject();
         void Initialize() override;
         ~DelayedRenderObject() override = default;
 

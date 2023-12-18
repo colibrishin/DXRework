@@ -9,6 +9,8 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Objects
 {
+    Light::Light(): Object(DEF_OBJ_T_LIGHT) {}
+
     Light::~Light() {}
 
     void Light::SetColor(Vector4 color)

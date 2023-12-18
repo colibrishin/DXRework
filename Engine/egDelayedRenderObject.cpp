@@ -3,7 +3,6 @@
 
 #include "egCubeMesh.h"
 #include "egNormalMap.h"
-#include "egResourceManager.h"
 #include "egVertexShaderInternal.h"
 
 #include "egCollider.hpp"
@@ -12,6 +11,8 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::DelayedRenderObject,
                        _ARTAG(_BSTSUPER(Object)))
+
+Engine::Objects::DelayedRenderObject::DelayedRenderObject(): Abstract::Object(DEF_OBJ_T_DELAY_OBJ) {}
 
 void Engine::Objects::DelayedRenderObject::Initialize()
 {

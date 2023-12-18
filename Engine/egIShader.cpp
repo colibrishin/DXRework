@@ -11,7 +11,7 @@ SERIALIZER_ACCESS_IMPL(
 namespace Engine::Graphic
 {
     IShader::IShader(const EntityName& name, const std::filesystem::path& path)
-    : Resource(path, RESOURCE_PRIORITY_SHADER)
+    : Resource(path, RES_T_SHADER)
     {
         SetName(name);
     }

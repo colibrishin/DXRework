@@ -33,7 +33,7 @@ namespace Engine::Components
     }
 
     Rigidbody::Rigidbody(const WeakObject& object)
-    : Component(COMPONENT_PRIORITY_RIGIDBODY, object),
+    : Component(COM_T_RIDIGBODY, object),
       m_bGrounded(false),
       m_bGravityOverride(false),
       m_bFixed(false),
@@ -231,7 +231,7 @@ namespace Engine::Components
     }
 
     Rigidbody::Rigidbody()
-    : Component(COMPONENT_PRIORITY_RIGIDBODY, {}),
+    : Component(COM_T_RIDIGBODY, {}),
       m_bGrounded(false),
       m_bGravityOverride(false),
       m_bFixed(false),

@@ -147,7 +147,7 @@ namespace Engine::Resources
     }
 
     Mesh::Mesh(std::filesystem::path path)
-    : Resource(std::move(path), RESOURCE_PRIORITY_MESH),
+    : Resource(std::move(path), RES_T_MESH),
       m_render_index_(0) {}
 
     void __vectorcall Mesh::GenerateTangentBinormal(
@@ -273,7 +273,7 @@ namespace Engine::Resources
     }
 
     Mesh::Mesh()
-    : Resource("", RESOURCE_PRIORITY_MESH),
+    : Resource("", RES_T_MESH),
       m_render_index_(0) {}
 
     void Mesh::Load_INTERNAL()

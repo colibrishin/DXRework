@@ -89,6 +89,11 @@ namespace Engine::Abstract
         return m_imgui_open_;
     }
 
+    eDefObjectType Object::GetObjectType() const
+    {
+        return m_type_;
+    }
+
     void Object::OnCollisionEnter(const Engine::Components::Collider& other)
     {
         if (!GetComponent<Engine::Components::Collider>().lock())
@@ -196,8 +201,7 @@ namespace Engine::Abstract
 
     void Object::OnImGui()
     {
-        const auto id =
-                GetTypeName() + " " + GetName() + " " + std::to_string(GetID());
+        const auto id = GetTypeName() + " " + GetName() + " " + std::to_string(GetID());
 
         if (ImGui::Begin(
                          id.c_str(), nullptr,
