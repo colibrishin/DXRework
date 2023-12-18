@@ -102,8 +102,12 @@ namespace Engine::Components
                 else if (type == RES_T_SHADER)
                 {
                     // todo: need to recognize shader type
-                    Add(GetResourceManager().GetResource<Graphic::VertexShader>(name));
-                    Add(GetResourceManager().GetResource<Graphic::PixelShader>(name));
+
+                    const auto prefix = name.substr(0, 2);
+
+                    if (prefix == "vs") Add(GetResourceManager().GetResource<Graphic::VertexShader>(name));
+                    else if (prefix == "ps") Add(GetResourceManager().GetResource<Graphic::PixelShader>(name));
+                    else throw std::runtime_error("MeshRenderer::OnDeserialized() : Unknown shader type");
                 }
                 else
                 {
