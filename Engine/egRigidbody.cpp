@@ -192,11 +192,6 @@ namespace Engine::Components
 
     void Rigidbody::FixedUpdate(const float& dt) {}
 
-    TypeName Rigidbody::GetVirtualTypeName() const
-    {
-        return typeid(Rigidbody).name();
-    }
-
     void Rigidbody::OnDeserialized()
     {
         Component::OnDeserialized();

@@ -16,7 +16,6 @@ namespace Engine::Resources
         void     PreRender(const float& dt) override;
         void     Render(const float& dt) override;
         void     PostRender(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;

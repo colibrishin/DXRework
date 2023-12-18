@@ -28,8 +28,6 @@ namespace Engine::Graphic
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
 
-        TypeName GetVirtualTypeName() const final;
-
     protected:
         Shader()
         : IShader("", "") {}

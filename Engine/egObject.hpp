@@ -19,7 +19,6 @@ namespace Engine::Abstract
         void     FixedUpdate(const float& dt) override;
         void     OnDeserialized() override;
         void     OnImGui() override;
-        TypeName GetVirtualTypeName() const final;
 
         template <typename T, typename... Args>
         boost::weak_ptr<T> AddComponent(Args&&... args)

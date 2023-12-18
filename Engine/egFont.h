@@ -19,7 +19,6 @@ namespace Engine::Resources
         void     Render(const float& dt) override;
         void     FixedUpdate(const float& dt) override;
         void     PostRender(const float& dt) override;
-        TypeName GetVirtualTypeName() const final;
 
         void SetText(const std::string& text);
         void SetPosition(const Vector2& position);

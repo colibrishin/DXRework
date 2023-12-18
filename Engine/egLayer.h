@@ -19,7 +19,6 @@ namespace Engine
         void     PostRender(const float& dt) override;
         void     FixedUpdate(const float& dt) override;
         void     OnDeserialized() override;
-        TypeName GetVirtualTypeName() const override;
 
         void                           AddGameObject(const StrongObject& obj);
         void                           RemoveGameObject(EntityID id);

@@ -134,11 +134,6 @@ namespace Engine::Components
                         XMConvertToDegrees(euler.z));
     }
 
-    TypeName Transform::GetVirtualTypeName() const
-    {
-        return typeid(Transform).name();
-    }
-
     Matrix Transform::GetWorldMatrix() const
     {
         return Matrix::CreateScale(m_scale_) *

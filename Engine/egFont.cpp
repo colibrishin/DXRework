@@ -48,11 +48,6 @@ namespace Engine::Resources
 
     void Font::PostRender(const float& dt) {}
 
-    TypeName Font::GetVirtualTypeName() const
-    {
-        return typeid(Font).name();
-    }
-
     void Font::SetText(const std::string& text)
     {
         m_text_ = text;

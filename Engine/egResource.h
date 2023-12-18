@@ -23,7 +23,6 @@ namespace Engine::Abstract
         void SetPath(const std::filesystem::path& path);
 
         void     OnImGui() override;
-        TypeName GetVirtualTypeName() const override;
 
     protected:
         Resource(std::filesystem::path path, eResourcePriority priority);

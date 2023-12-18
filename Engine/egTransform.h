@@ -33,7 +33,6 @@ namespace Engine::Components
 
         void     OnImGui() override;
         void     OnDeserialized() override;
-        TypeName GetVirtualTypeName() const override;
 
         Matrix GetWorldMatrix() const;
 

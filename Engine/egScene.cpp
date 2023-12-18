@@ -656,9 +656,4 @@ namespace Engine
         GetMainCamera().lock()->BindObject(m_observer_);
 #endif
     }
-
-    TypeName Scene::GetVirtualTypeName() const
-    {
-        return typeid(Scene).name();
-    }
 } // namespace Engine

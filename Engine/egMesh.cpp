@@ -267,11 +267,6 @@ namespace Engine::Resources
 
     void Mesh::PostRender(const float& dt) {}
 
-    TypeName Mesh::GetVirtualTypeName() const
-    {
-        return typeid(Mesh).name();
-    }
-
     void Mesh::ResetRenderIndex()
     {
         m_render_index_ = 0;

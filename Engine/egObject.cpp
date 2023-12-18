@@ -234,11 +234,6 @@ namespace Engine::Abstract
         }
     }
 
-    TypeName Object::GetVirtualTypeName() const
-    {
-        return typeid(Object).name();
-    }
-
     const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents() const
     {
         return m_priority_sorted_;

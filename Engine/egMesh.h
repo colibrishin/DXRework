@@ -37,7 +37,6 @@ namespace Engine::Resources
         UINT     GetRenderIndex() const;
         UINT     GetRemainingRenderIndex() const;
         UINT     GetIndexCount() const;
-        TypeName GetVirtualTypeName() const final;
 
         void ResetRenderIndex();
 

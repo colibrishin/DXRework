@@ -44,12 +44,7 @@ namespace Engine::Abstract
         ImGui::Unindent(2);
     }
 
-    TypeName Resource::GetVirtualTypeName() const
-    {
-        return typeid(Resource).name();
-    }
-
-    Resource::Resource(std::filesystem::path path, eResourcePriority priority)
+    Resource::Resource(std::filesystem::path path, eResourceType type)
     : m_bLoaded_(false),
       m_path_(std::move(path)),
       m_priority_(priority)

@@ -67,9 +67,4 @@ namespace Engine::Resources
     }
 
     void Texture::FixedUpdate(const float& dt) {}
-
-    TypeName Texture::GetVirtualTypeName() const
-    {
-        return typeid(Texture).name();
-    }
 } // namespace Engine::Resources

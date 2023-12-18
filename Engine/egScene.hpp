@@ -26,7 +26,7 @@ namespace Engine
         void PostRender(const float& dt) override;
 
         void     OnDeserialized() override;
-        TypeName GetVirtualTypeName() const final;
+
 
         EntityID AddGameObject(const StrongObject& obj, eLayerType layer);
         void     RemoveGameObject(EntityID id, eLayerType layer);

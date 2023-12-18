@@ -34,9 +34,6 @@ namespace Engine::Components
         SERIALIZER_ACCESS;
         MeshRenderer();
 
-    public:
-        TypeName GetVirtualTypeName() const override;
-
     private:
         template <typename T>
         __forceinline void CycleIterator(std::vector<T>& container, typename std::vector<T>::iterator& iterator)

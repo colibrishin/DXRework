@@ -191,10 +191,5 @@ namespace Engine::Components
         return m_mesh_;
     }
 
-    MeshRenderer::MeshRenderer() : Component(COMPONENT_PRIORITY_MESH_RENDERER, {}) {}
-
-    TypeName MeshRenderer::GetVirtualTypeName() const
-    {
-        return typeid(MeshRenderer).name();
-    }
+    MeshRenderer::MeshRenderer() : Component(COM_T_MESH_RENDERER, {}) {}
 }

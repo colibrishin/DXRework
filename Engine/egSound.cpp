@@ -48,11 +48,6 @@ namespace Engine::Resources
 
     void Sound::PostRender(const float& dt) {}
 
-    TypeName Sound::GetVirtualTypeName() const
-    {
-        return typeid(Sound).name();
-    }
-
     void Sound::Play_INTERNAL(const WeakObject& origin)
     {
         FMOD_VECTOR pos{};
