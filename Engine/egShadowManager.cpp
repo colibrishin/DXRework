@@ -176,12 +176,6 @@ namespace Engine::Manager::Graphics
         m_lights_.clear();
         m_cascade_vp_buffer_.clear();
 
-        for (auto& buffer : m_graphic_shadow_buffer_ | std::views::values)
-        {
-            buffer.depth_stencil_view.Reset();
-            buffer.shader_resource_view.Reset();
-        }
-
         for (auto& subfrusta : m_subfrusta_)
         {
             subfrusta = {};
