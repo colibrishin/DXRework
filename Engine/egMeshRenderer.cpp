@@ -5,7 +5,7 @@
 #include "egMesh.h"
 #include "egTexture.h"
 #include "egNormalMap.h"
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 #include "egVertexShaderInternal.h"
 #include "egShader.hpp"
 

@@ -8,7 +8,7 @@
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
 #include "egProjectionFrustum.h"
-#include "egResourceManager.h"
+#include "egResourceManager.hpp"
 #include "egRenderPipeline.h"
 #include "egSceneManager.hpp"
 #include "egShadowManager.hpp"

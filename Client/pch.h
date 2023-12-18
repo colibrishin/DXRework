@@ -62,7 +62,7 @@
 #include "../Engine/egIShader.h"
 #include "../Engine/egManagerHelper.hpp"
 #include "../Engine/egObject.hpp"
-#include "../Engine/egResourceManager.h"
+#include "../Engine/egResourceManager.hpp"
 #include "../Engine/egRigidbody.h"
 #include "../Engine/egTexture.h"
 #include "../Engine/egTransform.h"
