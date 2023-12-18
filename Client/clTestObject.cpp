@@ -16,20 +16,19 @@ namespace Client::Object
     {
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(Engine::GetResourceManager()
-                    .GetResource<Engine::Mesh::SphereMesh>("SphereMesh")
-                    .lock());
-        mr->AddTexture(Engine::GetResourceManager()
-                       .GetResource<Engine::Resources::Texture>("TestTexture")
-                       .lock());
-        mr->AddVertexShader(Engine::GetResourceManager()
-                            .GetResource<Engine::Graphic::VertexShader>("vs_default")
-                            .lock());
-        mr->AddPixelShader(Engine::GetResourceManager()
-                           .GetResource<Engine::Graphic::PixelShader>("ps_normalmap")
-                           .lock());
-        mr->AddNormalMap(Engine::GetResourceManager()
-                         .GetResource<Engine::Resources::NormalMap>("TestNormalMap")
-                         .lock());
+                    .GetResource<Engine::Mesh::SphereMesh>("SphereMesh"));
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Resources::Texture>("TestTexture"));
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Graphic::PixelShader>("ps_normalmap"));
+        mr->Add(
+                Engine::GetResourceManager()
+                .GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

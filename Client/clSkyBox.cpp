@@ -17,13 +17,11 @@ namespace Client::Object
     {
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(Engine::GetResourceManager().GetResource<Client::Mesh::BackSphereMesh>("BackSphereMesh").lock());
-        mr->AddTexture(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("Sky").lock());
-        mr->AddVertexShader(
-                            Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default").
-                                                         lock());
-        mr->AddPixelShader(
-                           Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_default_nolight").
-                                                        lock());
+        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("Sky"));
+        mr->Add(
+                Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
+        mr->Add(
+                Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_default_nolight"));
 
         AddComponent<Engine::Components::Transform>();
         const auto tr = GetComponent<Engine::Components::Transform>().lock();

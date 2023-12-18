@@ -8,7 +8,7 @@
 #include <egSphereMesh.h>
 #include <egFont.h>
 #include <egNormalMap.h>
-#include <egResourceManager.h>
+#include <egResourceManager.hpp>
 #include <egSceneManager.hpp>
 #include <egSerialization.hpp>
 #include <egSound.h>
