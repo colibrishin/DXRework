@@ -1,5 +1,14 @@
 #pragma once
 
+namespace Engine
+{
+    enum eSceneType : UINT
+    {
+        SCENE_T_UNK = 0,
+        SCENE_T_TEST,
+    };
+}
+
 namespace Client
 {
     void fnClient();

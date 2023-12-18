@@ -1,4 +1,5 @@
 #pragma once
+#include "Client.h"
 #include "clFPSCounter.hpp"
 #include "clMousePosition.hpp"
 #include "clPlaneObject.hpp"
@@ -12,6 +13,8 @@ namespace Client::Scene
     class TestScene : public Engine::Scene
     {
     public:
+        CLIENT_SCENE_CHECK_CONSTEXPR(Engine::SCENE_T_TEST)
+
         TestScene();
         ~TestScene() override = default;
 
@@ -24,6 +27,7 @@ namespace Client::Scene
 
     private:
         SERIALIZER_ACCESS
+
         void AddCustomObject() override;
     };
 } // namespace Client::Scene
