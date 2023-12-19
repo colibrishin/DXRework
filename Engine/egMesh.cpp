@@ -4,7 +4,6 @@
 #include <execution>
 #include <tiny_obj_loader.h>
 #include "egManagerHelper.hpp"
-#include <fbxsdk.h>
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Mesh,
@@ -283,10 +282,6 @@ namespace Engine::Resources
             if (GetPath().extension() == ".obj")
             {
                 ReadOBJFile();
-            }
-            if (GetPath().extension() == ".fbx")
-            {
-                GetFBXLoader().LoadFBXFile(GetPath(), *this);
             }
         }
         else

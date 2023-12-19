@@ -3,7 +3,6 @@
 
 #include "clCharacterController.hpp"
 #include "clPlayerMesh.h"
-#include "clTestMesh.h"
 #include "egMeshRenderer.h"
 
 SERIALIZER_ACCESS_IMPL(Client::Object::Player,
@@ -16,7 +15,7 @@ namespace Client::Object
         Object::Initialize();
 
         const auto mesh = Engine::GetResourceManager()
-                          .GetResource<Mesh::TestMesh>("TestMesh").lock();
+                          .GetResource<Mesh::PlayerMesh>("PlayerMesh").lock();
 
         const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
         mr->SetMesh(mesh);

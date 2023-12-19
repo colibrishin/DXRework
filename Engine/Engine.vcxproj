@@ -35,7 +35,6 @@
     <ClInclude Include="egApplication.h" />
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
-    <ClInclude Include="egFBXLoader.h" />
     <ClInclude Include="egFont.h" />
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egIShader.h" />
@@ -99,7 +98,6 @@
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egEntity.cpp" />
-    <ClCompile Include="egFBXLoader.cpp" />
     <ClCompile Include="egFont.cpp" />
     <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egGravity.cpp" />
@@ -388,7 +386,6 @@
   <ImportGroup Label="Shared">
     <Import Project="..\DX\fmod\fmod.vcxitems" Label="Shared" />
     <Import Project="..\DX\imgui\imgui.vcxitems" Label="Shared" />
-    <Import Project="..\DX\fbx-sdk\fbx-sdk.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
