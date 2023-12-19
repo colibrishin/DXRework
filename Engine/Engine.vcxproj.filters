@@ -200,6 +200,9 @@
     <Filter Include="Component\MeshRenderer">
       <UniqueIdentifier>{f171939c-b0da-4abc-970b-a40a797503b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Component\SoundPlayer">
+      <UniqueIdentifier>{91edda74-d311-4fc6-ae2b-f457ed7347b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -366,9 +369,6 @@
     <ClInclude Include="egMouseManager.h">
       <Filter>Singleton\Internal\MouseManager</Filter>
     </ClInclude>
-    <ClInclude Include="egResourceManager.h">
-      <Filter>Singleton\Internal\ResourceManager</Filter>
-    </ClInclude>
     <ClInclude Include="egSceneManager.hpp">
       <Filter>Singleton\Internal\SceneManager</Filter>
     </ClInclude>
@@ -383,6 +383,10 @@
     </ClInclude>
     <ClInclude Include="egMeshRenderer.h">
       <Filter>Component\MeshRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="egResourceManager.hpp" />
+    <ClInclude Include="egSoundPlayer.h">
+      <Filter>Component\SoundPlayer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -546,6 +550,9 @@
     </ClCompile>
     <ClCompile Include="egMeshRenderer.cpp">
       <Filter>Component\MeshRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egSoundPlayer.cpp">
+      <Filter>Component\SoundPlayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

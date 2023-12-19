@@ -66,6 +66,7 @@
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egShadowManager.hpp" />
     <ClInclude Include="egSound.h" />
+    <ClInclude Include="egSoundPlayer.h" />
     <ClInclude Include="egSphereMesh.h" />
     <ClInclude Include="egStateController.hpp" />
     <ClInclude Include="egTaskScheduler.h" />
@@ -126,6 +127,7 @@
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egShadowManager.cpp" />
     <ClCompile Include="egSound.cpp" />
+    <ClCompile Include="egSoundPlayer.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />
     <ClCompile Include="egTaskScheduler.cpp" />
     <ClCompile Include="egText.cpp" />
