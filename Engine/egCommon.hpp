@@ -75,7 +75,8 @@ namespace Engine
         COM_T_COLLIDER,
         COM_T_RIDIGBODY,
         COM_T_STATE,
-        COM_T_MESH_RENDERER
+        COM_T_MESH_RENDERER,
+        COMP_T_SOUND_PLAYER
     };
 
     enum eDefObjectType

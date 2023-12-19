@@ -33,6 +33,7 @@ namespace Engine::Resources
         void Stop(const WeakObject& origin);
         void StopLoop(const WeakObject& origin);
 
+        void UpdatePosition(const WeakObject & origin);
         void SetRollOff(const FMOD_MODE& roll_off) const;
         void SetMinDistance(const float& min_distance);
         void SetMaxDistance(const float& max_distance);

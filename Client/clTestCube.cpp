@@ -5,6 +5,8 @@
 #include <egNormalMap.h>
 
 #include "egMeshRenderer.h"
+#include "egSoundPlayer.h"
+#include "egSound.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestCube,
@@ -38,6 +40,10 @@ namespace Client::Object
 
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
+
+        const auto snd = AddComponent<Engine::Components::SoundPlayer>().lock();
+        snd->SetSound(Engine::GetResourceManager().GetResource<Engine::Resources::Sound>("AmbientSound").lock());
+        snd->PlaySound();
     }
 
     inline TestCube::~TestCube() {}

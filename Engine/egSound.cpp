@@ -108,6 +108,26 @@ namespace Engine::Resources
         Stop(origin);
     }
 
+    void Sound::UpdatePosition(const WeakObject& origin)
+    {
+        FMOD_VECTOR pos{};
+        FMOD_VECTOR vel{};
+
+        if (const auto tr = origin.lock()->GetComponent<Components::Transform>().lock())
+        {
+            pos = {tr->GetPosition().x, tr->GetPosition().y, tr->GetPosition().z};
+        }
+        if (const auto rb = origin.lock()->GetComponent<Components::Rigidbody>().lock())
+        {
+            vel = {
+                rb->GetLinearMomentum().x, rb->GetLinearMomentum().y,
+                rb->GetLinearMomentum().z
+            };
+        }
+
+        m_channel_map_[origin]->set3DAttributes(&pos, &vel);
+    }
+
     void Sound::SetRollOff(const FMOD_MODE& roll_off) const
     {
         if (m_sound_)
