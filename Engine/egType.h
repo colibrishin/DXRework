@@ -111,6 +111,7 @@ namespace Engine
         class Transform;
         class Rigidbody;
         class ObserverController;
+        class SoundPlayer;
     } // namespace Component
 
     class Scene;
@@ -206,6 +207,7 @@ namespace Engine
     using StrongCamera = boost::shared_ptr<Objects::Camera>;
     using StrongFont = boost::shared_ptr<Resources::Font>;
     using StrongMesh = boost::shared_ptr<Resources::Mesh>;
+    using StrongSound = boost::shared_ptr<Resources::Sound>;
 
     using JointMap = std::map<std::string, Joint>;
 
