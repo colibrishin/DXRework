@@ -13,8 +13,6 @@
 #include "egRenderable.h"
 #include "egResource.h"
 
-#include <fbxsdk.h>
-
 namespace Engine::Resources
 {
     using Shape = std::vector<VertexElement>;

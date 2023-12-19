@@ -3,6 +3,7 @@
     "dependencies": [
         "tinyobjloader",
         "boost-smart-ptr",
-        "boost-serialization"
+        "boost-serialization",
+        "assimp"
     ]
 }

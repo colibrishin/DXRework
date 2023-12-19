@@ -113,9 +113,6 @@
     <ClInclude Include="clPlayerMesh.h">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clTestMesh.h">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -160,9 +157,6 @@
     <ClCompile Include="clPlayerMesh.cpp">
       <Filter>Resource\Mesh</Filter>
     </ClCompile>
-    <ClCompile Include="clTestMesh.cpp">
-      <Filter>Resource\Mesh</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -172,12 +166,6 @@
       <Filter>Resource\Scene</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="player.obj">
-      <Filter>Resource\Mesh</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="player.fbx">
-      <Filter>Resource\Mesh</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="bob_lamp_update.fbx">
       <Filter>Resource\Mesh</Filter>
     </CopyFileToFolders>
   </ItemGroup>

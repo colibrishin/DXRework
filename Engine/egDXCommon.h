@@ -124,34 +124,16 @@ namespace Engine
         UINT        frame;
         UINT        start_frame;
         UINT        end_frame;
-        Matrix      global_transform;
-        KeyFrame*   next = nullptr;
-
-        ~KeyFrame()
-        {
-            if (next != nullptr)
-            {
-                delete next;
-            }
-        }
+        Matrix      transform;
     };
 
     struct Joint
     {
-        std::string name;
-        UINT        index;
-        UINT        parent_index;
-        Matrix      global_transform;
-        Matrix      local_transform;
-        KeyFrame*   key_frames  = nullptr;
-
-        ~Joint()
-        {
-            if (key_frames != nullptr)
-            {
-                delete key_frames;
-            }
-        }
+        std::string           name;
+        UINT                  index;
+        UINT                  parent_index;
+        Matrix                bind_pose_inverse;
+        std::vector<KeyFrame> key_frames;
     };
 
     struct PerspectiveBuffer
