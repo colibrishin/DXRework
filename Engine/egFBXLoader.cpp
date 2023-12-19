@@ -208,32 +208,9 @@ namespace Engine::Manager
     {
         Joint joint;
 
-        joint.index = static_cast<UINT>(target_mesh.m_joints_.size());
-        joint.parent_index = depth;
-
-        const auto transform = node->EvaluateGlobalTransform();
-
-        for (int i = 0; i < 4; ++i)
-        {
-            const auto row = transform.GetRow(i);
-
-            for (int j = 0; j < 4; ++j)
-            {
-                joint.global_transform.m[i][j] = static_cast<float>(row[j]);
-            }
-        }
-
-        for (int i = 0; i < 4; ++i)
-        {
-            const auto row = node->EvaluateLocalTransform().GetRow(i);
-
-            for (int j = 0; j < 4; ++j)
-            {
-                joint.local_transform.m[i][j] = static_cast<float>(row[j]);
-            }
-        }
-
-        joint.name = node->GetName();
+        joint.index                            = static_cast<UINT>(target_mesh.m_joints_.size());
+        joint.parent_index                     = depth;
+        joint.name                             = node->GetName();
         target_mesh.m_joints_[node->GetName()] = joint;
     }
 
@@ -249,7 +226,26 @@ namespace Engine::Manager
         }
     }
 
-    void FBXLoader::RipDeformation(const FbxMesh* mesh, std::vector<Resources::Shape>& shape, const JointMap& joints)
+    Vector4 __vectorcall FBXLoader::FbxToVector4(const FbxVector4& v)
+    {
+        return {
+            static_cast<float>(v[0]), static_cast<float>(v[1]), static_cast<float>(v[2]),
+            static_cast<float>(v[3])
+        };
+    };
+
+    Matrix __vectorcall FBXLoader::FbxToMatrix(const FbxAMatrix& m)
+    {
+        return Matrix
+        {
+            FbxToVector4(m.GetRow(0)),
+            FbxToVector4(m.GetRow(1)),
+            FbxToVector4(m.GetRow(2)),
+            FbxToVector4(m.GetRow(3))
+        };
+    };
+
+    void FBXLoader::RipDeformation(const FbxMesh* mesh, std::vector<Resources::Shape>& shape, JointMap& joints)
     {
         const auto deformer_count = mesh->GetDeformerCount();
 
@@ -258,6 +254,12 @@ namespace Engine::Manager
             const auto deformer = mesh->GetDeformer(j);
             const auto skin = static_cast<FbxSkin*>(deformer);
 
+            const auto geometry_transform = FbxAMatrix{
+                    mesh->GetNode()->GetGeometricTranslation(FbxNode::eSourcePivot),
+                    mesh->GetNode()->GetGeometricRotation(FbxNode::eSourcePivot),
+                    mesh->GetNode()->GetGeometricScaling(FbxNode::eSourcePivot)
+            };
+
             const auto cluster_count = skin->GetClusterCount();
 
             for (int k = 0; k < cluster_count; ++k)
@@ -265,13 +267,20 @@ namespace Engine::Manager
                 const auto cluster = skin->GetCluster(k);
 
                 const auto joint_name = cluster->GetLink()->GetName();
-
-                const auto joint = joints.find(joint_name);
+                auto       joint      = joints.find(joint_name);
 
                 if (joint == joints.end())
                 {
                     continue;
                 }
+
+                FbxAMatrix bindTimeMeshTransform;
+                FbxAMatrix bindTimeClusterTransform;
+
+                cluster->GetTransformMatrix(bindTimeClusterTransform);
+                cluster->GetTransformLinkMatrix(bindTimeMeshTransform);
+
+                joint->second.bind_pose_inverse = FbxToMatrix(bindTimeClusterTransform.Inverse() * bindTimeMeshTransform * geometry_transform);
 
                 const auto joint_index = joint->second.index;
                 const auto influence_count = cluster->GetControlPointIndicesCount();
@@ -294,6 +303,33 @@ namespace Engine::Manager
                             break;
                         }
                     }
+                }
+
+                const FbxAnimStack* anim_stack = m_fbx_scene_->GetSrcObject<FbxAnimStack>(0);
+                FbxString           anim_name  = anim_stack->GetName();
+                const FbxTakeInfo*  take_info  = m_fbx_scene_->GetTakeInfo(anim_name);
+
+                FbxTime           start_time  = take_info->mLocalTimeSpan.GetStart();
+                FbxTime           end_time    = take_info->mLocalTimeSpan.GetStop();
+                const FbxLongLong anim_length = end_time.GetFrameCount(FbxTime::eFrames24) - start_time.GetFrameCount(FbxTime::eFrames24) + 1;
+                joint->second.key_frames.resize(anim_length);
+
+                for (auto t = start_time.GetFrameCount(FbxTime::eFrames24); t <= end_time.GetFrameCount(FbxTime::eFrames24); ++t)
+                {
+                    FbxTime time;
+                    time.SetFrame(t, FbxTime::eFrames24);
+
+                    KeyFrame kf;
+                    kf.frame     = t;
+                    kf.name      = anim_name;
+
+                    const auto offset = mesh->GetNode()->EvaluateGlobalTransform() * geometry_transform;
+                    const auto animation_transform = offset.Inverse() * cluster->GetLink()->EvaluateGlobalTransform(time);
+
+                    kf.transform = FbxToMatrix(animation_transform);
+                    kf.start_frame = static_cast<UINT>(start_time.GetFrameCount(FbxTime::eFrames24));
+                    kf.end_frame   = static_cast<UINT>(end_time.GetFrameCount(FbxTime::eFrames24));
+                    joint->second.key_frames[t] = kf;
                 }
             }
         }

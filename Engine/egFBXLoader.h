@@ -24,11 +24,13 @@ namespace Engine::Manager
     private:
         using IdxVtxPair = std::map<int, VertexElement*>;
 
-        void IterateFBXMesh(FbxNode* child, Engine::Resources::Mesh& target_mesh);
-        void IterateFBXSkeleton(FbxNode* node, UINT depth, Engine::Resources::Mesh& target_mesh);
-        void IterateFBXSkin(FbxNode* child, Engine::Resources::Mesh& target_mesh);
-        void RipDeformation(
-            const FbxMesh * mesh, std::vector<Resources::Shape> & shape, const JointMap & joints);
+        void                 IterateFBXMesh(FbxNode* child, Engine::Resources::Mesh& target_mesh);
+        void                 IterateFBXSkeleton(FbxNode* node, UINT depth, Engine::Resources::Mesh& target_mesh);
+        void                 IterateFBXSkin(FbxNode* child, Engine::Resources::Mesh& target_mesh);
+        Vector4 __vectorcall FbxToVector4(const FbxVector4& v);
+        Matrix  __vectorcall FbxToMatrix(const FbxAMatrix& m);
+        void                 RipDeformation(
+            const FbxMesh * mesh, std::vector<Resources::Shape> & shape, JointMap & joints);
         void RipVertexElementFromFBX(
             const FbxMesh* mesh, Resources::Shape& shape, Resources::IndexCollection& indices, int polygon_idx);
 
