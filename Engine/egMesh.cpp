@@ -5,120 +5,17 @@
 #include <tiny_obj_loader.h>
 #include "egManagerHelper.hpp"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Mesh,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Resource)))
 
 namespace Engine::Resources
 {
-    void Mesh::ReadOBJFile()
-    {
-        tinyobj::ObjReader       reader;
-        tinyobj::ObjReaderConfig reader_config;
-        reader_config.vertex_color = true;
-
-        // todo: wstring is not supported?
-        reader.ParseFromFile(GetPath().generic_string().c_str(), reader_config);
-
-        const auto& attrib    = reader.GetAttrib();
-        const auto& shapes    = reader.GetShapes();
-        const auto& materials = reader.GetMaterials();
-
-        std::mutex commit_lock;
-        std::mutex iter_lock;
-
-        std::for_each(
-                      std::execution::par, shapes.begin(), shapes.end(),
-                      [&](const tinyobj::shape_t& shape)
-                      {
-                          UINT            index_offset = 0;
-                          Shape           new_shape;
-                          IndexCollection new_indices;
-
-                          std::mutex shape_lock;
-                          std::mutex index_lock;
-
-                          std::ranges::for_each(
-                                                shape.mesh.num_face_vertices, [&](UINT f)
-                                                {
-                                                    const UINT fv = shape.mesh.num_face_vertices[f];
-
-                                                    for (UINT v = 0; v < fv; v++)
-                                                    {
-                                                        VertexElement vertex;
-
-                                                        // access to vertex
-                                                        const tinyobj::index_t idx = shape.mesh.indices[
-                                                            index_offset + v];
-                                                        new_indices.push_back(index_offset + v);
-
-                                                        const tinyobj::real_t vx =
-                                                                attrib.vertices[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 0];
-                                                        const tinyobj::real_t vy =
-                                                                attrib.vertices[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 1];
-                                                        const tinyobj::real_t vz =
-                                                                attrib.vertices[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 2];
-
-                                                        vertex.position = Vector3(vx, vy, vz);
-
-                                                        if (idx.normal_index >= 0)
-                                                        {
-                                                            const tinyobj::real_t nx =
-                                                                    attrib.normals[
-                                                                        3 * static_cast<UINT>(idx.normal_index) + 0];
-                                                            const tinyobj::real_t ny =
-                                                                    attrib.normals[
-                                                                        3 * static_cast<UINT>(idx.normal_index) + 1];
-                                                            const tinyobj::real_t nz =
-                                                                    attrib.normals[
-                                                                        3 * static_cast<UINT>(idx.normal_index) + 2];
-
-                                                            vertex.normal = Vector3(nx, ny, nz);
-                                                        }
-
-                                                        if (idx.texcoord_index >= 0)
-                                                        {
-                                                            const tinyobj::real_t tx =
-                                                                    attrib.texcoords[
-                                                                        2 * static_cast<UINT>(idx.texcoord_index) +
-                                                                        0];
-                                                            const tinyobj::real_t ty =
-                                                                    attrib.texcoords[
-                                                                        2 * static_cast<UINT>(idx.texcoord_index) +
-                                                                        1];
-
-                                                            vertex.texCoord = Vector2(tx, ty);
-                                                        }
-
-                                                        // Optional: vertex colors
-                                                        tinyobj::real_t red =
-                                                                attrib.colors[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 0];
-                                                        tinyobj::real_t green =
-                                                                attrib.colors[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 1];
-                                                        tinyobj::real_t blue =
-                                                                attrib.colors[
-                                                                    3 * static_cast<UINT>(idx.vertex_index) + 2];
-
-                                                        vertex.color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                                                        new_shape.push_back(vertex);
-                                                    }
-
-                                                    index_offset += fv;
-                                                });
-
-                          {
-                              std::lock_guard cl(commit_lock);
-                              m_vertices_.push_back(new_shape);
-                              m_indices_.push_back(new_indices);
-                          }
-                      });
-    }
-
     const std::vector<Shape>& Mesh::GetShapes()
     {
         return m_vertices_;
@@ -275,14 +172,104 @@ namespace Engine::Resources
     : Resource("", RES_T_MESH),
       m_render_index_(0) {}
 
+    void Mesh::ReadMeshFile()
+    {
+        Assimp::Importer importer;
+        const aiScene*   scene = importer.ReadFile(
+                                                 GetPath().string(),
+                                                 aiProcess_Triangulate | aiProcess_GenSmoothNormals |
+                                                 aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
+                                                 aiProcess_MakeLeftHanded);
+
+        if (scene == nullptr)
+        {
+            throw std::runtime_error(importer.GetErrorString());
+        }
+
+        if(scene->HasMeshes())
+        {
+            const auto shape_count = scene->mNumMeshes;
+
+            for (int i = 0; i < shape_count; ++i)
+            {
+                Resources::Shape shape;
+                IndexCollection  indices;
+                const auto shape_ = scene->mMeshes[i];
+
+                const auto v_count = shape_->mNumVertices;
+                const auto f_count  = shape_->mNumFaces;
+
+                // extract vertices
+                for (int j = 0; j < v_count; ++j)
+                {
+                    const auto vec = shape_->mVertices[j];
+
+                    Vector2 tex_coord = {0.f, 0.f};
+                    Vector3 normal_ = {0.f, 0.f, 0.f};
+                    Vector3 tangent_ = {0.f, 0.f, 0.f};
+                    Vector3 binormal_ = {0.f, 0.f, 0.f};
+
+                    if (shape_->HasTextureCoords(j))
+                    {
+                        const auto tex = shape_->mTextureCoords[j]; // Assuming UV exists in 2D
+                        tex_coord = Vector2{tex->x, tex->y};
+                    }
+
+                    if (shape_->HasNormals())
+                    {
+                        const auto normal = shape_->mNormals[j];
+                        normal_ = Vector3{normal.x, normal.y, normal.z};
+                    }
+
+                    if (shape_->HasTangentsAndBitangents())
+                    {
+                        const auto tangent = shape_->mTangents[j];
+                        const auto binormal = shape_->mBitangents[j];
+
+                        tangent_ = Vector3{tangent.x, tangent.y, tangent.z};
+                        binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
+                    }
+                    
+                    shape.push_back(
+                                    VertexElement
+                                    {
+                                        {vec.x, vec.y, vec.z},
+                                        {1.0f, 0.f, 0.f, 1.f},
+                                        tex_coord,
+                                        normal_,
+                                        tangent_,
+                                        binormal_
+                                    });
+                }
+
+                for (int j = 0; j < f_count; ++j)
+                {
+                    const auto face = shape_->mFaces[j];
+                    const auto indices_ = face.mNumIndices;
+
+                    // extract indices
+                    for (int k = 0; k < indices_; ++k)
+                    {
+                        indices.push_back(face.mIndices[k]);
+                    }
+                }
+
+                m_vertices_.push_back(shape);
+                m_indices_.push_back(indices);
+            }
+        }
+        else
+        {
+            throw std::runtime_error("No meshes found in file");
+        }
+
+    }
+
     void Mesh::Load_INTERNAL()
     {
         if (!GetPath().empty())
         {
-            if (GetPath().extension() == ".obj")
-            {
-                ReadOBJFile();
-            }
+            ReadMeshFile();
         }
         else
         {

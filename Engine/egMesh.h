@@ -48,11 +48,10 @@ namespace Engine::Resources
         friend class Manager::FBXLoader;
 
 
+        void         ReadMeshFile();
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();
         void         Unload_INTERNAL() override;
-
-        void ReadOBJFile();
 
 
         static void __vectorcall GenerateTangentBinormal(
