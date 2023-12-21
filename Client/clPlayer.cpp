@@ -2,11 +2,12 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
-#include "clPlayerMesh.h"
-#include "egMeshRenderer.h"
+#include "clPlayerModel.h"
+#include "egModelRenderer.h"
 
-SERIALIZER_ACCESS_IMPL(Client::Object::Player,
-    _ARTAG(_BSTSUPER(Object)))
+SERIALIZER_ACCESS_IMPL(
+                       Client::Object::Player,
+                       _ARTAG(_BSTSUPER(Object)))
 
 namespace Client::Object
 {
@@ -14,30 +15,25 @@ namespace Client::Object
     {
         Object::Initialize();
 
-        const auto mesh = Engine::GetResourceManager()
-                          .GetResource<Mesh::PlayerMesh>("PlayerMesh").lock();
+        const auto model = Resources::Model::Get("PlayerModel").lock();
 
-        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
-        mr->SetMesh(mesh);
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::VertexShader>("vs_default"));
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::PixelShader>("ps_color"));
+        const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
+        mr->SetModel(model);
+        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default"));
+        mr->AddPixelShader(Graphic::PixelShader::Get("ps_color"));
 
-        AddComponent<Engine::Components::Transform>();
-        const auto cldr = AddComponent<Engine::Components::Collider>().lock();
-        const auto rb   = AddComponent<Engine::Components::Rigidbody>().lock();
+        AddComponent<Components::Transform>();
+        const auto cldr = AddComponent<Components::Collider>().lock();
+        const auto rb   = AddComponent<Components::Rigidbody>().lock();
         AddComponent<Client::State::CharacterController>();
 
-        cldr->SetMesh(mesh);
+        cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        const auto head_cldr = AddComponent<Engine::Components::Collider>().lock();
+        const auto head_cldr = AddComponent<Components::Collider>().lock();
         head_cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
         head_cldr->SetDirtyWithTransform(true);
         head_cldr->SetMass(1.0f);

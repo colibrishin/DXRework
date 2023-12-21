@@ -4,7 +4,9 @@
 #include <egNormalMap.h>
 #include <egSphereMesh.h>
 
-#include "egMeshRenderer.h"
+#include "egModel.h"
+#include "egModelRenderer.h"
+#include "egShader.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestObject,
@@ -14,31 +16,22 @@ namespace Client::Object
 {
     inline void TestObject::Initialize()
     {
-        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
-        mr->SetMesh(Engine::GetResourceManager()
-                    .GetResource<Engine::Mesh::SphereMesh>("SphereMesh"));
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Resources::Texture>("TestTexture"));
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::VertexShader>("vs_default"));
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Graphic::PixelShader>("ps_normalmap"));
-        mr->Add(
-                Engine::GetResourceManager()
-                .GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
+        const auto model = Resources::Model::Get("SphereModel");
+        const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
-        AddComponent<Engine::Components::Transform>();
-        AddComponent<Engine::Components::Collider>();
-        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
-        cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
+        mr->SetModel(model);
+        mr->AddVertexShader(Engine::Graphic::VertexShader::Get("vs_default"));
+        mr->AddPixelShader(Engine::Graphic::PixelShader::Get("ps_normalmap"));
+
+        AddComponent<Components::Transform>();
+        AddComponent<Components::Collider>();
+        const auto cldr = GetComponent<Components::Collider>().lock();
+        cldr->SetType(BOUNDING_TYPE_SPHERE);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
-        AddComponent<Engine::Components::Rigidbody>();
-        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
+        AddComponent<Components::Rigidbody>();
+        const auto rb = GetComponent<Components::Rigidbody>().lock();
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
     }

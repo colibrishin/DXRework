@@ -67,8 +67,10 @@
 #include "../Engine/egTexture.h"
 #include "../Engine/egTransform.h"
 
+using DirectX::SimpleMath::Vector2;
+using DirectX::SimpleMath::Vector3;
 using namespace DirectX;
-using namespace DirectX::SimpleMath;
-using Microsoft::WRL::ComPtr;
+
+using namespace Engine;
 
 #endif // PCH_H
