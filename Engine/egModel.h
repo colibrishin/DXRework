@@ -58,6 +58,8 @@ namespace Engine::Resources
             {
                 static_assert("Invalid resource type");
             }
+
+            UpdateVertices();
         }
 
         static StrongModel Create(const std::string& name, const std::vector<StrongResource>& resources);
@@ -71,17 +73,21 @@ namespace Engine::Resources
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
 
+
 	private:
+        void UpdateVertices();
+
         UINT                              m_render_index_;
         std::vector<StrongMesh>           m_meshes_;
-        std::vector<const Vector3*>       m_vertices_;
         std::map<std::string, StrongBone> m_bones_;
         std::vector<StrongTexture>        m_textures_;
         std::vector<StrongNormalMap>      m_normal_maps_;
         std::vector<StrongAnimation>      m_animations_;
         BoundingBox                       m_bounding_box_;
 
+        // non-serialized
         inline static Assimp::Importer s_importer_;
+        std::vector<const Vector3*>    m_cached_vertices_;
     };
 }
 
