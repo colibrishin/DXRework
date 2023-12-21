@@ -2,7 +2,6 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
-#include "clPlayerModel.h"
 #include "egModelRenderer.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -15,7 +14,7 @@ namespace Client::Object
     {
         Object::Initialize();
 
-        const auto model = Resources::Model::Get("PlayerModel").lock();
+        const auto model = Resources::Model::Get("BobModel").lock();
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 

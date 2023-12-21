@@ -13,8 +13,9 @@
 #include <egSerialization.hpp>
 #include <egSound.h>
 #include <egSphereMesh.h>
+#include <egModel.h>
+
 #include "clBackSphereMesh.hpp"
-#include "clPlayerModel.h"
 #include "clTestScene.hpp"
 #include "framework.h"
 
@@ -23,15 +24,8 @@ namespace Client
 {
     void InitializeTexture()
     {
-        Engine::GetResourceManager().AddResource(
-                                                 "TestTexture",
-                                                 boost::make_shared<Engine::Resources::Texture>("./Texture.dds"));
-        Engine::GetResourceManager().AddResource(
-                                                 "Sky", boost::make_shared<Engine::Resources::Texture>("./Sky.dds"));
-        Engine::GetResourceManager().AddResource(
-                                                 "TestNormalMap",
-                                                 boost::make_shared<Engine::Resources::NormalMap>(
-                                                  "./Texture-Normal.dds"));
+        Engine::Resources::Texture::Create("TestTexture", "./Texture.dds");
+        Engine::Resources::Texture::Create("Sky", "./Sky.dds");
     }
 
     void InitializeMesh()
@@ -42,39 +36,32 @@ namespace Client
                                                  "CubeMesh", boost::make_shared<Engine::Meshes::CubeMesh>());
         Engine::GetResourceManager().AddResource(
                                                  "SphereMesh", boost::make_shared<Engine::Meshes::SphereMesh>());
-         Engine::GetResourceManager().AddResource(
+        Engine::GetResourceManager().AddResource(
                                                  "BackSphereMesh", boost::make_shared<Meshes::BackSphereMesh>());
     }
 
     void InitializeNormal()
     {
-        Engine::GetResourceManager().AddResource(
-                                                 "WaterNormal",
-                                                 boost::make_shared<Engine::Resources::NormalMap>(
-                                                  "./Water-Normal.dds"));
+        Engine::Resources::NormalMap::Create("TestNormalMap", "./Texture-Normal.dds");
+        Engine::Resources::NormalMap::Create("WaterNormalMap", "./Water-Normal.dds");
     }
 
     void InitializeSound()
     {
-        Engine::GetResourceManager().AddResource(
-                                                 "AmbientSound", boost::make_shared<Engine::Resources::Sound>(
-                                                  "./"
-                                                  "crowded-avenue-people-talking-vendors-shouting-"
-                                                  "musicians-playing.mp3"));
+        Engine::Resources::Sound::Create(
+                                         "AmbientSound",
+                                         "./crowded-avenue-people-talking-vendors-shouting-musicians-playing.mp3");
     }
 
     void InitializeFont()
     {
-        Engine::GetResourceManager().AddResource(
-                                                 "DefaultFont",
-                                                 boost::make_shared<Engine::Resources::Font>("./consolas.spritefont"));
+        Engine::Resources::Font::Create("DefaultFont", "./consolas.spritefont");
     }
 
     void InitializeModel()
     {
-        Engine::GetResourceManager().AddResource(
-                                                 "PlayerModel",
-                                                 boost::make_shared<Client::Models::PlayerModel>());
+        Resources::Model::Create("BobModel", "./bob_lamp_update_export.fbx");
+        Resources::Model::Create("PlayerModel", "./player.obj");
 
         std::vector<Engine::StrongResource> resources;
 
