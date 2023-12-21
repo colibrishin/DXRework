@@ -7,11 +7,18 @@
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
-Texture2D      shaderTexture : register(t0);
-Texture2D      shaderNormalMap : register(t1);
-Texture2DArray cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
-Texture2D      renderedTexture : register(t3);
-//StructuredBuffer<BoneTransform> boneTransformBuffer : register(t4);
+struct BonePrimitive
+{
+    uint   index : BONEINDEX;
+    float  ___p[3] : PADDING;
+    matrix offset : BONETOFFSET;
+};
+
+Texture2D                       shaderTexture : register(t0);
+Texture2D                       shaderNormalMap : register(t1);
+Texture2DArray                  cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
+Texture2D                       renderedTexture : register(t3);
+StructuredBuffer<BonePrimitive> boneTransformBuffer : register(t4);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
