@@ -70,7 +70,6 @@
 
 namespace Engine
 {
-    struct Joint;
     using DirectX::SimpleMath::Color;
     using DirectX::SimpleMath::Matrix;
     using DirectX::SimpleMath::Quaternion;
@@ -99,6 +98,9 @@ namespace Engine
     using DirectX::XMFLOAT2;
     using DirectX::XMFLOAT3X3;
     using DirectX::XMVECTORF32;
+
+    struct AnimationPrimitive;
+    struct BonePrimitive;
 
     namespace Objects
     {
@@ -144,6 +146,9 @@ namespace Engine
         class Sound;
         class Texture;
         class NormalMap;
+        class Animation;
+        class Model;
+        class Bone;
     } // namespace Resources
 
     namespace Abstract
@@ -198,6 +203,8 @@ namespace Engine
     using WeakLight = boost::weak_ptr<Objects::Light>;
     using WeakTexture = boost::weak_ptr<Resources::Texture>;
     using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
+    using WeakAnimation = boost::weak_ptr<Resources::Animation>;
+    using WeakModel = boost::weak_ptr<Resources::Model>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
@@ -212,8 +219,16 @@ namespace Engine
     using StrongFont = boost::shared_ptr<Resources::Font>;
     using StrongMesh = boost::shared_ptr<Resources::Mesh>;
     using StrongSound = boost::shared_ptr<Resources::Sound>;
+    using StrongTexture = boost::shared_ptr<Resources::Texture>;
+    using StrongNormalMap = boost::shared_ptr<Resources::NormalMap>;
+    using StrongAnimation = boost::shared_ptr<Resources::Animation>;
+    using StrongModel = boost::shared_ptr<Resources::Model>;
+    using StrongBone = boost::shared_ptr<Resources::Bone>;
 
-    using JointMap = std::map<std::string, Joint>;
+    using StrongVertexShader = boost::shared_ptr<Graphic::VertexShader>;
+    using StrongPixelShader = boost::shared_ptr<Graphic::PixelShader>;
+
+    using BonePrimitiveMap = std::map<std::string, BonePrimitive>;
 
     using EntityID = LONG_PTR;
     using ComponentID = LONG_PTR;
