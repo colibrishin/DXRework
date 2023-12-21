@@ -8,14 +8,13 @@
 #include "egResourceManager.hpp"
 #include "egMesh.h"
 #include "egAnimation.h"
-#include "egBone.h"
 #include "egNormalMap.h"
 
 SERIALIZER_ACCESS_IMPL(Engine::Resources::Model,
                        _ARTAG(_BSTSUPER(Resource))
                        _ARTAG(m_meshes_)
                        _ARTAG(m_animations_)
-                       _ARTAG(m_bones_)
+                       _ARTAG(m_bone_map_)
                        _ARTAG(m_textures_)
                        _ARTAG(m_normal_maps_)
                        _ARTAG(m_bounding_box_))
@@ -44,6 +43,7 @@ namespace Engine::Resources
 
         GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
         GetRenderPipeline().UnbindResource(SR_TEXTURE);
+        GetRenderPipeline().UnbindResource(SR_BONE);
     }
 
     void Model::PostRender(const float& dt) {}
@@ -128,10 +128,6 @@ namespace Engine::Resources
             {
                 m.m_textures_.push_back(boost::static_pointer_cast<Texture>(res));
             }
-            else if (res->GetResourceType() == RES_T_BONE)
-            {
-                m.m_bones_.insert({res->GetName(), boost::static_pointer_cast<Bone>(res)});
-            }
             else if (res->GetResourceType() == RES_T_ANIM)
             {
                 m.m_animations_.push_back(boost::static_pointer_cast<Animation>(res));
@@ -179,7 +175,7 @@ namespace Engine::Resources
                                                 GetPath().string(),
                                                 aiProcess_Triangulate | aiProcess_GenSmoothNormals |
                                                 aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder);
+                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | aiProcess_PopulateArmatureData);
 
         if (scene == nullptr)
         {
@@ -203,9 +199,9 @@ namespace Engine::Resources
                 const auto shape_ = scene->mMeshes[i];
                 const auto mesh_name = shape_->mName.C_Str();
 
-                const std::string lookup_name = GetName() + "_" + mesh_name;
+                const std::string mesh_lookup_name = GetName() + "_" + mesh_name;
 
-                if (const auto mesh = GetResourceManager().GetResource<Mesh>(lookup_name).lock())
+                if (const auto mesh = GetResourceManager().GetResource<Mesh>(mesh_lookup_name).lock())
                 {
                     m_meshes_.push_back(mesh);
                     continue;
@@ -213,7 +209,7 @@ namespace Engine::Resources
 
                 const auto v_count = shape_->mNumVertices;
                 const auto f_count  = shape_->mNumFaces;
-                const auto j_count = shape_->mNumBones;
+                const auto b_count = shape_->mNumBones;
 
                 // extract vertices
                 for (int j = 0; j < v_count; ++j)
@@ -274,47 +270,37 @@ namespace Engine::Resources
 
                 if (shape_->HasBones())
                 {
-                    for (int j = 0; j < j_count; ++j)
+                    for (int j = 0; j < b_count; ++j)
                     {
                         BonePrimitive bone_info;
 
                         const auto bone   = shape_->mBones[j];
                         const auto offset = bone->mOffsetMatrix;
                         const std::string bone_name = bone->mName.C_Str();
+
                         bone_info.name    = bone_name;
-                        const auto bone_lookup_name = GetName() + "_" + bone_name;
-
-                        if (const auto b = GetResourceManager().GetResource<Bone>(bone_lookup_name).lock())
-                        {
-                            m_bones_[bone_name] = b;
-                            continue;
-                        }
-
                         bone_info.idx     = j;
-                        bone_info.offset  = Matrix{
+                        bone_info.offset  = Matrix
+                        {
                             offset.a1, offset.a2, offset.a3, offset.a4,
                             offset.b1, offset.b2, offset.b3, offset.b4,
                             offset.c1, offset.c2, offset.c3, offset.c4,
                             offset.d1, offset.d2, offset.d3, offset.d4
                         };
 
-                        // const auto weight_count = bone->mNumWeights;
-
+                        const auto weight_count = bone->mNumWeights;
                         // todo: expand
-                        for (int influence = 0; influence < 4; ++influence)
+                        for (int influence = 0; influence < weight_count; ++influence)
                         {
                             const auto weight = bone->mWeights[influence];
                             const auto vertex_id = weight.mVertexId;
                             const auto weight_ = weight.mWeight;
+                            auto& vtx_bone = shape[vertex_id].bone_element;
 
-                            shape[vertex_id].bone_weights[influence] = weight_;
-                            shape[vertex_id].bone_indices[influence] = j;
+                            vtx_bone.Append(j, weight_);
                         }
 
-                        StrongBone new_bone = boost::make_shared<Bone>(bone_info);
-                        new_bone->SetName(bone_lookup_name);
-                        GetResourceManager().AddResource(new_bone);
-                        m_bones_[bone_lookup_name] = new_bone;
+                        m_bone_map_[bone_name] = bone_info;
                     }
                 }
 
@@ -365,7 +351,7 @@ namespace Engine::Resources
                 }
 
                 StrongMesh mesh = boost::make_shared<Mesh>(shape, indices);
-                mesh->SetName(lookup_name);
+                mesh->SetName(mesh_lookup_name);
                 mesh->Load();
 
                 GetResourceManager().AddResource(mesh);
