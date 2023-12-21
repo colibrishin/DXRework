@@ -1,6 +1,7 @@
 #pragma once
 #include <assimp/Importer.hpp>
 
+#include "egDXCommon.h"
 #include "egResource.h"
 #include "egMesh.h"
 
@@ -42,10 +43,6 @@ namespace Engine::Resources
             {
                 m_textures_.push_back(res);
             }
-            else if constexpr (which_resource<T>::value == RES_T_BONE)
-            {
-                m_bone_map_.insert(std::make_pair(res->GetName(), res));
-            }
             else if constexpr (which_resource<T>::value == RES_T_NORMAL)
             {
                 m_normal_maps_.push_back(res);
@@ -81,6 +78,7 @@ namespace Engine::Resources
         UINT                                 m_render_index_;
         std::vector<StrongMesh>              m_meshes_;
         std::map<std::string, BonePrimitive> m_bone_map_;
+        std::vector<BonePrimitive>           m_bone_list_;
         std::vector<StrongTexture>           m_textures_;
         std::vector<StrongNormalMap>         m_normal_maps_;
         std::vector<StrongAnimation>         m_animations_;
@@ -89,6 +87,8 @@ namespace Engine::Resources
         // non-serialized
         inline static Assimp::Importer s_importer_;
         std::vector<const Vector3*>    m_cached_vertices_;
+
+        ComPtr<ID3D11ShaderResourceView> m_bone_srv_;
     };
 }
 
