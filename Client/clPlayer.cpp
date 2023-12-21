@@ -28,6 +28,7 @@ namespace Client::Object
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         AddComponent<Client::State::CharacterController>();
 
+        cldr->SetModel(model);
         cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);
