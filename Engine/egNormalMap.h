@@ -19,8 +19,10 @@ namespace Engine::Resources
         void     Render(const float& dt) override;
         void     PostRender(const float& dt) override;
 
-        void Load_INTERNAL() override;
-        void Unload_INTERNAL() override;
+        void          Load_INTERNAL() override;
+        void          Unload_INTERNAL() override;
+        eResourceType GetResourceType() const override;
+
         RESOURCE_SELF_INFER_GETTER(NormalMap)
 
     protected:
