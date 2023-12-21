@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "egCubeMesh.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Mesh::CubeMesh, _ARTAG(_BSTSUPER(Mesh)));
+SERIALIZER_ACCESS_IMPL(Engine::Meshes::CubeMesh, _ARTAG(_BSTSUPER(Mesh)));
 
-namespace Engine::Mesh
+namespace Engine::Meshes
 {
     CubeMesh::CubeMesh()
-    : Mesh("")
+    : Mesh()
     {
         CubeMesh::Initialize();
     }
@@ -23,12 +23,9 @@ namespace Engine::Mesh
         GeometricPrimitive::IndexCollection  indices;
         GeometricPrimitive::CreateCube(vertices, indices, 1.f, false);
 
-        m_vertices_.resize(1);
-        m_indices_.resize(1);
-
         for (const auto vertex : vertices)
         {
-            m_vertices_[0].push_back(
+            m_vertices_.push_back(
                                      VertexElement{
                                          vertex.position,
                                          {1.0f, 0.0f, 0.0f, 1.0f},
@@ -39,7 +36,7 @@ namespace Engine::Mesh
 
         for (const auto index : indices)
         {
-            m_indices_[0].push_back(index);
+            m_indices_.push_back(index);
         }
     }
 

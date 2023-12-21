@@ -1,5 +1,6 @@
 #pragma once
 #include "egShader.hpp"
+#include "egResourceManager.hpp"
 
 namespace Engine::Graphic
 {
@@ -14,6 +15,8 @@ namespace Engine::Graphic
         ID3D11InputLayout** GetInputLayout();
 
         void Render(const float& dt) override;
+
+        RESOURCE_SELF_INFER_GETTER(VertexShaderInternal)
 
     protected:
         VertexShaderInternal();

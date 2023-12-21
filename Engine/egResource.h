@@ -18,12 +18,11 @@ namespace Engine::Abstract
         bool IsLoaded() const;
 
         const std::filesystem::path& GetPath() const;
-        eResourceType                GetResourceType() const;
+        virtual eResourceType        GetResourceType() const;
 
         void SetPath(const std::filesystem::path& path);
 
-        void     OnImGui() override;
-
+        void        OnImGui() override;
     protected:
         Resource(std::filesystem::path path, eResourceType type);
 

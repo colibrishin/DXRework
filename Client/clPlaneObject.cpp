@@ -7,7 +7,9 @@
 #include <egVertexShaderInternal.h>
 #include <egNormalMap.h>
 
-#include "egMeshRenderer.h"
+#include "egModel.h"
+#include "egModelRenderer.h"
+#include "egShader.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::PlaneObject,
@@ -19,29 +21,27 @@ namespace Client::Object
 
     void PlaneObject::Initialize()
     {
-        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
-        mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
-        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
-        mr->Add(
-                Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>(
-                     "TestNormalMap"));
-        mr->Add(
-                Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
-        mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_color"));
+        const auto model = Resources::Model::Get("CubeModel").lock();
 
-        AddComponent<Engine::Components::Transform>();
-        const auto tr = GetComponent<Engine::Components::Transform>().lock();
+        const auto mr = AddComponent<Components::ModelRenderer>().lock();
+        mr->SetModel(model);
+        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default").lock());
+        mr->AddPixelShader(Graphic::PixelShader::Get("ps_color").lock());
+
+        AddComponent<Components::Transform>();
+        const auto tr = GetComponent<Components::Transform>().lock();
         tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetScale({10.0f, 1.0f, 10.0f});
 
-        AddComponent<Engine::Components::Collider>();
-        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
+        AddComponent<Components::Collider>();
+        const auto cldr = GetComponent<Components::Collider>().lock();
+        cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetDirtyWithTransform(true);
         cldr->SetMass(100000.0f);
 
-        AddComponent<Engine::Components::Rigidbody>();
-        const auto rb = GetComponent<Engine::Components::Rigidbody>().lock();
+        AddComponent<Components::Rigidbody>();
+        const auto rb = GetComponent<Components::Rigidbody>().lock();
 
         rb->SetFixed(true);
         rb->SetFrictionCoefficient(0.2f);

@@ -4,7 +4,9 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
-#include "egMeshRenderer.h"
+#include <egModel.h>
+
+#include "egModelRenderer.h"
 #include "egSoundPlayer.h"
 #include "egSound.h"
 
@@ -19,14 +21,12 @@ namespace Client::Object
 
     inline void TestCube::Initialize()
     {
-        const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
-        mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh"));
-        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap"));
-        mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture"));
-        mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
-        mr->Add(
-                Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>(
-                     "ps_normalmap_specular"));
+        const auto model = Engine::Resources::Model::Get("CubeModel").lock();
+
+        const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
+        mr->SetModel(model);
+        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default").lock());
+        mr->AddPixelShader(Graphic::PixelShader::Get("ps_normalmap_specular"));
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

@@ -26,6 +26,8 @@ namespace Engine::Resources
         UINT GetWidth() const;
         UINT GetHeight() const;
 
+        RESOURCE_SELF_INFER_GETTER(Texture)
+
     protected:
         Texture();
 

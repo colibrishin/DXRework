@@ -99,10 +99,25 @@ namespace Engine
         Vector4 end_clip_spaces[g_max_shadow_cascades];
     };
 
-    struct Deformation
+    struct BonePrimitive
     {
-        UINT    joint_index;
-        float   weight;
+        std::string name;
+        UINT        idx;
+        Matrix      offset;
+    };
+
+    struct KeyFrame
+    {
+        float  frame;
+        Vector3 scale;
+        Quaternion rotation;
+        Vector3 translation;
+    };
+
+    struct AnimationPrimitive
+    {
+        std::string           name;
+        std::vector<KeyFrame> keyframes;
     };
 
     struct VertexElement
@@ -115,25 +130,8 @@ namespace Engine
         Vector3 tangent;
         Vector3 binormal;
 
-        Deformation deformations[4];
-    };
-
-    struct KeyFrame
-    {
-        std::string name;
-        UINT        frame;
-        UINT        start_frame;
-        UINT        end_frame;
-        Matrix      transform;
-    };
-
-    struct Joint
-    {
-        std::string           name;
-        UINT                  index;
-        UINT                  parent_index;
-        Matrix                bind_pose_inverse;
-        std::vector<KeyFrame> key_frames;
+        UINT  bone_indices[4];
+        float bone_weights[4];
     };
 
     struct PerspectiveBuffer

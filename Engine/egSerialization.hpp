@@ -100,6 +100,70 @@ namespace boost::serialization
         ar & x._44;
     }
 
+    template <class Archive>
+    void serialize(
+        Archive&           ar, Engine::BonePrimitive& x,
+        const unsigned int version)
+    {
+        ar & x.idx;
+        ar & x.name;
+        ar & x.offset;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, Engine::VertexElement& x,
+        const unsigned int version)
+    {
+        ar & x.position;
+        ar & x.texCoord;
+        ar & x.normal;
+        ar & x.tangent;
+        ar & x.binormal;
+        ar & x.color;
+        ar & x.bone_indices;
+        ar & x.bone_weights;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, Engine::KeyFrame& x,
+        const unsigned int version)
+    {
+        ar & x.frame;
+        ar & x.scale;
+        ar & x.rotation;
+        ar & x.translation;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, Engine::AnimationPrimitive& x,
+        const unsigned int version)
+    {
+        ar & x.keyframes;
+        ar & x.name;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, DirectX::XMFLOAT3& x,
+        const unsigned int version)
+    {
+        ar & x.x;
+        ar & x.y;
+        ar & x.z;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, DirectX::BoundingBox& x,
+        const unsigned int version)
+    {
+        ar & x.Center;
+        ar & x.Extents;
+    }
+
     //
 } // namespace boost::serialization
 

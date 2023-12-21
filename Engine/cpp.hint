@@ -13,3 +13,5 @@
 #define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__) template <class Archive> void NAMESPACE_TYPE::serialize(Archive& ar, const unsigned int file_version) { __VA_ARGS__ }
 #define SERIALIZER_ACCESS_IMPL3(NAMESPACE_TYPE, __VA_ARGS__) SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE) SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)
 #define _BSTSUPER(BASE) boost::serialization::base_object<BASE>(*this)
+#define INTERNAL_COMP_CHECK_CONSTEXPR(enum_val)
+#define RESOURCE_SELF_INFER_GETTER(TYPE) static inline boost::weak_ptr<TYPE> Get(const std::string& name) { return GetResourceManager().GetResource<TYPE>(name); }

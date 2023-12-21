@@ -66,6 +66,9 @@ namespace Engine
         RES_T_MESH,
         RES_T_FONT,
         RES_T_SOUND,
+        RES_T_MODEL,
+        RES_T_ANIM,
+        RES_T_BONE,
     };
 
     enum eComponentType
@@ -75,8 +78,8 @@ namespace Engine
         COM_T_COLLIDER,
         COM_T_RIDIGBODY,
         COM_T_STATE,
-        COM_T_MESH_RENDERER,
-        COMP_T_SOUND_PLAYER
+        COMP_T_SOUND_PLAYER,
+        COM_T_MODEL_RENDERER
     };
 
     enum eDefObjectType
@@ -266,6 +269,11 @@ namespace Engine
                 static_assert("TranslateBounding: Invalid type");
                 return {};
             }
+        }
+
+        void __vectorcall UpdateFromBoundingBox(const BoundingBox& box_)
+        {
+            BoundingOrientedBox::CreateFromBoundingBox(box, box_);
         }
 
         template <typename BoundingType>

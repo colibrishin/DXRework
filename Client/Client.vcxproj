@@ -192,7 +192,6 @@
     <ClInclude Include="clBackSphereMesh.hpp" />
     <ClInclude Include="clPlaneObject.hpp" />
     <ClInclude Include="clPlayer.h" />
-    <ClInclude Include="clPlayerMesh.h" />
     <ClInclude Include="clSkyBox.hpp" />
     <ClInclude Include="clTestCube.hpp" />
     <ClInclude Include="clTestObject.hpp" />
@@ -211,7 +210,7 @@
     <ClCompile Include="clMousePosition.cpp" />
     <ClCompile Include="clPlaneObject.cpp" />
     <ClCompile Include="clPlayer.cpp" />
-    <ClCompile Include="clPlayerMesh.cpp" />
+    <ClCompile Include="clPlayerModel.cpp" />
     <ClCompile Include="clSkyBox.cpp" />
     <ClCompile Include="clTestCube.cpp" />
     <ClCompile Include="clTestObject.cpp" />
@@ -225,6 +224,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="clPlayerModel.h" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,9 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
-#include "egMeshRenderer.h"
+#include "egModel.h"
+#include "egModelRenderer.h"
+#include "egShader.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Water,
@@ -12,17 +14,17 @@ SERIALIZER_ACCESS_IMPL(
 
 void Client::Object::Water::Initialize()
 {
-    const auto mr = AddComponent<Engine::Components::MeshRenderer>().lock();
-    mr->SetMesh(Engine::GetResourceManager().GetResource<Engine::Mesh::CubeMesh>("CubeMesh").lock());
-    mr->Add(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("WaterNormal"));
-    mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::VertexShader>("vs_default"));
-    mr->Add(Engine::GetResourceManager().GetResource<Engine::Graphic::PixelShader>("ps_refraction"));
+    const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
+    const auto model = Engine::Resources::Model::Get("CubeModel");
+
+    mr->SetModel(model);
+    mr->AddVertexShader(Engine::Graphic::VertexShader::Get("vs_default"));
+    mr->AddPixelShader(Engine::Graphic::PixelShader::Get("ps_refraction"));
 
     AddComponent<Engine::Components::Transform>();
-    
-
     const auto cldr = AddComponent<Engine::Components::Collider>().lock();
 
+    cldr->SetBoundingBox(model.lock()->GetBoundingBox());
     cldr->SetDirtyWithTransform(true);
     cldr->SetOffset({0.f, 0.5f, 0.f});
 

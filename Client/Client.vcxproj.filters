@@ -63,6 +63,12 @@
     <Filter Include="Scene\TestScene">
       <UniqueIdentifier>{6f6bdb31-6658-4833-a2b4-74327a4b0da3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Model">
+      <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Model\PlayerModel">
+      <UniqueIdentifier>{6da56bfb-1683-4d99-ab6a-933018f21ecd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -110,9 +116,6 @@
     <ClInclude Include="clPlayer.h">
       <Filter>Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="clPlayerMesh.h">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -154,12 +157,15 @@
     <ClCompile Include="clPlayer.cpp">
       <Filter>Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="clPlayerMesh.cpp">
-      <Filter>Resource\Mesh</Filter>
+    <ClCompile Include="clPlayerModel.cpp">
+      <Filter>Resource\Model\PlayerModel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="clPlayerModel.h">
+      <Filter>Resource\Model\PlayerModel</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="testscene.txt">

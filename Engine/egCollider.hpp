@@ -32,7 +32,7 @@ namespace Engine::Components
         void SetMass(const float mass);
         void SetOffset(const Vector3& offset);
 
-        void SetMesh(const WeakMesh& mesh);
+        void SetBoundingBox(const BoundingBox& bounding);
 
         bool Intersects(Collider& other) const;
         bool Intersects(const Ray& ray, float distance, float& intersection) const;

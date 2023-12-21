@@ -3,7 +3,7 @@
 
 #include "GeometricPrimitive.h"
 
-namespace Client::Mesh
+namespace Client::Meshes
 {
     class BackSphereMesh final : public Engine::Resources::Mesh
     {
@@ -23,4 +23,4 @@ namespace Client::Mesh
     };
 } // namespace Client::Mesh
 
-BOOST_CLASS_EXPORT_KEY(Client::Mesh::BackSphereMesh)
+BOOST_CLASS_EXPORT_KEY(Client::Meshes::BackSphereMesh)

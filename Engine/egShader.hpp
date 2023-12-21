@@ -30,6 +30,8 @@ namespace Engine::Graphic
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
 
+        RESOURCE_SELF_INFER_GETTER(Shader)
+
     protected:
         Shader()
         : IShader("", "") {}

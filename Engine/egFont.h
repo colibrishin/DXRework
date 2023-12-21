@@ -29,6 +29,7 @@ namespace Engine::Resources
         void SetScale(const float scale);
         void ChangeFont(const std::filesystem::path& path);
 
+        RESOURCE_SELF_INFER_GETTER(Font)
     protected:
         Font(); // for serialization
         void Load_INTERNAL() override;

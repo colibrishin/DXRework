@@ -54,4 +54,9 @@ namespace Engine::Resources
     {
         Texture::Unload_INTERNAL();
     }
+
+    eResourceType NormalMap::GetResourceType() const
+    {
+        return rtype;
+    }
 } // namespace Engine::Resources
