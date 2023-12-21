@@ -68,6 +68,21 @@
   static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
     { return GetResourceManager().GetResource<TYPE>(name); }
 
+#define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
+    static inline boost::shared_ptr<TYPE> Create(                             \
+    const std::string& name, const std::filesystem::path& path)               \
+    {                                                                         \
+        if (const auto check = GetResourceManager().                          \
+                               GetResourceByPath<TYPE>(path).lock())          \
+        {                                                                     \
+            return check;                                                     \
+        }                                                                     \
+        const auto obj = boost::make_shared<TYPE>(path);                      \
+        GetResourceManager().AddResource(name, obj);                          \
+        return obj;                                                           \
+    }
+
+
 namespace Engine
 {
     using DirectX::SimpleMath::Color;

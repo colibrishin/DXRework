@@ -14,8 +14,7 @@ namespace Engine::Resources
     {
     public:
         INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SOUND)
-
-        explicit Sound(const std::string& path);
+        explicit Sound(const std::filesystem::path& path);
 
         ~Sound() override;
 
@@ -39,6 +38,7 @@ namespace Engine::Resources
         void SetMaxDistance(const float& max_distance);
 
         RESOURCE_SELF_INFER_GETTER(Sound)
+        RESOURCE_SELF_INFER_CREATE(Sound)
 
     protected:
         Sound();

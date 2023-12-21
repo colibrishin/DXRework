@@ -53,6 +53,29 @@ namespace Engine::Manager
             return {};
         }
 
+        template <typename T>
+        boost::weak_ptr<T> GetResourceByPath(const std::filesystem::path& path)
+        {
+            auto& resources = m_resources_[which_resource<T>::value];
+            auto it = std::find_if(
+                                   resources.begin(), resources.end(), [&path](const StrongResource& resource)
+                                   {
+                                       return resource->GetPath() == path;
+                                   });
+
+            if (it != resources.end())
+            {
+                if (!(*it)->IsLoaded())
+                {
+                    (*it)->Load();
+                }
+
+                return boost::reinterpret_pointer_cast<T>(*it);
+            }
+
+            return {};
+        }
+
     private:
         std::map<eResourceType, std::set<StrongResource>> m_resources_;
     };

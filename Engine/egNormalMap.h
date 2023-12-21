@@ -24,6 +24,7 @@ namespace Engine::Resources
         eResourceType GetResourceType() const override;
 
         RESOURCE_SELF_INFER_GETTER(NormalMap)
+        RESOURCE_SELF_INFER_CREATE(NormalMap)
 
     protected:
         NormalMap();
