@@ -11,7 +11,65 @@ namespace Engine::Manager::Graphics
     using namespace DirectX;
     using Microsoft::WRL::ComPtr;
 
-    const std::unordered_map<
+    const std::map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11ShaderResourceView*, UINT, UINT)>> g_shader_rs_bind_map = 
+    {
+        {
+            SHADER_VERTEX,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->VSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_PIXEL,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->PSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_GEOMETRY,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->GSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_COMPUTE,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->CSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_HULL,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->HSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_DOMAIN,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->DSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        }
+    };
+
+    const std::map<
         eShaderType, std::function<void(
             ID3D11Device*, ID3D11DeviceContext*,
             ID3D11Buffer*, UINT, UINT)>>
