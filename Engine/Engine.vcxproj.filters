@@ -378,7 +378,6 @@
     <ClInclude Include="egTaskScheduler.h">
       <Filter>Singleton\Internal\TaskScheduler</Filter>
     </ClInclude>
-    <ClInclude Include="egResourceManager.hpp" />
     <ClInclude Include="egSoundPlayer.h">
       <Filter>Component\SoundPlayer</Filter>
     </ClInclude>
@@ -390,6 +389,9 @@
     </ClInclude>
     <ClInclude Include="egAnimation.h">
       <Filter>Resource\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="egResourceManager.hpp">
+      <Filter>Singleton\Internal\ResourceManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -103,9 +103,41 @@ namespace Engine
 
     struct BonePrimitive
     {
-        std::string name;
         UINT        idx;
+        float       ___p[3];
         Matrix      offset;
+
+        BonePrimitive()
+        {
+            idx = 0;
+            std::fill_n(___p, 3, 0.f);
+            offset = Matrix::Identity;
+        }
+
+        BonePrimitive(BonePrimitive&& other) noexcept
+        : ___p{}
+        {
+            idx    = other.idx;
+            offset = other.offset;
+        }
+
+        BonePrimitive(const BonePrimitive& other) noexcept
+        : ___p{}
+        {
+            idx    = other.idx;
+            offset = other.offset;
+        }
+
+        BonePrimitive& operator=(const BonePrimitive& other) noexcept
+        {
+            idx     = other.idx;
+            ___p[0] = 0.f;
+            ___p[1] = 0.f;
+            ___p[2] = 0.f;
+            offset  = other.offset;
+
+            return *this;
+        }
     };
 
     struct KeyFrame

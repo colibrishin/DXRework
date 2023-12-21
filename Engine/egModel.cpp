@@ -37,6 +37,7 @@ namespace Engine::Resources
     {
         if (!m_normal_maps_.empty()) m_normal_maps_[m_render_index_ % m_normal_maps_.size()]->Render(dt);
         if (!m_textures_.empty()) m_textures_[m_render_index_ % m_textures_.size()]->Render(dt);
+        if (!m_bone_list_.empty()) GetRenderPipeline().BindResource(SR_BONE, SHADER_VERTEX, m_bone_srv_.Get());
         //m_animations_[m_render_index_ % m_animations_.size()]->Render(dt);
         m_meshes_[m_render_index_]->Render(dt);
         m_render_index_++;
@@ -175,7 +176,8 @@ namespace Engine::Resources
                                                 GetPath().string(),
                                                 aiProcess_Triangulate | aiProcess_GenSmoothNormals |
                                                 aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | aiProcess_PopulateArmatureData);
+                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | 
+                                                aiProcess_PopulateArmatureData);
 
         if (scene == nullptr)
         {
@@ -183,6 +185,7 @@ namespace Engine::Resources
         }
 
         const std::string scene_name = scene->mRootNode->mName.C_Str();
+        const aiMatrix4x4 scene_inv_transform = scene->mRootNode->mTransformation.Inverse();
         SetName(scene_name + "_MODEL");
 
         if (scene->HasMeshes())
@@ -191,7 +194,7 @@ namespace Engine::Resources
 
             std::vector<Vector3> total_vertices;
 
-            for (int i = shape_count - 1; i >= 0; --i)
+            for (int i = 0; i < shape_count; ++i)
             {
                 Resources::Shape shape;
                 IndexCollection  indices;
@@ -278,7 +281,6 @@ namespace Engine::Resources
                         const auto offset = bone->mOffsetMatrix;
                         const std::string bone_name = bone->mName.C_Str();
 
-                        bone_info.name    = bone_name;
                         bone_info.idx     = j;
                         bone_info.offset  = Matrix
                         {
@@ -340,6 +342,16 @@ namespace Engine::Resources
                                     Vector3(s.x, s.y, s.z),
                                     Quaternion(r.x, r.y, r.z, r.w),
                                     Vector3(t.x, t.y, t.z)});
+
+                                /*
+                                const aiMatrix4x4 node_transform = bone->mNode->mTransformation;
+                                const aiNode* parent_node = bone->mNode->mParent;
+                                const aiMatrix4x4 parent_transform = parent_node ? parent_node->mTransformation : aiMatrix4x4();
+                                const aiMatrix4x4 global_transform = parent_transform * node_transform;
+                                const aiMatrix4x4 transform = scene_inv_transform * global_transform * offset;
+
+                                offset = from bone info, animation * offset?
+                                */
                             }
                         }
 
@@ -361,6 +373,27 @@ namespace Engine::Resources
             UpdateVertices();
 
             BoundingBox::CreateFromPoints(m_bounding_box_, total_vertices.size(), total_vertices.data(), sizeof(Vector3));
+
+            if (!m_bone_map_.empty())
+            {
+                m_bone_list_.reserve(m_bone_map_.size());
+
+                for (const auto& bone : m_bone_map_ | std::views::values)
+                {
+                    m_bone_list_.push_back(bone);
+                }
+
+                std::ranges::sort(
+                                  m_bone_list_
+                                  , [](const auto& lhs, const auto& rhs)
+                {
+                    return lhs.idx < rhs.idx;
+                });
+
+                GetD3Device().CreateStructuredShaderResource<BonePrimitive>(
+                                                                            m_bone_list_.size(), m_bone_list_.data(),
+                                                                            m_bone_srv_.ReleaseAndGetAddressOf());
+            }
         }
         else
         {
