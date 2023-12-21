@@ -44,7 +44,7 @@ namespace Engine::Resources
             }
             else if constexpr (which_resource<T>::value == RES_T_BONE)
             {
-                m_bones_.insert(std::make_pair(res->GetName(), res));
+                m_bone_map_.insert(std::make_pair(res->GetName(), res));
             }
             else if constexpr (which_resource<T>::value == RES_T_NORMAL)
             {
@@ -78,13 +78,13 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        UINT                              m_render_index_;
-        std::vector<StrongMesh>           m_meshes_;
-        std::map<std::string, StrongBone> m_bones_;
-        std::vector<StrongTexture>        m_textures_;
-        std::vector<StrongNormalMap>      m_normal_maps_;
-        std::vector<StrongAnimation>      m_animations_;
-        BoundingBox                       m_bounding_box_;
+        UINT                                 m_render_index_;
+        std::vector<StrongMesh>              m_meshes_;
+        std::map<std::string, BonePrimitive> m_bone_map_;
+        std::vector<StrongTexture>           m_textures_;
+        std::vector<StrongNormalMap>         m_normal_maps_;
+        std::vector<StrongAnimation>         m_animations_;
+        BoundingBox                          m_bounding_box_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
