@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
+    <ClInclude Include="egAnimation.h" />
+    <ClInclude Include="egBone.h" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstraintSolver.h" />
     <ClInclude Include="egCubeMesh.h" />
@@ -39,7 +41,8 @@
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
-    <ClInclude Include="egMeshRenderer.h" />
+    <ClInclude Include="egModel.h" />
+    <ClInclude Include="egModelRenderer.h" />
     <ClInclude Include="egMouseManager.h" />
     <ClInclude Include="egObserverController.h" />
     <ClInclude Include="egObserver.h" />
@@ -85,7 +88,9 @@
   <ItemGroup>
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
+    <ClCompile Include="egAnimation.cpp" />
     <ClCompile Include="egApplication.cpp" />
+    <ClCompile Include="egBone.cpp" />
     <ClCompile Include="egCamera.cpp" />
     <ClCompile Include="egCollider.cpp" />
     <ClCompile Include="egCollision.cpp" />
@@ -107,7 +112,8 @@
     <ClCompile Include="egLayer.cpp" />
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egMesh.cpp" />
-    <ClCompile Include="egMeshRenderer.cpp" />
+    <ClCompile Include="egModel.cpp" />
+    <ClCompile Include="egModelRenderer.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
     <ClCompile Include="egNormalMap.cpp" />
     <ClCompile Include="egObserverController.cpp" />
