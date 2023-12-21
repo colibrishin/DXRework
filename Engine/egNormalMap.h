@@ -21,6 +21,7 @@ namespace Engine::Resources
 
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
+        RESOURCE_SELF_INFER_GETTER(NormalMap)
 
     protected:
         NormalMap();

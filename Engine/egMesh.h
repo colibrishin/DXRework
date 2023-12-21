@@ -38,7 +38,7 @@ namespace Engine::Resources
         UINT     GetRemainingRenderIndex() const;
         UINT     GetIndexCount() const;
 
-        void ResetRenderIndex();
+        RESOURCE_SELF_INFER_GETTER(Mesh)
 
     protected:
         SERIALIZER_ACCESS

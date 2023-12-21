@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include "egCommon.hpp"
 #include "egMesh.h"
+#include "egResourceManager.hpp"
 
 #undef max
 
@@ -24,6 +25,12 @@ namespace Engine
         }
     }
 
+    template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
+    inline static boost::weak_ptr<T> Get(const std::string& name)
+    {
+        return GetResourceManager().GetResource<T>(name);
+    }
+
     inline static bool __vectorcall IsSamePolarity(const float v1, const float v2)
     {
         return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);
@@ -35,23 +42,6 @@ namespace Engine
         std::vector<T> ret;
         for (const auto& v : orig) ret.insert(ret.end(), v.begin(), v.end());
         return ret;
-    }
-
-    inline static VertexElement& AccessShapeSerialized(std::vector<Resources::Shape>& shapes, const UINT index)
-    {
-        UINT total_vertices = 0;
-
-        for (int i = 0; i < shapes.size(); ++i)
-        {
-            total_vertices += static_cast<UINT>(shapes[i].size());
-            if (index < total_vertices)
-            {
-                const auto remainder = (total_vertices - shapes[i].size());
-                return shapes[i][index - remainder];
-            }
-        }
-
-        throw std::runtime_error("AccessShapeSerialized: Invalid index");
     }
 
     inline static void ImGuiVector3Editable(

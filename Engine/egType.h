@@ -64,6 +64,10 @@
 // Static client provided scene type, this should be added to every scene in the client
 #define CLIENT_SCENE_CHECK_CONSTEXPR(enum_val) static constexpr Engine::eSceneType stype = enum_val;
 
+#define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
+  static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
+    { return GetResourceManager().GetResource<TYPE>(name); }
+
 namespace Engine
 {
     struct Joint;

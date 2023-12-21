@@ -2,7 +2,7 @@
 #include "GeometricPrimitive.h"
 #include "egMesh.h"
 
-namespace Engine::Mesh
+namespace Engine::Meshes
 {
     class SphereMesh final : public Resources::Mesh
     {
@@ -22,4 +22,4 @@ namespace Engine::Mesh
     };
 } // namespace Engine::Mesh
 
-BOOST_CLASS_EXPORT_KEY(Engine::Mesh::SphereMesh)
+BOOST_CLASS_EXPORT_KEY(Engine::Meshes::SphereMesh)
