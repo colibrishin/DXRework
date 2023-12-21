@@ -8,6 +8,7 @@
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
 #include "egTransform.h"
+#include "egModel.h"
 
 #include "egManagerHelper.hpp"
 
@@ -48,6 +49,11 @@ namespace Engine::Components
 
     const std::vector<const Vector3*>& Collider::GetVertices() const
     {
+        if (const auto model = m_model_.lock())
+        {
+            return model->GetVertices();
+        }
+
         if (const auto mesh = m_mesh_.lock())
         {
             return mesh->GetVertices();
@@ -211,6 +217,26 @@ namespace Engine::Components
         else if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
             GenerateInertiaSphere();
+        }
+    }
+
+    void Collider::SetMesh(const WeakMesh& mesh)
+    {
+        if (const auto locked = mesh.lock())
+        {
+            m_mesh_name_ = locked->GetName();
+            m_mesh_      = mesh;
+            SetBoundingBox(locked->GetBoundingBox());
+        }
+    }
+
+    void Collider::SetModel(const WeakModel& model)
+    {
+        if (const auto locked = model.lock())
+        {
+            m_model_name_ = locked->GetName();
+            m_model_      = locked;
+            SetBoundingBox(locked->GetBoundingBox());
         }
     }
 

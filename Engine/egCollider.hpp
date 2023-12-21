@@ -33,6 +33,8 @@ namespace Engine::Components
         void SetOffset(const Vector3& offset);
 
         void SetBoundingBox(const BoundingBox& bounding);
+        void SetMesh(const WeakMesh& mesh);
+        void SetModel(const WeakModel& model);
 
         bool Intersects(Collider& other) const;
         bool Intersects(const Ray& ray, float distance, float& intersection) const;
@@ -155,6 +157,7 @@ namespace Engine::Components
 
         eBoundingType m_type_;
         EntityName    m_mesh_name_;
+        EntityName    m_model_name_;
 
         float m_mass_;
 
@@ -175,7 +178,8 @@ namespace Engine::Components
         XMFLOAT3X3 m_inertia_tensor_;
         Matrix     m_world_matrix_;
 
-        WeakMesh m_mesh_;
+        WeakMesh  m_mesh_;
+        WeakModel m_model_;
     };
 } // namespace Engine::Component
 
