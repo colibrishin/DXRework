@@ -1,17 +1,17 @@
 #pragma once
 
-#define TINYOBJLOADER_IMPLEMENTATION
-
 #include <SimpleMath.h>
 #include <d3d11.h>
 #include <filesystem>
 #include <vector>
+
 #include <wrl/client.h>
 
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 #include "egRenderable.h"
 #include "egResource.h"
+#include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {
@@ -25,18 +25,15 @@ namespace Engine::Resources
     public:
         INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MESH)
 
-        Mesh(std::filesystem::path path);
+        Mesh(const Shape& shape, const IndexCollection& indices);
         ~Mesh() override = default;
         void Initialize() override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        BoundingBox GetBoundingBox() const;
 
-        const std::vector<Shape>& GetShapes();
         const std::vector<const Vector3*>& GetVertices();
-
-        UINT     GetRenderIndex() const;
-        UINT     GetRemainingRenderIndex() const;
-        UINT     GetIndexCount() const;
+        UINT                               GetIndexCount() const;
 
         RESOURCE_SELF_INFER_GETTER(Mesh)
 
@@ -47,8 +44,6 @@ namespace Engine::Resources
         friend class Components::Collider;
         friend class Manager::FBXLoader;
 
-
-        void         ReadMeshFile();
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();
         void         Unload_INTERNAL() override;
@@ -69,14 +64,13 @@ namespace Engine::Resources
         void OnDeserialized() override;
 
     protected:
-        UINT                         m_render_index_;
-        std::vector<Shape>           m_vertices_;
-        std::vector<const Vector3*>  m_flatten_vertices_;
-        std::vector<IndexCollection> m_indices_;
-        JointMap                     m_joints_;
+        Shape                       m_vertices_;
+        std::vector<const Vector3*> m_flatten_vertices_;
+        IndexCollection             m_indices_;
+        BoundingBox                 m_bounding_box_;
 
-        VertexBufferCollection m_vertex_buffers_;
-        IndexBufferCollection  m_index_buffers_;
+        ComPtr<ID3D11Buffer> m_vertex_buffer_;
+        ComPtr<ID3D11Buffer> m_index_buffer_;
 
     };
 } // namespace Engine::Resources

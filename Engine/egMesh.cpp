@@ -1,40 +1,18 @@
 #include "pch.h"
 #include "egMesh.h"
-
 #include <execution>
-#include <tiny_obj_loader.h>
-#include "egManagerHelper.hpp"
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Mesh,
-                       _ARTAG(_BSTSUPER(Engine::Abstract::Resource)))
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Resource))
+                       _ARTAG(m_vertices_)
+                       _ARTAG(m_indices_))
 
 namespace Engine::Resources
 {
-    const std::vector<Shape>& Mesh::GetShapes()
-    {
-        return m_vertices_;
-    }
-
     const std::vector<const Vector3*>& Mesh::GetVertices()
     {
         return m_flatten_vertices_;
-    }
-
-    UINT Mesh::GetRenderIndex() const
-    {
-        return m_render_index_;
-    }
-
-    UINT Mesh::GetRemainingRenderIndex() const
-    {
-        const auto remain = static_cast<UINT>(m_vertices_.size()) - m_render_index_;
-        return remain < 0 ? 0 : remain;
     }
 
     UINT Mesh::GetIndexCount() const
@@ -42,9 +20,10 @@ namespace Engine::Resources
         return static_cast<UINT>(m_indices_.size());
     }
 
-    Mesh::Mesh(std::filesystem::path path)
-    : Resource(std::move(path), RES_T_MESH),
-      m_render_index_(0) {}
+    Mesh::Mesh(const Shape& shape, const IndexCollection& indices)
+    : Resource("", RES_T_MESH),
+      m_vertices_(shape),
+      m_indices_(indices) {}
 
     void __vectorcall Mesh::GenerateTangentBinormal(
         const Vector3& v0, const Vector3&  v1,
@@ -80,57 +59,46 @@ namespace Engine::Resources
             VertexElement* o[3];
         };
 
-        for (size_t shape_count = 0; shape_count < m_vertices_.size();
-             shape_count++)
+        const auto&           indices = m_indices_;
+        std::vector<FacePair> faces;
+
+        for (size_t i = 0; i < indices.size(); i += 3)
         {
-            auto& shape = m_vertices_[shape_count];
+            const auto& i0 = indices[i];
+            const auto& i1 = indices[i + 1];
+            const auto& i2 = indices[i + 2];
 
-            if (m_vertices_[shape_count].size() == 0)
-            {
-                break;
-            }
+            FacePair face = {{&m_vertices_[i0], &m_vertices_[i1], &m_vertices_[i2]}};
 
-            const auto&           indices = m_indices_[shape_count];
-            std::vector<FacePair> faces;
-
-            for (size_t i = 0; i < indices.size(); i += 3)
-            {
-                const auto& i0 = indices[i];
-                const auto& i1 = indices[i + 1];
-                const auto& i2 = indices[i + 2];
-
-                FacePair face = {{&shape[i0], &shape[i1], &shape[i2]}};
-
-                faces.push_back(face);
-            }
-
-            std::mutex commit_lock;
-
-            std::for_each(
-                          std::execution::par, faces.begin(), faces.end(),
-                          [&](const FacePair& face)
-                          {
-                              Vector3 tangent;
-                              Vector3 binormal;
-
-                              GenerateTangentBinormal(
-                                                      face.o[0]->position, face.o[1]->position,
-                                                      face.o[2]->position, face.o[0]->texCoord,
-                                                      face.o[1]->texCoord, face.o[2]->texCoord, tangent,
-                                                      binormal);
-
-                              {
-                                  std::lock_guard cl(commit_lock);
-                                  face.o[0]->tangent = tangent;
-                                  face.o[1]->tangent = tangent;
-                                  face.o[2]->tangent = tangent;
-
-                                  face.o[0]->binormal = binormal;
-                                  face.o[1]->binormal = binormal;
-                                  face.o[2]->binormal = binormal;
-                              }
-                          });
+            faces.push_back(face);
         }
+
+        std::mutex commit_lock;
+
+        std::for_each(
+                      std::execution::par, faces.begin(), faces.end(),
+                      [&](const FacePair& face)
+                      {
+                          Vector3 tangent;
+                          Vector3 binormal;
+
+                          GenerateTangentBinormal(
+                                                  face.o[0]->position, face.o[1]->position,
+                                                  face.o[2]->position, face.o[0]->texCoord,
+                                                  face.o[1]->texCoord, face.o[2]->texCoord, tangent,
+                                                  binormal);
+
+                          {
+                              std::lock_guard cl(commit_lock);
+                              face.o[0]->tangent = tangent;
+                              face.o[1]->tangent = tangent;
+                              face.o[2]->tangent = tangent;
+
+                              face.o[0]->binormal = binormal;
+                              face.o[1]->binormal = binormal;
+                              face.o[2]->binormal = binormal;
+                          }
+                      });
     }
 
     void Mesh::PreUpdate(const float& dt) {}
@@ -150,174 +118,58 @@ namespace Engine::Resources
 
     void Mesh::Render(const float& dt)
     {
-        if (m_render_index_ >= m_vertices_.size())
-        {
-            return;
-        }
-
-        GetRenderPipeline().BindVertexBuffer(m_vertex_buffers_[m_render_index_].Get());
-        GetRenderPipeline().BindIndexBuffer(m_index_buffers_[m_render_index_].Get());
-        GetRenderPipeline().DrawIndexed(static_cast<UINT>(m_indices_[m_render_index_].size()));
-        m_render_index_++;
+        GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_.Get());
+        GetRenderPipeline().BindIndexBuffer(m_index_buffer_.Get());
+        GetRenderPipeline().DrawIndexed(GetIndexCount());
     }
 
     void Mesh::PostRender(const float& dt) {}
 
-    void Mesh::ResetRenderIndex()
+    BoundingBox Mesh::GetBoundingBox() const
     {
-        m_render_index_ = 0;
+        return m_bounding_box_;
     }
 
     Mesh::Mesh()
-    : Resource("", RES_T_MESH),
-      m_render_index_(0) {}
-
-    void Mesh::ReadMeshFile()
-    {
-        Assimp::Importer importer;
-        const aiScene*   scene = importer.ReadFile(
-                                                 GetPath().string(),
-                                                 aiProcess_Triangulate | aiProcess_GenSmoothNormals |
-                                                 aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-                                                 aiProcess_MakeLeftHanded);
-
-        if (scene == nullptr)
-        {
-            throw std::runtime_error(importer.GetErrorString());
-        }
-
-        if(scene->HasMeshes())
-        {
-            const auto shape_count = scene->mNumMeshes;
-
-            for (int i = 0; i < shape_count; ++i)
-            {
-                Resources::Shape shape;
-                IndexCollection  indices;
-                const auto shape_ = scene->mMeshes[i];
-
-                const auto v_count = shape_->mNumVertices;
-                const auto f_count  = shape_->mNumFaces;
-
-                // extract vertices
-                for (int j = 0; j < v_count; ++j)
-                {
-                    const auto vec = shape_->mVertices[j];
-
-                    Vector2 tex_coord = {0.f, 0.f};
-                    Vector3 normal_ = {0.f, 0.f, 0.f};
-                    Vector3 tangent_ = {0.f, 0.f, 0.f};
-                    Vector3 binormal_ = {0.f, 0.f, 0.f};
-
-                    if (shape_->HasTextureCoords(j))
-                    {
-                        const auto tex = shape_->mTextureCoords[j]; // Assuming UV exists in 2D
-                        tex_coord = Vector2{tex->x, tex->y};
-                    }
-
-                    if (shape_->HasNormals())
-                    {
-                        const auto normal = shape_->mNormals[j];
-                        normal_ = Vector3{normal.x, normal.y, normal.z};
-                    }
-
-                    if (shape_->HasTangentsAndBitangents())
-                    {
-                        const auto tangent = shape_->mTangents[j];
-                        const auto binormal = shape_->mBitangents[j];
-
-                        tangent_ = Vector3{tangent.x, tangent.y, tangent.z};
-                        binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
-                    }
-                    
-                    shape.push_back(
-                                    VertexElement
-                                    {
-                                        {vec.x, vec.y, vec.z},
-                                        {1.0f, 0.f, 0.f, 1.f},
-                                        tex_coord,
-                                        normal_,
-                                        tangent_,
-                                        binormal_
-                                    });
-                }
-
-                for (int j = 0; j < f_count; ++j)
-                {
-                    const auto face = shape_->mFaces[j];
-                    const auto indices_ = face.mNumIndices;
-
-                    // extract indices
-                    for (int k = 0; k < indices_; ++k)
-                    {
-                        indices.push_back(face.mIndices[k]);
-                    }
-                }
-
-                m_vertices_.push_back(shape);
-                m_indices_.push_back(indices);
-            }
-        }
-        else
-        {
-            throw std::runtime_error("No meshes found in file");
-        }
-
-    }
+    : Resource("", RES_T_MESH) {}
 
     void Mesh::Load_INTERNAL()
     {
-        if (!GetPath().empty())
-        {
-            ReadMeshFile();
-        }
-        else
-        {
-            Load_CUSTOM();
-        }
+        Load_CUSTOM();
 
         UpdateTangentBinormal();
 
-        for (const auto& shape : m_vertices_)
+        for (const auto& vertex : m_vertices_)
         {
-            for (const auto& vertex : shape)
-            {
-                m_flatten_vertices_.push_back(&vertex.position);
-            }
+            m_flatten_vertices_.push_back(&vertex.position);
         }
 
-        m_vertex_buffers_.resize(m_vertices_.size());
-        m_index_buffers_.resize(m_indices_.size());
-
-        for (int i = 0; i < m_vertex_buffers_.size(); ++i)
+        std::vector<Vector3> vertices;
+        for (const auto& vertex : m_vertices_)
         {
-            GetD3Device().CreateBuffer<VertexElement>(
-                                                      D3D11_BIND_VERTEX_BUFFER,
-                                                      static_cast<UINT>(m_vertices_[i].size()),
-                                                      m_vertex_buffers_[i].ReleaseAndGetAddressOf(),
-                                                      m_vertices_[i].data());
+            vertices.push_back(vertex.position);
         }
 
-        for (int i = 0; i < m_index_buffers_.size(); ++i)
-        {
-            GetD3Device().CreateBuffer<UINT>(
-                                             D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_[i].size()),
-                                             m_index_buffers_[i].ReleaseAndGetAddressOf(), m_indices_[i].data());
-        }
+        BoundingBox::CreateFromPoints(
+                                      m_bounding_box_, m_vertices_.size(), vertices.data(),
+                                      sizeof(Vector3));
+
+        GetD3Device().CreateBuffer<VertexElement>(
+                                                  D3D11_BIND_VERTEX_BUFFER,
+                                                  static_cast<UINT>(m_vertices_.size()),
+                                                  m_vertex_buffer_.ReleaseAndGetAddressOf(),
+                                                  m_vertices_.data());
+
+        GetD3Device().CreateBuffer<UINT>(
+                                         D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_.size()),
+                                         m_index_buffer_.ReleaseAndGetAddressOf(), m_indices_.data());
     }
 
     void Mesh::Load_CUSTOM() {}
 
     void Mesh::Unload_INTERNAL()
     {
-        for (auto& buffer : m_vertex_buffers_)
-        {
-            buffer.Reset();
-        }
-
-        for (auto& buffer : m_index_buffers_)
-        {
-            buffer.Reset();
-        }
+        m_vertex_buffer_->Release();
+        m_index_buffer_->Release();
     }
 } // namespace Engine::Resources
