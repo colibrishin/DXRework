@@ -30,6 +30,8 @@ namespace Engine::Resources
         void ChangeFont(const std::filesystem::path& path);
 
         RESOURCE_SELF_INFER_GETTER(Font)
+        RESOURCE_SELF_INFER_CREATE(Font)
+
     protected:
         Font(); // for serialization
         void Load_INTERNAL() override;

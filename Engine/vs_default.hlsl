@@ -50,5 +50,13 @@ PixelInputType main(VertexInputType input)
     output.clipSpacePosZ = output.position.z;
     output.clipPlane     = dot(mul(input.position, world), g_clip_plane);
 
+    // TEST CODE //
+    for (int i = 0; i < input.bone_element.bone_count; ++i)
+    {
+        input.bone_element.boneIndex[i] = input.bone_element.boneIndex[i];
+        input.bone_element.boneWeight[i] = input.bone_element.boneWeight[i];
+    }
+    // TEST CODE //
+
     return output;
 }

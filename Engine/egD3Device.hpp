@@ -11,7 +11,65 @@ namespace Engine::Manager::Graphics
     using namespace DirectX;
     using Microsoft::WRL::ComPtr;
 
-    const std::unordered_map<
+    const std::map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11ShaderResourceView*, UINT, UINT)>> g_shader_rs_bind_map = 
+    {
+        {
+            SHADER_VERTEX,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->VSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_PIXEL,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->PSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_GEOMETRY,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->GSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_COMPUTE,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->CSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_HULL,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->HSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        },
+        {
+            SHADER_DOMAIN,
+            [](
+                ID3D11DeviceContext* context,
+                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+            {
+                context->DSSetShaderResources(start_slot, num_buffers, &buffer);
+            }
+        }
+    };
+
+    const std::map<
         eShaderType, std::function<void(
             ID3D11Device*, ID3D11DeviceContext*,
             ID3D11Buffer*, UINT, UINT)>>
@@ -200,6 +258,48 @@ namespace Engine::Manager::Graphics
             data.pSysMem = initial_data;
 
             DX::ThrowIfFailed(m_device_->CreateBuffer(&desc, &data, buffer));
+        }
+
+        template <typename T>
+        void CreateStructuredBuffer(
+            D3D11_BIND_FLAG flag, UINT size, ID3D11Buffer** buffer,
+            void*           initial_data)
+        {
+            static_assert(sizeof(T) <= 2048);
+            static_assert(sizeof(T) % 16 == 0);
+
+            D3D11_BUFFER_DESC desc{};
+
+            desc.Usage               = D3D11_USAGE_IMMUTABLE;
+            desc.CPUAccessFlags      = 0;
+            desc.BindFlags           = flag;
+            desc.ByteWidth           = size * sizeof(T);
+            desc.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+            desc.StructureByteStride = sizeof(T);
+
+            D3D11_SUBRESOURCE_DATA data{};
+            data.pSysMem = initial_data;
+
+            DX::ThrowIfFailed(m_device_->CreateBuffer(&desc, &data, buffer));
+        }
+
+        template <typename T>
+        void CreateStructuredShaderResource(
+                   D3D11_BIND_FLAG flag, UINT size, void* initial_data, ID3D11ShaderResourceView** view)
+        {
+            static_assert(sizeof(T) <= 2048);
+            static_assert(sizeof(T) % 16 == 0);
+
+            ComPtr<ID3D11Buffer> buffer;
+            CreateStructuredBuffer<T>(flag, size, buffer.GetAddressOf(), initial_data);
+
+            D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+            srv_desc.Format                          = DXGI_FORMAT_UNKNOWN;
+            srv_desc.ViewDimension                   = D3D11_SRV_DIMENSION_BUFFER;
+            srv_desc.Buffer.FirstElement             = 0;
+            srv_desc.Buffer.NumElements              = size;
+
+            m_device_->CreateShaderResourceView(buffer.Get(), &srv_desc, view);
         }
 
         void CreateTextureFromFile(

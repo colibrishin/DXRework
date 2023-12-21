@@ -66,6 +66,7 @@
 #include "../Engine/egRigidbody.h"
 #include "../Engine/egTexture.h"
 #include "../Engine/egTransform.h"
+#include "../Engine/egModel.h"
 
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;

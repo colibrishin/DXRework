@@ -12,7 +12,7 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Resources
 {
-    Sound::Sound(const std::string& path)
+    Sound::Sound(const std::filesystem::path& path)
     : Resource(path, RES_T_SOUND),
       m_mode_(FMOD_3D),
       m_min_distance_(0.f),

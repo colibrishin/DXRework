@@ -1,5 +1,6 @@
 #pragma once
 #include <SimpleMath.h>
+#include <boost/serialization/access.hpp>
 
 #include "egType.h"
 
@@ -51,7 +52,8 @@ namespace Engine
         SR_TEXTURE = 0,
         SR_NORMAL_MAP,
         SR_SHADOW_MAP,
-        SR_RENDERED
+        SR_RENDERED,
+        SR_BONE
     };
 
     enum eSampler
@@ -120,6 +122,66 @@ namespace Engine
         std::vector<KeyFrame> keyframes;
     };
 
+    struct VertexBoneElement
+    {
+        VertexBoneElement()
+        {
+            bone_count = 0;
+            std::fill_n(bone_indices, 4, -1);
+            std::fill_n(bone_weights, 4, 0.f);
+        }
+
+        VertexBoneElement(const VertexBoneElement& other) noexcept
+        {
+            bone_count = other.bone_count;
+            std::ranges::copy(
+                              other.bone_indices,
+                              std::begin(bone_indices));
+            std::ranges::copy(
+                              other.bone_weights,
+                              std::begin(bone_weights));
+        }
+
+        VertexBoneElement(VertexBoneElement&& other) noexcept
+        {
+            bone_count = other.bone_count;
+            std::ranges::copy(
+                              other.bone_indices,
+                              std::begin(bone_indices));
+            std::ranges::copy(
+                              other.bone_weights,
+                              std::begin(bone_weights));
+        }
+
+        void Append(const int indices, const float weight)
+        {
+            if (bone_count >= 4)
+            {
+                return;
+            }
+
+            bone_indices[bone_count] = indices;
+            bone_weights[bone_count] = weight;
+
+            bone_count++;
+        }
+
+    private:
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar & bone_indices;
+            ar & bone_weights;
+            ar & bone_count;
+        }
+
+        int   bone_indices[4];
+        float bone_weights[4];
+        UINT  bone_count;
+    };
+
     struct VertexElement
     {
         Vector3 position;
@@ -130,8 +192,7 @@ namespace Engine
         Vector3 tangent;
         Vector3 binormal;
 
-        UINT  bone_indices[4];
-        float bone_weights[4];
+        VertexBoneElement bone_element;
     };
 
     struct PerspectiveBuffer

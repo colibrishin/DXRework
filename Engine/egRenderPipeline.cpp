@@ -183,9 +183,10 @@ namespace Engine::Manager::Graphics
 
     void RenderPipeline::BindResource(
         eShaderResource           resource,
+        eShaderType               shader_type,
         ID3D11ShaderResourceView* texture)
     {
-        GetD3Device().GetContext()->PSSetShaderResources(resource, 1, &texture);
+        g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture,  resource, 1);
     }
 
     void RenderPipeline::InitializeShadowBuffer(GraphicShadowBuffer& buffer)

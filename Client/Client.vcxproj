@@ -210,7 +210,6 @@
     <ClCompile Include="clMousePosition.cpp" />
     <ClCompile Include="clPlaneObject.cpp" />
     <ClCompile Include="clPlayer.cpp" />
-    <ClCompile Include="clPlayerModel.cpp" />
     <ClCompile Include="clSkyBox.cpp" />
     <ClCompile Include="clTestCube.cpp" />
     <ClCompile Include="clTestObject.cpp" />
@@ -224,7 +223,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="clPlayerModel.h" />
+    <CopyFileToFolders Include="bob_lamp_update_export.fbx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
