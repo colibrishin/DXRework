@@ -106,7 +106,6 @@ namespace boost::serialization
         const unsigned int version)
     {
         ar & x.idx;
-        ar & x.name;
         ar & x.offset;
     }
 
