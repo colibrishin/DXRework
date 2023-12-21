@@ -500,7 +500,7 @@ namespace Engine
 
     void Scene::PostRender(const float& dt)
     {
-        GetRenderPipeline().BindResource(SR_RENDERED, m_rendered_buffer_.srv.Get());
+        GetRenderPipeline().BindResource(SR_RENDERED, SHADER_PIXEL, m_rendered_buffer_.srv.Get());
 
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {

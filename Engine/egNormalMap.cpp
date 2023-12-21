@@ -37,7 +37,7 @@ namespace Engine::Resources
 
     void NormalMap::Render(const float& dt)
     {
-        GetRenderPipeline().BindResource(SR_NORMAL_MAP, m_texture_view_.Get());
+        GetRenderPipeline().BindResource(SR_NORMAL_MAP, SHADER_PIXEL, m_texture_view_.Get());
     }
 
     void NormalMap::PostRender(const float& dt)

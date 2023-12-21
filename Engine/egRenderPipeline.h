@@ -46,8 +46,8 @@ namespace Engine::Manager::Graphics
         void UpdateBuffer(ID3D11Buffer * buffer, const void * data, UINT size);
 
         void BindResource(
-            eShaderResource           resource,
-            ID3D11ShaderResourceView* texture);
+            eShaderResource resource,
+            eShaderType     shader_type, ID3D11ShaderResourceView * texture);
 
         void InitializeShadowBuffer(GraphicShadowBuffer& buffer);
         void InitializeShadowProcessors();
