@@ -65,6 +65,7 @@ namespace Engine::Resources
         static StrongModel Create(const std::string& name, const std::vector<StrongResource>& resources);
 
         RESOURCE_SELF_INFER_GETTER(Model)
+        RESOURCE_SELF_INFER_CREATE(Model)
 
     protected:
         SERIALIZER_ACCESS
