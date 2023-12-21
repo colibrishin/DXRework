@@ -4,7 +4,7 @@
 #include <string>
 #include <egMesh.h>
 
-namespace Client::Mesh
+namespace Client::Meshes
 {
     class TriangleMesh : public Engine::Resources::Mesh
     {
@@ -23,7 +23,7 @@ namespace Client::Mesh
     };
 
     inline TriangleMesh::TriangleMesh()
-    : Mesh("")
+    : Mesh()
     {
         TriangleMesh::Initialize();
     }
@@ -58,7 +58,7 @@ namespace Client::Mesh
         m_vertices_.resize(1);
         m_indices_.resize(1);
 
-        m_vertices_[0].emplace_back(
+        m_vertices_.emplace_back(
                                     Engine::VertexElement{
                                         {-1.0f, -1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
@@ -66,7 +66,7 @@ namespace Client::Mesh
                                         {0.0f, 0.0f, -1.0f},
                                     });
 
-        m_vertices_[0].emplace_back(
+        m_vertices_.emplace_back(
                                     Engine::VertexElement{
                                         {0.0f, 1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
@@ -74,7 +74,7 @@ namespace Client::Mesh
                                         {0.0f, 0.0f, -1.0f},
                                     });
 
-        m_vertices_[0].emplace_back(
+        m_vertices_.emplace_back(
                                     Engine::VertexElement{
                                         {1.0f, -1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
@@ -82,9 +82,9 @@ namespace Client::Mesh
                                         {0.0f, 0.0f, -1.0f},
                                     });
 
-        m_indices_[0].emplace_back(0);
-        m_indices_[0].emplace_back(1);
-        m_indices_[0].emplace_back(2);
+        m_indices_.emplace_back(0);
+        m_indices_.emplace_back(1);
+        m_indices_.emplace_back(2);
     }
 
     inline void TriangleMesh::FixedUpdate(const float& dt) {}

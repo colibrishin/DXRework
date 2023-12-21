@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "clBackSphereMesh.hpp"
 
-SERIALIZER_ACCESS_IMPL(Client::Mesh::BackSphereMesh, _ARTAG(_BSTSUPER(Mesh)))
+SERIALIZER_ACCESS_IMPL(Client::Meshes::BackSphereMesh, _ARTAG(_BSTSUPER(Mesh)))
 
-namespace Client::Mesh
+namespace Client::Meshes
 {
     inline BackSphereMesh::BackSphereMesh()
-    : Mesh("")
+    : Mesh()
     {
         BackSphereMesh::Initialize();
     }
@@ -32,12 +32,9 @@ namespace Client::Mesh
         GeometricPrimitive::IndexCollection  indices;
         GeometricPrimitive::CreateSphere(vertices, indices, 1.f, 16, false);
 
-        m_vertices_.resize(1);
-        m_indices_.resize(1);
-
         for (const auto& vertex : vertices)
         {
-            m_vertices_[0].push_back(
+            m_vertices_.push_back(
                                      Engine::VertexElement{
                                          vertex.position,
                                          {1.0f, 0.0f, 0.0f, 1.0f},
@@ -48,10 +45,10 @@ namespace Client::Mesh
 
         for (const auto index : indices)
         {
-            m_indices_[0].push_back(index);
+            m_indices_.push_back(index);
         }
 
-        std::ranges::reverse(m_indices_[0]);
+        std::ranges::reverse(m_indices_);
     }
 
     inline void BackSphereMesh::Initialize()
