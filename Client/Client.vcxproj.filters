@@ -66,9 +66,6 @@
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Model\PlayerModel">
-      <UniqueIdentifier>{6da56bfb-1683-4d99-ab6a-933018f21ecd}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -157,22 +154,19 @@
     <ClCompile Include="clPlayer.cpp">
       <Filter>Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="clPlayerModel.cpp">
-      <Filter>Resource\Model\PlayerModel</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="clPlayerModel.h">
-      <Filter>Resource\Model\PlayerModel</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="testscene.txt">
       <Filter>Resource\Scene</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="player.obj">
-      <Filter>Resource\Mesh</Filter>
+      <Filter>Resource\Model</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="bob_lamp_update_export.fbx">
+      <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

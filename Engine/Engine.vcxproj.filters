@@ -197,11 +197,11 @@
     <Filter Include="Resource\Font">
       <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Component\MeshRenderer">
-      <UniqueIdentifier>{f171939c-b0da-4abc-970b-a40a797503b2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Component\SoundPlayer">
       <UniqueIdentifier>{91edda74-d311-4fc6-ae2b-f457ed7347b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\ModelRenderer">
+      <UniqueIdentifier>{52883f4c-0cd6-4df2-b38a-346c313ed2a5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -378,15 +378,18 @@
     <ClInclude Include="egTaskScheduler.h">
       <Filter>Singleton\Internal\TaskScheduler</Filter>
     </ClInclude>
-    <ClInclude Include="egFBXLoader.h">
-      <Filter>Singleton\Internal\FBXLoader</Filter>
-    </ClInclude>
-    <ClInclude Include="egMeshRenderer.h">
-      <Filter>Component\MeshRenderer</Filter>
-    </ClInclude>
     <ClInclude Include="egResourceManager.hpp" />
     <ClInclude Include="egSoundPlayer.h">
       <Filter>Component\SoundPlayer</Filter>
+    </ClInclude>
+    <ClInclude Include="egModel.h">
+      <Filter>Resource\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="egModelRenderer.h">
+      <Filter>Component\ModelRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="egAnimation.h">
+      <Filter>Resource\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -545,14 +548,17 @@
     <ClCompile Include="egTaskScheduler.cpp">
       <Filter>Singleton\Internal\TaskScheduler</Filter>
     </ClCompile>
-    <ClCompile Include="egFBXLoader.cpp">
-      <Filter>Singleton\Internal\FBXLoader</Filter>
-    </ClCompile>
-    <ClCompile Include="egMeshRenderer.cpp">
-      <Filter>Component\MeshRenderer</Filter>
-    </ClCompile>
     <ClCompile Include="egSoundPlayer.cpp">
       <Filter>Component\SoundPlayer</Filter>
+    </ClCompile>
+    <ClCompile Include="egModel.cpp">
+      <Filter>Resource\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="egModelRenderer.cpp">
+      <Filter>Component\ModelRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egAnimation.cpp">
+      <Filter>Resource\Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
