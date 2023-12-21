@@ -71,6 +71,8 @@ namespace Engine::Components
 
         InitializeStockVertices();
 
+        m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), m_cube_stock_.data(), sizeof(Vector3));
+
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
             GenerateInertiaCube();
@@ -93,7 +95,7 @@ namespace Engine::Components
 
         if (m_cube_stock_.empty())
         {
-            GeometricPrimitive::CreateBox(vertex, index, Vector3::One, false);
+            GeometricPrimitive::CreateCube(vertex, index, 1.f, false);
 
             for (const auto& v : vertex)
             {
@@ -129,12 +131,9 @@ namespace Engine::Components
 
         std::ranges::for_each(
                               mesh_obj->m_vertices_,
-                              [&](const Resources::Shape& shape)
+                              [&](const VertexElement& shape)
                               {
-                                  for (int i = 0; i < shape.size(); ++i)
-                                  {
-                                      serialized_vertices.emplace_back(shape[i].position);
-                                  }
+                                  serialized_vertices.emplace_back(shape.position);
                               });
 
         if (GetType() == BOUNDING_TYPE_BOX)
@@ -201,13 +200,17 @@ namespace Engine::Components
         m_offset_ = offset;
     }
 
-    void Collider::SetMesh(const WeakMesh& mesh)
+    void Collider::SetBoundingBox(const BoundingBox& bounding)
     {
-        if (const auto locked = mesh.lock())
+        m_boundings_.UpdateFromBoundingBox(bounding);
+
+        if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            m_mesh_ = mesh;
-            GenerateFromMesh(mesh);
-            m_mesh_name_ = locked->GetName();
+            GenerateInertiaCube();
+        }
+        else if (m_type_ == BOUNDING_TYPE_SPHERE)
+        {
+            GenerateInertiaSphere();
         }
     }
 
