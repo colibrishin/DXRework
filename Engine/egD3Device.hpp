@@ -284,14 +284,13 @@ namespace Engine::Manager::Graphics
         }
 
         template <typename T>
-        void CreateStructuredShaderResource(
-                   D3D11_BIND_FLAG flag, UINT size, void* initial_data, ID3D11ShaderResourceView** view)
+        void CreateStructuredShaderResource(UINT size, void* initial_data, ID3D11ShaderResourceView** view)
         {
             static_assert(sizeof(T) <= 2048);
             static_assert(sizeof(T) % 16 == 0);
 
             ComPtr<ID3D11Buffer> buffer;
-            CreateStructuredBuffer<T>(flag, size, buffer.GetAddressOf(), initial_data);
+            CreateStructuredBuffer<T>(D3D11_BIND_SHADER_RESOURCE, size, buffer.GetAddressOf(), initial_data);
 
             D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
             srv_desc.Format                          = DXGI_FORMAT_UNKNOWN;
