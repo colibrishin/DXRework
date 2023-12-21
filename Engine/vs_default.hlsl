@@ -4,7 +4,6 @@ PixelInputType main(VertexInputType input)
 {
     PixelInputType output;
 
-    // Change the position vector to be 4 units for proper matrix calculations.
     output.position = float4(input.position, 1.0f);
 
     matrix world = mul(mul(g_scale, g_rotation), g_translation);
@@ -49,14 +48,6 @@ PixelInputType main(VertexInputType input)
 
     output.clipSpacePosZ = output.position.z;
     output.clipPlane     = dot(mul(input.position, world), g_clip_plane);
-
-    // TEST CODE //
-    for (int i = 0; i < input.bone_element.bone_count; ++i)
-    {
-        input.bone_element.boneIndex[i] = input.bone_element.boneIndex[i];
-        input.bone_element.boneWeight[i] = input.bone_element.boneWeight[i];
-    }
-    // TEST CODE //
 
     return output;
 }
