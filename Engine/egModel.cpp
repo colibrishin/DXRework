@@ -88,7 +88,7 @@ namespace Engine::Resources
 
     const std::vector<const Vector3*>& Model::GetVertices() const
     {
-        return m_vertices_;
+        return m_cached_vertices_;
     }
 
     UINT Model::GetRenderIndex() const
@@ -149,11 +149,23 @@ namespace Engine::Resources
             BoundingBox::CreateMerged(m.m_bounding_box_, m.m_bounding_box_, mesh->GetBoundingBox());
         }
 
+        m.UpdateVertices();
+
         m.SetName(name);
         const auto ptr = boost::make_shared<Model>(m);
         GetResourceManager().AddResource(ptr);
 
         return ptr;
+    }
+
+    void Model::UpdateVertices()
+    {
+        m_cached_vertices_.clear();
+
+        for (const auto& mesh : m_meshes_)
+        {
+            m_cached_vertices_.insert(m_cached_vertices_.end(), mesh->GetVertices().begin(), mesh->GetVertices().end());
+        }
     }
 
     void Model::Load_INTERNAL()
@@ -183,14 +195,13 @@ namespace Engine::Resources
 
             std::vector<Vector3> total_vertices;
 
-            for (int i = 0; i < shape_count; ++i)
+            for (int i = shape_count - 1; i >= 0; --i)
             {
                 Resources::Shape shape;
                 IndexCollection  indices;
 
                 const auto shape_ = scene->mMeshes[i];
                 const auto mesh_name = shape_->mName.C_Str();
-                const auto bounding = shape_->mAABB;
 
                 const std::string lookup_name = GetName() + "_" + mesh_name;
 
@@ -234,9 +245,8 @@ namespace Engine::Resources
                         tangent_ = Vector3{tangent.x, tangent.y, tangent.z};
                         binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
                     }
-                    
-                    shape.push_back(
-                                    VertexElement
+
+                    const auto vtx = VertexElement
                                     {
                                         {vec.x, vec.y, vec.z},
                                         {1.0f, 0.f, 0.f, 1.f},
@@ -244,10 +254,10 @@ namespace Engine::Resources
                                         normal_,
                                         tangent_,
                                         binormal_
-                                    });
+                                    };
 
+                    shape.emplace_back(vtx);
                     total_vertices.push_back({vec.x, vec.y, vec.z});
-                    m_vertices_.push_back(&shape.back().position);
                 }
 
                 for (int j = 0; j < f_count; ++j)
@@ -361,6 +371,8 @@ namespace Engine::Resources
                 GetResourceManager().AddResource(mesh);
                 m_meshes_.push_back(mesh);
             }
+
+            UpdateVertices();
 
             BoundingBox::CreateFromPoints(m_bounding_box_, total_vertices.size(), total_vertices.data(), sizeof(Vector3));
         }
