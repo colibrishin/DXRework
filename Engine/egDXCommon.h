@@ -53,7 +53,7 @@ namespace Engine
         SR_NORMAL_MAP,
         SR_SHADOW_MAP,
         SR_RENDERED,
-        SR_BONE
+        SR_ANIMATION
     };
 
     enum eSampler
@@ -103,13 +103,15 @@ namespace Engine
 
     struct BonePrimitive
     {
-        UINT        idx;
-        float       ___p[3];
+        int        idx;
+        int        parent_idx;
+        float       ___p[2];
         Matrix      offset;
 
         BonePrimitive()
         {
             idx = 0;
+            parent_idx = 0;
             std::fill_n(___p, 3, 0.f);
             offset = Matrix::Identity;
         }
@@ -118,6 +120,7 @@ namespace Engine
         : ___p{}
         {
             idx    = other.idx;
+            parent_idx = other.parent_idx;
             offset = other.offset;
         }
 
@@ -125,12 +128,14 @@ namespace Engine
         : ___p{}
         {
             idx    = other.idx;
+            parent_idx = other.parent_idx;
             offset = other.offset;
         }
 
         BonePrimitive& operator=(const BonePrimitive& other) noexcept
         {
             idx     = other.idx;
+            parent_idx  = other.parent_idx;
             ___p[0] = 0.f;
             ___p[1] = 0.f;
             ___p[2] = 0.f;
@@ -140,18 +145,126 @@ namespace Engine
         }
     };
 
-    struct KeyFrame
+    struct BoneFrameAnimation
     {
-        float  frame;
-        Vector3 scale;
-        Quaternion rotation;
-        Vector3 translation;
+        Matrix transform;
+    };
+
+    struct BoneAnimation
+    {
+        std::vector<std::pair<float, Vector3>> position;
+        std::vector<std::pair<float, Vector3>> scale;
+        std::vector<std::pair<float, Quaternion>> rotation;
+
+        Vector3 GetPosition(const float time) const
+        {
+            if (position.size() == 1)
+            {
+                return position[0].second;
+            }
+
+            for (int i = 0; i < position.size() - 1; ++i)
+            {
+                if (time < position[i + 1].first)
+                {
+                    const auto& p0 = position[i];
+                    const auto& p1 = position[i + 1];
+
+                    const auto t = (time - p0.first) / (p1.first - p0.first);
+
+                    return Vector3::Lerp(p0.second, p1.second, t);
+                }
+            }
+
+            return position.back().second;
+        }
+
+        Vector3 GetScale(const float time) const
+        {
+            if (scale.size() == 1)
+            {
+                return scale[0].second;
+            }
+
+            for (size_t i = 0; i < scale.size() - 1; ++i)
+            {
+                if (time < scale[i + 1].first)
+                {
+                    const auto& p0 = scale[i];
+                    const auto& p1 = scale[i + 1];
+
+                    const auto t = (time - p0.first) / (p1.first - p0.first);
+
+                    return Vector3::Lerp(p0.second, p1.second, t);
+                }
+            }
+
+            return scale.back().second;
+        }
+
+        Quaternion GetRotation(const float time) const
+        {
+            for (size_t i = 0; i < rotation.size() - 1; ++i)
+            {
+                if (time < rotation[i + 1].first)
+                {
+                    const auto& p0 = rotation[i];
+                    const auto& p1 = rotation[i + 1];
+
+                    const auto t = (time - p0.first) / (p1.first - p0.first);
+
+                    return Quaternion::Slerp(p0.second, p1.second, t);
+                }
+            }
+
+            return rotation.back().second;
+        }
+
+        BoneAnimation()
+        {
+        }
+
+        BoneAnimation(BoneAnimation&& other) noexcept
+        {
+            position = std::move(other.position);
+            scale    = std::move(other.scale);
+            rotation = std::move(other.rotation);
+        }
+
+        BoneAnimation(const BoneAnimation& other) noexcept
+        {
+            position = other.position;
+            scale    = other.scale;
+            rotation = other.rotation;
+        }
+
+        BoneAnimation& operator=(const BoneAnimation& other) noexcept
+        {
+            position = other.position;
+            scale    = other.scale;
+            rotation = other.rotation;
+
+            return *this;
+        }
     };
 
     struct AnimationPrimitive
     {
-        std::string           name;
-        std::vector<KeyFrame> keyframes;
+        std::string                name;
+        float                      duration;
+        float                      ticks_per_second;
+        Matrix                     global_inverse_transform;
+        std::vector<BoneAnimation> bone_animations;
+
+        size_t GetBoneCount() const noexcept
+        {
+            return bone_animations.size();
+        }
+
+        BoneAnimation GetBoneAnimation(const size_t idx) const noexcept
+        {
+            return bone_animations[idx];
+        }
     };
 
     struct VertexBoneElement
