@@ -5,12 +5,38 @@ namespace Engine::Resources
 {
     Bone::Bone(const BonePrimitiveMap& bone_map) : Resource("", RES_T_BONE), m_bone_map(bone_map)
     {
-        for (const auto& bone : m_bone_map | std::views::values)
+        for (auto& bone : m_bone_map | std::views::values)
         {
-            m_bones_index_wise_.push_back(bone);
+            m_bones_index_wise_.push_back(&bone);
         }
 
-        std::ranges::sort(m_bones_index_wise_, [](const BonePrimitive& lhs, const BonePrimitive& rhs) { return lhs.idx < rhs.idx; });
+        std::ranges::sort(m_bones_index_wise_, [](const BonePrimitive* lhs, const BonePrimitive* rhs) { return lhs->GetIndex() < rhs->GetIndex(); });
+    }
+
+    Bone::Bone(const Bone& other) : Resource("", RES_T_BONE)
+    {
+        m_bone_map = other.m_bone_map;
+
+        for (auto& bone : m_bone_map | std::views::values)
+        {
+            m_bones_index_wise_.push_back(&bone);
+        }
+
+        std::ranges::sort(m_bones_index_wise_, [](const BonePrimitive* lhs, const BonePrimitive* rhs) { return lhs->GetIndex() < rhs->GetIndex(); });
+    }
+
+    Bone& Bone::operator=(Bone&& other) noexcept
+    {
+        m_bone_map = other.m_bone_map;
+
+        for (auto& bone : m_bone_map | std::views::values)
+        {
+            m_bones_index_wise_.push_back(&bone);
+        }
+
+        std::ranges::sort(m_bones_index_wise_, [](const BonePrimitive* lhs, const BonePrimitive* rhs) { return lhs->GetIndex() < rhs->GetIndex(); });
+
+        return *this;
     }
 
     void Bone::PreUpdate(const float& dt) {}
@@ -27,14 +53,36 @@ namespace Engine::Resources
 
     void Bone::PostRender(const float& dt) {}
 
-    BonePrimitive Bone::GetBone(const UINT idx)
+    const BonePrimitive* Bone::GetBone(const UINT idx) const
     {
-        return m_bones_index_wise_[idx];
+        if (m_bones_index_wise_.size() > idx)
+        {
+            return m_bones_index_wise_[idx];
+        }
+
+        return nullptr;
     }
 
-    BonePrimitive Bone::GetBone(const std::string& name)
+    const BonePrimitive* Bone::GetBone(const std::string& name)
     {
-        return m_bone_map.at(name);
+        if (m_bone_map.contains(name))
+        {
+            return &m_bone_map.at(name);
+        }
+
+        return nullptr;
+    }
+
+    bool Bone::Contains(const std::string& name) const
+    {
+        return m_bone_map.contains(name);
+    }
+
+    const BonePrimitive* Bone::GetBoneParent(const UINT idx) const
+    {
+        const auto parent_idx = m_bones_index_wise_[idx]->GetParentIndex();
+        if (parent_idx == -1) return nullptr;
+        return m_bones_index_wise_[parent_idx];
     }
 
     UINT Bone::GetBoneCount() const
