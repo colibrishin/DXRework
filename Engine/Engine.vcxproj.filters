@@ -188,9 +188,6 @@
     <Filter Include="Singleton\Internal\FBXLoader">
       <UniqueIdentifier>{cb2e5582-b223-4f51-9d4b-010eb6127966}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Animation">
-      <UniqueIdentifier>{0d3e2e5b-ded7-472a-b3a8-9b46edf5d5fe}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
     </Filter>
@@ -202,6 +199,12 @@
     </Filter>
     <Filter Include="Component\ModelRenderer">
       <UniqueIdentifier>{52883f4c-0cd6-4df2-b38a-346c313ed2a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Animation">
+      <UniqueIdentifier>{485c6a6f-e325-483b-8712-a23167f92ac0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Bone">
+      <UniqueIdentifier>{000966e6-ef39-4323-9022-f050f85b6a42}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -387,11 +390,14 @@
     <ClInclude Include="egModelRenderer.h">
       <Filter>Component\ModelRenderer</Filter>
     </ClInclude>
+    <ClInclude Include="egResourceManager.hpp">
+      <Filter>Singleton\Internal\ResourceManager</Filter>
+    </ClInclude>
     <ClInclude Include="egAnimation.h">
       <Filter>Resource\Animation</Filter>
     </ClInclude>
-    <ClInclude Include="egResourceManager.hpp">
-      <Filter>Singleton\Internal\ResourceManager</Filter>
+    <ClInclude Include="egBone.h">
+      <Filter>Resource\Bone</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -561,6 +567,9 @@
     </ClCompile>
     <ClCompile Include="egAnimation.cpp">
       <Filter>Resource\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="egBone.cpp">
+      <Filter>Resource\Bone</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
