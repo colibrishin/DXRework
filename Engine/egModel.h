@@ -65,7 +65,6 @@ namespace Engine::Resources
         RESOURCE_SELF_INFER_CREATE(Model)
 
     protected:
-        SERIALIZER_ACCESS
 	    Model();
 
         void Load_INTERNAL() override;

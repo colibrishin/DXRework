@@ -10,14 +10,6 @@
 #include "egAnimation.h"
 #include "egNormalMap.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Resources::Model,
-                       _ARTAG(_BSTSUPER(Resource))
-                       _ARTAG(m_meshes_)
-                       _ARTAG(m_animations_)
-                       _ARTAG(m_bone_map_)
-                       _ARTAG(m_textures_)
-                       _ARTAG(m_normal_maps_)
-                       _ARTAG(m_bounding_box_))
 
 namespace Engine::Resources
 {

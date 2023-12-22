@@ -125,22 +125,13 @@ namespace boost::serialization
 
     template <class Archive>
     void serialize(
-        Archive&           ar, Engine::KeyFrame& x,
-        const unsigned int version)
-    {
-        ar & x.frame;
-        ar & x.scale;
-        ar & x.rotation;
-        ar & x.translation;
-    }
-
-    template <class Archive>
-    void serialize(
         Archive&           ar, Engine::AnimationPrimitive& x,
         const unsigned int version)
     {
-        ar & x.keyframes;
         ar & x.name;
+        ar & x.duration;
+        ar & x.ticks_per_second;
+        ar & x.bone_animations;
     }
 
     template <class Archive>
