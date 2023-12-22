@@ -191,7 +191,7 @@ namespace Engine::Resources
 
             std::vector<Vector3> total_vertices;
 
-            for (int i = 0; i < shape_count; ++i)
+            for (auto i = 0; i < shape_count; ++i)
             {
                 Resources::Shape shape;
                 IndexCollection  indices;
@@ -212,7 +212,7 @@ namespace Engine::Resources
                 const auto b_count = shape_->mNumBones;
 
                 // extract vertices
-                for (int j = 0; j < v_count; ++j)
+                for (auto j = 0; j < v_count; ++j)
                 {
                     const auto vec = shape_->mVertices[j];
 
@@ -256,7 +256,7 @@ namespace Engine::Resources
                     total_vertices.push_back({vec.x, vec.y, vec.z});
                 }
 
-                for (int j = 0; j < f_count; ++j)
+                for (auto j = 0; j < f_count; ++j)
                 {
                     const auto face = shape_->mFaces[j];
                     const auto indices_ = face.mNumIndices;
@@ -272,18 +272,8 @@ namespace Engine::Resources
                 {
                     BonePrimitiveMap bone_map;
 
-                    // exceptional case: root bone (rig)
-                    BonePrimitive root_bone;
-                    root_bone.idx = 0;
-                    root_bone.parent_idx = -1;
-                    root_bone.offset = Matrix::Identity;
-
-                    bone_map[shape_->mBones[0]->mNode->mParent->mName.C_Str()] = root_bone;
-
-                    for (int j = 0; j < b_count; ++j)
+                    for (auto j = 0; j < b_count; ++j)
                     {
-                        BonePrimitive bone_info;
-
                         const auto bone   = shape_->mBones[j];
                         const auto offset = bone->mOffsetMatrix;
                         const std::string bone_name = bone->mName.C_Str();
@@ -291,22 +281,7 @@ namespace Engine::Resources
                         if (const auto check = GetResourceManager().GetResource<Bone>(mesh_lookup_name + "_BONE").lock())
                         {
                             m_bone_ = check;
-                            continue;
-                        }
-
-                        const auto parent = bone->mNode->mParent;
-
-                        bone_info.idx     = j + 1;
-                        bone_info.offset = AiMatrixToDirectX(offset);
-
-                        if (j == 0)
-                        {
-                            bone_info.parent_idx = 0;
-                        }
-                        else                         
-                        {
-                            const auto parent_name = parent->mName.C_Str();
-                            bone_info.parent_idx = bone_map[parent_name].idx;
+                            break;
                         }
 
                         const auto weight_count = bone->mNumWeights;
@@ -321,6 +296,21 @@ namespace Engine::Resources
                             vtx_bone.Append(j, weight_);
                         }
 
+                        const auto parent = bone->mNode->mParent;
+                        const auto parent_name = parent->mName.C_Str();
+                        int parent_idx = -1;
+
+                        if (bone_map.contains(parent_name))
+                        {
+                            parent_idx = bone_map[parent_name].GetIndex();
+                        }
+
+                        BonePrimitive bone_info;
+                        bone_info.SetIndex(j);
+                        bone_info.SetParentIndex(parent_idx);
+                        bone_info.SetInvBindPose(AiMatrixToDirectXTranspose(offset));
+                        bone_info.SetTransform(AiMatrixToDirectXTranspose(bone->mNode->mTransformation));
+
                         bone_map[bone_name] = bone_info;
                     }
 
@@ -334,7 +324,6 @@ namespace Engine::Resources
                 StrongMesh mesh = boost::make_shared<Mesh>(shape, indices);
                 mesh->SetName(mesh_lookup_name);
                 mesh->Load();
-
                 GetResourceManager().AddResource(mesh);
                 m_meshes_.push_back(mesh);
             }
@@ -342,14 +331,9 @@ namespace Engine::Resources
             if (scene->HasAnimations())
             {
                 const auto animation_count = scene->mNumAnimations;
-                const aiMatrix4x4 ai_scene_inv = scene->mRootNode->mTransformation.Inverse();
-                const Matrix scene_inv_transform = AiMatrixToDirectX(ai_scene_inv);
 
-                for (int j = 0; j < animation_count; ++j)
+                for (auto j = 0; j < animation_count; ++j)
                 {
-                    AnimationPrimitive animation;
-                    animation.bone_animations.resize(m_bone_->GetBoneCount());
-
                     const auto animation_ = scene->mAnimations[j];
                     const auto affect_bone_count = animation_->mNumChannels;
                     const std::string anim_name = animation_->mName.C_Str();
@@ -363,51 +347,60 @@ namespace Engine::Resources
                     const auto duration = animation_->mDuration;
                     const auto ticks_per_second = animation_->mTicksPerSecond == 0 ? 25.f : animation_->mTicksPerSecond;
 
-                    animation.duration = duration;
-                    animation.ticks_per_second = ticks_per_second;
-                    animation.name = anim_name;
-                    animation.global_inverse_transform = scene_inv_transform;
+                    AnimationPrimitive animation(
+                                                 anim_name, duration, ticks_per_second,
+                                                 AiMatrixToDirectXTranspose(
+                                                                            scene->mRootNode->mTransformation.
+                                                                            Inverse()));
 
-                    for (int k = 0; k < affect_bone_count; ++k)
+                    for (auto k = 0; k < affect_bone_count; ++k)
                     {
-                        BoneAnimation bone_animation;
-                        
                         const auto channel = animation_->mChannels[k];
                         const auto bone_name = channel->mNodeName;
-                        const auto bone_idx = m_bone_->GetBone(bone_name.C_Str()).idx;
-                        const auto parent = m_bone_->GetBone(bone_name.C_Str()).parent_idx;
+
+                        const auto bone     = m_bone_->GetBone(bone_name.C_Str());
+
+                        if (!bone)
+                        {
+                            // todo: recover? multiplying inv_bind_pose * global_transform * global_inverse_transform
+                            // might be enough to get the final transform
+                            continue;
+                        }
+
+                        BoneAnimation bone_animation;
+                        bone_animation.SetIndex(bone->GetIndex());
 
                         const auto positions = channel->mNumPositionKeys;
                         for (auto l = 0; l < positions; ++l)
                         {
                             const auto key = channel->mPositionKeys[l];
-                            const auto time = key.mTime;
+                            const auto time = static_cast<float>(key.mTime);
                             const auto value = key.mValue;
 
-                            bone_animation.position.emplace_back(time, Vector3{value.x, value.y, value.z});
+                            bone_animation.AddPosition(time, Vector3{value.x, value.y, value.z});
                         }
 
                         const auto rotations = channel->mNumRotationKeys;
                         for (auto l = 0; l < rotations; ++l)
                         {
                             const auto key = channel->mRotationKeys[l];
-                            const auto time = key.mTime;
+                            const auto time = static_cast<float>(key.mTime);
                             const auto value = key.mValue;
 
-                            bone_animation.rotation.emplace_back(time, Quaternion{value.x, value.y, value.z, value.w});
+                            bone_animation.AddRotation(time, Quaternion{value.x, value.y, value.z, value.w});
                         }
 
                         const auto scalings = channel->mNumScalingKeys;
                         for (auto l = 0; l < scalings; ++l)
                         {
                             const auto key = channel->mScalingKeys[l];
-                            const auto time = key.mTime;
+                            const auto time = static_cast<float>(key.mTime);
                             const auto value = key.mValue;
 
-                            bone_animation.scale.emplace_back(time, Vector3{value.x, value.y, value.z});
+                            bone_animation.AddScale(time, Vector3{value.x, value.y, value.z});
                         }
 
-                        animation.bone_animations[bone_idx] = bone_animation;
+                        animation.Add(bone_name.C_Str(), bone_animation);
                     }
 
                     StrongAnimation anim = boost::make_shared<Animation>(animation);
