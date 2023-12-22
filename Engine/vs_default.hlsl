@@ -10,16 +10,17 @@ PixelInputType main(VertexInputType input)
     output.tangent  = input.tangent;
     output.binormal = input.binormal;
 
-    // TEST CODE
-    matrix animation_transform;
-
+    
     if (input.bone_element.bone_count > 0)
     {
+        matrix animation_transform;
+
         for (int i = 0; i < input.bone_element.bone_count; ++i)
         {
-            const int bone_index = input.bone_element.boneIndex[i];
-            const float weight = input.bone_element.boneWeight[i];
-            animation_transform += boneTransformBuffer[bone_index].transform * weight;
+            const int    bone_index     = input.bone_element.boneIndex[i];
+            const float  weight         = input.bone_element.boneWeight[i];
+            const matrix transform = boneTransformBuffer[bone_index].transform;
+            animation_transform += transform * weight;
         }
 
         output.position = mul(output.position, animation_transform);
@@ -28,8 +29,6 @@ PixelInputType main(VertexInputType input)
         output.tangent  = mul(input.tangent, (float3x3)animation_transform);
         output.binormal = mul(input.binormal, (float3x3)animation_transform);
     }
-
-    // TEST CODE
 
     matrix world = mul(mul(g_scale, g_rotation), g_translation);
 
