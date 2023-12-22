@@ -220,6 +220,7 @@ namespace Engine
     using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
     using WeakAnimation = boost::weak_ptr<Resources::Animation>;
     using WeakModel = boost::weak_ptr<Resources::Model>;
+    using WeakBone = boost::weak_ptr<Resources::Bone>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
