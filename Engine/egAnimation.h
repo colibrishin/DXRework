@@ -25,7 +25,7 @@ namespace Engine::Resources
 
     private:
         float ConvertDtToFrame(const float& dt) const;
-        std::vector<BoneFrameAnimation> GetFrameAnimation() const;
+        std::vector<BoneTransformElement> GetFrameAnimation() const;
 
         float m_current_frame_;
 

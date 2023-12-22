@@ -22,7 +22,7 @@ namespace Engine::Resources
     {
         auto animation_per_bone = GetFrameAnimation();
 
-        GetD3Device().CreateStructuredShaderResource<BoneFrameAnimation>(animation_per_bone.size(), animation_per_bone.data(), m_animation_buffer_.ReleaseAndGetAddressOf());
+        GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(animation_per_bone.size(), animation_per_bone.data(), m_animation_buffer_.ReleaseAndGetAddressOf());
 
         GetRenderPipeline().BindResource(SR_ANIMATION, SHADER_VERTEX, m_animation_buffer_.Get());
     }
@@ -37,37 +37,40 @@ namespace Engine::Resources
         }
     }
 
-    std::vector<BoneFrameAnimation> Animation::GetFrameAnimation() const
+    std::vector<BoneTransformElement> Animation::GetFrameAnimation() const
     {
         const auto anim_time = ConvertDtToFrame(m_current_frame_);
+        std::vector<BoneTransformElement> rtn;
         std::vector<Matrix> memo;
-        std::vector<BoneFrameAnimation> rtn;
 
-        memo.resize(m_primitive_.GetBoneCount(), Matrix::Identity);
+        memo.resize(m_primitive_.GetBoneCount());
 
         for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
         {
-            BoneFrameAnimation bfa;
-            const BoneAnimation& bone_animation = m_primitive_.GetBoneAnimation(i);
-            const BonePrimitive bone = m_bone_->GetBone(i);
+            BoneTransformElement bfa;
+            const BoneAnimation* bone_animation = m_primitive_.GetBoneAnimation(i);
+            const BonePrimitive* bone           = m_bone_->GetBone(i);
+            const BonePrimitive* parent         = m_bone_->GetBoneParent(i);
 
-            Matrix transform = Matrix::Identity;
+            //const auto position = bone_animation.GetPosition(anim_time);
+            //const auto rotation = bone_animation.GetRotation(anim_time);
+            //const auto scale = bone_animation.GetScale(anim_time);
 
-            const auto position = bone_animation.GetPosition(anim_time);
-            const auto rotation = bone_animation.GetRotation(anim_time);
-            const auto scale = bone_animation.GetScale(anim_time) / 100;
+            //const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(position);
 
-            transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(position);
-            memo.at(i) = transform;
+            Matrix parent_transform = Matrix::Identity;
 
-            if (bone.parent_idx != -1)
+            if (parent)
             {
-                transform = memo.at(bone.parent_idx) * transform;
+                parent_transform = memo[parent->GetIndex()];
             }
-            
-            const auto inv_bind_pose = bone.offset;
 
-            const auto final_transform = m_primitive_.global_inverse_transform * transform * inv_bind_pose;
+            const Matrix node_transform = bone->GetTransform();
+
+            const Matrix global_transform = node_transform * parent_transform;
+            memo[bone->GetIndex()] = global_transform;
+
+            const auto final_transform = bone->GetInvBindPose() * global_transform  * m_primitive_.GetGlobalInverseTransform();
             bfa.transform = final_transform.Transpose();
             rtn.push_back(bfa);
         }
@@ -86,6 +89,6 @@ namespace Engine::Resources
 
     float Animation::ConvertDtToFrame(const float& dt) const
     {
-        return std::fmod(dt * m_primitive_.ticks_per_second, m_primitive_.duration);
+        return std::fmod(dt * m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
     }
 }
