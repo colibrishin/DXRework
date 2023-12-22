@@ -94,12 +94,12 @@ namespace Engine
         }
     }
 
-    inline static Matrix __vectorcall AiMatrixToDirectX(const aiMatrix4x4& from)
+    inline static Matrix __vectorcall AiMatrixToDirectXTranspose(const aiMatrix4x4& from)
     {
         return Matrix(
-                    from.a1, from.a2, from.a3, from.a4,
-                    from.b1, from.b2, from.b3, from.b4,
-                    from.c1, from.c2, from.c3, from.c4,
-                    from.d1, from.d2, from.d3, from.d4);
+                    from.a1, from.b1, from.c1, from.d1,
+                    from.a2, from.b2, from.c2, from.d2,
+                    from.a3, from.b3, from.c3, from.d3,
+                    from.a4, from.b4, from.c4, from.d4);
     }
 } // namespace Engine
