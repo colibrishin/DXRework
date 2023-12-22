@@ -105,8 +105,8 @@ namespace boost::serialization
         Archive&           ar, Engine::BonePrimitive& x,
         const unsigned int version)
     {
-        ar & x.idx;
-        ar & x.offset;
+        ar & x.m_idx_;
+        ar & x.m_inv_bind_pose_;
     }
 
     template <class Archive>
