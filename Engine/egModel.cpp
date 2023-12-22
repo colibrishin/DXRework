@@ -7,9 +7,9 @@
 
 #include "egResourceManager.hpp"
 #include "egMesh.h"
-#include "egAnimation.h"
 #include "egNormalMap.h"
-
+#include "egAnimation.h"
+#include "egBone.h"
 
 namespace Engine::Resources
 {
@@ -29,14 +29,20 @@ namespace Engine::Resources
     {
         if (!m_normal_maps_.empty()) m_normal_maps_[m_render_index_ % m_normal_maps_.size()]->Render(dt);
         if (!m_textures_.empty()) m_textures_[m_render_index_ % m_textures_.size()]->Render(dt);
-        if (!m_bone_list_.empty()) GetRenderPipeline().BindResource(SR_BONE, SHADER_VERTEX, m_bone_srv_.Get());
-        //m_animations_[m_render_index_ % m_animations_.size()]->Render(dt);
+        if (m_bone_) m_bone_->Render(dt);
+        // todo: expand
+        if (!m_animations_.empty()) 
+        {
+            m_animations_[0]->SetFrame(dt);
+            m_animations_[0]->Render(dt);
+        }
+
         m_meshes_[m_render_index_]->Render(dt);
         m_render_index_++;
 
         GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
         GetRenderPipeline().UnbindResource(SR_TEXTURE);
-        GetRenderPipeline().UnbindResource(SR_BONE);
+        GetRenderPipeline().UnbindResource(SR_ANIMATION);
     }
 
     void Model::PostRender(const float& dt) {}
@@ -123,7 +129,7 @@ namespace Engine::Resources
             }
             else if (res->GetResourceType() == RES_T_ANIM)
             {
-                m.m_animations_.push_back(boost::static_pointer_cast<Animation>(res));
+                //m.m_animations_.push_back(boost::static_pointer_cast<Animation>(res));
             }
             else
             {
@@ -177,7 +183,6 @@ namespace Engine::Resources
         }
 
         const std::string scene_name = scene->mRootNode->mName.C_Str();
-        const aiMatrix4x4 scene_inv_transform = scene->mRootNode->mTransformation.Inverse();
         SetName(scene_name + "_MODEL");
 
         if (scene->HasMeshes())
@@ -265,6 +270,16 @@ namespace Engine::Resources
 
                 if (shape_->HasBones())
                 {
+                    BonePrimitiveMap bone_map;
+
+                    // exceptional case: root bone (rig)
+                    BonePrimitive root_bone;
+                    root_bone.idx = 0;
+                    root_bone.parent_idx = -1;
+                    root_bone.offset = Matrix::Identity;
+
+                    bone_map[shape_->mBones[0]->mNode->mParent->mName.C_Str()] = root_bone;
+
                     for (int j = 0; j < b_count; ++j)
                     {
                         BonePrimitive bone_info;
@@ -273,14 +288,26 @@ namespace Engine::Resources
                         const auto offset = bone->mOffsetMatrix;
                         const std::string bone_name = bone->mName.C_Str();
 
-                        bone_info.idx     = j;
-                        bone_info.offset  = Matrix
+                        if (const auto check = GetResourceManager().GetResource<Bone>(mesh_lookup_name + "_BONE").lock())
                         {
-                            offset.a1, offset.a2, offset.a3, offset.a4,
-                            offset.b1, offset.b2, offset.b3, offset.b4,
-                            offset.c1, offset.c2, offset.c3, offset.c4,
-                            offset.d1, offset.d2, offset.d3, offset.d4
-                        };
+                            m_bone_ = check;
+                            continue;
+                        }
+
+                        const auto parent = bone->mNode->mParent;
+
+                        bone_info.idx     = j + 1;
+                        bone_info.offset = AiMatrixToDirectX(offset);
+
+                        if (j == 0)
+                        {
+                            bone_info.parent_idx = 0;
+                        }
+                        else                         
+                        {
+                            const auto parent_name = parent->mName.C_Str();
+                            bone_info.parent_idx = bone_map[parent_name].idx;
+                        }
 
                         const auto weight_count = bone->mNumWeights;
                         // todo: expand
@@ -294,64 +321,14 @@ namespace Engine::Resources
                             vtx_bone.Append(j, weight_);
                         }
 
-                        m_bone_map_[bone_name] = bone_info;
+                        bone_map[bone_name] = bone_info;
                     }
-                }
 
-                if (scene->HasAnimations())
-                {
-                    const auto animation_count = scene->mNumAnimations;
-
-                    for (int j = 0; j < animation_count; ++j)
-                    {
-                        AnimationPrimitive animation;
-
-                        const auto animation_ = scene->mAnimations[j];
-                        const auto channel_count = animation_->mNumChannels;
-                        animation.name = animation_->mName.C_Str();
-                        const auto anim_lookup_name = GetName() + "_" + animation.name;
-
-                        if (const auto anim = GetResourceManager().GetResource<Animation>(anim_lookup_name).lock())
-                        {
-                            m_animations_.push_back(anim);
-                            continue;
-                        }
-
-                        for (int k = 0; k < channel_count; ++k)
-                        {
-                            const auto channel = animation_->mChannels[k];
-                            const auto transform_count = channel->mNumPositionKeys;
-
-                            for (int l = 0; l < transform_count; ++l)
-                            {
-                                const auto frame = static_cast<float>(channel->mPositionKeys[l].mTime);
-                                const auto t = channel->mPositionKeys[l].mValue;
-                                const auto r = channel->mRotationKeys[l].mValue;
-                                const auto s = channel->mScalingKeys[l].mValue;
-
-                                animation.keyframes.push_back(KeyFrame{
-                                    frame,
-                                    Vector3(s.x, s.y, s.z),
-                                    Quaternion(r.x, r.y, r.z, r.w),
-                                    Vector3(t.x, t.y, t.z)});
-
-                                /*
-                                const aiMatrix4x4 node_transform = bone->mNode->mTransformation;
-                                const aiNode* parent_node = bone->mNode->mParent;
-                                const aiMatrix4x4 parent_transform = parent_node ? parent_node->mTransformation : aiMatrix4x4();
-                                const aiMatrix4x4 global_transform = parent_transform * node_transform;
-                                const aiMatrix4x4 transform = scene_inv_transform * global_transform * offset;
-
-                                offset = from bone info, animation * offset?
-                                */
-                            }
-                        }
-
-                        StrongAnimation anim = boost::make_shared<Animation>(animation);
-                        anim->SetName(anim_lookup_name);
-                        GetResourceManager().AddResource(anim);
-                        m_animations_.push_back(anim);
-                    }
+                    StrongBone bone = boost::make_shared<Bone>(bone_map);
+                    bone->SetName(mesh_lookup_name + "_BONE");
+                    GetResourceManager().AddResource(bone);
+                    bone->Load();
+                    m_bone_ = bone;
                 }
 
                 StrongMesh mesh = boost::make_shared<Mesh>(shape, indices);
@@ -362,30 +339,89 @@ namespace Engine::Resources
                 m_meshes_.push_back(mesh);
             }
 
+            if (scene->HasAnimations())
+            {
+                const auto animation_count = scene->mNumAnimations;
+                const aiMatrix4x4 ai_scene_inv = scene->mRootNode->mTransformation.Inverse();
+                const Matrix scene_inv_transform = AiMatrixToDirectX(ai_scene_inv);
+
+                for (int j = 0; j < animation_count; ++j)
+                {
+                    AnimationPrimitive animation;
+                    animation.bone_animations.resize(m_bone_->GetBoneCount());
+
+                    const auto animation_ = scene->mAnimations[j];
+                    const auto affect_bone_count = animation_->mNumChannels;
+                    const std::string anim_name = animation_->mName.C_Str();
+
+                    if (const auto check = GetResourceManager().GetResource<Animation>(anim_name + "_ANIM").lock())
+                    {
+                        m_animations_.push_back(check);
+                        continue;
+                    }
+
+                    const auto duration = animation_->mDuration;
+                    const auto ticks_per_second = animation_->mTicksPerSecond == 0 ? 25.f : animation_->mTicksPerSecond;
+
+                    animation.duration = duration;
+                    animation.ticks_per_second = ticks_per_second;
+                    animation.name = anim_name;
+                    animation.global_inverse_transform = scene_inv_transform;
+
+                    for (int k = 0; k < affect_bone_count; ++k)
+                    {
+                        BoneAnimation bone_animation;
+                        
+                        const auto channel = animation_->mChannels[k];
+                        const auto bone_name = channel->mNodeName;
+                        const auto bone_idx = m_bone_->GetBone(bone_name.C_Str()).idx;
+                        const auto parent = m_bone_->GetBone(bone_name.C_Str()).parent_idx;
+
+                        const auto positions = channel->mNumPositionKeys;
+                        for (auto l = 0; l < positions; ++l)
+                        {
+                            const auto key = channel->mPositionKeys[l];
+                            const auto time = key.mTime;
+                            const auto value = key.mValue;
+
+                            bone_animation.position.emplace_back(time, Vector3{value.x, value.y, value.z});
+                        }
+
+                        const auto rotations = channel->mNumRotationKeys;
+                        for (auto l = 0; l < rotations; ++l)
+                        {
+                            const auto key = channel->mRotationKeys[l];
+                            const auto time = key.mTime;
+                            const auto value = key.mValue;
+
+                            bone_animation.rotation.emplace_back(time, Quaternion{value.x, value.y, value.z, value.w});
+                        }
+
+                        const auto scalings = channel->mNumScalingKeys;
+                        for (auto l = 0; l < scalings; ++l)
+                        {
+                            const auto key = channel->mScalingKeys[l];
+                            const auto time = key.mTime;
+                            const auto value = key.mValue;
+
+                            bone_animation.scale.emplace_back(time, Vector3{value.x, value.y, value.z});
+                        }
+
+                        animation.bone_animations[bone_idx] = bone_animation;
+                    }
+
+                    StrongAnimation anim = boost::make_shared<Animation>(animation);
+                    anim->SetName(anim_name + "_ANIM");
+                    anim->BindBone(m_bone_);
+                    anim->Load();
+                    GetResourceManager().AddResource(anim);
+                    m_animations_.push_back(anim);
+                }
+            }
+
             UpdateVertices();
 
             BoundingBox::CreateFromPoints(m_bounding_box_, total_vertices.size(), total_vertices.data(), sizeof(Vector3));
-
-            if (!m_bone_map_.empty())
-            {
-                m_bone_list_.reserve(m_bone_map_.size());
-
-                for (const auto& bone : m_bone_map_ | std::views::values)
-                {
-                    m_bone_list_.push_back(bone);
-                }
-
-                std::ranges::sort(
-                                  m_bone_list_
-                                  , [](const auto& lhs, const auto& rhs)
-                {
-                    return lhs.idx < rhs.idx;
-                });
-
-                GetD3Device().CreateStructuredShaderResource<BonePrimitive>(
-                                                                            m_bone_list_.size(), m_bone_list_.data(),
-                                                                            m_bone_srv_.ReleaseAndGetAddressOf());
-            }
         }
         else
         {

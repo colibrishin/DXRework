@@ -74,14 +74,13 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        UINT                                 m_render_index_;
-        std::vector<StrongMesh>              m_meshes_;
-        std::map<std::string, BonePrimitive> m_bone_map_;
-        std::vector<BonePrimitive>           m_bone_list_;
-        std::vector<StrongTexture>           m_textures_;
-        std::vector<StrongNormalMap>         m_normal_maps_;
-        std::vector<StrongAnimation>         m_animations_;
-        BoundingBox                          m_bounding_box_;
+        UINT                         m_render_index_;
+        std::vector<StrongMesh>      m_meshes_;
+        StrongBone                   m_bone_;
+        std::vector<StrongTexture>   m_textures_;
+        std::vector<StrongNormalMap> m_normal_maps_;
+        std::vector<StrongAnimation> m_animations_;
+        BoundingBox                  m_bounding_box_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
