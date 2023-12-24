@@ -482,9 +482,7 @@ namespace Engine
 
     struct TransformBuffer
     {
-        Matrix scale;
-        Matrix rotation;
-        Matrix translation;
+        Matrix world;
     };
 
     struct LightBuffer

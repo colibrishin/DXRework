@@ -30,11 +30,9 @@ PixelInputType main(VertexInputType input)
         output.binormal = mul(input.binormal, (float3x3)animation_transform);
     }
 
-    matrix world = mul(mul(g_scale, g_rotation), g_translation);
-
     // Calculate the position of the vertex against the world, view, and
     // projection matrices.
-    output.position       = mul(output.position, world);
+    output.position       = mul(output.position, g_world);
     output.world_position = output.position;
 
     output.position = mul(output.position, g_cam_view);
@@ -44,34 +42,32 @@ PixelInputType main(VertexInputType input)
     output.color = input.color;
     output.tex   = input.tex;
 
-    float4 worldPosition = mul(input.position, world);
-
     [unroll] for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
         const float4 light_position = GetWorldPosition(g_lightWorld[i]);
-        output.lightDirection[i]    = light_position.xyz - worldPosition.xyz;
+        output.lightDirection[i] = light_position.xyz - output.world_position.xyz;
         output.lightDirection[i]    = normalize(output.lightDirection[i]);
     }
 
     const float3 cam_position = GetWorldPosition(g_cam_world);
 
-    output.viewDirection = cam_position.xyz - worldPosition.xyz;
+    output.viewDirection = cam_position.xyz - output.world_position.xyz;
     output.viewDirection = normalize(output.viewDirection);
 
-    output.normal   = mul(output.normal, (float3x3)world);
-    output.tangent  = mul(output.tangent, (float3x3)world);
-    output.binormal = mul(output.binormal, (float3x3)world);
+    output.normal   = mul(output.normal, (float3x3)g_world);
+    output.tangent  = mul(output.tangent, (float3x3)g_world);
+    output.binormal = mul(output.binormal, (float3x3)g_world);
 
     matrix reflectionWorld = mul(g_cam_reflectView, g_cam_projection);
-    reflectionWorld        = mul(world, reflectionWorld);
+    reflectionWorld        = mul(g_world, reflectionWorld);
     output.reflection      = mul(output.position, reflectionWorld);
 
     matrix vpw        = mul(g_cam_view, g_cam_projection);
-    vpw               = mul(world, vpw);
+    vpw               = mul(g_world, vpw);
     output.refraction = mul(output.position, vpw);
 
     output.clipSpacePosZ = output.position.z;
-    output.clipPlane     = dot(mul(input.position, world), g_clip_plane);
+    output.clipPlane     = dot(mul(input.position, g_world), g_clip_plane);
 
     return output;
 }
