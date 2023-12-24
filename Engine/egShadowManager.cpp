@@ -347,5 +347,7 @@ namespace Engine::Manager::Graphics
         GetRenderPipeline().SetLight(
                                      idx, Matrix::Identity,
                                      Color{0.0f, 0.0f, 0.0f, 0.0f});
+
+        m_graphic_shadow_buffer_[light] = {};
     }
 } // namespace Engine::Manager::Graphics

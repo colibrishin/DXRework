@@ -47,6 +47,8 @@ namespace Engine::Manager::Graphics
                               m_device_->CreateShaderResourceView(
                                                                   rtn_buffer.Get(), &srv_desc,
                                                                   buffer.srv.GetAddressOf()));
+
+            buffer.texture = rtn_buffer;
         }
 
         buffer.srv->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture.GetAddressOf()));

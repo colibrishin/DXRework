@@ -206,7 +206,9 @@ namespace Engine::Manager::Graphics
         desc.CPUAccessFlags     = 0;
         desc.MiscFlags          = 0;
 
-        GetD3Device().CreateTexture(desc, shadow_map_texture.GetAddressOf());
+        GetD3Device().CreateTexture(desc, shadow_map_texture.ReleaseAndGetAddressOf());
+
+        buffer.texture = shadow_map_texture;
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
         dsv_desc.Format                         = DXGI_FORMAT_D32_FLOAT;
@@ -219,7 +221,7 @@ namespace Engine::Manager::Graphics
         DX::ThrowIfFailed(
                           GetD3Device().GetDevice()->CreateDepthStencilView(
                                                                             shadow_map_texture.Get(), &dsv_desc,
-                                                                            buffer.depth_stencil_view.GetAddressOf()));
+                                                                            buffer.depth_stencil_view.ReleaseAndGetAddressOf()));
 
         D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
         srv_desc.Format                         = DXGI_FORMAT_R32_FLOAT;
@@ -233,7 +235,7 @@ namespace Engine::Manager::Graphics
                           GetD3Device().GetDevice()->CreateShaderResourceView(
                                                                               shadow_map_texture.Get(), &srv_desc,
                                                                               buffer.shader_resource_view.
-                                                                              GetAddressOf()));
+                                                                              ReleaseAndGetAddressOf()));
     }
 
     void RenderPipeline::InitializeShadowProcessors()
