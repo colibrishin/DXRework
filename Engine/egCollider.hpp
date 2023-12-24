@@ -15,22 +15,13 @@ namespace Engine::Components
         Collider(const WeakObject& owner, const WeakMesh& mesh = {});
         ~Collider() override = default;
 
-        void SetDirtyWithTransform(const bool dirty)
-        {
-            m_bDirtyByTransform = dirty;
-            if (dirty)
-            {
-                UpdateFromTransform();
-            }
-        }
-
-        void SetPosition(const Vector3& position);
-        void SetRotation(const Quaternion& rotation);
+        void SetOffsetPosition(const Vector3& position);
+        void SetOffsetRotation(const Quaternion& rotation);
         void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
-        void SetSize(const Vector3& size);
+        void SetOffsetSize(const Vector3& size);
+
         void SetType(eBoundingType type);
         void SetMass(const float mass);
-        void SetOffset(const Vector3& offset);
 
         void SetBoundingBox(const BoundingBox& bounding);
         void SetMesh(const WeakMesh& mesh);
@@ -51,10 +42,6 @@ namespace Engine::Components
         const std::set<EntityID>& GetCollidedObjects() const;
         const std::set<EntityID>& GetSpeculation() const;
 
-        bool GetDirtyFlag() const;
-        Vector3 GetPreviousPosition() const;
-        Vector3 GetPosition() const;
-        Quaternion GetRotation() const;
         Vector3 GetSize() const;
 
         void GetPenetration(
@@ -87,11 +74,11 @@ namespace Engine::Components
         {
             if constexpr (std::is_same_v<T, BoundingOrientedBox>)
             {
-                return m_boundings_.As<BoundingOrientedBox>(m_size_, m_rotation_, m_position_ + m_offset_);
+                return m_boundings_.As<BoundingOrientedBox>(GetTotalSize(), GetTotalRotation(), GetTotalPosition());
             }
             else if constexpr (std::is_same_v<T, BoundingSphere>)
             {
-                return m_boundings_.As<BoundingSphere>(m_size_, m_rotation_, m_position_ + m_offset_);
+                return m_boundings_.As<BoundingSphere>(GetTotalSize(), GetTotalRotation(), GetTotalPosition());
             }
             else
             {
@@ -140,20 +127,21 @@ namespace Engine::Components
             return false;
         }
 
-        void UpdateFromTransform();
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
         void UpdateWorldMatrix();
 
+        Vector3 GetTotalPosition() const;
+        Quaternion GetTotalRotation() const;
+        Vector3 GetTotalSize() const;
+
         bool m_bDirtyByTransform;
 
-        Vector3    m_previous_position_;
         Vector3    m_position_;
         Vector3    m_size_;
         Quaternion m_rotation_;
         Vector3    m_yaw_pitch_roll_degree_;
-        Vector3    m_offset_;
 
         eBoundingType m_type_;
         EntityName    m_mesh_name_;
