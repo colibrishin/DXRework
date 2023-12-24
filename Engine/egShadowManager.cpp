@@ -122,7 +122,7 @@ namespace Engine::Manager::Graphics
                                                     m_graphic_shadow_buffer_[known_light]);
 
                 Vector3 light_dir;
-                (tr->GetPosition()).Normalize(light_dir);
+                (tr->GetWorldPosition()).Normalize(light_dir);
 
                 EvalCascadeVP(
                               light_dir, m_cascade_vp_buffer_[locked], idx,

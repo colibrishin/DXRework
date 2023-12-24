@@ -110,17 +110,7 @@ namespace Engine::Manager::Physics
         rb->SetLinearMomentum(linear_momentum);
         rb->SetAngularMomentum(angular_momentum);
 
-        tr->SetPosition(tr->GetPosition() + linear_momentum);
-
-        const auto& cls = rb->GetOwner().lock()->GetComponents<Components::Collider>();
-
-        for (const auto child : cls)
-        {
-            if (const auto locked = child.lock())
-            {
-                locked->SetPosition(locked->GetPosition() + linear_momentum);
-            }
-        }
+        tr->SetLocalPosition(tr->GetLocalPosition() + linear_momentum);
 
         // Quaternion orientation = tr->GetRotation();
         // orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} *

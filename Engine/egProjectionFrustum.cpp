@@ -49,8 +49,8 @@ namespace Engine::Manager
                 object.lock()->GetComponent<Components::Transform>().lock())
         {
             BoundingOrientedBox box{
-                tr->GetPosition(), tr->GetScale() * 0.5f,
-                tr->GetRotation()
+                tr->GetWorldPosition(), tr->GetScale() * 0.5f,
+                tr->GetWorldRotation()
             };
 
             const auto check_plane  = m_frustum.Contains(box);

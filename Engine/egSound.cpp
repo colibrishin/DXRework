@@ -56,7 +56,7 @@ namespace Engine::Resources
         if (const auto tr =
                 origin.lock()->GetComponent<Components::Transform>().lock())
         {
-            pos = {tr->GetPosition().x, tr->GetPosition().y, tr->GetPosition().z};
+            pos = {tr->GetWorldPosition().x, tr->GetWorldPosition().y, tr->GetWorldPosition().z};
         }
 
         if (const auto rb =
@@ -115,7 +115,7 @@ namespace Engine::Resources
 
         if (const auto tr = origin.lock()->GetComponent<Components::Transform>().lock())
         {
-            pos = {tr->GetPosition().x, tr->GetPosition().y, tr->GetPosition().z};
+            pos = {tr->GetWorldPosition().x, tr->GetWorldPosition().y, tr->GetWorldPosition().z};
         }
         if (const auto rb = origin.lock()->GetComponent<Components::Rigidbody>().lock())
         {

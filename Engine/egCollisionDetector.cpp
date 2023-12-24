@@ -8,6 +8,7 @@
 #include "egObject.hpp"
 #include "egRigidbody.h"
 #include "egSceneManager.hpp"
+#include "egTransform.h"
 
 namespace Engine::Manager
 {
@@ -97,7 +98,7 @@ namespace Engine::Manager
         Components::Collider&       rhs)
     {
         Components::Collider copy = lhs;
-        copy.SetPosition(lhs.GetPosition() + Vector3::Down * g_epsilon);
+        copy.SetOffsetPosition(Vector3::Down * g_epsilon);
 
         if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
         {
@@ -130,7 +131,8 @@ namespace Engine::Manager
         if (rb && rb_other)
         {
             static Ray ray{};
-            ray.position        = lhs.GetPreviousPosition();
+            const auto tr = rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
+            ray.position        = tr->GetWorldPreviousPosition();
             const auto velocity = rb->GetLinearMomentum();
             velocity.Normalize(ray.direction);
 

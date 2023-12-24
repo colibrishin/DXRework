@@ -45,33 +45,16 @@ namespace Engine::Manager::Physics
                     {
                         if (!tr->IsTicked())
                         {
+                            tr->m_world_previous_position_ = tr->GetWorldPosition();
                             tr->m_previous_position_ = tr->m_position_;
                         }
 
-                        const auto previous = tr->GetPreviousPosition();
-                        const auto current  = tr->GetPosition();
+                        const auto previous = tr->GetLocalPreviousPosition();
+                        const auto current  = tr->GetLocalPosition();
                         const auto lerp     = Vector3::Lerp(previous, current, GetLerpFactor());
                         Vector3CheckNanException(lerp);
 
-                        tr->SetPosition(lerp);
-                    }
-
-                    for (const auto& cl : cls)
-                    {
-                        if (const auto collider = cl.lock())
-                        {
-                            if (!collider->IsTicked())
-                            {
-                                collider->m_previous_position_ = collider->m_position_;
-                            }
-
-                            const auto previous = collider->GetPreviousPosition();
-                            const auto current  = collider->GetPosition();
-                            const auto lerp     = Vector3::Lerp(previous, current, GetLerpFactor());
-                            Vector3CheckNanException(lerp);
-
-                            collider->SetPosition(lerp);
-                        }
+                        tr->SetLocalPosition(lerp);
                     }
                 }
             }
