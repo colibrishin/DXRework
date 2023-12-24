@@ -14,7 +14,7 @@ namespace Engine::Manager::Graphics
         RenderPipeline(SINGLETON_LOCK_TOKEN)
         : Singleton() {}
 
-        ~RenderPipeline() override = default;
+        ~RenderPipeline() override;
 
         void Initialize() override;
         void PreRender(const float& dt) override;
