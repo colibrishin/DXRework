@@ -66,32 +66,11 @@ namespace Engine
     {
         ComPtr<ID3D11DepthStencilView>   depth_stencil_view;
         ComPtr<ID3D11ShaderResourceView> shader_resource_view;
-
-        ~GraphicShadowBuffer()
-        {
-            if (depth_stencil_view)
-            {
-                depth_stencil_view.Reset();
-            }
-
-            if (shader_resource_view)
-            {
-                shader_resource_view.Reset();
-            }
-        }
     };
 
     struct GraphicRenderedBuffer
     {
         ComPtr<ID3D11ShaderResourceView> srv;
-
-        ~GraphicRenderedBuffer()
-        {
-            if (srv)
-            {
-                srv.Reset();
-            }
-        }
     };
 
     struct CascadeShadow

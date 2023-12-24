@@ -10,8 +10,8 @@ namespace Engine::Manager::Graphics
 {
     void D3Device::GetSwapchainCopy(GraphicRenderedBuffer& buffer)
     {
-        auto swapchain_texture = new ID3D11Texture2D*;
-        auto buffer_texture    = new ID3D11Texture2D*;
+        ComPtr<ID3D11Buffer> swapchain_texture;
+        ComPtr<ID3D11Buffer> buffer_texture;
 
         if (buffer.srv == nullptr)
         {
@@ -49,18 +49,12 @@ namespace Engine::Manager::Graphics
                                                                   buffer.srv.GetAddressOf()));
         }
 
-        buffer.srv->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture));
+        buffer.srv->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture.GetAddressOf()));
         m_swap_chain_->GetBuffer(
                                  0, __uuidof(ID3D11Texture2D),
-                                 (void**)swapchain_texture);
+                                 (void**)swapchain_texture.GetAddressOf());
 
-        m_context_->CopyResource(*buffer_texture, *swapchain_texture);
-
-        (*swapchain_texture)->Release();
-        (*buffer_texture)->Release();
-
-        delete swapchain_texture;
-        delete buffer_texture;
+        m_context_->CopyResource(buffer_texture.Get(), swapchain_texture.Get());
     }
 
     void D3Device::UpdateBuffer(
