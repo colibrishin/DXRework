@@ -59,6 +59,11 @@ namespace Engine::Manager::Graphics
         m_context_->CopyResource(buffer_texture.Get(), swapchain_texture.Get());
     }
 
+    HANDLE D3Device::GetSwapchainAwaiter() const
+    {
+        return m_swap_chain_->GetFrameLatencyWaitableObject();
+    }
+
     void D3Device::UpdateBuffer(
         UINT          size, const void* data,
         ID3D11Buffer* buffer) const

@@ -6,6 +6,8 @@
 #include <egCamera.h>
 
 #include "clPlayer.h"
+#include "egCollisionDetector.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Scene::TestScene,

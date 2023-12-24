@@ -1,17 +1,11 @@
 #pragma once
-
-#include <SimpleMath.h>
-#include <d3d11.h>
-#include <filesystem>
-#include <vector>
-
-#include <wrl/client.h>
-
 #include "egCommon.hpp"
 #include "egDXCommon.h"
-#include "egRenderable.h"
 #include "egResource.h"
 #include "egResourceManager.hpp"
+
+struct ID3D11Buffer;
+template class Microsoft::WRL::ComPtr<ID3D11Buffer>;
 
 namespace Engine::Resources
 {

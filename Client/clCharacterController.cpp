@@ -4,6 +4,14 @@
 
 #include <boost/serialization/export.hpp>
 #include <egCamera.h>
+#include <egRigidbody.h>
+#include <egApplication.h>
+#include <egDebugger.hpp>
+#include <egCollisionDetector.h>
+#include <egTransform.h>
+
+#include "egMouseManager.h"
+#include "egSceneManager.hpp"
 
 BOOST_CLASS_EXPORT_IMPLEMENT(
                              Engine::Abstract::StateController<Client::eCharacterState>)

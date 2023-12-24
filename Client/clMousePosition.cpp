@@ -2,6 +2,8 @@
 #include "clMousePosition.hpp"
 #include <egCamera.h>
 
+#include "egSceneManager.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::MousePositionText,
                        _ARTAG(_BSTSUPER(Text)))

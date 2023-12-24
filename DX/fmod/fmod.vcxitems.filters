@@ -12,14 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="$(MSBuildThisFileDirectory)lib\x86\fmod_vc.lib">
-      <Filter>lib\x86</Filter>
-    </Library>
-    <Library Include="$(MSBuildThisFileDirectory)lib\x64\fmod_vc.lib">
-      <Filter>lib\x64</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
     <CopyFileToFolders Include="$(MSBuildThisFileDirectory)lib\x64\fmod.dll">
       <Filter>lib\x64</Filter>
     </CopyFileToFolders>
@@ -45,5 +37,13 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)fmod_studio_common.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x86\fmod_vc.lib">
+      <Filter>lib\x86</Filter>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)lib\x64\fmod_vc.lib">
+      <Filter>lib\x64</Filter>
+    </Library>
   </ItemGroup>
 </Project>

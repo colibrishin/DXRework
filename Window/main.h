@@ -2,10 +2,8 @@
 #include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
 
-#include <framework.h>
-
-#include "imgui.h"
-
 LRESULT CALLBACK WndProc(
     HWND   hwnd, UINT umessage, WPARAM wparam,
     LPARAM lparam);
+
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -10,6 +10,9 @@
 #include "egModel.h"
 #include "egModelRenderer.h"
 #include "egShader.hpp"
+#include "egTransform.h"
+#include "egCollider.hpp"
+#include "egRigidbody.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::PlaneObject,

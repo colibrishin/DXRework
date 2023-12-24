@@ -5,21 +5,6 @@
 #include <memory>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
-#include <DirectXCollision.h>
-#include <SimpleMath.h>
-#include "Effects.h"
-#include "BufferHelpers.h"
-#include <wrl/client.h>
-
-#include <CommonStates.h>
-#include <GeometricPrimitive.h>
-#include <Keyboard.h>
-#include <Mouse.h>
-#include <SpriteBatch.h>
-#include <SpriteFont.h>
-
-#include <d3d11.h>
-
 // Need to be included before boost only in the header, requires a default
 // constructor
 #define SERIALIZER_ACCESS                                                      \
@@ -66,7 +51,8 @@
 
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
   static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
-    { return GetResourceManager().GetResource<TYPE>(name); }
+    { return Engine::Manager::ResourceManager::GetInstance()                  \
+       .GetResource<TYPE>(name); }
 
 #define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
     static inline boost::shared_ptr<TYPE> Create(                             \
@@ -87,6 +73,11 @@
 
 #define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
   if ((ID) == g_invalid_id) return {};
+
+namespace ImGui
+{
+    extern void Text(const char* fmt, ...);
+}
 
 namespace Engine
 {

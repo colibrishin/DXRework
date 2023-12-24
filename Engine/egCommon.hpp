@@ -1,9 +1,4 @@
 #pragma once
-#include <wrl/client.h>
-
-#include <DirectXCollision.h>
-#include <SimpleMath.h>
-
 #include <boost/make_shared.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
@@ -11,8 +6,6 @@
 #include "egDXCommon.h"
 #include "egSerialization.hpp"
 #include "egType.h"
-
-#include <fmod.h>
 
 #undef max
 #undef min
@@ -314,28 +307,16 @@ namespace DX
         com_exception(HRESULT hr)
         : result(hr) {}
 
-        const char* what() const noexcept override
-        {
-            static char s_str[64] = {};
-            sprintf_s(
-                      s_str, "Failure with HRESULT of %08X",
-                      static_cast<unsigned int>(result));
-            return s_str;
-        }
+        const char* what() const noexcept override;
 
     private:
         HRESULT result;
     };
 
-    // Helper utility converts D3D API failures into exceptions.
-    inline void ThrowIfFailed(HRESULT hr)
-    {
-        if (FAILED(hr))
-        {
-            throw com_exception(hr);
-        }
-    }
+    void ThrowIfFailed(HRESULT hr);
 } // namespace DX
+
+enum FMOD_RESULT;
 
 namespace FMOD::DX
 {
@@ -346,25 +327,11 @@ namespace FMOD::DX
         fmod_exception(FMOD_RESULT hr)
         : result(hr) {}
 
-        const char* what() const noexcept override
-        {
-            static char s_str[64] = {};
-            sprintf_s(
-                      s_str, "Failure with FMOD_RESULT of %08X",
-                      static_cast<unsigned int>(result));
-            return s_str;
-        }
+        const char* what() const noexcept override;
 
     private:
-        HRESULT result;
+        FMOD_RESULT result;
     };
 
-    // Helper utility converts D3D API failures into exceptions.
-    inline void ThrowIfFailed(FMOD_RESULT hr)
-    {
-        if (hr != FMOD_OK)
-        {
-            throw fmod_exception(hr);
-        }
-    }
+    void ThrowIfFailed(FMOD_RESULT hr);
 } // namespace FMOD::DX
