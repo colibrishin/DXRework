@@ -1,5 +1,5 @@
 #include "WinAPIWrapper.hpp"
-#include "../Engine/egManagerHelper.hpp"
+#include "../Client/Client.h"
 
 namespace WinAPI
 {
@@ -8,6 +8,8 @@ namespace WinAPI
         WNDCLASSEXW wc{};
         DEVMODE     dmScreenSettings;
         int         posX, posY;
+        UINT        initial_width  = Client::GetWidth();
+        UINT        initial_height = Client::GetHeight();
 
         // Get the instance of this application.
         s_hinstance_ = GetModuleHandle(nullptr);
@@ -31,16 +33,16 @@ namespace WinAPI
 
         // Setup the screen settings depending on whether it is running in full screen
         // or in windowed mode.
-        if (Engine::g_full_screen)
+        if (Client::IsFullScreen())
         {
             // If full screen set the screen to maximum size of the users desktop and
             // 32bit.
             memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
             dmScreenSettings.dmSize      = sizeof(dmScreenSettings);
             dmScreenSettings.dmPelsWidth =
-                    static_cast<unsigned long>(Engine::g_window_width);
+                    static_cast<unsigned long>(initial_width);
             dmScreenSettings.dmPelsHeight =
-                    static_cast<unsigned long>(Engine::g_window_height);
+                    static_cast<unsigned long>(initial_height);
             dmScreenSettings.dmBitsPerPel = 32;
             dmScreenSettings.dmFields     = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
@@ -53,15 +55,15 @@ namespace WinAPI
         else
         {
             // Place the window in the middle of the screen.
-            posX = (GetSystemMetrics(SM_CXSCREEN) - Engine::g_window_width) / 2;
-            posY = (GetSystemMetrics(SM_CYSCREEN) - Engine::g_window_height) / 2;
+            posX = (GetSystemMetrics(SM_CXSCREEN) - initial_width) / 2;
+            posY = (GetSystemMetrics(SM_CYSCREEN) - initial_height) / 2;
         }
 
         // Create the window with the screen settings and get the handle to it.
         const auto hwnd = CreateWindowExW(
                                           WS_EX_APPWINDOW, s_application_name_.c_str(), s_application_name_.c_str(),
                                           WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP, posX, posY,
-                                          Engine::g_window_width, Engine::g_window_height, nullptr, nullptr,
+                                          initial_width, initial_height, nullptr, nullptr,
                                           s_hinstance_, nullptr);
 
         // Bring the window up on the screen and set it as main focus.
@@ -105,7 +107,7 @@ namespace WinAPI
             }
             else
             {
-                Engine::GetApplication().Tick();
+                Client::Tick();
             }
         }
     }

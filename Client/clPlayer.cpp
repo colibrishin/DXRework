@@ -2,7 +2,13 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
+#include "egCollider.hpp"
+#include "egModel.h"
 #include "egModelRenderer.h"
+#include "egRigidbody.h"
+#include "egShader.hpp"
+#include "egTransform.h"
+#include "egVertexShaderInternal.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Player,

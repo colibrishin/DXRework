@@ -399,6 +399,7 @@
     <ClInclude Include="egBone.h">
       <Filter>Resource\Bone</Filter>
     </ClInclude>
+    <ClInclude Include="egReflectionEvaluator.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -571,6 +572,7 @@
     <ClCompile Include="egBone.cpp">
       <Filter>Resource\Bone</Filter>
     </ClCompile>
+    <ClCompile Include="egReflectionEvaluator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">

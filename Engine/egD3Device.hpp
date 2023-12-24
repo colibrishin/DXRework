@@ -438,10 +438,7 @@ namespace Engine::Manager::Graphics
 
         void GetSwapchainCopy(GraphicRenderedBuffer& buffer);
 
-        HANDLE GetSwapchainAwaiter() const
-        {
-            return m_swap_chain_->GetFrameLatencyWaitableObject();
-        }
+        HANDLE GetSwapchainAwaiter() const;
 
     private:
         friend class RenderPipeline;

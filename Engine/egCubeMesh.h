@@ -1,5 +1,4 @@
 #pragma once
-#include "GeometricPrimitive.h"
 #include "egMesh.h"
 
 namespace Engine::Meshes

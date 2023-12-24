@@ -413,8 +413,8 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
-    <CopyLocalProjectReference>true</CopyLocalProjectReference>
-    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
+    <CopyLocalProjectReference>false</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -427,8 +427,8 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
-    <CopyLocalProjectReference>true</CopyLocalProjectReference>
-    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
+    <CopyLocalProjectReference>false</CopyLocalProjectReference>
+    <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
@@ -643,10 +643,16 @@
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmodL.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod_vc.lib">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmod.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmodL.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmod_vc.lib">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>
@@ -697,6 +703,12 @@
       <FileType>Document</FileType>
     </Library>
     <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod.dll">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x64\fmod_vc.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Update="D:\document\Work\git\DX\DXRework\DX\fmod\lib\x86\fmod_vc.lib">
       <FileType>Document</FileType>
     </Library>
   </ItemGroup>

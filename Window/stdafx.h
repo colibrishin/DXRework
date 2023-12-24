@@ -11,7 +11,4 @@
 #include <string>
 #include <vector>
 
-#include "../Client/pch.h"
-#include "../Engine/pch.h"
-
 #include "WinAPIWrapper.hpp"

@@ -3,6 +3,7 @@
 #include "egCommon.hpp"
 #include "egResource.h"
 #include "egScene.hpp"
+#include "egComponent.h"
 
 namespace Engine::Abstract
 {

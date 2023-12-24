@@ -74,7 +74,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		fmod\fmod.vcxitems*{2181c64a-d09c-4cd0-aa59-7ef53399af82}*SharedItemsImports = 4
-		imgui\imgui.vcxitems*{2181c64a-d09c-4cd0-aa59-7ef53399af82}*SharedItemsImports = 4
 		fmod\fmod.vcxitems*{70beac34-4ab1-485a-afb7-81f047d85bfe}*SharedItemsImports = 9
 		fmod\fmod.vcxitems*{8e154f61-e984-4491-9894-7665ec2d18f9}*SharedItemsImports = 4
 		imgui\imgui.vcxitems*{8e154f61-e984-4491-9894-7665ec2d18f9}*SharedItemsImports = 4

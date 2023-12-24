@@ -17,11 +17,12 @@
 
 #include "clBackSphereMesh.hpp"
 #include "clTestScene.hpp"
-#include "framework.h"
 
 // TODO: This is an example of a library function
 namespace Client
 {
+    using namespace Engine;
+
     void InitializeTexture()
     {
         Engine::Resources::Texture::Create("TestTexture", "./Texture.dds");
@@ -84,8 +85,10 @@ namespace Client
         GetResourceManager().AddResource(sphere_model);
     }
 
-    void fnClient()
+    void Initialize(HWND hwnd)
     {
+        Engine::Manager::Application::GetInstance().Initialize(hwnd);
+
         InitializeTexture();
         InitializeMesh();
         InitializeNormal();
@@ -95,5 +98,30 @@ namespace Client
 
         Engine::GetSceneManager().AddScene<Scene::TestScene>();
         Engine::GetSceneManager().SetActive<Scene::TestScene>();
+    }
+
+    void Tick()
+    {
+        Engine::Manager::Application::GetInstance().Tick();
+    }
+
+    LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        return Engine::Manager::Application::GetInstance().MessageHandler(hwnd, msg, wparam, lparam);
+    }
+
+    UINT GetWidth()
+    {
+        return Engine::g_window_width;
+    }
+
+    UINT GetHeight()
+    {
+        return Engine::g_window_height;
+    }
+
+    bool IsFullScreen()
+    {
+        return Engine::g_full_screen;
     }
 } // namespace Client

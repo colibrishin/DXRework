@@ -11,7 +11,13 @@ namespace Engine
 
 namespace Client
 {
-    void fnClient();
+    void Initialize(HWND hwnd);
+    void Tick();
+    LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
+    UINT GetWidth();
+    UINT GetHeight();
+    bool IsFullScreen();
 
     enum eCharacterState
     {

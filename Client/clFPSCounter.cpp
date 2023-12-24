@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "clFPSCounter.hpp"
 
+#include "egApplication.h"
+
 SERIALIZER_ACCESS_IMPL(Client::Object::FPSCounter, _ARTAG(_BSTSUPER(Text)))
 
 namespace Client::Object

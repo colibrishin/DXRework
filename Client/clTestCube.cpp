@@ -6,9 +6,12 @@
 
 #include <egModel.h>
 
+#include "egCollider.hpp"
 #include "egModelRenderer.h"
+#include "egRigidbody.h"
 #include "egSoundPlayer.h"
 #include "egSound.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::TestCube,

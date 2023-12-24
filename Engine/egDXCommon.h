@@ -1,7 +1,5 @@
 #pragma once
-#include <SimpleMath.h>
 #include <boost/serialization/access.hpp>
-
 #include "egType.h"
 
 namespace Engine
@@ -343,7 +341,7 @@ namespace Engine
             return global_inverse_transform;
         }
 
-        const BoneAnimation* GetBoneAnimation(const size_t idx) const
+        const BoneAnimation* GetBoneAnimation(const int idx) const
         {
             if (bone_animations_index_wise.contains(idx))
             {

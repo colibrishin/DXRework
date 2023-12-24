@@ -2,8 +2,11 @@
 #include "clSkyBox.hpp"
 
 #include "clBackSphereMesh.hpp"
+#include "egHelper.hpp"
 #include "egModel.h"
 #include "egModelRenderer.h"
+#include "egTexture.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::SkyBox,

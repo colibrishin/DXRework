@@ -4,9 +4,11 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
+#include "egCollider.hpp"
 #include "egModel.h"
 #include "egModelRenderer.h"
 #include "egShader.hpp"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Water,
