@@ -14,16 +14,28 @@ namespace Engine::Components
         Transform(const WeakObject& owner);
         ~Transform() override = default;
 
-        void SetPosition(const Vector3& position);
-        void SetRotation(const Quaternion& rotation);
-        void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
-        void SetScale(const Vector3& scale);
-        void Translate(Vector3 translation);
+        void SetWorldPosition(const Vector3& position);
+        void SetWorldRotation(const Quaternion& rotation);
 
-        Vector3    GetPosition() const;
-        Vector3    GetPreviousPosition() const;
-        Quaternion GetRotation() const;
+        void SetLocalPosition(const Vector3& position);
+        void SetLocalRotation(const Quaternion& rotation);
+        void SetScale(const Vector3& scale);
+        void SetSizeAbsolute(bool absolute);
+        Vector3 GetWorldPosition() const;
+        Quaternion GetWorldRotation() const;
+
+        Vector3    GetWorldPreviousPosition() const;
+        Vector3    GetLocalPreviousPosition() const;
+        Vector3    GetLocalPosition() const;
+        Quaternion GetLocalRotation() const;
         Vector3    GetScale() const;
+
+        Vector3 Forward() const;
+        Vector3 Right() const;
+        Vector3 Up() const;
+
+        void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
+        void Translate(Vector3 translation);
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -36,7 +48,8 @@ namespace Engine::Components
         void     OnImGui() override;
         void     OnDeserialized() override;
 
-        Matrix GetWorldMatrix() const;
+        Matrix GetLocalMatrix() const;
+        Matrix     GetWorldMatrix() const;
 
     protected:
         Transform();
@@ -45,9 +58,13 @@ namespace Engine::Components
         friend class Manager::Physics::LerpManager;
         friend class Manager::Graphics::ShadowManager;
 
+        static WeakTransform FindNextTransform(const Transform& transform_);
+
         SERIALIZER_ACCESS
 
+        bool m_b_absolute_;
         Vector3    m_previous_position_;
+        Vector3    m_world_previous_position_;
         Vector3    m_position_;
         Vector3    m_yaw_pitch_roll_degree_;
         Quaternion m_rotation_;
