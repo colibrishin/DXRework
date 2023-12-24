@@ -64,12 +64,14 @@ namespace Engine
 
     struct GraphicShadowBuffer
     {
+        ComPtr<ID3D11Texture2D>          texture;
         ComPtr<ID3D11DepthStencilView>   depth_stencil_view;
         ComPtr<ID3D11ShaderResourceView> shader_resource_view;
     };
 
     struct GraphicRenderedBuffer
     {
+        ComPtr<ID3D11Texture2D>          texture;
         ComPtr<ID3D11ShaderResourceView> srv;
     };
 
