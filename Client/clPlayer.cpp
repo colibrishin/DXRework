@@ -22,19 +22,16 @@ namespace Client::Object
         mr->AddVertexShader(Graphic::VertexShader::Get("vs_default"));
         mr->AddPixelShader(Graphic::PixelShader::Get("ps_color"));
 
-        AddComponent<Components::Transform>();
+        const auto tr = AddComponent<Components::Transform>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         AddComponent<Client::State::CharacterController>();
 
-        //cldr->SetModel(model);
-        //cldr->SetBoundingBox(model->GetBoundingBox());
+        tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({0, XM_PI / 2, 0.0f}));
+        cldr->SetModel(model);
+        cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
-
-        const auto head_cldr = AddComponent<Components::Collider>().lock();
-        head_cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
-        head_cldr->SetMass(1.0f);
 
         rb->SetMainCollider(cldr);
         rb->SetFrictionCoefficient(0.1f);

@@ -20,6 +20,7 @@ namespace Engine::Resources
 
     void Animation::Render(const float& dt)
     {
+        SetFrame(m_current_frame_ + dt);
         auto animation_per_bone = GetFrameAnimation();
 
         GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(animation_per_bone.size(), animation_per_bone.data(), m_animation_buffer_.ReleaseAndGetAddressOf());
@@ -52,11 +53,11 @@ namespace Engine::Resources
             const BonePrimitive* bone           = m_bone_->GetBone(i);
             const BonePrimitive* parent         = m_bone_->GetBoneParent(i);
 
-            //const auto position = bone_animation.GetPosition(anim_time);
-            //const auto rotation = bone_animation.GetRotation(anim_time);
-            //const auto scale = bone_animation.GetScale(anim_time);
+            const auto position = bone_animation->GetPosition(anim_time);
+            const auto rotation = bone_animation->GetRotation(anim_time);
+            const auto scale = bone_animation->GetScale(anim_time);
 
-            //const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(position);
+            const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(position);
 
             Matrix parent_transform = Matrix::Identity;
 
@@ -65,7 +66,7 @@ namespace Engine::Resources
                 parent_transform = memo[parent->GetIndex()];
             }
 
-            const Matrix node_transform = bone->GetTransform();
+            const Matrix node_transform = vertex_transform;
 
             const Matrix global_transform = node_transform * parent_transform;
             memo[bone->GetIndex()] = global_transform;
@@ -80,6 +81,11 @@ namespace Engine::Resources
 
     void Animation::SetFrame(const float& dt)
     {
+        if (m_current_frame_ >= m_primitive_.GetDuration() / m_primitive_.GetTicksPerSecond())
+        {
+            m_current_frame_ = 0;
+        }
+
         m_current_frame_ = dt;
     }
 

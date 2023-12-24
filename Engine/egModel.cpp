@@ -33,7 +33,6 @@ namespace Engine::Resources
         // todo: expand
         if (!m_animations_.empty()) 
         {
-            m_animations_[0]->SetFrame(dt);
             m_animations_[0]->Render(dt);
         }
 
@@ -105,7 +104,12 @@ namespace Engine::Resources
         m_render_index_ = 0;
     }
 
-    StrongModel Model::Create(const std::string& name, const std::vector<StrongResource>& resources) {
+    std::vector<StrongMesh> Model::GetMeshes() const
+    {
+        return m_meshes_;
+    }
+
+    StrongModel           Model::Create(const std::string& name, const std::vector<StrongResource>& resources) {
         Model m("");
 
         if (const auto res_model = GetResourceManager().GetResource<Model>(name).lock())

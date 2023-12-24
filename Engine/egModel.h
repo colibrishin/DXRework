@@ -59,6 +59,8 @@ namespace Engine::Resources
             UpdateVertices();
         }
 
+        std::vector<StrongMesh> GetMeshes() const;
+
         static StrongModel Create(const std::string& name, const std::vector<StrongResource>& resources);
 
         RESOURCE_SELF_INFER_GETTER(Model)
