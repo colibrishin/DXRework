@@ -22,6 +22,11 @@ namespace Engine
                 continue;
             }
 
+            if (object->GetParent().lock())
+            {
+                continue;
+            }
+
             object->PreUpdate(dt);
         }
     }
@@ -31,6 +36,11 @@ namespace Engine
         for (const auto& object : m_objects_)
         {
             if (!object->GetActive())
+            {
+                continue;
+            }
+
+            if (object->GetParent().lock())
             {
                 continue;
             }
@@ -48,6 +58,11 @@ namespace Engine
                 continue;
             }
 
+            if (object->GetParent().lock())
+            {
+                continue;
+            }
+
             object->PreRender(dt);
         }
     }
@@ -57,6 +72,11 @@ namespace Engine
         for (const auto& object : m_objects_)
         {
             if (!object->GetActive())
+            {
+                continue;
+            }
+
+            if (object->GetParent().lock())
             {
                 continue;
             }
@@ -74,6 +94,11 @@ namespace Engine
                 continue;
             }
 
+            if (object->GetParent().lock())
+            {
+                continue;
+            }
+
             object->PostRender(dt);
         }
     }
@@ -83,6 +108,11 @@ namespace Engine
         for (const auto& object : m_objects_)
         {
             if (!object->GetActive())
+            {
+                continue;
+            }
+
+            if (object->GetParent().lock())
             {
                 continue;
             }

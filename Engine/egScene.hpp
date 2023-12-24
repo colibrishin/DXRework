@@ -79,6 +79,16 @@ namespace Engine
             return {};
         }
 
+        WeakObject FindGameObjectByLocalID(ActorID id)
+        {
+            if (m_assigned_actor_ids_.contains(id))
+            {
+                return m_cached_objects_[m_assigned_actor_ids_[id]];
+            }
+
+            return {};
+        }
+
         WeakCamera GetMainCamera() const
         {
             return m_mainCamera_;
@@ -158,7 +168,7 @@ namespace Engine
 
         GraphicRenderedBuffer m_rendered_buffer_;
 
-        std::set<ActorID>              m_assigned_actor_ids_;
+        std::map<ActorID, EntityID>    m_assigned_actor_ids_;
         std::map<EntityID, WeakObject> m_cached_objects_;
         std::map<eComponentType,
                  std::set<WeakComponent, ComponentPriorityComparer>>

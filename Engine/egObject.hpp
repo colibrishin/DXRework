@@ -227,15 +227,21 @@ namespace Engine::Abstract
         bool GetImGuiOpen() const;
         eDefObjectType GetObjectType() const;
 
+        WeakObject GetParent() const;
+        WeakObject GetChild(const ActorID id) const;
+        std::vector<WeakObject> GetChildren() const;
+
+        void AddChild(const WeakObject& child);
+        bool DetachChild(const ActorID id);
+
     protected:
-        Object(eDefObjectType type = DEF_OBJ_T_NONE)
+        explicit Object(eDefObjectType type = DEF_OBJ_T_NONE)
         : Actor(),
+          m_parent_(g_invalid_id),
           m_type_(type),
           m_active_(true),
           m_culled_(true),
-          m_imgui_open_(false)
-        {
-        };
+          m_imgui_open_(false) { };
 
     private:
         SERIALIZER_ACCESS
@@ -265,9 +271,11 @@ namespace Engine::Abstract
         virtual void OnCollisionExit(const Engine::Components::Collider& other);
 
     private:
-        eDefObjectType m_type_;
-        bool           m_active_ = true;
-        bool           m_culled_ = true;
+        ActorID              m_parent_;
+        std::vector<ActorID> m_children_;
+        eDefObjectType       m_type_;
+        bool                 m_active_ = true;
+        bool                 m_culled_ = true;
 
         bool m_imgui_open_ = false;
 
@@ -275,6 +283,7 @@ namespace Engine::Abstract
         m_components_;
 
         // Non-serialized
+        std::map<ActorID, WeakObject>                      m_children_cache_;
         std::set<ComponentID>                              m_assigned_component_ids_;
         std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
     };
