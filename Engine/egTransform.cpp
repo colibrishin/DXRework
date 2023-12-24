@@ -23,8 +23,8 @@ namespace Engine::Components
     {
         m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
         m_rotation_              = Quaternion::CreateFromYawPitchRoll(
-                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.x),
                                                          DirectX::XMConvertToRadians(yaw_pitch_roll.y),
+                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.x),
                                                          DirectX::XMConvertToRadians(yaw_pitch_roll.z));
     }
 
@@ -57,6 +57,11 @@ namespace Engine::Components
     void Transform::SetLocalRotation(const Quaternion& rotation)
     {
         m_rotation_ = rotation;
+        const auto euler = rotation.ToEuler();
+
+        m_yaw_pitch_roll_degree_ = Vector3{
+            XMConvertToDegrees(euler.x), XMConvertToDegrees(euler.y), XMConvertToDegrees(euler.z)
+        };
     }
 
     void Transform::SetScale(const Vector3& scale)
