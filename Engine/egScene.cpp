@@ -421,7 +421,7 @@ namespace Engine
         {
             if (i == LAYER_UI)
             {
-                GetD3Device().GetSwapchainCopy(m_rendered_buffer_);
+                GetReflectionEvaluator().ReceiveRenderFinished();
             }
 
             m_layers[static_cast<eLayerType>(i)]->Render(dt);
@@ -516,14 +516,10 @@ namespace Engine
 
     void Scene::PostRender(const float& dt)
     {
-        GetRenderPipeline().BindResource(SR_RENDERED, SHADER_PIXEL, m_rendered_buffer_.srv.Get());
-
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
             m_layers[static_cast<eLayerType>(i)]->PostRender(dt);
         }
-
-        GetRenderPipeline().UnbindResource(SR_RENDERED);
     }
 
     void Scene::OnDeserialized()
