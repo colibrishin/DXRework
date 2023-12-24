@@ -100,7 +100,7 @@ namespace Client::State
                     out;
 
             Ray ray;
-            ray.position  = tr->GetPosition();
+            ray.position  = tr->GetWorldPosition();
             ray.direction = m_offset_;
 
             constexpr float distance = 5.f;

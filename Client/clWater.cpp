@@ -25,12 +25,9 @@ void Client::Object::Water::Initialize()
     const auto cldr = AddComponent<Engine::Components::Collider>().lock();
 
     cldr->SetBoundingBox(model.lock()->GetBoundingBox());
-    cldr->SetDirtyWithTransform(true);
-    cldr->SetOffset({0.f, 0.5f, 0.f});
+    cldr->SetOffsetPosition({0.f, 0.5f, 0.f});
 
     const auto cldr2 = AddComponent<Engine::Components::Collider>().lock();
-
-    cldr2->SetDirtyWithTransform(true);
 }
 
 void Client::Object::Water::PreUpdate(const float& dt)

@@ -32,7 +32,6 @@ namespace Client::Object
         AddComponent<Engine::Components::Collider>();
         const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
-        cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
         AddComponent<Engine::Components::Rigidbody>();
