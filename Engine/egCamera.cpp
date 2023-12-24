@@ -24,7 +24,7 @@ namespace Engine::Objects
         m_look_at_rotation_ = rotation;
     }
 
-    Quaternion Camera::GetLookAtRotation()
+    Quaternion Camera::GetLookAtRotation() const
     {
         return m_look_at_rotation_;
     }
@@ -44,27 +44,7 @@ namespace Engine::Objects
         return m_world_matrix_;
     }
 
-    void Camera::SetPosition(Vector3 position)
-    {
-        GetComponent<Components::Transform>().lock()->SetPosition(position);
-    }
-
-    Quaternion Camera::GetRotation()
-    {
-        return GetComponent<Components::Transform>().lock()->GetRotation();
-    }
-
-    void Camera::SetRotation(Quaternion rotation)
-    {
-        GetComponent<Components::Transform>().lock()->SetRotation(rotation);
-    }
-
-    Vector3 Camera::GetPosition()
-    {
-        return GetComponent<Components::Transform>().lock()->GetPosition();
-    }
-
-    Vector3 Camera::GetLookAt()
+    Vector3 Camera::GetLookAt() const
     {
         return Vector3::Transform(m_look_at_, m_look_at_rotation_);
     }
@@ -74,7 +54,7 @@ namespace Engine::Objects
         Object::Initialize();
 
         AddComponent<Components::Transform>();
-        GetComponent<Components::Transform>().lock()->SetPosition(
+        GetComponent<Components::Transform>().lock()->SetLocalPosition(
                                                                  {0.0f, 0.0f, -20.0f});
         m_look_at_ = g_forward;
     }
@@ -99,8 +79,8 @@ namespace Engine::Objects
                     companion->GetComponent<Components::Transform>().lock())
             {
                 const auto tr = GetComponent<Components::Transform>().lock();
-                tr->SetPosition(tr_other->GetPosition() + m_offset_);
-                tr->SetRotation(tr_other->GetRotation());
+                tr->SetWorldPosition(tr_other->GetWorldPosition() + m_offset_);
+                tr->SetWorldRotation(tr_other->GetWorldRotation());
             }
         }
 
@@ -115,8 +95,8 @@ namespace Engine::Objects
 
         if (const auto transform = GetComponent<Components::Transform>().lock())
         {
-            const auto position = transform->GetPosition();
-            const auto rotation = transform->GetRotation();
+            const auto position = transform->GetWorldPosition();
+            const auto rotation = transform->GetWorldRotation();
 
             Vector3       upVector       = Vector3::Up;
             const Vector3 positionVector = XMLoadFloat3(&position);
@@ -253,7 +233,7 @@ namespace Engine::Objects
 
         const Vector3 mousePosition = DirectX::XMVectorSet(
                                                            x, y, GetComponent<Components::Transform>().lock()->
-                                                           GetPosition().z, 0.0f);
+                                                           GetWorldPosition().z, 0.0f);
 
         return XMVector3Transform(mousePosition, invProjectionView);
     }
