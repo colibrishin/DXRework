@@ -1,16 +1,6 @@
 #include "pch.h"
 #include "egApplication.h"
-
-#include "egCollisionDetector.h"
-#include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
-#include "egProjectionFrustum.h"
-#include "egSceneManager.hpp"
-#include "egToolkitAPI.h"
-
-#ifdef _DEBUG
-#include "dxgidebug.h"
-#endif
 
 namespace Engine::Manager
 {
@@ -55,17 +45,7 @@ namespace Engine::Manager
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
-
-#ifdef _DEBUG
-        HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
-        auto    DXGIGetDebugInterfaceFunc =
-                reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
-                    GetProcAddress(hModule, "DXGIGetDebugInterface"));
-
-        IDXGIDebug* pDXGIDebug;
-        DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-        pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_DETAIL);
-#endif
+        Graphics::D3Device::DEBUG_MEMORY();
     }
 
     void Application::Initialize(HWND hWnd)
@@ -88,15 +68,18 @@ namespace Engine::Manager
         GetToolkitAPI().Initialize();
         GetRenderPipeline().Initialize();
 
-        GetCollisionDetector().Initialize();
-        GetProjectionFrustum().Initialize();
         GetResourceManager().Initialize();
         GetSceneManager().Initialize();
         GetDebugger().Initialize();
         GetTaskScheduler().Initialize();
-        GetMouseManager().Initialize();
         GetShadowManager().Initialize();
+        GetMouseManager().Initialize();
+        GetProjectionFrustum().Initialize();
         GetReflectionEvaluator().Initialize();
+        GetCollisionDetector().Initialize();
+        GetLerpManager().Initialize();
+        GetPhysicsManager().Initialize();
+        GetConstraintSolver().Initialize();
 
         ImGui_ImplWin32_Init(hWnd);
         ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());

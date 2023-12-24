@@ -1,10 +1,15 @@
 #pragma once
 #include <d2d1.h>
 #include <d3dcompiler.h>
+#include <dxgidebug.h>
 #include <filesystem>
 #include "egCommon.hpp"
 #include "egManager.hpp"
 #include "egVertexShaderInternal.h"
+
+#ifdef _DEBUG
+#include "dxgidebug.h"
+#endif
 
 namespace Engine::Manager::Graphics
 {
@@ -220,6 +225,20 @@ namespace Engine::Manager::Graphics
         ~D3Device() override = default;
 
         void Initialize(HWND hWnd) override;
+
+        static void DEBUG_MEMORY()
+        {
+#ifdef _DEBUG
+        HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
+        auto    DXGIGetDebugInterfaceFunc =
+                reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
+                    GetProcAddress(hModule, "DXGIGetDebugInterface"));
+
+        IDXGIDebug* pDXGIDebug;
+        DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
+        pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_DETAIL);
+#endif
+        }
 
         static float GetAspectRatio();
         void         UpdateRenderTarget();
