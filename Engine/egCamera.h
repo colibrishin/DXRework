@@ -24,11 +24,11 @@ namespace Engine::Objects
         Quaternion GetRotation();
         Vector3    GetPosition();
 
-        Quaternion GetLookAtRotation();
+        Quaternion GetLookAtRotation() const;
         Matrix     GetViewMatrix() const;
         Matrix     GetProjectionMatrix() const;
         Matrix     GetWorldMatrix() const;
-        Vector3    GetLookAt();
+        Vector3    GetLookAt() const;
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;

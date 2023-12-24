@@ -83,6 +83,11 @@
     }
 
 
+#define INVALID_ID_CHECK(ID) ID != g_invalid_id
+
+#define INVALID_ID_CHECK_WEAK_RETURN(ID)                                              \
+  if ((ID) == g_invalid_id) return {};
+
 namespace Engine
 {
     using DirectX::SimpleMath::Color;
@@ -221,6 +226,7 @@ namespace Engine
     using WeakAnimation = boost::weak_ptr<Resources::Animation>;
     using WeakModel = boost::weak_ptr<Resources::Model>;
     using WeakBone = boost::weak_ptr<Resources::Bone>;
+    using WeakTransform = boost::weak_ptr<Components::Transform>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;

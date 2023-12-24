@@ -30,14 +30,13 @@ namespace Client::Object
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();
-        tr->SetPosition(Vector3(0.0f, -1.0f, 0.0f));
+        tr->SetLocalPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetScale({10.0f, 1.0f, 10.0f});
 
         AddComponent<Components::Collider>();
         const auto cldr = GetComponent<Components::Collider>().lock();
         cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
-        cldr->SetDirtyWithTransform(true);
         cldr->SetMass(100000.0f);
 
         AddComponent<Components::Rigidbody>();

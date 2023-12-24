@@ -27,17 +27,14 @@ namespace Client::Object
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         AddComponent<Client::State::CharacterController>();
 
-        cldr->SetModel(model);
-        cldr->SetBoundingBox(model->GetBoundingBox());
+        //cldr->SetModel(model);
+        //cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
-        cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
         const auto head_cldr = AddComponent<Components::Collider>().lock();
         head_cldr->SetType(Engine::BOUNDING_TYPE_SPHERE);
-        head_cldr->SetDirtyWithTransform(true);
         head_cldr->SetMass(1.0f);
-        head_cldr->SetOffset({0.f, 2.5f, 0.f});
 
         rb->SetMainCollider(cldr);
         rb->SetFrictionCoefficient(0.1f);

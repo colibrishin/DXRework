@@ -18,7 +18,6 @@ namespace Engine::Objects
         ~Light() override;
 
         void SetColor(Vector4 color);
-        void SetPosition(Vector3 position);
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;

@@ -32,11 +32,11 @@ namespace Engine
 
         const auto light1 = Instantiate<Objects::Light>();
         AddGameObject(light1, LAYER_LIGHT);
-        light1->SetPosition(Vector3(5.f, 2.f, 5.f));
+        light1->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(5.f, 2.f, 5.f));
 
         const auto light2 = Instantiate<Objects::Light>();
         AddGameObject(light2, LAYER_LIGHT);
-        light2->SetPosition(Vector3(-5.f, 2.f, 5.f));
+        light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
 
         Initialize_INTERNAL();
 
@@ -69,7 +69,7 @@ namespace Engine
 
             if (!m_assigned_actor_ids_.contains(id))
             {
-                m_assigned_actor_ids_.emplace(id);
+                m_assigned_actor_ids_.emplace(id, obj->GetID());
                 break;
             }
 
@@ -107,9 +107,9 @@ namespace Engine
             if (tr)
             {
                 const auto prev_pos =
-                        tr->GetPreviousPosition() + Vector3::One * g_octree_negative_round_up;
+                        tr->GetWorldPreviousPosition() + Vector3::One * g_octree_negative_round_up;
                 const auto pos =
-                        tr->GetPosition() + Vector3::One * g_octree_negative_round_up;
+                        tr->GetWorldPreviousPosition() + Vector3::One * g_octree_negative_round_up;
 
                 auto& prev_pos_set = m_object_position_tree_(
                                                              static_cast<int>(prev_pos.x), static_cast<int>(prev_pos.y),
@@ -150,6 +150,22 @@ namespace Engine
             UnregisterLightFromManager(obj.lock()->GetSharedPtr<Objects::Light>());
         }
 
+        if (const auto locked = obj.lock())
+        {
+            if (const auto parent = locked->GetParent().lock())
+            {
+                parent->DetachChild(locked->GetLocalID());
+            }
+
+            if (locked->GetChildren().size() > 0)
+            {
+                for (const auto& child : locked->GetChildren())
+                {
+                    RemoveGameObject(child.lock()->GetID(), child.lock()->GetLayer());
+                }
+            }
+        }
+
         m_cached_objects_.erase(id);
         m_layers[layer]->RemoveGameObject(id);
         m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
@@ -178,9 +194,9 @@ namespace Engine
             }
 
             const auto prev_pos =
-                    VectorElementAdd(tr->GetPreviousPosition(), g_octree_negative_round_up);
+                    VectorElementAdd(tr->GetWorldPreviousPosition(), g_octree_negative_round_up);
             const auto pos =
-                    VectorElementAdd(tr->GetPosition(), g_octree_negative_round_up);
+                    VectorElementAdd(tr->GetWorldPreviousPosition(), g_octree_negative_round_up);
 
             if (!VectorElementInRange(prev_pos, g_max_map_size) ||
                 !VectorElementInRange(pos, g_max_map_size))
@@ -549,7 +565,7 @@ namespace Engine
                 m_cached_objects_.emplace(obj.lock()->GetID(), obj);
                 obj.lock()->SetScene(GetSharedPtr<Scene>());
                 obj.lock()->SetLayer(static_cast<eLayerType>(i));
-                m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID());
+                m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID(), obj.lock()->GetID());
 
                 for (const auto& comp : obj.lock()->GetAllComponents())
                 {

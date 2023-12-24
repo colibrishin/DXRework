@@ -29,7 +29,7 @@ namespace Client::Object
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();
-        tr->SetPosition(Vector3(0.0f, 0.0f, 0.0f));
+        tr->SetLocalPosition(Vector3(0.0f, 0.0f, 0.0f));
         tr->SetScale(Vector3::One * 15.0f);
     }
 

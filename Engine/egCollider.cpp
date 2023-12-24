@@ -17,19 +17,19 @@ SERIALIZER_ACCESS_IMPL(
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
                        _ARTAG(m_bDirtyByTransform) _ARTAG(m_position_)
                        _ARTAG(m_rotation_) _ARTAG(m_size_)
-                       _ARTAG(m_type_) _ARTAG(m_mass_) _ARTAG(m_offset_)
+                       _ARTAG(m_type_) _ARTAG(m_mass_)
                        _ARTAG(m_mesh_name_))
 
 namespace Engine::Components
 {
-    void Collider::SetPosition(const Vector3& position)
+    void Collider::SetOffsetPosition(const Vector3& position)
     {
         Vector3CheckNanException(position);
         m_position_ = position;
         UpdateWorldMatrix();
     }
 
-    void Collider::SetRotation(const Quaternion& rotation)
+    void Collider::SetOffsetRotation(const Quaternion& rotation)
     {
         m_rotation_ = rotation;
         UpdateInertiaTensor();
@@ -89,8 +89,6 @@ namespace Engine::Components
         }
 
         UpdateInertiaTensor();
-
-        m_previous_position_ = m_position_;
         UpdateWorldMatrix();
     }
 
@@ -158,7 +156,7 @@ namespace Engine::Components
         }
     }
 
-    void Collider::SetSize(const Vector3& size)
+    void Collider::SetOffsetSize(const Vector3& size)
     {
         m_size_ = size;
 
@@ -199,11 +197,6 @@ namespace Engine::Components
     void Collider::SetMass(const float mass)
     {
         m_mass_ = mass;
-    }
-
-    void Collider::SetOffset(const Vector3& offset)
-    {
-        m_offset_ = offset;
     }
 
     void Collider::SetBoundingBox(const BoundingBox& bounding)
@@ -342,26 +335,6 @@ namespace Engine::Components
         return m_speculative_collision_candidates_;
     }
 
-    bool Collider::GetDirtyFlag() const
-    {
-        return m_bDirtyByTransform;
-    }
-
-    Vector3 Collider::GetPreviousPosition() const
-    {
-        return m_previous_position_;
-    }
-
-    Vector3 Collider::GetPosition() const
-    {
-        return m_position_;
-    }
-
-    Quaternion Collider::GetRotation() const
-    {
-        return m_rotation_;
-    }
-
     Vector3 Collider::GetSize() const
     {
         return m_size_;
@@ -371,7 +344,7 @@ namespace Engine::Components
         const Collider& other, Vector3& normal,
         float&          depth) const
     {
-        auto dir = other.GetPosition() - GetPosition();
+        auto dir = other.GetTotalPosition() - GetTotalPosition();
         dir.Normalize();
 
         Physics::GJK::GJKAlgorithm(
@@ -417,11 +390,9 @@ namespace Engine::Components
     Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_bDirtyByTransform(false),
-      m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_size_(Vector3::One),
       m_rotation_(Quaternion::Identity),
-      m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.f),
       m_boundings_(),
@@ -468,9 +439,6 @@ namespace Engine::Components
         ImGui::Indent(2);
         ImGui::Checkbox("Dirty by Transform", &m_bDirtyByTransform);
 
-        ImGui::Text("Previous Position");
-        ImGuiVector3Editable(GetID(), "previous_position", m_previous_position_);
-
         ImGui::Text("Position");
         ImGuiVector3Editable(GetID(), "position", m_position_);
 
@@ -490,6 +458,7 @@ namespace Engine::Components
 
     void Collider::Render(const float& dt)
     {
+        Component::Render(dt);
 #ifdef _DEBUG
         if (m_collided_objects_.empty())
         {
@@ -518,17 +487,6 @@ namespace Engine::Components
 
     void Collider::PostRender(const float& dt)
     {
-        m_previous_position_ = m_position_;
-    }
-
-    void Collider::UpdateFromTransform()
-    {
-        if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock(); m_bDirtyByTransform)
-        {
-            m_position_ = tr->GetPosition();
-            m_rotation_ = tr->GetRotation();
-            m_size_     = tr->GetScale();
-        }
     }
 
     void Collider::UpdateInertiaTensor()
@@ -541,7 +499,7 @@ namespace Engine::Components
         const Matrix orientation    = Matrix::CreateFromQuaternion(rotation);
 
         const Matrix matrix = orientation *
-                              XMMatrixScaling(GetSize().x, GetSize().y, GetSize().z) *
+                              Matrix::CreateScale(GetTotalSize()) *
                               invOrientation;
 
         XMStoreFloat3x3(&m_inertia_tensor_, matrix);
@@ -553,7 +511,6 @@ namespace Engine::Components
       m_position_(Vector3::Zero),
       m_size_(Vector3::One),
       m_rotation_(Quaternion::Identity),
-      m_offset_(Vector3::Zero),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.0f),
       m_boundings_(),
@@ -589,9 +546,27 @@ namespace Engine::Components
 
     void Collider::UpdateWorldMatrix()
     {
-        m_world_matrix_ = Matrix::CreateScale(GetSize()) *
-                          Matrix::CreateFromQuaternion(GetRotation()) *
-                          Matrix::CreateTranslation(GetPosition());
+        m_world_matrix_ = Matrix::CreateScale(GetTotalSize()) *
+                          Matrix::CreateFromQuaternion(GetTotalRotation()) *
+                          Matrix::CreateTranslation(GetTotalPosition());
+    }
+
+    Vector3 Collider::GetTotalPosition() const
+    {
+        return GetOwner().lock()->GetComponent<Transform>().lock()->GetWorldPosition() +
+               m_position_;
+    }
+
+    Quaternion Collider::GetTotalRotation() const
+    {
+        return GetOwner().lock()->GetComponent<Transform>().lock()->GetWorldRotation() *
+               m_rotation_;
+    }
+
+    Vector3 Collider::GetTotalSize() const
+    {
+        return GetOwner().lock()->GetComponent<Transform>().lock()->GetScale() *
+               m_size_;
     }
 
     void Collider::PreUpdate(const float& dt)
@@ -605,14 +580,12 @@ namespace Engine::Components
 
         second_counter += dt;
 
-        UpdateFromTransform();
         UpdateWorldMatrix();
         UpdateInertiaTensor();
     }
 
     void Collider::Update(const float& dt)
     {
-        UpdateFromTransform();
         UpdateWorldMatrix();
         UpdateInertiaTensor();
     }

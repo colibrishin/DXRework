@@ -94,6 +94,67 @@ namespace Engine::Abstract
         return m_type_;
     }
 
+    WeakObject Object::GetParent() const
+    {
+        INVALID_ID_CHECK_WEAK_RETURN(m_parent_)
+
+        const auto scene = GetSceneManager().GetActiveScene().lock();
+        return scene->FindGameObjectByLocalID(m_parent_);
+    }
+
+    WeakObject Object::GetChild(const ActorID id) const
+    {
+        INVALID_ID_CHECK_WEAK_RETURN(id)
+
+        if (m_children_cache_.contains(id))
+        {
+            return m_children_cache_.at(id);
+        }
+
+        return {};
+    }
+
+    std::vector<WeakObject> Object::GetChildren() const
+    {
+        std::vector<WeakObject> out;
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
+            {
+                out.push_back(locked);
+            }
+        }
+
+        return out;
+    }
+
+    void Object::AddChild(const WeakObject& child)
+    {
+        if (const auto locked = child.lock())
+        {
+            m_children_.push_back(locked->GetLocalID());
+            m_children_cache_.insert({ locked->GetLocalID(), child });
+        }
+    }
+
+    bool Object::DetachChild(const ActorID id)
+    {
+        if (INVALID_ID_CHECK(id))
+        {
+            return false;
+        }
+
+        if (m_children_cache_.contains(id))
+        {
+            m_children_cache_.erase(id);
+            m_children_.erase(std::ranges::find(m_children_, id));
+            return true;
+        }
+
+        return false;
+    }
+
     void Object::OnCollisionEnter(const Engine::Components::Collider& other)
     {
         if (!GetComponent<Engine::Components::Collider>().lock())
@@ -136,9 +197,17 @@ namespace Engine::Abstract
 
                 locked->Render(dt);
             }
-            else
+        }
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->Render(dt);
             }
         }
     }
@@ -156,9 +225,18 @@ namespace Engine::Abstract
 
                 locked->PostRender(dt);
             }
-            else
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->PostRender(dt);
             }
         }
     }
@@ -176,9 +254,18 @@ namespace Engine::Abstract
 
                 locked->FixedUpdate(dt);
             }
-            else
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->FixedUpdate(dt);
             }
         }
     }
@@ -256,9 +343,18 @@ namespace Engine::Abstract
 
                 locked->PreUpdate(dt);
             }
-            else
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->PreUpdate(dt);
             }
         }
     }
@@ -276,9 +372,18 @@ namespace Engine::Abstract
 
                 locked->PreRender(dt);
             }
-            else
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->PreRender(dt);
             }
         }
     }
@@ -296,9 +401,18 @@ namespace Engine::Abstract
 
                 locked->Update(dt);
             }
-            else
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
             {
-                m_priority_sorted_.erase(component);
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->Update(dt);
             }
         }
     }

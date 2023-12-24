@@ -32,9 +32,7 @@ cbuffer PerspectiveBuffer : register(b0)
 
 cbuffer TransformBuffer : register(b1)
 {
-    matrix g_scale;
-    matrix g_rotation;
-    matrix g_translation;
+    matrix g_world;
 };
 
 cbuffer LightBuffer : register(b2)

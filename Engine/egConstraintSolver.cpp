@@ -135,12 +135,8 @@ namespace Engine::Manager::Physics
             Vector3 other_linear_vel;
             Vector3 other_angular_vel;
 
-            const Vector3 pos       = cl->GetPosition();
-            const Vector3 other_pos = cl_other->GetPosition();
-
-            const Vector3 delta = (other_pos - pos);
-            Vector3       dir;
-            delta.Normalize(dir);
+            const Vector3 pos       = tr->GetWorldPosition();
+            const Vector3 other_pos = tr_other->GetWorldPosition();
 
             Vector3 normal;
             float   penetration;
@@ -148,7 +144,7 @@ namespace Engine::Manager::Physics
             // Calculate the penetration and the normal with main collider which is the
             // wrapper of the object.
             cl->GetPenetration(*cl_other, normal, penetration);
-            const Vector3 point = cl->GetPosition() + normal * penetration;
+            const Vector3 point = pos + normal * penetration;
 
             Vector3 lhs_penetration;
             Vector3 rhs_penetration;
@@ -161,16 +157,7 @@ namespace Engine::Manager::Physics
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
                                          other_angular_vel, lhs_penetration, rhs_penetration);
 
-            tr->SetPosition(pos + lhs_penetration);
-
-            // Apply the changes to the every colliders.
-            for (const auto& child : lhs.GetComponents<Components::Collider>())
-            {
-                if (const auto locked = child.lock())
-                {
-                    locked->SetPosition(locked->GetPosition() + lhs_penetration);
-                }
-            }
+            tr->SetWorldPosition(pos + lhs_penetration);
 
             const auto collided_count = cl->GetCollisionCount(rhs.GetID());
             const auto fps            = GetApplication().GetFPS();
@@ -203,15 +190,7 @@ namespace Engine::Manager::Physics
 
             if (!rb_other->IsFixed())
             {
-                tr_other->SetPosition(other_pos + rhs_penetration);
-
-                for (const auto& child : rhs.GetComponents<Components::Collider>())
-                {
-                    if (const auto locked = child.lock())
-                    {
-                        locked->SetPosition(locked->GetPosition() + rhs_penetration);
-                    }
-                }
+                tr_other->SetWorldPosition(other_pos + rhs_penetration);
 
                 rb_other->SetLinearMomentum(
                                             other_linear_vel * reduction);
@@ -251,7 +230,7 @@ namespace Engine::Manager::Physics
             }
 
             Ray ray{};
-            ray.position        = cl->GetPreviousPosition();
+            ray.position        = tr->GetWorldPreviousPosition();
             const auto velocity = rb->GetLinearMomentum();
             velocity.Normalize(ray.direction);
 
@@ -262,19 +241,7 @@ namespace Engine::Manager::Physics
             if (cl_other->Intersects(ray, length, intersection_distance))
             {
                 const Vector3 minimum_penetration = ray.direction * intersection_distance;
-                tr->SetPosition(tr->GetPosition() - minimum_penetration);
-
-                for (const auto& child : lhs.GetComponents<Components::Collider>())
-                {
-                    if (const auto locked = child.lock())
-                    {
-                        locked->SetPosition(locked->GetPosition() - minimum_penetration);
-                        GetDebugger().Draw(
-                                           locked->GetPreviousPosition(),
-                                           locked->GetPosition(), DirectX::Colors::Cyan);
-                    }
-                }
-
+                tr->SetWorldPosition(tr->GetWorldPosition() - minimum_penetration);
                 m_speculative_resolved_set_.insert({lhs.GetID(), rhs.GetID()});
                 m_speculative_resolved_set_.insert({rhs.GetID(), lhs.GetID()});
             }

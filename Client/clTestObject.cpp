@@ -27,7 +27,6 @@ namespace Client::Object
         AddComponent<Components::Collider>();
         const auto cldr = GetComponent<Components::Collider>().lock();
         cldr->SetType(BOUNDING_TYPE_SPHERE);
-        cldr->SetDirtyWithTransform(true);
         cldr->SetMass(1.0f);
 
         AddComponent<Components::Rigidbody>();

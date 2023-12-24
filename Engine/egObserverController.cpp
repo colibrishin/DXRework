@@ -65,7 +65,7 @@ namespace Engine::Components
 
                 camera->SetLookAtRotation(GetMouseManager().GetMouseRotation());
 
-                m_offset_ = camera->GetLookAt() * Vector3{1.f, 1.f, 1.f};
+                m_offset_ = camera->GetLookAt();
             }
         }
     }

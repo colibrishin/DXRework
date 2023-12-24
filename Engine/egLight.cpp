@@ -18,12 +18,6 @@ namespace Engine::Objects
         m_color_ = color;
     }
 
-    void Light::SetPosition(Vector3 position)
-    {
-        const auto transform = GetComponent<Components::Transform>();
-        transform.lock()->SetPosition(position);
-    }
-
     void Light::Initialize()
     {
         AddComponent<Components::Transform>();
@@ -52,7 +46,7 @@ namespace Engine::Objects
 #ifdef _DEBUG
         const auto tr = GetComponent<Components::Transform>().lock();
 
-        const BoundingSphere sphere(tr->GetPosition(), 0.5f);
+        const BoundingSphere sphere(tr->GetWorldPosition(), 0.5f);
         GetDebugger().Draw(sphere, DirectX::Colors::Yellow);
 #endif
     }
