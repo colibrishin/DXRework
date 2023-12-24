@@ -96,6 +96,7 @@ namespace Engine::Manager
         GetTaskScheduler().Initialize();
         GetMouseManager().Initialize();
         GetShadowManager().Initialize();
+        GetReflectionEvaluator().Initialize();
 
         ImGui_ImplWin32_Init(hWnd);
         ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -141,6 +142,7 @@ namespace Engine::Manager
         GetTaskScheduler().PreUpdate(dt);
         GetMouseManager().PreUpdate(dt);
         GetCollisionDetector().PreUpdate(dt);
+        GetReflectionEvaluator().PreUpdate(dt);
         GetSceneManager().PreUpdate(dt);
         GetProjectionFrustum().PreUpdate(dt);
         GetResourceManager().PreUpdate(dt);
@@ -158,6 +160,7 @@ namespace Engine::Manager
         GetTaskScheduler().FixedUpdate(dt);
         GetMouseManager().FixedUpdate(dt);
         GetCollisionDetector().FixedUpdate(dt);
+        GetReflectionEvaluator().FixedUpdate(dt);
         GetSceneManager().FixedUpdate(dt);
         GetProjectionFrustum().FixedUpdate(dt);
         GetResourceManager().FixedUpdate(dt);
@@ -175,6 +178,7 @@ namespace Engine::Manager
         GetTaskScheduler().Update(dt);
         GetMouseManager().Update(dt);
         GetCollisionDetector().Update(dt);
+        GetReflectionEvaluator().Update(dt);
         GetSceneManager().Update(dt);
         GetProjectionFrustum().Update(dt);
         GetResourceManager().Update(dt);
@@ -193,6 +197,7 @@ namespace Engine::Manager
         GetMouseManager().PreRender(dt);
         GetCollisionDetector().PreRender(dt);
         GetToolkitAPI().PreRender(dt);
+        GetReflectionEvaluator().PreRender(dt);
         GetSceneManager().PreRender(dt);
         GetProjectionFrustum().PreRender(dt);
         GetResourceManager().PreRender(dt);
@@ -210,6 +215,7 @@ namespace Engine::Manager
         GetTaskScheduler().Render(dt);
         GetMouseManager().Render(dt);
         GetCollisionDetector().Render(dt);
+        GetReflectionEvaluator().Render(dt);
         GetSceneManager().Render(dt);
         GetProjectionFrustum().Render(dt);
         GetResourceManager().Render(dt);
@@ -227,6 +233,7 @@ namespace Engine::Manager
         GetTaskScheduler().PostRender(dt);
         GetMouseManager().PostRender(dt);
         GetCollisionDetector().PostRender(dt);
+        GetReflectionEvaluator().PostRender(dt);
         GetSceneManager().PostRender(dt);
         GetProjectionFrustum().PostRender(dt);
         GetResourceManager().PostRender(dt);

@@ -166,8 +166,6 @@ namespace Engine
         WeakObject m_observer_;
         WeakCamera m_mainCamera_;
 
-        GraphicRenderedBuffer m_rendered_buffer_;
-
         std::map<ActorID, EntityID>    m_assigned_actor_ids_;
         std::map<EntityID, WeakObject> m_cached_objects_;
         std::map<eComponentType,

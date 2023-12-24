@@ -277,6 +277,17 @@ namespace Engine::Manager::Graphics
                                     m_shadow_map_sampler_state_.GetAddressOf());
     }
 
+    RenderPipeline::~RenderPipeline()
+    {
+        ResetShaders();
+        UnbindResource(SR_SHADOW_MAP);
+        UnbindResource(SR_TEXTURE);
+        UnbindResource(SR_NORMAL_MAP);
+        UnbindResource(SR_ANIMATION);
+        UnbindResource(SR_RENDERED);
+        UnbindShadowMap(g_max_shadow_cascades);
+    }
+
     void RenderPipeline::Initialize()
     {
         GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
