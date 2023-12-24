@@ -13,6 +13,7 @@
 #include "egShadowManager.hpp"
 #include "egTaskScheduler.h"
 #include "egToolkitAPI.h"
+#include "egReflectionEvaluator.h"
 
 namespace Engine
 {
@@ -84,6 +85,11 @@ namespace Engine
     inline Manager::MouseManager& GetMouseManager()
     {
         return Manager::MouseManager::GetInstance();
+    }
+
+    inline Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator()
+    {
+        return Manager::Graphics::ReflectionEvaluator::GetInstance();
     }
 
     inline Manager::Graphics::ShadowManager& GetShadowManager()

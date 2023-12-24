@@ -190,6 +190,7 @@ namespace Engine
             class RenderPipeline;
             class D3Device;
             class ShadowManager;
+            class ReflectionEvaluator;
         } // namespace Graphics
 
         namespace Physics
@@ -274,5 +275,5 @@ namespace Engine
     extern Manager::Debugger&                  GetDebugger();
     extern Manager::TaskScheduler&             GetTaskScheduler();
     extern Manager::MouseManager&              GetMouseManager();
-    extern Manager::FBXLoader&                 GetFBXLoader();
+    extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
 } // namespace Engine
