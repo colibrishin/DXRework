@@ -135,6 +135,7 @@ namespace Engine::Abstract
         {
             m_children_.push_back(locked->GetLocalID());
             m_children_cache_.insert({ locked->GetLocalID(), child });
+            locked->m_parent_ = GetLocalID();
         }
     }
 
@@ -147,8 +148,10 @@ namespace Engine::Abstract
 
         if (m_children_cache_.contains(id))
         {
+            m_children_cache_.at(id).lock()->m_parent_ = g_invalid_id;
             m_children_cache_.erase(id);
             m_children_.erase(std::ranges::find(m_children_, id));
+            
             return true;
         }
 
