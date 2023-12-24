@@ -85,7 +85,7 @@
 
 #define INVALID_ID_CHECK(ID) ID != g_invalid_id
 
-#define INVALID_ID_CHECK_WEAK_RETURN(ID)                                              \
+#define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
   if ((ID) == g_invalid_id) return {};
 
 namespace Engine
@@ -204,13 +204,10 @@ namespace Engine
         class Application;
         class ResourceManager;
         class SceneManager;
-        class ProjectionFrustum;
         class CollisionDetector;
         class Debugger;
         class MouseManager;
-        class Application;
         class TaskScheduler;
-        class FBXLoader;
     } // namespace Manager
 
     using WeakObject = boost::weak_ptr<Abstract::Object>;

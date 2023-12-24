@@ -42,7 +42,6 @@ namespace Engine::Resources
         Mesh();
 
         friend class Components::Collider;
-        friend class Manager::FBXLoader;
 
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();

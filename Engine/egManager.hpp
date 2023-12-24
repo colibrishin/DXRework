@@ -51,6 +51,6 @@ namespace Engine::Abstract
         // Add singleton destroyer when the program exits.
         // however, this can be removed due to usage of unique_ptr but added for the
         // note.
-        std::atexit(&Destroy);
+        // std::atexit(&Destroy);
     }
 } // namespace Engine::Abstract
