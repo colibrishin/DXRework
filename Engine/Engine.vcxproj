@@ -22,6 +22,7 @@
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
     <ClInclude Include="egAnimation.h" />
+    <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstraintSolver.h" />
@@ -91,6 +92,7 @@
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egAnimation.cpp" />
+    <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egBone.cpp" />
     <ClCompile Include="egCamera.cpp" />
