@@ -9,6 +9,7 @@
 #include "egCamera.h"
 #include "egLight.h"
 #include "egMesh.h"
+#include "egModel.h"
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
@@ -169,6 +170,8 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::FixedUpdate(const float& dt) {}
 
+    void ShadowManager::PostUpdate(const float& dt) {}
+
     void ShadowManager::Clear()
     {
         // it will not clear the graphic shadow buffer, because it can just overwrite
@@ -184,24 +187,37 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::BuildShadowMap(Scene& scene) const
     {
-        for (int i = 0; i < LAYER_MAX; ++i)
+        for (const auto& [type, layer] : scene)
         {
-            if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA ||
-                i == LAYER_SKYBOX || i == LAYER_ENVIRONMENT)
+            if (type == LAYER_LIGHT || type == LAYER_UI || type == LAYER_CAMERA ||
+                type == LAYER_SKYBOX || type == LAYER_ENVIRONMENT)
                 continue;
 
-            for (const auto& objects :
-                 scene.GetGameObjects(static_cast<eLayerType>(i)))
+            for (const auto& object : *layer)
             {
-                if (const auto locked = objects.lock())
-                {
-                    const auto tr   = locked->GetComponent<Components::Transform>().lock();
-                    const auto mr = locked->GetComponent<Components::ModelRenderer>().lock();
+                const auto tr = object->GetComponent<Components::Transform>().lock();
+                const auto mr = object->GetComponent<Components::ModelRenderer>().lock();
 
-                    if (tr && mr)
+                if (tr && mr)
+                {
+                    Components::Transform::Bind(*tr);
+
+                    const auto& ptr_model = mr->GetModel();
+
+                    if (ptr_model.expired()) continue;
+
+                    const auto model = ptr_model.lock();
+
+                    const auto mesh_count = model->GetMeshCount();
+
+                    for (int m = 0; m < mesh_count; ++m)
                     {
-                        tr->Render(placeholder);
-                        mr->RenderMeshOnly(placeholder);
+                        const auto ptr_mesh = model->GetMesh(m);
+
+                        if (const auto mesh = ptr_mesh.lock())
+                        {
+                            mesh->Render(placeholder);
+                        }
                     }
                 }
             }

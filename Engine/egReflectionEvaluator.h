@@ -13,9 +13,10 @@ namespace Engine::Manager::Graphics
         void PreRender(const float& dt) override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        void PostUpdate(const float& dt) override;
         void Initialize() override;
 
-        void ReceiveRenderFinished();
+        void RenderFinished();
 
     private:
         GraphicRenderedBuffer m_rendered_buffer_;
