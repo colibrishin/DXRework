@@ -64,6 +64,8 @@ namespace Engine::Resources
         RESOURCE_SELF_INFER_CREATE(Model)
 
     protected:
+        SERIALIZER_ACCESS
+
         friend class Manager::Graphics::Renderer;
 	    Model();
 
@@ -74,7 +76,6 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        UINT                         m_render_index_;
         std::vector<StrongMesh>      m_meshes_;
         StrongBone                   m_bone_;
         std::vector<StrongTexture>   m_textures_;

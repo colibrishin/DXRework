@@ -51,7 +51,7 @@ namespace Engine::Manager::Graphics
             vtx->Render(dt);
             pix->Render(dt);
 
-            const auto& mesh = model->GetMesh(0);
+            const auto& mesh = model->GetMesh(i);
 
             if (mesh.expired()) continue;
 

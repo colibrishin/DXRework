@@ -3,6 +3,13 @@
 
 #include "egBone.h"
 
+SERIALIZER_ACCESS_IMPL(
+                       Engine::Resources::Animation,
+                       _ARTAG(_BSTSUPER(Resource))
+                       _ARTAG(m_primitive_)
+                       _ARTAG(m_bone_)
+                       _ARTAG(m_current_frame_))
+
 namespace Engine::Resources
 {
     Animation::Animation(const AnimationPrimitive& primitive)
@@ -94,6 +101,10 @@ namespace Engine::Resources
     void Animation::Load_INTERNAL() {}
 
     void Animation::Unload_INTERNAL() {}
+
+    Animation::Animation(): Resource("", RES_T_ANIM),
+                            m_current_frame_(0),
+                            m_primitive_() { }
 
     float Animation::ConvertDtToFrame(const float& dt) const
     {

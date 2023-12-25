@@ -12,6 +12,9 @@
 
 namespace Engine
 {
+    using DirectX::SimpleMath::Vector3;
+    using Microsoft::WRL::ComPtr;
+
     constexpr float g_epsilon     = 0.001f;
     constexpr float g_gravity_acc = 9.8f;
 
@@ -72,7 +75,8 @@ namespace Engine
         COM_T_RIDIGBODY,
         COM_T_STATE,
         COMP_T_SOUND_PLAYER,
-        COM_T_MODEL_RENDERER
+        COM_T_MODEL_RENDERER,
+        COM_T_ANIMATOR
     };
 
     enum eDefObjectType

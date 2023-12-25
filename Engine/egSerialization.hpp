@@ -102,15 +102,6 @@ namespace boost::serialization
 
     template <class Archive>
     void serialize(
-        Archive&           ar, Engine::BonePrimitive& x,
-        const unsigned int version)
-    {
-        ar & x.m_idx_;
-        ar & x.m_inv_bind_pose_;
-    }
-
-    template <class Archive>
-    void serialize(
         Archive&           ar, Engine::VertexElement& x,
         const unsigned int version)
     {
@@ -121,17 +112,6 @@ namespace boost::serialization
         ar & x.binormal;
         ar & x.color;
         ar & x.bone_element;
-    }
-
-    template <class Archive>
-    void serialize(
-        Archive&           ar, Engine::AnimationPrimitive& x,
-        const unsigned int version)
-    {
-        ar & x.name;
-        ar & x.duration;
-        ar & x.ticks_per_second;
-        ar & x.bone_animations;
     }
 
     template <class Archive>
