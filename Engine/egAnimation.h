@@ -21,10 +21,14 @@ namespace Engine::Resources
         void SetFrame(const float& dt);
 
     protected:
+        SERIALIZER_ACCESS
+
         void  Load_INTERNAL() override;
         void  Unload_INTERNAL() override;
 
     private:
+        Animation();
+
         float ConvertDtToFrame(const float& dt) const;
         std::vector<BoneTransformElement> GetFrameAnimation() const;
 
@@ -37,3 +41,5 @@ namespace Engine::Resources
 
     };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Animation)

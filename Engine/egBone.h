@@ -28,12 +28,18 @@ namespace Engine::Resources
         UINT                               GetBoneCount() const;
 
     protected:
+        SERIALIZER_ACCESS
+
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
 
     private:
+        Bone();
+
         BonePrimitiveMap           m_bone_map;
         std::vector<BonePrimitive*> m_bones_index_wise_;
 
     };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Bone);

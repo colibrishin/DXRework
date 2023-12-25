@@ -11,6 +11,15 @@
 #include "egAnimation.h"
 #include "egBone.h"
 
+SERIALIZER_ACCESS_IMPL(
+                       Engine::Resources::Model,
+                       _ARTAG(_BSTSUPER(Resource))
+                       _ARTAG(m_animations_)
+                       _ARTAG(m_bone_)
+                       _ARTAG(m_meshes_)
+                       _ARTAG(m_normal_maps_)
+                       _ARTAG(m_textures_))
+
 namespace Engine::Resources
 {
     Model::Model(const std::filesystem::path& path)
@@ -401,5 +410,5 @@ namespace Engine::Resources
 
     Model::Model()
     : Resource("", RES_T_MODEL),
-      m_render_index_(0), m_bounding_box_({}) {}
+      m_bounding_box_({}) {}
 }

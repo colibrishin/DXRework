@@ -6,6 +6,7 @@ namespace Engine
 {
     constexpr int g_max_lights          = 8;
     constexpr int g_max_shadow_cascades = 3;
+    constexpr int g_max_bone_count      = 4;
 
     constexpr int g_max_shadow_map_size          = 512;
     constexpr int g_max_reflect_refract_map_size = 512;
@@ -145,6 +146,17 @@ namespace Engine
         }
 
     private:
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar & m_idx_;
+            ar & m_parent_idx_;
+            ar & m_inv_bind_pose_;
+            ar & m_transform_;
+        }
+
         int              m_idx_;
         int              m_parent_idx_;
         Matrix           m_inv_bind_pose_;
@@ -252,6 +264,17 @@ namespace Engine
         }
 
     private:
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar & bone_idx;
+            ar & m_positions_;
+            ar & m_scales_;
+            ar & m_rotations_;
+        }
+
         int bone_idx;
         std::vector<std::pair<float, Vector3>> m_positions_;
         std::vector<std::pair<float, Vector3>> m_scales_;
@@ -262,6 +285,12 @@ namespace Engine
     struct AnimationPrimitive
     {
     public:
+        AnimationPrimitive() :
+            duration(0.f),
+            ticks_per_second(0.f)
+        {
+        }
+
         AnimationPrimitive(std::string name, float duration, float ticks_per_second, Matrix global_inverse_transform) :
             name(std::move(name)),
             duration(duration),
@@ -361,7 +390,27 @@ namespace Engine
             return nullptr;
         }
 
+        void RebuildIndexCache()
+        {
+            for (const auto& [key, value] : bone_animations)
+            {
+                bone_animations_index_wise[value.GetIndex()] = &bone_animations[key];
+            }
+        }
+
     private:
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar & name;
+            ar & duration;
+            ar & ticks_per_second;
+            ar & global_inverse_transform;
+            ar & bone_animations;
+        }
+
         std::string                          name;
         float                                duration;
         float                                ticks_per_second;
@@ -409,7 +458,7 @@ namespace Engine
 
         void Append(const int indices, const float weight)
         {
-            if (bone_count >= 4)
+            if (bone_count >= g_max_bone_count)
             {
                 return;
             }
@@ -431,8 +480,8 @@ namespace Engine
             ar & bone_count;
         }
 
-        int   bone_indices[4];
-        float bone_weights[4];
+        int   bone_indices[g_max_bone_count];
+        float bone_weights[g_max_bone_count];
         UINT  bone_count;
     };
 
