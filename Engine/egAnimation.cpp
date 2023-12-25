@@ -30,6 +30,8 @@ namespace Engine::Resources
 
     void Animation::PostRender(const float& dt) {}
 
+    void Animation::PostUpdate(const float& dt) {}
+
     void Animation::BindBone(const WeakBone& bone_info)
     {
         if (const auto locked = bone_info.lock())

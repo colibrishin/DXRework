@@ -10,7 +10,7 @@
 #include "egSceneManager.hpp"
 #include "egTransform.h"
 
-namespace Engine::Manager
+namespace Engine::Manager::Physics
 {
     void CollisionDetector::Initialize()
     {
@@ -228,6 +228,8 @@ namespace Engine::Manager
 
     void CollisionDetector::FixedUpdate(const float& dt) {}
 
+    void CollisionDetector::PostUpdate(const float& dt) {}
+
     void CollisionDetector::SetCollisionLayer(
         const eLayerType a,
         const eLayerType b)
@@ -251,8 +253,8 @@ namespace Engine::Manager
         std::mutex out_mutex;
 
         std::for_each(
-                      std::execution::par, scene->serialized_layer_begin(),
-                      scene->serialized_layer_end(),
+                      std::execution::par, scene->begin(),
+                      scene->end(),
                       [ray, &distance, &out,
                           &out_mutex](const std::pair<const eLayerType, StrongLayer>& layer)
                       {

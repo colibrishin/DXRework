@@ -21,6 +21,7 @@ namespace Engine::Graphic
         void Update(const float& dt) override;
         void PreRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
         T** GetShader()
         {

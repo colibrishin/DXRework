@@ -63,9 +63,12 @@ namespace Engine::Manager
         return false;
     }
 
-    BoundingFrustum ProjectionFrustum::GetFrustum() const {
+    BoundingFrustum ProjectionFrustum::GetFrustum() const
+    {
         return m_frustum;
     }
 
     void ProjectionFrustum::FixedUpdate(const float& dt) {}
+
+    void ProjectionFrustum::PostUpdate(const float& dt) {}
 } // namespace Engine::Manager

@@ -15,6 +15,7 @@ namespace Engine::Manager
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
         static Vector2 GetNormalizedMousePosition();
 

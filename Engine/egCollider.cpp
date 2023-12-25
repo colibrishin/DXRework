@@ -456,39 +456,6 @@ namespace Engine::Components
         // TODO: colliding objects
     }
 
-    void Collider::Render(const float& dt)
-    {
-        Component::Render(dt);
-#ifdef _DEBUG
-        if (m_collided_objects_.empty())
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
-            }
-            else
-            {
-                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
-            }
-        }
-        else
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
-            }
-            else
-            {
-                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
-            }
-        }
-#endif
-    }
-
-    void Collider::PostRender(const float& dt)
-    {
-    }
-
     void Collider::UpdateInertiaTensor()
     {
         const Quaternion rotation = m_rotation_;
@@ -590,11 +557,36 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void Collider::PreRender(const float& dt)
+    void Collider::PostUpdate(const float& dt)
     {
+        Component::PostUpdate(dt);
         m_rotation_ = Quaternion::CreateFromYawPitchRoll(
                                                          XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
                                                          XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
                                                          XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
+#ifdef _DEBUG
+        if (m_collided_objects_.empty())
+        {
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
+            }
+            else
+            {
+                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
+            }
+        }
+        else
+        {
+            if (m_type_ == BOUNDING_TYPE_BOX)
+            {
+                GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
+            }
+            else
+            {
+                GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
+            }
+        }
+#endif
     }
 } // namespace Engine::Component

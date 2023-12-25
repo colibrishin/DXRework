@@ -504,6 +504,8 @@ namespace Engine::Manager::Graphics
         Present();
     }
 
+    void D3Device::PostUpdate(const float& dt) {}
+
     void D3Device::Initialize(HWND hwnd)
     {
         m_hwnd_ = hwnd;

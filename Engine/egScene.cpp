@@ -517,6 +517,14 @@ namespace Engine
         }
     }
 
+    void Scene::PostUpdate(const float& dt)
+    {
+        for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+        {
+            m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt);
+        }
+    }
+
     void Scene::OnDeserialized()
     {
         Renderable::OnDeserialized();

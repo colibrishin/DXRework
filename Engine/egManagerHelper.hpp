@@ -1,4 +1,5 @@
 #pragma once
+#include "Renderer.h"
 #include "egApplication.h"
 #include "egCollisionDetector.h"
 #include "egConstraintSolver.h"
@@ -32,9 +33,9 @@ namespace Engine
         return Manager::ProjectionFrustum::GetInstance();
     }
 
-    inline Manager::CollisionDetector& GetCollisionDetector()
+    inline Manager::Physics::CollisionDetector& GetCollisionDetector()
     {
-        return Manager::CollisionDetector::GetInstance();
+        return Manager::Physics::CollisionDetector::GetInstance();
     }
 
     inline Manager::Application& GetApplication()
@@ -95,5 +96,10 @@ namespace Engine
     inline Manager::Graphics::ShadowManager& GetShadowManager()
     {
         return Manager::Graphics::ShadowManager::GetInstance();
+    }
+
+    inline Manager::Graphics::Renderer& GetRenderer()
+    {
+        return Manager::Graphics::Renderer::GetInstance();
     }
 } // namespace Engine

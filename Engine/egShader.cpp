@@ -63,6 +63,9 @@ namespace Engine::Graphic
     void Shader<T>::FixedUpdate(const float& dt) {}
 
     template <typename T>
+    void Shader<T>::PostUpdate(const float& dt) {}
+
+    template <typename T>
     void Shader<T>::SetShaderType()
     {
         if constexpr (std::is_same_v<T, ID3D11VertexShader>)

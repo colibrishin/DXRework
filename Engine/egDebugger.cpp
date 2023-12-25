@@ -52,6 +52,8 @@ namespace Engine::Manager
         GetToolkitAPI().EndPrimitiveBatch();
     }
 
+    void Debugger::PostUpdate(const float& dt) {}
+
     Debugger::Debugger(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_bDebug(false) {}

@@ -32,9 +32,10 @@ namespace Engine::Components
 
     void SoundPlayer::FixedUpdate(const float& dt) {}
 
-    void SoundPlayer::PreRender(const float& dt) {}
-
-    void SoundPlayer::PostRender(const float& dt) {}
+    void SoundPlayer::PostUpdate(const float& dt)
+    {
+        Component::PostUpdate(dt);
+    }
 
     void SoundPlayer::SetSound(const StrongSound& sound)
     {

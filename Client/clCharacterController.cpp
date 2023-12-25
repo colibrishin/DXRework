@@ -33,6 +33,11 @@ namespace Client::State
         StateController::PreUpdate(dt);
     }
 
+    void CharacterController::PostUpdate(const float& dt)
+    {
+        StateController<eCharacterState>::PostUpdate(dt);
+    }
+
     void CharacterController::CheckJump(
         const boost::shared_ptr<Engine::Components::Rigidbody>& rb)
     {
@@ -167,10 +172,4 @@ namespace Client::State
     }
 
     void CharacterController::FixedUpdate(const float& dt) {}
-
-    void CharacterController::PreRender(const float& dt) {}
-
-    void CharacterController::Render(const float& dt) {}
-
-    void CharacterController::PostRender(const float& dt) {}
 } // namespace Client::State

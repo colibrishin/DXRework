@@ -121,6 +121,24 @@ namespace Engine
         }
     }
 
+    void Layer::PostUpdate(const float& dt)
+    {
+        for (const auto& object : m_objects_)
+        {
+            if (!object->GetActive())
+            {
+                continue;
+            }
+
+            if (object->GetParent().lock())
+            {
+                continue;
+            }
+
+            object->PostUpdate(dt);
+        }
+    }
+
     void Layer::OnDeserialized()
     {
         Renderable::OnDeserialized();

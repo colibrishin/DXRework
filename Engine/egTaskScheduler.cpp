@@ -22,5 +22,7 @@ namespace Engine::Manager
 
     void TaskScheduler::PostRender(const float& dt) {}
 
+    void TaskScheduler::PostUpdate(const float& dt) {}
+
     void TaskScheduler::FixedUpdate(const float& dt) {}
 }

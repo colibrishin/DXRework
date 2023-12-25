@@ -56,6 +56,11 @@ namespace Engine::Objects
         Object::PostRender(dt);
     }
 
+    void Light::PostUpdate(const float& dt)
+    {
+        Object::PostUpdate(dt);
+    }
+
     void Light::OnDeserialized()
     {
         Object::OnDeserialized();
