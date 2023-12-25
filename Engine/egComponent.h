@@ -4,7 +4,7 @@
 
 namespace Engine::Abstract
 {
-    class Component : public Renderable
+    class Component : public Entity
     {
     public:
         ~Component() override       = default;
@@ -17,9 +17,9 @@ namespace Engine::Abstract
         bool               GetActive() const;
 
         void SetActive(bool active);
+        void PostUpdate(const float& dt) override;
 
         void OnImGui() override;
-        void Render(const float& dt) override;
 
     protected:
         Component(eComponentType type, const WeakObject& owner);
