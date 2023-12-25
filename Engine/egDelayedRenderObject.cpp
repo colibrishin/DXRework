@@ -34,11 +34,13 @@ void Engine::Objects::DelayedRenderObject::PreRender(const float& dt)
     Object::PreRender(dt);
 }
 
-void Engine::Objects::DelayedRenderObject::Render(const float& dt) {}
+void Engine::Objects::DelayedRenderObject::Render(const float& dt)
+{
+    Object::Render(dt);
+}
 
 void Engine::Objects::DelayedRenderObject::PostRender(const float& dt)
 {
-    Object::Render(dt);
     Object::PostRender(dt);
 }
 

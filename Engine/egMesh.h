@@ -24,6 +24,7 @@ namespace Engine::Resources
         void Initialize() override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        void PostUpdate(const float& dt) override;
         BoundingBox GetBoundingBox() const;
 
         const std::vector<const Vector3*>& GetVertices();

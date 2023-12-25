@@ -37,14 +37,10 @@ namespace Engine::Components
 
     void ObserverController::FixedUpdate(const float& dt) {}
 
-    void ObserverController::PreRender(const float& dt) {}
-
-    void ObserverController::Render(const float& dt)
+    void ObserverController::PostUpdate(const float& dt)
     {
-        StateController::Render(dt);
+        StateController<eObserverState>::PostUpdate(dt);
     }
-
-    void ObserverController::PostRender(const float& dt) {}
 
     ObserverController::ObserverController(): StateController() {}
 

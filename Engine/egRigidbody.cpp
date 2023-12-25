@@ -184,11 +184,10 @@ namespace Engine::Components
 
     void Rigidbody::Update(const float& dt) {}
 
-    void Rigidbody::PreRender(const float& dt) {}
-
-    void Rigidbody::Render(const float& dt) {}
-
-    void Rigidbody::PostRender(const float& dt) {}
+    void Rigidbody::PostUpdate(const float& dt)
+    {
+        Component::PostUpdate(dt);
+    }
 
     void Rigidbody::FixedUpdate(const float& dt) {}
 

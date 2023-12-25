@@ -419,11 +419,6 @@ namespace Engine
     {
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
-            if (i == LAYER_UI)
-            {
-                GetReflectionEvaluator().ReceiveRenderFinished();
-            }
-
             m_layers[static_cast<eLayerType>(i)]->Render(dt);
         }
 
@@ -519,6 +514,14 @@ namespace Engine
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
             m_layers[static_cast<eLayerType>(i)]->PostRender(dt);
+        }
+    }
+
+    void Scene::PostUpdate(const float& dt)
+    {
+        for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+        {
+            m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt);
         }
     }
 

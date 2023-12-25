@@ -3,7 +3,7 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Component,
-                       _ARTAG(_BSTSUPER(Renderable)) _ARTAG(m_local_id_)
+                       _ARTAG(_BSTSUPER(Entity)) _ARTAG(m_local_id_)
                        _ARTAG(m_type_))
 
 namespace Engine::Abstract
@@ -33,6 +33,11 @@ namespace Engine::Abstract
         m_b_active_ = active;
     }
 
+    void Component::PostUpdate(const float& dt)
+    {
+        m_b_ticked_ = true;
+    }
+
     bool Component::GetActive() const
     {
         return m_b_active_;
@@ -40,16 +45,11 @@ namespace Engine::Abstract
 
     void Component::OnImGui()
     {
-        Renderable::OnImGui();
+        Entity::OnImGui();
         ImGui::Indent(2);
         ImGui::Text("Component Local ID: %lld", m_local_id_);
         ImGui::Checkbox("Component Active", &m_b_active_);
         ImGui::Unindent(2);
-    }
-
-    void Component::Render(const float& dt)
-    {
-        m_b_ticked_ = true;
     }
 
     Component::Component(eComponentType type, const WeakObject& owner)

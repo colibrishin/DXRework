@@ -48,6 +48,8 @@ namespace Engine::Resources
 
     void Sound::PostRender(const float& dt) {}
 
+    void Sound::PostUpdate(const float& dt) {}
+
     void Sound::Play_INTERNAL(const WeakObject& origin)
     {
         FMOD_VECTOR pos{};

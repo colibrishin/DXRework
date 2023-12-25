@@ -129,6 +129,7 @@ namespace Engine
         class Rigidbody;
         class ObserverController;
         class SoundPlayer;
+        class ModelRenderer;
     } // namespace Component
 
     class Scene;
@@ -182,6 +183,7 @@ namespace Engine
             class D3Device;
             class ShadowManager;
             class ReflectionEvaluator;
+            class Renderer;
         } // namespace Graphics
 
         namespace Physics
@@ -189,13 +191,13 @@ namespace Engine
             class PhysicsManager;
             class LerpManager;
             class ConstraintSolver;
+            class CollisionDetector;
         } // namespace Physics
 
         class ProjectionFrustum;
         class Application;
         class ResourceManager;
         class SceneManager;
-        class CollisionDetector;
         class Debugger;
         class MouseManager;
         class TaskScheduler;
@@ -216,6 +218,7 @@ namespace Engine
     using WeakModel = boost::weak_ptr<Resources::Model>;
     using WeakBone = boost::weak_ptr<Resources::Bone>;
     using WeakTransform = boost::weak_ptr<Components::Transform>;
+    using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
@@ -249,19 +252,21 @@ namespace Engine
 
     using TaskSchedulerFunc = std::function<void(const float&)>;
 
-    extern Manager::ResourceManager&           GetResourceManager();
-    extern Manager::SceneManager&              GetSceneManager();
-    extern Manager::ProjectionFrustum&         GetProjectionFrustum();
-    extern Manager::CollisionDetector&         GetCollisionDetector();
-    extern Manager::Application&               GetApplication();
-    extern Manager::Graphics::D3Device&        GetD3Device();
-    extern Manager::Graphics::RenderPipeline&  GetRenderPipeline();
-    extern Manager::Graphics::ToolkitAPI&      GetToolkitAPI();
-    extern Manager::Physics::LerpManager&      GetLerpManager();
-    extern Manager::Physics::PhysicsManager&   GetPhysicsManager();
-    extern Manager::Physics::ConstraintSolver& GetConstraintSolver();
-    extern Manager::Debugger&                  GetDebugger();
-    extern Manager::TaskScheduler&             GetTaskScheduler();
-    extern Manager::MouseManager&              GetMouseManager();
+    extern Manager::ResourceManager&               GetResourceManager();
+    extern Manager::SceneManager&                  GetSceneManager();
+    extern Manager::ProjectionFrustum&             GetProjectionFrustum();
+    extern Manager::Physics::CollisionDetector&    GetCollisionDetector();
+    extern Manager::Application&                   GetApplication();
+    extern Manager::Graphics::D3Device&            GetD3Device();
+    extern Manager::Graphics::RenderPipeline&      GetRenderPipeline();
+    extern Manager::Graphics::ToolkitAPI&          GetToolkitAPI();
+    extern Manager::Physics::LerpManager&          GetLerpManager();
+    extern Manager::Physics::PhysicsManager&       GetPhysicsManager();
+    extern Manager::Physics::ConstraintSolver&     GetConstraintSolver();
+    extern Manager::Debugger&                      GetDebugger();
+    extern Manager::TaskScheduler&                 GetTaskScheduler();
+    extern Manager::MouseManager&                  GetMouseManager();
     extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
+    extern Manager::Graphics::ShadowManager&       GetShadowManager();
+    extern Manager::Graphics::Renderer&            GetRenderer();
 } // namespace Engine

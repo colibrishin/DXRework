@@ -42,6 +42,8 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::FixedUpdate(const float& dt) {}
 
+    void ConstraintSolver::PostUpdate(const float& dt) {}
+
     void ConstraintSolver::CheckCollision(Abstract::Object& obj)
     {
         const auto cl = obj.GetComponent<Components::Collider>().lock();

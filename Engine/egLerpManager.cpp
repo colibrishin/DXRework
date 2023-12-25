@@ -24,7 +24,9 @@ namespace Engine::Manager::Physics
         m_elapsedTime_ = g_epsilon;
     }
 
-    void LerpManager::PreUpdate(const float& dt)
+    void LerpManager::PreUpdate(const float& dt) {}
+
+    void LerpManager::PreRender(const float& dt)
     {
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
@@ -63,8 +65,6 @@ namespace Engine::Manager::Physics
         m_elapsedTime_ += dt;
     }
 
-    void LerpManager::PreRender(const float& dt) {}
-
     void LerpManager::Render(const float& dt) {}
 
     void LerpManager::PostRender(const float& dt) {}
@@ -73,6 +73,8 @@ namespace Engine::Manager::Physics
     {
         Reset();
     }
+
+    void LerpManager::PostUpdate(const float& dt) {}
 
     float LerpManager::GetLerpFactor() const
     {

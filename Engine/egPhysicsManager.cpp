@@ -38,6 +38,8 @@ namespace Engine::Manager::Physics
         }
     }
 
+    void PhysicsManager::PostUpdate(const float& dt) {}
+
     void PhysicsManager::UpdateGravity(Components::Rigidbody* rb)
     {
         if (rb->IsFixed() || !rb->IsGravityAllowed())

@@ -145,19 +145,11 @@ namespace Engine::Components
 
     void Transform::Update(const float& dt) {}
 
-    void Transform::PreRender(const float& dt) {}
-
-    void Transform::PostRender(const float& dt)
+    void Transform::PostUpdate(const float& dt)
     {
+        Component::PostUpdate(dt);
         m_world_previous_position_ = GetWorldPosition();
         m_previous_position_ = m_position_;
-    }
-
-    void Transform::Render(const float& dt)
-    {
-        Component::Render(dt);
-        m_transform_buffer_.world = GetWorldMatrix().Transpose();
-        GetRenderPipeline().SetWorldMatrix(m_transform_buffer_);
     }
 
     void Transform::FixedUpdate(const float& dt) {}
@@ -228,6 +220,12 @@ namespace Engine::Components
         }
 
         return world;
+    }
+
+    void Transform::Bind(Transform& transform)
+    {
+        transform.m_transform_buffer_.world = transform.GetWorldMatrix().Transpose();
+        GetRenderPipeline().SetWorldMatrix(transform.m_transform_buffer_);
     }
 
     Transform::Transform()

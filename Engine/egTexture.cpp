@@ -45,6 +45,8 @@ namespace Engine::Resources
 
     void Texture::PostRender(const float& dt) {}
 
+    void Texture::PostUpdate(const float& dt) {}
+
     void Texture::Load_INTERNAL()
     {
         ComPtr<ID3D11Resource>  resource;

@@ -36,6 +36,11 @@ namespace Engine::Manager
         m_active_scene_.lock()->PreRender(dt);
     }
 
+    void SceneManager::PostUpdate(const float& dt)
+    {
+        m_active_scene_.lock()->PostUpdate(dt);
+    }
+
     void SceneManager::Render(const float& dt)
     {
         m_active_scene_.lock()->Render(dt);

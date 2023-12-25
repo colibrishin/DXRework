@@ -28,6 +28,10 @@ namespace Engine::Resources
 
     void Font::PreRender(const float& dt)
     {
+    }
+
+    void Font::PostUpdate(const float& dt)
+    {
         if (m_lazy_reload_)
         {
             Unload();

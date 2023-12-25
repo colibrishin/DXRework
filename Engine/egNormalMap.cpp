@@ -45,6 +45,11 @@ namespace Engine::Resources
         Texture::PostRender(dt);
     }
 
+    void NormalMap::PostUpdate(const float& dt)
+    {
+        Texture::PostUpdate(dt);
+    }
+
     void NormalMap::Load_INTERNAL()
     {
         Texture::Load_INTERNAL();

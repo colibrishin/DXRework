@@ -1,25 +1,26 @@
 #pragma once
-#include "pch.h"
+#include "egManager.hpp"
+#include "egModelRenderer.h"
 
 namespace Engine::Manager::Graphics
 {
-    class ReflectionEvaluator : public Abstract::Singleton<ReflectionEvaluator>
+	class Renderer : public Abstract::Singleton<Renderer>
     {
     public:
-        ReflectionEvaluator(SINGLETON_LOCK_TOKEN) : Singleton() {}
+        Renderer(SINGLETON_LOCK_TOKEN) : Singleton() {}
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
         void PreRender(const float& dt) override;
+        void RenderModel(const float& dt, const WeakModelRenderer& ptr_mr, const WeakTransform& ptr_tr);
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
         void Initialize() override;
 
-        void RenderFinished();
-
-    private:
-        GraphicRenderedBuffer m_rendered_buffer_;
-
+	private:
+        std::queue<WeakObject> m_delayed_objects_;
     };
 }
+
+

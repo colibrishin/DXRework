@@ -38,6 +38,7 @@ namespace Engine::Manager
         void PreRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
         void PostRender(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
     private:
         struct Message

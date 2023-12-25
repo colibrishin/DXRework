@@ -5,7 +5,7 @@
 #include "egCommon.hpp"
 #include "egManager.hpp"
 
-namespace Engine::Manager
+namespace Engine::Manager::Physics
 {
     class CollisionDetector : public Abstract::Singleton<CollisionDetector>
     {
@@ -22,6 +22,7 @@ namespace Engine::Manager
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
         void SetCollisionLayer(eLayerType layer, eLayerType mask);
 

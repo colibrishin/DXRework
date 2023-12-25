@@ -20,17 +20,14 @@ namespace Engine::Resources
         void PreRender(const float& dt) override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
-
-        void RenderMeshOnly(const float& dt);
+        void PostUpdate(const float& dt) override;
 
         BoundingBox                        GetBoundingBox() const;
         WeakMesh                           GetMesh(const std::string& name) const;
         WeakMesh                           GetMesh(const UINT index) const;
         const std::vector<const Vector3*>& GetVertices() const;
 
-        UINT GetRenderIndex() const;
-        UINT GetRemainingRenderIndex() const;
-        void ResetRenderIndex();
+        UINT GetMeshCount() const;
 
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void Add(const boost::shared_ptr<T>& res)
@@ -67,6 +64,7 @@ namespace Engine::Resources
         RESOURCE_SELF_INFER_CREATE(Model)
 
     protected:
+        friend class Manager::Graphics::Renderer;
 	    Model();
 
         void Load_INTERNAL() override;

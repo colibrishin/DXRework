@@ -14,7 +14,6 @@ namespace Engine::Objects
         INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_LIGHT)
 
         Light();
-
         ~Light() override;
 
         void SetColor(Vector4 color);
@@ -25,6 +24,7 @@ namespace Engine::Objects
         void PreRender(const float& dt) override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
         void OnDeserialized() override;
 

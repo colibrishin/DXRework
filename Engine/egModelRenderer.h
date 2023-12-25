@@ -12,16 +12,16 @@ namespace Engine::Components
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void Render(const float& dt) override;
-        void RenderMeshOnly(const float& dt);
+        void PostUpdate(const float& dt) override;
 
         void SetModel(const WeakModel & model);
         void AddVertexShader(const WeakVertexShader & vertex_shader);
         void AddPixelShader(const WeakPixelShader & pixel_shader);
+        WeakModel GetModel() const;
 
     private:
+        friend class Manager::Graphics::Renderer;
+
         std::vector<StrongVertexShader> m_vertex_shaders_;
         std::vector<StrongPixelShader> m_pixel_shaders_;
 

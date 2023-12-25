@@ -66,6 +66,8 @@ namespace Engine::Manager::Graphics
 
     void ToolkitAPI::FixedUpdate(const float& dt) {}
 
+    void ToolkitAPI::PostUpdate(const float& dt) {}
+
     void ToolkitAPI::BeginPrimitiveBatch()
     {
         const auto context = GetD3Device().GetContext();

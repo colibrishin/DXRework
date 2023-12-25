@@ -125,6 +125,8 @@ namespace Engine::Resources
 
     void Mesh::PostRender(const float& dt) {}
 
+    void Mesh::PostUpdate(const float& dt) {}
+
     BoundingBox Mesh::GetBoundingBox() const
     {
         return m_bounding_box_;

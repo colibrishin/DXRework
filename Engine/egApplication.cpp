@@ -75,6 +75,8 @@ namespace Engine::Manager
         GetShadowManager().Initialize();
         GetMouseManager().Initialize();
         GetProjectionFrustum().Initialize();
+        GetRenderer().Initialize();
+        GetShadowManager().Initialize();
         GetReflectionEvaluator().Initialize();
         GetCollisionDetector().Initialize();
         GetLerpManager().Initialize();
@@ -113,6 +115,7 @@ namespace Engine::Manager
                           }
 
                           Update(dt);
+                          PostUpdate(dt);
 
                           PreRender(dt);
                           Render(dt);
@@ -127,12 +130,14 @@ namespace Engine::Manager
         GetCollisionDetector().PreUpdate(dt);
         GetReflectionEvaluator().PreUpdate(dt);
         GetSceneManager().PreUpdate(dt);
-        GetProjectionFrustum().PreUpdate(dt);
+        GetShadowManager().PreUpdate(dt);
         GetResourceManager().PreUpdate(dt);
         GetPhysicsManager().PreUpdate(dt);
         GetConstraintSolver().PreUpdate(dt);
         GetLerpManager().PreUpdate(dt);
+        GetProjectionFrustum().PreUpdate(dt);
         GetShadowManager().PreUpdate(dt);
+        GetRenderer().PreUpdate(dt);
         GetDebugger().PreUpdate(dt);
         GetD3Device().PreUpdate(dt);
         GetToolkitAPI().PreUpdate(dt);
@@ -145,12 +150,14 @@ namespace Engine::Manager
         GetCollisionDetector().FixedUpdate(dt);
         GetReflectionEvaluator().FixedUpdate(dt);
         GetSceneManager().FixedUpdate(dt);
-        GetProjectionFrustum().FixedUpdate(dt);
+        GetShadowManager().FixedUpdate(dt);
         GetResourceManager().FixedUpdate(dt);
         GetPhysicsManager().FixedUpdate(dt);
         GetConstraintSolver().FixedUpdate(dt);
         GetLerpManager().FixedUpdate(dt);
+        GetProjectionFrustum().FixedUpdate(dt);
         GetShadowManager().FixedUpdate(dt);
+        GetRenderer().FixedUpdate(dt);
         GetDebugger().FixedUpdate(dt);
         GetD3Device().FixedUpdate(dt);
         GetToolkitAPI().FixedUpdate(dt);
@@ -163,12 +170,13 @@ namespace Engine::Manager
         GetCollisionDetector().Update(dt);
         GetReflectionEvaluator().Update(dt);
         GetSceneManager().Update(dt);
-        GetProjectionFrustum().Update(dt);
         GetResourceManager().Update(dt);
         GetPhysicsManager().Update(dt);
         GetConstraintSolver().Update(dt);
         GetLerpManager().Update(dt);
+        GetProjectionFrustum().Update(dt);
         GetShadowManager().Update(dt);
+        GetRenderer().Update(dt);
         GetDebugger().Update(dt);
         GetD3Device().Update(dt);
         GetToolkitAPI().Update(dt);
@@ -182,12 +190,13 @@ namespace Engine::Manager
         GetToolkitAPI().PreRender(dt);
         GetReflectionEvaluator().PreRender(dt);
         GetSceneManager().PreRender(dt);
-        GetProjectionFrustum().PreRender(dt);
         GetResourceManager().PreRender(dt);
         GetPhysicsManager().PreRender(dt);
         GetConstraintSolver().PreRender(dt);
         GetLerpManager().PreRender(dt);
+        GetProjectionFrustum().PreRender(dt);
         GetShadowManager().PreRender(dt);
+        GetRenderer().PreRender(dt);
         GetDebugger().PreRender(dt);
         GetRenderPipeline().PreRender(dt);
         GetD3Device().PreRender(dt);
@@ -200,12 +209,13 @@ namespace Engine::Manager
         GetCollisionDetector().Render(dt);
         GetReflectionEvaluator().Render(dt);
         GetSceneManager().Render(dt);
-        GetProjectionFrustum().Render(dt);
         GetResourceManager().Render(dt);
         GetPhysicsManager().Render(dt);
         GetConstraintSolver().PreRender(dt);
         GetLerpManager().Render(dt);
+        GetProjectionFrustum().Render(dt);
         GetShadowManager().Render(dt);
+        GetRenderer().Render(dt);
         GetDebugger().Render(dt);
         GetToolkitAPI().Render(dt);
         GetD3Device().Render(dt);
@@ -218,18 +228,39 @@ namespace Engine::Manager
         GetCollisionDetector().PostRender(dt);
         GetReflectionEvaluator().PostRender(dt);
         GetSceneManager().PostRender(dt);
-        GetProjectionFrustum().PostRender(dt);
         GetResourceManager().PostRender(dt);
         GetPhysicsManager().PostRender(dt);
         GetConstraintSolver().PostRender(dt);
         GetLerpManager().PostRender(dt);
+        GetProjectionFrustum().PostRender(dt);
         GetShadowManager().PostRender(dt);
+        GetRenderer().PostRender(dt);
         GetDebugger().PostRender(dt);
 
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
         GetToolkitAPI().PostRender(dt);
         GetD3Device().PostRender(dt);
+    }
+
+    void Application::PostUpdate(const float& dt)
+    {
+        GetTaskScheduler().PostUpdate(dt);
+        GetMouseManager().PostUpdate(dt);
+        GetCollisionDetector().PostUpdate(dt);
+        GetReflectionEvaluator().PostUpdate(dt);
+        GetSceneManager().PostUpdate(dt);
+        GetResourceManager().PostUpdate(dt);
+        GetPhysicsManager().PostUpdate(dt);
+        GetConstraintSolver().PostUpdate(dt);
+        GetLerpManager().PostUpdate(dt);
+        GetShadowManager().PostUpdate(dt);
+        GetProjectionFrustum().PostUpdate(dt);
+        GetRenderer().PostUpdate(dt);
+        GetDebugger().PostUpdate(dt);
+        GetD3Device().PostUpdate(dt);
+        GetToolkitAPI().PostUpdate(dt);
     }
 
     LRESULT Application::MessageHandler(

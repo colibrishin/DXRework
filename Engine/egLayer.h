@@ -11,19 +11,27 @@ namespace Engine
 
         ~Layer() override = default;
 
-        void     Initialize() override;
-        void     PreUpdate(const float& dt) override;
-        void     Update(const float& dt) override;
-        void     PreRender(const float& dt) override;
-        void     Render(const float& dt) override;
-        void     PostRender(const float& dt) override;
-        void     FixedUpdate(const float& dt) override;
-        void     OnDeserialized() override;
+        void Initialize() override;
+        void PreUpdate(const float& dt) override;
+        void Update(const float& dt) override;
+        void PreRender(const float& dt) override;
+        void Render(const float& dt) override;
+        void PostRender(const float& dt) override;
+        void FixedUpdate(const float& dt) override;
+        void PostUpdate(const float& dt) override;
+        void OnDeserialized() override;
 
         void                           AddGameObject(const StrongObject& obj);
         void                           RemoveGameObject(EntityID id);
         WeakObject                     GetGameObject(EntityID id) const;
         const std::vector<WeakObject>& GetGameObjects();
+
+        auto begin() noexcept { return m_objects_.begin(); }
+        auto end() noexcept { return m_objects_.end(); }
+        auto begin() const noexcept { return m_objects_.begin(); }
+        auto end() const noexcept { return m_objects_.end(); }
+        auto cbegin() const noexcept { return m_objects_.cbegin(); }
+        auto cend() const noexcept { return m_objects_.cend(); }
 
     private:
         Layer();

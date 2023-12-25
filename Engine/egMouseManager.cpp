@@ -10,13 +10,7 @@ namespace Engine::Manager
         m_previous_mouse_position_ = m_current_mouse_position_;
     }
 
-    void MouseManager::PreUpdate(const float& dt) {}
-
-    void MouseManager::Update(const float& dt) {}
-
-    void MouseManager::FixedUpdate(const float& dt) {}
-
-    void MouseManager::PreRender(const float& dt)
+    void MouseManager::PreUpdate(const float& dt)
     {
         m_current_mouse_position_ = GetNormalizedMousePosition();
         Vector2 delta;
@@ -28,10 +22,18 @@ namespace Engine::Manager
         m_mouse_rotation_matrix_ = Matrix::CreateFromQuaternion(m_mouse_rotation_);
     }
 
-    void MouseManager::Render(const float& dt)
+    void MouseManager::Update(const float& dt) {}
+
+    void MouseManager::FixedUpdate(const float& dt) {}
+
+    void MouseManager::PostUpdate(const float& dt)
     {
         m_previous_mouse_position_ = m_current_mouse_position_;
     }
+
+    void MouseManager::PreRender(const float& dt) {}
+
+    void MouseManager::Render(const float& dt) {}
 
     void MouseManager::PostRender(const float& dt) {}
 

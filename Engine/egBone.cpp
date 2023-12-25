@@ -47,11 +47,11 @@ namespace Engine::Resources
 
     void Bone::PreRender(const float& dt) {}
 
-    void Bone::Render(const float& dt)
-    {
-    }
+    void Bone::Render(const float& dt) {}
 
     void Bone::PostRender(const float& dt) {}
+
+    void Bone::PostUpdate(const float& dt) {}
 
     const BonePrimitive* Bone::GetBone(const UINT idx) const
     {

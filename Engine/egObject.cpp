@@ -189,18 +189,6 @@ namespace Engine::Abstract
             return;
         }
 
-        for (const auto& component : m_priority_sorted_)
-        {
-            if (const auto locked = component.lock())
-            {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->Render(dt);
-            }
-        }
         for (const auto& child : m_children_cache_ | std::views::values)
         {
             if (const auto locked = child.lock())
@@ -217,19 +205,6 @@ namespace Engine::Abstract
 
     void Object::PostRender(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
-        {
-            if (const auto locked = component.lock())
-            {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PostRender(dt);
-            }
-        }
-
         for (const auto& child : m_children_cache_ | std::views::values)
         {
             if (const auto locked = child.lock())
@@ -269,6 +244,35 @@ namespace Engine::Abstract
                 }
 
                 locked->FixedUpdate(dt);
+            }
+        }
+    }
+
+    void Object::PostUpdate(const float& dt)
+    {
+        for (const auto& component : m_priority_sorted_)
+        {
+            if (const auto locked = component.lock())
+            {
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->PostUpdate(dt);
+            }
+        }
+
+        for (const auto& child : m_children_cache_ | std::views::values)
+        {
+            if (const auto locked = child.lock())
+            {
+                if (!locked->GetActive())
+                {
+                    continue;
+                }
+
+                locked->PostUpdate(dt);
             }
         }
     }
@@ -364,19 +368,6 @@ namespace Engine::Abstract
 
     void Object::PreRender(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
-        {
-            if (const auto locked = component.lock())
-            {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PreRender(dt);
-            }
-        }
-
         for (const auto& child : m_children_cache_ | std::views::values)
         {
             if (const auto locked = child.lock())

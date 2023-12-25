@@ -14,56 +14,9 @@ namespace Engine::Components
 
     void ModelRenderer::FixedUpdate(const float& dt) {}
 
-    void ModelRenderer::PreRender(const float& dt) {}
-
-    void ModelRenderer::PostRender(const float& dt) {}
-
-    void ModelRenderer::Render(const float& dt)
+    void ModelRenderer::PostUpdate(const float& dt)
     {
-        Component::Render(dt);
-
-        if (m_vertex_shaders_.empty())
-        {
-            GetDebugger().Log(L"ModelRenderer::Render() : Vertex shader is null");
-            return;
-        }
-
-        if (m_pixel_shaders_.empty())
-        {
-            GetDebugger().Log(L"ModelRenderer::Render() : Pixel shader is null");
-            return;
-        }
-
-        const auto render_targets = m_model_->GetRemainingRenderIndex();
-
-        for (auto i = 0; i < render_targets; ++i)
-        {
-            const auto vtx = m_vertex_shaders_[i % m_vertex_shaders_.size()];
-            const auto pix = m_pixel_shaders_[i % m_pixel_shaders_.size()];
-
-            vtx->Render(dt);
-            pix->Render(dt);
-
-            m_model_->Render(dt);
-
-            GetRenderPipeline().ResetShaders();
-        }
-
-        m_model_->ResetRenderIndex();
-    }
-
-    void ModelRenderer::RenderMeshOnly(const float& dt)
-    {
-        Component::Render(dt);
-
-        const auto render_targets = m_model_->GetRemainingRenderIndex();
-
-        for (int i = 0; i < render_targets; ++i)
-        {
-            m_model_->RenderMeshOnly(dt);
-        }
-
-        m_model_->ResetRenderIndex();
+        Component::PostUpdate(dt);
     }
 
     void ModelRenderer::SetModel(const WeakModel& model)
@@ -88,5 +41,10 @@ namespace Engine::Components
         {
             m_pixel_shaders_.push_back(pix);
         }
+    }
+
+    WeakModel ModelRenderer::GetModel() const
+    {
+        return m_model_;
     }
 }

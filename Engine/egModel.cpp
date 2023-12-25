@@ -15,7 +15,7 @@ namespace Engine::Resources
 {
     Model::Model(const std::filesystem::path& path)
     : Resource(path, RES_T_MODEL),
-      m_render_index_(0), m_bounding_box_({}) {}
+      m_bounding_box_({}) {}
 
     void Model::PreUpdate(const float& dt) {}
 
@@ -25,32 +25,11 @@ namespace Engine::Resources
 
     void Model::PreRender(const float& dt) {}
 
-    void Model::Render(const float& dt)
-    {
-        if (!m_normal_maps_.empty()) m_normal_maps_[m_render_index_ % m_normal_maps_.size()]->Render(dt);
-        if (!m_textures_.empty()) m_textures_[m_render_index_ % m_textures_.size()]->Render(dt);
-        if (m_bone_) m_bone_->Render(dt);
-        // todo: expand
-        if (!m_animations_.empty()) 
-        {
-            m_animations_[0]->Render(dt);
-        }
-
-        m_meshes_[m_render_index_]->Render(dt);
-        m_render_index_++;
-
-        GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
-        GetRenderPipeline().UnbindResource(SR_TEXTURE);
-        GetRenderPipeline().UnbindResource(SR_ANIMATION);
-    }
+    void Model::Render(const float& dt) {}
 
     void Model::PostRender(const float& dt) {}
 
-    void Model::RenderMeshOnly(const float& dt)
-    {
-        m_meshes_[m_render_index_]->Render(dt);
-        m_render_index_++;
-    }
+    void Model::PostUpdate(const float& dt) {}
 
     BoundingBox Model::GetBoundingBox() const
     {
@@ -89,19 +68,9 @@ namespace Engine::Resources
         return m_cached_vertices_;
     }
 
-    UINT Model::GetRenderIndex() const
+    UINT Model::GetMeshCount() const
     {
-        return m_render_index_;
-    }
-
-    UINT Model::GetRemainingRenderIndex() const
-    {
-        return m_meshes_.size() - m_render_index_ <= 0 ? 0 : m_meshes_.size() - m_render_index_;
-    }
-
-    void Model::ResetRenderIndex()
-    {
-        m_render_index_ = 0;
+        return m_meshes_.size();
     }
 
     std::vector<StrongMesh> Model::GetMeshes() const

@@ -40,9 +40,7 @@ namespace Engine::Components
         void Initialize() override;
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void Render(const float& dt) override;
+        void PostUpdate(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
         void     OnImGui() override;
@@ -51,12 +49,15 @@ namespace Engine::Components
         Matrix GetLocalMatrix() const;
         Matrix     GetWorldMatrix() const;
 
+        static void Bind(Transform & transform);
+
     protected:
         Transform();
 
     private:
         friend class Manager::Physics::LerpManager;
         friend class Manager::Graphics::ShadowManager;
+        friend class Manager::Graphics::Renderer;
 
         static WeakTransform FindNextTransform(const Transform& transform_);
 

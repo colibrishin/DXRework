@@ -17,6 +17,8 @@ namespace Engine::Meshes
 
     inline void SphereMesh::PreRender(const float& dt) {}
 
+    void SphereMesh::PostUpdate(const float& dt) {}
+
     inline void SphereMesh::Load_CUSTOM()
     {
         GeometricPrimitive::VertexCollection vertices;

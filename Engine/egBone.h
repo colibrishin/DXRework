@@ -19,6 +19,7 @@ namespace Engine::Resources
         void PreRender(const float& dt) override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        void PostUpdate(const float& dt) override;
 
         [[nodiscard]] const BonePrimitive* GetBone(const UINT idx) const;
         [[nodiscard]] const BonePrimitive* GetBone(const std::string& name);

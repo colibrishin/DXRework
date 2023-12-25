@@ -37,6 +37,7 @@ namespace Engine::Abstract
         virtual void Initialize();
         virtual void PreUpdate(const float& dt) = 0;
         virtual void Update(const float& dt) = 0;
+        virtual void PostUpdate(const float& dt) = 0;
         virtual void FixedUpdate(const float& dt) = 0;
 
         virtual void OnDeserialized();
