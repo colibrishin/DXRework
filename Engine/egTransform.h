@@ -21,6 +21,11 @@ namespace Engine::Components
         void SetLocalRotation(const Quaternion& rotation);
         void SetScale(const Vector3& scale);
         void SetSizeAbsolute(bool absolute);
+
+        void SetAnimationPosition(const Vector3& position);
+        void SetAnimationRotation(const Quaternion& rotation);
+        void SetAnimationScale(const Vector3& scale);
+
         Vector3 GetWorldPosition() const;
         Quaternion GetWorldRotation() const;
 
@@ -70,6 +75,10 @@ namespace Engine::Components
         Vector3    m_yaw_pitch_roll_degree_;
         Quaternion m_rotation_;
         Vector3    m_scale_;
+
+        Vector3 m_animation_position_;
+        Quaternion m_animation_rotation_;
+        Vector3 m_animation_scale_;
 
         // Non-serialized
         TransformBuffer m_transform_buffer_;
