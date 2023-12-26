@@ -44,6 +44,9 @@ namespace Engine::Manager::Physics
             return;
         }
 
+        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
+        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
+
         if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
         {
             if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
@@ -100,10 +103,16 @@ namespace Engine::Manager::Physics
         Components::Collider copy = lhs;
         copy.SetOffsetPosition(Vector3::Down * g_epsilon);
 
-        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+        const auto lhs_owner = lhs.GetOwner().lock();
+        const auto rhs_owner = rhs.GetOwner().lock();
+
+        if (lhs_owner == rhs_owner)
         {
             return;
         }
+
+        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
+        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
         if (copy.Intersects(rhs))
         {
