@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egShadowManager.hpp"
 
-#include "egAnimation.h"
+#include "egBaseAnimation.h"
 #include "egAnimator.h"
 #include "egObject.hpp"
 #include "egResourceManager.hpp"

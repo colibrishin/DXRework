@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "egAnimation.h"
+#include "egBaseAnimation.h"
 #include "egAnimator.h"
+#include "egBoneAnimation.h"
 #include "egModel.h"
 #include "egModelRenderer.h"
 #include "egNormalMap.h"

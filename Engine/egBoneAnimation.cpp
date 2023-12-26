@@ -1,31 +1,30 @@
 #include "pch.h"
-#include "egAnimation.h"
+#include "egBoneAnimation.h"
 
 #include "egBone.h"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Resources::Animation,
-                       _ARTAG(_BSTSUPER(Resource))
+                       Engine::Resources::BoneAnimation,
+                       _ARTAG(_BSTSUPER(BaseAnimation))
                        _ARTAG(m_primitive_)
                        _ARTAG(m_bone_)
                        _ARTAG(m_current_frame_))
 
 namespace Engine::Resources
 {
-    Animation::Animation(const AnimationPrimitive& primitive)
-    : Resource("", RES_T_ANIM),
-      m_current_frame_(0),
+    BoneAnimation::BoneAnimation(const AnimationPrimitive& primitive)
+    : BaseAnimation(),
       m_primitive_(primitive) {}
 
-    void Animation::PreUpdate(const float& dt) {}
+    void BoneAnimation::PreUpdate(const float& dt) {}
 
-    void Animation::Update(const float& dt) {}
+    void BoneAnimation::Update(const float& dt) {}
 
-    void Animation::FixedUpdate(const float& dt) {}
+    void BoneAnimation::FixedUpdate(const float& dt) {}
 
-    void Animation::PreRender(const float& dt) {}
+    void BoneAnimation::PreRender(const float& dt) {}
 
-    void Animation::Render(const float& dt)
+    void BoneAnimation::Render(const float& dt)
     {
         SetFrame(m_current_frame_ + dt);
         auto animation_per_bone = GetFrameAnimation();
@@ -35,11 +34,11 @@ namespace Engine::Resources
         GetRenderPipeline().BindResource(SR_ANIMATION, SHADER_VERTEX, m_animation_buffer_.Get());
     }
 
-    void Animation::PostRender(const float& dt) {}
+    void BoneAnimation::PostRender(const float& dt) {}
 
-    void Animation::PostUpdate(const float& dt) {}
+    void BoneAnimation::PostUpdate(const float& dt) {}
 
-    void Animation::BindBone(const WeakBone& bone_info)
+    void BoneAnimation::BindBone(const WeakBone& bone_info)
     {
         if (const auto locked = bone_info.lock())
         {
@@ -47,7 +46,12 @@ namespace Engine::Resources
         }
     }
 
-    std::vector<BoneTransformElement> Animation::GetFrameAnimation() const
+    eResourceType BoneAnimation::GetResourceType() const
+    {
+        return RES_T_BONE_ANIM;
+    }
+
+    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation() const
     {
         const auto anim_time = ConvertDtToFrame(m_current_frame_);
         std::vector<BoneTransformElement> rtn;
@@ -58,7 +62,7 @@ namespace Engine::Resources
         for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
         {
             BoneTransformElement bfa;
-            const BoneAnimation* bone_animation = m_primitive_.GetBoneAnimation(i);
+            const BoneAnimationPrimitive* bone_animation = m_primitive_.GetBoneAnimation(i);
             const BonePrimitive* bone           = m_bone_->GetBone(i);
             const BonePrimitive* parent         = m_bone_->GetBoneParent(i);
 
@@ -88,26 +92,15 @@ namespace Engine::Resources
         return rtn;
     }
 
-    void Animation::SetFrame(const float& dt)
+    void BoneAnimation::Load_INTERNAL()
     {
-        if (m_current_frame_ >= m_primitive_.GetDuration() / m_primitive_.GetTicksPerSecond())
-        {
-            m_current_frame_ = 0;
-        }
-
-        m_current_frame_ = dt;
+        SetDuration(m_primitive_.GetDuration());
+        SetTicksPerSecond(m_primitive_.GetTicksPerSecond());
     }
 
-    void Animation::Load_INTERNAL() {}
+    void BoneAnimation::Unload_INTERNAL() {}
 
-    void Animation::Unload_INTERNAL() {}
-
-    Animation::Animation(): Resource("", RES_T_ANIM),
-                            m_current_frame_(0),
-                            m_primitive_() { }
-
-    float Animation::ConvertDtToFrame(const float& dt) const
-    {
-        return std::fmod(dt * m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
-    }
+    BoneAnimation::BoneAnimation()
+    : BaseAnimation(),
+      m_primitive_() { }
 }

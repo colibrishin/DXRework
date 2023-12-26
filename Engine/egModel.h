@@ -26,8 +26,8 @@ namespace Engine::Resources
         WeakMesh                           GetMesh(const std::string& name) const;
         WeakMesh                           GetMesh(const UINT index) const;
         const std::vector<const Vector3*>& GetVertices() const;
-        WeakAnimation                      GetAnimation(const std::string& name) const;
-        WeakAnimation                      GetAnimation(const UINT index) const;
+        WeakBoneAnimation                      GetAnimation(const std::string& name) const;
+        WeakBoneAnimation                      GetAnimation(const UINT index) const;
 
         UINT GetMeshCount() const;
 
@@ -46,7 +46,7 @@ namespace Engine::Resources
             {
                 m_normal_maps_.push_back(res);
             }
-            else if constexpr (which_resource<T>::value == RES_T_ANIM)
+            else if constexpr (which_resource<T>::value == RES_T_BONE_ANIM)
             {
                 m_animations_.push_back(res);
             }
@@ -82,7 +82,7 @@ namespace Engine::Resources
         StrongBone                   m_bone_;
         std::vector<StrongTexture>   m_textures_;
         std::vector<StrongNormalMap> m_normal_maps_;
-        std::vector<StrongAnimation> m_animations_;
+        std::vector<StrongBoneAnimation> m_animations_;
         BoundingBox                  m_bounding_box_;
 
         // non-serialized

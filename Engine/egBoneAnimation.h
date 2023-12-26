@@ -1,13 +1,14 @@
 #pragma once
+#include "egBaseAnimation.h"
 
 namespace Engine::Resources
 {
-    class Animation : public Abstract::Resource
+    class BoneAnimation : public BaseAnimation
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_ANIM)
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_BONE_ANIM)
 
-        Animation(const AnimationPrimitive& primitive);
+        BoneAnimation(const AnimationPrimitive& primitive);
 
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
@@ -17,8 +18,10 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void                            BindBone(const WeakBone & bone_info);
-        void SetFrame(const float& dt);
+        void BindBone(const WeakBone& bone_info);
+        eResourceType GetResourceType() const override;
+
+        RESOURCE_SELF_INFER_GETTER(BoneAnimation)
 
     protected:
         SERIALIZER_ACCESS
@@ -27,12 +30,9 @@ namespace Engine::Resources
         void  Unload_INTERNAL() override;
 
     private:
-        Animation();
+        BoneAnimation();
 
-        float ConvertDtToFrame(const float& dt) const;
         std::vector<BoneTransformElement> GetFrameAnimation() const;
-
-        float m_current_frame_;
 
         AnimationPrimitive m_primitive_;
         StrongBone          m_bone_;
@@ -42,4 +42,4 @@ namespace Engine::Resources
     };
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Animation)
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::BoneAnimation)

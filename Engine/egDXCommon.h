@@ -163,10 +163,10 @@ namespace Engine
         Matrix           m_transform_;
     };
 
-    struct BoneAnimation
+    struct BoneAnimationPrimitive
     {
     public:
-        BoneAnimation() :
+        BoneAnimationPrimitive() :
             bone_idx(0)
         {
         }
@@ -339,7 +339,7 @@ namespace Engine
             return *this;
         }
 
-        void Add(const std::string& name, const BoneAnimation& bone_animation)
+        void Add(const std::string& name, const BoneAnimationPrimitive& bone_animation)
         {
             bone_animations[name] = bone_animation;
             bone_animations_index_wise[bone_animation.GetIndex()] = &bone_animations[name];
@@ -370,7 +370,7 @@ namespace Engine
             return global_inverse_transform;
         }
 
-        const BoneAnimation* GetBoneAnimation(const int idx) const
+        const BoneAnimationPrimitive* GetBoneAnimation(const int idx) const
         {
             if (bone_animations_index_wise.contains(idx))
             {
@@ -380,7 +380,7 @@ namespace Engine
             return nullptr;
         }
 
-        const BoneAnimation* GetBoneAnimation(const std::string& name) const
+        const BoneAnimationPrimitive* GetBoneAnimation(const std::string& name) const
         {
             if (bone_animations.contains(name))
             {
@@ -415,8 +415,8 @@ namespace Engine
         float                                duration;
         float                                ticks_per_second;
         Matrix                               global_inverse_transform;
-        std::map<std::string, BoneAnimation> bone_animations;
-        std::map<int, BoneAnimation*>        bone_animations_index_wise;
+        std::map<std::string, BoneAnimationPrimitive> bone_animations;
+        std::map<int, BoneAnimationPrimitive*>        bone_animations_index_wise;
 
     };
 

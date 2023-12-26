@@ -63,6 +63,11 @@
         {                                                                     \
             return check;                                                     \
         }                                                                     \
+        if (const auto check = GetResourceManager().                          \
+                               GetResource<TYPE>(name).lock())                \
+        {                                                                     \
+            return check;                                                     \
+        }                                                                     \
         const auto obj = boost::make_shared<TYPE>(path);                      \
         GetResourceManager().AddResource(name, obj);                          \
         return obj;                                                           \
@@ -159,9 +164,10 @@ namespace Engine
         class Sound;
         class Texture;
         class NormalMap;
-        class Animation;
+        class BoneAnimation;
         class Model;
         class Bone;
+        class BaseAnimation;
     } // namespace Resources
 
     namespace Abstract
@@ -215,12 +221,13 @@ namespace Engine
     using WeakLight = boost::weak_ptr<Objects::Light>;
     using WeakTexture = boost::weak_ptr<Resources::Texture>;
     using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
-    using WeakAnimation = boost::weak_ptr<Resources::Animation>;
+    using WeakBoneAnimation = boost::weak_ptr<Resources::BoneAnimation>;
     using WeakModel = boost::weak_ptr<Resources::Model>;
     using WeakBone = boost::weak_ptr<Resources::Bone>;
     using WeakTransform = boost::weak_ptr<Components::Transform>;
     using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;
     using WeakAnimator = boost::weak_ptr<Components::Animator>;
+    using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
@@ -237,9 +244,10 @@ namespace Engine
     using StrongSound = boost::shared_ptr<Resources::Sound>;
     using StrongTexture = boost::shared_ptr<Resources::Texture>;
     using StrongNormalMap = boost::shared_ptr<Resources::NormalMap>;
-    using StrongAnimation = boost::shared_ptr<Resources::Animation>;
+    using StrongBoneAnimation = boost::shared_ptr<Resources::BoneAnimation>;
     using StrongModel = boost::shared_ptr<Resources::Model>;
     using StrongBone = boost::shared_ptr<Resources::Bone>;
+    using StrongBaseAnimation = boost::shared_ptr<Resources::BaseAnimation>;
 
     using StrongVertexShader = boost::shared_ptr<Graphic::VertexShader>;
     using StrongPixelShader = boost::shared_ptr<Graphic::PixelShader>;

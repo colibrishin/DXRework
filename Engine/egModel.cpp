@@ -8,8 +8,9 @@
 #include "egResourceManager.hpp"
 #include "egMesh.h"
 #include "egNormalMap.h"
-#include "egAnimation.h"
+#include "egBaseAnimation.h"
 #include "egBone.h"
+#include "egBoneAnimation.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Model,
@@ -77,7 +78,7 @@ namespace Engine::Resources
         return m_cached_vertices_;
     }
 
-    WeakAnimation Model::GetAnimation(const std::string& name) const
+    WeakBoneAnimation Model::GetAnimation(const std::string& name) const
     {
         const auto it = std::ranges::find_if(
                                              m_animations_
@@ -94,7 +95,7 @@ namespace Engine::Resources
         return {};
     }
 
-    WeakAnimation Model::GetAnimation(const UINT index) const
+    WeakBoneAnimation Model::GetAnimation(const UINT index) const
     {
         if (m_animations_.size() > index)
         {
@@ -136,7 +137,7 @@ namespace Engine::Resources
             {
                 m.m_textures_.push_back(boost::static_pointer_cast<Texture>(res));
             }
-            else if (res->GetResourceType() == RES_T_ANIM)
+            else if (res->GetResourceType() == RES_T_BONE_ANIM)
             {
                 //m.m_animations_.push_back(boost::static_pointer_cast<Animation>(res));
             }
@@ -352,7 +353,7 @@ namespace Engine::Resources
                     const auto affect_bone_count = animation_->mNumChannels;
                     const std::string anim_name = animation_->mName.C_Str();
 
-                    if (const auto check = GetResourceManager().GetResource<Animation>(anim_name + "_ANIM").lock())
+                    if (const auto check = GetResourceManager().GetResource<BoneAnimation>(anim_name + "_ANIM").lock())
                     {
                         m_animations_.push_back(check);
                         continue;
@@ -381,7 +382,7 @@ namespace Engine::Resources
                             continue;
                         }
 
-                        BoneAnimation bone_animation;
+                        BoneAnimationPrimitive bone_animation;
                         bone_animation.SetIndex(bone->GetIndex());
 
                         const auto positions = channel->mNumPositionKeys;
@@ -417,7 +418,7 @@ namespace Engine::Resources
                         animation.Add(bone_name.C_Str(), bone_animation);
                     }
 
-                    StrongAnimation anim = boost::make_shared<Animation>(animation);
+                    StrongBoneAnimation anim = boost::make_shared<BoneAnimation>(animation);
                     anim->SetName(anim_name + "_ANIM");
                     anim->BindBone(m_bone_);
                     anim->Load();

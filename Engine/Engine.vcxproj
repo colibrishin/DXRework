@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
-    <ClInclude Include="egAnimation.h" />
+    <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egCollision.h" />
@@ -69,6 +69,7 @@
     <ClInclude Include="egSerialization.hpp" />
     <ClInclude Include="egShader.hpp" />
     <ClInclude Include="egShadowManager.hpp" />
+    <ClInclude Include="egBaseAnimation.h" />
     <ClInclude Include="egSound.h" />
     <ClInclude Include="egSoundPlayer.h" />
     <ClInclude Include="egSphereMesh.h" />
@@ -91,7 +92,7 @@
   <ItemGroup>
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
-    <ClCompile Include="egAnimation.cpp" />
+    <ClCompile Include="egBoneAnimation.cpp" />
     <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
     <ClCompile Include="egBone.cpp" />
@@ -135,6 +136,7 @@
     <ClCompile Include="egSceneManager.cpp" />
     <ClCompile Include="egShader.cpp" />
     <ClCompile Include="egShadowManager.cpp" />
+    <ClCompile Include="egBaseAnimation.cpp" />
     <ClCompile Include="egSound.cpp" />
     <ClCompile Include="egSoundPlayer.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />

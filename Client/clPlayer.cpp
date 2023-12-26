@@ -10,6 +10,7 @@
 #include "egShader.hpp"
 #include "egTransform.h"
 #include "egVertexShaderInternal.h"
+#include "egBoneAnimation.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Player,
