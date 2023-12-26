@@ -77,6 +77,33 @@ namespace Engine::Resources
         return m_cached_vertices_;
     }
 
+    WeakAnimation Model::GetAnimation(const std::string& name) const
+    {
+        const auto it = std::ranges::find_if(
+                                             m_animations_
+                                             , [&name](const auto& anim)
+                                             {
+                                                 return anim->GetName() == name;
+                                             });
+
+        if (it != m_animations_.end())
+        {
+            return *it;
+        }
+
+        return {};
+    }
+
+    WeakAnimation Model::GetAnimation(const UINT index) const
+    {
+        if (m_animations_.size() > index)
+        {
+            return m_animations_[index];
+        }
+
+        return {};
+    }
+
     UINT Model::GetMeshCount() const
     {
         return m_meshes_.size();
@@ -181,7 +208,7 @@ namespace Engine::Resources
                 const auto shape_ = scene->mMeshes[i];
                 const auto mesh_name = shape_->mName.C_Str();
 
-                const std::string mesh_lookup_name = GetName() + "_" + mesh_name;
+                const std::string mesh_lookup_name = GetName() + "_" + mesh_name + "_" + std::to_string(i);
 
                 if (const auto mesh = GetResourceManager().GetResource<Mesh>(mesh_lookup_name).lock())
                 {
@@ -192,6 +219,11 @@ namespace Engine::Resources
                 const auto v_count = shape_->mNumVertices;
                 const auto f_count  = shape_->mNumFaces;
                 const auto b_count = shape_->mNumBones;
+
+                if (f_count == 0)
+                {
+                    continue;
+                }
 
                 // extract vertices
                 for (auto j = 0; j < v_count; ++j)
