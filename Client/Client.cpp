@@ -62,6 +62,8 @@ namespace Client
     void InitializeModel()
     {
         Resources::Model::Create("BobModel", "./bob_lamp_update_export.fbx");
+        Resources::Model::Create("CharacterModel", "./Character.fbx");
+        Resources::Model::Create("RifleModel", "./Rifle.fbx");
         Resources::Model::Create("PlayerModel", "./player.obj");
 
         std::vector<Engine::StrongResource> resources;
