@@ -14,7 +14,8 @@ namespace Engine::Manager::Graphics
 {
     void RenderPipeline::SetWorldMatrix(const TransformBuffer& matrix)
     {
-        m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+        m_transform_buffer_ = matrix;
+        m_transform_buffer_data_.SetData(GetD3Device().GetContext(), m_transform_buffer_);
         GetD3Device().BindConstantBuffer(
                                          m_transform_buffer_data_, CB_TYPE_TRANSFORM,
                                          SHADER_VERTEX);
@@ -24,7 +25,8 @@ namespace Engine::Manager::Graphics
         const TransformBuffer& matrix,
         const eShaderType      shader)
     {
-        m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
+        m_transform_buffer_ = matrix;
+        m_transform_buffer_data_.SetData(GetD3Device().GetContext(), m_transform_buffer_);
         GetD3Device().BindConstantBuffer(
                                          m_transform_buffer_data_, CB_TYPE_TRANSFORM,
                                          shader);
@@ -158,6 +160,11 @@ namespace Engine::Manager::Graphics
     {
         GetD3Device().GetContext()->RSSetState(
                                                GetToolkitAPI().GetCommonStates()->CullClockwise());
+    }
+
+    TransformBuffer RenderPipeline::GetWorldMatrix() const
+    {
+        return m_transform_buffer_;
     }
 
     void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)

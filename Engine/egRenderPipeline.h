@@ -39,6 +39,8 @@ namespace Engine::Manager::Graphics
         void SetNoneCullState() const;
         void SetFrontCullState() const;
 
+        TransformBuffer GetWorldMatrix() const;
+
         void BindLightBuffer(UINT light_count);
         void BindVertexBuffer(ID3D11Buffer* buffer);
         void BindIndexBuffer(ID3D11Buffer* buffer);
@@ -88,6 +90,7 @@ namespace Engine::Manager::Graphics
         ConstantBuffer<PerspectiveBuffer> m_wvp_buffer_data_{};
         ConstantBuffer<TransformBuffer>   m_transform_buffer_data_{};
 
+        TransformBuffer m_transform_buffer_{};
         LightBuffer    m_light_buffer_{};
         SpecularBuffer m_specular_buffer_{};
 
