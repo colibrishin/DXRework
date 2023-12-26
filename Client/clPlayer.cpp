@@ -2,6 +2,7 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
+#include "egAnimator.h"
 #include "egCollider.hpp"
 #include "egModel.h"
 #include "egModelRenderer.h"
@@ -20,7 +21,7 @@ namespace Client::Object
     {
         Object::Initialize();
 
-        const auto model = Resources::Model::Get("BobModel").lock();
+        const auto model = Resources::Model::Get("CharacterModel").lock();
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
@@ -31,6 +32,7 @@ namespace Client::Object
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
+        const auto atr = AddComponent<Components::Animator>().lock();
         AddComponent<Client::State::CharacterController>();
 
         tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({0, XM_PI / 2, 0.0f}));
@@ -42,6 +44,8 @@ namespace Client::Object
         rb->SetMainCollider(cldr);
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
+
+        atr->SetAnimation(model->GetAnimation(0));
     }
 
     void Player::PreUpdate(const float& dt)
