@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egShadowManager.hpp"
 
+#include "egAnimation.h"
+#include "egAnimator.h"
 #include "egObject.hpp"
 #include "egResourceManager.hpp"
 #include "egScene.hpp"
@@ -129,7 +131,7 @@ namespace Engine::Manager::Graphics
                               light_dir, m_cascade_vp_buffer_[locked], idx,
                               m_cascade_shadow_buffer_chunk_);
                 GetRenderPipeline().SetCascadeBuffer(m_cascade_vp_buffer_[locked]);
-                BuildShadowMap(*scene);
+                BuildShadowMap(*scene, dt);
                 m_cascade_shadow_buffer_chunk_.lights[idx] =
                         m_cascade_vp_buffer_[locked].shadow;
             }
@@ -185,7 +187,7 @@ namespace Engine::Manager::Graphics
         }
     }
 
-    void ShadowManager::BuildShadowMap(Scene& scene) const
+    void ShadowManager::BuildShadowMap(Scene& scene, const float dt) const
     {
         for (const auto& [type, layer] : scene)
         {
@@ -197,6 +199,7 @@ namespace Engine::Manager::Graphics
             {
                 const auto tr = object->GetComponent<Components::Transform>().lock();
                 const auto mr = object->GetComponent<Components::ModelRenderer>().lock();
+                const auto atr = object->GetComponent<Components::Animator>().lock();
 
                 if (tr && mr)
                 {
@@ -210,6 +213,16 @@ namespace Engine::Manager::Graphics
 
                     const auto mesh_count = model->GetMeshCount();
 
+                    if (atr)
+                    {
+                        const auto ptr_anim = atr->GetAnimation();
+
+                        if (const auto anim = ptr_anim.lock())
+                        {
+                            anim->Render(dt);
+                        }
+                    }
+
                     for (int m = 0; m < mesh_count; ++m)
                     {
                         const auto ptr_mesh = model->GetMesh(m);
@@ -219,6 +232,8 @@ namespace Engine::Manager::Graphics
                             mesh->Render(placeholder);
                         }
                     }
+
+                    GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
                 }
             }
         }

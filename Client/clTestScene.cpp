@@ -6,6 +6,7 @@
 #include <egCamera.h>
 
 #include "clPlayer.h"
+#include "clRifile.h"
 #include "egCollisionDetector.h"
 #include "egTransform.h"
 
@@ -88,6 +89,10 @@ namespace Client::Scene
         AddGameObject(player, Engine::LAYER_DEFAULT);
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
                    {-4.f, 2.f, 0.f});
+
+        const auto rifle = Engine::Instantiate<Object::Rifle>();
+        AddGameObject(rifle, Engine::LAYER_DEFAULT);
+        player->AddChild(rifle);
 
         GetMainCamera().lock()->BindObject(player);
 

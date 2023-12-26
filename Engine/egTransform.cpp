@@ -85,6 +85,11 @@ namespace Engine::Components
         Quaternion rotation = m_rotation_;
         const WeakTransform tr = FindNextTransform(*this);
 
+        if (m_b_absolute_)
+        {
+            return m_rotation_;
+        }
+
         if (const auto parent = tr.lock())
         {
             rotation *= parent->GetWorldRotation();
@@ -210,8 +215,8 @@ namespace Engine::Components
         {
             if (m_b_absolute_)
             {
-                const auto inv_scale = Matrix::CreateScale(parent->GetScale()).Invert();
-                world *= inv_scale * parent->GetWorldMatrix();
+                const auto inv_sr = Matrix::CreateScale(parent->GetScale()).Invert() * Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
+                world *= inv_sr * parent->GetWorldMatrix();
             }
             else
             {

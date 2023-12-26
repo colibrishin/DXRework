@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "egAnimator.h"
 #include "egModel.h"
+#include "egAnimation.h"
 
 SERIALIZER_ACCESS_IMPL(Engine::Components::Animator,
 _ARTAG(_BSTSUPER(Engine::Abstract::Component))
-_ARTAG(m_model_)
-_ARTAG(m_current_animation_))
+_ARTAG(m_animation_))
 
 namespace Engine::Components
 {
@@ -17,17 +17,17 @@ namespace Engine::Components
 
     void Animator::FixedUpdate(const float& dt) {}
 
-    void Animator::SetModel(const WeakModel& model)
+    void Animator::SetAnimation(const WeakAnimation& anim)
     {
-        if (const auto locked = model.lock())
+        if (const auto locked = anim.lock())
         {
-            m_model_ = locked;
+            m_animation_ = locked;
         }
     }
 
-    void Animator::SetAnimation(const std::string& animation_name)
+    WeakAnimation Animator::GetAnimation() const
     {
-        m_current_animation_ = animation_name;
+        return m_animation_;
     }
 
     Animator::Animator() : Component(COM_T_ANIMATOR, {}) {}

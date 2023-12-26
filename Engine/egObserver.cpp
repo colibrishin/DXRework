@@ -17,8 +17,10 @@ namespace Engine::Objects
     {
         Object::Initialize();
 
-        AddComponent<Components::Transform>();
+        const auto tr = AddComponent<Components::Transform>().lock();
         AddComponent<Components::ObserverController>();
+
+        tr->SetLocalPosition({0.f, 0.f, -10.f});
     }
 
     Observer::~Observer() {}

@@ -26,6 +26,8 @@ namespace Engine::Resources
         WeakMesh                           GetMesh(const std::string& name) const;
         WeakMesh                           GetMesh(const UINT index) const;
         const std::vector<const Vector3*>& GetVertices() const;
+        WeakAnimation                      GetAnimation(const std::string& name) const;
+        WeakAnimation                      GetAnimation(const UINT index) const;
 
         UINT GetMeshCount() const;
 

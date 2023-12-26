@@ -66,6 +66,9 @@
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Rifle">
+      <UniqueIdentifier>{a7aef9eb-6d3b-44f2-adf4-7e29c5a5799a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -113,6 +116,9 @@
     <ClInclude Include="clPlayer.h">
       <Filter>Object\Player</Filter>
     </ClInclude>
+    <ClInclude Include="clRifile.h">
+      <Filter>Object\Rifle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -154,6 +160,9 @@
     <ClCompile Include="clPlayer.cpp">
       <Filter>Object\Player</Filter>
     </ClCompile>
+    <ClCompile Include="clRifle.cpp">
+      <Filter>Object\Rifle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -166,6 +175,12 @@
       <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="bob_lamp_update_export.fbx">
+      <Filter>Resource\Model</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Character.fbx">
+      <Filter>Resource\Model</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Rifle.fbx">
       <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
   </ItemGroup>

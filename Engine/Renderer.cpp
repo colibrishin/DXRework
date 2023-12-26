@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 #include "egAnimation.h"
+#include "egAnimator.h"
 #include "egModel.h"
 #include "egModelRenderer.h"
 #include "egNormalMap.h"
@@ -21,7 +22,7 @@ namespace Engine::Manager::Graphics
 
     void Renderer::PreRender(const float& dt) {}
 
-    void Renderer::RenderModel(const float& dt, const WeakModelRenderer& ptr_mr, const WeakTransform& ptr_tr)
+    void Renderer::RenderModel(const float& dt, const WeakModelRenderer& ptr_mr, const WeakTransform& ptr_tr, const WeakAnimator& ptr_atr)
     {
         const auto mr = ptr_mr.lock();
         const auto tr = ptr_tr.lock();
@@ -57,12 +58,23 @@ namespace Engine::Manager::Graphics
 
             if (!model->m_textures_.empty()) model->m_textures_[i]->Render(dt);
             if (!model->m_normal_maps_.empty()) model->m_normal_maps_[i]->Render(dt);
-            if (!model->m_animations_.empty()) model->m_animations_[0]->Render(dt);
+
+            if (const auto atr = ptr_atr.lock())
+            {
+                const auto ptr_anim = atr->GetAnimation();
+
+                if (const auto anim = ptr_anim.lock())
+                {
+                    anim->Render(dt);
+                }
+            }
+            
             mesh.lock()->Render(dt);
 
             GetRenderPipeline().ResetShaders();
             GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
             GetRenderPipeline().UnbindResource(SR_TEXTURE);
+            GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
         }
     }
 
@@ -97,11 +109,12 @@ namespace Engine::Manager::Graphics
 
                 const auto ptr_mr = object->GetComponent<Components::ModelRenderer>();
                 const auto& ptr_tr = object->GetComponent<Components::Transform>();
+                const auto& ptr_atr = object->GetComponent<Components::Animator>();
 
                 if (ptr_mr.expired()) continue;
                 if (ptr_tr.expired()) continue;
 
-                RenderModel(dt, ptr_mr, ptr_tr);
+                RenderModel(dt, ptr_mr, ptr_tr, ptr_atr);
             }
         }
 
@@ -116,11 +129,12 @@ namespace Engine::Manager::Graphics
 
             const auto  ptr_mr = object->GetComponent<Components::ModelRenderer>();
             const auto& ptr_tr = object->GetComponent<Components::Transform>();
+            const auto& ptr_atr = object->GetComponent<Components::Animator>();
 
             if (ptr_mr.expired()) continue;
             if (ptr_tr.expired()) continue;
 
-            RenderModel(dt, ptr_mr, ptr_tr);
+            RenderModel(dt, ptr_mr, ptr_tr, ptr_atr);
         }
     }
 
