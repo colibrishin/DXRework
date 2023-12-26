@@ -130,6 +130,7 @@ namespace Engine
         class ObserverController;
         class SoundPlayer;
         class ModelRenderer;
+        class Animator;
     } // namespace Component
 
     class Scene;
@@ -219,6 +220,7 @@ namespace Engine
     using WeakBone = boost::weak_ptr<Resources::Bone>;
     using WeakTransform = boost::weak_ptr<Components::Transform>;
     using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;
+    using WeakAnimator = boost::weak_ptr<Components::Animator>;
 
     using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
     using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
