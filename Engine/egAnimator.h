@@ -15,12 +15,16 @@ namespace Engine::Components
 
         void              SetAnimation(const WeakBaseAnimation & anim);
         WeakBaseAnimation GetAnimation() const;
+        float               GetFrame() const;
 
     private:
         SERIALIZER_ACCESS
         Animator();
 
+        void  UpdateTransform(const StrongTransform& tr) const;
+
         StrongBaseAnimation m_animation_;
+        float m_current_frame_;
 
     };
 }
