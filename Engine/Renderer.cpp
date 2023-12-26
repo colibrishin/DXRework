@@ -66,7 +66,7 @@ namespace Engine::Manager::Graphics
 
                 if (const auto anim = ptr_anim.lock())
                 {
-                    anim->Render(dt);
+                    anim->Render(atr->GetFrame());
                 }
             }
             

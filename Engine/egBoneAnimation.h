@@ -32,7 +32,7 @@ namespace Engine::Resources
     private:
         BoneAnimation();
 
-        std::vector<BoneTransformElement> GetFrameAnimation() const;
+        std::vector<BoneTransformElement> GetFrameAnimation(const float dt) const;
 
         AnimationPrimitive m_primitive_;
         StrongBone          m_bone_;
