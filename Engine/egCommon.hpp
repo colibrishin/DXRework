@@ -63,8 +63,10 @@ namespace Engine
         RES_T_FONT,
         RES_T_SOUND,
         RES_T_MODEL,
-        RES_T_ANIM,
+        RES_T_BONE_ANIM,
         RES_T_BONE,
+        RES_T_BASE_ANIM
+        ,
     };
 
     enum eComponentType
