@@ -516,4 +516,12 @@ namespace Engine::Manager::Graphics
                                                          shader_resource, 1,
                                                          null_view.GetAddressOf());
     }
+
+    void RenderPipeline::UnbindResource(eShaderResource shader_resource, eShaderType shader_type)
+    {
+        ComPtr<ID3D11ShaderResourceView> null_view = nullptr;
+        g_shader_rs_bind_map.at(shader_type)(
+                                             GetD3Device().GetContext(), null_view.Get(),
+                                             shader_resource, 1);
+    }
 } // namespace Engine::Manager::Graphics

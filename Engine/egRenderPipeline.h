@@ -68,6 +68,7 @@ namespace Engine::Manager::Graphics
         void BindCascadeBufferChunk(
             const CascadeShadowBufferChunk& cascade_shadow_buffer_chunk);
         void UnbindResource(eShaderResource shader_resource);
+        void UnbindResource(eShaderResource shader_resource, eShaderType shader_type);
 
     private:
         friend class ToolkitAPI;
