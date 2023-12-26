@@ -39,7 +39,7 @@ namespace Engine::Manager::Graphics
             const Vector3& light_dir, CascadeShadowBuffer&        buffer,
             UINT           light_index, CascadeShadowBufferChunk& chunk);
 
-        void BuildShadowMap(Scene& scene) const;
+        void BuildShadowMap(Scene & scene, const float dt) const;
         void BindShadowMapChunk();
         void ClearShadowBufferChunk();
         void ClearShadowMaps();
