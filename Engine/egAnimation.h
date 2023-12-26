@@ -17,8 +17,23 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void                            BindBone(const WeakBone & bone_info);
+        void BindBone(const WeakBone& bone_info);
         void SetFrame(const float& dt);
+
+        RESOURCE_SELF_INFER_GETTER(Animation)
+
+        static inline boost::shared_ptr<Animation> Create(const std::string& name, const AnimationPrimitive& primitive)
+        {
+            if (const auto check = GetResourceManager().GetResource<Animation>(name).lock())
+            {
+                return check;
+            }
+
+            const auto obj = boost::make_shared<Animation>(primitive);
+            obj->m_b_bone_animation_ = false;
+            GetResourceManager().AddResource(name, obj);
+            return obj;
+        }
 
     protected:
         SERIALIZER_ACCESS
@@ -33,6 +48,7 @@ namespace Engine::Resources
         std::vector<BoneTransformElement> GetFrameAnimation() const;
 
         float m_current_frame_;
+        bool  m_b_bone_animation_;
 
         AnimationPrimitive m_primitive_;
         StrongBone          m_bone_;

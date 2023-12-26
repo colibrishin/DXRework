@@ -15,6 +15,7 @@ namespace Engine::Resources
     Animation::Animation(const AnimationPrimitive& primitive)
     : Resource("", RES_T_ANIM),
       m_current_frame_(0),
+      m_b_bone_animation_(true),
       m_primitive_(primitive) {}
 
     void Animation::PreUpdate(const float& dt) {}
@@ -102,9 +103,11 @@ namespace Engine::Resources
 
     void Animation::Unload_INTERNAL() {}
 
-    Animation::Animation(): Resource("", RES_T_ANIM),
-                            m_current_frame_(0),
-                            m_primitive_() { }
+    Animation::Animation()
+    : Resource("", RES_T_ANIM),
+      m_current_frame_(0),
+      m_b_bone_animation_(true),
+      m_primitive_() { }
 
     float Animation::ConvertDtToFrame(const float& dt) const
     {

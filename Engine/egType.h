@@ -63,6 +63,11 @@
         {                                                                     \
             return check;                                                     \
         }                                                                     \
+        if (const auto check = GetResourceManager().                          \
+                               GetResource<TYPE>(name).lock())                \
+        {                                                                     \
+            return check;                                                     \
+        }                                                                     \
         const auto obj = boost::make_shared<TYPE>(path);                      \
         GetResourceManager().AddResource(name, obj);                          \
         return obj;                                                           \
