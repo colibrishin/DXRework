@@ -13,14 +13,14 @@ namespace Engine::Components
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
-        void SetAnimation(const WeakAnimation& anim);
-        WeakAnimation GetAnimation() const;
+        void              SetAnimation(const WeakBaseAnimation & anim);
+        WeakBaseAnimation GetAnimation() const;
 
     private:
         SERIALIZER_ACCESS
         Animator();
 
-        StrongAnimation m_animation_;
+        StrongBaseAnimation m_animation_;
 
     };
 }

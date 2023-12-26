@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egAnimator.h"
 #include "egModel.h"
-#include "egAnimation.h"
+#include "egBoneAnimation.h"
 
 SERIALIZER_ACCESS_IMPL(Engine::Components::Animator,
 _ARTAG(_BSTSUPER(Engine::Abstract::Component))
@@ -17,7 +17,7 @@ namespace Engine::Components
 
     void Animator::FixedUpdate(const float& dt) {}
 
-    void Animator::SetAnimation(const WeakAnimation& anim)
+    void Animator::SetAnimation(const WeakBaseAnimation& anim)
     {
         if (const auto locked = anim.lock())
         {
@@ -25,7 +25,7 @@ namespace Engine::Components
         }
     }
 
-    WeakAnimation Animator::GetAnimation() const
+    WeakBaseAnimation Animator::GetAnimation() const
     {
         return m_animation_;
     }

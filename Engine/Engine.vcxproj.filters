@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Resource Files">
@@ -200,11 +200,11 @@
     <Filter Include="Component\ModelRenderer">
       <UniqueIdentifier>{52883f4c-0cd6-4df2-b38a-346c313ed2a5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Animation">
-      <UniqueIdentifier>{485c6a6f-e325-483b-8712-a23167f92ac0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Bone">
       <UniqueIdentifier>{000966e6-ef39-4323-9022-f050f85b6a42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Animator">
+      <UniqueIdentifier>{cf1d3b46-1151-473c-a3e8-37a09662db10}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -393,13 +393,17 @@
     <ClInclude Include="egResourceManager.hpp">
       <Filter>Singleton\Internal\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="egAnimation.h">
-      <Filter>Resource\Animation</Filter>
+    <ClInclude Include="egBoneAnimation.h">
+      <Filter>Resource\BoneAnimation</Filter>
     </ClInclude>
     <ClInclude Include="egBone.h">
       <Filter>Resource\Bone</Filter>
     </ClInclude>
     <ClInclude Include="egReflectionEvaluator.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="egAnimator.h">
+      <Filter>Component\Animator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -566,13 +570,17 @@
     <ClCompile Include="egModelRenderer.cpp">
       <Filter>Component\ModelRenderer</Filter>
     </ClCompile>
-    <ClCompile Include="egAnimation.cpp">
-      <Filter>Resource\Animation</Filter>
+    <ClCompile Include="egBoneAnimation.cpp">
+      <Filter>Resource\BoneAnimation</Filter>
     </ClCompile>
     <ClCompile Include="egBone.cpp">
       <Filter>Resource\Bone</Filter>
     </ClCompile>
     <ClCompile Include="egReflectionEvaluator.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="egAnimator.cpp">
+      <Filter>Component\Animator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
