@@ -123,7 +123,11 @@ namespace Engine::Resources
         GetRenderPipeline().DrawIndexed(GetIndexCount());
     }
 
-    void Mesh::PostRender(const float& dt) {}
+    void Mesh::PostRender(const float& dt)
+    {
+        GetRenderPipeline().UnbindVertexBuffer();
+        GetRenderPipeline().UnbindIndexBuffer();
+    }
 
     void Mesh::PostUpdate(const float& dt) {}
 
