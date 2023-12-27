@@ -3,55 +3,18 @@
 #include "egD3Device.hpp"
 
 #include "egDebugger.hpp"
+#include "egGlobal.h"
 #include "egShader.hpp"
 #include "egToolkitAPI.h"
 
 namespace Engine::Manager::Graphics
 {
-    void D3Device::GetSwapchainCopy(GraphicRenderedBuffer& buffer)
+    void D3Device::CopySwapchain(ID3D11ShaderResourceView* buffer)
     {
         ComPtr<ID3D11Buffer> swapchain_texture;
         ComPtr<ID3D11Buffer> buffer_texture;
 
-        if (buffer.srv == nullptr)
-        {
-            ComPtr<ID3D11Texture2D> rtn_buffer;
-
-            D3D11_TEXTURE2D_DESC desc{};
-
-            desc.Width              = g_window_width;
-            desc.Height             = g_window_height;
-            desc.MipLevels          = 1;
-            desc.ArraySize          = 1;
-            desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
-            desc.SampleDesc.Count   = 1;
-            desc.SampleDesc.Quality = 0;
-            desc.Usage              = D3D11_USAGE_DEFAULT;
-            desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
-            desc.CPUAccessFlags     = 0;
-            desc.MiscFlags          = 0;
-
-            DX::ThrowIfFailed(
-                              m_device_->CreateTexture2D(&desc, nullptr, rtn_buffer.GetAddressOf()));
-
-            D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
-
-            srv_desc.Format                         = desc.Format;
-            srv_desc.ViewDimension                  = D3D11_SRV_DIMENSION_TEXTURE2D;
-            srv_desc.Texture2D.MipLevels            = desc.MipLevels;
-            srv_desc.Texture2D.MostDetailedMip      = 0;
-            srv_desc.Texture2DArray.ArraySize       = 1;
-            srv_desc.Texture2DArray.FirstArraySlice = 0;
-
-            DX::ThrowIfFailed(
-                              m_device_->CreateShaderResourceView(
-                                                                  rtn_buffer.Get(), &srv_desc,
-                                                                  buffer.srv.GetAddressOf()));
-
-            buffer.texture = rtn_buffer;
-        }
-
-        buffer.srv->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture.GetAddressOf()));
+        buffer->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture.GetAddressOf()));
         m_swap_chain_->GetBuffer(
                                  0, __uuidof(ID3D11Texture2D),
                                  (void**)swapchain_texture.GetAddressOf());
@@ -77,7 +40,7 @@ namespace Engine::Manager::Graphics
     }
 
     std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(
-        Graphic::Shader<ID3D11VertexShader>* shader,
+        Graphics::Shader<ID3D11VertexShader>* shader,
         ID3DBlob*                            blob)
     {
         ComPtr<ID3D11ShaderReflection> reflection = nullptr;
@@ -192,7 +155,7 @@ namespace Engine::Manager::Graphics
         m_device_->CreateSamplerState(&desc, state);
     }
 
-    void D3Device::CreateTexture(
+    void D3Device::CreateTexture2D(
         const D3D11_TEXTURE2D_DESC& desc,
         ID3D11Texture2D**           texture) const
     {
@@ -484,6 +447,39 @@ namespace Engine::Manager::Graphics
                                                    D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0,
                                                    D3D11_RESOURCE_MISC_GENERATE_MIPS, DDS_LOADER_DEFAULT, texture,
                                                    shader_resource_view));
+    }
+
+    void D3Device::CreateTexture2D(
+        const D3D11_TEXTURE2D_DESC& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11Texture2D** texture, ID3D11ShaderResourceView** view) const
+    {
+        DX::ThrowIfFailed(
+                          m_device_->CreateTexture2D(&desc, nullptr, texture));
+        DX::ThrowIfFailed(
+                          m_device_->CreateShaderResourceView(*texture, &srv, view));
+    }
+
+    void D3Device::CreateDepthStencil(
+        const D3D11_TEXTURE2D_DESC& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsv, ID3D11Texture2D** texture,
+        ID3D11DepthStencilView** view) const
+    {
+        DX::ThrowIfFailed(
+                          m_device_->CreateTexture2D(&desc, nullptr, texture));
+        DX::ThrowIfFailed(
+                          m_device_->CreateDepthStencilView(*texture, &dsv, view));
+    }
+
+    void D3Device::CreateDepthStencilState(
+        const D3D11_DEPTH_STENCIL_DESC& desc, ID3D11DepthStencilState** depth_stencil_state) const
+    {
+        DX::ThrowIfFailed(
+                          m_device_->CreateDepthStencilState(&desc, depth_stencil_state));
+    }
+
+    void D3Device::CreateShaderResourceView(
+        ID3D11Resource* resource, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11ShaderResourceView** view) const
+    {
+        DX::ThrowIfFailed(
+                          m_device_->CreateShaderResourceView(resource, &srv, view));
     }
 
     void D3Device::PreUpdate(const float& dt) {}

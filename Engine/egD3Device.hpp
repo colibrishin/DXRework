@@ -15,61 +15,62 @@ namespace Engine::Manager::Graphics
 {
     using namespace DirectX;
     using Microsoft::WRL::ComPtr;
+    using namespace Engine::Graphics;
 
-    const std::map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11ShaderResourceView*, UINT, UINT)>> g_shader_rs_bind_map = 
+    const std::map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11ShaderResourceView**, UINT, UINT)>> g_shader_rs_bind_map = 
     {
         {
             SHADER_VERTEX,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->VSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->VSSetShaderResources(start_slot, num_buffers, buffer);
             }
         },
         {
             SHADER_PIXEL,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->PSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->PSSetShaderResources(start_slot, num_buffers, buffer);
             }
         },
         {
             SHADER_GEOMETRY,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->GSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->GSSetShaderResources(start_slot, num_buffers, buffer);
             }
         },
         {
             SHADER_COMPUTE,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->CSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->CSSetShaderResources(start_slot, num_buffers, buffer);
             }
         },
         {
             SHADER_HULL,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->HSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->HSSetShaderResources(start_slot, num_buffers, buffer);
             }
         },
         {
             SHADER_DOMAIN,
             [](
                 ID3D11DeviceContext* context,
-                ID3D11ShaderResourceView* buffer, UINT                 start_slot, UINT num_buffers)
+                ID3D11ShaderResourceView** buffer, UINT                 start_slot, UINT num_buffers)
             {
-                context->DSSetShaderResources(start_slot, num_buffers, &buffer);
+                context->DSSetShaderResources(start_slot, num_buffers, buffer);
             }
         }
     };
@@ -328,7 +329,7 @@ namespace Engine::Manager::Graphics
         template <typename T>
         void CreateShader(
             const std::filesystem::path& path,
-            Graphic::Shader<T>*          shader)
+            Graphics::Shader<T>*          shader)
         {
             ComPtr<ID3DBlob>  blob;
             ComPtr<ID3DBlob>  error;
@@ -348,7 +349,7 @@ namespace Engine::Manager::Graphics
 
             if (error)
             {
-                std::string error_message =
+                const std::string error_message =
                         static_cast<char*>(error->GetBufferPointer());
                 OutputDebugStringA(error_message.c_str());
             }
@@ -356,7 +357,7 @@ namespace Engine::Manager::Graphics
             if constexpr (std::is_same_v<T, ID3D11VertexShader>)
             {
                 const auto input_descs = GenerateInputDescription(shader, blob.Get());
-                const auto casted      = dynamic_cast<Graphic::VertexShaderInternal*>(shader);
+                const auto casted      = dynamic_cast<Graphics::VertexShaderInternal*>(shader);
 
                 DX::ThrowIfFailed(
                                   m_device_->CreateInputLayout(
@@ -409,6 +410,23 @@ namespace Engine::Manager::Graphics
             }
         }
 
+        void CreateTexture2D(
+            const D3D11_TEXTURE2D_DESC& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11Texture2D** texture,
+            ID3D11ShaderResourceView** view) const;
+
+        void CreateDepthStencil(
+            const D3D11_TEXTURE2D_DESC& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsv, ID3D11Texture2D** texture,
+            ID3D11DepthStencilView** view) const;
+
+        void CreateDepthStencilState(
+            const D3D11_DEPTH_STENCIL_DESC& desc, ID3D11DepthStencilState** depth_stencil_state) const;
+
+        void CreateShaderResourceView(
+            ID3D11Resource* resource, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11ShaderResourceView** view) const;
+
+        void CreateSampler(
+            const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const;
+
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void PreRender(const float& dt) override;
@@ -437,7 +455,7 @@ namespace Engine::Manager::Graphics
             return m_context_.Get();
         }
 
-        void GetSwapchainCopy(GraphicRenderedBuffer& buffer);
+        void CopySwapchain(ID3D11ShaderResourceView * buffer);
 
         HANDLE GetSwapchainAwaiter() const;
 
@@ -457,8 +475,8 @@ namespace Engine::Manager::Graphics
 
         template <typename T>
         void BindConstantBuffer(
-            ConstantBuffer<T>& buffer, eCBType type,
-            eShaderType        target_shader)
+            const ConstantBuffer<T>& buffer, eCBType type,
+            eShaderType        target_shader) const
         {
             g_shader_cb_bind_map.at(target_shader)(
                                                    m_device_.Get(), m_context_.Get(),
@@ -466,15 +484,15 @@ namespace Engine::Manager::Graphics
         }
 
         std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
-            Graphic::Shader<ID3D11VertexShader>* shader,
+            Graphics::Shader<ID3D11VertexShader>* shader,
             ID3DBlob*                            blob);
 
         template <typename T>
-        void BindShader(Graphic::Shader<T>* shader)
+        void BindShader(Graphics::Shader<T>* shader)
         {
             if constexpr (std::is_same_v<T, ID3D11VertexShader>)
             {
-                const auto casting = static_cast<Graphic::VertexShaderInternal*>(shader);
+                const auto casting = static_cast<Graphics::VertexShaderInternal*>(shader);
                 m_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
                 m_context_->IASetInputLayout(*casting->GetInputLayout());
             }
@@ -500,16 +518,48 @@ namespace Engine::Manager::Graphics
             }
         }
 
+        template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<IShader, T>>>
+        void UnbindShader()
+        {
+            if constexpr (std::is_same_v<typename T::shaderType, ID3D11VertexShader>)
+            {
+                m_context_->VSSetShader(nullptr, nullptr, 0);
+                m_context_->IASetInputLayout(nullptr);
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11PixelShader>)
+            {
+                m_context_->PSSetShader(nullptr, nullptr, 0);
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11GeometryShader>)
+            {
+                m_context_->GSSetShader(nullptr, nullptr, 0);
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11ComputeShader>)
+            {
+                m_context_->CSSetShader(nullptr, nullptr, 0);
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11HullShader>)
+            {
+                m_context_->HSSetShader(nullptr, nullptr, 0);
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11DomainShader>)
+            {
+                m_context_->DSSetShader(nullptr, nullptr, 0);
+            }
+            else
+            {
+                assert(nullptr);
+            }
+        }
+
+        void CreateTexture2D(
+            const D3D11_TEXTURE2D_DESC& desc,
+            ID3D11Texture2D**           texture) const;
+
         void BindSampler(
             ID3D11SamplerState* sampler, eShaderType target_shader,
             eSampler            sampler_type) const;
-        void CreateSampler(
-            const D3D11_SAMPLER_DESC& desc,
-            ID3D11SamplerState**      state) const;
 
-        void CreateTexture(
-            const D3D11_TEXTURE2D_DESC& desc,
-            ID3D11Texture2D**           texture) const;
         void CreateBlendState(ID3D11BlendState** blend_state) const;
         void CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state) const;
         void CreateRasterizer(
