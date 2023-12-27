@@ -4,11 +4,11 @@
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Graphic::IShader,
+                       Engine::Graphics::IShader,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Resource))
                        _ARTAG(m_type_));
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
     IShader::IShader(const EntityName& name, const std::filesystem::path& path)
     : Resource(path, RES_T_SHADER)

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egCamera.h"
 #include "egApplication.h"
+#include "egGlobal.h"
 #include "egManagerHelper.hpp"
 #include "egTransform.h"
 #include "egRigidbody.h"

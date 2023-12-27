@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egBone.h"
 
+#include "egDXAnimCommon.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Bone,
                        _ARTAG(_BSTSUPER(Resource))

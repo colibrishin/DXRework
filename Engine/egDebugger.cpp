@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egDebugger.hpp"
 
+#include "egGlobal.h"
+
 namespace Engine::Manager
 {
     void Debugger::Render(const float& dt) {}

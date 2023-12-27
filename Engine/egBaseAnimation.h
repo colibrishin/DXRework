@@ -1,8 +1,11 @@
 #pragma once
+#include "egDXAnimCommon.hpp"
 #include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {
+    using namespace Engine::Graphics;
+
     class BaseAnimation : public Abstract::Resource
     {
     public:

@@ -3,6 +3,8 @@
 
 namespace Engine::Resources
 {
+    using namespace Engine::Graphics;
+
     class Bone : public Abstract::Resource
     {
     public:

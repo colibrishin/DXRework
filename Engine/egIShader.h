@@ -4,7 +4,7 @@
 #include "egCommon.hpp"
 #include "egResource.h"
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
     using Microsoft::WRL::ComPtr;
 
@@ -31,4 +31,4 @@ namespace Engine::Graphic
     };
 } // namespace Engine::Graphic
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::IShader)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::IShader)

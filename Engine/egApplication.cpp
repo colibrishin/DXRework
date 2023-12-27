@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "egApplication.h"
+
+#include "egGlobal.h"
 #include "egManagerHelper.hpp"
 
 namespace Engine::Manager

@@ -9,7 +9,8 @@ template class Microsoft::WRL::ComPtr<ID3D11Buffer>;
 
 namespace Engine::Resources
 {
-    using Shape = std::vector<VertexElement>;
+    using namespace Engine::Graphics;
+    using Shape = std::vector<Graphics::VertexElement>;
     using IndexCollection = std::vector<UINT>;
     using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
     using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;

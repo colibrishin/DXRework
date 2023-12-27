@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egConstraintSolver.h"
 #include "egCollisionDetector.h"
+#include "egGlobal.h"
 #include "egObject.hpp"
 #include "egSceneManager.hpp"
 #include "egTransform.h"

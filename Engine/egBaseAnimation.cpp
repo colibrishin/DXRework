@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egBaseAnimation.h"
 
+#include "egDXAnimCommon.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::BaseAnimation,
                        _ARTAG(_BSTSUPER(Resource))
