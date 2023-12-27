@@ -3,6 +3,10 @@
 
 #include "egBone.h"
 
+namespace Engine::Graphics {
+    struct BoneTransformElement;
+}
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::BoneAnimation,
                        _ARTAG(_BSTSUPER(BaseAnimation))
@@ -27,12 +31,19 @@ namespace Engine::Resources
     {
         auto animation_per_bone = GetFrameAnimation(dt);
 
-        GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(animation_per_bone.size(), animation_per_bone.data(), m_animation_buffer_.ReleaseAndGetAddressOf());
+        GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(
+                                                                           animation_per_bone.size(),
+                                                                           animation_per_bone.data(),
+                                                                           m_animation_buffer_.
+                                                                           ReleaseAndGetAddressOf());
 
-        GetRenderPipeline().BindResource(SR_ANIMATION, SHADER_VERTEX, m_animation_buffer_.Get());
+        GetRenderPipeline().BindResource(SR_ANIMATION, SHADER_VERTEX, m_animation_buffer_.GetAddressOf());
     }
 
-    void BoneAnimation::PostRender(const float& dt) {}
+    void BoneAnimation::PostRender(const float& dt)
+    {
+        GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
+    }
 
     void BoneAnimation::PostUpdate(const float& dt) {}
 
