@@ -18,8 +18,12 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
+        void RenderEnd();
+
         void BindBone(const WeakBone& bone_info);
         eResourceType GetResourceType() const override;
+
+        std::vector<BoneTransformElement> GetBoneTransform(const float dt) const;
 
         RESOURCE_SELF_INFER_GETTER(BoneAnimation)
 
@@ -32,12 +36,13 @@ namespace Engine::Resources
     private:
         BoneAnimation();
 
-        std::vector<BoneTransformElement> GetFrameAnimation(const float dt) const;
-
         AnimationPrimitive m_primitive_;
         StrongBone          m_bone_;
 
+        std::vector<BoneTransformElement> GetFrameAnimation(const float dt) const;
+
         ComPtr<ID3D11ShaderResourceView> m_animation_buffer_;
+
 
     };
 }

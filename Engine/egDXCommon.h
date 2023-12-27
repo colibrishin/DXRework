@@ -469,6 +469,11 @@ namespace Engine
             bone_count++;
         }
 
+        std::vector<UINT> GetBoneIndices() const
+        {
+            return std::vector<UINT>(std::begin(bone_indices), std::begin(bone_indices) + bone_count);
+        }
+
     private:
         friend class boost::serialization::access;
 

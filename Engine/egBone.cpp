@@ -58,6 +58,25 @@ namespace Engine::Resources
 
     void Bone::PostUpdate(const float& dt) {}
 
+    std::string Bone::GetName(const UINT idx) const
+    {
+        const auto it = std::ranges::find_if(
+                             m_bone_map
+                             , [idx](const auto& pair)
+                             {
+                                 return pair.second.GetIndex() == idx;
+                             });
+
+        if (it != m_bone_map.end())
+        {
+            return it->first;
+        }
+        else 
+        {
+            return "";
+        }
+    }
+
     const BonePrimitive* Bone::GetBone(const UINT idx) const
     {
         if (m_bones_index_wise_.size() > idx)

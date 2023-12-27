@@ -57,8 +57,33 @@ namespace Engine::Manager::Graphics
 
             if (mesh.expired()) continue;
 
+            if (const auto atr = ptr_atr.lock())
+            {
+                const auto ptr_anim = atr->GetAnimation();
+
+                if (const auto anim = ptr_anim.lock(); anim->GetResourceType() == RES_T_BONE_ANIM)
+                {
+                    const auto b_anim = anim->GetSharedPtr<Resources::BoneAnimation>();
+
+                    const auto deform = b_anim->GetBoneTransform(atr->GetFrame());
+
+                    anim->PreRender(atr->GetFrame());
+                    anim->Render(atr->GetFrame());
+
+                    for (auto& [idx, box] : model->GetBoundingBoxes())
+                    {
+                        BoundingOrientedBox copy  = box;
+
+                        copy.Transform(copy, deform[idx].transform * tr->GetWorldMatrix());
+                        GetDebugger().Draw(copy, Colors::AliceBlue);
+                    }
+                }
+            }
+
             if (!model->m_textures_.empty()) model->m_textures_[i]->Render(dt);
             if (!model->m_normal_maps_.empty()) model->m_normal_maps_[i]->Render(dt);
+            
+            mesh.lock()->Render(dt);
 
             if (const auto atr = ptr_atr.lock())
             {
@@ -66,11 +91,9 @@ namespace Engine::Manager::Graphics
 
                 if (const auto anim = ptr_anim.lock())
                 {
-                    anim->Render(atr->GetFrame());
+                    anim->PostRender(atr->GetFrame());
                 }
             }
-            
-            mesh.lock()->Render(dt);
 
             GetRenderPipeline().ResetShaders();
             GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);

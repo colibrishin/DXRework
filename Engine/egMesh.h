@@ -37,6 +37,7 @@ namespace Engine::Resources
         Mesh();
 
         friend class Components::Collider;
+        friend class Resources::Model;
 
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();

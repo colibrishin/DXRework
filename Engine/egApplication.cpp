@@ -132,8 +132,8 @@ namespace Engine::Manager
         GetSceneManager().PreUpdate(dt);
         GetShadowManager().PreUpdate(dt);
         GetResourceManager().PreUpdate(dt);
-        GetPhysicsManager().PreUpdate(dt);
         GetConstraintSolver().PreUpdate(dt);
+        GetPhysicsManager().PreUpdate(dt);
         GetLerpManager().PreUpdate(dt);
         GetProjectionFrustum().PreUpdate(dt);
         GetShadowManager().PreUpdate(dt);
@@ -152,8 +152,8 @@ namespace Engine::Manager
         GetSceneManager().FixedUpdate(dt);
         GetShadowManager().FixedUpdate(dt);
         GetResourceManager().FixedUpdate(dt);
-        GetPhysicsManager().FixedUpdate(dt);
         GetConstraintSolver().FixedUpdate(dt);
+        GetPhysicsManager().FixedUpdate(dt);
         GetLerpManager().FixedUpdate(dt);
         GetProjectionFrustum().FixedUpdate(dt);
         GetShadowManager().FixedUpdate(dt);
@@ -171,8 +171,8 @@ namespace Engine::Manager
         GetReflectionEvaluator().Update(dt);
         GetSceneManager().Update(dt);
         GetResourceManager().Update(dt);
-        GetPhysicsManager().Update(dt);
         GetConstraintSolver().Update(dt);
+        GetPhysicsManager().Update(dt);
         GetLerpManager().Update(dt);
         GetProjectionFrustum().Update(dt);
         GetShadowManager().Update(dt);
@@ -191,8 +191,8 @@ namespace Engine::Manager
         GetReflectionEvaluator().PreRender(dt);
         GetSceneManager().PreRender(dt);
         GetResourceManager().PreRender(dt);
-        GetPhysicsManager().PreRender(dt);
         GetConstraintSolver().PreRender(dt);
+        GetPhysicsManager().PreRender(dt);
         GetLerpManager().PreRender(dt);
         GetProjectionFrustum().PreRender(dt);
         GetShadowManager().PreRender(dt);
@@ -210,8 +210,8 @@ namespace Engine::Manager
         GetReflectionEvaluator().Render(dt);
         GetSceneManager().Render(dt);
         GetResourceManager().Render(dt);
-        GetPhysicsManager().Render(dt);
         GetConstraintSolver().PreRender(dt);
+        GetPhysicsManager().Render(dt);
         GetLerpManager().Render(dt);
         GetProjectionFrustum().Render(dt);
         GetShadowManager().Render(dt);
@@ -229,8 +229,8 @@ namespace Engine::Manager
         GetReflectionEvaluator().PostRender(dt);
         GetSceneManager().PostRender(dt);
         GetResourceManager().PostRender(dt);
-        GetPhysicsManager().PostRender(dt);
         GetConstraintSolver().PostRender(dt);
+        GetPhysicsManager().PostRender(dt);
         GetLerpManager().PostRender(dt);
         GetProjectionFrustum().PostRender(dt);
         GetShadowManager().PostRender(dt);

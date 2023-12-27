@@ -22,12 +22,13 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        BoundingBox                        GetBoundingBox() const;
-        WeakMesh                           GetMesh(const std::string& name) const;
-        WeakMesh                           GetMesh(const UINT index) const;
-        const std::vector<const Vector3*>& GetVertices() const;
-        WeakBoneAnimation                      GetAnimation(const std::string& name) const;
-        WeakBoneAnimation                      GetAnimation(const UINT index) const;
+        BoundingBox                                GetBoundingBox() const;
+        WeakMesh                                   GetMesh(const std::string& name) const;
+        WeakMesh                                   GetMesh(const UINT index) const;
+        const std::vector<const Vector3*>&         GetVertices() const;
+        WeakBoneAnimation                          GetAnimation(const std::string& name) const;
+        WeakBoneAnimation                          GetAnimation(const UINT index) const;
+        const std::map<UINT, BoundingOrientedBox>& GetBoundingBoxes() const;
 
         UINT GetMeshCount() const;
 
@@ -78,12 +79,14 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        std::vector<StrongMesh>      m_meshes_;
-        StrongBone                   m_bone_;
-        std::vector<StrongTexture>   m_textures_;
-        std::vector<StrongNormalMap> m_normal_maps_;
-        std::vector<StrongBoneAnimation> m_animations_;
-        BoundingBox                  m_bounding_box_;
+        std::vector<StrongMesh>            m_meshes_;
+        StrongBone                         m_bone_;
+        std::vector<StrongTexture>         m_textures_;
+        std::vector<StrongNormalMap>       m_normal_maps_;
+        std::vector<StrongBoneAnimation>   m_animations_;
+        std::map<UINT, std::vector<Vector3>> m_bone_vertices_;
+        std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
+        BoundingBox                        m_bounding_box_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;

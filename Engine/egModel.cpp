@@ -105,6 +105,11 @@ namespace Engine::Resources
         return {};
     }
 
+    const std::map<UINT, BoundingOrientedBox>& Model::GetBoundingBoxes() const
+    {
+        return m_bone_bounding_boxes_;
+    }
+
     UINT Model::GetMeshCount() const
     {
         return m_meshes_.size();
@@ -184,7 +189,7 @@ namespace Engine::Resources
                                                 GetPath().string(),
                                                 aiProcess_Triangulate | aiProcess_GenSmoothNormals |
                                                 aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | 
+                                                aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder |
                                                 aiProcess_PopulateArmatureData);
 
         if (scene == nullptr)
@@ -341,6 +346,36 @@ namespace Engine::Resources
                 mesh->Load();
                 GetResourceManager().AddResource(mesh);
                 m_meshes_.push_back(mesh);
+            }
+
+            for (const auto& mesh : m_meshes_)
+            {
+                for (const auto& vertex : mesh->m_vertices_)
+                {
+                    for (const auto& idx : vertex.bone_element.GetBoneIndices())
+                    {
+                        const auto unique = std::ranges::find_if(
+                                             m_bone_vertices_[idx],
+                                        [vertex](const Vector3& v)
+                        {
+                            return FloatCompare(v.x, vertex.position.x) &&
+                                   FloatCompare(v.y, vertex.position.y) &&
+                                   FloatCompare(v.z, vertex.position.z);
+                        });
+
+                        if (unique != m_bone_vertices_[idx].end())
+                        {
+                            continue;
+                        }
+                        
+                        m_bone_vertices_[idx].push_back(vertex.position);
+                    }
+                }
+            }
+
+            for (const auto& [idx, vertices] : m_bone_vertices_)
+            {
+                BoundingOrientedBox::CreateFromPoints(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
             }
 
             if (scene->HasAnimations())
