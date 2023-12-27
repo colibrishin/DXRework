@@ -48,7 +48,7 @@ namespace Engine::Manager::Physics
                         if (!tr->IsTicked())
                         {
                             tr->m_world_previous_position_ = tr->GetWorldPosition();
-                            tr->m_previous_position_ = tr->m_position_;
+                            tr->m_previous_position_ = tr->GetLocalPosition();
                         }
 
                         const auto previous = tr->GetLocalPreviousPosition();

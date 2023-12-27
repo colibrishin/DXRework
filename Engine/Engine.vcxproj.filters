@@ -38,9 +38,6 @@
     <Filter Include="Mesh">
       <UniqueIdentifier>{258c4e9f-9245-457a-b6dc-021cb9bee28b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Singleton\Internal\Physics">
-      <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\Shadow">
       <UniqueIdentifier>{0a8cbefb-c0be-41f9-8fd4-1d8f83695f5d}</UniqueIdentifier>
     </Filter>
@@ -155,18 +152,6 @@
     <Filter Include="Singleton\Graphics\ToolkitAPI">
       <UniqueIdentifier>{e48ba7f2-d575-4f70-bd6a-56f16df1d909}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Singleton\Internal\Physics\CollisionDetector">
-      <UniqueIdentifier>{af9f026d-f741-4fd8-8286-967e877afc86}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Singleton\Internal\Physics\ConstraintSolver">
-      <UniqueIdentifier>{78703bbb-9af2-4201-8def-5a691c883096}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Singleton\Internal\Physics\LerpManager">
-      <UniqueIdentifier>{c7763e31-2b9c-4baf-babb-b6b6eb307836}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Singleton\Internal\Physics\PhysicsManager">
-      <UniqueIdentifier>{10f4f611-59a9-4a0f-bc34-c5c7f1582a6a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Singleton\Internal\Debugger">
       <UniqueIdentifier>{d198ede7-aeae-413f-a6ee-5e585853c522}</UniqueIdentifier>
     </Filter>
@@ -185,9 +170,6 @@
     <Filter Include="Singleton\Internal\TaskScheduler">
       <UniqueIdentifier>{44be5145-3da7-44b1-b9d6-ad0606f17360}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Singleton\Internal\FBXLoader">
-      <UniqueIdentifier>{cb2e5582-b223-4f51-9d4b-010eb6127966}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
     </Filter>
@@ -205,6 +187,33 @@
     </Filter>
     <Filter Include="Component\Animator">
       <UniqueIdentifier>{cf1d3b46-1151-473c-a3e8-37a09662db10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\BaseAnimation">
+      <UniqueIdentifier>{7650e74d-5471-4157-9d05-2099228b2477}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\BoneAnimation">
+      <UniqueIdentifier>{01b3e6bc-856a-4a95-95b8-8368c440418f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\ReflectionEvaluator">
+      <UniqueIdentifier>{e3c45a77-e2f6-481d-bf56-8c35923de9f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\Renderer">
+      <UniqueIdentifier>{0792e150-4f85-41fa-b063-3cb0b747bfb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics">
+      <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\CollisionDetector">
+      <UniqueIdentifier>{af9f026d-f741-4fd8-8286-967e877afc86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\ConstraintSolver">
+      <UniqueIdentifier>{78703bbb-9af2-4201-8def-5a691c883096}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\LerpManager">
+      <UniqueIdentifier>{c7763e31-2b9c-4baf-babb-b6b6eb307836}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\PhysicsManager">
+      <UniqueIdentifier>{10f4f611-59a9-4a0f-bc34-c5c7f1582a6a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -355,16 +364,16 @@
       <Filter>Singleton\Graphics\ToolkitAPI</Filter>
     </ClInclude>
     <ClInclude Include="egCollisionDetector.h">
-      <Filter>Singleton\Internal\Physics\CollisionDetector</Filter>
+      <Filter>Singleton\Physics\CollisionDetector</Filter>
     </ClInclude>
     <ClInclude Include="egConstraintSolver.h">
-      <Filter>Singleton\Internal\Physics\ConstraintSolver</Filter>
+      <Filter>Singleton\Physics\ConstraintSolver</Filter>
     </ClInclude>
     <ClInclude Include="egLerpManager.h">
-      <Filter>Singleton\Internal\Physics\LerpManager</Filter>
+      <Filter>Singleton\Physics\LerpManager</Filter>
     </ClInclude>
     <ClInclude Include="egPhysicsManager.h">
-      <Filter>Singleton\Internal\Physics\PhysicsManager</Filter>
+      <Filter>Singleton\Physics\PhysicsManager</Filter>
     </ClInclude>
     <ClInclude Include="egDebugger.hpp">
       <Filter>Singleton\Internal\Debugger</Filter>
@@ -393,16 +402,23 @@
     <ClInclude Include="egResourceManager.hpp">
       <Filter>Singleton\Internal\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="egBoneAnimation.h">
-      <Filter>Resource\BoneAnimation</Filter>
-    </ClInclude>
     <ClInclude Include="egBone.h">
       <Filter>Resource\Bone</Filter>
     </ClInclude>
-    <ClInclude Include="egReflectionEvaluator.h" />
-    <ClInclude Include="Renderer.h" />
     <ClInclude Include="egAnimator.h">
       <Filter>Component\Animator</Filter>
+    </ClInclude>
+    <ClInclude Include="egBaseAnimation.h">
+      <Filter>Resource\BaseAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="egBoneAnimation.h">
+      <Filter>Resource\BoneAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="egReflectionEvaluator.h">
+      <Filter>Singleton\Graphics\ReflectionEvaluator</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Singleton\Graphics\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -532,16 +548,16 @@
       <Filter>Singleton\Graphics\ToolkitAPI</Filter>
     </ClCompile>
     <ClCompile Include="egCollisionDetector.cpp">
-      <Filter>Singleton\Internal\Physics\CollisionDetector</Filter>
+      <Filter>Singleton\Physics\CollisionDetector</Filter>
     </ClCompile>
     <ClCompile Include="egConstraintSolver.cpp">
-      <Filter>Singleton\Internal\Physics\ConstraintSolver</Filter>
+      <Filter>Singleton\Physics\ConstraintSolver</Filter>
     </ClCompile>
     <ClCompile Include="egLerpManager.cpp">
-      <Filter>Singleton\Internal\Physics\LerpManager</Filter>
+      <Filter>Singleton\Physics\LerpManager</Filter>
     </ClCompile>
     <ClCompile Include="egPhysicsManager.cpp">
-      <Filter>Singleton\Internal\Physics\PhysicsManager</Filter>
+      <Filter>Singleton\Physics\PhysicsManager</Filter>
     </ClCompile>
     <ClCompile Include="egDebugger.cpp">
       <Filter>Singleton\Internal\Debugger</Filter>
@@ -570,16 +586,23 @@
     <ClCompile Include="egModelRenderer.cpp">
       <Filter>Component\ModelRenderer</Filter>
     </ClCompile>
-    <ClCompile Include="egBoneAnimation.cpp">
-      <Filter>Resource\BoneAnimation</Filter>
-    </ClCompile>
     <ClCompile Include="egBone.cpp">
       <Filter>Resource\Bone</Filter>
     </ClCompile>
-    <ClCompile Include="egReflectionEvaluator.cpp" />
-    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="egAnimator.cpp">
       <Filter>Component\Animator</Filter>
+    </ClCompile>
+    <ClCompile Include="egBaseAnimation.cpp">
+      <Filter>Resource\BaseAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="egBoneAnimation.cpp">
+      <Filter>Resource\BoneAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="egReflectionEvaluator.cpp">
+      <Filter>Singleton\Graphics\ReflectionEvaluator</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Singleton\Graphics\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

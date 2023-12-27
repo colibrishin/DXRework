@@ -2,6 +2,8 @@
 
 #include "clCharacterController.hpp"
 #include "clRifile.h"
+#include "egAnimator.h"
+#include "egBaseAnimation.h"
 #include "egCollider.hpp"
 #include "egModel.h"
 #include "egModelRenderer.h"
@@ -29,14 +31,11 @@ namespace Client::Object
         mr->AddPixelShader(Graphic::PixelShader::Get("ps_color"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
+        const auto atr = AddComponent<Components::Animator>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();
-        {
-            // Shooting offset
-            tr->SetLocalPosition({-.1f, 1.5f, 0.f});
-            tr->SetYawPitchRoll({0.f, 90.f, 0.f});
-            cldr->SetModel(model);
-            cldr->SetOffsetRotation(tr->GetLocalRotation());
-        }
+
+        atr->SetAnimation(Resources::BaseAnimation::Get("FireAnimation"));
+        cldr->SetModel(model);
     }
 
     void Rifle::PreUpdate(const float& dt)

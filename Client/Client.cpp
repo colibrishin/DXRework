@@ -14,6 +14,7 @@
 #include <egSound.h>
 #include <egSphereMesh.h>
 #include <egModel.h>
+#include <egBaseAnimation.h>
 
 #include "clBackSphereMesh.hpp"
 #include "clTestScene.hpp"
@@ -87,6 +88,26 @@ namespace Client
         GetResourceManager().AddResource(sphere_model);
     }
 
+    void InitializeAnimation()
+    {
+        BoneAnimationPrimitive primitive;
+
+        primitive.AddPosition(0.0f, {-.1f, 1.5f, 0.f});
+        primitive.AddPosition(0.5f, {-.1f, 1.5f, -.1f});
+        primitive.AddPosition(1.0f, {-.1f, 1.5f, 0.f});
+
+        primitive.AddRotation(0.0f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
+        primitive.AddRotation(0.5f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
+        primitive.AddRotation(1.0f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
+
+        primitive.AddScale(0.0f, {1.f, 1.f, 1.f});
+        primitive.AddScale(1.0f, {1.f, 1.f, 1.f});
+
+        const auto anim = Resources::BaseAnimation::Create("FireAnimation", primitive);
+        anim->SetDuration(1.f);
+        anim->SetTicksPerSecond(30.f);
+    }
+
     void Initialize(HWND hwnd)
     {
         Engine::Manager::Application::GetInstance().Initialize(hwnd);
@@ -97,6 +118,7 @@ namespace Client
         InitializeModel();
         InitializeFont();
         InitializeSound();
+        InitializeAnimation();
 
         Engine::GetSceneManager().AddScene<Scene::TestScene>();
         Engine::GetSceneManager().SetActive<Scene::TestScene>();

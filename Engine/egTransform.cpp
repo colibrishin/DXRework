@@ -17,7 +17,10 @@ namespace Engine::Components
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
-      m_scale_(Vector3::One) {}
+      m_scale_(Vector3::One),
+      m_animation_position_(Vector3::Zero),
+      m_animation_rotation_(Quaternion::Identity),
+      m_animation_scale_(Vector3::One) {}
 
     void Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
     {
@@ -74,6 +77,21 @@ namespace Engine::Components
         m_b_absolute_ = absolute;
     }
 
+    void Transform::SetAnimationPosition(const Vector3& position)
+    {
+        m_animation_position_ = position;
+    }
+
+    void Transform::SetAnimationRotation(const Quaternion& rotation)
+    {
+        m_animation_rotation_ = rotation;
+    }
+
+    void Transform::SetAnimationScale(const Vector3& scale)
+    {
+        m_animation_scale_ = scale;
+    }
+
     Vector3 Transform::GetWorldPosition() const
     {
         Matrix              world = GetWorldMatrix();
@@ -82,17 +100,17 @@ namespace Engine::Components
 
     Quaternion Transform::GetWorldRotation() const
     {
-        Quaternion rotation = m_rotation_;
+        Quaternion rotation = GetLocalRotation();
         const WeakTransform tr = FindNextTransform(*this);
 
         if (m_b_absolute_)
         {
-            return m_rotation_;
+            return rotation;
         }
 
         if (const auto parent = tr.lock())
         {
-            rotation *= parent->GetWorldRotation();
+            rotation = Quaternion::Concatenate(rotation, parent->GetWorldRotation());
         }
 
         return rotation;
@@ -100,17 +118,17 @@ namespace Engine::Components
 
     Vector3 Transform::GetLocalPosition() const
     {
-        return m_position_;
+        return m_position_ + m_animation_position_;
     }
 
     Quaternion Transform::GetLocalRotation() const
     {
-        return m_rotation_;
+        return Quaternion::Concatenate(m_rotation_, m_animation_rotation_);
     }
 
     Vector3 Transform::GetScale() const
     {
-        return m_scale_;
+        return m_scale_ * m_animation_scale_;
     }
 
     Vector3 Transform::Forward() const
@@ -137,7 +155,7 @@ namespace Engine::Components
     {
         Component::Initialize();
         m_world_previous_position_ = GetWorldPosition();
-        m_previous_position_ = m_position_;
+        m_previous_position_ = GetLocalPosition();
     }
 
     void Transform::PreUpdate(const float& dt)
@@ -154,7 +172,7 @@ namespace Engine::Components
     {
         Component::PostUpdate(dt);
         m_world_previous_position_ = GetWorldPosition();
-        m_previous_position_ = m_position_;
+        m_previous_position_ = GetLocalPosition();
     }
 
     void Transform::FixedUpdate(const float& dt) {}
@@ -191,9 +209,9 @@ namespace Engine::Components
 
     Matrix Transform::GetLocalMatrix() const
     {
-        return Matrix::CreateScale(m_scale_) *
-               Matrix::CreateFromQuaternion(m_rotation_) *
-               Matrix::CreateTranslation(m_position_);
+        return Matrix::CreateScale(GetScale()) *
+               Matrix::CreateFromQuaternion(GetLocalRotation()) *
+               Matrix::CreateTranslation(GetLocalPosition());
     }
 
     Vector3 Transform::GetWorldPreviousPosition() const
@@ -239,7 +257,10 @@ namespace Engine::Components
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
-      m_scale_(Vector3::One) {}
+      m_scale_(Vector3::One),
+      m_animation_position_(Vector3::Zero),
+      m_animation_rotation_(Quaternion::Identity),
+      m_animation_scale_(Vector3::One) {}
 
     WeakTransform Transform::FindNextTransform(const Transform& transform_)
     {

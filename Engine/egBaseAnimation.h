@@ -1,4 +1,5 @@
 #pragma once
+#include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {
@@ -17,13 +18,30 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void SetFrame(const float& dt);
         void SetTicksPerSecond(const float& ticks_per_second);
         void SetDuration(const float& duration);
+        float GetTicksPerSecond() const;
+        float GetDuration() const;
+
+        static float ConvertDtToFrame(const float& dt, const float ticks_per_second, const float duration);
 
         RESOURCE_SELF_INFER_GETTER(BaseAnimation)
 
+        static inline boost::shared_ptr<BaseAnimation> Create(
+            const std::string& name, const BoneAnimationPrimitive& primitive)
+        {
+            if (const auto check = GetResourceManager().GetResource<BaseAnimation>(name).lock())
+            {
+                return check;
+            }
+            const auto obj = boost::make_shared<BaseAnimation>(primitive);
+            GetResourceManager().AddResource(name, obj);
+            return obj;
+        }
+
     protected:
+        friend class Components::Animator;
+
         SERIALIZER_ACCESS
 
         void  Load_INTERNAL() override;
@@ -31,9 +49,6 @@ namespace Engine::Resources
 
         BaseAnimation();
 
-        float ConvertDtToFrame(const float& dt) const;
-
-        float m_current_frame_;
         float m_ticks_per_second_;
         float m_duration_;
 

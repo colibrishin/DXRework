@@ -7,8 +7,7 @@ SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::BoneAnimation,
                        _ARTAG(_BSTSUPER(BaseAnimation))
                        _ARTAG(m_primitive_)
-                       _ARTAG(m_bone_)
-                       _ARTAG(m_current_frame_))
+                       _ARTAG(m_bone_))
 
 namespace Engine::Resources
 {
@@ -26,8 +25,7 @@ namespace Engine::Resources
 
     void BoneAnimation::Render(const float& dt)
     {
-        SetFrame(m_current_frame_ + dt);
-        auto animation_per_bone = GetFrameAnimation();
+        auto animation_per_bone = GetFrameAnimation(dt);
 
         GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(animation_per_bone.size(), animation_per_bone.data(), m_animation_buffer_.ReleaseAndGetAddressOf());
 
@@ -51,9 +49,9 @@ namespace Engine::Resources
         return RES_T_BONE_ANIM;
     }
 
-    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation() const
+    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation(const float dt) const
     {
-        const auto anim_time = ConvertDtToFrame(m_current_frame_);
+        const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
         std::vector<BoneTransformElement> rtn;
         std::vector<Matrix> memo;
 

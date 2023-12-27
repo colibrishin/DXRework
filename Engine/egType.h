@@ -248,6 +248,7 @@ namespace Engine
     using StrongModel = boost::shared_ptr<Resources::Model>;
     using StrongBone = boost::shared_ptr<Resources::Bone>;
     using StrongBaseAnimation = boost::shared_ptr<Resources::BaseAnimation>;
+    using StrongTransform = boost::shared_ptr<Components::Transform>;
 
     using StrongVertexShader = boost::shared_ptr<Graphic::VertexShader>;
     using StrongPixelShader = boost::shared_ptr<Graphic::PixelShader>;
