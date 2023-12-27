@@ -19,7 +19,7 @@ namespace Engine::Manager::Graphics
         void RenderFinished();
 
     private:
-        GraphicRenderedBuffer m_rendered_buffer_;
+        Graphics::DXPacked::RenderedResource m_rendered_buffer_;
 
     };
 }
