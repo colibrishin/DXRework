@@ -47,6 +47,7 @@ namespace Engine::Manager::Graphics
 
         for (auto i = 0; i < mesh_count; ++i)
         {
+            // todo: wrap with material
             const auto vtx = mr->m_vertex_shaders_[i % mr->m_vertex_shaders_.size()];
             const auto pix = mr->m_pixel_shaders_[i % mr->m_pixel_shaders_.size()];
 
@@ -57,6 +58,7 @@ namespace Engine::Manager::Graphics
 
             if (mesh.expired()) continue;
 
+            // todo: wrap with material
             if (!model->m_textures_.empty()) model->m_textures_[i]->Render(dt);
             if (!model->m_normal_maps_.empty()) model->m_normal_maps_[i]->Render(dt);
 
@@ -72,10 +74,21 @@ namespace Engine::Manager::Graphics
             
             mesh.lock()->Render(dt);
 
-            GetRenderPipeline().ResetShaders();
-            GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
-            GetRenderPipeline().UnbindResource(SR_TEXTURE);
-            GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
+            mesh.lock()->PostRender(dt);
+
+            if (const auto atr = ptr_atr.lock())
+            {
+                if (const auto anim = atr->GetAnimation().lock())
+                {
+                    anim->PostRender(atr->GetFrame());
+                }
+            }
+
+            if (!model->m_textures_.empty()) model->m_textures_[i]->PostRender(dt);
+            if (!model->m_normal_maps_.empty()) model->m_normal_maps_[i]->PostRender(dt);
+
+            pix->PostRender(dt);
+            vtx->PostRender(dt);
         }
     }
 
