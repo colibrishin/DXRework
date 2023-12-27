@@ -544,7 +544,7 @@ namespace Engine
             }
         }
 
-        GetShadowManager().Clear();
+        GetShadowManager().Reset();
 
         auto& lights = m_layers[LAYER_LIGHT]->GetGameObjects();
 

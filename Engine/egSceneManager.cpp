@@ -8,7 +8,7 @@ namespace Engine::Manager
 {
     void SceneManager::ChangeScene(const WeakScene& it)
     {
-        Graphics::ShadowManager::GetInstance().Clear();
+        Graphics::ShadowManager::GetInstance().Reset();
         m_active_scene_ = it;
 
         for (const auto& light :
