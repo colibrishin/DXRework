@@ -28,8 +28,8 @@ namespace Client::Object
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetModel(model);
-        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default").lock());
-        mr->AddPixelShader(Graphic::PixelShader::Get("ps_color").lock());
+        mr->AddVertexShader(Resources::VertexShader::Get("vs_default").lock());
+        mr->AddPixelShader(Resources::PixelShader::Get("ps_color").lock());
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();

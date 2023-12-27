@@ -27,8 +27,8 @@ namespace Client::Object
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
         mr->SetModel(model);
-        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default"));
-        mr->AddPixelShader(Graphic::PixelShader::Get("ps_color"));
+        mr->AddVertexShader(Resources::VertexShader::Get("vs_default"));
+        mr->AddPixelShader(Resources::PixelShader::Get("ps_color"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();

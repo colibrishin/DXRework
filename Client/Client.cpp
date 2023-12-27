@@ -18,6 +18,7 @@
 
 #include "clBackSphereMesh.hpp"
 #include "clTestScene.hpp"
+#include "egGlobal.h"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -90,7 +91,7 @@ namespace Client
 
     void InitializeAnimation()
     {
-        BoneAnimationPrimitive primitive;
+        Graphics::BoneAnimationPrimitive primitive;
 
         primitive.AddPosition(0.0f, {-.1f, 1.5f, 0.f});
         primitive.AddPosition(0.5f, {-.1f, 1.5f, -.1f});

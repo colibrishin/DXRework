@@ -28,8 +28,8 @@ namespace Client::Object
 
         const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
         mr->SetModel(model);
-        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default").lock());
-        mr->AddPixelShader(Graphic::PixelShader::Get("ps_normalmap_specular"));
+        mr->AddVertexShader(Resources::VertexShader::Get("vs_default").lock());
+        mr->AddPixelShader(Resources::PixelShader::Get("ps_normalmap_specular"));
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

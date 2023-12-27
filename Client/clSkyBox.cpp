@@ -27,8 +27,8 @@ namespace Client::Object
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetModel(model);
-        mr->AddVertexShader(Get<Graphic::VertexShader>("vs_default"));
-        mr->AddPixelShader(Get<Graphic::PixelShader>("ps_default_nolight"));
+        mr->AddVertexShader(Get<Resources::VertexShader>("vs_default"));
+        mr->AddPixelShader(Get<Resources::PixelShader>("ps_default_nolight"));
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();

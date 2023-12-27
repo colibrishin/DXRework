@@ -20,8 +20,8 @@ void Client::Object::Water::Initialize()
     const auto model = Engine::Resources::Model::Get("CubeModel");
 
     mr->SetModel(model);
-    mr->AddVertexShader(Engine::Graphic::VertexShader::Get("vs_default"));
-    mr->AddPixelShader(Engine::Graphic::PixelShader::Get("ps_refraction"));
+    mr->AddVertexShader(Resources::VertexShader::Get("vs_default"));
+    mr->AddPixelShader(Resources::PixelShader::Get("ps_refraction"));
 
     AddComponent<Engine::Components::Transform>();
     const auto cldr = AddComponent<Engine::Components::Collider>().lock();

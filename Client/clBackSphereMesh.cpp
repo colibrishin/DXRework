@@ -35,7 +35,7 @@ namespace Client::Meshes
         for (const auto& vertex : vertices)
         {
             m_vertices_.push_back(
-                                     Engine::VertexElement{
+                                     Engine::Graphics::VertexElement{
                                          vertex.position,
                                          {1.0f, 0.0f, 0.0f, 1.0f},
                                          vertex.textureCoordinate,
