@@ -24,10 +24,13 @@
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
+    <ClInclude Include="egBoundingGroup.hpp" />
     <ClInclude Include="egCollision.h" />
+    <ClInclude Include="egConstant.h" />
     <ClInclude Include="egConstraintSolver.h" />
     <ClInclude Include="egCubeMesh.h" />
     <ClInclude Include="egDebugger.hpp" />
+    <ClInclude Include="egDXAnimCommon.hpp" />
     <ClInclude Include="egDXCommon.h" />
     <ClInclude Include="egCamera.h" />
     <ClInclude Include="egCollider.hpp" />
@@ -36,12 +39,17 @@
     <ClInclude Include="egComponent.h" />
     <ClInclude Include="egD3Device.hpp" />
     <ClInclude Include="egApplication.h" />
+    <ClInclude Include="egDXType.h" />
     <ClInclude Include="egElastic.h" />
     <ClInclude Include="egEntity.hpp" />
+    <ClInclude Include="egEnums.h" />
     <ClInclude Include="egFont.h" />
     <ClInclude Include="egFriction.h" />
+    <ClInclude Include="egGlobal.h" />
     <ClInclude Include="egIShader.h" />
     <ClInclude Include="egKinetic.h" />
+    <ClInclude Include="egMacro.h" />
+    <ClInclude Include="egMaterial.h" />
     <ClInclude Include="egModel.h" />
     <ClInclude Include="egModelRenderer.h" />
     <ClInclude Include="egMouseManager.h" />
@@ -116,6 +124,7 @@
     <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egLayer.cpp" />
     <ClCompile Include="egLight.cpp" />
+    <ClCompile Include="egMaterial.cpp" />
     <ClCompile Include="egMesh.cpp" />
     <ClCompile Include="egModel.cpp" />
     <ClCompile Include="egModelRenderer.cpp" />
@@ -781,6 +790,19 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="type.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

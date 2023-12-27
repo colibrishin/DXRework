@@ -215,6 +215,12 @@
     <Filter Include="Singleton\Physics\PhysicsManager">
       <UniqueIdentifier>{10f4f611-59a9-4a0f-bc34-c5c7f1582a6a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Material">
+      <UniqueIdentifier>{b7fe8b47-d01c-479a-a3ec-095ccc6f09a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\DX">
+      <UniqueIdentifier>{90dadfdb-7dbb-465d-88dc-234ab1e8900c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -226,9 +232,6 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egHelper.hpp">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="egDXCommon.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egManagerHelper.hpp">
@@ -420,6 +423,33 @@
     <ClInclude Include="Renderer.h">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="egMaterial.h">
+      <Filter>Resource\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="egConstant.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egGlobal.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egEnums.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egBoundingGroup.hpp">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXCommon.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXAnimCommon.hpp">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXType.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egMacro.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -604,6 +634,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="egMaterial.cpp">
+      <Filter>Resource\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -646,6 +679,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="vs_default.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="type.hlsli">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
