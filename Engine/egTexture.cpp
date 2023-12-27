@@ -40,10 +40,13 @@ namespace Engine::Resources
 
     void Texture::Render(const float& dt)
     {
-        GetRenderPipeline().BindResource(SR_TEXTURE, SHADER_PIXEL, m_texture_view_.Get());
+        GetRenderPipeline().BindResource(SR_TEXTURE, SHADER_PIXEL, m_texture_view_.GetAddressOf());
     }
 
-    void Texture::PostRender(const float& dt) {}
+    void Texture::PostRender(const float& dt)
+    {
+        GetRenderPipeline().UnbindResource(SR_TEXTURE, SHADER_PIXEL);
+    }
 
     void Texture::PostUpdate(const float& dt) {}
 
