@@ -9,7 +9,6 @@ PixelInputType main(VertexInputType input)
     output.normal   = input.normal;
     output.tangent  = input.tangent;
     output.binormal = input.binormal;
-
     
     if (input.bone_element.bone_count > 0)
     {
@@ -35,8 +34,8 @@ PixelInputType main(VertexInputType input)
     output.position       = mul(output.position, g_world);
     output.world_position = output.position;
 
-    output.position = mul(output.position, g_cam_view);
-    output.position = mul(output.position, g_cam_projection);
+    output.position = mul(output.position, g_camView);
+    output.position = mul(output.position, g_camProj);
 
     // Store the input color for the pixel shader to use.
     output.color = input.color;
@@ -49,7 +48,7 @@ PixelInputType main(VertexInputType input)
         output.lightDirection[i]    = normalize(output.lightDirection[i]);
     }
 
-    const float3 cam_position = GetWorldPosition(g_cam_world);
+    const float3 cam_position = GetWorldPosition(g_camWorld);
 
     output.viewDirection = cam_position.xyz - output.world_position.xyz;
     output.viewDirection = normalize(output.viewDirection);
@@ -58,16 +57,16 @@ PixelInputType main(VertexInputType input)
     output.tangent  = mul(output.tangent, (float3x3)g_world);
     output.binormal = mul(output.binormal, (float3x3)g_world);
 
-    matrix reflectionWorld = mul(g_cam_reflectView, g_cam_projection);
+    matrix reflectionWorld = mul(g_camReflectView, g_camProj);
     reflectionWorld        = mul(g_world, reflectionWorld);
     output.reflection      = mul(output.position, reflectionWorld);
 
-    matrix vpw        = mul(g_cam_view, g_cam_projection);
+    matrix vpw        = mul(g_camView, g_camProj);
     vpw               = mul(g_world, vpw);
     output.refraction = mul(output.position, vpw);
 
     output.clipSpacePosZ = output.position.z;
-    output.clipPlane     = dot(mul(input.position, g_world), g_clip_plane);
+    output.clipPlane     = dot(mul(input.position, g_world), g_clipPlane);
 
     return output;
 }

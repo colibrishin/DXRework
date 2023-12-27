@@ -1,9 +1,8 @@
 #pragma once
-#include <boost/make_shared.hpp>
-#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
 #include "egDXCommon.h"
+#include "egEnums.h"
 #include "egSerialization.hpp"
 #include "egType.h"
 
@@ -14,125 +13,6 @@ namespace Engine
 {
     using DirectX::SimpleMath::Vector3;
     using Microsoft::WRL::ComPtr;
-
-    constexpr float g_epsilon     = 0.001f;
-    constexpr float g_gravity_acc = 9.8f;
-
-    constexpr float  g_fixed_update_interval   = 0.02f;
-    constexpr int    g_debug_y_movement        = 15;
-    constexpr int    g_debug_y_initial         = 0;
-    constexpr float  g_debug_message_life_time = 1.0f;
-    constexpr size_t g_debug_message_max       = 20;
-
-    constexpr bool g_speculation_enabled = true;
-
-    constexpr LONG_PTR g_invalid_id = -1;
-
-    constexpr Vector3 g_forward  = {0.f, 0.f, 1.f};
-    constexpr Vector3 g_backward = {0.f, 0.f, -1.f};
-
-    constexpr size_t g_max_map_size             = 2048; // only in power of 2
-    constexpr size_t g_octree_negative_round_up = g_max_map_size / 2;
-
-    inline std::atomic<UINT> g_collision_energy_reduction_multiplier = 2;
-
-    enum eLayerType
-    {
-        LAYER_NONE = 0,
-        LAYER_LIGHT,
-        LAYER_DEFAULT,
-        LAYER_ENVIRONMENT,
-        LAYER_SKYBOX,
-        LAYER_UI,
-        LAYER_CAMERA,
-        LAYER_MAX
-    };
-
-    enum eObserverState
-    {
-        OBSERVER_STATE_NONE,
-    };
-
-    enum eResourceType
-    {
-        RES_T_UNK = 0,
-        RES_T_SHADER,
-        RES_T_TEX,
-        RES_T_NORMAL,
-        RES_T_MESH,
-        RES_T_FONT,
-        RES_T_SOUND,
-        RES_T_MODEL,
-        RES_T_BONE_ANIM,
-        RES_T_BONE,
-        RES_T_BASE_ANIM
-        ,
-    };
-
-    enum eComponentType
-    {
-        COM_T_UNK = 0,
-        COM_T_TRANSFORM,
-        COM_T_COLLIDER,
-        COM_T_RIDIGBODY,
-        COM_T_STATE,
-        COMP_T_SOUND_PLAYER,
-        COM_T_MODEL_RENDERER,
-        COM_T_ANIMATOR
-    };
-
-    enum eDefObjectType
-    {
-        DEF_OBJ_T_UNK = 0,
-        DEF_OBJ_T_NONE,
-        DEF_OBJ_T_CAMERA,
-        DEF_OBJ_T_LIGHT,
-        DEF_OBJ_T_OBSERVER,
-        DEF_OBJ_T_TEXT,
-        DEF_OBJ_T_DELAY_OBJ
-    };
-
-    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
-    enum eSceneType : UINT;
-
-    enum eBoundingType
-    {
-        BOUNDING_TYPE_BOX = 0,
-        BOUNDING_TYPE_FRUSTUM,
-        BOUNDING_TYPE_SPHERE,
-    };
-
-    template <typename T>
-    struct which_resource
-    {
-        static constexpr eResourceType value = T::rtype;
-    };
-
-    template <typename T>
-    struct which_component
-    {
-        static constexpr eComponentType value = T::ctype;
-    };
-
-    template <typename T>
-    struct which_def_object
-    {
-        static constexpr eDefObjectType value = T::dotype;
-    };
-
-    template <typename T>
-    struct which_scene
-    {
-        static constexpr eSceneType value = T::stype;
-    };
-
-    struct GUIDComparer
-    {
-        bool operator()(const GUID& Left, const GUID& Right) const
-        {
-            return memcmp(&Left, &Right, sizeof(Right)) < 0;
-        }
-    };
 
     template <typename T>
     struct WeakComparer
@@ -220,88 +100,6 @@ namespace Engine
             lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
         };
     }
-
-    template <typename BoundingType>
-    __forceinline static BoundingType __vectorcall TranslateBounding(
-        const BoundingType& box, const Vector3& scale, const Quaternion& rotation, const Vector3& position)
-    {
-        if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
-        {
-            auto box_ = const_cast<BoundingOrientedBox&>(box);
-            box_.Transform(box_, 1.f, rotation, position);
-            box_.Extents = Vector3(box_.Extents.x * scale.x, box_.Extents.y * scale.y, box_.Extents.z * scale.z);
-            return box_;
-        }
-        else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
-        {
-            auto sphere_ = const_cast<BoundingSphere&>(box);
-            sphere_.Transform(sphere_, MaxElement(scale), rotation, position);
-            return sphere_;
-        }
-        else
-        {
-            static_assert("TranslateBounding: Invalid type");
-            return {};
-        }
-    }
-
-    union BoundingGroup
-    {
-    public:
-        BoundingGroup() : box(Vector3::Zero, {0.5f, 0.5f, 0.5f}, Quaternion::Identity) {}
-
-        template <typename BoundingType>
-        __forceinline BoundingType __vectorcall As(const Vector3& scale, const Quaternion& rotation, const Vector3& translation) const
-        {
-            if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
-            {
-                const auto box_ = TranslateBounding(box, scale, rotation, translation);
-                return box_;
-            }
-            else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
-            {
-                const auto sphere_ = TranslateBounding(sphere, scale, rotation, translation);
-                return sphere_;
-            }
-            else
-            {
-                static_assert("TranslateBounding: Invalid type");
-                return {};
-            }
-        }
-
-        void __vectorcall UpdateFromBoundingBox(const BoundingBox& box_)
-        {
-            BoundingOrientedBox::CreateFromBoundingBox(box, box_);
-        }
-
-        template <typename BoundingType>
-        void CreateFromPoints(size_t count, const Vector3* points, size_t stride)
-        {
-            if (std::is_same_v<BoundingType, BoundingOrientedBox>)
-            {
-                box.CreateFromPoints(box, count, points, stride);
-            }
-            else if (std::is_same_v<BoundingType, BoundingSphere>)
-            {
-                sphere.CreateFromPoints(sphere, count, points, stride);
-            }
-            else if (std::is_same_v<BoundingType, BoundingBox>)
-            {
-                BoundingBox box_;
-                BoundingBox::CreateFromPoints(box_, count, points, stride);
-                BoundingOrientedBox::CreateFromBoundingBox(box, box_);
-            }
-            else
-            {
-                static_assert("TranslateBounding: Invalid type");
-            }
-        }
-
-    private:
-        BoundingOrientedBox box;
-        BoundingSphere      sphere;
-    };
 } // namespace Engine
 
 namespace DX

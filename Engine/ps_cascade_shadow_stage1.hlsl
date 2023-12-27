@@ -1,6 +1,6 @@
 #include "common.hlsli"
 
-void main(PixelShadowStage1InputType input)
+void main(PixelShadowInputType input)
 {
     // Passing through
 }
