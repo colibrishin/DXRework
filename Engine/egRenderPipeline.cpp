@@ -324,26 +324,47 @@ namespace Engine::Manager::Graphics
         GetRenderPipeline().SetSpecularPower(100.0f);
     }
 
-    void RenderPipeline::SetShader(Graphic::IShader* shader)
+    void RenderPipeline::SetShader(Graphics::IShader* shader)
     {
         switch (shader->GetType())
         {
-        case SHADER_VERTEX: GetD3Device().BindShader(reinterpret_cast<Graphic::VertexShader*>(shader));
+        case SHADER_VERTEX: GetD3Device().BindShader(reinterpret_cast<Resources::VertexShader*>(shader));
             break;
-        case SHADER_PIXEL: GetD3Device().BindShader(reinterpret_cast<Graphic::PixelShader*>(shader));
+        case SHADER_PIXEL: GetD3Device().BindShader(reinterpret_cast<Resources::PixelShader*>(shader));
             break;
         case SHADER_GEOMETRY: GetD3Device().BindShader(
-                                                       reinterpret_cast<Graphic::GeometryShader*>(shader));
+                                                       reinterpret_cast<Resources::GeometryShader*>(shader));
             break;
         case SHADER_COMPUTE: GetD3Device().BindShader(
-                                                      reinterpret_cast<Graphic::ComputeShader*>(shader));
+                                                      reinterpret_cast<Resources::ComputeShader*>(shader));
             break;
-        case SHADER_HULL: GetD3Device().BindShader(reinterpret_cast<Graphic::HullShader*>(shader));
+        case SHADER_HULL: GetD3Device().BindShader(reinterpret_cast<Resources::HullShader*>(shader));
             break;
-        case SHADER_DOMAIN: GetD3Device().BindShader(reinterpret_cast<Graphic::DomainShader*>(shader));
+        case SHADER_DOMAIN: GetD3Device().BindShader(reinterpret_cast<Resources::DomainShader*>(shader));
             break;
         default:
             assert(nullptr);
+        }
+    }
+
+    void RenderPipeline::UnbindShader(const Graphics::IShader* shader)
+    {
+        switch (shader->GetType())
+        {
+            case SHADER_VERTEX: GetD3Device().UnbindShader<VertexShader>();
+                break;
+            case SHADER_PIXEL: GetD3Device().UnbindShader<PixelShader>();
+                break;
+            case SHADER_GEOMETRY: GetD3Device().UnbindShader<GeometryShader>();
+                break;
+            case SHADER_COMPUTE: GetD3Device().UnbindShader<ComputeShader>();
+                break;
+            case SHADER_HULL: GetD3Device().UnbindShader<HullShader>();
+                break;
+            case SHADER_DOMAIN: GetD3Device().UnbindShader<DomainShader>();
+                break;
+            default:
+                assert(nullptr);
         }
     }
 

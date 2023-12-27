@@ -4,11 +4,11 @@
 #include "egRenderPipeline.h"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Graphic::VertexShaderInternal,
+                       Engine::Graphics::VertexShaderInternal,
                        _ARTAG(_BSTSUPER(Shader<ID3D11VertexShader>))
                        _ARTAG(m_topology_))
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
     VertexShaderInternal::VertexShaderInternal(
         const EntityName&            name,

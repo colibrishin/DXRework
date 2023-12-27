@@ -2,9 +2,9 @@
 #include "egShader.hpp"
 #include "egResourceManager.hpp"
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
-    class VertexShaderInternal : public Shader<ID3D11VertexShader>
+    class VertexShaderInternal : public Graphics::Shader<ID3D11VertexShader>
     {
     public:
         VertexShaderInternal(
@@ -28,6 +28,6 @@ namespace Engine::Graphic
 
         ComPtr<ID3D11InputLayout> m_input_layout_ = nullptr;
     };
-} // namespace Engine::Graphic
+} // namespace Engine::Resources
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::VertexShaderInternal)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexShaderInternal)

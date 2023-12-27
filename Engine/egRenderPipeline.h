@@ -20,6 +20,7 @@ namespace Engine::Manager::Graphics
         void PreRender(const float& dt) override;
 
         void SetShader(Graphic::IShader* shader);
+        void UnbindShader(const Graphics::IShader* shader);
 
         void SetWorldMatrix(const TransformBuffer& matrix);
         void SetWorldMatrix(const TransformBuffer& matrix, eShaderType shader);
