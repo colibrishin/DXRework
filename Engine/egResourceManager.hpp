@@ -54,6 +54,29 @@ namespace Engine::Manager
             return {};
         }
 
+        WeakResource GetResource(const EntityName& name, const eResourceType& type)
+        {
+            auto&      resources = m_resources_[type];
+            const auto it        = std::ranges::find_if(
+                                                 resources
+                                                 , [&name](const StrongResource& resource)
+                                                 {
+                                                     return resource->GetName() == name;
+                                                 });
+
+            if (it != resources.end())
+            {
+                if (!(*it)->IsLoaded())
+                {
+                    (*it)->Load();
+                }
+
+                return *it;
+            }
+
+            return {};
+        }
+
         template <typename T>
         boost::weak_ptr<T> GetResourceByPath(const std::filesystem::path& path)
         {
