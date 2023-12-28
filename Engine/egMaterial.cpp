@@ -8,7 +8,7 @@ namespace Engine::Resources
     : Resource(path, RES_T_MTR),
       m_material_cb_()
     {
-        m_material_cb_.specular_power = 10.0f;
+        m_material_cb_.specular_power = 100.0f;
         m_material_cb_.specular_color = DirectX::Colors::White;
         m_material_cb_.reflection_scale = 0.15f;
         m_material_cb_.refraction_scale = 0.15f;
@@ -33,6 +33,11 @@ namespace Engine::Resources
 
         GetRenderPipeline().SetMaterial(m_material_cb_);
 
+        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        {
+	        shd->PreRender(dt);
+        }
+
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
             res->PreRender(dt);
@@ -45,6 +50,11 @@ namespace Engine::Resources
         {
             return;
         }
+
+        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        {
+        	shd->Render(dt);
+		}
 
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
@@ -60,6 +70,11 @@ namespace Engine::Resources
         }
 
         GetRenderPipeline().SetMaterial({});
+
+        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        {
+        	shd->PostRender(dt);
+		}
 
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
