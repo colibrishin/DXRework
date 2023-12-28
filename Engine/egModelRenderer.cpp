@@ -39,4 +39,14 @@ namespace Engine::Components
     {
         return m_model_;
     }
+
+    WeakMaterial ModelRenderer::GetMaterial() const
+    {
+        if (m_material_)
+        {
+            return m_material_;
+        }
+
+        return {};
+    }
 }

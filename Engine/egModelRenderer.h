@@ -17,6 +17,7 @@ namespace Engine::Components
         void SetShape(const WeakModel& model);
         void SetMaterial(const WeakMaterial& material);
         WeakModel GetModel() const;
+        WeakMaterial GetMaterial() const;
 
     private:
         friend class Manager::Graphics::Renderer;
