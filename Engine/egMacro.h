@@ -57,15 +57,12 @@
     static inline boost::shared_ptr<TYPE> Create(                             \
     const std::string& name, const std::filesystem::path& path)               \
     {                                                                         \
-        if (const auto check = GetResourceManager().                          \
-                               GetResourceByPath<TYPE>(path).lock())          \
-        {                                                                     \
-            return check;                                                     \
-        }                                                                     \
-        if (const auto check = GetResourceManager().                          \
+        if (const auto pcheck = GetResourceManager().                         \
+                               GetResourceByPath<TYPE>(path).lock();          \
+            const auto ncheck = GetResourceManager().                         \
                                GetResource<TYPE>(name).lock())                \
         {                                                                     \
-            return check;                                                     \
+            return ncheck;                                                    \
         }                                                                     \
         const auto obj = boost::make_shared<TYPE>(path);                      \
         GetResourceManager().AddResource(name, obj);                          \
