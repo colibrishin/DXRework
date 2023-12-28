@@ -2,7 +2,7 @@
 #include "egModelRenderer.h"
 
 #include "egDebugger.hpp"
-#include "egModel.h"
+#include "egShape.h"
 
 namespace Engine::Components
 {
@@ -19,7 +19,7 @@ namespace Engine::Components
         Component::PostUpdate(dt);
     }
 
-    void ModelRenderer::SetModel(const WeakModel& model)
+    void ModelRenderer::SetShape(const WeakModel& model)
     {
         if (const auto m = model.lock())
         {
@@ -27,24 +27,26 @@ namespace Engine::Components
         }
     }
 
-    void ModelRenderer::AddVertexShader(const WeakVertexShader& vertex_shader)
+    void ModelRenderer::SetMaterial(const WeakMaterial& material)
     {
-        if (const auto vtx = vertex_shader.lock())
+        if (const auto m = material.lock())
         {
-            m_vertex_shaders_.push_back(vtx);
-        }
-    }
-
-    void ModelRenderer::AddPixelShader(const WeakPixelShader& pixel_shader)
-    {
-        if (const auto pix = pixel_shader.lock())
-        {
-            m_pixel_shaders_.push_back(pix);
+            m_material_ = m;
         }
     }
 
     WeakModel ModelRenderer::GetModel() const
     {
         return m_model_;
+    }
+
+    WeakMaterial ModelRenderer::GetMaterial() const
+    {
+        if (m_material_)
+        {
+            return m_material_;
+        }
+
+        return {};
     }
 }

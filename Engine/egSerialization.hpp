@@ -102,7 +102,7 @@ namespace boost::serialization
 
     template <class Archive>
     void serialize(
-        Archive&           ar, Engine::VertexElement& x,
+        Archive&           ar, Engine::Graphics::VertexElement& x,
         const unsigned int version)
     {
         ar & x.position;

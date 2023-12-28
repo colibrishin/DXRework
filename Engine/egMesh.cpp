@@ -20,7 +20,7 @@ namespace Engine::Resources
         return static_cast<UINT>(m_indices_.size());
     }
 
-    Mesh::Mesh(const Shape& shape, const IndexCollection& indices)
+    Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)
     : Resource("", RES_T_MESH),
       m_vertices_(shape),
       m_indices_(indices) {}
@@ -123,7 +123,11 @@ namespace Engine::Resources
         GetRenderPipeline().DrawIndexed(GetIndexCount());
     }
 
-    void Mesh::PostRender(const float& dt) {}
+    void Mesh::PostRender(const float& dt)
+    {
+        GetRenderPipeline().UnbindVertexBuffer();
+        GetRenderPipeline().UnbindIndexBuffer();
+    }
 
     void Mesh::PostUpdate(const float& dt) {}
 

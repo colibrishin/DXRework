@@ -14,17 +14,15 @@ namespace Engine::Components
         void FixedUpdate(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void SetModel(const WeakModel & model);
-        void AddVertexShader(const WeakVertexShader & vertex_shader);
-        void AddPixelShader(const WeakPixelShader & pixel_shader);
+        void SetShape(const WeakModel& model);
+        void SetMaterial(const WeakMaterial& material);
         WeakModel GetModel() const;
+        WeakMaterial GetMaterial() const;
 
     private:
         friend class Manager::Graphics::Renderer;
 
-        std::vector<StrongVertexShader> m_vertex_shaders_;
-        std::vector<StrongPixelShader> m_pixel_shaders_;
-
+        StrongMaterial m_material_;
         StrongModel m_model_;
     };
 }

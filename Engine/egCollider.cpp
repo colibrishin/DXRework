@@ -8,7 +8,7 @@
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
 #include "egTransform.h"
-#include "egModel.h"
+#include "egShape.h"
 
 #include "egManagerHelper.hpp"
 
@@ -135,7 +135,7 @@ namespace Engine::Components
 
         std::ranges::for_each(
                               mesh_obj->m_vertices_,
-                              [&](const VertexElement& shape)
+                              [&](const Graphics::VertexElement& shape)
                               {
                                   serialized_vertices.emplace_back(shape.position);
                               });

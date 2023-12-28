@@ -4,13 +4,14 @@
 #include "clCharacterController.hpp"
 #include "egAnimator.h"
 #include "egCollider.hpp"
-#include "egModel.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
 #include "egTransform.h"
 #include "egVertexShaderInternal.h"
 #include "egBoneAnimation.h"
+#include "egMaterial.h"
+#include "egShape.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Player,
@@ -22,13 +23,11 @@ namespace Client::Object
     {
         Object::Initialize();
 
-        const auto model = Resources::Model::Get("CharacterModel").lock();
+        const auto model = Resources::Shape::Get("CharacterModel").lock();
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
-
-        mr->SetModel(model);
-        mr->AddVertexShader(Graphic::VertexShader::Get("vs_default"));
-        mr->AddPixelShader(Graphic::PixelShader::Get("ps_color"));
+        mr->SetShape(model);
+        mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();

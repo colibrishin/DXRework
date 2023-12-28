@@ -66,14 +66,6 @@ namespace Engine::Physics
         return {signx, signy, signz};
     }
 
-    constexpr float   g_gravity_acc             = 9.81f;
-    constexpr Vector3 g_gravity_vec             = Vector3(0.0f, -g_gravity_acc, 0.0f);
-    constexpr float   g_restitution_coefficient = 0.5f;
-    constexpr float   g_drag_coefficient        = 0.47f;
-
-    constexpr size_t g_gjk_max_iteration = 64;
-    constexpr size_t g_epa_max_iteration = 64;
-
     extern Vector3 __vectorcall EvalFriction(const Vector3& vel, float mu, float dt);
     extern Vector3 __vectorcall EvalDrag(const Vector3& vel, float k);
     extern Vector3 __vectorcall EvalGravity(float invMass, float dt);

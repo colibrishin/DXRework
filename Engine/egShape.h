@@ -7,12 +7,12 @@
 
 namespace Engine::Resources
 {
-	class Model : public Abstract::Resource
+	class Shape : public Abstract::Resource
 	{
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MODEL)
+        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHAPE)
 
-        Model(const std::filesystem::path& path);
+        Shape(const std::filesystem::path& path);
 
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
@@ -26,29 +26,34 @@ namespace Engine::Resources
         WeakMesh                           GetMesh(const std::string& name) const;
         WeakMesh                           GetMesh(const UINT index) const;
         const std::vector<const Vector3*>& GetVertices() const;
-        WeakBoneAnimation                      GetAnimation(const std::string& name) const;
-        WeakBoneAnimation                      GetAnimation(const UINT index) const;
-
-        UINT GetMeshCount() const;
+        WeakBaseAnimation                  GetAnimation(const std::string& name) const;
+        WeakBaseAnimation                  GetAnimation(const UINT index) const;
 
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
-        void Add(const boost::shared_ptr<T>& res)
+        void Add(const boost::weak_ptr<T>& res)
         {
+            if (res.expired()) return;
+
             if constexpr (which_resource<T>::value == RES_T_MESH)
             {
-                m_meshes_.push_back(res);
+                m_meshes_.push_back(res.lock());
+
+                m_bounding_box_.Center = Vector3::Zero;
+                m_bounding_box_.Extents = Vector3::Zero;
+
+                for (const auto& mesh : m_meshes_)
+                {
+                    BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, mesh->GetBoundingBox());
+                }
             }
-            else if constexpr (which_resource<T>::value == RES_T_TEX)
+            else if constexpr (which_resource<T>::value == RES_T_BONE)
             {
-                m_textures_.push_back(res);
+                m_bone_ = res.lock();
             }
-            else if constexpr (which_resource<T>::value == RES_T_NORMAL)
+            else if constexpr (which_resource<T>::value == RES_T_BONE_ANIM || 
+                               which_resource<T>::value == RES_T_BASE_ANIM)
             {
-                m_normal_maps_.push_back(res);
-            }
-            else if constexpr (which_resource<T>::value == RES_T_BONE_ANIM)
-            {
-                m_animations_.push_back(res);
+                m_animations_.push_back(res.lock());
             }
             else
             {
@@ -60,16 +65,14 @@ namespace Engine::Resources
 
         std::vector<StrongMesh> GetMeshes() const;
 
-        static StrongModel Create(const std::string& name, const std::vector<StrongResource>& resources);
-
-        RESOURCE_SELF_INFER_GETTER(Model)
-        RESOURCE_SELF_INFER_CREATE(Model)
+        RESOURCE_SELF_INFER_GETTER(Shape)
+        RESOURCE_SELF_INFER_CREATE(Shape)
 
     protected:
         SERIALIZER_ACCESS
 
         friend class Manager::Graphics::Renderer;
-	    Model();
+	    Shape();
 
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
@@ -78,12 +81,10 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        std::vector<StrongMesh>      m_meshes_;
-        StrongBone                   m_bone_;
-        std::vector<StrongTexture>   m_textures_;
-        std::vector<StrongNormalMap> m_normal_maps_;
-        std::vector<StrongBoneAnimation> m_animations_;
-        BoundingBox                  m_bounding_box_;
+        std::vector<StrongMesh>          m_meshes_;
+        StrongBone                       m_bone_;
+        std::vector<StrongBaseAnimation> m_animations_;
+        BoundingBox                      m_bounding_box_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
@@ -93,4 +94,4 @@ namespace Engine::Resources
     };
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Model)
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Shape)

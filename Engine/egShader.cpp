@@ -3,19 +3,19 @@
 #include "egManagerHelper.hpp"
 #include "egRenderPipeline.h"
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11VertexShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11VertexShader>);
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11PixelShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11PixelShader>);
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11GeometryShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11GeometryShader>);
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11ComputeShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11ComputeShader>);
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11HullShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11HullShader>);
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphic::Shader<ID3D11DomainShader>);
+BOOST_CLASS_EXPORT_IMPLEMENT(Engine::Graphics::Shader<ID3D11DomainShader>);
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
     // explicit template instantiation
     template class Shader<ID3D11VertexShader>;
@@ -117,5 +117,8 @@ namespace Engine::Graphic
     }
 
     template <typename T>
-    void Shader<T>::PostRender(const float& dt) {}
+    void Shader<T>::PostRender(const float& dt)
+    {
+        GetRenderPipeline().UnbindShader(this);
+    }
 } // namespace Engine::Graphic

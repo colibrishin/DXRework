@@ -52,7 +52,7 @@ namespace Engine::Manager::Physics
 
         if (!rb->IsGrounded())
         {
-            rb->AddForce(Engine::Physics::g_gravity_vec * cl->GetInverseMass());
+            rb->AddForce(Engine::g_gravity_vec * cl->GetInverseMass());
         }
         else
         {

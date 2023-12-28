@@ -5,79 +5,7 @@
 #include <memory>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
-// Need to be included before boost only in the header, requires a default
-// constructor
-#define SERIALIZER_ACCESS                                                      \
-  friend class Engine::Serializer;                                             \
-  friend class boost::serialization::access;                                   \
-  template <class Archive>                                                     \
-  void serialize(Archive &ar, const unsigned int file_version);
-// part of serialization access implementation, forward declaration of serialize
-// function
-#define SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                \
-  template void NAMESPACE_TYPE::serialize<boost::archive::text_iarchive>(      \
-      boost::archive::text_iarchive & ar, const unsigned int file_version);    \
-  template void NAMESPACE_TYPE::serialize<boost::archive::text_oarchive>(      \
-      boost::archive::text_oarchive & ar, const unsigned int file_version);    \
-  BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE)
-// serialization macros
-#define _ARTAG(TYPENAME) ar & TYPENAME;
-// serialization macros, requires if object is inherited from another object
-#define _BSTSUPER(BASE) boost::serialization::base_object<BASE>(*this)
-
-// part of serialization access implementation, serialize function
-// implementation
-#define SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, ...)                           \
-  template <class Archive>                                                     \
-  void NAMESPACE_TYPE::serialize(Archive &ar,                                  \
-                                 const unsigned int file_version) {            \
-    __VA_ARGS__                                                                \
-  }
-// full serialization access implementation for a class only in the cpp file,
-// requires a boost include
-#define SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE, ...)                            \
-  SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                      \
-  SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)
-
-// Static Component type, this should be added to every component
-#define INTERNAL_COMP_CHECK_CONSTEXPR(enum_val) static constexpr eComponentType ctype = enum_val;
-// Static Resource type, this should be added to every resource
-#define INTERNAL_RES_CHECK_CONSTEXPR(enum_val) static constexpr eResourceType rtype = enum_val;
-// Static engine default provided object type, this should be added to every object
-#define INTERNAL_OBJECT_CHECK_CONSTEXPR(enum_val) static constexpr eDefObjectType dotype = enum_val;
-
-// Static client provided scene type, this should be added to every scene in the client
-#define CLIENT_SCENE_CHECK_CONSTEXPR(enum_val) static constexpr Engine::eSceneType stype = enum_val;
-
-#define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
-  static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
-    { return Engine::Manager::ResourceManager::GetInstance()                  \
-       .GetResource<TYPE>(name); }
-
-#define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
-    static inline boost::shared_ptr<TYPE> Create(                             \
-    const std::string& name, const std::filesystem::path& path)               \
-    {                                                                         \
-        if (const auto check = GetResourceManager().                          \
-                               GetResourceByPath<TYPE>(path).lock())          \
-        {                                                                     \
-            return check;                                                     \
-        }                                                                     \
-        if (const auto check = GetResourceManager().                          \
-                               GetResource<TYPE>(name).lock())                \
-        {                                                                     \
-            return check;                                                     \
-        }                                                                     \
-        const auto obj = boost::make_shared<TYPE>(path);                      \
-        GetResourceManager().AddResource(name, obj);                          \
-        return obj;                                                           \
-    }
-
-
-#define INVALID_ID_CHECK(ID) ID != g_invalid_id
-
-#define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
-  if ((ID) == g_invalid_id) return {};
+#include "egEnums.h"
 
 namespace ImGui
 {
@@ -115,9 +43,6 @@ namespace Engine
     using DirectX::XMFLOAT3X3;
     using DirectX::XMVECTORF32;
 
-    struct AnimationPrimitive;
-    struct BonePrimitive;
-
     namespace Objects
     {
         class Light;
@@ -142,19 +67,17 @@ namespace Engine
     class Layer;
     class Serializer;
 
-    namespace Graphic
+    namespace Graphics
     {
         template <typename T>
         class Shader;
         class IShader;
         class VertexShaderInternal;
 
-        using VertexShader = VertexShaderInternal;
-        using PixelShader = Shader<ID3D11PixelShader>;
-        using GeometryShader = Shader<ID3D11GeometryShader>;
-        using HullShader = Shader<ID3D11HullShader>;
-        using DomainShader = Shader<ID3D11DomainShader>;
-        using ComputeShader = Shader<ID3D11ComputeShader>;
+        struct AnimationPrimitive;
+        struct BonePrimitive;
+        struct BoneAnimationPrimitive;
+        struct VertexElement;
     } // namespace Graphic
 
     namespace Resources
@@ -165,9 +88,17 @@ namespace Engine
         class Texture;
         class NormalMap;
         class BoneAnimation;
-        class Model;
+        class Shape;
         class Bone;
         class BaseAnimation;
+        class Material;
+
+        using VertexShader = Graphics::VertexShaderInternal;
+        using PixelShader = Graphics::Shader<ID3D11PixelShader>;
+        using GeometryShader = Graphics::Shader<ID3D11GeometryShader>;
+        using HullShader = Graphics::Shader<ID3D11HullShader>;
+        using DomainShader = Graphics::Shader<ID3D11DomainShader>;
+        using ComputeShader = Graphics::Shader<ID3D11ComputeShader>;
     } // namespace Resources
 
     namespace Abstract
@@ -210,6 +141,7 @@ namespace Engine
         class TaskScheduler;
     } // namespace Manager
 
+    // Weak pointer type definitions
     using WeakObject = boost::weak_ptr<Abstract::Object>;
     using WeakComponent = boost::weak_ptr<Abstract::Component>;
     using WeakResource = boost::weak_ptr<Abstract::Resource>;
@@ -222,16 +154,17 @@ namespace Engine
     using WeakTexture = boost::weak_ptr<Resources::Texture>;
     using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
     using WeakBoneAnimation = boost::weak_ptr<Resources::BoneAnimation>;
-    using WeakModel = boost::weak_ptr<Resources::Model>;
+    using WeakModel = boost::weak_ptr<Resources::Shape>;
     using WeakBone = boost::weak_ptr<Resources::Bone>;
     using WeakTransform = boost::weak_ptr<Components::Transform>;
     using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;
     using WeakAnimator = boost::weak_ptr<Components::Animator>;
     using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
+    using WeakVertexShader = boost::weak_ptr<Resources::VertexShader>;
+    using WeakPixelShader = boost::weak_ptr<Resources::PixelShader>;
+    using WeakMaterial = boost::weak_ptr<Resources::Material>;
 
-    using WeakVertexShader = boost::weak_ptr<Graphic::VertexShader>;
-    using WeakPixelShader = boost::weak_ptr<Graphic::PixelShader>;
-
+    // Strong pointer type definitions
     using StrongObject = boost::shared_ptr<Abstract::Object>;
     using StrongComponent = boost::shared_ptr<Abstract::Component>;
     using StrongResource = boost::shared_ptr<Abstract::Resource>;
@@ -245,24 +178,29 @@ namespace Engine
     using StrongTexture = boost::shared_ptr<Resources::Texture>;
     using StrongNormalMap = boost::shared_ptr<Resources::NormalMap>;
     using StrongBoneAnimation = boost::shared_ptr<Resources::BoneAnimation>;
-    using StrongModel = boost::shared_ptr<Resources::Model>;
+    using StrongModel = boost::shared_ptr<Resources::Shape>;
     using StrongBone = boost::shared_ptr<Resources::Bone>;
     using StrongBaseAnimation = boost::shared_ptr<Resources::BaseAnimation>;
     using StrongTransform = boost::shared_ptr<Components::Transform>;
+    using StrongVertexShader = boost::shared_ptr<Resources::VertexShader>;
+    using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
+    using StrongShader = boost::shared_ptr<Graphics::IShader>;
+    using StrongMaterial = boost::shared_ptr<Resources::Material>;
 
-    using StrongVertexShader = boost::shared_ptr<Graphic::VertexShader>;
-    using StrongPixelShader = boost::shared_ptr<Graphic::PixelShader>;
-
-    using BonePrimitiveMap = std::map<std::string, BonePrimitive>;
-
+    // Misc type definitions
+    using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
     using EntityID = LONG_PTR;
     using ComponentID = LONG_PTR;
     using ActorID = LONG_PTR;
     using EntityName = std::string;
     using TypeName = std::string;
-
     using TaskSchedulerFunc = std::function<void(const float&)>;
+    using VertexCollection = std::vector<Graphics::VertexElement>;
+    using IndexCollection = std::vector<UINT>;
+    using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+    using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
 
+    // Manager Forward Declaration
     extern Manager::ResourceManager&               GetResourceManager();
     extern Manager::SceneManager&                  GetSceneManager();
     extern Manager::ProjectionFrustum&             GetProjectionFrustum();
@@ -280,4 +218,80 @@ namespace Engine
     extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
     extern Manager::Graphics::ShadowManager&       GetShadowManager();
     extern Manager::Graphics::Renderer&            GetRenderer();
+
+    // Static type checkers
+    template <typename T>
+    struct which_resource
+    {
+        static constexpr eResourceType value = T::rtype;
+    };
+
+    template <typename T>
+    struct which_component
+    {
+        static constexpr eComponentType value = T::ctype;
+    };
+
+    template <typename T>
+    struct which_def_object
+    {
+        static constexpr eDefObjectType value = T::dotype;
+    };
+
+    template <typename T>
+    struct which_scene
+    {
+        static constexpr eSceneType value = T::stype;
+    };
+
+    template <typename T>
+    struct which_cb
+    {
+        static constexpr eCBType value = T::cbtype;
+    };
+
+    // Static conversion from ID3D11 shader type to eShaderType
+    template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Graphics::IShader, T>>>
+    struct convert_shaderT_enum
+    {
+        static inline eShaderType value_e()
+        {
+            if constexpr (std::is_same_v<typename T::shaderType, ID3D11VertexShader>)
+            {
+                return SHADER_VERTEX;
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11PixelShader>)
+            {
+                return SHADER_PIXEL;
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11GeometryShader>)
+            {
+                return SHADER_GEOMETRY;
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11HullShader>)
+            {
+                return SHADER_HULL;
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11DomainShader>)
+            {
+                return SHADER_DOMAIN;
+            }
+            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11ComputeShader>)
+            {
+                return SHADER_COMPUTE;
+            }
+            else
+            {
+                return SHADER_UNKNOWN;
+            }
+        }
+    };
+
+    struct GUIDComparer
+    {
+        bool operator()(const GUID& Left, const GUID& Right) const
+        {
+            return memcmp(&Left, &Right, sizeof(Right)) < 0;
+        }
+    };
 } // namespace Engine

@@ -9,29 +9,28 @@
 #include "egSceneManager.hpp"
 
 #include "egCamera.h"
+#include "egGlobal.h"
 #include "egLight.h"
+#include "egMaterial.h"
 #include "egMesh.h"
-#include "egModel.h"
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
+#include "egVertexShaderInternal.h"
+#include "egShader.hpp"
+#include "egShape.h"
 
 namespace Engine::Manager::Graphics
 {
     void ShadowManager::Initialize()
-    {
-        m_vs_stage1 =
-                GetResourceManager()
-                .GetResource<Graphic::VertexShader>("vs_cascade_shadow_stage1")
-                .lock();
-        m_gs_stage1 =
-                GetResourceManager()
-                .GetResource<Graphic::GeometryShader>("gs_cascade_shadow_stage1")
-                .lock();
-        m_ps_stage1 =
-                GetResourceManager()
-                .GetResource<Graphic::PixelShader>("ps_cascade_shadow_stage1")
-                .lock();
+	{
+    	m_shadow_shaders_ = Resources::Material::Create("ShadowMap", "");
+        m_shadow_shaders_->SetResource<Resources::VertexShader>("vs_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
+
+        InitializeViewport();
+        InitializeProcessors();
     }
 
     void ShadowManager::PreUpdate(const float& dt)
@@ -51,30 +50,121 @@ namespace Engine::Manager::Graphics
 
                 const auto world = tr->GetWorldMatrix();
 
-                GetRenderPipeline().SetLight(idx, world, locked->GetColor());
+                m_light_buffer_.color[idx] = locked->GetColor();
+                m_light_buffer_.world[idx] = world.Transpose();
             }
         }
 
-        GetRenderPipeline().BindLightBuffer(static_cast<UINT>(m_lights_.size()));
+        m_light_buffer_.light_count = static_cast<UINT>(m_lights_.size());
+        GetRenderPipeline().SetLight(m_light_buffer_);
     }
 
-    void ShadowManager::BindShadowMapChunk()
+    void ShadowManager::PreRender(const float& dt)
     {
-        ID3D11ShaderResourceView* shadow_maps[g_max_lights];
-        UINT                      idx = 0;
+        // # Pass 1 : depth only, building shadow map
+        // Unbind the shadow map resource from the pixel shader to build the shadow map.
+        GetRenderPipeline().UnbindResource(SR_SHADOW_MAP, SHADER_PIXEL);
 
-        for (const auto& buffer : m_graphic_shadow_buffer_ | std::views::values)
+        // Clear all shadow map data.
+        ClearShadowMaps();
+        ClearShadowVP();
+        // Set the viewport to the size of the shadow map.
+        GetRenderPipeline().SetViewport(m_viewport_);
+
+        // bind the shadow map shaders.
+        m_shadow_shaders_->PreRender(placeholder);
+        m_shadow_shaders_->Render(placeholder);
+
+        if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
-            shadow_maps[idx] = buffer.shader_resource_view.Get();
-            idx++;
+            for (const auto& ptr_light : m_lights_)
+            {
+                const UINT light_idx =
+                        static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(ptr_light)));
+
+                if (const auto light = ptr_light.lock())
+                {
+                    const auto tr = light->GetComponent<Components::Transform>().lock();
+
+                    // It only needs to render the depth of the object from the light's point of view.
+                    GetRenderPipeline().TargetDepthOnly(
+                                                        m_dx_resource_shadow_vps_[ptr_light].depth_stencil_view.Get(),
+                                                        m_shadow_map_depth_stencil_state_.Get());
+
+                    Vector3 light_dir;
+                    (tr->GetWorldPosition()).Normalize(light_dir);
+
+                    // Get the light's view and projection matrix in g_max_shadow_cascades parts.
+                    EvalShadowVP(
+                                 light_dir, m_cb_shadow_vps_[light], light_idx,
+                                 m_cb_shadow_vps_chunk_);
+
+                    // Set the light's view and projection matrix to render the objects as the light sees them.
+                    GetRenderPipeline().SetCascadeBuffer(m_cb_shadow_vps_[light]);
+                    // Now render.
+                    BuildShadowMap(*scene, dt);
+
+                    // Save this light perspective depth buffer to shadow map.
+                    m_cb_shadow_vps_chunk_.lights[light_idx] = m_cb_shadow_vps_[light].value;
+                }
+                else
+                {
+                    m_lights_.erase(ptr_light);
+                }
+            }
         }
 
-        GetRenderPipeline().BindShadowMap(idx, shadow_maps);
+        // Unload the shadow map shaders.
+        m_shadow_shaders_->PostRender(placeholder);
+        
+        // post-processing for serialization and binding
+        UINT light_idx = 0;
+
+        for (const auto& buffer : m_dx_resource_shadow_vps_ | std::views::values)
+        {
+            m_current_shadow_maps_[light_idx] = buffer.shader_resource_view.Get();
+            light_idx++;
+        }
+
+        // Pass #2 : Render scene with shadow map
+        // Reverts the viewport to the size of the screen, render target, and the depth stencil state.
+        GetRenderPipeline().DefaultViewport();
+        GetRenderPipeline().DefaultRenderTarget();
+        GetRenderPipeline().DefaultDepthStencilState();
+
+        // Bind the shadow map resource previously rendered to the pixel shader.
+        GetRenderPipeline().BindResources(
+                                          SR_SHADOW_MAP, SHADER_PIXEL,
+                                          m_current_shadow_maps_,
+                                          light_idx);
+        // And bind the light view and projection matrix on to the constant buffer.
+        GetRenderPipeline().SetShadowVP(m_cb_shadow_vps_chunk_);
     }
 
-    void ShadowManager::ClearShadowBufferChunk()
+    void ShadowManager::Render(const float& dt) {}
+
+    void ShadowManager::PostRender(const float& dt) {}
+
+    void ShadowManager::FixedUpdate(const float& dt) {}
+
+    void ShadowManager::PostUpdate(const float& dt) {}
+
+    void ShadowManager::Reset()
     {
-        for (auto& buffer : m_cascade_shadow_buffer_chunk_.lights)
+        // it will not clear the graphic shadow buffer, because it can just overwrite
+        // the buffer and reuse it.
+        m_lights_.clear();
+        m_cb_shadow_vps_.clear();
+
+        for (auto& subfrusta : m_subfrusta_)
+        {
+            subfrusta = {};
+        }
+    }
+
+    void ShadowManager::ClearShadowVP()
+    {
+        for (auto& buffer : m_cb_shadow_vps_chunk_.lights)
         {
             for (auto& view : buffer.view)
             {
@@ -95,98 +185,6 @@ namespace Engine::Manager::Graphics
         }
     }
 
-    void ShadowManager::PreRender(const float& dt)
-    {
-        // # Pass 1 : depth only, building shadow map
-
-        GetRenderPipeline().UseShadowMapViewport();
-
-        m_vs_stage1->Render(placeholder);
-        m_gs_stage1->Render(placeholder);
-        m_ps_stage1->Render(placeholder);
-
-        const auto scene = GetSceneManager().GetActiveScene().lock();
-
-        if (!scene)
-        {
-            return;
-        }
-
-        for (const auto& known_light : m_lights_)
-        {
-            const UINT idx =
-                    static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(known_light)));
-
-            if (const auto locked = known_light.lock())
-            {
-                const auto tr = locked->GetComponent<Components::Transform>().lock();
-
-                GetRenderPipeline().TargetShadowMap(
-                                                    m_graphic_shadow_buffer_[known_light]);
-
-                Vector3 light_dir;
-                (tr->GetWorldPosition()).Normalize(light_dir);
-
-                EvalCascadeVP(
-                              light_dir, m_cascade_vp_buffer_[locked], idx,
-                              m_cascade_shadow_buffer_chunk_);
-                GetRenderPipeline().SetCascadeBuffer(m_cascade_vp_buffer_[locked]);
-                BuildShadowMap(*scene, dt);
-                m_cascade_shadow_buffer_chunk_.lights[idx] =
-                        m_cascade_vp_buffer_[locked].shadow;
-            }
-            else
-            {
-                m_lights_.erase(known_light);
-            }
-        }
-
-        GetRenderPipeline().ResetShaders();
-        GetRenderPipeline().ResetRenderTarget();
-        GetRenderPipeline().ResetViewport();
-
-        // Pass #2 : Render scene with shadow map
-
-        BindShadowMapChunk();
-        GetRenderPipeline().BindCascadeBufferChunk(m_cascade_shadow_buffer_chunk_);
-    }
-
-    void ShadowManager::ClearShadowMaps()
-    {
-        for (const auto& buffer : m_graphic_shadow_buffer_ | std::views::values)
-        {
-            GetRenderPipeline().ResetShadowMap(buffer.depth_stencil_view.Get());
-        }
-    }
-
-    void ShadowManager::Render(const float& dt) {}
-
-    void ShadowManager::PostRender(const float& dt)
-    {
-        // Pass 2 Ends, reset shadow map
-        GetRenderPipeline().UnbindShadowMap(static_cast<UINT>(m_lights_.size()));
-        ClearShadowMaps();
-        ClearShadowBufferChunk();
-        GetRenderPipeline().ResetDepthStencilState();
-    }
-
-    void ShadowManager::FixedUpdate(const float& dt) {}
-
-    void ShadowManager::PostUpdate(const float& dt) {}
-
-    void ShadowManager::Clear()
-    {
-        // it will not clear the graphic shadow buffer, because it can just overwrite
-        // the buffer and reuse it.
-        m_lights_.clear();
-        m_cascade_vp_buffer_.clear();
-
-        for (auto& subfrusta : m_subfrusta_)
-        {
-            subfrusta = {};
-        }
-    }
-
     void ShadowManager::BuildShadowMap(Scene& scene, const float dt) const
     {
         for (const auto& [type, layer] : scene)
@@ -199,7 +197,7 @@ namespace Engine::Manager::Graphics
             {
                 const auto tr = object->GetComponent<Components::Transform>().lock();
                 const auto mr = object->GetComponent<Components::ModelRenderer>().lock();
-                const auto atr = object->GetComponent<Components::Animator>().lock();
+                const auto ptr_atr = object->GetComponent<Components::Animator>();
 
                 if (tr && mr)
                 {
@@ -211,9 +209,7 @@ namespace Engine::Manager::Graphics
 
                     const auto model = ptr_model.lock();
 
-                    const auto mesh_count = model->GetMeshCount();
-
-                    if (atr)
+                    if (const auto atr = ptr_atr.lock())
                     {
                         const auto ptr_anim = atr->GetAnimation();
 
@@ -223,17 +219,17 @@ namespace Engine::Manager::Graphics
                         }
                     }
 
-                    for (int m = 0; m < mesh_count; ++m)
-                    {
-                        const auto ptr_mesh = model->GetMesh(m);
+                    model->PreRender(dt);
+                    model->Render(dt);
+                    model->PostRender(dt);
 
-                        if (const auto mesh = ptr_mesh.lock())
+                    if (const auto atr = ptr_atr.lock())
+                    {
+                        if (const auto anim = atr->GetAnimation().lock())
                         {
-                            mesh->Render(placeholder);
+                            anim->PostRender(dt);
                         }
                     }
-
-                    GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
                 }
             }
         }
@@ -281,11 +277,11 @@ namespace Engine::Manager::Graphics
         subfrusta.corners[7] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabY);
     }
 
-    void ShadowManager::EvalCascadeVP(
-        const Vector3&            light_dir,
-        CascadeShadowBuffer&      buffer,
-        const UINT                light_index,
-        CascadeShadowBufferChunk& chunk)
+    void ShadowManager::EvalShadowVP(
+        const Vector3&                 light_dir,
+        CBs::ShadowVPCB&      buffer,
+        const UINT                     light_index,
+        CBs::ShadowVPChunkCB& chunk)
     {
         // https://cutecatgame.tistory.com/6
 
@@ -337,21 +333,21 @@ namespace Engine::Manager::Graphics
 
                     // DX11 uses column major matrix
 
-                    buffer.shadow.view[i] = XMMatrixTranspose(
+                    buffer.value.view[i] = XMMatrixTranspose(
                                                               XMMatrixLookAtLH(pos, Vector3(center), Vector3::Up));
 
-                    buffer.shadow.proj[i] =
+                    buffer.value.proj[i] =
                             XMMatrixTranspose(
                                               XMMatrixOrthographicOffCenterLH(
                                                                               minExtent.x, maxExtent.x, minExtent.y,
                                                                               maxExtent.y, 0.f,
                                                                               cascadeExtents.z));
 
-                    buffer.shadow.end_clip_spaces[i] =
+                    buffer.value.end_clip_spaces[i] =
                             Vector4{0.f, 0.f, cascadeEnds[i + 1], 1.f};
-                    buffer.shadow.end_clip_spaces[i] =
+                    buffer.value.end_clip_spaces[i] =
                             Vector4::Transform(
-                                               buffer.shadow.end_clip_spaces[i],
+                                               buffer.value.end_clip_spaces[i],
                                                camera->GetProjectionMatrix()); // use z axis
                 }
             }
@@ -362,9 +358,8 @@ namespace Engine::Manager::Graphics
     {
         m_lights_.insert(light);
 
-        GetRenderPipeline().InitializeShadowBuffer(m_graphic_shadow_buffer_[light]);
-
-        m_cascade_vp_buffer_[light] = {};
+        InitializeShadowBuffer(m_dx_resource_shadow_vps_[light]);
+        m_cb_shadow_vps_[light] = {};
     }
 
     void ShadowManager::UnregisterLight(const WeakLight& light)
@@ -372,13 +367,123 @@ namespace Engine::Manager::Graphics
         const UINT idx = static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(light)));
 
         m_lights_.erase(light);
-        m_graphic_shadow_buffer_.erase(light);
-        m_cascade_vp_buffer_.erase(light);
+        m_dx_resource_shadow_vps_.erase(light);
+        m_cb_shadow_vps_.erase(light);
+        m_light_buffer_.color[idx] = Colors::White;
+        m_light_buffer_.world[idx] = Matrix::Identity;
 
-        GetRenderPipeline().SetLight(
-                                     idx, Matrix::Identity,
-                                     Color{0.0f, 0.0f, 0.0f, 0.0f});
+        m_dx_resource_shadow_vps_[light] = {};
+    }
 
-        m_graphic_shadow_buffer_[light] = {};
+    void ShadowManager::InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer)
+    {
+        D3D11_TEXTURE2D_DESC desc{};
+        desc.Width              = g_max_shadow_map_size;
+        desc.Height             = g_max_shadow_map_size;
+        desc.MipLevels          = 1;
+        desc.ArraySize          = g_max_shadow_cascades;
+        desc.Format             = DXGI_FORMAT_R32_TYPELESS;
+        desc.SampleDesc.Count   = 1;
+        desc.SampleDesc.Quality = 0;
+        desc.Usage              = D3D11_USAGE_DEFAULT;
+        desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+        desc.CPUAccessFlags     = 0;
+        desc.MiscFlags          = 0;
+
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
+        dsv_desc.Format                         = DXGI_FORMAT_D32_FLOAT;
+        dsv_desc.ViewDimension                  = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+        dsv_desc.Texture2DArray.ArraySize       = g_max_shadow_cascades;
+        dsv_desc.Texture2DArray.MipSlice        = 0;
+        dsv_desc.Texture2DArray.FirstArraySlice = 0;
+        dsv_desc.Flags                          = 0;
+
+        GetD3Device().CreateDepthStencil(
+                                         desc, dsv_desc, buffer.texture.ReleaseAndGetAddressOf(),
+                                         buffer.depth_stencil_view.ReleaseAndGetAddressOf());
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+        srv_desc.Format                         = DXGI_FORMAT_R32_FLOAT;
+        srv_desc.ViewDimension                  = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+        srv_desc.Texture2DArray.ArraySize       = g_max_shadow_cascades;
+        srv_desc.Texture2DArray.FirstArraySlice = 0;
+        srv_desc.Texture2DArray.MipLevels       = 1;
+        srv_desc.Texture2DArray.MostDetailedMip = 0;
+
+        GetD3Device().CreateShaderResourceView(
+                                                buffer.texture.Get(), srv_desc,
+                                                buffer.shader_resource_view.ReleaseAndGetAddressOf());
+    }
+
+    ShadowManager::~ShadowManager()
+    {
+        if (m_shadow_map_depth_stencil_state_)
+        {
+            m_shadow_map_depth_stencil_state_->Release();
+        }
+
+        if (m_shadow_map_sampler_state_)
+        {
+            m_shadow_map_sampler_state_->Release();
+        }
+    }
+
+    void ShadowManager::InitializeProcessors()
+    {
+        D3D11_DEPTH_STENCIL_DESC ds_desc{};
+
+        ds_desc.DepthEnable                  = true;
+        ds_desc.DepthWriteMask               = D3D11_DEPTH_WRITE_MASK_ALL;
+        ds_desc.DepthFunc                    = D3D11_COMPARISON_LESS;
+        ds_desc.StencilEnable                = true;
+        ds_desc.StencilReadMask              = 0xFF;
+        ds_desc.StencilWriteMask             = 0xFF;
+        ds_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+        ds_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+        ds_desc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
+        ds_desc.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
+        ds_desc.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
+        ds_desc.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_DECR;
+        ds_desc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
+        ds_desc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
+
+        GetD3Device().CreateDepthStencilState(
+                                              ds_desc,
+                                              m_shadow_map_depth_stencil_state_.
+                                              GetAddressOf());
+
+        D3D11_SAMPLER_DESC sampler_desc{};
+        sampler_desc.Filter         = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        sampler_desc.AddressU       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.AddressV       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.AddressW       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS;
+        sampler_desc.BorderColor[0] = 1.f;
+        sampler_desc.BorderColor[1] = 1.f;
+        sampler_desc.BorderColor[2] = 1.f;
+        sampler_desc.BorderColor[3] = 1.f;
+
+        GetD3Device().CreateSampler(sampler_desc, m_shadow_map_sampler_state_.GetAddressOf());
+        GetRenderPipeline().BindSampler(m_shadow_map_sampler_state_.Get());
+    }
+
+    void ShadowManager::InitializeViewport()
+    {
+        m_viewport_.Width    = static_cast<float>(g_max_shadow_map_size);
+        m_viewport_.Height   = static_cast<float>(g_max_shadow_map_size);
+        m_viewport_.MinDepth = 0.f;
+        m_viewport_.MaxDepth = 1.f;
+        m_viewport_.TopLeftX = 0.f;
+        m_viewport_.TopLeftY = 0.f;
+    }
+
+    void ShadowManager::ClearShadowMaps()
+    {
+        for (const auto& buffer : m_dx_resource_shadow_vps_ | std::views::values)
+        {
+            GetD3Device().GetContext()->ClearDepthStencilView(
+                                                              buffer.depth_stencil_view.Get(),
+                                                              D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+        }
     }
 } // namespace Engine::Manager::Graphics

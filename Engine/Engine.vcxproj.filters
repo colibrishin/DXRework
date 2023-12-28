@@ -170,9 +170,6 @@
     <Filter Include="Singleton\Internal\TaskScheduler">
       <UniqueIdentifier>{44be5145-3da7-44b1-b9d6-ad0606f17360}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Model">
-      <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Font">
       <UniqueIdentifier>{7ce8f9d2-2f37-42a0-b63b-d96d33c103e8}</UniqueIdentifier>
     </Filter>
@@ -215,6 +212,18 @@
     <Filter Include="Singleton\Physics\PhysicsManager">
       <UniqueIdentifier>{10f4f611-59a9-4a0f-bc34-c5c7f1582a6a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common\DX">
+      <UniqueIdentifier>{90dadfdb-7dbb-465d-88dc-234ab1e8900c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Group">
+      <UniqueIdentifier>{16162a2e-9d96-4076-b5bd-b2cf0af96494}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Group\Material">
+      <UniqueIdentifier>{b7fe8b47-d01c-479a-a3ec-095ccc6f09a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Group\Shape">
+      <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -226,9 +235,6 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egHelper.hpp">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="egDXCommon.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egManagerHelper.hpp">
@@ -393,11 +399,8 @@
     <ClInclude Include="egSoundPlayer.h">
       <Filter>Component\SoundPlayer</Filter>
     </ClInclude>
-    <ClInclude Include="egModel.h">
-      <Filter>Resource\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="egModelRenderer.h">
-      <Filter>Component\ModelRenderer</Filter>
+    <ClInclude Include="egShape.h">
+      <Filter>Resource Group\Shape</Filter>
     </ClInclude>
     <ClInclude Include="egResourceManager.hpp">
       <Filter>Singleton\Internal\ResourceManager</Filter>
@@ -419,6 +422,36 @@
     </ClInclude>
     <ClInclude Include="Renderer.h">
       <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="egMaterial.h">
+      <Filter>Resource Group\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="egConstant.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egGlobal.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egEnums.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egBoundingGroup.hpp">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXCommon.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXAnimCommon.hpp">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egDXType.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egMacro.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="egModelRenderer.h">
+      <Filter>Component\ModelRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -580,8 +613,8 @@
     <ClCompile Include="egSoundPlayer.cpp">
       <Filter>Component\SoundPlayer</Filter>
     </ClCompile>
-    <ClCompile Include="egModel.cpp">
-      <Filter>Resource\Model</Filter>
+    <ClCompile Include="egShape.cpp">
+      <Filter>Resource Group\Shape</Filter>
     </ClCompile>
     <ClCompile Include="egModelRenderer.cpp">
       <Filter>Component\ModelRenderer</Filter>
@@ -603,6 +636,9 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egMaterial.cpp">
+      <Filter>Resource Group\Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -646,6 +682,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="vs_default.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="type.hlsli">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

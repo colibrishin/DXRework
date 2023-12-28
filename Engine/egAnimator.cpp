@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "egAnimator.h"
-#include "egModel.h"
+#include "egShape.h"
 #include "egBoneAnimation.h"
 #include "egTransform.h"
 

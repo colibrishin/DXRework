@@ -59,7 +59,7 @@ namespace Client::Meshes
         m_indices_.resize(1);
 
         m_vertices_.emplace_back(
-                                    Engine::VertexElement{
+                                    Engine::Graphics::VertexElement{
                                         {-1.0f, -1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
                                         {1.0f, 0.0f},
@@ -67,7 +67,7 @@ namespace Client::Meshes
                                     });
 
         m_vertices_.emplace_back(
-                                    Engine::VertexElement{
+                                    Engine::Graphics::VertexElement{
                                         {0.0f, 1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
                                         {0.5f, 1.0f},
@@ -75,7 +75,7 @@ namespace Client::Meshes
                                     });
 
         m_vertices_.emplace_back(
-                                    Engine::VertexElement{
+                                    Engine::Graphics::VertexElement{
                                         {1.0f, -1.0f, 0.0f},
                                         {1.0f, 0.0f, 0.0f, 1.0f},
                                         {1.0f, 1.0f},

@@ -1,4 +1,5 @@
 #pragma once
+#include "egBoundingGroup.hpp"
 #include "egCommon.hpp"
 #include "egComponent.h"
 #include "egHelper.hpp"
@@ -154,7 +155,7 @@ namespace Engine::Components
         inline static std::vector<const Vector3*> m_cube_stock_ref_   = {};
         inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
 
-        BoundingGroup m_boundings_;
+        Physics::BoundingGroup m_boundings_;
 
         std::set<EntityID>       m_collided_objects_;
         std::map<EntityID, UINT> m_collision_count_;

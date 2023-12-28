@@ -63,7 +63,7 @@ namespace Engine::Objects
         Matrix m_view_matrix_;
         Matrix m_projection_matrix_;
 
-        PerspectiveBuffer m_wvp_buffer_;
+        Graphics::CBs::PerspectiveCB m_wvp_buffer_;
         WeakObject        m_bound_object_;
     };
 } // namespace Engine::Objects

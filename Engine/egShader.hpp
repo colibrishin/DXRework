@@ -5,13 +5,14 @@
 #include "egEntity.hpp"
 #include "egIShader.h"
 
-namespace Engine::Graphic
+namespace Engine::Graphics
 {
     template <typename T>
-    class Shader : public IShader
+    class Shader : public Graphics::IShader
     {
     public:
         INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHADER)
+        using shaderType = T;
 
         Shader(const EntityName& name, const std::filesystem::path& path);
         ~Shader() override;
@@ -58,14 +59,14 @@ namespace Engine::Graphic
     };
 } // namespace Engine::Graphic
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11VertexShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11VertexShader>);
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11PixelShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11PixelShader>);
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11GeometryShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11GeometryShader>);
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11ComputeShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11ComputeShader>);
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11HullShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11HullShader>);
 
-BOOST_CLASS_EXPORT_KEY(Engine::Graphic::Shader<ID3D11DomainShader>);
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::Shader<ID3D11DomainShader>);

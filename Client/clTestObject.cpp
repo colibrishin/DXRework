@@ -5,10 +5,11 @@
 #include <egSphereMesh.h>
 
 #include "egCollider.hpp"
-#include "egModel.h"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
+#include "egShape.h"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -19,12 +20,9 @@ namespace Client::Object
 {
     inline void TestObject::Initialize()
     {
-        const auto model = Resources::Model::Get("SphereModel");
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
-
-        mr->SetModel(model);
-        mr->AddVertexShader(Engine::Graphic::VertexShader::Get("vs_default"));
-        mr->AddPixelShader(Engine::Graphic::PixelShader::Get("ps_normalmap"));
+        mr->SetShape(Resources::Shape::Get("SphereModel"));
+        mr->SetMaterial(Resources::Material::Get("NormalSpecular"));
 
         AddComponent<Components::Transform>();
         AddComponent<Components::Collider>();

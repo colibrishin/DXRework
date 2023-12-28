@@ -9,17 +9,14 @@ template class Microsoft::WRL::ComPtr<ID3D11Buffer>;
 
 namespace Engine::Resources
 {
-    using Shape = std::vector<VertexElement>;
-    using IndexCollection = std::vector<UINT>;
-    using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
-    using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+    using namespace Engine::Graphics;
 
     class Mesh : public Abstract::Resource
     {
     public:
         INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MESH)
 
-        Mesh(const Shape& shape, const IndexCollection& indices);
+        Mesh(const VertexCollection& shape, const IndexCollection& indices);
         ~Mesh() override = default;
         void Initialize() override;
         void Render(const float& dt) override;
@@ -58,7 +55,7 @@ namespace Engine::Resources
         void OnDeserialized() override;
 
     protected:
-        Shape                       m_vertices_;
+        VertexCollection            m_vertices_;
         std::vector<const Vector3*> m_flatten_vertices_;
         IndexCollection             m_indices_;
         BoundingBox                 m_bounding_box_;

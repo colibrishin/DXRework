@@ -4,7 +4,8 @@
 #include "egBaseAnimation.h"
 #include "egAnimator.h"
 #include "egBoneAnimation.h"
-#include "egModel.h"
+#include "egMaterial.h"
+#include "egShape.h"
 #include "egModelRenderer.h"
 #include "egNormalMap.h"
 #include "egProjectionFrustum.h"
@@ -28,54 +29,42 @@ namespace Engine::Manager::Graphics
         const auto mr = ptr_mr.lock();
         const auto tr = ptr_tr.lock();
 
-        if (mr->m_vertex_shaders_.empty())
+        const auto& ptr_model = mr->GetModel();
+        const auto& ptr_mtr = mr->GetMaterial();
+
+        if (ptr_model.expired()) return;
+        if (ptr_mtr.expired()) return;
+
+        const auto& model = ptr_model.lock();
+        const auto& mtr = ptr_mtr.lock();
+
+        if (const auto atr = ptr_atr.lock())
         {
-            GetDebugger().Log(L"ModelRenderer::Render() : Vertex shader is null");
-            return;
+	        const auto ptr_anim = atr->GetAnimation();
+
+	        if (const auto anim = ptr_anim.lock())
+	        {
+		        anim->PreRender(atr->GetFrame());
+                anim->Render(atr->GetFrame());
+	        }
         }
 
-        if (mr->m_pixel_shaders_.empty())
+    	Components::Transform::Bind(*tr);
+        mtr->PreRender(dt);
+    	mtr->Render(dt);
+        model->PreRender(dt);
+        model->Render(dt);
+        mtr->PostRender(dt);
+        model->PostRender(dt);
+
+        if (const auto atr = ptr_atr.lock())
         {
-            GetDebugger().Log(L"ModelRenderer::Render() : Pixel shader is null");
-            return;
-        }
+	        const auto ptr_anim = atr->GetAnimation();
 
-        const auto& model      = mr->m_model_;
-        const auto  mesh_count = model->GetMeshCount();
-
-        Components::Transform::Bind(*tr);
-
-        for (auto i = 0; i < mesh_count; ++i)
-        {
-            const auto vtx = mr->m_vertex_shaders_[i % mr->m_vertex_shaders_.size()];
-            const auto pix = mr->m_pixel_shaders_[i % mr->m_pixel_shaders_.size()];
-
-            vtx->Render(dt);
-            pix->Render(dt);
-
-            const auto& mesh = model->GetMesh(i);
-
-            if (mesh.expired()) continue;
-
-            if (!model->m_textures_.empty()) model->m_textures_[i]->Render(dt);
-            if (!model->m_normal_maps_.empty()) model->m_normal_maps_[i]->Render(dt);
-
-            if (const auto atr = ptr_atr.lock())
-            {
-                const auto ptr_anim = atr->GetAnimation();
-
-                if (const auto anim = ptr_anim.lock())
-                {
-                    anim->Render(atr->GetFrame());
-                }
-            }
-            
-            mesh.lock()->Render(dt);
-
-            GetRenderPipeline().ResetShaders();
-            GetRenderPipeline().UnbindResource(SR_NORMAL_MAP);
-            GetRenderPipeline().UnbindResource(SR_TEXTURE);
-            GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
+	        if (const auto anim = ptr_anim.lock())
+	        {
+		        anim->PostRender(atr->GetFrame());
+	        }
         }
     }
 

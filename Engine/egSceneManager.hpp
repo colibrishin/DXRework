@@ -58,7 +58,7 @@ namespace Engine::Manager
                 if (scene == m_active_scene_.lock())
                 {
                     Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
-                    Graphics::ShadowManager::GetInstance().Clear();
+                    Graphics::ShadowManager::GetInstance().Reset();
                     m_active_scene_.reset();
                 }
 

@@ -55,6 +55,7 @@ namespace Engine::Components
         Matrix     GetWorldMatrix() const;
 
         static void Bind(Transform & transform);
+        static void Unbind();
 
     protected:
         Transform();
@@ -81,7 +82,7 @@ namespace Engine::Components
         Vector3 m_animation_scale_;
 
         // Non-serialized
-        TransformBuffer m_transform_buffer_;
+        Graphics::CBs::TransformCB m_transform_buffer_;
     };
 } // namespace Engine::Component
 
