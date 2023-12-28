@@ -29,8 +29,6 @@ namespace Engine::Resources
         WeakBaseAnimation                  GetAnimation(const std::string& name) const;
         WeakBaseAnimation                  GetAnimation(const UINT index) const;
 
-        UINT GetMeshCount() const;
-
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void Add(const boost::weak_ptr<T>& res)
         {

@@ -121,11 +121,6 @@ namespace Engine::Resources
         return {};
     }
 
-    UINT Shape::GetMeshCount() const
-    {
-        return m_meshes_.size();
-    }
-
     std::vector<StrongMesh> Shape::GetMeshes() const
     {
         return m_meshes_;
