@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "egModel.h"
+#include "egShape.h"
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -13,40 +13,56 @@
 #include "egBoneAnimation.h"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Resources::Model,
+                       Engine::Resources::Shape,
                        _ARTAG(_BSTSUPER(Resource))
                        _ARTAG(m_animations_)
                        _ARTAG(m_bone_)
-                       _ARTAG(m_meshes_)
-                       _ARTAG(m_normal_maps_)
-                       _ARTAG(m_textures_))
+                       _ARTAG(m_meshes_))
 
 namespace Engine::Resources
 {
-    Model::Model(const std::filesystem::path& path)
-    : Resource(path, RES_T_MODEL),
+    Shape::Shape(const std::filesystem::path& path)
+    : Resource(path, RES_T_SHAPE),
       m_bounding_box_({}) {}
 
-    void Model::PreUpdate(const float& dt) {}
+    void Shape::PreUpdate(const float& dt) {}
 
-    void Model::Update(const float& dt) {}
+    void Shape::Update(const float& dt) {}
 
-    void Model::FixedUpdate(const float& dt) {}
+    void Shape::FixedUpdate(const float& dt) {}
 
-    void Model::PreRender(const float& dt) {}
+    void Shape::PreRender(const float& dt)
+    {
+        for (const auto& mesh : m_meshes_)
+        {
+            mesh->PreRender(dt);
+        }
+    }
 
-    void Model::Render(const float& dt) {}
+    void Shape::Render(const float& dt)
+    {
+        for (const auto& mesh : m_meshes_)
+        {
+            mesh->Render(dt);
+        }
+    }
 
-    void Model::PostRender(const float& dt) {}
+    void Shape::PostRender(const float& dt)
+    {
+        for (const auto& mesh : m_meshes_)
+        {
+            mesh->PostRender(dt);
+        }
+    }
 
-    void Model::PostUpdate(const float& dt) {}
+    void Shape::PostUpdate(const float& dt) {}
 
-    BoundingBox Model::GetBoundingBox() const
+    BoundingBox Shape::GetBoundingBox() const
     {
         return m_bounding_box_;
     }
 
-    WeakMesh Model::GetMesh(const std::string& name) const
+    WeakMesh Shape::GetMesh(const std::string& name) const
     {
         const auto it = std::ranges::find_if(
                                              m_meshes_
@@ -63,7 +79,7 @@ namespace Engine::Resources
         return {};
     }
 
-    WeakMesh Model::GetMesh(const UINT index) const
+    WeakMesh Shape::GetMesh(const UINT index) const
     {
         if (m_meshes_.size() > index)
         {
@@ -73,12 +89,12 @@ namespace Engine::Resources
         return {};
     }
 
-    const std::vector<const Vector3*>& Model::GetVertices() const
+    const std::vector<const Vector3*>& Shape::GetVertices() const
     {
         return m_cached_vertices_;
     }
 
-    WeakBoneAnimation Model::GetAnimation(const std::string& name) const
+    WeakBaseAnimation Shape::GetAnimation(const std::string& name) const
     {
         const auto it = std::ranges::find_if(
                                              m_animations_
@@ -95,7 +111,7 @@ namespace Engine::Resources
         return {};
     }
 
-    WeakBoneAnimation Model::GetAnimation(const UINT index) const
+    WeakBaseAnimation Shape::GetAnimation(const UINT index) const
     {
         if (m_animations_.size() > index)
         {
@@ -105,65 +121,17 @@ namespace Engine::Resources
         return {};
     }
 
-    UINT Model::GetMeshCount() const
+    UINT Shape::GetMeshCount() const
     {
         return m_meshes_.size();
     }
 
-    std::vector<StrongMesh> Model::GetMeshes() const
+    std::vector<StrongMesh> Shape::GetMeshes() const
     {
         return m_meshes_;
     }
 
-    StrongModel           Model::Create(const std::string& name, const std::vector<StrongResource>& resources) {
-        Model m("");
-
-        if (const auto res_model = GetResourceManager().GetResource<Model>(name).lock())
-        {
-            return res_model;
-        }
-
-        for (auto& res : resources)
-        {
-            if (res->GetResourceType() == RES_T_MESH)
-            {
-                m.m_meshes_.push_back(boost::static_pointer_cast<Mesh>(res));
-            }
-            else if (res->GetResourceType() == RES_T_NORMAL)
-            {
-                m.m_normal_maps_.push_back(boost::static_pointer_cast<NormalMap>(res));
-            }
-            else if (res->GetResourceType() == RES_T_TEX)
-            {
-                m.m_textures_.push_back(boost::static_pointer_cast<Texture>(res));
-            }
-            else if (res->GetResourceType() == RES_T_BONE_ANIM)
-            {
-                //m.m_animations_.push_back(boost::static_pointer_cast<Animation>(res));
-            }
-            else
-            {
-                throw std::runtime_error("Invalid resource type");
-            }
-        }
-
-        m.m_bounding_box_ = m.m_meshes_[0]->GetBoundingBox();
-
-        for (const auto& mesh : m.m_meshes_)
-        {
-            BoundingBox::CreateMerged(m.m_bounding_box_, m.m_bounding_box_, mesh->GetBoundingBox());
-        }
-
-        m.UpdateVertices();
-
-        m.SetName(name);
-        const auto ptr = boost::make_shared<Model>(m);
-        GetResourceManager().AddResource(ptr);
-
-        return ptr;
-    }
-
-    void Model::UpdateVertices()
+    void Shape::UpdateVertices()
     {
         m_cached_vertices_.clear();
 
@@ -173,7 +141,7 @@ namespace Engine::Resources
         }
     }
 
-    void Model::Load_INTERNAL()
+    void Shape::Load_INTERNAL()
     {
         if (GetPath().empty())
         {
@@ -203,7 +171,7 @@ namespace Engine::Resources
 
             for (auto i = 0; i < shape_count; ++i)
             {
-                Resources::Shape shape;
+                VertexCollection shape;
                 IndexCollection  indices;
 
                 const auto shape_ = scene->mMeshes[i];
@@ -437,11 +405,11 @@ namespace Engine::Resources
         }
     }
 
-    void Model::Unload_INTERNAL()
+    void Shape::Unload_INTERNAL()
     {
     }
 
-    Model::Model()
-    : Resource("", RES_T_MODEL),
+    Shape::Shape()
+    : Resource("", RES_T_SHAPE),
       m_bounding_box_({}) {}
 }

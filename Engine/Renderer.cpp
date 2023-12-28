@@ -4,7 +4,7 @@
 #include "egBaseAnimation.h"
 #include "egAnimator.h"
 #include "egBoneAnimation.h"
-#include "egModel.h"
+#include "egShape.h"
 #include "egModelRenderer.h"
 #include "egNormalMap.h"
 #include "egProjectionFrustum.h"

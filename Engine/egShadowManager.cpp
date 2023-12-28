@@ -12,12 +12,12 @@
 #include "egGlobal.h"
 #include "egLight.h"
 #include "egMesh.h"
-#include "egModel.h"
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
 #include "egVertexShaderInternal.h"
 #include "egShader.hpp"
+#include "egShape.h"
 
 namespace Engine::Manager::Graphics
 {

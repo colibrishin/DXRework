@@ -8,7 +8,7 @@
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
 #include "egTransform.h"
-#include "egModel.h"
+#include "egShape.h"
 
 #include "egManagerHelper.hpp"
 

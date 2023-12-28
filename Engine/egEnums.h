@@ -61,14 +61,14 @@ namespace Engine
         RES_T_SHADER,
         RES_T_TEX,
         RES_T_NORMAL,
-        RES_T_MESH,
         RES_T_FONT,
         RES_T_SOUND,
-        RES_T_MODEL,
         RES_T_BONE_ANIM,
         RES_T_BONE,
         RES_T_BASE_ANIM,
         RES_T_MTR,
+        RES_T_MESH,
+        RES_T_SHAPE,
     };
 
     enum eComponentType
@@ -79,8 +79,8 @@ namespace Engine
         COM_T_RIDIGBODY,
         COM_T_STATE,
         COMP_T_SOUND_PLAYER,
+        COM_T_ANIMATOR,
         COM_T_MODEL_RENDERER,
-        COM_T_ANIMATOR
     };
 
     enum eDefObjectType
