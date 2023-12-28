@@ -55,6 +55,7 @@ namespace Engine::Components
         Matrix     GetWorldMatrix() const;
 
         static void Bind(Transform & transform);
+        static void Unbind();
 
     protected:
         Transform();
