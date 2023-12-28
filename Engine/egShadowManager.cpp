@@ -11,6 +11,7 @@
 #include "egCamera.h"
 #include "egGlobal.h"
 #include "egLight.h"
+#include "egMaterial.h"
 #include "egMesh.h"
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
@@ -22,10 +23,11 @@
 namespace Engine::Manager::Graphics
 {
     void ShadowManager::Initialize()
-    {
-        m_vs_stage1 = Resources::VertexShader::Get("vs_cascade_shadow_stage1").lock();
-        m_gs_stage1 = Resources::GeometryShader::Get("gs_cascade_shadow_stage1").lock();
-        m_ps_stage1 = Resources::PixelShader::Get("ps_cascade_shadow_stage1").lock();
+	{
+    	m_shadow_shaders_ = Resources::Material::Create("ShadowMap", "");
+        m_shadow_shaders_->SetResource<Resources::VertexShader>("vs_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
 
         InitializeViewport();
         InitializeProcessors();
@@ -70,9 +72,8 @@ namespace Engine::Manager::Graphics
         GetRenderPipeline().SetViewport(m_viewport_);
 
         // bind the shadow map shaders.
-        m_vs_stage1->Render(placeholder);
-        m_gs_stage1->Render(placeholder);
-        m_ps_stage1->Render(placeholder);
+        m_shadow_shaders_->PreRender(placeholder);
+        m_shadow_shaders_->Render(placeholder);
 
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
@@ -114,10 +115,8 @@ namespace Engine::Manager::Graphics
         }
 
         // Unload the shadow map shaders.
-        m_vs_stage1->PostRender(placeholder);
-        m_gs_stage1->PostRender(placeholder);
-        m_ps_stage1->PostRender(placeholder);
-
+        m_shadow_shaders_->PostRender(placeholder);
+        
         // post-processing for serialization and binding
         UINT light_idx = 0;
 
@@ -210,8 +209,6 @@ namespace Engine::Manager::Graphics
 
                     const auto model = ptr_model.lock();
 
-                    const auto mesh_count = model->GetMeshCount();
-
                     if (const auto atr = ptr_atr.lock())
                     {
                         const auto ptr_anim = atr->GetAnimation();
@@ -222,16 +219,9 @@ namespace Engine::Manager::Graphics
                         }
                     }
 
-                    for (int m = 0; m < mesh_count; ++m)
-                    {
-                        const auto ptr_mesh = model->GetMesh(m);
-
-                        if (const auto mesh = ptr_mesh.lock())
-                        {
-                            mesh->Render(placeholder);
-                            mesh->PostRender(placeholder);
-                        }
-                    }
+                    model->PreRender(dt);
+                    model->Render(dt);
+                    model->PostRender(dt);
 
                     if (const auto atr = ptr_atr.lock())
                     {

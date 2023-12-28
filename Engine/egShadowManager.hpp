@@ -47,9 +47,7 @@ namespace Engine::Manager::Graphics
             const Vector3& light_dir, CBs::ShadowVPCB&        buffer,
             UINT           light_index, CBs::ShadowVPChunkCB& chunk);
 
-        boost::shared_ptr<Resources::VertexShader>   m_vs_stage1;
-        boost::shared_ptr<Resources::GeometryShader> m_gs_stage1;
-        boost::shared_ptr<Resources::PixelShader>    m_ps_stage1;
+        StrongMaterial m_shadow_shaders_;
 
         // sub part of the view frustum
         Subfrusta m_subfrusta_[3];
