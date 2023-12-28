@@ -5,6 +5,8 @@
 
 namespace Engine::Manager::Graphics
 {
+    ReflectionEvaluator::~ReflectionEvaluator() {}
+
     void ReflectionEvaluator::PreUpdate(const float& dt)
     {
         GetRenderPipeline().UnbindResource(SR_RENDERED, SHADER_PIXEL);

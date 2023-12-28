@@ -7,6 +7,7 @@ namespace Engine::Manager::Graphics
     {
     public:
         ReflectionEvaluator(SINGLETON_LOCK_TOKEN) : Singleton() {}
+        ~ReflectionEvaluator() override;
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;

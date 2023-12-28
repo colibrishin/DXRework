@@ -419,12 +419,12 @@ namespace Engine::Manager::Graphics
     {
         if (m_shadow_map_depth_stencil_state_)
         {
-            m_shadow_map_depth_stencil_state_.Reset();
+            m_shadow_map_depth_stencil_state_->Release();
         }
 
         if (m_shadow_map_sampler_state_)
         {
-            m_shadow_map_sampler_state_.Reset();
+            m_shadow_map_sampler_state_->Release();
         }
     }
 
