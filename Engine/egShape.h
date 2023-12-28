@@ -37,6 +37,14 @@ namespace Engine::Resources
             if constexpr (which_resource<T>::value == RES_T_MESH)
             {
                 m_meshes_.push_back(res.lock());
+
+                m_bounding_box_.Center = Vector3::Zero;
+                m_bounding_box_.Extents = Vector3::Zero;
+
+                for (const auto& mesh : m_meshes_)
+                {
+                    BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, mesh->GetBoundingBox());
+                }
             }
             else if constexpr (which_resource<T>::value == RES_T_BONE)
             {
