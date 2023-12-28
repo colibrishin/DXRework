@@ -28,13 +28,13 @@ namespace Client::Object
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
         mr->SetShape(model);
-        mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
+        mr->SetMaterial(Resources::Material::Get("RifleColorMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();
 
-        atr->SetAnimation(Resources::BaseAnimation::Get("FireAnimation"));
+        atr->SetAnimation("FireAnimation");
         cldr->SetModel(model);
     }
 

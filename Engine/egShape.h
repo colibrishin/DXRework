@@ -26,8 +26,8 @@ namespace Engine::Resources
         WeakMesh                           GetMesh(const std::string& name) const;
         WeakMesh                           GetMesh(const UINT index) const;
         const std::vector<const Vector3*>& GetVertices() const;
-        WeakBaseAnimation                  GetAnimation(const std::string& name) const;
-        WeakBaseAnimation                  GetAnimation(const UINT index) const;
+        std::vector<StrongMesh>            GetMeshes() const;
+        const std::vector<std::string>&    GetAnimationCatalog() const;
 
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void Add(const boost::weak_ptr<T>& res)
@@ -50,11 +50,6 @@ namespace Engine::Resources
             {
                 m_bone_ = res.lock();
             }
-            else if constexpr (which_resource<T>::value == RES_T_BONE_ANIM || 
-                               which_resource<T>::value == RES_T_BASE_ANIM)
-            {
-                m_animations_.push_back(res.lock());
-            }
             else
             {
                 static_assert("Invalid resource type");
@@ -62,8 +57,6 @@ namespace Engine::Resources
 
             UpdateVertices();
         }
-
-        std::vector<StrongMesh> GetMeshes() const;
 
         RESOURCE_SELF_INFER_GETTER(Shape)
         RESOURCE_SELF_INFER_CREATE(Shape)
@@ -82,15 +75,13 @@ namespace Engine::Resources
         void UpdateVertices();
 
         std::vector<StrongMesh>          m_meshes_;
+        std::vector<std::string>         m_animation_catalog_;
         StrongBone                       m_bone_;
-        std::vector<StrongBaseAnimation> m_animations_;
         BoundingBox                      m_bounding_box_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
         std::vector<const Vector3*>    m_cached_vertices_;
-
-        ComPtr<ID3D11ShaderResourceView> m_bone_srv_;
     };
 }
 

@@ -27,7 +27,7 @@ namespace Client::Object
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetShape(model);
-        mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
+        mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto cldr = AddComponent<Components::Collider>().lock();
@@ -45,7 +45,7 @@ namespace Client::Object
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
 
-        atr->SetAnimation(model->GetAnimation(0));
+        atr->SetAnimation(model->GetAnimationCatalog().front());
     }
 
     void Player::PreUpdate(const float& dt)

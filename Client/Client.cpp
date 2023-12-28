@@ -14,6 +14,7 @@
 #include <egSound.h>
 #include <egSphereMesh.h>
 #include <egBaseAnimation.h>
+#include <egBoneAnimation.h>
 
 #include "clBackSphereMesh.hpp"
 #include "clTestScene.hpp"
@@ -101,32 +102,59 @@ namespace Client
 
     void InitializeMaterial()
     {
-        const auto mtr = Resources::Material::Create("NormalLight", "");
-        mtr->SetResource<Resources::Texture>("TestTexture");
-        mtr->SetResource<Resources::NormalMap>("TestNormalMap");
-        mtr->SetResource<Resources::VertexShader>("vs_default");
-        mtr->SetResource<Resources::PixelShader>("ps_normalmap");
+        {
+            const auto mtr = Resources::Material::Create("NormalLight", "");
+            mtr->SetResource<Resources::Texture>("TestTexture");
+            mtr->SetResource<Resources::NormalMap>("TestNormalMap");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_normalmap");
+        }
 
-        const auto mtr2 = Resources::Material::Create("NormalSpecular", "");
-        mtr2->SetResource<Resources::Texture>("TestTexture");
-        mtr2->SetResource<Resources::NormalMap>("TestNormalMap");
-        mtr2->SetResource<Resources::VertexShader>("vs_default");
-        mtr2->SetResource<Resources::PixelShader>("ps_normalmap_specular");
+        {
+            const auto mtr = Resources::Material::Create("NormalLightSpecular", "");
+            mtr->SetResource<Resources::Texture>("TestTexture");
+            mtr->SetResource<Resources::NormalMap>("TestNormalMap");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_normalmap_specular");
+        }
 
-        const auto mtr3 = Resources::Material::Create("ColorMaterial", "");
-        mtr3->SetResource<Resources::VertexShader>("vs_default");
-        mtr3->SetResource<Resources::PixelShader>("ps_color");
+        {
+            const auto mtr = Resources::Material::Create("ColorMaterial", "");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_color");
+        }
 
-        const auto mtr4 = Resources::Material::Create("SkyboxMaterial", "");
-        mtr4->SetResource<Resources::Texture>("Sky");
-        mtr4->SetResource<Resources::VertexShader>("vs_default");
-        mtr4->SetResource<Resources::PixelShader>("ps_default_nolight");
+        {
+            const auto mtr = Resources::Material::Create("CharacterMaterial", "");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_color");
 
-        const auto mtr5 = Resources::Material::Create("WaterMaterial", "");
-        mtr5->SetResource<Resources::NormalMap>("WaterNormalMap");
-        mtr5->SetResource<Resources::VertexShader>("vs_default");
-        mtr5->SetResource<Resources::PixelShader>("ps_refraction");
+            for (const auto& anim : Resources::Shape::Get("CharacterModel").lock()->GetAnimationCatalog())
+            {
+                mtr->SetResource<Resources::BoneAnimation>(anim);
+            }
+        }
 
+        {
+            const auto mtr = Resources::Material::Create("RifleColorMaterial", "");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_color");
+            mtr->SetResource<Resources::BaseAnimation>("FireAnimation");
+        }
+
+        {
+            const auto mtr = Resources::Material::Create("SkyboxMaterial", "");
+            mtr->SetResource<Resources::Texture>("Sky");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_default_nolight");
+        }
+
+        {
+            const auto mtr = Resources::Material::Create("WaterMaterial", "");
+            mtr->SetResource<Resources::NormalMap>("WaterNormalMap");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_refraction");
+        }
     }
 
     void Initialize(HWND hwnd)
@@ -136,11 +164,12 @@ namespace Client
         InitializeTexture();
         InitializeMesh();
         InitializeNormal();
-        InitializeMaterial();
         InitializeModel();
+        InitializeAnimation();
         InitializeFont();
         InitializeSound();
-        InitializeAnimation();
+        InitializeMaterial();
+        
 
         Engine::GetSceneManager().AddScene<Scene::TestScene>();
         Engine::GetSceneManager().SetActive<Scene::TestScene>();
