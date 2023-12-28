@@ -115,11 +115,11 @@ namespace Engine::Manager::Graphics
     }
 
     void RenderPipeline::BindResource(
-        eShaderResource           resource,
+        UINT                      slot,
         eShaderType               shader_type,
         ID3D11ShaderResourceView** texture)
     {
-        g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture,  resource, 1);
+        g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture,  slot, 1);
     }
 
     RenderPipeline::~RenderPipeline()
@@ -304,12 +304,12 @@ namespace Engine::Manager::Graphics
     }
 
     void RenderPipeline::BindResources(
-        eShaderResource resource,
+        UINT            slot,
         eShaderType     shader_type, ID3D11ShaderResourceView** textures, UINT size)
     {
         g_shader_rs_bind_map.at(shader_type)(
                                              GetD3Device().GetContext(), textures,
-                                             resource, size);
+                                             slot, size);
     }
 
     void RenderPipeline::BindSampler(ID3D11SamplerState* sampler)
@@ -352,11 +352,11 @@ namespace Engine::Manager::Graphics
         BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
     }
 
-    void RenderPipeline::UnbindResource(eShaderResource shader_resource, eShaderType type)
+    void RenderPipeline::UnbindResource(UINT slot, eShaderType type)
     {
         ComPtr<ID3D11ShaderResourceView> null_view = nullptr;
         g_shader_rs_bind_map.at(type)(
                                       GetD3Device().GetContext(), null_view.GetAddressOf(),
-                                      shader_resource, 1);
+                                      slot, 1);
     }
 } // namespace Engine::Manager::Graphics

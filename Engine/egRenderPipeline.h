@@ -50,14 +50,12 @@ namespace Engine::Manager::Graphics
         void UnbindIndexBuffer();
 
         void BindResource(
-            eShaderResource resource,
-            eShaderType     shader_type, ID3D11ShaderResourceView ** texture);
+            UINT slot, eShaderType shader_type, ID3D11ShaderResourceView ** texture);
         void BindResources(
-            eShaderResource resource,
-            eShaderType     shader_type, ID3D11ShaderResourceView ** textures, UINT size);
+            UINT slot, eShaderType shader_type, ID3D11ShaderResourceView ** textures, UINT size);
         void BindSampler(ID3D11SamplerState* sampler);
 
-        void UnbindResource(eShaderResource shader_resource, eShaderType shader_type);
+        void UnbindResource(UINT slot, eShaderType type);
 
         void DrawIndexed(UINT index_count);
 
