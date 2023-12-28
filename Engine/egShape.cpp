@@ -15,7 +15,6 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Shape,
                        _ARTAG(_BSTSUPER(Resource))
-                       _ARTAG(m_animations_)
                        _ARTAG(m_bone_)
                        _ARTAG(m_meshes_))
 
@@ -94,36 +93,14 @@ namespace Engine::Resources
         return m_cached_vertices_;
     }
 
-    WeakBaseAnimation Shape::GetAnimation(const std::string& name) const
-    {
-        const auto it = std::ranges::find_if(
-                                             m_animations_
-                                             , [&name](const auto& anim)
-                                             {
-                                                 return anim->GetName() == name;
-                                             });
-
-        if (it != m_animations_.end())
-        {
-            return *it;
-        }
-
-        return {};
-    }
-
-    WeakBaseAnimation Shape::GetAnimation(const UINT index) const
-    {
-        if (m_animations_.size() > index)
-        {
-            return m_animations_[index];
-        }
-
-        return {};
-    }
-
     std::vector<StrongMesh> Shape::GetMeshes() const
     {
         return m_meshes_;
+    }
+
+    const std::vector<std::string>& Shape::GetAnimationCatalog() const
+    {
+        return m_animation_catalog_;
     }
 
     void Shape::UpdateVertices()
@@ -154,9 +131,6 @@ namespace Engine::Resources
         {
             throw std::runtime_error(s_importer_.GetErrorString());
         }
-
-        const std::string scene_name = scene->mRootNode->mName.C_Str();
-        SetName(scene_name + "_MODEL");
 
         if (scene->HasMeshes())
         {
@@ -318,7 +292,7 @@ namespace Engine::Resources
 
                     if (const auto check = GetResourceManager().GetResource<BoneAnimation>(anim_name + "_ANIM").lock())
                     {
-                        m_animations_.push_back(check);
+                        m_animation_catalog_.push_back(anim_name + "_ANIM");
                         continue;
                     }
 
@@ -386,7 +360,7 @@ namespace Engine::Resources
                     anim->BindBone(m_bone_);
                     anim->Load();
                     GetResourceManager().AddResource(anim);
-                    m_animations_.push_back(anim);
+                    m_animation_catalog_.push_back(anim_name + "_ANIM");
                 }
             }
 
