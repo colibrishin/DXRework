@@ -50,7 +50,7 @@
     <ClInclude Include="egKinetic.h" />
     <ClInclude Include="egMacro.h" />
     <ClInclude Include="egMaterial.h" />
-    <ClInclude Include="egModel.h" />
+    <ClInclude Include="egShape.h" />
     <ClInclude Include="egModelRenderer.h" />
     <ClInclude Include="egMouseManager.h" />
     <ClInclude Include="egObserverController.h" />
@@ -126,7 +126,7 @@
     <ClCompile Include="egLight.cpp" />
     <ClCompile Include="egMaterial.cpp" />
     <ClCompile Include="egMesh.cpp" />
-    <ClCompile Include="egModel.cpp" />
+    <ClCompile Include="egShape.cpp" />
     <ClCompile Include="egModelRenderer.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
     <ClCompile Include="egNormalMap.cpp" />
