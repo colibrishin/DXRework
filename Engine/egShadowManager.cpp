@@ -3,6 +3,7 @@
 
 #include "egBaseAnimation.h"
 #include "egAnimator.h"
+#include "egBoneAnimation.h"
 #include "egObject.hpp"
 #include "egResourceManager.hpp"
 #include "egScene.hpp"
@@ -204,30 +205,32 @@ namespace Engine::Manager::Graphics
                     Components::Transform::Bind(*tr);
 
                     const auto& ptr_model = mr->GetModel();
-
+                    const auto& ptr_mtr = mr->GetMaterial();
                     if (ptr_model.expired()) continue;
 
                     const auto model = ptr_model.lock();
+                    const auto mtr = ptr_mtr.lock();
+                    float current_frame = dt;
 
                     if (const auto atr = ptr_atr.lock())
                     {
-                        const auto ptr_anim = atr->GetAnimation();
-
-                        if (const auto anim = ptr_anim.lock())
+                        if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
                         {
-                            anim->Render(dt);
+                            current_frame = atr->GetFrame();
+                            anim->PreRender(current_frame);
+                            anim->Render(current_frame);
                         }
                     }
 
-                    model->PreRender(dt);
-                    model->Render(dt);
-                    model->PostRender(dt);
+                    model->PreRender(current_frame);
+                    model->Render(current_frame);
+                    model->PostRender(current_frame);
 
                     if (const auto atr = ptr_atr.lock())
                     {
-                        if (const auto anim = atr->GetAnimation().lock())
+                        if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
                         {
-                            anim->PostRender(dt);
+                            anim->PostRender(current_frame);
                         }
                     }
                 }

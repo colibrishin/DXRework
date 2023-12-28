@@ -37,34 +37,35 @@ namespace Engine::Manager::Graphics
 
         const auto& model = ptr_model.lock();
         const auto& mtr = ptr_mtr.lock();
+        float anim_frame = dt;
 
         if (const auto atr = ptr_atr.lock())
         {
-	        const auto ptr_anim = atr->GetAnimation();
+            anim_frame = atr->GetFrame();
 
-	        if (const auto anim = ptr_anim.lock())
-	        {
-		        anim->PreRender(atr->GetFrame());
-                anim->Render(atr->GetFrame());
-	        }
+            if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
+            {
+                anim->PreRender(anim_frame);
+                anim->Render(anim_frame);
+            }
         }
 
     	Components::Transform::Bind(*tr);
-        mtr->PreRender(dt);
-    	mtr->Render(dt);
-        model->PreRender(dt);
-        model->Render(dt);
-        mtr->PostRender(dt);
-        model->PostRender(dt);
+
+        mtr->PreRender(anim_frame);
+    	mtr->Render(anim_frame);
+        model->PreRender(anim_frame);
+        model->Render(anim_frame);
+
+        mtr->PostRender(anim_frame);
+        model->PostRender(anim_frame);
 
         if (const auto atr = ptr_atr.lock())
         {
-	        const auto ptr_anim = atr->GetAnimation();
-
-	        if (const auto anim = ptr_anim.lock())
-	        {
-		        anim->PostRender(atr->GetFrame());
-	        }
+            if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
+            {
+                anim->PostRender(anim_frame);
+            }
         }
     }
 
