@@ -27,6 +27,8 @@ namespace Engine::Resources
         UINT GetWidth() const;
         UINT GetHeight() const;
 
+        void SetSlot(eTexBindSlot slot, UINT slot_offset);
+
         RESOURCE_SELF_INFER_GETTER(Texture)
         RESOURCE_SELF_INFER_CREATE(Texture)
 
@@ -39,6 +41,7 @@ namespace Engine::Resources
         SERIALIZER_ACCESS
 
         D3D11_TEXTURE2D_DESC m_texture_desc_;
+        UINT m_bound_slot_;
     };
 } // namespace Engine::Resources
 
