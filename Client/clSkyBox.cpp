@@ -3,8 +3,9 @@
 
 #include "clBackSphereMesh.hpp"
 #include "egHelper.hpp"
-#include "egModel.h"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egShape.h"
 #include "egTexture.h"
 #include "egTransform.h"
 
@@ -19,16 +20,9 @@ namespace Client::Object
 
     inline void SkyBox::Initialize()
     {
-        std::vector<StrongResource> resources;
-        resources.push_back(Get<Resources::Mesh>("BackSphereMesh").lock());
-        resources.push_back(Get<Resources::Texture>("Sky").lock());
-
-        const auto model = Resources::Model::Create("Skybox", resources);
-
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
-        mr->SetModel(model);
-        mr->AddVertexShader(Get<Resources::VertexShader>("vs_default"));
-        mr->AddPixelShader(Get<Resources::PixelShader>("ps_default_nolight"));
+        mr->SetShape(Resources::Shape::Get("SkyboxModel"));
+        mr->SetMaterial(Resources::Material::Get("SkyboxMaterial"));
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();

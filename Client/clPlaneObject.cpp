@@ -7,12 +7,13 @@
 #include <egVertexShaderInternal.h>
 #include <egNormalMap.h>
 
-#include "egModel.h"
 #include "egModelRenderer.h"
 #include "egShader.hpp"
 #include "egTransform.h"
 #include "egCollider.hpp"
+#include "egMaterial.h"
 #include "egRigidbody.h"
+#include "egShape.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::PlaneObject,
@@ -24,12 +25,11 @@ namespace Client::Object
 
     void PlaneObject::Initialize()
     {
-        const auto model = Resources::Model::Get("CubeModel").lock();
+        const auto model = Resources::Shape::Get("CubeModel").lock();
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
-        mr->SetModel(model);
-        mr->AddVertexShader(Resources::VertexShader::Get("vs_default").lock());
-        mr->AddPixelShader(Resources::PixelShader::Get("ps_color").lock());
+        mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
+        mr->SetShape(model);
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();

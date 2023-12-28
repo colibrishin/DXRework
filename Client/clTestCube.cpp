@@ -4,11 +4,11 @@
 #include <egCubeMesh.h>
 #include <egNormalMap.h>
 
-#include <egModel.h>
-
 #include "egCollider.hpp"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
+#include "egShape.h"
 #include "egSoundPlayer.h"
 #include "egSound.h"
 #include "egTransform.h"
@@ -24,12 +24,9 @@ namespace Client::Object
 
     inline void TestCube::Initialize()
     {
-        const auto model = Engine::Resources::Model::Get("CubeModel").lock();
-
         const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
-        mr->SetModel(model);
-        mr->AddVertexShader(Resources::VertexShader::Get("vs_default").lock());
-        mr->AddPixelShader(Resources::PixelShader::Get("ps_normalmap_specular"));
+        mr->SetShape(Resources::Shape::Get("CubeModel"));
+        mr->SetMaterial(Resources::Material::Get("NormalLight"));
 
         AddComponent<Engine::Components::Transform>();
         AddComponent<Engine::Components::Collider>();

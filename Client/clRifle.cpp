@@ -5,10 +5,11 @@
 #include "egAnimator.h"
 #include "egBaseAnimation.h"
 #include "egCollider.hpp"
-#include "egModel.h"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
+#include "egShape.h"
 #include "egTransform.h"
 #include "egVertexShaderInternal.h"
 
@@ -22,13 +23,12 @@ namespace Client::Object
     {
         Object::Initialize();
 
-        const auto model = Resources::Model::Get("RifleModel").lock();
+        const auto model = Resources::Shape::Get("RifleModel").lock();
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
-        mr->SetModel(model);
-        mr->AddVertexShader(Resources::VertexShader::Get("vs_default"));
-        mr->AddPixelShader(Resources::PixelShader::Get("ps_color"));
+        mr->SetShape(model);
+        mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();

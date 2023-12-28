@@ -13,12 +13,13 @@
 #include <egSerialization.hpp>
 #include <egSound.h>
 #include <egSphereMesh.h>
-#include <egModel.h>
 #include <egBaseAnimation.h>
 
 #include "clBackSphereMesh.hpp"
 #include "clTestScene.hpp"
 #include "egGlobal.h"
+#include "egMaterial.h"
+#include "egShape.h"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -63,30 +64,19 @@ namespace Client
 
     void InitializeModel()
     {
-        Resources::Model::Create("BobModel", "./bob_lamp_update_export.fbx");
-        Resources::Model::Create("CharacterModel", "./Character.fbx");
-        Resources::Model::Create("RifleModel", "./Rifle.fbx");
-        Resources::Model::Create("PlayerModel", "./player.obj");
+        Resources::Shape::Create("BobModel", "./bob_lamp_update_export.fbx");
+        Resources::Shape::Create("CharacterModel", "./Character.fbx");
+        Resources::Shape::Create("RifleModel", "./Rifle.fbx");
+        Resources::Shape::Create("PlayerModel", "./player.obj");
 
-        std::vector<Engine::StrongResource> resources;
+        const auto cube = Resources::Shape::Create("CubeModel", "");
+        cube->Add(Resources::Mesh::Get("CubeMesh"));
 
-        resources.push_back(Engine::Resources::Mesh::Get("CubeMesh").lock());
-        resources.push_back(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
-        resources.push_back(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
+        const auto sphere = Resources::Shape::Create("SphereModel", "");
+        sphere->Add(Resources::Mesh::Get("SphereMesh"));
 
-        const auto cube_model = Engine::Resources::Model::Create("CubeModel", resources);
-
-        GetResourceManager().AddResource(cube_model);
-
-        resources.clear();
-
-        resources.push_back(Engine::Resources::Mesh::Get("SphereMesh").lock());
-        resources.push_back(Engine::GetResourceManager().GetResource<Engine::Resources::Texture>("TestTexture").lock());
-        resources.push_back(Engine::GetResourceManager().GetResource<Engine::Resources::NormalMap>("TestNormalMap").lock());
-
-        const auto sphere_model = Engine::Resources::Model::Create("SphereModel", resources);
-
-        GetResourceManager().AddResource(sphere_model);
+        const auto skybox = Resources::Shape::Create("SkyboxModel", "");
+        skybox->Add(Resources::Mesh::Get("BackSphereMesh"));
     }
 
     void InitializeAnimation()
@@ -109,6 +99,36 @@ namespace Client
         anim->SetTicksPerSecond(30.f);
     }
 
+    void InitializeMaterial()
+    {
+        const auto mtr = Resources::Material::Create("NormalLight", "");
+        mtr->SetResource<Resources::Texture>("TestTexture");
+        mtr->SetResource<Resources::NormalMap>("TestNormalMap");
+        mtr->SetResource<Resources::VertexShader>("vs_default");
+        mtr->SetResource<Resources::PixelShader>("ps_normalmap");
+
+        const auto mtr2 = Resources::Material::Create("NormalSpecular", "");
+        mtr2->SetResource<Resources::Texture>("TestTexture");
+        mtr2->SetResource<Resources::NormalMap>("TestNormalMap");
+        mtr2->SetResource<Resources::VertexShader>("vs_default");
+        mtr2->SetResource<Resources::PixelShader>("ps_normalmap_specular");
+
+        const auto mtr3 = Resources::Material::Create("ColorMaterial", "");
+        mtr3->SetResource<Resources::VertexShader>("vs_default");
+        mtr3->SetResource<Resources::PixelShader>("ps_color");
+
+        const auto mtr4 = Resources::Material::Create("SkyboxMaterial", "");
+        mtr4->SetResource<Resources::Texture>("Sky");
+        mtr4->SetResource<Resources::VertexShader>("vs_default");
+        mtr4->SetResource<Resources::PixelShader>("ps_default_nolight");
+
+        const auto mtr5 = Resources::Material::Create("WaterMaterial", "");
+        mtr5->SetResource<Resources::NormalMap>("WaterNormalMap");
+        mtr5->SetResource<Resources::VertexShader>("vs_default");
+        mtr5->SetResource<Resources::PixelShader>("ps_refraction");
+
+    }
+
     void Initialize(HWND hwnd)
     {
         Engine::Manager::Application::GetInstance().Initialize(hwnd);
@@ -116,6 +136,7 @@ namespace Client
         InitializeTexture();
         InitializeMesh();
         InitializeNormal();
+        InitializeMaterial();
         InitializeModel();
         InitializeFont();
         InitializeSound();

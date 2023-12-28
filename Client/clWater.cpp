@@ -5,9 +5,10 @@
 #include <egNormalMap.h>
 
 #include "egCollider.hpp"
-#include "egModel.h"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egShader.hpp"
+#include "egShape.h"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -17,11 +18,10 @@ SERIALIZER_ACCESS_IMPL(
 void Client::Object::Water::Initialize()
 {
     const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
-    const auto model = Engine::Resources::Model::Get("CubeModel");
+    const auto model = Engine::Resources::Shape::Get("CubeModel");
 
-    mr->SetModel(model);
-    mr->AddVertexShader(Resources::VertexShader::Get("vs_default"));
-    mr->AddPixelShader(Resources::PixelShader::Get("ps_refraction"));
+    mr->SetShape(model);
+    mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
 
     AddComponent<Engine::Components::Transform>();
     const auto cldr = AddComponent<Engine::Components::Collider>().lock();
