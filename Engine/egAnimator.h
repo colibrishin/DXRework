@@ -13,17 +13,17 @@ namespace Engine::Components
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
-        void              SetAnimation(const WeakBaseAnimation & anim);
-        WeakBaseAnimation GetAnimation() const;
-        float               GetFrame() const;
+        void        SetAnimation(const std::string& name);
+        std::string GetAnimation() const;
+        float       GetFrame() const;
 
     private:
         SERIALIZER_ACCESS
         Animator();
 
-        void  UpdateTransform(const StrongTransform& tr) const;
+        void UpdateTransform(const StrongTransform & tr, const StrongBaseAnimation & anim) const;
 
-        StrongBaseAnimation m_animation_;
+        std::string m_animation_name_;
         float m_current_frame_;
 
     };

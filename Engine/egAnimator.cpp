@@ -1,13 +1,15 @@
 #include "pch.h"
 #include "egAnimator.h"
 #include "egShape.h"
+#include "egBaseAnimation.h"
 #include "egBoneAnimation.h"
+#include "egMaterial.h"
+#include "egModelRenderer.h"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Components::Animator,
-                       _ARTAG(_BSTSUPER(Engine::Abstract::Component))
-                       _ARTAG(m_animation_))
+                       _ARTAG(_BSTSUPER(Engine::Abstract::Component)))
 
 namespace Engine::Components
 {
@@ -19,9 +21,20 @@ namespace Engine::Components
 
     void Animator::Update(const float& dt)
     {
-        if (m_animation_)
+        const auto mr = GetOwner().lock()->GetComponent<ModelRenderer>();
+
+        if (mr.expired()) return;
+        const auto mat = mr.lock()->GetMaterial();
+        if (mat.expired()) return;
+
+        // Animator assumes that assigned material has animation.
+        const auto tr_anim = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_name_).lock();
+        const auto bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_name_).lock();
+        const float duration = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
+
+        if (tr_anim || bone_anim)
         {
-            if (m_current_frame_ >= m_animation_->GetDuration())
+            if (m_current_frame_ >= duration)
             {
                 m_current_frame_ = 0.0f;
             }
@@ -30,24 +43,21 @@ namespace Engine::Components
 
             if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock())
             {
-                UpdateTransform(tr);
+                UpdateTransform(tr, tr_anim);
             }
         }
     }
 
     void Animator::FixedUpdate(const float& dt) {}
 
-    void Animator::SetAnimation(const WeakBaseAnimation& anim)
+    void Animator::SetAnimation(const std::string& name)
     {
-        if (const auto locked = anim.lock())
-        {
-            m_animation_ = locked;
-        }
+        m_animation_name_ = name;
     }
 
-    WeakBaseAnimation Animator::GetAnimation() const
+    std::string Animator::GetAnimation() const
     {
-        return m_animation_;
+        return m_animation_name_;
     }
 
     float Animator::GetFrame() const
@@ -59,16 +69,16 @@ namespace Engine::Components
     : Component(COM_T_ANIMATOR, {}),
       m_current_frame_(0) {}
 
-    void Animator::UpdateTransform(const StrongTransform& tr) const
+    void Animator::UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const
     {
-        if (m_animation_ && m_animation_->GetResourceType() == RES_T_BASE_ANIM)
+        if (anim)
         {
             const auto time = Resources::BaseAnimation::ConvertDtToFrame(
                                                                          m_current_frame_,
-                                                                         m_animation_->GetTicksPerSecond(),
-                                                                         m_animation_->GetDuration());
+                                                                         anim->GetTicksPerSecond(),
+                                                                         anim->GetDuration());
 
-            const auto primitive = m_animation_->m_simple_primitive_;
+            const auto primitive = anim->m_simple_primitive_;
 
             const auto pos = primitive.GetPosition(time);
             const auto rot = primitive.GetRotation(time);
