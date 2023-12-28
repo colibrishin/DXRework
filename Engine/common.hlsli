@@ -63,7 +63,7 @@ cbuffer MaterialBuffer : register(b5)
 
 float4 GetWorldPosition(in matrix mat)
 {
-    return float4(mat._14, mat._24, mat._34, mat._44);
+    return float4(mat._41, mat._42, mat._43, mat._44);
 }
 
 float GetShadowFactorImpl(
