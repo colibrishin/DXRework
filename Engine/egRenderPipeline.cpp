@@ -134,6 +134,7 @@ namespace Engine::Manager::Graphics
         GetD3Device().CreateConstantBuffer(m_light_buffer_data);
         GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
         GetD3Device().CreateConstantBuffer(m_shadow_buffer_chunk_data_);
+        GetD3Device().CreateConstantBuffer(m_material_buffer_data_);
 
         PrecompileShaders();
         InitializeSamplers();
@@ -340,6 +341,15 @@ namespace Engine::Manager::Graphics
         GetD3Device().BindConstantBuffer(
                                          m_shadow_buffer_chunk_data_,
                                          CB_TYPE_SHADOW_CHUNK, SHADER_PIXEL);
+    }
+
+    void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
+    {
+        m_material_buffer_data_.SetData(
+										GetD3Device().GetContext(),
+										material_buffer);
+        BindConstantBuffer(m_material_buffer_data_, SHADER_VERTEX);
+        BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
     }
 
     void RenderPipeline::UnbindResource(eShaderResource shader_resource, eShaderType type)
