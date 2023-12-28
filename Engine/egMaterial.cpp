@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "egMaterial.h"
+#include "egType.h"
 
 namespace Engine::Resources
 {
@@ -7,8 +8,8 @@ namespace Engine::Resources
     : Resource(path, RES_T_MTR),
       m_material_cb_()
     {
-        m_material_cb_.specular_power = 100.0f;
-        m_material_cb_.specular_color = Vector4{0.5f, 0.5f, 0.5f, 0.5f};
+        m_material_cb_.specular_power = 10.0f;
+        m_material_cb_.specular_color = DirectX::Colors::White;
         m_material_cb_.reflection_scale = 0.15f;
         m_material_cb_.refraction_scale = 0.15f;
         m_material_cb_.clip_plane = Vector4::Zero;
@@ -25,6 +26,13 @@ namespace Engine::Resources
 
     void Material::PreRender(const float& dt)
     {
+        if (!ShaderCheck())
+        {
+            return;
+        }
+
+        GetRenderPipeline().SetMaterial(m_material_cb_);
+
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
             res->PreRender(dt);
@@ -33,6 +41,11 @@ namespace Engine::Resources
 
     void Material::Render(const float& dt)
     {
+        if (!ShaderCheck())
+        {
+            return;
+        }
+
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
             res->Render(dt);
@@ -41,10 +54,22 @@ namespace Engine::Resources
 
     void Material::PostRender(const float& dt)
     {
+        if (!ShaderCheck())
+        {
+            return;
+        }
+
+        GetRenderPipeline().SetMaterial({});
+
         for (const auto& res : m_resources_loaded_ | std::views::values)
         {
             res->PostRender(dt);
         }
+    }
+
+    void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept
+    {
+        m_material_cb_ = std::move(material_cb);
     }
 
     void Material::Load_INTERNAL()
@@ -61,5 +86,21 @@ namespace Engine::Resources
     void Material::Unload_INTERNAL()
     {
         m_resources_loaded_.clear();
+    }
+
+    bool Material::ShaderCheck() const
+    {
+        if (!m_shaders_loaded_.contains(convert_shaderT_enum<VertexShader>::value_e()))
+        {
+            GetDebugger().Log(L"Vertex shader not loaded for material");
+            return false;
+        }
+        if (!m_shaders_loaded_.contains(convert_shaderT_enum<PixelShader>::value_e()))
+        {
+            GetDebugger().Log(L"Pixel shader not loaded for material");
+            return false;
+        }
+
+        return true;
     }
 }
