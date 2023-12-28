@@ -41,7 +41,7 @@ PixelInputType main(VertexInputType input)
     output.color = input.color;
     output.tex   = input.tex;
 
-    [unroll] for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
+    [unroll] for (int i = 0; i < g_lightCount; ++i)
     {
         const float4 light_position = GetWorldPosition(g_lightWorld[i]);
         output.lightDirection[i] = light_position.xyz - output.world_position.xyz;

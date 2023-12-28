@@ -26,7 +26,7 @@ float4 main(PixelInputType input) : SV_TARGET
                         (normalMap.z * input.normal);
     bumpNormal = normalize(bumpNormal);
 
-    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < g_lightCount; ++i)
     {
         normalLightIntensity[i] =
                 saturate(dot(bumpNormal, input.lightDirection[i]));
@@ -41,7 +41,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 normalLightColor = g_ambientColor;
 
-    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < g_lightCount; ++i)
     {
         normalLightColor.r += normalColorArray[i].r;
         normalLightColor.g += normalColorArray[i].g;
@@ -50,7 +50,7 @@ float4 main(PixelInputType input) : SV_TARGET
 
     float4 textureLightColor = g_ambientColor;
 
-    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+    for (i = 0; i < g_lightCount; ++i)
     {
         textureLightColor.r += textureColorArray[i].r;
         textureLightColor.g += textureColorArray[i].g;
