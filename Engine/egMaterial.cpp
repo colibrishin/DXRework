@@ -38,9 +38,15 @@ namespace Engine::Resources
 	        shd->PreRender(dt);
         }
 
-        for (const auto& res : m_resources_loaded_ | std::views::values)
+        for (const auto& [type, resources] : m_resources_loaded_)
         {
-            res->PreRender(dt);
+            // No need to render the all animation.
+            if (type == RES_T_BONE_ANIM) continue;
+
+            for (const auto& res : resources)
+            {
+                res->PreRender(dt);
+            }
         }
     }
 
@@ -56,9 +62,15 @@ namespace Engine::Resources
         	shd->Render(dt);
 		}
 
-        for (const auto& res : m_resources_loaded_ | std::views::values)
+        for (const auto& [type, resources] : m_resources_loaded_)
         {
-            res->Render(dt);
+            // No need to render the all animation.
+            if (type == RES_T_BONE_ANIM) continue;
+
+            for (const auto& res : resources)
+            {
+                res->Render(dt);
+            }
         }
     }
 
@@ -76,9 +88,15 @@ namespace Engine::Resources
         	shd->PostRender(dt);
 		}
 
-        for (const auto& res : m_resources_loaded_ | std::views::values)
+        for (const auto& [type, resources] : m_resources_loaded_)
         {
-            res->PostRender(dt);
+            // No need to render the all animation.
+            if (type == RES_T_BONE_ANIM) continue;
+
+            for (const auto& res : resources)
+            {
+                res->PostRender(dt);
+            }
         }
     }
 
@@ -89,11 +107,14 @@ namespace Engine::Resources
 
     void Material::Load_INTERNAL()
     {
-        for (const auto& [type, name] : m_resources_)
+        for (const auto& [type, names] : m_resources_)
         {
-            if (const auto res = GetResourceManager().GetResource(name, type).lock())
+            for (const auto& name : names)
             {
-                m_resources_loaded_[type] = res;
+                if (const auto res = GetResourceManager().GetResource(name, type).lock())
+                {
+                    m_resources_loaded_[type].push_back(res);
+                }
             }
         }
     }
@@ -101,6 +122,7 @@ namespace Engine::Resources
     void Material::Unload_INTERNAL()
     {
         m_resources_loaded_.clear();
+        m_shaders_loaded_.clear();
     }
 
     bool Material::ShaderCheck() const
