@@ -7,7 +7,6 @@
 #include "egMaterial.h"
 #include "egShape.h"
 #include "egModelRenderer.h"
-#include "egNormalMap.h"
 #include "egProjectionFrustum.h"
 #include "egReflectionEvaluator.h"
 #include "egSceneManager.hpp"

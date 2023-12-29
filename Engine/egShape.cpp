@@ -7,7 +7,6 @@
 
 #include "egResourceManager.hpp"
 #include "egMesh.h"
-#include "egNormalMap.h"
 #include "egBaseAnimation.h"
 #include "egBone.h"
 #include "egBoneAnimation.h"

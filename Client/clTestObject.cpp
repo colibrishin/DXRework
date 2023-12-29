@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "clTestObject.hpp"
 
-#include <egNormalMap.h>
 #include <egSphereMesh.h>
 
 #include "egCollider.hpp"

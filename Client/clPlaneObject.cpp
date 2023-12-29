@@ -5,7 +5,6 @@
 #include <egObject.hpp>
 #include <egSound.h>
 #include <egVertexShaderInternal.h>
-#include <egNormalMap.h>
 
 #include "egModelRenderer.h"
 #include "egShader.hpp"

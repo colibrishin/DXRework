@@ -2,7 +2,6 @@
 #include "egDelayedRenderObject.h"
 
 #include "egCubeMesh.h"
-#include "egNormalMap.h"
 #include "egVertexShaderInternal.h"
 
 #include "egCollider.hpp"
