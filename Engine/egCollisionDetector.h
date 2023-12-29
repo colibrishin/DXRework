@@ -33,23 +33,24 @@ namespace Engine::Manager::Physics
             const Ray&                                            ray, float distance,
             std::set<WeakObject, WeakComparer<Abstract::Object>>& out);
 
-        bool IsCollided(EntityID id) const;
-        bool IsCollided(EntityID id1, EntityID id2) const;
-        bool IsCollidedInFrame(EntityID id1, EntityID id2) const;
+        bool IsCollided(GlobalEntityID id) const;
+        bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
+        bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
 
-        bool IsSpeculated(EntityID id1, EntityID id2) const;
+        bool IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const;
 
     private:
-        void CheckCollision(Components::Collider& lhs, Components::Collider& rhs);
-        void CheckGrounded(const Components::Collider& lhs, Components::Collider& rhs);
+        void CheckCollision(StrongCollider & lhs, StrongCollider & rhs);
+        void CheckGrounded(const StrongCollider & lhs, const StrongCollider & rhs);
         bool CheckRaycasting(
-            const Components::Collider& lhs,
-            const Components::Collider& rhs);
+            const StrongCollider & lhs,
+            const StrongCollider & rhs);
 
     private:
+        std::mutex                                    m_layer_mask_mutex_;
         std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
-        std::map<EntityID, std::set<EntityID>>        m_collision_map_;
-        std::map<EntityID, std::set<EntityID>>        m_frame_collision_map_;
-        std::map<EntityID, std::set<EntityID>>        m_speculation_map_;
+        concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_collision_map_;
+        concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_frame_collision_map_;
+        concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_speculation_map_;
     };
 } // namespace Engine::Manager

@@ -61,7 +61,7 @@ namespace Engine::Abstract
 
                 if (const auto scene = GetScene().lock())
                 {
-                    scene->AddCacheComponent(component);
+                    scene->AddCacheComponent<T>(component);
                 }
 
                 return component;
@@ -89,7 +89,7 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        boost::weak_ptr<T> GetComponentByLocal(ComponentID id)
+        boost::weak_ptr<T> GetComponentByLocal(LocalComponentID id)
         {
             if (m_assigned_component_ids_.contains(id))
             {
@@ -137,7 +137,7 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        boost::weak_ptr<T> GetComponent(EntityID id)
+        boost::weak_ptr<T> GetComponent(GlobalEntityID id)
         {
             if constexpr (std::is_base_of_v<Component, T>)
             {
@@ -187,7 +187,7 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        void RemoveComponent(const EntityID id)
+        void RemoveComponent(const LocalComponentID id)
         {
             if constexpr (std::is_base_of_v<Component, T>)
             {
@@ -204,7 +204,7 @@ namespace Engine::Abstract
                                                     comp_set.begin(), comp_set.end(),
                                                     [id](const auto& comp)
                                                     {
-                                                        return comp.lock()->GetID() == id;
+                                                        return comp->GetID() == id;
                                                     });
 
                     if (found == comp_set.end())
@@ -218,7 +218,7 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        void DispatchComponentEvent(T& lhs, T& rhs);
+        void DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs);
 
         void SetActive(bool active);
         void SetCulled(bool culled);
@@ -230,11 +230,11 @@ namespace Engine::Abstract
         eDefObjectType GetObjectType() const;
 
         WeakObject GetParent() const;
-        WeakObject GetChild(const ActorID id) const;
+        WeakObject GetChild(const LocalActorID id) const;
         std::vector<WeakObject> GetChildren() const;
 
         void AddChild(const WeakObject& child);
-        bool DetachChild(const ActorID id);
+        bool DetachChild(const LocalActorID id);
 
     protected:
         explicit Object(eDefObjectType type = DEF_OBJ_T_NONE)
@@ -251,7 +251,7 @@ namespace Engine::Abstract
         friend class Manager::Graphics::ShadowManager;
 
         template <typename T>
-        void RemoveComponentCommon(StrongComponent& value)
+        void RemoveComponentCommon(const StrongComponent value)
         {
             m_priority_sorted_.erase(value);
             m_components_[which_component<T>::value].erase(value);
@@ -259,7 +259,7 @@ namespace Engine::Abstract
 
             if (const auto scene = GetScene().lock())
             {
-                scene->RemoveCacheComponent(value);
+                scene->RemoveCacheComponent<T>(value->GetSharedPtr<T>());
             }
 
             if (m_components_[which_component<T>::value].empty())
@@ -268,13 +268,13 @@ namespace Engine::Abstract
             }
         }
 
-        virtual void OnCollisionEnter(const Engine::Components::Collider& other);
-        virtual void OnCollisionContinue(const Engine::Components::Collider& other);
-        virtual void OnCollisionExit(const Engine::Components::Collider& other);
+        virtual void OnCollisionEnter(const StrongCollider& other);
+        virtual void OnCollisionContinue(const StrongCollider& other);
+        virtual void OnCollisionExit(const StrongCollider& other);
 
     private:
-        ActorID              m_parent_;
-        std::vector<ActorID> m_children_;
+        LocalActorID              m_parent_;
+        std::vector<LocalActorID> m_children_;
         eDefObjectType       m_type_;
         bool                 m_active_ = true;
         bool                 m_culled_ = true;
@@ -285,8 +285,8 @@ namespace Engine::Abstract
         m_components_;
 
         // Non-serialized
-        std::map<ActorID, WeakObject>                      m_children_cache_;
-        std::set<ComponentID>                              m_assigned_component_ids_;
+        std::map<LocalActorID, WeakObject>                      m_children_cache_;
+        std::set<LocalComponentID>                              m_assigned_component_ids_;
         std::set<WeakComponent, ComponentPriorityComparer> m_priority_sorted_;
     };
 } // namespace Engine::Abstract
