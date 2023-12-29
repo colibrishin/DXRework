@@ -359,6 +359,8 @@
     <Import Project="..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets" Condition="Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" />
     <Import Project="..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" />
     <Import Project="$(VCTargetsPath)\BuildCustomizations\ImageContentTask.targets" />
+    <Import Project="..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets" Condition="Exists('..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets')" />
+    <Import Project="..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets" Condition="Exists('..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -366,5 +368,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxmath.2022.12.12.1\build\native\directxmath.targets'))" />
     <Error Condition="!Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets'))" />
+    <Error Condition="!Exists('..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets'))" />
+    <Error Condition="!Exists('..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets'))" />
   </Target>
 </Project>
