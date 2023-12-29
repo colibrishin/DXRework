@@ -37,13 +37,13 @@ namespace Engine
     struct ResourcePriorityComparer
     {
         bool operator()(
-            const StrongResource& Left,
-            const StrongResource& Right) const;
+            const StrongResource Left,
+            const StrongResource Right) const;
     };
 
     struct ComponentPriorityComparer
     {
-        bool operator()(const WeakComponent& Left, const WeakComponent& Right) const;
+        bool operator()(const WeakComponent Left, const WeakComponent Right) const;
     };
 
     inline static bool IsAssigned(const LONG_PTR id)

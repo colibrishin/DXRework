@@ -7,8 +7,8 @@
 namespace Engine
 {
     bool ResourcePriorityComparer::operator()(
-        const StrongResource& Left,
-        const StrongResource& Right) const
+        const StrongResource Left,
+        const StrongResource Right) const
     {
         if (Left->GetResourceType() != Right->GetResourceType())
         {
@@ -19,8 +19,8 @@ namespace Engine
     }
 
     bool ComponentPriorityComparer::operator()(
-        const WeakComponent& Left,
-        const WeakComponent& Right) const
+        const WeakComponent Left,
+        const WeakComponent Right) const
     {
         if (Left.lock()->GetComponentType() != Right.lock()->GetComponentType())
         {
