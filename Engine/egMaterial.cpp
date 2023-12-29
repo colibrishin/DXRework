@@ -3,6 +3,8 @@
 
 #include "egTexture.h"
 #include "egType.h"
+#include "egDXType.h"
+#include "egDXCommon.h"
 
 namespace Engine::Resources
 {
@@ -33,23 +35,37 @@ namespace Engine::Resources
             return;
         }
 
-        GetRenderPipeline().SetMaterial(m_material_cb_);
-
         for (const auto& shd : m_shaders_loaded_ | std::views::values)
         {
 	        shd->PreRender(dt);
         }
 
+        m_material_cb_.flags = {};
+
         for (const auto& [type, resources] : m_resources_loaded_)
         {
             // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM) continue;
-
-            for (const auto& res : resources)
+            if (type == RES_T_BONE_ANIM)
             {
+                m_material_cb_.flags.bone = 1;
+                continue;
+            }
+
+            for (auto it = resources.begin(); it != resources.end(); ++it)
+            {
+                const auto res = *it;
+
+                if (type == RES_T_TEX)
+                {
+                    const UINT idx = std::distance(resources.begin(), it);
+                    m_material_cb_.flags.tex[idx] = 1;
+                }
+
                 res->PreRender(dt);
             }
         }
+
+        GetRenderPipeline().SetMaterial(m_material_cb_);
     }
 
     void Material::Render(const float& dt)
@@ -67,7 +83,7 @@ namespace Engine::Resources
         for (const auto& [type, resources] : m_resources_loaded_)
         {
             // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM) continue;
+            if (type == RES_T_BONE_ANIM)  continue;
 
             for (auto it = resources.begin(); it != resources.end(); ++it)
             {

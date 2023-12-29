@@ -19,11 +19,41 @@ namespace Engine::Graphics
         };
     }
 
+    template <typename T>
+    struct OffsetT
+    {
+        T     value;
+        float ___p[(16 / sizeof(T)) - 1]{};
+
+        OffsetT() : value(), ___p{}
+        {
+            static_assert(sizeof(T) <= 16, "OffsetT: sizeof(T) > 16");
+        }
+
+        ~OffsetT() = default;
+
+        OffsetT(const T& v) : value(v) {}
+
+        OffsetT& operator=(const T& v)
+        {
+            value = v;
+            return *this;
+        }
+    };
+
     struct ShadowVP
     {
         Matrix  view[g_max_shadow_cascades];
         Matrix  proj[g_max_shadow_cascades];
         Vector4 end_clip_spaces[g_max_shadow_cascades];
+    };
+
+    struct MaterialBindFlag
+    {
+        OffsetT<int> tex[g_max_slot_per_texture];
+        OffsetT<int> texArr[g_max_slot_per_texture];
+        OffsetT<int> texCube[g_max_slot_per_texture];
+        OffsetT<int> bone;
     };
 
     struct VertexElement

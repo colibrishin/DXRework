@@ -74,14 +74,16 @@ cbuffer CascadeShadowChunk : register(b4)
 
 cbuffer MaterialBuffer : register(b5)
 {
-    float g_specularPower;
-    float g_reflectionTranslation;
-    float g_reflectionScale;
-    float g_refractionScale;
+    BindFlag g_bindFlag : BINDFLAG;
 
-    float4 g_overrideColor;
-    float4 g_specularColor;
-    float4 g_clipPlane;
+    float g_specularPower : SPECULARPOWER;
+    float g_reflectionTranslation : REFTRANSLATION;
+    float g_reflectionScale : REFSCALE;
+    float g_refractionScale : REFRACTSCALE;
+
+    float4 g_overrideColor : OVERRIDECOLOR;
+    float4 g_specularColor : SPECULARCOLOR;
+    float4 g_clipPlane : CLIPPLANE;
 }
 
 float4 GetWorldPosition(in matrix mat)

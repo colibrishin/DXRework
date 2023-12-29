@@ -4,6 +4,14 @@
 #define MAX_NUM_LIGHTS 8
 #define MAX_NUM_SLOTS 8
 
+struct BindFlag
+{
+    int4 texFlag[MAX_NUM_SLOTS];
+    int4 texArrayFlag[MAX_NUM_SLOTS];
+    int4 texCubeFlag[MAX_NUM_SLOTS];
+    int4 boneFlag;
+};
+
 struct CascadeShadow
 {
     matrix g_shadowView[MAX_NUM_CASCADES] : SHADOWVIEW;
