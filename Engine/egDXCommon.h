@@ -59,6 +59,8 @@ namespace Engine::Graphics
         {
             INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_MATERIAL)
 
+            MaterialBindFlag flags;
+
             float specular_power;
             float reflection_translation;
             float reflection_scale;
@@ -68,5 +70,7 @@ namespace Engine::Graphics
             Color   specular_color;
             Vector4 clip_plane;
         };
+
+        const auto test = sizeof(MaterialBindFlag);
     }
 } // namespace Engine
