@@ -37,12 +37,12 @@ namespace Engine::Resources
                                                                            m_animation_buffer_.
                                                                            ReleaseAndGetAddressOf());
 
-        GetRenderPipeline().BindResource(SR_ANIMATION, SHADER_VERTEX, m_animation_buffer_.GetAddressOf());
+        GetRenderPipeline().BindResource(RESERVED_ANIMATION, SHADER_VERTEX, m_animation_buffer_.GetAddressOf());
     }
 
     void BoneAnimation::PostRender(const float& dt)
     {
-        GetRenderPipeline().UnbindResource(SR_ANIMATION, SHADER_VERTEX);
+        GetRenderPipeline().UnbindResource(RESERVED_ANIMATION, SHADER_VERTEX);
     }
 
     void BoneAnimation::PostUpdate(const float& dt) {}

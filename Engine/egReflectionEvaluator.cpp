@@ -9,7 +9,7 @@ namespace Engine::Manager::Graphics
 
     void ReflectionEvaluator::PreUpdate(const float& dt)
     {
-        GetRenderPipeline().UnbindResource(SR_RENDERED, SHADER_PIXEL);
+        GetRenderPipeline().UnbindResource(RESERVED_RENDERED, SHADER_PIXEL);
     }
 
     void ReflectionEvaluator::Update(const float& dt) {}
@@ -57,6 +57,6 @@ namespace Engine::Manager::Graphics
     void ReflectionEvaluator::RenderFinished()
     {
         GetD3Device().CopySwapchain(m_rendered_buffer_.srv.Get());
-        GetRenderPipeline().BindResource(SR_RENDERED, SHADER_PIXEL, m_rendered_buffer_.srv.GetAddressOf());
+        GetRenderPipeline().BindResource(RESERVED_RENDERED, SHADER_PIXEL, m_rendered_buffer_.srv.GetAddressOf());
     }
 }

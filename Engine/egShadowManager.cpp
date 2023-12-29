@@ -64,7 +64,7 @@ namespace Engine::Manager::Graphics
     {
         // # Pass 1 : depth only, building shadow map
         // Unbind the shadow map resource from the pixel shader to build the shadow map.
-        GetRenderPipeline().UnbindResource(SR_SHADOW_MAP, SHADER_PIXEL);
+        GetRenderPipeline().UnbindResource(RESERVED_SHADOW_MAP, SHADER_PIXEL);
 
         // Clear all shadow map data.
         ClearShadowMaps();
@@ -135,7 +135,7 @@ namespace Engine::Manager::Graphics
 
         // Bind the shadow map resource previously rendered to the pixel shader.
         GetRenderPipeline().BindResources(
-                                          SR_SHADOW_MAP, SHADER_PIXEL,
+                                          RESERVED_SHADOW_MAP, SHADER_PIXEL,
                                           m_current_shadow_maps_,
                                           light_idx);
         // And bind the light view and projection matrix on to the constant buffer.
