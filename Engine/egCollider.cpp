@@ -233,15 +233,33 @@ namespace Engine::Components
         }
     }
 
-    bool Collider::Intersects(Collider& other) const
+    bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset)
+    {
+        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
+        {
+            static BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
+            box.Center = box.Center + offset;
+            return rhs->Intersects_GENERAL_TYPE(box);
+        }
+        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
+        {
+            static BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
+            sphere.Center = sphere.Center + offset;
+            return rhs->Intersects_GENERAL_TYPE(sphere);
+        }
+
+        return false;
+    }
+
+    bool Collider::Intersects(const StrongCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            return other.Intersects_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
+            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            return other.Intersects_GENERAL_TYPE(GetBounding<BoundingSphere>());
+            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingSphere>());
         }
 
         return false;
@@ -277,24 +295,26 @@ namespace Engine::Components
         return false;
     }
 
-    bool Collider::Contains(Collider& other) const
+    bool Collider::Contains(const StrongCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            return other.Contains_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
+            return other->Contains_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            return other.Contains_GENERAL_TYPE(GetBounding<BoundingSphere>());
+            return other->Contains_GENERAL_TYPE(GetBounding<BoundingSphere>());
         }
 
         return false;
     }
 
-    void Collider::AddCollidedObject(const EntityID id)
+    void Collider::AddCollidedObject(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.insert(id);
 
+        std::lock_guard lock2(m_collision_count_mutex_);
         if (!m_collision_count_.contains(id))
         {
             m_collision_count_.insert({id, 1});
@@ -305,33 +325,39 @@ namespace Engine::Components
         }
     }
 
-    void Collider::AddSpeculationObject(const EntityID id)
+    void Collider::AddSpeculationObject(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_speculative_mutex_);
         m_speculative_collision_candidates_.insert(id);
     }
 
-    void Collider::RemoveCollidedObject(const EntityID id)
+    void Collider::RemoveCollidedObject(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.erase(id);
     }
 
-    void Collider::RemoveSpeculationObject(const EntityID id)
+    void Collider::RemoveSpeculationObject(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_speculative_mutex_);
         m_speculative_collision_candidates_.erase(id);
     }
 
-    bool Collider::IsCollidedObject(const EntityID id) const
+    bool Collider::IsCollidedObject(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_.contains(id);
     }
 
-    const std::set<EntityID>& Collider::GetCollidedObjects() const
+    std::set<GlobalEntityID> Collider::GetCollidedObjects()
     {
+        std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_;
     }
 
-    const std::set<EntityID>& Collider::GetSpeculation() const
+    std::set<GlobalEntityID> Collider::GetSpeculation()
     {
+        std::lock_guard lock(m_speculative_mutex_);
         return m_speculative_collision_candidates_;
     }
 
@@ -352,8 +378,9 @@ namespace Engine::Components
                                    normal, depth);
     }
 
-    UINT Collider::GetCollisionCount(const EntityID id) const
+    UINT Collider::GetCollisionCount(const GlobalEntityID id)
     {
+        std::lock_guard lock(m_collision_count_mutex_);
         if (!m_collision_count_.contains(id))
         {
             return 0;
@@ -542,6 +569,7 @@ namespace Engine::Components
 
         if (second_counter >= 1.f)
         {
+            std::lock_guard lock(m_collision_count_mutex_);
             m_collision_count_.clear();
         }
 
@@ -565,6 +593,7 @@ namespace Engine::Components
                                                          XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
                                                          XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
 #ifdef _DEBUG
+        std::lock_guard lock(m_collision_mutex_);
         if (m_collided_objects_.empty())
         {
             if (m_type_ == BOUNDING_TYPE_BOX)

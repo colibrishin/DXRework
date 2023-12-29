@@ -28,27 +28,27 @@ namespace Engine::Components
         void SetMesh(const WeakMesh& mesh);
         void SetModel(const WeakModel& model);
 
-        bool Intersects(Collider& other) const;
-        bool Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool Contains(Collider& other) const;
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset);
+        bool        Intersects(const StrongCollider& other) const;
+        bool        Intersects(const Ray& ray, float distance, float& intersection) const;
+        bool        Contains(const StrongCollider & other) const;
 
-        void AddCollidedObject(EntityID id);
-        void AddSpeculationObject(EntityID id);
+        void AddCollidedObject(GlobalEntityID id);
+        void AddSpeculationObject(GlobalEntityID id);
 
-        void RemoveCollidedObject(const EntityID id);
-        void RemoveSpeculationObject(const EntityID id);
+        void RemoveCollidedObject(const GlobalEntityID id);
+        void RemoveSpeculationObject(const GlobalEntityID id);
 
-        bool IsCollidedObject(const EntityID id) const;
-
-        const std::set<EntityID>& GetCollidedObjects() const;
-        const std::set<EntityID>& GetSpeculation() const;
+        bool                     IsCollidedObject(const GlobalEntityID id);
+        std::set<GlobalEntityID> GetCollidedObjects();
+        std::set<GlobalEntityID> GetSpeculation();
+        UINT                     GetCollisionCount(GlobalEntityID id);
 
         Vector3 GetSize() const;
 
         void GetPenetration(
             const Collider& other, Vector3& normal,
             float&          depth) const;
-        UINT GetCollisionCount(EntityID id) const;
 
         float      GetMass() const;
         float      GetInverseMass() const;
@@ -157,9 +157,13 @@ namespace Engine::Components
 
         Physics::BoundingGroup m_boundings_;
 
-        std::set<EntityID>       m_collided_objects_;
-        std::map<EntityID, UINT> m_collision_count_;
-        std::set<EntityID>       m_speculative_collision_candidates_;
+        std::mutex                   m_collision_mutex_;
+        std::mutex                   m_collision_count_mutex_;
+        std::mutex                   m_speculative_mutex_;
+
+        std::set<GlobalEntityID>     m_collided_objects_;
+        std::map<GlobalEntityID, UINT> m_collision_count_;
+        std::set<GlobalEntityID>     m_speculative_collision_candidates_;
 
         Vector3    m_inverse_inertia_;
         XMFLOAT3X3 m_inertia_tensor_;
