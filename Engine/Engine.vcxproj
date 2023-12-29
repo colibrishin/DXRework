@@ -64,7 +64,6 @@
     <ClInclude Include="egManager.hpp" />
     <ClInclude Include="egManagerHelper.hpp" />
     <ClInclude Include="egMesh.h" />
-    <ClInclude Include="egNormalMap.h" />
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egReflectionEvaluator.h" />
     <ClInclude Include="egRenderable.h" />
@@ -129,7 +128,6 @@
     <ClCompile Include="egShape.cpp" />
     <ClCompile Include="egModelRenderer.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
-    <ClCompile Include="egNormalMap.cpp" />
     <ClCompile Include="egObserverController.cpp" />
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egObserver.cpp" />

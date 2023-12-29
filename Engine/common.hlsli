@@ -5,11 +5,34 @@
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
-Texture2D                              shaderTexture : register(t0);
-Texture2D                              shaderNormalMap : register(t1);
-Texture2DArray                         cascadeShadowMap[MAX_NUM_LIGHTS] : register(t2);
-Texture2D                              renderedTexture : register(t3);
-StructuredBuffer<BoneTransformElement> boneTransformBuffer : register(t4);
+Texture2D      tex00 : register(t0);
+Texture2D      tex01 : register(t1);
+Texture2D      tex02 : register(t2);
+Texture2D      tex03 : register(t3);
+Texture2D      tex04 : register(t4);
+Texture2D      tex05 : register(t5);
+Texture2D      tex06 : register(t6);
+Texture2D      tex07 : register(t7);
+Texture2DArray texArr00 : register(t8);
+Texture2DArray texArr01 : register(t9);
+Texture2DArray texArr02 : register(t10);
+Texture2DArray texArr03 : register(t11);
+Texture2DArray texArr04 : register(t12);
+Texture2DArray texArr05 : register(t13);
+Texture2DArray texArr06 : register(t14);
+Texture2DArray texArr07 : register(t15);
+TextureCube    texCube00 : register(t16);
+TextureCube    texCube01 : register(t17);
+TextureCube    texCube02 : register(t18);
+TextureCube    texCube03 : register(t19);
+TextureCube    texCube04 : register(t20);
+TextureCube    texCube05 : register(t21);
+TextureCube    texCube06 : register(t22);
+TextureCube    texCube07 : register(t23);
+
+Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t64);
+Texture2D                              texRendered : register(t65);
+StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -86,7 +109,7 @@ float GetShadowFactorImpl(
     float3 samplePos = float3(projCoords.xyz);
     samplePos.z      = cascadeIndex;
 
-    Texture2DArray shadowMap = cascadeShadowMap[lightIndex];
+    Texture2DArray shadowMap = texShadowMap[lightIndex];
 
     [unroll] for (int x = -1; x <= 1; ++x)
     {

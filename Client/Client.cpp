@@ -7,7 +7,6 @@
 #include <egCubeMesh.h>
 #include <egSphereMesh.h>
 #include <egFont.h>
-#include <egNormalMap.h>
 #include <egResourceManager.hpp>
 #include <egSceneManager.hpp>
 #include <egSerialization.hpp>
@@ -21,6 +20,7 @@
 #include "egGlobal.h"
 #include "egMaterial.h"
 #include "egShape.h"
+#include "egTexture.h"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -47,8 +47,8 @@ namespace Client
 
     void InitializeNormal()
     {
-        Engine::Resources::NormalMap::Create("TestNormalMap", "./Texture-Normal.dds");
-        Engine::Resources::NormalMap::Create("WaterNormalMap", "./Water-Normal.dds");
+        Engine::Resources::Texture::Create("TestNormalMap", "./Texture-Normal.dds");
+        Engine::Resources::Texture::Create("WaterNormalMap", "./Water-Normal.dds");
     }
 
     void InitializeSound()
@@ -105,15 +105,19 @@ namespace Client
         {
             const auto mtr = Resources::Material::Create("NormalLight", "");
             mtr->SetResource<Resources::Texture>("TestTexture");
-            mtr->SetResource<Resources::NormalMap>("TestNormalMap");
+            mtr->SetResource<Resources::Texture>("TestNormalMap");
             mtr->SetResource<Resources::VertexShader>("vs_default");
             mtr->SetResource<Resources::PixelShader>("ps_normalmap");
+
+            // this is not necessary if user adds texture in order.
+            //mtr->SetTextureSlot("TestTexture", 0);
+            //mtr->SetTextureSlot("TestNormalMap", 1);
         }
 
         {
             const auto mtr = Resources::Material::Create("NormalLightSpecular", "");
             mtr->SetResource<Resources::Texture>("TestTexture");
-            mtr->SetResource<Resources::NormalMap>("TestNormalMap");
+            mtr->SetResource<Resources::Texture>("TestNormalMap");
             mtr->SetResource<Resources::VertexShader>("vs_default");
             mtr->SetResource<Resources::PixelShader>("ps_normalmap_specular");
         }
@@ -151,7 +155,7 @@ namespace Client
 
         {
             const auto mtr = Resources::Material::Create("WaterMaterial", "");
-            mtr->SetResource<Resources::NormalMap>("WaterNormalMap");
+            mtr->SetResource<Resources::Texture>("WaterNormalMap");
             mtr->SetResource<Resources::VertexShader>("vs_default");
             mtr->SetResource<Resources::PixelShader>("ps_refraction");
         }

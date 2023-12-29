@@ -86,7 +86,6 @@ namespace Engine
         class Mesh;
         class Sound;
         class Texture;
-        class NormalMap;
         class BoneAnimation;
         class Shape;
         class Bone;
@@ -152,7 +151,6 @@ namespace Engine
     using WeakCamera = boost::weak_ptr<Objects::Camera>;
     using WeakLight = boost::weak_ptr<Objects::Light>;
     using WeakTexture = boost::weak_ptr<Resources::Texture>;
-    using WeakNormalMap = boost::weak_ptr<Resources::NormalMap>;
     using WeakBoneAnimation = boost::weak_ptr<Resources::BoneAnimation>;
     using WeakModel = boost::weak_ptr<Resources::Shape>;
     using WeakBone = boost::weak_ptr<Resources::Bone>;
@@ -176,7 +174,6 @@ namespace Engine
     using StrongMesh = boost::shared_ptr<Resources::Mesh>;
     using StrongSound = boost::shared_ptr<Resources::Sound>;
     using StrongTexture = boost::shared_ptr<Resources::Texture>;
-    using StrongNormalMap = boost::shared_ptr<Resources::NormalMap>;
     using StrongBoneAnimation = boost::shared_ptr<Resources::BoneAnimation>;
     using StrongModel = boost::shared_ptr<Resources::Shape>;
     using StrongBone = boost::shared_ptr<Resources::Bone>;

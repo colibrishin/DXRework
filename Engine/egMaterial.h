@@ -62,6 +62,8 @@ namespace Engine::Resources
             return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
         }
 
+        void SetTextureSlot(const std::string& name, const UINT slot);
+
         RESOURCE_SELF_INFER_GETTER(Material)
         RESOURCE_SELF_INFER_CREATE(Material)
 

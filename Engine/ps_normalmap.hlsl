@@ -10,14 +10,14 @@ float4 main(PixelInputType input) : SV_TARGET
     float shadowFactor[MAX_NUM_LIGHTS];
     GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
 
-    const float4 textureColor = shaderTexture.Sample(PSSampler, input.tex);
+    const float4 textureColor = tex00.Sample(PSSampler, input.tex);
     float        normalLightIntensity[MAX_NUM_LIGHTS];
     float        textureLightIntensity[MAX_NUM_LIGHTS];
 
     float4 normalColorArray[MAX_NUM_LIGHTS];
     float4 textureColorArray[MAX_NUM_LIGHTS];
 
-    float4 normalMap = shaderNormalMap.Sample(PSSampler, input.tex);
+    float4 normalMap = tex01.Sample(PSSampler, input.tex);
 
     normalMap = (normalMap * 2.0f) - 1.0f;
 

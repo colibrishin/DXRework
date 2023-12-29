@@ -2,7 +2,6 @@
 #include "clTestCube.hpp"
 
 #include <egCubeMesh.h>
-#include <egNormalMap.h>
 
 #include "egCollider.hpp"
 #include "egMaterial.h"

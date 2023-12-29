@@ -24,9 +24,15 @@ namespace Engine::Resources
         return m_texture_desc_.Height;
     }
 
+    void Texture::SetSlot(eTexBindSlot slot, UINT slot_offset)
+    {
+        m_bound_slot_ = slot + slot_offset;
+    }
+
     Texture::Texture()
     : Resource("", RES_T_TEX),
-      m_texture_desc_() {}
+      m_texture_desc_(),
+      m_bound_slot_(0) {}
 
     Texture::~Texture() {}
 
@@ -40,12 +46,12 @@ namespace Engine::Resources
 
     void Texture::Render(const float& dt)
     {
-        GetRenderPipeline().BindResource(SR_TEXTURE, SHADER_PIXEL, m_texture_view_.GetAddressOf());
+        GetRenderPipeline().BindResource(m_bound_slot_, SHADER_PIXEL, m_texture_view_.GetAddressOf());
     }
 
     void Texture::PostRender(const float& dt)
     {
-        GetRenderPipeline().UnbindResource(SR_TEXTURE, SHADER_PIXEL);
+        GetRenderPipeline().UnbindResource(m_bound_slot_, SHADER_PIXEL);
     }
 
     void Texture::PostUpdate(const float& dt) {}

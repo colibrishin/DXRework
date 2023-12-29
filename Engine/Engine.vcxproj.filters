@@ -110,9 +110,6 @@
     <Filter Include="Resource\Mesh">
       <UniqueIdentifier>{8734eb51-6ee9-44c4-8b4f-6b90bb699bb9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\NormalMap">
-      <UniqueIdentifier>{f96a8f9a-fd4c-4793-ab46-8c17d6fdc7b5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Shader">
       <UniqueIdentifier>{c41f5685-5d13-42f7-aa15-a89ba3dd3b64}</UniqueIdentifier>
     </Filter>
@@ -327,9 +324,6 @@
     <ClInclude Include="egMesh.h">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="egNormalMap.h">
-      <Filter>Resource\NormalMap</Filter>
-    </ClInclude>
     <ClInclude Include="egShader.hpp">
       <Filter>Resource\Shader</Filter>
     </ClInclude>
@@ -537,9 +531,6 @@
     </ClCompile>
     <ClCompile Include="egMesh.cpp">
       <Filter>Resource\Mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="egNormalMap.cpp">
-      <Filter>Resource\NormalMap</Filter>
     </ClCompile>
     <ClCompile Include="egShader.cpp">
       <Filter>Resource\Shader</Filter>

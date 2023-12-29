@@ -10,14 +10,14 @@ float4 main(PixelInputType input) : SV_TARGET
     refractTex.x = input.refraction.x / input.reflection.w / 2.0f + 0.5f;
     refractTex.y = -input.refraction.y / input.reflection.w / 2.0f + 0.5f;
 
-    float4 normalMap = shaderNormalMap.Sample(PSSampler, input.tex);
+    float4 normalMap = tex00.Sample(PSSampler, input.tex);
     float3 normal    = (normalMap.xyz * 2.0f) - 1.0f;
 
     reflectTex += normal.xy * g_reflectionScale;
     refractTex += normal.xy * g_refractionScale;
 
-    const float4 reflectColor = renderedTexture.Sample(PSSampler, reflectTex);
-    const float4 refractColor = renderedTexture.Sample(PSSampler, refractTex);
+    const float4 reflectColor = texRendered.Sample(PSSampler, reflectTex);
+    const float4 refractColor = texRendered.Sample(PSSampler, refractTex);
 
     return lerp(reflectColor, refractColor, 0.6f);
 }

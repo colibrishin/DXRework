@@ -1,4 +1,5 @@
 #pragma once
+#include "egConstant.h"
 
 namespace Engine
 {
@@ -23,13 +24,21 @@ namespace Engine
         CB_TYPE_MATERIAL,
     };
 
-    enum eShaderResource
+    enum eTexBindSlot
     {
-        SR_TEXTURE = 0,
-        SR_NORMAL_MAP,
-        SR_SHADOW_MAP,
-        SR_RENDERED,
-        SR_ANIMATION
+        BIND_SLOT_TEX = 0,
+        BIND_SLOT_TEXARR = BIND_SLOT_TEX + g_max_slot_per_texture,
+        BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + g_max_slot_per_texture,
+        BIND_SLOT_END
+    };
+
+    static_assert(BIND_SLOT_END < 128);
+
+    enum eReservedTexBindSlot
+    {
+        RESERVED_SHADOW_MAP = g_reserved_bind_slot,
+        RESERVED_RENDERED,
+        RESERVED_ANIMATION,
     };
 
     enum eSampler
@@ -60,7 +69,6 @@ namespace Engine
         RES_T_UNK = 0,
         RES_T_SHADER,
         RES_T_TEX,
-        RES_T_NORMAL,
         RES_T_FONT,
         RES_T_SOUND,
         RES_T_BONE_ANIM,

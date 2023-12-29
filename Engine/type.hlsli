@@ -2,6 +2,7 @@
 #define MAX_BONE_COUNT 4
 #define MAX_NUM_CASCADES 3
 #define MAX_NUM_LIGHTS 8
+#define MAX_NUM_SLOTS 8
 
 struct CascadeShadow
 {

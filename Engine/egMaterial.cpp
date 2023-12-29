@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "egMaterial.h"
+
+#include "egTexture.h"
 #include "egType.h"
 
 namespace Engine::Resources
@@ -67,8 +69,17 @@ namespace Engine::Resources
             // No need to render the all animation.
             if (type == RES_T_BONE_ANIM) continue;
 
-            for (const auto& res : resources)
+            for (auto it = resources.begin(); it != resources.end(); ++it)
             {
+                const auto res = *it;
+
+                if (type == RES_T_TEX)
+                {
+                    // todo: distinguish tex type
+                    const UINT idx = std::distance(resources.begin(), it);
+                    res->GetSharedPtr<Texture>()->SetSlot(BIND_SLOT_TEX, idx);
+                }
+
                 res->Render(dt);
             }
         }
@@ -105,8 +116,33 @@ namespace Engine::Resources
         m_material_cb_ = std::move(material_cb);
     }
 
+    void Material::SetTextureSlot(const std::string& name, const UINT slot)
+    {
+        auto texs = m_resources_loaded_[which_resource<Texture>::value];
+        const auto it = std::ranges::find_if(texs, [&name](const StrongResource& res)
+        {
+                       return res->GetName() == name;
+        });
+
+        if (it == texs.end()) return;
+        if (const UINT idx = std::distance(texs.begin(), it); idx == slot) return;
+
+        std::iter_swap(texs.begin() + slot, it);
+    }
+
     void Material::Load_INTERNAL()
     {
+        m_resources_loaded_.clear();
+        m_shaders_loaded_.clear();
+
+        for (const auto& [type, name] : m_shaders_)
+        {
+            if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
+            {
+                m_shaders_loaded_[type] = res->GetSharedPtr<IShader>();
+            }
+        }
+
         for (const auto& [type, names] : m_resources_)
         {
             for (const auto& name : names)
