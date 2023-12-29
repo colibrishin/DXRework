@@ -17,7 +17,7 @@ namespace Engine::Abstract
         return m_assigned_scene_;
     }
 
-    ActorID Actor::GetLocalID() const
+    LocalActorID Actor::GetLocalID() const
     {
         return m_local_id_;
     }
@@ -47,7 +47,7 @@ namespace Engine::Abstract
         m_assigned_scene_ = scene;
     }
 
-    void Actor::SetLocalID(const ActorID id)
+    void Actor::SetLocalID(const LocalActorID id)
     {
         if (m_assigned_scene_.lock())
         {

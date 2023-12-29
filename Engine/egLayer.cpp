@@ -147,8 +147,7 @@ namespace Engine
         for (const auto& object : m_objects_)
         {
             object->OnDeserialized();
-            m_weak_objects_cache_[object->GetID()] = object;
-            m_weak_objects_.emplace_back(object);
+            m_weak_objects_cache_.insert({object->GetID(), object});
         }
     }
 
@@ -160,41 +159,42 @@ namespace Engine
         }
 
         m_objects_.insert(obj);
-        m_weak_objects_cache_[obj->GetID()] = obj;
-        m_weak_objects_.emplace_back(obj);
+        m_weak_objects_cache_.insert({obj->GetID(), obj});
     }
 
-    void Layer::RemoveGameObject(EntityID id)
+    void Layer::RemoveGameObject(GlobalEntityID id)
     {
-        if (m_weak_objects_cache_.contains(id))
+        ConcurrentWeakObjGlobalMap::const_accessor obj;
+
+        if (m_weak_objects_cache_.find(obj, id))
         {
-            m_objects_.erase(m_weak_objects_cache_[id].lock());
+            m_objects_.erase(obj->second.lock());
             m_weak_objects_cache_.erase(id);
-            std::erase_if(
-                          m_weak_objects_,
-                          [id](const auto& obj)
-                          {
-                              return obj.lock()->GetID() == id;
-                          });
         }
     }
 
-    WeakObject Layer::GetGameObject(EntityID id) const
+    WeakObject Layer::GetGameObject(GlobalEntityID id) const
     {
-        for (const auto& object : m_objects_)
+        ConcurrentWeakObjGlobalMap::const_accessor obj;
+
+        if (m_weak_objects_cache_.find(obj, id))
         {
-            if (object->GetID() == id)
-            {
-                return object;
-            }
+            return obj->second;
         }
 
         return {};
     }
 
-    const std::vector<WeakObject>& Layer::GetGameObjects()
+    ConcurrentWeakObjVec Layer::GetGameObjects() const
     {
-        return m_weak_objects_;
+        ConcurrentWeakObjVec result;
+
+        for (const auto& obj : m_weak_objects_cache_ | std::views::values)
+        {
+            result.push_back(obj);
+        }
+
+        return result;
     }
 
     Layer::Layer(): m_layer_type_(LAYER_NONE) {}

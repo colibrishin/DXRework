@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <boost/smart_ptr/weak_ptr.hpp>
+#include <oneapi/tbb.h>
 
 #include "egEnums.h"
 
@@ -37,6 +38,12 @@ namespace Engine
     using DirectX::BoundingOrientedBox;
     using DirectX::BoundingSphere;
 
+    using tbb::concurrent_hash_map;
+    using tbb::concurrent_map;
+    using tbb::concurrent_queue;
+    using tbb::concurrent_vector;
+    using tbb::concurrent_set;
+
     using Microsoft::WRL::ComPtr;
 
     using DirectX::XMFLOAT2;
@@ -66,6 +73,7 @@ namespace Engine
     class Scene;
     class Layer;
     class Serializer;
+    struct ComponentPriorityComparer;
 
     namespace Graphics
     {
@@ -183,12 +191,13 @@ namespace Engine
     using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
     using StrongShader = boost::shared_ptr<Graphics::IShader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
+    using StrongCollider = boost::shared_ptr<Components::Collider>;
 
     // Misc type definitions
     using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
-    using EntityID = LONG_PTR;
-    using ComponentID = LONG_PTR;
-    using ActorID = LONG_PTR;
+    using GlobalEntityID = LONG_PTR;
+    using LocalComponentID = LONG_PTR;
+    using LocalActorID = LONG_PTR;
     using EntityName = std::string;
     using TypeName = std::string;
     using TaskSchedulerFunc = std::function<void(const float&)>;
@@ -196,6 +205,14 @@ namespace Engine
     using IndexCollection = std::vector<UINT>;
     using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
     using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+
+    // Concurrent type definitions
+    using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObject>;
+    using ConcurrentWeakObjVec = concurrent_vector<WeakObject>;
+    using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
+    using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
+    using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
+    using ConcurrentWeakComTypeMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
 
     // Manager Forward Declaration
     extern Manager::ResourceManager&               GetResourceManager();

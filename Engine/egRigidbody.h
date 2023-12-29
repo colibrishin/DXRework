@@ -79,7 +79,7 @@ namespace Engine::Components
         Vector3 m_force_;
         Vector3 m_torque_;
 
-        ComponentID m_main_collider_;
+        LocalComponentID m_main_collider_;
     };
 } // namespace Engine::Component
 

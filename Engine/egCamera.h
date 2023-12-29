@@ -54,7 +54,7 @@ namespace Engine::Objects
         Quaternion m_look_at_rotation_;
 
         Vector3 m_offset_;
-        ActorID m_bound_object_id_;
+        LocalActorID m_bound_object_id_;
 
         bool m_b_orthogonal_;
 

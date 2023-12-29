@@ -30,7 +30,7 @@ namespace Engine::Manager::Physics
         void ResolveSpeculation(Abstract::Object& lhs, Abstract::Object& rhs);
 
     private:
-        std::set<std::pair<EntityID, EntityID>> m_collision_resolved_set_;
-        std::set<std::pair<EntityID, EntityID>> m_speculative_resolved_set_;
+        std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_collision_resolved_set_;
+        std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_speculative_resolved_set_;
     };
 } // namespace Engine::Manager::Physics

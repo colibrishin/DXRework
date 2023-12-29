@@ -12,7 +12,7 @@ namespace Engine::Abstract
 
         WeakObject         GetOwner() const;
         eComponentType GetComponentType() const;
-        ComponentID        GetLocalID() const;
+        LocalComponentID        GetLocalID() const;
         bool               IsTicked() const;
         bool               GetActive() const;
 
@@ -33,7 +33,7 @@ namespace Engine::Abstract
             m_owner_ = owner;
         }
 
-        void SetLocalID(ComponentID id)
+        void SetLocalID(LocalComponentID id)
         {
             if (const auto locked = m_owner_.lock())
             {
@@ -42,7 +42,7 @@ namespace Engine::Abstract
         }
 
     private:
-        ComponentID        m_local_id_;
+        LocalComponentID        m_local_id_;
         eComponentType m_type_;
 
         // Non-serialized

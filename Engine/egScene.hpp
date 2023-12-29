@@ -15,6 +15,7 @@ namespace Engine
         ~Scene() override         = default;
 
         virtual void Initialize_INTERNAL() = 0;
+        void         DisableControllers();
         void         Initialize() final;
 
         void PreUpdate(const float& dt) override;
@@ -29,14 +30,17 @@ namespace Engine
         void     OnDeserialized() override;
 
         template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
-        EntityID AddGameObject(const boost::shared_ptr<T>& obj, eLayerType layer)
+        GlobalEntityID AddGameObject(const boost::shared_ptr<T>& obj, eLayerType layer)
         {
             m_layers[layer]->AddGameObject(obj);
             m_cached_objects_.emplace(obj->GetID(), obj);
 
             for (const auto& comp : obj->GetAllComponents())
             {
-                m_cached_components_[comp.lock()->GetComponentType()].emplace(comp);
+                ConcurrentWeakComTypeMap::accessor acc;
+
+                m_cached_components_.insert(acc, comp.lock()->GetComponentType());
+                acc->second.emplace(comp.lock()->GetID(), comp);
             }
 
             obj->template GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
@@ -66,25 +70,34 @@ namespace Engine
             return obj->GetID();
         }
 
-        void     RemoveGameObject(EntityID id, eLayerType layer);
+        void     RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
-        std::vector<WeakObject> GetGameObjects(eLayerType layer);
+        ConcurrentWeakObjVec GetGameObjects(eLayerType layer);
 
-        WeakObject FindGameObject(EntityID id)
+        WeakObject FindGameObject(GlobalEntityID id) const
         {
-            if (m_cached_objects_.contains(id))
+            ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+            if (m_cached_objects_.find(acc, id))
             {
-                return m_cached_objects_[id];
+                return acc->second;
             }
 
             return {};
         }
 
-        WeakObject FindGameObjectByLocalID(ActorID id)
+        WeakObject FindGameObjectByLocalID(LocalActorID id) const
         {
-            if (m_assigned_actor_ids_.contains(id))
+            ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
+
+            if (m_assigned_actor_ids_.find(actor_acc, id))
             {
-                return m_cached_objects_[m_assigned_actor_ids_[id]];
+                ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+                if (m_cached_objects_.find(acc, actor_acc->second))
+                {
+                    return acc->second;
+                }
             }
 
             return {};
@@ -128,25 +141,51 @@ namespace Engine
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void AddCacheComponent(const boost::shared_ptr<T>& component)
         {
-            if (m_cached_objects_.contains(component->GetOwner().lock()->GetID()))
+            ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+            if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                m_cached_components_[which_component<T>::value].insert(component);
+                ConcurrentWeakComTypeMap::accessor comp_acc;
+                if (m_cached_components_.find(comp_acc, which_component<T>::value))
+                {
+                    comp_acc->second.emplace(component->GetID(), component);
+                }
             }
         }
 
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void RemoveCacheComponent(const boost::shared_ptr<T>& component)
         {
-            if (m_cached_objects_.contains(component->GetOwner().lock()->GetID()))
+            ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+            if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                m_cached_components_[which_component<T>::value].erase(component);
+                ConcurrentWeakComTypeMap::accessor comp_acc;
+                if (m_cached_components_.find(comp_acc, which_component<T>::value))
+                {
+                    comp_acc->second.erase(component->GetID());
+                }
             }
         }
 
         template <typename T>
-        const std::set<WeakComponent, ComponentPriorityComparer>& GetCachedComponents()
+        ConcurrentWeakComVec GetCachedComponents()
         {
-            return m_cached_components_[which_component<T>::value];
+            ConcurrentWeakComTypeMap::const_accessor acc;
+
+            if (m_cached_components_.find(acc, which_component<T>::value))
+            {
+                ConcurrentWeakComVec result;
+
+                for (const auto& comp : acc->second | std::views::values)
+                {
+                    result.push_back(comp);
+                }
+
+                return result;
+            }
+
+            return {};
         }
 
         eSceneType GetType() const;
@@ -179,7 +218,7 @@ namespace Engine
 
         virtual void AddCustomObject();
 
-        ActorID                           m_main_camera_local_id_;
+        LocalActorID                           m_main_camera_local_id_;
         std::map<eLayerType, StrongLayer> m_layers;
         eSceneType                        m_type_;
 
@@ -187,11 +226,9 @@ namespace Engine
         WeakObject m_observer_;
         WeakCamera m_mainCamera_;
 
-        std::map<ActorID, EntityID>    m_assigned_actor_ids_;
-        std::map<EntityID, WeakObject> m_cached_objects_;
-        std::map<eComponentType,
-                 std::set<WeakComponent, ComponentPriorityComparer>>
-        m_cached_components_;
+        ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
+        ConcurrentWeakObjGlobalMap m_cached_objects_;
+        ConcurrentWeakComTypeMap m_cached_components_;
         Octree<std::set<WeakObject, WeakComparer<Abstract::Object>>>
         m_object_position_tree_;
     };

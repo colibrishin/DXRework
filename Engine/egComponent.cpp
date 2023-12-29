@@ -18,7 +18,7 @@ namespace Engine::Abstract
         return m_type_;
     }
 
-    ComponentID Component::GetLocalID() const
+    LocalComponentID Component::GetLocalID() const
     {
         return m_local_id_;
     }
