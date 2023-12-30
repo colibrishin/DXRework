@@ -63,7 +63,7 @@ namespace Engine::Components
         const auto euler = rotation.ToEuler();
 
         m_yaw_pitch_roll_degree_ = Vector3{
-            XMConvertToDegrees(euler.x), XMConvertToDegrees(euler.y), XMConvertToDegrees(euler.z)
+            DirectX::XMConvertToDegrees(euler.x), DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.z)
         };
     }
 
@@ -161,9 +161,9 @@ namespace Engine::Components
     void Transform::PreUpdate(const float& dt)
     {
         m_rotation_ = Quaternion::CreateFromYawPitchRoll(
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
     }
 
     void Transform::Update(const float& dt) {}
@@ -203,8 +203,8 @@ namespace Engine::Components
 
         m_yaw_pitch_roll_degree_ =
                 Vector3(
-                        XMConvertToDegrees(euler.y), XMConvertToDegrees(euler.x),
-                        XMConvertToDegrees(euler.z));
+                        DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.x),
+                        DirectX::XMConvertToDegrees(euler.z));
     }
 
     Matrix Transform::GetLocalMatrix() const
