@@ -102,6 +102,11 @@ namespace Engine::Resources
         return m_animation_catalog_;
     }
 
+    const std::map<UINT, BoundingOrientedBox>& Shape::GetBoneBoundingBoxes() const
+    {
+        return m_bone_bounding_boxes_;
+    }
+
     void Shape::UpdateVertices()
     {
         m_cached_vertices_.clear();
@@ -277,6 +282,38 @@ namespace Engine::Resources
                 mesh->Load();
                 GetResourceManager().AddResource(mesh);
                 m_meshes_.push_back(mesh);
+            }
+
+            std::map<UINT, std::vector<Vector3>> bone_vertices;
+
+            for (const auto& mesh : m_meshes_)
+            {
+                for (const auto& vertex : mesh->GetVertexCollection())
+                {
+                    for (const auto& idx : vertex.bone_element.GetIndices())
+                    {
+                        const auto unique = std::ranges::find_if(
+                                             bone_vertices[idx],
+                                        [vertex](const Vector3& v)
+                        {
+                            return FloatCompare(v.x, vertex.position.x) &&
+                                   FloatCompare(v.y, vertex.position.y) &&
+                                   FloatCompare(v.z, vertex.position.z);
+                        });
+
+                        if (unique != bone_vertices[idx].end())
+                        {
+                            continue;
+                        }
+
+                        bone_vertices[idx].push_back(vertex.position);
+                    }
+                }
+            }
+
+            for (const auto& [idx, vertices] : bone_vertices)
+            {
+                BoundingOrientedBox::CreateFromPoints(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
             }
 
             if (scene->HasAnimations())

@@ -20,6 +20,11 @@ namespace Engine::Resources
         return static_cast<UINT>(m_indices_.size());
     }
 
+    const VertexCollection& Mesh::GetVertexCollection() const
+    {
+        return m_vertices_;
+    }
+
     Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)
     : Resource("", RES_T_MESH),
       m_vertices_(shape),

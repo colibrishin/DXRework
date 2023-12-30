@@ -6,6 +6,7 @@
 #include "egCollider.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egOffsetCollider.hpp"
 #include "egShader.hpp"
 #include "egShape.h"
 #include "egTransform.h"

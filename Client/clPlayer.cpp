@@ -46,6 +46,13 @@ namespace Client::Object
         rb->SetGravityOverride(true);
 
         atr->SetAnimation(model->GetAnimationCatalog().front());
+
+        for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
+        {
+            const auto bone_cldr = AddComponent<Components::BaseCollider>().lock();
+            bone_cldr->SetBoundingBox(box);
+            m_bone_colliders_.emplace(idx, bone_cldr);
+        }
     }
 
     void Player::PreUpdate(const float& dt)
@@ -76,5 +83,18 @@ namespace Client::Object
     void Player::FixedUpdate(const float& dt)
     {
         Object::FixedUpdate(dt);
+
+        const auto tr = GetComponent<Components::Transform>().lock();
+        const auto mr = GetComponent<Components::ModelRenderer>().lock();
+        const auto atr = GetComponent<Components::Animator>().lock();
+        const auto model = mr->GetModel().lock();
+        const auto mtl = mr->GetMaterial().lock();
+        const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
+        auto deform = anim->GetFrameAnimation(atr->GetFrame());
+
+        for (const auto& [idx, cldr] : m_bone_colliders_)
+        {
+            cldr->FromMatrix(deform[idx].transform);
+        }
     }
 }

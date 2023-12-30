@@ -26,6 +26,7 @@ namespace Engine::Resources
 
         const std::vector<const Vector3*>& GetVertices();
         UINT                               GetIndexCount() const;
+        const VertexCollection&            GetVertexCollection() const;
 
         RESOURCE_SELF_INFER_GETTER(Mesh)
 
