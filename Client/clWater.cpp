@@ -26,9 +26,9 @@ void Client::Object::Water::Initialize()
     const auto cldr = AddComponent<Engine::Components::BaseCollider>().lock();
     cldr->SetModel(model);
 
-    cldr->SetOffsetPosition({0.f, 0.5f, 0.f});
-
-    const auto cldr2 = AddComponent<Engine::Components::Collider>().lock();
+    const auto cldr2 = AddComponent<Engine::Components::OffsetCollider>().lock();
+    cldr2->SetModel(model);
+    cldr2->SetTransition({0.f, 0.5f, 0.f});
 }
 
 void Client::Object::Water::PreUpdate(const float& dt)
