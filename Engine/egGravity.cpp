@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include "egCollider.hpp"
 #include "egPhysics.hpp"
 
 namespace Engine::Physics

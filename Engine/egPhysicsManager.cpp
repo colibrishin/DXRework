@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egPhysicsManager.h"
-#include "egCollider.hpp"
+
+#include "egBaseCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egFriction.h"
@@ -48,7 +49,7 @@ namespace Engine::Manager::Physics
         }
 
         const auto cl =
-                rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
+                rb->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
 
         if (!rb->IsGrounded())
         {

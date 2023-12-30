@@ -1,9 +1,8 @@
 #include "pch.h"
 #include "egRigidbody.h"
-#include "egCollider.hpp"
-#include "egKinetic.h"
+
+#include "egBaseCollider.hpp"
 #include "egObject.hpp"
-#include "egScene.hpp"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -26,7 +25,7 @@ namespace Engine::Components
             throw std::exception("Rigidbody must have a transform component");
         }
 
-        if (!GetOwner().lock()->GetComponent<Collider>().lock())
+        if (!GetOwner().lock()->GetComponent<BaseCollider>().lock())
         {
             throw std::exception("Rigidbody must have a collider component");
         }
@@ -40,7 +39,7 @@ namespace Engine::Components
       m_friction_mu_(0.0f),
       m_main_collider_(g_invalid_id) {}
 
-    void Rigidbody::SetMainCollider(const WeakCollider& collider)
+    void Rigidbody::SetMainCollider(const WeakBaseCollider& collider)
     {
         m_main_collider_ = collider.lock()->GetLocalID();
     }
@@ -159,14 +158,14 @@ namespace Engine::Components
         return m_bGrounded;
     }
 
-    WeakCollider Rigidbody::GetMainCollider() const
+    WeakBaseCollider Rigidbody::GetMainCollider() const
     {
         if (m_main_collider_ == g_invalid_id)
         {
-            return GetOwner().lock()->GetComponent<Collider>();
+            return GetOwner().lock()->GetComponent<BaseCollider>();
         }
 
-        return GetOwner().lock()->GetComponentByLocal<Collider>(m_main_collider_);
+        return GetOwner().lock()->GetComponentByLocal<BaseCollider>(m_main_collider_);
     }
 
     void Rigidbody::Reset()

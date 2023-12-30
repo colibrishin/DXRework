@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "egCollision.h"
-#include "egCollider.hpp"
 #include "egElastic.h"
 #include "egPhysics.hpp"
 

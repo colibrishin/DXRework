@@ -3,7 +3,7 @@
 
 #include "clCharacterController.hpp"
 #include "egAnimator.h"
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
@@ -30,14 +30,13 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
-        const auto cldr = AddComponent<Components::Collider>().lock();
+        const auto cldr = AddComponent<Components::BaseCollider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
         AddComponent<Client::State::CharacterController>();
 
         tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({0, XM_PI / 2, 0.0f}));
         cldr->SetModel(model);
-        cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
 

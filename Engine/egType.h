@@ -55,13 +55,14 @@ namespace Engine
         class Light;
         class Camera;
         class Text;
-        class DebugObject;
+        class DelayedRenderObject;
         class Observer;
     } // namespace Objects
 
     namespace Components
     {
-        class Collider;
+        class BaseCollider;
+        class OffsetCollider;
         class Transform;
         class Rigidbody;
         class ObserverController;
@@ -154,7 +155,7 @@ namespace Engine
     using WeakResource = boost::weak_ptr<Abstract::Resource>;
     using WeakMesh = boost::weak_ptr<Resources::Mesh>;
     using WeakScene = boost::weak_ptr<Scene>;
-    using WeakCollider = boost::weak_ptr<Components::Collider>;
+    using WeakBaseCollider = boost::weak_ptr<Components::BaseCollider>;
     using WeakFont = boost::weak_ptr<Resources::Font>;
     using WeakCamera = boost::weak_ptr<Objects::Camera>;
     using WeakLight = boost::weak_ptr<Objects::Light>;
@@ -191,7 +192,7 @@ namespace Engine
     using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
     using StrongShader = boost::shared_ptr<Graphics::IShader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
-    using StrongCollider = boost::shared_ptr<Components::Collider>;
+    using StrongBaseCollider = boost::shared_ptr<Components::BaseCollider>;
 
     // Misc type definitions
     using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -213,6 +214,7 @@ namespace Engine
     using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
     using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
     using ConcurrentWeakComTypeMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
+    using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
     // Manager Forward Declaration
     extern Manager::ResourceManager&               GetResourceManager();

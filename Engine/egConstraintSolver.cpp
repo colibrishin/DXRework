@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "egConstraintSolver.h"
+
+#include "egBaseCollider.hpp"
 #include "egCollisionDetector.h"
 #include "egGlobal.h"
 #include "egObject.hpp"
@@ -47,7 +49,7 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::CheckCollision(Abstract::Object& obj)
     {
-        const auto cl = obj.GetComponent<Components::Collider>().lock();
+        const auto cl = obj.GetComponent<Components::BaseCollider>().lock();
 
         if (!cl)
         {
@@ -76,7 +78,7 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::CheckSpeculation(Abstract::Object& obj)
     {
-        const auto cl = obj.GetComponent<Components::Collider>().lock();
+        const auto cl = obj.GetComponent<Components::BaseCollider>().lock();
 
         if (!cl)
         {

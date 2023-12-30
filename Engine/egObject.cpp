@@ -1,13 +1,13 @@
 #include "pch.h"
 
 #include "egObject.hpp"
-#include "egCollider.hpp"
 #include "egCollision.h"
 #include "egManagerHelper.hpp"
 #include "egMesh.h"
 #include "egRigidbody.h"
 #include "egTransform.h"
 #include "egComponent.h"
+#include "egBaseCollider.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
@@ -15,14 +15,14 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Abstract
 {
-    template void Object::DispatchComponentEvent(StrongCollider& lhs, StrongCollider& rhs);
+    template void Object::DispatchComponentEvent(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
 
     template <typename T>
     void Object::DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs)
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
-            if constexpr (std::is_same_v<Engine::Components::Collider, T>)
+            if constexpr (std::is_same_v<Engine::Components::BaseCollider, T>)
             {
                 const auto lhs_owner = lhs->GetOwner().lock();
                 const auto rhs_owner = rhs->GetOwner().lock();
@@ -159,25 +159,25 @@ namespace Engine::Abstract
         return false;
     }
 
-    void Object::OnCollisionEnter(const StrongCollider& other)
+    void Object::OnCollisionEnter(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionContinue(const StrongCollider& other)
+    void Object::OnCollisionContinue(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionExit(const StrongCollider& other)
+    void Object::OnCollisionExit(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }

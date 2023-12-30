@@ -268,9 +268,9 @@ namespace Engine::Abstract
             }
         }
 
-        virtual void OnCollisionEnter(const StrongCollider& other);
-        virtual void OnCollisionContinue(const StrongCollider& other);
-        virtual void OnCollisionExit(const StrongCollider& other);
+        virtual void OnCollisionEnter(const StrongBaseCollider& other);
+        virtual void OnCollisionContinue(const StrongBaseCollider& other);
+        virtual void OnCollisionExit(const StrongBaseCollider& other);
 
     private:
         LocalActorID              m_parent_;

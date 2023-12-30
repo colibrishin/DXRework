@@ -3,8 +3,6 @@
 
 #include "egCubeMesh.h"
 #include "egVertexShaderInternal.h"
-
-#include "egCollider.hpp"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(

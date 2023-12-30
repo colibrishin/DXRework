@@ -34,7 +34,7 @@ namespace Engine::Resources
         SERIALIZER_ACCESS
         Mesh();
 
-        friend class Components::Collider;
+        friend class Components::BaseCollider;
 
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();
