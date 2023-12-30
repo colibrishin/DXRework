@@ -40,11 +40,11 @@ namespace Engine::Manager::Physics
         bool IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const;
 
     private:
-        void CheckCollision(StrongCollider & lhs, StrongCollider & rhs);
-        void CheckGrounded(const StrongCollider & lhs, const StrongCollider & rhs);
+        void CheckCollision(StrongBaseCollider & lhs, StrongBaseCollider & rhs);
+        void CheckGrounded(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
         bool CheckRaycasting(
-            const StrongCollider & lhs,
-            const StrongCollider & rhs);
+            const StrongBaseCollider & lhs,
+            const StrongBaseCollider & rhs);
 
     private:
         std::mutex                                    m_layer_mask_mutex_;

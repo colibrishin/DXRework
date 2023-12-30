@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "egCollisionDetector.h"
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egManagerHelper.hpp"
@@ -32,7 +32,7 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::CheckCollision(StrongCollider& lhs, StrongCollider& rhs)
+    void CollisionDetector::CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs)
     {
         const auto lhs_owner = lhs->GetOwner().lock();
         const auto rhs_owner = rhs->GetOwner().lock();
@@ -90,20 +90,16 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs)
+    void CollisionDetector::CheckGrounded(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
     {
         const auto lhs_owner = lhs->GetOwner().lock();
         const auto rhs_owner = rhs->GetOwner().lock();
 
-        if (lhs_owner == rhs_owner)
-        {
-            return;
-        }
-
+        if (lhs_owner == rhs_owner) return;
         if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
         else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
-        if (Components::Collider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
+        if (Components::BaseCollider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
         {
             if (const auto rb = lhs_owner
                                    ->GetComponent<Components::Rigidbody>()
@@ -115,7 +111,7 @@ namespace Engine::Manager::Physics
         }
     }
 
-    bool CollisionDetector::CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs)
+    bool CollisionDetector::CheckRaycasting(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
     {
         const auto rb =
                 lhs->GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
@@ -143,7 +139,7 @@ namespace Engine::Manager::Physics
     void CollisionDetector::Update(const float& dt)
     {
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
+        const auto& colliders = scene->GetCachedComponents<Components::BaseCollider>();
 
         for (const auto& cl : colliders)
         {
@@ -174,8 +170,8 @@ namespace Engine::Manager::Physics
                               }
                               
 
-                              auto lhs_casted = cl_locked->GetSharedPtr<Components::Collider>();
-                              auto rhs_casted = cl_other_locked->GetSharedPtr<Components::Collider>();
+                              auto lhs_casted = cl_locked->GetSharedPtr<Components::BaseCollider>();
+                              auto rhs_casted = cl_other_locked->GetSharedPtr<Components::BaseCollider>();
 
                               CheckCollision(lhs_casted, rhs_casted);
                           });
@@ -190,7 +186,7 @@ namespace Engine::Manager::Physics
         m_speculation_map_.clear();
 
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
+        const auto& colliders = scene->GetCachedComponents<Components::BaseCollider>();
 
         for (const auto& cl : colliders)
         {
@@ -220,9 +216,15 @@ namespace Engine::Manager::Physics
                                   }
                               }
 
+                              if (const auto rb = cl_locked->GetOwner().lock()->GetComponent<Components::Rigidbody>().lock(); 
+                                  rb && rb->GetMainCollider().lock() != cl_locked)
+                              {
+                                  return;
+                              }
+
                               CheckGrounded(
-                                            cl_locked->GetSharedPtr<Components::Collider>(),
-                                            cl_other_locked->GetSharedPtr<Components::Collider>());
+                                            cl_locked->GetSharedPtr<Components::BaseCollider>(),
+                                            cl_other_locked->GetSharedPtr<Components::BaseCollider>());
                           });
         }
     }
@@ -272,7 +274,7 @@ namespace Engine::Manager::Physics
                                         [ray, &distance, &out, &out_mutex](const WeakObject& obj)
                                         {
                                             const auto obj_locked = obj.lock();
-                                            const auto cls        = obj_locked->GetComponents<Components::Collider>();
+                                            const auto cls        = obj_locked->GetComponents<Components::BaseCollider>();
 
                                             for (const auto& collider : cls)
                                             {
@@ -316,12 +318,12 @@ namespace Engine::Manager::Physics
                       {
                           if (const auto locked = obj.lock())
                           {
-                              const auto cls = locked->GetComponents<Components::Collider>();
+                              const auto cls = locked->GetComponents<Components::BaseCollider>();
 
                               std::for_each(
                                             std::execution::par, cls.begin(), cls.end(),
                                             [ray, distance, &hit, &out, &out_mutex, &obj,
-                                                locked](const WeakCollider& cl_o)
+                                                locked](const WeakBaseCollider& cl_o)
                                             {
                                                 const auto cl = cl_o.lock();
 
