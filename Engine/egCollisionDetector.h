@@ -36,11 +36,11 @@ namespace Engine::Manager::Physics
         bool IsCollided(GlobalEntityID id) const;
         bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
-
         bool IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const;
 
     private:
-        void CheckCollision(StrongBaseCollider & lhs, StrongBaseCollider & rhs);
+        void CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
+        void CheckCollisionChunk(StrongBaseCollider & lhs, std::vector<StrongBaseCollider> & rhs);
         void CheckGrounded(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
         bool CheckRaycasting(
             const StrongBaseCollider & lhs,
