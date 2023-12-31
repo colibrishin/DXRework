@@ -162,13 +162,15 @@ namespace Engine::Components
     {
         if (lhs->m_type_ == BOUNDING_TYPE_BOX)
         {
-            static BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
+            static BoundingOrientedBox box;
+            box = lhs->GetBounding<BoundingOrientedBox>();
             box.Center = box.Center + offset;
             return rhs->Intersects_GENERAL_TYPE(box);
         }
         else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            static BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
+            static BoundingSphere sphere;
+            sphere = lhs->GetBounding<BoundingSphere>();
             sphere.Center = sphere.Center + offset;
             return rhs->Intersects_GENERAL_TYPE(sphere);
         }
