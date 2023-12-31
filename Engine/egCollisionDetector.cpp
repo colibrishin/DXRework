@@ -55,6 +55,9 @@ namespace Engine::Manager::Physics
 
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
+
+                m_collision_queue_.push_back({lhs_owner, rhs_owner, true, true});
+
                 return;
             }
         }
@@ -68,14 +71,17 @@ namespace Engine::Manager::Physics
 
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
-                return;
+            }
+            else
+            {
+                m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+                m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+
+                lhs_owner->DispatchComponentEvent(lhs, rhs);
+                rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
 
-            m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-            m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
-
-            lhs_owner->DispatchComponentEvent(lhs, rhs);
-            rhs_owner->DispatchComponentEvent(rhs, lhs);
+            m_collision_queue_.push_back({lhs_owner, rhs_owner, false, true});
         }
         else
         {
@@ -149,44 +155,59 @@ namespace Engine::Manager::Physics
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
         const auto& colliders = scene->GetCachedComponents<Components::BaseCollider>();
 
-        tbb::parallel_for_each(
-                          colliders.range(),
-                          [colliders, this](const WeakComponent& lhs)
+        static tbb::affinity_partitioner ap;
+
+        tbb::parallel_for(
+                          tbb::blocked_range<size_t>(0, colliders.size()),
+                          [colliders, this](const tbb::blocked_range<size_t>& range)
                           {
-                              if (lhs.expired()) return;
-
-                              auto lhs_casted = lhs.lock()->GetSharedPtr<Components::BaseCollider>();
-
-                              std::vector<StrongBaseCollider> rhs_chunk;
-
-                              for (const auto& rhs : colliders)
+                              for (size_t i = range.begin(); i != range.end(); ++i)
                               {
-                                  const auto rhs_locked = rhs.lock();
+                                  auto ptr_lhs = colliders[i].lock();
 
-                                  if (!rhs_locked)
+                                  if (!ptr_lhs)
                                   {
                                       continue;
                                   }
 
-                                  if (lhs_casted == rhs_locked)
-                                  {
-                                      continue;
-                                  }
+                                  auto lhs = ptr_lhs->GetSharedPtr<Components::BaseCollider>();
 
+                                  std::vector<StrongBaseCollider> rhs_chunk;
+
+                                  for (size_t j = 0; j < colliders.size(); ++j)
                                   {
-                                      std::lock_guard lock(m_layer_mask_mutex_);
-                                      if (!m_layer_mask_[rhs_locked->GetOwner().lock()->GetLayer()].test(
-                                           rhs_locked->GetOwner().lock()->GetLayer()))
+                                      const auto rhs = colliders[j].lock();
+
+                                      if (!rhs)
                                       {
                                           continue;
                                       }
+
+                                      if (ptr_lhs == rhs)
+                                      {
+                                          continue;
+                                      }
+
+                                      if (ptr_lhs->GetOwner().lock() == rhs->GetOwner().lock())
+                                      {
+                                          continue;
+                                      }
+
+                                      {
+                                          std::lock_guard lock(m_layer_mask_mutex_);
+                                          if (!m_layer_mask_[rhs->GetOwner().lock()->GetLayer()].test(
+                                               rhs->GetOwner().lock()->GetLayer()))
+                                          {
+                                              continue;
+                                          }
+                                      }
+
+                                      rhs_chunk.push_back(rhs->GetSharedPtr<Components::BaseCollider>());
                                   }
 
-                                  rhs_chunk.push_back(rhs_locked->GetSharedPtr<Components::BaseCollider>());
+                                  CheckCollisionChunk(lhs, rhs_chunk);
                               }
-
-                              CheckCollisionChunk(lhs_casted, rhs_chunk);
-                          });
+                          }, ap);
     }
 
     void CollisionDetector::PreUpdate(const float& dt)
@@ -417,6 +438,11 @@ namespace Engine::Manager::Physics
         }
 
         return m_speculation_map_.at(id1).contains(id2);
+    }
+
+    concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
+    {
+        return m_collision_queue_;
     }
 
     bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const

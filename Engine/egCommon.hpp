@@ -46,6 +46,15 @@ namespace Engine
         bool operator()(const WeakComponent Left, const WeakComponent Right) const;
     };
 
+    struct CollisionInfo
+    {
+        WeakObject lhs;
+        WeakObject rhs;
+
+        bool speculative;
+        bool collision;
+    };
+
     inline static bool IsAssigned(const LONG_PTR id)
     {
         return id != g_invalid_id;

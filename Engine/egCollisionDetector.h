@@ -37,18 +37,19 @@ namespace Engine::Manager::Physics
         bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const;
+        concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
         void CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
         void CheckCollisionChunk(StrongBaseCollider & lhs, std::vector<StrongBaseCollider> & rhs);
         void CheckGrounded(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
-        bool CheckRaycasting(
-            const StrongBaseCollider & lhs,
-            const StrongBaseCollider & rhs);
+        bool CheckRaycasting(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
 
     private:
         std::mutex                                    m_layer_mask_mutex_;
         std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
+
+        concurrent_vector<CollisionInfo> m_collision_queue_;
         concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_collision_map_;
         concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_frame_collision_map_;
         concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_speculation_map_;
