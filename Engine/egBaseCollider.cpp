@@ -134,6 +134,8 @@ namespace Engine::Components
         {
             GenerateInertiaSphere();
         }
+
+        UpdateInertiaTensor();
     }
 
     void BaseCollider::SetModel(const WeakModel& model)
@@ -387,11 +389,11 @@ namespace Engine::Components
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            dimensions = GetBounding<BoundingOrientedBox>().Extents;
+            dimensions = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2;
         }
         else if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            dimensions = Vector3(GetBounding<BoundingSphere>().Radius);
+            dimensions = Vector3(GetBounding<BoundingSphere>().Radius) * 2;
         }
 
         const Matrix matrix = orientation *
@@ -412,7 +414,7 @@ namespace Engine::Components
 
     void BaseCollider::GenerateInertiaCube()
     {
-        const Vector3 dim                = GetBounding<BoundingOrientedBox>().Extents;
+        const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2;
         const Vector3 dimensions_squared = dim * dim;
 
         m_inverse_inertia_.x = (12.0f * GetInverseMass()) /
