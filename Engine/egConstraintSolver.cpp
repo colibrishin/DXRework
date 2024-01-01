@@ -20,24 +20,18 @@ namespace Engine::Manager::Physics
         auto& infos = GetCollisionDetector().GetCollisionInfo();
 
         static tbb::affinity_partitioner ap;
-        tbb::parallel_for(
-                             tbb::blocked_range<size_t>(0, infos.size()),
-                             [infos, this](const tbb::blocked_range<size_t>& range)
-                             {
-                                 for (auto i = range.begin(); i != range.end(); ++i)
-                                 {
-                                     const auto& info = infos[i];
 
-                                     if (info.speculative)
-                                     {
-                                         ResolveSpeculation(info.lhs, info.rhs);
-                                     }
-                                     else if (info.collision)
-                                     {
-                                         ResolveCollision(info.lhs, info.rhs);
-                                     }
-                                 }
-                             }, ap);
+        for (const auto& info : infos)
+        {
+            if (info.speculative)
+            {
+                ResolveSpeculation(info.lhs, info.rhs);
+            }
+            else if (info.collision)
+            {
+                ResolveCollision(info.lhs, info.rhs);
+            }
+        }
 
         infos.clear();
         m_collision_resolved_set_.clear();

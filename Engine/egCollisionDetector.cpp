@@ -186,57 +186,54 @@ namespace Engine::Manager::Physics
 
         static tbb::affinity_partitioner ap;
 
-        tbb::parallel_for(
-                          tbb::blocked_range<size_t>(0, colliders.size()),
-                          [colliders, this](const tbb::blocked_range<size_t>& range)
-                          {
-                              for (size_t i = range.begin(); i != range.end(); ++i)
-                              {
-                                  auto ptr_lhs = colliders[i].lock();
+        for (const auto& collider : colliders)
+        {
+            const auto ptr_lhs = collider.lock();
 
-                                  if (!ptr_lhs)
-                                  {
-                                      continue;
-                                  }
+            if (!ptr_lhs)
+            {
+                continue;
+            }
 
-                                  auto lhs = ptr_lhs->GetSharedPtr<Components::BaseCollider>();
+            auto lhs = ptr_lhs->GetSharedPtr<Components::BaseCollider>();
 
-                                  std::vector<StrongBaseCollider> rhs_chunk;
+            std::vector<StrongBaseCollider> rhs_chunk;
 
-                                  for (size_t j = 0; j < colliders.size(); ++j)
-                                  {
-                                      const auto rhs = colliders[j].lock();
+            for (size_t j = 0; j < colliders.size(); ++j)
+            {
+                const auto rhs = colliders[j].lock();
 
-                                      if (!rhs)
-                                      {
-                                          continue;
-                                      }
+                if (!rhs)
+                {
+                    continue;
+                }
 
-                                      if (ptr_lhs == rhs)
-                                      {
-                                          continue;
-                                      }
+                if (ptr_lhs == rhs)
+                {
+                    continue;
+                }
 
-                                      if (ptr_lhs->GetOwner().lock() == rhs->GetOwner().lock())
-                                      {
-                                          continue;
-                                      }
+                if (ptr_lhs->GetOwner().lock() == rhs->GetOwner().lock())
+                {
+                    continue;
+                }
 
-                                      {
-                                          std::lock_guard lock(m_layer_mask_mutex_);
-                                          if (!m_layer_mask_[rhs->GetOwner().lock()->GetLayer()].test(
-                                               rhs->GetOwner().lock()->GetLayer()))
-                                          {
-                                              continue;
-                                          }
-                                      }
+                {
+                    std::lock_guard lock(m_layer_mask_mutex_);
+                    if (!m_layer_mask_[rhs->GetOwner().lock()->GetLayer()].test(
+                                                                                rhs->GetOwner().lock()->GetLayer()))
+                    {
+                        continue;
+                    }
+                }
 
-                                      rhs_chunk.push_back(rhs->GetSharedPtr<Components::BaseCollider>());
-                                  }
+                rhs_chunk.push_back(rhs->GetSharedPtr<Components::BaseCollider>());
+            }
 
-                                  CheckCollisionChunk(lhs, rhs_chunk);
-                              }
-                          }, ap);
+            CheckCollisionChunk(lhs, rhs_chunk);
+        }
+
+        m_collision_check_map_.clear();
     }
 
     void CollisionDetector::PreUpdate(const float& dt)
@@ -258,36 +255,34 @@ namespace Engine::Manager::Physics
                 continue;
             }
 
-            tbb::parallel_for_each(
-                          rbs.range(),
-                          [lhs, this](const WeakComponent& p_rhs)
-                          {
-                              if (lhs == p_rhs.lock())
-                              {
-                                  return;
-                              }
+            for (const auto& p_rhs : rbs)
+            {
+                if (lhs == p_rhs.lock())
+                {
+                    return;
+                }
 
-                              const auto rhs = p_rhs.lock();
+                const auto rhs = p_rhs.lock();
 
-                              if (!rhs)
-                              {
-                                  return;
-                              }
+                if (!rhs)
+                {
+                    return;
+                }
 
-                              {
-                                  std::lock_guard lock(m_layer_mask_mutex_);
-                                  if (!m_layer_mask_[lhs->GetOwner().lock()->GetLayer()].test(
-                                   rhs->GetOwner().lock()->GetLayer()))
-                                  {
-                                      return;
-                                  }
-                              }
+                {
+                    std::lock_guard lock(m_layer_mask_mutex_);
+                    if (!m_layer_mask_[lhs->GetOwner().lock()->GetLayer()].test(
+                                                                                rhs->GetOwner().lock()->GetLayer()))
+                    {
+                        return;
+                    }
+                }
 
-                              const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
-                              const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
+                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
+                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
 
-                              CheckGrounded(lhs_cl, rhs_cl);
-                          });
+                CheckGrounded(lhs_cl, rhs_cl);
+            }
         }
     }
 
