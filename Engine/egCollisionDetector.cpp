@@ -262,14 +262,14 @@ namespace Engine::Manager::Physics
             {
                 if (lhs == p_rhs.lock())
                 {
-                    return;
+                    continue;
                 }
 
                 const auto rhs = p_rhs.lock();
 
                 if (!rhs)
                 {
-                    return;
+                    continue;
                 }
 
                 {
@@ -277,7 +277,7 @@ namespace Engine::Manager::Physics
                     if (!m_layer_mask_[lhs->GetOwner().lock()->GetLayer()].test(
                                                                                 rhs->GetOwner().lock()->GetLayer()))
                     {
-                        return;
+                        continue;
                     }
                 }
 
