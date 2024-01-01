@@ -53,6 +53,7 @@ namespace Engine
 
         bool speculative;
         bool collision;
+        bool grounded;
     };
 
     inline static bool IsAssigned(const LONG_PTR id)

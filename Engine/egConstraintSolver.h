@@ -22,8 +22,9 @@ namespace Engine::Manager::Physics
         void PostUpdate(const float& dt) override;
 
     private:
-        void ResolveCollision(const WeakObject & lhs, const WeakObject & rhs);
+        void ResolveCollision(const WeakObject& lhs, const WeakObject& rhs);
         void ResolveSpeculation(const WeakObject & lhs, const WeakObject & rhs);
+        void ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs);
 
     private:
         std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_collision_resolved_set_;

@@ -23,11 +23,15 @@ namespace Engine::Manager::Physics
 
         for (const auto& info : infos)
         {
+            if (info.grounded)
+            {
+                ResolveGrounded(info.lhs, info.rhs);
+            }
             if (info.speculative)
             {
                 ResolveSpeculation(info.lhs, info.rhs);
             }
-            else if (info.collision)
+            if (info.collision)
             {
                 ResolveCollision(info.lhs, info.rhs);
             }
@@ -197,6 +201,36 @@ namespace Engine::Manager::Physics
 
             cl->RemoveSpeculationObject(rhs.lock()->GetID());
             cl_other->RemoveSpeculationObject(lhs.lock()->GetID());
+        }
+    }
+
+    void ConstraintSolver::ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs)
+    {
+        const auto rb_lhs = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto rb_rhs = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+
+        const auto cl_lhs = rb_lhs->GetMainCollider().lock();
+        const auto cl_rhs = rb_rhs->GetMainCollider().lock();
+
+        const auto tr_lhs = lhs.lock()->GetComponent<Components::Transform>().lock();
+        const auto tr_rhs = rhs.lock()->GetComponent<Components::Transform>().lock();
+
+        static Ray ray{};
+        ray.position = lhs.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
+        ray.direction = Vector3::Down;
+        const auto length = std::fabsf(tr_lhs->GetScale().Dot(Vector3::Down)) / 2.f + std::fabsf(tr_rhs->GetScale().Dot(Vector3::Up)) / 2.f;
+        float intersection = 0.0f;
+
+        if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
+        {
+            Vector3 normal;
+            float penetration;
+
+            cl_lhs->GetPenetration(*cl_rhs, normal, penetration);
+
+            const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+            const auto fallback = tr->GetWorldPosition() + (normal * penetration);
+            tr->SetWorldPosition(fallback);
         }
     }
 } // namespace Engine::Manager::Physics

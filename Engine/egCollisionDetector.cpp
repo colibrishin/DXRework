@@ -142,15 +142,18 @@ namespace Engine::Manager::Physics
         if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
         else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
+        const auto rb = lhs_owner
+                        ->GetComponent<Components::Rigidbody>()
+                        .lock();
+
+        if (rb->IsFixed() || !rb->IsGravityAllowed()) return;
+
         if (Components::BaseCollider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
         {
-            if (const auto rb = lhs_owner
-                                   ->GetComponent<Components::Rigidbody>()
-                                   .lock())
-            {
-                // Ground flag is automatically set to false on the start of the frame.
-                rb->SetGrounded(true);
-            }
+            // Ground flag is automatically set to false on the start of the frame.
+            rb->SetGrounded(true);
+
+            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true, true});
         }
     }
 
