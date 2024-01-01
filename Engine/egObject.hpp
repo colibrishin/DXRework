@@ -82,7 +82,7 @@ namespace Engine::Abstract
 
                 const auto& comp_set = m_components_[which_component<T>::value];
 
-                return boost::reinterpret_pointer_cast<T>(*comp_set.begin());
+                return boost::static_pointer_cast<T>(*comp_set.begin());
             }
 
             return {};
@@ -102,7 +102,7 @@ namespace Engine::Abstract
 
                 if (it != comp_set.end())
                 {
-                    return boost::reinterpret_pointer_cast<T>(*it);
+                    return boost::static_pointer_cast<T>(*it);
                 }
             }
 
@@ -127,7 +127,7 @@ namespace Engine::Abstract
 
                 for (const auto& comp : comp_set)
                 {
-                    result.insert(boost::reinterpret_pointer_cast<T>(comp));
+                    result.insert(boost::static_pointer_cast<T>(comp));
                 }
 
                 return result;
@@ -160,7 +160,7 @@ namespace Engine::Abstract
                     return {};
                 }
 
-                return boost::reinterpret_pointer_cast<T>(*found);
+                return boost::static_pointer_cast<T>(*found);
             }
 
             return {};
