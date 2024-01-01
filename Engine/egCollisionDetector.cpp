@@ -41,9 +41,18 @@ namespace Engine::Manager::Physics
         if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
         else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
-        if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
+        if (m_collision_check_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()) &&
+            m_collision_check_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
         {
-            if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+            return;
+        }
+
+        if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
+            !m_speculation_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()) &&
+            CheckRaycasting(lhs, rhs) && g_speculation_enabled)
+        {
+            if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
+                !m_speculation_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
             {
                 m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
@@ -60,11 +69,16 @@ namespace Engine::Manager::Physics
 
                 return;
             }
+            else
+            {
+                return;
+            }
         }
 
         if (lhs->Intersects(rhs))
         {
-            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
+                m_collision_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
             {
                 m_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
@@ -72,11 +86,17 @@ namespace Engine::Manager::Physics
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
-            else
+            else if (!m_frame_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
+                     !m_frame_collision_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
             {
                 m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
+                lhs_owner->DispatchComponentEvent(lhs, rhs);
+                rhs_owner->DispatchComponentEvent(rhs, lhs);
+            }
+            else
+            {
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
@@ -94,6 +114,9 @@ namespace Engine::Manager::Physics
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
         }
+
+        m_collision_check_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+        m_collision_check_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
     }
 
     void CollisionDetector::CheckCollisionChunk(StrongBaseCollider& lhs, std::vector<StrongBaseCollider>& rhs)
