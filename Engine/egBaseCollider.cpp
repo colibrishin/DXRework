@@ -21,7 +21,7 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Components
 {
-    const std::vector<const Vector3*>& BaseCollider::GetVertices() const
+    const std::vector<Graphics::VertexElement>& BaseCollider::GetVertices() const
     {
         if (const auto model = m_model_.lock())
         {
@@ -30,11 +30,11 @@ namespace Engine::Components
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
-            return m_cube_stock_ref_;
+            return m_cube_stock_;
         }
         if (m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            return m_sphere_stock_ref_;
+            return m_sphere_stock_;
         }
 
         return {};
@@ -56,7 +56,8 @@ namespace Engine::Components
 
         InitializeStockVertices();
 
-        m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), m_cube_stock_.data(), sizeof(Vector3));
+        const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
+        m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -81,12 +82,7 @@ namespace Engine::Components
 
             for (const auto& v : vertex)
             {
-                m_cube_stock_.push_back(v.position);
-            }
-
-            for (const auto& v : m_cube_stock_)
-            {
-                m_cube_stock_ref_.push_back(&v);
+                m_cube_stock_.push_back({v.position});
             }
         }
         if (m_sphere_stock_.empty())
@@ -95,12 +91,7 @@ namespace Engine::Components
 
             for (const auto& v : vertex)
             {
-                m_sphere_stock_.push_back(v.position);
-            }
-
-            for (const auto& v : m_sphere_stock_)
-            {
-                m_sphere_stock_ref_.push_back(&v);
+                m_sphere_stock_.push_back({v.position});
             }
         }
     }

@@ -87,7 +87,7 @@ namespace Engine::Resources
         return {};
     }
 
-    const std::vector<const Vector3*>& Shape::GetVertices() const
+    const std::vector<VertexElement>& Shape::GetVertices() const
     {
         return m_cached_vertices_;
     }
@@ -113,7 +113,10 @@ namespace Engine::Resources
 
         for (const auto& mesh : m_meshes_)
         {
-            m_cached_vertices_.insert(m_cached_vertices_.end(), mesh->GetVertices().begin(), mesh->GetVertices().end());
+            for (const auto& vertex : mesh->GetVertexCollection())
+            {
+                m_cached_vertices_.push_back(vertex);
+            }
         }
     }
 

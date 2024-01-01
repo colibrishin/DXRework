@@ -15,21 +15,29 @@ namespace Engine::Physics
         }
 
         Vector3 __vectorcall GetFurthestPoint(
-            const std::vector<const Vector3*>& points,
+            const VertexCollection& points,
             const Matrix&                      world, const Vector3& dir)
         {
             float   max = -FLT_MAX;
             Vector3 result;
+            static std::vector<Vector3> out_stream;
+            out_stream.clear();
+            out_stream.resize(points.size());
 
-            for (const auto& point : points)
+            DirectX::XMVector3TransformCoordStream(
+                                                   out_stream.data(), sizeof(Vector3),
+                                                   reinterpret_cast<const Vector3*>(points.data()),
+                                                   sizeof(Graphics::VertexElement),
+                                                   points.size(), world);
+
+            for (const auto& point : out_stream)
             {
-                const auto  world_position = Vector3::Transform(*point, world);
-                const float dist           = world_position.Dot(dir);
+                const float dist           = point.Dot(dir);
 
                 if (dist > max)
                 {
                     max    = dist;
-                    result = world_position;
+                    result = point;
                 }
             }
 
@@ -37,8 +45,8 @@ namespace Engine::Physics
         }
 
         Vector3 __vectorcall GetSupportPoint(
-            const std::vector<const Vector3*>& lhs,
-            const std::vector<const Vector3*>& rhs,
+            const VertexCollection& lhs,
+            const VertexCollection& rhs,
             const Matrix&                      lw, const Matrix& rw,
             const Vector3&                     dir)
         {
@@ -206,8 +214,8 @@ namespace Engine::Physics
         }
 
         void __vectorcall EPAAlgorithm(
-            const std::vector<const Vector3*>& lhs,
-            const std::vector<const Vector3*>& rhs,
+            const VertexCollection& lhs,
+            const VertexCollection& rhs,
             const Matrix&                      lw, const Matrix& rw,
             const Simplex&                     simplex, Vector3& normal,
             float&                             penetration)
@@ -336,8 +344,8 @@ namespace Engine::Physics
 
         bool __vectorcall GJKAlgorithm(
             const Matrix&                      lhs_world,
-            const Matrix&                      rhs_world, const std::vector<const Vector3*>& lhs_vertices,
-            const std::vector<const Vector3*>& rhs_vertices, const Vector3&                  dir,
+            const Matrix&                      rhs_world, const VertexCollection& lhs_vertices,
+            const VertexCollection& rhs_vertices, const Vector3&                  dir,
             Vector3&                           normal, float&                                penetration)
         {
             const Matrix& lw = lhs_world;

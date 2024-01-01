@@ -10,11 +10,6 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Resources
 {
-    const std::vector<const Vector3*>& Mesh::GetVertices()
-    {
-        return m_flatten_vertices_;
-    }
-
     UINT Mesh::GetIndexCount() const
     {
         return static_cast<UINT>(m_indices_.size());
@@ -149,11 +144,6 @@ namespace Engine::Resources
         Load_CUSTOM();
 
         UpdateTangentBinormal();
-
-        for (const auto& vertex : m_vertices_)
-        {
-            m_flatten_vertices_.push_back(&vertex.position);
-        }
 
         std::vector<Vector3> vertices;
         for (const auto& vertex : m_vertices_)

@@ -25,7 +25,7 @@ namespace Engine::Resources
         BoundingBox                                GetBoundingBox() const;
         WeakMesh                                   GetMesh(const std::string& name) const;
         WeakMesh                                   GetMesh(const UINT index) const;
-        const std::vector<const Vector3*>&         GetVertices() const;
+        const std::vector<VertexElement>&          GetVertices() const;
         std::vector<StrongMesh>                    GetMeshes() const;
         const std::vector<std::string>&            GetAnimationCatalog() const;
         const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
@@ -83,7 +83,7 @@ namespace Engine::Resources
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
-        std::vector<const Vector3*>    m_cached_vertices_;
+        std::vector<VertexElement>    m_cached_vertices_;
     };
 }
 

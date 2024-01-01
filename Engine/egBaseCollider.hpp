@@ -51,9 +51,9 @@ namespace Engine::Components
 
         eBoundingType GetType() const;
 
-        const std::vector<const Vector3*>& GetVertices() const;
-        Matrix                             GetWorldMatrix() const;
-        virtual Matrix                     GetLocalMatrix() const;
+        const std::vector<Graphics::VertexElement>& GetVertices() const;
+        Matrix                                      GetWorldMatrix() const;
+        virtual Matrix                              GetLocalMatrix() const;
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -134,11 +134,8 @@ namespace Engine::Components
         float m_mass_;
 
         // Non-serialized
-        inline static std::vector<Vector3> m_cube_stock_   = {};
-        inline static std::vector<Vector3> m_sphere_stock_ = {};
-
-        inline static std::vector<const Vector3*> m_cube_stock_ref_   = {};
-        inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
+        inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
+        inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
         Physics::BoundingGroup m_boundings_;
 
