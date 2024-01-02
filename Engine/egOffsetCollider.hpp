@@ -19,7 +19,6 @@ namespace Engine::Components
         void SetTransition(const Vector3& transition);
         void SetRotation(const Quaternion& rotation);
         void SetScale(const Vector3& scale);
-        void FromMatrix(Matrix& mat) override;
 
         Matrix GetLocalMatrix() const override;
 

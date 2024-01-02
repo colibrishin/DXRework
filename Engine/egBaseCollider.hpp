@@ -17,7 +17,7 @@ namespace Engine::Components
         BaseCollider(const WeakObject& owner);
         ~BaseCollider() override = default;
 
-        virtual void FromMatrix(Matrix& mat);
+        void FromMatrix(Matrix& mat);
 
         void SetType(eBoundingType type);
         void SetMass(const float mass);
