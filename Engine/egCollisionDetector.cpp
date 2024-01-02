@@ -173,6 +173,8 @@ namespace Engine::Manager::Physics
             const auto velocity = rb->GetLinearMomentum();
             velocity.Normalize(ray.direction);
 
+            if (ray.direction == Vector3::Zero) return false;
+
             const auto length = velocity.Length();
             float      dist;
 
