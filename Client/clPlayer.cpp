@@ -11,6 +11,7 @@
 #include "egVertexShaderInternal.h"
 #include "egBoneAnimation.h"
 #include "egMaterial.h"
+#include "egOffsetCollider.hpp"
 #include "egShape.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -48,7 +49,7 @@ namespace Client::Object
 
         for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
         {
-            const auto bone_cldr = AddComponent<Components::BaseCollider>().lock();
+            auto bone_cldr = AddComponent<Components::OffsetCollider>().lock();
             bone_cldr->SetBoundingBox(box);
             m_bone_colliders_.emplace(idx, bone_cldr);
         }
@@ -90,10 +91,31 @@ namespace Client::Object
         const auto mtl = mr->GetMaterial().lock();
         const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
         auto deform = anim->GetFrameAnimation(atr->GetFrame());
+        const auto rb = GetComponent<Components::Rigidbody>().lock();
+        Vector3 min = {FLT_MAX, FLT_MAX, FLT_MAX};
+        Vector3 max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
         for (const auto& [idx, cldr] : m_bone_colliders_)
         {
+            std::vector<Vector3> vertices;
+            vertices.resize(8);
+            
             cldr->FromMatrix(deform[idx].transform);
+
+            auto obb = cldr->GetBoundingLocal<BoundingOrientedBox>();
+            obb.GetCorners(vertices.data());
+
+            for (const auto& v : vertices)
+            {
+                min = Vector3::Min(min, v);
+                max = Vector3::Max(max, v);
+            }
         }
+
+        BoundingOrientedBox new_obb;
+        BoundingBox         bb;
+        BoundingBox::CreateFromPoints(bb, min, max);
+        BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
+        rb->GetMainCollider().lock()->SetBoundingBox(new_obb);
     }
 }
