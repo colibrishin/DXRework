@@ -194,7 +194,7 @@ namespace Engine::Manager::Physics
             if (cl_other->Intersects(ray, length, intersection_distance))
             {
                 const Vector3 minimum_penetration = ray.direction * intersection_distance;
-                tr->SetWorldPosition(tr->GetWorldPosition() - minimum_penetration);
+                tr->SetWorldPosition(tr->GetWorldPreviousPosition() - minimum_penetration);
                 m_speculative_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
                 m_speculative_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
             }
