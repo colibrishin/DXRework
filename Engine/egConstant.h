@@ -18,13 +18,13 @@ namespace Engine
     // Physics Constants
     constexpr float   g_epsilon                 = 0.001f;
     constexpr float   g_gravity_acc             = 9.81f;
-    constexpr float   g_fixed_update_interval   = 0.02f;
+    constexpr float   g_fixed_update_interval   = 0.07f;
     constexpr Vector3 g_gravity_vec             = Vector3(0.0f, -g_gravity_acc, 0.0f);
-    constexpr float   g_restitution_coefficient = 0.5f;
-    constexpr float   g_drag_coefficient        = 0.47f;
+    constexpr float   g_restitution_coefficient = 0.6f;
+    constexpr float   g_drag_coefficient        = 0.25f;
     constexpr size_t  g_gjk_max_iteration       = 64;
     constexpr size_t  g_epa_max_iteration       = 64;
-    constexpr bool    g_speculation_enabled     = true;
+    constexpr bool    g_speculation_enabled     = false;
 
     // Debug Constants
     constexpr int    g_debug_y_movement        = 15;
