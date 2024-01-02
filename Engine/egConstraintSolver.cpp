@@ -221,7 +221,7 @@ namespace Engine::Manager::Physics
         static Ray ray{};
         ray.position = lhs.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
         ray.direction = Vector3::Down;
-        const auto length = std::fabsf(tr_lhs->GetScale().Dot(Vector3::Down)) / 2.f + std::fabsf(tr_rhs->GetScale().Dot(Vector3::Up)) / 2.f;
+        const auto length = std::fabsf(tr_lhs->GetScale().Dot(Vector3::Down)) / 2.f;
         float intersection = 0.0f;
 
         if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
