@@ -102,7 +102,7 @@ namespace Engine::Manager::Physics
 
         if (!rb->IsGrounded())
         {
-            const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, dt);
+            const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, g_drag_coefficient);
             rb->SetDragForce(drag_force);
             linear_momentum += drag_force;
             Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
