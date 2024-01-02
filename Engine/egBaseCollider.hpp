@@ -82,6 +82,24 @@ namespace Engine::Components
             }
         }
 
+        template <typename T>
+        T GetBoundingLocal() const
+        {
+            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+            {
+                return m_boundings_.As<BoundingOrientedBox>(GetLocalMatrix());
+            }
+            else if constexpr (std::is_same_v<T, BoundingSphere>)
+            {
+                return m_boundings_.As<BoundingSphere>(GetLocalMatrix());
+            }
+            else
+            {
+                static_assert("Invalid type");
+                throw std::exception("Invalid type");
+            }
+        }
+
     protected:
         BaseCollider();
 
