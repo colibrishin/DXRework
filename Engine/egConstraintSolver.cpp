@@ -112,7 +112,6 @@ namespace Engine::Manager::Physics
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
                                          other_angular_vel, lhs_penetration, rhs_penetration);
 
-            tr->SetWorldPosition(pos + lhs_penetration);
 
             const auto collided_count = cl->GetCollisionCount(rhs.lock()->GetID());
             const auto fps            = GetApplication().GetFPS();
@@ -123,7 +122,6 @@ namespace Engine::Manager::Physics
             {
                 ratio = 0.0f;
             }
-
             ratio                = std::clamp(ratio, 0.f, 1.f);
             const auto ratio_inv = 1.0f - ratio;
 
@@ -140,8 +138,12 @@ namespace Engine::Manager::Physics
                 reduction = ratio_inv;
             }
 
-            rb->SetLinearMomentum(linear_vel * reduction);
-            rb->SetAngularMomentum(angular_vel * reduction);
+            if (!rb->IsFixed())
+            {
+                tr->SetWorldPosition(pos + lhs_penetration);
+                rb->SetLinearMomentum(linear_vel * reduction);
+                rb->SetAngularMomentum(angular_vel * reduction);
+            }
 
             if (!rb_other->IsFixed())
             {

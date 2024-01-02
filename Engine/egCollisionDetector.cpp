@@ -32,6 +32,12 @@ namespace Engine::Manager::Physics
         }
     }
 
+    void CollisionDetector::MarkAsChecked(const StrongObject& lhs_owner, const StrongObject& rhs_owner)
+    {
+        m_collision_check_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+        m_collision_check_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+    }
+
     void CollisionDetector::CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs)
     {
         const auto lhs_owner = lhs->GetOwner().lock();
@@ -41,44 +47,33 @@ namespace Engine::Manager::Physics
         if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
         else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
-        if (m_collision_check_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()) &&
-            m_collision_check_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+        if (m_collision_check_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
         {
             return;
         }
 
-        if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
-            !m_speculation_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()) &&
-            CheckRaycasting(lhs, rhs) && g_speculation_enabled)
+        if ((!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
+            CheckRaycasting(lhs, rhs) && g_speculation_enabled))
         {
-            if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
-                !m_speculation_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
-            {
-                m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-                m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+            m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+            m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
-                GetDebugger().Log(
-                                  L"Speculation Hit! : " +
-                                  std::to_wstring(lhs_owner->GetID()) + L" " +
-                                  std::to_wstring(rhs_owner->GetID()));
+            GetDebugger().Log(
+                              L"Speculation Hit! : " +
+                              std::to_wstring(lhs_owner->GetID()) + L" " +
+                              std::to_wstring(rhs_owner->GetID()));
 
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
+            lhs_owner->DispatchComponentEvent(lhs, rhs);
+            rhs_owner->DispatchComponentEvent(rhs, lhs);
 
-                m_collision_queue_.push_back({lhs_owner, rhs_owner, true, true});
-
-                return;
-            }
-            else
-            {
-                return;
-            }
+            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
+            MarkAsChecked(lhs_owner, rhs_owner);
+            return;
         }
 
         if (lhs->Intersects(rhs))
         {
-            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
-                m_collision_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
+            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
             {
                 m_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
@@ -86,22 +81,34 @@ namespace Engine::Manager::Physics
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
-            else if (!m_frame_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) ||
-                     !m_frame_collision_map_[rhs_owner->GetID()].contains(lhs_owner->GetID()))
+            else if (!m_frame_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
             {
                 m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
+
+                if (const auto lhs_rb = lhs_owner->GetComponent<Components::Rigidbody>().lock();
+                    lhs_rb && lhs_rb->IsFixed())
+                {
+                    m_collision_produce_queue_.push_back({rhs_owner, lhs_owner, false, true});
+                }
+                else if (const auto rhs_rb = rhs_owner->GetComponent<Components::Rigidbody>().lock();
+                    rhs_rb && rhs_rb->IsFixed())
+                {
+                    m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
+                }
+                else
+                {
+                    m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
+                }
             }
             else
             {
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
-
-            m_collision_queue_.push_back({lhs_owner, rhs_owner, false, true});
         }
         else
         {
@@ -115,8 +122,7 @@ namespace Engine::Manager::Physics
             }
         }
 
-        m_collision_check_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-        m_collision_check_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+        MarkAsChecked(lhs_owner, rhs_owner);
     }
 
     void CollisionDetector::CheckCollisionChunk(StrongBaseCollider& lhs, std::vector<StrongBaseCollider>& rhs)
@@ -465,7 +471,7 @@ namespace Engine::Manager::Physics
 
     concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
     {
-        return m_collision_queue_;
+        return m_collision_produce_queue_;
     }
 
     bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const
