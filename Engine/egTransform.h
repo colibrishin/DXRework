@@ -26,7 +26,7 @@ namespace Engine::Components
         void SetAnimationRotation(const Quaternion& rotation);
         void SetAnimationScale(const Vector3& scale);
 
-        Vector3 GetWorldPosition() const;
+        Vector3 GetWorldPosition();
         Quaternion GetWorldRotation() const;
 
         Vector3    GetWorldPreviousPosition() const;
@@ -52,7 +52,7 @@ namespace Engine::Components
         void     OnDeserialized() override;
 
         Matrix GetLocalMatrix() const;
-        Matrix     GetWorldMatrix() const;
+        Matrix GetWorldMatrix();
 
         static void Bind(Transform & transform);
         static void Unbind();
@@ -82,6 +82,8 @@ namespace Engine::Components
         Vector3 m_animation_scale_;
 
         // Non-serialized
+        bool                       m_b_lazy_;
+        Matrix                     m_world_matrix_;
         Graphics::CBs::TransformCB m_transform_buffer_;
     };
 } // namespace Engine::Component

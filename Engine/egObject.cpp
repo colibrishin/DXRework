@@ -1,13 +1,13 @@
 #include "pch.h"
 
 #include "egObject.hpp"
-#include "egCollider.hpp"
 #include "egCollision.h"
 #include "egManagerHelper.hpp"
 #include "egMesh.h"
 #include "egRigidbody.h"
 #include "egTransform.h"
 #include "egComponent.h"
+#include "egBaseCollider.hpp"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
@@ -15,45 +15,46 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Abstract
 {
-    template void Object::DispatchComponentEvent(
-        Engine::Components::Collider& lhs,
-        Engine::Components::Collider& rhs);
+    template void Object::DispatchComponentEvent(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
 
     template <typename T>
-    void Object::DispatchComponentEvent(T& lhs, T& rhs)
+    void Object::DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs)
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
-            if constexpr (std::is_same_v<Engine::Components::Collider, T>)
+            if constexpr (std::is_same_v<Engine::Components::BaseCollider, T>)
             {
+                const auto lhs_owner = lhs->GetOwner().lock();
+                const auto rhs_owner = rhs->GetOwner().lock();
+
                 const auto speculation_check = GetCollisionDetector().IsSpeculated(
-                 lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
+                 lhs_owner->GetID(), rhs_owner->GetID());
 
                 if (speculation_check)
                 {
-                    lhs.AddSpeculationObject(rhs.GetOwner().lock()->GetID());
+                    lhs->AddSpeculationObject(rhs_owner->GetID());
                 }
 
                 const auto collision_check = GetCollisionDetector().IsCollided(
-                                                                               lhs.GetOwner().lock()->GetID(),
-                                                                               rhs.GetOwner().lock()->GetID());
+                                                                               lhs_owner->GetID(),
+                                                                               rhs_owner->GetID());
 
                 const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
-                 lhs.GetOwner().lock()->GetID(), rhs.GetOwner().lock()->GetID());
+                 lhs_owner->GetID(), rhs_owner->GetID());
 
                 if (collision_frame)
                 {
-                    lhs.GetOwner().lock()->OnCollisionEnter(rhs);
-                    lhs.AddCollidedObject(rhs.GetOwner().lock()->GetID());
+                    lhs_owner->OnCollisionEnter(rhs);
+                    lhs->AddCollidedObject(rhs_owner->GetID());
                 }
                 else if (collision_check)
                 {
-                    lhs.GetOwner().lock()->OnCollisionContinue(rhs);
+                    lhs_owner->OnCollisionContinue(rhs);
                 }
                 else if (!collision_check && !collision_frame)
                 {
-                    lhs.GetOwner().lock()->OnCollisionExit(rhs);
-                    lhs.RemoveCollidedObject(rhs.GetOwner().lock()->GetID());
+                    lhs_owner->OnCollisionExit(rhs);
+                    lhs->RemoveCollidedObject(rhs_owner->GetID());
                 }
             }
         }
@@ -102,7 +103,7 @@ namespace Engine::Abstract
         return scene->FindGameObjectByLocalID(m_parent_);
     }
 
-    WeakObject Object::GetChild(const ActorID id) const
+    WeakObject Object::GetChild(const LocalActorID id) const
     {
         INVALID_ID_CHECK_WEAK_RETURN(id)
 
@@ -139,7 +140,7 @@ namespace Engine::Abstract
         }
     }
 
-    bool Object::DetachChild(const ActorID id)
+    bool Object::DetachChild(const LocalActorID id)
     {
         if (INVALID_ID_CHECK(id))
         {
@@ -158,25 +159,25 @@ namespace Engine::Abstract
         return false;
     }
 
-    void Object::OnCollisionEnter(const Engine::Components::Collider& other)
+    void Object::OnCollisionEnter(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionContinue(const Engine::Components::Collider& other)
+    void Object::OnCollisionContinue(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionExit(const Engine::Components::Collider& other)
+    void Object::OnCollisionExit(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::Collider>().lock())
+        if (!GetComponent<Engine::Components::BaseCollider>().lock())
         {
             throw std::exception("Object has no collider");
         }

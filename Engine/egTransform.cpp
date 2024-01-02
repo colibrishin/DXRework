@@ -20,7 +20,8 @@ namespace Engine::Components
       m_scale_(Vector3::One),
       m_animation_position_(Vector3::Zero),
       m_animation_rotation_(Quaternion::Identity),
-      m_animation_scale_(Vector3::One) {}
+      m_animation_scale_(Vector3::One),
+      m_b_lazy_(true) {}
 
     void Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
     {
@@ -39,6 +40,7 @@ namespace Engine::Components
         world = world.Invert();
 
         m_position_ = Vector3::Transform(position, world);
+        m_b_lazy_   = true;
     }
 
     void Transform::SetWorldRotation(const Quaternion& rotation)
@@ -50,11 +52,13 @@ namespace Engine::Components
         world.Inverse(world);
 
         m_rotation_ = rotation * world;
+        m_b_lazy_   = true;
     }
 
     void Transform::SetLocalPosition(const Vector3& position)
     {
         m_position_ = position;
+        m_b_lazy_   = true;
     }
 
     void Transform::SetLocalRotation(const Quaternion& rotation)
@@ -63,36 +67,42 @@ namespace Engine::Components
         const auto euler = rotation.ToEuler();
 
         m_yaw_pitch_roll_degree_ = Vector3{
-            XMConvertToDegrees(euler.x), XMConvertToDegrees(euler.y), XMConvertToDegrees(euler.z)
+            DirectX::XMConvertToDegrees(euler.x), DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.z)
         };
+        m_b_lazy_ = true;
     }
 
     void Transform::SetScale(const Vector3& scale)
     {
         m_scale_ = scale;
+        m_b_lazy_ = true;
     }
 
     void Transform::SetSizeAbsolute(bool absolute)
     {
         m_b_absolute_ = absolute;
+        m_b_lazy_     = true;
     }
 
     void Transform::SetAnimationPosition(const Vector3& position)
     {
         m_animation_position_ = position;
+        m_b_lazy_             = true;
     }
 
     void Transform::SetAnimationRotation(const Quaternion& rotation)
     {
         m_animation_rotation_ = rotation;
+        m_b_lazy_             = true;
     }
 
     void Transform::SetAnimationScale(const Vector3& scale)
     {
         m_animation_scale_ = scale;
+        m_b_lazy_          = true;
     }
 
-    Vector3 Transform::GetWorldPosition() const
+    Vector3 Transform::GetWorldPosition()
     {
         Matrix              world = GetWorldMatrix();
         return {world._41, world._42, world._43};
@@ -149,6 +159,7 @@ namespace Engine::Components
     void Transform::Translate(Vector3 translation)
     {
         m_position_ += translation;
+        m_b_lazy_             = true;
     }
 
     void Transform::Initialize()
@@ -161,9 +172,9 @@ namespace Engine::Components
     void Transform::PreUpdate(const float& dt)
     {
         m_rotation_ = Quaternion::CreateFromYawPitchRoll(
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
-                                                         XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
+                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
     }
 
     void Transform::Update(const float& dt) {}
@@ -203,8 +214,8 @@ namespace Engine::Components
 
         m_yaw_pitch_roll_degree_ =
                 Vector3(
-                        XMConvertToDegrees(euler.y), XMConvertToDegrees(euler.x),
-                        XMConvertToDegrees(euler.z));
+                        DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.x),
+                        DirectX::XMConvertToDegrees(euler.z));
     }
 
     Matrix Transform::GetLocalMatrix() const
@@ -224,23 +235,36 @@ namespace Engine::Components
         return m_previous_position_;
     }
 
-    Matrix Transform::GetWorldMatrix() const
+    Matrix Transform::GetWorldMatrix()
     {
-        Matrix              world = GetLocalMatrix();
-        const WeakTransform tr    = FindNextTransform(*this);
-
-        if (const auto parent = tr.lock())
+        if (!m_b_lazy_)
         {
-            if (m_b_absolute_)
+            return m_world_matrix_;
+        }
+
+        Matrix        world = GetLocalMatrix();
+        auto          tr_c  = const_cast<Transform*>(this);
+        WeakTransform tr_p  = FindNextTransform(*this);
+
+        if (const auto parent = tr_p.lock())
+        {
+            if (tr_c->m_b_absolute_)
             {
-                const auto inv_sr = Matrix::CreateScale(parent->GetScale()).Invert() * Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
-                world *= inv_sr * parent->GetWorldMatrix();
+                const auto inv_sr = Matrix::CreateScale(parent->GetScale()).Invert() * 
+                    Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
+                world *= inv_sr * parent->GetLocalMatrix();
             }
             else
             {
-                world *= parent->GetWorldMatrix();
+                world *= parent->GetLocalMatrix();
             }
+
+            tr_c = parent.get();
+            tr_p = FindNextTransform(*parent);
         }
+
+        m_b_lazy_       = false;
+        m_world_matrix_ = world;
 
         return world;
     }
@@ -265,7 +289,8 @@ namespace Engine::Components
       m_scale_(Vector3::One),
       m_animation_position_(Vector3::Zero),
       m_animation_rotation_(Quaternion::Identity),
-      m_animation_scale_(Vector3::One) {}
+      m_animation_scale_(Vector3::One),
+      m_b_lazy_(true) {}
 
     WeakTransform Transform::FindNextTransform(const Transform& transform_)
     {

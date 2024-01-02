@@ -11,7 +11,7 @@ namespace Engine::Abstract
 
         eLayerType GetLayer() const;
         WeakScene  GetScene() const;
-        ActorID    GetLocalID() const;
+        LocalActorID    GetLocalID() const;
 
         void OnImGui() override;
 
@@ -24,11 +24,11 @@ namespace Engine::Abstract
 
         void SetLayer(eLayerType layer);
         void SetScene(const WeakScene& scene);
-        void SetLocalID(ActorID id);
+        void SetLocalID(LocalActorID id);
 
         WeakScene  m_assigned_scene_;
         eLayerType m_layer_;
-        ActorID    m_local_id_;
+        LocalActorID    m_local_id_;
     };
 } // namespace Engine::Abstract
 

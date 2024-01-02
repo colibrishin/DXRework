@@ -21,10 +21,10 @@ namespace Engine
         void PostUpdate(const float& dt) override;
         void OnDeserialized() override;
 
-        void                           AddGameObject(const StrongObject& obj);
-        void                           RemoveGameObject(EntityID id);
-        WeakObject                     GetGameObject(EntityID id) const;
-        const std::vector<WeakObject>& GetGameObjects();
+        void                 AddGameObject(const StrongObject& obj);
+        void                 RemoveGameObject(GlobalEntityID id);
+        WeakObject           GetGameObject(GlobalEntityID id) const;
+        ConcurrentWeakObjVec GetGameObjects() const;
 
         auto begin() noexcept { return m_objects_.begin(); }
         auto end() noexcept { return m_objects_.end(); }
@@ -42,8 +42,7 @@ namespace Engine
         std::set<StrongObject> m_objects_;
 
         // Non-serialized
-        std::vector<WeakObject>              m_weak_objects_; // back-compatibility
-        std::map<const EntityID, WeakObject> m_weak_objects_cache_;
+        ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
     };
 } // namespace Engine
 

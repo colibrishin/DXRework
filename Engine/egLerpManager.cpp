@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "egLerpManager.h"
-#include "egCollider.hpp"
 #include "egManagerHelper.hpp"
 #include "egRigidbody.h"
 #include "egSceneManager.hpp"
@@ -40,8 +39,6 @@ namespace Engine::Manager::Physics
                                              .lock()
                                              ->GetComponent<Components::Transform>()
                                              .lock();
-                    const auto cls =
-                            rigidbody->GetOwner().lock()->GetComponents<Components::Collider>();
 
                     if (tr)
                     {

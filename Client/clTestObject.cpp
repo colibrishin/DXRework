@@ -3,7 +3,7 @@
 
 #include <egSphereMesh.h>
 
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
@@ -24,8 +24,8 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("NormalLightSpecular"));
 
         AddComponent<Components::Transform>();
-        AddComponent<Components::Collider>();
-        const auto cldr = GetComponent<Components::Collider>().lock();
+        AddComponent<Components::BaseCollider>();
+        const auto cldr = GetComponent<Components::BaseCollider>().lock();
         cldr->SetType(BOUNDING_TYPE_SPHERE);
         cldr->SetMass(1.0f);
 

@@ -3,7 +3,7 @@
 
 #include <egCubeMesh.h>
 
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
@@ -28,8 +28,8 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("NormalLight"));
 
         AddComponent<Engine::Components::Transform>();
-        AddComponent<Engine::Components::Collider>();
-        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
+        AddComponent<Engine::Components::BaseCollider>();
+        const auto cldr = GetComponent<Engine::Components::BaseCollider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
 

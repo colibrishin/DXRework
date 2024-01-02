@@ -18,7 +18,7 @@ namespace Engine::Abstract
 
         void SetName(const EntityName& name);
 
-        EntityID   GetID() const;
+        GlobalEntityID   GetID() const;
         EntityName GetName() const;
         TypeName   GetTypeName() const;
 

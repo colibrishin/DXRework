@@ -22,12 +22,13 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        BoundingBox                        GetBoundingBox() const;
-        WeakMesh                           GetMesh(const std::string& name) const;
-        WeakMesh                           GetMesh(const UINT index) const;
-        const std::vector<const Vector3*>& GetVertices() const;
-        std::vector<StrongMesh>            GetMeshes() const;
-        const std::vector<std::string>&    GetAnimationCatalog() const;
+        BoundingBox                                GetBoundingBox() const;
+        WeakMesh                                   GetMesh(const std::string& name) const;
+        WeakMesh                                   GetMesh(const UINT index) const;
+        const std::vector<VertexElement>&          GetVertices() const;
+        std::vector<StrongMesh>                    GetMeshes() const;
+        const std::vector<std::string>&            GetAnimationCatalog() const;
+        const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void Add(const boost::weak_ptr<T>& res)
@@ -74,14 +75,15 @@ namespace Engine::Resources
 	private:
         void UpdateVertices();
 
-        std::vector<StrongMesh>          m_meshes_;
-        std::vector<std::string>         m_animation_catalog_;
-        StrongBone                       m_bone_;
-        BoundingBox                      m_bounding_box_;
+        std::vector<StrongMesh>             m_meshes_;
+        std::vector<std::string>            m_animation_catalog_;
+        StrongBone                          m_bone_;
+        BoundingBox                         m_bounding_box_;
+        std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
-        std::vector<const Vector3*>    m_cached_vertices_;
+        std::vector<VertexElement>    m_cached_vertices_;
     };
 }
 

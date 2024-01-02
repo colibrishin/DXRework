@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "egElastic.h"
-#include "egCollider.hpp"
 #include "egPhysics.hpp"
 
 #undef max

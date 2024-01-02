@@ -11,19 +11,18 @@ namespace Engine::Physics
 
     template <typename BoundingType>
     __forceinline static BoundingType __vectorcall TranslateBounding(
-        const BoundingType& box, const Vector3& scale, const Quaternion& rotation, const Vector3& position)
+        const BoundingType& box, const Matrix& mat)
     {
         if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
         {
             auto box_ = const_cast<BoundingOrientedBox&>(box);
-            box_.Transform(box_, 1.f, rotation, position);
-            box_.Extents = Vector3(box_.Extents.x * scale.x, box_.Extents.y * scale.y, box_.Extents.z * scale.z);
+            box_.Transform(box_, mat);
             return box_;
         }
         else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
         {
             auto sphere_ = const_cast<BoundingSphere&>(box);
-            sphere_.Transform(sphere_, MaxElement(scale), rotation, position);
+            sphere_.Transform(sphere_, mat);
             return sphere_;
         }
         else
@@ -39,16 +38,16 @@ namespace Engine::Physics
         BoundingGroup() : box(Vector3::Zero, {0.5f, 0.5f, 0.5f}, Quaternion::Identity) {}
 
         template <typename BoundingType>
-        __forceinline BoundingType __vectorcall As(const Vector3& scale, const Quaternion& rotation, const Vector3& translation) const
+        __forceinline BoundingType __vectorcall As(const Matrix& mat) const
         {
             if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
-                const auto box_ = TranslateBounding(box, scale, rotation, translation);
+                const auto box_ = TranslateBounding(box, mat);
                 return box_;
             }
             else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
             {
-                const auto sphere_ = TranslateBounding(sphere, scale, rotation, translation);
+                const auto sphere_ = TranslateBounding(sphere, mat);
                 return sphere_;
             }
             else
@@ -58,9 +57,9 @@ namespace Engine::Physics
             }
         }
 
-        void __vectorcall UpdateFromBoundingBox(const BoundingBox& box_)
+        void __vectorcall UpdateFromBoundingBox(const BoundingOrientedBox& box_)
         {
-            BoundingOrientedBox::CreateFromBoundingBox(box, box_);
+            box = box_;
         }
 
         template <typename BoundingType>

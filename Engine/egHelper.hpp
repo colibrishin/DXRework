@@ -1,7 +1,9 @@
 #pragma once
 #include <imgui.h>
-
+#include <functional>
 #include <assimp/matrix4x4.h>
+#include <oneapi/tbb.h>
+#include <execution>
 
 #include "egCommon.hpp"
 #include "egMesh.h"
@@ -48,7 +50,7 @@ namespace Engine
     }
 
     inline static void ImGuiVector3Editable(
-        const EntityID     id,
+        const GlobalEntityID     id,
         const std::string& var_name,
         Vector3&           v)
     {
@@ -61,7 +63,7 @@ namespace Engine
     }
 
     inline static void ImGuiQuaternionEditable(
-        const EntityID     id,
+        const GlobalEntityID     id,
         const std::string& var_name,
         Quaternion&        v)
     {
@@ -75,7 +77,7 @@ namespace Engine
     }
 
     inline static void ImGuiVector2Editable(
-        const EntityID     id,
+        const GlobalEntityID     id,
         const std::string& var_name,
         Vector2&           v)
     {

@@ -7,8 +7,8 @@ namespace Engine::Physics
     {
         bool __vectorcall GJKAlgorithm(
             const Matrix&                      lhs_world,
-            const Matrix&                      rhs_world, const std::vector<const Vector3*>& lhs_vertices,
-            const std::vector<const Vector3*>& rhs_vertices, const Vector3&                  dir,
+            const Matrix&                      rhs_world, const VertexCollection& lhs_vertices,
+            const VertexCollection& rhs_vertices, const Vector3&                  dir,
             Vector3&                           normal, float&                                penetration);
     } // namespace GJK
 

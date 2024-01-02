@@ -24,8 +24,8 @@ namespace Engine::Resources
         void PostUpdate(const float& dt) override;
         BoundingBox GetBoundingBox() const;
 
-        const std::vector<const Vector3*>& GetVertices();
         UINT                               GetIndexCount() const;
+        const VertexCollection&            GetVertexCollection() const;
 
         RESOURCE_SELF_INFER_GETTER(Mesh)
 
@@ -33,7 +33,7 @@ namespace Engine::Resources
         SERIALIZER_ACCESS
         Mesh();
 
-        friend class Components::Collider;
+        friend class Components::BaseCollider;
 
         void         Load_INTERNAL() final;
         virtual void Load_CUSTOM();
@@ -56,7 +56,6 @@ namespace Engine::Resources
 
     protected:
         VertexCollection            m_vertices_;
-        std::vector<const Vector3*> m_flatten_vertices_;
         IndexCollection             m_indices_;
         BoundingBox                 m_bounding_box_;
 

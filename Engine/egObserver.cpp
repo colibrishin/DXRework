@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "egObserver.h"
-#include "egCollider.hpp"
 #include "egObserverController.h"
 #include "egRigidbody.h"
 #include "egTransform.h"

@@ -4,7 +4,7 @@
 #include "clRifile.h"
 #include "egAnimator.h"
 #include "egBaseAnimation.h"
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
@@ -32,7 +32,7 @@ namespace Client::Object
 
         const auto tr = AddComponent<Components::Transform>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
-        const auto cldr = AddComponent<Components::Collider>().lock();
+        const auto cldr = AddComponent<Components::BaseCollider>().lock();
 
         atr->SetAnimation("FireAnimation");
         cldr->SetModel(model);

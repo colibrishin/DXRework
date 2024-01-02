@@ -15,9 +15,9 @@ void Engine::Abstract::Entity::SetName(const EntityName& name)
     m_name_ = name;
 }
 
-Engine::EntityID Engine::Abstract::Entity::GetID() const
+Engine::GlobalEntityID Engine::Abstract::Entity::GetID() const
 {
-    return reinterpret_cast<EntityID>(this);
+    return reinterpret_cast<GlobalEntityID>(this);
 }
 
 Engine::EntityName Engine::Abstract::Entity::GetName() const

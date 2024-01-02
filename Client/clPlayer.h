@@ -18,6 +18,7 @@ namespace Client::Object
 
     private:
         SERIALIZER_ACCESS
+        std::map<UINT, StrongBaseCollider> m_bone_colliders_;
 
     };
 }

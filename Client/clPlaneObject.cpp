@@ -6,10 +6,10 @@
 #include <egSound.h>
 #include <egVertexShaderInternal.h>
 
+#include "egBaseCollider.hpp"
 #include "egModelRenderer.h"
 #include "egShader.hpp"
 #include "egTransform.h"
-#include "egCollider.hpp"
 #include "egMaterial.h"
 #include "egRigidbody.h"
 #include "egShape.h"
@@ -35,9 +35,8 @@ namespace Client::Object
         tr->SetLocalPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetScale({10.0f, 1.0f, 10.0f});
 
-        AddComponent<Components::Collider>();
-        const auto cldr = GetComponent<Components::Collider>().lock();
-        cldr->SetBoundingBox(model->GetBoundingBox());
+        AddComponent<Components::BaseCollider>();
+        const auto cldr = GetComponent<Components::BaseCollider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(100000.0f);
 

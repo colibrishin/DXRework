@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "egCollisionDetector.h"
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egManagerHelper.hpp"
@@ -32,40 +32,46 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::CheckCollision(
-        Components::Collider& lhs,
-        Components::Collider& rhs)
+    void CollisionDetector::MarkAsChecked(const StrongObject& lhs_owner, const StrongObject& rhs_owner)
     {
-        const auto lhs_owner = lhs.GetOwner().lock();
-        const auto rhs_owner = rhs.GetOwner().lock();
+        m_collision_check_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+        m_collision_check_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+    }
 
-        if (lhs.GetOwner().lock() == rhs.GetOwner().lock())
+    void CollisionDetector::CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs)
+    {
+        const auto lhs_owner = lhs->GetOwner().lock();
+        const auto rhs_owner = rhs->GetOwner().lock();
+
+        if (lhs_owner == rhs_owner) return;
+        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
+        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
+
+        if (m_collision_check_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
         {
             return;
         }
 
-        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
-        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
-
-        if (CheckRaycasting(lhs, rhs) && g_speculation_enabled)
+        if ((!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
+            CheckRaycasting(lhs, rhs) && g_speculation_enabled))
         {
-            if (!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
-            {
-                m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-                m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+            m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+            m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
-                GetDebugger().Log(
-                                  L"Speculation Hit! : " +
-                                  std::to_wstring(lhs_owner->GetID()) + L" " +
-                                  std::to_wstring(rhs_owner->GetID()));
+            GetDebugger().Log(
+                              L"Speculation Hit! : " +
+                              std::to_wstring(lhs_owner->GetID()) + L" " +
+                              std::to_wstring(rhs_owner->GetID()));
 
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
-                return;
-            }
+            lhs_owner->DispatchComponentEvent(lhs, rhs);
+            rhs_owner->DispatchComponentEvent(rhs, lhs);
+
+            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
+            MarkAsChecked(lhs_owner, rhs_owner);
+            return;
         }
 
-        if (lhs.Intersects(rhs))
+        if (lhs->Intersects(rhs))
         {
             if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
             {
@@ -74,14 +80,35 @@ namespace Engine::Manager::Physics
 
                 lhs_owner->DispatchComponentEvent(lhs, rhs);
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
-                return;
             }
+            else if (!m_frame_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+            {
+                m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+                m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
-            m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-            m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+                lhs_owner->DispatchComponentEvent(lhs, rhs);
+                rhs_owner->DispatchComponentEvent(rhs, lhs);
 
-            lhs_owner->DispatchComponentEvent(lhs, rhs);
-            rhs_owner->DispatchComponentEvent(rhs, lhs);
+                if (const auto lhs_rb = lhs_owner->GetComponent<Components::Rigidbody>().lock();
+                    lhs_rb && lhs_rb->IsFixed())
+                {
+                    m_collision_produce_queue_.push_back({rhs_owner, lhs_owner, false, true});
+                }
+                else if (const auto rhs_rb = rhs_owner->GetComponent<Components::Rigidbody>().lock();
+                    rhs_rb && rhs_rb->IsFixed())
+                {
+                    m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
+                }
+                else
+                {
+                    m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
+                }
+            }
+            else
+            {
+                lhs_owner->DispatchComponentEvent(lhs, rhs);
+                rhs_owner->DispatchComponentEvent(rhs, lhs);
+            }
         }
         else
         {
@@ -94,52 +121,53 @@ namespace Engine::Manager::Physics
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
         }
+
+        MarkAsChecked(lhs_owner, rhs_owner);
     }
 
-    void CollisionDetector::CheckGrounded(
-        const Components::Collider& lhs,
-        Components::Collider&       rhs)
+    void CollisionDetector::CheckCollisionChunk(StrongBaseCollider& lhs, std::vector<StrongBaseCollider>& rhs)
     {
-        Components::Collider copy = lhs;
-        copy.SetOffsetPosition(Vector3::Down * g_epsilon);
-
-        const auto lhs_owner = lhs.GetOwner().lock();
-        const auto rhs_owner = rhs.GetOwner().lock();
-
-        if (lhs_owner == rhs_owner)
+        for (auto& rhs_cl : rhs)
         {
-            return;
+            CheckCollision(lhs, rhs_cl);
         }
+    }
 
+    void CollisionDetector::CheckGrounded(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
+    {
+        const auto lhs_owner = lhs->GetOwner().lock();
+        const auto rhs_owner = rhs->GetOwner().lock();
+
+        if (lhs_owner == rhs_owner) return;
         if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
         else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
 
-        if (copy.Intersects(rhs))
+        const auto rb = lhs_owner
+                        ->GetComponent<Components::Rigidbody>()
+                        .lock();
+
+        if (rb->IsFixed() || !rb->IsGravityAllowed()) return;
+
+        if (Components::BaseCollider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
         {
-            if (const auto rb = lhs.GetOwner()
-                                   .lock()
-                                   ->GetComponent<Components::Rigidbody>()
-                                   .lock())
-            {
-                // Ground flag is automatically set to false on the start of the frame.
-                rb->SetGrounded(true);
-            }
+            // Ground flag is automatically set to false on the start of the frame.
+            rb->SetGrounded(true);
+
+            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true, true});
         }
     }
 
-    bool CollisionDetector::CheckRaycasting(
-        const Components::Collider& lhs,
-        const Components::Collider& rhs)
+    bool CollisionDetector::CheckRaycasting(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
     {
         const auto rb =
-                lhs.GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
+                lhs->GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
 
         const auto rb_other =
-                rhs.GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
+                rhs->GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
 
         if (rb && rb_other)
         {
-            static Ray ray{};
+            Ray ray{};
             const auto tr = rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
             ray.position        = tr->GetWorldPreviousPosition();
             const auto velocity = rb->GetLinearMomentum();
@@ -148,7 +176,7 @@ namespace Engine::Manager::Physics
             const auto length = velocity.Length();
             float      dist;
 
-            return rhs.Intersects(ray, length, dist);
+            return rhs->Intersects(ray, length, dist);
         }
 
         return false;
@@ -157,36 +185,58 @@ namespace Engine::Manager::Physics
     void CollisionDetector::Update(const float& dt)
     {
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
+        const auto& colliders = scene->GetCachedComponents<Components::BaseCollider>();
 
-        for (const auto& cl : colliders)
+        static tbb::affinity_partitioner ap;
+
+        for (const auto& collider : colliders)
         {
-            for (const auto& cl_other : colliders)
+            const auto ptr_lhs = collider.lock();
+
+            if (!ptr_lhs)
             {
-                if (cl.lock() == cl_other.lock())
-                {
-                    continue;
-                }
-
-                const auto cl_locked       = cl.lock();
-                const auto cl_other_locked = cl_other.lock();
-
-                if (!cl_locked || !cl_other_locked)
-                {
-                    continue;
-                }
-
-                if (!m_layer_mask_[cl_locked->GetOwner().lock()->GetLayer()].test(
-                 cl_other_locked->GetOwner().lock()->GetLayer()))
-                {
-                    continue;
-                }
-
-                CheckCollision(
-                               *cl_locked->GetSharedPtr<Components::Collider>(),
-                               *cl_other_locked->GetSharedPtr<Components::Collider>());
+                continue;
             }
+
+            auto lhs = ptr_lhs->GetSharedPtr<Components::BaseCollider>();
+
+            std::vector<StrongBaseCollider> rhs_chunk;
+
+            for (size_t j = 0; j < colliders.size(); ++j)
+            {
+                const auto rhs = colliders[j].lock();
+
+                if (!rhs)
+                {
+                    continue;
+                }
+
+                if (ptr_lhs == rhs)
+                {
+                    continue;
+                }
+
+                if (ptr_lhs->GetOwner().lock() == rhs->GetOwner().lock())
+                {
+                    continue;
+                }
+
+                {
+                    std::lock_guard lock(m_layer_mask_mutex_);
+                    if (!m_layer_mask_[rhs->GetOwner().lock()->GetLayer()].test(
+                                                                                rhs->GetOwner().lock()->GetLayer()))
+                    {
+                        continue;
+                    }
+                }
+
+                rhs_chunk.push_back(rhs->GetSharedPtr<Components::BaseCollider>());
+            }
+
+            CheckCollisionChunk(lhs, rhs_chunk);
         }
+
+        m_collision_check_map_.clear();
     }
 
     void CollisionDetector::PreUpdate(const float& dt)
@@ -197,34 +247,44 @@ namespace Engine::Manager::Physics
         m_speculation_map_.clear();
 
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
+        const auto  rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
-        for (const auto& cl : colliders)
+        for (const auto& rb : rbs)
         {
-            for (const auto& cl_other : colliders)
+            const auto lhs = rb.lock();
+
+            if (!lhs)
             {
-                if (cl.lock() == cl_other.lock())
+                continue;
+            }
+
+            for (const auto& p_rhs : rbs)
+            {
+                if (lhs == p_rhs.lock())
                 {
                     continue;
                 }
 
-                const auto cl_locked       = cl.lock();
-                const auto cl_other_locked = cl_other.lock();
+                const auto rhs = p_rhs.lock();
 
-                if (!cl_locked || !cl_other_locked)
+                if (!rhs)
                 {
                     continue;
                 }
 
-                if (!m_layer_mask_[cl_locked->GetOwner().lock()->GetLayer()].test(
-                 cl_other_locked->GetOwner().lock()->GetLayer()))
                 {
-                    continue;
+                    std::lock_guard lock(m_layer_mask_mutex_);
+                    if (!m_layer_mask_[lhs->GetOwner().lock()->GetLayer()].test(
+                                                                                rhs->GetOwner().lock()->GetLayer()))
+                    {
+                        continue;
+                    }
                 }
 
-                CheckGrounded(
-                              *cl_locked->GetSharedPtr<Components::Collider>(),
-                              *cl_other_locked->GetSharedPtr<Components::Collider>());
+                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
+                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
+
+                CheckGrounded(lhs_cl, rhs_cl);
             }
         }
     }
@@ -274,7 +334,7 @@ namespace Engine::Manager::Physics
                                         [ray, &distance, &out, &out_mutex](const WeakObject& obj)
                                         {
                                             const auto obj_locked = obj.lock();
-                                            const auto cls        = obj_locked->GetComponents<Components::Collider>();
+                                            const auto cls        = obj_locked->GetComponents<Components::BaseCollider>();
 
                                             for (const auto& collider : cls)
                                             {
@@ -318,12 +378,12 @@ namespace Engine::Manager::Physics
                       {
                           if (const auto locked = obj.lock())
                           {
-                              const auto cls = locked->GetComponents<Components::Collider>();
+                              const auto cls = locked->GetComponents<Components::BaseCollider>();
 
                               std::for_each(
                                             std::execution::par, cls.begin(), cls.end(),
                                             [ray, distance, &hit, &out, &out_mutex, &obj,
-                                                locked](const WeakCollider& cl_o)
+                                                locked](const WeakBaseCollider& cl_o)
                                             {
                                                 const auto cl = cl_o.lock();
 
@@ -377,7 +437,7 @@ namespace Engine::Manager::Physics
         return false;
     }
 
-    bool CollisionDetector::IsCollided(EntityID id) const
+    bool CollisionDetector::IsCollided(GlobalEntityID id) const
     {
         if (!m_collision_map_.contains(id))
         {
@@ -387,7 +447,7 @@ namespace Engine::Manager::Physics
         return !m_collision_map_.at(id).empty();
     }
 
-    bool CollisionDetector::IsCollided(EntityID id1, EntityID id2) const
+    bool CollisionDetector::IsCollided(GlobalEntityID id1, GlobalEntityID id2) const
     {
         if (!m_collision_map_.contains(id1))
         {
@@ -397,7 +457,7 @@ namespace Engine::Manager::Physics
         return m_collision_map_.at(id1).contains(id2);
     }
 
-    bool CollisionDetector::IsSpeculated(EntityID id1, EntityID id2) const
+    bool CollisionDetector::IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const
     {
         if (!m_speculation_map_.contains(id1))
         {
@@ -407,7 +467,12 @@ namespace Engine::Manager::Physics
         return m_speculation_map_.at(id1).contains(id2);
     }
 
-    bool CollisionDetector::IsCollidedInFrame(EntityID id1, EntityID id2) const
+    concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
+    {
+        return m_collision_produce_queue_;
+    }
+
+    bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const
     {
         if (!m_frame_collision_map_.contains(id1))
         {

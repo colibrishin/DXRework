@@ -13,7 +13,7 @@ namespace Engine::Components
 
         ~Rigidbody() override = default;
 
-        void SetMainCollider(const WeakCollider& collider);
+        void SetMainCollider(const WeakBaseCollider& collider);
 
         void SetGravityOverride(bool gravity);
         void SetGrounded(bool grounded);
@@ -34,7 +34,7 @@ namespace Engine::Components
 
         float GetFrictionCoefficient() const;
 
-        WeakCollider GetMainCollider() const;
+        WeakBaseCollider GetMainCollider() const;
 
         Vector3 GetLinearMomentum() const;
         Vector3 GetAngularMomentum() const;
@@ -79,7 +79,7 @@ namespace Engine::Components
         Vector3 m_force_;
         Vector3 m_torque_;
 
-        ComponentID m_main_collider_;
+        LocalComponentID m_main_collider_;
     };
 } // namespace Engine::Component
 

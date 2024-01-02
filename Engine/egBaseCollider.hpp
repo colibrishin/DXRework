@@ -3,52 +3,47 @@
 #include "egCommon.hpp"
 #include "egComponent.h"
 #include "egHelper.hpp"
+#include "egTransform.h"
 
 namespace Engine::Components
 {
     using namespace DirectX;
 
-    class Collider final : public Abstract::Component
+    class BaseCollider : public Abstract::Component
     {
     public:
         INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_COLLIDER)
 
-        Collider(const WeakObject& owner, const WeakMesh& mesh = {});
-        ~Collider() override = default;
+        BaseCollider(const WeakObject& owner);
+        ~BaseCollider() override = default;
 
-        void SetOffsetPosition(const Vector3& position);
-        void SetOffsetRotation(const Quaternion& rotation);
-        void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
-        void SetOffsetSize(const Vector3& size);
+        virtual void FromMatrix(Matrix& mat);
 
         void SetType(eBoundingType type);
         void SetMass(const float mass);
 
-        void SetBoundingBox(const BoundingBox& bounding);
-        void SetMesh(const WeakMesh& mesh);
+        void SetBoundingBox(const BoundingOrientedBox & bounding);
         void SetModel(const WeakModel& model);
 
-        bool Intersects(Collider& other) const;
-        bool Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool Contains(Collider& other) const;
+        static bool Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset);
+        bool        Intersects(const StrongBaseCollider& other) const;
+        bool        Intersects(const Ray& ray, float distance, float& intersection) const;
+        bool        Contains(const StrongBaseCollider & other) const;
 
-        void AddCollidedObject(EntityID id);
-        void AddSpeculationObject(EntityID id);
+        void AddCollidedObject(GlobalEntityID id);
+        void AddSpeculationObject(GlobalEntityID id);
 
-        void RemoveCollidedObject(const EntityID id);
-        void RemoveSpeculationObject(const EntityID id);
+        void RemoveCollidedObject(const GlobalEntityID id);
+        void RemoveSpeculationObject(const GlobalEntityID id);
 
-        bool IsCollidedObject(const EntityID id) const;
-
-        const std::set<EntityID>& GetCollidedObjects() const;
-        const std::set<EntityID>& GetSpeculation() const;
-
-        Vector3 GetSize() const;
+        bool                     IsCollidedObject(const GlobalEntityID id);
+        std::set<GlobalEntityID> GetCollidedObjects();
+        std::set<GlobalEntityID> GetSpeculation();
+        UINT                     GetCollisionCount(GlobalEntityID id);
 
         void GetPenetration(
-            const Collider& other, Vector3& normal,
+            const BaseCollider& other, Vector3& normal,
             float&          depth) const;
-        UINT GetCollisionCount(EntityID id) const;
 
         float      GetMass() const;
         float      GetInverseMass() const;
@@ -56,8 +51,9 @@ namespace Engine::Components
 
         eBoundingType GetType() const;
 
-        virtual const std::vector<const Vector3*>& GetVertices() const;
-        const Matrix&                              GetWorldMatrix() const;
+        const std::vector<Graphics::VertexElement>& GetVertices() const;
+        Matrix                                      GetWorldMatrix() const;
+        virtual Matrix                              GetLocalMatrix() const;
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -73,11 +69,11 @@ namespace Engine::Components
         {
             if constexpr (std::is_same_v<T, BoundingOrientedBox>)
             {
-                return m_boundings_.As<BoundingOrientedBox>(GetTotalSize(), GetTotalRotation(), GetTotalPosition());
+                return m_boundings_.As<BoundingOrientedBox>(GetWorldMatrix());
             }
             else if constexpr (std::is_same_v<T, BoundingSphere>)
             {
-                return m_boundings_.As<BoundingSphere>(GetTotalSize(), GetTotalRotation(), GetTotalPosition());
+                return m_boundings_.As<BoundingSphere>(GetWorldMatrix());
             }
             else
             {
@@ -87,14 +83,13 @@ namespace Engine::Components
         }
 
     protected:
-        Collider();
+        BaseCollider();
 
     private:
         SERIALIZER_ACCESS
         friend class Manager::Physics::LerpManager;
 
         static void InitializeStockVertices();
-        void        GenerateFromMesh(const WeakMesh& mesh);
 
         template <typename T>
         bool Intersects_GENERAL_TYPE(const T& other)
@@ -129,18 +124,8 @@ namespace Engine::Components
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
-        void UpdateWorldMatrix();
-
-        Vector3 GetTotalPosition() const;
-        Quaternion GetTotalRotation() const;
-        Vector3 GetTotalSize() const;
 
         bool m_bDirtyByTransform;
-
-        Vector3    m_position_;
-        Vector3    m_size_;
-        Quaternion m_rotation_;
-        Vector3    m_yaw_pitch_roll_degree_;
 
         eBoundingType m_type_;
         EntityName    m_mesh_name_;
@@ -149,25 +134,25 @@ namespace Engine::Components
         float m_mass_;
 
         // Non-serialized
-        inline static std::vector<Vector3> m_cube_stock_   = {};
-        inline static std::vector<Vector3> m_sphere_stock_ = {};
-
-        inline static std::vector<const Vector3*> m_cube_stock_ref_   = {};
-        inline static std::vector<const Vector3*> m_sphere_stock_ref_ = {};
+        inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
+        inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
         Physics::BoundingGroup m_boundings_;
 
-        std::set<EntityID>       m_collided_objects_;
-        std::map<EntityID, UINT> m_collision_count_;
-        std::set<EntityID>       m_speculative_collision_candidates_;
+        std::mutex                   m_collision_mutex_;
+        std::mutex                   m_collision_count_mutex_;
+        std::mutex                   m_speculative_mutex_;
+
+        std::set<GlobalEntityID>     m_collided_objects_;
+        std::map<GlobalEntityID, UINT> m_collision_count_;
+        std::set<GlobalEntityID>     m_speculative_collision_candidates_;
 
         Vector3    m_inverse_inertia_;
         XMFLOAT3X3 m_inertia_tensor_;
-        Matrix     m_world_matrix_;
+        Matrix     m_local_matrix_;
 
-        WeakMesh  m_mesh_;
         WeakModel m_model_;
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::BaseCollider)

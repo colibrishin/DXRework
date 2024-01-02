@@ -15,6 +15,20 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine
 {
+    void Scene::DisableControllers()
+    {
+        // Note: accessor should be destroyed in used context, if not, it will cause deadlock.
+        ConcurrentWeakComTypeMap::accessor accessor;
+        bool                               check  = m_cached_components_.find(accessor, COM_T_STATE);
+        const auto&                        states = accessor->second;
+
+        for (const auto& state : states | std::views::values)
+        {
+            const auto locked = state.lock();
+            locked->SetActive(false);
+        }
+    }
+
     void Scene::Initialize()
     {
         for (int i = 0; i < LAYER_MAX; ++i)
@@ -41,14 +55,7 @@ namespace Engine
         Initialize_INTERNAL();
 
 #ifdef _DEBUG
-        const auto& states = m_cached_components_[COM_T_STATE];
-
-        for (const auto& state : states)
-        {
-            const auto locked = state.lock();
-            locked->SetActive(false);
-        }
-
+        DisableControllers();
         const auto observer = Instantiate<Objects::Observer>();
         m_observer_         = observer;
         AddGameObject(observer, LAYER_UI);
@@ -58,7 +65,7 @@ namespace Engine
 
     void Scene::AssignLocalIDToObject(const StrongObject& obj)
     {
-        ActorID id = 0;
+        LocalActorID id = 0;
 
         while (true)
         {
@@ -67,7 +74,8 @@ namespace Engine
                 throw std::exception("Actor ID overflow");
             }
 
-            if (!m_assigned_actor_ids_.contains(id))
+            ConcurrentLocalGlobalIDMap::const_accessor acc;
+            if (!m_assigned_actor_ids_.find(acc, id))
             {
                 m_assigned_actor_ids_.emplace(id, obj->GetID());
                 break;
@@ -91,10 +99,8 @@ namespace Engine
 
     void Scene::RemoveObjectFromCache(const WeakObject& obj)
     {
-        for (const auto& comp : obj.lock()->GetAllComponents())
-        {
-            m_cached_components_[comp.lock()->GetComponentType()].erase(comp);
-        }
+        m_cached_objects_.erase(obj.lock()->GetID());
+        m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
     }
 
     void Scene::RemoveObjectFromOctree(const WeakObject& obj)
@@ -138,19 +144,24 @@ namespace Engine
         }
     }
 
-    void Scene::RemoveGameObject(const EntityID id, eLayerType layer)
+    void Scene::RemoveGameObject(const GlobalEntityID id, eLayerType layer)
     {
-        const auto& obj = m_cached_objects_[id];
+        ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-        RemoveObjectFromOctree(obj);
-        RemoveObjectFromCache(obj);
+        if (!m_cached_objects_.find(acc, id))
+        {
+            return;
+        }
+
+        RemoveObjectFromOctree(acc->second);
+        RemoveObjectFromCache(acc->second);
 
         if (layer == LAYER_LIGHT)
         {
-            UnregisterLightFromManager(obj.lock()->GetSharedPtr<Objects::Light>());
+            UnregisterLightFromManager(acc->second.lock()->GetSharedPtr<Objects::Light>());
         }
 
-        if (const auto locked = obj.lock())
+        if (const auto locked = acc->second.lock())
         {
             if (const auto parent = locked->GetParent().lock())
             {
@@ -168,10 +179,10 @@ namespace Engine
 
         m_cached_objects_.erase(id);
         m_layers[layer]->RemoveGameObject(id);
-        m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
+        m_assigned_actor_ids_.erase(acc->second.lock()->GetLocalID());
     }
 
-    std::vector<WeakObject> Scene::GetGameObjects(eLayerType layer)
+    ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer)
     {
         return m_layers[layer]->GetGameObjects();
     }
@@ -529,7 +540,7 @@ namespace Engine
     {
         Renderable::OnDeserialized();
 
-        auto& ui = m_layers[LAYER_UI]->GetGameObjects();
+        auto ui = m_layers[LAYER_UI]->GetGameObjects();
 
         // remove observer of previous scene
         for (int i = 0; i < ui.size(); ++i)
@@ -546,7 +557,7 @@ namespace Engine
 
         GetShadowManager().Reset();
 
-        auto& lights = m_layers[LAYER_LIGHT]->GetGameObjects();
+        auto lights = m_layers[LAYER_LIGHT]->GetGameObjects();
 
         for (const auto& light : lights)
         {
@@ -568,7 +579,17 @@ namespace Engine
 
                 for (const auto& comp : obj.lock()->GetAllComponents())
                 {
-                    m_cached_components_[comp.lock()->GetComponentType()].emplace(comp);
+                    if (ConcurrentWeakComTypeMap::accessor acc; 
+                        m_cached_components_.find(acc, comp.lock()->GetComponentType()))
+                    {
+                        acc->second.emplace(comp.lock()->GetID(), comp);
+                    }
+                    else
+                    {
+                        m_cached_components_.emplace(comp.lock()->GetComponentType(), ConcurrentWeakComMap{});
+                        m_cached_components_.find(acc, comp.lock()->GetComponentType());
+                        acc->second.emplace(comp.lock()->GetID(), comp);
+                    }
                 }
             }
         }
@@ -593,15 +614,7 @@ namespace Engine
 
 #ifdef _DEBUG
         // remove controller if it is debug state
-        const auto& states = m_cached_components_[COM_T_STATE];
-
-        for (auto& state : states)
-        {
-            if (const auto locked = state.lock())
-            {
-                locked->SetActive(false);
-            }
-        }
+        DisableControllers();
 
         const auto observer = Instantiate<Objects::Observer>();
         m_observer_         = observer;

@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "egConstraintSolver.h"
+
+#include "egBaseCollider.hpp"
 #include "egCollisionDetector.h"
 #include "egGlobal.h"
 #include "egObject.hpp"
@@ -15,22 +17,27 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::Update(const float& dt)
     {
-        const auto scene = GetSceneManager().GetActiveScene().lock();
+        auto& infos = GetCollisionDetector().GetCollisionInfo();
 
-        const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
+        static tbb::affinity_partitioner ap;
 
-        for (const auto& rb : rbs)
+        for (const auto& info : infos)
         {
-            if (const auto locked = rb.lock())
+            if (info.speculative)
             {
-                if (g_speculation_enabled)
-                {
-                    CheckSpeculation(*locked->GetOwner().lock());
-                }
-                CheckCollision(*locked->GetOwner().lock());
+                ResolveSpeculation(info.lhs, info.rhs);
+            }
+            if (info.collision)
+            {
+                ResolveCollision(info.lhs, info.rhs);
+            }
+            if (info.grounded)
+            {
+                ResolveGrounded(info.lhs, info.rhs);
             }
         }
 
+        infos.clear();
         m_collision_resolved_set_.clear();
         m_speculative_resolved_set_.clear();
     }
@@ -45,71 +52,14 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::PostUpdate(const float& dt) {}
 
-    void ConstraintSolver::CheckCollision(Abstract::Object& obj)
+    void ConstraintSolver::ResolveCollision(const WeakObject& lhs, const WeakObject& rhs)
     {
-        const auto cl = obj.GetComponent<Components::Collider>().lock();
-
-        if (!cl)
-        {
-            return;
-        }
-
-        const auto others = cl->GetCollidedObjects();
-
-        for (const auto& id : others)
-        {
-            const auto scene = GetSceneManager().GetActiveScene().lock();
-
-            const auto other = scene->FindGameObject(id).lock();
-
-            if (!other)
-            {
-                continue;
-            }
-
-            if (GetCollisionDetector().IsCollidedInFrame(obj.GetID(), other->GetID()))
-            {
-                ResolveCollision(obj, *other);
-            }
-        }
-    }
-
-    void ConstraintSolver::CheckSpeculation(Abstract::Object& obj)
-    {
-        const auto cl = obj.GetComponent<Components::Collider>().lock();
-
-        if (!cl)
-        {
-            return;
-        }
-
-        const auto others = cl->GetSpeculation();
-
-        for (const auto& id : others)
-        {
-            const auto scene = GetSceneManager().GetActiveScene().lock();
-
-            const auto other = scene->FindGameObject(id).lock();
-
-            if (!other)
-            {
-                continue;
-            }
-
-            ResolveSpeculation(obj, *other);
-        }
-    }
-
-    void ConstraintSolver::ResolveCollision(
-        Abstract::Object& lhs,
-        Abstract::Object& rhs)
-    {
-        const auto rb = lhs.GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.GetComponent<Components::Transform>().lock();
+        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
         // Main collider is considered as the collider that wraps the object.
 
-        const auto rb_other = rhs.GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.GetComponent<Components::Transform>().lock();
+        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
 
         if (rb && rb_other)
         {
@@ -118,8 +68,8 @@ namespace Engine::Manager::Physics
                 return;
             }
 
-            if (m_collision_resolved_set_.contains({lhs.GetID(), rhs.GetID()}) ||
-                m_collision_resolved_set_.contains({rhs.GetID(), lhs.GetID()}))
+            if (m_collision_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()}) ||
+                m_collision_resolved_set_.contains({rhs.lock()->GetID(), lhs.lock()->GetID()}))
             {
                 return;
             }
@@ -160,9 +110,8 @@ namespace Engine::Manager::Physics
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
                                          other_angular_vel, lhs_penetration, rhs_penetration);
 
-            tr->SetWorldPosition(pos + lhs_penetration);
 
-            const auto collided_count = cl->GetCollisionCount(rhs.GetID());
+            const auto collided_count = cl->GetCollisionCount(rhs.lock()->GetID());
             const auto fps            = GetApplication().GetFPS();
 
             auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
@@ -171,7 +120,6 @@ namespace Engine::Manager::Physics
             {
                 ratio = 0.0f;
             }
-
             ratio                = std::clamp(ratio, 0.f, 1.f);
             const auto ratio_inv = 1.0f - ratio;
 
@@ -188,8 +136,12 @@ namespace Engine::Manager::Physics
                 reduction = ratio_inv;
             }
 
-            rb->SetLinearMomentum(linear_vel * reduction);
-            rb->SetAngularMomentum(angular_vel * reduction);
+            if (!rb->IsFixed())
+            {
+                tr->SetWorldPosition(pos + lhs_penetration);
+                rb->SetLinearMomentum(linear_vel * reduction);
+                rb->SetAngularMomentum(angular_vel * reduction);
+            }
 
             if (!rb_other->IsFixed())
             {
@@ -201,25 +153,26 @@ namespace Engine::Manager::Physics
                                              other_angular_vel * reduction);
             }
 
-            m_collision_resolved_set_.insert({lhs.GetID(), rhs.GetID()});
-            m_collision_resolved_set_.insert({rhs.GetID(), lhs.GetID()});
+            cl->RemoveCollidedObject(rhs.lock()->GetID());
+            cl_other->RemoveCollidedObject(lhs.lock()->GetID());
+
+            m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
+            m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
         }
     }
 
-    void ConstraintSolver::ResolveSpeculation(
-        Abstract::Object& lhs,
-        Abstract::Object& rhs)
+    void ConstraintSolver::ResolveSpeculation(const WeakObject& lhs, const WeakObject& rhs)
     {
-        const auto rb = lhs.GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.GetComponent<Components::Transform>().lock();
+        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
 
-        const auto rb_other = rhs.GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.GetComponent<Components::Transform>().lock();
+        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
 
         if (rb && tr && rb_other && tr_other)
         {
-            if (m_speculative_resolved_set_.contains({lhs.GetID(), rhs.GetID()}) ||
-                m_speculative_resolved_set_.contains({rhs.GetID(), lhs.GetID()}))
+            if (m_speculative_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()}) ||
+                m_speculative_resolved_set_.contains({rhs.lock()->GetID(), lhs.lock()->GetID()}))
             {
                 return;
             }
@@ -244,13 +197,43 @@ namespace Engine::Manager::Physics
             if (cl_other->Intersects(ray, length, intersection_distance))
             {
                 const Vector3 minimum_penetration = ray.direction * intersection_distance;
-                tr->SetWorldPosition(tr->GetWorldPosition() - minimum_penetration);
-                m_speculative_resolved_set_.insert({lhs.GetID(), rhs.GetID()});
-                m_speculative_resolved_set_.insert({rhs.GetID(), lhs.GetID()});
+                tr->SetWorldPosition(tr->GetWorldPreviousPosition() - minimum_penetration);
+                m_speculative_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
+                m_speculative_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
             }
 
-            cl->RemoveSpeculationObject(rhs.GetID());
-            cl_other->RemoveSpeculationObject(lhs.GetID());
+            cl->RemoveSpeculationObject(rhs.lock()->GetID());
+            cl_other->RemoveSpeculationObject(lhs.lock()->GetID());
+        }
+    }
+
+    void ConstraintSolver::ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs)
+    {
+        const auto rb_lhs = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        const auto rb_rhs = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+
+        const auto cl_lhs = rb_lhs->GetMainCollider().lock();
+        const auto cl_rhs = rb_rhs->GetMainCollider().lock();
+
+        const auto tr_lhs = lhs.lock()->GetComponent<Components::Transform>().lock();
+        const auto tr_rhs = rhs.lock()->GetComponent<Components::Transform>().lock();
+
+        static Ray ray{};
+        ray.position = lhs.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
+        ray.direction = Vector3::Down;
+        const auto length = std::fabsf(tr_lhs->GetScale().Dot(Vector3::Down)) / 2.f + std::fabsf(tr_rhs->GetScale().Dot(Vector3::Up)) / 2.f;
+        float intersection = 0.0f;
+
+        if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
+        {
+            Vector3 normal;
+            float penetration;
+
+            cl_lhs->GetPenetration(*cl_rhs, normal, penetration);
+
+            const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+            const auto fallback = tr->GetWorldPosition() + (normal * penetration);
+            tr->SetWorldPosition(fallback);
         }
     }
 } // namespace Engine::Manager::Physics

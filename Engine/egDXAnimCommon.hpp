@@ -391,6 +391,11 @@ namespace Engine::Graphics
             bone_count++;
         }
 
+        std::vector<UINT> GetIndices() const
+        {
+            return {bone_indices, bone_indices + bone_count};
+        }
+
     private:
         friend class boost::serialization::access;
 

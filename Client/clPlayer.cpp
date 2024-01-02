@@ -3,7 +3,7 @@
 
 #include "clCharacterController.hpp"
 #include "egAnimator.h"
-#include "egCollider.hpp"
+#include "egBaseCollider.hpp"
 #include "egModelRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
@@ -30,14 +30,13 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
-        const auto cldr = AddComponent<Components::Collider>().lock();
+        const auto cldr = AddComponent<Components::BaseCollider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
         AddComponent<Client::State::CharacterController>();
 
         tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({0, XM_PI / 2, 0.0f}));
         cldr->SetModel(model);
-        cldr->SetBoundingBox(model->GetBoundingBox());
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
 
@@ -46,6 +45,13 @@ namespace Client::Object
         rb->SetGravityOverride(true);
 
         atr->SetAnimation(model->GetAnimationCatalog().front());
+
+        for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
+        {
+            const auto bone_cldr = AddComponent<Components::BaseCollider>().lock();
+            bone_cldr->SetBoundingBox(box);
+            m_bone_colliders_.emplace(idx, bone_cldr);
+        }
     }
 
     void Player::PreUpdate(const float& dt)
@@ -76,5 +82,18 @@ namespace Client::Object
     void Player::FixedUpdate(const float& dt)
     {
         Object::FixedUpdate(dt);
+
+        const auto tr = GetComponent<Components::Transform>().lock();
+        const auto mr = GetComponent<Components::ModelRenderer>().lock();
+        const auto atr = GetComponent<Components::Animator>().lock();
+        const auto model = mr->GetModel().lock();
+        const auto mtl = mr->GetMaterial().lock();
+        const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
+        auto deform = anim->GetFrameAnimation(atr->GetFrame());
+
+        for (const auto& [idx, cldr] : m_bone_colliders_)
+        {
+            cldr->FromMatrix(deform[idx].transform);
+        }
     }
 }

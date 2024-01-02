@@ -17,7 +17,8 @@ namespace Engine::Resources
 {
     BoneAnimation::BoneAnimation(const AnimationPrimitive& primitive)
     : BaseAnimation(),
-      m_primitive_(primitive) {}
+      m_primitive_(primitive),
+      m_evaluated_time_(0) {}
 
     void BoneAnimation::PreUpdate(const float& dt) {}
 
@@ -31,6 +32,11 @@ namespace Engine::Resources
     {
         auto animation_per_bone = GetFrameAnimation(dt);
 
+        for (auto& bone : animation_per_bone)
+        {
+            bone.transform = bone.transform.Transpose();
+        }
+
         GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(
                                                                            animation_per_bone.size(),
                                                                            animation_per_bone.data(),
@@ -43,6 +49,8 @@ namespace Engine::Resources
     void BoneAnimation::PostRender(const float& dt)
     {
         GetRenderPipeline().UnbindResource(RESERVED_ANIMATION, SHADER_VERTEX);
+        m_evaluated_time_ = 0.f;
+        m_evaluated_data_.clear();
     }
 
     void BoneAnimation::PostUpdate(const float& dt) {}
@@ -60,10 +68,15 @@ namespace Engine::Resources
         return RES_T_BONE_ANIM;
     }
 
-    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation(const float dt) const
+    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation(const float dt)
     {
+        if (dt != 0.f && m_evaluated_time_ == dt && !m_evaluated_data_.empty())
+        {
+            return m_evaluated_data_;
+        }
+
+        m_evaluated_time_ = dt;
         const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
-        std::vector<BoneTransformElement> rtn;
         std::vector<Matrix> memo;
 
         memo.resize(m_primitive_.GetBoneCount());
@@ -94,11 +107,11 @@ namespace Engine::Resources
             memo[bone->GetIndex()] = global_transform;
 
             const auto final_transform = bone->GetInvBindPose() * global_transform  * m_primitive_.GetGlobalInverseTransform();
-            bfa.transform = final_transform.Transpose();
-            rtn.push_back(bfa);
+            bfa.transform = final_transform;
+            m_evaluated_data_.push_back(bfa);
         }
 
-        return rtn;
+        return m_evaluated_data_;
     }
 
     void BoneAnimation::Load_INTERNAL()
@@ -111,5 +124,6 @@ namespace Engine::Resources
 
     BoneAnimation::BoneAnimation()
     : BaseAnimation(),
-      m_primitive_() { }
+      m_primitive_(),
+      m_evaluated_time_(0) { }
 }
