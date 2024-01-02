@@ -138,6 +138,16 @@ namespace Engine::Manager
              });
     }
 
+    void Debugger::Draw(const BoundingBox& bb, const XMVECTORF32& color)
+    {
+        Push(
+             Message{}, [bb, color](Message& msg, const float& dt)
+             {
+                 DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), bb, color);
+                 msg.elapsed_time += 2.f;
+             });
+    }
+
     void Debugger::SetDebugFlag()
     {
         m_bDebug = true;

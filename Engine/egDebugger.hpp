@@ -28,6 +28,7 @@ namespace Engine::Manager
         void Draw(const BoundingFrustum& frustum, const XMVECTORF32& color);
         void Draw(const BoundingSphere& sphere, const XMVECTORF32& color);
         void Draw(const BoundingOrientedBox& obb, const XMVECTORF32& color);
+        void Draw(const BoundingBox& bb, const XMVECTORF32& color);
 
         void SetDebugFlag();
         bool GetDebugFlag() const;
