@@ -224,7 +224,7 @@ namespace Engine::Manager::Physics
         const auto length = std::fabsf(tr_lhs->GetScale().Dot(Vector3::Down)) / 2.f + std::fabsf(tr_rhs->GetScale().Dot(Vector3::Up)) / 2.f;
         float intersection = 0.0f;
 
-        if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
+        /*if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
         {
             Vector3 normal;
             float penetration;
@@ -234,6 +234,6 @@ namespace Engine::Manager::Physics
             const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
             const auto fallback = tr->GetWorldPosition() + (normal * penetration);
             tr->SetWorldPosition(fallback);
-        }
+        }*/
     }
 } // namespace Engine::Manager::Physics
