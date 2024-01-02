@@ -153,6 +153,9 @@ namespace Engine::Manager::Physics
                                              other_angular_vel * reduction);
             }
 
+            cl->RemoveCollidedObject(rhs.lock()->GetID());
+            cl_other->RemoveCollidedObject(lhs.lock()->GetID());
+
             m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
             m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
         }
