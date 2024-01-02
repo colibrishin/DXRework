@@ -17,7 +17,7 @@ namespace Engine::Components
         BaseCollider(const WeakObject& owner);
         ~BaseCollider() override = default;
 
-        virtual void FromMatrix(Matrix& mat);
+        void FromMatrix(Matrix& mat);
 
         void SetType(eBoundingType type);
         void SetMass(const float mass);
@@ -74,6 +74,24 @@ namespace Engine::Components
             else if constexpr (std::is_same_v<T, BoundingSphere>)
             {
                 return m_boundings_.As<BoundingSphere>(GetWorldMatrix());
+            }
+            else
+            {
+                static_assert("Invalid type");
+                throw std::exception("Invalid type");
+            }
+        }
+
+        template <typename T>
+        T GetBoundingLocal() const
+        {
+            if constexpr (std::is_same_v<T, BoundingOrientedBox>)
+            {
+                return m_boundings_.As<BoundingOrientedBox>(GetLocalMatrix());
+            }
+            else if constexpr (std::is_same_v<T, BoundingSphere>)
+            {
+                return m_boundings_.As<BoundingSphere>(GetLocalMatrix());
             }
             else
             {

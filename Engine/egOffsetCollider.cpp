@@ -57,19 +57,6 @@ namespace Engine::Components
         m_scale_ = Matrix::CreateScale(scale);
     }
 
-    void OffsetCollider::FromMatrix(Matrix& mat)
-    {
-        Vector3 scale, translation;
-        Quaternion rotation;
-
-        if (mat.Decompose(scale, rotation, translation))
-        {
-            m_scale_ = Matrix::CreateScale(scale);
-            m_rotation_ = Matrix::CreateFromQuaternion(rotation);
-            m_transition_ = Matrix::CreateTranslation(translation);
-        }
-    }
-
     Matrix OffsetCollider::GetLocalMatrix() const
     {
         return m_scale_ * m_rotation_ * m_transition_ * BaseCollider::GetLocalMatrix();
