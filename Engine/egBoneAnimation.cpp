@@ -55,6 +55,11 @@ namespace Engine::Resources
 
     void BoneAnimation::PostUpdate(const float& dt) {}
 
+    void BoneAnimation::OnDeserialized()
+    {
+        BaseAnimation::OnDeserialized();
+    }
+
     void BoneAnimation::BindBone(const WeakBone& bone_info)
     {
         if (const auto locked = bone_info.lock())

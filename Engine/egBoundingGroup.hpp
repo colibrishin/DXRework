@@ -32,22 +32,22 @@ namespace Engine::Physics
         }
     }
 
-    union BoundingGroup
+    struct BoundingGroup
     {
     public:
-        BoundingGroup() : box(Vector3::Zero, {0.5f, 0.5f, 0.5f}, Quaternion::Identity) {}
+        BoundingGroup() : boundings({}) {}
 
         template <typename BoundingType>
         __forceinline BoundingType __vectorcall As(const Matrix& mat) const
         {
             if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
-                const auto box_ = TranslateBounding(box, mat);
+                const auto box_ = TranslateBounding(boundings.box, mat);
                 return box_;
             }
             else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
             {
-                const auto sphere_ = TranslateBounding(sphere, mat);
+                const auto sphere_ = TranslateBounding(boundings.sphere, mat);
                 return sphere_;
             }
             else
@@ -59,7 +59,7 @@ namespace Engine::Physics
 
         void __vectorcall UpdateFromBoundingBox(const BoundingOrientedBox& box_)
         {
-            box = box_;
+            boundings.box = box_;
         }
 
         template <typename BoundingType>
@@ -67,17 +67,17 @@ namespace Engine::Physics
         {
             if (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
-                box.CreateFromPoints(box, count, points, stride);
+                boundings.box.CreateFromPoints(boundings.box, count, points, stride);
             }
             else if (std::is_same_v<BoundingType, BoundingSphere>)
             {
-                sphere.CreateFromPoints(sphere, count, points, stride);
+                boundings.sphere.CreateFromPoints(boundings.sphere, count, points, stride);
             }
             else if (std::is_same_v<BoundingType, BoundingBox>)
             {
                 BoundingBox box_;
                 BoundingBox::CreateFromPoints(box_, count, points, stride);
-                BoundingOrientedBox::CreateFromBoundingBox(box, box_);
+                BoundingOrientedBox::CreateFromBoundingBox(boundings.box, box_);
             }
             else
             {
@@ -86,7 +86,18 @@ namespace Engine::Physics
         }
 
     private:
-        BoundingOrientedBox box;
-        BoundingSphere      sphere;
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & boundings.box;
+            ar & boundings.sphere;
+        }
+
+        union Boundings
+        {
+            BoundingOrientedBox box;
+            BoundingSphere      sphere;
+        } boundings;
     };
 }

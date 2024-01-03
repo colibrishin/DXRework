@@ -60,6 +60,17 @@ namespace Engine::Resources
 
     void Bone::PostUpdate(const float& dt) {}
 
+    void Bone::OnDeserialized()
+    {
+        Resource::OnDeserialized();
+
+        m_bones_index_wise_.resize(m_bone_map.size());
+        for (auto& bone : m_bone_map | std::views::values)
+        {
+            m_bones_index_wise_[bone.GetIndex()] = &bone;
+        }
+    }
+
     const BonePrimitive* Bone::GetBone(const UINT idx) const
     {
         if (m_bones_index_wise_.size() > idx)

@@ -133,7 +133,35 @@ namespace boost::serialization
         ar & x.Extents;
     }
 
-    //
+    template <class Archive>
+    void serialize(
+        Archive&           ar, DirectX::BoundingOrientedBox& x,
+        const unsigned int version)
+    {
+        ar & x.Center;
+        ar & x.Extents;
+        ar & x.Orientation;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, DirectX::BoundingSphere& x,
+        const unsigned int version)
+    {
+        ar & x.Center;
+        ar & x.Radius;
+    }
+
+    template <class Archive>
+    void serialize(
+        Archive&           ar, DirectX::XMFLOAT4& x,
+        const unsigned int version)
+    {
+        ar & x.x;
+        ar & x.y;
+        ar & x.z;
+        ar & x.w;
+    }
 } // namespace boost::serialization
 
 namespace Engine

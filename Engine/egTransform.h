@@ -14,32 +14,34 @@ namespace Engine::Components
         Transform(const WeakObject& owner);
         ~Transform() override = default;
 
-        void SetWorldPosition(const Vector3& position);
-        void SetWorldRotation(const Quaternion& rotation);
+        void __vectorcall SetWorldPosition(const Vector3& position);
+        void __vectorcall SetWorldRotation(const Quaternion& rotation);
+        void __vectorcall SetWorldScale(const Vector3& scale);
 
-        void SetLocalPosition(const Vector3& position);
-        void SetLocalRotation(const Quaternion& rotation);
-        void SetScale(const Vector3& scale);
+        void __vectorcall SetLocalPosition(const Vector3& position);
+        void __vectorcall SetLocalRotation(const Quaternion& rotation);
+        void __vectorcall SetLocalScale(const Vector3& scale);
+        void __vectorcall SetLocalMatrix(const Matrix& matrix);
         void SetSizeAbsolute(bool absolute);
 
-        void SetAnimationPosition(const Vector3& position);
-        void SetAnimationRotation(const Quaternion& rotation);
-        void SetAnimationScale(const Vector3& scale);
+        void __vectorcall SetAnimationPosition(const Vector3& position);
+        void __vectorcall SetAnimationRotation(const Quaternion& rotation);
+        void __vectorcall SetAnimationScale(const Vector3& scale);
 
-        Vector3 GetWorldPosition();
+        Vector3    GetWorldPosition();
         Quaternion GetWorldRotation() const;
-
+        Vector3    GetWorldScale() const;
         Vector3    GetWorldPreviousPosition() const;
         Vector3    GetLocalPreviousPosition() const;
         Vector3    GetLocalPosition() const;
         Quaternion GetLocalRotation() const;
-        Vector3    GetScale() const;
+        Vector3    GetLocalScale() const;
 
         Vector3 Forward() const;
         Vector3 Right() const;
         Vector3 Up() const;
 
-        void SetYawPitchRoll(const Vector3& yaw_pitch_roll);
+        void __vectorcall SetYawPitchRoll(const Vector3& yaw_pitch_roll);
         void Translate(Vector3 translation);
 
         void Initialize() override;
@@ -54,7 +56,7 @@ namespace Engine::Components
         Matrix GetLocalMatrix() const;
         Matrix GetWorldMatrix();
 
-        static void Bind(Transform & transform);
+        static void __fastcall Bind(Transform & transform);
         static void Unbind();
 
     protected:

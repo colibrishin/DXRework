@@ -58,7 +58,8 @@ namespace Engine::Abstract
         m_path_    = m_path_str_;
     }
 
-    bool Resource::IsLoaded() const {
+    bool Resource::IsLoaded() const
+    {
         return m_bLoaded_;
     }
 

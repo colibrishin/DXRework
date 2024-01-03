@@ -3,11 +3,16 @@
 
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL(
-                       Engine::Components::Transform,
-                       _ARTAG(_BSTSUPER(Component)) _ARTAG(m_previous_position_)
-                       _ARTAG(m_position_) _ARTAG(m_rotation_)
-                       _ARTAG(m_scale_))
+SERIALIZER_ACCESS_IMPL(Engine::Components::Transform,
+                          _ARTAG(_BSTSUPER(Component))
+                          _ARTAG(m_b_absolute_)
+                          _ARTAG(m_previous_position_)
+                          _ARTAG(m_position_)
+                          _ARTAG(m_rotation_)
+                          _ARTAG(m_scale_)
+                          _ARTAG(m_animation_position_)
+                          _ARTAG(m_animation_rotation_)
+                          _ARTAG(m_animation_scale_))
 
 namespace Engine::Components
 {
@@ -23,7 +28,7 @@ namespace Engine::Components
       m_animation_scale_(Vector3::One),
       m_b_lazy_(true) {}
 
-    void Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
+    void __vectorcall Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
     {
         m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
         m_rotation_              = Quaternion::CreateFromYawPitchRoll(
@@ -32,18 +37,18 @@ namespace Engine::Components
                                                          DirectX::XMConvertToRadians(yaw_pitch_roll.z));
     }
 
-    void Transform::SetWorldPosition(const Vector3& position)
+    void __vectorcall Transform::SetWorldPosition(const Vector3& position)
     {
-        Matrix world = GetWorldMatrix();
-        Matrix inv_local = GetLocalMatrix().Invert();
-        world = inv_local * world;
-        world = world.Invert();
+        Matrix       world     = GetWorldMatrix();
+        const Matrix inv_local = GetLocalMatrix().Invert();
+        world                  = inv_local * world;
+        world                  = world.Invert();
 
         m_position_ = Vector3::Transform(position, world);
         m_b_lazy_   = true;
     }
 
-    void Transform::SetWorldRotation(const Quaternion& rotation)
+    void __vectorcall Transform::SetWorldRotation(const Quaternion& rotation)
     {
         Quaternion world = GetWorldRotation();
         Quaternion inv_local;
@@ -55,13 +60,23 @@ namespace Engine::Components
         m_b_lazy_   = true;
     }
 
-    void Transform::SetLocalPosition(const Vector3& position)
+    void Transform::SetWorldScale(const Vector3& scale)
+    {
+        Vector3       world = GetWorldScale();
+        const Vector3 local = GetLocalScale();
+        world               = world / local;
+
+        m_scale_ = scale / world;
+        m_b_lazy_   = true;
+    }
+
+    void __vectorcall Transform::SetLocalPosition(const Vector3& position)
     {
         m_position_ = position;
         m_b_lazy_   = true;
     }
 
-    void Transform::SetLocalRotation(const Quaternion& rotation)
+    void __vectorcall Transform::SetLocalRotation(const Quaternion& rotation)
     {
         m_rotation_ = rotation;
         const auto euler = rotation.ToEuler();
@@ -72,10 +87,18 @@ namespace Engine::Components
         m_b_lazy_ = true;
     }
 
-    void Transform::SetScale(const Vector3& scale)
+    void __vectorcall Transform::SetLocalScale(const Vector3& scale)
     {
         m_scale_ = scale;
         m_b_lazy_ = true;
+    }
+
+    void Transform::SetLocalMatrix(const Matrix& matrix)
+    {
+        if (!const_cast<Matrix*>(&matrix)->Decompose(m_scale_, m_rotation_, m_position_))
+        {
+            throw std::runtime_error("Matrix decomposition failed");
+        }
     }
 
     void Transform::SetSizeAbsolute(bool absolute)
@@ -84,19 +107,19 @@ namespace Engine::Components
         m_b_lazy_     = true;
     }
 
-    void Transform::SetAnimationPosition(const Vector3& position)
+    void __vectorcall Transform::SetAnimationPosition(const Vector3& position)
     {
         m_animation_position_ = position;
         m_b_lazy_             = true;
     }
 
-    void Transform::SetAnimationRotation(const Quaternion& rotation)
+    void __vectorcall Transform::SetAnimationRotation(const Quaternion& rotation)
     {
         m_animation_rotation_ = rotation;
         m_b_lazy_             = true;
     }
 
-    void Transform::SetAnimationScale(const Vector3& scale)
+    void __vectorcall Transform::SetAnimationScale(const Vector3& scale)
     {
         m_animation_scale_ = scale;
         m_b_lazy_          = true;
@@ -110,20 +133,36 @@ namespace Engine::Components
 
     Quaternion Transform::GetWorldRotation() const
     {
-        Quaternion rotation = GetLocalRotation();
-        const WeakTransform tr = FindNextTransform(*this);
-
-        if (m_b_absolute_)
+        if (!m_b_lazy_)
         {
-            return rotation;
+            const auto   scale = GetWorldScale();
+            const Matrix rot
+            {
+                {m_world_matrix_._11 / scale.x, m_world_matrix_._12 / scale.x, m_world_matrix_._13 / scale.x, 0.f},
+                {m_world_matrix_._21 / scale.y, m_world_matrix_._22 / scale.y, m_world_matrix_._23 / scale.y, 0.f},
+                {m_world_matrix_._31 / scale.z, m_world_matrix_._32 / scale.z, m_world_matrix_._33 / scale.z, 0.f},
+                {0.f, 0.f, 0.f, 1.f}
+            };
+
+            return Quaternion::CreateFromRotationMatrix(rot);
         }
 
-        if (const auto parent = tr.lock())
+        Quaternion    world = GetLocalRotation();
+        auto          tr_c  = const_cast<Transform*>(this);
+        WeakTransform tr_p  = FindNextTransform(*this);
+
+        if (const auto parent = tr_p.lock())
         {
-            rotation = Quaternion::Concatenate(rotation, parent->GetWorldRotation());
+            if (!tr_c->m_b_absolute_)
+            {
+                world *= parent->GetLocalRotation();
+            }
+
+            tr_c = parent.get();
+            tr_p = FindNextTransform(*parent);
         }
 
-        return rotation;
+        return world;
     }
 
     Vector3 Transform::GetLocalPosition() const
@@ -136,9 +175,38 @@ namespace Engine::Components
         return Quaternion::Concatenate(m_rotation_, m_animation_rotation_);
     }
 
-    Vector3 Transform::GetScale() const
+    Vector3 Transform::GetLocalScale() const
     {
         return m_scale_ * m_animation_scale_;
+    }
+
+    Vector3 Transform::GetWorldScale() const
+    {
+        if (!m_b_lazy_)
+        {
+            const Vector3 x = {m_world_matrix_._11, m_world_matrix_._12, m_world_matrix_._13};
+            const Vector3 y = {m_world_matrix_._21, m_world_matrix_._22, m_world_matrix_._23};
+            const Vector3 z = {m_world_matrix_._31, m_world_matrix_._32, m_world_matrix_._33};
+
+            return {x.Length(), y.Length(), z.Length()};
+        }
+
+        Vector3       world = GetLocalScale();
+        auto          tr_c  = const_cast<Transform*>(this);
+        WeakTransform tr_p  = FindNextTransform(*this);
+
+        if (const auto parent = tr_p.lock())
+        {
+            if (!tr_c->m_b_absolute_)
+            {
+                world *= parent->GetLocalScale();
+            }
+
+            tr_c = parent.get();
+            tr_p = FindNextTransform(*parent);
+        }
+
+        return world;
     }
 
     Vector3 Transform::Forward() const
@@ -220,7 +288,7 @@ namespace Engine::Components
 
     Matrix Transform::GetLocalMatrix() const
     {
-        return Matrix::CreateScale(GetScale()) *
+        return Matrix::CreateScale(GetLocalScale()) *
                Matrix::CreateFromQuaternion(GetLocalRotation()) *
                Matrix::CreateTranslation(GetLocalPosition());
     }
@@ -250,7 +318,7 @@ namespace Engine::Components
         {
             if (tr_c->m_b_absolute_)
             {
-                const auto inv_sr = Matrix::CreateScale(parent->GetScale()).Invert() * 
+                const auto inv_sr = Matrix::CreateScale(parent->GetLocalScale()).Invert() * 
                     Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
                 world *= inv_sr * parent->GetLocalMatrix();
             }

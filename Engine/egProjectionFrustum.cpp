@@ -49,7 +49,8 @@ namespace Engine::Manager
                 object.lock()->GetComponent<Components::Transform>().lock())
         {
             BoundingOrientedBox box{
-                tr->GetWorldPosition(), tr->GetScale() * 0.5f,
+                tr->GetWorldPosition(),
+                tr->GetWorldScale() * 0.5f,
                 tr->GetWorldRotation()
             };
 

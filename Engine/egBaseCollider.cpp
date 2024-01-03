@@ -15,9 +15,8 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Components::BaseCollider,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
-                       _ARTAG(m_bDirtyByTransform)
-                       _ARTAG(m_type_) _ARTAG(m_mass_)
-                       _ARTAG(m_mesh_name_))
+                       _ARTAG(m_type_) _ARTAG(m_model_name_) _ARTAG(m_mass_)
+                       _ARTAG(m_boundings_))
 
 namespace Engine::Components
 {
@@ -326,7 +325,6 @@ namespace Engine::Components
 
     BaseCollider::BaseCollider()
     : Component(COM_T_COLLIDER, {}),
-      m_bDirtyByTransform(false),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.f),
       m_boundings_(),
@@ -356,11 +354,9 @@ namespace Engine::Components
     {
         Component::OnImGui();
         ImGui::Indent(2);
-        ImGui::Checkbox("Dirty by Transform", &m_bDirtyByTransform);
 
         ImGui::InputInt("Collider Type", reinterpret_cast<int*>(&m_type_));
 
-        ImGui::Text("Collider Mesh : %s", m_mesh_name_.c_str());
         ImGui::InputFloat("Collider Mass", &m_mass_);
 
         // TODO: colliding objects
@@ -404,7 +400,6 @@ namespace Engine::Components
 
     BaseCollider::BaseCollider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
-      m_bDirtyByTransform(false),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.0f),
       m_boundings_(),

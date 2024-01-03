@@ -1,6 +1,13 @@
 #include "pch.h"
 #include "egOffsetCollider.hpp"
 
+SERIALIZER_ACCESS_IMPL(
+                       Engine::Components::OffsetCollider,
+                       _ARTAG(_BSTSUPER(BaseCollider))
+                       _ARTAG(m_transition_)
+                       _ARTAG(m_rotation_)
+                       _ARTAG(m_scale_))
+
 namespace Engine::Components
 {
     OffsetCollider::OffsetCollider(const WeakObject& owner) : BaseCollider(owner) {}
@@ -61,4 +68,6 @@ namespace Engine::Components
     {
         return m_scale_ * m_rotation_ * m_transition_ * BaseCollider::GetLocalMatrix();
     }
+
+    OffsetCollider::OffsetCollider() {}
 }

@@ -143,19 +143,16 @@ namespace Engine::Components
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
 
-        bool m_bDirtyByTransform;
-
         eBoundingType m_type_;
-        EntityName    m_mesh_name_;
         EntityName    m_model_name_;
+
+        Physics::BoundingGroup m_boundings_;
 
         float m_mass_;
 
         // Non-serialized
         inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
         inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
-
-        Physics::BoundingGroup m_boundings_;
 
         std::mutex                   m_collision_mutex_;
         std::mutex                   m_collision_count_mutex_;

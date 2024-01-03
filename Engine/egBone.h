@@ -22,6 +22,7 @@ namespace Engine::Resources
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
+        void OnDeserialized() override;
 
         [[nodiscard]] const BonePrimitive* GetBone(const UINT idx) const;
         [[nodiscard]] const BonePrimitive* GetBone(const std::string& name);

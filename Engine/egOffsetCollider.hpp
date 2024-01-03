@@ -23,6 +23,9 @@ namespace Engine::Components
         Matrix GetLocalMatrix() const override;
 
     private:
+        SERIALIZER_ACCESS
+        OffsetCollider();
+
         Matrix m_transition_;
         Matrix m_rotation_;
         Matrix m_scale_;
