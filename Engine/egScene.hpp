@@ -31,8 +31,8 @@ namespace Engine
         template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
         boost::weak_ptr<T> CreateGameObject(eLayerType layer)
         {
-            // Create object
-            auto obj_t = boost::make_shared<T>();
+            // Create object, dynamic allocation from scene due to the access limitation.
+            auto obj_t = boost::shared_ptr<T>(new T);
             auto obj = obj_t->template GetSharedPtr<Abstract::Object>();
 
             // add object to scene
