@@ -76,9 +76,6 @@ namespace Client::Scene
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
                    {-4.f, 2.f, 0.f});
 
-        const auto rifle = CreateGameObject<Object::Rifle>(Engine::LAYER_DEFAULT);
-        player->AddChild(rifle);
-
         GetMainCamera().lock()->BindObject(player);
 
         Engine::GetCollisionDetector().SetCollisionLayer(

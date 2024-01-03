@@ -2,6 +2,7 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
+#include "clRifile.h"
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
 #include "egModelRenderer.h"
@@ -36,7 +37,7 @@ namespace Client::Object
         const auto atr = AddComponent<Components::Animator>().lock();
         AddComponent<Client::State::CharacterController>();
 
-        tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({0, XM_PI / 2, 0.0f}));
+        tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({XM_PI / 2, 0, 0.0f}));
         cldr->SetModel(model);
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
@@ -46,12 +47,22 @@ namespace Client::Object
 
         atr->SetAnimation(model->GetAnimationCatalog().front());
 
-        /*for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
+        const auto rifle = GetScene().lock()->CreateGameObject<Rifle>(Engine::LAYER_DEFAULT);
+        AddChild(rifle);
+
+        for (const auto& box : model->GetBoneBoundingBoxes() | std::views::values)
         {
-            auto bone_cldr = AddComponent<Components::OffsetCollider>().lock();
-            bone_cldr->SetBoundingBox(box);
-            m_bone_colliders_.emplace(idx, bone_cldr);
-        }*/
+            const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
+            const auto ctr = child->AddComponent<Components::Transform>().lock();
+            child->AddComponent<Components::Collider>();
+            // todo: if child is not set before the transform, world matrix is created in local matrix.
+            AddChild(child);
+            ctr->SetSizeAbsolute(true);
+            ctr->SetRotateAbsolute(false);
+            ctr->SetLocalPosition(box.Center);
+            ctr->SetLocalRotation({box.Orientation.x, box.Orientation.y, box.Orientation.z, box.Orientation.w});
+            ctr->SetLocalScale(Vector3(box.Extents) * 2.f);
+        }
     }
 
     void Player::PreUpdate(const float& dt)
