@@ -23,6 +23,7 @@ namespace Engine::Components
         void __vectorcall SetLocalScale(const Vector3& scale);
         void __vectorcall SetLocalMatrix(const Matrix& matrix);
         void SetSizeAbsolute(bool absolute);
+        void SetRotateAbsolute(bool absolute);
 
         void __vectorcall SetAnimationPosition(const Vector3& position);
         void __vectorcall SetAnimationRotation(const Quaternion& rotation);
@@ -41,7 +42,6 @@ namespace Engine::Components
         Vector3 Right() const;
         Vector3 Up() const;
 
-        void __vectorcall SetYawPitchRoll(const Vector3& yaw_pitch_roll);
         void Translate(Vector3 translation);
 
         void Initialize() override;
@@ -71,11 +71,11 @@ namespace Engine::Components
 
         SERIALIZER_ACCESS
 
-        bool m_b_absolute_;
+        bool m_b_s_absolute_;
+        bool m_b_r_absolute_;
         Vector3    m_previous_position_;
         Vector3    m_world_previous_position_;
         Vector3    m_position_;
-        Vector3    m_yaw_pitch_roll_degree_;
         Quaternion m_rotation_;
         Vector3    m_scale_;
 

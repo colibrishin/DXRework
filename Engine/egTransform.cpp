@@ -5,7 +5,8 @@
 
 SERIALIZER_ACCESS_IMPL(Engine::Components::Transform,
                           _ARTAG(_BSTSUPER(Component))
-                          _ARTAG(m_b_absolute_)
+                          _ARTAG(m_b_s_absolute_)
+                          _ARTAG(m_b_r_absolute_)
                           _ARTAG(m_previous_position_)
                           _ARTAG(m_position_)
                           _ARTAG(m_rotation_)
@@ -18,7 +19,8 @@ namespace Engine::Components
 {
     Transform::Transform(const WeakObject& owner)
     : Component(COM_T_TRANSFORM, owner),
-      m_b_absolute_(true),
+      m_b_s_absolute_(true),
+      m_b_r_absolute_(false),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
@@ -27,15 +29,6 @@ namespace Engine::Components
       m_animation_rotation_(Quaternion::Identity),
       m_animation_scale_(Vector3::One),
       m_b_lazy_(true) {}
-
-    void __vectorcall Transform::SetYawPitchRoll(const Vector3& yaw_pitch_roll)
-    {
-        m_yaw_pitch_roll_degree_ = yaw_pitch_roll;
-        m_rotation_              = Quaternion::CreateFromYawPitchRoll(
-                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.y),
-                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.x),
-                                                         DirectX::XMConvertToRadians(yaw_pitch_roll.z));
-    }
 
     void __vectorcall Transform::SetWorldPosition(const Vector3& position)
     {
@@ -79,11 +72,6 @@ namespace Engine::Components
     void __vectorcall Transform::SetLocalRotation(const Quaternion& rotation)
     {
         m_rotation_ = rotation;
-        const auto euler = rotation.ToEuler();
-
-        m_yaw_pitch_roll_degree_ = Vector3{
-            DirectX::XMConvertToDegrees(euler.x), DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.z)
-        };
         m_b_lazy_ = true;
     }
 
@@ -103,8 +91,14 @@ namespace Engine::Components
 
     void Transform::SetSizeAbsolute(bool absolute)
     {
-        m_b_absolute_ = absolute;
-        m_b_lazy_     = true;
+        m_b_s_absolute_ = absolute;
+        m_b_lazy_       = true;
+    }
+
+    void Transform::SetRotateAbsolute(bool absolute)
+    {
+        m_b_r_absolute_ = absolute;
+        m_b_lazy_       = true;
     }
 
     void __vectorcall Transform::SetAnimationPosition(const Vector3& position)
@@ -153,7 +147,7 @@ namespace Engine::Components
 
         if (const auto parent = tr_p.lock())
         {
-            if (!tr_c->m_b_absolute_)
+            if (!tr_c->m_b_r_absolute_)
             {
                 world *= parent->GetLocalRotation();
             }
@@ -197,7 +191,7 @@ namespace Engine::Components
 
         if (const auto parent = tr_p.lock())
         {
-            if (!tr_c->m_b_absolute_)
+            if (!tr_c->m_b_s_absolute_)
             {
                 world *= parent->GetLocalScale();
             }
@@ -237,15 +231,16 @@ namespace Engine::Components
         m_previous_position_ = GetLocalPosition();
     }
 
-    void Transform::PreUpdate(const float& dt)
-    {
-        m_rotation_ = Quaternion::CreateFromYawPitchRoll(
-                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.x),
-                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.y),
-                                                         DirectX::XMConvertToRadians(m_yaw_pitch_roll_degree_.z));
-    }
+    void Transform::PreUpdate(const float& dt) {}
 
-    void Transform::Update(const float& dt) {}
+    void Transform::Update(const float& dt)
+    {
+        if (!m_b_lazy_ && FindNextTransform(*this).lock())
+        {
+            m_b_lazy_ = true;
+            GetWorldMatrix();
+        }
+    }
 
     void Transform::PostUpdate(const float& dt)
     {
@@ -267,9 +262,6 @@ namespace Engine::Components
         ImGui::Text("Position");
         ImGuiVector3Editable(GetID(), "position", m_position_);
 
-        ImGui::Text("Rotation");
-        ImGuiVector3Editable(GetID(), "yaw_pitch_roll", m_yaw_pitch_roll_degree_);
-
         ImGui::Text("Scale");
         ImGuiVector3Editable(GetID(), "scale", m_scale_);
         ImGui::Unindent(2);
@@ -278,12 +270,6 @@ namespace Engine::Components
     void Transform::OnDeserialized()
     {
         Component::OnDeserialized();
-        const auto euler = m_rotation_.ToEuler();
-
-        m_yaw_pitch_roll_degree_ =
-                Vector3(
-                        DirectX::XMConvertToDegrees(euler.y), DirectX::XMConvertToDegrees(euler.x),
-                        DirectX::XMConvertToDegrees(euler.z));
     }
 
     Matrix Transform::GetLocalMatrix() const
@@ -316,16 +302,18 @@ namespace Engine::Components
 
         if (const auto parent = tr_p.lock())
         {
-            if (tr_c->m_b_absolute_)
+            Matrix inv = Matrix::Identity;
+
+            if (tr_c->m_b_s_absolute_)
             {
-                const auto inv_sr = Matrix::CreateScale(parent->GetLocalScale()).Invert() * 
-                    Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
-                world *= inv_sr * parent->GetLocalMatrix();
+                inv *= Matrix::CreateScale(parent->GetLocalScale()).Invert();
             }
-            else
+            if (tr_c->m_b_r_absolute_)
             {
-                world *= parent->GetLocalMatrix();
+                inv *= Matrix::CreateFromQuaternion(parent->GetLocalRotation()).Invert();
             }
+
+            world *= inv * parent->GetLocalMatrix();
 
             tr_c = parent.get();
             tr_p = FindNextTransform(*parent);
@@ -350,7 +338,8 @@ namespace Engine::Components
 
     Transform::Transform()
     : Component(COM_T_TRANSFORM, {}),
-      m_b_absolute_(true),
+      m_b_s_absolute_(true),
+      m_b_r_absolute_(false),
       m_previous_position_(Vector3::Zero),
       m_position_(Vector3::Zero),
       m_rotation_(Quaternion::Identity),
