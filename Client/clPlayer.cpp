@@ -16,7 +16,8 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Player,
-                       _ARTAG(_BSTSUPER(Object)))
+                       _ARTAG(_BSTSUPER(Object))
+                       _ARTAG(m_bone_colliders_))
 
 namespace Client::Object
 {

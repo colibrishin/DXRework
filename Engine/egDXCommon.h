@@ -59,6 +59,20 @@ namespace Engine::Graphics
         {
             INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_MATERIAL)
 
+            friend class Engine::Serializer;
+            friend class boost::serialization::access;
+            template <class Archive> void serialize(Archive &ar, const unsigned int file_version)
+            {
+                ar & flags;
+                ar & specular_power;
+                ar & reflection_translation;
+                ar & reflection_scale;
+                ar & refraction_scale;
+                ar & override_color;
+                ar & specular_color;
+                ar & clip_plane;
+            }
+
             MaterialBindFlag flags;
 
             float specular_power;

@@ -15,7 +15,10 @@ SERIALIZER_ACCESS_IMPL(
                        Engine::Resources::Shape,
                        _ARTAG(_BSTSUPER(Resource))
                        _ARTAG(m_bone_)
-                       _ARTAG(m_meshes_))
+                       _ARTAG(m_meshes_)
+                       _ARTAG(m_animation_catalog_)
+                       _ARTAG(m_bounding_box_)
+                       _ARTAG(m_bone_bounding_boxes_))
 
 namespace Engine::Resources
 {
@@ -54,6 +57,12 @@ namespace Engine::Resources
     }
 
     void Shape::PostUpdate(const float& dt) {}
+
+    void Shape::OnDeserialized()
+    {
+        Resource::OnDeserialized();
+        Load();
+    }
 
     BoundingBox Shape::GetBoundingBox() const
     {
@@ -415,6 +424,12 @@ namespace Engine::Resources
 
     void Shape::Unload_INTERNAL()
     {
+        m_meshes_.clear();
+        m_animation_catalog_.clear();
+        m_bone_bounding_boxes_.clear();
+        m_cached_vertices_.clear();
+        m_bounding_box_ = {};
+        m_bone_.reset();
     }
 
     Shape::Shape()

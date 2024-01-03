@@ -20,7 +20,13 @@ namespace Engine::Components
         WeakMaterial GetMaterial() const;
 
     private:
+        SERIALIZER_ACCESS
+        ModelRenderer();
+
         friend class Manager::Graphics::Renderer;
+
+        std::string m_model_name_;
+        std::string m_material_name_;
 
         StrongMaterial m_material_;
         StrongModel m_model_;

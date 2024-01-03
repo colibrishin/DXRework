@@ -20,6 +20,7 @@ namespace Engine::Resources
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
+        void OnDeserialized() override;
 
         void BindBone(const WeakBone& bone_info);
         eResourceType GetResourceType() const override;
@@ -40,9 +41,9 @@ namespace Engine::Resources
         AnimationPrimitive m_primitive_;
         StrongBone          m_bone_;
 
+        // non-serialized
         float m_evaluated_time_;
         std::vector<BoneTransformElement> m_evaluated_data_;
-
         ComPtr<ID3D11ShaderResourceView> m_animation_buffer_;
 
     };

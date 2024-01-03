@@ -2,6 +2,7 @@
 #include "egModelRenderer.h"
 
 #include "egDebugger.hpp"
+#include "egMaterial.h"
 #include "egShape.h"
 
 namespace Engine::Components
@@ -24,6 +25,7 @@ namespace Engine::Components
         if (const auto m = model.lock())
         {
             m_model_ = m;
+            m_model_name_ = m->GetName();
         }
     }
 
@@ -32,6 +34,7 @@ namespace Engine::Components
         if (const auto m = material.lock())
         {
             m_material_ = m;
+            m_material_name_ = m->GetName();
         }
     }
 
@@ -49,4 +52,7 @@ namespace Engine::Components
 
         return {};
     }
+
+    ModelRenderer::ModelRenderer()
+    : Component(COM_T_MODEL_RENDERER, {}) {}
 }

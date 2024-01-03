@@ -21,6 +21,7 @@ namespace Engine::Resources
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
+        void OnDeserialized() override;
 
         BoundingBox                                GetBoundingBox() const;
         WeakMesh                                   GetMesh(const std::string& name) const;
@@ -83,7 +84,7 @@ namespace Engine::Resources
 
         // non-serialized
         inline static Assimp::Importer s_importer_;
-        std::vector<VertexElement>    m_cached_vertices_;
+        std::vector<VertexElement>     m_cached_vertices_;
     };
 }
 

@@ -3,11 +3,16 @@
 
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL(
-                       Engine::Components::Transform,
-                       _ARTAG(_BSTSUPER(Component)) _ARTAG(m_previous_position_)
-                       _ARTAG(m_position_) _ARTAG(m_rotation_)
-                       _ARTAG(m_scale_))
+SERIALIZER_ACCESS_IMPL(Engine::Components::Transform,
+                          _ARTAG(_BSTSUPER(Component))
+                          _ARTAG(m_b_absolute_)
+                          _ARTAG(m_previous_position_)
+                          _ARTAG(m_position_)
+                          _ARTAG(m_rotation_)
+                          _ARTAG(m_scale_)
+                          _ARTAG(m_animation_position_)
+                          _ARTAG(m_animation_rotation_)
+                          _ARTAG(m_animation_scale_))
 
 namespace Engine::Components
 {

@@ -16,6 +16,7 @@ namespace Engine::Resources
         void PreRender(const float& dt) override;
         void Render(const float& dt) override;
         void PostRender(const float& dt) override;
+        void OnDeserialized() override;
 
         template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void SetResource(const std::string& name)
@@ -68,6 +69,9 @@ namespace Engine::Resources
         RESOURCE_SELF_INFER_CREATE(Material)
 
     protected:
+        SERIALIZER_ACCESS
+
+        Material();
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
 

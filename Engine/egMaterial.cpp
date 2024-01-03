@@ -6,6 +6,12 @@
 #include "egDXType.h"
 #include "egDXCommon.h"
 
+SERIALIZER_ACCESS_IMPL(Engine::Resources::Material,
+                       _ARTAG(_BSTSUPER(Resource))
+                       _ARTAG(m_material_cb_)
+                       _ARTAG(m_shaders_)
+                       _ARTAG(m_resources_))
+
 namespace Engine::Resources
 {
     Material::Material(const std::filesystem::path& path)
@@ -127,6 +133,12 @@ namespace Engine::Resources
         }
     }
 
+    void Material::OnDeserialized()
+    {
+        Resource::OnDeserialized();
+        Load();
+    }
+
     void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept
     {
         m_material_cb_ = std::move(material_cb);
@@ -145,6 +157,10 @@ namespace Engine::Resources
 
         std::iter_swap(texs.begin() + slot, it);
     }
+
+    Material::Material()
+    : Resource("", RES_T_MTR),
+      m_material_cb_() {}
 
     void Material::Load_INTERNAL()
     {

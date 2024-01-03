@@ -1,5 +1,6 @@
 #pragma once
 #include "egDXAnimCommon.hpp"
+#include "egMacro.h"
 
 namespace Engine::Graphics
 {
@@ -39,6 +40,13 @@ namespace Engine::Graphics
             value = v;
             return *this;
         }
+
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive &ar, const unsigned int file_version)
+        {
+            ar & value;
+            ar & ___p;
+        }
     };
 
     struct ShadowVP
@@ -50,6 +58,15 @@ namespace Engine::Graphics
 
     struct MaterialBindFlag
     {
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive &ar, const unsigned int file_version)
+        {
+            ar & tex;
+            ar & texArr;
+            ar & texCube;
+            ar & bone;
+        }
+
         OffsetT<int> tex[g_max_slot_per_texture];
         OffsetT<int> texArr[g_max_slot_per_texture];
         OffsetT<int> texCube[g_max_slot_per_texture];
