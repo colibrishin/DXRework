@@ -26,32 +26,23 @@ namespace Engine
         void FixedUpdate(const float& dt) override;
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
-
-        void     OnDeserialized() override;
+        void OnDeserialized() override;
 
         template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
-        GlobalEntityID AddGameObject(const boost::shared_ptr<T>& obj, eLayerType layer)
+        boost::weak_ptr<T> CreateGameObject(eLayerType layer)
         {
+            // Create object
+            auto obj_t = boost::make_shared<T>();
+            auto obj = obj_t->template GetSharedPtr<Abstract::Object>();
+
+            // add object to scene
             m_layers[layer]->AddGameObject(obj);
             m_cached_objects_.emplace(obj->GetID(), obj);
 
-            for (const auto& comp : obj->GetAllComponents())
-            {
-                ConcurrentWeakComTypeMap::accessor acc;
-
-                m_cached_components_.insert(acc, comp.lock()->GetComponentType());
-                acc->second.emplace(comp.lock()->GetID(), comp);
-            }
-
+            // Set internal information as this scene and layer
             obj->template GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
             obj->template GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
-
             AssignLocalIDToObject(obj);
-
-            if (const auto tr = obj->template GetComponent<Components::Transform>().lock())
-            {
-                UpdatePosition(obj);
-            }
 
             if (layer == LAYER_LIGHT && !std::is_base_of_v<Objects::Light, T>)
             {
@@ -64,10 +55,25 @@ namespace Engine
 
             if constexpr (std::is_base_of_v<Objects::Light, T>)
             {
-                RegisterLightToManager(obj);
+                RegisterLightToManager(obj_t);
             }
 
-            return obj->GetID();
+            // Initialize object lately, for let object initialize itself.
+            obj->Initialize();
+            for (const auto& comp : obj->GetAllComponents())
+            {
+                ConcurrentWeakComTypeMap::accessor acc;
+
+                m_cached_components_.insert(acc, comp.lock()->GetComponentType());
+                acc->second.emplace(comp.lock()->GetID(), comp);
+            }
+
+            if (const auto tr = obj->template GetComponent<Components::Transform>().lock())
+            {
+                UpdatePosition(obj);
+            }
+
+            return obj_t;
         }
 
         void     RemoveGameObject(GlobalEntityID id, eLayerType layer);
@@ -146,8 +152,14 @@ namespace Engine
             if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
                 ConcurrentWeakComTypeMap::accessor comp_acc;
+
                 if (m_cached_components_.find(comp_acc, which_component<T>::value))
                 {
+                    comp_acc->second.emplace(component->GetID(), component);
+                }
+                else
+                {
+                    m_cached_components_.insert(comp_acc, which_component<T>::value);
                     comp_acc->second.emplace(component->GetID(), component);
                 }
             }

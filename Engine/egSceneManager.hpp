@@ -22,7 +22,8 @@ namespace Engine::Manager
         template <typename T, typename... Args, typename SceneLock = std::enable_if_t<std::is_base_of_v<Scene, T>>>
         void AddScene(Args&&... args)
         {
-            auto scene = Instantiate<T>(std::forward<Args>(args)...);
+            auto scene = boost::make_shared<T>(std::forward<Args>(args)...);
+            scene->Initialize();
             m_scenes_[which_scene<T>::value] = scene;
         }
 
