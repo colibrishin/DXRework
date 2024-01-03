@@ -11,8 +11,7 @@ SERIALIZER_ACCESS_IMPL(
                        _ARTAG(m_bGravityOverride) _ARTAG(m_bFixed) _ARTAG(m_friction_mu_)
                        _ARTAG(m_linear_momentum_) _ARTAG(m_angular_momentum_)
                        _ARTAG(m_linear_friction_) _ARTAG(m_angular_friction_)
-                       _ARTAG(m_drag_force_) _ARTAG(m_force_) _ARTAG(m_torque_)
-                       _ARTAG(m_main_collider_))
+                       _ARTAG(m_drag_force_) _ARTAG(m_force_) _ARTAG(m_torque_))
 
 namespace Engine::Components
 {
@@ -36,13 +35,7 @@ namespace Engine::Components
       m_bGrounded(false),
       m_bGravityOverride(false),
       m_bFixed(false),
-      m_friction_mu_(0.0f),
-      m_main_collider_(g_invalid_id) {}
-
-    void Rigidbody::SetMainCollider(const WeakBaseCollider& collider)
-    {
-        m_main_collider_ = collider.lock()->GetLocalID();
-    }
+      m_friction_mu_(0.0f) {}
 
     void Rigidbody::SetGravityOverride(bool gravity)
     {
@@ -158,16 +151,6 @@ namespace Engine::Components
         return m_bGrounded;
     }
 
-    WeakBaseCollider Rigidbody::GetMainCollider() const
-    {
-        if (m_main_collider_ == g_invalid_id)
-        {
-            return GetOwner().lock()->GetComponent<BaseCollider>();
-        }
-
-        return GetOwner().lock()->GetComponentByLocal<BaseCollider>(m_main_collider_);
-    }
-
     void Rigidbody::Reset()
     {
         m_bGrounded = false;
@@ -224,7 +207,6 @@ namespace Engine::Components
         ImGui::Text("Rigidbody Torque");
         ImGuiVector3Editable(GetID(), "torque", m_torque_);
 
-        ImGui::Text("Rigidbody Main Collider: %lld", m_main_collider_);
         ImGui::Unindent(2);
     }
 
@@ -233,6 +215,5 @@ namespace Engine::Components
       m_bGrounded(false),
       m_bGravityOverride(false),
       m_bFixed(false),
-      m_friction_mu_(0),
-      m_main_collider_(g_invalid_id) {}
+      m_friction_mu_(0) {}
 } // namespace Engine::Component

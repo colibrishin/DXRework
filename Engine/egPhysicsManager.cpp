@@ -76,9 +76,10 @@ namespace Engine::Manager::Physics
             return;
         }
 
-        const auto& cl = rb->GetMainCollider().lock();
+        const auto& cl = 
+            rb->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
         const auto& tr =
-                rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
+            rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
 
         float mass = 1.f;
 

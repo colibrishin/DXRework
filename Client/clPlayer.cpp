@@ -42,18 +42,17 @@ namespace Client::Object
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
 
-        rb->SetMainCollider(cldr);
         rb->SetFrictionCoefficient(0.1f);
         rb->SetGravityOverride(true);
 
         atr->SetAnimation(model->GetAnimationCatalog().front());
 
-        for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
+        /*for (const auto& [idx, box] : model->GetBoneBoundingBoxes())
         {
             auto bone_cldr = AddComponent<Components::OffsetCollider>().lock();
             bone_cldr->SetBoundingBox(box);
             m_bone_colliders_.emplace(idx, bone_cldr);
-        }
+        }*/
     }
 
     void Player::PreUpdate(const float& dt)
@@ -85,7 +84,7 @@ namespace Client::Object
     {
         Object::FixedUpdate(dt);
 
-        const auto tr = GetComponent<Components::Transform>().lock();
+        /*const auto tr = GetComponent<Components::Transform>().lock();
         const auto mr = GetComponent<Components::ModelRenderer>().lock();
         const auto atr = GetComponent<Components::Animator>().lock();
         const auto model = mr->GetModel().lock();
@@ -117,6 +116,6 @@ namespace Client::Object
         BoundingBox         bb;
         BoundingBox::CreateFromPoints(bb, min, max);
         BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
-        rb->GetMainCollider().lock()->SetBoundingBox(new_obb);
+        rb->GetMainCollider().lock()->SetBoundingBox(new_obb);*/
     }
 }

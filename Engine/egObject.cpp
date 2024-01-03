@@ -222,17 +222,14 @@ namespace Engine::Abstract
 
     void Object::FixedUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->FixedUpdate(dt);
+                continue;
             }
+
+            component->FixedUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -251,17 +248,14 @@ namespace Engine::Abstract
 
     void Object::PostUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PostUpdate(dt);
+                continue;
             }
+
+            component->PostUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -282,15 +276,12 @@ namespace Engine::Abstract
     {
         Actor::OnDeserialized();
 
-        for (const auto& val : m_components_ | std::views::values)
+        for (const auto& comp : m_components_ | std::views::values)
         {
-            for (const auto& comps : val)
-            {
-                comps->OnDeserialized();
-                comps->SetOwner(GetSharedPtr<Object>());
-                m_assigned_component_ids_.insert(comps->GetLocalID());
-                m_priority_sorted_.insert(comps);
-            }
+            comp->OnDeserialized();
+            comp->SetOwner(GetSharedPtr<Object>());
+            m_assigned_component_ids_.insert(comp->GetLocalID());
+            m_cached_component_.insert(comp);
         }
     }
 
@@ -311,16 +302,13 @@ namespace Engine::Abstract
 
             if (ImGui::TreeNode("Components"))
             {
-                for (const auto& pointer : m_components_ | std::views::values)
+                for (const auto& comp : m_components_ | std::views::values)
                 {
-                    for (const auto& comp : pointer)
+                    if (ImGui::TreeNode(comp->GetTypeName().c_str()))
                     {
-                        if (ImGui::TreeNode(comp->GetTypeName().c_str()))
-                        {
-                            comp->OnImGui();
-                            ImGui::TreePop();
-                            ImGui::Spacing();
-                        }
+                        comp->OnImGui();
+                        ImGui::TreePop();
+                        ImGui::Spacing();
                     }
                 }
 
@@ -333,24 +321,21 @@ namespace Engine::Abstract
         }
     }
 
-    const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents() const
+    const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents()
     {
-        return m_priority_sorted_;
+        return m_cached_component_;
     }
 
     void Object::PreUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PreUpdate(dt);
+                continue;
             }
+
+            component->PreUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -385,17 +370,14 @@ namespace Engine::Abstract
 
     void Object::Update(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->Update(dt);
+                continue;
             }
+
+            component->Update(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)

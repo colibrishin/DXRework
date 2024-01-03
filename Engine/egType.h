@@ -213,7 +213,7 @@ namespace Engine
     using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
     using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
     using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
-    using ConcurrentWeakComTypeMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
+    using ConcurrentWeakComRootMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
     using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
     // Manager Forward Declaration

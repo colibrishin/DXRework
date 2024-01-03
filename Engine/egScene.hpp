@@ -60,13 +60,6 @@ namespace Engine
 
             // Initialize object lately, for let object initialize itself.
             obj->Initialize();
-            for (const auto& comp : obj->GetAllComponents())
-            {
-                ConcurrentWeakComTypeMap::accessor acc;
-
-                m_cached_components_.insert(acc, comp.lock()->GetComponentType());
-                acc->second.emplace(comp.lock()->GetID(), comp);
-            }
 
             if (const auto tr = obj->template GetComponent<Components::Transform>().lock())
             {
@@ -151,7 +144,7 @@ namespace Engine
 
             if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                ConcurrentWeakComTypeMap::accessor comp_acc;
+                ConcurrentWeakComRootMap::accessor comp_acc;
 
                 if (m_cached_components_.find(comp_acc, which_component<T>::value))
                 {
@@ -172,7 +165,7 @@ namespace Engine
 
             if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                ConcurrentWeakComTypeMap::accessor comp_acc;
+                ConcurrentWeakComRootMap::accessor comp_acc;
                 if (m_cached_components_.find(comp_acc, which_component<T>::value))
                 {
                     comp_acc->second.erase(component->GetID());
@@ -183,7 +176,7 @@ namespace Engine
         template <typename T>
         ConcurrentWeakComVec GetCachedComponents()
         {
-            ConcurrentWeakComTypeMap::const_accessor acc;
+            ConcurrentWeakComRootMap::const_accessor acc;
 
             if (m_cached_components_.find(acc, which_component<T>::value))
             {
@@ -240,7 +233,7 @@ namespace Engine
 
         ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
         ConcurrentWeakObjGlobalMap m_cached_objects_;
-        ConcurrentWeakComTypeMap m_cached_components_;
+        ConcurrentWeakComRootMap m_cached_components_;
         Octree<std::set<WeakObject, WeakComparer<Abstract::Object>>>
         m_object_position_tree_;
     };

@@ -283,8 +283,8 @@ namespace Engine::Manager::Physics
                     }
                 }
 
-                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
-                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetMainCollider().lock();
+                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
+                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
 
                 CheckGrounded(lhs_cl, rhs_cl);
             }
@@ -336,25 +336,20 @@ namespace Engine::Manager::Physics
                                         [ray, &distance, &out, &out_mutex](const WeakObject& obj)
                                         {
                                             const auto obj_locked = obj.lock();
-                                            const auto cls        = obj_locked->GetComponents<Components::BaseCollider>();
+                                            const auto cl = obj_locked->GetComponent<Components::BaseCollider>().lock();
 
-                                            for (const auto& collider : cls)
+                                            if (!cl)
                                             {
-                                                const auto cl = collider.lock();
+                                                return;
+                                            }
 
-                                                if (!cl)
+                                            float intersection;
+
+                                            if (cl->Intersects(ray, distance, intersection))
+                                            {
                                                 {
-                                                    continue;
-                                                }
-
-                                                float intersection;
-
-                                                if (cl->Intersects(ray, distance, intersection))
-                                                {
-                                                    {
-                                                        std::lock_guard lock(out_mutex);
-                                                        out.insert(obj);
-                                                    }
+                                                    std::lock_guard lock(out_mutex);
+                                                    out.insert(obj);
                                                 }
                                             }
                                         });
@@ -380,35 +375,27 @@ namespace Engine::Manager::Physics
                       {
                           if (const auto locked = obj.lock())
                           {
-                              const auto cls = locked->GetComponents<Components::BaseCollider>();
+                              const auto cl = locked->GetComponent<Components::BaseCollider>().lock();
 
-                              std::for_each(
-                                            std::execution::par, cls.begin(), cls.end(),
-                                            [ray, distance, &hit, &out, &out_mutex, &obj,
-                                                locked](const WeakBaseCollider& cl_o)
-                                            {
-                                                const auto cl = cl_o.lock();
+                              if (!cl)
+                              {
+                                  return;
+                              }
 
-                                                if (!cl)
-                                                {
-                                                    return;
-                                                }
+                              float ground;
 
-                                                float ground;
+                              if (cl->Intersects(ray, distance, ground))
+                              {
+                                  GetDebugger().Log(
+                                                    L"Octree Hit! : " +
+                                                    std::to_wstring(locked->GetID()));
 
-                                                if (cl->Intersects(ray, distance, ground))
-                                                {
-                                                    GetDebugger().Log(
-                                                                      L"Octree Hit! : " +
-                                                                      std::to_wstring(locked->GetID()));
-
-                                                    {
-                                                        std::lock_guard lock(out_mutex);
-                                                        hit |= true;
-                                                        out.insert(obj);
-                                                    }
-                                                }
-                                            });
+                                  {
+                                      std::lock_guard lock(out_mutex);
+                                      hit |= true;
+                                      out.insert(obj);
+                                  }
+                              }
                           }
                       });
 
