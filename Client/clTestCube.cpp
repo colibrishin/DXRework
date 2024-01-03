@@ -28,8 +28,8 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("NormalLight"));
 
         AddComponent<Engine::Components::Transform>();
-        AddComponent<Engine::Components::BaseCollider>();
-        const auto cldr = GetComponent<Engine::Components::BaseCollider>().lock();
+        AddComponent<Engine::Components::Collider>();
+        const auto cldr = GetComponent<Engine::Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
 

@@ -74,8 +74,8 @@ namespace Engine::Manager::Physics
                 return;
             }
 
-            const auto cl       = lhs.lock()->GetComponent<Components::BaseCollider>().lock();
-            const auto cl_other = rhs.lock()->GetComponent<Components::BaseCollider>().lock();
+            const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
+            const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
 
             if (!cl || !cl_other)
             {
@@ -177,8 +177,8 @@ namespace Engine::Manager::Physics
                 return;
             }
 
-            const auto cl       = lhs.lock()->GetComponent<Components::BaseCollider>().lock();
-            const auto cl_other = rhs.lock()->GetComponent<Components::BaseCollider>().lock();
+            const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
+            const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
 
             if (!cl || !cl_other)
             {
@@ -212,8 +212,8 @@ namespace Engine::Manager::Physics
         const auto rb_lhs = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
         const auto rb_rhs = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
 
-        const auto cl_lhs = lhs.lock()->GetComponent<Components::BaseCollider>().lock();
-        const auto cl_rhs = rhs.lock()->GetComponent<Components::BaseCollider>().lock();
+        const auto cl_lhs = lhs.lock()->GetComponent<Components::Collider>().lock();
+        const auto cl_rhs = rhs.lock()->GetComponent<Components::Collider>().lock();
 
         const auto tr_lhs = lhs.lock()->GetComponent<Components::Transform>().lock();
         const auto tr_rhs = rhs.lock()->GetComponent<Components::Transform>().lock();

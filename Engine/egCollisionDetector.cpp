@@ -148,7 +148,7 @@ namespace Engine::Manager::Physics
 
         if (rb->IsFixed() || !rb->IsGravityAllowed()) return;
 
-        if (Components::BaseCollider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
+        if (Components::Collider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
         {
             // Ground flag is automatically set to false on the start of the frame.
             rb->SetGrounded(true);
@@ -187,7 +187,7 @@ namespace Engine::Manager::Physics
     void CollisionDetector::Update(const float& dt)
     {
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::BaseCollider>();
+        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
 
         static tbb::affinity_partitioner ap;
 
@@ -200,7 +200,7 @@ namespace Engine::Manager::Physics
                 continue;
             }
 
-            auto lhs = ptr_lhs->GetSharedPtr<Components::BaseCollider>();
+            auto lhs = ptr_lhs->GetSharedPtr<Components::Collider>();
 
             std::vector<StrongBaseCollider> rhs_chunk;
 
@@ -232,7 +232,7 @@ namespace Engine::Manager::Physics
                     }
                 }
 
-                rhs_chunk.push_back(rhs->GetSharedPtr<Components::BaseCollider>());
+                rhs_chunk.push_back(rhs->GetSharedPtr<Components::Collider>());
             }
 
             CheckCollisionChunk(lhs, rhs_chunk);
@@ -283,8 +283,8 @@ namespace Engine::Manager::Physics
                     }
                 }
 
-                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
-                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
+                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::Collider>().lock();
+                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::Collider>().lock();
 
                 CheckGrounded(lhs_cl, rhs_cl);
             }
@@ -336,7 +336,7 @@ namespace Engine::Manager::Physics
                                         [ray, &distance, &out, &out_mutex](const WeakObject& obj)
                                         {
                                             const auto obj_locked = obj.lock();
-                                            const auto cl = obj_locked->GetComponent<Components::BaseCollider>().lock();
+                                            const auto cl = obj_locked->GetComponent<Components::Collider>().lock();
 
                                             if (!cl)
                                             {
@@ -375,7 +375,7 @@ namespace Engine::Manager::Physics
                       {
                           if (const auto locked = obj.lock())
                           {
-                              const auto cl = locked->GetComponent<Components::BaseCollider>().lock();
+                              const auto cl = locked->GetComponent<Components::Collider>().lock();
 
                               if (!cl)
                               {

@@ -49,7 +49,7 @@ namespace Engine::Manager::Physics
         }
 
         const auto cl =
-                rb->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
+                rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
 
         if (!rb->IsGrounded())
         {
@@ -77,7 +77,7 @@ namespace Engine::Manager::Physics
         }
 
         const auto& cl = 
-            rb->GetOwner().lock()->GetComponent<Components::BaseCollider>().lock();
+            rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
         const auto& tr =
             rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
 

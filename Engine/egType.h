@@ -61,7 +61,7 @@ namespace Engine
 
     namespace Components
     {
-        class BaseCollider;
+        class Collider;
         class OffsetCollider;
         class Transform;
         class Rigidbody;
@@ -155,7 +155,7 @@ namespace Engine
     using WeakResource = boost::weak_ptr<Abstract::Resource>;
     using WeakMesh = boost::weak_ptr<Resources::Mesh>;
     using WeakScene = boost::weak_ptr<Scene>;
-    using WeakBaseCollider = boost::weak_ptr<Components::BaseCollider>;
+    using WeakBaseCollider = boost::weak_ptr<Components::Collider>;
     using WeakFont = boost::weak_ptr<Resources::Font>;
     using WeakCamera = boost::weak_ptr<Objects::Camera>;
     using WeakLight = boost::weak_ptr<Objects::Light>;
@@ -192,7 +192,7 @@ namespace Engine
     using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
     using StrongShader = boost::shared_ptr<Graphics::IShader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
-    using StrongBaseCollider = boost::shared_ptr<Components::BaseCollider>;
+    using StrongBaseCollider = boost::shared_ptr<Components::Collider>;
 
     // Misc type definitions
     using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;

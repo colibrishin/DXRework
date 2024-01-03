@@ -24,8 +24,8 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("NormalLightSpecular"));
 
         AddComponent<Components::Transform>();
-        AddComponent<Components::BaseCollider>();
-        const auto cldr = GetComponent<Components::BaseCollider>().lock();
+        AddComponent<Components::Collider>();
+        const auto cldr = GetComponent<Components::Collider>().lock();
         cldr->SetType(BOUNDING_TYPE_SPHERE);
         cldr->SetMass(1.0f);
 

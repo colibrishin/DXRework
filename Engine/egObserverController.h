@@ -29,6 +29,4 @@ namespace Engine::Components
 } // namespace Engine::Component
 
 BOOST_CLASS_EXPORT_KEY(Engine::Components::ObserverController);
-
-BOOST_CLASS_EXPORT_KEY(
-                       Engine::Abstract::StateController<Engine::eObserverState>);
+BOOST_CLASS_EXPORT_KEY(Engine::Abstract::StateController<Engine::eObserverState>);

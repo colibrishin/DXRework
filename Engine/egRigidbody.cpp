@@ -24,7 +24,7 @@ namespace Engine::Components
             throw std::exception("Rigidbody must have a transform component");
         }
 
-        if (!GetOwner().lock()->GetComponent<BaseCollider>().lock())
+        if (!GetOwner().lock()->GetComponent<Collider>().lock())
         {
             throw std::exception("Rigidbody must have a collider component");
         }

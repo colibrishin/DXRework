@@ -13,14 +13,14 @@
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(
-                       Engine::Components::BaseCollider,
+                       Engine::Components::Collider,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component))
                        _ARTAG(m_type_) _ARTAG(m_model_name_) _ARTAG(m_mass_)
                        _ARTAG(m_boundings_))
 
 namespace Engine::Components
 {
-    const std::vector<Graphics::VertexElement>& BaseCollider::GetVertices() const
+    const std::vector<Graphics::VertexElement>& Collider::GetVertices() const
     {
         if (const auto model = m_model_.lock())
         {
@@ -39,17 +39,17 @@ namespace Engine::Components
         return {};
     }
 
-    Matrix BaseCollider::GetWorldMatrix() const
+    Matrix Collider::GetWorldMatrix() const
     {
         return GetLocalMatrix() * GetOwner().lock()->GetComponent<Transform>().lock()->GetWorldMatrix();
     }
 
-    Matrix BaseCollider::GetLocalMatrix() const
+    Matrix Collider::GetLocalMatrix() const
     {
         return m_local_matrix_;
     }
 
-    void BaseCollider::Initialize()
+    void Collider::Initialize()
     {
         Component::Initialize();
 
@@ -70,7 +70,7 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::InitializeStockVertices()
+    void Collider::InitializeStockVertices()
     {
         GeometricPrimitive::IndexCollection  index;
         GeometricPrimitive::VertexCollection vertex;
@@ -95,12 +95,12 @@ namespace Engine::Components
         }
     }
 
-    void BaseCollider::FromMatrix(Matrix& mat)
+    void Collider::FromMatrix(Matrix& mat)
     {
         m_local_matrix_ = mat;
     }
 
-    void BaseCollider::SetType(const eBoundingType type)
+    void Collider::SetType(const eBoundingType type)
     {
         m_type_ = type;
 
@@ -116,12 +116,12 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::SetMass(const float mass)
+    void Collider::SetMass(const float mass)
     {
         m_mass_ = mass;
     }
 
-    void BaseCollider::SetBoundingBox(const BoundingOrientedBox& bounding)
+    void Collider::SetBoundingBox(const BoundingOrientedBox& bounding)
     {
         m_boundings_.UpdateFromBoundingBox(bounding);
 
@@ -137,7 +137,7 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::SetModel(const WeakModel& model)
+    void Collider::SetModel(const WeakModel& model)
     {
         if (const auto locked = model.lock())
         {
@@ -150,7 +150,7 @@ namespace Engine::Components
         }
     }
 
-    bool BaseCollider::Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset)
+    bool Collider::Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset)
     {
         if (lhs->m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -170,7 +170,7 @@ namespace Engine::Components
         return false;
     }
 
-    bool BaseCollider::Intersects(const StrongBaseCollider& other) const
+    bool Collider::Intersects(const StrongBaseCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -184,7 +184,7 @@ namespace Engine::Components
         return false;
     }
 
-    bool BaseCollider::Intersects(
+    bool Collider::Intersects(
         const Ray& ray, float distance,
         float&     intersection) const
     {
@@ -214,7 +214,7 @@ namespace Engine::Components
         return false;
     }
 
-    bool BaseCollider::Contains(const StrongBaseCollider& other) const
+    bool Collider::Contains(const StrongBaseCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -228,7 +228,7 @@ namespace Engine::Components
         return false;
     }
 
-    void BaseCollider::AddCollidedObject(const GlobalEntityID id)
+    void Collider::AddCollidedObject(const GlobalEntityID id)
     {
         std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.insert(id);
@@ -244,44 +244,44 @@ namespace Engine::Components
         }
     }
 
-    void BaseCollider::AddSpeculationObject(const GlobalEntityID id)
+    void Collider::AddSpeculationObject(const GlobalEntityID id)
     {
         std::lock_guard lock(m_speculative_mutex_);
         m_speculative_collision_candidates_.insert(id);
     }
 
-    void BaseCollider::RemoveCollidedObject(const GlobalEntityID id)
+    void Collider::RemoveCollidedObject(const GlobalEntityID id)
     {
         std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.erase(id);
     }
 
-    void BaseCollider::RemoveSpeculationObject(const GlobalEntityID id)
+    void Collider::RemoveSpeculationObject(const GlobalEntityID id)
     {
         std::lock_guard lock(m_speculative_mutex_);
         m_speculative_collision_candidates_.erase(id);
     }
 
-    bool BaseCollider::IsCollidedObject(const GlobalEntityID id)
+    bool Collider::IsCollidedObject(const GlobalEntityID id)
     {
         std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_.contains(id);
     }
 
-    std::set<GlobalEntityID> BaseCollider::GetCollidedObjects()
+    std::set<GlobalEntityID> Collider::GetCollidedObjects()
     {
         std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_;
     }
 
-    std::set<GlobalEntityID> BaseCollider::GetSpeculation()
+    std::set<GlobalEntityID> Collider::GetSpeculation()
     {
         std::lock_guard lock(m_speculative_mutex_);
         return m_speculative_collision_candidates_;
     }
 
-    void BaseCollider::GetPenetration(
-        const BaseCollider& other, Vector3& normal,
+    void Collider::GetPenetration(
+        const Collider& other, Vector3& normal,
         float&          depth) const
     {
         auto dir = other.GetWorldMatrix().Translation() - GetWorldMatrix().Translation();
@@ -292,7 +292,7 @@ namespace Engine::Components
                                    normal, depth);
     }
 
-    UINT BaseCollider::GetCollisionCount(const GlobalEntityID id)
+    UINT Collider::GetCollisionCount(const GlobalEntityID id)
     {
         std::lock_guard lock(m_collision_count_mutex_);
         if (!m_collision_count_.contains(id))
@@ -303,36 +303,36 @@ namespace Engine::Components
         return m_collision_count_.at(id);
     }
 
-    float BaseCollider::GetMass() const
+    float Collider::GetMass() const
     {
         return m_mass_;
     }
 
-    float BaseCollider::GetInverseMass() const
+    float Collider::GetInverseMass() const
     {
         return 1.0f / m_mass_;
     }
 
-    XMFLOAT3X3 BaseCollider::GetInertiaTensor() const
+    XMFLOAT3X3 Collider::GetInertiaTensor() const
     {
         return m_inertia_tensor_;
     }
 
-    eBoundingType BaseCollider::GetType() const
+    eBoundingType Collider::GetType() const
     {
         return m_type_;
     }
 
-    BaseCollider::BaseCollider()
+    Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.f),
       m_boundings_(),
       m_inertia_tensor_() {}
 
-    void BaseCollider::FixedUpdate(const float& dt) {}
+    void Collider::FixedUpdate(const float& dt) {}
 
-    void BaseCollider::OnDeserialized()
+    void Collider::OnDeserialized()
     {
         Component::OnDeserialized();
 
@@ -350,7 +350,7 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::OnImGui()
+    void Collider::OnImGui()
     {
         Component::OnImGui();
         ImGui::Indent(2);
@@ -362,7 +362,7 @@ namespace Engine::Components
         // TODO: colliding objects
     }
 
-    void BaseCollider::UpdateInertiaTensor()
+    void Collider::UpdateInertiaTensor()
     {
         Quaternion rotation;
 
@@ -398,7 +398,7 @@ namespace Engine::Components
         XMStoreFloat3x3(&m_inertia_tensor_, matrix);
     }
 
-    BaseCollider::BaseCollider(const WeakObject& owner)
+    Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
       m_type_(BOUNDING_TYPE_BOX),
       m_mass_(1.0f),
@@ -407,7 +407,7 @@ namespace Engine::Components
     {
     }
 
-    void BaseCollider::GenerateInertiaCube()
+    void Collider::GenerateInertiaCube()
     {
         const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2;
         const Vector3 dimensions_squared = dim * dim;
@@ -420,7 +420,7 @@ namespace Engine::Components
                                (dimensions_squared.x + dimensions_squared.y);
     }
 
-    void BaseCollider::GenerateInertiaSphere()
+    void Collider::GenerateInertiaSphere()
     {
         const float radius = GetBounding<BoundingSphere>().Radius;
         const float i      = 2.5f * GetInverseMass() / (radius * radius);
@@ -428,7 +428,7 @@ namespace Engine::Components
         m_inverse_inertia_ = Vector3(i, i, i);
     }
 
-    void BaseCollider::PreUpdate(const float& dt)
+    void Collider::PreUpdate(const float& dt)
     {
         static float second_counter = 0.f;
 
@@ -443,12 +443,12 @@ namespace Engine::Components
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::Update(const float& dt)
+    void Collider::Update(const float& dt)
     {
         UpdateInertiaTensor();
     }
 
-    void BaseCollider::PostUpdate(const float& dt)
+    void Collider::PostUpdate(const float& dt)
     {
         Component::PostUpdate(dt);
 #ifdef _DEBUG

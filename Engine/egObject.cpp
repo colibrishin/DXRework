@@ -22,7 +22,7 @@ namespace Engine::Abstract
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
-            if constexpr (std::is_same_v<Engine::Components::BaseCollider, T>)
+            if constexpr (std::is_same_v<Engine::Components::Collider, T>)
             {
                 const auto lhs_owner = lhs->GetOwner().lock();
                 const auto rhs_owner = rhs->GetOwner().lock();
@@ -161,7 +161,7 @@ namespace Engine::Abstract
 
     void Object::OnCollisionEnter(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
@@ -169,7 +169,7 @@ namespace Engine::Abstract
 
     void Object::OnCollisionContinue(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
@@ -177,7 +177,7 @@ namespace Engine::Abstract
 
     void Object::OnCollisionExit(const StrongBaseCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }

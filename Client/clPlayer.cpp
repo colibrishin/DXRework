@@ -11,7 +11,6 @@
 #include "egVertexShaderInternal.h"
 #include "egBoneAnimation.h"
 #include "egMaterial.h"
-#include "egOffsetCollider.hpp"
 #include "egShape.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -32,7 +31,7 @@ namespace Client::Object
         mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
 
         const auto tr = AddComponent<Components::Transform>().lock();
-        const auto cldr = AddComponent<Components::BaseCollider>().lock();
+        const auto cldr = AddComponent<Components::Collider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
         AddComponent<Client::State::CharacterController>();

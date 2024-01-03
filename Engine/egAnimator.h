@@ -3,7 +3,7 @@
 
 namespace Engine::Components
 {
-    class Animator : public Abstract::Component
+    class Animator final : public Abstract::Component
     {
     public:
         INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_ANIMATOR)

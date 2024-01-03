@@ -3,9 +3,9 @@
 
 #include <egCubeMesh.h>
 
+#include "egBaseCollider.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
-#include "egOffsetCollider.hpp"
 #include "egShader.hpp"
 #include "egShape.h"
 #include "egTransform.h"
@@ -23,7 +23,7 @@ void Client::Object::Water::Initialize()
     mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
 
     AddComponent<Engine::Components::Transform>();
-    const auto cldr = AddComponent<Engine::Components::BaseCollider>().lock();
+    const auto cldr = AddComponent<Engine::Components::Collider>().lock();
     cldr->SetModel(model);
 }
 

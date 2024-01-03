@@ -9,13 +9,13 @@ namespace Engine::Components
 {
     using namespace DirectX;
 
-    class BaseCollider : public Abstract::Component
+    class Collider final : public Abstract::Component
     {
     public:
         INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_COLLIDER)
 
-        BaseCollider(const WeakObject& owner);
-        ~BaseCollider() override = default;
+        Collider(const WeakObject& owner);
+        ~Collider() override = default;
 
         void FromMatrix(Matrix& mat);
 
@@ -42,7 +42,7 @@ namespace Engine::Components
         UINT                     GetCollisionCount(GlobalEntityID id);
 
         void GetPenetration(
-            const BaseCollider& other, Vector3& normal,
+            const Collider& other, Vector3& normal,
             float&          depth) const;
 
         float      GetMass() const;
@@ -101,7 +101,7 @@ namespace Engine::Components
         }
 
     protected:
-        BaseCollider();
+        Collider();
 
     private:
         SERIALIZER_ACCESS
@@ -170,4 +170,4 @@ namespace Engine::Components
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Components::BaseCollider)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)
