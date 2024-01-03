@@ -36,6 +36,8 @@ namespace Client::Object
 
         atr->SetAnimation("FireAnimation");
         cldr->SetModel(model);
+        tr->SetSizeAbsolute(true);
+        tr->SetRotateAbsolute(true);
     }
 
     void Rifle::PreUpdate(const float& dt)
