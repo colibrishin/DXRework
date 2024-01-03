@@ -11,7 +11,13 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
-                       _ARTAG(_BSTSUPER(Actor)) _ARTAG(m_components_))
+                       _ARTAG(_BSTSUPER(Actor)) 
+                       _ARTAG(m_parent_id_)
+                       _ARTAG(m_children_)
+                       _ARTAG(m_type_)
+                       _ARTAG(m_active_)
+                       _ARTAG(m_culled_)
+                       _ARTAG(m_components_))
 
 namespace Engine::Abstract
 {
@@ -97,10 +103,8 @@ namespace Engine::Abstract
 
     WeakObject Object::GetParent() const
     {
-        INVALID_ID_CHECK_WEAK_RETURN(m_parent_)
-
-        const auto scene = GetSceneManager().GetActiveScene().lock();
-        return scene->FindGameObjectByLocalID(m_parent_);
+        INVALID_ID_CHECK_WEAK_RETURN(m_parent_id_)
+        return m_parent_;
     }
 
     WeakObject Object::GetChild(const LocalActorID id) const
@@ -130,13 +134,14 @@ namespace Engine::Abstract
         return out;
     }
 
-    void Object::AddChild(const WeakObject& child)
+    void Object::AddChild(const WeakObject& p_child)
     {
-        if (const auto locked = child.lock())
+        if (const auto child = p_child.lock())
         {
-            m_children_.push_back(locked->GetLocalID());
-            m_children_cache_.insert({ locked->GetLocalID(), child });
-            locked->m_parent_ = GetLocalID();
+            m_children_.push_back(child->GetLocalID());
+            m_children_cache_.insert({ child->GetLocalID(), child });
+            child->m_parent_id_ = GetLocalID();
+            child->m_parent_ = GetSharedPtr<Object>();
         }
     }
 
@@ -149,7 +154,8 @@ namespace Engine::Abstract
 
         if (m_children_cache_.contains(id))
         {
-            m_children_cache_.at(id).lock()->m_parent_ = g_invalid_id;
+            m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
+            m_children_cache_.at(id).lock()->m_parent_ = {};
             m_children_cache_.erase(id);
             m_children_.erase(std::ranges::find(m_children_, id));
             

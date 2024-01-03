@@ -142,7 +142,7 @@ namespace Engine::Abstract
     protected:
         explicit Object(eDefObjectType type = DEF_OBJ_T_NONE)
         : Actor(),
-          m_parent_(g_invalid_id),
+          m_parent_id_(g_invalid_id),
           m_type_(type),
           m_active_(true),
           m_culled_(true),
@@ -158,7 +158,7 @@ namespace Engine::Abstract
         virtual void OnCollisionExit(const StrongBaseCollider& other);
 
     private:
-        LocalActorID              m_parent_;
+        LocalActorID              m_parent_id_;
         std::vector<LocalActorID> m_children_;
         eDefObjectType       m_type_;
         bool                 m_active_ = true;
@@ -169,6 +169,7 @@ namespace Engine::Abstract
         std::map<eComponentType, StrongComponent> m_components_;
 
         // Non-serialized
+        WeakObject                                         m_parent_;
         std::map<LocalActorID, WeakObject>                 m_children_cache_;
         std::set<LocalComponentID>                         m_assigned_component_ids_;
         std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
