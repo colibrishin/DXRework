@@ -33,32 +33,26 @@ namespace Engine
     {
         for (int i = 0; i < LAYER_MAX; ++i)
         {
-            m_layers.emplace(
-                             static_cast<eLayerType>(i),
-                             Instantiate<Layer>(static_cast<eLayerType>(i)));
+            m_layers.emplace(static_cast<eLayerType>(i), boost::make_shared<Layer>(static_cast<eLayerType>(i)));
         }
 
-        const auto camera = Instantiate<Objects::Camera>();
-        AddGameObject(camera, LAYER_CAMERA);
-
+        const auto camera = CreateGameObject<Objects::Camera>(LAYER_CAMERA).lock();
         m_mainCamera_           = camera;
         m_main_camera_local_id_ = camera->GetLocalID();
 
-        const auto light1 = Instantiate<Objects::Light>();
-        AddGameObject(light1, LAYER_LIGHT);
+        const auto light1 = CreateGameObject<Objects::Light>(LAYER_LIGHT).lock();
         light1->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(5.f, 2.f, 5.f));
 
-        const auto light2 = Instantiate<Objects::Light>();
-        AddGameObject(light2, LAYER_LIGHT);
+        const auto light2 = CreateGameObject<Objects::Light>(LAYER_LIGHT).lock();
         light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
 
         Initialize_INTERNAL();
 
 #ifdef _DEBUG
         DisableControllers();
-        const auto observer = Instantiate<Objects::Observer>();
+        const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI);
         m_observer_         = observer;
-        AddGameObject(observer, LAYER_UI);
+        // todo: maybe adding child to observer rather than binding to object?
         GetMainCamera().lock()->BindObject(m_observer_);
 #endif
     }
@@ -444,14 +438,12 @@ namespace Engine
                 {
                     if (ImGui::MenuItem("Camera"))
                     {
-                        const auto camera = Instantiate<Objects::Camera>();
-                        AddGameObject(camera, LAYER_CAMERA);
+                        CreateGameObject<Objects::Camera>(LAYER_CAMERA);
                     }
 
                     if (ImGui::MenuItem("Light"))
                     {
-                        const auto light = Instantiate<Objects::Light>();
-                        AddGameObject(light, LAYER_LIGHT);
+                        CreateGameObject<Objects::Light>(LAYER_LIGHT);
                     }
 
                     AddCustomObject();
@@ -616,9 +608,8 @@ namespace Engine
         // remove controller if it is debug state
         DisableControllers();
 
-        const auto observer = Instantiate<Objects::Observer>();
+        const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI);
         m_observer_         = observer;
-        AddGameObject(observer, LAYER_UI);
         GetMainCamera().lock()->BindObject(m_observer_);
 #endif
     }

@@ -47,51 +47,36 @@ namespace Client::Scene
     {
         if (ImGui::MenuItem("PlaneObject"))
         {
-            const auto plane = Engine::Instantiate<Object::PlaneObject>();
-            AddGameObject(plane, Engine::LAYER_DEFAULT);
+            CreateGameObject<Object::PlaneObject>(Engine::LAYER_DEFAULT);
         }
     }
 
     inline void TestScene::Initialize_INTERNAL()
     {
-        const auto cube = Engine::Instantiate<Object::TestCube>();
-        AddGameObject(cube, Engine::LAYER_DEFAULT);
 
+        const auto cube = CreateGameObject<Object::TestCube>(Engine::LAYER_DEFAULT).lock();
         cube->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
              {2.f, 4.f, 0.f});
 
-        const auto sphere = Engine::Instantiate<Object::TestObject>();
-        AddGameObject(sphere, Engine::LAYER_DEFAULT);
+        const auto sphere = CreateGameObject<Object::TestObject>(Engine::LAYER_DEFAULT).lock();
         sphere->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
             {-2.f, 4.f, 0.f});
-
         cube->AddChild(sphere);
 
-        AddGameObject(
-                      Engine::Instantiate<Object::FPSCounter>(),
-                      Engine::LAYER_UI);
-        AddGameObject(
-                      Engine::Instantiate<Object::MousePositionText>(),
-                      Engine::LAYER_UI);
-        AddGameObject(
-                      Engine::Instantiate<Object::SkyBox>(),
-                      Engine::LAYER_SKYBOX);
-        AddGameObject(
-                      Engine::Instantiate<Object::PlaneObject>(),
-                      Engine::LAYER_ENVIRONMENT);
+        CreateGameObject<Object::FPSCounter>(Engine::LAYER_UI);
+        CreateGameObject<Object::MousePositionText>(Engine::LAYER_UI);
+        CreateGameObject<Object::SkyBox>(Engine::LAYER_SKYBOX);
+        CreateGameObject<Object::PlaneObject>(Engine::LAYER_ENVIRONMENT);
 
-        const auto water = Engine::Instantiate<Object::Water>();
-        AddGameObject(water, Engine::LAYER_ENVIRONMENT);
+        const auto water = CreateGameObject<Object::Water>(Engine::LAYER_ENVIRONMENT).lock();
         water->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
             {0.f, 0.f, -2.f});
 
-        const auto player = Engine::Instantiate<Object::Player>();
-        AddGameObject(player, Engine::LAYER_DEFAULT);
+        const auto player = CreateGameObject<Object::Player>(Engine::LAYER_DEFAULT).lock();
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
                    {-4.f, 2.f, 0.f});
 
-        const auto rifle = Engine::Instantiate<Object::Rifle>();
-        AddGameObject(rifle, Engine::LAYER_DEFAULT);
+        const auto rifle = CreateGameObject<Object::Rifle>(Engine::LAYER_DEFAULT);
         player->AddChild(rifle);
 
         GetMainCamera().lock()->BindObject(player);

@@ -13,23 +13,6 @@
 
 namespace Engine
 {
-    // instantiate a object, scene, layer.
-    template <typename T, typename... Arg>
-    inline static boost::shared_ptr<T> Instantiate(Arg&&... args)
-    {
-        if constexpr (std::is_base_of_v<Abstract::Object, T> ||
-                      std::is_base_of_v<Scene, T> || std::is_base_of_v<Layer, T>)
-        {
-            const auto inst = boost::make_shared<T>(std::forward<Arg>(args)...);
-            inst->Initialize();
-            return inst;
-        }
-        else
-        {
-            throw std::runtime_error("Instantiate: Invalid type" + typeid(T).name());
-        }
-    }
-
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     inline static boost::weak_ptr<T> Get(const std::string& name)
     {
