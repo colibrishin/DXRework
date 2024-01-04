@@ -34,17 +34,26 @@ namespace Engine::Manager::Physics
 
     void CollisionDetector::CheckCollision(StrongCollider& lhs, StrongCollider& rhs)
     {
-        const auto lhs_owner = lhs->GetOwner().lock();
-        const auto rhs_owner = rhs->GetOwner().lock();
+        auto c_lhs = lhs;
+        auto c_rhs = rhs;
 
-        if ((!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
-            g_speculation_enabled && CheckRaycasting(lhs, rhs)))
+        auto lhs_owner = lhs->GetOwner().lock();
+        auto rhs_owner = rhs->GetOwner().lock();
+
+        // Two objects are already checked and in the collision course.
+        if (IsCollidedInFrame(lhs_owner->GetID(), rhs_owner->GetID())) return;
+
+        const auto rb = lhs_owner->GetComponent<Components::Rigidbody>().lock();
+
+        // Assuming that lhs is always the moving object or two objects are static.
+        if (rb && rb->IsFixed())
         {
-            m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-            m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+            std::swap(c_lhs, c_rhs);
+            std::swap(lhs_owner, rhs_owner);
+        }
 
         if constexpr (g_speculation_enabled && 
-                      !m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) && 
+                      !IsSpeculated(lhs_owner->GetID(), rhs_owner->GetID()) && 
                       CheckRaycasting(lhs, rhs))
         {
             GetDebugger().Log(
@@ -52,7 +61,7 @@ namespace Engine::Manager::Physics
                               std::to_wstring(lhs_owner->GetID()) + L" " +
                               std::to_wstring(rhs_owner->GetID()));
 
-            lhs_owner->DispatchComponentEvent(lhs, rhs);
+            if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
             rhs_owner->DispatchComponentEvent(rhs, lhs);
 
             m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
@@ -61,7 +70,7 @@ namespace Engine::Manager::Physics
 
         if (lhs->Intersects(rhs))
         {
-            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+            if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
             {
                 m_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
@@ -94,8 +103,8 @@ namespace Engine::Manager::Physics
             }
             else
             {
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
+            // Now no longer in collision course.
+            if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
             }
         }
         else
