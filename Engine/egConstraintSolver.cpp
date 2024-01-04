@@ -115,12 +115,13 @@ namespace Engine::Manager::Physics
             const auto fps            = GetApplication().GetFPS();
 
             auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
+            ratio      = std::clamp(ratio, 0.f, 1.f);
 
-            if (collided_count > fps)
+            if (!std::isfinite(ratio))
             {
                 ratio = 0.0f;
             }
-            ratio                = std::clamp(ratio, 0.f, 1.f);
+
             const auto ratio_inv = 1.0f - ratio;
 
             const auto collision_reduction = std::powf(
@@ -152,9 +153,6 @@ namespace Engine::Manager::Physics
                 rb_other->SetAngularMomentum(
                                              other_angular_vel * reduction);
             }
-
-            cl->RemoveCollidedObject(rhs.lock()->GetID());
-            cl_other->RemoveCollidedObject(lhs.lock()->GetID());
 
             m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
             m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
