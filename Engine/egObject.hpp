@@ -121,7 +121,7 @@ namespace Engine::Abstract
         }
 
         template <typename T>
-        void DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs);
+        void DispatchComponentEvent(const boost::shared_ptr<T>& other);
 
         void SetActive(bool active);
         void SetCulled(bool culled);

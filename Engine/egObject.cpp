@@ -21,46 +21,35 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Abstract
 {
-    template void Object::DispatchComponentEvent(StrongCollider& lhs, StrongCollider& rhs);
+    template void Object::DispatchComponentEvent(const StrongCollider& other);
 
     template <typename T>
-    void Object::DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs)
+    void Object::DispatchComponentEvent(const boost::shared_ptr<T>& other)
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
             if constexpr (std::is_same_v<Engine::Components::Collider, T>)
             {
-                const auto lhs_owner = lhs->GetOwner().lock();
-                const auto rhs_owner = rhs->GetOwner().lock();
+                const auto rhs_owner = other->GetOwner().lock();
 
                 const auto speculation_check = GetCollisionDetector().IsSpeculated(
-                 lhs_owner->GetID(), rhs_owner->GetID());
-
-                if (speculation_check)
-                {
-                    lhs->AddSpeculationObject(rhs_owner->GetID());
-                }
-
+                 GetID(), rhs_owner->GetID());
                 const auto collision_check = GetCollisionDetector().IsCollided(
-                                                                               lhs_owner->GetID(),
-                                                                               rhs_owner->GetID());
-
+                 GetID(), rhs_owner->GetID());
                 const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
-                 lhs_owner->GetID(), rhs_owner->GetID());
+                 GetID(), rhs_owner->GetID());
 
-                if (collision_frame)
+                if (collision_frame || speculation_check)
                 {
-                    lhs_owner->OnCollisionEnter(rhs);
-                    lhs->AddCollidedObject(rhs_owner->GetID());
+                    OnCollisionEnter(other);
                 }
                 else if (collision_check)
                 {
-                    lhs_owner->OnCollisionContinue(rhs);
+                    OnCollisionContinue(other);
                 }
                 else if (!collision_check && !collision_frame)
                 {
-                    lhs_owner->OnCollisionExit(rhs);
-                    lhs->RemoveCollidedObject(rhs_owner->GetID());
+                    OnCollisionExit(other);
                 }
             }
         }
