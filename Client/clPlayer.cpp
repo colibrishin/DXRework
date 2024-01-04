@@ -16,8 +16,7 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Player,
-                       _ARTAG(_BSTSUPER(Object))
-                       _ARTAG(m_bone_colliders_))
+                       _ARTAG(_BSTSUPER(Object)))
 
 namespace Client::Object
 {
@@ -50,7 +49,9 @@ namespace Client::Object
         const auto rifle = GetScene().lock()->CreateGameObject<Rifle>(Engine::LAYER_DEFAULT);
         AddChild(rifle);
 
-        for (const auto& box : model->GetBoneBoundingBoxes() | std::views::values)
+        const auto bb_map = model->GetBoneBoundingBoxes();
+
+        for (const auto& [idx, box] : bb_map)
         {
             const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
             const auto ctr = child->AddComponent<Components::Transform>().lock();
@@ -60,8 +61,9 @@ namespace Client::Object
             ctr->SetSizeAbsolute(true);
             ctr->SetRotateAbsolute(false);
             ctr->SetLocalPosition(box.Center);
-            ctr->SetLocalRotation({box.Orientation.x, box.Orientation.y, box.Orientation.z, box.Orientation.w});
+            ctr->SetLocalRotation(box.Orientation);
             ctr->SetLocalScale(Vector3(box.Extents) * 2.f);
+            m_child_bones_[idx] = child->GetLocalID();
         }
     }
 
@@ -94,7 +96,7 @@ namespace Client::Object
     {
         Object::FixedUpdate(dt);
 
-        /*const auto tr = GetComponent<Components::Transform>().lock();
+        const auto cl = GetComponent<Components::Collider>().lock();
         const auto mr = GetComponent<Components::ModelRenderer>().lock();
         const auto atr = GetComponent<Components::Animator>().lock();
         const auto model = mr->GetModel().lock();
@@ -105,17 +107,37 @@ namespace Client::Object
         Vector3 min = {FLT_MAX, FLT_MAX, FLT_MAX};
         Vector3 max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-        for (const auto& [idx, cldr] : m_bone_colliders_)
+        for (const auto& [idx, id] : m_child_bones_)
         {
-            std::vector<Vector3> vertices;
-            vertices.resize(8);
-            
-            cldr->FromMatrix(deform[idx].transform);
+            const auto child = GetChild(id).lock();
 
-            auto obb = cldr->GetBoundingLocal<BoundingOrientedBox>();
-            obb.GetCorners(vertices.data());
+            const auto ctr = child->GetComponent<Components::Transform>().lock();
+            //ctr->SetAnimationMatrix(deform[idx].transform);
 
-            for (const auto& v : vertices)
+            static const std::vector<Vector3> stock_vertices
+            {
+                {0.5f, 0.5f, 0.5f},
+                {0.5f, -0.5f, 0.5f},
+                {-0.5f, -0.5f, 0.5f},
+                {-0.5f, 0.5f, 0.5f},
+                {0.5f, 0.5f, -0.5f},
+                {0.5f, -0.5f, -0.5f},
+                {-0.5f, -0.5f, -0.5f},
+                {-0.5f, 0.5f, -0.5f},
+            };
+
+            std::vector<Vector3> out_vertices;
+            out_vertices.resize(stock_vertices.size());
+
+            XMVector3TransformCoordStream(
+                out_vertices.data(), 
+                sizeof(Vector3), 
+                stock_vertices.data(), 
+                sizeof(Vector3), 
+                stock_vertices.size(), 
+                ctr->GetLocalMatrix());
+
+            for (const auto& v : out_vertices)
             {
                 min = Vector3::Min(min, v);
                 max = Vector3::Max(max, v);
@@ -126,6 +148,6 @@ namespace Client::Object
         BoundingBox         bb;
         BoundingBox::CreateFromPoints(bb, min, max);
         BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
-        rb->GetMainCollider().lock()->SetBoundingBox(new_obb);*/
+        cl->SetBoundingBox(new_obb);
     }
 }
