@@ -32,7 +32,7 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::CheckCollision(StrongCollider& lhs, StrongCollider& rhs)
+    void CollisionDetector::CheckCollision(const StrongCollider& lhs, const StrongCollider& rhs)
     {
         auto c_lhs = lhs;
         auto c_rhs = rhs;
@@ -192,6 +192,9 @@ namespace Engine::Manager::Physics
 
     void CollisionDetector::Update(const float& dt)
     {
+        m_frame_collision_map_.clear();
+        m_speculation_map_.clear();
+
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
 
         for (int i = 0; i < LAYER_MAX; ++i)

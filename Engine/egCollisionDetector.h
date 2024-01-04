@@ -41,8 +41,8 @@ namespace Engine::Manager::Physics
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
-        void CheckCollision(StrongCollider & lhs, StrongCollider & rhs);
-        void CheckGrounded(const StrongCollider & lhs, const StrongCollider & rhs);
+        void CheckCollision(const StrongCollider & lhs, const StrongCollider & rhs);
+        void CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs);
         bool CheckRaycasting(const StrongCollider & lhs, const StrongCollider & rhs);
 
     private:
