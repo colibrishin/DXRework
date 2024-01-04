@@ -33,7 +33,7 @@ namespace Engine
     {
         for (int i = 0; i < LAYER_MAX; ++i)
         {
-            m_layers.emplace(static_cast<eLayerType>(i), boost::make_shared<Layer>(static_cast<eLayerType>(i)));
+            m_layers.emplace_back(boost::make_shared<Layer>(static_cast<eLayerType>(i)));
         }
 
         const auto camera = CreateGameObject<Objects::Camera>(LAYER_CAMERA).lock();

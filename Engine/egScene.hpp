@@ -107,6 +107,11 @@ namespace Engine
             return m_mainCamera_;
         }
 
+        auto operator[] (size_t idx) const
+        {
+            return m_layers[idx];
+        }
+
         auto begin() noexcept
         {
             return m_layers.begin();
@@ -223,9 +228,9 @@ namespace Engine
 
         virtual void AddCustomObject();
 
-        LocalActorID                           m_main_camera_local_id_;
-        std::map<eLayerType, StrongLayer> m_layers;
-        eSceneType                        m_type_;
+        LocalActorID             m_main_camera_local_id_;
+        std::vector<StrongLayer> m_layers;
+        eSceneType               m_type_;
 
         // Non-serialized
         WeakObject m_observer_;

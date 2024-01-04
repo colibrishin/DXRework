@@ -72,14 +72,14 @@ namespace Engine::Manager::Graphics
     {
         const auto& scene = GetSceneManager().GetActiveScene().lock();
 
-        for (const auto& [type, layer] : *scene)
+        for (int i = 0; i < LAYER_MAX; ++i)
         {
-            if (type == LAYER_UI)
+            if (i == LAYER_UI)
             {
                 GetReflectionEvaluator().RenderFinished();
             }
 
-            for (const auto& object : *layer)
+            for (const auto& object : *(*scene)[i])
             {
                 if (!object->GetActive())
                 {
