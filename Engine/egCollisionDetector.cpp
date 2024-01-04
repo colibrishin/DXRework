@@ -62,61 +62,71 @@ namespace Engine::Manager::Physics
                               std::to_wstring(rhs_owner->GetID()));
 
             if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
-            rhs_owner->DispatchComponentEvent(rhs, lhs);
-
-            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
-            return;
-        }
-
-        if (lhs->Intersects(rhs))
-        {
-            if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
-            {
-                m_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-                m_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
-
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
-            }
-            else if (!m_frame_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
             {
                 m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
                 m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
+                lhs_owner->DispatchComponentEvent(rhs);
+                rhs_owner->DispatchComponentEvent(lhs);
 
-                if (const auto lhs_rb = lhs_owner->GetComponent<Components::Rigidbody>().lock();
-                    lhs_rb && lhs_rb->IsFixed())
-                {
-                    m_collision_produce_queue_.push_back({rhs_owner, lhs_owner, false, true});
-                }
-                else if (const auto rhs_rb = rhs_owner->GetComponent<Components::Rigidbody>().lock();
-                    rhs_rb && rhs_rb->IsFixed())
-                {
+                lhs->AddCollidedObject(rhs_owner->GetID());
+                rhs->AddCollidedObject(lhs_owner->GetID());
+            }
+
+            // Resolving the speculation and after than the collision.
+            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
+
+            // In speculation, assumes that collision will eventually happen. Skip the collision check.
+            return;
+        }
+
+        if (Components::Collider::Intersects(lhs, rhs))
+        {
+            if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+            {
+                // This is the first contact.
+                const auto lhs_rb = lhs_owner->GetComponent<Components::Rigidbody>().lock();
+                const auto rhs_rb = rhs_owner->GetComponent<Components::Rigidbody>().lock();
+
+                // Resolves the collision only in the first frame that collision occurred.
+                // Still adds the count for collided, for reducing the energy of the collision.
+                // Both are fixed or does not have rigidbody, we do not need to resolve the collision.
+                // However, they do need to know that they are collided.
+                if (rhs_rb && lhs_rb)
                     m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
-                }
-                else
-                {
-                    m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
-                }
+
+                m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+                m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+
+                lhs_owner->DispatchComponentEvent(rhs);
+                rhs_owner->DispatchComponentEvent(lhs);
             }
             else
             {
-            // Now no longer in collision course.
-            if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+                // This is the continuous collision.
+                lhs_owner->DispatchComponentEvent(rhs);
+                rhs_owner->DispatchComponentEvent(lhs);
             }
+
+            lhs->AddCollidedObject(rhs_owner->GetID());
+            rhs->AddCollidedObject(lhs_owner->GetID());
         }
         else
         {
-            if (m_collision_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
+            // Now no longer in collision course.
+            if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
             {
                 m_collision_map_[lhs_owner->GetID()].erase(rhs_owner->GetID());
                 m_collision_map_[rhs_owner->GetID()].erase(lhs_owner->GetID());
 
-                lhs_owner->DispatchComponentEvent(lhs, rhs);
-                rhs_owner->DispatchComponentEvent(rhs, lhs);
+                lhs_owner->DispatchComponentEvent(rhs);
+                rhs_owner->DispatchComponentEvent(lhs);
+
+                lhs->RemoveCollidedObject(rhs_owner->GetID());
+                rhs->RemoveCollidedObject(lhs_owner->GetID());
             }
+
+            // It is and was not in collision course.
         }
     }
 
