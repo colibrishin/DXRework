@@ -25,7 +25,8 @@ namespace Engine::Components
         void SetBoundingBox(const BoundingOrientedBox & bounding);
         void SetModel(const WeakModel& model);
 
-        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset);
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon = g_epsilon);
         bool        Intersects(const StrongCollider& other) const;
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
         bool        Contains(const StrongCollider & other) const;
@@ -114,11 +115,15 @@ namespace Engine::Components
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return GetBounding<BoundingOrientedBox>().Intersects(other);
+                BoundingOrientedBox box = GetBounding<BoundingOrientedBox>();
+                box.Extents = box.Extents + (Vector3::One * g_epsilon);
+                return box.Intersects(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return GetBounding<BoundingSphere>().Intersects(other);
+                BoundingSphere sphere = GetBounding<BoundingSphere>();
+                sphere.Radius += g_epsilon;
+                return sphere.Intersects(other);
             }
 
             return false;

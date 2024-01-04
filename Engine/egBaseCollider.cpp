@@ -150,20 +150,36 @@ namespace Engine::Components
         }
     }
 
-    bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset)
+    bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir)
     {
         if (lhs->m_type_ == BOUNDING_TYPE_BOX)
         {
-            static BoundingOrientedBox box;
-            box = lhs->GetBounding<BoundingOrientedBox>();
-            box.Center = box.Center + offset;
+            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
+            box.Center = box.Center + (dir * g_epsilon);
             return rhs->Intersects_GENERAL_TYPE(box);
         }
         else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
         {
-            static BoundingSphere sphere;
-            sphere = lhs->GetBounding<BoundingSphere>();
-            sphere.Center = sphere.Center + offset;
+            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
+            sphere.Center = sphere.Center + (dir * g_epsilon);
+            return rhs->Intersects_GENERAL_TYPE(sphere);
+        }
+
+        return false;
+    }
+
+    bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon)
+    {
+        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
+        {
+            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
+            box.Extents = box.Extents + (Vector3::One * g_epsilon);
+            return rhs->Intersects_GENERAL_TYPE(box);
+        }
+        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
+        {
+            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
+            sphere.Radius = sphere.Radius + g_epsilon;
             return rhs->Intersects_GENERAL_TYPE(sphere);
         }
 
@@ -254,6 +270,12 @@ namespace Engine::Components
     {
         std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.erase(id);
+
+        if (m_collision_count_.contains(id))
+        {
+            std::lock_guard lock2(m_collision_count_mutex_);
+            m_collision_count_.erase(id);
+        }
     }
 
     void Collider::RemoveSpeculationObject(const GlobalEntityID id)
