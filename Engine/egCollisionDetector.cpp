@@ -203,19 +203,49 @@ namespace Engine::Manager::Physics
                     if (!m_layer_mask_[i].test(j)) continue;
                 }
 
-                const auto objects = (*scene)[i]->GetGameObjects();
+                const auto lhsl = (*scene)[i]->GetGameObjects();
+                const auto rhsl = (*scene)[j]->GetGameObjects();
 
-                for (int k = 0; k < objects.size(); ++k)
+                if (i == j)
                 {
-                    if (objects[k].expired()) continue;
-                    const auto lhs = objects[k].lock();
+                    for (int k = 0; k < lhsl.size(); ++k)
+                    {
+                        const auto lhs = lhsl[k].lock();
+                        if (!lhs) continue;
+                        if (!lhs->GetActive()) continue;
 
+                        for (int l = k + 1; l < rhsl.size(); ++l)
+                        {
+                            const auto rhs = rhsl[l].lock();
+                            if (!rhs) continue;
+
+                            if (!rhs->GetActive()) continue;
+                            if (lhs->GetParent().lock() == rhs->GetParent().lock()) continue;
+                            if (rhs->GetParent().lock() == lhs) continue;
+                            if (lhs->GetParent().lock() == rhs) continue;
+
+                            auto lhs_cl = lhs->GetComponent<Components::Collider>().lock();
+                            auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
+
+                            if (!lhs_cl || !rhs_cl) continue;
+
+                            CheckCollision(lhs_cl, rhs_cl);
+                        }
+                    }
+
+                    continue;
+                }
+
+                for (int k = 0; k < lhsl.size(); ++k)
+                {
+                    const auto lhs = lhsl[k].lock();
+                    if (!lhs) continue;
                     if (!lhs->GetActive()) continue;
 
-                    for (int l = k + 1; l < objects.size(); ++l)
+                    for (int l = 0; l < rhsl.size(); ++l)
                     {
-                        if (objects[l].expired()) continue;
-                        const auto rhs = objects[l].lock();
+                        const auto rhs = rhsl[l].lock();
+                        if (!rhs) continue;
 
                         if (!rhs->GetActive()) continue;
                         if (lhs->GetParent().lock() == rhs->GetParent().lock()) continue;
