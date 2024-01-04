@@ -43,6 +43,10 @@ namespace Engine::Manager::Physics
             m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
             m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
 
+        if constexpr (g_speculation_enabled && 
+                      !m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) && 
+                      CheckRaycasting(lhs, rhs))
+        {
             GetDebugger().Log(
                               L"Speculation Hit! : " +
                               std::to_wstring(lhs_owner->GetID()) + L" " +
