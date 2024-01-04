@@ -32,7 +32,23 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::CheckCollision(const StrongCollider& lhs, const StrongCollider& rhs)
+    __forceinline void CollisionDetector::IncreaseCollisionCounter(
+        const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+        const StrongObject&   rhs_owner)
+    {
+        lhs->AddCollidedObject(rhs_owner->GetID());
+        rhs->AddCollidedObject(lhs_owner->GetID());
+    }
+
+    __forceinline void CollisionDetector::RemoveCollisionCounter(
+        const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+        const StrongObject&   rhs_owner)
+    {
+        lhs->RemoveCollidedObject(rhs_owner->GetID());
+        rhs->RemoveCollidedObject(lhs_owner->GetID());
+    }
+
+    void CollisionDetector::CheckCollisionImpl(const StrongCollider& lhs, const StrongCollider& rhs)
     {
         auto c_lhs = lhs;
         auto c_rhs = rhs;
@@ -63,11 +79,7 @@ namespace Engine::Manager::Physics
 
             if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
             {
-                m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-                m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
-
-                lhs_owner->DispatchComponentEvent(rhs);
-                rhs_owner->DispatchComponentEvent(lhs);
+                InFrameColliding(lhs, rhs, lhs_owner, rhs_owner);
 
                 lhs->AddCollidedObject(rhs_owner->GetID());
                 rhs->AddCollidedObject(lhs_owner->GetID());
@@ -95,38 +107,63 @@ namespace Engine::Manager::Physics
                 if (rhs_rb && lhs_rb)
                     m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true});
 
-                m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-                m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
-
-                lhs_owner->DispatchComponentEvent(rhs);
-                rhs_owner->DispatchComponentEvent(lhs);
+                InFrameColliding(lhs, rhs, lhs_owner, rhs_owner);
             }
             else
             {
                 // This is the continuous collision.
-                lhs_owner->DispatchComponentEvent(rhs);
-                rhs_owner->DispatchComponentEvent(lhs);
+                ContinuousColliding(lhs, rhs, lhs_owner, rhs_owner);
             }
 
-            lhs->AddCollidedObject(rhs_owner->GetID());
-            rhs->AddCollidedObject(lhs_owner->GetID());
+            IncreaseCollisionCounter(lhs, rhs, lhs_owner, rhs_owner);
         }
         else
         {
             // Now no longer in collision course.
-            if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
-            {
-                m_collision_map_[lhs_owner->GetID()].erase(rhs_owner->GetID());
-                m_collision_map_[rhs_owner->GetID()].erase(lhs_owner->GetID());
-
-                lhs_owner->DispatchComponentEvent(rhs);
-                rhs_owner->DispatchComponentEvent(lhs);
-
-                lhs->RemoveCollidedObject(rhs_owner->GetID());
-                rhs->RemoveCollidedObject(lhs_owner->GetID());
-            }
+            ExitColliding(lhs, rhs, lhs_owner, rhs_owner);
+            RemoveCollisionCounter(lhs, rhs, lhs_owner, rhs_owner);
 
             // It is and was not in collision course.
+        }
+    }
+
+    __forceinline void CollisionDetector::ContinuousColliding(
+        const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+        const StrongObject&   rhs_owner) const
+    {
+        if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+        {
+            // This is the continuous collision.
+            lhs_owner->DispatchComponentEvent(rhs);
+            rhs_owner->DispatchComponentEvent(lhs);
+        }
+    }
+
+    __forceinline void CollisionDetector::InFrameColliding(
+        const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+        const StrongObject&   rhs_owner)
+    {
+        if (!IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+        {
+            m_frame_collision_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
+            m_frame_collision_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
+
+            lhs_owner->DispatchComponentEvent(rhs);
+            rhs_owner->DispatchComponentEvent(lhs);
+        }
+    }
+
+    __forceinline void CollisionDetector::ExitColliding(
+        const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+        const StrongObject&   rhs_owner)
+    {
+        if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+        {
+            m_collision_map_[lhs_owner->GetID()].erase(rhs_owner->GetID());
+            m_collision_map_[rhs_owner->GetID()].erase(lhs_owner->GetID());
+
+            lhs_owner->DispatchComponentEvent(rhs);
+            rhs_owner->DispatchComponentEvent(lhs);
         }
     }
 
@@ -158,8 +195,30 @@ namespace Engine::Manager::Physics
             // pre-update -> collision detection -> ground = true -> fixed update -> physics update (w/o gravity) -> ground = false
             rb->SetGrounded(true);
 
-            // The object hits the "ground" object.
-            m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true, true});
+            if (!IsCollided(lhs->GetID(), rhs->GetID()))
+            {
+                InFrameColliding(lhs, rhs, lhs_owner, rhs_owner);
+
+                // The object hits the "ground" object.
+                m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true, true});
+            }
+            else
+            {
+                ContinuousColliding(lhs, rhs, lhs_owner, rhs_owner);
+            }
+
+            IncreaseCollisionCounter(lhs, rhs, lhs_owner, rhs_owner);
+        }
+        else
+        {
+            // Now no longer in collision course.
+            if (IsCollided(lhs_owner->GetID(), rhs_owner->GetID()))
+            {
+                ExitColliding(lhs, rhs, lhs_owner, rhs_owner);
+                RemoveCollisionCounter(lhs, rhs, lhs_owner, rhs_owner);
+            }
+
+            // It is and was not in collision course.
         }
     }
 
@@ -188,6 +247,25 @@ namespace Engine::Manager::Physics
         }
 
         return false;
+    }
+
+    bool CollisionDetector::CheckCollision(const ConcurrentWeakObjVec& rhsl, const StrongObject& lhs, int idx)
+    {
+        const auto rhs = rhsl[idx].lock();
+        if (!rhs) return false;
+
+        if (!rhs->GetActive()) return false;
+        if (lhs->GetParent().lock() == rhs->GetParent().lock()) return false;
+        if (rhs->GetParent().lock() == lhs) return false;
+        if (lhs->GetParent().lock() == rhs) return false;
+
+        const auto lhs_cl = lhs->GetComponent<Components::Collider>().lock();
+        const auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
+
+        if (!lhs_cl || !rhs_cl) return false;
+
+        CheckCollisionImpl(lhs_cl, rhs_cl);
+        return true;
     }
 
     void CollisionDetector::Update(const float& dt)
@@ -219,20 +297,7 @@ namespace Engine::Manager::Physics
 
                         for (int l = k + 1; l < rhsl.size(); ++l)
                         {
-                            const auto rhs = rhsl[l].lock();
-                            if (!rhs) continue;
-
-                            if (!rhs->GetActive()) continue;
-                            if (lhs->GetParent().lock() == rhs->GetParent().lock()) continue;
-                            if (rhs->GetParent().lock() == lhs) continue;
-                            if (lhs->GetParent().lock() == rhs) continue;
-
-                            auto lhs_cl = lhs->GetComponent<Components::Collider>().lock();
-                            auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
-
-                            if (!lhs_cl || !rhs_cl) continue;
-
-                            CheckCollision(lhs_cl, rhs_cl);
+                            if (!CheckCollision(rhsl, lhs, l)) continue;
                         }
                     }
 
@@ -247,20 +312,7 @@ namespace Engine::Manager::Physics
 
                     for (int l = 0; l < rhsl.size(); ++l)
                     {
-                        const auto rhs = rhsl[l].lock();
-                        if (!rhs) continue;
-
-                        if (!rhs->GetActive()) continue;
-                        if (lhs->GetParent().lock() == rhs->GetParent().lock()) continue;
-                        if (rhs->GetParent().lock() == lhs) continue;
-                        if (lhs->GetParent().lock() == rhs) continue;
-
-                        auto lhs_cl = lhs->GetComponent<Components::Collider>().lock();
-                        auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
-
-                        if (!lhs_cl || !rhs_cl) continue;
-
-                        CheckCollision(lhs_cl, rhs_cl);
+                        if (!CheckCollision(rhsl, lhs, l)) continue;
                     }
                 }
             }
