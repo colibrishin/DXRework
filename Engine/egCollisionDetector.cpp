@@ -109,18 +109,33 @@ namespace Engine::Manager::Physics
 
     void CollisionDetector::CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs)
     {
-        const auto lhs_owner = lhs->GetOwner().lock();
-        const auto rhs_owner = rhs->GetOwner().lock();
+        auto c_lhs = lhs;
+        auto c_rhs = rhs;
 
-        const auto rb = lhs_owner
+        auto lhs_owner = lhs->GetOwner().lock();
+        auto rhs_owner = rhs->GetOwner().lock();
+
+        auto rb = lhs_owner
                         ->GetComponent<Components::Rigidbody>()
                         .lock();
+        auto rb_other = rhs_owner
+                              ->GetComponent<Components::Rigidbody>()
+                              .lock();
 
-        if (Components::Collider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
+        if (rb->IsFixed())
         {
-            // Ground flag is automatically set to false on the start of the frame.
+            std::swap(c_lhs, c_rhs);
+            std::swap(lhs_owner, rhs_owner);
+            std::swap(rb, rb_other);
+        }
+
+        if (Components::Collider::Intersects(lhs, rhs, Vector3::Down))
+        {
+            // Ground flag is automatically set to false on the fixed frame update. (i.e., physics update)
+            // pre-update -> collision detection -> ground = true -> fixed update -> physics update (w/o gravity) -> ground = false
             rb->SetGrounded(true);
 
+            // The object hits the "ground" object.
             m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, false, true, true});
         }
     }
@@ -194,33 +209,30 @@ namespace Engine::Manager::Physics
                 }
             }
         }
-
-        m_collision_check_map_.clear();
     }
 
     void CollisionDetector::PreUpdate(const float& dt)
     {
         m_collision_map_.merge(m_frame_collision_map_);
 
-        m_frame_collision_map_.clear();
-        m_speculation_map_.clear();
-
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
+        // Ignore the static object being grounded.
         const auto  rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
         for (int i = 0; i < rbs.size(); ++i)
         {
-            if (rbs[i].expired()) continue;
             const auto lhs = rbs[i].lock();
-
+            if (!lhs) continue;
             if (lhs->GetSharedPtr<Components::Rigidbody>()->IsFixed()) continue;
 
+            // There could be the case where two objects are moving downwards and colliding with each other.
+            // then, first object is considered as grounded and second object is not.
             for (int j = 0; j < rbs.size(); ++j)
             {
-                if (rbs[j].expired()) continue;
-                const auto rhs = rbs[j].lock();
-
                 if (i == j) continue;
+
+                const auto rhs = rbs[j].lock();
+                if (!rhs) continue;
 
                 {
                     std::lock_guard lock(m_layer_mask_mutex_);
