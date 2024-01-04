@@ -32,28 +32,13 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::MarkAsChecked(const StrongObject& lhs_owner, const StrongObject& rhs_owner)
-    {
-        m_collision_check_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
-        m_collision_check_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
-    }
-
-    void CollisionDetector::CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs)
+    void CollisionDetector::CheckCollision(StrongCollider& lhs, StrongCollider& rhs)
     {
         const auto lhs_owner = lhs->GetOwner().lock();
         const auto rhs_owner = rhs->GetOwner().lock();
 
-        if (lhs_owner == rhs_owner) return;
-        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
-        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
-
-        if (m_collision_check_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()))
-        {
-            return;
-        }
-
         if ((!m_speculation_map_[lhs_owner->GetID()].contains(rhs_owner->GetID()) &&
-            CheckRaycasting(lhs, rhs) && g_speculation_enabled))
+            g_speculation_enabled && CheckRaycasting(lhs, rhs)))
         {
             m_speculation_map_[lhs_owner->GetID()].insert(rhs_owner->GetID());
             m_speculation_map_[rhs_owner->GetID()].insert(lhs_owner->GetID());
@@ -67,7 +52,6 @@ namespace Engine::Manager::Physics
             rhs_owner->DispatchComponentEvent(rhs, lhs);
 
             m_collision_produce_queue_.push_back({lhs_owner, rhs_owner, true, true});
-            MarkAsChecked(lhs_owner, rhs_owner);
             return;
         }
 
@@ -121,32 +105,16 @@ namespace Engine::Manager::Physics
                 rhs_owner->DispatchComponentEvent(rhs, lhs);
             }
         }
-
-        MarkAsChecked(lhs_owner, rhs_owner);
     }
 
-    void CollisionDetector::CheckCollisionChunk(StrongBaseCollider& lhs, std::vector<StrongBaseCollider>& rhs)
-    {
-        for (auto& rhs_cl : rhs)
-        {
-            CheckCollision(lhs, rhs_cl);
-        }
-    }
-
-    void CollisionDetector::CheckGrounded(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
+    void CollisionDetector::CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs)
     {
         const auto lhs_owner = lhs->GetOwner().lock();
         const auto rhs_owner = rhs->GetOwner().lock();
 
-        if (lhs_owner == rhs_owner) return;
-        if (const auto      lhs_parent = lhs_owner->GetParent().lock(); lhs_parent == rhs_owner) return;
-        else if (const auto rhs_parent = rhs_owner->GetParent().lock(); rhs_parent == lhs_owner) return;
-
         const auto rb = lhs_owner
                         ->GetComponent<Components::Rigidbody>()
                         .lock();
-
-        if (rb->IsFixed() || !rb->IsGravityAllowed()) return;
 
         if (Components::Collider::Intersects(lhs, rhs, Vector3::Down * g_epsilon))
         {
@@ -157,7 +125,7 @@ namespace Engine::Manager::Physics
         }
     }
 
-    bool CollisionDetector::CheckRaycasting(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs)
+    bool CollisionDetector::CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs)
     {
         const auto rb =
                 lhs->GetOwner().lock()->GetComponent<Components::Rigidbody>().lock();
@@ -187,55 +155,44 @@ namespace Engine::Manager::Physics
     void CollisionDetector::Update(const float& dt)
     {
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
-        const auto& colliders = scene->GetCachedComponents<Components::Collider>();
 
-        static tbb::affinity_partitioner ap;
-
-        for (const auto& collider : colliders)
+        for (int i = 0; i < LAYER_MAX; ++i)
         {
-            const auto ptr_lhs = collider.lock();
-
-            if (!ptr_lhs)
+            for (int j = i; j < LAYER_MAX; ++j)
             {
-                continue;
-            }
-
-            auto lhs = ptr_lhs->GetSharedPtr<Components::Collider>();
-
-            std::vector<StrongBaseCollider> rhs_chunk;
-
-            for (size_t j = 0; j < colliders.size(); ++j)
-            {
-                const auto rhs = colliders[j].lock();
-
-                if (!rhs)
                 {
-                    continue;
+                    std::lock_guard l(m_layer_mask_mutex_);
+                    if (!m_layer_mask_[i].test(j)) continue;
                 }
 
-                if (ptr_lhs == rhs)
-                {
-                    continue;
-                }
+                const auto objects = (*scene)[i]->GetGameObjects();
 
-                if (ptr_lhs->GetOwner().lock() == rhs->GetOwner().lock())
+                for (int k = 0; k < objects.size(); ++k)
                 {
-                    continue;
-                }
+                    if (objects[k].expired()) continue;
+                    const auto lhs = objects[k].lock();
 
-                {
-                    std::lock_guard lock(m_layer_mask_mutex_);
-                    if (!m_layer_mask_[rhs->GetOwner().lock()->GetLayer()].test(
-                                                                                rhs->GetOwner().lock()->GetLayer()))
+                    if (!lhs->GetActive()) continue;
+
+                    for (int l = k + 1; l < objects.size(); ++l)
                     {
-                        continue;
+                        if (objects[l].expired()) continue;
+                        const auto rhs = objects[l].lock();
+
+                        if (!rhs->GetActive()) continue;
+                        if (lhs->GetParent().lock() == rhs->GetParent().lock()) continue;
+                        if (rhs->GetParent().lock() == lhs) continue;
+                        if (lhs->GetParent().lock() == rhs) continue;
+
+                        auto lhs_cl = lhs->GetComponent<Components::Collider>().lock();
+                        auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
+
+                        if (!lhs_cl || !rhs_cl) continue;
+
+                        CheckCollision(lhs_cl, rhs_cl);
                     }
                 }
-
-                rhs_chunk.push_back(rhs->GetSharedPtr<Components::Collider>());
             }
-
-            CheckCollisionChunk(lhs, rhs_chunk);
         }
 
         m_collision_check_map_.clear();
@@ -251,28 +208,19 @@ namespace Engine::Manager::Physics
         const auto  scene     = GetSceneManager().GetActiveScene().lock();
         const auto  rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
-        for (const auto& rb : rbs)
+        for (int i = 0; i < rbs.size(); ++i)
         {
-            const auto lhs = rb.lock();
+            if (rbs[i].expired()) continue;
+            const auto lhs = rbs[i].lock();
 
-            if (!lhs)
+            if (lhs->GetSharedPtr<Components::Rigidbody>()->IsFixed()) continue;
+
+            for (int j = 0; j < rbs.size(); ++j)
             {
-                continue;
-            }
+                if (rbs[j].expired()) continue;
+                const auto rhs = rbs[j].lock();
 
-            for (const auto& p_rhs : rbs)
-            {
-                if (lhs == p_rhs.lock())
-                {
-                    continue;
-                }
-
-                const auto rhs = p_rhs.lock();
-
-                if (!rhs)
-                {
-                    continue;
-                }
+                if (i == j) continue;
 
                 {
                     std::lock_guard lock(m_layer_mask_mutex_);
@@ -283,8 +231,8 @@ namespace Engine::Manager::Physics
                     }
                 }
 
-                const auto lhs_cl = lhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::Collider>().lock();
-                const auto rhs_cl = rhs->GetSharedPtr<Components::Rigidbody>()->GetOwner().lock()->GetComponent<Components::Collider>().lock();
+                const auto lhs_cl = lhs->GetOwner().lock()->GetComponent<Components::Collider>().lock();
+                const auto rhs_cl = rhs->GetOwner().lock()->GetComponent<Components::Collider>().lock();
 
                 CheckGrounded(lhs_cl, rhs_cl);
             }
@@ -327,9 +275,9 @@ namespace Engine::Manager::Physics
                       std::execution::par, scene->begin(),
                       scene->end(),
                       [ray, &distance, &out,
-                          &out_mutex](const std::pair<const eLayerType, StrongLayer>& layer)
+                          &out_mutex](const StrongLayer& layer)
                       {
-                          const auto objects = layer.second->GetGameObjects();
+                          const auto objects = layer->GetGameObjects();
 
                           std::for_each(
                                         std::execution::par, objects.begin(), objects.end(),

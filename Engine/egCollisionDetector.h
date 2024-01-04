@@ -41,12 +41,9 @@ namespace Engine::Manager::Physics
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
-        void MarkAsChecked(const StrongObject& lhs_owner, const StrongObject& rhs_owner);
-
-        void CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
-        void CheckCollisionChunk(StrongBaseCollider & lhs, std::vector<StrongBaseCollider> & rhs);
-        void CheckGrounded(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
-        bool CheckRaycasting(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
+        void CheckCollision(StrongCollider & lhs, StrongCollider & rhs);
+        void CheckGrounded(const StrongCollider & lhs, const StrongCollider & rhs);
+        bool CheckRaycasting(const StrongCollider & lhs, const StrongCollider & rhs);
 
     private:
         std::mutex                                    m_layer_mask_mutex_;
