@@ -21,7 +21,7 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Engine::Abstract
 {
-    template void Object::DispatchComponentEvent(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
+    template void Object::DispatchComponentEvent(StrongCollider& lhs, StrongCollider& rhs);
 
     template <typename T>
     void Object::DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs)
@@ -165,7 +165,7 @@ namespace Engine::Abstract
         return false;
     }
 
-    void Object::OnCollisionEnter(const StrongBaseCollider& other)
+    void Object::OnCollisionEnter(const StrongCollider& other)
     {
         if (!GetComponent<Engine::Components::Collider>().lock())
         {
@@ -173,7 +173,7 @@ namespace Engine::Abstract
         }
     }
 
-    void Object::OnCollisionContinue(const StrongBaseCollider& other)
+    void Object::OnCollisionContinue(const StrongCollider& other)
     {
         if (!GetComponent<Engine::Components::Collider>().lock())
         {
@@ -181,7 +181,7 @@ namespace Engine::Abstract
         }
     }
 
-    void Object::OnCollisionExit(const StrongBaseCollider& other)
+    void Object::OnCollisionExit(const StrongCollider& other)
     {
         if (!GetComponent<Engine::Components::Collider>().lock())
         {

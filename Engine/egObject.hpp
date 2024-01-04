@@ -153,9 +153,9 @@ namespace Engine::Abstract
         friend class Scene;
         friend class Manager::Graphics::ShadowManager;
 
-        virtual void OnCollisionEnter(const StrongBaseCollider& other);
-        virtual void OnCollisionContinue(const StrongBaseCollider& other);
-        virtual void OnCollisionExit(const StrongBaseCollider& other);
+        virtual void OnCollisionEnter(const StrongCollider& other);
+        virtual void OnCollisionContinue(const StrongCollider& other);
+        virtual void OnCollisionExit(const StrongCollider& other);
 
     private:
         LocalActorID              m_parent_id_;

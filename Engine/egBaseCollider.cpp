@@ -150,7 +150,7 @@ namespace Engine::Components
         }
     }
 
-    bool Collider::Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset)
+    bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset)
     {
         if (lhs->m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -170,7 +170,7 @@ namespace Engine::Components
         return false;
     }
 
-    bool Collider::Intersects(const StrongBaseCollider& other) const
+    bool Collider::Intersects(const StrongCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -214,7 +214,7 @@ namespace Engine::Components
         return false;
     }
 
-    bool Collider::Contains(const StrongBaseCollider& other) const
+    bool Collider::Contains(const StrongCollider& other) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
         {

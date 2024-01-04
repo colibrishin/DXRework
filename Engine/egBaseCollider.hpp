@@ -25,10 +25,10 @@ namespace Engine::Components
         void SetBoundingBox(const BoundingOrientedBox & bounding);
         void SetModel(const WeakModel& model);
 
-        static bool Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset);
-        bool        Intersects(const StrongBaseCollider& other) const;
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& offset);
+        bool        Intersects(const StrongCollider& other) const;
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool        Contains(const StrongBaseCollider & other) const;
+        bool        Contains(const StrongCollider & other) const;
 
         void AddCollidedObject(GlobalEntityID id);
         void AddSpeculationObject(GlobalEntityID id);

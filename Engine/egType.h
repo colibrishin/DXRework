@@ -192,7 +192,7 @@ namespace Engine
     using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
     using StrongShader = boost::shared_ptr<Graphics::IShader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
-    using StrongBaseCollider = boost::shared_ptr<Components::Collider>;
+    using StrongCollider = boost::shared_ptr<Components::Collider>;
 
     // Misc type definitions
     using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
