@@ -23,7 +23,7 @@ namespace Engine::Abstract
 {
     template void Object::DispatchComponentEvent(const StrongCollider& other);
 
-    template <typename T>
+    template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
     void Object::DispatchComponentEvent(const boost::shared_ptr<T>& other)
     {
         if constexpr (std::is_base_of_v<Component, T>)
@@ -33,22 +33,30 @@ namespace Engine::Abstract
                 const auto rhs_owner = other->GetOwner().lock();
 
                 const auto speculation_check = GetCollisionDetector().IsSpeculated(
-                 GetID(), rhs_owner->GetID());
+                    GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsSpeculated(
+                    rhs_owner->GetID(), GetID());
                 const auto collision_check = GetCollisionDetector().IsCollided(
-                 GetID(), rhs_owner->GetID());
+                    GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsCollided(
+                    rhs_owner->GetID(), GetID());
                 const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
-                 GetID(), rhs_owner->GetID());
+                    GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsCollidedInFrame(
+                    rhs_owner->GetID(), GetID());
 
                 if (collision_frame || speculation_check)
                 {
+                    GetDebugger().Log(
+                                      "Collision detected between " + GetName() + " and " + rhs_owner->GetName());
+
                     OnCollisionEnter(other);
                 }
-                else if (collision_check)
+                else if (collision_check && !collision_frame)
                 {
                     OnCollisionContinue(other);
                 }
                 else if (!collision_check && !collision_frame)
                 {
+                    GetDebugger().Log(
+                                      "Collision exit between " + GetName() + " and " + rhs_owner->GetName());
                     OnCollisionExit(other);
                 }
             }

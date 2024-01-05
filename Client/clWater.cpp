@@ -16,6 +16,7 @@ SERIALIZER_ACCESS_IMPL(
 
 void Client::Object::Water::Initialize()
 {
+    SetName("Water");
     const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
     const auto model = Engine::Resources::Shape::Get("CubeModel");
 

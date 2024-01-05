@@ -24,6 +24,7 @@ namespace Client::Object
         Object::Initialize();
 
         const auto model = Resources::Shape::Get("RifleModel").lock();
+        SetName("Rifle");
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
 

@@ -19,6 +19,7 @@ namespace Client::Object
 {
     inline void TestObject::Initialize()
     {
+        SetName("TestObject");
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetShape(Resources::Shape::Get("SphereModel"));
         mr->SetMaterial(Resources::Material::Get("NormalLightSpecular"));

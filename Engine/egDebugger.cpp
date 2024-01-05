@@ -68,7 +68,7 @@ namespace Engine::Manager
                                                 L"consolas.spritefont");
     }
 
-    void Debugger::Log(const std::wstring& str)
+    void Debugger::Log(const std::string& str)
     {
         Push(
              Message{str}, [&](Message& msg, const float& dt)

@@ -532,7 +532,7 @@ namespace Engine::Manager::Graphics
                                   GetSwapchainAwaiter(), g_max_frame_latency_ms,
                                   true) != WAIT_OBJECT_0)
         {
-            GetDebugger().Log(L"Waiting for Swap chain had an issue.");
+            GetDebugger().Log("Waiting for Swap chain had an issue.");
         }
 
         constexpr float color[4] = {0.f, 0.f, 0.f, 1.f};

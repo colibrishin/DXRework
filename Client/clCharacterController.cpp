@@ -154,14 +154,14 @@ namespace Client::State
 
             switch (GetState())
             {
-            case CHAR_STATE_IDLE: if (HasStateChanged()) Engine::GetDebugger().Log(L"Idle");
+            case CHAR_STATE_IDLE: if (HasStateChanged()) Engine::GetDebugger().Log("Idle");
                 break;
-            case CHAR_STATE_WALK: if (HasStateChanged()) Engine::GetDebugger().Log(L"Walk");
+            case CHAR_STATE_WALK: if (HasStateChanged()) Engine::GetDebugger().Log("Walk");
                 break;
             case CHAR_STATE_RUN: break;
-            case CHAR_STATE_JUMP: if (HasStateChanged()) Engine::GetDebugger().Log(L"Jump");
+            case CHAR_STATE_JUMP: if (HasStateChanged()) Engine::GetDebugger().Log("Jump");
                 break;
-            case CHAR_STATE_ATTACK: if (HasStateChanged()) Engine::GetDebugger().Log(L"Attack");
+            case CHAR_STATE_ATTACK: if (HasStateChanged()) Engine::GetDebugger().Log("Attack");
                 break;
             case CHAR_STATE_DIE: break;
             case CHAR_STATE_HIT: break;

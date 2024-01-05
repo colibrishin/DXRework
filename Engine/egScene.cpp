@@ -194,7 +194,7 @@ namespace Engine
 
             if (!tr)
             {
-                GetDebugger().Log(L"Object has no transform component");
+                GetDebugger().Log("Object has no transform component");
                 return;
             }
 
@@ -206,7 +206,7 @@ namespace Engine
             if (!VectorElementInRange(prev_pos, g_max_map_size) ||
                 !VectorElementInRange(pos, g_max_map_size))
             {
-                GetDebugger().Log(L"Object position is out of range");
+                GetDebugger().Log("Object position is out of range");
                 return;
             }
 
@@ -247,7 +247,7 @@ namespace Engine
 
         if (!VectorElementInRange(pos_rounded, g_max_map_size))
         {
-            GetDebugger().Log(L"Position is out of range");
+            GetDebugger().Log("Position is out of range");
             return;
         }
 
@@ -281,7 +281,7 @@ namespace Engine
                 {
                     if (!VectorElementInRange(pos_rounded, g_max_map_size))
                     {
-                        GetDebugger().Log(L"Position is out of range");
+                        GetDebugger().Log("Position is out of range");
                         continue;
                     }
 
@@ -336,7 +336,7 @@ namespace Engine
         GetTaskScheduler().AddTask(
                                    [this, scene](const float& dt)
                                    {
-                                       GetDebugger().Log(L"Scene synchronization started.");
+                                       GetDebugger().Log("Scene synchronization started.");
 
                                        m_layers = scene->m_layers;
 
