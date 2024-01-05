@@ -3,27 +3,6 @@
 
 namespace Engine
 {
-    enum eShaderType
-    {
-        SHADER_VERTEX = 0,
-        SHADER_PIXEL,
-        SHADER_GEOMETRY,
-        SHADER_COMPUTE,
-        SHADER_HULL,
-        SHADER_DOMAIN,
-        SHADER_UNKNOWN
-    };
-
-    enum eCBType
-    {
-        CB_TYPE_WVP = 0,
-        CB_TYPE_TRANSFORM,
-        CB_TYPE_LIGHT,
-        CB_TYPE_SHADOW,
-        CB_TYPE_SHADOW_CHUNK,
-        CB_TYPE_MATERIAL,
-    };
-
     enum eTexBindSlot
     {
         BIND_SLOT_TEX = 0,
@@ -47,6 +26,21 @@ namespace Engine
         SAMPLER_SHADOW,
     };
 
+    enum eObserverState
+    {
+        OBSERVER_STATE_NONE,
+    };
+
+    enum eTaskType
+    {
+        TASK_NONE = 0,
+        TASK_ADD_OBJ,
+        TASK_REM_OBJ,
+        TASK_INIT_SCENE,
+        TASK_SYNC_SCENE,
+        TASK_MAX
+    };
+
     enum eLayerType
     {
         LAYER_NONE = 0,
@@ -59,9 +53,25 @@ namespace Engine
         LAYER_MAX
     };
 
-    enum eObserverState
+    enum eShaderType
     {
-        OBSERVER_STATE_NONE,
+        SHADER_VERTEX = 0,
+        SHADER_PIXEL,
+        SHADER_GEOMETRY,
+        SHADER_COMPUTE,
+        SHADER_HULL,
+        SHADER_DOMAIN,
+        SHADER_UNKNOWN
+    };
+
+    enum eCBType
+    {
+        CB_TYPE_WVP = 0,
+        CB_TYPE_TRANSFORM,
+        CB_TYPE_LIGHT,
+        CB_TYPE_SHADOW,
+        CB_TYPE_SHADOW_CHUNK,
+        CB_TYPE_MATERIAL,
     };
 
     enum eResourceType
@@ -102,13 +112,12 @@ namespace Engine
         DEF_OBJ_T_DELAY_OBJ
     };
 
-    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
-    enum eSceneType : UINT;
-
     enum eBoundingType
     {
         BOUNDING_TYPE_BOX = 0,
-        BOUNDING_TYPE_FRUSTUM,
         BOUNDING_TYPE_SPHERE,
     };
+
+    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
+    enum eSceneType : UINT;
 }

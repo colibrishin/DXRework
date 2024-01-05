@@ -7,10 +7,14 @@ namespace Engine::Manager
 
     void TaskScheduler::PreUpdate(const float& dt)
     {
-        while (!m_tasks_.empty())
+        for (int i = 0; i < TASK_MAX; ++i)
         {
-            m_tasks_.front()(dt);
-            m_tasks_.pop();
+            while (!m_tasks_[(eTaskType)i].empty())
+            {
+                auto task = m_tasks_[(eTaskType)i].front();
+                m_tasks_[(eTaskType)i].pop();
+                task.func(task.params, dt);
+            }
         }
     }
 

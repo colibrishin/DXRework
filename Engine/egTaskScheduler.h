@@ -1,6 +1,8 @@
 #pragma once
+#include <any>
 #include <functional>
 #include <queue>
+#include <numeric>
 #include "egManager.hpp"
 
 namespace Engine::Manager
@@ -8,6 +10,13 @@ namespace Engine::Manager
     class TaskScheduler : public Abstract::Singleton<TaskScheduler>
     {
     public:
+        struct TaskValue
+        {
+            eTaskType type;
+            TaskSchedulerFunc     func;
+            std::vector<std::any> params;
+        };
+
         TaskScheduler(SINGLETON_LOCK_TOKEN)
         : Singleton() {}
 
@@ -22,12 +31,17 @@ namespace Engine::Manager
         void PostUpdate(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
-        void AddTask(const TaskSchedulerFunc& task)
+        void AddTask(const eTaskType type, const std::vector<std::any>& params, const TaskSchedulerFunc& func)
         {
-            m_tasks_.push(task);
+            m_tasks_[type].push({
+                    type,
+                    func,
+                    params
+            });
         }
 
     private:
-        std::queue<TaskSchedulerFunc> m_tasks_;
+        std::map<eTaskType, std::queue<TaskValue>> m_tasks_;
+
     };
 } // namespace Engine::Manager

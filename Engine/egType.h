@@ -1,4 +1,5 @@
 #pragma once
+#include <any>
 #include <Windows.h>
 #include <functional>
 #include <map>
@@ -201,7 +202,7 @@ namespace Engine
     using LocalActorID = LONG_PTR;
     using EntityName = std::string;
     using TypeName = std::string;
-    using TaskSchedulerFunc = std::function<void(const float&)>;
+    using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, const float)>;
     using VertexCollection = std::vector<Graphics::VertexElement>;
     using IndexCollection = std::vector<UINT>;
     using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
@@ -234,6 +235,24 @@ namespace Engine
     extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
     extern Manager::Graphics::ShadowManager&       GetShadowManager();
     extern Manager::Graphics::Renderer&            GetRenderer();
+
+    // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
+    template <typename WrapT>
+    struct unwrap;
+    template <template <typename> class WrapT, typename T>
+    struct unwrap<WrapT<T>>
+    {
+        using type = T;
+    };
+
+    // Getting wrapper type (e.g., std::shared_ptr<T> -> std::shared_ptr<void>)
+    template <typename WrapT>
+    struct get_wrapper;
+    template <template <typename> class WrapT, typename T>
+    struct get_wrapper<WrapT<T>>
+    {
+        using type = WrapT<void>;
+    };
 
     // Static type checkers
     template <typename T>
