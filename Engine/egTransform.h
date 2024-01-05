@@ -28,6 +28,7 @@ namespace Engine::Components
         void __vectorcall SetAnimationPosition(const Vector3& position);
         void __vectorcall SetAnimationRotation(const Quaternion& rotation);
         void __vectorcall SetAnimationScale(const Vector3& scale);
+        void __vectorcall SetAnimationMatrix(const Matrix& matrix);
 
         Vector3    GetWorldPosition();
         Quaternion GetWorldRotation() const;
@@ -37,6 +38,9 @@ namespace Engine::Components
         Vector3    GetLocalPosition() const;
         Quaternion GetLocalRotation() const;
         Vector3    GetLocalScale() const;
+        Vector3    GetAnimationPosition() const;
+        Vector3    GetAnimationScale() const;
+        Quaternion GetAnimationRotation() const;
 
         Vector3 Forward() const;
         Vector3 Right() const;
@@ -79,9 +83,10 @@ namespace Engine::Components
         Quaternion m_rotation_;
         Vector3    m_scale_;
 
-        Vector3 m_animation_position_;
+        Vector3    m_animation_position_;
         Quaternion m_animation_rotation_;
-        Vector3 m_animation_scale_;
+        Vector3    m_animation_scale_;
+        Matrix     m_animation_matrix_;
 
         // Non-serialized
         bool                       m_b_lazy_;

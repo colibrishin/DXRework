@@ -13,7 +13,8 @@ SERIALIZER_ACCESS_IMPL(Engine::Components::Transform,
                           _ARTAG(m_scale_)
                           _ARTAG(m_animation_position_)
                           _ARTAG(m_animation_rotation_)
-                          _ARTAG(m_animation_scale_))
+                          _ARTAG(m_animation_scale_)
+                          _ARTAG(m_animation_matrix_))
 
 namespace Engine::Components
 {
@@ -103,20 +104,36 @@ namespace Engine::Components
 
     void __vectorcall Transform::SetAnimationPosition(const Vector3& position)
     {
+        // SRT * T^-1 = SR
+        m_animation_matrix_ = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_).Invert();
         m_animation_position_ = position;
+        m_animation_matrix_ = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_);
         m_b_lazy_             = true;
     }
 
     void __vectorcall Transform::SetAnimationRotation(const Quaternion& rotation)
     {
+        // rebuild animation matrix
         m_animation_rotation_ = rotation;
+        m_animation_matrix_   = Matrix::CreateScale(m_animation_scale_) *
+                                Matrix::CreateFromQuaternion(m_animation_rotation_) * 
+                                Matrix::CreateTranslation(m_animation_position_);
         m_b_lazy_             = true;
     }
 
     void __vectorcall Transform::SetAnimationScale(const Vector3& scale)
     {
+        // S^-1 * SRT = RT
+        m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_).Invert() * m_animation_matrix_;
         m_animation_scale_ = scale;
+        m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_) * m_animation_matrix_;
         m_b_lazy_          = true;
+    }
+
+    void Transform::SetAnimationMatrix(const Matrix& matrix)
+    {
+        m_animation_matrix_ = matrix;
+        m_b_lazy_ = true;
     }
 
     Vector3 Transform::GetWorldPosition()
@@ -161,17 +178,32 @@ namespace Engine::Components
 
     Vector3 Transform::GetLocalPosition() const
     {
-        return m_position_ + m_animation_position_;
+        return m_position_ + GetAnimationPosition();
     }
 
     Quaternion Transform::GetLocalRotation() const
     {
-        return Quaternion::Concatenate(m_rotation_, m_animation_rotation_);
+        return m_rotation_ * GetAnimationRotation();
     }
 
     Vector3 Transform::GetLocalScale() const
     {
-        return m_scale_ * m_animation_scale_;
+        return m_scale_ * GetAnimationScale();
+    }
+
+    Vector3 Transform::GetAnimationPosition() const
+    {
+        return m_animation_position_;
+    }
+
+    Vector3 Transform::GetAnimationScale() const
+    {
+        return m_animation_scale_;
+    }
+
+    Quaternion Transform::GetAnimationRotation() const
+    {
+        return m_animation_rotation_;
     }
 
     Vector3 Transform::GetWorldScale() const
@@ -274,9 +306,10 @@ namespace Engine::Components
 
     Matrix Transform::GetLocalMatrix() const
     {
-        return Matrix::CreateScale(GetLocalScale()) *
-               Matrix::CreateFromQuaternion(GetLocalRotation()) *
-               Matrix::CreateTranslation(GetLocalPosition());
+        return Matrix::CreateScale(m_scale_) *
+               Matrix::CreateFromQuaternion(m_rotation_) *
+               Matrix::CreateTranslation(m_position_) * 
+               m_animation_matrix_;
     }
 
     Vector3 Transform::GetWorldPreviousPosition() const
