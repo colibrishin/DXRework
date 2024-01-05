@@ -7,7 +7,7 @@ namespace Engine::Resources
     class Texture : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_TEX)
+        RESOURCE_T(RES_T_TEX)
 
         explicit Texture(std::filesystem::path path);
 

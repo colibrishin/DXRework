@@ -9,7 +9,7 @@ namespace Engine::Resources
     class BaseAnimation : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_BASE_ANIM)
+        RESOURCE_T(RES_T_BASE_ANIM)
 
         BaseAnimation(const BoneAnimationPrimitive& primitive);
 

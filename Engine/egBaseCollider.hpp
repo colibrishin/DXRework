@@ -12,7 +12,7 @@ namespace Engine::Components
     class Collider final : public Abstract::Component
     {
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_COLLIDER)
+        COMPONENT_T(COM_T_COLLIDER)
 
         Collider(const WeakObject& owner);
         ~Collider() override = default;

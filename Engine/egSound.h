@@ -13,7 +13,7 @@ namespace Engine::Resources
     class Sound : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SOUND)
+        RESOURCE_T(RES_T_SOUND)
         explicit Sound(const std::filesystem::path& path);
 
         ~Sound() override;

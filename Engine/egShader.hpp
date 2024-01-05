@@ -11,7 +11,7 @@ namespace Engine::Graphics
     class Shader : public Graphics::IShader
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHADER)
+        RESOURCE_T(RES_T_SHADER)
         using shaderType = T;
 
         Shader(const EntityName& name, const std::filesystem::path& path);

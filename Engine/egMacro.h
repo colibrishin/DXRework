@@ -34,14 +34,16 @@
   SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                      \
   SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)
 
+// Static base type, this should be added to every baseline object
+#define BASE_T(enum_val) static constexpr eBaseType btype = enum_val;
 // Static Component type, this should be added to every component
-#define INTERNAL_COMP_CHECK_CONSTEXPR(enum_val) static constexpr eComponentType ctype = enum_val;
+#define COMPONENT_T(enum_val) static constexpr eComponentType ctype = enum_val;
 // Static Resource type, this should be added to every resource
-#define INTERNAL_RES_CHECK_CONSTEXPR(enum_val) static constexpr eResourceType rtype = enum_val;
+#define RESOURCE_T(enum_val) static constexpr eResourceType rtype = enum_val;
 // Static engine default provided object type, this should be added to every object
-#define INTERNAL_OBJECT_CHECK_CONSTEXPR(enum_val) static constexpr eDefObjectType dotype = enum_val;
+#define OBJECT_T(enum_val) static constexpr eDefObjectType dotype = enum_val;
 // Static constant buffer type, this should be added to every constant buffer
-#define INTERNAL_CB_CHECK_CONSTEXPR(enum_val) static constexpr eCBType cbtype = enum_val;
+#define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;
 
 // Static client provided scene type, this should be added to every scene in the client
 #define CLIENT_SCENE_CHECK_CONSTEXPR(enum_val) static constexpr Engine::eSceneType stype = enum_val;

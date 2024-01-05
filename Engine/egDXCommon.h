@@ -12,7 +12,7 @@ namespace Engine::Graphics
         // Constant buffers
         struct PerspectiveCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_WVP)
+            CB_T(CB_TYPE_WVP)
 
             Matrix world;
             Matrix view;
@@ -26,14 +26,14 @@ namespace Engine::Graphics
 
         struct TransformCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_TRANSFORM)
+            CB_T(CB_TYPE_TRANSFORM)
 
             Matrix world;
         };
 
         struct LightCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_LIGHT)
+            CB_T(CB_TYPE_LIGHT)
 
             Matrix world[g_max_lights];
             Color  color[g_max_lights];
@@ -43,21 +43,21 @@ namespace Engine::Graphics
 
         struct ShadowVPCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_SHADOW)
+            CB_T(CB_TYPE_SHADOW)
 
             ShadowVP value;
         };
 
         struct ShadowVPChunkCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_SHADOW_CHUNK)
+            CB_T(CB_TYPE_SHADOW_CHUNK)
 
             ShadowVP lights[g_max_lights];
         };
 
         struct MaterialCB
         {
-            INTERNAL_CB_CHECK_CONSTEXPR(CB_TYPE_MATERIAL)
+            CB_T(CB_TYPE_MATERIAL)
 
             friend class Engine::Serializer;
             friend class boost::serialization::access;

@@ -10,7 +10,7 @@ namespace Engine::Abstract
     class Object : public Actor
     {
     public:
-        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_NONE)
+        OBJECT_T(DEF_OBJ_T_NONE)
 
         ~Object() override = default;
 
