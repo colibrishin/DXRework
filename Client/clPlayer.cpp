@@ -25,6 +25,7 @@ namespace Client::Object
         Object::Initialize();
 
         const auto model = Resources::Shape::Get("CharacterModel").lock();
+        SetName("Player");
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetShape(model);

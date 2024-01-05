@@ -25,6 +25,7 @@ namespace Client::Object
     void PlaneObject::Initialize()
     {
         const auto model = Resources::Shape::Get("CubeModel").lock();
+        SetName("Plane");
 
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetMaterial(Resources::Material::Get("ColorMaterial"));

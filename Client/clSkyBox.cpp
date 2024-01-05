@@ -20,6 +20,7 @@ namespace Client::Object
 
     inline void SkyBox::Initialize()
     {
+        SetName("SkyBox");
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
         mr->SetShape(Resources::Shape::Get("SkyboxModel"));
         mr->SetMaterial(Resources::Material::Get("SkyboxMaterial"));

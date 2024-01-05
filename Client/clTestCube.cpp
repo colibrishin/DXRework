@@ -23,6 +23,7 @@ namespace Client::Object
 
     inline void TestCube::Initialize()
     {
+        SetName("TestCube");
         const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
         mr->SetShape(Resources::Shape::Get("CubeModel"));
         mr->SetMaterial(Resources::Material::Get("NormalLight"));
