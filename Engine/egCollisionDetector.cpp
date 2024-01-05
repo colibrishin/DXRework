@@ -196,6 +196,7 @@ namespace Engine::Manager::Physics
         const auto rhs_cl = rhs->GetComponent<Components::Collider>().lock();
 
         if (!lhs_cl || !rhs_cl) return;
+        if (!lhs_cl->GetActive() || !rhs_cl->GetActive()) return;
 
         CheckCollisionImpl(lhs_cl, rhs_cl);
         return;
@@ -257,25 +258,17 @@ namespace Engine::Manager::Physics
             const auto lhs = rbs[i].lock();
             if (!lhs) continue;
             if (lhs->GetSharedPtr<Components::Rigidbody>()->IsFixed()) continue;
-            if (!lhs->GetActive())
-            {
-                CheckInactiveCollision(scene, lhs->GetOwner().lock());
-                continue; 
-            }
+            if (!lhs->GetActive() || !lhs->GetOwner().lock()->GetActive()) continue;
 
             // There could be the case where two objects are moving downwards and colliding with each other.
             // then, first object is considered as grounded and second object is not.
             for (int j = 0; j < rbs.size(); ++j)
             {
+                // No need to check ground status with same object.
                 if (i == j) continue;
-
                 const auto rhs = rbs[j].lock();
                 if (!rhs) continue;
-                if (!rhs->GetActive()) 
-                {
-                    CheckInactiveCollision(scene, rhs->GetOwner().lock());
-                    continue;
-                }
+                if (!rhs->GetActive() || !rhs->GetOwner().lock()->GetActive()) continue;
 
                 CheckLayerCollidable(lhs->GetOwner().lock()->GetLayer(), rhs->GetOwner().lock()->GetLayer());
 
@@ -580,7 +573,7 @@ namespace Engine::Manager::Physics
     {
         const auto lhs = lhsl[idx].lock();
         if (!lhs) return;
-        if (!lhs->GetActive())
+        if (!lhs->GetActive() || !lhs->GetComponent<Components::Collider>().lock()->GetActive())
         {
             CheckInactiveCollision(scene, lhs);
             return;
