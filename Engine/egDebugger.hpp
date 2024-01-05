@@ -22,7 +22,7 @@ namespace Engine::Manager
 
         void Initialize() override;
 
-        void Log(const std::wstring& str);
+        void Log(const std::string& str);
         void Draw(const Vector3& start, const Vector3& end, const XMVECTORF32& color);
         void Draw(Ray& ray, const XMVECTORF32& color);
         void Draw(const BoundingFrustum& frustum, const XMVECTORF32& color);
@@ -44,7 +44,7 @@ namespace Engine::Manager
     private:
         struct Message
         {
-            std::wstring log;
+            std::string log;
             float        elapsed_time;
         };
 

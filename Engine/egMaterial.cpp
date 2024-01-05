@@ -197,12 +197,12 @@ namespace Engine::Resources
     {
         if (!m_shaders_loaded_.contains(convert_shaderT_enum<VertexShader>::value_e()))
         {
-            GetDebugger().Log(L"Vertex shader not loaded for material");
+            GetDebugger().Log("Vertex shader not loaded for material");
             return false;
         }
         if (!m_shaders_loaded_.contains(convert_shaderT_enum<PixelShader>::value_e()))
         {
-            GetDebugger().Log(L"Pixel shader not loaded for material");
+            GetDebugger().Log("Pixel shader not loaded for material");
             return false;
         }
 

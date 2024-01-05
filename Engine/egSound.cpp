@@ -142,7 +142,7 @@ namespace Engine::Resources
             }
             else
             {
-                GetDebugger().Log(L"Invalid roll off mode given.");
+                GetDebugger().Log("Invalid roll off mode given.");
             }
         }
     }
