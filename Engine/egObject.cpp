@@ -23,7 +23,7 @@ namespace Engine::Abstract
 {
     template void Object::DispatchComponentEvent(const StrongCollider& other);
 
-    template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
+    template <typename T, typename Lock>
     void Object::DispatchComponentEvent(const boost::shared_ptr<T>& other)
     {
         if constexpr (std::is_base_of_v<Component, T>)

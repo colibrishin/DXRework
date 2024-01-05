@@ -9,7 +9,7 @@ namespace Engine::Components
     class Transform final : public Abstract::Component
     {
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_TRANSFORM)
+        COMPONENT_T(COM_T_TRANSFORM)
 
         Transform(const WeakObject& owner);
         ~Transform() override = default;

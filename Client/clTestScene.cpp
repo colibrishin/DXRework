@@ -7,6 +7,7 @@
 
 #include "clPlayer.h"
 #include "clRifile.h"
+#include "egApplication.h"
 #include "egCollisionDetector.h"
 #include "egTransform.h"
 
@@ -26,6 +27,11 @@ namespace Client::Scene
     inline void TestScene::Update(const float& dt)
     {
         Scene::Update(dt);
+
+        if (GetApplication().GetKeyState().Space)
+        {
+            RemoveGameObject(m_player_id_, Engine::LAYER_DEFAULT);
+        }
     }
 
     inline void TestScene::PreRender(const float& dt)
@@ -53,7 +59,6 @@ namespace Client::Scene
 
     inline void TestScene::Initialize_INTERNAL()
     {
-
         const auto cube = CreateGameObject<Object::TestCube>(Engine::LAYER_DEFAULT).lock();
         cube->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
              {2.f, 4.f, 0.f});
@@ -81,5 +86,7 @@ namespace Client::Scene
         Engine::GetCollisionDetector().SetCollisionLayer(
                                                          Engine::LAYER_DEFAULT,
                                                          Engine::LAYER_ENVIRONMENT);
+
+        m_player_id_ = player->GetID();
     }
 } // namespace Client::Scene

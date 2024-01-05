@@ -7,7 +7,7 @@ namespace Engine::Objects
     class Observer : public Abstract::Object
     {
     public:
-        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_OBSERVER)
+        OBJECT_T(DEF_OBJ_T_OBSERVER)
 
         Observer();
         void Initialize() override;

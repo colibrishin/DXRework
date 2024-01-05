@@ -8,7 +8,7 @@ namespace Engine::Resources
     class Bone : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_BONE)
+        RESOURCE_T(RES_T_BONE)
 
         Bone(const BonePrimitiveMap& bone_map);
         Bone(Bone&& other) noexcept = default;

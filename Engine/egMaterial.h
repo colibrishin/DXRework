@@ -6,7 +6,7 @@ namespace Engine::Resources
     class Material final : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MTR);
+        RESOURCE_T(RES_T_MTR);
 
         Material(const std::filesystem::path& path);
         void PreUpdate(const float& dt) override;

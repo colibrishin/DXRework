@@ -6,7 +6,7 @@ namespace Engine::Components
     class ModelRenderer final : public Abstract::Component
 	{
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_MODEL_RENDERER)
+        COMPONENT_T(COM_T_MODEL_RENDERER)
 
         ModelRenderer(const WeakObject& owner);
         void PreUpdate(const float& dt) override;

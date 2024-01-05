@@ -9,7 +9,7 @@ namespace Engine::Abstract
     class StateController : public IStateController
     {
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_STATE)
+        COMPONENT_T(COM_T_STATE)
 
         StateEnum GetState() const
         {

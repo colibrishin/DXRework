@@ -10,7 +10,7 @@ namespace Engine::Resources
 	class Shape : public Abstract::Resource
 	{
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_SHAPE)
+        RESOURCE_T(RES_T_SHAPE)
 
         Shape(const std::filesystem::path& path);
 

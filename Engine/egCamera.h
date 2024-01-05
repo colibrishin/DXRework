@@ -7,7 +7,7 @@ namespace Engine::Objects
     class Camera final : public Abstract::Object
     {
     public:
-        INTERNAL_OBJECT_CHECK_CONSTEXPR(DEF_OBJ_T_CAMERA)
+        OBJECT_T(DEF_OBJ_T_CAMERA)
 
         Camera()
         : Object(DEF_OBJ_T_CAMERA),

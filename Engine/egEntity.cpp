@@ -15,6 +15,11 @@ void Engine::Abstract::Entity::SetName(const EntityName& name)
     m_name_ = name;
 }
 
+void Engine::Abstract::Entity::SetGarbage(bool garbage)
+{
+    m_b_garbage_ = garbage;
+}
+
 Engine::GlobalEntityID Engine::Abstract::Entity::GetID() const
 {
     return reinterpret_cast<GlobalEntityID>(this);
@@ -28,6 +33,11 @@ Engine::EntityName Engine::Abstract::Entity::GetName() const
 Engine::TypeName Engine::Abstract::Entity::GetTypeName() const
 {
     return typeid(*this).name();
+}
+
+bool Engine::Abstract::Entity::IsGarbage() const
+{
+    return m_b_garbage_;
 }
 
 void Engine::Abstract::Entity::Initialize()

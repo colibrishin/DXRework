@@ -7,7 +7,7 @@ namespace Engine::Components
     class Rigidbody final : public Abstract::Component
     {
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_RIDIGBODY)
+        COMPONENT_T(COM_T_RIDIGBODY)
 
         explicit Rigidbody(const WeakObject& object);
 

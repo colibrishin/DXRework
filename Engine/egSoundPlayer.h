@@ -7,7 +7,7 @@ namespace Engine::Components
     class SoundPlayer final : public Abstract::Component
     {
     public:
-        INTERNAL_COMP_CHECK_CONSTEXPR(COMP_T_SOUND_PLAYER)
+        COMPONENT_T(COMP_T_SOUND_PLAYER)
 
         SoundPlayer(const WeakObject& owner);
         void PreUpdate(const float& dt) override;

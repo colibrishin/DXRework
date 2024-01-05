@@ -17,10 +17,12 @@ namespace Engine::Abstract
         }
 
         void SetName(const EntityName& name);
+        void SetGarbage(bool garbage);
 
-        GlobalEntityID   GetID() const;
-        EntityName GetName() const;
-        TypeName   GetTypeName() const;
+        GlobalEntityID GetID() const;
+        EntityName     GetName() const;
+        TypeName       GetTypeName() const;
+        bool           IsGarbage() const;
 
         template <typename T>
         __forceinline boost::weak_ptr<T> GetWeakPtr()
@@ -45,13 +47,15 @@ namespace Engine::Abstract
 
     protected:
         Entity()
-        : m_b_initialized_(false) {}
+        : m_b_initialized_(false),
+          m_b_garbage_(false) {}
 
     private:
         SERIALIZER_ACCESS
 
         EntityName m_name_;
         bool       m_b_initialized_;
+        bool       m_b_garbage_;
     };
 } // namespace Engine::Abstract
 

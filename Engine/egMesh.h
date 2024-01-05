@@ -14,7 +14,7 @@ namespace Engine::Resources
     class Mesh : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_MESH)
+        RESOURCE_T(RES_T_MESH)
 
         Mesh(const VertexCollection& shape, const IndexCollection& indices);
         ~Mesh() override = default;

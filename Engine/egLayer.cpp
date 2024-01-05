@@ -164,11 +164,20 @@ namespace Engine
 
     void Layer::RemoveGameObject(GlobalEntityID id)
     {
-        ConcurrentWeakObjGlobalMap::const_accessor obj;
+        WeakObject obj;
 
-        if (m_weak_objects_cache_.find(obj, id))
         {
-            m_objects_.erase(obj->second.lock());
+            ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+            if (m_weak_objects_cache_.find(acc, id))
+            {
+                obj = acc->second;
+            }
+        }
+
+        if (const auto locked = obj.lock())
+        {
+            m_objects_.erase(locked);
             m_weak_objects_cache_.erase(id);
         }
     }

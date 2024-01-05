@@ -4,6 +4,8 @@
 #include <boost/serialization/export.hpp>
 #include "egRenderable.h"
 #include "egLayer.h"
+#include "egTaskScheduler.h"
+
 #include "../octree/octree.h"
 
 namespace Engine
@@ -35,113 +37,41 @@ namespace Engine
             auto obj_t = boost::shared_ptr<T>(new T);
             auto obj = obj_t->template GetSharedPtr<Abstract::Object>();
 
-            // add object to scene
-            m_layers[layer]->AddGameObject(obj);
-            m_cached_objects_.emplace(obj->GetID(), obj);
-
             // Set internal information as this scene and layer
             obj->template GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
             obj->template GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
             AssignLocalIDToObject(obj);
 
-            if (layer == LAYER_LIGHT && !std::is_base_of_v<Objects::Light, T>)
-            {
-                static_assert("Only light object can be added to light layer");
-            }
-            else if (layer == LAYER_CAMERA && !std::is_base_of_v<Objects::Camera, T>)
-            {
-                static_assert("Only camera object can be added to camera layer");
-            }
-
-            if constexpr (std::is_base_of_v<Objects::Light, T>)
-            {
-                RegisterLightToManager(obj_t);
-            }
-
-            // Initialize object lately, for let object initialize itself.
             obj->Initialize();
 
-            if (const auto tr = obj->template GetComponent<Components::Transform>().lock())
+            // finalize the object registration at the next frame
+            GetTaskScheduler().AddTask(
+                TASK_ADD_OBJ,
+                {obj, layer}, // keep the object alive, scene does not own the object yet.
+                [this](const std::vector<std::any>& params, const float dt)
             {
-                UpdatePosition(obj);
-            }
+                    const auto obj = std::any_cast<StrongObject>(params[0]);
+                    const auto layer = std::any_cast<eLayerType>(params[1]);
 
+                    // function to bypass the object header inclusion...
+                    AddObjectFinalize(layer, obj);
+            });
+            
+
+            // yield the currently created object
             return obj_t;
         }
 
         void     RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
-        ConcurrentWeakObjVec GetGameObjects(eLayerType layer);
+        WeakObject FindGameObject(GlobalEntityID id) const;
+        WeakObject FindGameObjectByLocalID(LocalActorID id) const;
 
-        WeakObject FindGameObject(GlobalEntityID id) const
-        {
-            ConcurrentWeakObjGlobalMap::const_accessor acc;
+        eSceneType GetType() const;
+        ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
+        WeakCamera GetMainCamera() const;
 
-            if (m_cached_objects_.find(acc, id))
-            {
-                return acc->second;
-            }
-
-            return {};
-        }
-
-        WeakObject FindGameObjectByLocalID(LocalActorID id) const
-        {
-            ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
-
-            if (m_assigned_actor_ids_.find(actor_acc, id))
-            {
-                ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-                if (m_cached_objects_.find(acc, actor_acc->second))
-                {
-                    return acc->second;
-                }
-            }
-
-            return {};
-        }
-
-        WeakCamera GetMainCamera() const
-        {
-            return m_mainCamera_;
-        }
-
-        auto operator[] (size_t idx) const
-        {
-            return m_layers[idx];
-        }
-
-        auto begin() noexcept
-        {
-            return m_layers.begin();
-        }
-
-        auto end() noexcept
-        {
-            return m_layers.end();
-        }
-
-        auto begin() const noexcept
-        {
-            return m_layers.begin();
-        }
-
-        auto end() const noexcept
-        {
-            return m_layers.end();
-        }
-
-        auto cbegin() const noexcept
-        {
-            return m_layers.cbegin();
-        }
-
-        auto cend() const noexcept
-        {
-            return m_layers.cend();
-        }
-
+        // Add cache component from the object. Type is deduced in compile time.
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void AddCacheComponent(const boost::shared_ptr<T>& component)
         {
@@ -162,6 +92,9 @@ namespace Engine
                 }
             }
         }
+
+        // Add cache component from the object. Type is deduced in runtime.
+        void AddCacheComponent(const StrongComponent& component);
 
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void RemoveCacheComponent(const boost::shared_ptr<T>& component)
@@ -198,8 +131,6 @@ namespace Engine
             return {};
         }
 
-        eSceneType GetType() const;
-
         void UpdatePosition(const WeakObject& obj);
         void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
         void GetNearbyObjects(
@@ -209,6 +140,41 @@ namespace Engine
             const Vector3&                                        pos, const Vector3& dir,
             std::set<WeakObject, WeakComparer<Abstract::Object>>& out,
             int                                                   exhaust = 100);
+
+        auto operator[] (size_t idx) const
+        {
+            return m_layers[idx];
+        }
+
+        auto begin() noexcept
+        {
+            return m_layers.begin();
+        }
+
+        auto end() noexcept
+        {
+            return m_layers.end();
+        }
+
+        auto begin() const noexcept
+        {
+            return m_layers.begin();
+        }
+
+        auto end() const noexcept
+        {
+            return m_layers.end();
+        }
+
+        auto cbegin() const noexcept
+        {
+            return m_layers.cbegin();
+        }
+
+        auto cend() const noexcept
+        {
+            return m_layers.cend();
+        }
 
     protected:
         Scene();
@@ -223,8 +189,15 @@ namespace Engine
         void RegisterLightToManager(const StrongLight & obj);
         void UnregisterLightFromManager(const StrongLight & obj);
 
-        void RemoveObjectFromCache(const WeakObject& obj);
         void RemoveObjectFromOctree(const WeakObject& obj);
+
+        // Functions for the next frame.
+        // Add the object from the scene finally. this function should be called at the next frame.
+        void AddObjectFinalize(const eLayerType layer, const StrongObject& obj);
+        // Remove the object from the scene finally. this function should be called at the next frame.
+        void RemoveObjectFinalize(const GlobalEntityID id, eLayerType layer);
+        // Initialize the scene finally. this function should be called at the next frame.
+        void InitializeFinalize();
 
         virtual void AddCustomObject();
 

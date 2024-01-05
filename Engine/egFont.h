@@ -8,7 +8,7 @@ namespace Engine::Resources
     class Font : public Abstract::Resource
     {
     public:
-        INTERNAL_RES_CHECK_CONSTEXPR(RES_T_FONT)
+        RESOURCE_T(RES_T_FONT)
 
         Font(const std::filesystem::path& path);
         ~Font() override = default;

@@ -73,7 +73,6 @@ namespace Engine::Resources
     void Texture::Unload_INTERNAL()
     {
         m_texture_view_->Release();
-        m_texture_view_.Reset();
         m_texture_desc_ = {};
     }
 
