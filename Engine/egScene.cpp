@@ -19,13 +19,15 @@ namespace Engine
     {
         // Note: accessor should be destroyed in used context, if not, it will cause deadlock.
         ConcurrentWeakComRootMap::accessor accessor;
-        bool                               check  = m_cached_components_.find(accessor, COM_T_STATE);
-        const auto&                        states = accessor->second;
-
-        for (const auto& state : states | std::views::values)
+        if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
         {
-            const auto locked = state.lock();
-            locked->SetActive(false);
+            const auto& states = accessor->second;
+
+            for (const auto& state : states | std::views::values)
+            {
+                const auto locked = state.lock();
+                locked->SetActive(false);
+            }
         }
     }
 
