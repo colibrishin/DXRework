@@ -120,7 +120,7 @@ namespace Engine::Abstract
             }
         }
 
-        template <typename T>
+        template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
         void DispatchComponentEvent(const boost::shared_ptr<T>& other);
 
         void SetActive(bool active);
