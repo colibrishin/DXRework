@@ -71,77 +71,14 @@ namespace Engine
 
         void     RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
-        ConcurrentWeakObjVec GetGameObjects(eLayerType layer);
+        WeakObject FindGameObject(GlobalEntityID id) const;
+        WeakObject FindGameObjectByLocalID(LocalActorID id) const;
 
-        WeakObject FindGameObject(GlobalEntityID id) const
-        {
-            ConcurrentWeakObjGlobalMap::const_accessor acc;
+        eSceneType GetType() const;
+        ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
+        WeakCamera GetMainCamera() const;
 
-            if (m_cached_objects_.find(acc, id))
-            {
-                return acc->second;
-            }
-
-            return {};
-        }
-
-        WeakObject FindGameObjectByLocalID(LocalActorID id) const
-        {
-            ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
-
-            if (m_assigned_actor_ids_.find(actor_acc, id))
-            {
-                ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-                if (m_cached_objects_.find(acc, actor_acc->second))
-                {
-                    return acc->second;
-                }
-            }
-
-            return {};
-        }
-
-        WeakCamera GetMainCamera() const
-        {
-            return m_mainCamera_;
-        }
-
-        auto operator[] (size_t idx) const
-        {
-            return m_layers[idx];
-        }
-
-        auto begin() noexcept
-        {
-            return m_layers.begin();
-        }
-
-        auto end() noexcept
-        {
-            return m_layers.end();
-        }
-
-        auto begin() const noexcept
-        {
-            return m_layers.begin();
-        }
-
-        auto end() const noexcept
-        {
-            return m_layers.end();
-        }
-
-        auto cbegin() const noexcept
-        {
-            return m_layers.cbegin();
-        }
-
-        auto cend() const noexcept
-        {
-            return m_layers.cend();
-        }
-
+        // Add cache component from the object. Type is deduced in compile time.
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void AddCacheComponent(const boost::shared_ptr<T>& component)
         {
@@ -198,8 +135,6 @@ namespace Engine
             return {};
         }
 
-        eSceneType GetType() const;
-
         void UpdatePosition(const WeakObject& obj);
         void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
         void GetNearbyObjects(
@@ -209,6 +144,41 @@ namespace Engine
             const Vector3&                                        pos, const Vector3& dir,
             std::set<WeakObject, WeakComparer<Abstract::Object>>& out,
             int                                                   exhaust = 100);
+
+        auto operator[] (size_t idx) const
+        {
+            return m_layers[idx];
+        }
+
+        auto begin() noexcept
+        {
+            return m_layers.begin();
+        }
+
+        auto end() noexcept
+        {
+            return m_layers.end();
+        }
+
+        auto begin() const noexcept
+        {
+            return m_layers.begin();
+        }
+
+        auto end() const noexcept
+        {
+            return m_layers.end();
+        }
+
+        auto cbegin() const noexcept
+        {
+            return m_layers.cbegin();
+        }
+
+        auto cend() const noexcept
+        {
+            return m_layers.cend();
+        }
 
     protected:
         Scene();
