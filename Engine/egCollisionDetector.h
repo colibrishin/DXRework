@@ -41,12 +41,28 @@ namespace Engine::Manager::Physics
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
-        void MarkAsChecked(const StrongObject& lhs_owner, const StrongObject& rhs_owner);
+        void CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs);
+        bool CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs);
 
-        void CheckCollision(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
-        void CheckCollisionChunk(StrongBaseCollider & lhs, std::vector<StrongBaseCollider> & rhs);
-        void CheckGrounded(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
-        bool CheckRaycasting(const StrongBaseCollider & lhs, const StrongBaseCollider & rhs);
+        bool CheckCollision(const ConcurrentWeakObjVec& rhsl, const StrongObject& lhs, int idx);
+        void CheckCollisionImpl(const StrongCollider& lhs, const StrongCollider& rhs);
+
+        __forceinline void ContinuousColliding(
+            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+            const StrongObject&   rhs_owner) const;
+        __forceinline void InFrameColliding(
+            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+            const StrongObject&   rhs_owner);
+        __forceinline void ExitColliding(
+            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+            const StrongObject&   rhs_owner);
+
+        __forceinline void IncreaseCollisionCounter(
+            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+            const StrongObject&   rhs_owner);
+        __forceinline void RemoveCollisionCounter(
+            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
+            const StrongObject&   rhs_owner);
 
     private:
         std::mutex                                    m_layer_mask_mutex_;

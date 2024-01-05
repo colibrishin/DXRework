@@ -221,9 +221,6 @@
     <Filter Include="Resource Group\Shape">
       <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Component\OffsetCollider">
-      <UniqueIdentifier>{e8cc27cf-91c7-4f6f-b639-47f913bc614e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -450,9 +447,6 @@
     <ClInclude Include="egModelRenderer.h">
       <Filter>Component\ModelRenderer</Filter>
     </ClInclude>
-    <ClInclude Include="egOffsetCollider.hpp">
-      <Filter>Component\OffsetCollider</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -636,9 +630,6 @@
     </ClCompile>
     <ClCompile Include="egMaterial.cpp">
       <Filter>Resource Group\Material</Filter>
-    </ClCompile>
-    <ClCompile Include="egOffsetCollider.cpp">
-      <Filter>Component\OffsetCollider</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

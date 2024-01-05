@@ -31,8 +31,8 @@ namespace Engine
         template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
         boost::weak_ptr<T> CreateGameObject(eLayerType layer)
         {
-            // Create object
-            auto obj_t = boost::make_shared<T>();
+            // Create object, dynamic allocation from scene due to the access limitation.
+            auto obj_t = boost::shared_ptr<T>(new T);
             auto obj = obj_t->template GetSharedPtr<Abstract::Object>();
 
             // add object to scene
@@ -60,13 +60,6 @@ namespace Engine
 
             // Initialize object lately, for let object initialize itself.
             obj->Initialize();
-            for (const auto& comp : obj->GetAllComponents())
-            {
-                ConcurrentWeakComTypeMap::accessor acc;
-
-                m_cached_components_.insert(acc, comp.lock()->GetComponentType());
-                acc->second.emplace(comp.lock()->GetID(), comp);
-            }
 
             if (const auto tr = obj->template GetComponent<Components::Transform>().lock())
             {
@@ -114,6 +107,11 @@ namespace Engine
             return m_mainCamera_;
         }
 
+        auto operator[] (size_t idx) const
+        {
+            return m_layers[idx];
+        }
+
         auto begin() noexcept
         {
             return m_layers.begin();
@@ -151,7 +149,7 @@ namespace Engine
 
             if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                ConcurrentWeakComTypeMap::accessor comp_acc;
+                ConcurrentWeakComRootMap::accessor comp_acc;
 
                 if (m_cached_components_.find(comp_acc, which_component<T>::value))
                 {
@@ -172,7 +170,7 @@ namespace Engine
 
             if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
             {
-                ConcurrentWeakComTypeMap::accessor comp_acc;
+                ConcurrentWeakComRootMap::accessor comp_acc;
                 if (m_cached_components_.find(comp_acc, which_component<T>::value))
                 {
                     comp_acc->second.erase(component->GetID());
@@ -183,7 +181,7 @@ namespace Engine
         template <typename T>
         ConcurrentWeakComVec GetCachedComponents()
         {
-            ConcurrentWeakComTypeMap::const_accessor acc;
+            ConcurrentWeakComRootMap::const_accessor acc;
 
             if (m_cached_components_.find(acc, which_component<T>::value))
             {
@@ -230,9 +228,9 @@ namespace Engine
 
         virtual void AddCustomObject();
 
-        LocalActorID                           m_main_camera_local_id_;
-        std::map<eLayerType, StrongLayer> m_layers;
-        eSceneType                        m_type_;
+        LocalActorID             m_main_camera_local_id_;
+        std::vector<StrongLayer> m_layers;
+        eSceneType               m_type_;
 
         // Non-serialized
         WeakObject m_observer_;
@@ -240,7 +238,7 @@ namespace Engine
 
         ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
         ConcurrentWeakObjGlobalMap m_cached_objects_;
-        ConcurrentWeakComTypeMap m_cached_components_;
+        ConcurrentWeakComRootMap m_cached_components_;
         Octree<std::set<WeakObject, WeakComparer<Abstract::Object>>>
         m_object_position_tree_;
     };

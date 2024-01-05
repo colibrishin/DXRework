@@ -11,50 +11,45 @@
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Object,
-                       _ARTAG(_BSTSUPER(Actor)) _ARTAG(m_components_))
+                       _ARTAG(_BSTSUPER(Actor)) 
+                       _ARTAG(m_parent_id_)
+                       _ARTAG(m_children_)
+                       _ARTAG(m_type_)
+                       _ARTAG(m_active_)
+                       _ARTAG(m_culled_)
+                       _ARTAG(m_components_))
 
 namespace Engine::Abstract
 {
-    template void Object::DispatchComponentEvent(StrongBaseCollider& lhs, StrongBaseCollider& rhs);
+    template void Object::DispatchComponentEvent(const StrongCollider& other);
 
     template <typename T>
-    void Object::DispatchComponentEvent(boost::shared_ptr<T>& lhs, boost::shared_ptr<T>& rhs)
+    void Object::DispatchComponentEvent(const boost::shared_ptr<T>& other)
     {
         if constexpr (std::is_base_of_v<Component, T>)
         {
-            if constexpr (std::is_same_v<Engine::Components::BaseCollider, T>)
+            if constexpr (std::is_same_v<Engine::Components::Collider, T>)
             {
-                const auto lhs_owner = lhs->GetOwner().lock();
-                const auto rhs_owner = rhs->GetOwner().lock();
+                const auto rhs_owner = other->GetOwner().lock();
 
                 const auto speculation_check = GetCollisionDetector().IsSpeculated(
-                 lhs_owner->GetID(), rhs_owner->GetID());
-
-                if (speculation_check)
-                {
-                    lhs->AddSpeculationObject(rhs_owner->GetID());
-                }
-
+                 GetID(), rhs_owner->GetID());
                 const auto collision_check = GetCollisionDetector().IsCollided(
-                                                                               lhs_owner->GetID(),
-                                                                               rhs_owner->GetID());
-
+                 GetID(), rhs_owner->GetID());
                 const auto collision_frame = GetCollisionDetector().IsCollidedInFrame(
-                 lhs_owner->GetID(), rhs_owner->GetID());
+                 GetID(), rhs_owner->GetID());
 
-                if (collision_frame)
+                if (collision_frame || speculation_check)
                 {
-                    lhs_owner->OnCollisionEnter(rhs);
-                    lhs->AddCollidedObject(rhs_owner->GetID());
+                    OnCollisionEnter(other);
                 }
                 else if (collision_check)
                 {
-                    lhs_owner->OnCollisionContinue(rhs);
+                    OnCollisionContinue(other);
                 }
                 else if (!collision_check && !collision_frame)
                 {
-                    lhs_owner->OnCollisionExit(rhs);
-                    lhs->RemoveCollidedObject(rhs_owner->GetID());
+                    OnCollisionExit(other);
                 }
             }
         }
@@ -97,10 +92,8 @@ namespace Engine::Abstract
 
     WeakObject Object::GetParent() const
     {
-        INVALID_ID_CHECK_WEAK_RETURN(m_parent_)
-
-        const auto scene = GetSceneManager().GetActiveScene().lock();
-        return scene->FindGameObjectByLocalID(m_parent_);
+        INVALID_ID_CHECK_WEAK_RETURN(m_parent_id_)
+        return m_parent_;
     }
 
     WeakObject Object::GetChild(const LocalActorID id) const
@@ -130,13 +123,14 @@ namespace Engine::Abstract
         return out;
     }
 
-    void Object::AddChild(const WeakObject& child)
+    void Object::AddChild(const WeakObject& p_child)
     {
-        if (const auto locked = child.lock())
+        if (const auto child = p_child.lock())
         {
-            m_children_.push_back(locked->GetLocalID());
-            m_children_cache_.insert({ locked->GetLocalID(), child });
-            locked->m_parent_ = GetLocalID();
+            m_children_.push_back(child->GetLocalID());
+            m_children_cache_.insert({ child->GetLocalID(), child });
+            child->m_parent_id_ = GetLocalID();
+            child->m_parent_ = GetSharedPtr<Object>();
         }
     }
 
@@ -149,7 +143,8 @@ namespace Engine::Abstract
 
         if (m_children_cache_.contains(id))
         {
-            m_children_cache_.at(id).lock()->m_parent_ = g_invalid_id;
+            m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
+            m_children_cache_.at(id).lock()->m_parent_ = {};
             m_children_cache_.erase(id);
             m_children_.erase(std::ranges::find(m_children_, id));
             
@@ -159,25 +154,25 @@ namespace Engine::Abstract
         return false;
     }
 
-    void Object::OnCollisionEnter(const StrongBaseCollider& other)
+    void Object::OnCollisionEnter(const StrongCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionContinue(const StrongBaseCollider& other)
+    void Object::OnCollisionContinue(const StrongCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
     }
 
-    void Object::OnCollisionExit(const StrongBaseCollider& other)
+    void Object::OnCollisionExit(const StrongCollider& other)
     {
-        if (!GetComponent<Engine::Components::BaseCollider>().lock())
+        if (!GetComponent<Engine::Components::Collider>().lock())
         {
             throw std::exception("Object has no collider");
         }
@@ -222,17 +217,14 @@ namespace Engine::Abstract
 
     void Object::FixedUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->FixedUpdate(dt);
+                continue;
             }
+
+            component->FixedUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -251,17 +243,14 @@ namespace Engine::Abstract
 
     void Object::PostUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PostUpdate(dt);
+                continue;
             }
+
+            component->PostUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -282,15 +271,12 @@ namespace Engine::Abstract
     {
         Actor::OnDeserialized();
 
-        for (const auto& val : m_components_ | std::views::values)
+        for (const auto& comp : m_components_ | std::views::values)
         {
-            for (const auto& comps : val)
-            {
-                comps->OnDeserialized();
-                comps->SetOwner(GetSharedPtr<Object>());
-                m_assigned_component_ids_.insert(comps->GetLocalID());
-                m_priority_sorted_.insert(comps);
-            }
+            comp->OnDeserialized();
+            comp->SetOwner(GetSharedPtr<Object>());
+            m_assigned_component_ids_.insert(comp->GetLocalID());
+            m_cached_component_.insert(comp);
         }
     }
 
@@ -311,16 +297,13 @@ namespace Engine::Abstract
 
             if (ImGui::TreeNode("Components"))
             {
-                for (const auto& pointer : m_components_ | std::views::values)
+                for (const auto& comp : m_components_ | std::views::values)
                 {
-                    for (const auto& comp : pointer)
+                    if (ImGui::TreeNode(comp->GetTypeName().c_str()))
                     {
-                        if (ImGui::TreeNode(comp->GetTypeName().c_str()))
-                        {
-                            comp->OnImGui();
-                            ImGui::TreePop();
-                            ImGui::Spacing();
-                        }
+                        comp->OnImGui();
+                        ImGui::TreePop();
+                        ImGui::Spacing();
                     }
                 }
 
@@ -333,24 +316,21 @@ namespace Engine::Abstract
         }
     }
 
-    const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents() const
+    const std::set<WeakComponent, ComponentPriorityComparer>& Object::GetAllComponents()
     {
-        return m_priority_sorted_;
+        return m_cached_component_;
     }
 
     void Object::PreUpdate(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->PreUpdate(dt);
+                continue;
             }
+
+            component->PreUpdate(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)
@@ -385,17 +365,14 @@ namespace Engine::Abstract
 
     void Object::Update(const float& dt)
     {
-        for (const auto& component : m_priority_sorted_)
+        for (const auto& component : m_components_ | std::views::values)
         {
-            if (const auto locked = component.lock())
+            if (!component->GetActive())
             {
-                if (!locked->GetActive())
-                {
-                    continue;
-                }
-
-                locked->Update(dt);
+                continue;
             }
+
+            component->Update(dt);
         }
 
         for (const auto& child : m_children_cache_ | std::views::values)

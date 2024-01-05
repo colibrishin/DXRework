@@ -188,13 +188,13 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::BuildShadowMap(Scene& scene, const float dt) const
     {
-        for (const auto& [type, layer] : scene)
+        for (int i = 0; i < LAYER_MAX; ++i)
         {
-            if (type == LAYER_LIGHT || type == LAYER_UI || type == LAYER_CAMERA ||
-                type == LAYER_SKYBOX || type == LAYER_ENVIRONMENT)
+            if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA ||
+                i == LAYER_SKYBOX || i == LAYER_ENVIRONMENT)
                 continue;
 
-            for (const auto& object : *layer)
+            for (const auto& object : *scene[i])
             {
                 const auto tr = object->GetComponent<Components::Transform>().lock();
                 const auto mr = object->GetComponent<Components::ModelRenderer>().lock();

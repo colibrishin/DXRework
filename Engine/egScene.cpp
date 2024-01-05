@@ -18,7 +18,7 @@ namespace Engine
     void Scene::DisableControllers()
     {
         // Note: accessor should be destroyed in used context, if not, it will cause deadlock.
-        ConcurrentWeakComTypeMap::accessor accessor;
+        ConcurrentWeakComRootMap::accessor accessor;
         bool                               check  = m_cached_components_.find(accessor, COM_T_STATE);
         const auto&                        states = accessor->second;
 
@@ -33,7 +33,7 @@ namespace Engine
     {
         for (int i = 0; i < LAYER_MAX; ++i)
         {
-            m_layers.emplace(static_cast<eLayerType>(i), boost::make_shared<Layer>(static_cast<eLayerType>(i)));
+            m_layers.emplace_back(boost::make_shared<Layer>(static_cast<eLayerType>(i)));
         }
 
         const auto camera = CreateGameObject<Objects::Camera>(LAYER_CAMERA).lock();
@@ -571,15 +571,14 @@ namespace Engine
 
                 for (const auto& comp : obj.lock()->GetAllComponents())
                 {
-                    if (ConcurrentWeakComTypeMap::accessor acc; 
+                    if (ConcurrentWeakComRootMap::accessor acc; 
                         m_cached_components_.find(acc, comp.lock()->GetComponentType()))
                     {
                         acc->second.emplace(comp.lock()->GetID(), comp);
                     }
                     else
                     {
-                        m_cached_components_.emplace(comp.lock()->GetComponentType(), ConcurrentWeakComMap{});
-                        m_cached_components_.find(acc, comp.lock()->GetComponentType());
+                        m_cached_components_.insert(acc, comp.lock()->GetComponentType());
                         acc->second.emplace(comp.lock()->GetID(), comp);
                     }
                 }

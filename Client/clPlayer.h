@@ -18,7 +18,7 @@ namespace Client::Object
 
     private:
         SERIALIZER_ACCESS
-        std::map<UINT, StrongBaseCollider> m_bone_colliders_;
+        std::map<UINT, LocalComponentID> m_child_bones_;
 
     };
 }

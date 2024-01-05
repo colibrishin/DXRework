@@ -9,13 +9,13 @@ namespace Engine::Components
 {
     using namespace DirectX;
 
-    class BaseCollider : public Abstract::Component
+    class Collider final : public Abstract::Component
     {
     public:
         INTERNAL_COMP_CHECK_CONSTEXPR(COM_T_COLLIDER)
 
-        BaseCollider(const WeakObject& owner);
-        ~BaseCollider() override = default;
+        Collider(const WeakObject& owner);
+        ~Collider() override = default;
 
         void FromMatrix(Matrix& mat);
 
@@ -25,10 +25,11 @@ namespace Engine::Components
         void SetBoundingBox(const BoundingOrientedBox & bounding);
         void SetModel(const WeakModel& model);
 
-        static bool Intersects(const StrongBaseCollider& lhs, const StrongBaseCollider& rhs, const Vector3& offset);
-        bool        Intersects(const StrongBaseCollider& other) const;
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
+        static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon = g_epsilon);
+        bool        Intersects(const StrongCollider& other) const;
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool        Contains(const StrongBaseCollider & other) const;
+        bool        Contains(const StrongCollider & other) const;
 
         void AddCollidedObject(GlobalEntityID id);
         void AddSpeculationObject(GlobalEntityID id);
@@ -42,7 +43,7 @@ namespace Engine::Components
         UINT                     GetCollisionCount(GlobalEntityID id);
 
         void GetPenetration(
-            const BaseCollider& other, Vector3& normal,
+            const Collider& other, Vector3& normal,
             float&          depth) const;
 
         float      GetMass() const;
@@ -101,7 +102,7 @@ namespace Engine::Components
         }
 
     protected:
-        BaseCollider();
+        Collider();
 
     private:
         SERIALIZER_ACCESS
@@ -114,11 +115,15 @@ namespace Engine::Components
         {
             if (m_type_ == BOUNDING_TYPE_BOX)
             {
-                return GetBounding<BoundingOrientedBox>().Intersects(other);
+                BoundingOrientedBox box = GetBounding<BoundingOrientedBox>();
+                box.Extents = box.Extents + (Vector3::One * g_epsilon);
+                return box.Intersects(other);
             }
             if (m_type_ == BOUNDING_TYPE_SPHERE)
             {
-                return GetBounding<BoundingSphere>().Intersects(other);
+                BoundingSphere sphere = GetBounding<BoundingSphere>();
+                sphere.Radius += g_epsilon;
+                return sphere.Intersects(other);
             }
 
             return false;
@@ -170,4 +175,4 @@ namespace Engine::Components
     };
 } // namespace Engine::Component
 
-BOOST_CLASS_EXPORT_KEY(Engine::Components::BaseCollider)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)

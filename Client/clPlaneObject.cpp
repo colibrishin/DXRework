@@ -35,8 +35,8 @@ namespace Client::Object
         tr->SetLocalPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetLocalScale({10.0f, 1.0f, 10.0f});
 
-        AddComponent<Components::BaseCollider>();
-        const auto cldr = GetComponent<Components::BaseCollider>().lock();
+        AddComponent<Components::Collider>();
+        const auto cldr = GetComponent<Components::Collider>().lock();
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(100000.0f);
 
