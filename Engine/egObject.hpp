@@ -68,6 +68,8 @@ namespace Engine::Abstract
                     scene->AddCacheComponent<T>(component);
                 }
 
+                m_cached_component_.insert(component);
+
                 return component;
             }
 
