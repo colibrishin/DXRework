@@ -44,8 +44,18 @@ namespace Engine::Manager::Physics
         void CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs);
         bool CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs);
 
-        bool CheckCollision(const ConcurrentWeakObjVec& rhsl, const StrongObject& lhs, int idx);
+
+        void CheckCollision(const ConcurrentWeakObjVec& rhsl, const StrongObject& lhs, int idx);
         void CheckCollisionImpl(const StrongCollider& lhs, const StrongCollider& rhs);
+
+        __forceinline void PreCheckCollisionSameLayer(
+            const StrongScene& scene, const ConcurrentWeakObjVec& lhsl, const ConcurrentWeakObjVec& rhsl);
+        __forceinline void PreCheckCollisionDiffLayer(
+            const StrongScene& scene, const ConcurrentWeakObjVec& lhsl, const ConcurrentWeakObjVec& rhsl, int idx);
+        __forceinline bool CheckLayerCollidable(int i, int j);
+
+        __forceinline void CheckInactiveCollision(
+            const StrongScene& scene, const StrongObject& lhs);
 
         __forceinline void ContinuousColliding(
             const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
