@@ -9,27 +9,10 @@
 SERIALIZER_ACCESS_IMPL(
                        Engine::Objects::Camera,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Object))
-                       _ARTAG(m_look_at_) _ARTAG(m_offset_)
-                       _ARTAG(m_bound_object_id_)
                        _ARTAG(m_b_orthogonal_))
 
 namespace Engine::Objects
 {
-    void Camera::SetLookAt(Vector3 lookAt)
-    {
-        m_look_at_ = lookAt;
-    }
-
-    void Camera::SetLookAtRotation(Quaternion rotation)
-    {
-        m_look_at_rotation_ = rotation;
-    }
-
-    Quaternion Camera::GetLookAtRotation() const
-    {
-        return m_look_at_rotation_;
-    }
-
     Matrix Camera::GetViewMatrix() const
     {
         return m_view_matrix_;
@@ -45,19 +28,11 @@ namespace Engine::Objects
         return m_world_matrix_;
     }
 
-    Vector3 Camera::GetLookAt() const
-    {
-        return Vector3::Transform(m_look_at_, m_look_at_rotation_);
-    }
-
     void Camera::Initialize()
     {
         Object::Initialize();
 
         AddComponent<Components::Transform>();
-        GetComponent<Components::Transform>().lock()->SetLocalPosition(
-                                                                 {0.0f, 0.0f, -20.0f});
-        m_look_at_ = g_forward;
     }
 
     void Camera::PreUpdate(const float& dt)
@@ -74,17 +49,6 @@ namespace Engine::Objects
     {
         Object::PreRender(dt);
 
-        if (const auto companion = m_bound_object_.lock())
-        {
-            if (const auto tr_other =
-                    companion->GetComponent<Components::Transform>().lock())
-            {
-                const auto tr = GetComponent<Components::Transform>().lock();
-                tr->SetWorldPosition(tr_other->GetWorldPosition() + m_offset_);
-                tr->SetWorldRotation(tr_other->GetWorldRotation());
-            }
-        }
-
         if (GetApplication().GetMouseState().scrollWheelValue > 1)
         {
             GetComponent<Components::Transform>().lock()->Translate(g_forward * 0.1f);
@@ -98,31 +62,21 @@ namespace Engine::Objects
         {
             const auto position = transform->GetWorldPosition();
             const auto rotation = transform->GetWorldRotation();
+            Vector3    up       = m_b_fixed_up_ ? Vector3::Up : transform->Up();
+            Vector3    forward  = transform->Forward();
 
-            Vector3       upVector       = Vector3::Up;
-            const Vector3 positionVector = XMLoadFloat3(&position);
-            Vector3       lookAtVector   = XMLoadFloat3(&m_look_at_);
-
-            // Create the rotation matrix from the yaw, pitch, and roll values.
-            const Matrix rotationMatrix = XMMatrixRotationQuaternion(rotation);
-            const Matrix lookAtMatrix   = XMMatrixRotationQuaternion(m_look_at_rotation_);
+            Matrix rotationMatrix = Matrix::CreateFromQuaternion(rotation);
 
             m_world_matrix_ =
                     Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up) *
                     rotationMatrix *
-                    DirectX::XMMatrixTranslation(position.x, position.y, position.z);
-
-            // Transform the lookAt and up vector by the rotation matrix so the view is
-            // correctly rotated at the origin.
-            lookAtVector = XMVector3TransformNormal(lookAtVector, rotationMatrix);
-            lookAtVector = XMVector3TransformNormal(lookAtVector, lookAtMatrix);
-            upVector     = XMVector3TransformNormal(upVector, rotationMatrix);
-
-            // Translate the rotated camera position to the location of the viewer.
-            lookAtVector = XMVectorAdd(positionVector, lookAtVector);
+                    Matrix::CreateTranslation(position);
 
             // Finally create the view matrix from the three updated vectors.
-            m_view_matrix_ = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+            m_view_matrix_ = XMMatrixLookAtLH(
+                                              position,
+                                              position + forward,
+                                              up);
 
             m_projection_matrix_ = m_b_orthogonal_
                                        ? GetD3Device().GetOrthogonalMatrix()
@@ -143,15 +97,13 @@ namespace Engine::Objects
                                                     rotationMatrix, Quaternion::CreateFromYawPitchRoll(
                                                      0.f, DirectX::XMConvertToRadians(180.f), 0.f));
 
-            lookAtVector = m_look_at_;
+            Vector3 flipLookAtVector = XMVector3TransformNormal(forward, flipRotation);
+            Vector3 flipUpVector     = XMVector3TransformNormal(up, flipRotation);
 
-            lookAtVector = XMVector3TransformNormal(lookAtVector, flipRotation);
-            lookAtVector = XMVector3TransformNormal(lookAtVector, lookAtMatrix);
-            upVector     = XMVector3TransformNormal(upVector, flipRotation);
-
-            lookAtVector              = XMVectorAdd(positionVector, lookAtVector);
-            m_wvp_buffer_.reflectView =
-                    XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+            m_wvp_buffer_.reflectView = XMMatrixLookAtLH(
+                                                         position,
+                                                         position + flipLookAtVector,
+                                                         flipUpVector);
 
             m_wvp_buffer_.reflectView = m_wvp_buffer_.reflectView.Transpose();
 
@@ -159,7 +111,7 @@ namespace Engine::Objects
 
             Vector3 velocity = Vector3::Zero;
 
-            if (const auto bound = m_bound_object_.lock())
+            if (const auto bound = GetParent().lock())
             {
                 if (const auto rb = bound->GetComponent<Components::Rigidbody>().lock())
                 {
@@ -171,7 +123,7 @@ namespace Engine::Objects
                                           {invView._41, invView._42, invView._43},
                                           {velocity.x, velocity.y, velocity.z},
                                           {g_forward.x, g_forward.y, g_forward.z},
-                                          {Vector3::Up.x, Vector3::Up.y, Vector3::Up.z});
+                                          {Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}); // todo: fixed up?
         }
     }
 
@@ -198,20 +150,14 @@ namespace Engine::Objects
         Object::FixedUpdate(dt);
     }
 
-    void Camera::BindObject(const WeakObject& object)
-    {
-        m_bound_object_    = object;
-        m_bound_object_id_ = object.lock()->GetLocalID();
-    }
-
-    void Camera::SetOffset(Vector3 offset)
-    {
-        m_offset_ = offset;
-    }
-
     void Camera::SetOrthogonal(bool bOrthogonal)
     {
         m_b_orthogonal_ = bOrthogonal;
+    }
+
+    void Camera::SetFixedUp(bool bFixedUp)
+    {
+        m_b_fixed_up_ = bFixedUp;
     }
 
     bool Camera::GetOrthogonal() const
@@ -253,16 +199,8 @@ namespace Engine::Objects
                          ImGuiWindowFlags_AlwaysAutoResize |
                          ImGuiWindowFlags_NoCollapse))
         {
-            ImGui::Text("Look at");
-            ImGuiVector3Editable(GetID(), "look_at", m_look_at_);
-
-            ImGui::Text("Offset");
-            ImGuiVector3Editable(GetID(), "offset", m_offset_);
-
             ImGui::Text("Orthogonal");
             ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
-
-            ImGui::Text("Bound object: %lld", m_bound_object_id_);
             ImGui::End();
         }
     }
