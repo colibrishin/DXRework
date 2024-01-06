@@ -237,17 +237,17 @@ namespace Engine::Components
 
     Vector3 Transform::Forward() const
     {
-        return Vector3::Transform(g_forward, m_rotation_);
+        return Vector3::Transform(g_forward, GetWorldRotation());
     }
 
     Vector3 Transform::Right() const
     {
-        return Vector3::Transform(Vector3::Right, m_rotation_);
+        return Vector3::Transform(Vector3::Right, GetWorldRotation());
     }
 
     Vector3 Transform::Up() const
     {
-        return Vector3::Transform(Vector3::Up, m_rotation_);
+        return Vector3::Transform(Vector3::Up, GetWorldRotation());
     }
 
     void Transform::Translate(Vector3 translation)
