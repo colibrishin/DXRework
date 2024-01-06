@@ -17,7 +17,7 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Client::Scene
 {
-    inline TestScene::TestScene() {}
+    inline TestScene::TestScene() = default;
 
     inline void TestScene::PreUpdate(const float& dt)
     {
@@ -81,7 +81,7 @@ namespace Client::Scene
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
                    {-4.f, 2.f, 0.f});
 
-        GetMainCamera().lock()->BindObject(player);
+        player->AddChild(GetMainCamera());
 
         Engine::GetCollisionDetector().SetCollisionLayer(
                                                          Engine::LAYER_DEFAULT,

@@ -19,7 +19,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(
 SERIALIZER_ACCESS_IMPL(
                        Client::State::CharacterController,
                        _ARTAG(_BSTSUPER(Engine::Abstract::StateController<eCharacterState>))
-                       _ARTAG(m_offset_) _ARTAG(m_shoot_interval) _ARTAG(m_hp_))
+                       _ARTAG(m_shoot_interval) _ARTAG(m_hp_))
 
 namespace Client::State
 {
@@ -54,17 +54,19 @@ namespace Client::State
     void CharacterController::CheckMove(
         const boost::shared_ptr<Engine::Components::Rigidbody>& rb)
     {
-        float      speed = 1.0f;
-        const auto ortho =
+        float      speed   = 1.0f;
+        const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
+        const auto forward = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock()->Forward();
+        const auto ortho   =
                 Vector3::Transform(
-                                   m_offset_,
+                                   forward,
                                    Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) *
                 speed;
         bool pressed = false;
 
         if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
         {
-            rb->AddForce(m_offset_);
+            rb->AddForce(forward);
             pressed = true;
         }
 
@@ -76,7 +78,7 @@ namespace Client::State
 
         if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
         {
-            rb->AddForce(-m_offset_);
+            rb->AddForce(-forward);
             pressed = true;
         }
 
@@ -114,7 +116,7 @@ namespace Client::State
 
             Ray ray;
             ray.position  = tr->GetWorldPosition();
-            ray.direction = m_offset_;
+            ray.direction = tr->Forward();
 
             constexpr float distance = 5.f;
 
@@ -140,34 +142,28 @@ namespace Client::State
             return;
         }
 
-        if (const auto scene = Engine::GetSceneManager().GetActiveScene().lock())
+        const auto tr = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock();
+        tr->SetLocalRotation(Engine::GetMouseManager().GetMouseRotation());
+
+        CheckJump(rb);
+        CheckMove(rb);
+        CheckAttack(dt);
+
+        switch (GetState())
         {
-            const auto camera = scene->GetMainCamera().lock();
-
-            camera->SetLookAtRotation(Engine::GetMouseManager().GetMouseRotation());
-
-            m_offset_ = camera->GetLookAt() * Vector3{1.f, 0.f, 1.f};
-
-            CheckJump(rb);
-            CheckMove(rb);
-            CheckAttack(dt);
-
-            switch (GetState())
-            {
-            case CHAR_STATE_IDLE: if (HasStateChanged()) Engine::GetDebugger().Log("Idle");
-                break;
-            case CHAR_STATE_WALK: if (HasStateChanged()) Engine::GetDebugger().Log("Walk");
-                break;
-            case CHAR_STATE_RUN: break;
-            case CHAR_STATE_JUMP: if (HasStateChanged()) Engine::GetDebugger().Log("Jump");
-                break;
-            case CHAR_STATE_ATTACK: if (HasStateChanged()) Engine::GetDebugger().Log("Attack");
-                break;
-            case CHAR_STATE_DIE: break;
-            case CHAR_STATE_HIT: break;
-            case CHAR_STATE_MAX:
-            default: break;
-            }
+        case CHAR_STATE_IDLE: if (HasStateChanged()) Engine::GetDebugger().Log("Idle");
+            break;
+        case CHAR_STATE_WALK: if (HasStateChanged()) Engine::GetDebugger().Log("Walk");
+            break;
+        case CHAR_STATE_RUN: break;
+        case CHAR_STATE_JUMP: if (HasStateChanged()) Engine::GetDebugger().Log("Jump");
+            break;
+        case CHAR_STATE_ATTACK: if (HasStateChanged()) Engine::GetDebugger().Log("Attack");
+            break;
+        case CHAR_STATE_DIE: break;
+        case CHAR_STATE_HIT: break;
+        case CHAR_STATE_MAX:
+        default: break;
         }
     }
 

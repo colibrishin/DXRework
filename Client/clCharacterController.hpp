@@ -34,7 +34,6 @@ namespace Client::State
         void CheckMove(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
         bool CheckAttack(const float& dt);
 
-        Vector3 m_offset_;
         float   m_shoot_interval;
         float   m_hp_;
     };

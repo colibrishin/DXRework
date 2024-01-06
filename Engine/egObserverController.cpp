@@ -42,27 +42,22 @@ namespace Engine::Components
         StateController<eObserverState>::PostUpdate(dt);
     }
 
-    ObserverController::ObserverController(): StateController() {}
+    ObserverController::ObserverController() = default;
 
     void ObserverController::Mouse(const float& dt)
     {
-        if (const auto scene = GetSceneManager().GetActiveScene().lock())
+        const auto mouse = GetApplication().GetMouseState();
+
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
         {
-            const auto mouse = GetApplication().GetMouseState();
+            return;
+        }
 
-            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
-            {
-                return;
-            }
-
-            if (mouse.leftButton)
-            {
-                const auto camera = scene->GetMainCamera().lock();
-
-                camera->SetLookAtRotation(GetMouseManager().GetMouseRotation());
-
-                m_offset_ = camera->GetLookAt();
-            }
+        if (mouse.leftButton)
+        {
+            const auto tr     = GetOwner().lock()->GetComponent<Transform>().lock();
+            const auto mouse_rot = GetMouseManager().GetMouseRotation();
+            tr->SetLocalRotation(mouse_rot);
         }
     }
 
@@ -70,16 +65,17 @@ namespace Engine::Components
     {
         const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-        const float speed = 2.0f * dt;
-        const auto  ortho =
+        const float speed   = 2.0f * dt;
+        const auto  forward = GetOwner().lock()->GetComponent<Transform>().lock()->Forward();
+        const auto  ortho   =
                 Vector3::Transform(
-                                   m_offset_, Matrix::CreateRotationY(
-                                                                      -DirectX::XMConvertToRadians(90.0f))) *
+                                   forward, Matrix::CreateRotationY(
+                                                                    -DirectX::XMConvertToRadians(90.0f))) *
                 speed;
 
         if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
         {
-            tr->Translate(m_offset_ * speed);
+            tr->Translate(forward * speed);
         }
 
         if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
@@ -89,7 +85,7 @@ namespace Engine::Components
 
         if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
         {
-            tr->Translate(-m_offset_ * speed);
+            tr->Translate(-forward * speed);
         }
 
         if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
