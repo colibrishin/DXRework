@@ -21,8 +21,6 @@ namespace Engine::Components
         virtual void Mouse(const float& dt);
         virtual void Move(const float& dt);
 
-        Vector3 m_offset_;
-
     private:
         SERIALIZER_ACCESS
     };
