@@ -27,6 +27,14 @@ namespace Engine::Manager
         template <typename T>
         void SetActive()
         {
+            if (const auto current = m_active_scene_.lock())
+            {
+                if (current->GetType() == which_scene<T>::value)
+                {
+                    return;
+                }
+            }
+
             if (m_scenes_.contains(which_scene<T>::value))
             {
                 GetTaskScheduler().AddTask(
