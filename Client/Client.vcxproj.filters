@@ -69,6 +69,9 @@
     <Filter Include="Object\Rifle">
       <UniqueIdentifier>{a7aef9eb-6d3b-44f2-adf4-7e29c5a5799a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene\DarkScene">
+      <UniqueIdentifier>{7e2797b0-0e58-4b99-9f63-bd1a4ef1fa16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -119,6 +122,9 @@
     <ClInclude Include="clRifile.h">
       <Filter>Object\Rifle</Filter>
     </ClInclude>
+    <ClInclude Include="clDarkScene.h">
+      <Filter>Scene\DarkScene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -163,6 +169,9 @@
     <ClCompile Include="clRifle.cpp">
       <Filter>Object\Rifle</Filter>
     </ClCompile>
+    <ClCompile Include="clDarkScene.cpp">
+      <Filter>Scene\DarkScene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -200,6 +209,9 @@
       <Filter>Resource\Texture</Filter>
     </ImageContentTask>
     <ImageContentTask Include="Texture.png">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="ThunderCat.jpg">
       <Filter>Resource\Texture</Filter>
     </ImageContentTask>
   </ItemGroup>

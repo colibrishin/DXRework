@@ -177,7 +177,7 @@ namespace Engine
         }
 
     protected:
-        Scene();
+        explicit Scene(const eSceneType type);
 
     private:
         SERIALIZER_ACCESS

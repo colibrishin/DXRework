@@ -2,6 +2,7 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
+#include "clDarkScene.h"
 #include "clRifile.h"
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
@@ -12,6 +13,7 @@
 #include "egVertexShaderInternal.h"
 #include "egBoneAnimation.h"
 #include "egMaterial.h"
+#include "egSceneManager.hpp"
 #include "egShape.h"
 
 SERIALIZER_ACCESS_IMPL(
@@ -76,6 +78,11 @@ namespace Client::Object
     void Player::Update(const float& dt)
     {
         Object::Update(dt);
+
+        if (GetApplication().GetKeyState().IsKeyDown(Keyboard::Space))
+        {
+            GetSceneManager().SetActive<Scene::DarkScene>();
+        }
     }
 
     void Player::PreRender(const float& dt)

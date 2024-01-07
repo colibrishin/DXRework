@@ -71,10 +71,6 @@
         return obj;                                                           \
     }
 
-
-// Invalid id check
-#define INVALID_ID_CHECK(ID) ID != g_invalid_id
-
 // invalid id check for weak pointer
 #define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
   if ((ID) == g_invalid_id) return {};

@@ -6,6 +6,7 @@ namespace Engine
     {
         SCENE_T_UNK = 0,
         SCENE_T_TEST,
+        SCENE_T_DARK
     };
 }
 

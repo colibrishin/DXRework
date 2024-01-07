@@ -27,6 +27,19 @@ namespace Engine::Manager
         template <typename T>
         void SetActive()
         {
+            if (const auto current = m_active_scene_.lock())
+            {
+                if (current->GetType() == which_scene<T>::value)
+                {
+                    return;
+                }
+            }
+
+            // Orders :
+            // 1. At the start of the frame, scene will be set as active and initialized, resetting shadow manager, push back to the task queue if there is any object creation, which has the higher priority than the scene. it will be processed in the next frame.
+            // 2. Scene is activated, passing through the first frame without any objects. This has the effect that averaging out the noticeable delta time spike.
+            // 3. On the second frame, pushed objects are processed, and added to the scene.
+            // 4. Scene InitializeFinalize is called, and the scene loading is finished.
             if (m_scenes_.contains(which_scene<T>::value))
             {
                 GetTaskScheduler().AddTask(

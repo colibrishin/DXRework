@@ -464,9 +464,9 @@ namespace Engine
         }
     }
 
-    Scene::Scene()
+    Scene::Scene(const eSceneType type)
     : m_main_camera_local_id_(g_invalid_id),
-      m_type_(),
+      m_type_(type),
       m_object_position_tree_(g_max_map_size, {}) {}
 
     void Scene::Synchronize(const StrongScene& scene)

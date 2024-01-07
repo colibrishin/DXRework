@@ -152,10 +152,10 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::Reset()
     {
-        // it will not clear the graphic shadow buffer, because it can just overwrite
-        // the buffer and reuse it.
         m_lights_.clear();
         m_cb_shadow_vps_.clear();
+        m_dx_resource_shadow_vps_.clear();
+        ClearShadowVP();
 
         for (auto& subfrusta : m_subfrusta_)
         {

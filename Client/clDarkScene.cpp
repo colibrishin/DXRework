@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "clTestScene.hpp"
+#include "clDarkScene.h"
 
 #include "clWater.hpp"
 #include "egHelper.hpp"
@@ -9,57 +9,45 @@
 #include "clRifile.h"
 #include "egApplication.h"
 #include "egCollisionDetector.h"
+#include "egMaterial.h"
+#include "egModelRenderer.h"
 #include "egTransform.h"
+#include "egTexture.h"
 
 SERIALIZER_ACCESS_IMPL(
-                       Client::Scene::TestScene,
+                       Client::Scene::DarkScene,
                        _ARTAG(_BSTSUPER(Engine::Scene)))
 
 namespace Client::Scene
 {
-    inline TestScene::TestScene()
-    : Scene(SCENE_T_TEST),
-      m_player_id_(g_invalid_id) {}
+    DarkScene::DarkScene() : Scene(SCENE_T_DARK) {}
 
-    inline void TestScene::PreUpdate(const float& dt)
+    void DarkScene::PreUpdate(const float& dt)
     {
         Scene::PreUpdate(dt);
     }
 
-    inline void TestScene::Update(const float& dt)
+    void DarkScene::Update(const float& dt)
     {
         Scene::Update(dt);
-
-        if (GetApplication().GetKeyState().Space)
-        {
-            RemoveGameObject(m_player_id_, Engine::LAYER_DEFAULT);
-        }
     }
 
-    inline void TestScene::PreRender(const float& dt)
+    void DarkScene::PreRender(const float& dt)
     {
         Scene::PreRender(dt);
     }
 
-    inline void TestScene::Render(const float& dt)
+    void DarkScene::Render(const float& dt)
     {
         Scene::Render(dt);
     }
 
-    void TestScene::PostRender(const float& dt)
+    void DarkScene::PostRender(const float& dt)
     {
         Scene::PostRender(dt);
     }
 
-    void TestScene::AddCustomObject()
-    {
-        if (ImGui::MenuItem("PlaneObject"))
-        {
-            CreateGameObject<Object::PlaneObject>(Engine::LAYER_DEFAULT);
-        }
-    }
-
-    inline void TestScene::Initialize_INTERNAL()
+    void DarkScene::Initialize_INTERNAL()
     {
         const auto cube = CreateGameObject<Object::TestCube>(Engine::LAYER_DEFAULT).lock();
         cube->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
@@ -72,7 +60,10 @@ namespace Client::Scene
 
         CreateGameObject<Object::FPSCounter>(Engine::LAYER_UI);
         CreateGameObject<Object::MousePositionText>(Engine::LAYER_UI);
-        CreateGameObject<Object::SkyBox>(Engine::LAYER_SKYBOX);
+        const auto go = CreateGameObject<Object::SkyBox>(Engine::LAYER_SKYBOX).lock();
+
+        go->GetComponent<Components::ModelRenderer>().lock()->SetMaterial(Resources::Material::Get("ThunderSky"));
+
         CreateGameObject<Object::PlaneObject>(Engine::LAYER_ENVIRONMENT);
 
         const auto water = CreateGameObject<Object::Water>(Engine::LAYER_ENVIRONMENT).lock();
@@ -89,6 +80,5 @@ namespace Client::Scene
                                                          Engine::LAYER_DEFAULT,
                                                          Engine::LAYER_ENVIRONMENT);
 
-        m_player_id_ = player->GetID();
     }
 } // namespace Client::Scene
