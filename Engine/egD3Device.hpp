@@ -598,6 +598,6 @@ namespace Engine::Manager::Graphics
 
         XMMATRIX s_world_matrix_      = {};
         Matrix   m_projection_matrix_ = {};
-        XMMATRIX s_ortho_matrix_      = {};
+        Matrix   s_ortho_matrix_      = {};
     };
 } // namespace Engine::Manager::Graphics
