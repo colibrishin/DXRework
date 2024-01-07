@@ -16,6 +16,7 @@
 #include <egBoneAnimation.h>
 
 #include "clBackSphereMesh.hpp"
+#include "clDarkScene.h"
 #include "clTestScene.hpp"
 #include "egGlobal.h"
 #include "egMaterial.h"
@@ -31,6 +32,7 @@ namespace Client
     {
         Engine::Resources::Texture::Create("TestTexture", "./Texture.dds");
         Engine::Resources::Texture::Create("Sky", "./Sky.dds");
+        Engine::Resources::Texture::Create("ThunderCat", "./ThunderCat.dds");
     }
 
     void InitializeMesh()
@@ -140,6 +142,13 @@ namespace Client
         }
 
         {
+            const auto mtr = Resources::Material::Create("ThunderSky", "");
+            mtr->SetResource<Resources::Texture>("ThunderCat");
+            mtr->SetResource<Resources::VertexShader>("vs_default");
+            mtr->SetResource<Resources::PixelShader>("ps_default_nolight");
+        }
+
+        {
             const auto mtr = Resources::Material::Create("RifleColorMaterial", "");
             mtr->SetResource<Resources::VertexShader>("vs_default");
             mtr->SetResource<Resources::PixelShader>("ps_color");
@@ -176,6 +185,7 @@ namespace Client
         
 
         Engine::GetSceneManager().AddScene<Scene::TestScene>();
+        Engine::GetSceneManager().AddScene<Scene::DarkScene>();
         Engine::GetSceneManager().SetActive<Scene::TestScene>();
     }
 

@@ -186,6 +186,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="clDarkScene.h" />
     <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
@@ -206,6 +207,7 @@
   <ItemGroup>
     <ClCompile Include="clBackSphereMesh.cpp" />
     <ClCompile Include="clCharacterController.cpp" />
+    <ClCompile Include="clDarkScene.cpp" />
     <ClCompile Include="clFPSCounter.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="clMousePosition.cpp" />
@@ -353,6 +355,18 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ImageContentTask Include="ThunderCat.jpg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </ImageContentTask>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
