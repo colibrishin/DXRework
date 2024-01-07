@@ -8,8 +8,6 @@ namespace Engine::Manager::Physics
     public:
         LerpManager(SINGLETON_LOCK_TOKEN);
 
-        ~LerpManager() override = default;
-
         void Initialize() override;
         void Update(const float& dt) override;
 
@@ -24,6 +22,9 @@ namespace Engine::Manager::Physics
         float GetLerpFactor() const;
 
     private:
+        friend struct SingletonDeleter;
+        ~LerpManager() override = default;
+
         float m_elapsedTime_;
     };
 } // namespace Engine::Manager::Physics

@@ -22,11 +22,13 @@ namespace Engine::Manager::Physics
         void PostUpdate(const float& dt) override;
 
     private:
+        friend struct SingletonDeleter;
+        ~ConstraintSolver() override = default;
+
         void ResolveCollision(const WeakObject& lhs, const WeakObject& rhs);
         void ResolveSpeculation(const WeakObject & lhs, const WeakObject & rhs);
         void ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs);
 
-    private:
         std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_collision_resolved_set_;
         std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_speculative_resolved_set_;
     };

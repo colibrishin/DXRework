@@ -13,10 +13,7 @@ namespace Engine::Manager::Graphics
     class RenderPipeline final : public Abstract::Singleton<RenderPipeline>
     {
     public:
-        RenderPipeline(SINGLETON_LOCK_TOKEN)
-        : Singleton() {}
-
-        ~RenderPipeline() override;
+        explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
         void Initialize() override;
         void PreRender(const float& dt) override;
@@ -70,6 +67,9 @@ namespace Engine::Manager::Graphics
     private:
         friend class ToolkitAPI;
         friend class D3Device;
+        friend struct SingletonDeleter;
+        RenderPipeline() = default;
+        ~RenderPipeline() override;
 
         void PrecompileShaders();
         void InitializeSamplers();
@@ -80,7 +80,6 @@ namespace Engine::Manager::Graphics
             GetD3Device().BindConstantBuffer(buffer, which_cb<T>::value, target);
         }
 
-    private:
         ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
         ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
 

@@ -14,8 +14,6 @@ namespace Engine::Manager::Physics
         explicit PhysicsManager(SINGLETON_LOCK_TOKEN)
         : Singleton() {}
 
-        ~PhysicsManager() override = default;
-
         void Initialize() override;
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
@@ -26,6 +24,9 @@ namespace Engine::Manager::Physics
         void PostUpdate(const float& dt) override;
 
     private:
+        friend struct SingletonDeleter;
+        ~PhysicsManager() override = default;
+
         static void UpdateGravity(Components::Rigidbody* rb);
         static void EpsilonGuard(Vector3& linear_momentum);
         static void UpdateObject(Components::Rigidbody* rb, const float& dt);

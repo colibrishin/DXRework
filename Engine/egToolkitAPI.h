@@ -11,12 +11,9 @@ namespace Engine::Manager::Graphics
     class ToolkitAPI final : public Abstract::Singleton<ToolkitAPI>
     {
     public:
-        ToolkitAPI(SINGLETON_LOCK_TOKEN)
-        : Singleton() {}
+        ToolkitAPI(SINGLETON_LOCK_TOKEN) {}
 
-        ~ToolkitAPI() override;
         void Initialize() override;
-
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void PreRender(const float& dt) override;
@@ -43,10 +40,12 @@ namespace Engine::Manager::Graphics
             const FMOD_VECTOR& forward, const FMOD_VECTOR&  up) const;
 
     private:
+        friend struct SingletonDeleter;
+        ~ToolkitAPI() override;
+
         void FrameBegin() const;
         void FrameEnd() const;
 
-    private:
         std::unique_ptr<CommonStates>       m_states_              = nullptr;
         std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
         std::unique_ptr<SpriteBatch>        m_sprite_batch_        = nullptr;

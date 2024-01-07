@@ -6,10 +6,11 @@
 
 namespace Engine::Manager
 {
-    void SceneManager::ChangeScene(const WeakScene& it)
+    void SceneManager::SetActiveFinalize(const WeakScene& it)
     {
         Graphics::ShadowManager::GetInstance().Reset();
         m_active_scene_ = it;
+        m_active_scene_.lock()->Initialize();
 
         for (const auto& light :
              m_active_scene_.lock()->GetGameObjects(LAYER_LIGHT))

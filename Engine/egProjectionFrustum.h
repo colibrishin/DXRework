@@ -11,8 +11,6 @@ namespace Engine::Manager
         explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN)
         : Singleton() {}
 
-        ~ProjectionFrustum() override = default;
-
         void Initialize() override;
         void Update(const float& dt) override;
         void PreUpdate(const float& dt) override;
@@ -27,6 +25,9 @@ namespace Engine::Manager
         BoundingFrustum GetFrustum() const;
 
     private:
+        friend struct SingletonDeleter;
+        ~ProjectionFrustum() override = default;
+
         BoundingFrustum m_frustum;
         BoundingSphere  m_sphere;
     };

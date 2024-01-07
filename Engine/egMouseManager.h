@@ -23,6 +23,9 @@ namespace Engine::Manager
         [[nodiscard]] const Matrix&     GetMouseRotationMatrix() const;
 
     private:
+        friend struct SingletonDeleter;
+        ~MouseManager() override = default;
+
         Quaternion m_mouse_rotation_;
 
         Vector2 m_previous_mouse_position_;

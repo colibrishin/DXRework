@@ -119,6 +119,9 @@ namespace Engine
         class Renderable;
         class Resource;
         class IStateController;
+
+        template <typename T, typename... Args>
+        class Singleton;
     } // namespace Abstract
 
     namespace Manager
@@ -218,23 +221,23 @@ namespace Engine
     using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
     // Manager Forward Declaration
-    extern Manager::ResourceManager&               GetResourceManager();
-    extern Manager::SceneManager&                  GetSceneManager();
-    extern Manager::ProjectionFrustum&             GetProjectionFrustum();
-    extern Manager::Physics::CollisionDetector&    GetCollisionDetector();
-    extern Manager::Application&                   GetApplication();
-    extern Manager::Graphics::D3Device&            GetD3Device();
-    extern Manager::Graphics::RenderPipeline&      GetRenderPipeline();
-    extern Manager::Graphics::ToolkitAPI&          GetToolkitAPI();
-    extern Manager::Physics::LerpManager&          GetLerpManager();
-    extern Manager::Physics::PhysicsManager&       GetPhysicsManager();
-    extern Manager::Physics::ConstraintSolver&     GetConstraintSolver();
-    extern Manager::Debugger&                      GetDebugger();
-    extern Manager::TaskScheduler&                 GetTaskScheduler();
-    extern Manager::MouseManager&                  GetMouseManager();
-    extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
-    extern Manager::Graphics::ShadowManager&       GetShadowManager();
-    extern Manager::Graphics::Renderer&            GetRenderer();
+    extern Manager::ResourceManager&                 GetResourceManager();
+    extern Manager::SceneManager&                    GetSceneManager();
+    extern Manager::ProjectionFrustum&               GetProjectionFrustum();
+    extern Manager::Physics::CollisionDetector&      GetCollisionDetector();
+    extern Manager::Application&                     GetApplication();
+    extern Manager::Graphics::D3Device&              GetD3Device();
+    extern Manager::Graphics::RenderPipeline&        GetRenderPipeline();
+    extern Manager::Graphics::ToolkitAPI&            GetToolkitAPI();
+    extern Manager::Physics::LerpManager&            GetLerpManager();
+    extern Manager::Physics::PhysicsManager&         GetPhysicsManager();
+    extern Manager::Physics::ConstraintSolver&       GetConstraintSolver();
+    extern Manager::Debugger&                        GetDebugger();
+    extern Manager::TaskScheduler&                   GetTaskScheduler();
+    extern Manager::MouseManager&                    GetMouseManager();
+    extern Manager::Graphics::ReflectionEvaluator&   GetReflectionEvaluator();
+    extern Manager::Graphics::ShadowManager&         GetShadowManager();
+    extern Manager::Graphics::Renderer&              GetRenderer();
 
     // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
     template <typename WrapT>
