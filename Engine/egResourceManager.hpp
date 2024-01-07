@@ -8,8 +8,7 @@ namespace Engine::Manager
     class ResourceManager : public Abstract::Singleton<ResourceManager>
     {
     public:
-        explicit ResourceManager(SINGLETON_LOCK_TOKEN)
-        : Singleton() {}
+        explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
 
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -101,6 +100,9 @@ namespace Engine::Manager
         }
 
     private:
+        friend struct SingletonDeleter;
+        ~ResourceManager() override = default;
+
         std::map<eResourceType, std::set<StrongResource>> m_resources_;
     };
 } // namespace Engine::Manager

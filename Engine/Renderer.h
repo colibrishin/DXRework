@@ -18,6 +18,9 @@ namespace Engine::Manager::Graphics
         void Initialize() override;
 
 	private:
+        friend struct SingletonDeleter;
+        ~Renderer() override = default;
+
         void RenderModel(const float& dt, const WeakModelRenderer& ptr_mr, const WeakTransform& ptr_tr, const WeakAnimator& ptr_atr);
 
         std::queue<WeakObject> m_delayed_objects_;

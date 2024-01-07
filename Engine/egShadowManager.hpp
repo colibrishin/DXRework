@@ -15,10 +15,11 @@ namespace Engine::Manager::Graphics
         };
 
     public:
-        ShadowManager(SINGLETON_LOCK_TOKEN)
-        : Singleton<ShadowManager>() {}
+        explicit ShadowManager(SINGLETON_LOCK_TOKEN)
+        : Singleton<ShadowManager>(),
+          m_viewport_(),
+          m_current_shadow_maps_{} {}
 
-        ~ShadowManager() override;
         void InitializeProcessors();
         void InitializeViewport();
         void Initialize() override;
@@ -35,6 +36,9 @@ namespace Engine::Manager::Graphics
         void                        UnregisterLight(const WeakLight& light);
 
     private:
+        friend struct SingletonDeleter;
+        ~ShadowManager() override;
+
         void InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer);
         void BuildShadowMap(Scene& scene, const float dt) const;
         void ClearShadowVP();

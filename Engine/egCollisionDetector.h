@@ -10,10 +10,7 @@ namespace Engine::Manager::Physics
     class CollisionDetector : public Abstract::Singleton<CollisionDetector>
     {
     public:
-        explicit CollisionDetector(SINGLETON_LOCK_TOKEN)
-        : Singleton() {}
-
-        ~CollisionDetector() override = default;
+        explicit CollisionDetector(SINGLETON_LOCK_TOKEN) {}
 
         void Initialize() override;
         void Update(const float& dt) override;
@@ -41,6 +38,9 @@ namespace Engine::Manager::Physics
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
+        friend struct SingletonDeleter;
+        ~CollisionDetector() override = default;
+
         void CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs);
         bool CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs);
 
@@ -74,7 +74,7 @@ namespace Engine::Manager::Physics
             const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
             const StrongObject&   rhs_owner);
 
-    private:
+
         std::mutex                                    m_layer_mask_mutex_;
         std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 

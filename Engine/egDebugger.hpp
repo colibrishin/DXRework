@@ -17,9 +17,6 @@ namespace Engine::Manager
     {
     public:
         explicit Debugger(SINGLETON_LOCK_TOKEN);
-
-        ~Debugger() override = default;
-
         void Initialize() override;
 
         void Log(const std::string& str);
@@ -42,6 +39,9 @@ namespace Engine::Manager
         void PostUpdate(const float& dt) override;
 
     private:
+        friend struct SingletonDeleter;
+        ~Debugger() override = default;
+
         struct Message
         {
             std::string log;
@@ -54,7 +54,6 @@ namespace Engine::Manager
             const Message&                              msg,
             const std::function<void(Message&, float)>& func);
 
-    private:
         bool m_bDebug;
         int  x = 0;
         int  y = g_debug_y_initial;

@@ -223,8 +223,6 @@ namespace Engine::Manager::Graphics
         D3Device(SINGLETON_LOCK_TOKEN)
         : Singleton() {}
 
-        ~D3Device() override = default;
-
         void Initialize(HWND hWnd) override;
 
         static void DEBUG_MEMORY()
@@ -460,8 +458,10 @@ namespace Engine::Manager::Graphics
         HANDLE GetSwapchainAwaiter() const;
 
     private:
+        friend struct SingletonDeleter;
         friend class RenderPipeline;
         friend class ToolkitAPI;
+        ~D3Device() override = default;
 
         D3Device() = default;
 

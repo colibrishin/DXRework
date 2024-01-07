@@ -7,7 +7,6 @@ namespace Engine::Manager::Graphics
     {
     public:
         ReflectionEvaluator(SINGLETON_LOCK_TOKEN) : Singleton() {}
-        ~ReflectionEvaluator() override;
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
@@ -20,6 +19,9 @@ namespace Engine::Manager::Graphics
         void RenderFinished();
 
     private:
+        friend struct SingletonDeleter;
+        ~ReflectionEvaluator() override = default;
+
         Graphics::DXPacked::RenderedResource m_rendered_buffer_;
 
     };

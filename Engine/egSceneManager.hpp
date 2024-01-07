@@ -11,8 +11,7 @@ namespace Engine::Manager
     class SceneManager final : public Abstract::Singleton<SceneManager>
     {
     public:
-        explicit SceneManager(SINGLETON_LOCK_TOKEN)
-        : Singleton() {}
+        explicit SceneManager(SINGLETON_LOCK_TOKEN) {}
 
         WeakScene GetActiveScene() const
         {
@@ -77,6 +76,8 @@ namespace Engine::Manager
         void PostRender(const float& dt) override;
 
     private:
+        friend struct SingletonDeleter;
+        ~SceneManager() override = default;
         WeakScene                         m_active_scene_;
         std::map<eSceneType, StrongScene> m_scenes_;
     };

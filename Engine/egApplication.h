@@ -26,8 +26,6 @@ namespace Engine::Manager
     public:
         Application(SINGLETON_LOCK_TOKEN);
 
-        ~Application() override;
-
         void        Initialize(HWND hwnd) override;
         static void UpdateWindowSize(HWND hWnd);
         void        Tick();
@@ -40,6 +38,9 @@ namespace Engine::Manager
         Mouse::State    GetMouseState() const;
 
     private:
+        friend struct SingletonDeleter;
+        ~Application() override;
+
         void PreUpdate(const float& dt) override;
         void FixedUpdate(const float& dt) override;
         void Update(const float& dt) override;
@@ -48,7 +49,6 @@ namespace Engine::Manager
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-    private:
         HWND m_hWnd = nullptr;
 
         // Input
