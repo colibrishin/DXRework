@@ -38,6 +38,8 @@ namespace Engine
         TASK_REM_OBJ,
         TASK_INIT_SCENE,
         TASK_SYNC_SCENE,
+        TASK_REM_SCENE,
+        TASK_ACTIVE_SCENE,
         TASK_MAX
     };
 

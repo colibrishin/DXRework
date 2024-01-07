@@ -2,7 +2,6 @@
 #include "egCommon.hpp"
 #include "egDebugger.hpp"
 #include "egHelper.hpp"
-#include "egManager.hpp"
 #include "egScene.hpp"
 #include "egShadowManager.hpp"
 
@@ -22,18 +21,21 @@ namespace Engine::Manager
         void AddScene(Args&&... args)
         {
             auto scene = boost::make_shared<T>(std::forward<Args>(args)...);
-            scene->Initialize();
             m_scenes_[which_scene<T>::value] = scene;
         }
-
-        void ChangeScene(const WeakScene& it);
 
         template <typename T>
         void SetActive()
         {
             if (m_scenes_.contains(which_scene<T>::value))
             {
-                ChangeScene(m_scenes_[which_scene<T>::value]);
+                GetTaskScheduler().AddTask(
+                                           TASK_ACTIVE_SCENE,
+                                           {},
+                                           [this](const std::vector<std::any>&, float)
+                                           {
+                                               SetActiveFinalize(m_scenes_[which_scene<T>::value]);
+                                           });
             }
         }
 
@@ -53,16 +55,13 @@ namespace Engine::Manager
         {
             if (m_scenes_.contains(which_scene<T>::value))
             {
-                const auto scene = m_scenes_[which_scene<T>::value];
-
-                if (scene == m_active_scene_.lock())
-                {
-                    Debugger::GetInstance().Log(L"Warning: Active scene has been removed.");
-                    Graphics::ShadowManager::GetInstance().Reset();
-                    m_active_scene_.reset();
-                }
-
-                m_scenes_.erase(which_scene<T>::value);
+                GetTaskScheduler().AddTask(
+                                           TASK_REM_SCENE,
+                                           {},
+                                           [this](const std::vector<std::any>&, float)
+                                           {
+                                               RemoveSceneFinalize<T>();
+                                           });
             }
         }
 
@@ -78,6 +77,24 @@ namespace Engine::Manager
     private:
         friend struct SingletonDeleter;
         ~SceneManager() override = default;
+
+        void SetActiveFinalize(const WeakScene& it);
+
+        template <typename T>
+        void RemoveSceneFinalize()
+        {
+            const auto scene = m_scenes_[which_scene<T>::value];
+
+            if (scene == m_active_scene_.lock())
+            {
+                Debugger::GetInstance().Log("Warning: Active scene has been removed.");
+                Graphics::ShadowManager::GetInstance().Reset();
+                m_active_scene_.reset();
+            }
+
+            m_scenes_.erase(which_scene<T>::value);
+        }
+
         WeakScene                         m_active_scene_;
         std::map<eSceneType, StrongScene> m_scenes_;
     };
