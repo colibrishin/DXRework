@@ -17,7 +17,9 @@ SERIALIZER_ACCESS_IMPL(
 
 namespace Client::Scene
 {
-    inline TestScene::TestScene() = default;
+    inline TestScene::TestScene()
+    : Scene(SCENE_T_TEST),
+      m_player_id_(g_invalid_id) {}
 
     inline void TestScene::PreUpdate(const float& dt)
     {
