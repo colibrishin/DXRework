@@ -7,6 +7,33 @@
 
 namespace Engine::Graphics
 {
+    namespace SBs
+    {
+        struct BoneSB
+        {
+            SB_T(SB_TYPE_BONE)
+        	Matrix transform;
+        };
+
+        struct LightSB
+        {
+            SB_T(SB_TYPE_LIGHT)
+
+        	Matrix world;
+			Color  color;
+		};
+
+        struct LightVPSB
+        {
+        	SB_T(SB_TYPE_SHADOW)
+
+            Matrix  view[g_max_shadow_cascades];
+            Matrix  proj[g_max_shadow_cascades];
+            Vector4 end_clip_spaces[g_max_shadow_cascades];
+		};
+    }
+
+
     namespace CBs
     {
         // Constant buffers

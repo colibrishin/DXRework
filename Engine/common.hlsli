@@ -34,6 +34,8 @@ Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 
 StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
+StructuredBuffer<LightElement> bufLight : register(t65);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
