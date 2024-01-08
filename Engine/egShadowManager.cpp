@@ -30,8 +30,8 @@ namespace Engine::Manager::Graphics
         m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
         m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
 
-        m_sb_light_buffer_.Create(10, nullptr, true);
-        m_sb_light_vps_buffer_.Create(10, nullptr, true);
+        m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
+        m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
 
         InitializeViewport();
         InitializeProcessors();
@@ -39,10 +39,14 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::PreUpdate(const float& dt)
     {
+        // Unbind the light information structured buffer from the shader.
         m_sb_light_buffer_.Unbind(SHADER_VERTEX);
         m_sb_light_buffer_.Unbind(SHADER_PIXEL);
+
+        // And the light view and projection matrix buffer to re-evaluate.
         m_sb_light_vps_buffer_.Unbind(SHADER_PIXEL);
 
+        // Remove the expired lights just in case.
         std::erase_if(m_lights_, [](const auto& kv)
             {
                 return kv.second.expired();
@@ -51,6 +55,7 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::Update(const float& dt)
     {
+        // Build light information structured buffer.
         std::vector<SBs::LightSB> light_buffer;
 
         for (const auto& light : m_lights_ | std::views::values)
@@ -65,10 +70,12 @@ namespace Engine::Manager::Graphics
             }
         }
 
+        // Notify the number of lights to the shader.
         auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
         gcb.light_count = static_cast<int>(light_buffer.size());
         GetRenderPipeline().SetGlobalStateBuffer(gcb);
 
+        // If there is no light, it does not need to be updated.
         if (light_buffer.empty())
         {
 	        return;
@@ -94,6 +101,7 @@ namespace Engine::Manager::Graphics
 
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
+            // Build light view and projection matrix in frustum.
             std::vector<SBs::LightVPSB> current_light_vp;
 
             for (const auto& ptr_light : m_lights_ | std::views::values)
@@ -113,6 +121,7 @@ namespace Engine::Manager::Graphics
                 }
             }
 
+            // Also, if there is no light, it does not need to be updated.
             if (current_light_vp.empty())
             {
 	            return;
@@ -133,14 +142,17 @@ namespace Engine::Manager::Graphics
                         m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get(),
                         m_shadow_map_depth_stencil_state_.Get());
 
+                    // Notify the index of the shadow map to the shader.
 		            auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
                     gcb.target_shadow = idx++;
                     GetRenderPipeline().SetGlobalStateBuffer(gcb);
 
+                    // Render the depth of the object from the light's point of view.
                     BuildShadowMap(*scene, dt);
 	            }
             }
 
+            // Geometry shader's work is done.
             m_sb_light_vps_buffer_.Unbind(SHADER_GEOMETRY);
         }
 
@@ -166,7 +178,7 @@ namespace Engine::Manager::Graphics
         // And bind the light view and projection matrix on to the constant buffer.
         m_sb_light_vps_buffer_.Bind(SHADER_PIXEL);
 
-
+        // Bind the light information structured buffer that previously built.
         m_sb_light_buffer_.Bind(SHADER_PIXEL);
         m_sb_light_buffer_.Bind(SHADER_VERTEX);
     }
