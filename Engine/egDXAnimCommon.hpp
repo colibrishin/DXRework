@@ -1,6 +1,8 @@
 #pragma once
 #include <boost/serialization/access.hpp>
 
+#include "egMacro.h"
+
 namespace Engine::Graphics
 {
     struct BonePrimitive
@@ -344,6 +346,7 @@ namespace Engine::Graphics
 
     struct BoneTransformElement
     {
+        SB_T(SB_TYPE_BONE)
         Matrix transform;
     };
 

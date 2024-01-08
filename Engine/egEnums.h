@@ -76,6 +76,11 @@ namespace Engine
         CB_TYPE_MATERIAL,
     };
 
+    enum eSBType
+    {
+        SB_TYPE_BONE = g_reserved_struct_buffer_slot,
+    };
+
     enum eResourceType
     {
         RES_T_UNK = 0,

@@ -44,6 +44,8 @@
 #define OBJECT_T(enum_val) static constexpr eDefObjectType dotype = enum_val;
 // Static constant buffer type, this should be added to every constant buffer
 #define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;
+// Static structured buffer type, this should be added to every structured buffer
+#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
 
 // Static client provided scene type, this should be added to every scene in the client
 #define CLIENT_SCENE_CHECK_CONSTEXPR(enum_val) static constexpr Engine::eSceneType stype = enum_val;
