@@ -102,11 +102,6 @@ namespace Engine::Manager::Graphics
                 {
                     const auto tr = light->GetComponent<Components::Transform>().lock();
 
-                    // It only needs to render the depth of the object from the light's point of view.
-                    GetRenderPipeline().TargetDepthOnly(
-                                                        m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get(),
-                                                        m_shadow_map_depth_stencil_state_.Get());
-
                     // Get the light direction from the light's position.
                     Vector3 light_dir;
                     (tr->GetWorldPosition()).Normalize(light_dir);
@@ -132,6 +127,12 @@ namespace Engine::Manager::Graphics
             {
 	            if (const auto light = ptr_light.lock())
 	            {
+                    // It only needs to render the depth of the object from the light's point of view.
+                    // Swap the depth stencil to the each light's shadow map.
+                    GetRenderPipeline().TargetDepthOnly(
+                        m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get(),
+                        m_shadow_map_depth_stencil_state_.Get());
+
 		            auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
                     gcb.target_shadow = idx++;
                     GetRenderPipeline().SetGlobalStateBuffer(gcb);
