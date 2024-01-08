@@ -129,16 +129,21 @@ void GetShadowFactor(
         shadowFactor[i] = 1.0f;
     }
 
-    [unroll] for (i = 0; i < g_lightCount; ++i)
+    [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
+        if (i > g_lightCount.x)
+        {
+            break;
+        }
+
         [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
         {
             const matrix vp = mul(
-                                  g_cascadeShadowChunk[i].g_shadowView[j],
-                                  g_cascadeShadowChunk[i].g_shadowProj[j]);
+                                  bufLightVP[i].g_shadowView[j],
+                                  bufLightVP[i].g_shadowProj[j]);
             const float4 position = mul(world_position, vp);
 
-            if (z_clip <= g_cascadeShadowChunk[i].g_shadowZClip[j].z)
+            if (z_clip <= bufLightVP[i].g_shadowZClip[j].z)
             {
                 shadowFactor[i] = GetShadowFactorImpl(i, j, position);
                 break;

@@ -15,11 +15,11 @@ float4 main(PixelInputType input) : SV_TARGET
     float3 reflection[MAX_NUM_LIGHTS];
     float4 specular[MAX_NUM_LIGHTS];
 
-    for (i = 0; i < g_lightCount; ++i)
+    for (i = 0; i < g_lightCount.x; ++i)
     {
         lightIntensity[i] = saturate(dot(input.normal, -input.lightDirection[i]));
         colorArray[i]     =
-                LerpShadow(shadowFactor[i]) * g_lightColor[i] * lightIntensity[i];
+                LerpShadow(shadowFactor[i]) * bufLight[i].color * lightIntensity[i];
         reflection[i] = normalize(
                                   2.0f * lightIntensity[i] * input.normal -
                                   input.lightDirection[i]);
@@ -30,14 +30,14 @@ float4 main(PixelInputType input) : SV_TARGET
     float4 colorSum    = g_ambientColor;
     float4 specularSum = g_ambientColor;
 
-    for (i = 0; i < g_lightCount; ++i)
+    for (i = 0; i < g_lightCount.x; ++i)
     {
         colorSum.r += colorArray[i].r;
         colorSum.g += colorArray[i].g;
         colorSum.b += colorArray[i].b;
     }
 
-    for (i = 0; i < g_lightCount; ++i)
+    for (i = 0; i < g_lightCount.x; ++i)
     {
         specularSum.r += specular[i].r;
         specularSum.g += specular[i].g;
