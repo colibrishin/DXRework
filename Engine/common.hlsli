@@ -30,9 +30,10 @@ TextureCube    texCube05 : register(t21);
 TextureCube    texCube06 : register(t22);
 TextureCube    texCube07 : register(t23);
 
-Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t64);
-Texture2D                              texRendered : register(t65);
-StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t66);
+Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
+Texture2D      texRendered : register(t33);
+
+StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
