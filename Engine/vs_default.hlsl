@@ -10,7 +10,7 @@ PixelInputType main(VertexInputType input)
     output.tangent  = input.tangent;
     output.binormal = input.binormal;
     
-    if (input.bone_element.bone_count > 0)
+    if (g_bindFlag.boneFlag.x)
     {
         matrix animation_transform;
 

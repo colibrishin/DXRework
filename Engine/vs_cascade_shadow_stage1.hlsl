@@ -6,7 +6,7 @@ GeometryShadowInputType main(VertexInputType input)
 
     output.position = float4(input.position, 1.0f);
 
-    if (input.bone_element.bone_count > 0)
+    if (g_bindFlag.boneFlag.x)
     {
         matrix animation_transform;
 
