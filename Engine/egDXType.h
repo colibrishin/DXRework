@@ -49,13 +49,6 @@ namespace Engine::Graphics
         }
     };
 
-    struct ShadowVP
-    {
-        Matrix  view[g_max_shadow_cascades];
-        Matrix  proj[g_max_shadow_cascades];
-        Vector4 end_clip_spaces[g_max_shadow_cascades];
-    };
-
     struct MaterialBindFlag
     {
         friend class boost::serialization::access;

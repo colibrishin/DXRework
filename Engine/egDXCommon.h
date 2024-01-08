@@ -31,28 +31,12 @@ namespace Engine::Graphics
             Matrix world;
         };
 
-        struct LightCB
+        struct GlobalStateCB
         {
-            CB_T(CB_TYPE_LIGHT)
+            CB_T(CB_TYPE_GLOBAL_STATE)
 
-            Matrix world[g_max_lights];
-            Color  color[g_max_lights];
-            int    light_count;
-            float  ___p[3];
-        };
-
-        struct ShadowVPCB
-        {
-            CB_T(CB_TYPE_SHADOW)
-
-            ShadowVP value;
-        };
-
-        struct ShadowVPChunkCB
-        {
-            CB_T(CB_TYPE_SHADOW_CHUNK)
-
-            ShadowVP lights[g_max_lights];
+        	OffsetT<int> light_count;
+            OffsetT<int> target_shadow;
         };
 
         struct MaterialCB

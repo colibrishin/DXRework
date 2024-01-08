@@ -54,26 +54,13 @@ cbuffer TransformBuffer : register(b1)
     matrix g_world;
 };
 
-cbuffer LightBuffer : register(b2)
+cbuffer GlobalStatusBuffer : register(b2)
 {
-    matrix g_lightWorld[MAX_NUM_LIGHTS];
-    float4 g_lightColor[MAX_NUM_LIGHTS];
-    int    g_lightCount;
-    float3 ___p0;
+    int4 g_lightCount : LIGHTCOUNT;
+    int4 g_targetShadow : SHADOWTARGET;
 }
 
-// current light view and projection matrix of each cascade
-cbuffer CascadeShadowBuffer : register(b3)
-{
-    CascadeShadow g_currentShadow;
-}
-
-cbuffer CascadeShadowChunk : register(b4)
-{
-    CascadeShadow g_cascadeShadowChunk[MAX_NUM_LIGHTS];
-}
-
-cbuffer MaterialBuffer : register(b5)
+cbuffer MaterialBuffer : register(b3)
 {
     BindFlag g_bindFlag : BINDFLAG;
 
