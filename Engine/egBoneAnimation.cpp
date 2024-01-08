@@ -37,18 +37,13 @@ namespace Engine::Resources
             bone.transform = bone.transform.Transpose();
         }
 
-        GetD3Device().CreateStructuredShaderResource<BoneTransformElement>(
-                                                                           animation_per_bone.size(),
-                                                                           animation_per_bone.data(),
-                                                                           m_animation_buffer_.
-                                                                           ReleaseAndGetAddressOf());
-
-        GetRenderPipeline().BindResource(RESERVED_ANIMATION, SHADER_VERTEX, m_animation_buffer_.GetAddressOf());
+        m_buffer_.SetData(animation_per_bone.size(), animation_per_bone.data());
+        m_buffer_.Bind(SHADER_VERTEX);
     }
 
     void BoneAnimation::PostRender(const float& dt)
     {
-        GetRenderPipeline().UnbindResource(RESERVED_ANIMATION, SHADER_VERTEX);
+        m_buffer_.Unbind(SHADER_VERTEX);
         m_evaluated_time_ = 0.f;
         m_evaluated_data_.clear();
     }
@@ -123,9 +118,13 @@ namespace Engine::Resources
     {
         SetDuration(m_primitive_.GetDuration());
         SetTicksPerSecond(m_primitive_.GetTicksPerSecond());
+        m_buffer_.Create(m_primitive_.GetBoneCount(), nullptr, true);
     }
 
-    void BoneAnimation::Unload_INTERNAL() {}
+    void BoneAnimation::Unload_INTERNAL()
+    {
+        m_buffer_.Clear();
+    }
 
     BoneAnimation::BoneAnimation()
     : BaseAnimation(),
