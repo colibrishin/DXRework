@@ -1,6 +1,7 @@
 #pragma once
 #include "egBaseAnimation.h"
 #include "egDXAnimCommon.hpp"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Resources
 {
@@ -44,7 +45,7 @@ namespace Engine::Resources
         // non-serialized
         float m_evaluated_time_;
         std::vector<BoneTransformElement> m_evaluated_data_;
-        ComPtr<ID3D11ShaderResourceView> m_animation_buffer_;
+        StructuredBuffer<BoneTransformElement> m_buffer_;
 
     };
 }

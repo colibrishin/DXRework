@@ -83,6 +83,8 @@ namespace Engine
         class Shader;
         class IShader;
         class VertexShaderInternal;
+        template <typename T>
+        class StructuredBuffer;
 
         struct AnimationPrimitive;
         struct BonePrimitive;
@@ -286,6 +288,12 @@ namespace Engine
     struct which_cb
     {
         static constexpr eCBType value = T::cbtype;
+    };
+
+    template <typename T>
+    struct which_sb
+    {
+        static constexpr eSBType value = T::sbtype;
     };
 
     // Static conversion from ID3D11 shader type to eShaderType

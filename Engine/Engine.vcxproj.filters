@@ -221,6 +221,9 @@
     <Filter Include="Resource Group\Shape">
       <UniqueIdentifier>{b2ac8215-31f7-4429-bee1-0fed657489b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Low-level\StructuredBuffer">
+      <UniqueIdentifier>{585839c3-00c5-40a8-b8a9-421462a789d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -446,6 +449,9 @@
     </ClInclude>
     <ClInclude Include="egModelRenderer.h">
       <Filter>Component\ModelRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="egStructuredBuffer.hpp">
+      <Filter>Low-level\StructuredBuffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,7 +13,8 @@ namespace Engine
     constexpr UINT g_max_frame_latency_second     = 1;
     constexpr UINT g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
     constexpr UINT g_max_slot_per_texture         = 8;
-    constexpr UINT g_reserved_bind_slot           = 64;
+    constexpr UINT g_reserved_bind_slot           = 32;
+    constexpr UINT g_reserved_struct_buffer_slot  = 64;
 
     // Physics Constants
     constexpr float   g_epsilon                 = 0.001f;

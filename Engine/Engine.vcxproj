@@ -81,6 +81,7 @@
     <ClInclude Include="egSoundPlayer.h" />
     <ClInclude Include="egSphereMesh.h" />
     <ClInclude Include="egStateController.hpp" />
+    <ClInclude Include="egStructuredBuffer.hpp" />
     <ClInclude Include="egTaskScheduler.h" />
     <ClInclude Include="egText.h" />
     <ClInclude Include="egTexture.h" />
