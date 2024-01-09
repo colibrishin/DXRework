@@ -1,6 +1,10 @@
 #include "pch.h"
+
+#include "egBaseCollider.hpp"
+#include "egBoundingGroup.hpp"
 #include "egLayer.h"
 #include "egObject.hpp"
+#include "egTransform.h"
 #include "egResource.h"
 #include "egScene.hpp"
 
@@ -28,6 +32,23 @@ namespace Engine
         }
 
         return Left.lock()->GetID() < Right.lock()->GetID();
+    }
+
+    Physics::GenericBounding bounding_getter::value(Abstract::Object& object)
+    {
+        if (const auto cldr = object.GetComponent<Components::Collider>().lock())
+        {
+            return cldr->GetBounding();
+        }
+
+        const auto tr = object.GetComponent<Components::Transform>().lock();
+
+        Physics::GenericBounding bounding;
+        bounding.SetType(BOUNDING_TYPE_BOX);
+        bounding.SetCenter(tr->GetWorldPosition());
+        bounding.SetExtents(tr->GetWorldScale());
+
+        return bounding;
     }
 } // namespace Engine
 

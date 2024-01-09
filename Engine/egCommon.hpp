@@ -9,6 +9,11 @@
 #undef max
 #undef min
 
+namespace Engine::Physics
+{
+    struct GenericBounding;
+}
+
 namespace Engine
 {
     using DirectX::SimpleMath::Vector3;
@@ -44,6 +49,11 @@ namespace Engine
     struct ComponentPriorityComparer
     {
         bool operator()(const WeakComponent Left, const WeakComponent Right) const;
+    };
+
+    struct bounding_getter
+    {
+        static Physics::GenericBounding value(Abstract::Object& object);
     };
 
     struct CollisionInfo
