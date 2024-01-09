@@ -344,12 +344,6 @@ namespace Engine::Graphics
 
     };
 
-    struct BoneTransformElement
-    {
-        SB_T(SB_TYPE_BONE)
-        Matrix transform;
-    };
-
     struct VertexBoneElement
     {
         VertexBoneElement()

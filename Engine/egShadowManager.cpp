@@ -30,34 +30,58 @@ namespace Engine::Manager::Graphics
         m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
         m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
 
+        m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
+        m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
+
         InitializeViewport();
         InitializeProcessors();
     }
 
     void ShadowManager::PreUpdate(const float& dt)
     {
-        // todo: cleanup non-lockable lights
+        // Unbind the light information structured buffer from the shader.
+        m_sb_light_buffer_.Unbind(SHADER_VERTEX);
+        m_sb_light_buffer_.Unbind(SHADER_PIXEL);
+
+        // And the light view and projection matrix buffer to re-evaluate.
+        m_sb_light_vps_buffer_.Unbind(SHADER_PIXEL);
+
+        // Remove the expired lights just in case.
+        std::erase_if(m_lights_, [](const auto& kv)
+            {
+                return kv.second.expired();
+            });
     }
 
     void ShadowManager::Update(const float& dt)
     {
-        for (const auto& light : m_lights_)
-        {
-            const UINT idx = static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(light)));
+        // Build light information structured buffer.
+        std::vector<SBs::LightSB> light_buffer;
 
+        for (const auto& light : m_lights_ | std::views::values)
+        {
             if (const auto locked = light.lock())
             {
                 const auto tr = locked->GetComponent<Components::Transform>().lock();
 
                 const auto world = tr->GetWorldMatrix();
 
-                m_light_buffer_.color[idx] = locked->GetColor();
-                m_light_buffer_.world[idx] = world.Transpose();
+                light_buffer.emplace_back(world.Transpose(), locked->GetColor());
             }
         }
 
-        m_light_buffer_.light_count = static_cast<UINT>(m_lights_.size());
-        GetRenderPipeline().SetLight(m_light_buffer_);
+        // Notify the number of lights to the shader.
+        auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
+        gcb.light_count = static_cast<int>(light_buffer.size());
+        GetRenderPipeline().SetGlobalStateBuffer(gcb);
+
+        // If there is no light, it does not need to be updated.
+        if (light_buffer.empty())
+        {
+	        return;
+		}
+
+        m_sb_light_buffer_.SetData(light_buffer.size(), light_buffer.data());
     }
 
     void ShadowManager::PreRender(const float& dt)
@@ -68,7 +92,6 @@ namespace Engine::Manager::Graphics
 
         // Clear all shadow map data.
         ClearShadowMaps();
-        ClearShadowVP();
         // Set the viewport to the size of the shadow map.
         GetRenderPipeline().SetViewport(m_viewport_);
 
@@ -78,53 +101,70 @@ namespace Engine::Manager::Graphics
 
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
-            for (const auto& ptr_light : m_lights_)
-            {
-                const UINT light_idx =
-                        static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(ptr_light)));
+            // Build light view and projection matrix in frustum.
+            std::vector<SBs::LightVPSB> current_light_vp;
 
+            for (const auto& ptr_light : m_lights_ | std::views::values)
+            {
                 if (const auto light = ptr_light.lock())
                 {
                     const auto tr = light->GetComponent<Components::Transform>().lock();
 
-                    // It only needs to render the depth of the object from the light's point of view.
-                    GetRenderPipeline().TargetDepthOnly(
-                                                        m_dx_resource_shadow_vps_[ptr_light].depth_stencil_view.Get(),
-                                                        m_shadow_map_depth_stencil_state_.Get());
-
+                    // Get the light direction from the light's position.
                     Vector3 light_dir;
                     (tr->GetWorldPosition()).Normalize(light_dir);
 
+                    SBs::LightVPSB light_vp{};
                     // Get the light's view and projection matrix in g_max_shadow_cascades parts.
-                    EvalShadowVP(
-                                 light_dir, m_cb_shadow_vps_[light], light_idx,
-                                 m_cb_shadow_vps_chunk_);
-
-                    // Set the light's view and projection matrix to render the objects as the light sees them.
-                    GetRenderPipeline().SetCascadeBuffer(m_cb_shadow_vps_[light]);
-                    // Now render.
-                    BuildShadowMap(*scene, dt);
-
-                    // Save this light perspective depth buffer to shadow map.
-                    m_cb_shadow_vps_chunk_.lights[light_idx] = m_cb_shadow_vps_[light].value;
-                }
-                else
-                {
-                    m_lights_.erase(ptr_light);
+                    EvalShadowVP(light_dir, light_vp);
+                    current_light_vp.emplace_back(light_vp);
                 }
             }
+
+            // Also, if there is no light, it does not need to be updated.
+            if (current_light_vp.empty())
+            {
+	            return;
+			}
+
+            m_sb_light_vps_buffer_.SetData(current_light_vp.size(), current_light_vp.data());
+            m_sb_light_vps_buffer_.Bind(SHADER_GEOMETRY);
+
+            UINT idx = 0;
+
+            for (const auto& ptr_light : m_lights_ | std::views::values)
+            {
+	            if (const auto light = ptr_light.lock())
+	            {
+                    // It only needs to render the depth of the object from the light's point of view.
+                    // Swap the depth stencil to the each light's shadow map.
+                    GetRenderPipeline().TargetDepthOnly(
+                        m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get(),
+                        m_shadow_map_depth_stencil_state_.Get());
+
+                    // Notify the index of the shadow map to the shader.
+		            auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
+                    gcb.target_shadow = idx++;
+                    GetRenderPipeline().SetGlobalStateBuffer(gcb);
+
+                    // Render the depth of the object from the light's point of view.
+                    BuildShadowMap(*scene, dt);
+	            }
+            }
+
+            // Geometry shader's work is done.
+            m_sb_light_vps_buffer_.Unbind(SHADER_GEOMETRY);
         }
 
         // Unload the shadow map shaders.
         m_shadow_shaders_->PostRender(placeholder);
         
         // post-processing for serialization and binding
-        UINT light_idx = 0;
+        std::vector<ID3D11ShaderResourceView*> current_shadow_maps;
 
         for (const auto& buffer : m_dx_resource_shadow_vps_ | std::views::values)
         {
-            m_current_shadow_maps_[light_idx] = buffer.shader_resource_view.Get();
-            light_idx++;
+            current_shadow_maps.emplace_back(buffer.shader_resource_view.Get());
         }
 
         // Pass #2 : Render scene with shadow map
@@ -134,12 +174,13 @@ namespace Engine::Manager::Graphics
         GetRenderPipeline().DefaultDepthStencilState();
 
         // Bind the shadow map resource previously rendered to the pixel shader.
-        GetRenderPipeline().BindResources(
-                                          RESERVED_SHADOW_MAP, SHADER_PIXEL,
-                                          m_current_shadow_maps_,
-                                          light_idx);
+        GetRenderPipeline().BindResources(RESERVED_SHADOW_MAP, SHADER_PIXEL, current_shadow_maps.data(), (UINT)current_shadow_maps.size());
         // And bind the light view and projection matrix on to the constant buffer.
-        GetRenderPipeline().SetShadowVP(m_cb_shadow_vps_chunk_);
+        m_sb_light_vps_buffer_.Bind(SHADER_PIXEL);
+
+        // Bind the light information structured buffer that previously built.
+        m_sb_light_buffer_.Bind(SHADER_PIXEL);
+        m_sb_light_buffer_.Bind(SHADER_VERTEX);
     }
 
     void ShadowManager::Render(const float& dt) {}
@@ -153,36 +194,11 @@ namespace Engine::Manager::Graphics
     void ShadowManager::Reset()
     {
         m_lights_.clear();
-        m_cb_shadow_vps_.clear();
         m_dx_resource_shadow_vps_.clear();
-        ClearShadowVP();
 
         for (auto& subfrusta : m_subfrusta_)
         {
             subfrusta = {};
-        }
-    }
-
-    void ShadowManager::ClearShadowVP()
-    {
-        for (auto& buffer : m_cb_shadow_vps_chunk_.lights)
-        {
-            for (auto& view : buffer.view)
-            {
-                view = Matrix::Identity;
-                view = view.Transpose();
-            }
-
-            for (auto& proj : buffer.proj)
-            {
-                proj = Matrix::Identity;
-                proj = proj.Transpose();
-            }
-
-            for (auto& end_clip_space : buffer.end_clip_spaces)
-            {
-                end_clip_space = Vector4{0.f, 0.f, 0.f, 0.f};
-            }
         }
     }
 
@@ -233,6 +249,8 @@ namespace Engine::Manager::Graphics
                             anim->PostRender(current_frame);
                         }
                     }
+
+                    Components::Transform::Unbind();
                 }
             }
         }
@@ -280,11 +298,7 @@ namespace Engine::Manager::Graphics
         subfrusta.corners[7] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabY);
     }
 
-    void ShadowManager::EvalShadowVP(
-        const Vector3&                 light_dir,
-        CBs::ShadowVPCB&      buffer,
-        const UINT                     light_index,
-        CBs::ShadowVPChunkCB& chunk)
+    void ShadowManager::EvalShadowVP(const Vector3& light_dir, SBs::LightVPSB& buffer)
     {
         // https://cutecatgame.tistory.com/6
 
@@ -336,21 +350,21 @@ namespace Engine::Manager::Graphics
 
                     // DX11 uses column major matrix
 
-                    buffer.value.view[i] = XMMatrixTranspose(
+                    buffer.view[i] = XMMatrixTranspose(
                                                               XMMatrixLookAtLH(pos, Vector3(center), Vector3::Up));
 
-                    buffer.value.proj[i] =
+                    buffer.proj[i] =
                             XMMatrixTranspose(
                                               XMMatrixOrthographicOffCenterLH(
                                                                               minExtent.x, maxExtent.x, minExtent.y,
                                                                               maxExtent.y, 0.f,
                                                                               cascadeExtents.z));
 
-                    buffer.value.end_clip_spaces[i] =
+                    buffer.end_clip_spaces[i] =
                             Vector4{0.f, 0.f, cascadeEnds[i + 1], 1.f};
-                    buffer.value.end_clip_spaces[i] =
+                    buffer.end_clip_spaces[i] =
                             Vector4::Transform(
-                                               buffer.value.end_clip_spaces[i],
+                                               buffer.end_clip_spaces[i],
                                                camera->GetProjectionMatrix()); // use z axis
                 }
             }
@@ -359,23 +373,20 @@ namespace Engine::Manager::Graphics
 
     void ShadowManager::RegisterLight(const WeakLight& light)
     {
-        m_lights_.insert(light);
-
-        InitializeShadowBuffer(m_dx_resource_shadow_vps_[light]);
-        m_cb_shadow_vps_[light] = {};
+        if (const auto locked = light.lock())
+        {
+            m_lights_[locked->GetLocalID()] = light;
+            InitializeShadowBuffer(m_dx_resource_shadow_vps_[locked->GetLocalID()]);
+		}
     }
 
     void ShadowManager::UnregisterLight(const WeakLight& light)
     {
-        const UINT idx = static_cast<UINT>(std::distance(m_lights_.begin(), m_lights_.find(light)));
-
-        m_lights_.erase(light);
-        m_dx_resource_shadow_vps_.erase(light);
-        m_cb_shadow_vps_.erase(light);
-        m_light_buffer_.color[idx] = Colors::White;
-        m_light_buffer_.world[idx] = Matrix::Identity;
-
-        m_dx_resource_shadow_vps_[light] = {};
+        if (const auto locked = light.lock())
+        {
+	        m_lights_.erase(locked->GetLocalID());
+            m_dx_resource_shadow_vps_.erase(locked->GetLocalID());
+        }
     }
 
     void ShadowManager::InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer)

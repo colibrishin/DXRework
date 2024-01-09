@@ -17,7 +17,6 @@ namespace Engine
     {
         RESERVED_SHADOW_MAP = g_reserved_bind_slot,
         RESERVED_RENDERED,
-        RESERVED_ANIMATION,
     };
 
     enum eSampler
@@ -70,15 +69,15 @@ namespace Engine
     {
         CB_TYPE_WVP = 0,
         CB_TYPE_TRANSFORM,
-        CB_TYPE_LIGHT,
-        CB_TYPE_SHADOW,
-        CB_TYPE_SHADOW_CHUNK,
+        CB_TYPE_GLOBAL_STATE,
         CB_TYPE_MATERIAL,
     };
 
     enum eSBType
     {
         SB_TYPE_BONE = g_reserved_struct_buffer_slot,
+        SB_TYPE_LIGHT,
+        SB_TYPE_SHADOW,
     };
 
     enum eResourceType

@@ -68,7 +68,7 @@ namespace Engine::Resources
         return RES_T_BONE_ANIM;
     }
 
-    std::vector<BoneTransformElement> BoneAnimation::GetFrameAnimation(const float dt)
+    std::vector<SBs::BoneSB> BoneAnimation::GetFrameAnimation(const float dt)
     {
         if (dt != 0.f && m_evaluated_time_ == dt && !m_evaluated_data_.empty())
         {
@@ -83,7 +83,7 @@ namespace Engine::Resources
 
         for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
         {
-            BoneTransformElement bfa;
+            SBs::BoneSB bfa;
             const BoneAnimationPrimitive* bone_animation = m_primitive_.GetBoneAnimation(i);
             const BonePrimitive* bone           = m_bone_->GetBone(i);
             const BonePrimitive* parent         = m_bone_->GetBoneParent(i);

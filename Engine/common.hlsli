@@ -34,6 +34,8 @@ Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 
 StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
+StructuredBuffer<LightElement> bufLight : register(t65);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -54,26 +56,13 @@ cbuffer TransformBuffer : register(b1)
     matrix g_world;
 };
 
-cbuffer LightBuffer : register(b2)
+cbuffer GlobalStatusBuffer : register(b2)
 {
-    matrix g_lightWorld[MAX_NUM_LIGHTS];
-    float4 g_lightColor[MAX_NUM_LIGHTS];
-    int    g_lightCount;
-    float3 ___p0;
+    int4 g_lightCount : LIGHTCOUNT;
+    int4 g_targetShadow : SHADOWTARGET;
 }
 
-// current light view and projection matrix of each cascade
-cbuffer CascadeShadowBuffer : register(b3)
-{
-    CascadeShadow g_currentShadow;
-}
-
-cbuffer CascadeShadowChunk : register(b4)
-{
-    CascadeShadow g_cascadeShadowChunk[MAX_NUM_LIGHTS];
-}
-
-cbuffer MaterialBuffer : register(b5)
+cbuffer MaterialBuffer : register(b3)
 {
     BindFlag g_bindFlag : BINDFLAG;
 
@@ -140,16 +129,21 @@ void GetShadowFactor(
         shadowFactor[i] = 1.0f;
     }
 
-    [unroll] for (i = 0; i < g_lightCount; ++i)
+    [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
     {
+        if (i > g_lightCount.x)
+        {
+            break;
+        }
+
         [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
         {
             const matrix vp = mul(
-                                  g_cascadeShadowChunk[i].g_shadowView[j],
-                                  g_cascadeShadowChunk[i].g_shadowProj[j]);
+                                  bufLightVP[i].g_shadowView[j],
+                                  bufLightVP[i].g_shadowProj[j]);
             const float4 position = mul(world_position, vp);
 
-            if (z_clip <= g_cascadeShadowChunk[i].g_shadowZClip[j].z)
+            if (z_clip <= bufLightVP[i].g_shadowZClip[j].z)
             {
                 shadowFactor[i] = GetShadowFactorImpl(i, j, position);
                 break;

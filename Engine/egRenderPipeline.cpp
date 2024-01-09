@@ -29,19 +29,13 @@ namespace Engine::Manager::Graphics
         BindConstantBuffer(m_wvp_buffer_data_, SHADER_PIXEL);
     }
 
-    void RenderPipeline::SetLight(const CBs::LightCB& light)
+    void RenderPipeline::SetGlobalStateBuffer(const CBs::GlobalStateCB& state)
     {
-        m_light_buffer_data.SetData(GetD3Device().GetContext(), light);
-        BindConstantBuffer(m_light_buffer_data, SHADER_VERTEX);
-        BindConstantBuffer(m_light_buffer_data, SHADER_PIXEL);
-        BindConstantBuffer(m_light_buffer_data, SHADER_GEOMETRY);
-    }
-
-    void RenderPipeline::SetCascadeBuffer(const CBs::ShadowVPCB& shadow_buffer)
-    {
-        m_shadow_buffer_data_.SetData(GetD3Device().GetContext(), shadow_buffer);
-        BindConstantBuffer(m_shadow_buffer_data_, SHADER_GEOMETRY);
-        BindConstantBuffer(m_shadow_buffer_data_, SHADER_PIXEL);
+        m_global_state_ = state;
+		m_global_state_buffer_data_.SetData(GetD3Device().GetContext(), state);
+		BindConstantBuffer(m_global_state_buffer_data_, SHADER_VERTEX);
+		BindConstantBuffer(m_global_state_buffer_data_, SHADER_PIXEL);
+        BindConstantBuffer(m_global_state_buffer_data_, SHADER_GEOMETRY);
     }
 
     void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
@@ -131,9 +125,7 @@ namespace Engine::Manager::Graphics
     {
         GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
         GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-        GetD3Device().CreateConstantBuffer(m_light_buffer_data);
-        GetD3Device().CreateConstantBuffer(m_shadow_buffer_data_);
-        GetD3Device().CreateConstantBuffer(m_shadow_buffer_chunk_data_);
+        GetD3Device().CreateConstantBuffer(m_global_state_buffer_data_);
         GetD3Device().CreateConstantBuffer(m_material_buffer_data_);
 
         PrecompileShaders();
@@ -333,16 +325,6 @@ namespace Engine::Manager::Graphics
                                                            m_depth_stencil_state_.Get(), 0);
     }
 
-    void RenderPipeline::SetShadowVP(const CBs::ShadowVPChunkCB& vp_chunk)
-    {
-        m_shadow_buffer_chunk_data_.SetData(
-                                            GetD3Device().GetContext(),
-                                            vp_chunk);
-        GetD3Device().BindConstantBuffer(
-                                         m_shadow_buffer_chunk_data_,
-                                         CB_TYPE_SHADOW_CHUNK, SHADER_PIXEL);
-    }
-
     void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
     {
         m_material_buffer_data_.SetData(
@@ -350,6 +332,11 @@ namespace Engine::Manager::Graphics
 										material_buffer);
         BindConstantBuffer(m_material_buffer_data_, SHADER_VERTEX);
         BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
+    }
+
+    CBs::GlobalStateCB RenderPipeline::GetGlobalStateBuffer() const
+    {
+        return m_global_state_;
     }
 
     void RenderPipeline::UnbindResource(UINT slot, eShaderType type)

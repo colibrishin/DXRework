@@ -7,6 +7,33 @@
 
 namespace Engine::Graphics
 {
+    namespace SBs
+    {
+        struct BoneSB
+        {
+            SB_T(SB_TYPE_BONE)
+        	Matrix transform;
+        };
+
+        struct LightSB
+        {
+            SB_T(SB_TYPE_LIGHT)
+
+        	Matrix world;
+			Color  color;
+		};
+
+        struct LightVPSB
+        {
+        	SB_T(SB_TYPE_SHADOW)
+
+            Matrix  view[g_max_shadow_cascades];
+            Matrix  proj[g_max_shadow_cascades];
+            Vector4 end_clip_spaces[g_max_shadow_cascades];
+		};
+    }
+
+
     namespace CBs
     {
         // Constant buffers
@@ -31,28 +58,12 @@ namespace Engine::Graphics
             Matrix world;
         };
 
-        struct LightCB
+        struct GlobalStateCB
         {
-            CB_T(CB_TYPE_LIGHT)
+            CB_T(CB_TYPE_GLOBAL_STATE)
 
-            Matrix world[g_max_lights];
-            Color  color[g_max_lights];
-            int    light_count;
-            float  ___p[3];
-        };
-
-        struct ShadowVPCB
-        {
-            CB_T(CB_TYPE_SHADOW)
-
-            ShadowVP value;
-        };
-
-        struct ShadowVPChunkCB
-        {
-            CB_T(CB_TYPE_SHADOW_CHUNK)
-
-            ShadowVP lights[g_max_lights];
+        	OffsetT<int> light_count;
+            OffsetT<int> target_shadow;
         };
 
         struct MaterialCB

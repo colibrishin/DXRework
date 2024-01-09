@@ -12,11 +12,17 @@ struct BindFlag
     int4 boneFlag;
 };
 
-struct CascadeShadow
+struct CascadeShadowElement
 {
     matrix g_shadowView[MAX_NUM_CASCADES] : SHADOWVIEW;
     matrix g_shadowProj[MAX_NUM_CASCADES] : SHADOWPROJ;
     float4 g_shadowZClip[MAX_NUM_CASCADES] : SHADOWZCLIP;
+};
+
+struct LightElement
+{
+    matrix world : LIGHTWORLD;
+    float4 color : LIGHTCOLOR;
 };
 
 struct VertexBoneElement

@@ -14,8 +14,8 @@
             element.position =
                     mul(
                         input[j].position, mul(
-                                               g_currentShadow.g_shadowView[i],
-                                               g_currentShadow.g_shadowProj[i]));
+                                               bufLightVP[g_targetShadow.x].g_shadowView[i],
+                                               bufLightVP[g_targetShadow.x].g_shadowProj[i]));
             output.Append(element);
         }
 

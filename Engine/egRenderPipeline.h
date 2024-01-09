@@ -29,10 +29,10 @@ namespace Engine::Manager::Graphics
 
         void SetWorldMatrix(const CBs::TransformCB& matrix);
         void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-        void SetLight(const CBs::LightCB& light);
-        void SetCascadeBuffer(const CBs::ShadowVPCB& shadow_buffer);
-        void SetShadowVP(const CBs::ShadowVPChunkCB& vp_chunk);
+        void SetGlobalStateBuffer(const CBs::GlobalStateCB& state);
         void SetMaterial(const CBs::MaterialCB& material_buffer);
+
+        CBs::GlobalStateCB GetGlobalStateBuffer() const;
 
         void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
 
@@ -80,12 +80,11 @@ namespace Engine::Manager::Graphics
             GetD3Device().BindConstantBuffer(buffer, which_cb<T>::value, target);
         }
 
+        CBs::GlobalStateCB m_global_state_{};
+
         ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
         ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
-
-        ConstantBuffer<CBs::LightCB>              m_light_buffer_data{};
-        ConstantBuffer<CBs::ShadowVPCB>      m_shadow_buffer_data_{};
-        ConstantBuffer<CBs::ShadowVPChunkCB> m_shadow_buffer_chunk_data_{};
+        ConstantBuffer<CBs::GlobalStateCB> m_global_state_buffer_data_{};
         ConstantBuffer<CBs::MaterialCB>           m_material_buffer_data_{};
 
         std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
