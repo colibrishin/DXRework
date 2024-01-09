@@ -224,6 +224,9 @@
     <Filter Include="Low-level\StructuredBuffer">
       <UniqueIdentifier>{585839c3-00c5-40a8-b8a9-421462a789d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Low-level\Octree">
+      <UniqueIdentifier>{c7c24fa4-9f05-4fe6-b344-76abf4d72dd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -453,6 +456,9 @@
     <ClInclude Include="egStructuredBuffer.hpp">
       <Filter>Low-level\StructuredBuffer</Filter>
     </ClInclude>
+    <ClInclude Include="egOctree.hpp">
+      <Filter>Low-level\Octree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -636,6 +642,9 @@
     </ClCompile>
     <ClCompile Include="egMaterial.cpp">
       <Filter>Resource Group\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="egOctree.cpp">
+      <Filter>Low-level\Octree</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
