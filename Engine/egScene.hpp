@@ -5,8 +5,7 @@
 #include "egRenderable.h"
 #include "egLayer.h"
 #include "egTaskScheduler.h"
-
-#include "../octree/octree.h"
+#include "egOctree.hpp"
 
 namespace Engine
 {
@@ -211,9 +210,8 @@ namespace Engine
 
         ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
         ConcurrentWeakObjGlobalMap m_cached_objects_;
-        ConcurrentWeakComRootMap m_cached_components_;
-        Octree<std::set<WeakObject, WeakComparer<Abstract::Object>>>
-        m_object_position_tree_;
+        ConcurrentWeakComRootMap   m_cached_components_;
+        Octree m_object_position_tree_;
     };
 } // namespace Engine
 

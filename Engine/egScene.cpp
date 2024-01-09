@@ -112,29 +112,7 @@ namespace Engine
 
             if (tr)
             {
-                const auto prev_pos =
-                        tr->GetWorldPreviousPosition() + Vector3::One * g_octree_negative_round_up;
-                const auto pos =
-                        tr->GetWorldPreviousPosition() + Vector3::One * g_octree_negative_round_up;
-
-                auto& prev_pos_set = m_object_position_tree_(
-                                                             static_cast<int>(prev_pos.x), static_cast<int>(prev_pos.y),
-                                                             static_cast<int>(prev_pos.z));
-                auto& pos_set = m_object_position_tree_(
-                                                        static_cast<int>(pos.x),
-                                                        static_cast<int>(pos.y),
-                                                        static_cast<int>(pos.z));
-
-                if (prev_pos_set.contains(obj))
-                {
-                    prev_pos_set.erase(obj);
-                    updated = true;
-                }
-                if (pos_set.contains(obj))
-                {
-                    pos_set.erase(obj);
-                    updated = true;
-                }
+                
             }
 
             if (!updated)
@@ -348,32 +326,9 @@ namespace Engine
                 return;
             }
 
+            m_object_position_tree_.Insert(obj);
+
             const auto delta = prev_pos - pos;
-
-            if (std::fabsf(delta.x) <= g_epsilon && std::fabsf(delta.y) <= g_epsilon &&
-                std::fabsf(delta.z) <= g_epsilon)
-            {
-                return;
-            }
-
-            auto& prev_pos_set = m_object_position_tree_(
-                                                         static_cast<int>(prev_pos.x),
-                                                         static_cast<int>(prev_pos.y),
-                                                         static_cast<int>(prev_pos.z));
-            auto& pos_set = m_object_position_tree_(
-                                                    static_cast<int>(pos.x),
-                                                    static_cast<int>(pos.y),
-                                                    static_cast<int>(pos.z));
-
-            if (prev_pos_set.contains(obj))
-            {
-                prev_pos_set.erase(obj);
-            }
-
-            if (!pos_set.contains(obj))
-            {
-                pos_set.insert(obj);
-            }
         }
     }
 
@@ -388,18 +343,6 @@ namespace Engine
             GetDebugger().Log("Position is out of range");
             return;
         }
-
-        const auto& pos_set = m_object_position_tree_(
-                                                      static_cast<int>(pos_rounded.x), static_cast<int>(pos_rounded.y),
-                                                      static_cast<int>(pos_rounded.z));
-
-        for (const auto& obj : pos_set)
-        {
-            if (const auto obj_ptr = obj.lock())
-            {
-                out.push_back(obj_ptr);
-            }
-        }
     }
 
     void Scene::GetNearbyObjects(
@@ -408,29 +351,19 @@ namespace Engine
     {
         const auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
 
-        for (auto i = static_cast<UINT>(pos_rounded.x) - range;
-             i < static_cast<UINT>(pos_rounded.x) + range; ++i)
+        for (auto i = static_cast<UINT>(pos_rounded.z) - range;
+             i < static_cast<UINT>(pos_rounded.z) + range; ++i)
         {
             for (auto j = static_cast<UINT>(pos_rounded.y) - range;
                  j < static_cast<UINT>(pos_rounded.y) + range; ++j)
             {
-                for (auto k = static_cast<UINT>(pos_rounded.z) - range;
-                     k < static_cast<UINT>(pos_rounded.z) + range; ++k)
+                for (auto k = static_cast<UINT>(pos_rounded.x) - range;
+                     k < static_cast<UINT>(pos_rounded.x) + range; ++k)
                 {
                     if (!VectorElementInRange(pos_rounded, g_max_map_size))
                     {
                         GetDebugger().Log("Position is out of range");
                         continue;
-                    }
-
-                    const auto& set = m_object_position_tree_(i, j, k);
-
-                    for (const auto& obj : set)
-                    {
-                        if (const auto obj_ptr = obj.lock())
-                        {
-                            out.push_back(obj_ptr);
-                        }
                     }
                 }
             }
@@ -446,19 +379,6 @@ namespace Engine
 
         while (static_cast<int>(accumulated_length) < exhaust)
         {
-            const auto& current_tree = m_object_position_tree_(
-                                                               static_cast<int>(pos_rounded.x),
-                                                               static_cast<int>(pos_rounded.y),
-                                                               static_cast<int>(pos_rounded.z));
-
-            for (const auto& obj : current_tree)
-            {
-                if (const auto obj_ptr = obj.lock())
-                {
-                    out.insert(obj_ptr);
-                }
-            }
-
             pos_rounded += dir;
             accumulated_length += dir.Length();
         }
@@ -467,7 +387,7 @@ namespace Engine
     Scene::Scene(const eSceneType type)
     : m_main_camera_local_id_(g_invalid_id),
       m_type_(type),
-      m_object_position_tree_(g_max_map_size, {}) {}
+      m_object_position_tree_() {}
 
     void Scene::Synchronize(const StrongScene& scene)
     {
@@ -481,7 +401,6 @@ namespace Engine
             m_mainCamera_           = scene->m_mainCamera_;
             m_cached_objects_       = scene->m_cached_objects_;
             m_cached_components_    = scene->m_cached_components_;
-            m_object_position_tree_ = scene->m_object_position_tree_;
             m_assigned_actor_ids_   = scene->m_assigned_actor_ids_;
         };
 
@@ -539,6 +458,8 @@ namespace Engine
         {
             m_layers[static_cast<eLayerType>(i)]->Update(dt);
         }
+
+        m_object_position_tree_.Update();
     }
 
     void Scene::PreRender(const float& dt)
