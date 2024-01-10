@@ -249,6 +249,8 @@ namespace Engine
                         {
                             break;
                         }
+
+                        cursor = cursor->parent();
                     }
 
                     if (!cursor)
