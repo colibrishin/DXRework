@@ -73,11 +73,11 @@ namespace Client::Scene
         CreateGameObject<Object::FPSCounter>(Engine::LAYER_UI);
         CreateGameObject<Object::MousePositionText>(Engine::LAYER_UI);
         CreateGameObject<Object::SkyBox>(Engine::LAYER_SKYBOX);
-        CreateGameObject<Object::PlaneObject>(Engine::LAYER_ENVIRONMENT);
+        const auto ground = CreateGameObject<Object::PlaneObject>(Engine::LAYER_ENVIRONMENT).lock();
 
         const auto water = CreateGameObject<Object::Water>(Engine::LAYER_ENVIRONMENT).lock();
         water->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
-            {0.f, 0.f, -2.f});
+            {0.f, 2.f, -2.f});
 
         const auto player = CreateGameObject<Object::Player>(Engine::LAYER_DEFAULT).lock();
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
