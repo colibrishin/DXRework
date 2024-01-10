@@ -15,12 +15,13 @@ namespace Engine
     // Deep copying
     Octree::Octree(const Octree& other)
     : m_parent_(other.m_parent_),
+      m_active_children_(other.m_active_children_),
+      m_values_(other.m_values_),
+      m_bounds_(other.m_bounds_),
+      m_insertion_queue_(other.m_insertion_queue_),
       m_b_initialized_(other.m_b_initialized_),
       m_life_count_(other.m_life_count_)
     {
-        m_bounds_ = other.m_bounds_;
-        m_values_ = other.m_values_;
-
         for (int i = 0; i < octant_count; ++i)
         {
             if (other.m_children_[i])
@@ -39,9 +40,12 @@ namespace Engine
             return false;
         }
 
+        // This will be the last node that successfully contains the object
         Octree* last = nullptr;
         std::stack<Octree*> stack;
         stack.push(this);
+
+        // exact match (which is the smallest node that can contain the object)
         bool found = false;
 
         const auto bounding_value = bounding_getter::value(*obj.lock());
@@ -49,7 +53,7 @@ namespace Engine
         while (!stack.empty())
         {
             const auto node = stack.top();
-            last = node;
+            last            = node;
             stack.pop();
 
             const auto& node_active_flag     = node->m_b_initialized_;
@@ -88,6 +92,7 @@ namespace Engine
                 // Try to insert into children for more precise containment
                 for (int i = 0; i < octant_count; ++i)
                 {
+                    // See if there is any child that can contain the object
                     if (node_children[i])
                     {
                         if (bounding_value.ContainsBy(node_children[i]->m_bounds_) ==
@@ -124,6 +129,7 @@ namespace Engine
             return true;
         }
 
+        // there is not match with current object (oob)
         return false;
     }
 

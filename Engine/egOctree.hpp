@@ -55,24 +55,32 @@ namespace Engine
         explicit Octree(const BoundingBox& bounds);
         explicit Octree(const BoundingBox& bounds, const std::vector<WeakT>& values);
 
+        // Initialize a node
         void Build();
+        // Resolving panic status, rebuilds the whole tree.
         void Panic();
+        // Resolving dirty status or rebuilding.
         void UpdateInternal();
 
-        static std::vector<BoundingBox> __vectorcall GetBounds(const Vector3 &extent, const Vector3 &center);
-        static BoundingBox __vectorcall GetBounds(const Vector3 &extent, const Vector3 &center, const eOctant region);
+        // Utility function for getting the octant bounds.
+        static std::vector<BoundingBox> __vectorcall GetBounds(const Vector3& extent, const Vector3& center);
+        static BoundingBox __vectorcall GetBounds(const Vector3& extent, const Vector3& center, const eOctant region);
 
         Octree* root();
         Octree* parent() const;
-        bool ready();
-        bool dirty() const;
-        bool garbage() const;
-        bool empty() const;
+        bool    ready() const;
+        bool    dirty() const;
+        bool    garbage() const;
+        bool    empty() const;
 
+        // The max points of the bounding box in world space.
         Vector3 MaxWorldPoint() const;
+        // The min points of the bounding box in world space.
         Vector3 MinWorldPoint() const;
 
+        // The size of the bounding box in world space in half.
         Vector3 Extent() const;
+        // The center of the bounding box in world space.
         Vector3 WorldCenter() const;
 
         Octree*                   m_parent_;
