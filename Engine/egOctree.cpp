@@ -123,9 +123,18 @@ namespace Engine
             }
         }
 
+        if (found)
+        {
+            return true;
+        }
         if (!found && last)
         {
             last->m_values_.push_back(obj);
+            return true;
+        }
+        else if (!last && bounding_value.ContainsBy(root()->m_bounds_))
+        {
+            root()->m_values_.push_back(obj);
             return true;
         }
 
