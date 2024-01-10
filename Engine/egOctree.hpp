@@ -7,6 +7,7 @@
 
 namespace Engine
 {
+    // todo: generic octree
     class Octree
     {
     private:
@@ -54,13 +55,12 @@ namespace Engine
         explicit Octree(const BoundingBox& bounds);
         explicit Octree(const BoundingBox& bounds, const std::vector<WeakT>& values);
 
-        void SetEnclosingCube();
         void Build();
         void Panic();
         void UpdateInternal();
 
-        static std::vector<BoundingBox> __vectorcall GetBounds(const DirectX::XMFLOAT3& extent, const DirectX::XMFLOAT3& center);
-        static BoundingBox __vectorcall GetBounds(const DirectX::XMFLOAT3& extent, const DirectX::XMFLOAT3& center, const eOctant region);
+        static std::vector<BoundingBox> __vectorcall GetBounds(const Vector3 &extent, const Vector3 &center);
+        static BoundingBox __vectorcall GetBounds(const Vector3 &extent, const Vector3 &center, const eOctant region);
 
         Octree* root();
         Octree* parent() const;
