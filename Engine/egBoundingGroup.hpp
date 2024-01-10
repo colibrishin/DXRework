@@ -100,8 +100,36 @@ namespace Engine::Physics
             }
         }
 
+        Vector3 GetExtents() const
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                return m_boundings_.box.Extents;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                return Vector3(m_boundings_.sphere.Radius);
+            }
+            else
+            {
+                throw std::exception("GetExtents: Invalid type");
+            }
+        }
+
+        void Transform(const Matrix& world)
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                m_boundings_.box = TranslateBounding(m_boundings_.box, world);
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                m_boundings_.sphere = TranslateBounding(m_boundings_.sphere, world);
+            }
+        }
+
         template <typename BoundingType>
-        DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other)
+        DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
         {
             if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
