@@ -92,6 +92,7 @@ namespace Engine
 
         std::queue<WeakT> m_insertion_queue_;
         bool              m_b_initialized_;
+        bool              m_b_panic_;
 
         int m_life_count_;
     };

@@ -243,7 +243,7 @@ namespace Engine
                 {
                     auto* cursor = parent();
 
-                    while (cursor != nullptr)
+                    while (cursor)
                     {
                         if (cursor->Insert(obj))
                         {
@@ -256,8 +256,7 @@ namespace Engine
                     if (!cursor)
                     {
                         // panic: Even root cannot contains the object, need to rebuild the whole tree.
-                        // todo: due to the recursion, remaining stacks cause undefined behavior.
-                        root()->Panic();
+                        root()->m_b_panic_ = true;
                         return;
                     }
                     else
@@ -270,6 +269,11 @@ namespace Engine
 
                 ++it;
             }
+        }
+
+        if (root() == this && m_b_panic_)
+        {
+            Panic();
         }
 
         //GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
