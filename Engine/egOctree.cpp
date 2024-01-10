@@ -105,8 +105,10 @@ namespace Engine
 
                         if (bound_check == DirectX::ContainmentType::CONTAINS)
                         {
-                            node_children[i]            = std::unique_ptr<Octree>(new Octree{bound});
+                            // Expand the node and check same above
+                            node_children[i] = std::unique_ptr<Octree>(new Octree{bound, {obj}});
                             node_children[i]->m_parent_ = node;
+                            node_children[i]->Build();
                             node_active_children.set(i);
                             stack.push(node_children[i].get());
                             break;
@@ -157,6 +159,49 @@ namespace Engine
             m_life_count_ = node_lifespan;
         }
 
+        // If parent has any object that can be fit into smaller node, move it to the child node
+        if (!m_values_.empty())
+        {
+            for (auto it = m_values_.begin(); it != m_values_.end();)
+            {
+                if (it->expired())
+                {
+                    it = m_values_.erase(it);
+                    continue;
+                }
+
+                const auto obj = it->lock();
+                const auto obj_bound   = bounding_getter::value(*obj);
+                bool found = false;
+
+                for (int i = 0; i < octant_count; ++i)
+                {
+                    if (m_children_[i])
+                    {
+                        if (obj_bound.ContainsBy(m_children_[i]->m_bounds_) ==
+                            DirectX::ContainmentType::CONTAINS)
+                        {
+                            // Move the object to insertion queue, and let the child node handle it
+                            // By this, dirty flag will be set, and the child node will be updated
+                            m_children_[i]->m_insertion_queue_.push(obj);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (found)
+                {
+                    it = m_values_.erase(it);
+                }
+                else
+                {
+                    ++it;   
+                }
+            }
+        }
+
+        // Update children first.
         for (int i = 0; i < octant_count; ++i)
         {
             if (m_children_[i])
@@ -178,37 +223,48 @@ namespace Engine
             // Check whether the objects are still bounded by the node
             for (auto it = m_values_.begin(); it != m_values_.end();)
             {
-                if (auto obj = it->lock())
+                if (it->expired())
                 {
-                    const auto bound_check = bounding_getter::value(*obj).ContainsBy(m_bounds_);
-                    if (bound_check != DirectX::CONTAINS)
+                    it = m_values_.erase(it);
+                    continue;
+                }
+
+                const auto obj = it->lock();
+                const auto obj_bound   = bounding_getter::value(*obj);
+                const auto bound_check = obj_bound.ContainsBy(m_bounds_);
+
+                if (bound_check != DirectX::ContainmentType::CONTAINS)
+                {
+                    auto* cursor = parent();
+
+                    while (cursor != nullptr)
                     {
-                        if (!parent()->Insert(obj))
+                        if (cursor->Insert(obj))
                         {
-                            // panic: parent cannot update the object, need to rebuild the whole tree.
-                            root()->Panic();
-                            return;
+                            break;
                         }
-                        else
-                        {
-                            // Object moved to parent node, remove from current obj
-                            it = m_values_.erase(it);
-                        }
+                    }
+
+                    if (!cursor)
+                    {
+                        // panic: Even root cannot contains the object, need to rebuild the whole tree.
+                        // todo: due to the recursion, remaining stacks cause undefined behavior.
+                        root()->Panic();
+                        return;
                     }
                     else
                     {
-                        ++it;
+                        // Object moved to parent node, remove from current obj
+                        it = m_values_.erase(it);
+                        continue;
                     }
                 }
-                else
-                {
-                    // Object expired, remove from current node
-                    it = m_values_.erase(it);
-                }
+
+                ++it;
             }
         }
 
-        GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
+        //GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
     }
 
     Octree::Octree(const BoundingBox& bounds)
@@ -246,8 +302,11 @@ namespace Engine
             const auto node_center = node->WorldCenter();
             const auto extent_scale = node->Extent() * 2.f;
 
+            node_active_flag = true;
+
             if (node_value.size() <= 1 && root() != this) continue; // Leaf node
 
+            // Node is bigger than the max map size
             if (extent_scale.x < (float)g_max_map_size &&
                 extent_scale.y < (float)g_max_map_size &&
                 extent_scale.z < (float)g_max_map_size)
@@ -255,6 +314,7 @@ namespace Engine
                 continue;
             }
 
+            // Split the node into 8 octants, if it is needed, and distribute the objects
             const std::vector<BoundingBox> octants = GetBounds(node_extent, node_center);
             std::array<std::vector<WeakT>, octant_count> octant_values;
 
@@ -279,14 +339,12 @@ namespace Engine
                 if (!octant_values[i].empty())
                 {
                     node_children[i]            = std::unique_ptr<Octree>(new Octree{octants[i], octant_values[i]});
-                    node_children[i]->m_parent_ = this;
+                    node_children[i]->m_parent_ = node;
+                    node_children[i]->Build();
                     node_active_children.set(i);
-
                     stack.push(node_children[i].get());
                 }
             }
-
-            node_active_flag = true;
         }
     }
 
@@ -367,9 +425,11 @@ namespace Engine
         BoundingBox::CreateFromPoints(trfb, center + (extent * trf), center);
         BoundingBox::CreateFromPoints(blfb, center + (extent * blf), center);
         BoundingBox::CreateFromPoints(brfb, center + (extent * brf), center);
-        BoundingBox::CreateFromPoints(tlbb, center + (extent * tlb), center);
-        BoundingBox::CreateFromPoints(trbb, center + (extent * trb), center);
-        BoundingBox::CreateFromPoints(blbb, center + (extent * blb), center);
+
+        BoundingBox::CreateFromPoints(tlbb, center, center + (extent * tlb));
+        BoundingBox::CreateFromPoints(trbb, center, center + (extent * trb));
+        BoundingBox::CreateFromPoints(blbb, center, center + (extent * blb));
+        BoundingBox::CreateFromPoints(brbb, center, center + (extent * brb));
 
         return {tlfb, trfb, blfb, brfb, tlbb, trbb, blbb, brbb};
     }
@@ -381,37 +441,21 @@ namespace Engine
 
         switch (region)
         {
-        case eOctant::TopLeftFront: BoundingBox::CreateFromPoints(
-                                                                  bound, center + (extent * tlf),
-                                                                  center);
+        case eOctant::TopLeftFront: BoundingBox::CreateFromPoints(bound, center + (extent * tlf), center);
             break;
-        case eOctant::TopRightFront: BoundingBox::CreateFromPoints(
-                                                                   bound, center + (extent * trf),
-                                                                   center);
+        case eOctant::TopRightFront: BoundingBox::CreateFromPoints(bound, center + (extent * trf), center);
             break;
-        case eOctant::BottomLeftFront: BoundingBox::CreateFromPoints(
-                                                                     bound, center + (extent * blf),
-                                                                     center);
+        case eOctant::BottomLeftFront: BoundingBox::CreateFromPoints(bound, center + (extent * blf), center);
             break;
-        case eOctant::BottomRightFront: BoundingBox::CreateFromPoints(
-                                                                      bound, center + (extent * brf),
-                                                                      center);
+        case eOctant::BottomRightFront: BoundingBox::CreateFromPoints(bound, center + (extent * brf), center);
             break;
-        case eOctant::TopLeftBack: BoundingBox::CreateFromPoints(
-                                                                 bound, center + (extent * tlb),
-                                                                 center);
+        case eOctant::TopLeftBack: BoundingBox::CreateFromPoints(bound, center, center + (extent * tlb));
             break;
-        case eOctant::TopRightBack: BoundingBox::CreateFromPoints(
-                                                                  bound, center + (extent * trb),
-                                                                  center);
+        case eOctant::TopRightBack: BoundingBox::CreateFromPoints(bound, center, center + (extent * trb));
             break;
-        case eOctant::BottomLeftBack: BoundingBox::CreateFromPoints(
-                                                                    bound, center + (extent * blb),
-                                                                    center);
+        case eOctant::BottomLeftBack: BoundingBox::CreateFromPoints(bound, center, center + (extent * blb));
             break;
-        case eOctant::BottomRightBack: BoundingBox::CreateFromPoints(
-                                                                     bound, center + (extent * brb),
-                                                                     center);
+        case eOctant::BottomRightBack: BoundingBox::CreateFromPoints(bound, center, center + (extent * brb));
             break;
         default: throw std::logic_error("Unknown octant value given");
         }
@@ -429,9 +473,9 @@ namespace Engine
         return m_parent_ ? m_parent_ : nullptr;
     }
 
-    bool Octree::ready()
+    bool Octree::ready() const
     {
-        return root()->m_b_initialized_ && !root()->dirty();
+        return m_b_initialized_ && !dirty();
     }
 
     bool Octree::dirty() const
