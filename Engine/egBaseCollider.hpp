@@ -65,6 +65,8 @@ namespace Engine::Components
         void     OnDeserialized() override;
         void     OnImGui() override;
 
+        Physics::GenericBounding GetBounding() const;
+
         template <typename T>
         T GetBounding() const
         {
@@ -151,7 +153,7 @@ namespace Engine::Components
         eBoundingType m_type_;
         EntityName    m_model_name_;
 
-        Physics::BoundingGroup m_boundings_;
+        Physics::GenericBounding m_boundings_;
 
         float m_mass_;
 

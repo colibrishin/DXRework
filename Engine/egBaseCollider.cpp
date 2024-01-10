@@ -384,6 +384,11 @@ namespace Engine::Components
         // TODO: colliding objects
     }
 
+    Physics::GenericBounding Collider::GetBounding() const
+    {
+        return m_boundings_;
+    }
+
     void Collider::UpdateInertiaTensor()
     {
         Quaternion rotation;
