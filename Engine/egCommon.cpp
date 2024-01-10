@@ -36,18 +36,18 @@ namespace Engine
 
     Physics::GenericBounding bounding_getter::value(Abstract::Object& object)
     {
+        const auto tr = object.GetComponent<Components::Transform>().lock();
+
         if (const auto cldr = object.GetComponent<Components::Collider>().lock())
         {
-            return cldr->GetBounding();
+            auto bounding = cldr->GetBounding();
+            bounding.Transform(tr->GetWorldMatrix());
+            return bounding;
         }
-
-        const auto tr = object.GetComponent<Components::Transform>().lock();
 
         Physics::GenericBounding bounding;
         bounding.SetType(BOUNDING_TYPE_BOX);
-        bounding.SetCenter(tr->GetWorldPosition());
-        bounding.SetExtents(tr->GetWorldScale());
-
+        bounding.Transform(tr->GetWorldMatrix());
         return bounding;
     }
 } // namespace Engine
