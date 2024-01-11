@@ -291,6 +291,7 @@ namespace Engine
     Octree::Octree(const BoundingBox& bounds)
     : m_parent_(nullptr),
       m_b_initialized_(false),
+      m_b_panic_(false),
       m_life_count_(node_lifespan)
     {
         m_bounds_ = bounds;
@@ -299,6 +300,7 @@ namespace Engine
     Octree::Octree(const BoundingBox& bounds, const std::vector<WeakT>& values)
     : m_parent_(nullptr),
       m_b_initialized_(false),
+      m_b_panic_(false),
       m_life_count_(node_lifespan)
     {
         m_bounds_ = bounds;
