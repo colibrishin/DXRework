@@ -13,7 +13,9 @@ namespace Engine::Manager::Physics
 {
     void ConstraintSolver::Initialize() {}
 
-    void ConstraintSolver::PreUpdate(const float& dt)
+    void ConstraintSolver::PreUpdate(const float& dt) {}
+
+    void ConstraintSolver::Update(const float& dt)
     {
         auto& infos = GetCollisionDetector().GetCollisionInfo();
 
@@ -29,18 +31,12 @@ namespace Engine::Manager::Physics
             {
                 ResolveCollision(info.lhs, info.rhs);
             }
-            if (info.grounded)
-            {
-                ResolveGrounded(info.lhs, info.rhs);
-            }
         }
 
         infos.clear();
         m_collision_resolved_set_.clear();
         m_speculative_resolved_set_.clear();
     }
-
-    void ConstraintSolver::Update(const float& dt) {}
 
     void ConstraintSolver::PreRender(const float& dt) {}
 
@@ -191,31 +187,6 @@ namespace Engine::Manager::Physics
 
             cl->RemoveSpeculationObject(rhs.lock()->GetID());
             cl_other->RemoveSpeculationObject(lhs.lock()->GetID());
-        }
-    }
-
-    void ConstraintSolver::ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs)
-    {
-        const auto cl_lhs = lhs.lock()->GetComponent<Components::Collider>().lock();
-        const auto cl_rhs = rhs.lock()->GetComponent<Components::Collider>().lock();
-
-        const auto tr_lhs = lhs.lock()->GetComponent<Components::Transform>().lock();
-        const auto tr_rhs = rhs.lock()->GetComponent<Components::Transform>().lock();
-
-        static Ray ray{};
-        ray.position = lhs.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
-        ray.direction = Vector3::Down;
-        const auto length = std::fabsf(tr_lhs->GetLocalScale().Dot(Vector3::Down)) / 2.f;
-        float intersection = 0.0f;
-
-        if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
-        {
-            Vector3 normal;
-            float penetration;
-            cl_lhs->GetPenetration(*cl_rhs, normal, penetration);
-
-            const auto fallback = tr_lhs->GetWorldPosition() + (normal * penetration);
-            tr_lhs->SetWorldPosition(fallback);
         }
     }
 } // namespace Engine::Manager::Physics
