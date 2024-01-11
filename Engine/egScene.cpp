@@ -103,25 +103,6 @@ namespace Engine
         GetShadowManager().UnregisterLight(obj);
     }
 
-    void Scene::RemoveObjectFromOctree(const WeakObject& obj)
-    {
-        if (const auto locked = obj.lock())
-        {
-            const auto tr      = locked->GetComponent<Components::Transform>().lock();
-            bool       updated = false;
-
-            if (tr)
-            {
-                
-            }
-
-            if (!updated)
-            {
-                // @todo: add task for refreshing octree.
-            }
-        }
-    }
-
     void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
     {
         // add object to scene
@@ -168,8 +149,6 @@ namespace Engine
 
             obj = acc->second;
         }
-
-        RemoveObjectFromOctree(obj);
 
         if (layer == LAYER_LIGHT)
         {
@@ -300,88 +279,6 @@ namespace Engine
     eSceneType Scene::GetType() const
     {
         return m_type_;
-    }
-
-    void     Scene::UpdatePosition(const WeakObject& obj)
-    {
-        if (const auto obj_ptr = obj.lock())
-        {
-            const auto tr = obj_ptr->GetComponent<Components::Transform>().lock();
-
-            if (!tr)
-            {
-                GetDebugger().Log("Object has no transform component");
-                return;
-            }
-
-            const auto prev_pos =
-                    VectorElementAdd(tr->GetWorldPreviousPosition(), g_octree_negative_round_up);
-            const auto pos =
-                    VectorElementAdd(tr->GetWorldPreviousPosition(), g_octree_negative_round_up);
-
-            if (!VectorElementInRange(prev_pos, g_max_map_size) ||
-                !VectorElementInRange(pos, g_max_map_size))
-            {
-                GetDebugger().Log("Object position is out of range");
-                return;
-            }
-
-            m_object_position_tree_.Insert(obj);
-
-            const auto delta = prev_pos - pos;
-        }
-    }
-
-    void Scene::GetNearestObjects(
-        const Vector3&           pos,
-        std::vector<WeakObject>& out)
-    {
-        const auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
-
-        if (!VectorElementInRange(pos_rounded, g_max_map_size))
-        {
-            GetDebugger().Log("Position is out of range");
-            return;
-        }
-    }
-
-    void Scene::GetNearbyObjects(
-        const Vector3&           pos, const UINT range,
-        std::vector<WeakObject>& out)
-    {
-        const auto pos_rounded = VectorElementAdd(pos, g_octree_negative_round_up);
-
-        for (auto i = static_cast<UINT>(pos_rounded.z) - range;
-             i < static_cast<UINT>(pos_rounded.z) + range; ++i)
-        {
-            for (auto j = static_cast<UINT>(pos_rounded.y) - range;
-                 j < static_cast<UINT>(pos_rounded.y) + range; ++j)
-            {
-                for (auto k = static_cast<UINT>(pos_rounded.x) - range;
-                     k < static_cast<UINT>(pos_rounded.x) + range; ++k)
-                {
-                    if (!VectorElementInRange(pos_rounded, g_max_map_size))
-                    {
-                        GetDebugger().Log("Position is out of range");
-                        continue;
-                    }
-                }
-            }
-        }
-    }
-
-    void Scene::SearchObjects(
-        const Vector3&                                        pos, const Vector3& dir,
-        std::set<WeakObject, WeakComparer<Abstract::Object>>& out, int            exhaust)
-    {
-        auto  pos_rounded        = VectorElementAdd(pos, g_octree_negative_round_up);
-        float accumulated_length = 0.f;
-
-        while (static_cast<int>(accumulated_length) < exhaust)
-        {
-            pos_rounded += dir;
-            accumulated_length += dir.Length();
-        }
     }
 
     Scene::Scene(const eSceneType type)
