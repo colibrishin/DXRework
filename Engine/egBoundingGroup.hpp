@@ -1,5 +1,4 @@
 #pragma once
-#include "egType.h"
 
 namespace Engine::Physics
 {
@@ -32,34 +31,128 @@ namespace Engine::Physics
         }
     }
 
-    struct BoundingGroup
+    struct GenericBounding
     {
     public:
-        BoundingGroup() : boundings({}) {}
+        GenericBounding()
+        : type(BOUNDING_TYPE_BOX),
+          m_boundings_({}) {}
+
+        GenericBounding(const GenericBounding& other)
+        {
+            type = other.type;
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                m_boundings_.box = other.m_boundings_.box;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                m_boundings_.sphere = other.m_boundings_.sphere;
+            }
+        }
 
         template <typename BoundingType>
         __forceinline BoundingType __vectorcall As(const Matrix& mat) const
         {
             if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
-                const auto box_ = TranslateBounding(boundings.box, mat);
+                const auto box_ = TranslateBounding(m_boundings_.box, mat);
                 return box_;
             }
             else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
             {
-                const auto sphere_ = TranslateBounding(boundings.sphere, mat);
+                const auto sphere_ = TranslateBounding(m_boundings_.sphere, mat);
                 return sphere_;
             }
             else
             {
-                static_assert("TranslateBounding: Invalid type");
+                static_assert("As: Invalid type");
                 return {};
+            }
+        }
+
+        void SetType(const eBoundingType type_)
+        {
+            type = type_;
+        }
+
+        void SetCenter(const Vector3& center_)
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                m_boundings_.box.Center = center_;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                m_boundings_.sphere.Center = center_;
+            }
+        }
+
+        void SetExtents(const Vector3& extents_)
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                m_boundings_.box.Extents = extents_;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                m_boundings_.sphere.Radius = MaxElement(extents_);
+            }
+        }
+
+        Vector3 GetExtents() const
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                return m_boundings_.box.Extents;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                return Vector3(m_boundings_.sphere.Radius);
+            }
+            else
+            {
+                throw std::exception("GetExtents: Invalid type");
+            }
+        }
+
+        void Transform(const Matrix& world)
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                m_boundings_.box = TranslateBounding(m_boundings_.box, world);
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                m_boundings_.sphere = TranslateBounding(m_boundings_.sphere, world);
+            }
+        }
+
+        template <typename BoundingType>
+        DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
+        {
+            if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
+            {
+                return other.Contains(m_boundings_.box);
+            }
+            else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
+            {
+                return other.Contains(m_boundings_.sphere);
+            }
+            else if constexpr (std::is_same_v<BoundingType, BoundingBox>)
+            {
+                return other.Contains(m_boundings_.box);
+            }
+            else
+            {
+                static_assert("ContainsBy: Invalid type");
+                return DirectX::ContainmentType::DISJOINT;
             }
         }
 
         void __vectorcall UpdateFromBoundingBox(const BoundingOrientedBox& box_)
         {
-            boundings.box = box_;
+            m_boundings_.box = box_;
         }
 
         template <typename BoundingType>
@@ -67,21 +160,17 @@ namespace Engine::Physics
         {
             if (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
-                boundings.box.CreateFromPoints(boundings.box, count, points, stride);
+                m_boundings_.box.CreateFromPoints(m_boundings_.box, count, points, stride);
             }
             else if (std::is_same_v<BoundingType, BoundingSphere>)
             {
-                boundings.sphere.CreateFromPoints(boundings.sphere, count, points, stride);
+                m_boundings_.sphere.CreateFromPoints(m_boundings_.sphere, count, points, stride);
             }
             else if (std::is_same_v<BoundingType, BoundingBox>)
             {
                 BoundingBox box_;
                 BoundingBox::CreateFromPoints(box_, count, points, stride);
-                BoundingOrientedBox::CreateFromBoundingBox(boundings.box, box_);
-            }
-            else
-            {
-                static_assert("TranslateBounding: Invalid type");
+                BoundingOrientedBox::CreateFromBoundingBox(m_boundings_.box, box_);
             }
         }
 
@@ -90,14 +179,17 @@ namespace Engine::Physics
         template <class Archive>
         void serialize(Archive& ar, const unsigned int file_version)
         {
-            ar & boundings.box;
-            ar & boundings.sphere;
+            ar & m_boundings_.box;
+            ar & m_boundings_.sphere;
         }
 
+        eBoundingType type;
         union Boundings
         {
             BoundingOrientedBox box;
             BoundingSphere      sphere;
-        } boundings;
+
+            Boundings() { box = {}; }
+        } m_boundings_;
     };
 }

@@ -4,15 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Engine", "..\Engine\Engine.vcxproj", "{8E154F61-E984-4491-9894-7665EC2D18F9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE} = {5554F591-CCB5-43E8-AFAB-E9348CB9AACE}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Window", "..\Window\Window.vcxproj", "{2181C64A-D09C-4CD0-AA59-7EF53399AF82}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "..\Client\Client.vcxproj", "{8F17EB0B-FD49-4998-92EA-E1052985777B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "octree", "..\octree\octree.vcxproj", "{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmod", "fmod\fmod.vcxitems", "{70BEAC34-4AB1-485A-AFB7-81F047D85BFE}"
 EndProject
@@ -52,20 +47,11 @@ Global
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x64.Build.0 = Release|x64
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.ActiveCfg = Release|Win32
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.Build.0 = Release|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.ActiveCfg = Debug|x64
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x64.Build.0 = Debug|x64
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x86.ActiveCfg = Debug|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Debug|x86.Build.0 = Debug|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Release|x64.ActiveCfg = Release|x64
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Release|x64.Build.0 = Release|x64
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Release|x86.ActiveCfg = Release|Win32
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5554F591-CCB5-43E8-AFAB-E9348CB9AACE} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
 		{70BEAC34-4AB1-485A-AFB7-81F047D85BFE} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
 		{B06DEDD4-4E9B-43C2-9E80-D3D135CD61E5} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
 	EndGlobalSection

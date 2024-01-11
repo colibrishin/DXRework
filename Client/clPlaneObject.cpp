@@ -33,7 +33,6 @@ namespace Client::Object
 
         AddComponent<Components::Transform>();
         const auto tr = GetComponent<Components::Transform>().lock();
-        tr->SetLocalPosition(Vector3(0.0f, -1.0f, 0.0f));
         tr->SetLocalScale({10.0f, 1.0f, 10.0f});
 
         AddComponent<Components::Collider>();

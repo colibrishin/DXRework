@@ -37,6 +37,8 @@ namespace Engine
     constexpr LONG_PTR g_invalid_id               = -1;
     constexpr Vector3  g_forward                  = {0.f, 0.f, 1.f};
     constexpr Vector3  g_backward                 = {0.f, 0.f, -1.f};
-    constexpr size_t   g_max_map_size             = 2048; // only in power of 2
+    constexpr size_t   g_max_map_size             = 128; // only in power of 2
     constexpr size_t   g_octree_negative_round_up = g_max_map_size / 2;
+
+    static_assert(g_max_map_size % 2 == 0, "Map size should be in the power of 2");
 }
