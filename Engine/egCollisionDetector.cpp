@@ -162,7 +162,7 @@ namespace Engine::Manager::Physics
 
             if (collision)
             {
-                if (!m_collision_map_.contains(lhs->GetID()) && 
+                if (!m_collision_map_.contains(lhs->GetID()) || 
                     !m_collision_map_[lhs->GetID()].contains(rhs->GetID()))
                 {
                     // Initial Collision
