@@ -100,7 +100,7 @@ namespace Engine::Physics
             }
         }
 
-        Vector3 GetExtents() const
+        [[nodiscard]] Vector3 GetExtents() const
         {
             if (type == BOUNDING_TYPE_BOX)
             {
@@ -116,11 +116,28 @@ namespace Engine::Physics
             }
         }
 
+        [[nodiscard]] Quaternion GetOrientation() const
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                return m_boundings_.box.Orientation;
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                return Quaternion::Identity;
+            }
+            else
+            {
+                throw std::exception("GetOrientation: Invalid type");
+            }
+        }
+
         void Transform(const Matrix& world)
         {
             if (type == BOUNDING_TYPE_BOX)
             {
-                m_boundings_.box = TranslateBounding(m_boundings_.box, world);
+                const auto translated = TranslateBounding(m_boundings_.box, world);
+                m_boundings_.box = translated;
             }
             else if (type == BOUNDING_TYPE_SPHERE)
             {
@@ -128,8 +145,54 @@ namespace Engine::Physics
             }
         }
 
+        [[nodiscard]] bool __vectorcall Intersects(
+            const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat, const Vector3& dir, const float epsilon = g_epsilon) const
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                BoundingOrientedBox box = m_boundings_.box;
+                box.Center             = box.Center + (dir * epsilon);
+                box = TranslateBounding(box, this_mat);
+                return Intersects(box, other, other_mat, dir);
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                BoundingSphere sphere = m_boundings_.sphere;
+                sphere.Center         = sphere.Center + (dir * epsilon);
+                sphere = TranslateBounding(sphere, this_mat);
+                return Intersects(sphere, other, other_mat, dir);
+            }
+            else
+            {
+                throw std::exception("Intersects: Invalid type");
+            }
+        }
+
+        [[nodiscard]] bool __vectorcall Intersects(
+            const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat, const float epsilon = g_epsilon) const
+        {
+            if (type == BOUNDING_TYPE_BOX)
+            {
+                BoundingOrientedBox box = m_boundings_.box;
+                box.Extents = box.Extents + Vector3(epsilon);
+                box = TranslateBounding(box, this_mat);
+                return Intersects(box, other, other_mat, epsilon);
+            }
+            else if (type == BOUNDING_TYPE_SPHERE)
+            {
+                BoundingSphere sphere = m_boundings_.sphere;
+                sphere.Radius = sphere.Radius + epsilon;
+                sphere = TranslateBounding(sphere, this_mat);
+                return Intersects(sphere, other, other_mat, epsilon);
+            }
+            else
+            {
+                throw std::exception("Intersects: Invalid type");
+            }
+        }
+
         template <typename BoundingType>
-        DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
+        [[nodiscard]] DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
         {
             if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
             {
@@ -174,6 +237,13 @@ namespace Engine::Physics
             }
         }
 
+        [[nodiscard]] __forceinline GenericBounding __vectorcall Transform(const Matrix& mat) const
+        {
+            GenericBounding ret = *this;
+            ret.Transform(mat);
+            return ret;
+        }
+
     private:
         friend class boost::serialization::access;
         template <class Archive>
@@ -181,6 +251,74 @@ namespace Engine::Physics
         {
             ar & m_boundings_.box;
             ar & m_boundings_.sphere;
+        }
+
+        template <typename BoundingTypeA, typename BoundingTypeB>
+        static bool __vectorcall Intersects(
+            const BoundingTypeA& lhs, const BoundingTypeB& rhs, const Matrix& mat, const Vector3& dir, const float epsilon = g_epsilon)
+        {
+            if constexpr (std::is_same_v<BoundingTypeB, GenericBounding>)
+            {
+                if (rhs.type == BOUNDING_TYPE_BOX)
+                {
+                    BoundingOrientedBox box = rhs.m_boundings_.box;
+                    box.Center              = box.Center + (dir * epsilon);
+                    box                     = TranslateBounding(box, mat);
+                    return lhs.Intersects(box);
+                }
+                else if (rhs.type == BOUNDING_TYPE_SPHERE)
+                {
+                    BoundingSphere sphere = rhs.m_boundings_.sphere;
+                    sphere.Center         = sphere.Center + (dir * epsilon);
+                    sphere                = TranslateBounding(sphere, mat);
+                    return lhs.Intersects(sphere);
+                }
+                else
+                {
+                    throw std::exception("Intersects: Invalid type");
+                }
+            }
+            else
+            {
+                BoundingTypeB rhs_ = rhs;
+                rhs_.Center        = rhs_.Center + (dir * epsilon);
+                rhs_               = TranslateBounding(rhs_, mat);
+                return lhs.Intersects(rhs);
+            }
+        }
+
+        template <typename BoundingTypeA, typename BoundingTypeB>
+        static bool __vectorcall Intersects(
+            const BoundingTypeA& lhs, const BoundingTypeB& rhs, const Matrix& mat, const float epsilon = g_epsilon)
+        {
+            if constexpr (std::is_same_v<BoundingTypeB, GenericBounding>)
+            {
+                if (rhs.type == BOUNDING_TYPE_BOX)
+                {
+                    BoundingOrientedBox box = rhs.m_boundings_.box;
+                    box.Extents             = box.Extents + Vector3(epsilon);
+                    box                     = TranslateBounding(box, mat);
+                    return lhs.Intersects(box);
+                }
+                else if (rhs.type == BOUNDING_TYPE_SPHERE)
+                {
+                    BoundingSphere sphere = rhs.m_boundings_.sphere;
+                    sphere.Radius         = sphere.Radius + epsilon;
+                    sphere                = TranslateBounding(sphere, mat);
+                    return lhs.Intersects(sphere);
+                }
+                else
+                {
+                    throw std::exception("Intersects: Invalid type");
+                }
+            }
+            else
+            {
+                BoundingTypeB rhs_ = rhs;
+                rhs_.Extents       = rhs_.Extents + Vector3(epsilon);
+                rhs_               = TranslateBounding(rhs_, mat);
+                return lhs.Intersects(rhs_);
+            }
         }
 
         eBoundingType type;

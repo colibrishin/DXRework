@@ -27,9 +27,7 @@ namespace Engine::Components
 
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon = g_epsilon);
-        bool        Intersects(const StrongCollider& other) const;
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool        Contains(const StrongCollider & other) const;
 
         void AddCollidedObject(GlobalEntityID id);
         void AddSpeculationObject(GlobalEntityID id);
@@ -111,40 +109,6 @@ namespace Engine::Components
         friend class Manager::Physics::LerpManager;
 
         static void InitializeStockVertices();
-
-        template <typename T>
-        bool Intersects_GENERAL_TYPE(const T& other)
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                BoundingOrientedBox box = GetBounding<BoundingOrientedBox>();
-                box.Extents = box.Extents + (Vector3::One * g_epsilon);
-                return box.Intersects(other);
-            }
-            if (m_type_ == BOUNDING_TYPE_SPHERE)
-            {
-                BoundingSphere sphere = GetBounding<BoundingSphere>();
-                sphere.Radius += g_epsilon;
-                return sphere.Intersects(other);
-            }
-
-            return false;
-        }
-
-        template <typename T>
-        bool Contains_GENERAL_TYPE(const T& other)
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                return GetBounding<BoundingOrientedBox>().Contains(other);
-            }
-            if (m_type_ == BOUNDING_TYPE_SPHERE)
-            {
-                return GetBounding<BoundingSphere>().Contains(other);
-            }
-
-            return false;
-        }
 
         void UpdateInertiaTensor();
         void GenerateInertiaCube();

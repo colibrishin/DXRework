@@ -103,6 +103,7 @@ namespace Engine::Components
     void Collider::SetType(const eBoundingType type)
     {
         m_type_ = type;
+        m_boundings_.SetType(type);
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -152,52 +153,12 @@ namespace Engine::Components
 
     bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir)
     {
-        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
-        {
-            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
-            box.Center = box.Center + (dir * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(box);
-        }
-        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
-            sphere.Center = sphere.Center + (dir * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(sphere);
-        }
-
-        return false;
+        return lhs->m_boundings_.Intersects(rhs->m_boundings_, lhs->GetWorldMatrix(), rhs->GetWorldMatrix(), dir);
     }
 
     bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon)
     {
-        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
-        {
-            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
-            box.Extents = box.Extents + (Vector3::One * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(box);
-        }
-        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
-            sphere.Radius = sphere.Radius + g_epsilon;
-            return rhs->Intersects_GENERAL_TYPE(sphere);
-        }
-
-        return false;
-    }
-
-    bool Collider::Intersects(const StrongCollider& other) const
-    {
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
-        }
-        if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingSphere>());
-        }
-
-        return false;
+        return lhs->m_boundings_.Intersects(rhs->m_boundings_, lhs->GetWorldMatrix(), rhs->GetWorldMatrix(), epsilon);
     }
 
     bool Collider::Intersects(
@@ -225,20 +186,6 @@ namespace Engine::Components
                                                                           intersection);
 
             return test && intersection <= distance;
-        }
-
-        return false;
-    }
-
-    bool Collider::Contains(const StrongCollider& other) const
-    {
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            return other->Contains_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
-        }
-        if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            return other->Contains_GENERAL_TYPE(GetBounding<BoundingSphere>());
         }
 
         return false;
@@ -386,7 +333,7 @@ namespace Engine::Components
 
     Physics::GenericBounding Collider::GetBounding() const
     {
-        return m_boundings_;
+        return m_boundings_.Transform(GetWorldMatrix());
     }
 
     void Collider::UpdateInertiaTensor()
@@ -436,7 +383,7 @@ namespace Engine::Components
 
     void Collider::GenerateInertiaCube()
     {
-        const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2;
+        const Vector3 dim                = GetBounding<BoundingOrientedBox>().Extents;
         const Vector3 dimensions_squared = dim * dim;
 
         m_inverse_inertia_.x = (12.0f * GetInverseMass()) /
