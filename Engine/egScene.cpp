@@ -125,7 +125,7 @@ namespace Engine
 
         if (const auto tr = obj->GetComponent<Components::Transform>().lock())
         {
-            UpdatePosition(obj);
+            m_object_position_tree_.Insert(obj);
         }
 
         for (const auto& comp : obj->GetAllComponents())
@@ -225,6 +225,11 @@ namespace Engine
     WeakCamera Scene::GetMainCamera() const
     {
         return m_mainCamera_;
+    }
+
+    const Octree& Scene::GetObjectTree()
+    {
+        return m_object_position_tree_;
     }
 
     WeakObject Scene::FindGameObject(GlobalEntityID id) const

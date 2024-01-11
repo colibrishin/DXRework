@@ -70,6 +70,8 @@ namespace Engine
         ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
         WeakCamera GetMainCamera() const;
 
+        const Octree& GetObjectTree();
+
         // Add cache component from the object. Type is deduced in compile time.
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void AddCacheComponent(const boost::shared_ptr<T>& component)
