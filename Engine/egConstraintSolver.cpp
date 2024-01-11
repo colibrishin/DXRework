@@ -23,10 +23,6 @@ namespace Engine::Manager::Physics
 
         for (const auto& info : infos)
         {
-            if constexpr (g_speculation_enabled && info.speculative)
-            {
-                ResolveSpeculation(info.lhs, info.rhs);
-            }
             if (info.collision)
             {
                 ResolveCollision(info.lhs, info.rhs);
@@ -35,7 +31,6 @@ namespace Engine::Manager::Physics
 
         infos.clear();
         m_collision_resolved_set_.clear();
-        m_speculative_resolved_set_.clear();
     }
 
     void ConstraintSolver::PreRender(const float& dt) {}
@@ -141,52 +136,6 @@ namespace Engine::Manager::Physics
                 rb_other->SetAngularMomentum(
                                              other_angular_vel * reduction);
             }
-        }
-    }
-
-    void ConstraintSolver::ResolveSpeculation(const WeakObject& lhs, const WeakObject& rhs)
-    {
-        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
-
-        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
-
-        if (rb && rb_other)
-        {
-            if (m_speculative_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()}))
-            {
-                return;
-            }
-
-            m_speculative_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
-            m_speculative_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
-
-            const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
-            const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
-
-            if (!cl || !cl_other)
-            {
-                return;
-            }
-
-            Ray ray{};
-            ray.position        = tr->GetWorldPreviousPosition();
-            const auto velocity = rb->GetLinearMomentum();
-            velocity.Normalize(ray.direction);
-
-            const auto length                = velocity.Length();
-            float      intersection_distance = 0.0f;
-
-            // Forward collision check
-            if (cl_other->Intersects(ray, length, intersection_distance))
-            {
-                const Vector3 minimum_penetration = ray.direction * intersection_distance;
-                tr->SetWorldPosition(tr->GetWorldPreviousPosition() - minimum_penetration);
-            }
-
-            cl->RemoveSpeculationObject(rhs.lock()->GetID());
-            cl_other->RemoveSpeculationObject(lhs.lock()->GetID());
         }
     }
 } // namespace Engine::Manager::Physics
