@@ -32,6 +32,35 @@ namespace Engine
         }
     }
 
+    std::vector<Octree::WeakT> Octree::Read() const
+    {
+        return m_values_;
+    }
+
+    std::array<const Octree*, 8> Octree::Next() const
+    {
+        std::array<const Octree*, 8> next;
+
+        for (int i = 0; i < octant_count; ++i)
+        {
+            if (m_children_[i])
+            {
+                next[i] = m_children_[i].get();
+            }
+            else
+            {
+                next[i] = nullptr;
+            }
+        }
+
+        return next;
+    }
+
+    UINT Octree::ActiveChildren() const
+    {
+        return m_active_children_.count();
+    }
+
     bool Octree::Insert(const WeakT& obj)
     {
         // attempt to insert outside of the map
@@ -111,7 +140,7 @@ namespace Engine
                         if (bound_check == DirectX::ContainmentType::CONTAINS)
                         {
                             // Expand the node and check same above
-                            node_children[i] = std::unique_ptr<Octree>(new Octree{bound, {obj}});
+                            node_children[i] = std::unique_ptr<Octree>(new Octree{bound});
                             node_children[i]->m_parent_ = node;
                             node_children[i]->Build();
                             node_active_children.set(i);
@@ -203,6 +232,23 @@ namespace Engine
                             break;
                         }
                     }
+                    else
+                    {
+                        const auto bound       = GetBounds(Extent(), WorldCenter(), (eOctant)i);
+                        const auto bound_check = obj_bound.ContainsBy(bound);
+
+                        if (bound_check == DirectX::ContainmentType::CONTAINS)
+                        {
+                            // Expand the node
+                            m_children_[i]            = std::unique_ptr<Octree>(new Octree{bound});
+                            m_children_[i]->m_parent_ = this;
+                            m_children_[i]->Build();
+                            m_active_children_.set(i);
+                            m_children_[i]->m_insertion_queue_.push(obj);
+                            found = true;
+                            break;
+                        }
+                    }
                 }
 
                 if (found)
@@ -285,7 +331,7 @@ namespace Engine
             Panic();
         }
 
-        //GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
+        GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
     }
 
     Octree::Octree(const BoundingBox& bounds)

@@ -48,8 +48,11 @@ namespace Engine
         Octree();
         Octree(const Octree& other);
 
-        bool Insert(const WeakT& obj);
-        void Update();
+        std::vector<WeakT>           Read() const;
+        std::array<const Octree*, 8> Next() const;
+        UINT                         ActiveChildren() const;
+        bool                         Insert(const WeakT& obj);
+        void                         Update();
 
     private:
         explicit Octree(const BoundingBox& bounds);
