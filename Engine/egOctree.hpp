@@ -3,7 +3,7 @@
 #include <bitset>
 #include <vector>
 #include <boost/smart_ptr/weak_ptr.hpp>
-#include "egBoundingGroup.hpp"
+#include "egGenericBounding.hpp"
 
 namespace Engine
 {

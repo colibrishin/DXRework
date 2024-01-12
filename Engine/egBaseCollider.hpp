@@ -1,5 +1,5 @@
 #pragma once
-#include "egBoundingGroup.hpp"
+#include "egGenericBounding.hpp"
 #include "egCommon.hpp"
 #include "egComponent.h"
 #include "egHelper.hpp"

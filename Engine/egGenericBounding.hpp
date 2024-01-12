@@ -1,4 +1,5 @@
 #pragma once
+#include "egDebugger.hpp"
 
 namespace Engine::Physics
 {
