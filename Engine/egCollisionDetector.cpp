@@ -82,7 +82,7 @@ namespace Engine::Manager::Physics
                     // Collision Check between parent and self
                     for (int i = 0; i < node_objects.size(); ++i)
                     {
-                        const auto parent_compare_set = node_objects[i];
+                        const auto& parent_compare_set = node_objects[i];
 
                         for (int j = 0; j < value.size(); ++j)
                         {

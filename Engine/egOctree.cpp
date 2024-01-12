@@ -32,7 +32,7 @@ namespace Engine
         }
     }
 
-    std::vector<Octree::WeakT> Octree::Read() const
+    const std::vector<Octree::WeakT>& Octree::Read() const
     {
         return m_values_;
     }
