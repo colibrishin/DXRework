@@ -73,6 +73,13 @@ namespace Engine::Manager::Physics
                     // Self collision check
                     for (int i = 0; i < value.size(); ++i)
                     {
+                        // If object is inactive or collider is inactive, then dispatch exit event.
+                        if (const auto cl = value[i].lock()->GetComponent<Components::Collider>().lock();
+                            !value[i].lock()->GetActive() || (cl && !cl->GetActive()))
+                        {
+                            DispatchInactiveExit(value[i]);
+                        }
+
                         for (int j = i + 1; j < value.size(); ++j)
                         {
                             TestCollision(value[i], value[j]);
@@ -197,6 +204,36 @@ namespace Engine::Manager::Physics
                 }
 
                 // No collision
+            }
+        }
+    }
+
+    void CollisionDetector::DispatchInactiveExit(const WeakObject& lhs)
+    {
+        const auto lcl = lhs.lock()->GetComponent<Components::Collider>().lock();
+        const auto scene = GetSceneManager().GetActiveScene().lock();
+
+        if (!lcl) return;
+
+        const auto& collided = lcl->GetCollidedObjects();
+
+        for (const auto& id : collided)
+        {
+            if (const auto rhs = scene->FindGameObject(id).lock())
+            {
+                if (const auto rcl = rhs->GetComponent<Components::Collider>().lock())
+                {
+                    if (rcl->IsCollidedObject(lhs.lock()->GetID()))
+                    {
+                        rcl->RemoveCollidedObject(lhs.lock()->GetID());
+
+                        m_collision_map_[rhs->GetID()].erase(lhs.lock()->GetID());
+                        m_collision_map_[lhs.lock()->GetID()].erase(rhs->GetID());
+
+                        lhs.lock()->DispatchComponentEvent(rcl);
+                        rhs->DispatchComponentEvent(lcl);
+                    }
+                }
             }
         }
     }
