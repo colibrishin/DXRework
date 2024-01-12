@@ -159,6 +159,12 @@ namespace Engine::Manager::Physics
         }
         if (!lhs->GetActive() || !rhs->GetActive()) return;
 
+        // Octree sanity check
+        if (lhs == rhs) throw std::logic_error("Self collision detected");
+        if (m_frame_collision_map_.contains(lhs->GetID()) &&
+            m_frame_collision_map_[lhs->GetID()].contains(rhs->GetID()))
+            throw std::logic_error("Double check occurred");
+
         const auto ltr = lhs->GetComponent<Components::Transform>().lock();
         const auto rtr = rhs->GetComponent<Components::Transform>().lock();
 
@@ -167,6 +173,7 @@ namespace Engine::Manager::Physics
 
         if (lcl && rcl)
         {
+            if (!lcl->GetActive() || !rcl->GetActive()) return;
             const bool collision = Components::Collider::Intersects(lcl, rcl);
 
             if (collision)
@@ -179,7 +186,11 @@ namespace Engine::Manager::Physics
                     m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
                 }
 
-                m_collision_produce_queue_.push_back({lhs, rhs, false, true});
+                const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
+                const auto rrb = rhs->GetComponent<Components::Rigidbody>().lock();
+
+                if (lrb && rrb) 
+                    m_collision_produce_queue_.push_back({lhs, rhs, false, true});
 
                 // Or continuous collision
                 lhs->DispatchComponentEvent(rcl);
