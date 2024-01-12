@@ -32,7 +32,17 @@ namespace Engine::Manager::Physics
         }
     }
 
-    void CollisionDetector::Update(const float& dt)
+    void CollisionDetector::Update(const float& dt) {}
+
+    void CollisionDetector::PreUpdate(const float& dt) {}
+
+    void CollisionDetector::PreRender(const float& dt) {}
+
+    void CollisionDetector::Render(const float& dt) {}
+
+    void CollisionDetector::PostRender(const float& dt) {}
+
+    void CollisionDetector::FixedUpdate(const float& dt)
     {
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
@@ -114,10 +124,7 @@ namespace Engine::Manager::Physics
                 }
             }
         }
-    }
 
-    void CollisionDetector::PreUpdate(const float& dt)
-    {
         m_collision_map_.merge(m_frame_collision_map_);
         m_frame_collision_map_.clear();
 
@@ -134,14 +141,6 @@ namespace Engine::Manager::Physics
             }
         }
     }
-
-    void CollisionDetector::PreRender(const float& dt) {}
-
-    void CollisionDetector::Render(const float& dt) {}
-
-    void CollisionDetector::PostRender(const float& dt) {}
-
-    void CollisionDetector::FixedUpdate(const float& dt) {}
 
     void CollisionDetector::PostUpdate(const float& dt) {}
 

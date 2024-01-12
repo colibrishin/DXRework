@@ -15,7 +15,15 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::PreUpdate(const float& dt) {}
 
-    void ConstraintSolver::Update(const float& dt)
+    void ConstraintSolver::Update(const float& dt) {}
+
+    void ConstraintSolver::PreRender(const float& dt) {}
+
+    void ConstraintSolver::Render(const float& dt) {}
+
+    void ConstraintSolver::PostRender(const float& dt) {}
+
+    void ConstraintSolver::FixedUpdate(const float& dt)
     {
         auto& infos = GetCollisionDetector().GetCollisionInfo();
 
@@ -32,14 +40,6 @@ namespace Engine::Manager::Physics
         infos.clear();
         m_collision_resolved_set_.clear();
     }
-
-    void ConstraintSolver::PreRender(const float& dt) {}
-
-    void ConstraintSolver::Render(const float& dt) {}
-
-    void ConstraintSolver::PostRender(const float& dt) {}
-
-    void ConstraintSolver::FixedUpdate(const float& dt) {}
 
     void ConstraintSolver::PostUpdate(const float& dt) {}
 
