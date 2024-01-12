@@ -214,6 +214,11 @@ namespace Engine::Components
         return m_collided_objects_.contains(id);
     }
 
+    const std::set<GlobalEntityID>& Collider::GetCollidedObjects() const
+    {
+        return m_collided_objects_;
+    }
+
     UINT Collider::GetCPS(GlobalEntityID id) const
     {
         if (!m_cps_.contains(id))

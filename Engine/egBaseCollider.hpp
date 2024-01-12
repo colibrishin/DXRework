@@ -32,9 +32,10 @@ namespace Engine::Components
         void AddCollidedObject(GlobalEntityID id);
         void RemoveCollidedObject(const GlobalEntityID id);
 
-        bool IsCollidedObject(const GlobalEntityID id) const;
-        UINT GetCPS(GlobalEntityID id) const;
-        UINT GetCollisionCount(GlobalEntityID id) const;
+        bool                            IsCollidedObject(const GlobalEntityID id) const;
+        const std::set<GlobalEntityID>& GetCollidedObjects() const;
+        UINT                            GetCPS(GlobalEntityID id) const;
+        UINT                            GetCollisionCount(GlobalEntityID id) const;
 
         bool GetPenetration(
             const Collider& other, Vector3& normal,
