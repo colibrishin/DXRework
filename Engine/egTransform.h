@@ -89,8 +89,6 @@ namespace Engine::Components
         Matrix     m_animation_matrix_;
 
         // Non-serialized
-        bool                       m_b_lazy_;
-        Matrix                     m_world_matrix_;
         Graphics::CBs::TransformCB m_transform_buffer_;
     };
 } // namespace Engine::Component
