@@ -24,6 +24,8 @@ namespace Engine::Graphics
         void FixedUpdate(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
+        void SetDomain(const eShaderDomain & domain) override;
+
         T** GetShader()
         {
             return m_shader_.GetAddressOf();

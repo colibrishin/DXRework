@@ -66,6 +66,12 @@ namespace Engine::Graphics
     void Shader<T>::PostUpdate(const float& dt) {}
 
     template <typename T>
+    void Shader<T>::SetDomain(const eShaderDomain& domain)
+    {
+        m_domain_ = domain;
+    }
+
+    template <typename T>
     void Shader<T>::SetShaderType()
     {
         if constexpr (std::is_same_v<T, ID3D11VertexShader>)

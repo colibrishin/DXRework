@@ -65,6 +65,15 @@ namespace Engine
         SHADER_UNKNOWN
     };
 
+    enum eShaderDomain
+    {
+        SHADER_DOMAIN_OPAQUE = 0,
+        SHADER_DOMAIN_MASK,
+        SHADER_DOMAIN_TRANSPARENT,
+        SHADER_DOMAIN_POST_PROCESS,
+        SHADER_DOMAIN_MAX
+    };
+
     enum eCBType
     {
         CB_TYPE_WVP = 0,

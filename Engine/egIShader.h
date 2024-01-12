@@ -21,8 +21,10 @@ namespace Engine::Graphics
         eShaderType GetType() const;
 
     protected:
-        virtual void SetShaderType() = 0;
-        eShaderType  m_type_;
+        virtual void  SetShaderType() = 0;
+        virtual void  SetDomain(const eShaderDomain & domain)     = 0;
+        eShaderType   m_type_;
+        eShaderDomain m_domain_;
 
     private:
         SERIALIZER_ACCESS
