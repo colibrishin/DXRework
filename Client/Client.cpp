@@ -184,9 +184,9 @@ namespace Client
         InitializeMaterial();
         
 
-        Engine::GetSceneManager().AddScene<Scene::TestScene>();
-        Engine::GetSceneManager().AddScene<Scene::DarkScene>();
-        Engine::GetSceneManager().SetActive<Scene::TestScene>();
+        Engine::GetSceneManager().AddScene<Scene::TestScene>("Test");
+        Engine::GetSceneManager().AddScene<Scene::DarkScene>("Thunder");
+        Engine::GetSceneManager().SetActive<Scene::TestScene>("Test");
     }
 
     void Tick()

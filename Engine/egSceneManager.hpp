@@ -18,18 +18,19 @@ namespace Engine::Manager
         }
 
         template <typename T, typename... Args, typename SceneLock = std::enable_if_t<std::is_base_of_v<Scene, T>>>
-        void AddScene(Args&&... args)
+        void AddScene(const std::string& name, Args&&... args)
         {
             auto scene = boost::make_shared<T>(std::forward<Args>(args)...);
-            m_scenes_[which_scene<T>::value] = scene;
+            scene->SetName(name);
+            m_scenes_[which_scene<T>::value][name] = scene;
         }
 
         template <typename T>
-        void SetActive()
+        void SetActive(const std::string& name)
         {
             if (const auto current = m_active_scene_.lock())
             {
-                if (current->GetType() == which_scene<T>::value)
+                if (current->GetType() == which_scene<T>::value && current->GetName() == name)
                 {
                     return;
                 }
@@ -40,40 +41,44 @@ namespace Engine::Manager
             // 2. Scene is activated, passing through the first frame without any objects. This has the effect that averaging out the noticeable delta time spike.
             // 3. On the second frame, pushed objects are processed, and added to the scene.
             // 4. Scene InitializeFinalize is called, and the scene loading is finished.
-            if (m_scenes_.contains(which_scene<T>::value))
+            if (m_scenes_.contains(which_scene<T>::value) && m_scenes_[which_scene<T>::value].contains(name))
             {
                 GetTaskScheduler().AddTask(
                                            TASK_ACTIVE_SCENE,
                                            {},
-                                           [this](const std::vector<std::any>&, float)
+                                           [name, this](const std::vector<std::any>& params, float)
                                            {
-                                               SetActiveFinalize(m_scenes_[which_scene<T>::value]);
+                                               SetActiveFinalize(m_scenes_[which_scene<T>::value][name]);
                                            });
             }
         }
 
         template <typename T>
-        std::weak_ptr<T> GetScene() const
+        std::weak_ptr<T> GetScene(const std::string& name) const
         {
             if (m_scenes_.contains(which_scene<T>::value))
             {
-                return m_scenes_[which_scene<T>::value];
+                if (m_scenes_[which_scene<T>::value].contains(name))
+                {
+                    return std::dynamic_pointer_cast<T>(m_scenes_[which_scene<T>::value][name]);
+                }
             }
 
             return {};
         }
 
         template <typename T>
-        void RemoveScene()
+        void RemoveScene(const std::string& name)
         {
-            if (m_scenes_.contains(which_scene<T>::value))
+            if (m_scenes_.contains(which_scene<T>::value) && m_scenes_[which_scene<T>::value].contains(name))
             {
                 GetTaskScheduler().AddTask(
                                            TASK_REM_SCENE,
-                                           {},
-                                           [this](const std::vector<std::any>&, float)
+                                           {name},
+                                           [this](const std::vector<std::any>& params, float)
                                            {
-                                               RemoveSceneFinalize<T>();
+                                               const auto name = std::any_cast<std::string>(params[0]);
+                                               RemoveSceneFinalize<T>(name);
                                            });
             }
         }
@@ -94,9 +99,9 @@ namespace Engine::Manager
         void SetActiveFinalize(const WeakScene& it);
 
         template <typename T>
-        void RemoveSceneFinalize()
+        void RemoveSceneFinalize(const std::string& name)
         {
-            const auto scene = m_scenes_[which_scene<T>::value];
+            const auto scene = m_scenes_[which_scene<T>::value][name];
 
             if (scene == m_active_scene_.lock())
             {
@@ -105,10 +110,14 @@ namespace Engine::Manager
                 m_active_scene_.reset();
             }
 
-            m_scenes_.erase(which_scene<T>::value);
+            m_scenes_[which_scene<T>::value].erase(name);
+            if (m_scenes_[which_scene<T>::value].empty())
+            {
+                m_scenes_.erase(which_scene<T>::value);
+            }
         }
 
-        WeakScene                         m_active_scene_;
-        std::map<eSceneType, StrongScene> m_scenes_;
+        WeakScene                                                m_active_scene_;
+        std::map<eSceneType, std::map<std::string, StrongScene>> m_scenes_;
     };
 } // namespace Engine::Manager

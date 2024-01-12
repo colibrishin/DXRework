@@ -80,7 +80,7 @@ namespace Client::Object
 
         if (GetApplication().GetKeyState().IsKeyDown(Keyboard::Space))
         {
-            GetSceneManager().SetActive<Scene::DarkScene>();
+            GetSceneManager().SetActive<Scene::DarkScene>("Thunder");
         }
     }
 
