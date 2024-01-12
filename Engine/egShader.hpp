@@ -35,6 +35,8 @@ namespace Engine::Graphics
         void PostRender(const float& dt) override;
 
         RESOURCE_SELF_INFER_GETTER(Shader)
+        static inline boost::shared_ptr<Shader> Create(
+            const std::string& name, const std::filesystem::path& path, const eShaderDomain& domain);
 
     protected:
         Shader()

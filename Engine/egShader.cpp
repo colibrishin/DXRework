@@ -127,4 +127,19 @@ namespace Engine::Graphics
     {
         GetRenderPipeline().UnbindShader(this);
     }
+
+    template <typename T>
+    boost::shared_ptr<Shader<T>> Shader<T>::Create(const std::string& name, const std::filesystem::path& path, const eShaderDomain& domain)
+    {
+        if (const auto pcheck = GetResourceManager().GetResourceByPath<Shader<T>>(path).lock(); 
+            const auto ncheck = GetResourceManager().GetResource<Shader<T>>(name).lock())
+        {
+            return ncheck;
+        }
+
+        const auto obj = boost::make_shared<Shader<T>>(name, path);
+        obj->SetDomain(domain);
+        GetResourceManager().AddResource(name, obj);
+        return obj;
+    }
 } // namespace Engine::Graphic
