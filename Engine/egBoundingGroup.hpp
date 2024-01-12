@@ -191,20 +191,17 @@ namespace Engine::Physics
             }
         }
 
-        [[nodiscard]] bool __vectorcall TestRay(
-            const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat, const Vector3& dir, float& dist) const
+        [[nodiscard]] bool __vectorcall TestRay(const GenericBounding& other, const Vector3& dir, float& dist) const
         {
             if (type == BOUNDING_TYPE_BOX)
             {
                 BoundingOrientedBox box = m_boundings_.box;
-                box = TranslateBounding(box, this_mat);
-                return TestRay(m_boundings_.box, other, other_mat, dir, dist);
+                return TestRay(m_boundings_.box, other, dir, dist);
             }
             else if (type == BOUNDING_TYPE_SPHERE)
             {
                 BoundingSphere sphere = m_boundings_.sphere;
-                sphere = TranslateBounding(sphere, this_mat);
-                return TestRay(m_boundings_.sphere, other, other_mat, dir, dist);
+                return TestRay(m_boundings_.sphere, other, dir, dist);
             }
             else
             {
@@ -310,20 +307,18 @@ namespace Engine::Physics
 
         template <typename BoundingTypeA, typename BoundingTypeB>
         static bool __vectorcall TestRay(
-            const BoundingTypeA& lhs, const BoundingTypeB& rhs, const Matrix& other_mat, const Vector3& dir, float& dist)
+            const BoundingTypeA& lhs, const BoundingTypeB& rhs, const Vector3& dir, float& dist)
         {
             if constexpr (std::is_same_v<BoundingTypeB, GenericBounding>)
             {
                 if (rhs.type == BOUNDING_TYPE_BOX)
                 {
                     BoundingOrientedBox box = rhs.m_boundings_.box;
-                    box = TranslateBounding(box, other_mat);
                     return box.Intersects(Vector3(lhs.Center), dir, dist);
                 }
                 else if (rhs.type == BOUNDING_TYPE_SPHERE)
                 {
                     BoundingSphere sphere = rhs.m_boundings_.sphere;
-                    sphere = TranslateBounding(sphere, other_mat);
                     return sphere.Intersects(Vector3(lhs.Center), dir, dist);
                 }
                 else

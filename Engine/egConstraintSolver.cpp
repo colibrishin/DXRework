@@ -102,8 +102,7 @@ namespace Engine::Manager::Physics
             const auto rbnd = cl_other->GetBounding();
 
             float distance = 0;
-            if (!lbnd.TestRay(
-                rbnd, cl->GetWorldMatrix(), cl_other->GetWorldMatrix(), lhs_normal, distance))
+            if (!lbnd.TestRay(rbnd, lhs_normal, distance))
             {
                 return;
             }
