@@ -249,14 +249,14 @@ namespace Engine::Components
         return m_speculative_collision_candidates_;
     }
 
-    void Collider::GetPenetration(
+    bool Collider::GetPenetration(
         const Collider& other, Vector3& normal,
         float&          depth) const
     {
         auto dir = other.GetWorldMatrix().Translation() - GetWorldMatrix().Translation();
         dir.Normalize();
 
-        Physics::GJK::GJKAlgorithm(
+        return Physics::GJK::GJKAlgorithm(
                                    GetWorldMatrix(), other.GetWorldMatrix(), GetVertices(), other.GetVertices(), dir,
                                    normal, depth);
     }

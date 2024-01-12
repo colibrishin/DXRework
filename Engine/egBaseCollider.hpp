@@ -40,7 +40,7 @@ namespace Engine::Components
         std::set<GlobalEntityID> GetSpeculation();
         UINT                     GetCollisionCount(GlobalEntityID id);
 
-        void GetPenetration(
+        bool GetPenetration(
             const Collider& other, Vector3& normal,
             float&          depth) const;
 

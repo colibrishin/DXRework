@@ -93,7 +93,7 @@ namespace Engine::Manager::Physics
                                          rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
                                          rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
-                                         other_angular_vel, lhs_penetration, rhs_penetration);
+                                         other_angular_vel, lhs_weight_pen, rhs_weight_pen);
 
 
             const auto collided_count = cl->GetCollisionCount(rhs.lock()->GetID());
