@@ -265,18 +265,18 @@ namespace Engine::Components
 
     void Transform::PreUpdate(const float& dt) {}
 
-    void Transform::Update(const float& dt)
+    void Transform::Update(const float& dt) {}
+
+    void Transform::PostUpdate(const float& dt)
     {
+        Component::PostUpdate(dt);
+
         if (!m_b_lazy_ && FindNextTransform(*this).lock())
         {
             m_b_lazy_ = true;
             GetWorldMatrix();
         }
-    }
 
-    void Transform::PostUpdate(const float& dt)
-    {
-        Component::PostUpdate(dt);
         m_world_previous_position_ = GetWorldPosition();
         m_previous_position_ = GetLocalPosition();
     }
