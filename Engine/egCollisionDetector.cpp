@@ -146,8 +146,11 @@ namespace Engine::Manager::Physics
         if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
 
         if (!lhs || !rhs) return;
-        if (lhs == rhs) throw std::logic_error("Self collision detected.");
-        if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
+        if (lhs->GetParent().lock() || rhs->GetParent().lock())
+        {
+            if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
+            if (lhs->GetParent().lock() == rhs->GetParent().lock()) return;
+        }
         if (!lhs->GetActive() || !rhs->GetActive()) return;
 
         const auto ltr = lhs->GetComponent<Components::Transform>().lock();
