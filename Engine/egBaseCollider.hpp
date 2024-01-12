@@ -17,7 +17,7 @@ namespace Engine::Components
         Collider(const WeakObject& owner);
         ~Collider() override = default;
 
-        void FromMatrix(Matrix& mat);
+        void FromMatrix(const Matrix& mat);
 
         void SetType(eBoundingType type);
         void SetMass(const float mass);

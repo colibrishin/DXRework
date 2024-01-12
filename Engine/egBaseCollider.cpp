@@ -96,7 +96,7 @@ namespace Engine::Components
         }
     }
 
-    void Collider::FromMatrix(Matrix& mat)
+    void Collider::FromMatrix(const Matrix& mat)
     {
         m_local_matrix_ = mat;
     }
@@ -269,9 +269,10 @@ namespace Engine::Components
     Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_type_(BOUNDING_TYPE_BOX),
-      m_mass_(1.f),
       m_boundings_(),
-      m_inertia_tensor_() {}
+      m_mass_(1.f),
+      m_inertia_tensor_(),
+      m_local_matrix_(Matrix::Identity) {}
 
     void Collider::FixedUpdate(const float& dt) {}
 
@@ -349,9 +350,10 @@ namespace Engine::Components
     Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
       m_type_(BOUNDING_TYPE_BOX),
-      m_mass_(1.0f),
       m_boundings_(),
-      m_inertia_tensor_()
+      m_mass_(1.0f),
+      m_inertia_tensor_(),
+      m_local_matrix_(Matrix::Identity)
     {
     }
 
