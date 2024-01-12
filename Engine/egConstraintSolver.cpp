@@ -101,14 +101,19 @@ namespace Engine::Manager::Physics
             const auto lbnd = cl->GetBounding();
             const auto rbnd = cl_other->GetBounding();
 
-            cl->GetPenetration(*cl_other, normal, penetration);
-            const Vector3 point = pos + normal * penetration;
+            float distance = 0;
+            if (!lbnd.TestRay(
+                rbnd, cl->GetWorldMatrix(), cl_other->GetWorldMatrix(), lhs_normal, distance))
+            {
+                return;
+            }
 
-            Vector3 lhs_penetration;
-            Vector3 rhs_penetration;
+            Vector3 collision_point = pos + lhs_normal * distance;
+            Vector3 lhs_weight_pen;
+            Vector3 rhs_weight_pen;
 
             Engine::Physics::EvalImpulse(
-                                         pos, other_pos, point, penetration, normal, cl->GetInverseMass(),
+                                         pos, other_pos, collision_point, lhs_pen, lhs_normal, cl->GetInverseMass(),
                                          cl_other->GetInverseMass(), rb->GetAngularMomentum(),
                                          rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
                                          rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
