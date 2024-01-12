@@ -122,11 +122,11 @@ namespace Client::State
 
             Engine::GetDebugger().Draw(ray, Colors::AliceBlue);
 
-            if (Engine::GetCollisionDetector().Hitscan(ray, distance, out))
-            {
-                SetState(CHAR_STATE_ATTACK);
-                return true;
-            }
+            //if (Engine::GetCollisionDetector().Hitscan(ray, distance, out))
+            //{
+            //    SetState(CHAR_STATE_ATTACK);
+            //    return true;
+            //}
         }
 
         return false;

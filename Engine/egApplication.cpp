@@ -117,6 +117,7 @@ namespace Engine::Manager
                           }
 
                           Update(dt);
+
                           PostUpdate(dt);
 
                           PreRender(dt);
@@ -154,8 +155,8 @@ namespace Engine::Manager
         GetSceneManager().FixedUpdate(dt);
         GetShadowManager().FixedUpdate(dt);
         GetResourceManager().FixedUpdate(dt);
-        GetConstraintSolver().FixedUpdate(dt);
         GetPhysicsManager().FixedUpdate(dt);
+        GetConstraintSolver().FixedUpdate(dt);
         GetLerpManager().FixedUpdate(dt);
         GetProjectionFrustum().FixedUpdate(dt);
         GetShadowManager().FixedUpdate(dt);

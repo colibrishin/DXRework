@@ -22,18 +22,11 @@ namespace Engine::Manager::Physics
         void PostUpdate(const float& dt) override;
 
         void SetCollisionLayer(eLayerType layer, eLayerType mask);
-
-        static void GetCollidedObjects(
-            const Ray&                                            ray, float distance,
-            std::set<WeakObject, WeakComparer<Abstract::Object>>& out);
-        static bool Hitscan(
-            const Ray&                                            ray, float distance,
-            std::set<WeakObject, WeakComparer<Abstract::Object>>& out);
+        bool IsCollsionLayer(eLayerType layer1, eLayerType layer2);
 
         bool IsCollided(GlobalEntityID id) const;
         bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
-        bool IsSpeculated(GlobalEntityID id1, GlobalEntityID id2) const;
 
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
@@ -41,48 +34,15 @@ namespace Engine::Manager::Physics
         friend struct SingletonDeleter;
         ~CollisionDetector() override = default;
 
-        void CheckGrounded(const StrongCollider& lhs, const StrongCollider& rhs);
-        bool CheckRaycasting(const StrongCollider& lhs, const StrongCollider& rhs);
-
-
-        void CheckCollision(const ConcurrentWeakObjVec& rhsl, const StrongObject& lhs, int idx);
-        void CheckCollisionImpl(const StrongCollider& lhs, const StrongCollider& rhs);
-
-        __forceinline void PreCheckCollisionSameLayer(
-            const StrongScene& scene, const ConcurrentWeakObjVec& lhsl, const ConcurrentWeakObjVec& rhsl);
-        __forceinline void PreCheckCollisionDiffLayer(
-            const StrongScene& scene, const ConcurrentWeakObjVec& lhsl, const ConcurrentWeakObjVec& rhsl, int idx);
-        __forceinline bool CheckLayerCollidable(int i, int j);
-
-        __forceinline void CheckInactiveCollision(
-            const StrongScene& scene, const StrongObject& lhs);
-
-        __forceinline void ContinuousColliding(
-            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
-            const StrongObject&   rhs_owner) const;
-        __forceinline void InFrameColliding(
-            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
-            const StrongObject&   rhs_owner);
-        __forceinline void ExitColliding(
-            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
-            const StrongObject&   rhs_owner);
-
-        __forceinline void IncreaseCollisionCounter(
-            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
-            const StrongObject&   rhs_owner);
-        __forceinline void RemoveCollisionCounter(
-            const StrongCollider& lhs, const StrongCollider& rhs, const StrongObject& lhs_owner,
-            const StrongObject&   rhs_owner);
-
+        void TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs);
+        void DispatchInactiveExit(const WeakObject& lhs);
 
         std::mutex                                    m_layer_mask_mutex_;
         std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
 
         concurrent_vector<CollisionInfo> m_collision_produce_queue_;
 
-        concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_collision_check_map_;
         concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_collision_map_;
         concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_frame_collision_map_;
-        concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>  m_speculation_map_;
     };
 } // namespace Engine::Manager

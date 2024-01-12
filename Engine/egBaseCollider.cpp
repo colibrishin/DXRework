@@ -4,6 +4,7 @@
 #include "egCollision.h"
 #include "egCubeMesh.h"
 #include "egD3Device.hpp"
+#include "egGlobal.h"
 #include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
@@ -95,7 +96,7 @@ namespace Engine::Components
         }
     }
 
-    void Collider::FromMatrix(Matrix& mat)
+    void Collider::FromMatrix(const Matrix& mat)
     {
         m_local_matrix_ = mat;
     }
@@ -103,6 +104,7 @@ namespace Engine::Components
     void Collider::SetType(const eBoundingType type)
     {
         m_type_ = type;
+        m_boundings_.SetType(type);
 
         if (m_type_ == BOUNDING_TYPE_BOX)
         {
@@ -152,52 +154,12 @@ namespace Engine::Components
 
     bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir)
     {
-        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
-        {
-            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
-            box.Center = box.Center + (dir * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(box);
-        }
-        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
-            sphere.Center = sphere.Center + (dir * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(sphere);
-        }
-
-        return false;
+        return lhs->m_boundings_.Intersects(rhs->m_boundings_, lhs->GetWorldMatrix(), rhs->GetWorldMatrix(), dir);
     }
 
     bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon)
     {
-        if (lhs->m_type_ == BOUNDING_TYPE_BOX)
-        {
-            BoundingOrientedBox box = lhs->GetBounding<BoundingOrientedBox>();
-            box.Extents = box.Extents + (Vector3::One * g_epsilon);
-            return rhs->Intersects_GENERAL_TYPE(box);
-        }
-        else if (lhs->m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            BoundingSphere sphere = lhs->GetBounding<BoundingSphere>();
-            sphere.Radius = sphere.Radius + g_epsilon;
-            return rhs->Intersects_GENERAL_TYPE(sphere);
-        }
-
-        return false;
-    }
-
-    bool Collider::Intersects(const StrongCollider& other) const
-    {
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
-        }
-        if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            return other->Intersects_GENERAL_TYPE(GetBounding<BoundingSphere>());
-        }
-
-        return false;
+        return lhs->m_boundings_.Intersects(rhs->m_boundings_, lhs->GetWorldMatrix(), rhs->GetWorldMatrix(), epsilon);
     }
 
     bool Collider::Intersects(
@@ -230,99 +192,63 @@ namespace Engine::Components
         return false;
     }
 
-    bool Collider::Contains(const StrongCollider& other) const
-    {
-        if (m_type_ == BOUNDING_TYPE_BOX)
-        {
-            return other->Contains_GENERAL_TYPE(GetBounding<BoundingOrientedBox>());
-        }
-        if (m_type_ == BOUNDING_TYPE_SPHERE)
-        {
-            return other->Contains_GENERAL_TYPE(GetBounding<BoundingSphere>());
-        }
-
-        return false;
-    }
-
     void Collider::AddCollidedObject(const GlobalEntityID id)
     {
-        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.insert(id);
 
-        std::lock_guard lock2(m_collision_count_mutex_);
-        if (!m_collision_count_.contains(id))
-        {
-            m_collision_count_.insert({id, 1});
-        }
-        else
-        {
-            m_collision_count_[id]++;
-        }
-    }
+        if (!m_cps_.contains(id)) m_cps_.insert({id, 1});
+        else m_cps_[id]++;
 
-    void Collider::AddSpeculationObject(const GlobalEntityID id)
-    {
-        std::lock_guard lock(m_speculative_mutex_);
-        m_speculative_collision_candidates_.insert(id);
+        if(!m_ltcc_.contains(id)) m_ltcc_.insert({id, 1});
+        else m_ltcc_[id]++;
     }
 
     void Collider::RemoveCollidedObject(const GlobalEntityID id)
     {
-        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.erase(id);
-
-        if (m_collision_count_.contains(id))
-        {
-            std::lock_guard lock2(m_collision_count_mutex_);
-            m_collision_count_.erase(id);
-        }
+        if (m_cps_.contains(id)) m_cps_.erase(id);
     }
 
-    void Collider::RemoveSpeculationObject(const GlobalEntityID id)
+    bool Collider::IsCollidedObject(const GlobalEntityID id) const
     {
-        std::lock_guard lock(m_speculative_mutex_);
-        m_speculative_collision_candidates_.erase(id);
-    }
-
-    bool Collider::IsCollidedObject(const GlobalEntityID id)
-    {
-        std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_.contains(id);
     }
 
-    std::set<GlobalEntityID> Collider::GetCollidedObjects()
+    const std::set<GlobalEntityID>& Collider::GetCollidedObjects() const
     {
-        std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_;
     }
 
-    std::set<GlobalEntityID> Collider::GetSpeculation()
+    UINT Collider::GetCPS(GlobalEntityID id) const
     {
-        std::lock_guard lock(m_speculative_mutex_);
-        return m_speculative_collision_candidates_;
+        if (!m_cps_.contains(id))
+        {
+            return 0;
+        }
+
+        return m_cps_.at(id);
     }
 
-    void Collider::GetPenetration(
+    bool Collider::GetPenetration(
         const Collider& other, Vector3& normal,
         float&          depth) const
     {
         auto dir = other.GetWorldMatrix().Translation() - GetWorldMatrix().Translation();
         dir.Normalize();
 
-        Physics::GJK::GJKAlgorithm(
+        return Physics::GJK::GJKAlgorithm(
                                    GetWorldMatrix(), other.GetWorldMatrix(), GetVertices(), other.GetVertices(), dir,
                                    normal, depth);
     }
 
-    UINT Collider::GetCollisionCount(const GlobalEntityID id)
+    UINT Collider::GetCollisionCount(const GlobalEntityID id) const
     {
-        std::lock_guard lock(m_collision_count_mutex_);
-        if (!m_collision_count_.contains(id))
+        if (!m_ltcc_.contains(id))
         {
             return 0;
         }
 
-        return m_collision_count_.at(id);
+        return m_ltcc_.at(id);
     }
 
     float Collider::GetMass() const
@@ -348,9 +274,10 @@ namespace Engine::Components
     Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_type_(BOUNDING_TYPE_BOX),
-      m_mass_(1.f),
       m_boundings_(),
-      m_inertia_tensor_() {}
+      m_mass_(1.f),
+      m_inertia_tensor_(),
+      m_local_matrix_(Matrix::Identity) {}
 
     void Collider::FixedUpdate(const float& dt) {}
 
@@ -386,7 +313,7 @@ namespace Engine::Components
 
     Physics::GenericBounding Collider::GetBounding() const
     {
-        return m_boundings_;
+        return m_boundings_.Transform(GetWorldMatrix());
     }
 
     void Collider::UpdateInertiaTensor()
@@ -428,15 +355,16 @@ namespace Engine::Components
     Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
       m_type_(BOUNDING_TYPE_BOX),
-      m_mass_(1.0f),
       m_boundings_(),
-      m_inertia_tensor_()
+      m_mass_(1.0f),
+      m_inertia_tensor_(),
+      m_local_matrix_(Matrix::Identity)
     {
     }
 
     void Collider::GenerateInertiaCube()
     {
-        const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2;
+        const Vector3 dim                = GetBounding<BoundingOrientedBox>().Extents;
         const Vector3 dimensions_squared = dim * dim;
 
         m_inverse_inertia_.x = (12.0f * GetInverseMass()) /
@@ -457,15 +385,67 @@ namespace Engine::Components
 
     void Collider::PreUpdate(const float& dt)
     {
-        static float second_counter = 0.f;
+        static float fps_counter = 0.f;
+        static float ltcc_counter = 0.f;
 
-        if (second_counter >= 1.f)
+        if (fps_counter >= 1.f)
         {
-            std::lock_guard lock(m_collision_count_mutex_);
-            m_collision_count_.clear();
+            for (const auto& [id, count] : m_cps_)
+            {
+                if (m_ltcc_.contains(id)) m_ltcc_[id] += m_cps_[id];
+                else m_ltcc_.insert({id, count});
+            }
+
+            m_cps_.clear();
+
+            for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
+            {
+                if (it->second == 0)
+                {
+                    it = m_ltcc_.erase(it);
+                }
+                else if (it->second > g_energy_reduction_ceil)
+                {
+                    it->second = g_energy_reduction_ceil;
+                    ++it;
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            fps_counter = 0.f;
         }
 
-        second_counter += dt;
+        if (ltcc_counter >= g_ltcc_window_interval)
+        {
+            for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
+            {
+                if (it->second > 0)
+                {
+                    if (!m_collided_objects_.contains(it->first))
+                    {
+                        it->second--;
+                    }
+                    if (it->second > g_energy_reduction_ceil)
+                    {
+                        it->second = g_energy_reduction_ceil;
+                    }
+
+                    ++it;
+                }
+                else
+                {
+                    it = m_ltcc_.erase(it);
+                }
+            }
+
+            ltcc_counter = 0.f;
+        }
+
+        fps_counter += dt;
+        ltcc_counter += dt;
 
         UpdateInertiaTensor();
     }
@@ -479,7 +459,6 @@ namespace Engine::Components
     {
         Component::PostUpdate(dt);
 #ifdef _DEBUG
-        std::lock_guard lock(m_collision_mutex_);
         if (m_collided_objects_.empty())
         {
             if (m_type_ == BOUNDING_TYPE_BOX)

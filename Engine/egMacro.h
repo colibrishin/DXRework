@@ -76,3 +76,6 @@
 // invalid id check for weak pointer
 #define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
   if ((ID) == g_invalid_id) return {};
+
+// Debugging macro
+#define HELPME __nop();

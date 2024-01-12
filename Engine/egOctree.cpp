@@ -32,6 +32,35 @@ namespace Engine
         }
     }
 
+    const std::vector<Octree::WeakT>& Octree::Read() const
+    {
+        return m_values_;
+    }
+
+    std::array<const Octree*, 8> Octree::Next() const
+    {
+        std::array<const Octree*, 8> next;
+
+        for (int i = 0; i < octant_count; ++i)
+        {
+            if (m_children_[i])
+            {
+                next[i] = m_children_[i].get();
+            }
+            else
+            {
+                next[i] = nullptr;
+            }
+        }
+
+        return next;
+    }
+
+    UINT Octree::ActiveChildren() const
+    {
+        return m_active_children_.count();
+    }
+
     bool Octree::Insert(const WeakT& obj)
     {
         // attempt to insert outside of the map
@@ -111,7 +140,7 @@ namespace Engine
                         if (bound_check == DirectX::ContainmentType::CONTAINS)
                         {
                             // Expand the node and check same above
-                            node_children[i] = std::unique_ptr<Octree>(new Octree{bound, {obj}});
+                            node_children[i] = std::unique_ptr<Octree>(new Octree{bound});
                             node_children[i]->m_parent_ = node;
                             node_children[i]->Build();
                             node_active_children.set(i);
@@ -148,141 +177,190 @@ namespace Engine
 
         // todo: check whether the node is orphan.
 
-        if (!m_b_initialized_)
-        {
-            UpdateInternal();
-        }
+        std::stack<Octree*> stack;
+        std::map<Octree*, bool> visited;
 
-        while (!ready())
+        stack.push(this);
+
+        while (!stack.empty())
         {
-            if (attempt > retry_exhaust)
+            const auto node = stack.top();
+
+            auto& life_count = node->m_life_count_;
+            auto& node_value = node->m_values_;
+            auto& node_children = node->m_children_;
+            auto& node_active_children = node->m_active_children_;
+            auto& node_bound = node->m_bounds_;
+            const auto& node_extent = node->Extent();
+            const auto& node_center = node->WorldCenter();
+
+            if (visited.contains(node) && visited[node])
             {
-                throw std::logic_error("Octree update failed.");
-            }
-
-            UpdateInternal();
-            ++attempt;
-        }
-
-        // Lifecycle management
-        if (empty())
-        {
-            m_life_count_--;
-        }
-        else
-        {
-            m_life_count_ = node_lifespan;
-        }
-
-        // If parent has any object that can be fit into smaller node, move it to the child node
-        if (!m_values_.empty())
-        {
-            for (auto it = m_values_.begin(); it != m_values_.end();)
-            {
-                if (it->expired())
+                if (!node_value.empty())
                 {
-                    it = m_values_.erase(it);
-                    continue;
-                }
+                    // Check whether the objects are still bounded by the node
+                    for (auto it = node_value.begin(); it != node_value.end();)
+                    {
+                        if (it->expired())
+                        {
+                            it = node_value.erase(it);
+                            continue;
+                        }
 
-                const auto obj = it->lock();
-                const auto obj_bound   = bounding_getter::value(*obj);
-                bool found = false;
+                        const auto obj         = it->lock();
+                        const auto obj_bound   = bounding_getter::value(*obj);
+                        const auto bound_check = obj_bound.ContainsBy(node_bound);
+
+                        if (bound_check != DirectX::ContainmentType::CONTAINS)
+                        {
+                            auto* cursor = node->parent();
+
+                            while (cursor)
+                            {
+                                if (cursor->Insert(obj))
+                                {
+                                    break;
+                                }
+
+                                cursor = cursor->parent();
+                            }
+
+                            if (!cursor)
+                            {
+                                // panic: Even root cannot contains the object, need to rebuild the whole tree.
+                                root()->Panic();
+                                return;
+                            }
+                            else
+                            {
+                                // Object moved to parent node, remove from current obj
+                                it = node_value.erase(it);
+                                continue;
+                            }
+                        }
+
+                        ++it;
+                    }
+                }
 
                 for (int i = 0; i < octant_count; ++i)
                 {
-                    if (m_children_[i])
+                    if (node_children[i])
                     {
-                        if (obj_bound.ContainsBy(m_children_[i]->m_bounds_) ==
-                            DirectX::ContainmentType::CONTAINS)
+                        if (node_children[i]->garbage())
                         {
-                            // Move the object to insertion queue, and let the child node handle it
-                            // By this, dirty flag will be set, and the child node will be updated
-                            m_children_[i]->m_insertion_queue_.push(obj);
-                            found = true;
-                            break;
+                            node_children[i].reset();
+                            node_active_children.reset(i);
                         }
                     }
                 }
 
-                if (found)
+                stack.pop();
+                continue;
+            }
+
+            if (!visited.contains(node) && !visited[node])
+            {
+                if (!node->m_b_initialized_)
                 {
-                    it = m_values_.erase(it);
+                    node->UpdateInternal();
+                }
+
+                while (!node->ready())
+                {
+                    if (attempt > retry_exhaust)
+                    {
+                        throw std::logic_error("Octree update failed.");
+                    }
+
+                    node->UpdateInternal();
+                    ++attempt;
+                }
+
+                // Lifecycle management
+                if (node->empty())
+                {
+                    life_count--;
                 }
                 else
                 {
-                    ++it;   
-                }
-            }
-        }
-
-        // Update children first.
-        for (int i = 0; i < octant_count; ++i)
-        {
-            if (m_children_[i])
-            {
-                // Update children
-                m_children_[i]->Update();
-
-                // Prune empty children
-                if (m_children_[i]->garbage())
-                {
-                    m_children_[i].reset();
-                    m_active_children_.reset(i);
-                }
-            }
-        }
-
-        if (!m_values_.empty())
-        {
-            // Check whether the objects are still bounded by the node
-            for (auto it = m_values_.begin(); it != m_values_.end();)
-            {
-                if (it->expired())
-                {
-                    it = m_values_.erase(it);
-                    continue;
+                    life_count = node_lifespan;
                 }
 
-                const auto obj = it->lock();
-                const auto obj_bound   = bounding_getter::value(*obj);
-                const auto bound_check = obj_bound.ContainsBy(m_bounds_);
-
-                if (bound_check != DirectX::ContainmentType::CONTAINS)
+                if (!node_value.empty())
                 {
-                    auto* cursor = parent();
-
-                    while (cursor)
+                    for (auto it = node_value.begin(); it != node_value.end();)
                     {
-                        if (cursor->Insert(obj))
+                        if (it->expired())
                         {
-                            break;
+                            it = node_value.erase(it);
+                            continue;
                         }
 
-                        cursor = cursor->parent();
-                    }
+                        const auto obj       = it->lock();
+                        const auto obj_bound = bounding_getter::value(*obj);
+                        bool       found     = false;
 
-                    if (!cursor)
-                    {
-                        // panic: Even root cannot contains the object, need to rebuild the whole tree.
-                        root()->m_b_panic_ = true;
-                        return;
-                    }
-                    else
-                    {
-                        // Object moved to parent node, remove from current obj
-                        it = m_values_.erase(it);
-                        continue;
+                        for (int i = 0; i < octant_count; ++i)
+                        {
+                            if (node_children[i])
+                            {
+                                if (obj_bound.ContainsBy(node_children[i]->m_bounds_) ==
+                                    DirectX::ContainmentType::CONTAINS)
+                                {
+                                    // Move the object to insertion queue, and let the child node handle it
+                                    // By this, dirty flag will be set, and the child node will be updated
+                                    node_children[i]->m_insertion_queue_.push(obj);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                const auto bound       = GetBounds(node_extent, node_center, (eOctant)i);
+                                const auto bound_check = obj_bound.ContainsBy(bound);
+
+                                if (bound_check == DirectX::ContainmentType::CONTAINS)
+                                {
+                                    // Expand the node
+                                    node_children[i]            = std::unique_ptr<Octree>(new Octree{bound});
+                                    node_children[i]->m_parent_ = this;
+                                    node_children[i]->Build();
+                                    node_active_children.set(i);
+                                    node_children[i]->m_insertion_queue_.push(obj);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (found)
+                        {
+                            it = node_value.erase(it);
+                        }
+                        else
+                        {
+                            ++it;
+                        }
                     }
                 }
 
-                ++it;
+                for (int i = 0; i < octant_count; ++i)
+                {
+                    if (node_children[i])
+                    {
+                        stack.push(node_children[i].get());
+                    }
+                }
+                
+                visited[node] = true;
             }
-        }
 
-        if (root() == this && m_b_panic_)
-        {
-            Panic();
+            if (node_value.size() <= 1 && node->ActiveChildren() == 0) 
+            {
+                stack.pop();
+                continue; // Leaf node
+            }
         }
 
         //GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);

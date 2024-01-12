@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "egBaseCollider.hpp"
-#include "egBoundingGroup.hpp"
 #include "egLayer.h"
 #include "egObject.hpp"
 #include "egTransform.h"

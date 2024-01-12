@@ -3,7 +3,7 @@
 #include <bitset>
 #include <vector>
 #include <boost/smart_ptr/weak_ptr.hpp>
-#include "egBoundingGroup.hpp"
+#include "egGenericBounding.hpp"
 
 namespace Engine
 {
@@ -48,8 +48,11 @@ namespace Engine
         Octree();
         Octree(const Octree& other);
 
-        bool Insert(const WeakT& obj);
-        void Update();
+        const std::vector<Octree::WeakT>& Read() const;
+        std::array<const Octree*, 8>      Next() const;
+        UINT                              ActiveChildren() const;
+        bool                              Insert(const WeakT& obj);
+        void                              Update();
 
     private:
         explicit Octree(const BoundingBox& bounds);

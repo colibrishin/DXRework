@@ -435,7 +435,7 @@
     <ClInclude Include="egEnums.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="egBoundingGroup.hpp">
+    <ClInclude Include="egGenericBounding.hpp">
       <Filter>Physics</Filter>
     </ClInclude>
     <ClInclude Include="egDXCommon.h">

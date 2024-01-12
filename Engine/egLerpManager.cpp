@@ -27,6 +27,11 @@ namespace Engine::Manager::Physics
 
     void LerpManager::PreRender(const float& dt)
     {
+        if (m_elapsedTime_ >= g_lerp)
+        {
+            m_elapsedTime_ = g_epsilon;
+        }
+
         if (const auto scene = GetSceneManager().GetActiveScene().lock())
         {
             const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
@@ -66,17 +71,14 @@ namespace Engine::Manager::Physics
 
     void LerpManager::PostRender(const float& dt) {}
 
-    void LerpManager::FixedUpdate(const float& dt)
-    {
-        Reset();
-    }
+    void LerpManager::FixedUpdate(const float& dt) {}
 
     void LerpManager::PostUpdate(const float& dt) {}
 
     float LerpManager::GetLerpFactor() const
     {
         auto factor = (static_cast<float>(m_elapsedTime_) /
-                       static_cast<float>(g_fixed_update_interval));
+                       static_cast<float>(g_lerp));
 
         if (!std::isfinite(factor))
         {

@@ -32,9 +32,6 @@ namespace Engine::Abstract
             {
                 const auto rhs_owner = other->GetOwner().lock();
 
-                const auto speculation_check = GetCollisionDetector().IsSpeculated(
-                    GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsSpeculated(
-                    rhs_owner->GetID(), GetID());
                 const auto collision_check = GetCollisionDetector().IsCollided(
                     GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsCollided(
                     rhs_owner->GetID(), GetID());
@@ -42,7 +39,7 @@ namespace Engine::Abstract
                     GetID(), rhs_owner->GetID()) || GetCollisionDetector().IsCollidedInFrame(
                     rhs_owner->GetID(), GetID());
 
-                if (collision_frame || speculation_check)
+                if (collision_frame)
                 {
                     GetDebugger().Log(
                                       "Collision detected between " + GetName() + " and " + rhs_owner->GetName());

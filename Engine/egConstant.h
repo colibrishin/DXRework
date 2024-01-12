@@ -20,12 +20,15 @@ namespace Engine
     constexpr float   g_epsilon                 = 0.001f;
     constexpr float   g_gravity_acc             = 9.81f;
     constexpr float   g_fixed_update_interval   = 0.07f;
+    constexpr float   g_lerp                    = 0.5f;
     constexpr Vector3 g_gravity_vec             = Vector3(0.0f, -g_gravity_acc, 0.0f);
     constexpr float   g_restitution_coefficient = 0.6f;
     constexpr float   g_drag_coefficient        = 0.25f;
     constexpr size_t  g_gjk_max_iteration       = 64;
     constexpr size_t  g_epa_max_iteration       = 64;
     constexpr bool    g_speculation_enabled     = false;
+    constexpr float   g_ltcc_window_interval    = 10.f;
+    constexpr int     g_energy_reduction_ceil   = 1 << 8;
 
     // Debug Constants
     constexpr int    g_debug_y_movement        = 15;

@@ -39,6 +39,11 @@ namespace Engine
         }
     };
 
+    inline std::string Vector3ToString(const Vector3& v)
+    {
+        return std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z);
+    }
+
     struct ResourcePriorityComparer
     {
         bool operator()(
@@ -63,7 +68,6 @@ namespace Engine
 
         bool speculative;
         bool collision;
-        bool grounded;
     };
 
     inline static bool IsAssigned(const LONG_PTR id)

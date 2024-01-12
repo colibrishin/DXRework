@@ -70,6 +70,8 @@ namespace Engine
         ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
         WeakCamera GetMainCamera() const;
 
+        const Octree& GetObjectTree();
+
         // Add cache component from the object. Type is deduced in compile time.
         template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
         void AddCacheComponent(const boost::shared_ptr<T>& component)
@@ -130,16 +132,6 @@ namespace Engine
             return {};
         }
 
-        void UpdatePosition(const WeakObject& obj);
-        void GetNearestObjects(const Vector3& pos, std::vector<WeakObject>& out);
-        void GetNearbyObjects(
-            const Vector3 &           pos, const UINT range,
-            std::vector<WeakObject> & out);
-        void SearchObjects(
-            const Vector3&                                        pos, const Vector3& dir,
-            std::set<WeakObject, WeakComparer<Abstract::Object>>& out,
-            int                                                   exhaust = 100);
-
         auto operator[] (size_t idx) const
         {
             return m_layers[idx];
@@ -187,8 +179,6 @@ namespace Engine
         void AssignLocalIDToObject(const StrongObject& obj);
         void RegisterLightToManager(const StrongLight & obj);
         void UnregisterLightFromManager(const StrongLight & obj);
-
-        void RemoveObjectFromOctree(const WeakObject& obj);
 
         // Functions for the next frame.
         // Add the object from the scene finally. this function should be called at the next frame.

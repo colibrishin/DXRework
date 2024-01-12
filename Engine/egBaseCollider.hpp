@@ -1,5 +1,5 @@
 #pragma once
-#include "egBoundingGroup.hpp"
+#include "egGenericBounding.hpp"
 #include "egCommon.hpp"
 #include "egComponent.h"
 #include "egHelper.hpp"
@@ -17,7 +17,7 @@ namespace Engine::Components
         Collider(const WeakObject& owner);
         ~Collider() override = default;
 
-        void FromMatrix(Matrix& mat);
+        void FromMatrix(const Matrix& mat);
 
         void SetType(eBoundingType type);
         void SetMass(const float mass);
@@ -27,22 +27,17 @@ namespace Engine::Components
 
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon = g_epsilon);
-        bool        Intersects(const StrongCollider& other) const;
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
-        bool        Contains(const StrongCollider & other) const;
 
         void AddCollidedObject(GlobalEntityID id);
-        void AddSpeculationObject(GlobalEntityID id);
-
         void RemoveCollidedObject(const GlobalEntityID id);
-        void RemoveSpeculationObject(const GlobalEntityID id);
 
-        bool                     IsCollidedObject(const GlobalEntityID id);
-        std::set<GlobalEntityID> GetCollidedObjects();
-        std::set<GlobalEntityID> GetSpeculation();
-        UINT                     GetCollisionCount(GlobalEntityID id);
+        bool                            IsCollidedObject(const GlobalEntityID id) const;
+        const std::set<GlobalEntityID>& GetCollidedObjects() const;
+        UINT                            GetCPS(GlobalEntityID id) const;
+        UINT                            GetCollisionCount(GlobalEntityID id) const;
 
-        void GetPenetration(
+        bool GetPenetration(
             const Collider& other, Vector3& normal,
             float&          depth) const;
 
@@ -112,40 +107,6 @@ namespace Engine::Components
 
         static void InitializeStockVertices();
 
-        template <typename T>
-        bool Intersects_GENERAL_TYPE(const T& other)
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                BoundingOrientedBox box = GetBounding<BoundingOrientedBox>();
-                box.Extents = box.Extents + (Vector3::One * g_epsilon);
-                return box.Intersects(other);
-            }
-            if (m_type_ == BOUNDING_TYPE_SPHERE)
-            {
-                BoundingSphere sphere = GetBounding<BoundingSphere>();
-                sphere.Radius += g_epsilon;
-                return sphere.Intersects(other);
-            }
-
-            return false;
-        }
-
-        template <typename T>
-        bool Contains_GENERAL_TYPE(const T& other)
-        {
-            if (m_type_ == BOUNDING_TYPE_BOX)
-            {
-                return GetBounding<BoundingOrientedBox>().Contains(other);
-            }
-            if (m_type_ == BOUNDING_TYPE_SPHERE)
-            {
-                return GetBounding<BoundingSphere>().Contains(other);
-            }
-
-            return false;
-        }
-
         void UpdateInertiaTensor();
         void GenerateInertiaCube();
         void GenerateInertiaSphere();
@@ -161,13 +122,11 @@ namespace Engine::Components
         inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
         inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
-        std::mutex                   m_collision_mutex_;
-        std::mutex                   m_collision_count_mutex_;
-        std::mutex                   m_speculative_mutex_;
-
-        std::set<GlobalEntityID>     m_collided_objects_;
-        std::map<GlobalEntityID, UINT> m_collision_count_;
-        std::set<GlobalEntityID>     m_speculative_collision_candidates_;
+        std::set<GlobalEntityID>       m_collided_objects_;
+        // Collision per second
+        std::map<GlobalEntityID, UINT> m_cps_;
+        // Long-term collision count
+        std::map<GlobalEntityID, UINT> m_ltcc_;
 
         Vector3    m_inverse_inertia_;
         XMFLOAT3X3 m_inertia_tensor_;

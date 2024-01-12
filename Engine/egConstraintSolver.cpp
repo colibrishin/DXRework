@@ -13,32 +13,7 @@ namespace Engine::Manager::Physics
 {
     void ConstraintSolver::Initialize() {}
 
-    void ConstraintSolver::PreUpdate(const float& dt)
-    {
-        auto& infos = GetCollisionDetector().GetCollisionInfo();
-
-        static tbb::affinity_partitioner ap;
-
-        for (const auto& info : infos)
-        {
-            if constexpr (g_speculation_enabled && info.speculative)
-            {
-                ResolveSpeculation(info.lhs, info.rhs);
-            }
-            if (info.collision)
-            {
-                ResolveCollision(info.lhs, info.rhs);
-            }
-            if (info.grounded)
-            {
-                ResolveGrounded(info.lhs, info.rhs);
-            }
-        }
-
-        infos.clear();
-        m_collision_resolved_set_.clear();
-        m_speculative_resolved_set_.clear();
-    }
+    void ConstraintSolver::PreUpdate(const float& dt) {}
 
     void ConstraintSolver::Update(const float& dt) {}
 
@@ -48,17 +23,33 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::PostRender(const float& dt) {}
 
-    void ConstraintSolver::FixedUpdate(const float& dt) {}
+    void ConstraintSolver::FixedUpdate(const float& dt)
+    {
+        auto& infos = GetCollisionDetector().GetCollisionInfo();
+
+        static tbb::affinity_partitioner ap;
+
+        for (const auto& info : infos)
+        {
+            if (info.collision)
+            {
+                ResolveCollision(info.lhs, info.rhs);
+            }
+        }
+
+        infos.clear();
+        m_collision_resolved_set_.clear();
+    }
 
     void ConstraintSolver::PostUpdate(const float& dt) {}
 
     void ConstraintSolver::ResolveCollision(const WeakObject& lhs, const WeakObject& rhs)
     {
-        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+        auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
 
-        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
+        auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
 
         if (rb && rb_other)
         {
@@ -69,6 +60,17 @@ namespace Engine::Manager::Physics
 
             m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
             m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
+
+            if (rb->IsFixed() && rb_other->IsFixed())
+            {
+                return;
+            }
+
+            if (rb->IsFixed())
+            {
+                std::swap(rb, rb_other);
+                std::swap(tr, tr_other);
+            }
 
             const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
             const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
@@ -87,135 +89,65 @@ namespace Engine::Manager::Physics
             const Vector3 pos       = tr->GetWorldPosition();
             const Vector3 other_pos = tr_other->GetWorldPosition();
 
-            Vector3 normal;
-            float   penetration;
+            Vector3 lhs_normal;
+            float   lhs_pen;
 
-            cl->GetPenetration(*cl_other, normal, penetration);
-            const Vector3 point = pos + normal * penetration;
+            if (!cl->GetPenetration(*cl_other, lhs_normal, lhs_pen))
+            {
+                return;
+            }
 
-            Vector3 lhs_penetration;
-            Vector3 rhs_penetration;
+            // Gets the vector from center to collision point.
+            const auto lbnd = cl->GetBounding();
+            const auto rbnd = cl_other->GetBounding();
+
+            float distance = 0;
+            if (!lbnd.TestRay(rbnd, lhs_normal, distance))
+            {
+                return;
+            }
+
+            Vector3 collision_point = pos - (lhs_normal * distance);
+            Vector3 lhs_weight_pen;
+            Vector3 rhs_weight_pen;
 
             Engine::Physics::EvalImpulse(
-                                         pos, other_pos, point, penetration, normal, cl->GetInverseMass(),
+                                         pos, other_pos, collision_point, lhs_pen, lhs_normal, cl->GetInverseMass(),
                                          cl_other->GetInverseMass(), rb->GetAngularMomentum(),
                                          rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
                                          rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
-                                         other_angular_vel, lhs_penetration, rhs_penetration);
+                                         other_angular_vel, lhs_weight_pen, rhs_weight_pen);
 
+            // Fast collision penalty
+            const auto cps     = static_cast<float>(cl->GetCPS(rhs.lock()->GetID()));
+            const auto fps     = static_cast<float>(GetApplication().GetFPS());
+            auto       cps_val = cps / fps;
 
-            const auto collided_count = cl->GetCollisionCount(rhs.lock()->GetID());
-            const auto fps            = GetApplication().GetFPS();
+            // Not collided object is given to solver.
+            if (cps == 0) throw std::logic_error("Collision count is zero");
+            if (!isfinite(cps)) cps_val = 0.f; // where fps is zero
 
-            auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
-            ratio      = std::clamp(ratio, 0.f, 1.f);
+            // Accumulated collision penalty
+            const auto collision_count = cl->GetCollisionCount(rhs.lock()->GetID());
+            const auto log_count       = std::clamp(std::powf(2, collision_count), 2.f, (float)g_energy_reduction_ceil);
+            const auto penalty         = log_count / (float)g_energy_reduction_ceil;
+            const auto penalty_sum     = std::clamp(cps_val + penalty, 0.f, 1.f);
+            const auto reduction       = 1.0f - penalty_sum;
 
-            if (!std::isfinite(ratio))
+            if (!rb->IsFixed())
             {
-                ratio = 0.0f;
+                tr->SetWorldPosition(pos + lhs_weight_pen);
+                rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
+                rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
             }
-
-            const auto ratio_inv = 1.0f - ratio;
-
-            const auto collision_reduction = std::powf(
-                                                       static_cast<float>(collided_count),
-                                                       static_cast<float>(g_collision_energy_reduction_multiplier.
-                                                           load()));
-
-            auto reduction = (ratio_inv / collision_reduction);
-
-            // nan guard
-            if (!isfinite(reduction))
-            {
-                reduction = ratio_inv;
-            }
-
-            // Assuming lhs rigid-body is the movable object.
-            tr->SetWorldPosition(pos + lhs_penetration);
-            rb->SetLinearMomentum(linear_vel * reduction);
-            rb->SetAngularMomentum(angular_vel * reduction);
 
             if (!rb_other->IsFixed())
             {
-                tr_other->SetWorldPosition(other_pos + rhs_penetration);
-
-                rb_other->SetLinearMomentum(
-                                            other_linear_vel * reduction);
-                rb_other->SetAngularMomentum(
-                                             other_angular_vel * reduction);
+                tr_other->SetWorldPosition(pos + rhs_weight_pen);
+                rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (linear_vel * reduction));
+                rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
             }
-        }
-    }
-
-    void ConstraintSolver::ResolveSpeculation(const WeakObject& lhs, const WeakObject& rhs)
-    {
-        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
-
-        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
-
-        if (rb && rb_other)
-        {
-            if (m_speculative_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()}))
-            {
-                return;
-            }
-
-            m_speculative_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
-            m_speculative_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
-
-            const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
-            const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
-
-            if (!cl || !cl_other)
-            {
-                return;
-            }
-
-            Ray ray{};
-            ray.position        = tr->GetWorldPreviousPosition();
-            const auto velocity = rb->GetLinearMomentum();
-            velocity.Normalize(ray.direction);
-
-            const auto length                = velocity.Length();
-            float      intersection_distance = 0.0f;
-
-            // Forward collision check
-            if (cl_other->Intersects(ray, length, intersection_distance))
-            {
-                const Vector3 minimum_penetration = ray.direction * intersection_distance;
-                tr->SetWorldPosition(tr->GetWorldPreviousPosition() - minimum_penetration);
-            }
-
-            cl->RemoveSpeculationObject(rhs.lock()->GetID());
-            cl_other->RemoveSpeculationObject(lhs.lock()->GetID());
-        }
-    }
-
-    void ConstraintSolver::ResolveGrounded(const WeakObject& lhs, const WeakObject& rhs)
-    {
-        const auto cl_lhs = lhs.lock()->GetComponent<Components::Collider>().lock();
-        const auto cl_rhs = rhs.lock()->GetComponent<Components::Collider>().lock();
-
-        const auto tr_lhs = lhs.lock()->GetComponent<Components::Transform>().lock();
-        const auto tr_rhs = rhs.lock()->GetComponent<Components::Transform>().lock();
-
-        static Ray ray{};
-        ray.position = lhs.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
-        ray.direction = Vector3::Down;
-        const auto length = std::fabsf(tr_lhs->GetLocalScale().Dot(Vector3::Down)) / 2.f;
-        float intersection = 0.0f;
-
-        if (cl_rhs->Intersects(ray, length, intersection) && intersection > g_epsilon)
-        {
-            Vector3 normal;
-            float penetration;
-            cl_lhs->GetPenetration(*cl_rhs, normal, penetration);
-
-            const auto fallback = tr_lhs->GetWorldPosition() + (normal * penetration);
-            tr_lhs->SetWorldPosition(fallback);
         }
     }
 } // namespace Engine::Manager::Physics

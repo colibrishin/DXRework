@@ -59,7 +59,6 @@ namespace Client::Object
             const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
             const auto ctr = child->AddComponent<Components::Transform>().lock();
             child->AddComponent<Components::Collider>();
-            // todo: if child is not set before the transform, world matrix is created in local matrix.
             AddChild(child);
             ctr->SetSizeAbsolute(true);
             ctr->SetRotateAbsolute(false);

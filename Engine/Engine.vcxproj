@@ -24,7 +24,7 @@
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
-    <ClInclude Include="egBoundingGroup.hpp" />
+    <ClInclude Include="egGenericBounding.hpp" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstant.h" />
     <ClInclude Include="egConstraintSolver.h" />
