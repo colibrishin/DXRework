@@ -107,7 +107,7 @@ namespace Engine::Manager::Physics
                 return;
             }
 
-            Vector3 collision_point = pos + lhs_normal * distance;
+            Vector3 collision_point = pos - (lhs_normal * distance);
             Vector3 lhs_weight_pen;
             Vector3 rhs_weight_pen;
 
@@ -134,22 +134,6 @@ namespace Engine::Manager::Physics
             const auto penalty         = log_count / (float)g_energy_reduction_ceil;
             const auto penalty_sum     = std::clamp(cps_val + penalty, 0.f, 1.f);
             const auto reduction       = 1.0f - penalty_sum;
-
-            if (lhs.lock()->GetName() == "TestObject" && linear_vel.y < 0)
-            {
-                GetDebugger().Log(std::format("Penetration: {} {} {}", 
-                                              lhs.lock()->GetName(), 
-                                              Vector3ToString(lhs_weight_pen),
-                                              reduction));
-            }
-
-            if (lhs.lock()->GetName() == "Player" && linear_vel.y < 0)
-            {
-                GetDebugger().Log(std::format("Penetration: {} {} {}", 
-                                              lhs.lock()->GetName(), 
-                                              Vector3ToString(lhs_weight_pen),
-                                              reduction));
-            }
 
             if (!rb->IsFixed())
             {
