@@ -339,7 +339,7 @@ namespace Engine::Physics
             }
 
             normal      = minNormal;
-            penetration = minDistance + g_epsilon;
+            penetration = minDistance;
         }
 
         bool __vectorcall GJKAlgorithm(
