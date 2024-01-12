@@ -2,9 +2,6 @@
 
 namespace Engine
 {
-    // Physics Modifier
-    inline std::atomic<UINT> g_collision_energy_reduction_multiplier = 2;
-
     // Graphic Modifier
     inline std::atomic<float> g_fov           = DirectX::XM_PI / 4.f;
     inline std::atomic<bool>  g_full_screen   = false;

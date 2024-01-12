@@ -26,6 +26,8 @@ namespace Engine
     constexpr size_t  g_gjk_max_iteration       = 64;
     constexpr size_t  g_epa_max_iteration       = 64;
     constexpr bool    g_speculation_enabled     = false;
+    constexpr float   g_ltcc_window_interval    = 10.f;
+    constexpr int     g_energy_reduction_ceil   = 1 << 8;
 
     // Debug Constants
     constexpr int    g_debug_y_movement        = 15;

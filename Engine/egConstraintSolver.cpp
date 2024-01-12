@@ -45,11 +45,11 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::ResolveCollision(const WeakObject& lhs, const WeakObject& rhs)
     {
-        const auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+        auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
 
-        const auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        const auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
+        auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+        auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
 
         if (rb && rb_other)
         {
@@ -60,6 +60,17 @@ namespace Engine::Manager::Physics
 
             m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
             m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
+
+            if (rb->IsFixed() && rb_other->IsFixed())
+            {
+                return;
+            }
+
+            if (rb->IsFixed())
+            {
+                std::swap(rb, rb_other);
+                std::swap(tr, tr_other);
+            }
 
             const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
             const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
@@ -78,8 +89,17 @@ namespace Engine::Manager::Physics
             const Vector3 pos       = tr->GetWorldPosition();
             const Vector3 other_pos = tr_other->GetWorldPosition();
 
-            Vector3 normal;
-            float   penetration;
+            Vector3 lhs_normal;
+            float   lhs_pen;
+
+            if (!cl->GetPenetration(*cl_other, lhs_normal, lhs_pen))
+            {
+                return;
+            }
+
+            // Gets the vector from center to collision point.
+            const auto lbnd = cl->GetBounding();
+            const auto rbnd = cl_other->GetBounding();
 
             cl->GetPenetration(*cl_other, normal, penetration);
             const Vector3 point = pos + normal * penetration;
@@ -95,46 +115,50 @@ namespace Engine::Manager::Physics
                                          cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
                                          other_angular_vel, lhs_weight_pen, rhs_weight_pen);
 
+            // Fast collision penalty
+            const auto cps     = static_cast<float>(cl->GetCPS(rhs.lock()->GetID()));
+            const auto fps     = static_cast<float>(GetApplication().GetFPS());
+            auto       cps_val = cps / fps;
 
-            const auto collided_count = cl->GetCollisionCount(rhs.lock()->GetID());
-            const auto fps            = GetApplication().GetFPS();
+            // Not collided object is given to solver.
+            if (cps == 0) throw std::logic_error("Collision count is zero");
+            if (!isfinite(cps)) cps_val = 0.f; // where fps is zero
 
-            auto ratio = static_cast<float>(collided_count) / static_cast<float>(fps);
-            ratio      = std::clamp(ratio, 0.f, 1.f);
+            // Accumulated collision penalty
+            const auto collision_count = cl->GetCollisionCount(rhs.lock()->GetID());
+            const auto log_count       = std::clamp(std::powf(2, collision_count), 2.f, (float)g_energy_reduction_ceil);
+            const auto penalty         = log_count / (float)g_energy_reduction_ceil;
+            const auto penalty_sum     = std::clamp(cps_val + penalty, 0.f, 1.f);
+            const auto reduction       = 1.0f - penalty_sum;
 
-            if (!std::isfinite(ratio))
+            if (lhs.lock()->GetName() == "TestObject" && linear_vel.y < 0)
             {
-                ratio = 0.0f;
+                GetDebugger().Log(std::format("Penetration: {} {} {}", 
+                                              lhs.lock()->GetName(), 
+                                              Vector3ToString(lhs_weight_pen),
+                                              reduction));
             }
 
-            const auto ratio_inv = 1.0f - ratio;
-
-            const auto collision_reduction = std::powf(
-                                                       static_cast<float>(collided_count),
-                                                       static_cast<float>(g_collision_energy_reduction_multiplier.
-                                                           load()));
-
-            auto reduction = (ratio_inv / collision_reduction);
-
-            // nan guard
-            if (!isfinite(reduction))
+            if (lhs.lock()->GetName() == "Player" && linear_vel.y < 0)
             {
-                reduction = ratio_inv;
+                GetDebugger().Log(std::format("Penetration: {} {} {}", 
+                                              lhs.lock()->GetName(), 
+                                              Vector3ToString(lhs_weight_pen),
+                                              reduction));
             }
 
-            // Assuming lhs rigid-body is the movable object.
-            tr->SetWorldPosition(pos + lhs_penetration);
-            rb->SetLinearMomentum(linear_vel * reduction);
-            rb->SetAngularMomentum(angular_vel * reduction);
+            if (!rb->IsFixed())
+            {
+                tr->SetWorldPosition(pos + lhs_weight_pen);
+                rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
+                rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
+            }
 
             if (!rb_other->IsFixed())
             {
-                tr_other->SetWorldPosition(other_pos + rhs_penetration);
-
-                rb_other->SetLinearMomentum(
-                                            other_linear_vel * reduction);
-                rb_other->SetAngularMomentum(
-                                             other_angular_vel * reduction);
+                tr_other->SetWorldPosition(pos + rhs_weight_pen);
+                rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (linear_vel * reduction));
+                rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
             }
         }
     }

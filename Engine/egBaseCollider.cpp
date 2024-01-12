@@ -4,6 +4,7 @@
 #include "egCollision.h"
 #include "egCubeMesh.h"
 #include "egD3Device.hpp"
+#include "egGlobal.h"
 #include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egSphereMesh.h"
@@ -193,60 +194,34 @@ namespace Engine::Components
 
     void Collider::AddCollidedObject(const GlobalEntityID id)
     {
-        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.insert(id);
 
-        std::lock_guard lock2(m_collision_count_mutex_);
-        if (!m_collision_count_.contains(id))
-        {
-            m_collision_count_.insert({id, 1});
-        }
-        else
-        {
-            m_collision_count_[id]++;
-        }
-    }
+        if (!m_cps_.contains(id)) m_cps_.insert({id, 1});
+        else m_cps_[id]++;
 
-    void Collider::AddSpeculationObject(const GlobalEntityID id)
-    {
-        std::lock_guard lock(m_speculative_mutex_);
-        m_speculative_collision_candidates_.insert(id);
+        if(!m_ltcc_.contains(id)) m_ltcc_.insert({id, 1});
+        else m_ltcc_[id]++;
     }
 
     void Collider::RemoveCollidedObject(const GlobalEntityID id)
     {
-        std::lock_guard lock(m_collision_mutex_);
         m_collided_objects_.erase(id);
-
-        if (m_collision_count_.contains(id))
-        {
-            std::lock_guard lock2(m_collision_count_mutex_);
-            m_collision_count_.erase(id);
-        }
+        if (m_cps_.contains(id)) m_cps_.erase(id);
     }
 
-    void Collider::RemoveSpeculationObject(const GlobalEntityID id)
+    bool Collider::IsCollidedObject(const GlobalEntityID id) const
     {
-        std::lock_guard lock(m_speculative_mutex_);
-        m_speculative_collision_candidates_.erase(id);
-    }
-
-    bool Collider::IsCollidedObject(const GlobalEntityID id)
-    {
-        std::lock_guard lock(m_collision_mutex_);
         return m_collided_objects_.contains(id);
     }
 
-    std::set<GlobalEntityID> Collider::GetCollidedObjects()
+    UINT Collider::GetCPS(GlobalEntityID id) const
     {
-        std::lock_guard lock(m_collision_mutex_);
-        return m_collided_objects_;
-    }
+        if (!m_cps_.contains(id))
+        {
+            return 0;
+        }
 
-    std::set<GlobalEntityID> Collider::GetSpeculation()
-    {
-        std::lock_guard lock(m_speculative_mutex_);
-        return m_speculative_collision_candidates_;
+        return m_cps_.at(id);
     }
 
     bool Collider::GetPenetration(
@@ -261,15 +236,14 @@ namespace Engine::Components
                                    normal, depth);
     }
 
-    UINT Collider::GetCollisionCount(const GlobalEntityID id)
+    UINT Collider::GetCollisionCount(const GlobalEntityID id) const
     {
-        std::lock_guard lock(m_collision_count_mutex_);
-        if (!m_collision_count_.contains(id))
+        if (!m_ltcc_.contains(id))
         {
             return 0;
         }
 
-        return m_collision_count_.at(id);
+        return m_ltcc_.at(id);
     }
 
     float Collider::GetMass() const
@@ -404,15 +378,67 @@ namespace Engine::Components
 
     void Collider::PreUpdate(const float& dt)
     {
-        static float second_counter = 0.f;
+        static float fps_counter = 0.f;
+        static float ltcc_counter = 0.f;
 
-        if (second_counter >= 1.f)
+        if (fps_counter >= 1.f)
         {
-            std::lock_guard lock(m_collision_count_mutex_);
-            m_collision_count_.clear();
+            for (const auto& [id, count] : m_cps_)
+            {
+                if (m_ltcc_.contains(id)) m_ltcc_[id] += m_cps_[id];
+                else m_ltcc_.insert({id, count});
+            }
+
+            m_cps_.clear();
+
+            for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
+            {
+                if (it->second == 0)
+                {
+                    it = m_ltcc_.erase(it);
+                }
+                else if (it->second > g_energy_reduction_ceil)
+                {
+                    it->second = g_energy_reduction_ceil;
+                    ++it;
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            fps_counter = 0.f;
         }
 
-        second_counter += dt;
+        if (ltcc_counter >= g_ltcc_window_interval)
+        {
+            for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
+            {
+                if (it->second > 0)
+                {
+                    if (!m_collided_objects_.contains(it->first))
+                    {
+                        it->second--;
+                    }
+                    if (it->second > g_energy_reduction_ceil)
+                    {
+                        it->second = g_energy_reduction_ceil;
+                    }
+
+                    ++it;
+                }
+                else
+                {
+                    it = m_ltcc_.erase(it);
+                }
+            }
+
+            ltcc_counter = 0.f;
+        }
+
+        fps_counter += dt;
+        ltcc_counter += dt;
 
         UpdateInertiaTensor();
     }
@@ -426,7 +452,6 @@ namespace Engine::Components
     {
         Component::PostUpdate(dt);
 #ifdef _DEBUG
-        std::lock_guard lock(m_collision_mutex_);
         if (m_collided_objects_.empty())
         {
             if (m_type_ == BOUNDING_TYPE_BOX)

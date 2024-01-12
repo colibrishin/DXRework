@@ -30,15 +30,11 @@ namespace Engine::Components
         bool        Intersects(const Ray& ray, float distance, float& intersection) const;
 
         void AddCollidedObject(GlobalEntityID id);
-        void AddSpeculationObject(GlobalEntityID id);
-
         void RemoveCollidedObject(const GlobalEntityID id);
-        void RemoveSpeculationObject(const GlobalEntityID id);
 
-        bool                     IsCollidedObject(const GlobalEntityID id);
-        std::set<GlobalEntityID> GetCollidedObjects();
-        std::set<GlobalEntityID> GetSpeculation();
-        UINT                     GetCollisionCount(GlobalEntityID id);
+        bool IsCollidedObject(const GlobalEntityID id) const;
+        UINT GetCPS(GlobalEntityID id) const;
+        UINT GetCollisionCount(GlobalEntityID id) const;
 
         bool GetPenetration(
             const Collider& other, Vector3& normal,
@@ -125,13 +121,11 @@ namespace Engine::Components
         inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
         inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
-        std::mutex                   m_collision_mutex_;
-        std::mutex                   m_collision_count_mutex_;
-        std::mutex                   m_speculative_mutex_;
-
-        std::set<GlobalEntityID>     m_collided_objects_;
-        std::map<GlobalEntityID, UINT> m_collision_count_;
-        std::set<GlobalEntityID>     m_speculative_collision_candidates_;
+        std::set<GlobalEntityID>       m_collided_objects_;
+        // Collision per second
+        std::map<GlobalEntityID, UINT> m_cps_;
+        // Long-term collision count
+        std::map<GlobalEntityID, UINT> m_ltcc_;
 
         Vector3    m_inverse_inertia_;
         XMFLOAT3X3 m_inertia_tensor_;
