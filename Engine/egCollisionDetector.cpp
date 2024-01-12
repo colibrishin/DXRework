@@ -46,10 +46,10 @@ namespace Engine::Manager::Physics
 
             while (!stack.empty())
             {
-                const auto node = stack.top();
-                const auto& value = node->Read();
+                const auto  node     = stack.top();
+                const auto& value    = node->Read();
                 const auto& children = node->Next();
-                const auto& active = node->ActiveChildren();
+                const auto& active   = node->ActiveChildren();
 
                 // Walk back from stack, it can be visited again.
                 if (visited.contains(node) && visited[node])
@@ -109,7 +109,7 @@ namespace Engine::Manager::Physics
                 // terminal node
                 if (value.size() <= 1 && active == 0)
                 {
-                    node_objects.erase(node_objects.end() - 1);
+                    node_objects.pop_back();
                     stack.pop();
                 }
             }
@@ -151,7 +151,6 @@ namespace Engine::Manager::Physics
         const auto rhs = p_rhs.lock();
 
         if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
-
         if (!lhs || !rhs) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
