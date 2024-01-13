@@ -11,7 +11,6 @@
 #include "egShader.hpp"
 #include "egShape.h"
 #include "egTransform.h"
-#include "egVertexShaderInternal.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Client::Object::Rifle,

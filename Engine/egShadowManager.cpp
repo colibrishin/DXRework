@@ -17,7 +17,6 @@
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
-#include "egVertexShaderInternal.h"
 #include "egShader.hpp"
 #include "egShape.h"
 

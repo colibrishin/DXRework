@@ -2,7 +2,6 @@
 #include "egDelayedRenderObject.h"
 
 #include "egCubeMesh.h"
-#include "egVertexShaderInternal.h"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL(
