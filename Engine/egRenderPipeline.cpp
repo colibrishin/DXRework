@@ -50,6 +50,11 @@ namespace Engine::Manager::Graphics
         GetD3Device().GetContext()->RSSetState(state);
     }
 
+    void RenderPipeline::SetSamplerState(ID3D11SamplerState* sampler)
+    {
+        GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_TEXTURE);
+    }
+
     void RenderPipeline::DefaultRenderTarget()
     {
         GetD3Device().GetContext()->OMSetDepthStencilState(
@@ -150,48 +155,66 @@ namespace Engine::Manager::Graphics
         Shader::Create(
                        "default", "./default.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "color", "./color.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "skybox", "./skybox.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "specular_normal", "./specular_normal.hlsl",
                        SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "normal", "./normal.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "refraction", "./refraction.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "specular_tex", "./specular_tex.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "specular", "./specular.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
-                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID);
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+                       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS);
     }
 
     void RenderPipeline::InitializeSamplers()
@@ -232,11 +255,10 @@ namespace Engine::Manager::Graphics
         GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0);
     }
 
-    void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view, ID3D11DepthStencilState* state)
+    void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view)
     {
         ID3D11RenderTargetView* pnullView = nullptr;
         GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, view);
-        GetD3Device().GetContext()->OMSetDepthStencilState(state, 0);
     }
 
     void RenderPipeline::SetViewport(const D3D11_VIEWPORT& viewport)
@@ -251,11 +273,6 @@ namespace Engine::Manager::Graphics
         g_shader_rs_bind_map.at(shader_type)(
                                              GetD3Device().GetContext(), textures,
                                              slot, size);
-    }
-
-    void RenderPipeline::BindSampler(ID3D11SamplerState* sampler)
-    {
-        GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_SHADOW);
     }
 
     void RenderPipeline::ResetShaders()
@@ -277,6 +294,13 @@ namespace Engine::Manager::Graphics
     void RenderPipeline::DefaultRasterizerState()
     {
         GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get());
+    }
+
+    void RenderPipeline::DefaultSamplerState()
+    {
+        GetD3Device().BindSampler(
+                                  m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL,
+                                  SAMPLER_TEXTURE);
     }
 
     void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
