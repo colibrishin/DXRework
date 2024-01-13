@@ -65,13 +65,35 @@ namespace Engine
         SHADER_UNKNOWN
     };
 
-    enum eShaderDomain
+    enum eShaderDomain : UINT
     {
         SHADER_DOMAIN_OPAQUE = 0,
         SHADER_DOMAIN_MASK,
         SHADER_DOMAIN_TRANSPARENT,
-        SHADER_DOMAIN_POST_PROCESS,
-        SHADER_DOMAIN_MAX
+        SHADER_DOMAIN_POST_PROCESS
+    };
+
+    enum eShaderDepth : UINT
+    {
+        SHADER_DEPTH_TEST_ZERO = 0,
+        SHADER_DEPTH_TEST_ALL = 1,
+        SHADER_DEPTH_NEVER = 2,
+        SHADER_DEPTH_LESS = 4,
+        SHADER_DEPTH_EQUAL = 8,
+        SHADER_DEPTH_LESS_EQUAL = 16,
+        SHADER_DEPTH_GREATER = 32,
+        SHADER_DEPTH_NOT_EQUAL = 64,
+        SHADER_DEPTH_GREATER_EQUAL = 128,
+        SHADER_DEPTH_ALWAYS = 256,
+    };
+
+    enum eShaderRasterizer : UINT
+    {
+        SHADER_RASTERIZER_CULL_NONE = 0,
+        SHADER_RASTERIZER_CULL_FRONT = 1,
+        SHADER_RASTERIZER_CULL_BACK = 2,
+        SHADER_RASTERIZER_FILL_WIREFRAME = 4,
+        SHADER_RASTERIZER_FILL_SOLID = 8,
     };
 
     enum eCBType

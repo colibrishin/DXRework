@@ -12,8 +12,8 @@ namespace Engine::Resources
         RESOURCE_T(RES_T_SHADER)
 
         Shader(
-            const EntityName& name, const std::filesystem::path& path,
-            const UINT        domain, const UINT                 depth, UINT rasterizer);
+            const EntityName&   name, const std::filesystem::path& path,
+            const eShaderDomain domain, const UINT                 depth, const UINT rasterizer);
         ~Shader() override = default;
 
         void Initialize() override;
@@ -30,7 +30,7 @@ namespace Engine::Resources
         static boost::shared_ptr<Shader> Create(
             const std::string &           name,
             const std::filesystem::path & path,
-            const UINT                    domain,
+            const eShaderDomain           domain,
             const UINT                    depth,
             const UINT                    rasterizer);
 
@@ -44,24 +44,26 @@ namespace Engine::Resources
     private:
         SERIALIZER_ACCESS
 
-        D3D11_PRIMITIVE_TOPOLOGY m_topology_;
+        eShaderDomain          m_domain_;
+        bool                   m_depth_flag_;
+        D3D11_DEPTH_WRITE_MASK m_depth_test_;
+        D3D11_COMPARISON_FUNC  m_depth_func_;
+        D3D11_CULL_MODE        m_cull_mode_;
+        D3D11_FILL_MODE        m_fill_mode_;
 
-        UINT m_shader_domain_;
-        UINT m_shader_depth_;
-        UINT m_shader_rasterizer_;
-
+        D3D11_PRIMITIVE_TOPOLOGY  m_topology_;
         ComPtr<ID3D11InputLayout> m_il_;
 
-        ComPtr<ID3D11VertexShader> m_vs_;
-        ComPtr<ID3D11PixelShader> m_ps_;
+        ComPtr<ID3D11VertexShader>   m_vs_;
+        ComPtr<ID3D11PixelShader>    m_ps_;
         ComPtr<ID3D11GeometryShader> m_gs_;
-        ComPtr<ID3D11ComputeShader> m_cs_;
-        ComPtr<ID3D11HullShader> m_hs_;
-        ComPtr<ID3D11DomainShader> m_ds_;
+        ComPtr<ID3D11ComputeShader>  m_cs_;
+        ComPtr<ID3D11HullShader>     m_hs_;
+        ComPtr<ID3D11DomainShader>   m_ds_;
 
         ComPtr<ID3D11DepthStencilState> m_dss_;
-        ComPtr<ID3D11RasterizerState> m_rs_;
-        ComPtr<ID3D11SamplerState> m_ss_;
+        ComPtr<ID3D11RasterizerState>   m_rs_;
+        ComPtr<ID3D11SamplerState>      m_ss_;
 
     };
 } // namespace Engine::Graphic

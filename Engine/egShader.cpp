@@ -94,9 +94,9 @@ namespace Engine::Resources
         }
 
         D3D11_DEPTH_STENCIL_DESC dsd;
-        dsd.DepthEnable                  = static_cast<BOOL>(m_shader_depth_ & 1);
-        dsd.DepthWriteMask               = static_cast<D3D11_DEPTH_WRITE_MASK>((m_shader_depth_ >> 1) & 1);
-        dsd.DepthFunc                    = static_cast<D3D11_COMPARISON_FUNC>(m_shader_depth_ >> 2);
+        dsd.DepthEnable                  = m_depth_flag_;
+        dsd.DepthWriteMask               = m_depth_test_;
+        dsd.DepthFunc                    = m_depth_func_;
         dsd.StencilEnable                = true;
         dsd.StencilReadMask              = 0xFF;
         dsd.StencilWriteMask             = 0xFF;
@@ -116,20 +116,28 @@ namespace Engine::Resources
         rd.DepthBias             = 0;
         rd.DepthBiasClamp        = 0.0f;
         rd.DepthClipEnable       = true;
-        rd.CullMode              = static_cast<D3D11_CULL_MODE>(m_shader_rasterizer_ & 3);
-        rd.FillMode              = static_cast<D3D11_FILL_MODE>(((m_shader_rasterizer_ >> 2) & 1) + 1);
+        rd.CullMode              = m_cull_mode_;
+        rd.FillMode              = m_fill_mode_;
+        rd.FrontCounterClockwise = false;
+        rd.MultisampleEnable     = false;
+        rd.ScissorEnable         = false;
+        rd.SlopeScaledDepthBias  = 0.0f;
 
+        HELPME
         GetD3Device().CreateRasterizerState(rd, m_rs_.ReleaseAndGetAddressOf());
     }
 
     Shader::Shader(
-        const EntityName&   name, const std::filesystem::path& path, const UINT domain,
+        const EntityName&   name, const std::filesystem::path& path, const eShaderDomain domain,
         const UINT depth, const UINT    rasterizer)
     : Resource(path, RES_T_SHADER),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST),
-      m_shader_domain_(domain),
-      m_shader_depth_(depth),
-      m_shader_rasterizer_(rasterizer) {}
+      m_domain_(domain),
+      m_depth_flag_(depth != 0),
+      m_depth_test_(static_cast<D3D11_DEPTH_WRITE_MASK>(depth & 1)),
+      m_depth_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(depth >> 1) + 1)),
+      m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
+      m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
+      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) {}
 
     void Shader::Initialize() {}
 
@@ -153,6 +161,8 @@ namespace Engine::Resources
         m_ds_.Reset();
         m_il_.Reset();
         m_ss_.Reset();
+        m_dss_.Reset();
+        m_rs_.Reset();
     }
 
     void Shader::OnDeserialized() {}
@@ -192,7 +202,7 @@ namespace Engine::Resources
     }
 
     boost::shared_ptr<Shader> Shader::Create(
-        const std::string& name, const std::filesystem::path& path, const UINT domain, const UINT depth,
+        const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
         const UINT         rasterizer)
     {
         if (const auto pcheck = GetResourceManager().GetResourceByPath<Shader>(path).lock(); 
@@ -208,8 +218,11 @@ namespace Engine::Resources
 
     Shader::Shader()
     : Resource("", RES_T_SHADER),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST),
-      m_shader_domain_(0),
-      m_shader_depth_(0),
-      m_shader_rasterizer_(0) { }
+      m_domain_(),
+      m_depth_flag_(false),
+      m_depth_test_(),
+      m_depth_func_(),
+      m_cull_mode_(),
+      m_fill_mode_(),
+      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) { }
 } // namespace Engine::Graphic

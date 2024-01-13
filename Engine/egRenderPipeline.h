@@ -24,9 +24,6 @@ namespace Engine::Manager::Graphics
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void SetShader(IShader* shader);
-        void UnbindShader(const Graphics::IShader* shader);
-
         void SetWorldMatrix(const CBs::TransformCB& matrix);
         void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
         void SetGlobalStateBuffer(const CBs::GlobalStateCB& state);
@@ -35,6 +32,8 @@ namespace Engine::Manager::Graphics
         CBs::GlobalStateCB GetGlobalStateBuffer() const;
 
         void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
+        void SetDepthStencilState(ID3D11DepthStencilState* state);
+        void SetRasterizerState(ID3D11RasterizerState* state);
 
         void SetWireframeState() const;
         void SetFillState() const;
@@ -63,6 +62,7 @@ namespace Engine::Manager::Graphics
         void DefaultViewport();
         void ResetShaders();
         void DefaultDepthStencilState();
+        void DefaultRasterizerState();
 
     private:
         friend class ToolkitAPI;
