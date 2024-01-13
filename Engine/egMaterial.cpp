@@ -36,12 +36,7 @@ namespace Engine::Resources
 
     void Material::PreRender(const float& dt)
     {
-        if (!ShaderCheck())
-        {
-            return;
-        }
-
-        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        for (const auto& shd : m_shaders_loaded_)
         {
 	        shd->PreRender(dt);
         }
@@ -76,12 +71,7 @@ namespace Engine::Resources
 
     void Material::Render(const float& dt)
     {
-        if (!ShaderCheck())
-        {
-            return;
-        }
-
-        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        for (const auto& shd : m_shaders_loaded_)
         {
         	shd->Render(dt);
 		}
@@ -109,14 +99,9 @@ namespace Engine::Resources
 
     void Material::PostRender(const float& dt)
     {
-        if (!ShaderCheck())
-        {
-            return;
-        }
-
         GetRenderPipeline().SetMaterial({});
 
-        for (const auto& shd : m_shaders_loaded_ | std::views::values)
+        for (const auto& shd : m_shaders_loaded_)
         {
         	shd->PostRender(dt);
 		}
@@ -167,11 +152,11 @@ namespace Engine::Resources
         m_resources_loaded_.clear();
         m_shaders_loaded_.clear();
 
-        for (const auto& [type, name] : m_shaders_)
+        for (const auto& name : m_shaders_)
         {
             if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
             {
-                m_shaders_loaded_[type] = res->GetSharedPtr<IShader>();
+                m_shaders_loaded_.emplace_back(res->GetSharedPtr<Shader>());
             }
         }
 
@@ -191,21 +176,5 @@ namespace Engine::Resources
     {
         m_resources_loaded_.clear();
         m_shaders_loaded_.clear();
-    }
-
-    bool Material::ShaderCheck() const
-    {
-        if (!m_shaders_loaded_.contains(convert_shaderT_enum<VertexShader>::value_e()))
-        {
-            GetDebugger().Log("Vertex shader not loaded for material");
-            return false;
-        }
-        if (!m_shaders_loaded_.contains(convert_shaderT_enum<PixelShader>::value_e()))
-        {
-            GetDebugger().Log("Pixel shader not loaded for material");
-            return false;
-        }
-
-        return true;
     }
 }

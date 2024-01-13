@@ -30,8 +30,8 @@ namespace Engine::Resources
 
             if constexpr (which_resource<T>::value == RES_T_SHADER)
             {
-                m_shaders_[convert_shaderT_enum<T>::value_e()] = name;
-                m_shaders_loaded_[convert_shaderT_enum<T>::value_e()] = search.lock();
+                m_shaders_.emplace_back(name);
+                m_shaders_loaded_.emplace_back(search.lock());
                 return;
             }
 
@@ -76,14 +76,12 @@ namespace Engine::Resources
         void Unload_INTERNAL() override;
 
     private:
-        bool ShaderCheck() const;
-
         CBs::MaterialCB m_material_cb_;
-        std::map<const eShaderType, std::string> m_shaders_;
+        std::vector<std::string> m_shaders_;
         std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
         // non-serialized
-        std::map<const eShaderType, StrongShader> m_shaders_loaded_;
+        std::vector<StrongShader> m_shaders_loaded_;
         std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
 
     };
