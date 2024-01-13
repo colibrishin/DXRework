@@ -15,7 +15,6 @@
 #include <egBaseAnimation.h>
 #include <egBoneAnimation.h>
 
-#include "clBackSphereMesh.hpp"
 #include "clDarkScene.h"
 #include "clTestScene.hpp"
 #include "egGlobal.h"
@@ -44,8 +43,6 @@ namespace Client
                                                  "CubeMesh", boost::make_shared<Engine::Meshes::CubeMesh>());
         Engine::GetResourceManager().AddResource(
                                                  "SphereMesh", boost::make_shared<Engine::Meshes::SphereMesh>());
-        Engine::GetResourceManager().AddResource(
-                                                 "BackSphereMesh", boost::make_shared<Meshes::BackSphereMesh>());
     }
 
     void InitializeNormal()
@@ -78,9 +75,6 @@ namespace Client
 
         const auto sphere = Resources::Shape::Create("SphereModel", "");
         sphere->Add(Resources::Mesh::Get("SphereMesh"));
-
-        const auto skybox = Resources::Shape::Create("SkyboxModel", "");
-        skybox->Add(Resources::Mesh::Get("BackSphereMesh"));
     }
 
     void InitializeAnimation()

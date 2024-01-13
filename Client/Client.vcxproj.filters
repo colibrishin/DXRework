@@ -86,9 +86,6 @@
     <ClInclude Include="clTriangleMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clBackSphereMesh.hpp">
-      <Filter>Resource\Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="clCharacterController.hpp">
       <Filter>State</Filter>
     </ClInclude>
@@ -135,9 +132,6 @@
     </ClCompile>
     <ClCompile Include="clCharacterController.cpp">
       <Filter>State</Filter>
-    </ClCompile>
-    <ClCompile Include="clBackSphereMesh.cpp">
-      <Filter>Resource\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="clWater.cpp">
       <Filter>Object\Water</Filter>
