@@ -123,21 +123,37 @@ namespace Engine::Resources
         rd.ScissorEnable         = false;
         rd.SlopeScaledDepthBias  = 0.0f;
 
-        HELPME
         GetD3Device().CreateRasterizerState(rd, m_rs_.ReleaseAndGetAddressOf());
+
+        D3D11_SAMPLER_DESC sd;
+        sd.Filter         = m_smp_filter_;
+        sd.AddressU       = m_smp_address_;
+        sd.AddressV       = m_smp_address_;
+        sd.AddressW       = m_smp_address_;
+        sd.MipLODBias     = 0.0f;
+        sd.MaxAnisotropy  = 1;
+        sd.ComparisonFunc = m_smp_func_;
+
+        GetD3Device().CreateSampler(sd, m_ss_.ReleaseAndGetAddressOf());
     }
 
     Shader::Shader(
         const EntityName&   name, const std::filesystem::path& path, const eShaderDomain domain,
-        const UINT depth, const UINT    rasterizer)
+        const UINT depth, const UINT    rasterizer, const D3D11_FILTER filter, const UINT sampler)
     : Resource(path, RES_T_SHADER),
       m_domain_(domain),
       m_depth_flag_(depth != 0),
       m_depth_test_(static_cast<D3D11_DEPTH_WRITE_MASK>(depth & 1)),
       m_depth_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(depth >> 1) + 1)),
+      m_smp_filter_(filter),
+      m_smp_address_(static_cast<D3D11_TEXTURE_ADDRESS_MODE>((sampler & shader_sampler_address_mask) + 1)),
+      m_smp_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(sampler >> 3))),
       m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
       m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) {}
+      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+    {
+        HELPME
+    }
 
     void Shader::Initialize() {}
 
@@ -180,6 +196,7 @@ namespace Engine::Resources
 
         GetRenderPipeline().SetDepthStencilState(m_dss_.Get());
         GetRenderPipeline().SetRasterizerState(m_rs_.Get());
+        GetRenderPipeline().SetSamplerState(m_ss_.Get());
     }
 
     void Shader::PostRender(const float& dt)
@@ -194,6 +211,7 @@ namespace Engine::Resources
 
         GetRenderPipeline().DefaultDepthStencilState();
         GetRenderPipeline().DefaultRasterizerState();
+        GetRenderPipeline().DefaultSamplerState();
     }
 
     boost::weak_ptr<Shader> Shader::Get(const std::string& name)
@@ -203,7 +221,7 @@ namespace Engine::Resources
 
     boost::shared_ptr<Shader> Shader::Create(
         const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-        const UINT         rasterizer)
+        const UINT         rasterizer, const D3D11_FILTER     filter, const UINT        sampler)
     {
         if (const auto pcheck = GetResourceManager().GetResourceByPath<Shader>(path).lock(); 
             const auto ncheck = GetResourceManager().GetResource<Shader>(name).lock())
@@ -211,7 +229,7 @@ namespace Engine::Resources
             return ncheck;
         }
 
-        const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer);
+        const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler);
         GetResourceManager().AddResource(name, obj);
         return obj;
     }
@@ -222,6 +240,9 @@ namespace Engine::Resources
       m_depth_flag_(false),
       m_depth_test_(),
       m_depth_func_(),
+      m_smp_filter_(),
+      m_smp_address_(),
+      m_smp_func_(),
       m_cull_mode_(),
       m_fill_mode_(),
       m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) { }

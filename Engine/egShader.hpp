@@ -13,7 +13,8 @@ namespace Engine::Resources
 
         Shader(
             const EntityName&   name, const std::filesystem::path& path,
-            const eShaderDomain domain, const UINT                 depth, const UINT rasterizer);
+            const eShaderDomain domain, const UINT                 depth, 
+            const UINT rasterizer, const D3D11_FILTER sampler_filter, const UINT sampler);
         ~Shader() override = default;
 
         void Initialize() override;
@@ -32,7 +33,9 @@ namespace Engine::Resources
             const std::filesystem::path & path,
             const eShaderDomain           domain,
             const UINT                    depth,
-            const UINT                    rasterizer);
+            const UINT                    rasterizer,
+            const D3D11_FILTER            filter,
+            const UINT                    sampler);
 
     protected:
         Shader();
@@ -44,12 +47,15 @@ namespace Engine::Resources
     private:
         SERIALIZER_ACCESS
 
-        eShaderDomain          m_domain_;
-        bool                   m_depth_flag_;
-        D3D11_DEPTH_WRITE_MASK m_depth_test_;
-        D3D11_COMPARISON_FUNC  m_depth_func_;
-        D3D11_CULL_MODE        m_cull_mode_;
-        D3D11_FILL_MODE        m_fill_mode_;
+        eShaderDomain              m_domain_;
+        bool                       m_depth_flag_;
+        D3D11_DEPTH_WRITE_MASK     m_depth_test_;
+        D3D11_COMPARISON_FUNC      m_depth_func_;
+        D3D11_FILTER               m_smp_filter_;
+        D3D11_TEXTURE_ADDRESS_MODE m_smp_address_;
+        D3D11_COMPARISON_FUNC      m_smp_func_;
+        D3D11_CULL_MODE            m_cull_mode_;
+        D3D11_FILL_MODE            m_fill_mode_;
 
         D3D11_PRIMITIVE_TOPOLOGY  m_topology_;
         ComPtr<ID3D11InputLayout> m_il_;

@@ -77,6 +77,7 @@ namespace Engine
     {
         SHADER_DEPTH_TEST_ZERO = 0,
         SHADER_DEPTH_TEST_ALL = 1,
+
         SHADER_DEPTH_NEVER = 2,
         SHADER_DEPTH_LESS = 4,
         SHADER_DEPTH_EQUAL = 8,
@@ -85,6 +86,25 @@ namespace Engine
         SHADER_DEPTH_NOT_EQUAL = 64,
         SHADER_DEPTH_GREATER_EQUAL = 128,
         SHADER_DEPTH_ALWAYS = 256,
+    };
+
+    enum eShaderSampler : UINT
+    {
+        SHADER_SAMPLER_CLAMP        = 0,
+        SHADER_SAMPLER_WRAP         = 1,
+        SHADER_SAMPLER_MIRROR       = 2,
+        SHADER_SAMPLER_BORDER       = 4,
+        SHADER_SAMPLER_MIRROR_ONCE  = 8,
+        shader_sampler_address_mask = 15,
+
+        SHADER_SAMPLER_NEVER = 16,
+        SHADER_SAMPLER_LESS = 32,
+        SHADER_SAMPLER_EQUAL = 64,
+        SHADER_SAMPLER_LESS_EQUAL = 128,
+        SHADER_SAMPLER_GREATER = 256,
+        SHADER_SAMPLER_NOT_EQUAL = 512,
+        SHADER_SAMPLER_GREATER_EQUAL = 1024,
+        SHADER_SAMPLER_ALWAYS = 2048,
     };
 
     enum eShaderRasterizer : UINT
