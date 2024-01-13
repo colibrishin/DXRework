@@ -25,9 +25,7 @@ namespace Engine::Manager::Graphics
     void ShadowManager::Initialize()
 	{
     	m_shadow_shaders_ = Resources::Material::Create("ShadowMap", "");
-        m_shadow_shaders_->SetResource<Resources::VertexShader>("vs_cascade_shadow_stage1");
-        m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
-        m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::Shader>("cascade_shadow_stage1");
 
         m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
         m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
