@@ -5,7 +5,6 @@
 #include <filesystem>
 #include "egCommon.hpp"
 #include "egManager.hpp"
-#include "egVertexShaderInternal.h"
 
 #ifdef _DEBUG
 #include "dxgidebug.h"
@@ -283,90 +282,6 @@ namespace Engine::Manager::Graphics
             ID3D11Resource**             texture,
             ID3D11ShaderResourceView**   shader_resource_view) const;
 
-        template <typename T>
-        void CreateShader(
-            const std::filesystem::path& path,
-            Graphics::Shader<T>*          shader)
-        {
-            ComPtr<ID3DBlob>  blob;
-            ComPtr<ID3DBlob>  error;
-            const eShaderType type = g_shader_enum_type_map.at(__uuidof(T));
-            shader->Initialize();
-
-            UINT flag = 0;
-
-#if defined(_DEBUG)
-            flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
-#endif
-
-            D3DCompileFromFile(
-                               path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-                               "main", g_shader_target_map.at(type).c_str(), flag, 0,
-                               &blob, &error);
-
-            if (error)
-            {
-                const std::string error_message =
-                        static_cast<char*>(error->GetBufferPointer());
-                OutputDebugStringA(error_message.c_str());
-            }
-
-            if constexpr (std::is_same_v<T, ID3D11VertexShader>)
-            {
-                const auto input_descs = GenerateInputDescription(shader, blob.Get());
-                const auto casted      = dynamic_cast<Graphics::VertexShaderInternal*>(shader);
-
-                DX::ThrowIfFailed(
-                                  m_device_->CreateInputLayout(
-                                                               input_descs.data(), static_cast<UINT>(input_descs.size()),
-                                                               blob->GetBufferPointer(),
-                                                               blob->GetBufferSize(), casted->GetInputLayout()));
-                DX::ThrowIfFailed(
-                                  m_device_->CreateVertexShader(
-                                                                blob->GetBufferPointer(), blob->GetBufferSize(),
-                                                                nullptr,
-                                                                shader->GetShader()));
-            }
-            else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
-            {
-                DX::ThrowIfFailed(
-                                  m_device_->CreatePixelShader(
-                                                               blob->GetBufferPointer(), blob->GetBufferSize(), nullptr,
-                                                               shader->GetShader()));
-            }
-            else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
-            {
-                DX::ThrowIfFailed(
-                                  m_device_->CreateGeometryShader(
-                                                                  blob->GetBufferPointer(), blob->GetBufferSize(),
-                                                                  nullptr,
-                                                                  shader->GetShader()));
-            }
-            else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
-            {
-                DX::ThrowIfFailed(
-                                  m_device_->CreateComputeShader(
-                                                                 blob->GetBufferPointer(), blob->GetBufferSize(),
-                                                                 nullptr,
-                                                                 shader->GetShader()));
-            }
-            else if constexpr (std::is_same_v<T, ID3D11HullShader>)
-            {
-                DX::ThrowIfFailed(
-                                  m_device_->CreateHullShader(
-                                                              blob->GetBufferPointer(), blob->GetBufferSize(), nullptr,
-                                                              shader->GetShader()));
-            }
-            else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
-            {
-                DX::ThrowIfFailed(
-                                  m_device_->CreateDomainShader(
-                                                                blob->GetBufferPointer(), blob->GetBufferSize(),
-                                                                nullptr,
-                                                                shader->GetShader()));
-            }
-        }
-
         void CreateTexture2D(
             const D3D11_TEXTURE2D_DESC& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11Texture2D** texture,
             ID3D11ShaderResourceView** view) const;
@@ -383,6 +298,11 @@ namespace Engine::Manager::Graphics
 
         void CreateSampler(
             const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state) const;
+
+        void CreateRasterizerState(const D3D11_RASTERIZER_DESC& rd, ID3D11RasterizerState** id_3d11_rasterizer_state) const;
+
+        std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
+            ID3DBlob * blob);
 
         void PreUpdate(const float& dt) override;
         void Update(const float& dt) override;
@@ -440,75 +360,6 @@ namespace Engine::Manager::Graphics
             g_shader_cb_bind_map.at(target_shader)(
                                                    m_device_.Get(), m_context_.Get(),
                                                    buffer.GetBuffer(), type, 1);
-        }
-
-        std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
-            Graphics::Shader<ID3D11VertexShader>* shader,
-            ID3DBlob*                            blob);
-
-        template <typename T>
-        void BindShader(Graphics::Shader<T>* shader)
-        {
-            if constexpr (std::is_same_v<T, ID3D11VertexShader>)
-            {
-                const auto casting = static_cast<Graphics::VertexShaderInternal*>(shader);
-                m_context_->VSSetShader(*(casting->GetShader()), nullptr, 0);
-                m_context_->IASetInputLayout(*casting->GetInputLayout());
-            }
-            else if constexpr (std::is_same_v<T, ID3D11PixelShader>)
-            {
-                m_context_->PSSetShader(*(shader->GetShader()), nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<T, ID3D11GeometryShader>)
-            {
-                m_context_->GSSetShader(*(shader->GetShader()), nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<T, ID3D11ComputeShader>)
-            {
-                m_context_->CSSetShader(*(shader->GetShader()), nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<T, ID3D11HullShader>)
-            {
-                m_context_->HSSetShader(*(shader->GetShader()), nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<T, ID3D11DomainShader>)
-            {
-                m_context_->DSSetShader(*(shader->GetShader()), nullptr, 0);
-            }
-        }
-
-        template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<IShader, T>>>
-        void UnbindShader()
-        {
-            if constexpr (std::is_same_v<typename T::shaderType, ID3D11VertexShader>)
-            {
-                m_context_->VSSetShader(nullptr, nullptr, 0);
-                m_context_->IASetInputLayout(nullptr);
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11PixelShader>)
-            {
-                m_context_->PSSetShader(nullptr, nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11GeometryShader>)
-            {
-                m_context_->GSSetShader(nullptr, nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11ComputeShader>)
-            {
-                m_context_->CSSetShader(nullptr, nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11HullShader>)
-            {
-                m_context_->HSSetShader(nullptr, nullptr, 0);
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11DomainShader>)
-            {
-                m_context_->DSSetShader(nullptr, nullptr, 0);
-            }
-            else
-            {
-                assert(nullptr);
-            }
         }
 
         void CreateTexture2D(

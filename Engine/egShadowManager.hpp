@@ -21,7 +21,6 @@ namespace Engine::Manager::Graphics
           m_viewport_(),
           m_current_shadow_maps_{} {}
 
-        void InitializeProcessors();
         void InitializeViewport();
         void Initialize() override;
         void PreUpdate(const float& dt) override;
@@ -68,9 +67,6 @@ namespace Engine::Manager::Graphics
         D3D11_VIEWPORT m_viewport_;
 
         ID3D11ShaderResourceView* m_current_shadow_maps_[g_max_lights];
-
-        ComPtr<ID3D11SamplerState>      m_shadow_map_sampler_state_;
-        ComPtr<ID3D11DepthStencilState> m_shadow_map_depth_stencil_state_;
 
     };
 } // namespace Engine::Manager::Graphics

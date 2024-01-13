@@ -25,16 +25,16 @@ struct LightElement
     float4 color : LIGHTCOLOR;
 };
 
+struct BoneTransformElement
+{
+    matrix transform : BONETRANSFORM;
+};
+
 struct VertexBoneElement
 {
     int boneIndex[MAX_BONE_COUNT] : BONEINDEX;
     float boneWeight[MAX_BONE_COUNT] : BONEWEIGHT;
     uint bone_count : BONECOUNT;
-};
-
-struct BoneTransformElement
-{
-    matrix transform : BONETRANSFORM;
 };
 
 struct VertexInputType
@@ -48,38 +48,6 @@ struct VertexInputType
     float3 binormal : BINOARML;
 
     VertexBoneElement bone_element : BONE;
-};
-
-struct GeometryShadowInputType
-{
-    float4 position : SV_POSITION;
-};
-
-struct PixelShadowInputType
-{
-    float4 position : SV_POSITION;
-    uint RTIndex : SV_RenderTargetArrayIndex;
-};
-
-struct PixelInputType
-{
-    float4 position : SV_POSITION;
-    float4 world_position : POSITION0;
-    float4 color : COLOR;
-    float2 tex : TEXCOORD0;
-
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 binormal : BINOARML;
-
-    float4 reflection : POSITION1;
-    float4 refraction : POSITION2;
-
-    float3 viewDirection : TEXCOORD2;
-    float3 lightDirection[MAX_NUM_LIGHTS] : TEXCOORD3;
-
-    float clipSpacePosZ : SV_ClipDistance0;
-    float clipPlane : SV_ClipDistance1;
 };
 
 #endif // __TYPE_HLSLI__

@@ -15,13 +15,13 @@
 #include <egBaseAnimation.h>
 #include <egBoneAnimation.h>
 
-#include "clBackSphereMesh.hpp"
 #include "clDarkScene.h"
 #include "clTestScene.hpp"
 #include "egGlobal.h"
 #include "egMaterial.h"
 #include "egShape.h"
 #include "egTexture.h"
+#include "egShader.hpp"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -43,8 +43,6 @@ namespace Client
                                                  "CubeMesh", boost::make_shared<Engine::Meshes::CubeMesh>());
         Engine::GetResourceManager().AddResource(
                                                  "SphereMesh", boost::make_shared<Engine::Meshes::SphereMesh>());
-        Engine::GetResourceManager().AddResource(
-                                                 "BackSphereMesh", boost::make_shared<Meshes::BackSphereMesh>());
     }
 
     void InitializeNormal()
@@ -77,9 +75,6 @@ namespace Client
 
         const auto sphere = Resources::Shape::Create("SphereModel", "");
         sphere->Add(Resources::Mesh::Get("SphereMesh"));
-
-        const auto skybox = Resources::Shape::Create("SkyboxModel", "");
-        skybox->Add(Resources::Mesh::Get("BackSphereMesh"));
     }
 
     void InitializeAnimation()
@@ -108,8 +103,7 @@ namespace Client
             const auto mtr = Resources::Material::Create("NormalLight", "");
             mtr->SetResource<Resources::Texture>("TestTexture");
             mtr->SetResource<Resources::Texture>("TestNormalMap");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_normalmap");
+            mtr->SetResource<Resources::Shader>("normal");
 
             // this is not necessary if user adds texture in order.
             //mtr->SetTextureSlot("TestTexture", 0);
@@ -120,20 +114,17 @@ namespace Client
             const auto mtr = Resources::Material::Create("NormalLightSpecular", "");
             mtr->SetResource<Resources::Texture>("TestTexture");
             mtr->SetResource<Resources::Texture>("TestNormalMap");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_normalmap_specular");
+            mtr->SetResource<Resources::Shader>("specular_normal");
         }
 
         {
             const auto mtr = Resources::Material::Create("ColorMaterial", "");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_color");
+            mtr->SetResource<Resources::Shader>("color");
         }
 
         {
             const auto mtr = Resources::Material::Create("CharacterMaterial", "");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_color");
+            mtr->SetResource<Resources::Shader>("color");
 
             for (const auto& anim : Resources::Shape::Get("CharacterModel").lock()->GetAnimationCatalog())
             {
@@ -144,29 +135,25 @@ namespace Client
         {
             const auto mtr = Resources::Material::Create("ThunderSky", "");
             mtr->SetResource<Resources::Texture>("ThunderCat");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_default_nolight");
+            mtr->SetResource<Resources::Shader>("skybox");
         }
 
         {
             const auto mtr = Resources::Material::Create("RifleColorMaterial", "");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_color");
+            mtr->SetResource<Resources::Shader>("color");
             mtr->SetResource<Resources::BaseAnimation>("FireAnimation");
         }
 
         {
             const auto mtr = Resources::Material::Create("SkyboxMaterial", "");
             mtr->SetResource<Resources::Texture>("Sky");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_default_nolight");
+            mtr->SetResource<Resources::Shader>("skybox");
         }
 
         {
             const auto mtr = Resources::Material::Create("WaterMaterial", "");
             mtr->SetResource<Resources::Texture>("WaterNormalMap");
-            mtr->SetResource<Resources::VertexShader>("vs_default");
-            mtr->SetResource<Resources::PixelShader>("ps_refraction");
+            mtr->SetResource<Resources::Shader>("refraction");
         }
     }
 

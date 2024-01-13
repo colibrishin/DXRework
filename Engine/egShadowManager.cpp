@@ -17,7 +17,6 @@
 #include "egModelRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egTransform.h"
-#include "egVertexShaderInternal.h"
 #include "egShader.hpp"
 #include "egShape.h"
 
@@ -26,15 +25,12 @@ namespace Engine::Manager::Graphics
     void ShadowManager::Initialize()
 	{
     	m_shadow_shaders_ = Resources::Material::Create("ShadowMap", "");
-        m_shadow_shaders_->SetResource<Resources::VertexShader>("vs_cascade_shadow_stage1");
-        m_shadow_shaders_->SetResource<Resources::GeometryShader>("gs_cascade_shadow_stage1");
-        m_shadow_shaders_->SetResource<Resources::PixelShader>("ps_cascade_shadow_stage1");
+        m_shadow_shaders_->SetResource<Resources::Shader>("cascade_shadow_stage1");
 
         m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
         m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
 
         InitializeViewport();
-        InitializeProcessors();
     }
 
     void ShadowManager::PreUpdate(const float& dt)
@@ -139,8 +135,7 @@ namespace Engine::Manager::Graphics
                     // It only needs to render the depth of the object from the light's point of view.
                     // Swap the depth stencil to the each light's shadow map.
                     GetRenderPipeline().TargetDepthOnly(
-                        m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get(),
-                        m_shadow_map_depth_stencil_state_.Get());
+                    m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get());
 
                     // Notify the index of the shadow map to the shader.
 		            auto gcb = GetRenderPipeline().GetGlobalStateBuffer();
@@ -429,57 +424,7 @@ namespace Engine::Manager::Graphics
                                                 buffer.shader_resource_view.ReleaseAndGetAddressOf());
     }
 
-    ShadowManager::~ShadowManager()
-    {
-        if (m_shadow_map_depth_stencil_state_)
-        {
-            m_shadow_map_depth_stencil_state_->Release();
-        }
-
-        if (m_shadow_map_sampler_state_)
-        {
-            m_shadow_map_sampler_state_->Release();
-        }
-    }
-
-    void ShadowManager::InitializeProcessors()
-    {
-        D3D11_DEPTH_STENCIL_DESC ds_desc{};
-
-        ds_desc.DepthEnable                  = true;
-        ds_desc.DepthWriteMask               = D3D11_DEPTH_WRITE_MASK_ALL;
-        ds_desc.DepthFunc                    = D3D11_COMPARISON_LESS;
-        ds_desc.StencilEnable                = true;
-        ds_desc.StencilReadMask              = 0xFF;
-        ds_desc.StencilWriteMask             = 0xFF;
-        ds_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-        ds_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-        ds_desc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-        ds_desc.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-        ds_desc.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
-        ds_desc.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_DECR;
-        ds_desc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
-        ds_desc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
-
-        GetD3Device().CreateDepthStencilState(
-                                              ds_desc,
-                                              m_shadow_map_depth_stencil_state_.
-                                              GetAddressOf());
-
-        D3D11_SAMPLER_DESC sampler_desc{};
-        sampler_desc.Filter         = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-        sampler_desc.AddressU       = D3D11_TEXTURE_ADDRESS_CLAMP;
-        sampler_desc.AddressV       = D3D11_TEXTURE_ADDRESS_CLAMP;
-        sampler_desc.AddressW       = D3D11_TEXTURE_ADDRESS_CLAMP;
-        sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS;
-        sampler_desc.BorderColor[0] = 1.f;
-        sampler_desc.BorderColor[1] = 1.f;
-        sampler_desc.BorderColor[2] = 1.f;
-        sampler_desc.BorderColor[3] = 1.f;
-
-        GetD3Device().CreateSampler(sampler_desc, m_shadow_map_sampler_state_.GetAddressOf());
-        GetRenderPipeline().BindSampler(m_shadow_map_sampler_state_.Get());
-    }
+    ShadowManager::~ShadowManager() {}
 
     void ShadowManager::InitializeViewport()
     {

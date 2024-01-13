@@ -106,7 +106,6 @@
 #include "egEntity.hpp"
 #include "egFriction.h"
 #include "egHelper.hpp"
-#include "egIShader.h"
 #include "egIStateController.h"
 #include "egKinetic.h"
 #include "egLayer.h"
@@ -121,6 +120,5 @@
 #include "egShader.hpp"
 #include "egStateController.hpp"
 #include "egType.h"
-#include "egVertexShaderInternal.h"
 
 #endif // ENGINE_PCH_H

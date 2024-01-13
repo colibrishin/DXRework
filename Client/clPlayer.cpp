@@ -10,7 +10,6 @@
 #include "egRigidbody.h"
 #include "egShader.hpp"
 #include "egTransform.h"
-#include "egVertexShaderInternal.h"
 #include "egBoneAnimation.h"
 #include "egMaterial.h"
 #include "egSceneManager.hpp"

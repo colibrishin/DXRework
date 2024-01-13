@@ -6,10 +6,7 @@
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
 #include "egToolkitAPI.h"
-
-#include "egIShader.h"
 #include "egShader.hpp"
-#include "egVertexShaderInternal.h"
 #include "egType.h"
 
 namespace Engine::Manager::Graphics
@@ -41,6 +38,21 @@ namespace Engine::Manager::Graphics
     void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
     {
         GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
+    }
+
+    void RenderPipeline::SetDepthStencilState(ID3D11DepthStencilState* state)
+    {
+        GetD3Device().GetContext()->OMSetDepthStencilState(state, 0);
+    }
+
+    void RenderPipeline::SetRasterizerState(ID3D11RasterizerState* state)
+    {
+        GetD3Device().GetContext()->RSSetState(state);
+    }
+
+    void RenderPipeline::SetSamplerState(ID3D11SamplerState* sampler)
+    {
+        GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_TEXTURE);
     }
 
     void RenderPipeline::DefaultRenderTarget()
@@ -138,111 +150,71 @@ namespace Engine::Manager::Graphics
         GetD3Device().CreateDepthStencilState(m_depth_stencil_state_.GetAddressOf());
     }
 
-    void RenderPipeline::SetShader(Graphics::IShader* shader)
-    {
-        switch (shader->GetType())
-        {
-        case SHADER_VERTEX: GetD3Device().BindShader(reinterpret_cast<Resources::VertexShader*>(shader));
-            break;
-        case SHADER_PIXEL: GetD3Device().BindShader(reinterpret_cast<Resources::PixelShader*>(shader));
-            break;
-        case SHADER_GEOMETRY: GetD3Device().BindShader(
-                                                       reinterpret_cast<Resources::GeometryShader*>(shader));
-            break;
-        case SHADER_COMPUTE: GetD3Device().BindShader(
-                                                      reinterpret_cast<Resources::ComputeShader*>(shader));
-            break;
-        case SHADER_HULL: GetD3Device().BindShader(reinterpret_cast<Resources::HullShader*>(shader));
-            break;
-        case SHADER_DOMAIN: GetD3Device().BindShader(reinterpret_cast<Resources::DomainShader*>(shader));
-            break;
-        default:
-            assert(nullptr);
-        }
-    }
-
-    void RenderPipeline::UnbindShader(const Graphics::IShader* shader)
-    {
-        switch (shader->GetType())
-        {
-            case SHADER_VERTEX: GetD3Device().UnbindShader<VertexShader>();
-                break;
-            case SHADER_PIXEL: GetD3Device().UnbindShader<PixelShader>();
-                break;
-            case SHADER_GEOMETRY: GetD3Device().UnbindShader<GeometryShader>();
-                break;
-            case SHADER_COMPUTE: GetD3Device().UnbindShader<ComputeShader>();
-                break;
-            case SHADER_HULL: GetD3Device().UnbindShader<HullShader>();
-                break;
-            case SHADER_DOMAIN: GetD3Device().UnbindShader<DomainShader>();
-                break;
-            default:
-                assert(nullptr);
-        }
-    }
-
     void RenderPipeline::PrecompileShaders()
     {
-        for (const auto& file : std::filesystem::directory_iterator("./"))
-        {
-            if (file.path().extension() == ".hlsl")
-            {
-                const auto prefix                     = file.path().filename().string();
-                const auto filename_without_extension =
-                        prefix.substr(0, prefix.find_last_of("."));
+        Shader::Create(
+                       "default", "./default.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                if (prefix.starts_with("vs"))
-                {
-                    boost::shared_ptr<Graphics::Shader<ID3D11VertexShader>> shader =
-                            boost::make_shared<Graphics::VertexShader>(
-                                                                      filename_without_extension, file);
+        Shader::Create(
+                       "color", "./color.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-                else if (prefix.starts_with("ps"))
-                {
-                    auto shader = boost::make_shared<Graphics::PixelShader>(
-                                                                           filename_without_extension, file);
+        Shader::Create(
+                       "skybox", "./skybox.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-                else if (prefix.starts_with("gs"))
-                {
-                    auto shader = boost::make_shared<Graphics::GeometryShader>(
-                                                                              filename_without_extension, file);
+        Shader::Create(
+                       "specular_normal", "./specular_normal.hlsl",
+                       SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-                else if (prefix.starts_with("cs"))
-                {
-                    auto shader = boost::make_shared<Graphics::ComputeShader>(
-                                                                             filename_without_extension, file);
+        Shader::Create(
+                       "normal", "./normal.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-                else if (prefix.starts_with("hs"))
-                {
-                    auto shader = boost::make_shared<Graphics::HullShader>(
-                                                                          filename_without_extension, file);
+        Shader::Create(
+                       "refraction", "./refraction.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-                else if (prefix.starts_with("ds"))
-                {
-                    auto shader = boost::make_shared<Graphics::DomainShader>(
-                                                                            filename_without_extension, file);
+        Shader::Create(
+                       "specular_tex", "./specular_tex.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
-                    shader->Load();
-                    GetResourceManager().AddResource(filename_without_extension, shader);
-                }
-            }
-        }
+        Shader::Create(
+                       "specular", "./specular.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
+
+        Shader::Create(
+                       "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", SHADER_DOMAIN_OPAQUE,
+                       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+                       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+                       D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+                       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS);
     }
 
     void RenderPipeline::InitializeSamplers()
@@ -283,11 +255,10 @@ namespace Engine::Manager::Graphics
         GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0);
     }
 
-    void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view, ID3D11DepthStencilState* state)
+    void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view)
     {
         ID3D11RenderTargetView* pnullView = nullptr;
         GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, view);
-        GetD3Device().GetContext()->OMSetDepthStencilState(state, 0);
     }
 
     void RenderPipeline::SetViewport(const D3D11_VIEWPORT& viewport)
@@ -304,11 +275,6 @@ namespace Engine::Manager::Graphics
                                              slot, size);
     }
 
-    void RenderPipeline::BindSampler(ID3D11SamplerState* sampler)
-    {
-        GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_SHADOW);
-    }
-
     void RenderPipeline::ResetShaders()
     {
         GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
@@ -323,6 +289,18 @@ namespace Engine::Manager::Graphics
     {
         GetD3Device().GetContext()->OMSetDepthStencilState(
                                                            m_depth_stencil_state_.Get(), 0);
+    }
+
+    void RenderPipeline::DefaultRasterizerState()
+    {
+        GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get());
+    }
+
+    void RenderPipeline::DefaultSamplerState()
+    {
+        GetD3Device().BindSampler(
+                                  m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL,
+                                  SAMPLER_TEXTURE);
     }
 
     void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)

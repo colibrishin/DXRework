@@ -190,7 +190,6 @@
     <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
-    <ClInclude Include="clBackSphereMesh.hpp" />
     <ClInclude Include="clPlaneObject.hpp" />
     <ClInclude Include="clPlayer.h" />
     <ClInclude Include="clRifile.h" />
@@ -205,7 +204,6 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="clBackSphereMesh.cpp" />
     <ClCompile Include="clCharacterController.cpp" />
     <ClCompile Include="clDarkScene.cpp" />
     <ClCompile Include="clFPSCounter.cpp" />

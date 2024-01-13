@@ -39,9 +39,7 @@ namespace Engine::Manager::Graphics
         m_context_->Unmap(buffer, 0);
     }
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(
-        Graphics::Shader<ID3D11VertexShader>* shader,
-        ID3DBlob*                            blob)
+    std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(ID3DBlob * blob)
     {
         ComPtr<ID3D11ShaderReflection> reflection = nullptr;
 
@@ -153,6 +151,12 @@ namespace Engine::Manager::Graphics
         ID3D11SamplerState**      state) const
     {
         m_device_->CreateSamplerState(&desc, state);
+    }
+
+    void D3Device::CreateRasterizerState(
+        const D3D11_RASTERIZER_DESC& rd, ID3D11RasterizerState** id_3d11_rasterizer_state) const
+    {
+        DX::ThrowIfFailed(m_device_->CreateRasterizerState(&rd, id_3d11_rasterizer_state));
     }
 
     void D3Device::CreateTexture2D(

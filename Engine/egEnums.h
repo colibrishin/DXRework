@@ -65,6 +65,57 @@ namespace Engine
         SHADER_UNKNOWN
     };
 
+    enum eShaderDomain : UINT
+    {
+        SHADER_DOMAIN_OPAQUE = 0,
+        SHADER_DOMAIN_MASK,
+        SHADER_DOMAIN_TRANSPARENT,
+        SHADER_DOMAIN_POST_PROCESS
+    };
+
+    enum eShaderDepth : UINT
+    {
+        SHADER_DEPTH_TEST_ZERO = 0,
+        SHADER_DEPTH_TEST_ALL = 1,
+
+        SHADER_DEPTH_NEVER = 2,
+        SHADER_DEPTH_LESS = 4,
+        SHADER_DEPTH_EQUAL = 8,
+        SHADER_DEPTH_LESS_EQUAL = 16,
+        SHADER_DEPTH_GREATER = 32,
+        SHADER_DEPTH_NOT_EQUAL = 64,
+        SHADER_DEPTH_GREATER_EQUAL = 128,
+        SHADER_DEPTH_ALWAYS = 256,
+    };
+
+    enum eShaderSampler : UINT
+    {
+        SHADER_SAMPLER_CLAMP        = 0,
+        SHADER_SAMPLER_WRAP         = 1,
+        SHADER_SAMPLER_MIRROR       = 2,
+        SHADER_SAMPLER_BORDER       = 4,
+        SHADER_SAMPLER_MIRROR_ONCE  = 8,
+        shader_sampler_address_mask = 15,
+
+        SHADER_SAMPLER_NEVER = 16,
+        SHADER_SAMPLER_LESS = 32,
+        SHADER_SAMPLER_EQUAL = 64,
+        SHADER_SAMPLER_LESS_EQUAL = 128,
+        SHADER_SAMPLER_GREATER = 256,
+        SHADER_SAMPLER_NOT_EQUAL = 512,
+        SHADER_SAMPLER_GREATER_EQUAL = 1024,
+        SHADER_SAMPLER_ALWAYS = 2048,
+    };
+
+    enum eShaderRasterizer : UINT
+    {
+        SHADER_RASTERIZER_CULL_NONE = 0,
+        SHADER_RASTERIZER_CULL_FRONT = 1,
+        SHADER_RASTERIZER_CULL_BACK = 2,
+        SHADER_RASTERIZER_FILL_WIREFRAME = 4,
+        SHADER_RASTERIZER_FILL_SOLID = 8,
+    };
+
     enum eCBType
     {
         CB_TYPE_WVP = 0,

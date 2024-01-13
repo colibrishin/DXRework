@@ -24,9 +24,6 @@ namespace Engine::Manager::Graphics
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
 
-        void SetShader(IShader* shader);
-        void UnbindShader(const Graphics::IShader* shader);
-
         void SetWorldMatrix(const CBs::TransformCB& matrix);
         void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
         void SetGlobalStateBuffer(const CBs::GlobalStateCB& state);
@@ -35,6 +32,9 @@ namespace Engine::Manager::Graphics
         CBs::GlobalStateCB GetGlobalStateBuffer() const;
 
         void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
+        void SetDepthStencilState(ID3D11DepthStencilState* state);
+        void SetRasterizerState(ID3D11RasterizerState* state);
+        void SetSamplerState(ID3D11SamplerState* sampler);
 
         void SetWireframeState() const;
         void SetFillState() const;
@@ -50,19 +50,20 @@ namespace Engine::Manager::Graphics
             UINT slot, eShaderType shader_type, ID3D11ShaderResourceView ** texture);
         void BindResources(
             UINT slot, eShaderType shader_type, ID3D11ShaderResourceView ** textures, UINT size);
-        void BindSampler(ID3D11SamplerState* sampler);
 
         void UnbindResource(UINT slot, eShaderType type);
 
         void DrawIndexed(UINT index_count);
 
-        void TargetDepthOnly(ID3D11DepthStencilView * view, ID3D11DepthStencilState * state);
+        void TargetDepthOnly(ID3D11DepthStencilView * view);
         void SetViewport(const D3D11_VIEWPORT& viewport);
 
         void DefaultRenderTarget();
         void DefaultViewport();
         void ResetShaders();
         void DefaultDepthStencilState();
+        void DefaultRasterizerState();
+        void DefaultSamplerState();
 
     private:
         friend class ToolkitAPI;

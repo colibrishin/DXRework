@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "clSkyBox.hpp"
 
-#include "clBackSphereMesh.hpp"
 #include "egHelper.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
@@ -22,7 +21,7 @@ namespace Client::Object
     {
         SetName("SkyBox");
         const auto mr = AddComponent<Components::ModelRenderer>().lock();
-        mr->SetShape(Resources::Shape::Get("SkyboxModel"));
+        mr->SetShape(Resources::Shape::Get("SphereModel"));
         mr->SetMaterial(Resources::Material::Get("SkyboxMaterial"));
 
         AddComponent<Components::Transform>();

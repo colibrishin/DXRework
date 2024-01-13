@@ -4,7 +4,6 @@
 #include <egCubeMesh.h>
 #include <egObject.hpp>
 #include <egSound.h>
-#include <egVertexShaderInternal.h>
 
 #include "egBaseCollider.hpp"
 #include "egModelRenderer.h"

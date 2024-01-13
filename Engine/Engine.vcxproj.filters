@@ -38,12 +38,6 @@
     <Filter Include="Mesh">
       <UniqueIdentifier>{258c4e9f-9245-457a-b6dc-021cb9bee28b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\Shadow">
-      <UniqueIdentifier>{0a8cbefb-c0be-41f9-8fd4-1d8f83695f5d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\Shadow\stage1">
-      <UniqueIdentifier>{03cea989-7022-4e17-bd74-9aa51d34711d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Base">
       <UniqueIdentifier>{61714c34-6fc6-4b57-9c19-aa7e0b141f27}</UniqueIdentifier>
     </Filter>
@@ -115,9 +109,6 @@
     </Filter>
     <Filter Include="Resource\Sound">
       <UniqueIdentifier>{1d465ce0-22a0-4ad2-9796-1b8ca313b66d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource\VertexShader">
-      <UniqueIdentifier>{ab3cdb61-ac59-4ff9-a88f-6e924afd476b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\Texture">
       <UniqueIdentifier>{5fec1756-ea9d-4208-ab0c-968bb9d5f5f2}</UniqueIdentifier>
@@ -255,9 +246,6 @@
     <ClInclude Include="DebugDraw.h">
       <Filter>Low-level</Filter>
     </ClInclude>
-    <ClInclude Include="egIShader.h">
-      <Filter>Low-level</Filter>
-    </ClInclude>
     <ClInclude Include="egActor.h">
       <Filter>Abstract\Actor</Filter>
     </ClInclude>
@@ -335,9 +323,6 @@
     </ClInclude>
     <ClInclude Include="egSound.h">
       <Filter>Resource\Sound</Filter>
-    </ClInclude>
-    <ClInclude Include="egVertexShaderInternal.h">
-      <Filter>Resource\VertexShader</Filter>
     </ClInclude>
     <ClInclude Include="egTexture.h">
       <Filter>Resource\Texture</Filter>
@@ -474,9 +459,6 @@
     <ClCompile Include="DebugDraw.cpp">
       <Filter>Low-level</Filter>
     </ClCompile>
-    <ClCompile Include="egIShader.cpp">
-      <Filter>Low-level</Filter>
-    </ClCompile>
     <ClCompile Include="egActor.cpp">
       <Filter>Abstract\Actor</Filter>
     </ClCompile>
@@ -549,9 +531,6 @@
     </ClCompile>
     <ClCompile Include="egSound.cpp">
       <Filter>Resource\Sound</Filter>
-    </ClCompile>
-    <ClCompile Include="egVertexShaderInternal.cpp">
-      <Filter>Resource\VertexShader</Filter>
     </ClCompile>
     <ClCompile Include="egTexture.cpp">
       <Filter>Resource\Texture</Filter>
@@ -651,46 +630,40 @@
     <CopyFileToFolders Include="consolas.spritefont">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_color.hlsl">
+    <CopyFileToFolders Include="color.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_default.hlsl">
+    <CopyFileToFolders Include="default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_default_nolight.hlsl">
+    <CopyFileToFolders Include="skybox.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_normalmap.hlsl">
+    <CopyFileToFolders Include="normal.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_normalmap_specular.hlsl">
+    <CopyFileToFolders Include="specular_normal.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_sepcular_texture.hlsl">
+    <CopyFileToFolders Include="specular_tex.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_specular.hlsl">
+    <CopyFileToFolders Include="specular.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="common.hlsli">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="gs_cascade_shadow_stage1.hlsl">
-      <Filter>Resource Files\Shadow\stage1</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_cascade_shadow_stage1.hlsl">
-      <Filter>Resource Files\Shadow\stage1</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="vs_cascade_shadow_stage1.hlsl">
-      <Filter>Resource Files\Shadow\stage1</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="ps_refraction.hlsl">
+    <CopyFileToFolders Include="refraction.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="vs_default.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="type.hlsli">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="cascade_shadow_stage1.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

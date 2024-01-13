@@ -1,4 +1,5 @@
 #ifndef __COMMON_HLSLI__
+#define __COMMON_HLSLI__
 #define TRIANGLE_MACRO 3
 #include "type.hlsli"
 

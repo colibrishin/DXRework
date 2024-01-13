@@ -1,6 +1,7 @@
 #include "common.hlsli"
+#include "vs_default.hlsl"
 
-float4 main(PixelInputType input) : SV_TARGET
+float4 ps_main(PixelInputType input) : SV_TARGET
 {
     float2 reflectTex;
     reflectTex.x = input.reflection.x / input.reflection.w / 2.0f + 0.5f;
