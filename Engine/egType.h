@@ -80,10 +80,6 @@ namespace Engine
     namespace Graphics
     {
         template <typename T>
-        class Shader;
-        class IShader;
-        class VertexShaderInternal;
-        template <typename T>
         class StructuredBuffer;
 
         struct AnimationPrimitive;
@@ -103,13 +99,7 @@ namespace Engine
         class Bone;
         class BaseAnimation;
         class Material;
-
-        using VertexShader = Graphics::VertexShaderInternal;
-        using PixelShader = Graphics::Shader<ID3D11PixelShader>;
-        using GeometryShader = Graphics::Shader<ID3D11GeometryShader>;
-        using HullShader = Graphics::Shader<ID3D11HullShader>;
-        using DomainShader = Graphics::Shader<ID3D11DomainShader>;
-        using ComputeShader = Graphics::Shader<ID3D11ComputeShader>;
+        class Shader;
     } // namespace Resources
 
     namespace Abstract
@@ -173,8 +163,6 @@ namespace Engine
     using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;
     using WeakAnimator = boost::weak_ptr<Components::Animator>;
     using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
-    using WeakVertexShader = boost::weak_ptr<Resources::VertexShader>;
-    using WeakPixelShader = boost::weak_ptr<Resources::PixelShader>;
     using WeakMaterial = boost::weak_ptr<Resources::Material>;
 
     // Strong pointer type definitions
@@ -194,9 +182,7 @@ namespace Engine
     using StrongBone = boost::shared_ptr<Resources::Bone>;
     using StrongBaseAnimation = boost::shared_ptr<Resources::BaseAnimation>;
     using StrongTransform = boost::shared_ptr<Components::Transform>;
-    using StrongVertexShader = boost::shared_ptr<Resources::VertexShader>;
-    using StrongPixelShader = boost::shared_ptr<Resources::PixelShader>;
-    using StrongShader = boost::shared_ptr<Graphics::IShader>;
+    using StrongShader = boost::shared_ptr<Resources::Shader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
     using StrongCollider = boost::shared_ptr<Components::Collider>;
 
@@ -294,43 +280,6 @@ namespace Engine
     struct which_sb
     {
         static constexpr eSBType value = T::sbtype;
-    };
-
-    // Static conversion from ID3D11 shader type to eShaderType
-    template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Graphics::IShader, T>>>
-    struct convert_shaderT_enum
-    {
-        static inline eShaderType value_e()
-        {
-            if constexpr (std::is_same_v<typename T::shaderType, ID3D11VertexShader>)
-            {
-                return SHADER_VERTEX;
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11PixelShader>)
-            {
-                return SHADER_PIXEL;
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11GeometryShader>)
-            {
-                return SHADER_GEOMETRY;
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11HullShader>)
-            {
-                return SHADER_HULL;
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11DomainShader>)
-            {
-                return SHADER_DOMAIN;
-            }
-            else if constexpr (std::is_same_v<typename T::shaderType, ID3D11ComputeShader>)
-            {
-                return SHADER_COMPUTE;
-            }
-            else
-            {
-                return SHADER_UNKNOWN;
-            }
-        }
     };
 
     struct GUIDComparer
