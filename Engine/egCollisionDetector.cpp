@@ -83,9 +83,12 @@ namespace Engine::Manager::Physics
                     // Self collision check
                     for (int i = 0; i < value.size(); ++i)
                     {
+                        const auto& obj = value[i].lock();
+                        if (!obj) continue;
+                        const auto& cl = obj->GetComponent<Components::Collider>().lock();
+
                         // If object is inactive or collider is inactive, then dispatch exit event.
-                        if (const auto cl = value[i].lock()->GetComponent<Components::Collider>().lock();
-                            !value[i].lock()->GetActive() || (cl && !cl->GetActive()))
+                        if (obj && !obj->GetActive() || (cl && !cl->GetActive()))
                         {
                             DispatchInactiveExit(value[i]);
                         }
@@ -149,8 +152,8 @@ namespace Engine::Manager::Physics
         const auto lhs = p_lhs.lock();
         const auto rhs = p_rhs.lock();
 
-        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (!lhs || !rhs) return;
+        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
             if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;

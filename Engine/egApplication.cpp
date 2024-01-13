@@ -273,6 +273,11 @@ namespace Engine::Manager
         switch (msg)
         {
         case WM_ACTIVATE:
+        case WM_ACTIVATEAPP:
+            Mouse::ProcessMessage(msg, wparam, lparam);
+            Keyboard::ProcessMessage(msg, wparam, lparam);
+            break;
+
         case WM_INPUT:
         case WM_MOUSEMOVE:
         case WM_LBUTTONDOWN:
