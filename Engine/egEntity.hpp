@@ -23,6 +23,7 @@ namespace Engine::Abstract
         EntityName     GetName() const;
         TypeName       GetTypeName() const;
         bool           IsGarbage() const;
+        bool           IsInitialized() const;
 
         template <typename T>
         __forceinline boost::weak_ptr<T> GetWeakPtr()

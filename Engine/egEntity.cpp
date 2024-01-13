@@ -40,6 +40,11 @@ bool Engine::Abstract::Entity::IsGarbage() const
     return m_b_garbage_;
 }
 
+bool Engine::Abstract::Entity::IsInitialized() const
+{
+    return m_b_initialized_;
+}
+
 void Engine::Abstract::Entity::Initialize()
 {
     m_b_initialized_ = true;
