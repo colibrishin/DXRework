@@ -1,13 +1,14 @@
 #include "common.hlsli"
+#include "vs_default.hlsl"
 
-float4 main(PixelInputType input) : SV_TARGET
+float4 ps_main(PixelInputType input) : SV_TARGET
 {
     int i = 0;
 
     float shadowFactor[MAX_NUM_LIGHTS];
     GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
 
-    float4 color = input.color;
+    const float4 textureColor = tex00.Sample(PSSampler, input.tex);
 
     float  lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];
@@ -28,7 +29,7 @@ float4 main(PixelInputType input) : SV_TARGET
         colorSum.b += colorArray[i].b;
     }
 
-    float4 finalColor = saturate(colorSum) * color;
+    float4 color = saturate(colorSum) * textureColor;
 
-    return finalColor;
+    return color;
 }
