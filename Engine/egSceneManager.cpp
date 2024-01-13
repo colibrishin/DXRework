@@ -10,7 +10,11 @@ namespace Engine::Manager
     {
         Graphics::ShadowManager::GetInstance().Reset();
         m_active_scene_ = it;
-        m_active_scene_.lock()->Initialize();
+
+        if (!it.lock()->IsInitialized())
+        {
+            m_active_scene_.lock()->Initialize();
+        }
 
         for (const auto& light :
              m_active_scene_.lock()->GetGameObjects(LAYER_LIGHT))

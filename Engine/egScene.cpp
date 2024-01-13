@@ -33,6 +33,8 @@ namespace Engine
 
     void Scene::Initialize()
     {
+        Renderable::Initialize();
+
         for (int i = 0; i < LAYER_MAX; ++i)
         {
             m_layers.emplace_back(boost::make_shared<Layer>(static_cast<eLayerType>(i)));
