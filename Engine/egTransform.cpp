@@ -149,7 +149,7 @@ namespace Engine::Components
         auto          tr_c  = const_cast<Transform*>(this);
         WeakTransform tr_p  = FindNextTransform(*this);
 
-        if (const auto parent = tr_p.lock())
+        while (const auto parent = tr_p.lock())
         {
             if (!tr_c->m_b_r_absolute_)
             {
@@ -208,7 +208,7 @@ namespace Engine::Components
         auto          tr_c  = const_cast<Transform*>(this);
         WeakTransform tr_p  = FindNextTransform(*this);
 
-        if (const auto parent = tr_p.lock())
+        while (const auto parent = tr_p.lock())
         {
             if (!tr_c->m_b_s_absolute_)
             {
@@ -308,7 +308,7 @@ namespace Engine::Components
         auto          tr_c  = const_cast<Transform*>(this);
         WeakTransform tr_p  = FindNextTransform(*this);
 
-        if (const auto parent = tr_p.lock())
+        while (const auto parent = tr_p.lock())
         {
             Matrix inv = Matrix::Identity;
 
