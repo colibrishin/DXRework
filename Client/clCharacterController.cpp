@@ -64,7 +64,7 @@ namespace Client::State
     {
         float      speed   = 1.0f;
         const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
-        const auto forward = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock()->Forward();
+        const auto forward = m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward();
         const auto ortho   =
                 Vector3::Transform(
                                    forward,
