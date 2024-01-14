@@ -19,7 +19,7 @@ namespace Engine::Physics
             const Vector3& aabb_min, const Vector3& aabb_max,
             const Matrix&  world, float&            intersection_distance);
         bool __vectorcall TestRaySphereIntersection(
-            const Ray& ray, const Vector3& center,
+            const Vector3& ray, const Vector3& dir, const Vector3& center,
             float      radius, float&      intersection_distance);
     } // namespace Raycast
 } // namespace Engine::Physics
