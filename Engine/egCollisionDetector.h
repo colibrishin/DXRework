@@ -28,6 +28,8 @@ namespace Engine::Manager::Physics
         bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
 
+        static bool Hitscan(const Vector3& start, float length, const Vector3& dir, std::vector<WeakObject>& hit_objs);
+
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
     private:
