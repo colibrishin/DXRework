@@ -74,8 +74,6 @@ namespace Client::Scene
         player->GetComponent<Engine::Components::Transform>().lock()->SetLocalPosition(
                    {-4.f, 2.f, 0.f});
 
-        player->AddChild(GetMainCamera());
-
         Engine::GetCollisionDetector().SetCollisionLayer(
                                                          Engine::LAYER_DEFAULT,
                                                          Engine::LAYER_ENVIRONMENT);

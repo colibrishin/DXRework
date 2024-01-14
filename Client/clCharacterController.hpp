@@ -34,6 +34,7 @@ namespace Client::State
         void CheckMove(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
         bool CheckAttack(const float& dt);
 
+        WeakObject m_head_;
         float   m_shoot_interval;
         float   m_hp_;
     };

@@ -10,6 +10,7 @@
 #include <egCollisionDetector.h>
 #include <egTransform.h>
 
+#include "clPlayer.h"
 #include "egMouseManager.h"
 #include "egSceneManager.hpp"
 
@@ -26,6 +27,13 @@ namespace Client::State
     void CharacterController::Initialize()
     {
         SetState(CHAR_STATE_IDLE);
+        const auto cam = GetOwner().lock()->GetScene().lock()->GetMainCamera().lock();
+
+        if (cam)
+        {
+            m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
+            m_head_.lock()->AddChild(cam);
+        }
     }
 
     void CharacterController::PreUpdate(const float& dt)
@@ -135,15 +143,14 @@ namespace Client::State
 
     void CharacterController::Update(const float& dt)
     {
-        const auto rb =
-                GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
+        const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
 
         if (!rb)
         {
             return;
         }
 
-        const auto tr = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock();
+        const auto tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
         tr->SetLocalRotation(Engine::GetMouseManager().GetMouseRotation());
 
         CheckJump(rb);

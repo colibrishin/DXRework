@@ -16,9 +16,12 @@ namespace Client::Object
         void PostRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
+        WeakObject GetHead() const;
+
     private:
         SERIALIZER_ACCESS
         std::map<UINT, LocalComponentID> m_child_bones_;
+        WeakObject m_head_;
 
     };
 }

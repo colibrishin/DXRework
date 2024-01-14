@@ -36,7 +36,6 @@ namespace Client::Object
         const auto cldr = AddComponent<Components::Collider>().lock();
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
-        AddComponent<Client::State::CharacterController>();
 
         tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({XM_PI / 2, 0, 0.0f}));
         cldr->SetModel(model);
@@ -58,6 +57,7 @@ namespace Client::Object
             const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
             const auto ctr = child->AddComponent<Components::Transform>().lock();
             child->AddComponent<Components::Collider>();
+            child->SetName("Bone" + std::to_string(idx));
             AddChild(child);
             ctr->SetSizeAbsolute(true);
             ctr->SetRotateAbsolute(false);
@@ -65,7 +65,14 @@ namespace Client::Object
             ctr->SetLocalRotation(box.Orientation);
             ctr->SetLocalScale(Vector3(box.Extents) * 2.f);
             m_child_bones_[idx] = child->GetLocalID();
+
+            if (child->GetName() == "Bone5")
+            {
+                m_head_ = child;
+            }
         }
+
+        AddComponent<Client::State::CharacterController>();
     }
 
     void Player::PreUpdate(const float& dt)
@@ -155,5 +162,10 @@ namespace Client::Object
         BoundingBox::CreateFromPoints(bb, min, max);
         BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
         cl->SetBoundingBox(new_obb);
+    }
+
+    WeakObject Player::GetHead() const
+    {
+        return m_head_;
     }
 }
