@@ -95,6 +95,10 @@ namespace Engine::Manager::Physics
 
                         for (int j = i + 1; j < value.size(); ++j)
                         {
+                            if constexpr (g_speculation_enabled)
+                            {
+                                TestSpeculation(value[i], value[j]);
+                            }
                             TestCollision(value[i], value[j]);
                         }
                     }
@@ -108,6 +112,10 @@ namespace Engine::Manager::Physics
                         {
                             for (int k = 0; k < parent_compare_set.size(); ++k)
                             {
+                                if constexpr (g_speculation_enabled)
+                                {
+                                    TestSpeculation(value[j], parent_compare_set[k]);
+                                }
                                 TestCollision(value[j], parent_compare_set[k]);
                             }
                         }
@@ -163,9 +171,13 @@ namespace Engine::Manager::Physics
 
         // Octree sanity check
         if (lhs == rhs) throw std::logic_error("Self collision detected");
+
+        // Speculation caught.
         if (m_frame_collision_map_.contains(lhs->GetID()) &&
             m_frame_collision_map_[lhs->GetID()].contains(rhs->GetID()))
-            throw std::logic_error("Double check occurred");
+        {
+            return;
+        }
 
         const auto ltr = lhs->GetComponent<Components::Transform>().lock();
         const auto rtr = rhs->GetComponent<Components::Transform>().lock();
@@ -216,6 +228,105 @@ namespace Engine::Manager::Physics
                 }
 
                 // No collision
+            }
+        }
+    }
+
+    void CollisionDetector::TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
+    {
+        auto lhs = p_lhs.lock();
+        auto rhs = p_rhs.lock();
+
+        if (!lhs || !rhs) return;
+        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
+        if (lhs->GetParent().lock() || rhs->GetParent().lock())
+        {
+            if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
+            if (lhs->GetParent().lock() == rhs->GetParent().lock()) return;
+        }
+        if (!lhs->GetActive() || !rhs->GetActive()) return;
+
+        // Octree sanity check
+        if (lhs == rhs) throw std::logic_error("Self collision detected");
+        if (m_frame_collision_map_.contains(lhs->GetID()) &&
+            m_frame_collision_map_[lhs->GetID()].contains(rhs->GetID()))
+            throw std::logic_error("Double check occurred");
+
+        auto ltr = lhs->GetComponent<Components::Transform>().lock();
+        auto rtr = rhs->GetComponent<Components::Transform>().lock();
+
+        auto lcl = lhs->GetComponent<Components::Collider>().lock();
+        auto rcl = rhs->GetComponent<Components::Collider>().lock();
+
+        // To speculate, the velocity of object is required.
+        auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
+        auto rrb = rhs->GetComponent<Components::Rigidbody>().lock();
+
+        // Assuming lhs always has the rigid-body or both have, for moving object backward easily.
+        if (!lrb && !rrb) return;
+        // Move rigid-body object to lhs or fixed object to rhs.
+        if ((rrb && !lrb) || (lrb && lrb->IsFixed()))
+        {
+            std::swap(lhs, rhs);
+            std::swap(ltr, rtr);
+            std::swap(lcl, rcl);
+            std::swap(lrb, rrb);
+        }
+
+        // If rhs was not exist, then skip.
+        if (!lrb) return;
+
+        if (lcl && rcl)
+        {
+            // If any of object collider is disabled, then skip.
+            if (!lcl->GetActive() || !rcl->GetActive()) return;
+
+            bool collision1 = false;
+            bool collision2 = false;
+
+            // lhs test
+            const auto lvel = lrb->GetLinearMomentum();
+            Vector3 ldir;
+            lvel.Normalize(ldir);
+
+            // no need to check if velocity is zero.
+            if (ldir != Vector3::Zero || !FloatCompare(lvel.Length(), 0.f) || !lrb->GetActive())
+            {
+                collision1 = Components::Collider::Intersects(lcl, rcl, lvel.Length(), ldir);
+            }
+
+            // rhs test, if exists.
+            if (rrb && rrb->GetActive())
+            {
+                const auto rvel = rrb->GetLinearMomentum();
+                Vector3 rdir;
+                rvel.Normalize(rdir);
+                if (rdir != Vector3::Zero || !FloatCompare(rvel.Length(), 0.f))
+                {
+                    collision2 = Components::Collider::Intersects(rcl, lcl, rvel.Length(), rdir);
+                }
+            }
+
+            // If any of collision is true, then it is speculative hit.
+            if (collision1 || collision2)
+            {
+                GetDebugger().Log(std::format("Speculative hit, {}, {}", lhs->GetName(), rhs->GetName()));
+
+                if (!m_collision_map_.contains(lhs->GetID()) || 
+                    !m_collision_map_[lhs->GetID()].contains(rhs->GetID()))
+                {
+                    // Initial Collision
+                    m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
+                    m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
+                }
+
+                m_collision_produce_queue_.push_back({lhs, rhs, true, true});
+
+                // Or continuous collision
+                lhs->DispatchComponentEvent(rcl);
+                rhs->DispatchComponentEvent(lcl);
+                lcl->AddCollidedObject(rhs->GetID());
+                rcl->AddCollidedObject(lhs->GetID());
             }
         }
     }
