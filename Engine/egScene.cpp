@@ -63,11 +63,13 @@ namespace Engine
     void Scene::InitializeFinalize()
     {
 #ifdef _DEBUG
-        DisableControllers();
-        const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-        m_observer_         = observer;
-        // todo: maybe adding child to observer rather than binding to object?
-        observer->AddChild(GetMainCamera());
+        if constexpr (g_debug_observer)
+        {
+            DisableControllers();
+            const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
+            m_observer_         = observer;
+            observer->AddChild(GetMainCamera());
+        }
 #endif // _DEBUG
     }
 
@@ -569,11 +571,13 @@ namespace Engine
         // @todo: rebuild octree.
 
 #ifdef _DEBUG
-        // remove controller if it is debug state
-        DisableControllers();
-        const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-        m_observer_         = observer;
-        observer->AddChild(GetMainCamera());
+        if constexpr (g_debug_observer)
+        {
+            DisableControllers();
+            const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
+            m_observer_         = observer;
+            observer->AddChild(GetMainCamera());
+        }
 #endif
     }
 } // namespace Engine
