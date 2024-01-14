@@ -31,6 +31,7 @@ namespace Engine::Manager::Graphics
         m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
 
         InitializeViewport();
+        InitializeProcessor();
     }
 
     void ShadowManager::PreUpdate(const float& dt)
@@ -424,7 +425,27 @@ namespace Engine::Manager::Graphics
                                                 buffer.shader_resource_view.ReleaseAndGetAddressOf());
     }
 
-    ShadowManager::~ShadowManager() {}
+    ShadowManager::~ShadowManager()
+    {
+        if (m_shadow_sampler_) m_shadow_sampler_->Release();
+    }
+
+    void ShadowManager::InitializeProcessor()
+    {
+        D3D11_SAMPLER_DESC sampler_desc{};
+        sampler_desc.Filter         = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        sampler_desc.AddressU       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.AddressV       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.AddressW       = D3D11_TEXTURE_ADDRESS_CLAMP;
+        sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS;
+        sampler_desc.BorderColor[0] = 1.f;
+        sampler_desc.BorderColor[1] = 1.f;
+        sampler_desc.BorderColor[2] = 1.f;
+        sampler_desc.BorderColor[3] = 1.f;
+
+        GetD3Device().CreateSampler(sampler_desc, m_shadow_sampler_.GetAddressOf());
+        GetD3Device().GetContext()->PSSetSamplers(SAMPLER_SHADOW, 1, m_shadow_sampler_.GetAddressOf());
+    }
 
     void ShadowManager::InitializeViewport()
     {
