@@ -16,16 +16,7 @@ namespace Engine::Manager::Physics
         m_elapsedTime_ = g_epsilon;
     }
 
-    void LerpManager::Update(const float& dt) {}
-
-    void LerpManager::Reset()
-    {
-        m_elapsedTime_ = g_epsilon;
-    }
-
-    void LerpManager::PreUpdate(const float& dt) {}
-
-    void LerpManager::PreRender(const float& dt)
+    void LerpManager::Update(const float& dt)
     {
         if (m_elapsedTime_ >= g_lerp)
         {
@@ -66,6 +57,15 @@ namespace Engine::Manager::Physics
 
         m_elapsedTime_ += dt;
     }
+
+    void LerpManager::Reset()
+    {
+        m_elapsedTime_ = g_epsilon;
+    }
+
+    void LerpManager::PreUpdate(const float& dt) {}
+
+    void LerpManager::PreRender(const float& dt) {}
 
     void LerpManager::Render(const float& dt) {}
 
