@@ -26,6 +26,7 @@ namespace Engine::Manager::Physics
         ~ConstraintSolver() override = default;
 
         void ResolveCollision(const WeakObject& p_lhs, const WeakObject& p_rhs);
+        void ResolveSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs);
 
         std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_collision_resolved_set_;
     };
