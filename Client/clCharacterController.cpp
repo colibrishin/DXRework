@@ -102,6 +102,8 @@ namespace Client::State
     {
         if (Engine::GetApplication().GetMouseState().leftButton)
         {
+            SetState(CHAR_STATE_ATTACK);
+
             if (m_shoot_interval < 0.5f)
             {
                 m_shoot_interval += dt;
@@ -111,8 +113,6 @@ namespace Client::State
             m_shoot_interval = 0.f;
             const auto tr    =
                     GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock();
-            std::set<Engine::WeakObject, Engine::WeakComparer<Engine::Abstract::Object>>
-                    out;
 
             Ray ray;
             ray.position  = tr->GetWorldPosition();
@@ -121,12 +121,13 @@ namespace Client::State
             constexpr float distance = 5.f;
 
             Engine::GetDebugger().Draw(ray, Colors::AliceBlue);
+            std::vector<WeakObject> out;
 
-            //if (Engine::GetCollisionDetector().Hitscan(ray, distance, out))
-            //{
-            //    SetState(CHAR_STATE_ATTACK);
-            //    return true;
-            //}
+            if (Engine::GetCollisionDetector().Hitscan(
+                ray.position, distance, ray.direction, out))
+            {
+                return true;
+            }
         }
 
         return false;
