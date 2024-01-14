@@ -170,8 +170,8 @@ namespace Engine::Components
         return test && distance <= dist;
     }
 
-    /*bool Collider::Intersects(
-        const Ray& ray, float distance,
+    bool Collider::Intersects(
+        const Vector3& start, const Vector3& dir, float distance,
         float&     intersection) const
     {
         if (m_type_ == BOUNDING_TYPE_BOX)
@@ -179,7 +179,7 @@ namespace Engine::Components
             const auto    box     = GetBounding<BoundingOrientedBox>();
             const Vector3 Extents = box.Extents;
             const auto    test    = Physics::Raycast::TestRayOBBIntersection(
-                                                                       ray.position, ray.direction, -Extents,
+                                                                       start, dir, -Extents,
                                                                        Extents,
                                                                        GetWorldMatrix(),
                                                                        intersection);
@@ -190,7 +190,7 @@ namespace Engine::Components
         {
             const auto sphere = GetBounding<BoundingSphere>();
             const auto test = Physics::Raycast::TestRaySphereIntersection(
-                                                                          ray, sphere.Center,
+                                                                          start, dir, sphere.Center,
                                                                           sphere.Radius,
                                                                           intersection);
 
@@ -198,7 +198,7 @@ namespace Engine::Components
         }
 
         return false;
-    }*/
+    }
 
     void Collider::AddCollidedObject(const GlobalEntityID id)
     {
