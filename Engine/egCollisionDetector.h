@@ -35,6 +35,8 @@ namespace Engine::Manager::Physics
         ~CollisionDetector() override = default;
 
         void TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs);
+        void TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs);
+
         void DispatchInactiveExit(const WeakObject& lhs);
 
         std::mutex                                    m_layer_mask_mutex_;

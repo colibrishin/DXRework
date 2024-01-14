@@ -31,6 +31,10 @@ namespace Engine::Manager::Physics
 
         for (const auto& info : infos)
         {
+            if (info.speculative)
+            {
+                ResolveSpeculation(info.lhs, info.rhs);
+            }
             if (info.collision)
             {
                 ResolveCollision(info.lhs, info.rhs);
@@ -149,5 +153,41 @@ namespace Engine::Manager::Physics
                 rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
             }
         }
+    }
+
+    void ConstraintSolver::ResolveSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
+    {
+        const auto lhs = p_lhs.lock();
+        const auto rhs = p_rhs.lock();
+
+        const auto ltr = lhs->GetComponent<Components::Transform>().lock();
+        const auto rtr = rhs->GetComponent<Components::Transform>().lock();
+
+        const auto lcl = lhs->GetComponent<Components::Collider>().lock();
+        const auto rcl = rhs->GetComponent<Components::Collider>().lock();
+
+        const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
+
+        // Move object back to the previous frame position.
+        const auto previous_position = ltr->GetWorldPreviousPosition();
+        ltr->SetWorldPosition(previous_position);
+
+        const auto lbnd = lcl->GetBounding();
+        const auto rbnd = rcl->GetBounding();
+
+        const auto vel = lrb->GetLinearMomentum();
+        Vector3 dir;
+        vel.Normalize(dir);
+
+        float distance = 0.f;
+        // Ray test sanity check, and re-evaluate the distance.
+        if (!lbnd.TestRay(rbnd, dir, distance))
+        {
+            throw std::logic_error("Speculation object ray test failed");
+        }
+
+        // Move object to the new position.
+        const auto new_pos = previous_position + (dir * distance);
+        ltr->SetWorldPosition(new_pos);
     }
 } // namespace Engine::Manager::Physics

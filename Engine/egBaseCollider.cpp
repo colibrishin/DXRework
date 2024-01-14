@@ -163,6 +163,14 @@ namespace Engine::Components
     }
 
     bool Collider::Intersects(
+        const StrongCollider& lhs, const StrongCollider& rhs, const float dist, const Vector3& dir)
+    {
+        float distance = 0.f;
+        const auto test = lhs->GetBounding().TestRay(rhs->GetBounding(), dir, distance);
+        return test && distance <= dist;
+    }
+
+    /*bool Collider::Intersects(
         const Ray& ray, float distance,
         float&     intersection) const
     {
@@ -190,7 +198,7 @@ namespace Engine::Components
         }
 
         return false;
-    }
+    }*/
 
     void Collider::AddCollidedObject(const GlobalEntityID id)
     {
