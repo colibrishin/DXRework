@@ -39,6 +39,7 @@ namespace Engine::Manager::Graphics
         friend struct SingletonDeleter;
         ~ShadowManager() override;
 
+        void InitializeProcessor();
         void InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer);
         void BuildShadowMap(Scene& scene, const float dt) const;
         void ClearShadowMaps();
@@ -67,6 +68,6 @@ namespace Engine::Manager::Graphics
         D3D11_VIEWPORT m_viewport_;
 
         ID3D11ShaderResourceView* m_current_shadow_maps_[g_max_lights];
-
+        ComPtr<ID3D11SamplerState> m_shadow_sampler_;
     };
 } // namespace Engine::Manager::Graphics
