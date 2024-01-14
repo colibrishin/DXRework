@@ -50,6 +50,7 @@ namespace Engine
 
         const std::vector<Octree::WeakT>& Read() const;
         std::array<const Octree*, 8>      Next() const;
+        bool                              Contains(const Vector3& point) const;
         UINT                              ActiveChildren() const;
         bool                              Insert(const WeakT& obj);
         void                              Update();

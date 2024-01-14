@@ -29,6 +29,8 @@ namespace Engine::Components
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float epsilon = g_epsilon);
         static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const float dist, const Vector3& dir);
 
+        bool Intersects(const Vector3& start, const Vector3& dir, float distance, float& intersection) const;
+
         void AddCollidedObject(GlobalEntityID id);
         void RemoveCollidedObject(const GlobalEntityID id);
 

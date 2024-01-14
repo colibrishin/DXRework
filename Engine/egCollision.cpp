@@ -442,13 +442,8 @@ namespace Engine::Physics
             float tMin = 0.f;
             float tMax = FLT_MAX;
 
-            const Matrix inv_world = world.Invert();
-
-            const Vector3 local_origin = Vector3::Transform(origin, inv_world);
-            const Vector3 local_dir    = Vector3::TransformNormal(dir, inv_world);
-
             const Vector3 world_position = {world._41, world._42, world._43};
-            const Vector3 delta          = world_position - local_origin;
+            const Vector3 delta          = world_position - origin;
 
             const auto x = Vector3{world._11, world._12, world._13};
             const auto y = Vector3{world._21, world._22, world._23};
@@ -462,7 +457,7 @@ namespace Engine::Physics
 
             for (const auto& [axis, min, max] : list)
             {
-                if (!TestAxis(axis, delta, local_dir, min, max, tMin, tMax))
+                if (!TestAxis(axis, delta, dir, min, max, tMin, tMax))
                 {
                     intersection_distance = 0.f;
                     return false;
@@ -499,14 +494,14 @@ namespace Engine::Physics
         }
 
         bool __vectorcall TestRaySphereIntersection(
-            const Ray& ray, const Vector3& center,
-            float      radius, float&      intersection_distance)
+            const Vector3& start, const Vector3& dir, const Vector3& center,
+            float          radius, float&        intersection_distance)
         {
             float t0, t1; // solutions for t if the ray intersects
             // analytic solution
-            Vector3 L = ray.position - center;
-            float   a = ray.direction.Dot(ray.direction);
-            float   b = 2 * ray.direction.Dot(L);
+            Vector3 L = start - center;
+            float   a = dir.Dot(dir);
+            float   b = 2 * dir.Dot(L);
             float   c = L.Dot(L) - radius;
 
             if (!SolveQuadratic(a, b, c, t0, t1))

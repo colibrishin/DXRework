@@ -56,6 +56,11 @@ namespace Engine
         return next;
     }
 
+    bool Octree::Contains(const Vector3& point) const
+    {
+        return m_bounds_.Contains(point) == DirectX::ContainmentType::CONTAINS;
+    }
+
     UINT Octree::ActiveChildren() const
     {
         return m_active_children_.count();

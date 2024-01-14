@@ -22,11 +22,13 @@ namespace Engine::Manager::Physics
         void PostUpdate(const float& dt) override;
 
         void SetCollisionLayer(eLayerType layer, eLayerType mask);
-        bool IsCollsionLayer(eLayerType layer1, eLayerType layer2);
+        bool IsCollisionLayer(eLayerType layer1, eLayerType layer2);
 
         bool IsCollided(GlobalEntityID id) const;
         bool IsCollided(GlobalEntityID id1, GlobalEntityID id2) const;
         bool IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const;
+
+        static bool Hitscan(const Vector3& start, float length, const Vector3& dir, std::vector<WeakObject>& hit_objs);
 
         concurrent_vector<CollisionInfo>& GetCollisionInfo();
 

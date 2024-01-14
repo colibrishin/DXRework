@@ -161,7 +161,7 @@ namespace Engine::Manager::Physics
         const auto rhs = p_rhs.lock();
 
         if (!lhs || !rhs) return;
-        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
+        if (!IsCollisionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
             if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
@@ -238,7 +238,7 @@ namespace Engine::Manager::Physics
         auto rhs = p_rhs.lock();
 
         if (!lhs || !rhs) return;
-        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
+        if (!IsCollisionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
             if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
@@ -369,7 +369,7 @@ namespace Engine::Manager::Physics
         m_layer_mask_[b].set(a, true);
     }
 
-    bool CollisionDetector::IsCollsionLayer(eLayerType layer1, eLayerType layer2)
+    bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
     {
         std::lock_guard l(m_layer_mask_mutex_);
         return m_layer_mask_[layer1].test(layer2);
@@ -408,5 +408,63 @@ namespace Engine::Manager::Physics
         }
 
         return m_frame_collision_map_.at(id1).contains(id2);
+    }
+
+    bool CollisionDetector::Hitscan(
+        const Vector3& start, float length, const Vector3& dir, std::vector<WeakObject>& hit_objs)
+    {
+        const auto end = start + dir * length;
+
+        if (const auto scene = GetSceneManager().GetActiveScene().lock())
+        {
+            const auto& tree = scene->GetObjectTree();
+
+            std::queue<const Octree*>     queue;
+            queue.push(&tree);
+
+            while (!queue.empty())
+            {
+                const auto  node     = queue.front();
+                const auto& value    = node->Read();
+                const auto& children = node->Next();
+                const auto& active   = node->ActiveChildren();
+                queue.pop();
+
+                for (const auto& p_obj : value)
+                {
+                    if (const auto& obj = p_obj.lock())
+                    {
+                        if (const auto& cl = obj->GetComponent<Components::Collider>().lock())
+                        {
+                            if (cl->GetActive())
+                            {
+                                float dist = 0.f;
+
+                                if (cl->Intersects(start, dir, length, dist))
+                                {
+                                    hit_objs.emplace_back(obj);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Add children to stack.
+                for (int i = 7; i >= 0; --i)
+                {
+                    if (children[i] && children[i]->Contains(end))
+                    {
+                        queue.push(children[i]);
+                    }
+                }
+            }
+        }
+
+        for (const auto& obj : hit_objs)
+        {
+            GetDebugger().Log(std::format("Hitscan hit, {}", obj.lock()->GetName()));
+        }
+
+        return hit_objs.empty();
     }
 } // namespace Engine::Manager
