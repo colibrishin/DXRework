@@ -129,8 +129,7 @@ namespace Engine::Manager::Physics
             auto       cps_val = cps / fps;
 
             // Not collided object is given to solver.
-            if (cps == 0) throw std::logic_error("Collision count is zero");
-            if (!isfinite(cps)) cps_val = 0.f; // where fps is zero
+            if (!isfinite(cps)) cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
 
             // Accumulated collision penalty
             const auto collision_count = cl->GetCollisionCount(rhs.lock()->GetID());
