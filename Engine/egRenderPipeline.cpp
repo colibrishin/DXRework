@@ -156,21 +156,21 @@ namespace Engine::Manager::Graphics
                        "default", "./default.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "color", "./color.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "skybox", "./skybox.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
@@ -178,42 +178,42 @@ namespace Engine::Manager::Graphics
                        SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "normal", "./normal.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "refraction", "./refraction.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "specular_tex", "./specular_tex.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "specular", "./specular.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS);
 
         Shader::Create(
                        "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", SHADER_DOMAIN_OPAQUE,
                        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
                        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-                       D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+                       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
                        SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS);
     }
 
