@@ -161,7 +161,7 @@ namespace Engine::Manager::Physics
         const auto rhs = p_rhs.lock();
 
         if (!lhs || !rhs) return;
-        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
+        if (!IsCollisionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
             if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
@@ -238,7 +238,7 @@ namespace Engine::Manager::Physics
         auto rhs = p_rhs.lock();
 
         if (!lhs || !rhs) return;
-        if (!IsCollsionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
+        if (!IsCollisionLayer(lhs->GetLayer(), rhs->GetLayer())) return;
         if (lhs->GetParent().lock() || rhs->GetParent().lock())
         {
             if (lhs->GetParent().lock() == rhs || rhs->GetParent().lock() == lhs) return;
@@ -369,7 +369,7 @@ namespace Engine::Manager::Physics
         m_layer_mask_[b].set(a, true);
     }
 
-    bool CollisionDetector::IsCollsionLayer(eLayerType layer1, eLayerType layer2)
+    bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
     {
         std::lock_guard l(m_layer_mask_mutex_);
         return m_layer_mask_[layer1].test(layer2);
