@@ -148,6 +148,24 @@ namespace Engine::Resources
             throw std::runtime_error(s_importer_.GetErrorString());
         }
 
+        Matrix vup         = Matrix::CreateFromYawPitchRoll({DirectX::XM_PIDIV2, 0.f, 0.f});
+        vup                = vup.Transpose();
+        aiMatrix4x4 vuprot = aiMatrix4x4(
+                                         vup._11, vup._12, vup._13, vup._14,
+                                         vup._21, vup._22, vup._23, vup._24,
+                                         vup._31, vup._32, vup._33, vup._34,
+                                         vup._41, vup._42, vup._43, vup._44);
+
+        Matrix up       = Matrix::CreateFromYawPitchRoll({-DirectX::XM_PIDIV2, 0.f ,0.f});
+        up              = up.Transpose();
+        aiMatrix4x4 uprot = aiMatrix4x4(
+                                       up._11, up._12, up._13, up._14,
+                                       up._21, up._22, up._23, up._24,
+                                       up._31, up._32, up._33, up._34,
+                                       up._41, up._42, up._43, up._44);
+
+        scene->mRootNode->mTransformation *= uprot;
+
         if (scene->HasMeshes())
         {
             const auto  shape_count = scene->mNumMeshes;
@@ -182,7 +200,8 @@ namespace Engine::Resources
                 // extract vertices
                 for (auto j = 0; j < v_count; ++j)
                 {
-                    const auto vec = shape_->mVertices[j];
+                    auto vec = shape_->mVertices[j];
+                    vec *= vuprot;
 
                     Vector2 tex_coord = {0.f, 0.f};
                     Vector3 normal_ = {0.f, 0.f, 0.f};
@@ -197,14 +216,18 @@ namespace Engine::Resources
 
                     if (shape_->HasNormals())
                     {
-                        const auto normal = shape_->mNormals[j];
+                        auto normal = shape_->mNormals[j];
+                        normal *= vuprot;
                         normal_ = Vector3{normal.x, normal.y, normal.z};
                     }
 
                     if (shape_->HasTangentsAndBitangents())
                     {
-                        const auto tangent = shape_->mTangents[j];
-                        const auto binormal = shape_->mBitangents[j];
+                        auto tangent = shape_->mTangents[j];
+                        auto binormal = shape_->mBitangents[j];
+
+                        tangent *= vuprot;
+                        binormal *= vuprot;
 
                         tangent_ = Vector3{tangent.x, tangent.y, tangent.z};
                         binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
@@ -243,7 +266,12 @@ namespace Engine::Resources
                     for (auto j = 0; j < b_count; ++j)
                     {
                         const auto bone   = shape_->mBones[j];
-                        const auto offset = bone->mOffsetMatrix;
+                        auto offset = bone->mOffsetMatrix;
+                        auto transformation = bone->mNode->mTransformation;
+
+                        offset *= uprot;
+                        transformation *= uprot;
+
                         const std::string bone_name = bone->mName.C_Str();
 
                         if (const auto check = GetResourceManager().GetResource<Bone>(mesh_lookup_name + "_BONE").lock())
@@ -277,7 +305,7 @@ namespace Engine::Resources
                         bone_info.SetIndex(j);
                         bone_info.SetParentIndex(parent_idx);
                         bone_info.SetInvBindPose(AiMatrixToDirectXTranspose(offset));
-                        bone_info.SetTransform(AiMatrixToDirectXTranspose(bone->mNode->mTransformation));
+                        bone_info.SetTransform(AiMatrixToDirectXTranspose(transformation));
 
                         bone_map[bone_name] = bone_info;
                     }

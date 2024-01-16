@@ -85,9 +85,9 @@ namespace Client
         primitive.AddPosition(0.5f, {-.1f, 1.5f, -.1f});
         primitive.AddPosition(1.0f, {-.1f, 1.5f, 0.f});
 
-        primitive.AddRotation(0.0f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
-        primitive.AddRotation(0.5f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
-        primitive.AddRotation(1.0f, Quaternion::CreateFromYawPitchRoll(0.f, XMConvertToRadians(90.f), 0.f));
+        primitive.AddRotation(0.0f, Quaternion::CreateFromYawPitchRoll(0.f, 0.f, 0.f));
+        primitive.AddRotation(0.5f, Quaternion::CreateFromYawPitchRoll(0.f, 0.f, 0.f));
+        primitive.AddRotation(1.0f, Quaternion::CreateFromYawPitchRoll(0.f, 0.f, 0.f));
 
         primitive.AddScale(0.0f, {1.f, 1.f, 1.f});
         primitive.AddScale(1.0f, {1.f, 1.f, 1.f});

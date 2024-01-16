@@ -37,7 +37,6 @@ namespace Client::Object
         const auto rb   = AddComponent<Components::Rigidbody>().lock();
         const auto atr = AddComponent<Components::Animator>().lock();
 
-        tr->SetLocalRotation(Quaternion::CreateFromYawPitchRoll({XM_PI / 2, 0, 0.0f}));
         cldr->SetModel(model);
         cldr->SetType(Engine::BOUNDING_TYPE_BOX);
         cldr->SetMass(1.0f);
