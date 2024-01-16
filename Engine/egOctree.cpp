@@ -320,8 +320,7 @@ namespace Engine
                                 if (obj_bound.ContainsBy(node_children[i]->m_bounds_) ==
                                     DirectX::ContainmentType::CONTAINS)
                                 {
-                                    // Move the object to insertion queue, and let the child node handle it
-                                    // By this, dirty flag will be set, and the child node will be updated
+                                    // Move the object to the child node for precise boundary
                                     if (node_children[i]->Insert(obj))
                                     {
                                         found = true;
