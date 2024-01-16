@@ -8,12 +8,10 @@
 #include "egStateController.hpp"
 #include "egTransform.h"
 
-BOOST_CLASS_EXPORT_IMPLEMENT(
-                             Engine::Abstract::StateController<Engine::eObserverState>)
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Components::ObserverController,
-                       _ARTAG(_BSTSUPER(Engine::Abstract::StateController<eObserverState>)))
+                       _ARTAG(_BSTSUPER(Engine::Components::StateController)))
 
 namespace Engine::Components
 {
@@ -39,10 +37,10 @@ namespace Engine::Components
 
     void ObserverController::PostUpdate(const float& dt)
     {
-        StateController<eObserverState>::PostUpdate(dt);
+        StateController::PostUpdate(dt);
     }
 
-    ObserverController::ObserverController() = default;
+    ObserverController::ObserverController() : StateController({}) {}
 
     void ObserverController::Mouse(const float& dt)
     {

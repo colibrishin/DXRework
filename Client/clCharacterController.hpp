@@ -6,12 +6,11 @@
 
 namespace Client::State
 {
-    class CharacterController
-            : public Engine::Abstract::StateController<eCharacterState>
+    class CharacterController : public Components::StateController
     {
     public:
         explicit CharacterController(const Engine::WeakObject& owner)
-        : StateController<eCharacterState>(owner),
+        : StateController(owner),
           m_shoot_interval(0.3f),
           m_hp_(100.f) {}
 
@@ -22,8 +21,7 @@ namespace Client::State
         void FixedUpdate(const float& dt) override;
 
     protected:
-        CharacterController()
-        : StateController<eCharacterState>(),
+        CharacterController() : StateController({}),
           m_shoot_interval(0.3f),
           m_hp_(100.f) {}
 
@@ -40,8 +38,5 @@ namespace Client::State
         float   m_hp_;
     };
 } // namespace Client::State
-
-BOOST_CLASS_EXPORT_KEY(
-                       Engine::Abstract::StateController<Client::eCharacterState>)
 
 BOOST_CLASS_EXPORT_KEY(Client::State::CharacterController)
