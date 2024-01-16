@@ -78,7 +78,7 @@ namespace Engine::Components
                                                                          anim->GetTicksPerSecond(),
                                                                          anim->GetDuration());
 
-            const auto primitive = anim->m_simple_primitive_;
+            const auto& primitive = anim->m_simple_primitive_;
 
             const auto pos = primitive.GetPosition(time);
             const auto rot = primitive.GetRotation(time);

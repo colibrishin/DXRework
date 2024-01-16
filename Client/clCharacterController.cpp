@@ -10,6 +10,8 @@
 #include <egCollisionDetector.h>
 #include <egTransform.h>
 
+#include "clPlayer.h"
+#include "egBaseCollider.hpp"
 #include "egMouseManager.h"
 #include "egSceneManager.hpp"
 
@@ -26,6 +28,13 @@ namespace Client::State
     void CharacterController::Initialize()
     {
         SetState(CHAR_STATE_IDLE);
+        const auto cam = GetOwner().lock()->GetScene().lock()->GetMainCamera().lock();
+
+        if (cam)
+        {
+            m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
+            m_head_.lock()->AddChild(cam);
+        }
     }
 
     void CharacterController::PreUpdate(const float& dt)
@@ -56,7 +65,7 @@ namespace Client::State
     {
         float      speed   = 1.0f;
         const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
-        const auto forward = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock()->Forward();
+        const auto forward = m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward();
         const auto ortho   =
                 Vector3::Transform(
                                    forward,
@@ -133,19 +142,72 @@ namespace Client::State
         return false;
     }
 
+    void CharacterController::CheckGround() const
+    {
+        const auto scene = GetOwner().lock()->GetScene().lock();
+        const auto& tree = scene->GetObjectTree();
+        const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
+
+        std::queue<const Octree*> q;
+        q.push(&tree);
+
+        while (!q.empty())
+        {
+            const auto node = q.front();
+            q.pop();
+
+            const auto& value = node->Read();
+            const auto& children = node->Next();
+
+            for (const auto v : value)
+            {
+                const auto lcl = GetOwner().lock()->GetComponent<Engine::Components::Collider>().lock();
+                const auto rcl = v.lock()->GetComponent<Engine::Components::Collider>().lock();
+
+                if (!rcl || lcl == rcl)
+                {
+                    continue;
+                }
+
+                if (Components::Collider::Intersects(lcl, rcl, Vector3::Down))
+                {
+                    rb->SetGrounded(true);
+                    return;
+                }
+            }
+
+            for (const auto& child : children)
+            {
+                if (child && 
+                    child->Contains(GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition()))
+                {
+                    q.push(child);
+                }
+            }
+        }
+    }
+
     void CharacterController::Update(const float& dt)
     {
-        const auto rb =
-                GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
+        const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
 
         if (!rb)
         {
             return;
         }
 
-        const auto tr = GetOwner().lock()->GetComponent<Engine::Components::Transform>().lock();
-        tr->SetLocalRotation(Engine::GetMouseManager().GetMouseRotation());
+        const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+        const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
+        const auto mouse_q = Engine::GetMouseManager().GetMouseRotation();
+        const auto euler = mouse_q.ToEuler();
 
+        const auto lrq = Quaternion::CreateFromYawPitchRoll(euler.y, 0.f, 0.f);
+        const auto udq = Quaternion::CreateFromYawPitchRoll(0.f, euler.x, 0.f);
+
+        body_tr->SetLocalRotation(lrq);
+        head_tr->SetLocalRotation(udq);
+
+        CheckGround();
         CheckJump(rb);
         CheckMove(rb);
         CheckAttack(dt);
