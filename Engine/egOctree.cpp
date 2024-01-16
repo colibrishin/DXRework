@@ -260,6 +260,13 @@ namespace Engine
                     }
                 }
 
+                if (node_value.size() <= 1 && node->ActiveChildren() == 0)
+                {
+                    stack.pop();
+                    continue; // Leaf node
+                }
+
+                GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
                 stack.pop();
                 continue;
             }
@@ -315,14 +322,16 @@ namespace Engine
                                 {
                                     // Move the object to insertion queue, and let the child node handle it
                                     // By this, dirty flag will be set, and the child node will be updated
-                                    node_children[i]->m_insertion_queue_.push(obj);
-                                    found = true;
-                                    break;
+                                    if (node_children[i]->Insert(obj))
+                                    {
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
                             else
                             {
-                                const auto bound       = GetBounds(node_extent, node_center, (eOctant)i);
+                                const auto bound       = GetBounds(node_extent * 0.5f, node_center, (eOctant)i);
                                 const auto bound_check = obj_bound.ContainsBy(bound);
 
                                 if (bound_check == DirectX::ContainmentType::CONTAINS)
@@ -332,9 +341,11 @@ namespace Engine
                                     node_children[i]->m_parent_ = this;
                                     node_children[i]->Build();
                                     node_active_children.set(i);
-                                    node_children[i]->m_insertion_queue_.push(obj);
-                                    found = true;
-                                    break;
+                                    if (node_children[i]->Insert(obj))
+                                    {
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -360,15 +371,7 @@ namespace Engine
                 
                 visited[node] = true;
             }
-
-            if (node_value.size() <= 1 && node->ActiveChildren() == 0) 
-            {
-                stack.pop();
-                continue; // Leaf node
-            }
         }
-
-        //GetDebugger().Draw(m_bounds_, DirectX::Colors::BlanchedAlmond);
     }
 
     Octree::Octree(const BoundingBox& bounds)
