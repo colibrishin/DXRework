@@ -199,11 +199,13 @@ namespace Client::State
         const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
         const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
         const auto mouse_q = Engine::GetMouseManager().GetMouseRotation();
+        const auto euler = mouse_q.ToEuler();
 
-        const auto lrq = Quaternion::CreateFromAxisAngle(
-            Vector3::Up, Quaternion::Angle(mouse_q, Quaternion::CreateFromAxisAngle(Vector3::Up, 0.f)));
+        const auto lrq = Quaternion::CreateFromYawPitchRoll(euler.y, 0.f, 0.f);
+        const auto udq = Quaternion::CreateFromYawPitchRoll(0.f, euler.x, 0.f);
 
         body_tr->SetLocalRotation(lrq);
+        head_tr->SetLocalRotation(udq);
 
         CheckGround();
         CheckJump(rb);
