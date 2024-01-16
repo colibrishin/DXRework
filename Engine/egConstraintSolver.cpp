@@ -182,7 +182,7 @@ namespace Engine::Manager::Physics
         // Ray test sanity check, and re-evaluate the distance.
         if (!lbnd.TestRay(rbnd, dir, distance))
         {
-            throw std::logic_error("Speculation object ray test failed");
+            return;
         }
 
         // Move object to the new position.
