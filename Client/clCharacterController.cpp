@@ -11,6 +11,7 @@
 #include <egTransform.h>
 
 #include "clPlayer.h"
+#include "egBaseCollider.hpp"
 #include "egMouseManager.h"
 #include "egSceneManager.hpp"
 
@@ -141,6 +142,51 @@ namespace Client::State
         return false;
     }
 
+    void CharacterController::CheckGround() const
+    {
+        const auto scene = GetOwner().lock()->GetScene().lock();
+        const auto& tree = scene->GetObjectTree();
+        const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
+
+        std::queue<const Octree*> q;
+        q.push(&tree);
+
+        while (!q.empty())
+        {
+            const auto node = q.front();
+            q.pop();
+
+            const auto& value = node->Read();
+            const auto& children = node->Next();
+
+            for (const auto v : value)
+            {
+                const auto lcl = GetOwner().lock()->GetComponent<Engine::Components::Collider>().lock();
+                const auto rcl = v.lock()->GetComponent<Engine::Components::Collider>().lock();
+
+                if (!rcl || lcl == rcl)
+                {
+                    continue;
+                }
+
+                if (Components::Collider::Intersects(lcl, rcl, Vector3::Down))
+                {
+                    rb->SetGrounded(true);
+                    return;
+                }
+            }
+
+            for (const auto& child : children)
+            {
+                if (child && 
+                    child->Contains(GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition()))
+                {
+                    q.push(child);
+                }
+            }
+        }
+    }
+
     void CharacterController::Update(const float& dt)
     {
         const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
@@ -153,6 +199,7 @@ namespace Client::State
         const auto tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
         tr->SetLocalRotation(Engine::GetMouseManager().GetMouseRotation());
 
+        CheckGround();
         CheckJump(rb);
         CheckMove(rb);
         CheckAttack(dt);

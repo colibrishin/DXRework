@@ -33,6 +33,7 @@ namespace Client::State
         void CheckJump(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
         void CheckMove(const boost::shared_ptr<Engine::Components::Rigidbody>& rb);
         bool CheckAttack(const float& dt);
+        void CheckGround() const;
 
         WeakObject m_head_;
         float   m_shoot_interval;
