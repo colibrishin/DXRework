@@ -20,17 +20,17 @@ namespace Engine::Manager
         static Vector2 GetNormalizedMousePosition();
 
         [[nodiscard]] const Quaternion& GetMouseRotation() const;
-        [[nodiscard]] const Matrix&     GetMouseRotationMatrix() const;
+        [[nodiscard]] const Quaternion& GetMouseXRotation() const;
+        [[nodiscard]] const Quaternion& GetMouseYRotation() const;
 
     private:
         friend struct SingletonDeleter;
         ~MouseManager() override = default;
 
-        Quaternion m_mouse_rotation_;
+        Quaternion m_mouse_rot_x_;
+        Quaternion m_mouse_rot_y_;
 
         Vector2 m_previous_mouse_position_;
         Vector2 m_current_mouse_position_;
-
-        Matrix m_mouse_rotation_matrix_;
     };
 } // namespace Engine::Manager
