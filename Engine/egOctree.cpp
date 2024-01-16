@@ -26,7 +26,7 @@ namespace Engine
         {
             if (other.m_children_[i])
             {
-                m_children_[i]            = std::unique_ptr<Octree>(other.m_children_[i].get());
+                m_children_[i]            = std::make_unique<Octree>(*other.m_children_[i]);
                 m_children_[i]->m_parent_ = this;
             }
         }
