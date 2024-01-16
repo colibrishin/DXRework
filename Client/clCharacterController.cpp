@@ -198,14 +198,11 @@ namespace Client::State
 
         const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
         const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
-        const auto mouse_q = Engine::GetMouseManager().GetMouseRotation();
-        const auto euler = mouse_q.ToEuler();
+        const auto mouse_x = Engine::GetMouseManager().GetMouseXRotation();
+        const auto mouse_y = Engine::GetMouseManager().GetMouseYRotation();
 
-        const auto lrq = Quaternion::CreateFromYawPitchRoll(euler.y, 0.f, 0.f);
-        const auto udq = Quaternion::CreateFromYawPitchRoll(0.f, euler.x, 0.f);
-
-        body_tr->SetLocalRotation(lrq);
-        head_tr->SetLocalRotation(udq);
+        body_tr->SetLocalRotation(mouse_x);
+        head_tr->SetLocalRotation(mouse_y);
 
         CheckGround();
         CheckJump(rb);

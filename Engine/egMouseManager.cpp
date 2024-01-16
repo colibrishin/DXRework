@@ -18,10 +18,10 @@ namespace Engine::Manager
         Vector2 delta;
         (m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
 
-        const auto lookRotation =
-                Quaternion::CreateFromYawPitchRoll(delta.x * dt, delta.y * dt, 0.f);
-        m_mouse_rotation_        = Quaternion::Concatenate(m_mouse_rotation_, lookRotation);
-        m_mouse_rotation_matrix_ = Matrix::CreateFromQuaternion(m_mouse_rotation_);
+        // pitch
+        m_mouse_rot_x_ = m_mouse_rot_x_ * Quaternion::CreateFromAxisAngle(Vector3::Up, delta.x * dt);
+        // yaw
+        m_mouse_rot_y_ = m_mouse_rot_y_ * Quaternion::CreateFromAxisAngle(Vector3::Right, delta.y * dt);
     }
 
     void MouseManager::Update(const float& dt) {}
@@ -54,11 +54,16 @@ namespace Engine::Manager
 
     const Quaternion& MouseManager::GetMouseRotation() const
     {
-        return m_mouse_rotation_;
+        return m_mouse_rot_x_ * m_mouse_rot_y_;
     }
 
-    const Matrix& MouseManager::GetMouseRotationMatrix() const
+    const Quaternion& MouseManager::GetMouseXRotation() const
     {
-        return m_mouse_rotation_matrix_;
+        return m_mouse_rot_x_;
+    }
+
+    const Quaternion& MouseManager::GetMouseYRotation() const
+    {
+        return m_mouse_rot_y_;
     }
 } // namespace Engine::Manager
