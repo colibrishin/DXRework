@@ -91,7 +91,6 @@
     <ClInclude Include="egType.h" />
     <ClInclude Include="egDelayedRenderObject.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="egIStateController.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="StepTimer.hpp" />
@@ -118,7 +117,6 @@
     <ClCompile Include="egFont.cpp" />
     <ClCompile Include="egFriction.cpp" />
     <ClCompile Include="egGravity.cpp" />
-    <ClCompile Include="egIStateController.cpp" />
     <ClCompile Include="egKinetic.cpp" />
     <ClCompile Include="egLayer.cpp" />
     <ClCompile Include="egLight.cpp" />
@@ -147,6 +145,7 @@
     <ClCompile Include="egSound.cpp" />
     <ClCompile Include="egSoundPlayer.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />
+    <ClCompile Include="egStateController.cpp" />
     <ClCompile Include="egTaskScheduler.cpp" />
     <ClCompile Include="egText.cpp" />
     <ClCompile Include="egTexture.cpp" />
