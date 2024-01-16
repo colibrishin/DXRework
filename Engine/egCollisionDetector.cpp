@@ -136,7 +136,16 @@ namespace Engine::Manager::Physics
             }
         }
 
-        m_collision_map_.merge(m_frame_collision_map_);
+        for (const auto& [lhs, rhs_set] : m_frame_collision_map_)
+        {
+            m_collision_map_[lhs].insert(rhs_set.begin(), rhs_set.end());
+
+            for (const auto& rhs : rhs_set)
+            {
+                m_collision_map_[rhs].insert(lhs);
+            }
+        }
+
         m_frame_collision_map_.clear();
 
         // Remove empty set.
