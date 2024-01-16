@@ -196,8 +196,14 @@ namespace Client::State
             return;
         }
 
-        const auto tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
-        tr->SetLocalRotation(Engine::GetMouseManager().GetMouseRotation());
+        const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+        const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
+        const auto mouse_q = Engine::GetMouseManager().GetMouseRotation();
+
+        const auto lrq = Quaternion::CreateFromAxisAngle(
+            Vector3::Up, Quaternion::Angle(mouse_q, Quaternion::CreateFromAxisAngle(Vector3::Up, 0.f)));
+
+        body_tr->SetLocalRotation(lrq);
 
         CheckGround();
         CheckJump(rb);
