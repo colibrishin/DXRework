@@ -68,14 +68,15 @@ namespace Client::State
         float      speed   = 1.0f;
         const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
 
-        const auto forward = m_head_.lock()
-                                 ? m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward()
-                                 : GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
-        const auto ortho   =
+        auto forward = GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
+        auto ortho   =
                 Vector3::Transform(
                                    forward,
-                                   Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) *
-                speed;
+                                   Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) * speed;
+
+        forward *= {1.f, 0.f, 1.f};
+        ortho *= {1.f, 0.f, 1.f};
+
         bool pressed = false;
 
         if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
