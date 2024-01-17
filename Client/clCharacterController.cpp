@@ -29,6 +29,8 @@ namespace Client::State
 
         if (cam)
         {
+            m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
+
             if (const auto head = m_head_.lock())
             {
                 m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
