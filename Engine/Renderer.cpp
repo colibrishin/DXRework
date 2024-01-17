@@ -38,7 +38,7 @@ namespace Engine::Manager::Graphics
         const auto& mtr = ptr_mtr.lock();
         float anim_frame = dt;
 
-        if (const auto atr = ptr_atr.lock())
+        if (const auto atr = ptr_atr.lock(); atr && atr->GetActive())
         {
             anim_frame = atr->GetFrame();
 
@@ -47,6 +47,10 @@ namespace Engine::Manager::Graphics
                 anim->PreRender(anim_frame);
                 anim->Render(anim_frame);
             }
+        }
+        else
+        {
+            mtr->IgnoreAnimation(true);
         }
 
     	Components::Transform::Bind(*tr);
@@ -59,12 +63,16 @@ namespace Engine::Manager::Graphics
         mtr->PostRender(anim_frame);
         model->PostRender(anim_frame);
 
-        if (const auto atr = ptr_atr.lock())
+        if (const auto atr = ptr_atr.lock(); atr && atr->GetActive())
         {
             if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
             {
                 anim->PostRender(anim_frame);
             }
+        }
+        else
+        {
+            mtr->IgnoreAnimation(false);
         }
     }
 
