@@ -53,7 +53,7 @@ namespace Client::Object
 
         for (const auto& [idx, box] : bb_map)
         {
-            const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
+            const auto child = GetScene().lock()->CreateGameObject<Object>(LAYER_HITBOX).lock();
             const auto ctr = child->AddComponent<Components::Transform>().lock();
             child->AddComponent<Components::Collider>();
             child->SetName("Bone" + std::to_string(idx));

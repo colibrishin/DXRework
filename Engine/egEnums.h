@@ -47,11 +47,12 @@ namespace Engine
         LAYER_NONE = 0,
         LAYER_LIGHT,
         LAYER_DEFAULT,
+        LAYER_HITBOX,
         LAYER_ENVIRONMENT,
         LAYER_SKYBOX,
         LAYER_UI,
         LAYER_CAMERA,
-        LAYER_MAX
+        LAYER_MAX, 
     };
 
     enum eShaderType
