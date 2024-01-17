@@ -72,6 +72,7 @@ namespace Engine
         class Animator;
     } // namespace Component
 
+    class Script;
     class Scene;
     class Layer;
     class Serializer;
@@ -164,6 +165,7 @@ namespace Engine
     using WeakAnimator = boost::weak_ptr<Components::Animator>;
     using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
     using WeakMaterial = boost::weak_ptr<Resources::Material>;
+    using WeakScript = boost::weak_ptr<Script>;
 
     // Strong pointer type definitions
     using StrongObject = boost::shared_ptr<Abstract::Object>;
@@ -185,6 +187,7 @@ namespace Engine
     using StrongShader = boost::shared_ptr<Resources::Shader>;
     using StrongMaterial = boost::shared_ptr<Resources::Material>;
     using StrongCollider = boost::shared_ptr<Components::Collider>;
+    using StrongScript = boost::shared_ptr<Script>;
 
     // Misc type definitions
     using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -285,6 +288,12 @@ namespace Engine
     struct which_sb
     {
         static constexpr eSBType value = T::sbtype;
+    };
+
+    template <typename T>
+    struct which_script
+    {
+        static constexpr eScriptType value = T::scptype;
     };
 
     struct GUIDComparer

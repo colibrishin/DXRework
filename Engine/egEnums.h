@@ -157,6 +157,7 @@ namespace Engine
         COMP_T_SOUND_PLAYER,
         COM_T_ANIMATOR,
         COM_T_MODEL_RENDERER,
+        COM_T_SCRIPT,
     };
 
     enum eDefObjectType
