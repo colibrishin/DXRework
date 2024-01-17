@@ -29,8 +29,11 @@ namespace Client::State
 
         if (cam)
         {
-            m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
-            m_head_.lock()->AddChild(cam);
+            if (const auto head = m_head_.lock())
+            {
+                m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
+                m_head_.lock()->AddChild(cam);
+            }
         }
     }
 
@@ -62,7 +65,10 @@ namespace Client::State
     {
         float      speed   = 1.0f;
         const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
-        const auto forward = m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward();
+
+        const auto forward = m_head_.lock()
+                                 ? m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward()
+                                 : GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
         const auto ortho   =
                 Vector3::Transform(
                                    forward,
@@ -193,13 +199,17 @@ namespace Client::State
             return;
         }
 
-        const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+        if (const auto head = m_head_.lock())
+        {
+            const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+            const auto mouse_y = Engine::GetMouseManager().GetMouseYRotation();
+            head_tr->SetLocalRotation(mouse_y);
+        }
+
         const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
         const auto mouse_x = Engine::GetMouseManager().GetMouseXRotation();
-        const auto mouse_y = Engine::GetMouseManager().GetMouseYRotation();
 
         body_tr->SetLocalRotation(mouse_x);
-        head_tr->SetLocalRotation(mouse_y);
 
         CheckGround();
         CheckJump(rb);
