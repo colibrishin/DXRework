@@ -42,6 +42,7 @@ namespace Client::State
     void CharacterController::PreUpdate(const float& dt)
     {
         StateController::PreUpdate(dt);
+        CheckGround();
     }
 
     void CharacterController::PostUpdate(const float& dt)
@@ -170,6 +171,11 @@ namespace Client::State
                 const auto lcl = GetOwner().lock()->GetComponent<Engine::Components::Collider>().lock();
                 const auto rcl = v.lock()->GetComponent<Engine::Components::Collider>().lock();
 
+                if (!GetCollisionDetector().IsCollisionLayer(GetOwner().lock()->GetLayer(), v.lock()->GetLayer()))
+                {
+                    continue;
+                }
+
                 if (!rcl || lcl == rcl)
                 {
                     continue;
@@ -214,7 +220,6 @@ namespace Client::State
 
         body_tr->SetLocalRotation(mouse_x);
 
-        CheckGround();
         CheckJump(rb);
         CheckMove(rb);
         CheckAttack(dt);
