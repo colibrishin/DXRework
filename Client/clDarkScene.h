@@ -13,7 +13,7 @@ namespace Client::Scene
     class DarkScene : public Engine::Scene
     {
     public:
-        CLIENT_SCENE_CHECK_CONSTEXPR(Engine::SCENE_T_DARK)
+        CLIENT_SCENE_T(Engine::SCENE_T_DARK)
 
         DarkScene();
         ~DarkScene() override = default;

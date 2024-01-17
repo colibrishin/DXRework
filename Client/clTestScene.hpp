@@ -13,7 +13,7 @@ namespace Client::Scene
     class TestScene : public Engine::Scene
     {
     public:
-        CLIENT_SCENE_CHECK_CONSTEXPR(Engine::SCENE_T_TEST)
+        CLIENT_SCENE_T(Engine::SCENE_T_TEST)
 
         TestScene();
         ~TestScene() override = default;
