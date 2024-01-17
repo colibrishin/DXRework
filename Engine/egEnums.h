@@ -179,4 +179,6 @@ namespace Engine
 
     // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
     enum eSceneType : UINT;
+    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
+    enum eScriptType : UINT;
 }
