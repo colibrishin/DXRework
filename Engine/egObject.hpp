@@ -4,6 +4,7 @@
 #include "egResource.h"
 #include "egScene.hpp"
 #include "egComponent.h"
+#include "egScript.h"
 
 namespace Engine::Abstract
 {
@@ -74,6 +75,63 @@ namespace Engine::Abstract
             }
 
             return {};
+        }
+
+        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+        boost::weak_ptr<T> AddScript(const std::string& name = "")
+        {
+            StrongScript script = boost::make_shared<T>(GetSharedPtr<Object>());
+            script->SetName(name);
+
+            m_scripts_[which_script<T>::value].push_back(script);
+
+            return script;
+        }
+
+        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+        boost::weak_ptr<T> GetScript(const std::string& name = "")
+        {
+            if (m_scripts_.contains(which_script<T>::value))
+            {
+                auto& scripts = m_scripts_[which_script<T>::value];
+
+                if (name.empty() && !scripts.empty())
+                {
+                    return scripts.front();
+                }
+
+                for (const auto& script : scripts)
+                {
+                    if (script->GetName() == name)
+                    {
+                        return script;
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+        void RemoveScript(const std::string& name = "")
+        {
+            if (m_scripts_.contains(which_script<T>::value))
+            {
+                auto& scripts = m_scripts_[which_script<T>::value];
+
+                if (name.empty() && !scripts.empty())
+                {
+                    scripts.erase(scripts.begin());
+                }
+                else
+                {
+                    std::erase_if(
+                                  scripts, [&name](const StrongScript& script)
+                                  {
+                                      return script->GetName() == name;
+                                  });
+                }
+            }
         }
 
         const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
@@ -162,9 +220,9 @@ namespace Engine::Abstract
     private:
         LocalActorID              m_parent_id_;
         std::vector<LocalActorID> m_children_;
-        eDefObjectType       m_type_;
-        bool                 m_active_ = true;
-        bool                 m_culled_ = true;
+        eDefObjectType            m_type_;
+        bool                      m_active_ = true;
+        bool                      m_culled_ = true;
 
         bool m_imgui_open_ = false;
 
@@ -175,6 +233,7 @@ namespace Engine::Abstract
         std::map<LocalActorID, WeakObject>                 m_children_cache_;
         std::set<LocalComponentID>                         m_assigned_component_ids_;
         std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
+        std::map<eScriptType, std::vector<StrongScript>>   m_scripts_;
 
     };
 } // namespace Engine::Abstract
