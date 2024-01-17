@@ -21,6 +21,8 @@ namespace Engine::Components
 
     void Animator::Update(const float& dt)
     {
+        if (!GetActive()) return;
+
         const auto mr = GetOwner().lock()->GetComponent<ModelRenderer>();
 
         if (mr.expired()) return;

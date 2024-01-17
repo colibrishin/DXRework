@@ -18,6 +18,8 @@ namespace Engine::Resources
         void PostRender(const float& dt) override;
         void OnDeserialized() override;
 
+        void IgnoreAnimation(bool ignore) noexcept;
+
         template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
         void SetResource(const std::string& name)
         {
@@ -77,6 +79,8 @@ namespace Engine::Resources
 
     private:
         CBs::MaterialCB m_material_cb_;
+        bool m_no_anim_flag_;
+
         std::vector<std::string> m_shaders_;
         std::map<const eResourceType, std::vector<std::string>> m_resources_;
 

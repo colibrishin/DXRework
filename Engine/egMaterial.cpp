@@ -16,13 +16,14 @@ namespace Engine::Resources
 {
     Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_()
+      m_material_cb_(),
+      m_no_anim_flag_(false)
     {
-        m_material_cb_.specular_power = 100.0f;
-        m_material_cb_.specular_color = DirectX::Colors::White;
-        m_material_cb_.reflection_scale = 0.15f;
-        m_material_cb_.refraction_scale = 0.15f;
-        m_material_cb_.clip_plane = Vector4::Zero;
+        m_material_cb_.specular_power         = 100.0f;
+        m_material_cb_.specular_color         = DirectX::Colors::White;
+        m_material_cb_.reflection_scale       = 0.15f;
+        m_material_cb_.refraction_scale       = 0.15f;
+        m_material_cb_.clip_plane             = Vector4::Zero;
         m_material_cb_.reflection_translation = 0.5f;
     }
 
@@ -46,7 +47,7 @@ namespace Engine::Resources
         for (const auto& [type, resources] : m_resources_loaded_)
         {
             // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM)
+            if (type == RES_T_BONE_ANIM && !m_no_anim_flag_)
             {
                 m_material_cb_.flags.bone = 1;
                 continue;
@@ -122,6 +123,11 @@ namespace Engine::Resources
     {
         Resource::OnDeserialized();
         Load();
+    }
+
+    void Material::IgnoreAnimation(bool ignore) noexcept
+    {
+        m_no_anim_flag_ = ignore;
     }
 
     void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept
