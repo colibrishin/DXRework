@@ -208,6 +208,11 @@ namespace Engine
     using ConcurrentWeakComRootMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
     using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
+    // Bitwise Enums
+    using eShaderRasterizers = UINT;
+    using eShaderDepths = UINT;
+    using eShaderSamplers = UINT;
+
     // Manager Forward Declaration
     extern Manager::ResourceManager&                 GetResourceManager();
     extern Manager::SceneManager&                    GetSceneManager();
