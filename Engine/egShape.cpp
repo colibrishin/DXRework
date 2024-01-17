@@ -148,24 +148,15 @@ namespace Engine::Resources
             throw std::runtime_error(s_importer_.GetErrorString());
         }
 
-        Matrix vup         = Matrix::CreateFromYawPitchRoll({DirectX::XM_PIDIV2, 0.f, 0.f});
-        vup                = vup.Transpose();
-        aiMatrix4x4 vuprot = aiMatrix4x4(
-                                         vup._11, vup._12, vup._13, vup._14,
-                                         vup._21, vup._22, vup._23, vup._24,
-                                         vup._31, vup._32, vup._33, vup._34,
-                                         vup._41, vup._42, vup._43, vup._44);
+        aiMatrix4x4 axis = {
+            1.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, -1.f, 0.f,
+            0.f, -1.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
 
-        Matrix up       = Matrix::CreateFromYawPitchRoll({-DirectX::XM_PIDIV2, 0.f ,0.f});
-        up              = up.Transpose();
-        aiMatrix4x4 uprot = aiMatrix4x4(
-                                       up._11, up._12, up._13, up._14,
-                                       up._21, up._22, up._23, up._24,
-                                       up._31, up._32, up._33, up._34,
-                                       up._41, up._42, up._43, up._44);
-
-        scene->mRootNode->mTransformation *= uprot;
-
+        scene->mRootNode->mTransformation = axis;
+            
         if (scene->HasMeshes())
         {
             const auto  shape_count = scene->mNumMeshes;
@@ -201,7 +192,7 @@ namespace Engine::Resources
                 for (auto j = 0; j < v_count; ++j)
                 {
                     auto vec = shape_->mVertices[j];
-                    vec *= vuprot;
+                    vec *= axis;
 
                     Vector2 tex_coord = {0.f, 0.f};
                     Vector3 normal_ = {0.f, 0.f, 0.f};
@@ -217,7 +208,7 @@ namespace Engine::Resources
                     if (shape_->HasNormals())
                     {
                         auto normal = shape_->mNormals[j];
-                        normal *= vuprot;
+                        normal *= axis;
                         normal_ = Vector3{normal.x, normal.y, normal.z};
                     }
 
@@ -226,8 +217,8 @@ namespace Engine::Resources
                         auto tangent = shape_->mTangents[j];
                         auto binormal = shape_->mBitangents[j];
 
-                        tangent *= vuprot;
-                        binormal *= vuprot;
+                        tangent *= axis;
+                        binormal *= axis;
 
                         tangent_ = Vector3{tangent.x, tangent.y, tangent.z};
                         binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
@@ -269,8 +260,8 @@ namespace Engine::Resources
                         auto offset = bone->mOffsetMatrix;
                         auto transformation = bone->mNode->mTransformation;
 
-                        offset *= uprot;
-                        transformation *= uprot;
+                        offset *= axis;
+                        transformation *= axis;
 
                         const std::string bone_name = bone->mName.C_Str();
 
