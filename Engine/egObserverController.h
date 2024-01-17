@@ -4,7 +4,7 @@
 
 namespace Engine::Components
 {
-    class ObserverController final : public Abstract::StateController<eObserverState>
+    class ObserverController final : public StateController
     {
     public:
         explicit ObserverController(const WeakObject& owner);
@@ -27,4 +27,3 @@ namespace Engine::Components
 } // namespace Engine::Component
 
 BOOST_CLASS_EXPORT_KEY(Engine::Components::ObserverController);
-BOOST_CLASS_EXPORT_KEY(Engine::Abstract::StateController<Engine::eObserverState>);

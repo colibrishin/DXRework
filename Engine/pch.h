@@ -106,7 +106,6 @@
 #include "egEntity.hpp"
 #include "egFriction.h"
 #include "egHelper.hpp"
-#include "egIStateController.h"
 #include "egKinetic.h"
 #include "egLayer.h"
 #include "egManager.hpp"

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "egScene.hpp"
 #include "egCamera.h"
-#include "egIStateController.h"
 #include "egLight.h"
 #include "egManagerHelper.hpp"
 #include "egObserver.h"

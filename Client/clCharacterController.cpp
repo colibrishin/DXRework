@@ -15,12 +15,9 @@
 #include "egMouseManager.h"
 #include "egSceneManager.hpp"
 
-BOOST_CLASS_EXPORT_IMPLEMENT(
-                             Engine::Abstract::StateController<Client::eCharacterState>)
-
 SERIALIZER_ACCESS_IMPL(
                        Client::State::CharacterController,
-                       _ARTAG(_BSTSUPER(Engine::Abstract::StateController<eCharacterState>))
+                       _ARTAG(_BSTSUPER(Engine::Components::StateController))
                        _ARTAG(m_shoot_interval) _ARTAG(m_hp_))
 
 namespace Client::State
@@ -44,7 +41,7 @@ namespace Client::State
 
     void CharacterController::PostUpdate(const float& dt)
     {
-        StateController<eCharacterState>::PostUpdate(dt);
+        StateController::PostUpdate(dt);
     }
 
     void CharacterController::CheckJump(
@@ -209,7 +206,7 @@ namespace Client::State
         CheckMove(rb);
         CheckAttack(dt);
 
-        switch (GetState())
+        switch (GetState<eCharacterState>())
         {
         case CHAR_STATE_IDLE: if (HasStateChanged()) Engine::GetDebugger().Log("Idle");
             break;
