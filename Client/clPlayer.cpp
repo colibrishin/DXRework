@@ -111,13 +111,18 @@ namespace Client::Object
         const auto cl = GetComponent<Components::Collider>().lock();
         const auto mr = GetComponent<Components::ModelRenderer>().lock();
         const auto atr = GetComponent<Components::Animator>().lock();
-        const auto model = mr->GetModel().lock();
+
+        if (!cl || !mr || !atr) return;
+
         const auto mtl = mr->GetMaterial().lock();
-        const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
-        auto deform = anim->GetFrameAnimation(atr->GetFrame());
-        const auto rb = GetComponent<Components::Rigidbody>().lock();
-        Vector3 min = {FLT_MAX, FLT_MAX, FLT_MAX};
-        Vector3 max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
+
+        if (!mtl) return;
+
+        const auto anim   = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
+        auto       deform = anim->GetFrameAnimation(atr->GetFrame());
+        const auto rb     = GetComponent<Components::Rigidbody>().lock();
+        Vector3    min    = {FLT_MAX, FLT_MAX, FLT_MAX};
+        Vector3    max    = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
         for (const auto& [idx, id] : m_child_bones_)
         {
@@ -142,12 +147,12 @@ namespace Client::Object
             out_vertices.resize(stock_vertices.size());
 
             XMVector3TransformCoordStream(
-                out_vertices.data(), 
-                sizeof(Vector3), 
-                stock_vertices.data(), 
-                sizeof(Vector3), 
-                stock_vertices.size(), 
-                ctr->GetLocalMatrix());
+                                          out_vertices.data(),
+                                          sizeof(Vector3),
+                                          stock_vertices.data(),
+                                          sizeof(Vector3),
+                                          stock_vertices.size(),
+                                          ctr->GetLocalMatrix());
 
             for (const auto& v : out_vertices)
             {
