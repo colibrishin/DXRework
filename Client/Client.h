@@ -8,6 +8,11 @@ namespace Engine
         SCENE_T_TEST,
         SCENE_T_DARK
     };
+
+    enum eScriptType : UINT
+    {
+        SCRIPT_T_NONE = 0,
+    };
 }
 
 namespace Client
