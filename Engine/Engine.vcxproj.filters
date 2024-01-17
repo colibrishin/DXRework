@@ -218,6 +218,9 @@
     <Filter Include="Low-level\Octree">
       <UniqueIdentifier>{c7c24fa4-9f05-4fe6-b344-76abf4d72dd8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Base\Script">
+      <UniqueIdentifier>{86b3d06f-2f9e-4937-8caf-9381f3583869}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -257,9 +260,6 @@
     </ClInclude>
     <ClInclude Include="egBaseCollider.hpp">
       <Filter>Component\Collider</Filter>
-    </ClInclude>
-    <ClInclude Include="egIStateController.h">
-      <Filter>Component\StateController</Filter>
     </ClInclude>
     <ClInclude Include="egStateController.hpp">
       <Filter>Component\StateController</Filter>
@@ -444,6 +444,9 @@
     <ClInclude Include="egOctree.hpp">
       <Filter>Low-level\Octree</Filter>
     </ClInclude>
+    <ClInclude Include="egScript.h">
+      <Filter>Base\Script</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -470,9 +473,6 @@
     </ClCompile>
     <ClCompile Include="egBaseCollider.cpp">
       <Filter>Component\Collider</Filter>
-    </ClCompile>
-    <ClCompile Include="egIStateController.cpp">
-      <Filter>Component\StateController</Filter>
     </ClCompile>
     <ClCompile Include="egObserverController.cpp">
       <Filter>Component\OberserverController</Filter>
@@ -624,6 +624,12 @@
     </ClCompile>
     <ClCompile Include="egOctree.cpp">
       <Filter>Low-level\Octree</Filter>
+    </ClCompile>
+    <ClCompile Include="egScript.cpp">
+      <Filter>Base\Script</Filter>
+    </ClCompile>
+    <ClCompile Include="egStateController.cpp">
+      <Filter>Component\StateController</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

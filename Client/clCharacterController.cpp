@@ -29,6 +29,8 @@ namespace Client::State
 
         if (cam)
         {
+            m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
+
             if (const auto head = m_head_.lock())
             {
                 m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
@@ -40,6 +42,7 @@ namespace Client::State
     void CharacterController::PreUpdate(const float& dt)
     {
         StateController::PreUpdate(dt);
+        CheckGround();
     }
 
     void CharacterController::PostUpdate(const float& dt)
@@ -66,14 +69,15 @@ namespace Client::State
         float      speed   = 1.0f;
         const auto scene   = Engine::GetSceneManager().GetActiveScene().lock();
 
-        const auto forward = m_head_.lock()
-                                 ? m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward()
-                                 : GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
-        const auto ortho   =
+        auto forward = GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
+        auto ortho   =
                 Vector3::Transform(
                                    forward,
-                                   Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) *
-                speed;
+                                   Matrix::CreateRotationY(-XMConvertToRadians(90.0f))) * speed;
+
+        forward *= {1.f, 0.f, 1.f};
+        ortho *= {1.f, 0.f, 1.f};
+
         bool pressed = false;
 
         if (Engine::GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
@@ -167,6 +171,11 @@ namespace Client::State
                 const auto lcl = GetOwner().lock()->GetComponent<Engine::Components::Collider>().lock();
                 const auto rcl = v.lock()->GetComponent<Engine::Components::Collider>().lock();
 
+                if (!GetCollisionDetector().IsCollisionLayer(GetOwner().lock()->GetLayer(), v.lock()->GetLayer()))
+                {
+                    continue;
+                }
+
                 if (!rcl || lcl == rcl)
                 {
                     continue;
@@ -211,7 +220,6 @@ namespace Client::State
 
         body_tr->SetLocalRotation(mouse_x);
 
-        CheckGround();
         CheckJump(rb);
         CheckMove(rb);
         CheckAttack(dt);

@@ -12,9 +12,9 @@ namespace Engine::Resources
         RESOURCE_T(RES_T_SHADER)
 
         Shader(
-            const EntityName&   name, const std::filesystem::path& path,
-            const eShaderDomain domain, const UINT                 depth, 
-            const UINT rasterizer, const D3D11_FILTER sampler_filter, const UINT sampler);
+            const EntityName&        name, const std::filesystem::path& path,
+            const eShaderDomain      domain, const eShaderDepths        depth,
+            const eShaderRasterizers rasterizer, const D3D11_FILTER     sampler_filter, const eShaderSamplers sampler);
         ~Shader() override = default;
 
         void Initialize() override;
@@ -29,13 +29,13 @@ namespace Engine::Resources
 
         static boost::weak_ptr<Shader>   Get(const std::string& name);
         static boost::shared_ptr<Shader> Create(
-            const std::string &           name,
-            const std::filesystem::path & path,
-            const eShaderDomain           domain,
-            const UINT                    depth,
-            const UINT                    rasterizer,
-            const D3D11_FILTER            filter,
-            const UINT                    sampler);
+            const std::string&           name,
+            const std::filesystem::path& path,
+            const eShaderDomain          domain,
+            const eShaderDepths          depth,
+            const eShaderRasterizers     rasterizer,
+            const D3D11_FILTER           filter,
+            const eShaderSamplers        sampler);
 
     protected:
         Shader();

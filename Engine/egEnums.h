@@ -157,6 +157,7 @@ namespace Engine
         COMP_T_SOUND_PLAYER,
         COM_T_ANIMATOR,
         COM_T_MODEL_RENDERER,
+        COM_T_SCRIPT,
     };
 
     enum eDefObjectType
@@ -178,4 +179,6 @@ namespace Engine
 
     // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
     enum eSceneType : UINT;
+    // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
+    enum eScriptType : UINT;
 }
