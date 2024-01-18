@@ -46,6 +46,7 @@
     <ClInclude Include="egFont.h" />
     <ClInclude Include="egFriction.h" />
     <ClInclude Include="egGlobal.h" />
+    <ClInclude Include="egImGuiHeler.hpp" />
     <ClInclude Include="egKinetic.h" />
     <ClInclude Include="egMacro.h" />
     <ClInclude Include="egMaterial.h" />
