@@ -327,9 +327,9 @@ namespace Engine::Manager::Physics
                     // Initial Collision
                     m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
                     m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
-                }
 
-                m_collision_produce_queue_.push_back({lhs, rhs, true, true});
+                    m_collision_produce_queue_.push_back({lhs, rhs, true, true});
+                }
 
                 // Or continuous collision
                 lhs->DispatchComponentEvent(rcl);
