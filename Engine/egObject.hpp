@@ -1,241 +1,214 @@
 #pragma once
 #include "egActor.h"
 #include "egCommon.hpp"
+#include "egComponent.h"
 #include "egResource.h"
 #include "egScene.hpp"
-#include "egComponent.h"
 #include "egScript.h"
 
 namespace Engine::Abstract
 {
-    class Object : public Actor
+  class Object : public Actor
+  {
+  public:
+    OBJECT_T(DEF_OBJ_T_NONE)
+
+    ~Object() override = default;
+
+    void PreUpdate(const float& dt) override;
+    void Update(const float& dt) override;
+    void PreRender(const float& dt) override;
+    void Render(const float& dt) override;
+    void PostRender(const float& dt) override;
+    void FixedUpdate(const float& dt) override;
+    void PostUpdate(const float& dt) override;
+    void OnDeserialized() override;
+    void OnImGui() override;
+
+    template <typename T, typename... Args>
+    boost::weak_ptr<T> AddComponent(Args&&... args)
     {
-    public:
-        OBJECT_T(DEF_OBJ_T_NONE)
+      if constexpr (std::is_base_of_v<Component, T>)
+      {
+        if (m_components_.contains(which_component<T>::value)) { return {}; }
 
-        ~Object() override = default;
+        const auto thisObject = GetSharedPtr<Object>();
 
-        void PreUpdate(const float& dt) override;
-        void Update(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void Render(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void FixedUpdate(const float& dt) override;
-        void PostUpdate(const float& dt) override;
-        void OnDeserialized() override;
-        void OnImGui() override;
+        boost::shared_ptr<T> component =
+          boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
+        component->Initialize();
 
-        template <typename T, typename... Args>
-        boost::weak_ptr<T> AddComponent(Args&&... args)
+        m_components_.emplace
+          (
+           which_component<T>::value,
+           boost::reinterpret_pointer_cast<Component>(component)
+          );
+
+        UINT idx = 0;
+
+        while (true)
         {
-            if constexpr (std::is_base_of_v<Component, T>)
-            {
-                if (m_components_.contains(which_component<T>::value))
-                {
-                    return {};
-                }
+          if (idx == g_invalid_id) { throw std::exception("Component ID overflow"); }
 
-                const auto thisObject = GetSharedPtr<Object>();
+          if (!m_assigned_component_ids_.contains(idx))
+          {
+            component->SetLocalID(idx);
+            m_assigned_component_ids_.insert(idx);
+            break;
+          }
 
-                boost::shared_ptr<T> component =
-                        boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
-                component->Initialize();
-
-                m_components_.emplace(
-                    which_component<T>::value, 
-                    boost::reinterpret_pointer_cast<Component>(component));
-
-                UINT idx = 0;
-
-                while (true)
-                {
-                    if (idx == g_invalid_id)
-                    {
-                        throw std::exception("Component ID overflow");
-                    }
-
-                    if (!m_assigned_component_ids_.contains(idx))
-                    {
-                        component->SetLocalID(idx);
-                        m_assigned_component_ids_.insert(idx);
-                        break;
-                    }
-
-                    idx++;
-                }
-
-                if (const auto scene = GetScene().lock())
-                {
-                    scene->AddCacheComponent<T>(component);
-                }
-
-                m_cached_component_.insert(component);
-
-                return component;
-            }
-
-            return {};
+          idx++;
         }
 
-        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-        boost::weak_ptr<T> AddScript(const std::string& name = "")
+        if (const auto scene = GetScene().lock()) { scene->AddCacheComponent<T>(component); }
+
+        m_cached_component_.insert(component);
+
+        return component;
+      }
+
+      return {};
+    }
+
+    template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    boost::weak_ptr<T> AddScript(const std::string& name = "")
+    {
+      StrongScript script = boost::make_shared<T>(GetSharedPtr<Object>());
+      script->SetName(name);
+
+      m_scripts_[which_script<T>::value].push_back(script);
+
+      return script;
+    }
+
+    template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    boost::weak_ptr<T> GetScript(const std::string& name = "")
+    {
+      if (m_scripts_.contains(which_script<T>::value))
+      {
+        auto& scripts = m_scripts_[which_script<T>::value];
+
+        if (name.empty() && !scripts.empty()) { return scripts.front(); }
+
+        for (const auto& script : scripts) { if (script->GetName() == name) { return script; } }
+      }
+
+      return {};
+    }
+
+    template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    void RemoveScript(const std::string& name = "")
+    {
+      if (m_scripts_.contains(which_script<T>::value))
+      {
+        auto& scripts = m_scripts_[which_script<T>::value];
+
+        if (name.empty() && !scripts.empty()) { scripts.erase(scripts.begin()); }
+        else
         {
-            StrongScript script = boost::make_shared<T>(GetSharedPtr<Object>());
-            script->SetName(name);
-
-            m_scripts_[which_script<T>::value].push_back(script);
-
-            return script;
+          std::erase_if
+            (
+             scripts, [&name](const StrongScript& script) { return script->GetName() == name; }
+            );
         }
+      }
+    }
 
-        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-        boost::weak_ptr<T> GetScript(const std::string& name = "")
+    const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
+
+    template <typename T>
+    boost::weak_ptr<T> GetComponent()
+    {
+      if constexpr (std::is_base_of_v<Component, T>)
+      {
+        if (!m_components_.contains(which_component<T>::value)) { return {}; }
+
+        const auto& comp = m_components_[which_component<T>::value];
+
+        return boost::static_pointer_cast<T>(comp);
+      }
+
+      return {};
+    }
+
+    template <typename T>
+    void RemoveComponent()
+    {
+      if constexpr (std::is_base_of_v<Component, T>)
+      {
+        if (m_components_.contains(which_component<T>::value))
         {
-            if (m_scripts_.contains(which_script<T>::value))
-            {
-                auto& scripts = m_scripts_[which_script<T>::value];
+          const auto comp = m_components_[which_component<T>::value];
 
-                if (name.empty() && !scripts.empty())
-                {
-                    return scripts.front();
-                }
+          if (const auto scene = GetScene().lock())
+          {
+            scene->RemoveCacheComponent<T>(comp->template GetSharedPtr<T>());
+          }
 
-                for (const auto& script : scripts)
-                {
-                    if (script->GetName() == name)
-                    {
-                        return script;
-                    }
-                }
-            }
+          if (m_components_[which_component<T>::value].empty()) { m_components_.erase(which_component<T>::value); }
 
-            return {};
+          m_assigned_component_ids_.erase(comp->GetLocalID());
+          m_cached_component_.erase(comp);
+          m_components_[which_component<T>::value].erase(comp);
         }
+      }
+    }
 
-        template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-        void RemoveScript(const std::string& name = "")
-        {
-            if (m_scripts_.contains(which_script<T>::value))
-            {
-                auto& scripts = m_scripts_[which_script<T>::value];
+    template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
+    void DispatchComponentEvent(const boost::shared_ptr<T>& other);
 
-                if (name.empty() && !scripts.empty())
-                {
-                    scripts.erase(scripts.begin());
-                }
-                else
-                {
-                    std::erase_if(
-                                  scripts, [&name](const StrongScript& script)
-                                  {
-                                      return script->GetName() == name;
-                                  });
-                }
-            }
-        }
+    void SetActive(bool active);
+    void SetCulled(bool culled);
+    void SetImGuiOpen(bool open);
 
-        const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
+    bool           GetActive() const;
+    bool           GetCulled() const;
+    bool           GetImGuiOpen() const;
+    eDefObjectType GetObjectType() const;
 
-        template <typename T>
-        boost::weak_ptr<T> GetComponent()
-        {
-            if constexpr (std::is_base_of_v<Component, T>)
-            {
-                if (!m_components_.contains(which_component<T>::value))
-                {
-                    return {};
-                }
+    WeakObject              GetParent() const;
+    WeakObject              GetChild(LocalActorID id) const;
+    std::vector<WeakObject> GetChildren() const;
 
-                const auto& comp = m_components_[which_component<T>::value];
+    void AddChild(const WeakObject& child);
+    bool DetachChild(LocalActorID id);
 
-                return boost::static_pointer_cast<T>(comp);
-            }
+  protected:
+    explicit Object(eDefObjectType type = DEF_OBJ_T_NONE)
+      : Actor(),
+        m_parent_id_(g_invalid_id),
+        m_type_(type),
+        m_active_(true),
+        m_culled_(true),
+        m_imgui_open_(false) { };
 
-            return {};
-        }
+  private:
+    SERIALIZER_ACCESS
+    friend class Scene;
+    friend class Manager::Graphics::ShadowManager;
 
-        template <typename T>
-        void RemoveComponent()
-        {
-            if constexpr (std::is_base_of_v<Component, T>)
-            {
-                if (m_components_.contains(which_component<T>::value))
-                {
-                    const auto comp = m_components_[which_component<T>::value];
+    virtual void OnCollisionEnter(const StrongCollider& other);
+    virtual void OnCollisionContinue(const StrongCollider& other);
+    virtual void OnCollisionExit(const StrongCollider& other);
 
-                    if (const auto scene = GetScene().lock())
-                    {
-                        scene->RemoveCacheComponent<T>(comp->template GetSharedPtr<T>());
-                    }
+  private:
+    LocalActorID              m_parent_id_;
+    std::vector<LocalActorID> m_children_;
+    eDefObjectType            m_type_;
+    bool                      m_active_ = true;
+    bool                      m_culled_ = true;
 
-                    if (m_components_[which_component<T>::value].empty())
-                    {
-                        m_components_.erase(which_component<T>::value);
-                    }
+    bool m_imgui_open_ = false;
 
-                    m_assigned_component_ids_.erase(comp->GetLocalID());
-                    m_cached_component_.erase(comp);
-                    m_components_[which_component<T>::value].erase(comp);
-                }
-            }
-        }
+    std::map<eComponentType, StrongComponent> m_components_;
 
-        template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
-        void DispatchComponentEvent(const boost::shared_ptr<T>& other);
-
-        void SetActive(bool active);
-        void SetCulled(bool culled);
-        void SetImGuiOpen(bool open);
-
-        bool GetActive() const;
-        bool GetCulled() const;
-        bool GetImGuiOpen() const;
-        eDefObjectType GetObjectType() const;
-
-        WeakObject GetParent() const;
-        WeakObject GetChild(const LocalActorID id) const;
-        std::vector<WeakObject> GetChildren() const;
-
-        void AddChild(const WeakObject& child);
-        bool DetachChild(const LocalActorID id);
-
-    protected:
-        explicit Object(eDefObjectType type = DEF_OBJ_T_NONE)
-        : Actor(),
-          m_parent_id_(g_invalid_id),
-          m_type_(type),
-          m_active_(true),
-          m_culled_(true),
-          m_imgui_open_(false) { };
-
-    private:
-        SERIALIZER_ACCESS
-        friend class Scene;
-        friend class Manager::Graphics::ShadowManager;
-
-        virtual void OnCollisionEnter(const StrongCollider& other);
-        virtual void OnCollisionContinue(const StrongCollider& other);
-        virtual void OnCollisionExit(const StrongCollider& other);
-
-    private:
-        LocalActorID              m_parent_id_;
-        std::vector<LocalActorID> m_children_;
-        eDefObjectType            m_type_;
-        bool                      m_active_ = true;
-        bool                      m_culled_ = true;
-
-        bool m_imgui_open_ = false;
-
-        std::map<eComponentType, StrongComponent> m_components_;
-
-        // Non-serialized
-        WeakObject                                         m_parent_;
-        std::map<LocalActorID, WeakObject>                 m_children_cache_;
-        std::set<LocalComponentID>                         m_assigned_component_ids_;
-        std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
-        std::map<eScriptType, std::vector<StrongScript>>   m_scripts_;
-
-    };
+    // Non-serialized
+    WeakObject                                         m_parent_;
+    std::map<LocalActorID, WeakObject>                 m_children_cache_;
+    std::set<LocalComponentID>                         m_assigned_component_ids_;
+    std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
+    std::map<eScriptType, std::vector<StrongScript>>   m_scripts_;
+  };
 } // namespace Engine::Abstract
 
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Object)

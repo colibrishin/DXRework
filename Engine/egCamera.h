@@ -4,50 +4,50 @@
 
 namespace Engine::Objects
 {
-    class Camera final : public Abstract::Object
-    {
-    public:
-        OBJECT_T(DEF_OBJ_T_CAMERA)
+  class Camera final : public Abstract::Object
+  {
+  public:
+    OBJECT_T(DEF_OBJ_T_CAMERA)
 
-        Camera()
-        : Object(DEF_OBJ_T_CAMERA),
-          m_b_orthogonal_(false),
-          m_b_fixed_up_(true) {}
+    Camera()
+      : Object(DEF_OBJ_T_CAMERA),
+        m_b_orthogonal_(false),
+        m_b_fixed_up_(true) {}
 
-        ~Camera() override = default;
+    ~Camera() override = default;
 
-        void Initialize() override;
-        void PreUpdate(const float& dt) override;
-        void Update(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void Render(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void FixedUpdate(const float& dt) override;
-        void OnDeserialized() override;
-        void OnImGui() override;
+    void Initialize() override;
+    void PreUpdate(const float& dt) override;
+    void Update(const float& dt) override;
+    void PreRender(const float& dt) override;
+    void Render(const float& dt) override;
+    void PostRender(const float& dt) override;
+    void FixedUpdate(const float& dt) override;
+    void OnDeserialized() override;
+    void OnImGui() override;
 
-        void SetOrthogonal(bool bOrthogonal);
-        void SetFixedUp(bool bFixedUp);
+    void SetOrthogonal(bool bOrthogonal);
+    void SetFixedUp(bool bFixedUp);
 
-        Matrix  GetViewMatrix() const;
-        Matrix  GetProjectionMatrix() const;
-        Matrix  GetWorldMatrix() const;
-        Vector2 GetWorldMousePosition();
-        bool    GetOrthogonal() const;
+    Matrix  GetViewMatrix() const;
+    Matrix  GetProjectionMatrix() const;
+    Matrix  GetWorldMatrix() const;
+    Vector2 GetWorldMousePosition();
+    bool    GetOrthogonal() const;
 
-    private:
-        SERIALIZER_ACCESS
+  private:
+    SERIALIZER_ACCESS
 
-        bool m_b_orthogonal_;
-        bool m_b_fixed_up_;
+    bool m_b_orthogonal_;
+    bool m_b_fixed_up_;
 
-        // Non-serialized
-        Matrix m_world_matrix_;
-        Matrix m_view_matrix_;
-        Matrix m_projection_matrix_;
+    // Non-serialized
+    Matrix m_world_matrix_;
+    Matrix m_view_matrix_;
+    Matrix m_projection_matrix_;
 
-        Graphics::CBs::PerspectiveCB m_wvp_buffer_;
-    };
+    Graphics::CBs::PerspectiveCB m_wvp_buffer_;
+  };
 } // namespace Engine::Objects
 
 BOOST_CLASS_EXPORT_KEY(Engine::Objects::Camera)

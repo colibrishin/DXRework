@@ -10,60 +10,38 @@
 #include "egShape.h"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL(
-                       Client::Object::Water,
-                       _ARTAG(_BSTSUPER(Engine::Objects::DelayedRenderObject)))
+SERIALIZER_ACCESS_IMPL
+(
+ Client::Object::Water,
+ _ARTAG(_BSTSUPER(Engine::Objects::DelayedRenderObject))
+)
 
 void Client::Object::Water::Initialize()
 {
-    SetName("Water");
-    const auto mr = AddComponent<Engine::Components::ModelRenderer>().lock();
-    const auto model = Engine::Resources::Shape::Get("CubeModel");
+  SetName("Water");
+  const auto mr    = AddComponent<Components::ModelRenderer>().lock();
+  const auto model = Resources::Shape::Get("CubeModel");
 
-    mr->SetShape(model);
-    mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
+  mr->SetShape(model);
+  mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
 
-    AddComponent<Engine::Components::Transform>();
-    const auto cldr = AddComponent<Engine::Components::Collider>().lock();
-    cldr->SetModel(model);
+  AddComponent<Components::Transform>();
+  const auto cldr = AddComponent<Components::Collider>().lock();
+  cldr->SetModel(model);
 }
 
-void Client::Object::Water::PreUpdate(const float& dt)
-{
-    DelayedRenderObject::PreUpdate(dt);
-}
+void Client::Object::Water::PreUpdate(const float& dt) { DelayedRenderObject::PreUpdate(dt); }
 
-void Client::Object::Water::Update(const float& dt)
-{
-    DelayedRenderObject::Update(dt);
-}
+void Client::Object::Water::Update(const float& dt) { DelayedRenderObject::Update(dt); }
 
-void Client::Object::Water::PreRender(const float& dt)
-{
-    DelayedRenderObject::PreRender(dt);
-}
+void Client::Object::Water::PreRender(const float& dt) { DelayedRenderObject::PreRender(dt); }
 
-void Client::Object::Water::Render(const float& dt)
-{
-    DelayedRenderObject::Render(dt);
-}
+void Client::Object::Water::Render(const float& dt) { DelayedRenderObject::Render(dt); }
 
-void Client::Object::Water::PostRender(const float& dt)
-{
-    DelayedRenderObject::PostRender(dt);
-}
+void Client::Object::Water::PostRender(const float& dt) { DelayedRenderObject::PostRender(dt); }
 
-void Client::Object::Water::FixedUpdate(const float& dt)
-{
-    DelayedRenderObject::FixedUpdate(dt);
-}
+void Client::Object::Water::FixedUpdate(const float& dt) { DelayedRenderObject::FixedUpdate(dt); }
 
-void Client::Object::Water::OnDeserialized()
-{
-    DelayedRenderObject::OnDeserialized();
-}
+void Client::Object::Water::OnDeserialized() { DelayedRenderObject::OnDeserialized(); }
 
-void Client::Object::Water::OnImGui()
-{
-    DelayedRenderObject::OnImGui();
-}
+void Client::Object::Water::OnImGui() { DelayedRenderObject::OnImGui(); }

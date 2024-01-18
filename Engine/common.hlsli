@@ -35,127 +35,118 @@ Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 
 StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
-StructuredBuffer<LightElement> bufLight : register(t65);
+StructuredBuffer<LightElement>         bufLight : register(t65);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
 cbuffer PerspectiveBuffer : register(b0)
 {
-    matrix g_camWorld;
-    matrix g_camView;
-    matrix g_camProj;
+  matrix g_camWorld;
+  matrix g_camView;
+  matrix g_camProj;
 
-    matrix g_camInvView;
-    matrix g_camInvProj;
+  matrix g_camInvView;
+  matrix g_camInvProj;
 
-    matrix g_camReflectView;
+  matrix g_camReflectView;
 };
 
 cbuffer TransformBuffer : register(b1)
 {
-    matrix g_world;
+  matrix g_world;
 };
 
 cbuffer GlobalStatusBuffer : register(b2)
 {
-    int4 g_lightCount : LIGHTCOUNT;
-    int4 g_targetShadow : SHADOWTARGET;
+  int4 g_lightCount : LIGHTCOUNT;
+  int4 g_targetShadow : SHADOWTARGET;
 }
 
 cbuffer MaterialBuffer : register(b3)
 {
-    BindFlag g_bindFlag : BINDFLAG;
+  BindFlag g_bindFlag : BINDFLAG;
 
-    float g_specularPower : SPECULARPOWER;
-    float g_reflectionTranslation : REFTRANSLATION;
-    float g_reflectionScale : REFSCALE;
-    float g_refractionScale : REFRACTSCALE;
+  float g_specularPower : SPECULARPOWER;
+  float g_reflectionTranslation : REFTRANSLATION;
+  float g_reflectionScale : REFSCALE;
+  float g_refractionScale : REFRACTSCALE;
 
-    float4 g_overrideColor : OVERRIDECOLOR;
-    float4 g_specularColor : SPECULARCOLOR;
-    float4 g_clipPlane : CLIPPLANE;
+  float4 g_overrideColor : OVERRIDECOLOR;
+  float4 g_specularColor : SPECULARCOLOR;
+  float4 g_clipPlane : CLIPPLANE;
 }
 
-float4 GetWorldPosition(in matrix mat)
-{
-    return float4(mat._41, mat._42, mat._43, mat._44);
-}
+float4 GetWorldPosition(in matrix mat) { return float4(mat._41, mat._42, mat._43, mat._44); }
 
 float GetShadowFactorImpl(
-    int    lightIndex, int cascadeIndex,
-    float4 cascadeLocalPosition)
+  int    lightIndex, int cascadeIndex,
+  float4 cascadeLocalPosition
+)
 {
-    float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
-    projCoords.x      = projCoords.x * 0.5 + 0.5f;
-    projCoords.y      = -projCoords.y * 0.5 + 0.5f;
+  float4 projCoords = cascadeLocalPosition / cascadeLocalPosition.w;
+  projCoords.x      = projCoords.x * 0.5 + 0.5f;
+  projCoords.y      = -projCoords.y * 0.5 + 0.5f;
 
-    if (projCoords.z > 1.0)
+  if (projCoords.z > 1.0) { return 0.f; }
+
+  float currentDepth = projCoords.z;
+  float bias         = 0.01f;
+  float shadow       = 0.0;
+
+  float3 samplePos = float3(projCoords.xyz);
+  samplePos.z      = cascadeIndex;
+
+  Texture2DArray shadowMap = texShadowMap[lightIndex];
+
+  [unroll] for (int x = -1; x <= 1; ++x)
+  {
+    [unroll] for (int y = -1; y <= 1; ++y)
     {
-        return 0.f;
+      shadow += shadowMap.SampleCmpLevelZero
+        (
+         PSShadowSampler, samplePos,
+         currentDepth - bias, int2(x, y)
+        );
     }
+  }
 
-    float currentDepth = projCoords.z;
-    float bias         = 0.01f;
-    float shadow       = 0.0;
-
-    float3 samplePos = float3(projCoords.xyz);
-    samplePos.z      = cascadeIndex;
-
-    Texture2DArray shadowMap = texShadowMap[lightIndex];
-
-    [unroll] for (int x = -1; x <= 1; ++x)
-    {
-        [unroll] for (int y = -1; y <= 1; ++y)
-        {
-            shadow += shadowMap.SampleCmpLevelZero(
-                                                   PSShadowSampler, samplePos,
-                                                   currentDepth - bias, int2(x, y));
-        }
-    }
-
-    shadow /= 9.0f;
-    return shadow;
+  shadow /= 9.0f;
+  return shadow;
 }
 
 void GetShadowFactor(
-    in float4 world_position, in float z_clip,
-    out float shadowFactor[MAX_NUM_LIGHTS])
+  in float4 world_position, in float z_clip,
+  out float shadowFactor[MAX_NUM_LIGHTS]
+)
 {
-    int i = 0;
-    int j = 0;
+  int i = 0;
+  int j = 0;
 
-    for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+  for (i = 0; i < MAX_NUM_LIGHTS; ++i) { shadowFactor[i] = 1.0f; }
+
+  [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+  {
+    if (i > g_lightCount.x) { break; }
+
+    [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
     {
-        shadowFactor[i] = 1.0f;
+      const matrix vp = mul
+        (
+         bufLightVP[i].g_shadowView[j],
+         bufLightVP[i].g_shadowProj[j]
+        );
+      const float4 position = mul(world_position, vp);
+
+      if (z_clip <= bufLightVP[i].g_shadowZClip[j].z)
+      {
+        shadowFactor[i] = GetShadowFactorImpl(i, j, position);
+        break;
+      }
     }
-
-    [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
-    {
-        if (i > g_lightCount.x)
-        {
-            break;
-        }
-
-        [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
-        {
-            const matrix vp = mul(
-                                  bufLightVP[i].g_shadowView[j],
-                                  bufLightVP[i].g_shadowProj[j]);
-            const float4 position = mul(world_position, vp);
-
-            if (z_clip <= bufLightVP[i].g_shadowZClip[j].z)
-            {
-                shadowFactor[i] = GetShadowFactorImpl(i, j, position);
-                break;
-            }
-        }
-    }
+  }
 }
 
-float4 LerpShadow(in float4 shadowFactor)
-{
-    return lerp(float4(0, 0, 0, 1), float4(1, 1, 1, 1), shadowFactor);
-}
+float4 LerpShadow(in float4 shadowFactor) { return lerp(float4(0, 0, 0, 1), float4(1, 1, 1, 1), shadowFactor); }
 
 #endif // __COMMON_HLSLI__
