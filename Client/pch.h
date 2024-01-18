@@ -21,19 +21,18 @@
 #include <vector>
 #define WIN32_LEAN_AND_MEAN
 
-#include <wrl/client.h>
 #include <d2d1.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <dxcapi.h>
 #include <dxgi1_3.h>
+#include <wrl/client.h>
 #include "framework.h"
 
 #include <boost/smart_ptr.hpp>
 #define _USE_MATH_DEFINES
 
-#include "SimpleMath.h"
 #include "BufferHelpers.h"
 #include "CommonStates.h"
 #include "DDSTextureLoader.h"
@@ -48,6 +47,7 @@
 #include "PostProcess.h"
 #include "PrimitiveBatch.h"
 #include "ScreenGrab.h"
+#include "SimpleMath.h"
 #include "SimpleMath.h"
 #include "SpriteBatch.h"
 #include "SpriteFont.h"
@@ -65,7 +65,7 @@ using namespace DirectX;
 
 namespace Client
 {
-    using namespace Engine;
+  using namespace Engine;
 }
 
 #endif // PCH_H

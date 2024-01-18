@@ -4,32 +4,32 @@
 
 namespace Engine::Abstract
 {
-    class Actor : public Renderable
-    {
-    public:
-        ~Actor() override = default;
+  class Actor : public Renderable
+  {
+  public:
+    ~Actor() override = default;
 
-        eLayerType GetLayer() const;
-        WeakScene  GetScene() const;
-        LocalActorID    GetLocalID() const;
+    eLayerType   GetLayer() const;
+    WeakScene    GetScene() const;
+    LocalActorID GetLocalID() const;
 
-        void OnImGui() override;
+    void OnImGui() override;
 
-    protected:
-        explicit Actor();
+  protected:
+    explicit Actor();
 
-    private:
-        SERIALIZER_ACCESS
-        friend class Scene;
+  private:
+    SERIALIZER_ACCESS
+    friend class Scene;
 
-        void SetLayer(eLayerType layer);
-        void SetScene(const WeakScene& scene);
-        void SetLocalID(LocalActorID id);
+    void SetLayer(eLayerType layer);
+    void SetScene(const WeakScene& scene);
+    void SetLocalID(LocalActorID id);
 
-        WeakScene  m_assigned_scene_;
-        eLayerType m_layer_;
-        LocalActorID    m_local_id_;
-    };
+    WeakScene    m_assigned_scene_;
+    eLayerType   m_layer_;
+    LocalActorID m_local_id_;
+  };
 } // namespace Engine::Abstract
 
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Actor)

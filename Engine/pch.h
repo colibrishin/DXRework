@@ -16,8 +16,8 @@
 #include "imgui_impl_win32.h"
 
 // add headers that you want to pre-compile here
-#include <array>
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <exception>
 #include <execution>

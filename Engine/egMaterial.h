@@ -3,90 +3,92 @@
 
 namespace Engine::Resources
 {
-    class Material final : public Abstract::Resource
+  class Material final : public Abstract::Resource
+  {
+  public:
+    RESOURCE_T(RES_T_MTR);
+
+    Material(const std::filesystem::path& path);
+    void PreUpdate(const float& dt) override;
+    void Update(const float& dt) override;
+    void PostUpdate(const float& dt) override;
+    void FixedUpdate(const float& dt) override;
+    void PreRender(const float& dt) override;
+    void Render(const float& dt) override;
+    void PostRender(const float& dt) override;
+    void OnDeserialized() override;
+
+    void IgnoreAnimation(bool ignore) noexcept;
+
+    template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<
+                Resource, T>>>
+    void SetResource(const std::string& name)
     {
-    public:
-        RESOURCE_T(RES_T_MTR);
+      const auto search = GetResourceManager().GetResource<T>(name);
 
-        Material(const std::filesystem::path& path);
-        void PreUpdate(const float& dt) override;
-        void Update(const float& dt) override;
-        void PostUpdate(const float& dt) override;
-        void FixedUpdate(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void Render(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void OnDeserialized() override;
+      if (search.expired()) { return; }
 
-        void IgnoreAnimation(bool ignore) noexcept;
+      static_assert
+        (
+         which_resource<T>::value != RES_T_MESH || which_resource<T>::value != RES_T_SHAPE,
+         "Define shape in the ModelRenderer"
+        );
 
-        template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
-        void SetResource(const std::string& name)
-        {
-            const auto search = GetResourceManager().GetResource<T>(name);
+      if constexpr (which_resource<T>::value == RES_T_SHADER)
+      {
+        m_shaders_.emplace_back(name);
+        m_shaders_loaded_.emplace_back(search.lock());
+        return;
+      }
 
-            if (search.expired()) return;
+      m_resources_[which_resource<T>::value].push_back(name);
+      m_resources_loaded_[which_resource<T>::value].push_back(search.lock());
+    }
 
-            static_assert(which_resource<T>::value != RES_T_MESH || which_resource<T>::value != RES_T_SHAPE,
-                          "Define shape in the ModelRenderer");
+    void SetProperties(CBs::MaterialCB&& material_cb) noexcept;
 
-            if constexpr (which_resource<T>::value == RES_T_SHADER)
-            {
-                m_shaders_.emplace_back(name);
-                m_shaders_loaded_.emplace_back(search.lock());
-                return;
-            }
+    template <typename T>
+    [[nodiscard]] auto GetResources() const
+    {
+      if (!m_resources_loaded_.contains(which_resource<T>::value)) { return std::vector<StrongResource>{}; }
+      return m_resources_loaded_.at(which_resource<T>::value);
+    }
 
-            m_resources_[which_resource<T>::value].push_back(name);
-            m_resources_loaded_[which_resource<T>::value].push_back(search.lock());
-        }
+    template <typename T>
+    [[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name) const
+    {
+      if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
+      if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
 
-        void SetProperties(CBs::MaterialCB&& material_cb) noexcept;
+      const auto it = std::ranges::find(m_resources_.at(which_resource<T>::value), name);
 
-        template <typename T>
-        [[nodiscard]] auto GetResources() const
-        {
-            if (!m_resources_loaded_.contains(which_resource<T>::value)) 
-                return std::vector<StrongResource>{};
-            return m_resources_loaded_.at(which_resource<T>::value);
-        }
+      if (it == m_resources_.at(which_resource<T>::value).end()) { return {}; }
 
-        template <typename T>
-        [[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name) const
-        {
-            if (!m_resources_loaded_.contains(which_resource<T>::value)) return {};
-            if (m_resources_loaded_.at(which_resource<T>::value).empty()) return {};
+      const auto idx = std::distance(m_resources_.at(which_resource<T>::value).begin(), it);
+      return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
+    }
 
-            const auto it = std::ranges::find(m_resources_.at(which_resource<T>::value), name);
+    void SetTextureSlot(const std::string& name, UINT slot);
 
-            if (it == m_resources_.at(which_resource<T>::value).end()) return {};
+    RESOURCE_SELF_INFER_GETTER(Material)
+    RESOURCE_SELF_INFER_CREATE(Material)
 
-            const auto idx = std::distance(m_resources_.at(which_resource<T>::value).begin(), it);
-            return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
-        }
+  protected:
+    SERIALIZER_ACCESS
 
-        void SetTextureSlot(const std::string& name, const UINT slot);
+    Material();
+    void Load_INTERNAL() override;
+    void Unload_INTERNAL() override;
 
-        RESOURCE_SELF_INFER_GETTER(Material)
-        RESOURCE_SELF_INFER_CREATE(Material)
+  private:
+    CBs::MaterialCB m_material_cb_;
+    bool            m_no_anim_flag_;
 
-    protected:
-        SERIALIZER_ACCESS
+    std::vector<std::string>                                m_shaders_;
+    std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
-        Material();
-        void Load_INTERNAL() override;
-        void Unload_INTERNAL() override;
-
-    private:
-        CBs::MaterialCB m_material_cb_;
-        bool m_no_anim_flag_;
-
-        std::vector<std::string> m_shaders_;
-        std::map<const eResourceType, std::vector<std::string>> m_resources_;
-
-        // non-serialized
-        std::vector<StrongShader> m_shaders_loaded_;
-        std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
-
-    };
+    // non-serialized
+    std::vector<StrongShader>                                  m_shaders_loaded_;
+    std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
+  };
 }

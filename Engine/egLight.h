@@ -8,35 +8,32 @@
 
 namespace Engine::Objects
 {
-    class Light final : public Abstract::Object
-    {
-    public:
-        OBJECT_T(DEF_OBJ_T_LIGHT)
+  class Light final : public Abstract::Object
+  {
+  public:
+    OBJECT_T(DEF_OBJ_T_LIGHT)
 
-        Light();
-        ~Light() override;
+    Light();
+    ~Light() override;
 
-        void SetColor(Vector4 color);
+    void SetColor(Vector4 color);
 
-        void Initialize() override;
-        void PreUpdate(const float& dt) override;
-        void Update(const float& dt) override;
-        void PreRender(const float& dt) override;
-        void Render(const float& dt) override;
-        void PostRender(const float& dt) override;
-        void PostUpdate(const float& dt) override;
+    void Initialize() override;
+    void PreUpdate(const float& dt) override;
+    void Update(const float& dt) override;
+    void PreRender(const float& dt) override;
+    void Render(const float& dt) override;
+    void PostRender(const float& dt) override;
+    void PostUpdate(const float& dt) override;
 
-        void OnDeserialized() override;
+    void OnDeserialized() override;
 
-        Color GetColor() const
-        {
-            return m_color_;
-        }
+    Color GetColor() const { return m_color_; }
 
-    private:
-        SERIALIZER_ACCESS
-        Color m_color_;
-    };
+  private:
+    SERIALIZER_ACCESS
+    Color m_color_;
+  };
 } // namespace Engine::Objects
 
 BOOST_CLASS_EXPORT_KEY(Engine::Objects::Light)

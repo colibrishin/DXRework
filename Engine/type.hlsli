@@ -6,48 +6,48 @@
 
 struct BindFlag
 {
-    int4 texFlag[MAX_NUM_SLOTS];
-    int4 texArrayFlag[MAX_NUM_SLOTS];
-    int4 texCubeFlag[MAX_NUM_SLOTS];
-    int4 boneFlag;
+  int4 texFlag[MAX_NUM_SLOTS];
+  int4 texArrayFlag[MAX_NUM_SLOTS];
+  int4 texCubeFlag[MAX_NUM_SLOTS];
+  int4 boneFlag;
 };
 
 struct CascadeShadowElement
 {
-    matrix g_shadowView[MAX_NUM_CASCADES] : SHADOWVIEW;
-    matrix g_shadowProj[MAX_NUM_CASCADES] : SHADOWPROJ;
-    float4 g_shadowZClip[MAX_NUM_CASCADES] : SHADOWZCLIP;
+  matrix g_shadowView[MAX_NUM_CASCADES] : SHADOWVIEW;
+  matrix g_shadowProj[MAX_NUM_CASCADES] : SHADOWPROJ;
+  float4 g_shadowZClip[MAX_NUM_CASCADES] : SHADOWZCLIP;
 };
 
 struct LightElement
 {
-    matrix world : LIGHTWORLD;
-    float4 color : LIGHTCOLOR;
+  matrix world : LIGHTWORLD;
+  float4 color : LIGHTCOLOR;
 };
 
 struct BoneTransformElement
 {
-    matrix transform : BONETRANSFORM;
+  matrix transform : BONETRANSFORM;
 };
 
 struct VertexBoneElement
 {
-    int boneIndex[MAX_BONE_COUNT] : BONEINDEX;
-    float boneWeight[MAX_BONE_COUNT] : BONEWEIGHT;
-    uint bone_count : BONECOUNT;
+  int   boneIndex[MAX_BONE_COUNT] : BONEINDEX;
+  float boneWeight[MAX_BONE_COUNT] : BONEWEIGHT;
+  uint  bone_count : BONECOUNT;
 };
 
 struct VertexInputType
 {
-    float3 position : POSITION;
-    float4 color : COLOR;
-    float2 tex : TEXCOORD0;
+  float3 position : POSITION;
+  float4 color : COLOR;
+  float2 tex : TEXCOORD0;
 
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 binormal : BINOARML;
+  float3 normal : NORMAL;
+  float3 tangent : TANGENT;
+  float3 binormal : BINOARML;
 
-    VertexBoneElement bone_element : BONE;
+  VertexBoneElement bone_element : BONE;
 };
 
 #endif // __TYPE_HLSLI__

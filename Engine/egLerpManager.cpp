@@ -7,85 +7,73 @@
 
 namespace Engine::Manager::Physics
 {
-    LerpManager::LerpManager(SINGLETON_LOCK_TOKEN)
+  LerpManager::LerpManager(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_elapsedTime_(g_epsilon) {}
 
-    void LerpManager::Initialize()
+  void LerpManager::Initialize() { m_elapsedTime_ = g_epsilon; }
+
+  void LerpManager::Update(const float& dt)
+  {
+    if (m_elapsedTime_ >= g_lerp) { m_elapsedTime_ = g_epsilon; }
+
+    if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
-        m_elapsedTime_ = g_epsilon;
-    }
+      const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
-    void LerpManager::Update(const float& dt)
-    {
-        if (m_elapsedTime_ >= g_lerp)
+      for (const auto& rb : rbs)
+      {
+        if (const auto rigidbody = rb.lock())
         {
-            m_elapsedTime_ = g_epsilon;
-        }
+          const auto tr = rigidbody->GetOwner()
+                                   .lock()
+                                   ->GetComponent<Components::Transform>()
+                                   .lock();
 
-        if (const auto scene = GetSceneManager().GetActiveScene().lock())
-        {
-            const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
-
-            for (const auto& rb : rbs)
+          if (tr)
+          {
+            if (!tr->IsTicked())
             {
-                if (const auto rigidbody = rb.lock())
-                {
-                    const auto tr = rigidbody->GetOwner()
-                                             .lock()
-                                             ->GetComponent<Components::Transform>()
-                                             .lock();
-
-                    if (tr)
-                    {
-                        if (!tr->IsTicked())
-                        {
-                            tr->m_world_previous_position_ = tr->GetWorldPosition();
-                            tr->m_previous_position_ = tr->GetLocalPosition();
-                        }
-
-                        const auto previous = tr->GetLocalPreviousPosition();
-                        const auto current  = tr->GetLocalPosition();
-                        const auto lerp     = Vector3::Lerp(previous, current, GetLerpFactor());
-                        Vector3CheckNanException(lerp);
-
-                        tr->SetLocalPosition(lerp);
-                    }
-                }
+              tr->m_world_previous_position_ = tr->GetWorldPosition();
+              tr->m_previous_position_       = tr->GetLocalPosition();
             }
+
+            const auto previous = tr->GetLocalPreviousPosition();
+            const auto current  = tr->GetLocalPosition();
+            const auto lerp     = Vector3::Lerp(previous, current, GetLerpFactor());
+            Vector3CheckNanException(lerp);
+
+            tr->SetLocalPosition(lerp);
+          }
         }
-
-        m_elapsedTime_ += dt;
+      }
     }
 
-    void LerpManager::Reset()
-    {
-        m_elapsedTime_ = g_epsilon;
-    }
+    m_elapsedTime_ += dt;
+  }
 
-    void LerpManager::PreUpdate(const float& dt) {}
+  void LerpManager::Reset() { m_elapsedTime_ = g_epsilon; }
 
-    void LerpManager::PreRender(const float& dt) {}
+  void LerpManager::PreUpdate(const float& dt) {}
 
-    void LerpManager::Render(const float& dt) {}
+  void LerpManager::PreRender(const float& dt) {}
 
-    void LerpManager::PostRender(const float& dt) {}
+  void LerpManager::Render(const float& dt) {}
 
-    void LerpManager::FixedUpdate(const float& dt) {}
+  void LerpManager::PostRender(const float& dt) {}
 
-    void LerpManager::PostUpdate(const float& dt) {}
+  void LerpManager::FixedUpdate(const float& dt) {}
 
-    float LerpManager::GetLerpFactor() const
-    {
-        auto factor = (static_cast<float>(m_elapsedTime_) /
-                       static_cast<float>(g_lerp));
+  void LerpManager::PostUpdate(const float& dt) {}
 
-        if (!std::isfinite(factor))
-        {
-            factor = g_epsilon;
-        }
+  float LerpManager::GetLerpFactor() const
+  {
+    auto factor = (static_cast<float>(m_elapsedTime_) /
+                   static_cast<float>(g_lerp));
 
-        factor = std::clamp(factor, g_epsilon, 1.0f);
-        return factor;
-    }
+    if (!std::isfinite(factor)) { factor = g_epsilon; }
+
+    factor = std::clamp(factor, g_epsilon, 1.0f);
+    return factor;
+  }
 } // namespace Engine::Manager::Physics

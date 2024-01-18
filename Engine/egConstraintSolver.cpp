@@ -5,193 +5,175 @@
 #include "egCollisionDetector.h"
 #include "egGlobal.h"
 #include "egObject.hpp"
+#include "egRigidbody.h"
 #include "egSceneManager.hpp"
 #include "egTransform.h"
-#include "egRigidbody.h"
 
 namespace Engine::Manager::Physics
 {
-    void ConstraintSolver::Initialize() {}
+  void ConstraintSolver::Initialize() {}
 
-    void ConstraintSolver::PreUpdate(const float& dt) {}
+  void ConstraintSolver::PreUpdate(const float& dt) {}
 
-    void ConstraintSolver::Update(const float& dt) {}
+  void ConstraintSolver::Update(const float& dt) {}
 
-    void ConstraintSolver::PreRender(const float& dt) {}
+  void ConstraintSolver::PreRender(const float& dt) {}
 
-    void ConstraintSolver::Render(const float& dt) {}
+  void ConstraintSolver::Render(const float& dt) {}
 
-    void ConstraintSolver::PostRender(const float& dt) {}
+  void ConstraintSolver::PostRender(const float& dt) {}
 
-    void ConstraintSolver::FixedUpdate(const float& dt)
+  void ConstraintSolver::FixedUpdate(const float& dt)
+  {
+    auto& infos = GetCollisionDetector().GetCollisionInfo();
+
+    static tbb::affinity_partitioner ap;
+
+    for (const auto& info : infos)
     {
-        auto& infos = GetCollisionDetector().GetCollisionInfo();
-
-        static tbb::affinity_partitioner ap;
-
-        for (const auto& info : infos)
-        {
-            if (info.speculative)
-            {
-                ResolveSpeculation(info.lhs, info.rhs);
-            }
-            if (info.collision)
-            {
-                ResolveCollision(info.lhs, info.rhs);
-            }
-        }
-
-        infos.clear();
-        m_collision_resolved_set_.clear();
+      if (info.speculative) { ResolveSpeculation(info.lhs, info.rhs); }
+      if (info.collision) { ResolveCollision(info.lhs, info.rhs); }
     }
 
-    void ConstraintSolver::PostUpdate(const float& dt) {}
+    infos.clear();
+    m_collision_resolved_set_.clear();
+  }
 
-    void ConstraintSolver::ResolveCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  void ConstraintSolver::PostUpdate(const float& dt) {}
+
+  void ConstraintSolver::ResolveCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  {
+    auto lhs = p_lhs;
+    auto rhs = p_rhs;
+
+    auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
+    auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+
+    auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
+    auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
+
+    if (rb && rb_other)
     {
-        auto lhs = p_lhs;
-        auto rhs = p_rhs;
+      if (m_collision_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()})) { return; }
 
-        auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+      m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
+      m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
 
-        auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-        auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
+      if (rb->IsFixed() && rb_other->IsFixed()) { return; }
 
-        if (rb && rb_other)
-        {
-            if (m_collision_resolved_set_.contains({lhs.lock()->GetID(), rhs.lock()->GetID()}))
-            {
-                return;
-            }
+      auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
+      auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
 
-            m_collision_resolved_set_.insert({lhs.lock()->GetID(), rhs.lock()->GetID()});
-            m_collision_resolved_set_.insert({rhs.lock()->GetID(), lhs.lock()->GetID()});
+      if (rb->IsFixed())
+      {
+        std::swap(rb, rb_other);
+        std::swap(tr, tr_other);
+        std::swap(lhs, rhs);
+        std::swap(cl, cl_other);
+      }
 
-            if (rb->IsFixed() && rb_other->IsFixed())
-            {
-                return;
-            }
+      if (!cl || !cl_other) { return; }
 
-            auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
-            auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
+      Vector3 linear_vel;
+      Vector3 angular_vel;
 
-            if (rb->IsFixed())
-            {
-                std::swap(rb, rb_other);
-                std::swap(tr, tr_other);
-                std::swap(lhs, rhs);
-                std::swap(cl, cl_other);
-            }
+      Vector3 other_linear_vel;
+      Vector3 other_angular_vel;
 
-            if (!cl || !cl_other)
-            {
-                return;
-            }
+      const Vector3 pos       = tr->GetWorldPosition();
+      const Vector3 other_pos = tr_other->GetWorldPosition();
 
-            Vector3 linear_vel;
-            Vector3 angular_vel;
+      Vector3 lhs_normal;
+      float   lhs_pen;
 
-            Vector3 other_linear_vel;
-            Vector3 other_angular_vel;
+      if (!cl->GetPenetration(*cl_other, lhs_normal, lhs_pen)) { return; }
 
-            const Vector3 pos       = tr->GetWorldPosition();
-            const Vector3 other_pos = tr_other->GetWorldPosition();
+      // Gets the vector from center to collision point.
+      const auto lbnd = cl->GetBounding();
+      const auto rbnd = cl_other->GetBounding();
 
-            Vector3 lhs_normal;
-            float   lhs_pen;
+      float distance = 0;
+      if (!lbnd.TestRay(rbnd, lhs_normal, distance)) { return; }
 
-            if (!cl->GetPenetration(*cl_other, lhs_normal, lhs_pen))
-            {
-                return;
-            }
+      Vector3 collision_point = pos - (lhs_normal * distance);
+      Vector3 lhs_weight_pen;
+      Vector3 rhs_weight_pen;
 
-            // Gets the vector from center to collision point.
-            const auto lbnd = cl->GetBounding();
-            const auto rbnd = cl_other->GetBounding();
+      Engine::Physics::EvalImpulse
+        (
+         pos, other_pos, collision_point, lhs_pen, lhs_normal, cl->GetInverseMass(),
+         cl_other->GetInverseMass(), rb->GetAngularMomentum(),
+         rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
+         rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
+         cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
+         other_angular_vel, lhs_weight_pen, rhs_weight_pen
+        );
 
-            float distance = 0;
-            if (!lbnd.TestRay(rbnd, lhs_normal, distance))
-            {
-                return;
-            }
+      // Fast collision penalty
+      const auto cps     = static_cast<float>(cl->GetCPS(p_rhs.lock()->GetID()));
+      const auto fps     = static_cast<float>(GetApplication().GetFPS());
+      auto       cps_val = cps / fps;
 
-            Vector3 collision_point = pos - (lhs_normal * distance);
-            Vector3 lhs_weight_pen;
-            Vector3 rhs_weight_pen;
+      // Not collided object is given to solver.
+      if (!isfinite(cps))
+      {
+        cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
+      }
 
-            Engine::Physics::EvalImpulse(
-                                         pos, other_pos, collision_point, lhs_pen, lhs_normal, cl->GetInverseMass(),
-                                         cl_other->GetInverseMass(), rb->GetAngularMomentum(),
-                                         rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
-                                         rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
-                                         cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
-                                         other_angular_vel, lhs_weight_pen, rhs_weight_pen);
+      // Accumulated collision penalty
+      const auto collision_count = cl->GetCollisionCount(p_rhs.lock()->GetID());
+      const auto log_count       = std::clamp
+        (std::powf(2, collision_count), 2.f, static_cast<float>(g_energy_reduction_ceil));
+      const auto penalty     = log_count / static_cast<float>(g_energy_reduction_ceil);
+      const auto penalty_sum = std::clamp(cps_val + penalty, 0.f, 1.f);
+      const auto reduction   = 1.0f - penalty_sum;
 
-            // Fast collision penalty
-            const auto cps     = static_cast<float>(cl->GetCPS(p_rhs.lock()->GetID()));
-            const auto fps     = static_cast<float>(GetApplication().GetFPS());
-            auto       cps_val = cps / fps;
+      if (!rb->IsFixed())
+      {
+        tr->SetWorldPosition(pos + lhs_weight_pen);
+        rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
+        rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
+      }
 
-            // Not collided object is given to solver.
-            if (!isfinite(cps)) cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
-
-            // Accumulated collision penalty
-            const auto collision_count = cl->GetCollisionCount(p_rhs.lock()->GetID());
-            const auto log_count       = std::clamp(std::powf(2, collision_count), 2.f, (float)g_energy_reduction_ceil);
-            const auto penalty         = log_count / (float)g_energy_reduction_ceil;
-            const auto penalty_sum     = std::clamp(cps_val + penalty, 0.f, 1.f);
-            const auto reduction       = 1.0f - penalty_sum;
-
-            if (!rb->IsFixed())
-            {
-                tr->SetWorldPosition(pos + lhs_weight_pen);
-                rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
-                rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
-            }
-
-            if (!rb_other->IsFixed())
-            {
-                tr_other->SetWorldPosition(pos + rhs_weight_pen);
-                rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (linear_vel * reduction));
-                rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
-            }
-        }
+      if (!rb_other->IsFixed())
+      {
+        tr_other->SetWorldPosition(pos + rhs_weight_pen);
+        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (linear_vel * reduction));
+        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
+      }
     }
+  }
 
-    void ConstraintSolver::ResolveSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
-    {
-        const auto lhs = p_lhs.lock();
-        const auto rhs = p_rhs.lock();
+  void ConstraintSolver::ResolveSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  {
+    const auto lhs = p_lhs.lock();
+    const auto rhs = p_rhs.lock();
 
-        const auto ltr = lhs->GetComponent<Components::Transform>().lock();
-        const auto rtr = rhs->GetComponent<Components::Transform>().lock();
+    const auto ltr = lhs->GetComponent<Components::Transform>().lock();
+    const auto rtr = rhs->GetComponent<Components::Transform>().lock();
 
-        const auto lcl = lhs->GetComponent<Components::Collider>().lock();
-        const auto rcl = rhs->GetComponent<Components::Collider>().lock();
+    const auto lcl = lhs->GetComponent<Components::Collider>().lock();
+    const auto rcl = rhs->GetComponent<Components::Collider>().lock();
 
-        const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
+    const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
 
-        // Move object back to the previous frame position.
-        const auto previous_position = ltr->GetWorldPreviousPosition();
-        ltr->SetWorldPosition(previous_position);
+    // Move object back to the previous frame position.
+    const auto previous_position = ltr->GetWorldPreviousPosition();
+    ltr->SetWorldPosition(previous_position);
 
-        const auto lbnd = lcl->GetBounding();
-        const auto rbnd = rcl->GetBounding();
+    const auto lbnd = lcl->GetBounding();
+    const auto rbnd = rcl->GetBounding();
 
-        const auto vel = lrb->GetLinearMomentum();
-        Vector3 dir;
-        vel.Normalize(dir);
+    const auto vel = lrb->GetLinearMomentum();
+    Vector3    dir;
+    vel.Normalize(dir);
 
-        float distance = 0.f;
-        // Ray test sanity check, and re-evaluate the distance.
-        if (!lbnd.TestRay(rbnd, dir, distance))
-        {
-            return;
-        }
+    float distance = 0.f;
+    // Ray test sanity check, and re-evaluate the distance.
+    if (!lbnd.TestRay(rbnd, dir, distance)) { return; }
 
-        // Move object to the new position.
-        const auto new_pos = previous_position + (dir * distance);
-        ltr->SetWorldPosition(new_pos);
-    }
+    // Move object to the new position.
+    const auto new_pos = previous_position + (dir * distance);
+    ltr->SetWorldPosition(new_pos);
+  }
 } // namespace Engine::Manager::Physics

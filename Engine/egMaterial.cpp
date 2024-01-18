@@ -1,186 +1,168 @@
 #include "pch.h"
 #include "egMaterial.h"
 
+#include "egDXCommon.h"
+#include "egDXType.h"
 #include "egTexture.h"
 #include "egType.h"
-#include "egDXType.h"
-#include "egDXCommon.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Resources::Material,
-                       _ARTAG(_BSTSUPER(Resource))
-                       _ARTAG(m_material_cb_)
-                       _ARTAG(m_shaders_)
-                       _ARTAG(m_resources_))
+SERIALIZER_ACCESS_IMPL
+(
+ Engine::Resources::Material,
+ _ARTAG(_BSTSUPER(Resource))
+ _ARTAG(m_material_cb_)
+ _ARTAG(m_shaders_)
+ _ARTAG(m_resources_)
+)
 
 namespace Engine::Resources
 {
-    Material::Material(const std::filesystem::path& path)
+  Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
       m_material_cb_(),
       m_no_anim_flag_(false)
+  {
+    m_material_cb_.specular_power         = 100.0f;
+    m_material_cb_.specular_color         = DirectX::Colors::White;
+    m_material_cb_.reflection_scale       = 0.15f;
+    m_material_cb_.refraction_scale       = 0.15f;
+    m_material_cb_.clip_plane             = Vector4::Zero;
+    m_material_cb_.reflection_translation = 0.5f;
+  }
+
+  void Material::PreUpdate(const float& dt) {}
+
+  void Material::Update(const float& dt) {}
+
+  void Material::PostUpdate(const float& dt) {}
+
+  void Material::FixedUpdate(const float& dt) {}
+
+  void Material::PreRender(const float& dt)
+  {
+    for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+
+    m_material_cb_.flags = {};
+
+    for (const auto& [type, resources] : m_resources_loaded_)
     {
-        m_material_cb_.specular_power         = 100.0f;
-        m_material_cb_.specular_color         = DirectX::Colors::White;
-        m_material_cb_.reflection_scale       = 0.15f;
-        m_material_cb_.refraction_scale       = 0.15f;
-        m_material_cb_.clip_plane             = Vector4::Zero;
-        m_material_cb_.reflection_translation = 0.5f;
-    }
+      // No need to render the all animation.
+      if (type == RES_T_BONE_ANIM && !m_no_anim_flag_)
+      {
+        m_material_cb_.flags.bone = 1;
+        continue;
+      }
 
-    void Material::PreUpdate(const float& dt) {}
+      for (auto it = resources.begin(); it != resources.end(); ++it)
+      {
+        const auto res = *it;
 
-    void Material::Update(const float& dt) {}
-
-    void Material::PostUpdate(const float& dt) {}
-
-    void Material::FixedUpdate(const float& dt) {}
-
-    void Material::PreRender(const float& dt)
-    {
-        for (const auto& shd : m_shaders_loaded_)
+        if (type == RES_T_TEX)
         {
-	        shd->PreRender(dt);
+          const UINT idx                = std::distance(resources.begin(), it);
+          m_material_cb_.flags.tex[idx] = 1;
         }
 
-        m_material_cb_.flags = {};
+        res->PreRender(dt);
+      }
+    }
 
-        for (const auto& [type, resources] : m_resources_loaded_)
+    GetRenderPipeline().SetMaterial(m_material_cb_);
+  }
+
+  void Material::Render(const float& dt)
+  {
+    for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); }
+
+    for (const auto& [type, resources] : m_resources_loaded_)
+    {
+      // No need to render the all animation.
+      if (type == RES_T_BONE_ANIM) { continue; }
+
+      for (auto it = resources.begin(); it != resources.end(); ++it)
+      {
+        const auto res = *it;
+
+        if (type == RES_T_TEX)
         {
-            // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM && !m_no_anim_flag_)
-            {
-                m_material_cb_.flags.bone = 1;
-                continue;
-            }
-
-            for (auto it = resources.begin(); it != resources.end(); ++it)
-            {
-                const auto res = *it;
-
-                if (type == RES_T_TEX)
-                {
-                    const UINT idx = std::distance(resources.begin(), it);
-                    m_material_cb_.flags.tex[idx] = 1;
-                }
-
-                res->PreRender(dt);
-            }
+          // todo: distinguish tex type
+          const UINT idx = std::distance(resources.begin(), it);
+          res->GetSharedPtr<Texture>()->SetSlot(BIND_SLOT_TEX, idx);
         }
 
-        GetRenderPipeline().SetMaterial(m_material_cb_);
+        res->Render(dt);
+      }
     }
+  }
 
-    void Material::Render(const float& dt)
+  void Material::PostRender(const float& dt)
+  {
+    GetRenderPipeline().SetMaterial({});
+
+    for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+
+    for (const auto& [type, resources] : m_resources_loaded_)
     {
-        for (const auto& shd : m_shaders_loaded_)
-        {
-        	shd->Render(dt);
-		}
+      // No need to render the all animation.
+      if (type == RES_T_BONE_ANIM) { continue; }
 
-        for (const auto& [type, resources] : m_resources_loaded_)
-        {
-            // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM)  continue;
-
-            for (auto it = resources.begin(); it != resources.end(); ++it)
-            {
-                const auto res = *it;
-
-                if (type == RES_T_TEX)
-                {
-                    // todo: distinguish tex type
-                    const UINT idx = std::distance(resources.begin(), it);
-                    res->GetSharedPtr<Texture>()->SetSlot(BIND_SLOT_TEX, idx);
-                }
-
-                res->Render(dt);
-            }
-        }
+      for (const auto& res : resources) { res->PostRender(dt); }
     }
+  }
 
-    void Material::PostRender(const float& dt)
-    {
-        GetRenderPipeline().SetMaterial({});
+  void Material::OnDeserialized()
+  {
+    Resource::OnDeserialized();
+    Load();
+  }
 
-        for (const auto& shd : m_shaders_loaded_)
-        {
-        	shd->PostRender(dt);
-		}
+  void Material::IgnoreAnimation(bool ignore) noexcept { m_no_anim_flag_ = ignore; }
 
-        for (const auto& [type, resources] : m_resources_loaded_)
-        {
-            // No need to render the all animation.
-            if (type == RES_T_BONE_ANIM) continue;
+  void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
-            for (const auto& res : resources)
-            {
-                res->PostRender(dt);
-            }
-        }
-    }
+  void Material::SetTextureSlot(const std::string& name, const UINT slot)
+  {
+    auto       texs = m_resources_loaded_[which_resource<Texture>::value];
+    const auto it   = std::ranges::find_if(texs, [&name](const StrongResource& res) { return res->GetName() == name; });
 
-    void Material::OnDeserialized()
-    {
-        Resource::OnDeserialized();
-        Load();
-    }
+    if (it == texs.end()) { return; }
+    if (const UINT idx = std::distance(texs.begin(), it); idx == slot) { return; }
 
-    void Material::IgnoreAnimation(bool ignore) noexcept
-    {
-        m_no_anim_flag_ = ignore;
-    }
+    std::iter_swap(texs.begin() + slot, it);
+  }
 
-    void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept
-    {
-        m_material_cb_ = std::move(material_cb);
-    }
-
-    void Material::SetTextureSlot(const std::string& name, const UINT slot)
-    {
-        auto texs = m_resources_loaded_[which_resource<Texture>::value];
-        const auto it = std::ranges::find_if(texs, [&name](const StrongResource& res)
-        {
-                       return res->GetName() == name;
-        });
-
-        if (it == texs.end()) return;
-        if (const UINT idx = std::distance(texs.begin(), it); idx == slot) return;
-
-        std::iter_swap(texs.begin() + slot, it);
-    }
-
-    Material::Material()
+  Material::Material()
     : Resource("", RES_T_MTR),
       m_material_cb_() {}
 
-    void Material::Load_INTERNAL()
+  void Material::Load_INTERNAL()
+  {
+    m_resources_loaded_.clear();
+    m_shaders_loaded_.clear();
+
+    for (const auto& name : m_shaders_)
     {
-        m_resources_loaded_.clear();
-        m_shaders_loaded_.clear();
-
-        for (const auto& name : m_shaders_)
-        {
-            if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
-            {
-                m_shaders_loaded_.emplace_back(res->GetSharedPtr<Shader>());
-            }
-        }
-
-        for (const auto& [type, names] : m_resources_)
-        {
-            for (const auto& name : names)
-            {
-                if (const auto res = GetResourceManager().GetResource(name, type).lock())
-                {
-                    m_resources_loaded_[type].push_back(res);
-                }
-            }
-        }
+      if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
+      {
+        m_shaders_loaded_.emplace_back(res->GetSharedPtr<Shader>());
+      }
     }
 
-    void Material::Unload_INTERNAL()
+    for (const auto& [type, names] : m_resources_)
     {
-        m_resources_loaded_.clear();
-        m_shaders_loaded_.clear();
+      for (const auto& name : names)
+      {
+        if (const auto res = GetResourceManager().GetResource(name, type).lock())
+        {
+          m_resources_loaded_[type].push_back(res);
+        }
+      }
     }
+  }
+
+  void Material::Unload_INTERNAL()
+  {
+    m_resources_loaded_.clear();
+    m_shaders_loaded_.clear();
+  }
 }

@@ -11,58 +11,31 @@
 
 SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_))
 
-void Engine::Abstract::Entity::SetName(const EntityName& name)
-{
-    m_name_ = name;
-}
+void Engine::Abstract::Entity::SetName(const EntityName& name) { m_name_ = name; }
 
-void Engine::Abstract::Entity::SetGarbage(bool garbage)
-{
-    m_b_garbage_ = garbage;
-}
+void Engine::Abstract::Entity::SetGarbage(bool garbage) { m_b_garbage_ = garbage; }
 
-Engine::GlobalEntityID Engine::Abstract::Entity::GetID() const
-{
-    return reinterpret_cast<GlobalEntityID>(this);
-}
+Engine::GlobalEntityID Engine::Abstract::Entity::GetID() const { return reinterpret_cast<GlobalEntityID>(this); }
 
-Engine::EntityName Engine::Abstract::Entity::GetName() const
-{
-    return m_name_;
-}
+Engine::EntityName Engine::Abstract::Entity::GetName() const { return m_name_; }
 
-Engine::TypeName Engine::Abstract::Entity::GetTypeName() const
-{
-    return typeid(*this).name();
-}
+Engine::TypeName Engine::Abstract::Entity::GetTypeName() const { return typeid(*this).name(); }
 
-bool Engine::Abstract::Entity::IsGarbage() const
-{
-    return m_b_garbage_;
-}
+bool Engine::Abstract::Entity::IsGarbage() const { return m_b_garbage_; }
 
-bool Engine::Abstract::Entity::IsInitialized() const
-{
-    return m_b_initialized_;
-}
+bool Engine::Abstract::Entity::IsInitialized() const { return m_b_initialized_; }
 
-void Engine::Abstract::Entity::Initialize()
-{
-    m_b_initialized_ = true;
-}
+void Engine::Abstract::Entity::Initialize() { m_b_initialized_ = true; }
 
 void Engine::Abstract::Entity::OnDeserialized()
 {
-    if (m_b_initialized_)
-    {
-        throw std::runtime_error("Entity already initialized");
-    }
+  if (m_b_initialized_) { throw std::runtime_error("Entity already initialized"); }
 
-    m_b_initialized_ = true;
+  m_b_initialized_ = true;
 }
 
 void Engine::Abstract::Entity::OnImGui()
 {
-    lldDisabled("Entity ID", GetID());
-    TextAligned("Name", m_name_);
+  lldDisabled("Entity ID", GetID());
+  TextAligned("Name", m_name_);
 }
