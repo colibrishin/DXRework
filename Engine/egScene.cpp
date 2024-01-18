@@ -312,41 +312,6 @@ namespace Engine
         GetTaskScheduler().AddTask(TASK_SYNC_SCENE, {scene}, sync);
     }
 
-    void Scene::OpenLoadPopup(bool& is_load_open)
-    {
-        if (is_load_open)
-        {
-            if (ImGui::Begin(
-                             "Load Scene", nullptr,
-                             ImGuiWindowFlags_AlwaysAutoResize))
-            {
-                static char buf[256] = {0};
-
-                ImGui::InputText("Filename", buf, IM_ARRAYSIZE(buf));
-
-                if (ImGui::Button("Load"))
-                {
-                    const auto scene = Serializer::Deserialize<Scene>(buf);
-
-                    Synchronize(scene);
-
-                    is_load_open = false;
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::SameLine();
-
-                if (ImGui::Button("Cancel"))
-                {
-                    is_load_open = false;
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::End();
-            }
-        }
-    }
-
     void Scene::AddCustomObject() {}
 
     void Scene::PreUpdate(const float& dt)
@@ -391,82 +356,6 @@ namespace Engine
         {
             m_layers[static_cast<eLayerType>(i)]->Render(dt);
         }
-
-#ifdef _DEBUG
-        static bool is_load_open = false;
-
-        if (ImGui::Begin(GetTypeName().c_str()), nullptr, ImGuiWindowFlags_MenuBar)
-        {
-            if (ImGui::BeginMainMenuBar())
-            {
-                if (ImGui::BeginMenu("Add"))
-                {
-                    if (ImGui::MenuItem("Camera"))
-                    {
-                        CreateGameObject<Objects::Camera>(LAYER_CAMERA);
-                    }
-
-                    if (ImGui::MenuItem("Light"))
-                    {
-                        CreateGameObject<Objects::Light>(LAYER_LIGHT);
-                    }
-
-                    AddCustomObject();
-
-                    ImGui::EndMenu();
-                }
-
-                if (ImGui::BeginMenu("Load"))
-                {
-                    if (ImGui::MenuItem("Scene"))
-                    {
-                        is_load_open = true;
-                    }
-
-                    ImGui::EndMenu();
-                }
-
-                if (ImGui::BeginMenu("Save"))
-                {
-                    if (ImGui::MenuItem("Scene"))
-                    {
-                        Save();
-                    }
-
-                    ImGui::EndMenu();
-                }
-
-                ImGui::EndMainMenuBar();
-            }
-
-            OpenLoadPopup(is_load_open);
-
-            for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
-            {
-                for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
-                {
-                    if (const auto obj_ptr = obj.lock())
-                    {
-                        const auto unique_name = obj_ptr->GetName() + " " +
-                                                 obj_ptr->GetTypeName() + " " +
-                                                 std::to_string(obj_ptr->GetID());
-
-                        if (ImGui::Button(unique_name.c_str()))
-                        {
-                            obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
-                        }
-
-                        if (obj_ptr->GetImGuiOpen())
-                        {
-                            obj_ptr->OnImGui();
-                        }
-                    }
-                }
-            }
-
-            ImGui::End();
-        }
-#endif
     }
 
     void Scene::FixedUpdate(const float& dt)
@@ -578,5 +467,42 @@ namespace Engine
             observer->AddChild(GetMainCamera());
         }
 #endif
+    }
+
+    void Scene::OnImGui()
+    {
+        if (ImGui::Begin(GetTypeName().c_str()), &m_b_scene_imgui_open_, ImGuiWindowFlags_MenuBar)
+        {
+            for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+            {
+                if (ImGui::TreeNode(std::to_string(i).c_str()))
+                {
+                    for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
+                    {
+                        if (const auto obj_ptr = obj.lock())
+                        {
+                            const auto unique_name = obj_ptr->GetName() + " " +
+                                                     obj_ptr->GetTypeName() + " " +
+                                                     std::to_string(obj_ptr->GetID());
+
+                            if (ImGui::Button(unique_name.c_str()))
+                            {
+                                obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+                            }
+
+                            if (obj_ptr->GetImGuiOpen())
+                            {
+                                obj_ptr->OnImGui();
+                            }
+                        }
+                    }
+
+                    ImGui::TreePop();
+                    ImGui::Separator();
+                }
+            }
+
+            ImGui::End();
+        }
     }
 } // namespace Engine
