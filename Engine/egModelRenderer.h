@@ -13,6 +13,7 @@ namespace Engine::Components
         void Update(const float& dt) override;
         void FixedUpdate(const float& dt) override;
         void PostUpdate(const float& dt) override;
+        void OnImGui() override;
 
         void SetShape(const WeakModel& model);
         void SetMaterial(const WeakMaterial& material);

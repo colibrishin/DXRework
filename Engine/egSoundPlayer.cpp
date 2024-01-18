@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egSoundPlayer.h"
 
+#include "egImGuiHeler.hpp"
 #include "egResourceManager.hpp"
 #include "egSound.h"
 
@@ -53,6 +54,12 @@ namespace Engine::Components
         }
 
         m_sound_ = GetResourceManager().GetResource<Resources::Sound>(m_sound_name_).lock();
+    }
+
+    void SoundPlayer::OnImGui()
+    {
+        Component::OnImGui();
+        TextDisabled("Sound name", m_sound_name_);
     }
 
     void SoundPlayer::PlaySound()
