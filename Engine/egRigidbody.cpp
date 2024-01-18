@@ -2,6 +2,7 @@
 #include "egRigidbody.h"
 
 #include "egBaseCollider.hpp"
+#include "egImGuiHeler.hpp"
 #include "egObject.hpp"
 #include "egTransform.h"
 
@@ -183,29 +184,18 @@ namespace Engine::Components
         Component::OnImGui();
 
         ImGui::Indent(2);
-        ImGui::Checkbox("Rigidbody Grounded", &m_bGrounded);
-        ImGui::Checkbox("Rigidbody Gravity Override", &m_bGravityOverride);
-        ImGui::Checkbox("Rigidbody Fixed", &m_bFixed);
-
+        CheckboxAligned("Grounded", m_bGrounded);
+        CheckboxAligned("Gravity Override", m_bGravityOverride);
+        CheckboxAligned("Fixed", m_bFixed);
         ImGui::DragFloat("Rigidbody Friction", &m_friction_mu_, 0.01f, 0, 1);
 
-        ImGui::Text("Linear Momentum");
-        ImGuiVector3Editable(GetID(), "linear_momentum", m_linear_momentum_);
-        ImGui::Text("Angular Momentum");
-        ImGuiVector3Editable(GetID(), "angular_momentum", m_angular_momentum_);
-
-        ImGui::Text("Linear Friction");
-        ImGuiVector3Editable(GetID(), "linear_friction", m_linear_friction_);
-
-        ImGui::Text("Angular Friction");
-        ImGuiVector3Editable(GetID(), "angular_friction", m_angular_friction_);
-        ImGui::Text("Drag Force");
-        ImGuiVector3Editable(GetID(), "drag_force", m_drag_force_);
-
-        ImGui::Text("Rigidbody Force");
-        ImGuiVector3Editable(GetID(), "force", m_force_);
-        ImGui::Text("Rigidbody Torque");
-        ImGuiVector3Editable(GetID(), "torque", m_torque_);
+        ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_momentum_);
+        ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_momentum_);
+        ImGuiVector3Editable("Linear Friction", GetID(), "linear_friction", m_linear_friction_);
+        ImGuiVector3Editable("Angular Friction", GetID(), "angular_friction", m_angular_friction_);
+        ImGuiVector3Editable("Drag Force", GetID(), "drag_force", m_drag_force_);
+        ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_force_);
+        ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_torque_);
 
         ImGui::Unindent(2);
     }

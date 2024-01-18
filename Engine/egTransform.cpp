@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egTransform.h"
 
+#include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 
 SERIALIZER_ACCESS_IMPL(Engine::Components::Transform,
@@ -267,15 +268,9 @@ namespace Engine::Components
     {
         Component::OnImGui();
         ImGui::Indent(2);
-
-        ImGui::Text("Previous Position");
-        ImGuiVector3Editable(GetID(), "previous_position", m_previous_position_);
-
-        ImGui::Text("Position");
-        ImGuiVector3Editable(GetID(), "position", m_position_);
-
-        ImGui::Text("Scale");
-        ImGuiVector3Editable(GetID(), "scale", m_scale_);
+        ImGuiVector3Editable("Previous Position", GetID(), "previous_position", m_previous_position_);
+        ImGuiVector3Editable("Position", GetID(), "position", m_position_);
+        ImGuiVector3Editable("Scale", GetID(), "scale", m_scale_);
         ImGui::Unindent(2);
     }
 

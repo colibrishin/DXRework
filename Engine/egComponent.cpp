@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egComponent.h"
 
+#include "egImGuiHeler.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Component,
                        _ARTAG(_BSTSUPER(Entity)) _ARTAG(m_local_id_)
@@ -47,8 +49,8 @@ namespace Engine::Abstract
     {
         Entity::OnImGui();
         ImGui::Indent(2);
-        ImGui::Text("Component Local ID: %lld", m_local_id_);
-        ImGui::Checkbox("Component Active", &m_b_active_);
+        lldDisabled("Local ID", m_local_id_);
+        CheckboxAligned("Active", m_b_active_);
         ImGui::Unindent(2);
     }
 

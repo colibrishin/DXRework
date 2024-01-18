@@ -447,6 +447,7 @@
     <ClInclude Include="egScript.h">
       <Filter>Base\Script</Filter>
     </ClInclude>
+    <ClInclude Include="egImGuiHeler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

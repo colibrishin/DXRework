@@ -2,6 +2,7 @@
 #include "egModelRenderer.h"
 
 #include "egDebugger.hpp"
+#include "egImGuiHeler.hpp"
 #include "egMaterial.h"
 #include "egShape.h"
 
@@ -18,6 +19,13 @@ namespace Engine::Components
     void ModelRenderer::PostUpdate(const float& dt)
     {
         Component::PostUpdate(dt);
+    }
+
+    void ModelRenderer::OnImGui()
+    {
+        Component::OnImGui();
+        TextDisabled("Model name", m_model_name_);
+        TextDisabled("Material Name", m_material_name_);
     }
 
     void ModelRenderer::SetShape(const WeakModel& model)

@@ -19,6 +19,8 @@ namespace Engine::Manager
         void PostRender(const float& dt) override;
         void FixedUpdate(const float& dt) override;
 
+        void OnImGui() override;
+
         template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
         void AddResource(const boost::shared_ptr<T>& resource)
         {

@@ -28,6 +28,7 @@ namespace Engine::Components
         void PreUpdate(const float& dt) override;
 
         void     OnDeserialized() override;
+        void    OnImGui() override;
 
     protected:
         template <typename Enum>

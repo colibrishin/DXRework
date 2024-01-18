@@ -3,9 +3,11 @@
 #include "egShape.h"
 #include "egBaseAnimation.h"
 #include "egBoneAnimation.h"
+#include "egImGuiHeler.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egTransform.h"
+#include "imgui_stdlib.h"
 
 SERIALIZER_ACCESS_IMPL(
                        Engine::Components::Animator,
@@ -51,6 +53,13 @@ namespace Engine::Components
     }
 
     void Animator::FixedUpdate(const float& dt) {}
+
+    void Animator::OnImGui()
+    {
+        Component::OnImGui();
+        TextDisabled("Animation", m_animation_name_);
+        FloatDisabled("Frame", m_current_frame_);
+    }
 
     void Animator::SetAnimation(const std::string& name)
     {

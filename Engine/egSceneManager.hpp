@@ -91,12 +91,14 @@ namespace Engine::Manager
         void Render(const float& dt) override;
         void FixedUpdate(const float& dt) override;
         void PostRender(const float& dt) override;
+        void OnImGui() override;
 
     private:
         friend struct SingletonDeleter;
         ~SceneManager() override = default;
 
         void SetActiveFinalize(const WeakScene& it);
+        void OpenLoadPopup();
 
         template <typename T>
         void RemoveSceneFinalize(const std::string& name)
@@ -116,6 +118,8 @@ namespace Engine::Manager
                 m_scenes_.erase(which_scene<T>::value);
             }
         }
+
+        bool m_b_load_popup_ = false;
 
         WeakScene                                                m_active_scene_;
         std::map<eSceneType, std::map<std::string, StrongScene>> m_scenes_;

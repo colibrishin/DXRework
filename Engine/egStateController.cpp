@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egStateController.hpp"
 
+#include "egImGuiHeler.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Components::StateController,
                        _ARTAG(_BSTSUPER(Engine::Abstract::Component)))
@@ -31,5 +33,12 @@ namespace Engine::Components
     void StateController::OnDeserialized()
     {
         Component::OnDeserialized();
+    }
+
+    void StateController::OnImGui()
+    {
+        Component::OnImGui();
+        intDisabled("Current State", m_state_);
+        intDisabled("Previous State", m_previous_state_);
     }
 }

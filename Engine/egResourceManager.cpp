@@ -25,9 +25,37 @@ namespace Engine::Manager
 
     void ResourceManager::PostUpdate(const float& dt) {}
 
-    void ResourceManager::Render(const float& dt) {}
+    void ResourceManager::Render(const float& dt)
+    {
+        this->OnImGui();
+    }
 
     void ResourceManager::PostRender(const float& dt) {}
 
     void ResourceManager::FixedUpdate(const float& dt) {}
+
+    void ResourceManager::OnImGui()
+    {
+        if (ImGui::Begin("Resource Manager"))
+        {
+            for (const auto& resources : m_resources_)
+            {
+                if (ImGui::TreeNode(std::to_string(resources.first).c_str()))
+                {
+                    for (const auto& res : resources.second)
+                    {
+                                               if (ImGui::TreeNode(res->GetName().c_str()))
+                                               {
+                                                                              res->OnImGui();
+                            ImGui::TreePop();
+                        }
+                    }
+                    ImGui::TreePop();
+                    ImGui::Separator();
+                }
+            }
+
+            ImGui::End();
+        }
+    }
 }

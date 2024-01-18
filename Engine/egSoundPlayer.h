@@ -17,6 +17,7 @@ namespace Engine::Components
 
         void SetSound(const StrongSound& sound);
         void OnDeserialized() override;
+        void OnImGui() override;
 
         void PlaySound();
         void PlaySoundLoop();

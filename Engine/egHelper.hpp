@@ -1,5 +1,6 @@
 #pragma once
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <functional>
 #include <assimp/matrix4x4.h>
 #include <oneapi/tbb.h>
@@ -30,45 +31,6 @@ namespace Engine
         std::vector<T> ret;
         for (const auto& v : orig) ret.insert(ret.end(), v.begin(), v.end());
         return ret;
-    }
-
-    inline static void ImGuiVector3Editable(
-        const GlobalEntityID     id,
-        const std::string& var_name,
-        Vector3&           v)
-    {
-        const auto unique_id = std::to_string(id) + var_name;
-        ImGui::PushID(unique_id.c_str());
-        ImGui::InputFloat("x", &v.x);
-        ImGui::InputFloat("y", &v.y);
-        ImGui::InputFloat("z", &v.z);
-        ImGui::PopID();
-    }
-
-    inline static void ImGuiQuaternionEditable(
-        const GlobalEntityID     id,
-        const std::string& var_name,
-        Quaternion&        v)
-    {
-        const auto unique_id = std::to_string(id) + var_name;
-        ImGui::PushID(unique_id.c_str());
-        ImGui::InputFloat("x", &v.x);
-        ImGui::InputFloat("y", &v.y);
-        ImGui::InputFloat("z", &v.z);
-        ImGui::InputFloat("w", &v.w);
-        ImGui::PopID();
-    }
-
-    inline static void ImGuiVector2Editable(
-        const GlobalEntityID     id,
-        const std::string& var_name,
-        Vector2&           v)
-    {
-        const auto unique_id = std::to_string(id) + var_name;
-        ImGui::PushID(unique_id.c_str());
-        ImGui::InputFloat("x", &v.x);
-        ImGui::InputFloat("y", &v.y);
-        ImGui::PopID();
     }
 
     inline static void __vectorcall Vector3CheckNanException(const Vector3& v)

@@ -28,6 +28,7 @@ namespace Engine
         void PostRender(const float& dt) override;
         void PostUpdate(const float& dt) override;
         void OnDeserialized() override;
+        void OnImGui() override;
 
         template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
         boost::weak_ptr<T> CreateGameObject(eLayerType layer)
@@ -172,6 +173,7 @@ namespace Engine
 
     private:
         SERIALIZER_ACCESS
+        friend class Manager::SceneManager;
 
         void Synchronize(const StrongScene& scene);
         void OpenLoadPopup(bool& is_load_open);
@@ -189,6 +191,8 @@ namespace Engine
         void InitializeFinalize();
 
         virtual void AddCustomObject();
+
+        bool m_b_scene_imgui_open_;
 
         LocalActorID             m_main_camera_local_id_;
         std::vector<StrongLayer> m_layers;

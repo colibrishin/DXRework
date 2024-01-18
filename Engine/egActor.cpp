@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egActor.h"
 
+#include "egImGuiHeler.hpp"
+
 SERIALIZER_ACCESS_IMPL(
                        Engine::Abstract::Actor,
                        _ARTAG(m_layer_) _ARTAG(m_local_id_))
@@ -26,10 +28,8 @@ namespace Engine::Abstract
     {
         Renderable::OnImGui();
         ImGui::BulletText("Actor");
-        ImGui::Indent(2);
-        ImGui::Text("Layer: %d", m_layer_);
-        ImGui::Text("Local ID: %lld", m_local_id_);
-        ImGui::Unindent(2);
+        lldDisabled("Layer", m_layer_);
+        lldDisabled("Local ID", m_local_id_);
     }
 
     Actor::Actor()

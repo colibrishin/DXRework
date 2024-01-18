@@ -5,6 +5,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
+#include "egImGuiHeler.hpp"
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
@@ -62,8 +63,6 @@ void Engine::Abstract::Entity::OnDeserialized()
 
 void Engine::Abstract::Entity::OnImGui()
 {
-    ImGui::Indent(2);
-    ImGui::Text("Entity ID: %lld", GetID());
-    ImGui::InputText("Entity Name", &m_name_);
-    ImGui::Unindent(2);
+    lldDisabled("Entity ID", GetID());
+    TextAligned("Name", m_name_);
 }
