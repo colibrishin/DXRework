@@ -47,8 +47,11 @@ namespace Engine::Manager::Physics
 
     void ConstraintSolver::PostUpdate(const float& dt) {}
 
-    void ConstraintSolver::ResolveCollision(const WeakObject& lhs, const WeakObject& rhs)
+    void ConstraintSolver::ResolveCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
     {
+        auto lhs = p_lhs;
+        auto rhs = p_rhs;
+
         auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
         auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
 
@@ -70,14 +73,16 @@ namespace Engine::Manager::Physics
                 return;
             }
 
+            auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
+            auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
+
             if (rb->IsFixed())
             {
                 std::swap(rb, rb_other);
                 std::swap(tr, tr_other);
+                std::swap(lhs, rhs);
+                std::swap(cl, cl_other);
             }
-
-            const auto cl       = lhs.lock()->GetComponent<Components::Collider>().lock();
-            const auto cl_other = rhs.lock()->GetComponent<Components::Collider>().lock();
 
             if (!cl || !cl_other)
             {
@@ -124,7 +129,7 @@ namespace Engine::Manager::Physics
                                          other_angular_vel, lhs_weight_pen, rhs_weight_pen);
 
             // Fast collision penalty
-            const auto cps     = static_cast<float>(cl->GetCPS(rhs.lock()->GetID()));
+            const auto cps     = static_cast<float>(cl->GetCPS(p_rhs.lock()->GetID()));
             const auto fps     = static_cast<float>(GetApplication().GetFPS());
             auto       cps_val = cps / fps;
 
@@ -132,7 +137,7 @@ namespace Engine::Manager::Physics
             if (!isfinite(cps)) cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
 
             // Accumulated collision penalty
-            const auto collision_count = cl->GetCollisionCount(rhs.lock()->GetID());
+            const auto collision_count = cl->GetCollisionCount(p_rhs.lock()->GetID());
             const auto log_count       = std::clamp(std::powf(2, collision_count), 2.f, (float)g_energy_reduction_ceil);
             const auto penalty         = log_count / (float)g_energy_reduction_ceil;
             const auto penalty_sum     = std::clamp(cps_val + penalty, 0.f, 1.f);
