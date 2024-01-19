@@ -14,6 +14,8 @@ namespace Client::Object
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+    void UpdateHitboxes(
+    );
     void FixedUpdate(const float& dt) override;
 
     WeakObject GetHead() const;
