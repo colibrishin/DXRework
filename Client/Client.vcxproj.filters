@@ -72,6 +72,12 @@
     <Filter Include="Scene\DarkScene">
       <UniqueIdentifier>{7e2797b0-0e58-4b99-9f63-bd1a4ef1fa16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Hitbox">
+      <UniqueIdentifier>{2f49c3ca-73ee-477f-bc6f-47a08f03927b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script">
+      <UniqueIdentifier>{480a1e2a-0c63-47eb-990b-f117e6da8d83}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -122,6 +128,12 @@
     <ClInclude Include="clDarkScene.h">
       <Filter>Scene\DarkScene</Filter>
     </ClInclude>
+    <ClInclude Include="clHitbox.h">
+      <Filter>Object\Hitbox</Filter>
+    </ClInclude>
+    <ClInclude Include="clHitboxScript.hpp">
+      <Filter>Script</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -165,6 +177,9 @@
     </ClCompile>
     <ClCompile Include="clDarkScene.cpp">
       <Filter>Scene\DarkScene</Filter>
+    </ClCompile>
+    <ClCompile Include="clHitbox.cpp">
+      <Filter>Object\Hitbox</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -78,7 +78,7 @@ namespace Engine::Abstract
 
       m_scripts_[which_script<T>::value].push_back(script);
 
-      return script;
+      return boost::static_pointer_cast<T>(script);
     }
 
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
@@ -88,9 +88,9 @@ namespace Engine::Abstract
       {
         auto& scripts = m_scripts_[which_script<T>::value];
 
-        if (name.empty() && !scripts.empty()) { return scripts.front(); }
+        if (name.empty() && !scripts.empty()) { return boost::static_pointer_cast<T>(scripts.front()); }
 
-        for (const auto& script : scripts) { if (script->GetName() == name) { return script; } }
+        for (auto& script : scripts) { if (script->GetName() == name) { return boost::static_pointer_cast<T>(script); } }
       }
 
       return {};
@@ -182,16 +182,15 @@ namespace Engine::Abstract
         m_culled_(true),
         m_imgui_open_(false) { };
 
-  private:
-    SERIALIZER_ACCESS
-    friend class Scene;
-    friend class Manager::Graphics::ShadowManager;
-
     virtual void OnCollisionEnter(const StrongCollider& other);
     virtual void OnCollisionContinue(const StrongCollider& other);
     virtual void OnCollisionExit(const StrongCollider& other);
 
   private:
+    SERIALIZER_ACCESS
+    friend class Scene;
+    friend class Manager::Graphics::ShadowManager;
+
     LocalActorID              m_parent_id_;
     std::vector<LocalActorID> m_children_;
     eDefObjectType            m_type_;

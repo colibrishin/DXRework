@@ -293,7 +293,7 @@ namespace Engine::Manager::Physics
       // If any of collision is true, then it is speculative hit.
       if (collision1 || collision2)
       {
-        GetDebugger().Log(std::format("Speculative hit, {}, {}", lhs->GetName(), rhs->GetName()));
+        //GetDebugger().Log(std::format("Speculative hit, {}, {}", lhs->GetName(), rhs->GetName()));
 
         if (!m_collision_map_.contains(lhs->GetID()) ||
             !m_collision_map_[lhs->GetID()].contains(rhs->GetID()))
@@ -353,6 +353,12 @@ namespace Engine::Manager::Physics
     m_layer_mask_[b].set(a, true);
   }
 
+  void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
+  {
+    m_layer_mask_[layer].set(layer2, false);
+    m_layer_mask_[layer2].set(layer, false);
+  }
+
   bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
   {
     std::lock_guard l(m_layer_mask_mutex_);
@@ -380,52 +386,5 @@ namespace Engine::Manager::Physics
     if (!m_frame_collision_map_.contains(id1)) { return false; }
 
     return m_frame_collision_map_.at(id1).contains(id2);
-  }
-
-  bool CollisionDetector::Hitscan(
-    const Vector3& start, float length, const Vector3& dir, std::vector<WeakObject>& hit_objs
-  )
-  {
-    const auto end = start + dir * length;
-
-    if (const auto scene = GetSceneManager().GetActiveScene().lock())
-    {
-      const auto& tree = scene->GetObjectTree();
-
-      std::queue<const Octree*> queue;
-      queue.push(&tree);
-
-      while (!queue.empty())
-      {
-        const auto  node     = queue.front();
-        const auto& value    = node->Read();
-        const auto& children = node->Next();
-        const auto& active   = node->ActiveChildren();
-        queue.pop();
-
-        for (const auto& p_obj : value)
-        {
-          if (const auto& obj = p_obj.lock())
-          {
-            if (const auto& cl = obj->GetComponent<Components::Collider>().lock())
-            {
-              if (cl->GetActive())
-              {
-                float dist = 0.f;
-
-                if (cl->Intersects(start, dir, length, dist)) { hit_objs.emplace_back(obj); }
-              }
-            }
-          }
-        }
-
-        // Add children to stack.
-        for (int i = 7; i >= 0; --i) { if (children[i] && children[i]->Contains(end)) { queue.push(children[i]); } }
-      }
-    }
-
-    for (const auto& obj : hit_objs) { GetDebugger().Log(std::format("Hitscan hit, {}", obj.lock()->GetName())); }
-
-    return hit_objs.empty();
   }
 } // namespace Engine::Manager

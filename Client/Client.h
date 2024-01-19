@@ -12,6 +12,7 @@ namespace Engine
   enum eScriptType : UINT
   {
     SCRIPT_T_NONE = 0,
+    SCRIPT_T_HITBOX,
   };
 }
 

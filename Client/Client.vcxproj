@@ -188,6 +188,7 @@
   <ItemGroup>
     <ClInclude Include="clDarkScene.h" />
     <ClInclude Include="clFPSCounter.hpp" />
+    <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
     <ClInclude Include="clPlaneObject.hpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="clTriangleMesh.hpp" />
     <ClInclude Include="clCharacterController.hpp" />
     <ClInclude Include="clWater.hpp" />
+    <ClInclude Include="clHitbox.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -207,6 +209,7 @@
     <ClCompile Include="clCharacterController.cpp" />
     <ClCompile Include="clDarkScene.cpp" />
     <ClCompile Include="clFPSCounter.cpp" />
+    <ClCompile Include="clHitbox.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="clMousePosition.cpp" />
     <ClCompile Include="clPlaneObject.cpp" />

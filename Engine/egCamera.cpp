@@ -69,9 +69,19 @@ namespace Engine::Objects
          up
         );
 
-      m_projection_matrix_ = m_b_orthogonal_ ?
-                               GetD3Device().GetOrthogonalMatrix() :
-                               GetD3Device().GetProjectionMatrix();
+      if (m_b_orthogonal_)
+      {
+        float aspectRatio = static_cast<float>(g_window_width) / static_cast<float>(g_window_height);
+
+        m_projection_matrix_ = DirectX::XMMatrixOrthographicLH
+          (
+           m_zoom_ * aspectRatio, aspectRatio, g_screen_near, g_screen_far
+          );
+      }
+      else
+      {
+        m_projection_matrix_ = GetD3Device().GetProjectionMatrix();
+      }
 
       const auto invView = m_view_matrix_.Invert();
       const auto invProj = m_projection_matrix_.Invert();
@@ -143,6 +153,11 @@ namespace Engine::Objects
   void Camera::SetOrthogonal(bool bOrthogonal) { m_b_orthogonal_ = bOrthogonal; }
 
   void Camera::SetFixedUp(bool bFixedUp) { m_b_fixed_up_ = bFixedUp; }
+
+  void Camera::SetZoom(float zoom)
+  {
+    m_zoom_ = zoom;
+  }
 
   bool Camera::GetOrthogonal() const { return m_b_orthogonal_; }
 

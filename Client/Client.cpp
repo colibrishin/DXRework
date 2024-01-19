@@ -17,6 +17,7 @@
 
 #include "clDarkScene.h"
 #include "clTestScene.hpp"
+#include "egCollisionDetector.h"
 #include "egGlobal.h"
 #include "egMaterial.h"
 #include "egShader.hpp"
@@ -174,6 +175,8 @@ namespace Client
     InitializeFont();
     InitializeSound();
     InitializeMaterial();
+
+    GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
 
 
     GetSceneManager().AddScene<Scene::TestScene>("Test");

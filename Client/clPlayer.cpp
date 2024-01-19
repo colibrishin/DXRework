@@ -3,6 +3,7 @@
 
 #include "clCharacterController.hpp"
 #include "clDarkScene.h"
+#include "clHitbox.h"
 #include "clRifile.h"
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
@@ -55,16 +56,10 @@ namespace Client::Object
 
     for (const auto& [idx, box] : bb_map)
     {
-      const auto child = GetScene().lock()->CreateGameObject<Object>(LAYER_HITBOX).lock();
-      const auto ctr   = child->AddComponent<Components::Transform>().lock();
-      child->AddComponent<Components::Collider>();
+      const auto child = GetScene().lock()->CreateGameObject<Objects::Hitbox>(LAYER_HITBOX).lock();
+      child->SetBoundingBox(box);
       child->SetName("Bone" + std::to_string(idx));
       AddChild(child);
-      ctr->SetSizeAbsolute(true);
-      ctr->SetRotateAbsolute(false);
-      ctr->SetLocalPosition(box.Center);
-      ctr->SetLocalRotation(box.Orientation);
-      ctr->SetLocalScale(Vector3(box.Extents) * 2.f);
       m_child_bones_[idx] = child->GetLocalID();
 
       if (child->GetName() == "Bone5") { m_head_ = child; }
@@ -91,10 +86,8 @@ namespace Client::Object
 
   void Player::PostRender(const float& dt) { Object::PostRender(dt); }
 
-  void Player::FixedUpdate(const float& dt)
+  void Player::UpdateHitboxes()
   {
-    Object::FixedUpdate(dt);
-
     const auto cl  = GetComponent<Components::Collider>().lock();
     const auto mr  = GetComponent<Components::ModelRenderer>().lock();
     const auto atr = GetComponent<Components::Animator>().lock();
@@ -155,6 +148,12 @@ namespace Client::Object
     BoundingBox::CreateFromPoints(bb, min, max);
     BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
     cl->SetBoundingBox(new_obb);
+  }
+
+  void Player::FixedUpdate(const float& dt)
+  {
+    Object::FixedUpdate(dt);
+    UpdateHitboxes();
   }
 
   WeakObject Player::GetHead() const { return m_head_; }

@@ -11,6 +11,7 @@ namespace Engine::Objects
 
     Camera()
       : Object(DEF_OBJ_T_CAMERA),
+        m_zoom_(1.0f),
         m_b_orthogonal_(false),
         m_b_fixed_up_(true) {}
 
@@ -28,6 +29,7 @@ namespace Engine::Objects
 
     void SetOrthogonal(bool bOrthogonal);
     void SetFixedUp(bool bFixedUp);
+    void SetZoom(float zoom);
 
     Matrix  GetViewMatrix() const;
     Matrix  GetProjectionMatrix() const;
@@ -38,6 +40,7 @@ namespace Engine::Objects
   private:
     SERIALIZER_ACCESS
 
+    float m_zoom_;
     bool m_b_orthogonal_;
     bool m_b_fixed_up_;
 
