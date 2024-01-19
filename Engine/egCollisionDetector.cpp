@@ -293,7 +293,7 @@ namespace Engine::Manager::Physics
       // If any of collision is true, then it is speculative hit.
       if (collision1 || collision2)
       {
-        GetDebugger().Log(std::format("Speculative hit, {}, {}", lhs->GetName(), rhs->GetName()));
+        //GetDebugger().Log(std::format("Speculative hit, {}, {}", lhs->GetName(), rhs->GetName()));
 
         if (!m_collision_map_.contains(lhs->GetID()) ||
             !m_collision_map_[lhs->GetID()].contains(rhs->GetID()))
@@ -429,8 +429,6 @@ namespace Engine::Manager::Physics
         for (int i = 7; i >= 0; --i) { if (children[i] && children[i]->Contains(end)) { queue.push(children[i]); } }
       }
     }
-
-    for (const auto& obj : hit_objs) { GetDebugger().Log(std::format("Hitscan hit, {}", obj.lock()->GetName())); }
 
     return hit_objs.empty();
   }
