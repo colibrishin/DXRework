@@ -69,6 +69,14 @@ namespace Client::Scene
        {0.f, 2.f, -2.f}
       );
 
+    const auto dummy = CreateGameObject<Object::Player>(LAYER_DEFAULT).lock();
+    dummy->GetComponent<Components::Transform>().lock()->SetLocalPosition
+      (
+       {4.f, 2.f, 0.f}
+      );
+    dummy->GetComponent<State::CharacterController>().lock()->SetActive(false);
+    dummy->SetName("Dummy Player");
+
     const auto player = CreateGameObject<Object::Player>(LAYER_DEFAULT).lock();
     player->GetComponent<Components::Transform>().lock()->SetLocalPosition
       (
