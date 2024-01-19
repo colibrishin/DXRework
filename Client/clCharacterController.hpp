@@ -21,12 +21,14 @@ namespace Client::State
     void PostUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void FixedUpdate(const float& dt) override;
+    void OnImGui() override;
 
     void SetActive(bool active) override;
     void MoveCameraToChild(bool active);
     void SetHeadView(const bool head_view);
 
     void Hit(const float damage);
+    void Hitscan(const float damage, const float range) const;
 
   protected:
     CharacterController()
@@ -41,7 +43,7 @@ namespace Client::State
 
     void CheckJump(const boost::shared_ptr<Components::Rigidbody>& rb);
     void CheckMove(const boost::shared_ptr<Components::Rigidbody>& rb);
-    bool CheckAttack(const float& dt);
+    void CheckAttack(const float& dt);
     void CheckGround() const;
 
     bool         m_top_view_;

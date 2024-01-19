@@ -10,8 +10,10 @@
 #include <egTransform.h>
 #include <boost/serialization/export.hpp>
 
+#include "clHitboxScript.hpp"
 #include "clPlayer.h"
 #include "egBaseCollider.hpp"
+#include "egImGuiHeler.hpp"
 #include "egMouseManager.h"
 #include "egSceneManager.hpp"
 
@@ -100,7 +102,7 @@ namespace Client::State
     else { SetState(CHAR_STATE_WALK); }
   }
 
-  bool CharacterController::CheckAttack(const float& dt)
+  void CharacterController::CheckAttack(const float& dt)
   {
     if (GetApplication().GetMouseState().leftButton)
     {
@@ -109,7 +111,7 @@ namespace Client::State
       if (m_shoot_interval < 0.5f)
       {
         m_shoot_interval += dt;
-        return false;
+        return;
       }
 
       m_shoot_interval = 0.f;
@@ -125,13 +127,8 @@ namespace Client::State
       GetDebugger().Draw(ray, Colors::AliceBlue);
       std::vector<WeakObject> out;
 
-      if (GetCollisionDetector().Hitscan
-        (
-         GetOwner(), ray.position, distance, ray.direction, out
-        )) { return true; }
+      Hitscan(10.f, 10.f);
     }
-
-    return false;
   }
 
   void CharacterController::CheckGround() const
@@ -218,6 +215,15 @@ namespace Client::State
 
   void CharacterController::FixedUpdate(const float& dt) {}
 
+  void CharacterController::OnImGui()
+  {
+    StateController::OnImGui();
+    Engine::CheckboxAligned("Top View", m_top_view_);
+    Engine::lldDisabled("Camera ID", m_cam_id_);
+    Engine::FloatAligned("Shoot Interval", m_shoot_interval);
+    Engine::FloatAligned("HP", m_hp_);
+  }
+
   void CharacterController::MoveCameraToChild(bool active)
   {
     if (const auto head = m_head_.lock(); 
@@ -286,6 +292,72 @@ namespace Client::State
     else
     {
       SetState(CHAR_STATE_HIT);
+    }
+  }
+
+  void CharacterController::Hitscan(const float damage, const float range) const
+  {
+    const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+    const auto owner = GetOwner().lock();
+    const auto lcl = GetOwner().lock()->GetComponent<Components::Collider>().lock();
+    const auto start   = head_tr->GetWorldPosition();
+    const auto forward = head_tr->Forward();
+
+    const auto end = start + forward * range;
+
+    if (const auto scene = GetOwner().lock()->GetScene().lock())
+    {
+      const auto& tree = scene->GetObjectTree();
+
+      std::queue<const Octree*> queue;
+      queue.push(&tree);
+
+      while (!queue.empty())
+      {
+        const auto  node     = queue.front();
+        const auto& value    = node->Read();
+        const auto& children = node->Next();
+        const auto& active   = node->ActiveChildren();
+        queue.pop();
+
+        for (const auto& p_rhs : value)
+        {
+          if (const auto& rhs = p_rhs.lock())
+          {
+            if (rhs->GetParent().lock() == owner) { continue; }
+            if (rhs == owner) { continue; }
+
+            if (const auto& rcl = rhs->GetComponent<Components::Collider>().lock())
+            {
+              if (rcl->GetActive())
+              {
+                float dist = 0.f;
+
+                if (rcl->Intersects(start, forward, range, dist))
+                {
+                  if (const auto script = rhs->GetScript<Scripts::HitboxScript>().lock())
+                  {
+                    GetDebugger().Log(
+                        std::format(
+                            "Hit {} for {} damage", 
+                            rhs->GetName(), 
+                            damage));
+
+                    script->Hit(damage);
+                  }
+                  else
+                  {
+                    rhs->DispatchComponentEvent(lcl);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Add children to stack.
+        for (int i = 7; i >= 0; --i) { if (children[i] && children[i]->Contains(end)) { queue.push(children[i]); } }
+      }
     }
   }
 } // namespace Client::State
