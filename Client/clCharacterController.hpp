@@ -11,6 +11,8 @@ namespace Client::State
   public:
     explicit CharacterController(const WeakObject& owner)
       : StateController(owner),
+        m_top_view_(false),
+        m_cam_id_(g_invalid_id),
         m_shoot_interval(0.3f),
         m_hp_(100.f) {}
 
@@ -20,9 +22,17 @@ namespace Client::State
     void Update(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
+    void SetActive(bool active) override;
+    void MoveCameraToChild(bool active);
+    void SetHeadView(const bool head_view);
+
+    void Hit(const float damage);
+
   protected:
     CharacterController()
       : StateController({}),
+        m_top_view_(false),
+        m_cam_id_(g_invalid_id),
         m_shoot_interval(0.3f),
         m_hp_(100.f) {}
 
@@ -34,9 +44,11 @@ namespace Client::State
     bool CheckAttack(const float& dt);
     void CheckGround() const;
 
-    WeakObject m_head_;
-    float      m_shoot_interval;
-    float      m_hp_;
+    bool         m_top_view_;
+    WeakObject   m_head_;
+    LocalActorID m_cam_id_;
+    float        m_shoot_interval;
+    float        m_hp_;
   };
 } // namespace Client::State
 

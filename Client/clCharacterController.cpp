@@ -27,18 +27,13 @@ namespace Client::State
   void CharacterController::Initialize()
   {
     SetState(CHAR_STATE_IDLE);
-    const auto cam = GetOwner().lock()->GetScene().lock()->GetMainCamera().lock();
 
-    if (cam)
+    if (const auto player = GetOwner().lock()->GetSharedPtr<Object::Player>())
     {
-      m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
-
-      if (const auto head = m_head_.lock())
-      {
-        m_head_ = GetOwner().lock()->GetSharedPtr<Object::Player>()->GetHead().lock();
-        m_head_.lock()->AddChild(cam);
-      }
+      m_head_ = player->GetHead();
     }
+
+    MoveCameraToChild(true);
   }
 
   void CharacterController::PreUpdate(const float& dt)
@@ -132,7 +127,7 @@ namespace Client::State
 
       if (GetCollisionDetector().Hitscan
         (
-         ray.position, distance, ray.direction, out
+         GetOwner(), ray.position, distance, ray.direction, out
         )) { return true; }
     }
 
@@ -187,7 +182,7 @@ namespace Client::State
 
     if (!rb) { return; }
 
-    if (const auto head = m_head_.lock())
+    if (const auto head = m_head_.lock() && !m_top_view_)
     {
       const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
       const auto mouse_y = GetMouseManager().GetMouseYRotation();
@@ -222,4 +217,75 @@ namespace Client::State
   }
 
   void CharacterController::FixedUpdate(const float& dt) {}
+
+  void CharacterController::MoveCameraToChild(bool active)
+  {
+    if (const auto head = m_head_.lock(); 
+        const auto scene = GetOwner().lock()->GetScene().lock())
+    {
+      const auto cam = scene->GetMainCamera().lock();
+
+      if (head && scene && cam && !active)
+      {
+        head->DetachChild(m_cam_id_);
+        m_cam_id_ = g_invalid_id;
+      }
+      else if (head && scene && cam && active)
+      {
+        head->AddChild(cam);
+        m_cam_id_ = cam->GetLocalID();
+      }
+    }
+  }
+
+  void CharacterController::SetActive(bool active)
+  {
+    MoveCameraToChild(active);
+    StateController::SetActive(active);
+  }
+
+  void CharacterController::SetHeadView(const bool head_view)
+  {
+    if (m_cam_id_ == g_invalid_id) { return; }
+
+    const auto head = m_head_.lock();
+
+    if (!head) { return; }
+
+    const auto cam_obj = head->GetChild(m_cam_id_).lock();
+
+    if (!cam_obj) { return; }
+
+    const auto cam = cam_obj->GetSharedPtr<Objects::Camera>();
+    const auto cam_tr = cam_obj->GetComponent<Components::Transform>().lock();
+
+    if (m_top_view_)
+    {
+      cam->SetOrthogonal(false);
+      cam_tr->SetLocalPosition({0.f, 10.f, 0.f});
+      cam_tr->SetLocalRotation(Quaternion::CreateFromAxisAngle(Vector3::Right, XM_PIDIV2));
+    }
+    else
+    {
+      cam->SetOrthogonal(false);
+      cam_tr->SetLocalPosition(Vector3::Zero);
+      cam_tr->SetLocalRotation(Quaternion::Identity);
+    }
+
+    m_top_view_ = head_view;
+  }
+
+  void CharacterController::Hit(const float damage)
+  {
+    m_hp_ -= damage;
+
+    if (m_hp_ <= 0.f)
+    {
+      SetState(CHAR_STATE_DIE);
+    }
+    else
+    {
+      SetState(CHAR_STATE_HIT);
+    }
+  }
 } // namespace Client::State
