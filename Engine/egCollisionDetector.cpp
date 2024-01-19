@@ -353,6 +353,12 @@ namespace Engine::Manager::Physics
     m_layer_mask_[b].set(a, true);
   }
 
+  void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
+  {
+    m_layer_mask_[layer].set(layer2, false);
+    m_layer_mask_[layer2].set(layer, false);
+  }
+
   bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
   {
     std::lock_guard l(m_layer_mask_mutex_);

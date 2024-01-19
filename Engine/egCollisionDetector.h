@@ -22,6 +22,7 @@ namespace Engine::Manager::Physics
     void PostUpdate(const float& dt) override;
 
     void SetCollisionLayer(eLayerType layer, eLayerType mask);
+    void UnsetCollisionLayer(eLayerType layer, eLayerType layer2);
     bool IsCollisionLayer(eLayerType layer1, eLayerType layer2);
 
     bool IsCollided(GlobalEntityID id) const;
