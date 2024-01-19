@@ -16,7 +16,7 @@ namespace Engine::Abstract
     bool             IsTicked() const;
     bool             GetActive() const;
 
-    void SetActive(bool active);
+    virtual void SetActive(bool active);
     void PostUpdate(const float& dt) override;
 
     void OnImGui() override;
