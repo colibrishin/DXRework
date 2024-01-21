@@ -26,6 +26,7 @@ namespace Engine::Resources
 {
   Shape::Shape(const std::filesystem::path& path)
     : Resource(path, RES_T_SHAPE),
+      m_instance_count_(1),
       m_bounding_box_({}) {}
 
   void Shape::PreUpdate(const float& dt) {}
@@ -34,11 +35,21 @@ namespace Engine::Resources
 
   void Shape::FixedUpdate(const float& dt) {}
 
-  void Shape::PreRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PreRender(dt); } }
+  void Shape::PreRender(const float& dt) {}
 
-  void Shape::Render(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->Render(dt); } }
+  void Shape::Render(const float& dt)
+  {
+    // Instancing the meshes.
+    for (const auto& mesh : m_meshes_)
+    {
+      mesh->PreRender(dt);
+      mesh->Render(dt);
+      GetRenderPipeline().DrawIndexedInstanced(mesh->GetIndexCount(), m_instance_count_);
+      mesh->PostRender(dt);
+    }
+  }
 
-  void Shape::PostRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PostRender(dt); } }
+  void Shape::PostRender(const float& dt) { m_instance_count_ = 1; }
 
   void Shape::PostUpdate(const float& dt) {}
 
@@ -47,6 +58,8 @@ namespace Engine::Resources
     Resource::OnDeserialized();
     Load();
   }
+
+  void Shape::SetInstanceCount(UINT count) { m_instance_count_ = count; }
 
   BoundingBox Shape::GetBoundingBox() const { return m_bounding_box_; }
 
@@ -400,5 +413,6 @@ namespace Engine::Resources
 
   Shape::Shape()
     : Resource("", RES_T_SHAPE),
+      m_instance_count_(1),
       m_bounding_box_({}) {}
 }

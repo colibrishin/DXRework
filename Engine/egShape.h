@@ -23,6 +23,8 @@ namespace Engine::Resources
     void PostUpdate(const float& dt) override;
     void OnDeserialized() override;
 
+    void SetInstanceCount(UINT count);
+
     BoundingBox                                GetBoundingBox() const;
     WeakMesh                                   GetMesh(const std::string& name) const;
     WeakMesh                                   GetMesh(UINT index) const;
@@ -68,6 +70,8 @@ namespace Engine::Resources
 
   private:
     void UpdateVertices();
+
+    UINT m_instance_count_;
 
     std::vector<StrongMesh>             m_meshes_;
     std::vector<std::string>            m_animation_catalog_;
