@@ -41,7 +41,7 @@ namespace Engine::Manager::Graphics
 
     void InitializeProcessor();
     void InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer);
-    void BuildShadowMap(Scene& scene, float dt) const;
+    void BuildShadowMap(const float & dt) const;
     void ClearShadowMaps();
 
     void CreateSubfrusta(
