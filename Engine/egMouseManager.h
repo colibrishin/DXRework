@@ -19,7 +19,7 @@ namespace Engine::Manager
 
     static Vector2 GetNormalizedMousePosition();
 
-    [[nodiscard]] const Quaternion& GetMouseRotation() const;
+    [[nodiscard]] Quaternion        GetMouseRotation() const;
     [[nodiscard]] const Quaternion& GetMouseXRotation() const;
     [[nodiscard]] const Quaternion& GetMouseYRotation() const;
 

@@ -49,7 +49,7 @@ namespace Engine::Manager
     return {x, y};
   }
 
-  const Quaternion& MouseManager::GetMouseRotation() const { return m_mouse_rot_x_ * m_mouse_rot_y_; }
+  Quaternion MouseManager::GetMouseRotation() const { return m_mouse_rot_x_ * m_mouse_rot_y_; }
 
   const Quaternion& MouseManager::GetMouseXRotation() const { return m_mouse_rot_x_; }
 
