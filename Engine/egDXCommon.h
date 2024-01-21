@@ -7,12 +7,6 @@
 
 namespace Engine::Graphics { namespace SBs
   {
-    struct BoneSB
-    {
-      SB_T(SB_TYPE_BONE)
-      Matrix transform;
-    };
-
     struct LightSB
     {
       SB_T(SB_TYPE_LIGHT)
@@ -28,6 +22,14 @@ namespace Engine::Graphics { namespace SBs
       Matrix  view[g_max_shadow_cascades];
       Matrix  proj[g_max_shadow_cascades];
       Vector4 end_clip_spaces[g_max_shadow_cascades];
+    };
+
+    struct InstanceSB
+    {
+      SB_T(SB_TYPE_INSTANCE)
+
+      Matrix world;
+      int    bone_flag;
     };
   }
 
@@ -82,6 +84,8 @@ namespace Engine::Graphics { namespace SBs
         ar & override_color;
         ar & specular_color;
         ar & clip_plane;
+        ar & instance_count;
+        ar & bone_texture_width;
       }
 
       MaterialBindFlag flags;
@@ -91,10 +95,10 @@ namespace Engine::Graphics { namespace SBs
       float reflection_scale;
       float refraction_scale;
 
-      Color   override_color;
-      Color   specular_color;
-      Vector4 clip_plane;
+      Color        override_color;
+      Color        specular_color;
+      Vector4      clip_plane;
+      OffsetT<int> instance_count;
+      OffsetT<int> bone_texture_width;
     };
-
-    constexpr auto test = sizeof(MaterialBindFlag);
   }} // namespace Engine

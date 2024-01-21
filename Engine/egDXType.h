@@ -59,13 +59,11 @@ namespace Engine::Graphics { namespace DXPacked
       ar & tex;
       ar & texArr;
       ar & texCube;
-      ar & bone;
     }
 
     OffsetT<int> tex[g_max_slot_per_texture];
     OffsetT<int> texArr[g_max_slot_per_texture];
     OffsetT<int> texCube[g_max_slot_per_texture];
-    OffsetT<int> bone;
   };
 
   struct VertexElement

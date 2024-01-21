@@ -17,6 +17,7 @@ namespace Engine
   {
     RESERVED_SHADOW_MAP = g_reserved_bind_slot,
     RESERVED_RENDERED,
+    RESERVED_BONES,
   };
 
   enum eSampler
@@ -127,9 +128,9 @@ namespace Engine
 
   enum eSBType
   {
-    SB_TYPE_BONE = g_reserved_struct_buffer_slot,
-    SB_TYPE_LIGHT,
+    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
     SB_TYPE_SHADOW,
+    SB_TYPE_INSTANCE
   };
 
   enum eResourceType
