@@ -156,7 +156,7 @@ namespace Engine
   using WeakLight = boost::weak_ptr<Objects::Light>;
   using WeakTexture = boost::weak_ptr<Resources::Texture>;
   using WeakBoneAnimation = boost::weak_ptr<Resources::BoneAnimation>;
-  using WeakModel = boost::weak_ptr<Resources::Shape>;
+  using WeakShape = boost::weak_ptr<Resources::Shape>;
   using WeakBone = boost::weak_ptr<Resources::Bone>;
   using WeakTransform = boost::weak_ptr<Components::Transform>;
   using WeakModelRenderer = boost::weak_ptr<Components::ModelRenderer>;

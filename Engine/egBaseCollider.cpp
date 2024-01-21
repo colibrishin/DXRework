@@ -99,7 +99,7 @@ namespace Engine::Components
     UpdateInertiaTensor();
   }
 
-  void Collider::SetModel(const WeakModel& model)
+  void Collider::SetModel(const WeakShape& model)
   {
     if (const auto locked = model.lock())
     {

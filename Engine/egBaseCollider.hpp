@@ -23,7 +23,7 @@ namespace Engine::Components
     void SetMass(float mass);
 
     void SetBoundingBox(const BoundingOrientedBox& bounding);
-    void SetModel(const WeakModel& model);
+    void SetModel(const WeakShape& model);
 
     static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
     static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, float epsilon = g_epsilon);
@@ -135,7 +135,7 @@ namespace Engine::Components
     XMFLOAT3X3 m_inertia_tensor_;
     Matrix     m_local_matrix_;
 
-    WeakModel m_model_;
+    WeakShape m_model_;
   };
 } // namespace Engine::Component
 
