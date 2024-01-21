@@ -21,9 +21,7 @@ void Client::Object::Water::Initialize()
   SetName("Water");
   const auto mr    = AddComponent<Components::ModelRenderer>().lock();
   const auto model = Resources::Shape::Get("CubeModel");
-
-  mr->SetShape(model);
-  mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
+  mr->SetMaterial(Resources::Material::Get("WaterCube"));
 
   AddComponent<Components::Transform>();
   const auto cldr = AddComponent<Components::Collider>().lock();

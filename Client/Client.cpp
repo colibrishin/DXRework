@@ -69,7 +69,7 @@ namespace Client
 
   void InitializeFont() { Resources::Font::Create("DefaultFont", "./consolas.spritefont"); }
 
-  void InitializeModel()
+  void InitializeShape()
   {
     Resources::Shape::Create("BobModel", "./bob_lamp_update_export.fbx");
     Resources::Shape::Create("CharacterModel", "./Character.fbx");
@@ -106,10 +106,11 @@ namespace Client
   void InitializeMaterial()
   {
     {
-      const auto mtr = Resources::Material::Create("NormalLight", "");
+      const auto mtr = Resources::Material::Create("NormalLightCube", "");
       mtr->SetResource<Resources::Texture>("TestTexture");
       mtr->SetResource<Resources::Texture>("TestNormalMap");
       mtr->SetResource<Resources::Shader>("normal");
+      mtr->SetResource<Resources::Shape>("CubeModel");
 
       // this is not necessary if user adds texture in order.
       //mtr->SetTextureSlot("TestTexture", 0);
@@ -117,49 +118,57 @@ namespace Client
     }
 
     {
-      const auto mtr = Resources::Material::Create("NormalLightSpecular", "");
+      const auto mtr = Resources::Material::Create("NormalSpecularSphere", "");
       mtr->SetResource<Resources::Texture>("TestTexture");
       mtr->SetResource<Resources::Texture>("TestNormalMap");
       mtr->SetResource<Resources::Shader>("specular_normal");
+      mtr->SetResource<Resources::Shape>("SphereModel");
     }
 
     {
-      const auto mtr = Resources::Material::Create("ColorMaterial", "");
+      const auto mtr = Resources::Material::Create("ColorPlane", "");
       mtr->SetResource<Resources::Shader>("color");
+      mtr->SetResource<Resources::Shape>("CubeMesh");
     }
 
     {
-      const auto mtr = Resources::Material::Create("CharacterMaterial", "");
+      const auto mtr = Resources::Material::Create("ColorCharacter", "");
       mtr->SetResource<Resources::Shader>("color");
 
       for (const auto& anim : Resources::Shape::Get("CharacterModel").lock()->GetAnimationCatalog())
       {
         mtr->SetResource<Resources::BoneAnimation>(anim);
       }
+
+      mtr->SetResource<Resources::Shape>("CharacterModel");
     }
 
     {
       const auto mtr = Resources::Material::Create("ThunderSky", "");
       mtr->SetResource<Resources::Texture>("ThunderCat");
       mtr->SetResource<Resources::Shader>("skybox");
+      mtr->SetResource<Resources::Shape>("SphereModel");
     }
 
     {
-      const auto mtr = Resources::Material::Create("RifleColorMaterial", "");
+      const auto mtr = Resources::Material::Create("ColorRifle", "");
       mtr->SetResource<Resources::Shader>("color");
       mtr->SetResource<Resources::BaseAnimation>("FireAnimation");
+      mtr->SetResource<Resources::Shape>("RifleModel");
     }
 
     {
-      const auto mtr = Resources::Material::Create("SkyboxMaterial", "");
+      const auto mtr = Resources::Material::Create("BlueSky", "");
       mtr->SetResource<Resources::Texture>("Sky");
       mtr->SetResource<Resources::Shader>("skybox");
+      mtr->SetResource<Resources::Shape>("SphereModel");
     }
 
     {
-      const auto mtr = Resources::Material::Create("WaterMaterial", "");
+      const auto mtr = Resources::Material::Create("WaterCube", "");
       mtr->SetResource<Resources::Texture>("WaterNormalMap");
       mtr->SetResource<Resources::Shader>("refraction");
+      mtr->SetResource<Resources::Shape>("CubeModel");
     }
   }
 
@@ -170,7 +179,7 @@ namespace Client
     InitializeTexture();
     InitializeMesh();
     InitializeNormal();
-    InitializeModel();
+    InitializeShape();
     InitializeAnimation();
     InitializeFont();
     InitializeSound();

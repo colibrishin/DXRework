@@ -23,8 +23,7 @@ namespace Client::Object
   {
     SetName("TestObject");
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetShape(Resources::Shape::Get("SphereModel"));
-    mr->SetMaterial(Resources::Material::Get("NormalLightSpecular"));
+    mr->SetMaterial(Resources::Material::Get("NormalSpecularSphere"));
 
     AddComponent<Components::Transform>();
     AddComponent<Components::Collider>();

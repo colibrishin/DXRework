@@ -27,8 +27,7 @@ namespace Client::Object
   {
     SetName("TestCube");
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetShape(Resources::Shape::Get("CubeModel"));
-    mr->SetMaterial(Resources::Material::Get("NormalLight"));
+    mr->SetMaterial(Resources::Material::Get("NormalLightCube"));
 
     AddComponent<Components::Transform>();
     AddComponent<Components::Collider>();

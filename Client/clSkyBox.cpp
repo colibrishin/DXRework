@@ -23,8 +23,7 @@ namespace Client::Object
   {
     SetName("SkyBox");
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetShape(Resources::Shape::Get("SphereModel"));
-    mr->SetMaterial(Resources::Material::Get("SkyboxMaterial"));
+    mr->SetMaterial(Resources::Material::Get("BlueSky"));
 
     AddComponent<Components::Transform>();
     const auto tr = GetComponent<Components::Transform>().lock();

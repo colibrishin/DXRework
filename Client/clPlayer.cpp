@@ -32,8 +32,7 @@ namespace Client::Object
     SetName("Player");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetShape(model);
-    mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
+    mr->SetMaterial(Resources::Material::Get("ColorCharacter"));
 
     const auto tr   = AddComponent<Components::Transform>().lock();
     const auto cldr = AddComponent<Components::Collider>().lock();
@@ -109,7 +108,7 @@ namespace Client::Object
       const auto child = GetChild(id).lock();
 
       const auto ctr = child->GetComponent<Components::Transform>().lock();
-      ctr->SetAnimationMatrix(deform[idx].transform);
+      ctr->SetAnimationMatrix(deform[idx]);
 
       static const std::vector<Vector3> stock_vertices
       {

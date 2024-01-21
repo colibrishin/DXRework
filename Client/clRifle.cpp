@@ -28,9 +28,7 @@ namespace Client::Object
     SetName("Rifle");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-
-    mr->SetShape(model);
-    mr->SetMaterial(Resources::Material::Get("RifleColorMaterial"));
+    mr->SetMaterial(Resources::Material::Get("ColorRifle"));
 
     const auto tr   = AddComponent<Components::Transform>().lock();
     const auto atr  = AddComponent<Components::Animator>().lock();

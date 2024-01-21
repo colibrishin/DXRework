@@ -25,12 +25,10 @@ namespace Client::Object
 
   void PlaneObject::Initialize()
   {
-    const auto model = Resources::Shape::Get("CubeModel").lock();
     SetName("Plane");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
-    mr->SetShape(model);
+    mr->SetMaterial(Resources::Material::Get("ColorPlane"));
 
     AddComponent<Components::Transform>();
     const auto tr = GetComponent<Components::Transform>().lock();
