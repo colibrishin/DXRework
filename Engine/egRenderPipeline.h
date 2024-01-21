@@ -56,6 +56,7 @@ namespace Engine::Manager::Graphics
     void UnbindResource(UINT slot, eShaderType type);
 
     void DrawIndexed(UINT index_count);
+    void DrawIndexedInstanced(UINT index_count, UINT instance_count);
 
     void TargetDepthOnly(ID3D11DepthStencilView* view);
     void SetViewport(const D3D11_VIEWPORT& viewport);
