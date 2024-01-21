@@ -20,19 +20,18 @@ namespace Engine::Resources
 
     void IgnoreAnimation(bool ignore) noexcept;
 
-    template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<
-                Resource, T>>>
+    template <
+        typename T,
+        typename U = boost::weak_ptr<T>,
+        typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
     void SetResource(const std::string& name)
     {
       const auto search = GetResourceManager().GetResource<T>(name);
 
       if (search.expired()) { return; }
 
-      static_assert
-        (
-         which_resource<T>::value != RES_T_MESH || which_resource<T>::value != RES_T_SHAPE,
-         "Define shape in the ModelRenderer"
-        );
+      static_assert(which_resource<T>::value != RES_T_MESH, 
+                    "Mesh cannot be added as resource alone. Use with shape.");
 
       if constexpr (which_resource<T>::value == RES_T_SHADER)
       {
@@ -47,25 +46,26 @@ namespace Engine::Resources
 
     void SetProperties(CBs::MaterialCB&& material_cb) noexcept;
 
-    template <typename T>
-    [[nodiscard]] auto GetResources() const
+    template <typename T, typename RLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
+    [[nodiscard]] std::vector<boost::weak_ptr<T>> GetResources() const
     {
-      if (!m_resources_loaded_.contains(which_resource<T>::value)) { return std::vector<StrongResource>{}; }
+      if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       return m_resources_loaded_.at(which_resource<T>::value);
     }
 
-    template <typename T>
-    [[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name) const
+    template <typename T, typename RLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
+    [[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name = "") const
     {
       if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
+      if (name.empty()) { return boost::static_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value).front()); }
 
       const auto it = std::ranges::find(m_resources_.at(which_resource<T>::value), name);
 
       if (it == m_resources_.at(which_resource<T>::value).end()) { return {}; }
 
       const auto idx = std::distance(m_resources_.at(which_resource<T>::value).begin(), it);
-      return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
+      return boost::static_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
     }
 
     void SetTextureSlot(const std::string& name, UINT slot);
