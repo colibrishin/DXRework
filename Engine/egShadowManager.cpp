@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egShadowManager.hpp"
 
+#include "Renderer.h"
 #include "egAnimator.h"
 #include "egBaseAnimation.h"
 #include "egBoneAnimation.h"
@@ -72,7 +73,7 @@ namespace Engine::Manager::Graphics
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_.SetData(light_buffer.size(), light_buffer.data());
+    m_sb_light_buffer_.SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
   }
 
   void ShadowManager::PreRender(const float& dt)
@@ -115,7 +116,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(current_light_vp.size(), current_light_vp.data());
+      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
       m_sb_light_vps_buffer_.Bind(SHADER_GEOMETRY);
 
       UINT idx = 0;
@@ -137,7 +138,7 @@ namespace Engine::Manager::Graphics
           GetRenderPipeline().SetGlobalStateBuffer(gcb);
 
           // Render the depth of the object from the light's point of view.
-          BuildShadowMap(*scene, dt);
+          BuildShadowMap(dt);
         }
       }
 
@@ -163,8 +164,12 @@ namespace Engine::Manager::Graphics
     GetRenderPipeline().DefaultDepthStencilState();
 
     // Bind the shadow map resource previously rendered to the pixel shader.
-    GetRenderPipeline().BindResources
-      (RESERVED_SHADOW_MAP, SHADER_PIXEL, current_shadow_maps.data(), current_shadow_maps.size());
+    GetRenderPipeline().BindResources(
+        RESERVED_SHADOW_MAP, 
+        SHADER_PIXEL, 
+        current_shadow_maps.data(), 
+        static_cast<UINT>(current_shadow_maps.size()));
+
     // And bind the light view and projection matrix on to the constant buffer.
     m_sb_light_vps_buffer_.Bind(SHADER_PIXEL);
 
