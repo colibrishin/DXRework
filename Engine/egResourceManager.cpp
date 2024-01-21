@@ -11,9 +11,30 @@ namespace Engine::Manager
     {
       for (const auto& res : resources) { if (res.use_count() == 1 && res->IsLoaded()) { res->Unload(); } }
     }
+
+    for (const auto& set : m_resources_ | std::views::values)
+    {
+      for (const auto& res : set)
+      {
+        if (!res->IsLoaded()) { continue; }
+
+        res->PreUpdate(dt);
+      }
+    }
   }
 
-  void ResourceManager::Update(const float& dt) {}
+  void ResourceManager::Update(const float& dt)
+  {
+    for (const auto& set : m_resources_ | std::views::values)
+    {
+      for (const auto& res : set)
+      {
+        if (!res->IsLoaded()) { continue; }
+
+        res->Update(dt);
+      }
+    }
+  }
 
   void ResourceManager::PreRender(const float& dt) {}
 
@@ -23,7 +44,18 @@ namespace Engine::Manager
 
   void ResourceManager::PostRender(const float& dt) {}
 
-  void ResourceManager::FixedUpdate(const float& dt) {}
+  void ResourceManager::FixedUpdate(const float& dt)
+  {
+    for (const auto& set : m_resources_ | std::views::values)
+    {
+      for (const auto& res : set)
+      {
+        if (!res->IsLoaded()) { continue; }
+
+        res->FixedUpdate(dt);
+      }
+    }
+  }
 
   void ResourceManager::OnImGui()
   {
