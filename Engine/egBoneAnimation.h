@@ -26,7 +26,8 @@ namespace Engine::Resources
     void          BindBone(const WeakBone& bone_info);
     eResourceType GetResourceType() const override;
 
-    std::vector<SBs::BoneSB> GetFrameAnimation(float dt);
+    std::vector<Matrix> GetFrameAnimation(float dt);
+    UINT                GetBoneCount() const;
 
     RESOURCE_SELF_INFER_GETTER(BoneAnimation)
 
@@ -44,8 +45,7 @@ namespace Engine::Resources
 
     // non-serialized
     float                         m_evaluated_time_;
-    std::vector<SBs::BoneSB>      m_evaluated_data_;
-    StructuredBuffer<SBs::BoneSB> m_buffer_;
+    std::vector<Matrix>      m_evaluated_data_;
   };
 }
 
