@@ -3,6 +3,8 @@
 
 #include "egDXCommon.h"
 #include "egDXType.h"
+#include "egReflectionEvaluator.h"
+#include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"
 
@@ -20,7 +22,8 @@ namespace Engine::Resources
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
       m_material_cb_(),
-      m_no_anim_flag_(false)
+      m_b_ignore_shader_(false),
+      m_instance_count_(1)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -40,23 +43,25 @@ namespace Engine::Resources
 
   void Material::PreRender(const float& dt)
   {
-    for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+    if (!m_b_ignore_shader_)
+    {
+      for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+    }
 
-    m_material_cb_.flags = {};
+    m_material_cb_.flags              = {};
+    m_material_cb_.instance_count     = m_instance_count_;
+    m_material_cb_.bone_texture_width = m_bone_count_;
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
       // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM && !m_no_anim_flag_)
-      {
-        m_material_cb_.flags.bone = 1;
-        continue;
-      }
+      if (type == RES_T_BONE_ANIM) { continue; }
 
       for (auto it = resources.begin(); it != resources.end(); ++it)
       {
         const auto res = *it;
 
+        // flip the tex flag before rendering.
         if (type == RES_T_TEX)
         {
           const UINT idx                = std::distance(resources.begin(), it);
@@ -72,7 +77,10 @@ namespace Engine::Resources
 
   void Material::Render(const float& dt)
   {
-    for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); }
+    if (!m_b_ignore_shader_)
+    {
+      for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); }
+    }
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -89,6 +97,10 @@ namespace Engine::Resources
           const UINT idx = std::distance(resources.begin(), it);
           res->GetSharedPtr<Texture>()->SetSlot(BIND_SLOT_TEX, idx);
         }
+        else if(type == RES_T_SHAPE)
+        {
+          res->GetSharedPtr<Shape>()->SetInstanceCount(m_instance_count_);
+        }
 
         res->Render(dt);
       }
@@ -97,9 +109,10 @@ namespace Engine::Resources
 
   void Material::PostRender(const float& dt)
   {
-    GetRenderPipeline().SetMaterial({});
-
-    for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+    if (!m_b_ignore_shader_)
+    {
+      for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+    }
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -108,6 +121,10 @@ namespace Engine::Resources
 
       for (const auto& res : resources) { res->PostRender(dt); }
     }
+
+    GetRenderPipeline().SetMaterial({});
+    m_instance_count_ = 1;
+    m_b_ignore_shader_ = false;
   }
 
   void Material::OnDeserialized()
@@ -116,13 +133,26 @@ namespace Engine::Resources
     Load();
   }
 
-  void Material::IgnoreAnimation(bool ignore) noexcept { m_no_anim_flag_ = ignore; }
+  void Material::SetInstanceCount(UINT count)
+  {
+    m_instance_count_ = count;
+  }
+
+  void Material::IgnoreShader()
+  {
+    m_b_ignore_shader_ = true;
+  }
+
+  void Material::SetBoneCount(UINT count)
+  {
+    m_bone_count_ = count;
+  }
 
   void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
   void Material::SetTextureSlot(const std::string& name, const UINT slot)
   {
-    auto       texs = m_resources_loaded_[which_resource<Texture>::value];
+      auto& texs = m_resources_loaded_[which_resource<Texture>::value];
     const auto it   = std::ranges::find_if(texs, [&name](const StrongResource& res) { return res->GetName() == name; });
 
     if (it == texs.end()) { return; }
@@ -133,7 +163,9 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_() {}
+      m_material_cb_(),
+      m_b_ignore_shader_(false),
+      m_instance_count_(1) {}
 
   void Material::Load_INTERNAL()
   {

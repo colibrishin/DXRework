@@ -1,5 +1,6 @@
 #pragma once
 #include "egDebugger.hpp"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Resources
 {
@@ -18,7 +19,12 @@ namespace Engine::Resources
     void PostRender(const float& dt) override;
     void OnDeserialized() override;
 
-    void IgnoreAnimation(bool ignore) noexcept;
+    // Track references to this material. This is required for instancing.
+    // The value will be set to 1 after the PostRender called.
+    void SetInstanceCount(UINT count);
+    // Internal usage, rendering shadow needs this.
+    void IgnoreShader();
+    void SetBoneCount(UINT count);
 
     template <
         typename T,
@@ -82,13 +88,16 @@ namespace Engine::Resources
 
   private:
     CBs::MaterialCB m_material_cb_;
-    bool            m_no_anim_flag_;
 
     std::vector<std::string>                                m_shaders_;
     std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
     // non-serialized
+    bool                                                       m_b_ignore_shader_;
     std::vector<StrongShader>                                  m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
+
+    UINT m_instance_count_;
+    UINT m_bone_count_;
   };
 }
