@@ -11,13 +11,13 @@ struct GeometryShadowInputType
   float4 position : SV_POSITION;
 };
 
-GeometryShadowInputType vs_main(VertexInputType input)
+GeometryShadowInputType vs_main(VertexInputType input, uint instance_id : SV_InstanceID)
 {
   GeometryShadowInputType output;
 
   output.position = float4(input.position, 1.0f);
 
-  if (g_bindFlag.boneFlag.x)
+  if (bufInstance[instance_id].bone_flag)
   {
     matrix animation_transform;
 
@@ -25,7 +25,7 @@ GeometryShadowInputType vs_main(VertexInputType input)
     {
       const int    bone_index = input.bone_element.boneIndex[i];
       const float  weight     = input.bone_element.boneWeight[i];
-      const matrix transform  = bufBoneTransform[bone_index].transform;
+      const matrix transform  = GetAnimation(instance_id, bone_index);
       animation_transform += transform * weight;
     }
 

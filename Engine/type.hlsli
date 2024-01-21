@@ -9,7 +9,6 @@ struct BindFlag
   int4 texFlag[MAX_NUM_SLOTS];
   int4 texArrayFlag[MAX_NUM_SLOTS];
   int4 texCubeFlag[MAX_NUM_SLOTS];
-  int4 boneFlag;
 };
 
 struct CascadeShadowElement
@@ -23,11 +22,6 @@ struct LightElement
 {
   matrix world : LIGHTWORLD;
   float4 color : LIGHTCOLOR;
-};
-
-struct BoneTransformElement
-{
-  matrix transform : BONETRANSFORM;
 };
 
 struct VertexBoneElement
@@ -48,6 +42,12 @@ struct VertexInputType
   float3 binormal : BINOARML;
 
   VertexBoneElement bone_element : BONE;
+};
+
+struct InstanceElement
+{
+  matrix world : WORLD;
+  int    bone_flag : BONEFLAG;
 };
 
 #endif // __TYPE_HLSLI__

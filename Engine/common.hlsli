@@ -33,10 +33,11 @@ TextureCube    texCube07 : register(t23);
 
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
+Texture2D      texAnimation : register(t34);
 
-StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
-StructuredBuffer<LightElement>         bufLight : register(t65);
-StructuredBuffer<CascadeShadowElement> bufLightVP : register(t66);
+StructuredBuffer<LightElement>         bufLight : register(t64);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t65);
+StructuredBuffer<InstanceElement>      bufInstance : register(t66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -75,6 +76,8 @@ cbuffer MaterialBuffer : register(b3)
   float4 g_overrideColor : OVERRIDECOLOR;
   float4 g_specularColor : SPECULARCOLOR;
   float4 g_clipPlane : CLIPPLANE;
+  int4   g_instanceId : INSTANCEID;
+  int4   g_boneTextureWidth : BONETEXWIDTH;
 }
 
 float4 GetWorldPosition(in matrix mat) { return float4(mat._41, mat._42, mat._43, mat._44); }
@@ -113,6 +116,28 @@ float GetShadowFactorImpl(
 
   shadow /= 9.0f;
   return shadow;
+}
+
+matrix GetAnimation(in uint instance_id, in uint bone_idx)
+{
+  // 4 bytes wide (float4, float4, float4, float4)
+  // to merge into 4x4 matrix.
+  // Bone 0        Bone1       ...
+  // [0, 1, 2, 3], [4, 5, 6, 7]...
+  const uint base = (bone_idx * 4);
+
+  uint x = base % g_boneTextureWidth.x;
+  uint y = base / g_boneTextureWidth.x;
+  y += instance_id;
+
+  // Load raw float 4 xyzw, merge into 4x4 matrix.
+  float4 r0 = texAnimation.Load(uint3(x, y, 0), 0);
+  float4 r1 = texAnimation.Load(uint3(x + 1, y, 0), 0);
+  float4 r2 = texAnimation.Load(uint3(x + 2, y, 0), 0);
+  float4 r3 = texAnimation.Load(uint3(x + 3, y, 0), 0);
+
+  matrix rtn = matrix(r0, r1, r2, r3);
+  return rtn;
 }
 
 void GetShadowFactor(
