@@ -36,6 +36,14 @@ namespace Engine::Resources
          &blob, &error
         );
 
+      // Print the warnings if there were.
+      if (error)
+      {
+        const std::string error_message =
+          static_cast<char*>(error->GetBufferPointer());
+        OutputDebugStringA(error_message.c_str());
+      }
+
       // If compiled, set shader.
       if (res == S_OK)
       {
