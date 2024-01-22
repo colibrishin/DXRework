@@ -15,6 +15,7 @@ namespace Engine
   constexpr UINT g_max_slot_per_texture         = 8;
   constexpr UINT g_reserved_bind_slot           = 32;
   constexpr UINT g_reserved_struct_buffer_slot  = 64;
+  constexpr float g_animation_sample_rate       = 0.1f;
 
   // Physics Constants
   constexpr float   g_epsilon                 = 0.001f;

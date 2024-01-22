@@ -33,6 +33,7 @@ TextureCube    texCube07 : register(t23);
 
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
+Texture3D      texAnimations : register(t34);
 
 StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
 StructuredBuffer<LightElement>         bufLight : register(t65);

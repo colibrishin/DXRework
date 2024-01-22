@@ -101,6 +101,7 @@ namespace Engine
     class BaseAnimation;
     class Material;
     class Shader;
+    class Animations;
   } // namespace Resources
 
   namespace Abstract
@@ -164,6 +165,7 @@ namespace Engine
   using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
   using WeakMaterial = boost::weak_ptr<Resources::Material>;
   using WeakScript = boost::weak_ptr<Script>;
+  using WeakAnimations = boost::weak_ptr<Resources::Animations>;
 
   // Strong pointer type definitions
   using StrongObject = boost::shared_ptr<Abstract::Object>;
@@ -186,6 +188,7 @@ namespace Engine
   using StrongMaterial = boost::shared_ptr<Resources::Material>;
   using StrongCollider = boost::shared_ptr<Components::Collider>;
   using StrongScript = boost::shared_ptr<Script>;
+  using StrongAnimations = boost::shared_ptr<Resources::Animations>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
