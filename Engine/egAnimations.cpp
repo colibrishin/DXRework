@@ -51,7 +51,7 @@ namespace Engine::Resources
         const float f_dt  = animation->ConvertDtToFrame(t, animation->GetTicksPerSecond(), animation->GetDuration());
         auto        bones = animation->GetFrameAnimation(f_dt);
 
-        std::ranges::for_each(bones, [](Matrix& mat) { mat = mat.Transpose(); });
+        // todo: why transpose is not needed here??
         m_max_bone_count_ = std::max(m_max_bone_count_, static_cast<UINT>(bones.size()));
 
         sample_data.push_back(bones);
