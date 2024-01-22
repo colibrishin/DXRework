@@ -5,6 +5,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include "egAnimations.h"
 #include "egBaseAnimation.h"
 #include "egBone.h"
 #include "egBoneAnimation.h"
@@ -36,7 +37,15 @@ namespace Engine::Resources
 
   void Shape::PreRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PreRender(dt); } }
 
-  void Shape::Render(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->Render(dt); } }
+  void Shape::Render(const float& dt)
+  {
+    if (m_animations_)
+    {
+      m_animations_->Render(dt);
+    }
+    
+    for (const auto& mesh : m_meshes_) { mesh->Render(dt); }
+  }
 
   void Shape::PostRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PostRender(dt); } }
 
@@ -68,6 +77,11 @@ namespace Engine::Resources
     if (m_meshes_.size() > index) { return m_meshes_[index]; }
 
     return {};
+  }
+
+  WeakAnimations Shape::GetAnimations() const
+  {
+    return m_animations_;
   }
 
   const std::vector<VertexElement>& Shape::GetVertices() const { return m_cached_vertices_; }
@@ -293,6 +307,8 @@ namespace Engine::Resources
           (m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
       }
 
+      std::vector<StrongBoneAnimation> animations;
+
       if (scene->HasAnimations())
       {
         const auto animation_count = scene->mNumAnimations;
@@ -372,13 +388,20 @@ namespace Engine::Resources
             animation.Add(bone_name.C_Str(), bone_animation);
           }
 
-          auto anim = boost::make_shared<BoneAnimation>(animation);
+          const auto anim = boost::make_shared<BoneAnimation>(animation);
           anim->SetName(anim_name + "_ANIM");
           anim->BindBone(m_bone_);
           anim->Load();
           GetResourceManager().AddResource(anim);
           m_animation_catalog_.push_back(anim_name + "_ANIM");
+          animations.push_back(anim);
         }
+
+        const auto anims = boost::make_shared<Animations>(animations);
+        anims->SetName(GetName() + "_ANIMS");
+        anims->Load();
+        GetResourceManager().AddResource(anims);
+        m_animations_ = anims;
       }
 
       UpdateVertices();
