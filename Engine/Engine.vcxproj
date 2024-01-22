@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
+    <ClInclude Include="egAnimations.h" />
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
@@ -100,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
+    <ClCompile Include="egAnimations.cpp" />
     <ClCompile Include="egBoneAnimation.cpp" />
     <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
