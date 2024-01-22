@@ -116,6 +116,16 @@ float GetShadowFactorImpl(
   return shadow;
 }
 
+void LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx, out matrix transform)
+{
+  uint   frame_idx = frame * 10;
+    float4 r0 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 0));
+    float4 r1 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 1));
+    float4 r2 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 2));
+    float4 r3 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 3));
+  transform        = matrix(r0, r1, r2, r3);
+}
+
 void GetShadowFactor(
   in float4 world_position, in float z_clip,
   out float shadowFactor[MAX_NUM_LIGHTS]
