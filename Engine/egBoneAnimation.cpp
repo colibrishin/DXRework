@@ -31,22 +31,9 @@ namespace Engine::Resources
 
   void BoneAnimation::PreRender(const float& dt) {}
 
-  void BoneAnimation::Render(const float& dt)
-  {
-    auto animation_per_bone = GetFrameAnimation(dt);
+  void BoneAnimation::Render(const float& dt) {}
 
-    for (auto& bone : animation_per_bone) { bone.transform = bone.transform.Transpose(); }
-
-    m_buffer_.SetData(animation_per_bone.size(), animation_per_bone.data());
-    m_buffer_.Bind(SHADER_VERTEX);
-  }
-
-  void BoneAnimation::PostRender(const float& dt)
-  {
-    m_buffer_.Unbind(SHADER_VERTEX);
-    m_evaluated_time_ = 0.f;
-    m_evaluated_data_.clear();
-  }
+  void BoneAnimation::PostRender(const float& dt) {}
 
   void BoneAnimation::PostUpdate(const float& dt) {}
 
@@ -59,19 +46,21 @@ namespace Engine::Resources
 
   eResourceType BoneAnimation::GetResourceType() const { return RES_T_BONE_ANIM; }
 
-  std::vector<SBs::BoneSB> BoneAnimation::GetFrameAnimation(const float dt)
+  std::vector<Matrix> BoneAnimation::GetFrameAnimation(const float dt)
   {
     if (dt != 0.f && m_evaluated_time_ == dt && !m_evaluated_data_.empty()) { return m_evaluated_data_; }
 
+    m_evaluated_data_.clear();
     m_evaluated_time_             = dt;
     const auto          anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
     std::vector<Matrix> memo;
 
+    memo.clear();
     memo.resize(m_primitive_.GetBoneCount());
 
     for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
     {
-      SBs::BoneSB                   bfa;
+      Matrix                  bfa;
       const BoneAnimationPrimitive* bone_animation = m_primitive_.GetBoneAnimation(i);
       const BonePrimitive*          bone           = m_bone_->GetBone(i);
       const BonePrimitive*          parent         = m_bone_->GetBoneParent(i);
@@ -93,7 +82,7 @@ namespace Engine::Resources
       memo[bone->GetIndex()]        = global_transform;
 
       const auto final_transform = bone->GetInvBindPose() * global_transform * m_primitive_.GetGlobalInverseTransform();
-      bfa.transform              = final_transform;
+      bfa              = final_transform;
       m_evaluated_data_.push_back(bfa);
     }
 
@@ -104,10 +93,9 @@ namespace Engine::Resources
   {
     SetDuration(m_primitive_.GetDuration());
     SetTicksPerSecond(m_primitive_.GetTicksPerSecond());
-    m_buffer_.Create(m_primitive_.GetBoneCount(), nullptr, true);
   }
 
-  void BoneAnimation::Unload_INTERNAL() { m_buffer_.Clear(); }
+  void BoneAnimation::Unload_INTERNAL() { }
 
   BoneAnimation::BoneAnimation()
     : BaseAnimation(),
