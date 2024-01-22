@@ -116,14 +116,21 @@ float GetShadowFactorImpl(
   return shadow;
 }
 
-void LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx, out matrix transform)
+matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
 {
-  uint   frame_idx = frame * 10;
-    float4 r0 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 0));
-    float4 r1 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 1));
-    float4 r2 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 2));
-    float4 r3 = texAnimations.Load(uint4(anim_idx, frame_idx, bone_idx, 3));
-  transform        = matrix(r0, r1, r2, r3);
+  uint frame_idx = frame * 10;
+  // since we are storing float4s, bone idx should be
+  // multiplied by 4 to get the correct index
+  uint u         = bone_idx * 4;  
+  uint v         = frame_idx;
+  uint w         = anim_idx;
+
+  float4 r0        = texAnimations.Load(uint4(u, v, w, 0));
+  float4 r1        = texAnimations.Load(uint4(u + 1, v, w, 0));
+  float4 r2        = texAnimations.Load(uint4(u + 2, v, w, 0));
+  float4 r3        = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+  return matrix(r0, r1, r2, r3);
 }
 
 void GetShadowFactor(

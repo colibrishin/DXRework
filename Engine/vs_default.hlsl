@@ -39,8 +39,7 @@ PixelInputType vs_main(VertexInputType input)
     {
       const int    bone_index = input.bone_element.boneIndex[i];
       const float  weight     = input.bone_element.boneWeight[i];
-      matrix transform;
-      LoadAnimation(0, 0.f, bone_index, transform);
+      const matrix transform  = LoadAnimation(0, 0.f, bone_index);
       animation_transform += transform * weight;
     }
 
