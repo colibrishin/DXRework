@@ -88,49 +88,36 @@ namespace Engine::Resources
     GetD3Device().GetDevice()->CreateTexture3D(&dsc, nullptr, &m_tex_);
 
     D3D11_MAPPED_SUBRESOURCE mapped;
+
     GetD3Device().GetContext()->Map(m_tex_.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 
-    const auto padded_x = mapped.RowPitch / sizeof(Vector4);
+    // Note: Doing dynamic allocation with large data mapping causes a memory race.
+    const auto row       = mapped.RowPitch;
+    const auto slice      = mapped.DepthPitch;
+    const auto total_texel_in_bytes = 
+        m_max_frame_count_ * mapped.RowPitch + 
+        m_animation_count_ * mapped.DepthPitch;
 
-    auto*** structured = new Matrix**[m_animation_count_];
+    constexpr auto matrix_float_count = sizeof(Matrix) / sizeof(float);
 
-    for (int i = 0; i < m_animation_count_; ++i)
-    {
-      structured[i] = new Matrix*[m_max_frame_count_];
-
-      for (int j = 0; j < m_max_frame_count_; ++j)
-      {
-        structured[i][j] = new Matrix[padded_x];
-        std::memset(structured[i][j], 0, sizeof(Matrix) * padded_x);
-
-        if (animations[i].size() <= j) { continue; }
-
-        for (int k = 0; k < animations[i][j].size(); ++k)
-        {
-          structured[i][j][k] = animations[i][j][k];
-        }
-      }
-    }
-
-    const auto mat_access = static_cast<Vector4*>(mapped.pData);
+    auto* data = static_cast<float*>(mapped.pData);
 
     for (int i = 0; i < m_animation_count_; ++i)
     {
+      UINT d = slice / sizeof(float) * i;
+
       for (int j = 0; j < m_max_frame_count_; ++j)
       {
-        UINT idx = 0;
+        UINT h = row  / sizeof(float) * j;
+        if (j >= animations[i].size()) break;
 
-        for (int k = 0; k < m_max_bone_count_; k += 4)
+        for (int k = 0; k < m_max_bone_count_; ++k)
         {
-          const auto flat_idx = k + (j * m_animation_count_) + (i * m_animation_count_ * m_max_frame_count_);
-          const Matrix& mat = structured[i][j][idx];
+          if (k >= animations[i][j].size()) break;
 
-          mat_access[flat_idx] = Vector4(mat._11, mat._12, mat._13, mat._14);
-          mat_access[flat_idx + 1] = Vector4(mat._21, mat._22, mat._23, mat._24);
-          mat_access[flat_idx + 2] = Vector4(mat._31, mat._32, mat._33, mat._34);
-          mat_access[flat_idx + 3] = Vector4(mat._41, mat._42, mat._43, mat._44);
+          const auto& mat = animations[i][j][k];
 
-          idx++;
+          std::memcpy(data + d + h + k * matrix_float_count, &mat, sizeof(Matrix));
         }
       }
     }
@@ -138,8 +125,6 @@ namespace Engine::Resources
     GetD3Device().GetContext()->Unmap(m_tex_.Get(), 0);
 
     GetD3Device().GetDevice()->CreateShaderResourceView(m_tex_.Get(), &srv_dsc, &m_srv_);
-
-    delete structured;
   }
 
   void Animations::Unload_INTERNAL()
