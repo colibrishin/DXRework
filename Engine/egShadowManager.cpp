@@ -10,6 +10,7 @@
 #include "egSceneManager.hpp"
 
 #include "egCamera.h"
+#include "egShadowTexture.h"
 #include "egGlobal.h"
 #include "egLight.h"
 #include "egMaterial.h"
@@ -49,6 +50,8 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::Update(const float& dt)
   {
+    constexpr size_t light_slot = 0;
+
     // Build light information structured buffer.
     std::vector<SBs::LightSB> light_buffer;
 
@@ -65,9 +68,7 @@ namespace Engine::Manager::Graphics
     }
 
     // Notify the number of lights to the shader.
-    auto gcb        = GetRenderPipeline().GetGlobalStateBuffer();
-    gcb.light_count = light_buffer.size();
-    GetRenderPipeline().SetGlobalStateBuffer(gcb);
+    GetRenderPipeline().SetParam<int>(m_lights_.size(), light_slot);
 
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
@@ -124,20 +125,19 @@ namespace Engine::Manager::Graphics
       {
         if (const auto light = ptr_light.lock())
         {
+          constexpr size_t shadow_slot = 1;
+
           // It only needs to render the depth of the object from the light's point of view.
           // Swap the depth stencil to the each light's shadow map.
-          GetRenderPipeline().TargetDepthOnly
-            (
-             m_dx_resource_shadow_vps_[light->GetLocalID()].depth_stencil_view.Get()
-            );
+          m_shadow_texs_[light->GetLocalID()].Render(0.f);
 
           // Notify the index of the shadow map to the shader.
-          auto gcb          = GetRenderPipeline().GetGlobalStateBuffer();
-          gcb.target_shadow = idx++;
-          GetRenderPipeline().SetGlobalStateBuffer(gcb);
-
+          GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
           // Render the depth of the object from the light's point of view.
           BuildShadowMap(*scene, dt);
+
+          // Cleanup
+          m_shadow_texs_[light->GetLocalID()].PostRender(0.f);
         }
       }
 
@@ -145,15 +145,17 @@ namespace Engine::Manager::Graphics
       m_sb_light_vps_buffer_.Unbind(SHADER_GEOMETRY);
     }
 
+    GetRenderPipeline().SetParam<int>(0, 1);
+
     // Unload the shadow map shaders.
     m_shadow_shaders_->PostRender(placeholder);
 
     // post-processing for serialization and binding
     std::vector<ID3D11ShaderResourceView*> current_shadow_maps;
 
-    for (const auto& buffer : m_dx_resource_shadow_vps_ | std::views::values)
+    for (const auto& buffer : m_shadow_texs_ | std::views::values)
     {
-      current_shadow_maps.emplace_back(buffer.shader_resource_view.Get());
+      current_shadow_maps.emplace_back(buffer.GetSRV());
     }
 
     // Pass #2 : Render scene with shadow map
@@ -162,6 +164,7 @@ namespace Engine::Manager::Graphics
     GetRenderPipeline().DefaultRenderTarget();
     GetRenderPipeline().DefaultDepthStencilState();
 
+    // todo: refactoring.
     // Bind the shadow map resource previously rendered to the pixel shader.
     GetRenderPipeline().BindResources
       (RESERVED_SHADOW_MAP, SHADER_PIXEL, current_shadow_maps.data(), current_shadow_maps.size());
@@ -184,7 +187,7 @@ namespace Engine::Manager::Graphics
   void ShadowManager::Reset()
   {
     m_lights_.clear();
-    m_dx_resource_shadow_vps_.clear();
+    m_shadow_texs_.clear();
 
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
@@ -373,7 +376,7 @@ namespace Engine::Manager::Graphics
     if (const auto locked = light.lock())
     {
       m_lights_[locked->GetLocalID()] = light;
-      InitializeShadowBuffer(m_dx_resource_shadow_vps_[locked->GetLocalID()]);
+      InitializeShadowBuffer(locked->GetLocalID());
     }
   }
 
@@ -382,52 +385,15 @@ namespace Engine::Manager::Graphics
     if (const auto locked = light.lock())
     {
       m_lights_.erase(locked->GetLocalID());
-      m_dx_resource_shadow_vps_.erase(locked->GetLocalID());
+      m_shadow_texs_.erase(locked->GetLocalID());
     }
   }
 
-  void ShadowManager::InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer)
+  void ShadowManager::InitializeShadowBuffer(const LocalActorID id)
   {
-    D3D11_TEXTURE2D_DESC desc{};
-    desc.Width              = g_max_shadow_map_size;
-    desc.Height             = g_max_shadow_map_size;
-    desc.MipLevels          = 1;
-    desc.ArraySize          = g_max_shadow_cascades;
-    desc.Format             = DXGI_FORMAT_R32_TYPELESS;
-    desc.SampleDesc.Count   = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Usage              = D3D11_USAGE_DEFAULT;
-    desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-    desc.CPUAccessFlags     = 0;
-    desc.MiscFlags          = 0;
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
-    dsv_desc.Format                         = DXGI_FORMAT_D32_FLOAT;
-    dsv_desc.ViewDimension                  = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
-    dsv_desc.Texture2DArray.ArraySize       = g_max_shadow_cascades;
-    dsv_desc.Texture2DArray.MipSlice        = 0;
-    dsv_desc.Texture2DArray.FirstArraySlice = 0;
-    dsv_desc.Flags                          = 0;
-
-    GetD3Device().CreateDepthStencil
-      (
-       desc, dsv_desc, buffer.texture.ReleaseAndGetAddressOf(),
-       buffer.depth_stencil_view.ReleaseAndGetAddressOf()
-      );
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
-    srv_desc.Format                         = DXGI_FORMAT_R32_FLOAT;
-    srv_desc.ViewDimension                  = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-    srv_desc.Texture2DArray.ArraySize       = g_max_shadow_cascades;
-    srv_desc.Texture2DArray.FirstArraySlice = 0;
-    srv_desc.Texture2DArray.MipLevels       = 1;
-    srv_desc.Texture2DArray.MostDetailedMip = 0;
-
-    GetD3Device().CreateShaderResourceView
-      (
-       buffer.texture.Get(), srv_desc,
-       buffer.shader_resource_view.ReleaseAndGetAddressOf()
-      );
+    // This will bypass the resource manager for simplicity.
+    m_shadow_texs_[id] = Resources::ShadowTexture();
+    m_shadow_texs_[id].Load();
   }
 
   ShadowManager::~ShadowManager() { if (m_shadow_sampler_) { m_shadow_sampler_->Release(); } }
@@ -461,13 +427,9 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::ClearShadowMaps()
   {
-    for (const auto& buffer : m_dx_resource_shadow_vps_ | std::views::values)
+    for (const auto& buffer : m_shadow_texs_ | std::views::values)
     {
-      GetD3Device().GetContext()->ClearDepthStencilView
-        (
-         buffer.depth_stencil_view.Get(),
-         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0
-        );
+      buffer.Clear();
     }
   }
 } // namespace Engine::Manager::Graphics
