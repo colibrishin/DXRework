@@ -17,6 +17,7 @@ namespace Engine
   {
     RESERVED_SHADOW_MAP = g_reserved_bind_slot,
     RESERVED_RENDERED,
+    RESERVED_BONES,
   };
 
   enum eSampler
@@ -145,6 +146,7 @@ namespace Engine
     RES_T_MTR,
     RES_T_MESH,
     RES_T_SHAPE,
+    RES_T_ANIMS,
   };
 
   enum eComponentType

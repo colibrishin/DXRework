@@ -33,6 +33,7 @@ TextureCube    texCube07 : register(t23);
 
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
+Texture3D      texAnimations : register(t34);
 
 StructuredBuffer<BoneTransformElement> bufBoneTransform : register(t64);
 StructuredBuffer<LightElement>         bufLight : register(t65);
@@ -113,6 +114,23 @@ float GetShadowFactorImpl(
 
   shadow /= 9.0f;
   return shadow;
+}
+
+matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
+{
+  uint frame_idx = frame * 10;
+  // since we are storing float4s, bone idx should be
+  // multiplied by 4 to get the correct index
+  uint u         = bone_idx * 4;  
+  uint v         = frame_idx;
+  uint w         = anim_idx;
+
+  float4 r0        = texAnimations.Load(uint4(u, v, w, 0));
+  float4 r1        = texAnimations.Load(uint4(u + 1, v, w, 0));
+  float4 r2        = texAnimations.Load(uint4(u + 2, v, w, 0));
+  float4 r3        = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+  return matrix(r0, r1, r2, r3);
 }
 
 void GetShadowFactor(

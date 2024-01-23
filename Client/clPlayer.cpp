@@ -109,7 +109,7 @@ namespace Client::Object
       const auto child = GetChild(id).lock();
 
       const auto ctr = child->GetComponent<Components::Transform>().lock();
-      ctr->SetAnimationMatrix(deform[idx].transform);
+      ctr->SetAnimationMatrix(deform[idx]);
 
       static const std::vector<Vector3> stock_vertices
       {
