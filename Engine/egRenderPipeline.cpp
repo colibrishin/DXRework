@@ -26,15 +26,6 @@ namespace Engine::Manager::Graphics
     BindConstantBuffer(m_wvp_buffer_data_, SHADER_PIXEL);
   }
 
-  void RenderPipeline::SetGlobalStateBuffer(const CBs::GlobalStateCB& state)
-  {
-    m_global_state_ = state;
-    m_global_state_buffer_data_.SetData(GetD3Device().GetContext(), state);
-    BindConstantBuffer(m_global_state_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_global_state_buffer_data_, SHADER_PIXEL);
-    BindConstantBuffer(m_global_state_buffer_data_, SHADER_GEOMETRY);
-  }
-
   void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
   {
     GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
@@ -55,7 +46,7 @@ namespace Engine::Manager::Graphics
     GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_TEXTURE);
   }
 
-  void RenderPipeline::DefaultRenderTarget()
+  void RenderPipeline::DefaultRenderTarget() const
   {
     GetD3Device().GetContext()->OMSetDepthStencilState
       (
@@ -64,7 +55,7 @@ namespace Engine::Manager::Graphics
     GetD3Device().UpdateRenderTarget();
   }
 
-  void RenderPipeline::DefaultViewport() { GetD3Device().UpdateViewport(); }
+  void RenderPipeline::DefaultViewport() const { GetD3Device().UpdateViewport(); }
 
   void RenderPipeline::SetWireframeState() const
   {
@@ -138,8 +129,8 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
     GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_global_state_buffer_data_);
     GetD3Device().CreateConstantBuffer(m_material_buffer_data_);
+    GetD3Device().CreateConstantBuffer(m_param_buffer_data_);
 
     PrecompileShaders();
     InitializeSamplers();
@@ -312,7 +303,7 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
   }
 
-  void RenderPipeline::DefaultDepthStencilState()
+  void RenderPipeline::DefaultDepthStencilState() const
   {
     GetD3Device().GetContext()->OMSetDepthStencilState
       (
@@ -320,13 +311,13 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::DefaultRasterizerState() { GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get()); }
+  void RenderPipeline::DefaultRasterizerState() const { GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get()); }
 
-  void RenderPipeline::DefaultSamplerState()
+  void RenderPipeline::DefaultSamplerState() const
   {
     GetD3Device().BindSampler
       (
-       m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL,
+       m_sampler_state_.at(SAMPLER_TEXTURE), SHADER_PIXEL,
        SAMPLER_TEXTURE
       );
   }
@@ -341,8 +332,6 @@ namespace Engine::Manager::Graphics
     BindConstantBuffer(m_material_buffer_data_, SHADER_VERTEX);
     BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
   }
-
-  CBs::GlobalStateCB RenderPipeline::GetGlobalStateBuffer() const { return m_global_state_; }
 
   void RenderPipeline::UnbindResource(UINT slot, eShaderType type)
   {
