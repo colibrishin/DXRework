@@ -16,7 +16,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float3 reflection[MAX_NUM_LIGHTS];
   float4 specular[MAX_NUM_LIGHTS];
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     lightIntensity[i] = saturate(dot(input.normal, -input.lightDirection[i]));
     colorArray[i]     =
@@ -33,14 +33,14 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float4 colorSum    = g_ambientColor;
   float4 specularSum = g_ambientColor;
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     colorSum.r += colorArray[i].r;
     colorSum.g += colorArray[i].g;
     colorSum.b += colorArray[i].b;
   }
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     specularSum.r += specular[i].r;
     specularSum.g += specular[i].g;

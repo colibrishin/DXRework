@@ -1,6 +1,8 @@
 #ifndef __COMMON_HLSLI__
 #define __COMMON_HLSLI__
+
 #define TRIANGLE_MACRO 3
+
 #include "type.hlsli"
 
 SamplerState           PSSampler : register(s0);
@@ -58,13 +60,7 @@ cbuffer TransformBuffer : register(b1)
   matrix g_world;
 };
 
-cbuffer GlobalStatusBuffer : register(b2)
-{
-  int4 g_lightCount : LIGHTCOUNT;
-  int4 g_targetShadow : SHADOWTARGET;
-}
-
-cbuffer MaterialBuffer : register(b3)
+cbuffer MaterialBuffer : register(b2)
 {
   BindFlag g_bindFlag : BINDFLAG;
 
@@ -76,6 +72,14 @@ cbuffer MaterialBuffer : register(b3)
   float4 g_overrideColor : OVERRIDECOLOR;
   float4 g_specularColor : SPECULARCOLOR;
   float4 g_clipPlane : CLIPPLANE;
+}
+
+cbuffer ParamBuffer : register(b3)
+{
+  float  g_fParam[4] : FPARAM;
+  int    g_iParam[4] : IPARAM;
+  float4 g_vecParam[4] : VECPARAM;
+  matrix g_matParam[4] : MATPARAM;
 }
 
 float4 GetWorldPosition(in matrix mat) { return float4(mat._41, mat._42, mat._43, mat._44); }
@@ -145,7 +149,8 @@ void GetShadowFactor(
 
   [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
-    if (i > g_lightCount.x) { break; }
+    // Assuming light count is bound at idx 0
+    if (i > g_iParam[0]) { break; }
 
     [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
     {

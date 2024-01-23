@@ -1,4 +1,5 @@
 #include "common.hlsli"
+#define PARAM_NUM_LIGHT g_iParam[0]
 
 struct PixelInputType
 {
@@ -62,7 +63,7 @@ PixelInputType vs_main(VertexInputType input)
   output.color = input.color;
   output.tex   = input.tex;
 
-  [unroll] for (int i = 0; i < g_lightCount.x; ++i)
+  [unroll] for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     const float4 light_position = GetWorldPosition(bufLight[i].world);
     output.lightDirection[i]    = light_position.xyz - output.world_position.xyz;

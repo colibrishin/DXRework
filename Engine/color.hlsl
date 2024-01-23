@@ -13,7 +13,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float  lightIntensity[MAX_NUM_LIGHTS];
   float4 colorArray[MAX_NUM_LIGHTS];
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     lightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
     colorArray[i]     =
@@ -22,7 +22,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   float4 colorSum = g_ambientColor;
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     colorSum.r += colorArray[i].r;
     colorSum.g += colorArray[i].g;
