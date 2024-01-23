@@ -9,10 +9,26 @@ namespace Engine::Resources
   public:
     RESOURCE_T(RES_T_TEX)
 
-    explicit Texture(std::filesystem::path path);
+    struct GenericTextureDescription
+    {
+      UINT        Width = 0;
+      UINT        Height = 0;
+      UINT        Depth = 0;
+      UINT        ArraySize = 0;
+      DXGI_FORMAT Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      UINT        CPUAccessFlags = 0;
+      UINT        BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+      UINT        MipsLevel = 1;
+      UINT        MiscFlags = 0;
+      D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
+      DXGI_SAMPLE_DESC SampleDesc = {.Count = 1, .Quality = 0};
+    };
+
+    explicit Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description);
 
     ~Texture() override;
 
+  public:
     void Initialize() override;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
@@ -20,28 +36,79 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
-    void Load_INTERNAL() override;
-    void Unload_INTERNAL() override;
     void FixedUpdate(const float& dt) override;
 
-    UINT GetWidth() const;
-    UINT GetHeight() const;
+    eResourceType GetResourceType() const override;
 
-    void SetSlot(eTexBindSlot slot, UINT slot_offset);
+    eTexBindSlots GetSlot() const;
+    UINT          GetSlotOffset() const;
+    eShaderType   GetBoundShader() const;
+    eTexType      GetPrimitiveTextureType() const;
+
+    ID3D11ShaderResourceView*  GetSRV() const;
+    ID3D11RenderTargetView*    GetRTV() const;
+    ID3D11DepthStencilView*    GetDSV() const;
+    ID3D11UnorderedAccessView* GetUAV() const;
+
+    bool         IsHotload() const;
+
+    void BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader);
+    void Map(const std::function<void(const D3D11_MAPPED_SUBRESOURCE&)> & copy_func) const;
 
     RESOURCE_SELF_INFER_GETTER(Texture)
-    RESOURCE_SELF_INFER_CREATE(Texture)
 
   protected:
     Texture();
 
-    ComPtr<ID3D11ShaderResourceView> m_texture_view_;
+    // Derived class should hide these by their own case.
+    virtual UINT GetWidth() const;
+    virtual UINT GetHeight() const;
+    virtual UINT GetDepth() const;
+    virtual UINT GetArraySize() const;
+
+    void LazyDescription(const GenericTextureDescription & desc);
+    void LazyRTV(const D3D11_RENDER_TARGET_VIEW_DESC & desc);
+    void LazyDSV(const D3D11_DEPTH_STENCIL_VIEW_DESC & desc);
+    void LazyUAV(const D3D11_UNORDERED_ACCESS_VIEW_DESC & desc);
+    void LazySRV(const D3D11_SHADER_RESOURCE_VIEW_DESC & desc);
+
+    const GenericTextureDescription& GetDescription() const;
+
+    virtual void loadDerived(ComPtr<ID3D11Resource>& res) = 0;
+    void Unload_INTERNAL() override;
+
+    SERIALIZER_ACCESS
+    // Non-serialized
+    ComPtr<ID3D11Resource>            m_res_;
+
+    ComPtr<ID3D11ShaderResourceView>  m_srv_;
+    ComPtr<ID3D11RenderTargetView>    m_rtv_;
+    ComPtr<ID3D11DepthStencilView>    m_dsv_;
+    ComPtr<ID3D11UnorderedAccessView> m_uav_;
 
   private:
-    SERIALIZER_ACCESS
+    void Load_INTERNAL() override final;
 
-    D3D11_TEXTURE2D_DESC m_texture_desc_;
-    UINT                 m_bound_slot_;
+    inline static ID3D11RenderTargetView** s_previous_rtv = nullptr;
+    inline static ID3D11DepthStencilView** s_previous_dsv = nullptr;
+
+    bool                             m_b_lazy_window_;
+
+    GenericTextureDescription        m_desc_;
+    eTexType                         m_type_;
+
+    std::bitset<4>                   m_custom_desc_;
+    D3D11_RENDER_TARGET_VIEW_DESC    m_rtv_desc_{};
+    D3D11_DEPTH_STENCIL_VIEW_DESC    m_dsv_desc_{};
+    D3D11_UNORDERED_ACCESS_VIEW_DESC m_uav_desc_{};
+    D3D11_SHADER_RESOURCE_VIEW_DESC  m_srv_desc_{};
+
+    // Non-serialized
+    D3D11_BIND_FLAG                  m_bind_to_;
+    eTexBindSlots                    m_bound_slot_;
+    UINT                             m_bound_slot_offset_;
+    eShaderType                      m_bound_shader_;
+
   };
 } // namespace Engine::Resources
 
