@@ -25,13 +25,11 @@ namespace Engine::Resources
     void OnDeserialized() override;
 
     void SetTempParam(TempParam&& param) noexcept;
+    bool IsPostProcess() const noexcept;
 
     template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
     void SetResource(const std::string& name)
     {
-      // todo: check shader domain and if it is a post process shader, then flag
-      // this as post render material
-
       const auto search = GetResourceManager().GetResource<T>(name);
 
       if (search.expired()) { return; }
@@ -44,6 +42,11 @@ namespace Engine::Resources
 
       if constexpr (which_resource<T>::value == RES_T_SHADER)
       {
+        if (search.lock()->template GetSharedPtr<Shader>()->GetDomain() == SHADER_DOMAIN_POST_PROCESS)
+        {
+          m_b_post_process_ = true;
+        }
+
         m_shaders_.emplace_back(name);
         m_shaders_loaded_.emplace_back(search.lock());
         return;
@@ -101,6 +104,7 @@ namespace Engine::Resources
 
   private:
     CBs::MaterialCB m_material_cb_;
+    bool            m_b_post_process_;
 
     std::vector<std::string>                                m_shaders_;
     std::map<const eResourceType, std::vector<std::string>> m_resources_;

@@ -20,7 +20,8 @@ namespace Engine::Resources
 {
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_()
+      m_material_cb_(),
+      m_b_post_process_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -131,6 +132,8 @@ namespace Engine::Resources
 
   void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
 
+  bool Material::IsPostProcess() const noexcept { return m_b_post_process_; }
+
   void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
   void Material::SetTextureSlot(const std::string& name, const UINT slot)
@@ -146,7 +149,8 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_() {}
+      m_material_cb_(),
+      m_b_post_process_(false) {}
 
   void Material::Load_INTERNAL()
   {
