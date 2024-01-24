@@ -129,7 +129,8 @@ namespace Engine::Manager::Graphics
 
           // It only needs to render the depth of the object from the light's point of view.
           // Swap the depth stencil to the each light's shadow map.
-          m_shadow_texs_[light->GetLocalID()].Render(0.f);
+          m_shadow_texs_[light->GetLocalID()].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
+          m_shadow_texs_[light->GetLocalID()].Render(placeholder);
 
           // Notify the index of the shadow map to the shader.
           GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
@@ -137,7 +138,7 @@ namespace Engine::Manager::Graphics
           BuildShadowMap(*scene, dt);
 
           // Cleanup
-          m_shadow_texs_[light->GetLocalID()].PostRender(0.f);
+          m_shadow_texs_[light->GetLocalID()].PostRender(placeholder);
         }
       }
 
