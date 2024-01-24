@@ -79,10 +79,12 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::PreRender(const float& dt)
   {
+    constexpr size_t shadow_slot = 1;
+
     // # Pass 1 : depth only, building shadow map
     // Unbind the shadow map resource from the pixel shader to build the shadow map.
     GetRenderPipeline().UnbindResource(RESERVED_SHADOW_MAP, SHADER_PIXEL);
-
+    
     // Clear all shadow map data.
     ClearShadowMaps();
     // Set the viewport to the size of the shadow map.
@@ -126,8 +128,6 @@ namespace Engine::Manager::Graphics
       {
         if (const auto light = ptr_light.lock())
         {
-          constexpr size_t shadow_slot = 1;
-
           // It only needs to render the depth of the object from the light's point of view.
           // Swap the depth stencil to the each light's shadow map.
           m_shadow_texs_[light->GetLocalID()].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
@@ -147,7 +147,7 @@ namespace Engine::Manager::Graphics
       m_sb_light_vps_buffer_.Unbind(SHADER_GEOMETRY);
     }
 
-    GetRenderPipeline().SetParam<int>(0, 1);
+    GetRenderPipeline().SetParam<int>(0, shadow_slot);
 
     // Unload the shadow map shaders.
     m_shadow_shaders_->PostRender(placeholder);
@@ -304,7 +304,7 @@ namespace Engine::Manager::Graphics
 
           const auto pos = center + (light_dir * std::fabsf(minExtent.z));
 
-          // DX11 uses column major matrix
+          // DX11 uses row major matrix
 
           buffer.view[i] = XMMatrixTranspose
             (
