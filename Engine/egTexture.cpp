@@ -78,7 +78,7 @@ namespace Engine::Resources
       throw std::runtime_error("Texture is already created with given description, Cannot initialize lazily");
     }
 
-    m_desc_ = std::move(desc);
+    m_desc_ = desc;
   }
 
   void Texture::LazyRTV(const   D3D11_RENDER_TARGET_VIEW_DESC& desc)
@@ -89,7 +89,7 @@ namespace Engine::Resources
     }
 
     m_custom_desc_.set(0);
-    m_rtv_desc_ = std::move(desc);
+    m_rtv_desc_ = desc;
   }
 
   void Texture::LazyDSV(const  D3D11_DEPTH_STENCIL_VIEW_DESC& desc)
@@ -100,7 +100,7 @@ namespace Engine::Resources
     }
 
     m_custom_desc_.set(1);
-    m_dsv_desc_ = std::move(desc);
+    m_dsv_desc_ = desc;
   }
 
   void Texture::LazyUAV(const  D3D11_UNORDERED_ACCESS_VIEW_DESC& desc)
@@ -111,7 +111,7 @@ namespace Engine::Resources
     }
 
     m_custom_desc_.set(2);
-    m_uav_desc_ = std::move(desc);
+    m_uav_desc_ = desc;
   }
 
   void Texture::LazySRV(const  D3D11_SHADER_RESOURCE_VIEW_DESC& desc)
@@ -122,7 +122,7 @@ namespace Engine::Resources
     }
 
     m_custom_desc_.set(3);
-    m_srv_desc_ = std::move(desc);
+    m_srv_desc_ = desc;
   }
 
   const Texture::GenericTextureDescription& Texture::GetDescription() const { return m_desc_; }
@@ -141,7 +141,7 @@ namespace Engine::Resources
   {
     if (m_bind_to_ == D3D11_BIND_RENDER_TARGET)
     {
-      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv, s_previous_dsv);
+      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
       GetD3Device().GetContext()->OMSetRenderTargets(1, m_rtv_.GetAddressOf(), nullptr);
     }
     else if (m_bind_to_ == D3D11_BIND_SHADER_RESOURCE)
@@ -173,7 +173,7 @@ namespace Engine::Resources
     else if (m_bind_to_ == D3D11_BIND_DEPTH_STENCIL)
     {
       ComPtr<ID3D11RenderTargetView> null_view = nullptr;
-      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv, s_previous_dsv);
+      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
       GetD3Device().GetContext()->OMSetRenderTargets(1, null_view.GetAddressOf(), m_dsv_.Get());
     }
     else if (m_bind_to_ == D3D11_BIND_UNORDERED_ACCESS)
@@ -186,7 +186,7 @@ namespace Engine::Resources
   {
     if (m_bind_to_ == D3D11_BIND_RENDER_TARGET)
     {
-      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv, *s_previous_dsv);
+      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get());
     }
     else if (m_bind_to_ == D3D11_BIND_SHADER_RESOURCE)
     {
@@ -221,7 +221,7 @@ namespace Engine::Resources
     }
     else if (m_bind_to_ == D3D11_BIND_DEPTH_STENCIL)
     {
-      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv, *s_previous_dsv);
+      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get());
     }
   }
 

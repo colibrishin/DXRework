@@ -89,8 +89,8 @@ namespace Engine::Resources
   private:
     void Load_INTERNAL() override final;
 
-    inline static ID3D11RenderTargetView** s_previous_rtv = nullptr;
-    inline static ID3D11DepthStencilView** s_previous_dsv = nullptr;
+    inline static ComPtr<ID3D11RenderTargetView> s_previous_rtv = nullptr;
+    inline static ComPtr<ID3D11DepthStencilView> s_previous_dsv = nullptr;
 
     bool                             m_b_lazy_window_;
 
