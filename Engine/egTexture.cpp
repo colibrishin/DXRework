@@ -343,7 +343,7 @@ namespace Engine::Resources
 
     if (m_desc_.BindFlags & D3D11_BIND_UNORDERED_ACCESS)
     {
-      if (m_custom_desc_.test(1))
+      if (m_custom_desc_.test(2))
       {
         DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), &m_uav_desc_, m_uav_.ReleaseAndGetAddressOf()));
       }
