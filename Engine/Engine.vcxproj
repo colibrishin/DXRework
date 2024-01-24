@@ -21,10 +21,12 @@
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
-    <ClInclude Include="egAnimations.h" />
+    <ClInclude Include="egAnimationsTexture.h" />
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
+    <ClInclude Include="egComputeShader.h" />
+    <ClInclude Include="egShadowTexture.h" />
     <ClInclude Include="egGenericBounding.hpp" />
     <ClInclude Include="egCollision.h" />
     <ClInclude Include="egConstant.h" />
@@ -88,6 +90,9 @@
     <ClInclude Include="egTaskScheduler.h" />
     <ClInclude Include="egText.h" />
     <ClInclude Include="egTexture.h" />
+    <ClInclude Include="egTexture1D.h" />
+    <ClInclude Include="egTexture2D.h" />
+    <ClInclude Include="egTexture3D.h" />
     <ClInclude Include="egToolkitAPI.h" />
     <ClInclude Include="egTransform.h" />
     <ClInclude Include="egLerpManager.h" />
@@ -101,7 +106,7 @@
   <ItemGroup>
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
-    <ClCompile Include="egAnimations.cpp" />
+    <ClCompile Include="egAnimationsTexture.cpp" />
     <ClCompile Include="egBoneAnimation.cpp" />
     <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
@@ -112,10 +117,12 @@
     <ClCompile Include="egCollisionDetector.cpp" />
     <ClCompile Include="egCommon.cpp" />
     <ClCompile Include="egComponent.cpp" />
+    <ClCompile Include="egComputeShader.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
     <ClCompile Include="egCubeMesh.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
+    <ClCompile Include="egShadowTexture.cpp" />
     <ClCompile Include="egElastic.cpp" />
     <ClCompile Include="egEntity.cpp" />
     <ClCompile Include="egFont.cpp" />
@@ -154,6 +161,9 @@
     <ClCompile Include="egTaskScheduler.cpp" />
     <ClCompile Include="egText.cpp" />
     <ClCompile Include="egTexture.cpp" />
+    <ClCompile Include="egTexture1D.cpp" />
+    <ClCompile Include="egTexture2D.cpp" />
+    <ClCompile Include="egTexture3D.cpp" />
     <ClCompile Include="egToolkitAPI.cpp" />
     <ClCompile Include="egTransform.cpp" />
     <ClCompile Include="egLerpManager.cpp" />
