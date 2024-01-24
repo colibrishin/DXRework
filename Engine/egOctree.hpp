@@ -89,10 +89,10 @@ namespace Engine
     // The center of the bounding box in world space.
     Vector3 WorldCenter() const;
 
-    Octree*                   m_parent_;
-    std::unique_ptr<Octree>   m_children_[octant_count];
-    std::bitset<octant_count> m_active_children_;
-    std::vector<WeakT>        m_values_;
+    Octree*                                           m_parent_;
+    std::array<std::unique_ptr<Octree>, octant_count> m_children_;
+    std::bitset<octant_count>                         m_active_children_;
+    std::vector<WeakT>                                m_values_;
 
     BoundingBox m_bounds_;
 

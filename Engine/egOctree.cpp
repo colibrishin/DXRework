@@ -298,7 +298,7 @@ namespace Engine
                 {
                   // Expand the node
                   node_children[i]            = std::unique_ptr<Octree>(new Octree{bound});
-                  node_children[i]->m_parent_ = this;
+                  node_children[i]->m_parent_ = node;
                   node_children[i]->Build();
                   node_active_children.set(i);
                   if (node_children[i]->Insert(obj))
