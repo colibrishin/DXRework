@@ -7,12 +7,6 @@
 
 namespace Engine::Graphics { namespace SBs
   {
-    struct BoneSB
-    {
-      SB_T(SB_TYPE_BONE)
-      Matrix transform;
-    };
-
     struct LightSB
     {
       SB_T(SB_TYPE_LIGHT)
