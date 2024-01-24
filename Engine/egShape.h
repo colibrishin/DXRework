@@ -26,7 +26,7 @@ namespace Engine::Resources
     BoundingBox                                GetBoundingBox() const;
     WeakMesh                                   GetMesh(const std::string& name) const;
     WeakMesh                                   GetMesh(UINT index) const;
-    WeakAnimations                             GetAnimations() const;
+    WeakAnimsTexture                             GetAnimations() const;
     const std::vector<VertexElement>&          GetVertices() const;
     std::vector<StrongMesh>                    GetMeshes() const;
     const std::vector<std::string>&            GetAnimationCatalog() const;
@@ -73,7 +73,7 @@ namespace Engine::Resources
     std::vector<StrongMesh>             m_meshes_;
     std::vector<std::string>            m_animation_catalog_;
     StrongBone                          m_bone_;
-    StrongAnimations                    m_animations_;
+    StrongAnimsTexture                    m_animations_;
     BoundingBox                         m_bounding_box_;
     std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 

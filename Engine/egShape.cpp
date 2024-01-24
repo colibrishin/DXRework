@@ -5,7 +5,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-#include "egAnimations.h"
+#include "egAnimationsTexture.h"
 #include "egBaseAnimation.h"
 #include "egBone.h"
 #include "egBoneAnimation.h"
@@ -47,7 +47,15 @@ namespace Engine::Resources
     for (const auto& mesh : m_meshes_) { mesh->Render(dt); }
   }
 
-  void Shape::PostRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PostRender(dt); } }
+  void Shape::PostRender(const float& dt)
+  {
+    if (m_animations_)
+    {
+      m_animations_->PostRender(dt);
+    }
+
+    for (const auto& mesh : m_meshes_) { mesh->PostRender(dt); }
+  }
 
   void Shape::PostUpdate(const float& dt) {}
 
@@ -79,7 +87,7 @@ namespace Engine::Resources
     return {};
   }
 
-  WeakAnimations Shape::GetAnimations() const
+  WeakAnimsTexture Shape::GetAnimations() const
   {
     return m_animations_;
   }
@@ -397,7 +405,7 @@ namespace Engine::Resources
           animations.push_back(anim);
         }
 
-        const auto anims = boost::make_shared<Animations>(animations);
+        const auto anims = boost::make_shared<AnimationsTexture>(animations);
         anims->SetName(GetName() + "_ANIMS");
         anims->Load();
         GetResourceManager().AddResource(anims);
