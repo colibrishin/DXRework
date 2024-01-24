@@ -223,6 +223,9 @@ namespace Engine::Resources
     {
       GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get());
     }
+
+    s_previous_rtv.Reset();
+    s_previous_dsv.Reset();
   }
 
   void Texture::PostUpdate(const float& dt) {}
