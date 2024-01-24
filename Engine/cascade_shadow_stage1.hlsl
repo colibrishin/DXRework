@@ -40,7 +40,6 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
     output.position = mul(output.position, animation_transform);
   }
 
-  output.position = float4(input.position, 1.f);
   output.position = mul(output.position, bufInstance[instanceId].world);
 
   return output;
