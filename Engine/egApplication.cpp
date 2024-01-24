@@ -128,8 +128,8 @@ namespace Engine::Manager
     GetPhysicsManager().PreUpdate(dt);
     GetLerpManager().PreUpdate(dt);
     GetProjectionFrustum().PreUpdate(dt);
-    GetShadowManager().PreUpdate(dt);
     GetRenderer().PreUpdate(dt);
+    GetShadowManager().PreUpdate(dt);
     GetDebugger().PreUpdate(dt);
     GetD3Device().PreUpdate(dt);
     GetToolkitAPI().PreUpdate(dt);
@@ -148,8 +148,8 @@ namespace Engine::Manager
     GetConstraintSolver().FixedUpdate(dt);
     GetLerpManager().FixedUpdate(dt);
     GetProjectionFrustum().FixedUpdate(dt);
-    GetShadowManager().FixedUpdate(dt);
     GetRenderer().FixedUpdate(dt);
+    GetShadowManager().FixedUpdate(dt);
     GetDebugger().FixedUpdate(dt);
     GetD3Device().FixedUpdate(dt);
     GetToolkitAPI().FixedUpdate(dt);
@@ -167,8 +167,8 @@ namespace Engine::Manager
     GetPhysicsManager().Update(dt);
     GetLerpManager().Update(dt);
     GetProjectionFrustum().Update(dt);
-    GetShadowManager().Update(dt);
     GetRenderer().Update(dt);
+    GetShadowManager().Update(dt);
     GetDebugger().Update(dt);
     GetD3Device().Update(dt);
     GetToolkitAPI().Update(dt);
@@ -187,8 +187,8 @@ namespace Engine::Manager
     GetPhysicsManager().PreRender(dt);
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
-    GetShadowManager().PreRender(dt);
     GetRenderer().PreRender(dt);
+    GetShadowManager().PreRender(dt);
     GetDebugger().PreRender(dt);
     GetRenderPipeline().PreRender(dt);
     GetD3Device().PreRender(dt);
@@ -206,8 +206,8 @@ namespace Engine::Manager
     GetPhysicsManager().Render(dt);
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
-    GetShadowManager().Render(dt);
     GetRenderer().Render(dt);
+    GetShadowManager().Render(dt);
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
     GetD3Device().Render(dt);
@@ -225,8 +225,8 @@ namespace Engine::Manager
     GetPhysicsManager().PostRender(dt);
     GetLerpManager().PostRender(dt);
     GetProjectionFrustum().PostRender(dt);
-    GetShadowManager().PostRender(dt);
     GetRenderer().PostRender(dt);
+    GetShadowManager().PostRender(dt);
     GetDebugger().PostRender(dt);
 
     ImGui::Render();
@@ -247,9 +247,9 @@ namespace Engine::Manager
     GetConstraintSolver().PostUpdate(dt);
     GetPhysicsManager().PostUpdate(dt);
     GetLerpManager().PostUpdate(dt);
-    GetShadowManager().PostUpdate(dt);
     GetProjectionFrustum().PostUpdate(dt);
     GetRenderer().PostUpdate(dt);
+    GetShadowManager().PostUpdate(dt);
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);

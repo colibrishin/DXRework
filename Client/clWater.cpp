@@ -13,35 +13,34 @@
 SERIALIZER_ACCESS_IMPL
 (
  Client::Object::Water,
- _ARTAG(_BSTSUPER(Engine::Objects::DelayedRenderObject))
+ _ARTAG(_BSTSUPER(Engine::Abstract::Object))
 )
 
 void Client::Object::Water::Initialize()
 {
   SetName("Water");
   const auto mr    = AddComponent<Components::ModelRenderer>().lock();
-  const auto model = Resources::Shape::Get("CubeModel");
+  const auto model = Resources::Shape::Get("CubeShape");
 
-  mr->SetShape(model);
-  mr->SetMaterial(Resources::Material::Get("WaterMaterial"));
+  mr->SetMaterial(Resources::Material::Get("WaterCube"));
 
   AddComponent<Components::Transform>();
   const auto cldr = AddComponent<Components::Collider>().lock();
   cldr->SetModel(model);
 }
 
-void Client::Object::Water::PreUpdate(const float& dt) { DelayedRenderObject::PreUpdate(dt); }
+void Client::Object::Water::PreUpdate(const float& dt) { Object::PreUpdate(dt); }
 
-void Client::Object::Water::Update(const float& dt) { DelayedRenderObject::Update(dt); }
+void Client::Object::Water::Update(const float& dt) { Object::Update(dt); }
 
-void Client::Object::Water::PreRender(const float& dt) { DelayedRenderObject::PreRender(dt); }
+void Client::Object::Water::PreRender(const float& dt) { Object::PreRender(dt); }
 
-void Client::Object::Water::Render(const float& dt) { DelayedRenderObject::Render(dt); }
+void Client::Object::Water::Render(const float& dt) { Object::Render(dt); }
 
-void Client::Object::Water::PostRender(const float& dt) { DelayedRenderObject::PostRender(dt); }
+void Client::Object::Water::PostRender(const float& dt) { Object::PostRender(dt); }
 
-void Client::Object::Water::FixedUpdate(const float& dt) { DelayedRenderObject::FixedUpdate(dt); }
+void Client::Object::Water::FixedUpdate(const float& dt) { Object::FixedUpdate(dt); }
 
-void Client::Object::Water::OnDeserialized() { DelayedRenderObject::OnDeserialized(); }
+void Client::Object::Water::OnDeserialized() { Object::OnDeserialized(); }
 
-void Client::Object::Water::OnImGui() { DelayedRenderObject::OnImGui(); }
+void Client::Object::Water::OnImGui() { Object::OnImGui(); }

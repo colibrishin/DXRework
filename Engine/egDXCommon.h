@@ -7,12 +7,6 @@
 
 namespace Engine::Graphics { namespace SBs
   {
-    struct BoneSB
-    {
-      SB_T(SB_TYPE_BONE)
-      Matrix transform;
-    };
-
     struct LightSB
     {
       SB_T(SB_TYPE_LIGHT)
@@ -28,6 +22,16 @@ namespace Engine::Graphics { namespace SBs
       Matrix  view[g_max_shadow_cascades];
       Matrix  proj[g_max_shadow_cascades];
       Vector4 end_clip_spaces[g_max_shadow_cascades];
+    };
+
+    struct InstanceSB
+    {
+      SB_T(SB_TYPE_INSTANCE)
+
+      Matrix         world      = Matrix::Identity;
+      OffsetT<float> animFrame  = 0.f;
+      OffsetT<int>   animIndex  = 0;
+      OffsetT<int>   noAnimFlag = false;
     };
   }
 

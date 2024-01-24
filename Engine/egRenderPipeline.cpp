@@ -194,7 +194,7 @@ namespace Engine::Manager::Graphics
 
     Shader::Create
       (
-       "refraction", "./refraction.hlsl", SHADER_DOMAIN_OPAQUE,
+       "refraction", "./refraction.hlsl", SHADER_DOMAIN_POST_PROCESS,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D11_FILTER_MIN_MAG_MIP_LINEAR,
@@ -269,6 +269,11 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::PostUpdate(const float& dt) {}
 
   void RenderPipeline::DrawIndexed(UINT index_count) { GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0); }
+
+  void RenderPipeline::DrawIndexedInstanced(UINT index_count, UINT instance_count)
+  {
+    GetD3Device().GetContext()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+  }
 
   void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view)
   {

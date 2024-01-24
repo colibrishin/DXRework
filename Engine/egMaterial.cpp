@@ -3,6 +3,7 @@
 
 #include "egDXCommon.h"
 #include "egDXType.h"
+#include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"
 
@@ -20,7 +21,7 @@ namespace Engine::Resources
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
       m_material_cb_(),
-      m_no_anim_flag_(false)
+      m_b_post_process_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -40,14 +41,17 @@ namespace Engine::Resources
 
   void Material::PreRender(const float& dt)
   {
-    for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+    if (!m_temp_param_.bypassShader)
+    {
+      for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+    }
 
     m_material_cb_.flags = {};
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
       // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM && !m_no_anim_flag_)
+      if (type == RES_T_BONE_ANIM)
       {
         m_material_cb_.flags.bone = 1;
         continue;
@@ -72,7 +76,7 @@ namespace Engine::Resources
 
   void Material::Render(const float& dt)
   {
-    for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); }
+    if (!m_temp_param_.bypassShader) { for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); } }
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -90,6 +94,11 @@ namespace Engine::Resources
           res->GetSharedPtr<Texture>()->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, idx, SHADER_PIXEL);
         }
 
+        if (type == RES_T_SHAPE)
+        {
+          res->GetSharedPtr<Shape>()->SetInstanceCount(m_temp_param_.instanceCount);
+        }
+
         res->Render(dt);
       }
     }
@@ -99,7 +108,10 @@ namespace Engine::Resources
   {
     GetRenderPipeline().SetMaterial({});
 
-    for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+    if (!m_temp_param_.bypassShader)
+    {
+      for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+    }
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -108,6 +120,8 @@ namespace Engine::Resources
 
       for (const auto& res : resources) { res->PostRender(dt); }
     }
+
+    m_temp_param_ = {};
   }
 
   void Material::OnDeserialized()
@@ -116,7 +130,9 @@ namespace Engine::Resources
     Load();
   }
 
-  void Material::IgnoreAnimation(bool ignore) noexcept { m_no_anim_flag_ = ignore; }
+  void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
+
+  bool Material::IsPostProcess() const noexcept { return m_b_post_process_; }
 
   void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
@@ -133,7 +149,8 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_() {}
+      m_material_cb_(),
+      m_b_post_process_(false) {}
 
   void Material::Load_INTERNAL()
   {

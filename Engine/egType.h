@@ -56,7 +56,6 @@ namespace Engine
     class Light;
     class Camera;
     class Text;
-    class DelayedRenderObject;
     class Observer;
   } // namespace Objects
 
@@ -197,7 +196,7 @@ namespace Engine
   using StrongAnimsTexture = boost::shared_ptr<Resources::AnimationsTexture>;
   using StrongShadowTexture = boost::shared_ptr<Resources::ShadowTexture>;
   using StrongTexture2D = boost::shared_ptr<Resources::Texture2D>;
-
+  using StrongModelRenderer = boost::shared_ptr<Components::ModelRenderer>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;

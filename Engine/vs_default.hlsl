@@ -1,4 +1,5 @@
 #include "common.hlsli"
+
 #define PARAM_NUM_LIGHT g_iParam[0].x
 
 struct PixelInputType
@@ -22,7 +23,7 @@ struct PixelInputType
   float clipPlane : SV_ClipDistance1;
 };
 
-PixelInputType vs_main(VertexInputType input)
+PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 {
   PixelInputType output;
 
@@ -32,7 +33,7 @@ PixelInputType vs_main(VertexInputType input)
   output.tangent  = input.tangent;
   output.binormal = input.binormal;
 
-  if (g_bindFlag.boneFlag.x)
+  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].noAnimFlag.x)
   {
     matrix animation_transform;
 
@@ -40,7 +41,13 @@ PixelInputType vs_main(VertexInputType input)
     {
       const int    bone_index = input.bone_element.boneIndex[i];
       const float  weight     = input.bone_element.boneWeight[i];
-      const matrix transform  = LoadAnimation(0, 0.f, bone_index);
+      const matrix transform  = LoadAnimation
+        (
+         bufInstance[instanceId].animIndex.x,
+         bufInstance[instanceId].animFrame.x,
+         bone_index
+        );
+
       animation_transform += transform * weight;
     }
 
@@ -51,9 +58,11 @@ PixelInputType vs_main(VertexInputType input)
     output.binormal = mul(input.binormal, (float3x3)animation_transform);
   }
 
+  const matrix world = bufInstance[instanceId].world;
+
   // Calculate the position of the vertex against the world, view, and
   // projection matrices.
-  output.position       = mul(output.position, g_world);
+  output.position       = mul(output.position, world);
   output.world_position = output.position;
 
   output.position = mul(output.position, g_camView);
@@ -75,20 +84,20 @@ PixelInputType vs_main(VertexInputType input)
   output.viewDirection = cam_position.xyz - output.world_position.xyz;
   output.viewDirection = normalize(output.viewDirection);
 
-  output.normal   = mul(output.normal, (float3x3)g_world);
-  output.tangent  = mul(output.tangent, (float3x3)g_world);
-  output.binormal = mul(output.binormal, (float3x3)g_world);
+  output.normal   = mul(output.normal, (float3x3)world);
+  output.tangent  = mul(output.tangent, (float3x3)world);
+  output.binormal = mul(output.binormal, (float3x3)world);
 
   matrix reflectionWorld = mul(g_camReflectView, g_camProj);
-  reflectionWorld        = mul(g_world, reflectionWorld);
+  reflectionWorld        = mul(world, reflectionWorld);
   output.reflection      = mul(output.position, reflectionWorld);
 
   matrix vpw        = mul(g_camView, g_camProj);
-  vpw               = mul(g_world, vpw);
+  vpw               = mul(world, vpw);
   output.refraction = mul(output.position, vpw);
 
   output.clipSpacePosZ = output.position.z;
-  output.clipPlane     = dot(mul(input.position, g_world), g_clipPlane);
+  output.clipPlane     = dot(mul(input.position, world), g_clipPlane);
 
   return output;
 }

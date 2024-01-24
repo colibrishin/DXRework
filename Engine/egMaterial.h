@@ -6,6 +6,12 @@ namespace Engine::Resources
   class Material final : public Abstract::Resource
   {
   public:
+    struct TempParam
+    {
+      UINT  instanceCount = 1;
+      bool  bypassShader = false;
+    };
+
     RESOURCE_T(RES_T_MTR);
 
     Material(const std::filesystem::path& path);
@@ -18,10 +24,10 @@ namespace Engine::Resources
     void PostRender(const float& dt) override;
     void OnDeserialized() override;
 
-    void IgnoreAnimation(bool ignore) noexcept;
+    void SetTempParam(TempParam&& param) noexcept;
+    bool IsPostProcess() const noexcept;
 
-    template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<
-                Resource, T>>>
+    template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
     void SetResource(const std::string& name)
     {
       const auto search = GetResourceManager().GetResource<T>(name);
@@ -30,12 +36,17 @@ namespace Engine::Resources
 
       static_assert
         (
-         which_resource<T>::value != RES_T_MESH || which_resource<T>::value != RES_T_SHAPE,
-         "Define shape in the ModelRenderer"
+         which_resource<T>::value != RES_T_MESH,
+         "Mesh sole cannot added into material, wrap it with shape instead."
         );
 
       if constexpr (which_resource<T>::value == RES_T_SHADER)
       {
+        if (search.lock()->template GetSharedPtr<Shader>()->GetDomain() == SHADER_DOMAIN_POST_PROCESS)
+        {
+          m_b_post_process_ = true;
+        }
+
         m_shaders_.emplace_back(name);
         m_shaders_loaded_.emplace_back(search.lock());
         return;
@@ -68,6 +79,17 @@ namespace Engine::Resources
       return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
     }
 
+    template <typename T>
+    [[nodiscard]] boost::weak_ptr<T> GetResource(UINT idx) const
+    {
+      if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
+      if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
+
+      const auto& anims = m_resources_loaded_.at(which_resource<T>::value);
+
+      return boost::static_pointer_cast<T>(*(anims.begin() + idx));
+    }
+
     void SetTextureSlot(const std::string& name, UINT slot);
 
     RESOURCE_SELF_INFER_GETTER(Material)
@@ -82,12 +104,13 @@ namespace Engine::Resources
 
   private:
     CBs::MaterialCB m_material_cb_;
-    bool            m_no_anim_flag_;
+    bool            m_b_post_process_;
 
     std::vector<std::string>                                m_shaders_;
     std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
     // non-serialized
+    TempParam                                                  m_temp_param_;
     std::vector<StrongShader>                                  m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
   };

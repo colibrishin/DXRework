@@ -72,15 +72,15 @@ namespace Client
 
   void InitializeModel()
   {
-    Resources::Shape::Create("BobModel", "./bob_lamp_update_export.fbx");
-    Resources::Shape::Create("CharacterModel", "./Character.fbx");
-    Resources::Shape::Create("RifleModel", "./Rifle.fbx");
-    Resources::Shape::Create("PlayerModel", "./player.obj");
+    Resources::Shape::Create("BobShape", "./bob_lamp_update_export.fbx");
+    Resources::Shape::Create("CharacterShape", "./Character.fbx");
+    Resources::Shape::Create("RifleShape", "./Rifle.fbx");
+    Resources::Shape::Create("PlayerShape", "./player.obj");
 
-    const auto cube = Resources::Shape::Create("CubeModel", "");
+    const auto cube = Resources::Shape::Create("CubeShape", "");
     cube->Add(Resources::Mesh::Get("CubeMesh"));
 
-    const auto sphere = Resources::Shape::Create("SphereModel", "");
+    const auto sphere = Resources::Shape::Create("SphereShape", "");
     sphere->Add(Resources::Mesh::Get("SphereMesh"));
   }
 
@@ -107,10 +107,11 @@ namespace Client
   void InitializeMaterial()
   {
     {
-      const auto mtr = Resources::Material::Create("NormalLight", "");
+      const auto mtr = Resources::Material::Create("NormalLightCube", "");
       mtr->SetResource<Resources::Texture>("TestTexture");
       mtr->SetResource<Resources::Texture>("TestNormalMap");
       mtr->SetResource<Resources::Shader>("normal");
+      mtr->SetResource<Resources::Shape>("CubeShape");
 
       // this is not necessary if user adds texture in order.
       //mtr->SetTextureSlot("TestTexture", 0);
@@ -118,49 +119,57 @@ namespace Client
     }
 
     {
-      const auto mtr = Resources::Material::Create("NormalLightSpecular", "");
+      const auto mtr = Resources::Material::Create("NormalSpecularSphere", "");
       mtr->SetResource<Resources::Texture>("TestTexture");
       mtr->SetResource<Resources::Texture>("TestNormalMap");
       mtr->SetResource<Resources::Shader>("specular_normal");
+      mtr->SetResource<Resources::Shape>("SphereShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("ColorMaterial", "");
+      const auto mtr = Resources::Material::Create("ColorCube", "");
       mtr->SetResource<Resources::Shader>("color");
+      mtr->SetResource<Resources::Shape>("CubeShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("CharacterMaterial", "");
+      const auto mtr = Resources::Material::Create("Character", "");
       mtr->SetResource<Resources::Shader>("color");
 
-      for (const auto& anim : Resources::Shape::Get("CharacterModel").lock()->GetAnimationCatalog())
+      for (const auto& anim : Resources::Shape::Get("CharacterShape").lock()->GetAnimationCatalog())
       {
         mtr->SetResource<Resources::BoneAnimation>(anim);
       }
+
+      mtr->SetResource<Resources::Shape>("CharacterShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("ThunderSky", "");
+      const auto mtr = Resources::Material::Create("ThunderSkybox", "");
       mtr->SetResource<Resources::Texture>("ThunderCat");
       mtr->SetResource<Resources::Shader>("skybox");
+      mtr->SetResource<Resources::Shape>("SphereShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("RifleColorMaterial", "");
+      const auto mtr = Resources::Material::Create("ColorRifle", "");
       mtr->SetResource<Resources::Shader>("color");
       mtr->SetResource<Resources::BaseAnimation>("FireAnimation");
+      mtr->SetResource<Resources::Shape>("RifleShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("SkyboxMaterial", "");
+      const auto mtr = Resources::Material::Create("BlueSkybox", "");
       mtr->SetResource<Resources::Texture>("Sky");
       mtr->SetResource<Resources::Shader>("skybox");
+      mtr->SetResource<Resources::Shape>("SphereShape");
     }
 
     {
-      const auto mtr = Resources::Material::Create("WaterMaterial", "");
+      const auto mtr = Resources::Material::Create("WaterCube", "");
       mtr->SetResource<Resources::Texture>("WaterNormalMap");
       mtr->SetResource<Resources::Shader>("refraction");
+      mtr->SetResource<Resources::Shape>("CubeShape");
     }
   }
 

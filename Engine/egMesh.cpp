@@ -118,7 +118,6 @@ namespace Engine::Resources
   {
     GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_.Get());
     GetRenderPipeline().BindIndexBuffer(m_index_buffer_.Get());
-    GetRenderPipeline().DrawIndexed(GetIndexCount());
   }
 
   void Mesh::PostRender(const float& dt)

@@ -2,22 +2,8 @@
 #include "egDXAnimCommon.hpp"
 #include "egMacro.h"
 
-namespace Engine::Graphics { namespace DXPacked
-  {
-    struct ShadowVPResource
-    {
-      ComPtr<ID3D11Texture2D>          texture;
-      ComPtr<ID3D11DepthStencilView>   depth_stencil_view;
-      ComPtr<ID3D11ShaderResourceView> shader_resource_view;
-    };
-
-    struct RenderedResource
-    {
-      ComPtr<ID3D11Texture2D>          texture;
-      ComPtr<ID3D11ShaderResourceView> srv;
-    };
-  }
-
+namespace Engine::Graphics
+{
   template <typename T>
   struct OffsetT
   {
@@ -78,6 +64,6 @@ namespace Engine::Graphics { namespace DXPacked
     Vector3 tangent;
     Vector3 binormal;
 
-    VertexBoneElement bone_element;
+    VertexBoneElement boneElement;
   };
 }

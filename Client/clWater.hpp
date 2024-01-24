@@ -1,9 +1,9 @@
 #pragma once
-#include "egDelayedRenderObject.h"
+#include "egObject.hpp"
 
 namespace Client::Object
 {
-  class Water : public Objects::DelayedRenderObject
+  class Water : public Abstract::Object
   {
   public:
     void Initialize() override;

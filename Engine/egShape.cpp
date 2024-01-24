@@ -27,7 +27,8 @@ namespace Engine::Resources
 {
   Shape::Shape(const std::filesystem::path& path)
     : Resource(path, RES_T_SHAPE),
-      m_bounding_box_({}) {}
+      m_bounding_box_({}),
+      m_instance_count_(1) {}
 
   void Shape::PreUpdate(const float& dt) {}
 
@@ -35,7 +36,7 @@ namespace Engine::Resources
 
   void Shape::FixedUpdate(const float& dt) {}
 
-  void Shape::PreRender(const float& dt) { for (const auto& mesh : m_meshes_) { mesh->PreRender(dt); } }
+  void Shape::PreRender(const float& dt) {}
 
   void Shape::Render(const float& dt)
   {
@@ -44,7 +45,13 @@ namespace Engine::Resources
       m_animations_->Render(dt);
     }
     
-    for (const auto& mesh : m_meshes_) { mesh->Render(dt); }
+    for (const auto& mesh : m_meshes_)
+    {
+      mesh->PreRender(dt);
+      mesh->Render(dt);
+      GetRenderPipeline().DrawIndexedInstanced(mesh->GetIndexCount(), m_instance_count_);
+      mesh->PostRender(dt);
+    }
   }
 
   void Shape::PostRender(const float& dt)
@@ -54,7 +61,7 @@ namespace Engine::Resources
       m_animations_->PostRender(dt);
     }
 
-    for (const auto& mesh : m_meshes_) { mesh->PostRender(dt); }
+    m_instance_count_ = 1;
   }
 
   void Shape::PostUpdate(const float& dt) {}
@@ -99,6 +106,8 @@ namespace Engine::Resources
   const std::vector<std::string>& Shape::GetAnimationCatalog() const { return m_animation_catalog_; }
 
   const std::map<UINT, BoundingOrientedBox>& Shape::GetBoneBoundingBoxes() const { return m_bone_bounding_boxes_; }
+
+  void Shape::SetInstanceCount(const UINT instance_count) { m_instance_count_ = instance_count; }
 
   void Shape::UpdateVertices()
   {
@@ -249,7 +258,7 @@ namespace Engine::Resources
               const auto weight    = bone->mWeights[influence];
               const auto vertex_id = weight.mVertexId;
               const auto weight_   = weight.mWeight;
-              auto&      vtx_bone  = shape[vertex_id].bone_element;
+              auto&      vtx_bone  = shape[vertex_id].boneElement;
 
               vtx_bone.Append(j, weight_);
             }
@@ -289,7 +298,7 @@ namespace Engine::Resources
       {
         for (const auto& vertex : mesh->GetVertexCollection())
         {
-          for (const auto& idx : vertex.bone_element.GetIndices())
+          for (const auto& idx : vertex.boneElement.GetIndices())
           {
             const auto unique = std::ranges::find_if
               (
@@ -431,5 +440,6 @@ namespace Engine::Resources
 
   Shape::Shape()
     : Resource("", RES_T_SHAPE),
-      m_bounding_box_({}) {}
+      m_bounding_box_({}),
+      m_instance_count_(1) {}
 }

@@ -205,6 +205,8 @@ namespace Engine::Resources
     GetRenderPipeline().DefaultSamplerState();
   }
 
+  eShaderDomain Shader::GetDomain() const { return m_domain_; }
+
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
   {
     return Manager::ResourceManager::GetInstance().GetResource<Shader>(name);

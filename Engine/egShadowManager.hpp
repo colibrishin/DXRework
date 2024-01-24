@@ -42,7 +42,7 @@ namespace Engine::Manager::Graphics
 
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
-    void BuildShadowMap(Scene& scene, float dt) const;
+    void BuildShadowMap(const float dt) const;
     void ClearShadowMaps();
 
     void CreateSubfrusta(

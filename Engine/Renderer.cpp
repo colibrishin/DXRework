@@ -21,109 +21,201 @@ namespace Engine::Manager::Graphics
 
   void Renderer::FixedUpdate(const float& dt) {}
 
-  void Renderer::PreRender(const float& dt) {}
-
-  void Renderer::RenderModel(
-    const float& dt, const WeakModelRenderer& ptr_mr, const WeakTransform& ptr_tr, const WeakAnimator& ptr_atr
-  )
+  void Renderer::PreRender(const float& dt)
   {
-    const auto mr = ptr_mr.lock();
-    const auto tr = ptr_tr.lock();
+    // Pre-processing, Mapping the materials to the model renderers.
+    const auto& scene = GetSceneManager().GetActiveScene().lock();
+    const auto& mrs = scene->GetCachedComponents<Components::ModelRenderer>();
 
-    const auto& ptr_model = mr->GetModel();
-    const auto& ptr_mtr   = mr->GetMaterial();
-
-    if (ptr_model.expired()) { return; }
-    if (ptr_mtr.expired()) { return; }
-
-    const auto& model      = ptr_model.lock();
-    const auto& mtr        = ptr_mtr.lock();
-    float       anim_frame = dt;
-
-    if (const auto atr = ptr_atr.lock(); atr && atr->GetActive())
+    for (const auto& ptr_mr : mrs)
     {
-      anim_frame = atr->GetFrame();
+      // pointer sanity check
+      if (ptr_mr.expired()) { continue; }
 
-      if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
+      // get model renderer, continue if it is disabled
+      const auto mr = ptr_mr.lock()->GetSharedPtr<Components::ModelRenderer>();
+      if (!mr->GetActive()) { continue; }
+
+      // owner object sanity check and culling check
+      const auto obj = mr->GetOwner().lock();
+      if (!obj) { continue; }
+      if (!obj->GetActive()) { continue; }
+      if (!GetProjectionFrustum().CheckRender(obj)) { continue; }
+
+      // material sanity check
+      const auto ptr_mtr = mr->GetMaterial();
+      if (ptr_mtr.expired()) { continue; }
+      const auto mtr = ptr_mtr.lock();
+
+      // transform check, continue if it is disabled. (undefined behaviour)
+      const auto tr = obj->GetComponent<Components::Transform>().lock();
+      if (!tr) { continue; }
+      if (!tr->GetActive()) { continue; }
+
+      // animator parameters
+      float anim_frame = 0.0f;
+      UINT anim_idx = 0;
+      bool no_anim = false;
+
+      if (const auto atr = obj->GetComponent<Components::Animator>().lock())
       {
-        anim->PreRender(anim_frame);
-        anim->Render(anim_frame);
+        anim_frame = atr->GetFrame();
+        anim_idx = atr->GetAnimation();
+        no_anim = !atr->GetActive();
       }
+
+      if (mtr->IsPostProcess())
+      {
+        m_post_passes_[mtr].push_back(mr);
+
+        m_post_sbs_[mtr].push_back
+          (
+              {
+                .world = tr->GetWorldMatrix().Transpose(),
+                .animFrame = anim_frame,
+                .animIndex = (int)anim_idx,
+                .noAnimFlag = no_anim
+              }
+          );
+
+        continue;
+      }
+
+      m_normal_passes_[mtr].push_back(mr);
+
+      m_normal_sbs_[mtr].push_back
+        (
+         {
+           .world = tr->GetWorldMatrix().Transpose(),
+           .animFrame = anim_frame,
+           .animIndex = (int)anim_idx,
+           .noAnimFlag = no_anim
+         }
+        );
     }
-    else { mtr->IgnoreAnimation(true); }
 
-    Components::Transform::Bind(*tr);
-
-    mtr->PreRender(anim_frame);
-    mtr->Render(anim_frame);
-    model->PreRender(anim_frame);
-    model->Render(anim_frame);
-
-    mtr->PostRender(anim_frame);
-    model->PostRender(anim_frame);
-
-    if (const auto atr = ptr_atr.lock(); atr && atr->GetActive())
-    {
-      if (const auto anim = mtr->GetResource<Resources::BoneAnimation>
-        (atr->GetAnimation()).lock()) { anim->PostRender(anim_frame); }
-    }
-    else { mtr->IgnoreAnimation(false); }
+    m_b_ready_ = true;
   }
 
   void Renderer::Render(const float& dt)
   {
-    const auto& scene = GetSceneManager().GetActiveScene().lock();
+    RenderPass(dt, false, false);
 
-    for (int i = 0; i < LAYER_MAX; ++i)
-    {
-      if (i == LAYER_UI) { GetReflectionEvaluator().RenderFinished(); }
+    // Notify reflection evaluator that rendering is finished so that it
+    // can copy the rendered scene to the copy texture.
+    GetReflectionEvaluator().RenderFinished();
 
-      for (const auto& object : *(*scene)[i])
-      {
-        if (!object->GetActive()) { continue; }
-
-        if (!GetProjectionFrustum().CheckRender(object)) { continue; }
-
-        if (object->GetObjectType() == DEF_OBJ_T_DELAY_OBJ)
-        {
-          m_delayed_objects_.push(object);
-          continue;
-        }
-
-        const auto  ptr_mr  = object->GetComponent<Components::ModelRenderer>();
-        const auto& ptr_tr  = object->GetComponent<Components::Transform>();
-        const auto& ptr_atr = object->GetComponent<Components::Animator>();
-
-        if (ptr_mr.expired()) { continue; }
-        if (ptr_tr.expired()) { continue; }
-
-        RenderModel(dt, ptr_mr, ptr_tr, ptr_atr);
-      }
-    }
-
-    while (!m_delayed_objects_.empty())
-    {
-      const auto ptr_object = m_delayed_objects_.front();
-      m_delayed_objects_.pop();
-
-      if (ptr_object.expired()) { continue; }
-
-      const auto object = ptr_object.lock();
-
-      const auto  ptr_mr  = object->GetComponent<Components::ModelRenderer>();
-      const auto& ptr_tr  = object->GetComponent<Components::Transform>();
-      const auto& ptr_atr = object->GetComponent<Components::Animator>();
-
-      if (ptr_mr.expired()) { continue; }
-      if (ptr_tr.expired()) { continue; }
-
-      RenderModel(dt, ptr_mr, ptr_tr, ptr_atr);
-    }
+    RenderPass(dt, true, false);
   }
 
-  void Renderer::PostRender(const float& dt) {}
+  void Renderer::PostRender(const float& dt)
+  {
+    m_normal_passes_.clear();
+    m_post_passes_.clear();
+    m_normal_sbs_.clear();
+    m_post_sbs_.clear();
+    m_b_ready_ = false;
+  }
 
   void Renderer::PostUpdate(const float& dt) {}
 
   void Renderer::Initialize() {}
+
+  bool Renderer::Ready() const { return m_b_ready_; }
+
+  void Renderer::RenderPass(const float dt, bool post, bool shader_bypass) const
+  {
+    if (!Ready())
+    {
+      GetDebugger().Log("Renderer is not ready!");
+      return;
+    }
+
+    const auto& target_map = post ? m_post_passes_ : m_normal_passes_;
+    const auto& target_sb  = post ? m_post_sbs_ : m_normal_sbs_;
+
+    if (target_map.empty()) { return; }
+    if (target_sb.empty()) { return; }
+
+    for (const auto& mtr : target_map | std::views::keys)
+    {
+      DoRenderPass(dt, shader_bypass, target_sb.at(mtr).size(), mtr, target_sb.at(mtr));
+    }
+  }
+
+  void Renderer::DoRenderPass(
+    const float                         dt,
+    bool                                shader_bypass,
+    UINT                                instance_count,
+    const StrongMaterial&               material,
+    const std::vector<SBs::InstanceSB>& structured_buffers
+  ) const
+  {
+    StructuredBuffer<SBs::InstanceSB> sb;
+    sb.Create(instance_count, structured_buffers.data(), false);
+    sb.Bind(SHADER_VERTEX);
+
+    material->SetTempParam
+      (
+       {
+         .instanceCount = instance_count,
+         .bypassShader = shader_bypass
+       }
+      );
+
+    material->PreRender(dt);
+    material->Render(dt);
+    material->PostRender(dt);
+
+    sb.Unbind(SHADER_VERTEX);
+  }
+
+  void Renderer::RenderPass(
+    const float                                     dt,
+    const std::function<bool(const StrongObject&)>& predicate,
+    bool                                            post,
+    bool                                            shader_bypass
+  ) const
+  {
+    if (!Ready())
+    {
+      GetDebugger().Log("Renderer is not ready!");
+      return;
+    }
+
+    const auto& target_map = post ? m_post_passes_ : m_normal_passes_;
+    const auto& target_sb  = post ? m_post_sbs_ : m_normal_sbs_;
+
+    if (target_map.empty()) { return; }
+    if (target_sb.empty()) { return; }
+
+    for (const auto& [mtr, mrs] : target_map)
+    {
+      if (predicate)
+      {
+        std::vector<StrongModelRenderer> mr_pred_set;
+        std::vector<SBs::InstanceSB>     sb_pred_set;
+
+        for (int i = 0; i < mrs.size(); ++i)
+        {
+          const auto& mr = mrs[i];
+          const auto& sb = target_sb.at(mtr)[i];
+
+          if (!predicate(mr->GetOwner().lock())) { continue; }
+
+          mr_pred_set.push_back(mr);
+          sb_pred_set.push_back(sb);
+        }
+
+        if (mr_pred_set.empty()) { continue; }
+        if (sb_pred_set.empty()) { continue; }
+
+        DoRenderPass(dt, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
+      }
+      else
+      {
+        DoRenderPass(dt, shader_bypass, target_sb.at(mtr).size(), mtr, target_sb.at(mtr));
+      }
+    }
+  }
 }

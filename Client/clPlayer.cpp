@@ -28,12 +28,11 @@ namespace Client::Object
   {
     Object::Initialize();
 
-    const auto model = Resources::Shape::Get("CharacterModel").lock();
+    const auto model = Resources::Shape::Get("CharacterShape").lock();
     SetName("Player");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetShape(model);
-    mr->SetMaterial(Resources::Material::Get("CharacterMaterial"));
+    mr->SetMaterial(Resources::Material::Get("Character"));
 
     const auto tr   = AddComponent<Components::Transform>().lock();
     const auto cldr = AddComponent<Components::Collider>().lock();
@@ -47,7 +46,7 @@ namespace Client::Object
     rb->SetFrictionCoefficient(0.1f);
     rb->SetGravityOverride(true);
 
-    atr->SetAnimation(model->GetAnimationCatalog().front());
+    atr->SetAnimation(0);
 
     const auto rifle = GetScene().lock()->CreateGameObject<Rifle>(LAYER_DEFAULT);
     AddChild(rifle);

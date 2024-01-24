@@ -29,8 +29,7 @@ namespace Client::Object
     SetName("Plane");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
-    mr->SetMaterial(Resources::Material::Get("ColorMaterial"));
-    mr->SetShape(model);
+    mr->SetMaterial(Resources::Material::Get("ColorCube"));
 
     AddComponent<Components::Transform>();
     const auto tr = GetComponent<Components::Transform>().lock();

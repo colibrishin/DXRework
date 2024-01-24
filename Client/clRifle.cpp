@@ -24,19 +24,18 @@ namespace Client::Object
   {
     Object::Initialize();
 
-    const auto model = Resources::Shape::Get("RifleModel").lock();
+    const auto model = Resources::Shape::Get("RifleShape").lock();
     SetName("Rifle");
 
     const auto mr = AddComponent<Components::ModelRenderer>().lock();
 
-    mr->SetShape(model);
-    mr->SetMaterial(Resources::Material::Get("RifleColorMaterial"));
+    mr->SetMaterial(Resources::Material::Get("ColorRifle"));
 
     const auto tr   = AddComponent<Components::Transform>().lock();
     const auto atr  = AddComponent<Components::Animator>().lock();
     const auto cldr = AddComponent<Components::Collider>().lock();
 
-    atr->SetAnimation("FireAnimation");
+    atr->SetAnimation(0);
     cldr->SetModel(model);
     tr->SetSizeAbsolute(true);
     tr->SetRotateAbsolute(false);

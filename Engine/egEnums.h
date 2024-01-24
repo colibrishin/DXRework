@@ -135,9 +135,9 @@ namespace Engine
 
   enum eSBType
   {
-    SB_TYPE_BONE = g_reserved_struct_buffer_slot,
-    SB_TYPE_LIGHT,
+    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
     SB_TYPE_SHADOW,
+    SB_TYPE_INSTANCE,
   };
 
   enum eResourceType
@@ -179,7 +179,6 @@ namespace Engine
     DEF_OBJ_T_LIGHT,
     DEF_OBJ_T_OBSERVER,
     DEF_OBJ_T_TEXT,
-    DEF_OBJ_T_DELAY_OBJ
   };
 
   enum eBoundingType
