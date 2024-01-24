@@ -64,9 +64,7 @@ namespace Engine::Manager::Graphics
         no_anim = !atr->GetActive();
       }
 
-      // todo: refactor / remove delayed objects and determine post processing
-      // by material type.
-      if (obj->GetObjectType() == DEF_OBJ_T_DELAY_OBJ)
+      if (mtr->IsPostProcess())
       {
         m_post_passes_[mtr].push_back(mr);
 
