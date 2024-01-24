@@ -482,7 +482,7 @@ namespace Engine::Manager::Graphics
   }
 
   void D3Device::CreateTextureFromFile(
-    const std::filesystem::path& path, ID3D11Resource** texture,
+    const std::filesystem::path& path, UINT bind_flag, ID3D11Resource** texture,
     ID3D11ShaderResourceView**   shader_resource_view
   ) const
   {
@@ -491,7 +491,8 @@ namespace Engine::Manager::Graphics
        CreateDDSTextureFromFileEx
        (
         m_device_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT,
-        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0,
+        bind_flag,
+        0,
         D3D11_RESOURCE_MISC_GENERATE_MIPS, DDS_LOADER_DEFAULT, texture,
         shader_resource_view
        )
