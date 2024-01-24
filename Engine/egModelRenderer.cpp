@@ -22,17 +22,7 @@ namespace Engine::Components
   void ModelRenderer::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Model name", m_model_name_);
     TextDisabled("Material Name", m_material_name_);
-  }
-
-  void ModelRenderer::SetShape(const WeakModel& model)
-  {
-    if (const auto m = model.lock())
-    {
-      m_model_      = m;
-      m_model_name_ = m->GetName();
-    }
   }
 
   void ModelRenderer::SetMaterial(const WeakMaterial& material)
@@ -43,8 +33,6 @@ namespace Engine::Components
       m_material_name_ = m->GetName();
     }
   }
-
-  WeakModel ModelRenderer::GetModel() const { return m_model_; }
 
   WeakMaterial ModelRenderer::GetMaterial() const
   {
