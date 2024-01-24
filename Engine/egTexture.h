@@ -17,7 +17,7 @@ namespace Engine::Resources
       UINT        ArraySize = 0;
       DXGI_FORMAT Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
       UINT        CPUAccessFlags = 0;
-      UINT        BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+      UINT        BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS);
       UINT        MipsLevel = 1;
       UINT        MiscFlags = 0;
       D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
