@@ -67,6 +67,13 @@ namespace Engine
     SHADER_UNKNOWN
   };
 
+  enum eTexType
+  {
+    TEX_TYPE_1D,
+    TEX_TYPE_2D,
+    TEX_TYPE_3D
+  };
+
   enum eShaderDomain : UINT
   {
     SHADER_DOMAIN_OPAQUE = 0,
@@ -122,8 +129,8 @@ namespace Engine
   {
     CB_TYPE_WVP = 0,
     CB_TYPE_TRANSFORM,
-    CB_TYPE_GLOBAL_STATE,
     CB_TYPE_MATERIAL,
+    CB_TYPE_PARAM,
   };
 
   enum eSBType
@@ -137,7 +144,7 @@ namespace Engine
   {
     RES_T_UNK = 0,
     RES_T_SHADER,
-    RES_T_TEX,
+    RES_T_TEX, // Broad definition of texture
     RES_T_FONT,
     RES_T_SOUND,
     RES_T_BONE_ANIM,
@@ -146,7 +153,9 @@ namespace Engine
     RES_T_MTR,
     RES_T_MESH,
     RES_T_SHAPE,
-    RES_T_ANIMS,
+    RES_T_ANIMS_TEX,
+    RES_T_COMPUTE_SHADER,
+    RES_T_SHADOW_TEX,
   };
 
   enum eComponentType
