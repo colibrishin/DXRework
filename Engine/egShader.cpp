@@ -16,16 +16,6 @@ namespace Engine::Resources
     flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
 #endif
 
-    static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version =
-    {
-      {SHADER_VERTEX, "vs_main", "vs_5_0"},
-      {SHADER_PIXEL, "ps_main", "ps_5_0"},
-      {SHADER_GEOMETRY, "gs_main", "gs_5_0"},
-      {SHADER_COMPUTE, "cs_main", "cs_5_0"},
-      {SHADER_HULL, "hs_main", "hs_5_0"},
-      {SHADER_DOMAIN, "ds_main", "ds_5_0"}
-    };
-
     for (const auto& [t, ep, v] : s_main_version)
     {
       // Try search for every type of shader.
@@ -75,14 +65,6 @@ namespace Engine::Resources
             (
              blob->GetBufferPointer(), blob->GetBufferSize(),
              nullptr, m_gs_.ReleaseAndGetAddressOf()
-            );
-        }
-        else if (t == SHADER_COMPUTE)
-        {
-          GetD3Device().GetDevice()->CreateComputeShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_cs_.ReleaseAndGetAddressOf()
             );
         }
         else if (t == SHADER_HULL)
@@ -183,7 +165,6 @@ namespace Engine::Resources
     m_vs_.Reset();
     m_ps_.Reset();
     m_gs_.Reset();
-    m_cs_.Reset();
     m_hs_.Reset();
     m_ds_.Reset();
     m_il_.Reset();
@@ -201,7 +182,6 @@ namespace Engine::Resources
     GetD3Device().GetContext()->VSSetShader(m_vs_.Get(), nullptr, 0);
     GetD3Device().GetContext()->PSSetShader(m_ps_.Get(), nullptr, 0);
     GetD3Device().GetContext()->GSSetShader(m_gs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->CSSetShader(m_cs_.Get(), nullptr, 0);
     GetD3Device().GetContext()->HSSetShader(m_hs_.Get(), nullptr, 0);
     GetD3Device().GetContext()->DSSetShader(m_ds_.Get(), nullptr, 0);
 
