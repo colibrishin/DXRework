@@ -26,10 +26,32 @@ namespace Engine::Manager::Graphics
 
     void SetWorldMatrix(const CBs::TransformCB& matrix);
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-    void SetGlobalStateBuffer(const CBs::GlobalStateCB& state);
     void SetMaterial(const CBs::MaterialCB& material_buffer);
 
-    CBs::GlobalStateCB GetGlobalStateBuffer() const;
+    template <typename T>
+    void SetParam(const auto& v, const size_t slot)
+    {
+      static_assert(
+          !std::is_same_v<T, int> ||
+          !std::is_same_v<T, float> ||
+          !std::is_same_v<T, Matrix> || 
+          !std::is_same_v<T, Vector4>, 
+          "Type is not supported.");
+
+      if constexpr (std::is_same_v<T, float>) { m_param_buffer_.f_param[slot] = v; }
+      else if constexpr (std::is_same_v<T, int>) { m_param_buffer_.i_param[slot] = v; }
+      else if constexpr (std::is_same_v<T, Vector4>) { m_param_buffer_.v_param[slot] = v; }
+      else if constexpr (std::is_same_v<T, Matrix>) { m_param_buffer_.m_param[slot] = v; }
+
+      m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
+
+      BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
+      BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
+      BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
+      BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
+      BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
+      BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
+    }
 
     void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
     void SetDepthStencilState(ID3D11DepthStencilState* state);
@@ -60,12 +82,12 @@ namespace Engine::Manager::Graphics
     void TargetDepthOnly(ID3D11DepthStencilView* view);
     void SetViewport(const D3D11_VIEWPORT& viewport);
 
-    void DefaultRenderTarget();
-    void DefaultViewport();
+    void DefaultRenderTarget() const;
+    void DefaultViewport() const;
     void ResetShaders();
-    void DefaultDepthStencilState();
-    void DefaultRasterizerState();
-    void DefaultSamplerState();
+    void DefaultDepthStencilState() const;
+    void DefaultRasterizerState() const;
+    void DefaultSamplerState() const;
 
   private:
     friend class ToolkitAPI;
@@ -83,12 +105,12 @@ namespace Engine::Manager::Graphics
       GetD3Device().BindConstantBuffer(buffer, which_cb<T>::value, target);
     }
 
-    CBs::GlobalStateCB m_global_state_{};
+    CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
     ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
-    ConstantBuffer<CBs::GlobalStateCB> m_global_state_buffer_data_{};
     ConstantBuffer<CBs::MaterialCB>    m_material_buffer_data_{};
+    ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_{};
 
     std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
 

@@ -87,7 +87,7 @@ namespace Engine::Resources
         {
           // todo: distinguish tex type
           const UINT idx = std::distance(resources.begin(), it);
-          res->GetSharedPtr<Texture>()->SetSlot(BIND_SLOT_TEX, idx);
+          res->GetSharedPtr<Texture>()->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, idx, SHADER_PIXEL);
         }
 
         res->Render(dt);

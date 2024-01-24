@@ -46,6 +46,16 @@ namespace Engine::Resources
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
 
+    inline static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version =
+    {
+      {SHADER_VERTEX, "vs_main", "vs_5_0"},
+      {SHADER_PIXEL, "ps_main", "ps_5_0"},
+      {SHADER_GEOMETRY, "gs_main", "gs_5_0"},
+      {SHADER_COMPUTE, "cs_main", "cs_5_0"},
+      {SHADER_HULL, "hs_main", "hs_5_0"},
+      {SHADER_DOMAIN, "ds_main", "ds_5_0"}
+    };
+
   private:
     SERIALIZER_ACCESS
 
@@ -65,7 +75,6 @@ namespace Engine::Resources
     ComPtr<ID3D11VertexShader>   m_vs_;
     ComPtr<ID3D11PixelShader>    m_ps_;
     ComPtr<ID3D11GeometryShader> m_gs_;
-    ComPtr<ID3D11ComputeShader>  m_cs_;
     ComPtr<ID3D11HullShader>     m_hs_;
     ComPtr<ID3D11DomainShader>   m_ds_;
 

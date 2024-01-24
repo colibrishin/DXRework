@@ -101,7 +101,12 @@ namespace Engine
     class BaseAnimation;
     class Material;
     class Shader;
-    class Animations;
+    class AnimationsTexture;
+    class ShadowTexture;
+    class Texture1D;
+    class Texture2D;
+    class Texture3D;
+    class ComputeShader;
   } // namespace Resources
 
   namespace Abstract
@@ -165,7 +170,8 @@ namespace Engine
   using WeakBaseAnimation = boost::weak_ptr<Resources::BaseAnimation>;
   using WeakMaterial = boost::weak_ptr<Resources::Material>;
   using WeakScript = boost::weak_ptr<Script>;
-  using WeakAnimations = boost::weak_ptr<Resources::Animations>;
+  using WeakAnimsTexture = boost::weak_ptr<Resources::AnimationsTexture>;
+  using WeakShadowTexture = boost::weak_ptr<Resources::ShadowTexture>;
 
   // Strong pointer type definitions
   using StrongObject = boost::shared_ptr<Abstract::Object>;
@@ -188,7 +194,10 @@ namespace Engine
   using StrongMaterial = boost::shared_ptr<Resources::Material>;
   using StrongCollider = boost::shared_ptr<Components::Collider>;
   using StrongScript = boost::shared_ptr<Script>;
-  using StrongAnimations = boost::shared_ptr<Resources::Animations>;
+  using StrongAnimsTexture = boost::shared_ptr<Resources::AnimationsTexture>;
+  using StrongShadowTexture = boost::shared_ptr<Resources::ShadowTexture>;
+  using StrongTexture2D = boost::shared_ptr<Resources::Texture2D>;
+
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -216,6 +225,7 @@ namespace Engine
   using eShaderRasterizers = UINT;
   using eShaderDepths = UINT;
   using eShaderSamplers = UINT;
+  using eTexBindSlots = UINT;
 
   // Manager Forward Declaration
   extern Manager::ResourceManager&               GetResourceManager();

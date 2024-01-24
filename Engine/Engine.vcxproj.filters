@@ -110,9 +110,6 @@
     <Filter Include="Resource\Sound">
       <UniqueIdentifier>{1d465ce0-22a0-4ad2-9796-1b8ca313b66d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Texture">
-      <UniqueIdentifier>{5fec1756-ea9d-4208-ab0c-968bb9d5f5f2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Physics\Collision">
       <UniqueIdentifier>{c7baf94f-02a8-44f2-b662-125275638b15}</UniqueIdentifier>
     </Filter>
@@ -221,8 +218,32 @@
     <Filter Include="Base\Script">
       <UniqueIdentifier>{86b3d06f-2f9e-4937-8caf-9381f3583869}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Group\Animations">
+    <Filter Include="Resource\Abstract">
+      <UniqueIdentifier>{61a85c9c-bced-4b97-ba7b-b6c85031f820}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Abstract\Texture">
+      <UniqueIdentifier>{5fec1756-ea9d-4208-ab0c-968bb9d5f5f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Abstract\ComputeShader">
+      <UniqueIdentifier>{155afc44-65a5-48bb-86eb-26e9e8077bd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures">
+      <UniqueIdentifier>{273bb347-e341-4916-a117-4399056e398e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\Texture3D">
+      <UniqueIdentifier>{49a5fa0f-1ba1-45d8-ba28-cb3b227f7691}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\Texture2D">
+      <UniqueIdentifier>{2a176a8e-8437-49eb-8374-9c765b3c3292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\Texture1D">
+      <UniqueIdentifier>{df66640d-3463-407c-82d8-17be76ebdf73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\AnimationTexture">
       <UniqueIdentifier>{8ae5e752-353b-405b-90b3-0d6b0b0a57bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\ShadowTexture">
+      <UniqueIdentifier>{92bb950e-d982-46f6-a4b0-686462d2cbd2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -328,7 +349,7 @@
       <Filter>Resource\Sound</Filter>
     </ClInclude>
     <ClInclude Include="egTexture.h">
-      <Filter>Resource\Texture</Filter>
+      <Filter>Resource\Abstract\Texture</Filter>
     </ClInclude>
     <ClInclude Include="egCollision.h">
       <Filter>Physics\Collision</Filter>
@@ -451,8 +472,23 @@
       <Filter>Base\Script</Filter>
     </ClInclude>
     <ClInclude Include="egImGuiHeler.hpp" />
-    <ClInclude Include="egAnimations.h">
-      <Filter>Resource Group\Animations</Filter>
+    <ClInclude Include="egAnimationsTexture.h">
+      <Filter>Resource\Textures\AnimationTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="egComputeShader.h">
+      <Filter>Resource\Abstract\ComputeShader</Filter>
+    </ClInclude>
+    <ClInclude Include="egTexture3D.h">
+      <Filter>Resource\Textures\Texture3D</Filter>
+    </ClInclude>
+    <ClInclude Include="egTexture2D.h">
+      <Filter>Resource\Textures\Texture2D</Filter>
+    </ClInclude>
+    <ClInclude Include="egTexture1D.h">
+      <Filter>Resource\Textures\Texture1D</Filter>
+    </ClInclude>
+    <ClInclude Include="egShadowTexture.h">
+      <Filter>Resource\Textures\ShadowTexture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -540,7 +576,7 @@
       <Filter>Resource\Sound</Filter>
     </ClCompile>
     <ClCompile Include="egTexture.cpp">
-      <Filter>Resource\Texture</Filter>
+      <Filter>Resource\Abstract\Texture</Filter>
     </ClCompile>
     <ClCompile Include="egCollision.cpp">
       <Filter>Physics\Collision</Filter>
@@ -638,8 +674,23 @@
     <ClCompile Include="egStateController.cpp">
       <Filter>Component\StateController</Filter>
     </ClCompile>
-    <ClCompile Include="egAnimations.cpp">
-      <Filter>Resource Group\Animations</Filter>
+    <ClCompile Include="egAnimationsTexture.cpp">
+      <Filter>Resource\Textures\AnimationTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="egComputeShader.cpp">
+      <Filter>Resource\Abstract\ComputeShader</Filter>
+    </ClCompile>
+    <ClCompile Include="egTexture3D.cpp">
+      <Filter>Resource\Textures\Texture3D</Filter>
+    </ClCompile>
+    <ClCompile Include="egTexture2D.cpp">
+      <Filter>Resource\Textures\Texture2D</Filter>
+    </ClCompile>
+    <ClCompile Include="egTexture1D.cpp">
+      <Filter>Resource\Textures\Texture1D</Filter>
+    </ClCompile>
+    <ClCompile Include="egShadowTexture.cpp">
+      <Filter>Resource\Textures\ShadowTexture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

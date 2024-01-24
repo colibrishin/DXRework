@@ -56,19 +56,9 @@ namespace Engine::Graphics { namespace SBs
       Matrix world;
     };
 
-    struct GlobalStateCB
-    {
-      CB_T(CB_TYPE_GLOBAL_STATE)
-
-      OffsetT<int> light_count;
-      OffsetT<int> target_shadow;
-    };
-
     struct MaterialCB
     {
       CB_T(CB_TYPE_MATERIAL)
-
-      friend class Serializer;
       friend class boost::serialization::access;
 
       template <class Archive>
@@ -96,5 +86,17 @@ namespace Engine::Graphics { namespace SBs
       Vector4 clip_plane;
     };
 
-    constexpr auto test = sizeof(MaterialBindFlag);
+    struct ParamCB
+    {
+      CB_T(CB_TYPE_PARAM)
+
+      constexpr static size_t max_param = 4;
+
+      OffsetT<float> f_param[max_param]{};
+      OffsetT<int>   i_param[max_param]{};
+      Vector4        v_param[max_param]{};
+      Matrix         m_param[max_param]{};
+    };
+
+    static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
   }} // namespace Engine

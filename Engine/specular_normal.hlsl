@@ -26,7 +26,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
                       (normalMap.z * input.normal);
   bumpNormal = normalize(bumpNormal);
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     textureLightIntensity[i] =
       saturate(dot(input.normal, input.lightDirection[i]));
@@ -49,7 +49,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   float4 normalLightColor = g_ambientColor;
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     normalLightColor.r += normalColorArray[i].r;
     normalLightColor.g += normalColorArray[i].g;
@@ -58,7 +58,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   float4 textureLightColor = g_ambientColor;
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     textureLightColor.r += textureColorArray[i].r;
     textureLightColor.g += textureColorArray[i].g;
@@ -67,7 +67,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   float4 specularSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
-  for (i = 0; i < g_lightCount.x; ++i)
+  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     specularSum.r += specular[i].r;
     specularSum.g += specular[i].g;

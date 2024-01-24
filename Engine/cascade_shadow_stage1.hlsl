@@ -1,5 +1,7 @@
 #include "common.hlsli"
 
+#define TARGET_SHADOW_PARAM g_iParam[1].x
+
 struct PixelShadowInputType
 {
   float4 position : SV_POSITION;
@@ -56,8 +58,8 @@ void gs_main(
         (
          input[j].position, mul
          (
-          bufLightVP[g_targetShadow.x].g_shadowView[i],
-          bufLightVP[g_targetShadow.x].g_shadowProj[i]
+          bufLightVP[TARGET_SHADOW_PARAM].g_shadowView[i],
+          bufLightVP[TARGET_SHADOW_PARAM].g_shadowProj[i]
          )
         );
       output.Append(element);

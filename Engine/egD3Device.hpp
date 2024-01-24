@@ -300,9 +300,9 @@ namespace Engine::Manager::Graphics
     }
 
     void CreateTextureFromFile(
-      const std::filesystem::path& path,
-      ID3D11Resource**             texture,
-      ID3D11ShaderResourceView**   shader_resource_view
+      const std::filesystem::path & path,
+      UINT                          bind_flag,
+      ID3D11Resource **             texture, ID3D11ShaderResourceView ** shader_resource_view
     ) const;
 
     void CreateTexture2D(

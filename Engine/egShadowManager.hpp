@@ -1,6 +1,7 @@
 #pragma once
 #include "egManager.hpp"
 #include "egStructuredBuffer.hpp"
+#include "egShadowTexture.h"
 
 namespace Engine::Manager::Graphics
 {
@@ -40,7 +41,7 @@ namespace Engine::Manager::Graphics
     ~ShadowManager() override;
 
     void InitializeProcessor();
-    void InitializeShadowBuffer(DXPacked::ShadowVPResource& buffer);
+    void InitializeShadowBuffer(const LocalActorID id);
     void BuildShadowMap(Scene& scene, float dt) const;
     void ClearShadowMaps();
 
@@ -59,7 +60,7 @@ namespace Engine::Manager::Graphics
     std::map<LocalActorID, WeakLight> m_lights_;
 
     // The DX resources for each of the shadow map (texture, depth stencil view and shader resource view)
-    std::map<LocalActorID, DXPacked::ShadowVPResource> m_dx_resource_shadow_vps_;
+    std::map<LocalActorID, Resources::ShadowTexture> m_shadow_texs_;
 
     // light structured buffer
     StructuredBuffer<SBs::LightSB> m_sb_light_buffer_{};
