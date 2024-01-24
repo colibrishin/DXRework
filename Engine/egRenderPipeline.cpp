@@ -270,6 +270,11 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DrawIndexed(UINT index_count) { GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0); }
 
+  void RenderPipeline::DrawIndexedInstanced(UINT index_count, UINT instance_count)
+  {
+    GetD3Device().GetContext()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+  }
+
   void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view)
   {
     ID3D11RenderTargetView* pnullView = nullptr;
