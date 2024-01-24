@@ -118,7 +118,7 @@ namespace boost::serialization
     ar & x.tangent;
     ar & x.binormal;
     ar & x.color;
-    ar & x.bone_element;
+    ar & x.boneElement;
   }
 
   template <class Archive>

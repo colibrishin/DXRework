@@ -64,6 +64,6 @@ namespace Engine::Graphics
     Vector3 tangent;
     Vector3 binormal;
 
-    VertexBoneElement bone_element;
+    VertexBoneElement boneElement;
   };
 }
