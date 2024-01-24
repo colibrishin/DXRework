@@ -1,6 +1,6 @@
 #include "common.hlsli"
 
-#define TARGET_SHADOW_PARAM g_iParam[1]
+#define TARGET_SHADOW_PARAM g_iParam[1].x
 
 struct PixelShadowInputType
 {

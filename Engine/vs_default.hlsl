@@ -1,5 +1,5 @@
 #include "common.hlsli"
-#define PARAM_NUM_LIGHT g_iParam[0]
+#define PARAM_NUM_LIGHT g_iParam[0].x
 
 struct PixelInputType
 {

@@ -92,10 +92,10 @@ namespace Engine::Graphics { namespace SBs
 
       constexpr static size_t max_param = 4;
 
-      float   f_param[max_param]{};
-      int     i_param[max_param]{};
-      Vector4 v_param[max_param]{};
-      Matrix  m_param[max_param]{};
+      OffsetT<float> f_param[max_param]{};
+      OffsetT<int>   i_param[max_param]{};
+      Vector4        v_param[max_param]{};
+      Matrix         m_param[max_param]{};
     };
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);

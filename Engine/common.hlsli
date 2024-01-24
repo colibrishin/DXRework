@@ -76,8 +76,8 @@ cbuffer MaterialBuffer : register(b2)
 
 cbuffer ParamBuffer : register(b3)
 {
-  float  g_fParam[4] : FPARAM;
-  int    g_iParam[4] : IPARAM;
+  float4 g_fParam[4] : FPARAM;
+  int4   g_iParam[4] : IPARAM;
   float4 g_vecParam[4] : VECPARAM;
   matrix g_matParam[4] : MATPARAM;
 }
@@ -150,7 +150,7 @@ void GetShadowFactor(
   [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
     // Assuming light count is bound at idx 0
-    if (i > g_iParam[0]) { break; }
+    if (i > g_iParam[0].x) { break; }
 
     [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
     {
