@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egShadowManager.hpp"
 
+#include "Renderer.h"
 #include "egAnimator.h"
 #include "egBaseAnimation.h"
 #include "egBoneAnimation.h"
@@ -135,7 +136,7 @@ namespace Engine::Manager::Graphics
           // Notify the index of the shadow map to the shader.
           GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
           // Render the depth of the object from the light's point of view.
-          BuildShadowMap(*scene, dt);
+          BuildShadowMap(dt);
 
           // Cleanup
           m_shadow_texs_[light->GetLocalID()].PostRender(placeholder);
@@ -193,57 +194,19 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(Scene& scene, const float dt) const
+  void ShadowManager::BuildShadowMap(const float dt) const
   {
-    for (int i = 0; i < LAYER_MAX; ++i)
-    {
-      if (i == LAYER_LIGHT || i == LAYER_UI || i == LAYER_CAMERA ||
-          i == LAYER_SKYBOX || i == LAYER_ENVIRONMENT) { continue; }
+    GetRenderer().RenderPass
+      (
+       dt, [](const StrongObject& obj)
+       {
+         if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
+             obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
-      for (const auto& object : *scene[i])
-      {
-        const auto tr      = object->GetComponent<Components::Transform>().lock();
-        const auto mr      = object->GetComponent<Components::ModelRenderer>().lock();
-        const auto ptr_atr = object->GetComponent<Components::Animator>();
-
-        if (tr && mr)
-        {
-          Components::Transform::Bind(*tr);
-
-          const auto& ptr_model = mr->GetModel();
-          const auto& ptr_mtr   = mr->GetMaterial();
-          if (ptr_model.expired()) { continue; }
-
-          const auto model         = ptr_model.lock();
-          const auto mtr           = ptr_mtr.lock();
-          float      current_frame = dt;
-
-          if (const auto atr = ptr_atr.lock())
-          {
-            if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
-            {
-              current_frame = atr->GetFrame();
-              anim->PreRender(current_frame);
-              anim->Render(current_frame);
-            }
-          }
-
-          model->PreRender(current_frame);
-          model->Render(current_frame);
-          model->PostRender(current_frame);
-
-          if (const auto atr = ptr_atr.lock())
-          {
-            if (const auto anim = mtr->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
-            {
-              anim->PostRender(current_frame);
-            }
-          }
-
-          Components::Transform::Unbind();
-        }
-      }
-    }
+         return true;
+       },
+       false, true
+      );
   }
 
   void ShadowManager::CreateSubfrusta(
