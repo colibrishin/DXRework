@@ -13,7 +13,7 @@
 SERIALIZER_ACCESS_IMPL
 (
  Client::Object::Water,
- _ARTAG(_BSTSUPER(Engine::Objects::DelayedRenderObject))
+ _ARTAG(_BSTSUPER(Engine::Abstract::Object))
 )
 
 void Client::Object::Water::Initialize()
@@ -29,18 +29,18 @@ void Client::Object::Water::Initialize()
   cldr->SetModel(model);
 }
 
-void Client::Object::Water::PreUpdate(const float& dt) { DelayedRenderObject::PreUpdate(dt); }
+void Client::Object::Water::PreUpdate(const float& dt) { Object::PreUpdate(dt); }
 
-void Client::Object::Water::Update(const float& dt) { DelayedRenderObject::Update(dt); }
+void Client::Object::Water::Update(const float& dt) { Object::Update(dt); }
 
-void Client::Object::Water::PreRender(const float& dt) { DelayedRenderObject::PreRender(dt); }
+void Client::Object::Water::PreRender(const float& dt) { Object::PreRender(dt); }
 
-void Client::Object::Water::Render(const float& dt) { DelayedRenderObject::Render(dt); }
+void Client::Object::Water::Render(const float& dt) { Object::Render(dt); }
 
-void Client::Object::Water::PostRender(const float& dt) { DelayedRenderObject::PostRender(dt); }
+void Client::Object::Water::PostRender(const float& dt) { Object::PostRender(dt); }
 
-void Client::Object::Water::FixedUpdate(const float& dt) { DelayedRenderObject::FixedUpdate(dt); }
+void Client::Object::Water::FixedUpdate(const float& dt) { Object::FixedUpdate(dt); }
 
-void Client::Object::Water::OnDeserialized() { DelayedRenderObject::OnDeserialized(); }
+void Client::Object::Water::OnDeserialized() { Object::OnDeserialized(); }
 
-void Client::Object::Water::OnImGui() { DelayedRenderObject::OnImGui(); }
+void Client::Object::Water::OnImGui() { Object::OnImGui(); }
