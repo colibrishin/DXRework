@@ -23,6 +23,7 @@
 #include "egShader.hpp"
 #include "egShape.h"
 #include "egTexture.h"
+#include "egTexture2D.h"
 
 // TODO: This is an example of a library function
 namespace Client
@@ -31,9 +32,9 @@ namespace Client
 
   void InitializeTexture()
   {
-    Resources::Texture::Create("TestTexture", "./Texture.dds");
-    Resources::Texture::Create("Sky", "./Sky.dds");
-    Resources::Texture::Create("ThunderCat", "./ThunderCat.dds");
+    Resources::Texture2D::Create("TestTexture", "./Texture.dds", {});
+    Resources::Texture2D::Create("Sky", "./Sky.dds", {});
+    Resources::Texture2D::Create("ThunderCat", "./ThunderCat.dds", {});
   }
 
   void InitializeMesh()
@@ -54,8 +55,8 @@ namespace Client
 
   void InitializeNormal()
   {
-    Resources::Texture::Create("TestNormalMap", "./Texture-Normal.dds");
-    Resources::Texture::Create("WaterNormalMap", "./Water-Normal.dds");
+    Resources::Texture2D::Create("TestNormalMap", "./Texture-Normal.dds", {});
+    Resources::Texture2D::Create("WaterNormalMap", "./Water-Normal.dds", {});
   }
 
   void InitializeSound()
