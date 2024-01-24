@@ -56,7 +56,6 @@ namespace Engine
     class Light;
     class Camera;
     class Text;
-    class DelayedRenderObject;
     class Observer;
   } // namespace Objects
 

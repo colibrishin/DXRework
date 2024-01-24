@@ -179,7 +179,6 @@ namespace Engine
     DEF_OBJ_T_LIGHT,
     DEF_OBJ_T_OBSERVER,
     DEF_OBJ_T_TEXT,
-    DEF_OBJ_T_DELAY_OBJ
   };
 
   enum eBoundingType
