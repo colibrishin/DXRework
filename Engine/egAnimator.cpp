@@ -19,6 +19,7 @@ namespace Engine::Components
 {
   Animator::Animator(const WeakObject& owner)
     : Component(COM_T_ANIMATOR, owner),
+      m_animation_id_(0),
       m_current_frame_(0) {}
 
   void Animator::PreUpdate(const float& dt) {}
@@ -34,8 +35,8 @@ namespace Engine::Components
     if (mat.expired()) { return; }
 
     // Animator assumes that assigned material has animation.
-    const auto  tr_anim   = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_name_).lock();
-    const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_name_).lock();
+    const auto  tr_anim   = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_id_).lock();
+    const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
     const float duration  = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
 
     if (tr_anim || bone_anim)
@@ -53,18 +54,19 @@ namespace Engine::Components
   void Animator::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Animation", m_animation_name_);
+    lldDisabled("Animation", m_animation_id_);
     FloatDisabled("Frame", m_current_frame_);
   }
 
-  void Animator::SetAnimation(const std::string& name) { m_animation_name_ = name; }
+  void Animator::SetAnimation(UINT idx) { m_animation_id_ = idx; }
 
-  std::string Animator::GetAnimation() const { return m_animation_name_; }
+  UINT Animator::GetAnimation() const { return m_animation_id_; }
 
   float Animator::GetFrame() const { return m_current_frame_; }
 
   Animator::Animator()
     : Component(COM_T_ANIMATOR, {}),
+      m_animation_id_(0),
       m_current_frame_(0) {}
 
   void Animator::UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const

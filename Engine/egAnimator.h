@@ -14,9 +14,10 @@ namespace Engine::Components
     void FixedUpdate(const float& dt) override;
     void OnImGui() override;
 
-    void        SetAnimation(const std::string& name);
-    std::string GetAnimation() const;
-    float       GetFrame() const;
+    void SetAnimation(UINT idx);
+
+    UINT  GetAnimation() const;
+    float GetFrame() const;
 
   private:
     SERIALIZER_ACCESS
@@ -24,8 +25,8 @@ namespace Engine::Components
 
     void UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const;
 
-    std::string m_animation_name_;
-    float       m_current_frame_;
+    UINT  m_animation_id_;
+    float m_current_frame_;
   };
 }
 
