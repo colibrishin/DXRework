@@ -194,7 +194,7 @@ namespace Engine::Manager::Graphics
 
     Shader::Create
       (
-       "refraction", "./refraction.hlsl", SHADER_DOMAIN_OPAQUE,
+       "refraction", "./refraction.hlsl", SHADER_DOMAIN_POST_PROCESS,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D11_FILTER_MIN_MAG_MIP_LINEAR,
