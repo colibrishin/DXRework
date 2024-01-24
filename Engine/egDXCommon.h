@@ -23,6 +23,16 @@ namespace Engine::Graphics { namespace SBs
       Matrix  proj[g_max_shadow_cascades];
       Vector4 end_clip_spaces[g_max_shadow_cascades];
     };
+
+    struct InstanceSB
+    {
+      SB_T(SB_TYPE_INSTANCE)
+
+      Matrix         world      = Matrix::Identity;
+      OffsetT<float> animFrame  = 0.f;
+      OffsetT<int>   animIndex  = 0;
+      OffsetT<int>   noAnimFlag = false;
+    };
   }
 
 

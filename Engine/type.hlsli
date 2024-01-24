@@ -50,4 +50,12 @@ struct VertexInputType
   VertexBoneElement bone_element : BONE;
 };
 
+struct InstanceElement
+{
+  matrix world : WORLD;
+  float4 animFrame : ANIMFRAME;
+  int4   animIndex : ANIMINDEX;
+  int4   noAnimFlag : NOANIMFLAG;
+};
+
 #endif // __TYPE_HLSLI__
