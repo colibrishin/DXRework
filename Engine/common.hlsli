@@ -4,6 +4,7 @@
 #define TRIANGLE_MACRO 3
 
 #include "type.hlsli"
+#include "utility.hlsli"
 
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
@@ -81,8 +82,6 @@ cbuffer ParamBuffer : register(b3)
   float4 g_vecParam[4] : VECPARAM;
   matrix g_matParam[4] : MATPARAM;
 }
-
-float4 GetWorldPosition(in matrix mat) { return float4(mat._41, mat._42, mat._43, mat._44); }
 
 float GetShadowFactorImpl(
   int    lightIndex, int cascadeIndex,
