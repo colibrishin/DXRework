@@ -55,6 +55,7 @@ namespace Engine::Manager::Graphics
       // animator parameters
       float anim_frame = 0.0f;
       UINT anim_idx = 0;
+      UINT anim_duration = 0;
       bool no_anim = false;
 
       if (const auto atr = obj->GetComponent<Components::Animator>().lock())
@@ -62,6 +63,11 @@ namespace Engine::Manager::Graphics
         anim_frame = atr->GetFrame();
         anim_idx = atr->GetAnimation();
         no_anim = !atr->GetActive();
+
+        if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
+        {
+          anim_duration = (UINT)(bone_anim->GetDuration() / g_animation_sample_rate);
+        }
       }
 
       if (mtr->IsPostProcess())
@@ -73,6 +79,7 @@ namespace Engine::Manager::Graphics
               {
                 .world = tr->GetWorldMatrix().Transpose(),
                 .animFrame = anim_frame,
+                .boneAnimDuration = (int)anim_duration,
                 .animIndex = (int)anim_idx,
                 .noAnimFlag = no_anim
               }
@@ -88,6 +95,7 @@ namespace Engine::Manager::Graphics
          {
            .world = tr->GetWorldMatrix().Transpose(),
            .animFrame = anim_frame,
+           .boneAnimDuration = (int)anim_duration,
            .animIndex = (int)anim_idx,
            .noAnimFlag = no_anim
          }

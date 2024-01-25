@@ -45,6 +45,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
         (
          bufInstance[instanceId].animIndex.x,
          bufInstance[instanceId].animFrame.x,
+         bufInstance[instanceId].boneAnimDuration.x,
          bone_index
         );
 

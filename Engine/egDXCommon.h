@@ -30,6 +30,7 @@ namespace Engine::Graphics { namespace SBs
 
       Matrix         world      = Matrix::Identity;
       OffsetT<float> animFrame  = 0.f;
+      OffsetT<int>   boneAnimDuration = 0;
       OffsetT<int>   animIndex  = 0;
       OffsetT<int>   noAnimFlag = false;
     };

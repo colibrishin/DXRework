@@ -54,6 +54,7 @@ struct InstanceElement
 {
   matrix world : WORLD;
   float4 animFrame : ANIMFRAME;
+  int4   boneAnimDuration : ANIMDURATION;
   int4   animIndex : ANIMINDEX;
   int4   noAnimFlag : NOANIMFLAG;
 };
