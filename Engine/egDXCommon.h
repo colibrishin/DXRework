@@ -28,11 +28,20 @@ namespace Engine::Graphics { namespace SBs
     {
       SB_T(SB_TYPE_INSTANCE)
 
-      Matrix         world      = Matrix::Identity;
-      OffsetT<float> animFrame  = 0.f;
+      Matrix         world            = Matrix::Identity;
+      OffsetT<float> animFrame        = 0.f;
       OffsetT<int>   boneAnimDuration = 0;
-      OffsetT<int>   animIndex  = 0;
-      OffsetT<int>   noAnimFlag = false;
+      OffsetT<int>   animIndex        = 0;
+      OffsetT<int>   noAnimFlag       = false;
+    };
+
+    struct ParticleSB
+    {
+      SB_T(SB_TYPE_PARTICLE)
+
+      Vector4 position = Vector4::Zero;
+      OffsetT<float> size = 1.f;
+      Color   color = {0.f, 0.f, 0.f, 0.f};
     };
   }
 

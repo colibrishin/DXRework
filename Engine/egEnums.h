@@ -138,6 +138,7 @@ namespace Engine
     SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
     SB_TYPE_SHADOW,
     SB_TYPE_INSTANCE,
+    SB_TYPE_PARTICLE,
   };
 
   enum eResourceType
