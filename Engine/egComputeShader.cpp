@@ -5,32 +5,40 @@
 
 namespace Engine::Resources
 {
-  void ComputeShader::SetTexture(const WeakTexture& tex)
+  void ComputeShader::Dispatch()
   {
-    if (const auto t = tex.lock()) { m_tex_ = tex; }
-  }
+    preDispatch();
 
-  void ComputeShader::Dispatch(const std::array<UINT, 3>& group)
-  {
-    if (m_tex_.expired())
+    if (std::accumulate(m_group_.begin(), m_group_.end(), 0) == 0)
     {
-      GetDebugger().Log("ComputeShader::Dispatch() : Texture is not set. Ignore dispatching...");
+      GetDebugger().Log("ComputeShader::Dispatch() : Group is not set. Ignore dispatching...");
       return;
     }
 
-    preDispatch();
+    if (std::accumulate(m_group_.begin(), m_group_.end(), 1, std::multiplies()) > 1024)
+    {
+      GetDebugger().Log("ComputeShader::Dispatch() : Group is too large. Ignore dispatching...");
+      return;
+    }
 
-    const auto tex = m_tex_.lock();
-    tex->BindAs(D3D11_BIND_UNORDERED_ACCESS, BIND_SLOT_TEX, 0, SHADER_COMPUTE);
-    tex->Render(0.f);
+    if (std::accumulate(m_thread_.begin(), m_thread_.end(), 0) == 0)
+    {
+      GetDebugger().Log("ComputeShader::Dispatch() : Thread is not set. Ignore dispatching...");
+      return;
+    }
+
+    if (std::accumulate(m_thread_.begin(), m_thread_.end(), 1, std::multiplies()) > 1024)
+    {
+      GetDebugger().Log("ComputeShader::Dispatch() : Thread is too large. Ignore dispatching...");
+      return;
+    }
 
     GetD3Device().GetContext()->CSSetShader(m_cs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->Dispatch(group[0], group[1], group[2]);
-    GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
-
-    tex->PostRender(0.f);
+    GetD3Device().GetContext()->Dispatch(m_group_[0], m_group_[1], m_group_[3]);
 
     postDispatch();
+
+    GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
   }
 
   void ComputeShader::PostRender(const float& dt) {}

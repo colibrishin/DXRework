@@ -7,7 +7,7 @@ namespace Engine::Resources
   {
   public:
     void SetTexture(const WeakTexture& tex);
-    void Dispatch(const std::array<UINT, 3>& group);
+    void Dispatch();
 
 	protected:
     ComputeShader(const std::filesystem::path& path, const std::array<UINT, 3>& thread)
@@ -30,10 +30,10 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
 
   private:
-    WeakTexture m_tex_;
-
     ComPtr<ID3D11ComputeShader> m_cs_;
+
     std::array<UINT, 3> m_thread_;
+    std::array<UINT, 3> m_group_;
 
   };
 }
