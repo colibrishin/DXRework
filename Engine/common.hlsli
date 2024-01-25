@@ -119,7 +119,7 @@ float GetShadowFactorImpl(
   return shadow;
 }
 
-matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
+matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint bone_idx)
 {
   const float sampling_rate_frame = (frame * 10);
   const int   idx                 = (int)sampling_rate_frame;
@@ -128,8 +128,33 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
   const int next_frame_idx = idx + 1;
   const float t = sampling_rate_frame - frame_idx;
 
-  // todo: check duration
-  // if (next_frame_idx >= duration)....
+  if (frame_idx < 0)
+  {
+    uint u = bone_idx * 4;
+    uint v = 0;
+    uint w = anim_idx;
+
+    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
+    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
+    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
+    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+    return matrix(r0, r1, r2, r3);
+  }
+
+  if (next_frame_idx > duration || frame_idx > duration)
+  {
+    uint u = bone_idx * 4;
+    uint v = duration;
+    uint w = anim_idx;
+
+    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
+    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
+    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
+    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+    return matrix(r0, r1, r2, r3);
+  }
 
   // since we are storing float4s, bone idx should be
   // multiplied by 4 to get the correct index
@@ -153,7 +178,19 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
   float4       r13  = texAnimations.Load(uint4(u1 + 3, v1, w1, 0));
   const matrix mat1 = matrix(r10, r11, r12, r13);
 
-  return lerp(mat0, mat1, t);
+  float3     tr0, tr1;
+  float3     sc0, sc1;
+  quaternion qt0, qt1;
+
+  Decompose(mat0, tr0, sc0, qt0);
+  Decompose(mat1, tr1, sc1, qt1);
+
+  const float3     tr_final = lerp(tr0, tr1, t);
+  const float3     sc_final = lerp(sc0, sc1, t);
+  const quaternion qt_final = SLerp(qt0, qt1, t);
+
+
+  return Compose(tr_final, sc_final, qt_final);
 }
 
 void GetShadowFactor(
