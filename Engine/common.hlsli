@@ -119,6 +119,19 @@ float GetShadowFactorImpl(
   return shadow;
 }
 
+matrix GetAnimationMatrix(in uint anim_idx, in uint frame, in uint bone_idx)
+{
+  // since we are storing float4s, bone idx should be
+  // multiplied by 4 to get the correct index
+
+  float4 r0 = texAnimations.Load(uint4(bone_idx * 4, frame, anim_idx, 0));
+  float4 r1 = texAnimations.Load(uint4(bone_idx * 4 + 1, frame, anim_idx, 0));
+  float4 r2 = texAnimations.Load(uint4(bone_idx * 4 + 2, frame, anim_idx, 0));
+  float4 r3 = texAnimations.Load(uint4(bone_idx * 4 + 3, frame, anim_idx, 0));
+
+  return matrix(r0, r1, r2, r3);
+}
+
 matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint bone_idx)
 {
   const float sampling_rate_frame = (frame * 10);
@@ -128,67 +141,42 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint
   const int next_frame_idx = idx + 1;
   const float t = sampling_rate_frame - frame_idx;
 
+  matrix matT0, matT1;
+
   if (frame_idx < 0)
   {
-    uint u = bone_idx * 4;
-    uint v = 0;
-    uint w = anim_idx;
-
-    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
-    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
-    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
-    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
-
-    return matrix(r0, r1, r2, r3);
+    if (duration == 1)
+    {
+      matT0 = GetAnimationMatrix(anim_idx, 0, bone_idx);
+      matT1 = GetAnimationMatrix(anim_idx, 0, bone_idx);
+    }
+    else
+    {
+      matT0 = GetAnimationMatrix(anim_idx, 0, bone_idx);
+      matT1 = GetAnimationMatrix(anim_idx, 1, bone_idx);
+    }
   }
-
-  if (next_frame_idx >= duration || frame_idx >= duration)
+  else if (next_frame_idx >= duration || frame_idx >= duration)
   {
-    uint u = bone_idx * 4;
-    uint v = duration - 1;
-    uint w = anim_idx;
-
-    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
-    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
-    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
-    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
-
-    return matrix(r0, r1, r2, r3);
+    matT0 = GetAnimationMatrix(anim_idx, duration - 2, bone_idx);
+    matT1 = GetAnimationMatrix(anim_idx, duration - 1, bone_idx);
   }
-
-  // since we are storing float4s, bone idx should be
-  // multiplied by 4 to get the correct index
-  uint u0 = bone_idx * 4;
-  uint v0 = frame_idx;
-  uint w0 = anim_idx;
-
-  uint u1 = bone_idx * 4;
-  uint v1 = next_frame_idx;
-  uint w1 = anim_idx;
-
-  float4       r00  = texAnimations.Load(uint4(u0, v0, w0, 0));
-  float4       r01  = texAnimations.Load(uint4(u0 + 1, v0, w0, 0));
-  float4       r02  = texAnimations.Load(uint4(u0 + 2, v0, w0, 0));
-  float4       r03  = texAnimations.Load(uint4(u0 + 3, v0, w0, 0));
-  const matrix mat0 = matrix(r00, r01, r02, r03);
-
-  float4       r10  = texAnimations.Load(uint4(u1, v1, w1, 0));
-  float4       r11  = texAnimations.Load(uint4(u1 + 1, v1, w1, 0));
-  float4       r12  = texAnimations.Load(uint4(u1 + 2, v1, w1, 0));
-  float4       r13  = texAnimations.Load(uint4(u1 + 3, v1, w1, 0));
-  const matrix mat1 = matrix(r10, r11, r12, r13);
+  else
+  {
+    matT0 = GetAnimationMatrix(anim_idx, frame_idx, bone_idx);
+    matT1 = GetAnimationMatrix(anim_idx, next_frame_idx, bone_idx);
+  }
 
   float3     tr0, tr1;
   float3     sc0, sc1;
   quaternion qt0, qt1;
 
-  Decompose(mat0, tr0, sc0, qt0);
-  Decompose(mat1, tr1, sc1, qt1);
+  Decompose(matT0, tr0, sc0, qt0);
+  Decompose(matT1, tr1, sc1, qt1);
 
   const float3     tr_final = lerp(tr0, tr1, t);
   const float3     sc_final = lerp(sc0, sc1, t);
   const quaternion qt_final = SLerp(qt0, qt1, t);
-
 
   return Compose(tr_final, sc_final, qt_final);
 }
