@@ -4,6 +4,7 @@
 #define TRIANGLE_MACRO 3
 
 #include "type.hlsli"
+#include "utility.hlsli"
 
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
@@ -82,8 +83,6 @@ cbuffer ParamBuffer : register(b3)
   matrix g_matParam[4] : MATPARAM;
 }
 
-float4 GetWorldPosition(in matrix mat) { return float4(mat._41, mat._42, mat._43, mat._44); }
-
 float GetShadowFactorImpl(
   int    lightIndex, int cascadeIndex,
   float4 cascadeLocalPosition
@@ -120,21 +119,78 @@ float GetShadowFactorImpl(
   return shadow;
 }
 
-matrix LoadAnimation(in uint anim_idx, in float frame, in uint bone_idx)
+matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint bone_idx)
 {
-  uint frame_idx = frame * 10;
+  const float sampling_rate_frame = (frame * 10);
+  const int   idx                 = (int)sampling_rate_frame;
+
+  const int frame_idx      = idx;
+  const int next_frame_idx = idx + 1;
+  const float t = sampling_rate_frame - frame_idx;
+
+  if (frame_idx < 0)
+  {
+    uint u = bone_idx * 4;
+    uint v = 0;
+    uint w = anim_idx;
+
+    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
+    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
+    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
+    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+    return matrix(r0, r1, r2, r3);
+  }
+
+  if (next_frame_idx > duration || frame_idx > duration)
+  {
+    uint u = bone_idx * 4;
+    uint v = duration;
+    uint w = anim_idx;
+
+    float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
+    float4       r1  = texAnimations.Load(uint4(u + 1, v, w, 0));
+    float4       r2  = texAnimations.Load(uint4(u + 2, v, w, 0));
+    float4       r3  = texAnimations.Load(uint4(u + 3, v, w, 0));
+
+    return matrix(r0, r1, r2, r3);
+  }
+
   // since we are storing float4s, bone idx should be
   // multiplied by 4 to get the correct index
-  uint u         = bone_idx * 4;  
-  uint v         = frame_idx;
-  uint w         = anim_idx;
+  uint u0 = bone_idx * 4;
+  uint v0 = frame_idx;
+  uint w0 = anim_idx;
 
-  float4 r0        = texAnimations.Load(uint4(u, v, w, 0));
-  float4 r1        = texAnimations.Load(uint4(u + 1, v, w, 0));
-  float4 r2        = texAnimations.Load(uint4(u + 2, v, w, 0));
-  float4 r3        = texAnimations.Load(uint4(u + 3, v, w, 0));
+  uint u1 = bone_idx * 4;
+  uint v1 = next_frame_idx;
+  uint w1 = anim_idx;
 
-  return matrix(r0, r1, r2, r3);
+  float4       r00  = texAnimations.Load(uint4(u0, v0, w0, 0));
+  float4       r01  = texAnimations.Load(uint4(u0 + 1, v0, w0, 0));
+  float4       r02  = texAnimations.Load(uint4(u0 + 2, v0, w0, 0));
+  float4       r03  = texAnimations.Load(uint4(u0 + 3, v0, w0, 0));
+  const matrix mat0 = matrix(r00, r01, r02, r03);
+
+  float4       r10  = texAnimations.Load(uint4(u1, v1, w1, 0));
+  float4       r11  = texAnimations.Load(uint4(u1 + 1, v1, w1, 0));
+  float4       r12  = texAnimations.Load(uint4(u1 + 2, v1, w1, 0));
+  float4       r13  = texAnimations.Load(uint4(u1 + 3, v1, w1, 0));
+  const matrix mat1 = matrix(r10, r11, r12, r13);
+
+  float3     tr0, tr1;
+  float3     sc0, sc1;
+  quaternion qt0, qt1;
+
+  Decompose(mat0, tr0, sc0, qt0);
+  Decompose(mat1, tr1, sc1, qt1);
+
+  const float3     tr_final = lerp(tr0, tr1, t);
+  const float3     sc_final = lerp(sc0, sc1, t);
+  const quaternion qt_final = SLerp(qt0, qt1, t);
+
+
+  return Compose(tr_final, sc_final, qt_final);
 }
 
 void GetShadowFactor(
