@@ -3,7 +3,7 @@
 
 #include "egMaterial.h"
 
-namespace Engine::Components::Abstract
+namespace Engine::Components::Base
 {
   void RenderComponent::SetMaterial(const WeakMaterial& material) noexcept
   {
@@ -13,6 +13,8 @@ namespace Engine::Components::Abstract
       m_material_name_ = mtr->GetName();
     }
   }
+
+  eRenderComponentType RenderComponent::GetRenderType() const noexcept { return m_type_; }
 
   WeakMaterial RenderComponent::GetMaterial() const noexcept { return m_material_; }
 

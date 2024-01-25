@@ -1,7 +1,7 @@
 #pragma once
 #include "egComponent.h"
 
-namespace Engine::Components::Abstract
+namespace Engine::Components::Base
 {
   class RenderComponent : public Engine::Abstract::Component
   {
@@ -13,8 +13,9 @@ namespace Engine::Components::Abstract
         m_type_(type) {}
 
     void SetMaterial(const WeakMaterial& material) noexcept;
-    WeakMaterial         GetMaterial() const noexcept;
 
+    eRenderComponentType GetRenderType() const noexcept;
+    WeakMaterial         GetMaterial() const noexcept;
     std::string          GetMaterialName() const noexcept;
     eRenderComponentType GetType() const noexcept;
 
@@ -29,4 +30,4 @@ namespace Engine::Components::Abstract
   };
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Abstract::RenderComponent)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Base::RenderComponent)

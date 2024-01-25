@@ -4,7 +4,7 @@
 
 namespace Engine::Components
 {
-  class ModelRenderer final : public Abstract::RenderComponent
+  class ModelRenderer final : public Base::RenderComponent
   {
   public:
     RENDER_COM_T(RENDER_COM_T_MODEL)
