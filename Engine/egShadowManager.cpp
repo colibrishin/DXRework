@@ -198,14 +198,14 @@ namespace Engine::Manager::Graphics
   {
     GetRenderer().RenderPass
       (
-       dt, [](const StrongObject& obj)
+       dt, false, true,
+       [this](const StrongObject& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
          return true;
-       },
-       false, true
+       }
       );
   }
 
