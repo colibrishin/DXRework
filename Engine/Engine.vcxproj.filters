@@ -324,9 +324,6 @@
     <ClInclude Include="egCamera.h">
       <Filter>Object\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="egDelayedRenderObject.h">
-      <Filter>Object\DelayedRenderObject</Filter>
-    </ClInclude>
     <ClInclude Include="egLight.h">
       <Filter>Object\Light</Filter>
     </ClInclude>
@@ -551,9 +548,6 @@
     <ClCompile Include="egCamera.cpp">
       <Filter>Object\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="egDelayedRenderObject.cpp">
-      <Filter>Object\DelayedRenderObject</Filter>
-    </ClCompile>
     <ClCompile Include="egLight.cpp">
       <Filter>Object\Light</Filter>
     </ClCompile>
@@ -731,6 +725,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="cascade_shadow_stage1.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="utility.hlsli">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
