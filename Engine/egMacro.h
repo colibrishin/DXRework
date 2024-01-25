@@ -38,6 +38,8 @@
 #define BASE_T(enum_val) static constexpr eBaseType btype = enum_val;
 // Static Component type, this should be added to every component
 #define COMPONENT_T(enum_val) static constexpr eComponentType ctype = enum_val;
+// Static Render Component type, this should be added to every render component
+#define RENDER_COM_T(enum_val) static constexpr eRenderComponentType rctype = enum_val;
 // Static Resource type, this should be added to every resource
 #define RESOURCE_T(enum_val) static constexpr eResourceType rtype = enum_val;
 // Static engine default provided object type, this should be added to every object

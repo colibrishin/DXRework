@@ -178,7 +178,18 @@ namespace Engine::Resources
     }
     else if (m_bind_to_ == D3D11_BIND_UNORDERED_ACCESS)
     {
-      GetD3Device().GetContext()->CSSetUnorderedAccessViews(m_bound_slot_ + m_bound_slot_offset_, 1, m_uav_.GetAddressOf(), nullptr);
+      if (m_bound_shader_ == SHADER_COMPUTE)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews(m_bound_slot_ + m_bound_slot_offset_, 1, m_uav_.GetAddressOf(), nullptr);
+      }
+      else if (m_bound_shader_ == SHADER_PIXEL)
+      {
+        GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
+
+        GetD3Device().GetContext()->OMSetRenderTargetsAndUnorderedAccessViews
+          (1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get(), m_bound_slot_ + m_bound_slot_offset_, 1, m_uav_.GetAddressOf(), nullptr);
+      }
+      else { throw std::runtime_error("Unordered access view is not supported in this shader"); }
     }
   }
 
@@ -194,22 +205,22 @@ namespace Engine::Resources
 
       switch (m_bound_shader_)
       {
-      case SHADER_VERTEX:
-          GetD3Device().GetContext()->VSSetShaderResources(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
-          break;
-      case SHADER_PIXEL:
-          GetD3Device().GetContext()->PSSetShaderResources(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
-          break;
-      case SHADER_GEOMETRY:
-          GetD3Device().GetContext()->GSSetShaderResources(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
-          break;
-      case SHADER_HULL:
-          GetD3Device().GetContext()->HSSetShaderResources(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
-          break;
-      case SHADER_DOMAIN:
-          GetD3Device().GetContext()->DSSetShaderResources(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
-          break;
-      case SHADER_UNKNOWN: 
+      case SHADER_VERTEX: GetD3Device().GetContext()->VSSetShaderResources
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
+        break;
+      case SHADER_PIXEL: GetD3Device().GetContext()->PSSetShaderResources
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
+        break;
+      case SHADER_GEOMETRY: GetD3Device().GetContext()->GSSetShaderResources
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
+        break;
+      case SHADER_HULL: GetD3Device().GetContext()->HSSetShaderResources
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
+        break;
+      case SHADER_DOMAIN: GetD3Device().GetContext()->DSSetShaderResources
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf());
+        break;
+      case SHADER_UNKNOWN:
       default: break;
       }
     }
@@ -217,7 +228,20 @@ namespace Engine::Resources
     {
       ComPtr<ID3D11UnorderedAccessView> null_view = nullptr;
 
-      GetD3Device().GetContext()->CSSetUnorderedAccessViews(m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf(), nullptr);
+      if (m_bound_shader_ == SHADER_COMPUTE)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews
+          (m_bound_slot_ + m_bound_slot_offset_, 1, null_view.GetAddressOf(), nullptr);
+      }
+      else if (m_bound_shader_ == SHADER_PIXEL)
+      {
+        GetD3Device().GetContext()->OMSetRenderTargetsAndUnorderedAccessViews
+          (
+           1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get(), m_bound_slot_ + m_bound_slot_offset_, 1,
+           null_view.GetAddressOf(), nullptr
+          );
+      }
+      else { throw std::runtime_error("Unordered access view is not supported in this shader"); }
     }
     else if (m_bind_to_ == D3D11_BIND_DEPTH_STENCIL)
     {

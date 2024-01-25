@@ -9,6 +9,23 @@
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
+RWTexture2D<float4>      uav00 : register(u0);
+RWTexture2D<float4>      uav01 : register(u1);
+RWTexture2D<float4>      uav02 : register(u2);
+RWTexture2D<float4>      uav03 : register(u3);
+RWTexture2D<float4>      uav04 : register(u4);
+RWTexture2D<float4>      uav05 : register(u5);
+RWTexture2D<float4>      uav06 : register(u6);
+RWTexture2D<float4>      uav07 : register(u7);
+RWTexture2DArray<float4> uavArr00 : register(u8);
+RWTexture2DArray<float4> uavArr01 : register(u9);
+RWTexture2DArray<float4> uavArr02 : register(u10);
+RWTexture2DArray<float4> uavArr03 : register(u11);
+RWTexture2DArray<float4> uavArr04 : register(u12);
+RWTexture2DArray<float4> uavArr05 : register(u13);
+RWTexture2DArray<float4> uavArr06 : register(u14);
+RWTexture2DArray<float4> uavArr07 : register(u15);
+
 Texture2D      tex00 : register(t0);
 Texture2D      tex01 : register(t1);
 Texture2D      tex02 : register(t2);
@@ -41,6 +58,9 @@ Texture3D      texAnimations : register(t34);
 StructuredBuffer<LightElement>         bufLight : register(t64);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t65);
 StructuredBuffer<InstanceElement>      bufInstance : register(t66);
+
+StructuredBuffer<ParticleElement>   bufParticle : register(t67);
+RWStructuredBuffer<ParticleElement> bufUAVParticle : register(u67);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 

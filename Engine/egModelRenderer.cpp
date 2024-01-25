@@ -9,7 +9,7 @@
 namespace Engine::Components
 {
   ModelRenderer::ModelRenderer(const WeakObject& owner)
-    : Component(COM_T_MODEL_RENDERER, owner) {}
+    : RenderComponent(RENDER_COM_T_MODEL, owner) {}
 
   void ModelRenderer::PreUpdate(const float& dt) {}
 
@@ -22,25 +22,9 @@ namespace Engine::Components
   void ModelRenderer::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Material Name", m_material_name_);
-  }
-
-  void ModelRenderer::SetMaterial(const WeakMaterial& material)
-  {
-    if (const auto m = material.lock())
-    {
-      m_material_      = m;
-      m_material_name_ = m->GetName();
-    }
-  }
-
-  WeakMaterial ModelRenderer::GetMaterial() const
-  {
-    if (m_material_) { return m_material_; }
-
-    return {};
+    TextDisabled("Material Name", GetMaterialName());
   }
 
   ModelRenderer::ModelRenderer()
-    : Component(COM_T_MODEL_RENDERER, {}) {}
+    : RenderComponent(RENDER_COM_T_MODEL, {}) {}
 }

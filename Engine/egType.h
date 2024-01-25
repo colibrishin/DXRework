@@ -61,6 +61,11 @@ namespace Engine
 
   namespace Components
   {
+    namespace Base
+    {
+      class RenderComponent;
+    }
+
     class Collider;
     class OffsetCollider;
     class Transform;
@@ -197,6 +202,7 @@ namespace Engine
   using StrongShadowTexture = boost::shared_ptr<Resources::ShadowTexture>;
   using StrongTexture2D = boost::shared_ptr<Resources::Texture2D>;
   using StrongModelRenderer = boost::shared_ptr<Components::ModelRenderer>;
+  using StrongRenderComponent = boost::shared_ptr<Components::Base::RenderComponent>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;

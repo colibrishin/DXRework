@@ -59,4 +59,11 @@ struct InstanceElement
   int4   noAnimFlag : NOANIMFLAG;
 };
 
+struct ParticleElement
+{
+  float4 position : POSITION;
+  float4 size : SIZE;
+  float4 color : COLOR;
+};
+
 #endif // __TYPE_HLSLI__

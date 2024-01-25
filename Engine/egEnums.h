@@ -79,7 +79,8 @@ namespace Engine
     SHADER_DOMAIN_OPAQUE = 0,
     SHADER_DOMAIN_MASK,
     SHADER_DOMAIN_TRANSPARENT,
-    SHADER_DOMAIN_POST_PROCESS
+    SHADER_DOMAIN_POST_PROCESS,
+    SHADER_DOMAIN_MAX,
   };
 
   enum eShaderDepth : UINT
@@ -138,6 +139,7 @@ namespace Engine
     SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
     SB_TYPE_SHADOW,
     SB_TYPE_INSTANCE,
+    SB_TYPE_PARTICLE,
   };
 
   enum eResourceType
@@ -167,8 +169,15 @@ namespace Engine
     COM_T_STATE,
     COMP_T_SOUND_PLAYER,
     COM_T_ANIMATOR,
-    COM_T_MODEL_RENDERER,
+    COM_T_RENDERER,
     COM_T_SCRIPT,
+  };
+
+  enum eRenderComponentType
+  {
+    RENDER_COM_T_UNK = 0,
+    RENDER_COM_T_MODEL,
+    RENDER_COM_T_PARTICLE,
   };
 
   enum eDefObjectType
