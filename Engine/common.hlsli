@@ -142,10 +142,10 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint
     return matrix(r0, r1, r2, r3);
   }
 
-  if (next_frame_idx > duration || frame_idx > duration)
+  if (next_frame_idx >= duration || frame_idx >= duration)
   {
     uint u = bone_idx * 4;
-    uint v = duration;
+    uint v = duration - 1;
     uint w = anim_idx;
 
     float4       r0  = texAnimations.Load(uint4(u, v, w, 0));
