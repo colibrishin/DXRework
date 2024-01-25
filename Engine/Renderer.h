@@ -10,6 +10,12 @@ namespace Engine::Manager::Graphics
     template <typename T>
     using MaterialMap = std::map<WeakMaterial, T, WeakComparer<Resources::Material>>;
 
+    template <typename T>
+    using RenderComponentMap = std::map<const eRenderComponentType, MaterialMap<T>>;
+
+    template <typename T>
+    using RenderPassMap = std::map<const eShaderDomain, RenderComponentMap<T>>;
+
     explicit Renderer(SINGLETON_LOCK_TOKEN)
       : Singleton(),
         m_b_ready_(false) {}
@@ -26,30 +32,28 @@ namespace Engine::Manager::Graphics
     bool Ready() const;
 
     void RenderPass(
-      const float                                     dt,
-      bool                                            post          = false,
-      bool                                            shader_bypass = false,
-      const std::function<bool(const StrongObject&)>& predicate     = nullptr
+      const float   dt,
+      eShaderDomain domain,
+      bool          shader_bypass = false, const std::function<bool(const StrongObject&)> & predicate = nullptr
     ) const;
 
   private:
     friend struct SingletonDeleter;
     ~Renderer() override = default;
 
-    void RenderPassImpl(
-      const float                         dt,
-      bool                                shader_bypass,
-      UINT                                instance_count,
-      const StrongMaterial&               material,
-      const std::vector<SBs::InstanceSB>& structured_buffers
+    void renderPassImpl(
+      const float            dt,
+      eShaderDomain          domain,
+      bool                   shader_bypass,
+      UINT                   instance_count,
+      const StrongMaterial & material, const std::vector<SBs::InstanceSB> & structured_buffers
     ) const;
+
+    void preMappingModel(const StrongRenderComponent& rc);
 
     bool m_b_ready_;
 
-    MaterialMap<std::vector<WeakModelRenderer>> m_normal_passes_;
-    MaterialMap<std::vector<WeakModelRenderer>> m_post_passes_;
-
-    MaterialMap<std::vector<SBs::InstanceSB>>  m_normal_sbs_;
-    MaterialMap<std::vector<SBs::InstanceSB>>  m_post_sbs_;
+    RenderPassMap<std::vector<WeakObject>> m_render_passes_;
+    RenderPassMap<std::vector<SBs::InstanceSB>> m_sbs_;
   };
 }

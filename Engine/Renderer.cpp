@@ -25,24 +25,21 @@ namespace Engine::Manager::Graphics
   {
     // Pre-processing, Mapping the materials to the model renderers.
     const auto& scene = GetSceneManager().GetActiveScene().lock();
-    const auto& mrs = scene->GetCachedComponents<Components::ModelRenderer>();
+    const auto& rcs = scene->GetCachedComponents<Components::Base::RenderComponent>();
 
-    for (const auto& ptr_mr : mrs)
+    for (const auto& ptr_rc : rcs)
     {
       // pointer sanity check
-      if (ptr_mr.expired()) { continue; }
-
-      // get model renderer, continue if it is disabled
-      const auto mr = ptr_mr.lock()->GetSharedPtr<Components::ModelRenderer>();
-      if (!mr->GetActive()) { continue; }
+      if (ptr_rc.expired()) { continue; }
+      const auto rc = ptr_rc.lock()->GetSharedPtr<Components::Base::RenderComponent>();
 
       // owner object sanity check
-      const auto obj = mr->GetOwner().lock();
+      const auto obj = rc->GetOwner().lock();
       if (!obj) { continue; }
       if (!obj->GetActive()) { continue; }
 
       // material sanity check
-      const auto ptr_mtr = mr->GetMaterial();
+      const auto ptr_mtr = rc->GetMaterial();
       if (ptr_mtr.expired()) { continue; }
       const auto mtr = ptr_mtr.lock();
 
@@ -51,54 +48,16 @@ namespace Engine::Manager::Graphics
       if (!tr) { continue; }
       if (!tr->GetActive()) { continue; }
 
-      // animator parameters
-      float anim_frame = 0.0f;
-      UINT anim_idx = 0;
-      UINT anim_duration = 0;
-      bool no_anim = false;
-
-      if (const auto atr = obj->GetComponent<Components::Animator>().lock())
+      switch (rc->GetRenderType())
       {
-        anim_frame = atr->GetFrame();
-        anim_idx = atr->GetAnimation();
-        no_anim = !atr->GetActive();
-
-        if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
-        {
-          anim_duration = (UINT)(bone_anim->GetDuration() / g_animation_sample_rate);
-        }
+      case RENDER_COM_T_MODEL:
+          preMappingModel(rc);
+          break;
+      case RENDER_COM_T_PARTICLE: 
+          break;
+      case RENDER_COM_T_UNK:
+      default: break;
       }
-
-      if (mtr->IsPostProcess())
-      {
-        m_post_passes_[mtr].push_back(mr);
-
-        m_post_sbs_[mtr].push_back
-          (
-              {
-                .world = tr->GetWorldMatrix().Transpose(),
-                .animFrame = anim_frame,
-                .boneAnimDuration = (int)anim_duration,
-                .animIndex = (int)anim_idx,
-                .noAnimFlag = no_anim
-              }
-          );
-
-        continue;
-      }
-
-      m_normal_passes_[mtr].push_back(mr);
-
-      m_normal_sbs_[mtr].push_back
-        (
-         {
-           .world = tr->GetWorldMatrix().Transpose(),
-           .animFrame = anim_frame,
-           .boneAnimDuration = (int)anim_duration,
-           .animIndex = (int)anim_idx,
-           .noAnimFlag = no_anim
-         }
-        );
     }
 
     m_b_ready_ = true;
@@ -110,30 +69,29 @@ namespace Engine::Manager::Graphics
     {
       if (const auto cam = scene->GetMainCamera().lock())
       {
-        // Check culling.
-        RenderPass(dt, false, false, [](const StrongObject& obj)
+        for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
-          return GetProjectionFrustum().CheckRender(obj);
-        });
+          // Check culling.
+          RenderPass(dt, (eShaderDomain)i, false, [](const StrongObject& obj)
+          {
+            return GetProjectionFrustum().CheckRender(obj);
+          });
 
-        // Notify reflection evaluator that rendering is finished so that it
-        // can copy the rendered scene to the copy texture.
-        GetReflectionEvaluator().RenderFinished();
-
-        RenderPass(dt, true, false, [](const StrongObject& obj)
-        {
-          return GetProjectionFrustum().CheckRender(obj);
-        });
+          if (i == SHADER_DOMAIN_OPAQUE)
+          {
+            // Notify reflection evaluator that rendering is finished so that it
+            // can copy the rendered scene to the copy texture.
+            GetReflectionEvaluator().RenderFinished();
+          }
+        }
       }
     }
   }
 
   void Renderer::PostRender(const float& dt)
   {
-    m_normal_passes_.clear();
-    m_post_passes_.clear();
-    m_normal_sbs_.clear();
-    m_post_sbs_.clear();
+    m_render_passes_.clear();
+    m_sbs_.clear();
     m_b_ready_ = false;
   }
 
@@ -145,7 +103,7 @@ namespace Engine::Manager::Graphics
 
   void Renderer::RenderPass(
     const float                                     dt,
-    bool                                            post,
+    eShaderDomain                                   domain,
     bool                                            shader_bypass,
     const std::function<bool(const StrongObject&)>& predicate
   ) const
@@ -156,48 +114,54 @@ namespace Engine::Manager::Graphics
       return;
     }
 
-    const auto& target_map = post ? m_post_passes_ : m_normal_passes_;
-    const auto& target_sb  = post ? m_post_sbs_ : m_normal_sbs_;
+    if (!m_render_passes_.contains(domain)) { return; }
+
+    const auto& target_map = m_render_passes_.at(domain);
+    const auto& target_sb  = m_sbs_.at(domain);
 
     if (target_map.empty()) { return; }
     if (target_sb.empty()) { return; }
 
-    for (const auto& [ptr_mtr, mrs] : target_map)
+    for (const auto& [rc_type, mtr_map] : target_map)
     {
-      if (predicate)
+      for (const auto& [ptr_mtr, objs] : mtr_map)
       {
-        std::vector<StrongModelRenderer> mr_pred_set;
-        std::vector<SBs::InstanceSB>     sb_pred_set;
-
-        for (int i = 0; i < mrs.size(); ++i)
+        if (predicate)
         {
-          const auto& mr = mrs[i].lock();
-          const auto& sb = target_sb.at(ptr_mtr)[i];
+          std::vector<WeakObject>      obj_pred_set;
+          std::vector<SBs::InstanceSB> sb_pred_set;
 
-          if (!predicate(mr->GetOwner().lock())) { continue; }
+          for (int i = 0; i < objs.size(); ++i)
+          {
+            const auto& obj = objs[i].lock();
+            const auto& sb  = target_sb.at(rc_type).at(ptr_mtr).at(i);
 
-          mr_pred_set.push_back(mr);
-          sb_pred_set.push_back(sb);
+            if (!predicate(obj)) { continue; }
+
+            obj_pred_set.push_back(obj);
+            sb_pred_set.push_back(sb);
+          }
+
+          if (obj_pred_set.empty()) { continue; }
+          if (sb_pred_set.empty()) { continue; }
+
+          const auto mtr = ptr_mtr.lock();
+          renderPassImpl(dt, domain, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
         }
+        else
+        {
+          const auto& mtr_sbs = target_sb.at(rc_type).at(ptr_mtr);
+          const auto mtr = ptr_mtr.lock();
 
-        if (mr_pred_set.empty()) { continue; }
-        if (sb_pred_set.empty()) { continue; }
-
-        const auto mtr = ptr_mtr.lock();
-
-        RenderPassImpl(dt, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
-      }
-      else
-      {
-        const auto mtr = ptr_mtr.lock();
-
-        RenderPassImpl(dt, shader_bypass, target_sb.at(ptr_mtr).size(), mtr, target_sb.at(ptr_mtr));
+          renderPassImpl(dt, domain, shader_bypass, mtr_map.at(mtr).size(), mtr, mtr_sbs);
+        }
       }
     }
   }
 
-  void Renderer::RenderPassImpl(
+  void Renderer::renderPassImpl(
     const float                         dt,
+    eShaderDomain                       domain,
     bool                                shader_bypass,
     UINT                                instance_count,
     const StrongMaterial&               material,
@@ -212,7 +176,8 @@ namespace Engine::Manager::Graphics
       (
        {
          .instanceCount = instance_count,
-         .bypassShader = shader_bypass
+         .bypassShader = shader_bypass,
+         .domain = domain,
        }
       );
 
@@ -221,5 +186,57 @@ namespace Engine::Manager::Graphics
     material->PostRender(dt);
 
     sb.Unbind(SHADER_VERTEX);
+  }
+
+  void Renderer::preMappingModel(const StrongRenderComponent& rc)
+  {
+    // get model renderer, continue if it is disabled
+    const auto mr = rc->GetSharedPtr<Components::ModelRenderer>();
+    if (!mr->GetActive()) { return; }
+
+    const auto obj = rc->GetOwner().lock();
+    const auto mtr = rc->GetMaterial().lock();
+    const auto tr = obj->GetComponent<Components::Transform>().lock();
+
+    // animator parameters
+    float anim_frame    = 0.0f;
+    UINT  anim_idx      = 0;
+    UINT  anim_duration = 0;
+    bool  no_anim       = false;
+
+    if (const auto atr = obj->GetComponent<Components::Animator>().lock())
+    {
+      anim_frame = atr->GetFrame();
+      anim_idx   = atr->GetAnimation();
+      no_anim    = !atr->GetActive();
+
+      if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
+      {
+        anim_duration = (UINT)(bone_anim->GetDuration() / g_animation_sample_rate);
+      }
+    }
+
+    // Pre-mapping by the material.
+    for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
+    {
+      const auto domain = static_cast<eShaderDomain>(i);
+
+      if (mtr->IsRenderDomain(domain))
+      {
+        m_render_passes_[domain][rc->GetRenderType()][mtr].push_back(obj);
+
+        // todo: stacking structured buffer data might be get large easily.
+        m_sbs_[domain][rc->GetRenderType()][mtr].push_back
+          (
+           {
+             .world = tr->GetWorldMatrix().Transpose(),
+             .animFrame = anim_frame,
+             .boneAnimDuration = (int)anim_duration,
+             .animIndex = (int)anim_idx,
+             .noAnimFlag = no_anim
+           }
+          );
+      }
+    }
   }
 }
