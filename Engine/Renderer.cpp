@@ -36,11 +36,10 @@ namespace Engine::Manager::Graphics
       const auto mr = ptr_mr.lock()->GetSharedPtr<Components::ModelRenderer>();
       if (!mr->GetActive()) { continue; }
 
-      // owner object sanity check and culling check
+      // owner object sanity check
       const auto obj = mr->GetOwner().lock();
       if (!obj) { continue; }
       if (!obj->GetActive()) { continue; }
-      if (!GetProjectionFrustum().CheckRender(obj)) { continue; }
 
       // material sanity check
       const auto ptr_mtr = mr->GetMaterial();
@@ -107,13 +106,26 @@ namespace Engine::Manager::Graphics
 
   void Renderer::Render(const float& dt)
   {
-    RenderPass(dt, false, false);
+    if (const auto scene = GetSceneManager().GetActiveScene().lock())
+    {
+      if (const auto cam = scene->GetMainCamera().lock())
+      {
+        // Check culling.
+        RenderPass(dt, false, false, [](const StrongObject& obj)
+        {
+          return GetProjectionFrustum().CheckRender(obj);
+        });
 
-    // Notify reflection evaluator that rendering is finished so that it
-    // can copy the rendered scene to the copy texture.
-    GetReflectionEvaluator().RenderFinished();
+        // Notify reflection evaluator that rendering is finished so that it
+        // can copy the rendered scene to the copy texture.
+        GetReflectionEvaluator().RenderFinished();
 
-    RenderPass(dt, true, false);
+        RenderPass(dt, true, false, [](const StrongObject& obj)
+        {
+          return GetProjectionFrustum().CheckRender(obj);
+        });
+      }
+    }
   }
 
   void Renderer::PostRender(const float& dt)
@@ -131,7 +143,12 @@ namespace Engine::Manager::Graphics
 
   bool Renderer::Ready() const { return m_b_ready_; }
 
-  void Renderer::RenderPass(const float dt, bool post, bool shader_bypass) const
+  void Renderer::RenderPass(
+    const float                                     dt,
+    bool                                            post,
+    bool                                            shader_bypass,
+    const std::function<bool(const StrongObject&)>& predicate
+  ) const
   {
     if (!Ready())
     {
@@ -145,13 +162,41 @@ namespace Engine::Manager::Graphics
     if (target_map.empty()) { return; }
     if (target_sb.empty()) { return; }
 
-    for (const auto& mtr : target_map | std::views::keys)
+    for (const auto& [ptr_mtr, mrs] : target_map)
     {
-      DoRenderPass(dt, shader_bypass, target_sb.at(mtr).size(), mtr, target_sb.at(mtr));
+      if (predicate)
+      {
+        std::vector<StrongModelRenderer> mr_pred_set;
+        std::vector<SBs::InstanceSB>     sb_pred_set;
+
+        for (int i = 0; i < mrs.size(); ++i)
+        {
+          const auto& mr = mrs[i].lock();
+          const auto& sb = target_sb.at(ptr_mtr)[i];
+
+          if (!predicate(mr->GetOwner().lock())) { continue; }
+
+          mr_pred_set.push_back(mr);
+          sb_pred_set.push_back(sb);
+        }
+
+        if (mr_pred_set.empty()) { continue; }
+        if (sb_pred_set.empty()) { continue; }
+
+        const auto mtr = ptr_mtr.lock();
+
+        RenderPassImpl(dt, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
+      }
+      else
+      {
+        const auto mtr = ptr_mtr.lock();
+
+        RenderPassImpl(dt, shader_bypass, target_sb.at(ptr_mtr).size(), mtr, target_sb.at(ptr_mtr));
+      }
     }
   }
 
-  void Renderer::DoRenderPass(
+  void Renderer::RenderPassImpl(
     const float                         dt,
     bool                                shader_bypass,
     UINT                                instance_count,
@@ -176,54 +221,5 @@ namespace Engine::Manager::Graphics
     material->PostRender(dt);
 
     sb.Unbind(SHADER_VERTEX);
-  }
-
-  void Renderer::RenderPass(
-    const float                                     dt,
-    const std::function<bool(const StrongObject&)>& predicate,
-    bool                                            post,
-    bool                                            shader_bypass
-  ) const
-  {
-    if (!Ready())
-    {
-      GetDebugger().Log("Renderer is not ready!");
-      return;
-    }
-
-    const auto& target_map = post ? m_post_passes_ : m_normal_passes_;
-    const auto& target_sb  = post ? m_post_sbs_ : m_normal_sbs_;
-
-    if (target_map.empty()) { return; }
-    if (target_sb.empty()) { return; }
-
-    for (const auto& [mtr, mrs] : target_map)
-    {
-      if (predicate)
-      {
-        std::vector<StrongModelRenderer> mr_pred_set;
-        std::vector<SBs::InstanceSB>     sb_pred_set;
-
-        for (int i = 0; i < mrs.size(); ++i)
-        {
-          const auto& mr = mrs[i];
-          const auto& sb = target_sb.at(mtr)[i];
-
-          if (!predicate(mr->GetOwner().lock())) { continue; }
-
-          mr_pred_set.push_back(mr);
-          sb_pred_set.push_back(sb);
-        }
-
-        if (mr_pred_set.empty()) { continue; }
-        if (sb_pred_set.empty()) { continue; }
-
-        DoRenderPass(dt, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
-      }
-      else
-      {
-        DoRenderPass(dt, shader_bypass, target_sb.at(mtr).size(), mtr, target_sb.at(mtr));
-      }
-    }
   }
 }

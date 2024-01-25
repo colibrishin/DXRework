@@ -69,6 +69,7 @@ namespace Engine::Manager::Graphics
 
     D3D11_VIEWPORT m_viewport_;
 
+    // todo: refactoring
     ID3D11ShaderResourceView*  m_current_shadow_maps_[g_max_lights];
     ComPtr<ID3D11SamplerState> m_shadow_sampler_;
   };

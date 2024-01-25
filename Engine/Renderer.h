@@ -7,6 +7,9 @@ namespace Engine::Manager::Graphics
   class Renderer : public Abstract::Singleton<Renderer>
   {
   public:
+    template <typename T>
+    using MaterialMap = std::map<WeakMaterial, T, WeakComparer<Resources::Material>>;
+
     explicit Renderer(SINGLETON_LOCK_TOKEN)
       : Singleton(),
         m_b_ready_(false) {}
@@ -21,14 +24,19 @@ namespace Engine::Manager::Graphics
     void Initialize() override;
 
     bool Ready() const;
-    void RenderPass(const float dt, const std::function<bool(const StrongObject&)>& predicate, bool post = false, bool shader_bypass = false) const;
-    void RenderPass(const float dt, bool post = false, bool shader_bypass = false) const;
+
+    void RenderPass(
+      const float                                     dt,
+      bool                                            post          = false,
+      bool                                            shader_bypass = false,
+      const std::function<bool(const StrongObject&)>& predicate     = nullptr
+    ) const;
 
   private:
     friend struct SingletonDeleter;
     ~Renderer() override = default;
 
-    void DoRenderPass(
+    void RenderPassImpl(
       const float                         dt,
       bool                                shader_bypass,
       UINT                                instance_count,
@@ -38,10 +46,10 @@ namespace Engine::Manager::Graphics
 
     bool m_b_ready_;
 
-    std::map<StrongMaterial, std::vector<StrongModelRenderer>> m_normal_passes_;
-    std::map<StrongMaterial, std::vector<StrongModelRenderer>> m_post_passes_;
+    MaterialMap<std::vector<WeakModelRenderer>> m_normal_passes_;
+    MaterialMap<std::vector<WeakModelRenderer>> m_post_passes_;
 
-    std::map<StrongMaterial, std::vector<SBs::InstanceSB>>  m_normal_sbs_;
-    std::map<StrongMaterial, std::vector<SBs::InstanceSB>>  m_post_sbs_;
+    MaterialMap<std::vector<SBs::InstanceSB>>  m_normal_sbs_;
+    MaterialMap<std::vector<SBs::InstanceSB>>  m_post_sbs_;
   };
 }
