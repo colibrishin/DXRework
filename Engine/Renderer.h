@@ -24,14 +24,19 @@ namespace Engine::Manager::Graphics
     void Initialize() override;
 
     bool Ready() const;
-    void RenderPass(const float dt, const std::function<bool(const StrongObject&)>& predicate, bool post = false, bool shader_bypass = false) const;
-    void RenderPass(const float dt, bool post = false, bool shader_bypass = false) const;
+
+    void RenderPass(
+      const float                                     dt,
+      bool                                            post          = false,
+      bool                                            shader_bypass = false,
+      const std::function<bool(const StrongObject&)>& predicate     = nullptr
+    ) const;
 
   private:
     friend struct SingletonDeleter;
     ~Renderer() override = default;
 
-    void DoRenderPass(
+    void RenderPassImpl(
       const float                         dt,
       bool                                shader_bypass,
       UINT                                instance_count,
