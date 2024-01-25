@@ -20,8 +20,7 @@ namespace Engine::Resources
 {
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_(),
-      m_b_post_process_(false)
+      m_material_cb_()
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -30,6 +29,7 @@ namespace Engine::Resources
     m_material_cb_.clip_plane             = Vector4::Zero;
     m_material_cb_.reflection_translation = 0.5f;
   }
+
 
   void Material::PreUpdate(const float& dt) {}
 
@@ -43,7 +43,7 @@ namespace Engine::Resources
   {
     if (!m_temp_param_.bypassShader)
     {
-      for (const auto& shd : m_shaders_loaded_) { shd->PreRender(dt); }
+      m_shaders_loaded_[m_temp_param_.domain]->PreRender(dt);
     }
 
     m_material_cb_.flags = {};
@@ -76,7 +76,13 @@ namespace Engine::Resources
 
   void Material::Render(const float& dt)
   {
-    if (!m_temp_param_.bypassShader) { for (const auto& shd : m_shaders_loaded_) { shd->Render(dt); } }
+    if (!m_temp_param_.bypassShader)
+    {
+      for (const auto& shd : m_shaders_loaded_)
+      {
+        m_shaders_loaded_[m_temp_param_.domain]->Render(dt);
+      }
+    }
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -110,7 +116,10 @@ namespace Engine::Resources
 
     if (!m_temp_param_.bypassShader)
     {
-      for (const auto& shd : m_shaders_loaded_) { shd->PostRender(dt); }
+      for (const auto& shd : m_shaders_loaded_)
+      {
+        m_shaders_loaded_[m_temp_param_.domain]->PostRender(dt);
+      }
     }
 
     for (const auto& [type, resources] : m_resources_loaded_)
@@ -132,7 +141,7 @@ namespace Engine::Resources
 
   void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
 
-  bool Material::IsPostProcess() const noexcept { return m_b_post_process_; }
+  bool Material::IsRenderDomain(eShaderDomain domain) const noexcept { return m_shaders_loaded_.contains(domain); }
 
   void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
@@ -149,8 +158,7 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_(),
-      m_b_post_process_(false) {}
+      m_material_cb_() {}
 
   void Material::Load_INTERNAL()
   {
@@ -161,7 +169,8 @@ namespace Engine::Resources
     {
       if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
       {
-        m_shaders_loaded_.emplace_back(res->GetSharedPtr<Shader>());
+        const auto shader = res->GetSharedPtr<Shader>();
+        m_shaders_loaded_[shader->GetDomain()] = shader;
       }
     }
 

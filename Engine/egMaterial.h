@@ -10,11 +10,13 @@ namespace Engine::Resources
     {
       UINT  instanceCount = 1;
       bool  bypassShader = false;
+      eShaderDomain domain = SHADER_DOMAIN_OPAQUE;
     };
 
     RESOURCE_T(RES_T_MTR);
 
     Material(const std::filesystem::path& path);
+
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void PostUpdate(const float& dt) override;
@@ -25,7 +27,7 @@ namespace Engine::Resources
     void OnDeserialized() override;
 
     void SetTempParam(TempParam&& param) noexcept;
-    bool IsPostProcess() const noexcept;
+    bool IsRenderDomain(const eShaderDomain domain) const noexcept;
 
     template <typename T, typename U = boost::weak_ptr<T>, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
     void SetResource(const std::string& name)
@@ -42,13 +44,8 @@ namespace Engine::Resources
 
       if constexpr (which_resource<T>::value == RES_T_SHADER)
       {
-        if (search.lock()->template GetSharedPtr<Shader>()->GetDomain() == SHADER_DOMAIN_POST_PROCESS)
-        {
-          m_b_post_process_ = true;
-        }
-
         m_shaders_.emplace_back(name);
-        m_shaders_loaded_.emplace_back(search.lock());
+        m_shaders_loaded_[search.lock()->template GetSharedPtr<Shader>()->GetDomain()] = search.lock();
         return;
       }
 
@@ -104,14 +101,13 @@ namespace Engine::Resources
 
   private:
     CBs::MaterialCB m_material_cb_;
-    bool            m_b_post_process_;
 
     std::vector<std::string>                                m_shaders_;
     std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
     // non-serialized
     TempParam                                                  m_temp_param_;
-    std::vector<StrongShader>                                  m_shaders_loaded_;
+    std::map<const eShaderDomain, StrongShader>                m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
   };
 }
