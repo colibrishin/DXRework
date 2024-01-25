@@ -61,6 +61,11 @@ namespace Engine
 
   namespace Components
   {
+    namespace Abstract
+    {
+      class RenderComponent;
+    }
+
     class Collider;
     class OffsetCollider;
     class Transform;

@@ -1,12 +1,13 @@
 #pragma once
 #include "egComponent.h"
+#include "egRenderComponent.h"
 
 namespace Engine::Components
 {
-  class ModelRenderer final : public Abstract::Component
+  class ModelRenderer final : public Abstract::RenderComponent
   {
   public:
-    COMPONENT_T(COM_T_MODEL_RENDERER)
+    RENDER_COM_T(RENDER_COM_T_MODEL)
 
     ModelRenderer(const WeakObject& owner);
     void PreUpdate(const float& dt) override;
@@ -15,17 +16,11 @@ namespace Engine::Components
     void PostUpdate(const float& dt) override;
     void OnImGui() override;
 
-    void         SetMaterial(const WeakMaterial& material);
-    WeakMaterial GetMaterial() const;
-
   private:
     SERIALIZER_ACCESS
     ModelRenderer();
 
     friend class Manager::Graphics::Renderer;
 
-    std::string m_material_name_;
-
-    StrongMaterial m_material_;
   };
 }

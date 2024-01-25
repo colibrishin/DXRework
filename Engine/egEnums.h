@@ -168,8 +168,15 @@ namespace Engine
     COM_T_STATE,
     COMP_T_SOUND_PLAYER,
     COM_T_ANIMATOR,
-    COM_T_MODEL_RENDERER,
+    COM_T_RENDERER,
     COM_T_SCRIPT,
+  };
+
+  enum eRenderComponentType
+  {
+    RENDER_COM_T_UNK = 0,
+    RENDER_COM_T_MODEL,
+    RENDER_COM_T_PARTICLE,
   };
 
   enum eDefObjectType
