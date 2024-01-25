@@ -7,6 +7,9 @@ namespace Engine::Manager::Graphics
   class Renderer : public Abstract::Singleton<Renderer>
   {
   public:
+    template <typename T>
+    using MaterialMap = std::map<WeakMaterial, T, WeakComparer<Resources::Material>>;
+
     explicit Renderer(SINGLETON_LOCK_TOKEN)
       : Singleton(),
         m_b_ready_(false) {}
@@ -38,10 +41,10 @@ namespace Engine::Manager::Graphics
 
     bool m_b_ready_;
 
-    std::map<StrongMaterial, std::vector<StrongModelRenderer>> m_normal_passes_;
-    std::map<StrongMaterial, std::vector<StrongModelRenderer>> m_post_passes_;
+    MaterialMap<std::vector<WeakModelRenderer>> m_normal_passes_;
+    MaterialMap<std::vector<WeakModelRenderer>> m_post_passes_;
 
-    std::map<StrongMaterial, std::vector<SBs::InstanceSB>>  m_normal_sbs_;
-    std::map<StrongMaterial, std::vector<SBs::InstanceSB>>  m_post_sbs_;
+    MaterialMap<std::vector<SBs::InstanceSB>>  m_normal_sbs_;
+    MaterialMap<std::vector<SBs::InstanceSB>>  m_post_sbs_;
   };
 }
