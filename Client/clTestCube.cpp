@@ -4,8 +4,10 @@
 #include <egCubeMesh.h>
 
 #include "egBaseCollider.hpp"
+#include "egComputeShader.h"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egParticleRenderer.h"
 #include "egRigidbody.h"
 #include "egShape.h"
 #include "egSound.h"
@@ -44,6 +46,18 @@ namespace Client::Object
     const auto snd = AddComponent<Components::SoundPlayer>().lock();
     snd->SetSound(GetResourceManager().GetResource<Resources::Sound>("AmbientSound").lock());
     snd->PlaySound();
+
+    {
+      const auto child = GetScene().lock()->CreateGameObject<Object>(GetLayer()).lock();
+      child->SetName("CubeParticleChild");
+      child->AddComponent<Components::Transform>();
+
+      const auto c_pr = child->AddComponent<Components::ParticleRenderer>().lock();
+      c_pr->SetComputeShader(Resources::ComputeShader::Get("cs_particle"));
+      c_pr->SetCount(100);
+      c_pr->Spread(Vector3::Zero, Vector3::One);
+      AddChild(child);
+    }
   }
 
   inline TestCube::~TestCube() {}
