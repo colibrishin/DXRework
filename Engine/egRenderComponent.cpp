@@ -3,6 +3,8 @@
 
 #include "egMaterial.h"
 
+SERIALIZER_ACCESS_IMPL(Engine::Components::Base::RenderComponent, _ARTAG(_BSTSUPER(Engine::Abstract::Component)))
+
 namespace Engine::Components::Base
 {
   void RenderComponent::SetMaterial(const WeakMaterial& material) noexcept
