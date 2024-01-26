@@ -16,8 +16,10 @@
 #include <egSphereMesh.h>
 
 #include "clDarkScene.h"
+#include "clParticleCompute.h"
 #include "clTestScene.hpp"
 #include "egCollisionDetector.h"
+#include "egComputeShader.h"
 #include "egGlobal.h"
 #include "egMaterial.h"
 #include "egShader.hpp"
@@ -173,6 +175,11 @@ namespace Client
     }
   }
 
+  void InitializeComputeShader()
+  {
+    Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
+  }
+
   void Initialize(HWND hwnd)
   {
     Manager::Application::GetInstance().Initialize(hwnd);
@@ -184,6 +191,7 @@ namespace Client
     InitializeAnimation();
     InitializeFont();
     InitializeSound();
+    InitializeComputeShader();
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
