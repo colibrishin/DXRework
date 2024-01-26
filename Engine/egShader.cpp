@@ -153,7 +153,10 @@ namespace Engine::Resources
       m_smp_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(sampler >> 3))),
       m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
       m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) { HELPME }
+      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+  {
+    SetName(name);
+  }
 
   void Shader::Initialize() {}
 
