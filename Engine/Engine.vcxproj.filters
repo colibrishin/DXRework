@@ -161,9 +161,6 @@
     <Filter Include="Component\SoundPlayer">
       <UniqueIdentifier>{91edda74-d311-4fc6-ae2b-f457ed7347b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Component\ModelRenderer">
-      <UniqueIdentifier>{52883f4c-0cd6-4df2-b38a-346c313ed2a5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Bone">
       <UniqueIdentifier>{000966e6-ef39-4323-9022-f050f85b6a42}</UniqueIdentifier>
     </Filter>
@@ -248,7 +245,13 @@
     <Filter Include="Base\RenderComponent">
       <UniqueIdentifier>{475dc8d6-d4a2-45a6-85d9-5d8f994ff875}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Component\ParticleRenderer">
+    <Filter Include="Component\Renderer">
+      <UniqueIdentifier>{7dc510c8-6f26-4d7b-a4f3-df5bfd6e0001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Renderer\ModelRenderer">
+      <UniqueIdentifier>{52883f4c-0cd6-4df2-b38a-346c313ed2a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Renderer\ParticleRenderer">
       <UniqueIdentifier>{d11f8c82-4277-402f-9365-2d9b4ee16787}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -463,7 +466,7 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="egModelRenderer.h">
-      <Filter>Component\ModelRenderer</Filter>
+      <Filter>Component\Renderer\ModelRenderer</Filter>
     </ClInclude>
     <ClInclude Include="egStructuredBuffer.hpp">
       <Filter>Low-level\StructuredBuffer</Filter>
@@ -497,7 +500,7 @@
       <Filter>Base\RenderComponent</Filter>
     </ClInclude>
     <ClInclude Include="egParticleRenderer.h">
-      <Filter>Component\ParticleRenderer</Filter>
+      <Filter>Component\Renderer\ParticleRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -648,7 +651,7 @@
       <Filter>Resource Group\Shape</Filter>
     </ClCompile>
     <ClCompile Include="egModelRenderer.cpp">
-      <Filter>Component\ModelRenderer</Filter>
+      <Filter>Component\Renderer\ModelRenderer</Filter>
     </ClCompile>
     <ClCompile Include="egBone.cpp">
       <Filter>Resource\Bone</Filter>
@@ -702,7 +705,7 @@
       <Filter>Base\RenderComponent</Filter>
     </ClCompile>
     <ClCompile Include="egParticleRenderer.cpp">
-      <Filter>Component\ParticleRenderer</Filter>
+      <Filter>Component\Renderer\ParticleRenderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
