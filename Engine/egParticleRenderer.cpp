@@ -38,6 +38,10 @@ namespace Engine::Components
     }
   }
 
+  void ParticleRenderer::PreUpdate(const float& dt) {}
+
+  void ParticleRenderer::FixedUpdate(const float& dt) {}
+
   void ParticleRenderer::SetCount(const size_t count) {
     m_sbs_.resize(count, {});
   }
@@ -55,6 +59,8 @@ namespace Engine::Components
       sb.SetLocal(world);
     }
   }
+
+  ParticleRenderer::ParticleRenderer() : RenderComponent(RENDER_COM_T_PARTICLE, {}) {}
 
   void ParticleRenderer::SetComputeShader(const WeakComputeShader& cs) {
     if (const auto shader = cs.lock())

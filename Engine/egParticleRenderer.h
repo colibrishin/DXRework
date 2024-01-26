@@ -15,6 +15,8 @@ namespace Engine::Components
 
     void Initialize() override;
     void Update(const float& dt) override;
+    void PreUpdate(const float& dt) override;
+    void FixedUpdate(const float& dt) override;
 
     void SetCount(const size_t count);
     void SetComputeShader(const WeakComputeShader& cs);
@@ -23,6 +25,7 @@ namespace Engine::Components
 
   private:
     SERIALIZER_ACCESS
+    ParticleRenderer();
 
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
     std::vector<Graphics::SBs::InstanceParticleSB>                m_sbs_;
