@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "clParticleCompute.h"
 
-namespace Client::Resources
+namespace Client::ComputeShaders
 {
   void ParticleCompute::preDispatch() {}
 
