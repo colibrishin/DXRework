@@ -114,7 +114,7 @@ namespace Engine::Graphics
 
     UINT bind_flags = D3D11_BIND_SHADER_RESOURCE;
 
-    if constexpr (is_uav_sb<T, eSBUAVType>::value)
+    if constexpr (is_uav_sb<T>::value == true)
     {
       bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
     }
@@ -187,7 +187,7 @@ namespace Engine::Graphics
 
     InitializeMainBuffer(size, initial_data);
     InitializeSRV(size);
-    if constexpr (is_uav_sb<T, eSBUAVType>::value)
+    if constexpr (is_uav_sb<T>::value == true)
     {
       InitializeUAV(size);
     }
