@@ -45,8 +45,8 @@ namespace Engine::Graphics
 
     constexpr static size_t max_param = 8;
 
-    float   f_param[max_param * sizeof(float)]{};
-    int     i_param[max_param * sizeof(float)]{};
+    float   f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+    int     i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
     Vector4 v_param[max_param]{};
     Matrix  m_param[max_param]{};
   };
