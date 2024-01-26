@@ -26,17 +26,22 @@ namespace Engine::Resources
          &blob, &error
         );
 
+      // Print the warnings if there were.
+      if (error)
+      {
+        const std::string error_message =
+          static_cast<char*>(error->GetBufferPointer());
+
+        // Silencing the no entry point error.
+        if (error_message.find("X3501") == std::string::npos)
+        {
+          OutputDebugStringA(error_message.c_str());
+        }
+      }
+
       // If compiled, set shader.
       if (res == S_OK)
       {
-        // Print the warnings if there were.
-        if (error)
-        {
-          const std::string error_message =
-            static_cast<char*>(error->GetBufferPointer());
-          OutputDebugStringA(error_message.c_str());
-        }
-
         if (t == SHADER_VERTEX)
         {
           const auto ids = GetD3Device().GenerateInputDescription(blob.Get());
