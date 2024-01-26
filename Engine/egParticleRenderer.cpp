@@ -23,6 +23,7 @@ namespace Engine::Components
     if (m_cs_)
     {
       GetRenderPipeline().SetParam((int)m_sbs_.size(), particle_count_slot);
+      GetRenderPipeline().SetParam(dt, dt_slot);
       m_sb_buffer_.SetData(m_sbs_.size(), m_sbs_.data());
       m_sb_buffer_.BindUAV();
 

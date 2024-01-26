@@ -10,6 +10,7 @@ namespace Engine::Components
   public:
     RENDER_COM_T(RENDER_COM_T_PARTICLE)
     constexpr static size_t particle_count_slot = 1;
+    constexpr static size_t dt_slot     = 2;
 
     ParticleRenderer(const WeakObject& owner);
 
