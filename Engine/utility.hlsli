@@ -3,7 +3,7 @@
 
 #define quaternion float4
 
-float4 GetWorldPosition(in matrix mat)
+float4 GetTranslation(in matrix mat)
 {
     return float4(mat._41, mat._42, mat._43, mat._44);
 }

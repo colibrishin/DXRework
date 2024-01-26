@@ -1,7 +1,5 @@
 #include "common.hlsli"
 
-#define TARGET_SHADOW_PARAM g_iParam[1].x
-
 struct PixelShadowInputType
 {
   float4 position : SV_POSITION;
@@ -19,7 +17,13 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 
   output.position = float4(input.position, 1.0f);
 
-  if (g_bindFlag.boneFlag.x)
+#define INST_ANIM_FRAME  fParam[0]
+#define INST_ANIM_DURATION iParam[0].x   
+#define INST_ANIM_IDX  iParam[0].y
+#define INST_NO_ANIM   iParam[0].z
+#define INST_WORLD     mParam[0]
+
+  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
   {
     matrix animation_transform;
 
@@ -29,9 +33,9 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
       const float  weight     = input.bone_element.boneWeight[i];
       const matrix transform  = LoadAnimation
         (
-         bufInstance[instanceId].animIndex.x,
-         bufInstance[instanceId].animFrame.x,
-         bufInstance[instanceId].boneAnimDuration.x,
+         bufInstance[instanceId].INST_ANIM_IDX,
+         bufInstance[instanceId].INST_ANIM_FRAME,
+         bufInstance[instanceId].INST_ANIM_DURATION,
          bone_index
         );
 
@@ -41,7 +45,14 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
     output.position = mul(output.position, animation_transform);
   }
 
-  output.position = mul(output.position, bufInstance[instanceId].world);
+  const matrix world = bufInstance[instanceId].INST_WORLD;
+#undef INST_NO_ANIM
+#undef INST_ANIM_IDX
+#undef INST_ANIM_FRAME
+#undef INST_ANIM_DURATION
+#undef INST_WORLD
+
+  output.position = mul(output.position, world);
 
   return output;
 }
@@ -59,6 +70,7 @@ void gs_main(
 
     for (int j = 0; j < TRIANGLE_MACRO; ++j)
     {
+#define TARGET_SHADOW_PARAM g_iParam[0].y
       element.position =
         mul
         (
@@ -68,6 +80,7 @@ void gs_main(
           bufLightVP[TARGET_SHADOW_PARAM].g_shadowProj[i]
          )
         );
+#undef TARGET_SHADOW_PARAM
       output.Append(element);
     }
 

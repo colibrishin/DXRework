@@ -3,6 +3,7 @@
 #define MAX_NUM_CASCADES 3
 #define MAX_NUM_LIGHTS 8
 #define MAX_NUM_SLOTS 8
+#define MAX_PARAM_TYPE_SLOTS 8
 
 struct BindFlag
 {
@@ -52,18 +53,10 @@ struct VertexInputType
 
 struct InstanceElement
 {
-  matrix world : WORLD;
-  float4 animFrame : ANIMFRAME;
-  int4   boneAnimDuration : ANIMDURATION;
-  int4   animIndex : ANIMINDEX;
-  int4   noAnimFlag : NOANIMFLAG;
-};
-
-struct ParticleElement
-{
-  float4 position : POSITION;
-  float4 size : SIZE;
-  float4 color : COLOR;
+  float4  fParam[MAX_PARAM_TYPE_SLOTS] : FPARAM;
+  int4    iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
+  float4 vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
+  matrix mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
 };
 
 #endif // __TYPE_HLSLI__

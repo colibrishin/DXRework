@@ -58,9 +58,7 @@ Texture3D      texAnimations : register(t34);
 StructuredBuffer<LightElement>         bufLight : register(t64);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t65);
 StructuredBuffer<InstanceElement>      bufInstance : register(t66);
-
-StructuredBuffer<ParticleElement>   bufParticle : register(t67);
-RWStructuredBuffer<ParticleElement> bufUAVParticle : register(u67);
+RWStructuredBuffer<InstanceElement>    uavInstance : register(u66);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -97,10 +95,10 @@ cbuffer MaterialBuffer : register(b2)
 
 cbuffer ParamBuffer : register(b3)
 {
-  float4 g_fParam[4] : FPARAM;
-  int4   g_iParam[4] : IPARAM;
-  float4 g_vecParam[4] : VECPARAM;
-  matrix g_matParam[4] : MATPARAM;
+  float4 g_fParam[MAX_PARAM_TYPE_SLOTS] : FPARAM;
+  int4   g_iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
+  float4 g_vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
+  matrix g_mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
 }
 
 float GetShadowFactorImpl(
@@ -210,11 +208,11 @@ void GetShadowFactor(
   int j = 0;
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i) { shadowFactor[i] = 1.0f; }
-
   [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
-    // Assuming light count is bound at idx 0
-    if (i > g_iParam[0].x) { break; }
+#define PARAM_LIGHT_COUNT g_iParam[0].x
+    if (i > PARAM_LIGHT_COUNT) { break; }
+#undef PARAM_LIGHT_COUNT
 
     [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
     {
