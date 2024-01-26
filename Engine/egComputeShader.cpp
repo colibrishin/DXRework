@@ -23,7 +23,7 @@ namespace Engine::Resources
       return;
     }
 
-    if (std::accumulate(m_group_, m_group_ + 3, 1, std::multiplies()) > 1024)
+    if (std::accumulate(m_group_, m_group_ + 3, 1, std::multiplies()) > 1 << 16)
     {
       GetDebugger().Log("ComputeShader::Dispatch() : Group is too large. Ignore dispatching...");
       return;
@@ -42,7 +42,7 @@ namespace Engine::Resources
     }
 
     GetD3Device().GetContext()->CSSetShader(m_cs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->Dispatch(m_group_[0], m_group_[1], m_group_[3]);
+    GetD3Device().GetContext()->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
 
     postDispatch();
 
@@ -66,7 +66,7 @@ namespace Engine::Resources
     std::ranges::copy(thread, m_thread_);
   }
 
-  void ComputeShader::SetGroup(const std::array<UINT, 3>& group) { std::ranges::copy(group.begin(), group.end(), m_group_); }
+  void ComputeShader::SetGroup(const std::array<UINT, 3>& group) { std::ranges::copy(group, m_group_); }
 
   std::array<UINT, 3> ComputeShader::GetThread() const
   {
@@ -94,6 +94,7 @@ namespace Engine::Resources
   void ComputeShader::Initialize()
   {
     Shader::Initialize();
+    std::fill_n(m_group_, 3, 1);
   }
 
   void ComputeShader::Load_INTERNAL()
