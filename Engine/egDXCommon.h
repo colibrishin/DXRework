@@ -104,13 +104,11 @@ namespace Engine::Graphics
     public:
       InstanceParticleSB()
       {
-        SetDeltaTime(0.f);
         SetLife(1.0f);
         SetVelocity(Vector3::One);
         SetLocal(Matrix::Identity);
       }
 
-      void SetDeltaTime(const float dt) { SetParam(0, dt); }
       void SetLife(const float life) { SetParam(1, life); }
 
       void SetVelocity(const Vector3& velocity) { SetParam(0, Vector4(velocity)); }
