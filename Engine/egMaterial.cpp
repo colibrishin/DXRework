@@ -78,10 +78,7 @@ namespace Engine::Resources
   {
     if (!m_temp_param_.bypassShader)
     {
-      for (const auto& shd : m_shaders_loaded_)
-      {
-        m_shaders_loaded_[m_temp_param_.domain]->Render(dt);
-      }
+      m_shaders_loaded_[m_temp_param_.domain]->Render(dt);
     }
 
     for (const auto& [type, resources] : m_resources_loaded_)
@@ -116,10 +113,7 @@ namespace Engine::Resources
 
     if (!m_temp_param_.bypassShader)
     {
-      for (const auto& shd : m_shaders_loaded_)
-      {
-        m_shaders_loaded_[m_temp_param_.domain]->PostRender(dt);
-      }
+      m_shaders_loaded_[m_temp_param_.domain]->PostRender(dt);
     }
 
     for (const auto& [type, resources] : m_resources_loaded_)
