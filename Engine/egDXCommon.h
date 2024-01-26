@@ -15,6 +15,7 @@ namespace Engine::Graphics
     {
       if constexpr (std::is_same_v<T, int>) { i_param[slot] = param; }
       else if constexpr (std::is_same_v<T, float>) { f_param[slot] = param; }
+      else if constexpr (std::is_same_v<T, Vector3>) { v_param[slot] = Vector4(param); }
       else if constexpr (std::is_same_v<T, Vector4>) { v_param[slot] = param; }
       else if constexpr (std::is_same_v<T, Matrix>) { m_param[slot] = param; }
       else { throw std::runtime_error("Invalid type"); }
@@ -25,6 +26,7 @@ namespace Engine::Graphics
     {
       if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
       else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
+      else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
       else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
       else if constexpr (std::is_same_v<T, Matrix>) { return m_param[slot]; }
       else { throw std::runtime_error("Invalid type"); }
