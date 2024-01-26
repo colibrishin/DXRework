@@ -1,5 +1,6 @@
 #pragma once
 #include "Windows.h"
+#include "egType.h"
 
 namespace Engine::Graphics
 {
@@ -13,21 +14,61 @@ namespace Engine::Graphics
     void            Create(UINT size, const T* initial_data, bool is_mutable = false);
     void __fastcall SetData(UINT size, const T* src_ptr);
     void __fastcall GetData(UINT size, T* dst_ptr);
-    void            Bind(eShaderType shader);
-    void            Unbind(eShaderType shader);
+    void            BindSRV(eShaderType shader);
+    void            UnbindSRV(eShaderType shader);
     void            Clear();
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void BindUAV()
+    {
+      static_assert(is_uav_sb<T>::value == true, "It is not defined in UAV structured buffer");
+
+      if (m_b_srv_bound_) { throw std::logic_error("StructuredBuffer is already bound as SRV"); }
+
+      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+        (
+         which_sb_uav<T>::value,
+         1,
+         m_uav_.GetAddressOf(),
+         nullptr
+        );
+
+      m_b_uav_bound_ = true;
+    }
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAV()
+    {
+      static_assert(is_uav_sb<T>::value == true, "It is not defined in UAV structured buffer");
+
+      ComPtr<ID3D11UnorderedAccessView> null_uav = nullptr;
+      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+        (
+         which_sb_uav<T>::value,
+         1,
+         null_uav.GetAddressOf(),
+         nullptr
+        );
+
+      m_b_uav_bound_ = false;
+    }
 
   private:
     void InitializeSRV(UINT size);
+    void InitializeUAV(UINT size);
     void InitializeMainBuffer(UINT size, const T* initial_data);
     void InitializeWriteBuffer(UINT size);
     void InitializeReadBuffer(UINT size);
 
-    bool m_b_mutable_;
-    UINT m_size_;
+    bool        m_b_srv_bound_;
+    bool        m_b_uav_bound_;
+    bool        m_b_mutable_;
+    UINT        m_size_;
 
-    ComPtr<ID3D11Buffer>             m_buffer_;
-    ComPtr<ID3D11ShaderResourceView> m_srv_;
+    ComPtr<ID3D11Buffer> m_buffer_;
+
+    ComPtr<ID3D11ShaderResourceView>  m_srv_;
+    ComPtr<ID3D11UnorderedAccessView> m_uav_;
 
     ComPtr<ID3D11Buffer> m_write_buffer_;
     ComPtr<ID3D11Buffer> m_read_buffer_;
@@ -49,13 +90,36 @@ namespace Engine::Graphics
   }
 
   template <typename T>
+  void StructuredBuffer<T>::InitializeUAV(UINT size)
+  {
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uav_desc;
+    uav_desc.Format              = DXGI_FORMAT_UNKNOWN;
+    uav_desc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
+    uav_desc.Buffer.FirstElement = 0;
+    uav_desc.Buffer.Flags        = 0;
+    uav_desc.Buffer.NumElements  = size;
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_buffer_.Get(), &uav_desc, m_uav_.ReleaseAndGetAddressOf())
+      );
+  }
+
+  template <typename T>
   void StructuredBuffer<T>::InitializeMainBuffer(UINT size, const T* initial_data)
   {
     if ((sizeof(T) * size) % 16 != 0) { throw std::runtime_error("StructuredBuffer size need to be dividable by 16"); }
 
     D3D11_BUFFER_DESC desc;
 
-    desc.BindFlags           = D3D11_BIND_SHADER_RESOURCE;
+    UINT bind_flags = D3D11_BIND_SHADER_RESOURCE;
+
+    if constexpr (is_uav_sb<T>::value == true)
+    {
+      bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+    }
+
+    desc.BindFlags           = bind_flags;
     desc.ByteWidth           = sizeof(T) * size;
     desc.CPUAccessFlags      = 0;
     desc.StructureByteStride = sizeof(T);
@@ -91,8 +155,14 @@ namespace Engine::Graphics
 
   template <typename T>
   StructuredBuffer<T>::StructuredBuffer()
-    : m_b_mutable_(false),
-      m_size_(0) { static_assert(sizeof(T) <= 2048, "StructuredBuffer struct T size is too big"); }
+    : m_b_srv_bound_(false),
+      m_b_uav_bound_(false),
+      m_b_mutable_(false),
+      m_size_(0)
+  {
+    static_assert(sizeof(T) <= 2048, "StructuredBuffer struct T size is too big");
+    static_assert(sizeof(T) % sizeof(Vector4) == 0, "StructuredBuffer struct T size need to be dividable by 16");
+  }
 
   template <typename T>
   void StructuredBuffer<T>::InitializeReadBuffer(UINT size)
@@ -117,6 +187,10 @@ namespace Engine::Graphics
 
     InitializeMainBuffer(size, initial_data);
     InitializeSRV(size);
+    if constexpr (is_uav_sb<T>::value == true)
+    {
+      InitializeUAV(size);
+    }
 
     if (is_mutable) { InitializeWriteBuffer(size); }
 
@@ -152,15 +226,21 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::Bind(const eShaderType shader)
+  void StructuredBuffer<T>::BindSRV(const eShaderType shader)
   {
+    if (m_b_uav_bound_) { throw std::logic_error("StructuredBuffer is already bound as UAV"); }
+
     GetRenderPipeline().BindResource(which_sb<T>::value, shader, m_srv_.GetAddressOf());
+
+    m_b_srv_bound_ = true;
   }
 
   template <typename T>
-  void StructuredBuffer<T>::Unbind(const eShaderType shader)
+  void StructuredBuffer<T>::UnbindSRV(const eShaderType shader)
   {
     GetRenderPipeline().UnbindResource(which_sb<T>::value, shader);
+
+    m_b_srv_bound_ = false;
   }
 
   template <typename T>

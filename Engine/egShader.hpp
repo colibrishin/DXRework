@@ -42,7 +42,6 @@ namespace Engine::Resources
     );
 
   protected:
-    Shader();
     void OnDeserialized() override;
 
     void Load_INTERNAL() override;
@@ -59,6 +58,7 @@ namespace Engine::Resources
     };
 
   private:
+    Shader();
     SERIALIZER_ACCESS
 
     eShaderDomain              m_domain_;

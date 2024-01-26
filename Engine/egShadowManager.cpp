@@ -39,11 +39,11 @@ namespace Engine::Manager::Graphics
   void ShadowManager::PreUpdate(const float& dt)
   {
     // Unbind the light information structured buffer from the shader.
-    m_sb_light_buffer_.Unbind(SHADER_VERTEX);
-    m_sb_light_buffer_.Unbind(SHADER_PIXEL);
+    m_sb_light_buffer_.UnbindSRV(SHADER_VERTEX);
+    m_sb_light_buffer_.UnbindSRV(SHADER_PIXEL);
 
     // And the light view and projection matrix buffer to re-evaluate.
-    m_sb_light_vps_buffer_.Unbind(SHADER_PIXEL);
+    m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
 
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
@@ -120,7 +120,7 @@ namespace Engine::Manager::Graphics
       if (current_light_vp.empty()) { return; }
 
       m_sb_light_vps_buffer_.SetData(current_light_vp.size(), current_light_vp.data());
-      m_sb_light_vps_buffer_.Bind(SHADER_GEOMETRY);
+      m_sb_light_vps_buffer_.BindSRV(SHADER_GEOMETRY);
 
       UINT idx = 0;
 
@@ -144,7 +144,7 @@ namespace Engine::Manager::Graphics
       }
 
       // Geometry shader's work is done.
-      m_sb_light_vps_buffer_.Unbind(SHADER_GEOMETRY);
+      m_sb_light_vps_buffer_.UnbindSRV(SHADER_GEOMETRY);
     }
 
     GetRenderPipeline().SetParam<int>(0, shadow_slot);
@@ -171,11 +171,11 @@ namespace Engine::Manager::Graphics
     GetRenderPipeline().BindResources
       (RESERVED_SHADOW_MAP, SHADER_PIXEL, current_shadow_maps.data(), current_shadow_maps.size());
     // And bind the light view and projection matrix on to the constant buffer.
-    m_sb_light_vps_buffer_.Bind(SHADER_PIXEL);
+    m_sb_light_vps_buffer_.BindSRV(SHADER_PIXEL);
 
     // Bind the light information structured buffer that previously built.
-    m_sb_light_buffer_.Bind(SHADER_PIXEL);
-    m_sb_light_buffer_.Bind(SHADER_VERTEX);
+    m_sb_light_buffer_.BindSRV(SHADER_PIXEL);
+    m_sb_light_buffer_.BindSRV(SHADER_VERTEX);
   }
 
   void ShadowManager::Render(const float& dt) {}

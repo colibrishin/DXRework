@@ -6,6 +6,7 @@
 #include <memory>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <oneapi/tbb.h>
+#include <type_traits>
 
 #include "egEnums.h"
 
@@ -74,6 +75,7 @@ namespace Engine
     class SoundPlayer;
     class ModelRenderer;
     class Animator;
+    class ParticleRenderer;
   } // namespace Component
 
   class Script;
@@ -176,6 +178,8 @@ namespace Engine
   using WeakScript = boost::weak_ptr<Script>;
   using WeakAnimsTexture = boost::weak_ptr<Resources::AnimationsTexture>;
   using WeakShadowTexture = boost::weak_ptr<Resources::ShadowTexture>;
+  using WeakParticleRenderer = boost::weak_ptr<Components::ParticleRenderer>;
+  using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
 
   // Strong pointer type definitions
   using StrongObject = boost::shared_ptr<Abstract::Object>;
@@ -203,6 +207,8 @@ namespace Engine
   using StrongTexture2D = boost::shared_ptr<Resources::Texture2D>;
   using StrongModelRenderer = boost::shared_ptr<Components::ModelRenderer>;
   using StrongRenderComponent = boost::shared_ptr<Components::Base::RenderComponent>;
+  using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
+  using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -313,6 +319,26 @@ namespace Engine
   {
     static constexpr eScriptType value = T::scptype;
   };
+
+  template <typename T>
+  struct which_sb_uav
+  {
+    static constexpr eSBUAVType value = T::sbuavtype;
+  };
+
+
+  template<typename ...T>
+  struct void_stub { using type = void; };
+  template<typename ...T>
+  using void_t = typename void_stub<T...>::type;
+
+  // Structured buffer type checkers. is_uav_sb<T> will have "::type" if T has sbuavtype as member.
+  // if not then it will have no "::type".
+  template <typename T, typename = void>
+  struct is_uav_sb : std::false_type {};
+  template <typename T>
+  struct is_uav_sb<T, void_t<decltype(T::sbuavtype == true)>> : std::true_type {};
+
 
   struct GUIDComparer
   {

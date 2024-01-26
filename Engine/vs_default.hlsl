@@ -33,7 +33,13 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   output.tangent  = input.tangent;
   output.binormal = input.binormal;
 
-  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].noAnimFlag.x)
+#define INST_ANIM_FRAME  fParam[0]
+#define INST_ANIM_DURATION iParam[0].x   
+#define INST_ANIM_IDX  iParam[0].y
+#define INST_NO_ANIM   iParam[0].z
+#define INST_WORLD     mParam[0]
+
+  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
   {
     matrix animation_transform;
 
@@ -43,9 +49,9 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
       const float  weight     = input.bone_element.boneWeight[i];
       const matrix transform  = LoadAnimation
         (
-         bufInstance[instanceId].animIndex.x,
-         bufInstance[instanceId].animFrame.x,
-         bufInstance[instanceId].boneAnimDuration.x,
+         bufInstance[instanceId].INST_ANIM_IDX,
+         bufInstance[instanceId].INST_ANIM_FRAME,
+         bufInstance[instanceId].INST_ANIM_DURATION,
          bone_index
         );
 
@@ -59,7 +65,13 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
     output.binormal = mul(input.binormal, (float3x3)animation_transform);
   }
 
-  const matrix world = bufInstance[instanceId].world;
+  const matrix world = bufInstance[instanceId].INST_WORLD;
+
+#undef INST_NO_ANIM
+#undef INST_ANIM_IDX
+#undef INST_ANIM_FRAME
+#undef INST_ANIM_DURATION
+#undef INST_WORLD
 
   // Calculate the position of the vertex against the world, view, and
   // projection matrices.
@@ -75,12 +87,12 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 
   [unroll] for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
-    const float4 light_position = GetWorldPosition(bufLight[i].world);
+    const float4 light_position = GetTranslation(bufLight[i].world);
     output.lightDirection[i]    = light_position.xyz - output.world_position.xyz;
     output.lightDirection[i]    = normalize(output.lightDirection[i]);
   }
 
-  const float3 cam_position = GetWorldPosition(g_camWorld);
+  const float3 cam_position = GetTranslation(g_camWorld);
 
   output.viewDirection = cam_position.xyz - output.world_position.xyz;
   output.viewDirection = normalize(output.viewDirection);

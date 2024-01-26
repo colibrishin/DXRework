@@ -28,21 +28,9 @@ namespace Engine::Manager::Graphics
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
     void SetMaterial(const CBs::MaterialCB& material_buffer);
 
-    template <typename T>
     void SetParam(const auto& v, const size_t slot)
     {
-      static_assert(
-          !std::is_same_v<T, int> ||
-          !std::is_same_v<T, float> ||
-          !std::is_same_v<T, Matrix> || 
-          !std::is_same_v<T, Vector4>, 
-          "Type is not supported.");
-
-      if constexpr (std::is_same_v<T, float>) { m_param_buffer_.f_param[slot] = v; }
-      else if constexpr (std::is_same_v<T, int>) { m_param_buffer_.i_param[slot] = v; }
-      else if constexpr (std::is_same_v<T, Vector4>) { m_param_buffer_.v_param[slot] = v; }
-      else if constexpr (std::is_same_v<T, Matrix>) { m_param_buffer_.m_param[slot] = v; }
-
+      m_param_buffer_.SetParam(slot, v);
       m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
 
       BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);

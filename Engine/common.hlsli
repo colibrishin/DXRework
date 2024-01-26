@@ -11,20 +11,10 @@ SamplerComparisonState PSShadowSampler : register(s1);
 
 RWTexture2D<float4>      uav00 : register(u0);
 RWTexture2D<float4>      uav01 : register(u1);
-RWTexture2D<float4>      uav02 : register(u2);
-RWTexture2D<float4>      uav03 : register(u3);
-RWTexture2D<float4>      uav04 : register(u4);
-RWTexture2D<float4>      uav05 : register(u5);
-RWTexture2D<float4>      uav06 : register(u6);
-RWTexture2D<float4>      uav07 : register(u7);
-RWTexture2DArray<float4> uavArr00 : register(u8);
-RWTexture2DArray<float4> uavArr01 : register(u9);
-RWTexture2DArray<float4> uavArr02 : register(u10);
-RWTexture2DArray<float4> uavArr03 : register(u11);
-RWTexture2DArray<float4> uavArr04 : register(u12);
-RWTexture2DArray<float4> uavArr05 : register(u13);
-RWTexture2DArray<float4> uavArr06 : register(u14);
-RWTexture2DArray<float4> uavArr07 : register(u15);
+RWTexture2DArray<float4> uavArr00 : register(u2);
+RWTexture2DArray<float4> uavArr01 : register(u3);
+
+RWStructuredBuffer<InstanceElement> uavInstance : register(u4);
 
 Texture2D      tex00 : register(t0);
 Texture2D      tex01 : register(t1);
@@ -55,12 +45,9 @@ Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 Texture3D      texAnimations : register(t34);
 
-StructuredBuffer<LightElement>         bufLight : register(t64);
-StructuredBuffer<CascadeShadowElement> bufLightVP : register(t65);
-StructuredBuffer<InstanceElement>      bufInstance : register(t66);
-
-StructuredBuffer<ParticleElement>   bufParticle : register(t67);
-RWStructuredBuffer<ParticleElement> bufUAVParticle : register(u67);
+StructuredBuffer<LightElement>         bufLight : register(t48);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t49);
+StructuredBuffer<InstanceElement>      bufInstance : register(t50);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -97,10 +84,10 @@ cbuffer MaterialBuffer : register(b2)
 
 cbuffer ParamBuffer : register(b3)
 {
-  float4 g_fParam[4] : FPARAM;
-  int4   g_iParam[4] : IPARAM;
-  float4 g_vecParam[4] : VECPARAM;
-  matrix g_matParam[4] : MATPARAM;
+  float4 g_fParam[MAX_PARAM_TYPE_SLOTS] : FPARAM;
+  int4   g_iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
+  float4 g_vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
+  matrix g_mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
 }
 
 float GetShadowFactorImpl(
@@ -210,11 +197,11 @@ void GetShadowFactor(
   int j = 0;
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i) { shadowFactor[i] = 1.0f; }
-
   [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
-    // Assuming light count is bound at idx 0
-    if (i > g_iParam[0].x) { break; }
+#define PARAM_LIGHT_COUNT g_iParam[0].x
+    if (i > PARAM_LIGHT_COUNT) { break; }
+#undef PARAM_LIGHT_COUNT
 
     [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
     {

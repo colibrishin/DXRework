@@ -5,7 +5,56 @@
 #include "egMacro.h"
 #include "egType.h"
 
-namespace Engine::Graphics { namespace SBs
+namespace Engine::Graphics
+{
+  struct ParamBase
+  {
+  public:
+    template <typename T>
+    void SetParam(const size_t slot, const T& param)
+    {
+      if constexpr (std::is_same_v<T, int>) { i_param[slot] = param; }
+      else if constexpr (std::is_same_v<T, float>) { f_param[slot] = param; }
+      else if constexpr (std::is_same_v<T, Vector3>) { v_param[slot] = Vector4(param); }
+      else if constexpr (std::is_same_v<T, Vector4>) { v_param[slot] = param; }
+      else if constexpr (std::is_same_v<T, Matrix>) { m_param[slot] = param; }
+      else { throw std::runtime_error("Invalid type"); }
+    }
+
+    template <typename T>
+    T GetParam(const size_t slot) const
+    {
+      if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
+      else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
+      else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
+      else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
+      else if constexpr (std::is_same_v<T, Matrix>) { return m_param[slot]; }
+      else { throw std::runtime_error("Invalid type"); }
+    }
+
+  private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+      ar & f_param;
+      ar & i_param;
+      ar & v_param;
+      ar & m_param;
+    }
+
+    constexpr static size_t max_param = 8;
+
+    float   f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+    int     i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+    Vector4 v_param[max_param]{};
+    Matrix  m_param[max_param]{};
+  };
+
+  static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
+  static_assert(sizeof(ParamBase) < 2048);
+
+  namespace SBs
   {
     struct LightSB
     {
@@ -24,24 +73,49 @@ namespace Engine::Graphics { namespace SBs
       Vector4 end_clip_spaces[g_max_shadow_cascades];
     };
 
-    struct InstanceSB
+    struct InstanceSB : public ParamBase
     {
       SB_T(SB_TYPE_INSTANCE)
-
-      Matrix         world            = Matrix::Identity;
-      OffsetT<float> animFrame        = 0.f;
-      OffsetT<int>   boneAnimDuration = 0;
-      OffsetT<int>   animIndex        = 0;
-      OffsetT<int>   noAnimFlag       = false;
+      SB_UAV_T(SB_TYPE_UAV_INSTANCE)
     };
 
-    struct ParticleSB
+    struct InstanceModelSB : public InstanceSB
     {
-      SB_T(SB_TYPE_PARTICLE)
+      InstanceModelSB()
+      {
+        SetFrame(0.f);
+        SetAnimDuration(0);
+        SetAnimIndex(0);
+        SetNoAnim(false);
+        SetWorld(Matrix::Identity);
+      }
 
-      Vector4 position = Vector4::Zero;
-      OffsetT<float> size = 1.f;
-      Color   color = {0.f, 0.f, 0.f, 0.f};
+      void SetFrame(const float frame) { SetParam(0, frame); }
+
+      void SetAnimDuration(const UINT duration) { SetParam(0, (int)duration); }
+      void SetAnimIndex(const UINT index) { SetParam(1, (int)index); }
+      void SetNoAnim(const bool no_anim) { SetParam(2, (int)no_anim); }
+
+      void SetWorld(const Matrix& world) { SetParam(0, world); }
+    };
+
+    struct InstanceParticleSB : public InstanceSB
+    {
+    public:
+      InstanceParticleSB()
+      {
+        SetLife(1.0f);
+        SetVelocity(Vector3::One);
+        SetLocal(Matrix::Identity);
+      }
+
+      void SetLife(const float life) { SetParam(1, life); }
+
+      void SetVelocity(const Vector3& velocity) { SetParam(0, Vector4(velocity)); }
+
+      void SetLocal(const Matrix& world) { SetParam(0, world); }
+
+      Matrix GetLocal() const { return GetParam<Matrix>(0); }
     };
   }
 
@@ -100,16 +174,9 @@ namespace Engine::Graphics { namespace SBs
       Vector4 clip_plane;
     };
 
-    struct ParamCB
+    struct ParamCB : public ParamBase
     {
       CB_T(CB_TYPE_PARAM)
-
-      constexpr static size_t max_param = 4;
-
-      OffsetT<float> f_param[max_param]{};
-      OffsetT<int>   i_param[max_param]{};
-      Vector4        v_param[max_param]{};
-      Matrix         m_param[max_param]{};
     };
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);

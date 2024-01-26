@@ -170,7 +170,7 @@ namespace Engine::Manager::Graphics
   {
     StructuredBuffer<SBs::InstanceSB> sb;
     sb.Create(instance_count, structured_buffers.data(), false);
-    sb.Bind(SHADER_VERTEX);
+    sb.BindSRV(SHADER_VERTEX);
 
     material->SetTempParam
       (
@@ -185,7 +185,7 @@ namespace Engine::Manager::Graphics
     material->Render(dt);
     material->PostRender(dt);
 
-    sb.Unbind(SHADER_VERTEX);
+    sb.UnbindSRV(SHADER_VERTEX);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
@@ -225,17 +225,15 @@ namespace Engine::Manager::Graphics
       {
         m_render_passes_[domain][rc->GetRenderType()][mtr].push_back(obj);
 
+        SBs::InstanceModelSB sb{};
+        sb.SetWorld(tr->GetWorldMatrix().Transpose());
+        sb.SetFrame(anim_frame);
+        sb.SetAnimDuration(anim_duration);
+        sb.SetAnimIndex(anim_idx);
+        sb.SetNoAnim(no_anim);
+
         // todo: stacking structured buffer data might be get large easily.
-        m_sbs_[domain][rc->GetRenderType()][mtr].push_back
-          (
-           {
-             .world = tr->GetWorldMatrix().Transpose(),
-             .animFrame = anim_frame,
-             .boneAnimDuration = (int)anim_duration,
-             .animIndex = (int)anim_idx,
-             .noAnimFlag = no_anim
-           }
-          );
+        m_sbs_[domain][rc->GetRenderType()][mtr].emplace_back(sb);
       }
     }
   }

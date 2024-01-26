@@ -4,6 +4,8 @@
 #include "egManagerHelper.hpp"
 #include "egRenderPipeline.h"
 
+SERIALIZER_ACCESS_IMPL(Engine::Resources::Shader, _ARTAG(_BSTSUPER(Resource)))
+
 namespace Engine::Resources
 {
   void Shader::Load_INTERNAL()
@@ -26,17 +28,22 @@ namespace Engine::Resources
          &blob, &error
         );
 
+      // Print the warnings if there were.
+      if (error)
+      {
+        const std::string error_message =
+          static_cast<char*>(error->GetBufferPointer());
+
+        // Silencing the no entry point error.
+        if (error_message.find("X3501") == std::string::npos)
+        {
+          OutputDebugStringA(error_message.c_str());
+        }
+      }
+
       // If compiled, set shader.
       if (res == S_OK)
       {
-        // Print the warnings if there were.
-        if (error)
-        {
-          const std::string error_message =
-            static_cast<char*>(error->GetBufferPointer());
-          OutputDebugStringA(error_message.c_str());
-        }
-
         if (t == SHADER_VERTEX)
         {
           const auto ids = GetD3Device().GenerateInputDescription(blob.Get());
@@ -146,7 +153,10 @@ namespace Engine::Resources
       m_smp_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(sampler >> 3))),
       m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
       m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) { HELPME }
+      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+  {
+    SetName(name);
+  }
 
   void Shader::Initialize() {}
 

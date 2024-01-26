@@ -10,7 +10,7 @@ namespace Engine
     BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + g_max_slot_per_texture,
     BIND_SLOT_END
   };
-
+  
   static_assert(BIND_SLOT_END < 128);
 
   enum eReservedTexBindSlot
@@ -18,6 +18,38 @@ namespace Engine
     RESERVED_SHADOW_MAP = g_reserved_bind_slot,
     RESERVED_RENDERED,
     RESERVED_BONES,
+    RESERVED_END,
+  };
+
+  static_assert(RESERVED_END < 128);
+
+  enum eTexUAVBindSlot
+  {
+    BIND_SLOT_UAV_TEX = 0,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX + g_max_slot_per_uav,
+    BIND_SLOT_UAV_END,
+  };
+
+  static_assert(BIND_SLOT_UAV_END < 8);
+
+  enum eCBType
+  {
+    CB_TYPE_WVP = 0,
+    CB_TYPE_TRANSFORM,
+    CB_TYPE_MATERIAL,
+    CB_TYPE_PARAM,
+  };
+
+  enum eSBType
+  {
+    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
+    SB_TYPE_SHADOW,
+    SB_TYPE_INSTANCE,
+  };
+
+  enum eSBUAVType
+  {
+    SB_TYPE_UAV_INSTANCE = g_reserved_uav_slot,
   };
 
   enum eSampler
@@ -124,22 +156,6 @@ namespace Engine
     SHADER_RASTERIZER_CULL_BACK      = 2,
     SHADER_RASTERIZER_FILL_WIREFRAME = 4,
     SHADER_RASTERIZER_FILL_SOLID     = 8,
-  };
-
-  enum eCBType
-  {
-    CB_TYPE_WVP = 0,
-    CB_TYPE_TRANSFORM,
-    CB_TYPE_MATERIAL,
-    CB_TYPE_PARAM,
-  };
-
-  enum eSBType
-  {
-    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
-    SB_TYPE_SHADOW,
-    SB_TYPE_INSTANCE,
-    SB_TYPE_PARTICLE,
   };
 
   enum eResourceType

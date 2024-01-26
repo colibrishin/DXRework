@@ -30,11 +30,11 @@ namespace Engine::Manager::Graphics
     void Initialize() override;
 
     bool Ready() const;
-
     void RenderPass(
-      const float   dt,
-      eShaderDomain domain,
-      bool          shader_bypass = false, const std::function<bool(const StrongObject&)> & predicate = nullptr
+      float                                           dt,
+      eShaderDomain                                   domain,
+      bool                                            shader_bypass,
+      const std::function<bool(const StrongObject&)>& predicate
     ) const;
 
   private:
