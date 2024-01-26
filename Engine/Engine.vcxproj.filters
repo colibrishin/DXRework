@@ -245,6 +245,12 @@
     <Filter Include="Resource\Textures\ShadowTexture">
       <UniqueIdentifier>{92bb950e-d982-46f6-a4b0-686462d2cbd2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Base\RenderComponent">
+      <UniqueIdentifier>{475dc8d6-d4a2-45a6-85d9-5d8f994ff875}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\ParticleRenderer">
+      <UniqueIdentifier>{d11f8c82-4277-402f-9365-2d9b4ee16787}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -487,6 +493,12 @@
     <ClInclude Include="egShadowTexture.h">
       <Filter>Resource\Textures\ShadowTexture</Filter>
     </ClInclude>
+    <ClInclude Include="egRenderComponent.h">
+      <Filter>Base\RenderComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="egParticleRenderer.h">
+      <Filter>Component\ParticleRenderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -685,6 +697,12 @@
     </ClCompile>
     <ClCompile Include="egShadowTexture.cpp">
       <Filter>Resource\Textures\ShadowTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="egRenderComponent.cpp">
+      <Filter>Base\RenderComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="egParticleRenderer.cpp">
+      <Filter>Component\ParticleRenderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
