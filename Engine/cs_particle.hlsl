@@ -3,6 +3,8 @@
 #define PARAM_NUM_PARTICLE g_iParam[0].y
 #define PARAM_DT g_fParam[0].z
 
+groupshared int global_lock = 0;
+
 [numthreads(32, 32, 1)]
 void cs_main(
   uint3 dispatchThreadId : SV_DispatchThreadID
@@ -10,17 +12,24 @@ void cs_main(
 {
   const uint flat_idx = dispatchThreadId.x + dispatchThreadId.y * 32;
 
-  // todo: thread safety for global variable.
+  int l = 0;
+  do { InterlockedCompareExchange(global_lock, 0, 1, l); }
+  while (l == 0);
+
+  const uint total_particle_count = PARAM_NUM_PARTICLE;
+  const float dt = PARAM_DT;
+
+  do { InterlockedCompareExchange(global_lock, 1, 0, l); }
+  while (l == 1);
+
   if (flat_idx >= PARAM_NUM_PARTICLE) { return; }
-    
-  float dt = PARAM_DT;
 
 #define INST_LIFE       uavInstance[flat_idx].fParam[0].y
 #define INST_VELOCITY   uavInstance[flat_idx].vParam[0]
 #define INST_LOCAL      uavInstance[flat_idx].mParam[0]
 
   float4 curr_pos = GetTranslation(INST_LOCAL);
-  curr_pos += INST_VELOCITY * PARAM_DT;
+  curr_pos += INST_VELOCITY * dt;
 
   matrix mat = INST_LOCAL;
 
@@ -29,7 +38,7 @@ void cs_main(
   mat._43 = curr_pos.z;
 
   INST_LOCAL = mat;
-  INST_LIFE += PARAM_DT;
+  INST_LIFE += dt;
 
 #undef INST_LIFE
 #undef INST_VELOCITY
