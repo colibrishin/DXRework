@@ -3,31 +3,38 @@
 
 #include "egTexture.h"
 
+SERIALIZER_ACCESS_IMPL(
+  Engine::Resources::ComputeShader,
+     _ARTAG(_BSTSUPER(Shader))
+  _ARTAG(m_group_)
+  _ARTAG(m_thread_)
+)
+
 namespace Engine::Resources
 {
   void ComputeShader::Dispatch()
   {
     preDispatch();
 
-    if (std::accumulate(m_group_.begin(), m_group_.end(), 0) == 0)
+    if (std::accumulate(m_group_, m_group_ + 3, 0) == 0)
     {
       GetDebugger().Log("ComputeShader::Dispatch() : Group is not set. Ignore dispatching...");
       return;
     }
 
-    if (std::accumulate(m_group_.begin(), m_group_.end(), 1, std::multiplies()) > 1024)
+    if (std::accumulate(m_group_, m_group_ + 3, 1, std::multiplies()) > 1024)
     {
       GetDebugger().Log("ComputeShader::Dispatch() : Group is too large. Ignore dispatching...");
       return;
     }
 
-    if (std::accumulate(m_thread_.begin(), m_thread_.end(), 0) == 0)
+    if (std::accumulate(m_thread_, m_thread_ + 3, 0) == 0)
     {
       GetDebugger().Log("ComputeShader::Dispatch() : Thread is not set. Ignore dispatching...");
       return;
     }
 
-    if (std::accumulate(m_thread_.begin(), m_thread_.end(), 1, std::multiplies()) > 1024)
+    if (std::accumulate(m_thread_, m_thread_ + 3, 1, std::multiplies()) > 1024)
     {
       GetDebugger().Log("ComputeShader::Dispatch() : Thread is too large. Ignore dispatching...");
       return;
@@ -39,6 +46,25 @@ namespace Engine::Resources
     postDispatch();
 
     GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
+
+    std::fill_n(m_group_, 3, 1);
+  }
+
+  ComputeShader::ComputeShader(const std::filesystem::path& path, const std::array<UINT, 3>& thread)
+  {
+    SetPath(path);
+    std::ranges::copy(thread, m_thread_);
+  }
+
+  void ComputeShader::SetGroup(const std::array<UINT, 3>& group) { std::ranges::copy(group.begin(), group.end(), m_group_); }
+
+  std::array<UINT, 3> ComputeShader::GetThread() const
+  {
+    std::array<UINT, 3> thread;
+    thread[0] = m_thread_[0];
+    thread[1] = m_thread_[1];
+    thread[2] = m_thread_[2];
+    return thread;
   }
 
   void ComputeShader::PostRender(const float& dt) {}
