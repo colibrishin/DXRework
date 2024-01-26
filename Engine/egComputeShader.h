@@ -1,6 +1,7 @@
 #pragma once
 #include "egMacro.h"
 #include "egShader.hpp"
+#include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {
@@ -13,8 +14,21 @@ namespace Engine::Resources
     std::array<UINT, 3> GetThread() const;
     void Dispatch();
 
+    template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
+    static boost::weak_ptr<T> Create()
+    {
+      const auto& v = boost::make_shared<T>();
+      GetResourceManager().AddResource(v);
+      return v;
+    }
+
+    static inline boost::weak_ptr<ComputeShader> Get(const std::string& name)
+    {
+      return GetResourceManager().GetResource<ComputeShader>(name).lock();
+    }
+
 	protected:
-    ComputeShader(const std::filesystem::path& path, const std::array<UINT, 3>& thread);
+    ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
 
     virtual void preDispatch() = 0;
     virtual void postDispatch() = 0;
@@ -34,6 +48,8 @@ namespace Engine::Resources
 
   private:
     SERIALIZER_ACCESS
+    ComputeShader();
+
     ComPtr<ID3D11ComputeShader> m_cs_;
 
     UINT m_thread_[3];

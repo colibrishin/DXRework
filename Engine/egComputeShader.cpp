@@ -3,11 +3,12 @@
 
 #include "egTexture.h"
 
-SERIALIZER_ACCESS_IMPL(
-  Engine::Resources::ComputeShader,
-     _ARTAG(_BSTSUPER(Shader))
-  _ARTAG(m_group_)
-  _ARTAG(m_thread_)
+SERIALIZER_ACCESS_IMPL
+(
+ Engine::Resources::ComputeShader,
+ _ARTAG(_BSTSUPER(Shader))
+ _ARTAG(m_group_)
+ _ARTAG(m_thread_)
 )
 
 namespace Engine::Resources
@@ -50,7 +51,16 @@ namespace Engine::Resources
     std::fill_n(m_group_, 3, 1);
   }
 
-  ComputeShader::ComputeShader(const std::filesystem::path& path, const std::array<UINT, 3>& thread)
+  ComputeShader::ComputeShader(
+    const std::string&           name,
+    const std::filesystem::path& path,
+    const std::array<UINT, 3>&   thread
+  )
+    : Shader
+    (
+     name, path, SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
+     D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+    )
   {
     SetPath(path);
     std::ranges::copy(thread, m_thread_);
@@ -116,4 +126,13 @@ namespace Engine::Resources
   }
 
   void ComputeShader::Unload_INTERNAL() { m_cs_.Reset(); }
+
+  ComputeShader::ComputeShader()
+    : Shader
+      (
+       "", "", SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
+       D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+      ),
+      m_thread_{1,},
+      m_group_{1,} {}
 }
