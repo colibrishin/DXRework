@@ -76,6 +76,7 @@ namespace Engine::Graphics
     struct InstanceSB : public ParamBase
     {
       SB_T(SB_TYPE_INSTANCE)
+      SB_UAV_T(SB_TYPE_UAV_INSTANCE)
     };
 
     struct InstanceModelSB : public InstanceSB

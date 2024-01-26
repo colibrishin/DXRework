@@ -48,6 +48,8 @@
 #define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
+// Static structured buffer UAV type, this should be added to every structured buffer UAV
+#define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
 // Static texture type, this should be added to every texture.
 #define TEX_T(enum_val) static constexpr eTexType textype = enum_val;
 

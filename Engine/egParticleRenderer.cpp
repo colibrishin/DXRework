@@ -24,7 +24,7 @@ namespace Engine::Components
     {
       GetRenderPipeline().SetParam((int)m_sbs_.size(), particle_count_slot);
       m_sb_buffer_.SetData(m_sbs_.size(), m_sbs_.data());
-      m_sb_buffer_.Bind(SHADER_COMPUTE);
+      m_sb_buffer_.BindUAV();
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
@@ -33,7 +33,7 @@ namespace Engine::Components
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch();
-      m_sb_buffer_.Unbind(SHADER_COMPUTE);
+      m_sb_buffer_.UnbindUAV();
       m_sb_buffer_.GetData(m_sbs_.size(), m_sbs_.data());
     }
   }
@@ -42,11 +42,10 @@ namespace Engine::Components
 
   void ParticleRenderer::FixedUpdate(const float& dt) {}
 
-  void ParticleRenderer::SetCount(const size_t count) {
-    m_sbs_.resize(count, {});
-  }
+  void ParticleRenderer::SetCount(const size_t count) { m_sbs_.resize(count, {}); }
 
-  void ParticleRenderer::Spread(const Vector3& local_min, const Vector3& local_max) {
+  void ParticleRenderer::Spread(const Vector3& local_min, const Vector3& local_max)
+  {
     const auto count = m_sbs_.size();
     for (auto i = 0; i < count; ++i)
     {
@@ -62,7 +61,8 @@ namespace Engine::Components
 
   ParticleRenderer::ParticleRenderer() : RenderComponent(RENDER_COM_T_PARTICLE, {}) {}
 
-  void ParticleRenderer::SetComputeShader(const WeakComputeShader& cs) {
+  void ParticleRenderer::SetComputeShader(const WeakComputeShader& cs)
+  {
     if (const auto shader = cs.lock())
     {
       m_cs_ = shader;
