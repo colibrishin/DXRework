@@ -108,15 +108,24 @@ namespace Engine::Resources
 
     const auto [type, entry, version] = s_main_version[SHADER_COMPUTE];
 
-    DX::ThrowIfFailed
+    const auto res = D3DCompileFromFile
       (
-       D3DCompileFromFile
-       (
-        GetPath().c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        entry.c_str(), version.c_str(), flag, 0,
-        &blob, &error
-       )
+       GetPath().c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+       entry.c_str(), version.c_str(), flag, 0,
+       &blob, &error
       );
+
+    if (error)
+    {
+      const std::string error_message =
+        static_cast<char*>(error->GetBufferPointer());
+      OutputDebugStringA(error_message.c_str());
+    }
+
+    if (FAILED(res))
+    {
+      throw std::exception("ComputeShader::Load_INTERNAL() : Failed to compile shader.");
+    }
 
     GetD3Device().GetDevice()->CreateComputeShader
       (

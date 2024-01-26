@@ -18,6 +18,8 @@ namespace Engine::Resources
     static boost::weak_ptr<T> Create()
     {
       const auto& v = boost::make_shared<T>();
+      v->Initialize();
+      v->Load();
       GetResourceManager().AddResource(v);
       return v;
     }
