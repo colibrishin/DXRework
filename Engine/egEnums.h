@@ -11,6 +11,13 @@ namespace Engine
     BIND_SLOT_END
   };
 
+  enum eTexUAVBindSlot
+  {
+    BIND_SLOT_UAV_TEX = 0,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX + g_max_slot_per_uav,
+    BIND_SLOT_UAV_END
+  };
+
   static_assert(BIND_SLOT_END < 128);
 
   enum eReservedTexBindSlot
