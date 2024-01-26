@@ -16,8 +16,8 @@ void cs_main(
   do { InterlockedCompareExchange(global_lock, 0, 1, l); }
   while (l == 0);
 
-  const uint total_particle_count = PARAM_NUM_PARTICLE;
-  const float dt = PARAM_DT;
+  const uint  total_particle_count = PARAM_NUM_PARTICLE;
+  const float dt                   = PARAM_DT;
 
   do { InterlockedCompareExchange(global_lock, 1, 0, l); }
   while (l == 1);
