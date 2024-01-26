@@ -74,6 +74,7 @@ namespace Engine
     class SoundPlayer;
     class ModelRenderer;
     class Animator;
+    class ParticleRenderer;
   } // namespace Component
 
   class Script;
@@ -176,6 +177,8 @@ namespace Engine
   using WeakScript = boost::weak_ptr<Script>;
   using WeakAnimsTexture = boost::weak_ptr<Resources::AnimationsTexture>;
   using WeakShadowTexture = boost::weak_ptr<Resources::ShadowTexture>;
+  using WeakParticleRenderer = boost::weak_ptr<Components::ParticleRenderer>;
+  using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
 
   // Strong pointer type definitions
   using StrongObject = boost::shared_ptr<Abstract::Object>;
@@ -203,6 +206,8 @@ namespace Engine
   using StrongTexture2D = boost::shared_ptr<Resources::Texture2D>;
   using StrongModelRenderer = boost::shared_ptr<Components::ModelRenderer>;
   using StrongRenderComponent = boost::shared_ptr<Components::Base::RenderComponent>;
+  using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
+  using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
