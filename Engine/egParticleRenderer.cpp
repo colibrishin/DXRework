@@ -24,7 +24,7 @@ namespace Engine::Components
     {
       GetRenderPipeline().SetParam((int)m_sbs_.size(), particle_count_slot);
       GetRenderPipeline().SetParam(dt, dt_slot);
-      m_sb_buffer_.SetData(m_sbs_.size(), m_sbs_.data());
+      m_sb_buffer_.SetData(m_sbs_.size(), reinterpret_cast<const Graphics::SBs::InstanceParticleSB*>(m_sbs_.data()));
       m_sb_buffer_.BindUAV();
 
       const auto thread      = m_cs_->GetThread();
@@ -35,13 +35,15 @@ namespace Engine::Components
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch();
       m_sb_buffer_.UnbindUAV();
-      m_sb_buffer_.GetData(m_sbs_.size(), m_sbs_.data());
+      m_sb_buffer_.GetData(m_sbs_.size(), reinterpret_cast<Graphics::SBs::InstanceParticleSB*>(m_sbs_.data()));
     }
   }
 
   void ParticleRenderer::PreUpdate(const float& dt) {}
 
   void ParticleRenderer::FixedUpdate(const float& dt) {}
+
+  const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const { return m_sbs_; }
 
   void ParticleRenderer::SetCount(const size_t count) { m_sbs_.resize(count, {}); }
 
@@ -50,13 +52,13 @@ namespace Engine::Components
     const auto count = m_sbs_.size();
     for (auto i = 0; i < count; ++i)
     {
-      auto& sb    = m_sbs_[i];
-      auto  world = sb.GetLocal();
+      auto* sb    = reinterpret_cast<Graphics::SBs::InstanceParticleSB*>(&m_sbs_[i]);
+      auto  world = sb->GetLocal();
 
       const auto new_pos = Vector3::Lerp(local_min, local_max, static_cast<float>(i) / static_cast<float>(count));
 
       world *= Matrix::CreateTranslation(new_pos - world.Translation());
-      sb.SetLocal(world);
+      sb->SetLocal(world);
     }
   }
 

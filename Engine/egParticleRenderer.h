@@ -19,9 +19,10 @@ namespace Engine::Components
     void PreUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
+    const std::vector<Graphics::SBs::InstanceSB>& GetParticles() const;
+
     void SetCount(const size_t count);
     void SetComputeShader(const WeakComputeShader& cs);
-
     void Spread(const Vector3& local_min, const Vector3& local_max);
 
   private:
@@ -29,7 +30,7 @@ namespace Engine::Components
     ParticleRenderer();
 
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
-    std::vector<Graphics::SBs::InstanceParticleSB>                m_sbs_;
+    std::vector<Graphics::SBs::InstanceSB>                        m_sbs_;
     std::string                                                   m_cs_name_;
     StrongComputeShader                                           m_cs_;
   };
