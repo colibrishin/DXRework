@@ -5,6 +5,7 @@
 #include "egCollision.h"
 #include "egElastic.h"
 #include "egFriction.h"
+#include "egManagerHelper.hpp"
 #include "egObject.hpp"
 #include "egPhysics.hpp"
 #include "egRigidbody.h"
@@ -27,6 +28,8 @@ namespace Engine::Manager::Physics
 
   void PhysicsManager::FixedUpdate(const float& dt)
   {
+    if (!GetDeltaTimeDeviation().Stable()) { return; }
+
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
       const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
