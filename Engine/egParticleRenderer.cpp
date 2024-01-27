@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egParticleRenderer.h"
 #include "egComputeShader.h"
+#include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL
 (
@@ -45,7 +46,15 @@ namespace Engine::Components
 
   const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const { return m_sbs_; }
 
-  void ParticleRenderer::SetCount(const size_t count) { m_sbs_.resize(count, {}); }
+  void ParticleRenderer::SetCount(const size_t count)
+  {
+    for (int i = 0; i < count; ++i)
+    {
+      Graphics::SBs::InstanceParticleSB sb;
+      sb.SetWorld(GetOwner().lock()->GetComponent<Transform>().lock()->GetWorldMatrix().Transpose());
+      m_sbs_.push_back(sb);
+    }
+  }
 
   void ParticleRenderer::Spread(const Vector3& local_min, const Vector3& local_max)
   {
@@ -53,12 +62,12 @@ namespace Engine::Components
     for (auto i = 0; i < count; ++i)
     {
       auto* sb    = reinterpret_cast<Graphics::SBs::InstanceParticleSB*>(&m_sbs_[i]);
-      auto  world = sb->GetLocal();
+      auto  world = sb->GetWorld().Transpose();
 
       const auto new_pos = Vector3::Lerp(local_min, local_max, static_cast<float>(i) / static_cast<float>(count));
 
       world *= Matrix::CreateTranslation(new_pos - world.Translation());
-      sb->SetLocal(world);
+      sb->SetWorld(world.Transpose());
     }
   }
 

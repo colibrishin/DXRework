@@ -104,18 +104,18 @@ namespace Engine::Graphics
     public:
       InstanceParticleSB()
       {
-        SetLife(1.0f);
+        SetLife(0.0f);
         SetVelocity(Vector3::One);
-        SetLocal(Matrix::Identity);
+        SetWorld(Matrix::Identity);
       }
 
       void SetLife(const float life) { SetParam(1, life); }
 
-      void SetVelocity(const Vector3& velocity) { SetParam(0, Vector4(velocity)); }
+      void SetVelocity(const Vector3& velocity) { SetParam(0, velocity); }
 
-      void SetLocal(const Matrix& world) { SetParam(0, world); }
+      void SetWorld(const Matrix& world) { SetParam(0, world); }
 
-      Matrix GetLocal() const { return GetParam<Matrix>(0); }
+      Matrix GetWorld() const { return GetParam<Matrix>(0); }
     };
   }
 
