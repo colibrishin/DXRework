@@ -15,7 +15,6 @@ RWTexture2D<float4>      uav02 : register(u2);
 RWTexture2D<float4>      uav03 : register(u3);
 RWTexture2DArray<float4> uavArr04 : register(u4);
 RWTexture2DArray<float4> uavArr05 : register(u5);
-
 RWStructuredBuffer<InstanceElement> uavInstance : register(u6);
 
 Texture2D      tex00 : register(t0);
@@ -42,7 +41,14 @@ TextureCube    texCube04 : register(t20);
 TextureCube    texCube05 : register(t21);
 TextureCube    texCube06 : register(t22);
 TextureCube    texCube07 : register(t23);
-
+Texture1D      tex1d00 : register(t24);
+Texture1D      tex1d01 : register(t25);
+Texture1D      tex1d02 : register(t26);
+Texture1D      tex1d03 : register(t27);
+Texture1D      tex1d04 : register(t28);
+Texture1D      tex1d05 : register(t29);
+Texture1D      tex1d06 : register(t30);
+Texture1D      tex1d07 : register(t31);
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 Texture3D      texAnimations : register(t34);
