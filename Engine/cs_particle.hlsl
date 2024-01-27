@@ -22,14 +22,15 @@ void cs_main(
   do { InterlockedCompareExchange(global_lock, 1, 0, l); }
   while (l == 1);
 
-  if (flat_idx >= PARAM_NUM_PARTICLE) { return; }
+  if (flat_idx >= total_particle_count) { return; }
 
 #define INST_LIFE       uavInstance[flat_idx].fParam[0].y
 #define INST_VELOCITY   uavInstance[flat_idx].vParam[0]
 #define INST_LOCAL      uavInstance[flat_idx].mParam[0]
 
+  const float4 velocity = INST_VELOCITY;
   float4 curr_pos = GetTranslation(INST_LOCAL);
-  curr_pos += INST_VELOCITY * dt;
+  curr_pos += velocity * dt;
 
   matrix mat = INST_LOCAL;
 
