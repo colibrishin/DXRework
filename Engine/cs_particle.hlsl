@@ -28,8 +28,13 @@ void cs_main(
 #define INST_VELOCITY   uavInstance[flat_idx].vParam[0]
 #define INST_LOCAL      uavInstance[flat_idx].mParam[0]
 
-  const float4 velocity = INST_VELOCITY;
   float4 curr_pos = GetTranslation(INST_LOCAL);
+
+  const float3 omega    = float3(0.f, 1.f, 0.f);
+  const float3 radius   = curr_pos;
+  float3       v        = cross(omega, radius);
+  const float4 velocity = float4(v, 0.f);
+
   curr_pos += velocity * dt;
 
   matrix mat = INST_LOCAL;
