@@ -11,16 +11,8 @@ void cs_main(
 )
 {
   const uint flat_idx = dispatchThreadId.x + dispatchThreadId.y * 32;
-
-  int l = 0;
-  do { InterlockedCompareExchange(global_lock, 0, 1, l); }
-  while (l == 0);
-
-  const uint  total_particle_count = PARAM_NUM_PARTICLE;
-  const float dt                   = PARAM_DT;
-
-  do { InterlockedCompareExchange(global_lock, 1, 0, l); }
-  while (l == 1);
+  const uint total_particle_count = PARAM_NUM_PARTICLE;
+  const float dt = PARAM_DT;
 
   if (flat_idx >= total_particle_count) { return; }
 
