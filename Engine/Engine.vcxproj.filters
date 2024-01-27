@@ -182,9 +182,6 @@
     <Filter Include="Singleton\Physics">
       <UniqueIdentifier>{df398994-8d8a-48d8-9503-f76c72f44593}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Singleton\Physics\CollisionDetector">
-      <UniqueIdentifier>{af9f026d-f741-4fd8-8286-967e877afc86}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Singleton\Physics\ConstraintSolver">
       <UniqueIdentifier>{78703bbb-9af2-4201-8def-5a691c883096}</UniqueIdentifier>
     </Filter>
@@ -253,6 +250,12 @@
     </Filter>
     <Filter Include="Component\Renderer\ParticleRenderer">
       <UniqueIdentifier>{d11f8c82-4277-402f-9365-2d9b4ee16787}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\CollisionDetector">
+      <UniqueIdentifier>{af9f026d-f741-4fd8-8286-967e877afc86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Physics\DeltaTimeDeviation">
+      <UniqueIdentifier>{ec990930-853a-486a-9375-d53beebddde4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -502,6 +505,9 @@
     <ClInclude Include="egParticleRenderer.h">
       <Filter>Component\Renderer\ParticleRenderer</Filter>
     </ClInclude>
+    <ClInclude Include="egDeltaTimeDeviation.h">
+      <Filter>Singleton\Physics\DeltaTimeDeviation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -706,6 +712,9 @@
     </ClCompile>
     <ClCompile Include="egParticleRenderer.cpp">
       <Filter>Component\Renderer\ParticleRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egDeltaTimeDeviation.cpp">
+      <Filter>Singleton\Physics\DeltaTimeDeviation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
