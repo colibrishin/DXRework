@@ -3,13 +3,13 @@
 
 namespace Engine::Resources
 {
-  class Texture1D : Texture
+  class Texture1D : public Texture
   {
   public:
     TEX_T(TEX_TYPE_1D)
 
     explicit Texture1D(const std::filesystem::path& path, const GenericTextureDescription& description)
-      : Texture(path, TEX_TYPE_3D, description) { }
+      : Texture(path, TEX_TYPE_1D, description) { }
     ~Texture1D() override = default;
 
     void          OnDeserialized() override;

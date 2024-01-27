@@ -58,8 +58,6 @@ namespace Engine::Resources
     RESOURCE_SELF_INFER_GETTER(Texture)
 
   protected:
-    Texture();
-
     // Derived class should hide these by their own case.
     virtual UINT GetWidth() const;
     virtual UINT GetHeight() const;
@@ -87,6 +85,7 @@ namespace Engine::Resources
     ComPtr<ID3D11UnorderedAccessView> m_uav_;
 
   private:
+    Texture();
     void Load_INTERNAL() override final;
 
     inline static ComPtr<ID3D11RenderTargetView> s_previous_rtv = nullptr;

@@ -25,8 +25,9 @@ namespace Engine
 
   enum eTexUAVBindSlot
   {
-    BIND_SLOT_UAV_TEX = 0,
-    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEX_1D = 0,
+    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + g_max_slot_per_uav,
     BIND_SLOT_UAV_END,
   };
 

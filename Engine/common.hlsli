@@ -9,10 +9,12 @@
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
-RWTexture2D<float4>      uav00 : register(u0);
-RWTexture2D<float4>      uav01 : register(u1);
-RWTexture2DArray<float4> uavArr00 : register(u2);
-RWTexture2DArray<float4> uavArr01 : register(u3);
+RWTexture1D<float4>      uav00 : register(u0);
+RWTexture1D<float4>      uav01 : register(u1);
+RWTexture2D<float4>      uav02 : register(u2);
+RWTexture2D<float4>      uav03 : register(u3);
+RWTexture2DArray<float4> uavArr04 : register(u4);
+RWTexture2DArray<float4> uavArr05 : register(u5);
 
 RWStructuredBuffer<InstanceElement> uavInstance : register(u4);
 
