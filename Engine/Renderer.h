@@ -1,21 +1,22 @@
 #pragma once
 #include "egManager.hpp"
+#include "egMaterial.h"
 #include "egModelRenderer.h"
 
 namespace Engine::Manager::Graphics
 {
   class Renderer : public Abstract::Singleton<Renderer>
   {
+  private:
+    using CandidatePair = std::pair<StrongObject, std::vector<SBs::InstanceSB>>;
+
+    template <typename T>
+    using MaterialMap = std::map<StrongMaterial, std::vector<T>>;
+
+    template <typename T>
+    using RenderMap = std::map<eRenderComponentType, MaterialMap<T>>;
+
   public:
-    template <typename T>
-    using MaterialMap = std::map<WeakMaterial, T, WeakComparer<Resources::Material>>;
-
-    template <typename T>
-    using RenderComponentMap = std::map<const eRenderComponentType, MaterialMap<T>>;
-
-    template <typename T>
-    using RenderPassMap = std::map<const eShaderDomain, RenderComponentMap<T>>;
-
     explicit Renderer(SINGLETON_LOCK_TOKEN)
       : Singleton(),
         m_b_ready_(false) {}
@@ -45,15 +46,14 @@ namespace Engine::Manager::Graphics
       const float            dt,
       eShaderDomain          domain,
       bool                   shader_bypass,
-      UINT                   instance_count,
       const StrongMaterial & material, const std::vector<SBs::InstanceSB> & structured_buffers
     ) const;
 
     void preMappingModel(const StrongRenderComponent& rc);
+    void preMappingParticle(const StrongRenderComponent& rc);
 
     bool m_b_ready_;
 
-    RenderPassMap<std::vector<WeakObject>> m_render_passes_;
-    RenderPassMap<std::vector<SBs::InstanceSB>> m_sbs_;
+    RenderMap<CandidatePair> m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }

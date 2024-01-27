@@ -6,6 +6,7 @@
 #include "egBoneAnimation.h"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egParticleRenderer.h"
 #include "egProjectionFrustum.h"
 #include "egReflectionEvaluator.h"
 #include "egSceneManager.hpp"
@@ -53,7 +54,8 @@ namespace Engine::Manager::Graphics
       case RENDER_COM_T_MODEL:
           preMappingModel(rc);
           break;
-      case RENDER_COM_T_PARTICLE: 
+      case RENDER_COM_T_PARTICLE:
+          preMappingParticle(rc);
           break;
       case RENDER_COM_T_UNK:
       default: break;
@@ -90,8 +92,12 @@ namespace Engine::Manager::Graphics
 
   void Renderer::PostRender(const float& dt)
   {
-    m_render_passes_.clear();
-    m_sbs_.clear();
+    std::for_each
+      (
+       m_render_candidates_, m_render_candidates_ + SHADER_DOMAIN_MAX,
+       [](auto& target_set) { target_set.clear(); }
+      );
+
     m_b_ready_ = false;
   }
 
@@ -114,48 +120,28 @@ namespace Engine::Manager::Graphics
       return;
     }
 
-    if (!m_render_passes_.contains(domain)) { return; }
+    if (m_render_candidates_[domain].empty()) { return; }
 
-    const auto& target_map = m_render_passes_.at(domain);
-    const auto& target_sb  = m_sbs_.at(domain);
+    const auto& target_set = m_render_candidates_[domain];
+    std::map<WeakMaterial, std::vector<SBs::InstanceSB>> final_mapping;
 
-    if (target_map.empty()) { return; }
-    if (target_sb.empty()) { return; }
-
-    for (const auto& [rc_type, mtr_map] : target_map)
+    for (const auto& mtr_m : target_set | std::views::values)
     {
-      for (const auto& [ptr_mtr, objs] : mtr_map)
+      for (const auto& [mtr, obj_v] : mtr_m)
       {
-        if (predicate)
+        for (const auto& [obj, sbs] : obj_v)
         {
-          std::vector<WeakObject>      obj_pred_set;
-          std::vector<SBs::InstanceSB> sb_pred_set;
-
-          for (int i = 0; i < objs.size(); ++i)
+          if (predicate && predicate(obj))
           {
-            const auto& obj = objs[i].lock();
-            const auto& sb  = target_sb.at(rc_type).at(ptr_mtr).at(i);
-
-            if (!predicate(obj)) { continue; }
-
-            obj_pred_set.push_back(obj);
-            sb_pred_set.push_back(sb);
+            final_mapping[mtr].insert(final_mapping[mtr].end(), sbs.begin(), sbs.end());
           }
-
-          if (obj_pred_set.empty()) { continue; }
-          if (sb_pred_set.empty()) { continue; }
-
-          const auto mtr = ptr_mtr.lock();
-          renderPassImpl(dt, domain, shader_bypass, sb_pred_set.size(), mtr, sb_pred_set);
-        }
-        else
-        {
-          const auto& mtr_sbs = target_sb.at(rc_type).at(ptr_mtr);
-          const auto mtr = ptr_mtr.lock();
-
-          renderPassImpl(dt, domain, shader_bypass, mtr_map.at(mtr).size(), mtr, mtr_sbs);
         }
       }
+    }
+
+    for (const auto& [mtr, sbs] : final_mapping)
+    {
+      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), sbs);
     }
   }
 
@@ -163,19 +149,18 @@ namespace Engine::Manager::Graphics
     const float                         dt,
     eShaderDomain                       domain,
     bool                                shader_bypass,
-    UINT                                instance_count,
     const StrongMaterial&               material,
     const std::vector<SBs::InstanceSB>& structured_buffers
   ) const
   {
     StructuredBuffer<SBs::InstanceSB> sb;
-    sb.Create(instance_count, structured_buffers.data(), false);
+    sb.Create(structured_buffers.size(), structured_buffers.data(), false);
     sb.BindSRV(SHADER_VERTEX);
 
     material->SetTempParam
       (
        {
-         .instanceCount = instance_count,
+         .instanceCount = (UINT)structured_buffers.size(),
          .bypassShader = shader_bypass,
          .domain = domain,
        }
@@ -223,7 +208,7 @@ namespace Engine::Manager::Graphics
 
       if (mtr->IsRenderDomain(domain))
       {
-        m_render_passes_[domain][rc->GetRenderType()][mtr].push_back(obj);
+        auto& target_set = m_render_candidates_[domain][RENDER_COM_T_MODEL][mtr];
 
         SBs::InstanceModelSB sb{};
         sb.SetWorld(tr->GetWorldMatrix().Transpose());
@@ -233,7 +218,32 @@ namespace Engine::Manager::Graphics
         sb.SetNoAnim(no_anim);
 
         // todo: stacking structured buffer data might be get large easily.
-        m_sbs_[domain][rc->GetRenderType()][mtr].emplace_back(sb);
+        target_set.push_back({obj, {std::move(sb)}});
+      }
+    }
+  }
+
+  void Renderer::preMappingParticle(const StrongRenderComponent& rc)
+  {
+    // get model renderer, continue if it is disabled
+    const auto pr = rc->GetSharedPtr<Components::ParticleRenderer>();
+    if (!pr->GetActive()) { return; }
+
+    const auto obj = rc->GetOwner().lock();
+    const auto mtr = rc->GetMaterial().lock();
+    const auto tr = obj->GetComponent<Components::Transform>().lock();
+
+    // Pre-mapping by the material.
+    for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
+    {
+      const auto domain = static_cast<eShaderDomain>(i);
+
+      if (mtr->IsRenderDomain(domain))
+      {
+        auto& target_set = m_render_candidates_[domain][RENDER_COM_T_PARTICLE][mtr];
+        const auto& particles = pr->GetParticles();
+
+        target_set.push_back({obj, particles});
       }
     }
   }
