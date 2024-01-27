@@ -4,6 +4,7 @@
 #include "egBaseCollider.hpp"
 #include "egCollisionDetector.h"
 #include "egGlobal.h"
+#include "egManagerHelper.hpp"
 #include "egObject.hpp"
 #include "egRigidbody.h"
 #include "egSceneManager.hpp"
@@ -25,6 +26,8 @@ namespace Engine::Manager::Physics
 
   void ConstraintSolver::FixedUpdate(const float& dt)
   {
+    if (!GetDeltaTimeDeviation().Stable()) { return; }
+
     auto& infos = GetCollisionDetector().GetCollisionInfo();
 
     static tbb::affinity_partitioner ap;
