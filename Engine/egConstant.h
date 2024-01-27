@@ -18,7 +18,7 @@ namespace Engine
   constexpr UINT g_reserved_struct_buffer_slot  = 48;
   constexpr float g_animation_sample_rate       = 0.1f;
   constexpr UINT g_uav_slot_limit               = 8;
-  constexpr UINT g_reserved_uav_slot            = 4;
+  constexpr UINT g_reserved_uav_slot            = 6;
 
   // Physics Constants
   constexpr float   g_epsilon                 = 0.001f;
