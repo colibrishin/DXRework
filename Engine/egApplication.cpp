@@ -74,6 +74,7 @@ namespace Engine::Manager
     GetLerpManager().Initialize();
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
+    GetDeltaTimeDeviation().Initialize();
 
     ImGui_ImplWin32_Init(hWnd);
     ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -133,6 +134,7 @@ namespace Engine::Manager
     GetDebugger().PreUpdate(dt);
     GetD3Device().PreUpdate(dt);
     GetToolkitAPI().PreUpdate(dt);
+    GetDeltaTimeDeviation().PreUpdate(dt);
   }
 
   void Application::FixedUpdate(const float& dt)
@@ -153,6 +155,7 @@ namespace Engine::Manager
     GetDebugger().FixedUpdate(dt);
     GetD3Device().FixedUpdate(dt);
     GetToolkitAPI().FixedUpdate(dt);
+    GetDeltaTimeDeviation().FixedUpdate(dt);
   }
 
   void Application::Update(const float& dt)
@@ -172,6 +175,7 @@ namespace Engine::Manager
     GetDebugger().Update(dt);
     GetD3Device().Update(dt);
     GetToolkitAPI().Update(dt);
+    GetDeltaTimeDeviation().Update(dt);
   }
 
   void Application::PreRender(const float& dt)
@@ -192,6 +196,7 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetRenderPipeline().PreRender(dt);
     GetD3Device().PreRender(dt);
+    GetDeltaTimeDeviation().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -211,6 +216,7 @@ namespace Engine::Manager
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
     GetD3Device().Render(dt);
+    GetDeltaTimeDeviation().Render(dt);
   }
 
   void Application::PostRender(const float& dt)
@@ -234,6 +240,7 @@ namespace Engine::Manager
 
     GetToolkitAPI().PostRender(dt);
     GetD3Device().PostRender(dt);
+    GetDeltaTimeDeviation().PostRender(dt);
   }
 
   void Application::PostUpdate(const float& dt)
@@ -253,6 +260,7 @@ namespace Engine::Manager
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);
+    GetDeltaTimeDeviation().PostUpdate(dt);
   }
 
   LRESULT Application::MessageHandler(

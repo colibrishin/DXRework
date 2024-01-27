@@ -13,6 +13,7 @@
 #include "egResourceManager.hpp"
 #include "egSceneManager.hpp"
 #include "egShadowManager.hpp"
+#include "egDeltaTimeDeviation.h"
 #include "egTaskScheduler.h"
 #include "egToolkitAPI.h"
 
@@ -69,4 +70,6 @@ namespace Engine
   }
 
   inline Manager::Graphics::Renderer& GetRenderer() { return Manager::Graphics::Renderer::GetInstance(); }
+
+  inline Manager::Physics::DeltaTimeDeviation& GetDeltaTimeDeviation() { return Manager::Physics::DeltaTimeDeviation::GetInstance(); }
 } // namespace Engine

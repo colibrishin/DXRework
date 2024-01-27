@@ -145,6 +145,7 @@ namespace Engine
       class LerpManager;
       class ConstraintSolver;
       class CollisionDetector;
+      class DeltaTimeDeviation;
     } // namespace Physics
 
     class ProjectionFrustum;
