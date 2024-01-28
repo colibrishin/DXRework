@@ -114,6 +114,9 @@ namespace Engine::Components
     void GenerateInertiaCube();
     void GenerateInertiaSphere();
 
+    float m_fps_counter_;
+    float m_ltcc_counter_;
+
     eBoundingType m_type_;
     EntityName    m_model_name_;
 
