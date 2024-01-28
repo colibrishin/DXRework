@@ -157,7 +157,7 @@ namespace Client::State
 
         if (!rcl || lcl == rcl) { continue; }
 
-        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down))
+        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down * 0.01f))
         {
           rb->SetGrounded(true);
           return;
