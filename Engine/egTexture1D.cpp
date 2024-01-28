@@ -23,7 +23,7 @@ namespace Engine::Resources
       const D3D11_TEXTURE1D_DESC desc
       {
         .Width = gd.Width,
-        .MipLevels = gd.Height,
+        .MipLevels = gd.MipsLevel,
         .ArraySize = gd.ArraySize,
         .Format = gd.Format,
         .Usage = gd.Usage,

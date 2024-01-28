@@ -48,7 +48,6 @@ namespace Engine::Resources
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
 
-  private:
     SERIALIZER_ACCESS
     ComputeShader();
 

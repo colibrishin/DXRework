@@ -8,6 +8,7 @@ namespace Engine
     BIND_SLOT_TEX     = 0,
     BIND_SLOT_TEXARR  = BIND_SLOT_TEX + g_max_slot_per_texture,
     BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + g_max_slot_per_texture,
+    BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + g_max_slot_per_texture,
     BIND_SLOT_END
   };
   
@@ -25,8 +26,9 @@ namespace Engine
 
   enum eTexUAVBindSlot
   {
-    BIND_SLOT_UAV_TEX = 0,
-    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEX_1D = 0,
+    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + g_max_slot_per_uav,
     BIND_SLOT_UAV_END,
   };
 

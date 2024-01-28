@@ -387,6 +387,7 @@ namespace Engine::Resources
     m_dsv_.Reset();
     m_uav_.Reset();
     m_res_.Reset();
+    m_b_lazy_window_ = true;
   }
 
   void Texture::FixedUpdate(const float& dt) {}
