@@ -141,8 +141,8 @@ namespace Engine::Manager::Physics
       if (!rb_other->IsFixed())
       {
         tr_other->SetWorldPosition(pos + rhs_weight_pen);
-        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (linear_vel * reduction));
-        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (angular_vel * reduction));
+        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (other_linear_vel * reduction));
+        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (other_angular_vel * reduction));
       }
     }
   }
