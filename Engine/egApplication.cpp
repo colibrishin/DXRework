@@ -82,7 +82,7 @@ namespace Engine::Manager
 
   void Application::Tick()
   {
-    static float elapsed = 0.0f;
+    static float elapsed = g_epsilon;
 
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
 
@@ -91,7 +91,6 @@ namespace Engine::Manager
        [&]()
        {
          const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
-         elapsed += dt;
 
          ImGui_ImplDX11_NewFrame();
          ImGui_ImplWin32_NewFrame();
@@ -102,7 +101,7 @@ namespace Engine::Manager
          if (elapsed >= g_fixed_update_interval)
          {
            FixedUpdate(dt);
-           elapsed = 0.0f;
+           elapsed = g_epsilon;
          }
 
          Update(dt);
@@ -112,6 +111,8 @@ namespace Engine::Manager
          PreRender(dt);
          Render(dt);
          PostRender(dt);
+
+         elapsed += dt;
        }
       );
   }
