@@ -39,19 +39,5 @@ namespace Engine::Physics
     auto end() const { return m_points_.end() - (4 - m_size_); }
   };
 
-  inline Vector3 __vectorcall GetActivePolarity(const Vector3& vel)
-  {
-    const auto signx =
-      vel.x > 0.f ? 1.f : (std::fabsf(vel.x) == g_epsilon ? 0.f : -1.f);
-    const auto signy =
-      vel.y > 0.f ? 1.f : (std::fabsf(vel.y) == g_epsilon ? 0.f : -1.f);
-    const auto signz =
-      vel.z > 0.f ? 1.f : (std::fabsf(vel.z) == g_epsilon ? 0.f : -1.f);
-
-    return {signx, signy, signz};
-  }
-
-  extern Vector3 __vectorcall EvalFriction(const Vector3& vel, float mu, float dt);
-  extern Vector3 __vectorcall EvalDrag(const Vector3& vel, float k);
   extern Vector3 __vectorcall EvalGravity(float invMass, float dt);
 } // namespace Engine::Physics
