@@ -22,11 +22,21 @@ namespace Engine::Manager
     void OnImGui() override;
 
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
-    void AddResource(const boost::shared_ptr<T>& resource) { m_resources_[which_resource<T>::value].insert(resource); }
+    void AddResource(const boost::shared_ptr<T>& resource)
+    {
+      if (!resource->GetPath().empty() && GetResourceByPath<T>(resource->GetPath()).lock())  { return; }
+
+      m_resources_[which_resource<T>::value].insert(resource);
+    }
 
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
     {
+      if (!resource->GetPath().empty() && GetResourceByPath<T>(resource->GetPath()).lock())
+      {
+        throw std::runtime_error("Resource already exists");
+      }
+
       m_resources_[which_resource<T>::value].insert(resource);
       resource->SetName(name);
     }
