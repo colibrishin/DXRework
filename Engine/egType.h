@@ -181,6 +181,7 @@ namespace Engine
   using WeakShadowTexture = boost::weak_ptr<Resources::ShadowTexture>;
   using WeakParticleRenderer = boost::weak_ptr<Components::ParticleRenderer>;
   using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
+  using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
 
   // Strong pointer type definitions
   using StrongObject = boost::shared_ptr<Abstract::Object>;

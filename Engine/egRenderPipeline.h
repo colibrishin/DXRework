@@ -28,7 +28,8 @@ namespace Engine::Manager::Graphics
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
     void SetMaterial(const CBs::MaterialCB& material_buffer);
 
-    void SetParam(const auto& v, const size_t slot)
+    template <typename T>
+    void SetParam(const T& v, const size_t slot)
     {
       m_param_buffer_.SetParam(slot, v);
       m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
