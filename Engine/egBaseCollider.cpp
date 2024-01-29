@@ -226,6 +226,8 @@ namespace Engine::Components
 
   Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
+      m_fps_counter_(0),
+      m_ltcc_counter_(0),
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),
       m_mass_(1.f),
@@ -286,6 +288,8 @@ namespace Engine::Components
 
   Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
+      m_fps_counter_(0),
+      m_ltcc_counter_(0),
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),
       m_mass_(1.0f),
@@ -315,10 +319,7 @@ namespace Engine::Components
 
   void Collider::PreUpdate(const float& dt)
   {
-    static float fps_counter  = 0.f;
-    static float ltcc_counter = 0.f;
-
-    if (fps_counter >= 1.f)
+    if (m_fps_counter_ >= 1.f)
     {
       for (const auto& [id, count] : m_cps_)
       {
@@ -339,10 +340,10 @@ namespace Engine::Components
         else { ++it; }
       }
 
-      fps_counter = 0.f;
+      m_fps_counter_ = 0.f;
     }
 
-    if (ltcc_counter >= g_ltcc_window_interval)
+    if (m_ltcc_counter_ >= g_ltcc_window_interval)
     {
       for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
       {
@@ -356,11 +357,11 @@ namespace Engine::Components
         else { it = m_ltcc_.erase(it); }
       }
 
-      ltcc_counter = 0.f;
+      m_ltcc_counter_ = 0.f;
     }
 
-    fps_counter += dt;
-    ltcc_counter += dt;
+    m_fps_counter_ += dt;
+    m_ltcc_counter_ += dt;
 
     UpdateInertiaTensor();
   }

@@ -57,7 +57,9 @@ namespace Engine::Manager::Physics
 
   void PhysicsManager::EpsilonGuard(Vector3& linear_momentum)
   {
-    if (linear_momentum.Length() < g_epsilon) { linear_momentum = Vector3::Zero; }
+    if (linear_momentum.x < g_epsilon && linear_momentum.x > -g_epsilon) { linear_momentum.x = 0.0f; }
+    if (linear_momentum.y < g_epsilon && linear_momentum.y > -g_epsilon) { linear_momentum.y = 0.0f; }
+    if (linear_momentum.z < g_epsilon && linear_momentum.z > -g_epsilon) { linear_momentum.z = 0.0f; }
   }
 
   void PhysicsManager::UpdateObject(Components::Rigidbody* rb, const float& dt)
@@ -73,8 +75,7 @@ namespace Engine::Manager::Physics
 
     if (cl) { mass = cl->GetInverseMass(); }
 
-    Vector3 linear_momentum =
-      rb->GetLinearMomentum() + (rb->GetForce() * mass * dt);
+    Vector3 linear_momentum = rb->GetLinearMomentum() + (rb->GetForce() * mass * dt);
     const Vector3 linear_friction = Engine::Physics::EvalFriction
       (
        linear_momentum, rb->GetFrictionCoefficient(),
@@ -84,22 +85,19 @@ namespace Engine::Manager::Physics
     const Vector3 angular_momentum =
       rb->GetAngularMomentum() + rb->GetTorque() * mass * dt;
 
-    rb->SetLinearFriction(linear_friction);
     linear_momentum += linear_friction;
     Engine::Physics::FrictionVelocityGuard(linear_momentum, linear_friction);
 
+    const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, g_drag_coefficient);
+
     if (!rb->IsGrounded())
     {
-      const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, g_drag_coefficient);
       rb->SetDragForce(drag_force);
       linear_momentum += drag_force;
       Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
     }
 
     EpsilonGuard(linear_momentum);
-
-    rb->SetLinearMomentum(linear_momentum);
-    rb->SetAngularMomentum(angular_momentum);
 
     tr->SetLocalPosition(tr->GetLocalPosition() + linear_momentum);
 
@@ -110,5 +108,15 @@ namespace Engine::Manager::Physics
     // tr->SetRotation(orientation);
 
     rb->Reset();
+
+    rb->SetLinearMomentum(linear_momentum);
+    rb->SetAngularMomentum(angular_momentum);
+
+    rb->SetLinearFriction(linear_friction);
+
+    if (!rb->IsGrounded())
+    {
+      rb->SetDragForce(drag_force);
+    }
   }
 } // namespace Engine::Manager::Physics

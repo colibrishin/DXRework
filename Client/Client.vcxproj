@@ -73,26 +73,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
-    <CopyLocalProjectReference>false</CopyLocalProjectReference>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
-    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
+    <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
-    <CopyLocalProjectReference>false</CopyLocalProjectReference>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
-    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
+    <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
