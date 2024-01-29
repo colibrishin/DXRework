@@ -8,35 +8,53 @@ SERIALIZER_ACCESS_IMPL
  Engine::Components::ParticleRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))
  _ARTAG(m_cs_name_)
- _ARTAG(m_sbs_)
+ _ARTAG(m_instances_)
 )
 
 namespace Engine::Components
 {
-  ParticleRenderer::ParticleRenderer(const WeakObject& owner): RenderComponent(RENDER_COM_T_PARTICLE, owner) {}
+  ParticleRenderer::ParticleRenderer(const WeakObject& owner)
+    : RenderComponent(RENDER_COM_T_PARTICLE, owner),
+      m_b_follow_owner_(true),
+      m_duration_dt_(100.0f),
+      m_size_(0.5f) {}
 
-  void ParticleRenderer::Initialize() {
+  void ParticleRenderer::Initialize()
+  {
     m_sb_buffer_.Create(1, nullptr, true);
-    Spread(Vector3::One, Vector3::Zero);
+    LinearSpread(Vector3::One, Vector3::Zero);
   }
 
-  void ParticleRenderer::Update(const float& dt) {
+  void ParticleRenderer::Update(const float& dt)
+  {
     if (m_cs_)
     {
-      GetRenderPipeline().SetParam((int)m_sbs_.size(), particle_count_slot);
+      // Particle count
+      GetRenderPipeline().SetParam((int)m_instances_.size(), particle_count_slot);
+      // Current delta time
       GetRenderPipeline().SetParam(dt, dt_slot);
-      m_sb_buffer_.SetData(m_sbs_.size(), reinterpret_cast<const Graphics::SBs::InstanceParticleSB*>(m_sbs_.data()));
+      // Max life time of a particle.
+      GetRenderPipeline().SetParam(m_duration_dt_, duration_slot);
+
+      m_sb_buffer_.SetData(m_instances_.size(), m_instances_.data());
       m_sb_buffer_.BindUAV();
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
-      const UINT group_count = m_sbs_.size() / flatten;
-      const UINT remainder   = m_sbs_.size() % flatten;
+      const UINT group_count = m_instances_.size() / flatten;
+      const UINT remainder   = m_instances_.size() % flatten;
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch();
       m_sb_buffer_.UnbindUAV();
-      m_sb_buffer_.GetData(m_sbs_.size(), reinterpret_cast<Graphics::SBs::InstanceParticleSB*>(m_sbs_.data()));
+      m_sb_buffer_.GetData(m_instances_.size(), m_instances_.data());
+    }
+
+    // Remove inactive particles.
+    for (auto it = m_instances_.begin(); it != m_instances_.end();)
+    {
+      if (!it->GetActive()) { it = m_instances_.erase(it); }
+      else { ++it; }
     }
   }
 
@@ -44,34 +62,49 @@ namespace Engine::Components
 
   void ParticleRenderer::FixedUpdate(const float& dt) {}
 
-  const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const { return m_sbs_; }
+  const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const
+  {
+    return reinterpret_cast<const std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
+  }
+
+  void ParticleRenderer::SetFollowOwner(const bool follow) { m_b_follow_owner_ = follow; }
 
   void ParticleRenderer::SetCount(const size_t count)
   {
+    // Expand and apply the world matrix of the owner to each instance.
     for (int i = 0; i < count; ++i)
     {
       Graphics::SBs::InstanceParticleSB sb;
-      sb.SetWorld(GetOwner().lock()->GetComponent<Transform>().lock()->GetWorldMatrix().Transpose());
-      m_sbs_.push_back(sb);
+      m_instances_.push_back(sb);
     }
   }
 
-  void ParticleRenderer::Spread(const Vector3& local_min, const Vector3& local_max)
+  void ParticleRenderer::SetDuration(const float duration) { m_duration_dt_ = duration; }
+
+  void ParticleRenderer::LinearSpread(const Vector3& local_min, const Vector3& local_max)
   {
-    const auto count = m_sbs_.size();
+    const auto count = m_instances_.size();
     for (auto i = 0; i < count; ++i)
     {
-      auto* sb    = reinterpret_cast<Graphics::SBs::InstanceParticleSB*>(&m_sbs_[i]);
-      auto  world = sb->GetWorld().Transpose();
+      auto& instance = m_instances_[i];
+      auto  world    = instance.GetWorld().Transpose();
 
       const auto new_pos = Vector3::Lerp(local_min, local_max, static_cast<float>(i) / static_cast<float>(count));
 
-      world *= Matrix::CreateTranslation(new_pos - world.Translation());
-      sb->SetWorld(world.Transpose());
+      world *= Matrix::CreateScale(m_size_) * Matrix::CreateTranslation(new_pos - world.Translation());
+      instance.SetWorld(world.Transpose());
     }
   }
 
-  ParticleRenderer::ParticleRenderer() : RenderComponent(RENDER_COM_T_PARTICLE, {}) {}
+  bool ParticleRenderer::IsFollowOwner() const { return m_b_follow_owner_; }
+
+  ParticleRenderer::ParticleRenderer()
+    : RenderComponent(RENDER_COM_T_PARTICLE, {}),
+      m_b_follow_owner_(true),
+      m_duration_dt_(100.0f),
+      m_size_(0.5f) {}
+
+  void ParticleRenderer::SetSize(const float size) { m_size_ = size; }
 
   void ParticleRenderer::SetComputeShader(const WeakComputeShader& cs)
   {

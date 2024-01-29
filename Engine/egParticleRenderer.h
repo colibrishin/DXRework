@@ -10,7 +10,8 @@ namespace Engine::Components
   public:
     RENDER_COM_T(RENDER_COM_T_PARTICLE)
     constexpr static size_t particle_count_slot = 1;
-    constexpr static size_t dt_slot     = 2;
+    constexpr static size_t dt_slot             = 2;
+    constexpr static size_t duration_slot       = 3;
 
     ParticleRenderer(const WeakObject& owner);
 
@@ -21,16 +22,26 @@ namespace Engine::Components
 
     const std::vector<Graphics::SBs::InstanceSB>& GetParticles() const;
 
+    void SetFollowOwner(const bool follow);
     void SetCount(const size_t count);
+    void SetDuration(const float duration);
+    void SetSize(const float size);
     void SetComputeShader(const WeakComputeShader& cs);
-    void Spread(const Vector3& local_min, const Vector3& local_max);
+
+    void LinearSpread(const Vector3& local_min, const Vector3& local_max);
+
+    bool IsFollowOwner() const;
 
   private:
     SERIALIZER_ACCESS
     ParticleRenderer();
 
+    bool  m_b_follow_owner_;
+    float m_duration_dt_;
+    float m_size_;
+
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
-    std::vector<Graphics::SBs::InstanceSB>                        m_sbs_;
+    std::vector<Graphics::SBs::InstanceParticleSB>                m_instances_;
     std::string                                                   m_cs_name_;
     StrongComputeShader                                           m_cs_;
   };
