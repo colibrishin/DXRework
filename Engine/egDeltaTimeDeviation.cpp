@@ -23,6 +23,7 @@ namespace Engine::Manager::Physics
 
     const float std_dev = std::sqrt(variance / static_cast<float>(m_samples_.size()));
 
+    /*
     if (avg + (std_dev * g_stabilizer_dev_sigma_threshold) < dt)
     {
       m_is_stable_ = false;
@@ -32,7 +33,7 @@ namespace Engine::Manager::Physics
     else
     {
       m_is_stable_ = true;
-    }
+    } */
   }
 
   void DeltaTimeDeviation::Update(const float& dt) {}
