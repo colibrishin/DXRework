@@ -11,7 +11,7 @@ namespace Engine::Manager::Physics
 
     explicit DeltaTimeDeviation(SINGLETON_LOCK_TOKEN)
       : m_samples_({}),
-        m_is_stable_(false) {}
+        m_is_stable_(true) {}
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
