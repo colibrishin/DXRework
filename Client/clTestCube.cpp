@@ -55,7 +55,7 @@ namespace Client::Object
       const auto c_pr = child->AddComponent<Components::ParticleRenderer>().lock();
       c_pr->SetComputeShader(Resources::ComputeShader::Get("cs_particle"));
       c_pr->SetCount(100);
-      c_pr->Spread(-Vector3::One, Vector3::One);
+      c_pr->LinearSpread(-Vector3::One, Vector3::One);
       c_pr->SetMaterial(Resources::Material::Get("NormalSpecularSphere"));
       AddChild(child);
     }

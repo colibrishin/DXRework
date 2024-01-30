@@ -235,5 +235,14 @@
     <ImageContentTask Include="ThunderCat.jpg">
       <Filter>Resource\Texture</Filter>
     </ImageContentTask>
+    <ImageContentTask Include="noise0.png">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="noise1.png">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="noise2.png">
+      <Filter>Resource\Texture</Filter>
+    </ImageContentTask>
   </ItemGroup>
 </Project>

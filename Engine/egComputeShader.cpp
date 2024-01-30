@@ -133,9 +133,15 @@ namespace Engine::Resources
        blob->GetBufferPointer(), blob->GetBufferSize(),
        nullptr, m_cs_.ReleaseAndGetAddressOf()
       );
+
+    loadDerived();
   }
 
-  void ComputeShader::Unload_INTERNAL() { m_cs_.Reset(); }
+  void ComputeShader::Unload_INTERNAL()
+  {
+    m_cs_.Reset();
+    unloadDerived();
+  }
 
   ComputeShader::ComputeShader()
     : Shader

@@ -241,7 +241,19 @@ namespace Engine::Manager::Graphics
       if (mtr->IsRenderDomain(domain))
       {
         auto& target_set = m_render_candidates_[domain][RENDER_COM_T_PARTICLE][mtr];
-        const auto& particles = pr->GetParticles();
+        auto particles = pr->GetParticles();
+
+        if (pr->IsFollowOwner())
+        {
+          for (auto& particle : particles)
+          {
+            Matrix mat = particle.GetParam<Matrix>(0);
+            mat = tr->GetWorldMatrix().Transpose() * mat;
+            particle.SetParam(0, mat);
+          }
+        }
+
+        if (particles.empty()) { continue; }
 
         target_set.push_back({obj, particles});
       }

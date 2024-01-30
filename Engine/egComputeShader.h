@@ -35,6 +35,9 @@ namespace Engine::Resources
     virtual void preDispatch() = 0;
     virtual void postDispatch() = 0;
 
+    virtual void loadDerived() = 0;
+    virtual void unloadDerived() = 0;
+
   private:
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
@@ -45,8 +48,8 @@ namespace Engine::Resources
     void Update(const float& dt) override;
     void Initialize() override;
 
-    void Load_INTERNAL() override;
-    void Unload_INTERNAL() override;
+    void Load_INTERNAL() override final;
+    void Unload_INTERNAL() override final;
 
     SERIALIZER_ACCESS
     ComputeShader();

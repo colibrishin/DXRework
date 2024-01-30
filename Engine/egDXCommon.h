@@ -105,17 +105,22 @@ namespace Engine::Graphics
       InstanceParticleSB()
       {
         SetLife(0.0f);
+        SetActive(true);
         SetVelocity(Vector3::One);
         SetWorld(Matrix::Identity);
       }
 
-      void SetLife(const float life) { SetParam(1, life); }
+      void SetLife(const float life) { SetParam(0, life); }
+
+      void SetActive(const bool active) { SetParam(0, (int)active); }
 
       void SetVelocity(const Vector3& velocity) { SetParam(0, velocity); }
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
 
       Matrix GetWorld() const { return GetParam<Matrix>(0); }
+
+      bool GetActive() const { return GetParam<int>(0) != 0; }
     };
   }
 
