@@ -68,8 +68,7 @@ namespace Engine::Manager::Physics
 
     const auto& cl =
       rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
-    const auto& tr =
-      rb->GetOwner().lock()->GetComponent<Components::Transform>().lock();
+    const auto t1 = rb->GetT1();
 
     float mass = 1.f;
 
@@ -99,12 +98,11 @@ namespace Engine::Manager::Physics
 
     EpsilonGuard(linear_momentum);
 
-    tr->SetLocalPosition(tr->GetLocalPosition() + linear_momentum);
+    t1->SetLocalPosition(t1->GetLocalPosition() + linear_momentum);
 
     // Quaternion orientation = tr->GetRotation();
     // orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} *
     // orientation; orientation.Normalize();
-
     // tr->SetRotation(orientation);
 
     rb->Reset();
