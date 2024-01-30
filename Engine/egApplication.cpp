@@ -82,7 +82,7 @@ namespace Engine::Manager
 
   void Application::Tick()
   {
-    static float elapsed = g_epsilon;
+    static float elapsed = 0.f;
 
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
 
@@ -97,14 +97,13 @@ namespace Engine::Manager
          ImGui::NewFrame();
 
          PreUpdate(dt);
+         Update(dt);
 
          if (elapsed >= g_fixed_update_interval)
          {
            FixedUpdate(dt);
-           elapsed = g_epsilon;
+           elapsed = 0.f;
          }
-
-         Update(dt);
 
          PostUpdate(dt);
 
