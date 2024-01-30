@@ -36,8 +36,6 @@ namespace Engine::Components
 
     bool                            IsCollidedObject(GlobalEntityID id) const;
     const std::set<GlobalEntityID>& GetCollidedObjects() const;
-    UINT                            GetCPS(GlobalEntityID id) const;
-    UINT                            GetCollisionCount(GlobalEntityID id) const;
 
     bool GetPenetration(
       const Collider& other, Vector3& normal,
@@ -114,9 +112,6 @@ namespace Engine::Components
     void GenerateInertiaCube();
     void GenerateInertiaSphere();
 
-    float m_fps_counter_;
-    float m_ltcc_counter_;
-
     eBoundingType m_type_;
     EntityName    m_model_name_;
 
@@ -129,10 +124,6 @@ namespace Engine::Components
     inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
     std::set<GlobalEntityID> m_collided_objects_;
-    // Collision per second
-    std::map<GlobalEntityID, UINT> m_cps_;
-    // Long-term collision count
-    std::map<GlobalEntityID, UINT> m_ltcc_;
 
     Vector3    m_inverse_inertia_;
     XMFLOAT3X3 m_inertia_tensor_;

@@ -169,30 +169,16 @@ namespace Engine::Components
   void Collider::AddCollidedObject(const GlobalEntityID id)
   {
     m_collided_objects_.insert(id);
-
-    if (!m_cps_.contains(id)) { m_cps_.insert({id, 1}); }
-    else { m_cps_[id]++; }
-
-    if (!m_ltcc_.contains(id)) { m_ltcc_.insert({id, 1}); }
-    else { m_ltcc_[id]++; }
   }
 
   void Collider::RemoveCollidedObject(const GlobalEntityID id)
   {
     m_collided_objects_.erase(id);
-    if (m_cps_.contains(id)) { m_cps_.erase(id); }
   }
 
   bool Collider::IsCollidedObject(const GlobalEntityID id) const { return m_collided_objects_.contains(id); }
 
   const std::set<GlobalEntityID>& Collider::GetCollidedObjects() const { return m_collided_objects_; }
-
-  UINT Collider::GetCPS(GlobalEntityID id) const
-  {
-    if (!m_cps_.contains(id)) { return 0; }
-
-    return m_cps_.at(id);
-  }
 
   bool Collider::GetPenetration(
     const Collider& other, Vector3& normal,
@@ -209,13 +195,6 @@ namespace Engine::Components
       );
   }
 
-  UINT Collider::GetCollisionCount(const GlobalEntityID id) const
-  {
-    if (!m_ltcc_.contains(id)) { return 0; }
-
-    return m_ltcc_.at(id);
-  }
-
   float Collider::GetMass() const { return m_mass_; }
 
   float Collider::GetInverseMass() const { return 1.0f / m_mass_; }
@@ -226,8 +205,6 @@ namespace Engine::Components
 
   Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
-      m_fps_counter_(0),
-      m_ltcc_counter_(0),
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),
       m_mass_(1.f),
@@ -288,8 +265,6 @@ namespace Engine::Components
 
   Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
-      m_fps_counter_(0),
-      m_ltcc_counter_(0),
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),
       m_mass_(1.0f),
@@ -319,50 +294,6 @@ namespace Engine::Components
 
   void Collider::PreUpdate(const float& dt)
   {
-    if (m_fps_counter_ >= 1.f)
-    {
-      for (const auto& [id, count] : m_cps_)
-      {
-        if (m_ltcc_.contains(id)) { m_ltcc_[id] += m_cps_[id]; }
-        else { m_ltcc_.insert({id, count}); }
-      }
-
-      m_cps_.clear();
-
-      for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
-      {
-        if (it->second == 0) { it = m_ltcc_.erase(it); }
-        else if (it->second > g_energy_reduction_ceil)
-        {
-          it->second = g_energy_reduction_ceil;
-          ++it;
-        }
-        else { ++it; }
-      }
-
-      m_fps_counter_ = 0.f;
-    }
-
-    if (m_ltcc_counter_ >= g_ltcc_window_interval)
-    {
-      for (auto it = m_ltcc_.begin(); it != m_ltcc_.end();)
-      {
-        if (it->second > 0)
-        {
-          if (!m_collided_objects_.contains(it->first)) { it->second--; }
-          if (it->second > g_energy_reduction_ceil) { it->second = g_energy_reduction_ceil; }
-
-          ++it;
-        }
-        else { it = m_ltcc_.erase(it); }
-      }
-
-      m_ltcc_counter_ = 0.f;
-    }
-
-    m_fps_counter_ += dt;
-    m_ltcc_counter_ += dt;
-
     UpdateInertiaTensor();
   }
 

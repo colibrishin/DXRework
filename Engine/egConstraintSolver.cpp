@@ -112,37 +112,18 @@ namespace Engine::Manager::Physics
          other_angular_vel, lhs_weight_pen, rhs_weight_pen
         );
 
-      // Fast collision penalty
-      const auto cps     = static_cast<float>(cl->GetCPS(p_rhs.lock()->GetID()));
-      const auto fps     = static_cast<float>(GetApplication().GetFPS());
-      auto       cps_val = cps / fps;
-
-      // Not collided object is given to solver.
-      if (!isfinite(cps))
-      {
-        cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
-      }
-
-      // Accumulated collision penalty
-      const auto collision_count = cl->GetCollisionCount(p_rhs.lock()->GetID());
-      const auto log_count       = std::clamp
-        (std::powf(2, collision_count), 2.f, static_cast<float>(g_energy_reduction_ceil));
-      const auto penalty     = log_count / static_cast<float>(g_energy_reduction_ceil);
-      const auto penalty_sum = std::clamp(cps_val + penalty, 0.f, 1.f);
-      const auto reduction   = 1.0f - penalty_sum;
-
       if (!rb->IsFixed())
       {
         tr->SetWorldPosition(pos + lhs_weight_pen);
-        rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
-        rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
+        rb->SetLinearMomentum(rb->GetLinearMomentum() - linear_vel);
+        rb->SetAngularMomentum(rb->GetAngularMomentum() - angular_vel);
       }
 
       if (!rb_other->IsFixed())
       {
         tr_other->SetWorldPosition(pos + rhs_weight_pen);
-        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (other_linear_vel * reduction));
-        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (other_angular_vel * reduction));
+        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + other_linear_vel);
+        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + other_angular_vel);
       }
     }
   }
