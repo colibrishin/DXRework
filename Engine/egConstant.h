@@ -22,9 +22,9 @@ namespace Engine
 
   // Physics Constants
   constexpr float   g_epsilon                 = 0.001f;
+  constexpr float   g_epsilon_squared         = g_epsilon * g_epsilon;
   constexpr float   g_gravity_acc             = 9.81f;
-  constexpr float   g_fixed_update_interval   = 0.01f;
-  constexpr float   g_lerp                    = 0.01f;
+  constexpr float   g_fixed_update_interval   = 0.1f;
   constexpr Vector3 g_gravity_vec             = Vector3(0.0f, -g_gravity_acc, 0.0f);
   constexpr float   g_restitution_coefficient = 0.6f;
   constexpr float   g_drag_coefficient        = 0.25f;
@@ -37,7 +37,7 @@ namespace Engine
   constexpr int    g_debug_y_initial         = 0;
   constexpr float  g_debug_message_life_time = 1.0f;
   constexpr size_t g_debug_message_max       = 1000;
-  constexpr bool   g_debug_observer          = false;
+  constexpr bool   g_debug_observer          = true;
 
   // Misc
   constexpr LONG_PTR g_invalid_id               = -1;
