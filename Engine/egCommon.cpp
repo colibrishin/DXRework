@@ -43,7 +43,6 @@ namespace Engine
     if (const auto cldr = object.GetComponent<Components::Collider>().lock())
     {
       auto bounding = cldr->GetBounding();
-      bounding.Transform(tr->GetWorldMatrix());
       return bounding;
     }
 
