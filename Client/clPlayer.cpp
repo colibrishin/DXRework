@@ -3,6 +3,7 @@
 
 #include "clCharacterController.hpp"
 #include "clDarkScene.h"
+#include "clHealth.h"
 #include "clHitbox.h"
 #include "clRifile.h"
 #include "egAnimator.h"
@@ -65,6 +66,11 @@ namespace Client::Object
     }
 
     AddComponent<State::CharacterController>();
+
+    {
+      const auto child = GetScene().lock()->CreateGameObject<HealthText>(LAYER_UI).lock();
+      AddChild(child);
+    }
   }
 
   void Player::PreUpdate(const float& dt) { Object::PreUpdate(dt); }
