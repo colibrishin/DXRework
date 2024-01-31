@@ -41,7 +41,7 @@ namespace Client::State
   void CharacterController::PreUpdate(const float& dt)
   {
     StateController::PreUpdate(dt);
-    CheckGround();
+    //CheckGround();
   }
 
   void CharacterController::PostUpdate(const float& dt) { StateController::PostUpdate(dt); }
