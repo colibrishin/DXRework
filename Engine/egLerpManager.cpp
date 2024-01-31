@@ -9,13 +9,19 @@ namespace Engine::Manager::Physics
 {
   LerpManager::LerpManager(SINGLETON_LOCK_TOKEN)
     : Singleton(),
-      m_elapsed_time_(g_epsilon_squared) {}
+      m_elapsed_time_(0.f) {}
 
-  void LerpManager::Initialize() { m_elapsed_time_ = g_epsilon_squared; }
+  void LerpManager::Initialize() { m_elapsed_time_ = 0.f; }
 
   void LerpManager::Update(const float& dt) {}
 
-  void LerpManager::Reset() { m_elapsed_time_ = g_epsilon_squared; }
+  void LerpManager::Reset()
+  {
+    // modff = divide integer part and fractional part
+    const float f = std::fmod(m_elapsed_time_, g_fixed_update_interval);
+    if (f > 0.f) { m_elapsed_time_ = f; }
+    else { m_elapsed_time_ = 0.f; }
+  }
 
   void LerpManager::PreUpdate(const float& dt) {}
 
@@ -47,7 +53,8 @@ namespace Engine::Manager::Physics
           {
             const auto current = t0->GetLocalPosition();
             const auto future  = t1->GetLocalPosition();
-            const auto lerp    = Vector3::Lerp(current, future, GetLerpFactor());
+            const auto f = GetLerpFactor();
+            const auto lerp    = Vector3::Lerp(current, future, f);
             Vector3CheckNanException(lerp);
 
             t0->SetLocalPosition(lerp);
@@ -61,6 +68,8 @@ namespace Engine::Manager::Physics
 
   float LerpManager::GetLerpFactor() const
   {
-    return m_elapsed_time_ / g_fixed_update_interval;
+    const auto f = m_elapsed_time_ / g_fixed_update_interval;
+    if (!isfinite(f)) { return g_epsilon_squared; }
+    else { return f; }
   }
 } // namespace Engine::Manager::Physics
