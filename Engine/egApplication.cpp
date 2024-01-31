@@ -241,7 +241,7 @@ namespace Engine::Manager
 
     if (elapsed >= g_fixed_update_interval)
     {
-      FixedUpdate(dt);
+      FixedUpdate(elapsed);
       elapsed = std::fmod(elapsed, g_fixed_update_interval);
     }
 
