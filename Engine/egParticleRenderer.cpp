@@ -16,8 +16,11 @@ namespace Engine::Components
   ParticleRenderer::ParticleRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_PARTICLE, owner),
       m_b_follow_owner_(true),
+      m_b_scaling_(false),
       m_duration_dt_(100.0f),
-      m_size_(0.5f) {}
+      m_size_(0.5f),
+      m_max_scale_size_(1.f),
+      m_min_scale_size_(1.f) {}
 
   void ParticleRenderer::Initialize()
   {
@@ -35,6 +38,14 @@ namespace Engine::Components
       GetRenderPipeline().SetParam(dt, dt_slot);
       // Max life time of a particle.
       GetRenderPipeline().SetParam(m_duration_dt_, duration_slot);
+
+      // Scaling properties
+      if (m_b_scaling_)
+      {
+        GetRenderPipeline().SetParam((int)m_b_scaling_, scaling_active_slot);
+        GetRenderPipeline().SetParam(m_min_scale_size_, scaling_min_slot);
+        GetRenderPipeline().SetParam(m_max_scale_size_, scaling_max_slot);
+      }
 
       m_sb_buffer_.SetData(m_instances_.size(), m_instances_.data());
       m_sb_buffer_.BindUAV();
@@ -101,8 +112,11 @@ namespace Engine::Components
   ParticleRenderer::ParticleRenderer()
     : RenderComponent(RENDER_COM_T_PARTICLE, {}),
       m_b_follow_owner_(true),
+      m_b_scaling_(false),
       m_duration_dt_(100.0f),
-      m_size_(0.5f) {}
+      m_size_(0.5f),
+      m_max_scale_size_(1.f),
+      m_min_scale_size_(1.f) {}
 
   void ParticleRenderer::SetSize(const float size) { m_size_ = size; }
 
@@ -112,5 +126,13 @@ namespace Engine::Components
     {
       m_cs_ = shader;
     }
+  }
+
+  void ParticleRenderer::SetScaling(const bool scaling) { m_b_scaling_ = scaling; }
+
+  void ParticleRenderer::SetScalingParam(const float min, const float max)
+  {
+    m_min_scale_size_ = min;
+    m_max_scale_size_ = max;
   }
 }

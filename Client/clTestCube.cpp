@@ -57,6 +57,8 @@ namespace Client::Object
       c_pr->SetCount(100);
       c_pr->LinearSpread(-Vector3::One, Vector3::One);
       c_pr->SetMaterial(Resources::Material::Get("NormalSpecularSphere"));
+      c_pr->SetScaling(true);
+      c_pr->SetScalingParam(0.25, 2.f);
       AddChild(child);
     }
   }
