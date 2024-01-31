@@ -360,4 +360,6 @@ namespace Client::State
       }
     }
   }
+
+  UINT CharacterController::GetHealth() const { return m_hp_; }
 } // namespace Client::State
