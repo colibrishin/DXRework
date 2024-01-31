@@ -59,6 +59,13 @@ namespace Engine
     // attempt to insert outside of the map
     if (this == nullptr) { return false; }
 
+    if (!m_b_initialized_)
+    {
+    	m_insertion_queue_.push(obj);
+        Build();
+        return true;
+    }
+
     // This will be the last node that successfully contains the object
     Octree*             last = nullptr;
     std::stack<Octree*> stack;
