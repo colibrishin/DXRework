@@ -33,8 +33,8 @@ namespace Engine::Components
     Vector3    GetWorldPosition();
     Quaternion GetWorldRotation() const;
     Vector3    GetWorldScale() const;
-    Vector3    GetWorldPreviousPosition() const;
-    Vector3    GetLocalPreviousPosition() const;
+    Vector3    GetWorldPreviousPositionPerFrame() const;
+    Vector3    GetLocalPreviousPositionPerFrame() const;
     Vector3    GetLocalPosition() const;
     Quaternion GetLocalRotation() const;
     Vector3    GetLocalScale() const;

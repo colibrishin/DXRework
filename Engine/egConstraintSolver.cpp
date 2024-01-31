@@ -26,8 +26,6 @@ namespace Engine::Manager::Physics
 
   void ConstraintSolver::FixedUpdate(const float& dt)
   {
-    if (!GetDeltaTimeDeviation().Stable()) { return; }
-
     auto& infos = GetCollisionDetector().GetCollisionInfo();
 
     static tbb::affinity_partitioner ap;
@@ -50,10 +48,10 @@ namespace Engine::Manager::Physics
     auto rhs = p_rhs;
 
     auto rb = lhs.lock()->GetComponent<Components::Rigidbody>().lock();
-    auto tr = lhs.lock()->GetComponent<Components::Transform>().lock();
+    auto lt0 = lhs.lock()->GetComponent<Components::Transform>().lock();
 
     auto rb_other = rhs.lock()->GetComponent<Components::Rigidbody>().lock();
-    auto tr_other = rhs.lock()->GetComponent<Components::Transform>().lock();
+    auto rt0 = rhs.lock()->GetComponent<Components::Transform>().lock();
 
     if (rb && rb_other)
     {
@@ -70,7 +68,7 @@ namespace Engine::Manager::Physics
       if (rb->IsFixed())
       {
         std::swap(rb, rb_other);
-        std::swap(tr, tr_other);
+        std::swap(lt0, rt0);
         std::swap(lhs, rhs);
         std::swap(cl, cl_other);
       }
@@ -83,8 +81,8 @@ namespace Engine::Manager::Physics
       Vector3 other_linear_vel;
       Vector3 other_angular_vel;
 
-      const Vector3 pos       = tr->GetWorldPosition();
-      const Vector3 other_pos = tr_other->GetWorldPosition();
+      const Vector3 pos       = lt0->GetWorldPosition();
+      const Vector3 other_pos = rt0->GetWorldPosition();
 
       Vector3 lhs_normal;
       float   lhs_pen;
@@ -112,37 +110,20 @@ namespace Engine::Manager::Physics
          other_angular_vel, lhs_weight_pen, rhs_weight_pen
         );
 
-      // Fast collision penalty
-      const auto cps     = static_cast<float>(cl->GetCPS(p_rhs.lock()->GetID()));
-      const auto fps     = static_cast<float>(GetApplication().GetFPS());
-      auto       cps_val = cps / fps;
-
-      // Not collided object is given to solver.
-      if (!isfinite(cps))
-      {
-        cps_val = 0.f; // where fps is zero or cps value is moved to ltcc.
-      }
-
-      // Accumulated collision penalty
-      const auto collision_count = cl->GetCollisionCount(p_rhs.lock()->GetID());
-      const auto log_count       = std::clamp
-        (std::powf(2, collision_count), 2.f, static_cast<float>(g_energy_reduction_ceil));
-      const auto penalty     = log_count / static_cast<float>(g_energy_reduction_ceil);
-      const auto penalty_sum = std::clamp(cps_val + penalty, 0.f, 1.f);
-      const auto reduction   = 1.0f - penalty_sum;
-
       if (!rb->IsFixed())
       {
-        tr->SetWorldPosition(pos + lhs_weight_pen);
-        rb->SetLinearMomentum(rb->GetLinearMomentum() - (linear_vel * reduction));
-        rb->SetAngularMomentum(rb->GetAngularMomentum() - (angular_vel * reduction));
+        lt0->SetWorldPosition(pos + lhs_weight_pen);
+        rb->SetLinearMomentum(rb->GetLinearMomentum() - linear_vel);
+        rb->SetAngularMomentum(rb->GetAngularMomentum() - angular_vel);
+        rb->Synchronize();
       }
 
       if (!rb_other->IsFixed())
       {
-        tr_other->SetWorldPosition(pos + rhs_weight_pen);
-        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + (other_linear_vel * reduction));
-        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + (other_angular_vel * reduction));
+        rt0->SetWorldPosition(pos + rhs_weight_pen);
+        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + other_linear_vel);
+        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + other_angular_vel);
+        rb_other->Synchronize();
       }
     }
   }
@@ -152,17 +133,17 @@ namespace Engine::Manager::Physics
     const auto lhs = p_lhs.lock();
     const auto rhs = p_rhs.lock();
 
-    const auto ltr = lhs->GetComponent<Components::Transform>().lock();
-    const auto rtr = rhs->GetComponent<Components::Transform>().lock();
-
     const auto lcl = lhs->GetComponent<Components::Collider>().lock();
     const auto rcl = rhs->GetComponent<Components::Collider>().lock();
 
     const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
 
+    const auto t0 = lhs->GetComponent<Components::Transform>().lock();
+    const auto t1 = lrb->GetT1();
+
     // Move object back to the previous frame position.
-    const auto previous_position = ltr->GetWorldPreviousPosition();
-    ltr->SetWorldPosition(previous_position);
+    const auto previous_position = t0->GetWorldPreviousPositionPerFrame();
+    t0->SetWorldPosition(previous_position);
 
     const auto lbnd = lcl->GetBounding();
     const auto rbnd = rcl->GetBounding();
@@ -177,6 +158,8 @@ namespace Engine::Manager::Physics
 
     // Move object to the new position.
     const auto new_pos = previous_position + (dir * distance);
-    ltr->SetWorldPosition(new_pos);
+    t0->SetWorldPosition(new_pos);
+    // Change the future position to preventing the tunneling.
+    lrb->Synchronize();
   }
 } // namespace Engine::Manager::Physics

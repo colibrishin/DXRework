@@ -74,7 +74,6 @@ namespace Engine::Manager
     GetLerpManager().Initialize();
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
-    GetDeltaTimeDeviation().Initialize();
 
     ImGui_ImplWin32_Init(hWnd);
     ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -82,39 +81,7 @@ namespace Engine::Manager
 
   void Application::Tick()
   {
-    static float elapsed = g_epsilon;
-
-    if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
-
-    m_timer->Tick
-      (
-       [&]()
-       {
-         const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
-
-         ImGui_ImplDX11_NewFrame();
-         ImGui_ImplWin32_NewFrame();
-         ImGui::NewFrame();
-
-         PreUpdate(dt);
-
-         if (elapsed >= g_fixed_update_interval)
-         {
-           FixedUpdate(dt);
-           elapsed = g_epsilon;
-         }
-
-         Update(dt);
-
-         PostUpdate(dt);
-
-         PreRender(dt);
-         Render(dt);
-         PostRender(dt);
-
-         elapsed += dt;
-       }
-      );
+    m_timer->Tick([&]() { tickInternal(); });
   }
 
   void Application::PreUpdate(const float& dt)
@@ -135,7 +102,6 @@ namespace Engine::Manager
     GetDebugger().PreUpdate(dt);
     GetD3Device().PreUpdate(dt);
     GetToolkitAPI().PreUpdate(dt);
-    GetDeltaTimeDeviation().PreUpdate(dt);
   }
 
   void Application::FixedUpdate(const float& dt)
@@ -156,7 +122,6 @@ namespace Engine::Manager
     GetDebugger().FixedUpdate(dt);
     GetD3Device().FixedUpdate(dt);
     GetToolkitAPI().FixedUpdate(dt);
-    GetDeltaTimeDeviation().FixedUpdate(dt);
   }
 
   void Application::Update(const float& dt)
@@ -176,7 +141,6 @@ namespace Engine::Manager
     GetDebugger().Update(dt);
     GetD3Device().Update(dt);
     GetToolkitAPI().Update(dt);
-    GetDeltaTimeDeviation().Update(dt);
   }
 
   void Application::PreRender(const float& dt)
@@ -197,7 +161,6 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetRenderPipeline().PreRender(dt);
     GetD3Device().PreRender(dt);
-    GetDeltaTimeDeviation().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -217,7 +180,6 @@ namespace Engine::Manager
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
     GetD3Device().Render(dt);
-    GetDeltaTimeDeviation().Render(dt);
   }
 
   void Application::PostRender(const float& dt)
@@ -241,7 +203,6 @@ namespace Engine::Manager
 
     GetToolkitAPI().PostRender(dt);
     GetD3Device().PostRender(dt);
-    GetDeltaTimeDeviation().PostRender(dt);
   }
 
   void Application::PostUpdate(const float& dt)
@@ -261,7 +222,34 @@ namespace Engine::Manager
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);
-    GetDeltaTimeDeviation().PostUpdate(dt);
+  }
+
+  void Application::tickInternal()
+  {
+    static float elapsed = 0.f;
+
+    if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
+    const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
+
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    PreUpdate(dt);
+    Update(dt);
+    PostUpdate(dt);
+
+    if (elapsed >= g_fixed_update_interval)
+    {
+      FixedUpdate(dt);
+      elapsed = std::fmod(elapsed, g_fixed_update_interval);
+    }
+
+    PreRender(dt);
+    Render(dt);
+    PostRender(dt);
+
+    elapsed += dt;
   }
 
   LRESULT Application::MessageHandler(

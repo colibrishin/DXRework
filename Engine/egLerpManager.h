@@ -25,6 +25,6 @@ namespace Engine::Manager::Physics
     friend struct SingletonDeleter;
     ~LerpManager() override = default;
 
-    float m_elapsedTime_;
+    float m_elapsed_time_;
   };
 } // namespace Engine::Manager::Physics

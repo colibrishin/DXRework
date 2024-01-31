@@ -234,9 +234,9 @@ namespace Engine::Components
            m_animation_matrix_;
   }
 
-  Vector3 Transform::GetWorldPreviousPosition() const { return m_world_previous_position_; }
+  Vector3 Transform::GetWorldPreviousPositionPerFrame() const { return m_world_previous_position_; }
 
-  Vector3 Transform::GetLocalPreviousPosition() const { return m_previous_position_; }
+  Vector3 Transform::GetLocalPreviousPositionPerFrame() const { return m_previous_position_; }
 
   Matrix Transform::GetWorldMatrix()
   {

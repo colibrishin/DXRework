@@ -44,8 +44,6 @@ namespace Engine::Manager::Physics
 
   void CollisionDetector::FixedUpdate(const float& dt)
   {
-    if (!GetDeltaTimeDeviation().Stable()) { return; }
-
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
       const auto& tree = scene->GetObjectTree();

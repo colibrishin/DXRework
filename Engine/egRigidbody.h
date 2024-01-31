@@ -13,10 +13,14 @@ namespace Engine::Components
 
     ~Rigidbody() override = default;
 
+    Transform* GetT1() const;
+
     void SetGravityOverride(bool gravity);
     void SetGrounded(bool grounded);
     void SetFrictionCoefficient(float mu);
     void SetFixed(bool fixed);
+    // This will update the T1 from current Transform.
+    void Synchronize();
 
     void SetLinearMomentum(const Vector3& velocity);
     void SetAngularMomentum(const Vector3& velocity);
@@ -74,6 +78,8 @@ namespace Engine::Components
 
     Vector3 m_force_;
     Vector3 m_torque_;
+
+    std::unique_ptr<Transform> m_t1_;
   };
 } // namespace Engine::Component
 

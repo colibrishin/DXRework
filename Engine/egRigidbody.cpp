@@ -42,13 +42,17 @@ namespace Engine::Components
       m_bFixed(false),
       m_friction_mu_(0.0f) {}
 
-  void Rigidbody::SetGravityOverride(bool gravity) { m_bGravityOverride = gravity; }
+  Transform* Rigidbody::GetT1() const { return m_t1_.get(); }
+
+  void     Rigidbody::SetGravityOverride(bool gravity) { m_bGravityOverride = gravity; }
 
   void Rigidbody::SetGrounded(bool grounded) { m_bGrounded = grounded; }
 
   void Rigidbody::SetFrictionCoefficient(float mu) { m_friction_mu_ = mu; }
 
   void Rigidbody::SetFixed(bool fixed) { m_bFixed = fixed; }
+
+  void Rigidbody::Synchronize() { m_t1_ = std::make_unique<Transform>(*GetOwner().lock()->GetComponent<Transform>().lock()); }
 
   void Rigidbody::SetLinearMomentum(const Vector3& velocity)
   {
@@ -119,7 +123,7 @@ namespace Engine::Components
 
   void Rigidbody::PostUpdate(const float& dt) { Component::PostUpdate(dt); }
 
-  void Rigidbody::FixedUpdate(const float& dt) {}
+  void Rigidbody::FixedUpdate(const float& dt) { Synchronize(); }
 
   void Rigidbody::OnDeserialized() { Component::OnDeserialized(); }
 
