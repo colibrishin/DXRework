@@ -70,7 +70,7 @@ namespace Engine
 
     // Utility function for getting the octant bounds.
     static std::vector<BoundingBox> __vectorcall GetBounds(const Vector3& extent, const Vector3& center);
-    static BoundingBox __vectorcall GetBounds(const Vector3& extent, const Vector3& center, eOctant region);
+    static BoundingBox __vectorcall GetBound(const Vector3& extent, const Vector3& center, eOctant region);
 
     Octree* root();
     Octree* parent() const;

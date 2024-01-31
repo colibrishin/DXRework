@@ -59,6 +59,13 @@ namespace Engine
     // attempt to insert outside of the map
     if (this == nullptr) { return false; }
 
+    if (!m_b_initialized_)
+    {
+    	m_insertion_queue_.push(obj);
+        Build();
+        return true;
+    }
+
     // This will be the last node that successfully contains the object
     Octree*             last = nullptr;
     std::stack<Octree*> stack;
@@ -121,7 +128,7 @@ namespace Engine
           }
           else
           {
-            const auto bound       = GetBounds(node_extent, node_center, static_cast<eOctant>(i));
+            const auto bound       = GetBound(node_extent, node_center, static_cast<eOctant>(i));
             const auto bound_check = bounding_value.ContainsBy(bound);
 
             if (bound_check == DirectX::ContainmentType::CONTAINS)
@@ -291,7 +298,7 @@ namespace Engine
               }
               else
               {
-                const auto bound       = GetBounds(node_extent * 0.5f, node_center, static_cast<eOctant>(i));
+                const auto bound       = GetBound(node_extent, node_center, static_cast<eOctant>(i));
                 const auto bound_check = obj_bound.ContainsBy(bound);
 
                 if (bound_check == DirectX::ContainmentType::CONTAINS)
@@ -417,8 +424,30 @@ namespace Engine
 
       for (const auto& obj : node->m_values_) { m_insertion_queue_.push(obj); }
 
-      for (int i = 0; i < octant_count; ++i) { if (node->m_children_[i]) { stack.push(node->m_children_[i].get()); } }
+      for (int i = 0; i < octant_count; ++i)
+      {
+	      if (node->m_children_[i])
+	      {
+	      	auto& child = node->m_children_[i];
+            if (child->m_active_children_ == 0 || child->m_values_.size() <= 1)
+            {
+                if (child->m_values_.size() == 1)
+				{
+					m_insertion_queue_.push(child->m_values_[0]);
+				}
+
+                node->m_children_[i].reset();
+                node->m_active_children_.reset(i);
+            }
+            else
+            {
+                stack.push(node->m_children_[i].get());
+            }
+	      }
+      }
     }
+
+    m_values_.clear();
 
     // Rebuild the tree
     UpdateInternal();
@@ -471,7 +500,7 @@ namespace Engine
     return {tlfb, trfb, blfb, brfb, tlbb, trbb, blbb, brbb};
   }
 
-  BoundingBox __vectorcall Octree::GetBounds(
+  BoundingBox __vectorcall Octree::GetBound(
     const Vector3& extent, const Vector3& center, const eOctant region
   )
   {
