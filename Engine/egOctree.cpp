@@ -128,7 +128,7 @@ namespace Engine
           }
           else
           {
-            const auto bound       = GetBounds(node_extent, node_center, static_cast<eOctant>(i));
+            const auto bound       = GetBound(node_extent, node_center, static_cast<eOctant>(i));
             const auto bound_check = bounding_value.ContainsBy(bound);
 
             if (bound_check == DirectX::ContainmentType::CONTAINS)
@@ -298,7 +298,7 @@ namespace Engine
               }
               else
               {
-                const auto bound       = GetBounds(node_extent * 0.5f, node_center, static_cast<eOctant>(i));
+                const auto bound       = GetBound(node_extent, node_center, static_cast<eOctant>(i));
                 const auto bound_check = obj_bound.ContainsBy(bound);
 
                 if (bound_check == DirectX::ContainmentType::CONTAINS)
@@ -478,7 +478,7 @@ namespace Engine
     return {tlfb, trfb, blfb, brfb, tlbb, trbb, blbb, brbb};
   }
 
-  BoundingBox __vectorcall Octree::GetBounds(
+  BoundingBox __vectorcall Octree::GetBound(
     const Vector3& extent, const Vector3& center, const eOctant region
   )
   {
