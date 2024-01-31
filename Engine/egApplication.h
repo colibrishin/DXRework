@@ -50,6 +50,9 @@ namespace Engine::Manager
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
+    void tickInternal();
+
+
     HWND m_hWnd = nullptr;
 
     // Input

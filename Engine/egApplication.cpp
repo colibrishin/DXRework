@@ -81,38 +81,7 @@ namespace Engine::Manager
 
   void Application::Tick()
   {
-    static float elapsed = 0.f;
-
-    if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
-
-    m_timer->Tick
-      (
-       [&]()
-       {
-         const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
-
-         ImGui_ImplDX11_NewFrame();
-         ImGui_ImplWin32_NewFrame();
-         ImGui::NewFrame();
-
-         PreUpdate(dt);
-         Update(dt);
-
-         if (elapsed >= g_fixed_update_interval)
-         {
-           FixedUpdate(elapsed);
-           elapsed = 0.f;
-         }
-
-         PostUpdate(dt);
-
-         PreRender(dt);
-         Render(dt);
-         PostRender(dt);
-
-         elapsed += dt;
-       }
-      );
+    m_timer->Tick([&]() { tickInternal(); });
   }
 
   void Application::PreUpdate(const float& dt)
@@ -253,7 +222,34 @@ namespace Engine::Manager
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);
-    GetDeltaTimeDeviation().PostUpdate(dt);
+  }
+
+  void Application::tickInternal()
+  {
+    static float elapsed = 0.f;
+
+    if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
+    const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
+
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    PreUpdate(dt);
+    Update(dt);
+    PostUpdate(dt);
+
+    if (elapsed >= g_fixed_update_interval)
+    {
+      FixedUpdate(dt);
+      elapsed = std::fmod(elapsed, g_fixed_update_interval);
+    }
+
+    PreRender(dt);
+    Render(dt);
+    PostRender(dt);
+
+    elapsed += dt;
   }
 
   LRESULT Application::MessageHandler(
