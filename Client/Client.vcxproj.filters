@@ -81,6 +81,9 @@
     <Filter Include="Resource\ComputeShader">
       <UniqueIdentifier>{6e2bf49d-5f8d-4a30-a03d-176c473b9744}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Health">
+      <UniqueIdentifier>{4d29236d-2f58-4473-96cc-35ff21cddfae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -140,6 +143,9 @@
     <ClInclude Include="clParticleCompute.h">
       <Filter>Resource\ComputeShader</Filter>
     </ClInclude>
+    <ClInclude Include="clHealth.h">
+      <Filter>Object\Health</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -189,6 +195,9 @@
     </ClCompile>
     <ClCompile Include="clParticleCompute.cpp">
       <Filter>Resource\ComputeShader</Filter>
+    </ClCompile>
+    <ClCompile Include="clHealth.cpp">
+      <Filter>Object\Health</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
