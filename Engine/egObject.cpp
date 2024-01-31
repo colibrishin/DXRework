@@ -170,13 +170,13 @@ namespace Engine::Abstract
       }
     }
 
-    if (m_culled_ && !GetProjectionFrustum().CheckRender(GetWeakPtr<Object>())) { return; }
-
     for (const auto& child : m_children_cache_ | std::views::values)
     {
       if (const auto locked = child.lock())
       {
         if (!locked->GetActive()) { continue; }
+
+        if (locked->GetCulled() && !GetProjectionFrustum().CheckRender(locked)) { continue; }
 
         locked->Render(dt);
       }
