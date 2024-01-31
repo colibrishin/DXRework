@@ -28,8 +28,6 @@ namespace Engine::Manager::Physics
 
   void PhysicsManager::FixedUpdate(const float& dt)
   {
-    if (!GetDeltaTimeDeviation().Stable()) { return; }
-
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
       const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();

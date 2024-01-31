@@ -87,7 +87,6 @@
     <ClInclude Include="egSound.h" />
     <ClInclude Include="egSoundPlayer.h" />
     <ClInclude Include="egSphereMesh.h" />
-    <ClInclude Include="egDeltaTimeDeviation.h" />
     <ClInclude Include="egStateController.hpp" />
     <ClInclude Include="egStructuredBuffer.hpp" />
     <ClInclude Include="egTaskScheduler.h" />
@@ -161,7 +160,6 @@
     <ClCompile Include="egSound.cpp" />
     <ClCompile Include="egSoundPlayer.cpp" />
     <ClCompile Include="egSphereMesh.cpp" />
-    <ClCompile Include="egDeltaTimeDeviation.cpp" />
     <ClCompile Include="egStateController.cpp" />
     <ClCompile Include="egTaskScheduler.cpp" />
     <ClCompile Include="egText.cpp" />
