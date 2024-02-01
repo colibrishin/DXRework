@@ -9,6 +9,12 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(RenderComponent))
  _ARTAG(m_cs_name_)
  _ARTAG(m_instances_)
+ _ARTAG(m_b_follow_owner_)
+ _ARTAG(m_b_scaling_)
+ _ARTAG(m_duration_dt_)
+ _ARTAG(m_size_)
+ _ARTAG(m_max_scale_size_)
+ _ARTAG(m_min_scale_size_)
 )
 
 namespace Engine::Components
@@ -47,18 +53,18 @@ namespace Engine::Components
         GetRenderPipeline().SetParam(m_max_scale_size_, scaling_max_slot);
       }
 
-      m_sb_buffer_.SetData(m_instances_.size(), m_instances_.data());
+      m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
       m_sb_buffer_.BindUAV();
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
-      const UINT group_count = m_instances_.size() / flatten;
-      const UINT remainder   = m_instances_.size() % flatten;
+      const UINT group_count = static_cast<UINT>(m_instances_.size() / flatten);
+      const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch();
       m_sb_buffer_.UnbindUAV();
-      m_sb_buffer_.GetData(m_instances_.size(), m_instances_.data());
+      m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
     }
 
     // Remove inactive particles.

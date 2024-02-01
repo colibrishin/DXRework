@@ -19,6 +19,8 @@ namespace Engine::Components::Base
     std::string          GetMaterialName() const noexcept;
     eRenderComponentType GetType() const noexcept;
 
+    void OnDeserialized() override;
+
   private:
     SERIALIZER_ACCESS
     RenderComponent();

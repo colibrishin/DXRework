@@ -6,6 +6,12 @@
 #include "egMaterial.h"
 #include "egShape.h"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Engine::Components::ModelRenderer,
+ _ARTAG(_BSTSUPER(RenderComponent))
+)
+
 namespace Engine::Components
 {
   ModelRenderer::ModelRenderer(const WeakObject& owner)

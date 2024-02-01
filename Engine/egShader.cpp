@@ -49,7 +49,7 @@ namespace Engine::Resources
           const auto ids = GetD3Device().GenerateInputDescription(blob.Get());
           GetD3Device().GetDevice()->CreateInputLayout
             (
-             ids.data(), ids.size(), blob->GetBufferPointer(),
+             ids.data(), static_cast<UINT>(ids.size()), blob->GetBufferPointer(),
              blob->GetBufferSize(), m_il_.ReleaseAndGetAddressOf()
             );
           GetD3Device().GetDevice()->CreateVertexShader

@@ -63,7 +63,7 @@ namespace Engine::Resources
 
         if (type == RES_T_TEX)
         {
-          const UINT idx                = std::distance(resources.begin(), it);
+          const UINT idx                = static_cast<UINT>(std::distance(resources.begin(), it));
           m_material_cb_.flags.tex[idx] = 1;
         }
 
@@ -93,7 +93,7 @@ namespace Engine::Resources
         if (type == RES_T_TEX)
         {
           // todo: distinguish tex type
-          const UINT idx = std::distance(resources.begin(), it);
+          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
           res->GetSharedPtr<Texture>()->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, idx, SHADER_PIXEL);
         }
 
@@ -145,7 +145,7 @@ namespace Engine::Resources
     const auto it   = std::ranges::find_if(texs, [&name](const StrongResource& res) { return res->GetName() == name; });
 
     if (it == texs.end()) { return; }
-    if (const UINT idx = std::distance(texs.begin(), it); idx == slot) { return; }
+    if (const UINT idx = static_cast<UINT>(std::distance(texs.begin(), it)); idx == slot) { return; }
 
     std::iter_swap(texs.begin() + slot, it);
   }

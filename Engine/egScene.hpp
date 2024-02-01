@@ -17,6 +17,7 @@ namespace Engine
 
     virtual void Initialize_INTERNAL() = 0;
     void         DisableControllers();
+    void         AddObserver();
     void         Initialize() final;
 
     void PreUpdate(const float& dt) override;
@@ -153,22 +154,18 @@ namespace Engine
     SERIALIZER_ACCESS
     friend class Manager::SceneManager;
 
-    void Synchronize(const StrongScene& scene);
-    void OpenLoadPopup(bool& is_load_open);
-
     void AssignLocalIDToObject(const StrongObject& obj);
-    void RegisterLightToManager(const StrongLight& obj);
-    void UnregisterLightFromManager(const StrongLight& obj);
 
     // Functions for the next frame.
     // Add the object from the scene finally. this function should be called at the next frame.
     void AddObjectFinalize(eLayerType layer, const StrongObject& obj);
     // Remove the object from the scene finally. this function should be called at the next frame.
     void RemoveObjectFinalize(GlobalEntityID id, eLayerType layer);
-    // Initialize the scene finally. this function should be called at the next frame.
-    void InitializeFinalize();
 
-    virtual void AddCustomObject();
+    void synchronize(const WeakScene& ptr_scene);
+
+    // Add the entry to the imgui menu that will creates the object.
+    virtual void addCustomObject() = 0;
 
     bool m_b_scene_imgui_open_;
 

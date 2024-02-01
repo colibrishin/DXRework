@@ -42,8 +42,8 @@ namespace Engine::Manager
         if (ImGui::Button("Load"))
         {
           const auto scene = Serializer::Deserialize<Scene>(buf);
-
-          GetActiveScene().lock()->Synchronize(scene);
+          AddScene(scene);
+          SetActive(scene);
 
           m_b_load_popup_ = false;
           ImGui::CloseCurrentPopup();
@@ -98,7 +98,7 @@ namespace Engine::Manager
 
         if (ImGui::MenuItem("Light")) { GetActiveScene().lock()->CreateGameObject<Objects::Light>(LAYER_LIGHT); }
 
-        GetActiveScene().lock()->AddCustomObject();
+        GetActiveScene().lock()->addCustomObject();
 
         ImGui::EndMenu();
       }
@@ -118,6 +118,69 @@ namespace Engine::Manager
       }
 
       ImGui::EndMainMenuBar();
+    }
+
+    if (m_b_load_popup_) { OpenLoadPopup(); }
+  }
+
+  void SceneManager::AddScene(const WeakScene& ptr_scene)
+  {
+    if (const auto scene = ptr_scene.lock())
+    {
+      if (m_scenes_[scene->GetType()].contains(scene->GetName()))
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_SYNC_SCENE,
+           {ptr_scene},
+           [this](const std::vector<std::any>& params, float)
+           {
+             const auto scene = std::any_cast<WeakScene>(params[0]);
+             m_active_scene_.lock()->synchronize(scene);
+           }
+          );
+      }
+      else
+      {
+        m_scenes_[scene->GetType()][scene->GetName()] = scene;
+      }
+    }
+  }
+
+  void SceneManager::SetActive(const WeakScene& ptr_scene)
+  {
+    if (const auto scene = ptr_scene.lock())
+    {
+      if (m_scenes_[scene->GetType()].contains(scene->GetName()))
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_SYNC_SCENE,
+           {ptr_scene},
+           [this](const std::vector<std::any>& params, float)
+           {
+             const auto scene = std::any_cast<WeakScene>(params[0]);
+             m_active_scene_.lock()->synchronize(scene);
+           }
+          );
+      }
+      else
+      {
+        if (m_scenes_.contains(scene->GetType()) &&
+            m_scenes_[scene->GetType()].contains(scene->GetName()))
+        {
+          GetTaskScheduler().AddTask
+          (
+           TASK_ACTIVE_SCENE,
+           {ptr_scene},
+           [this](const std::vector<std::any>& params, float)
+           {
+             const auto scene = std::any_cast<WeakScene>(params[0]);
+             SetActiveFinalize(scene);
+           }
+          );
+        }
+      }
     }
   }
 } // namespace Engine::Manager

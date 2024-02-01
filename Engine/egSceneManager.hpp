@@ -34,7 +34,6 @@ namespace Engine::Manager
       // 1. At the start of the frame, scene will be set as active and initialized, resetting shadow manager, push back to the task queue if there is any object creation, which has the higher priority than the scene. it will be processed in the next frame.
       // 2. Scene is activated, passing through the first frame without any objects. This has the effect that averaging out the noticeable delta time spike.
       // 3. On the second frame, pushed objects are processed, and added to the scene.
-      // 4. Scene InitializeFinalize is called, and the scene loading is finished.
       if (m_scenes_.contains(which_scene<T>::value) && m_scenes_[which_scene<T>::value].contains(name))
       {
         GetTaskScheduler().AddTask
@@ -95,6 +94,11 @@ namespace Engine::Manager
   private:
     friend struct SingletonDeleter;
     ~SceneManager() override = default;
+
+    // Internal usage of add scene, used for un-deducible type (runtime).
+    void AddScene(const WeakScene& ptr_scene);
+    // Internal usage of set active, used for un-deducible type (runtime).
+    void SetActive(const WeakScene& ptr_scene);
 
     void SetActiveFinalize(const WeakScene& it);
     void OpenLoadPopup();

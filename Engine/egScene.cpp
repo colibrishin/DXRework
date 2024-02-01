@@ -16,24 +16,11 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine
 {
-  void Scene::DisableControllers()
-  {
-    // Note: accessor should be destroyed in used context, if not, it will cause deadlock.
-    ConcurrentWeakComRootMap::accessor accessor;
-    if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
-    {
-      const auto& states = accessor->second;
-
-      for (const auto& state : states | std::views::values)
-      {
-        const auto locked = state.lock();
-        locked->SetActive(false);
-      }
-    }
-  }
-
   void Scene::Initialize()
   {
+    // won't initialize if already initialized
+    if (IsInitialized()) { return; }
+
     Renderable::Initialize();
 
     for (int i = 0; i < LAYER_MAX; ++i)
@@ -52,25 +39,7 @@ namespace Engine
     light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
 
     Initialize_INTERNAL();
-
-    GetTaskScheduler().AddTask
-      (
-       TASK_INIT_SCENE,
-       {}, [this](const std::vector<std::any>&, const float) { InitializeFinalize(); }
-      );
-  }
-
-  void Scene::InitializeFinalize()
-  {
-#ifdef _DEBUG
-    if constexpr (g_debug_observer)
-    {
-      DisableControllers();
-      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-      m_observer_         = observer;
-      observer->AddChild(GetMainCamera());
-    }
-#endif // _DEBUG
+    AddObserver();
   }
 
   void Scene::AssignLocalIDToObject(const StrongObject& obj)
@@ -94,13 +63,6 @@ namespace Engine
     obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
   }
 
-  void Scene::RegisterLightToManager(const StrongLight& obj)
-  {
-    GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
-  }
-
-  void Scene::UnregisterLightFromManager(const StrongLight& obj) { GetShadowManager().UnregisterLight(obj); }
-
   void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
   {
     // add object to scene
@@ -109,16 +71,18 @@ namespace Engine
 
     if (layer == LAYER_LIGHT && obj->GetObjectType() != DEF_OBJ_T_LIGHT)
     {
-      static_assert
-        ("Only light object can be added to light layer");
+      throw std::logic_error("Only light object can be added to light layer");
     }
     else if (layer == LAYER_CAMERA && obj->GetObjectType() != DEF_OBJ_T_CAMERA)
     {
-      static_assert
-        ("Only camera object can be added to camera layer");
+      throw std::logic_error("Only camera object can be added to camera layer");
+    }
+    else if (layer != LAYER_UI && obj->GetObjectType() == DEF_OBJ_T_OBSERVER)
+    {
+      throw std::logic_error("Observer object can only be added to UI layer");
     }
 
-    if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { RegisterLightToManager(obj->GetSharedPtr<Objects::Light>()); }
+    if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>()); }
 
     if (const auto tr = obj->GetComponent<Components::Transform>().lock()) { m_object_position_tree_.Insert(obj); }
 
@@ -141,7 +105,7 @@ namespace Engine
       obj = acc->second;
     }
 
-    if (layer == LAYER_LIGHT) { UnregisterLightFromManager(obj.lock()->GetSharedPtr<Objects::Light>()); }
+    if (layer == LAYER_LIGHT) { GetShadowManager().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>()); }
 
     if (const auto locked = obj.lock())
     {
@@ -173,6 +137,36 @@ namespace Engine
     m_layers[layer]->RemoveGameObject(id);
   }
 
+  void Scene::synchronize(const WeakScene& ptr_scene)
+  {
+    if (const auto scene = ptr_scene.lock())
+    {
+      m_b_scene_imgui_open_ = scene->m_b_scene_imgui_open_;
+      m_main_camera_local_id_ = scene->m_main_camera_local_id_;
+      m_layers = scene->m_layers;
+      m_observer_ = scene->m_observer_;
+      m_mainCamera_ = scene->m_mainCamera_;
+      m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
+      m_cached_objects_ = scene->m_cached_objects_;
+      m_cached_components_ = scene->m_cached_components_;
+
+      m_object_position_tree_.Clear();
+
+      for (const auto obj : m_cached_objects_ | std::views::values)
+      {
+        if (const auto locked = obj.lock())
+        {
+          if (const auto tr = locked->GetComponent<Components::Transform>().lock())
+          {
+            m_object_position_tree_.Insert(locked);
+          }
+        }
+      }
+
+      m_object_position_tree_.Update();
+    }
+  }
+
   void Scene::RemoveGameObject(const GlobalEntityID id, eLayerType layer)
   {
     ConcurrentWeakObjGlobalMap::const_accessor acc;
@@ -193,12 +187,6 @@ namespace Engine
        [this, id, layer](const std::vector<std::any>&, const float) { RemoveObjectFinalize(id, layer); }
       );
   }
-
-  ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const { return m_layers[layer]->GetGameObjects(); }
-
-  WeakCamera Scene::GetMainCamera() const { return m_mainCamera_; }
-
-  const Octree& Scene::GetObjectTree() { return m_object_position_tree_; }
 
   WeakObject Scene::FindGameObject(GlobalEntityID id) const
   {
@@ -244,32 +232,11 @@ namespace Engine
     }
   }
 
-  eSceneType Scene::GetType() const { return m_type_; }
-
   Scene::Scene(const eSceneType type)
-    : m_main_camera_local_id_(g_invalid_id),
+    : m_b_scene_imgui_open_(false),
+      m_main_camera_local_id_(g_invalid_id),
       m_type_(type),
       m_object_position_tree_() {}
-
-  void Scene::Synchronize(const StrongScene& scene)
-  {
-    const auto sync = [this](const std::vector<std::any>& params, const float dt)
-    {
-      const auto scene = std::any_cast<StrongScene>(params[0]);
-
-      m_layers = scene->m_layers;
-
-      m_main_camera_local_id_ = scene->m_main_camera_local_id_;
-      m_mainCamera_           = scene->m_mainCamera_;
-      m_cached_objects_       = scene->m_cached_objects_;
-      m_cached_components_    = scene->m_cached_components_;
-      m_assigned_actor_ids_   = scene->m_assigned_actor_ids_;
-    };
-
-    GetTaskScheduler().AddTask(TASK_SYNC_SCENE, {scene}, sync);
-  }
-
-  void Scene::AddCustomObject() {}
 
   void Scene::PreUpdate(const float& dt)
   {
@@ -286,16 +253,6 @@ namespace Engine
   void Scene::PreRender(const float& dt)
   {
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PreRender(dt); }
-  }
-
-  void Scene::Save()
-  {
-    auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-    std::ranges::replace(name, ' ', '_');
-    std::ranges::replace(name, ':', '_');
-    name += ".txt";
-
-    Serializer::Serialize(name, GetSharedPtr<Scene>());
   }
 
   void Scene::Render(const float& dt)
@@ -318,6 +275,38 @@ namespace Engine
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt); }
   }
 
+  void Scene::Save()
+  {
+    auto name = std::to_string(GetID()) + " " + typeid(*this).name();
+    std::ranges::replace(name, ' ', '_');
+    std::ranges::replace(name, ':', '_');
+    name += ".txt";
+
+    Serializer::Serialize(name, GetSharedPtr<Scene>());
+  }
+  
+  eSceneType Scene::GetType() const { return m_type_; }
+  
+  ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const { return m_layers[layer]->GetGameObjects(); }
+
+  WeakCamera Scene::GetMainCamera() const { return m_mainCamera_; }
+
+  const Octree& Scene::GetObjectTree() { return m_object_position_tree_; }
+
+  void Scene::AddObserver()
+  {
+#ifdef _DEBUG
+    // add observer if flagged
+    if constexpr (g_debug_observer)
+    {
+      DisableControllers();
+      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
+      m_observer_         = observer;
+      observer->AddChild(GetMainCamera());
+    }
+#endif // _DEBUG
+  }
+
   void Scene::OnDeserialized()
   {
     Renderable::OnDeserialized();
@@ -336,13 +325,6 @@ namespace Engine
         }
       }
     }
-
-    GetShadowManager().Reset();
-
-    // todo: scene load is assuming that this scene will be the active scene.
-    auto lights = m_layers[LAYER_LIGHT]->GetGameObjects();
-
-    for (const auto& light : lights) { RegisterLightToManager(light.lock()->GetSharedPtr<Objects::Light>()); }
 
     // rebuild cache
     for (int i = 0; i < LAYER_MAX; ++i)
@@ -370,8 +352,8 @@ namespace Engine
       }
     }
 
+    // set main camera
     const auto& cameras = m_layers[LAYER_CAMERA]->GetGameObjects();
-
     const auto it = std::ranges::find_if
       (
        cameras, [this](const auto& obj)
@@ -382,20 +364,32 @@ namespace Engine
        }
       );
 
-    if (it != cameras.end()) { m_mainCamera_ = it->lock()->GetSharedPtr<Objects::Camera>(); }
-    else { m_mainCamera_ = cameras.begin()->lock()->GetSharedPtr<Objects::Camera>(); }
-
-    // @todo: rebuild octree.
-
-#ifdef _DEBUG
-    if constexpr (g_debug_observer)
+    // finding the main camera, if there is no main camera matches the local id, set the first camera as main camera.
+    if (it != cameras.end())
     {
-      DisableControllers();
-      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-      m_observer_         = observer;
-      observer->AddChild(GetMainCamera());
+      m_mainCamera_ = it->lock()->GetSharedPtr<Objects::Camera>();
     }
-#endif
+    else
+    {
+      m_mainCamera_ = cameras.begin()->lock()->GetSharedPtr<Objects::Camera>();
+      m_main_camera_local_id_ = cameras.begin()->lock()->GetLocalID();
+    }
+
+    // rebuild octree
+    m_object_position_tree_.Clear();
+
+    for (const auto& object : m_cached_objects_ | std::views::values)
+    {
+      if (const auto locked = object.lock();
+          locked->GetComponent<Components::Transform>().lock())
+      {
+        m_object_position_tree_.Insert(locked);
+      }
+    }
+
+    m_object_position_tree_.Update();
+
+    AddObserver();
   }
 
   void Scene::OnImGui()
@@ -426,6 +420,22 @@ namespace Engine
       }
 
       ImGui::End();
+    }
+  }
+
+  void Scene::DisableControllers()
+  {
+    // Note: accessor should be destroyed in used context, if not, it will cause deadlock.
+    ConcurrentWeakComRootMap::accessor accessor;
+    if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
+    {
+      const auto& states = accessor->second;
+
+      for (const auto& state : states | std::views::values)
+      {
+        const auto locked = state.lock();
+        locked->SetActive(false);
+      }
     }
   }
 } // namespace Engine
