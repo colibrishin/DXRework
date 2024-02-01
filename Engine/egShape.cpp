@@ -424,6 +424,7 @@ namespace Engine::Resources
       UpdateVertices();
 
       BoundingBox::CreateFromPoints(m_bounding_box_, total_vertices.size(), total_vertices.data(), sizeof(Vector3));
+      m_bounding_box_.Transform(m_bounding_box_, AiMatrixToDirectXTranspose(scene->mRootNode->mTransformation));
     }
     else { throw std::runtime_error("No meshes found in file"); }
   }
