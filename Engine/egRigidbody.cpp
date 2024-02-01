@@ -11,7 +11,7 @@ SERIALIZER_ACCESS_IMPL
  Engine::Components::Rigidbody,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component)) _ARTAG(m_bGrounded)
  _ARTAG(m_bGravityOverride) _ARTAG(m_bFixed) _ARTAG(m_friction_mu_)
- _ARTAG(m_linear_momentum_) _ARTAG(m_angular_momentum_)
+ _ARTAG(m_linear_velocity) _ARTAG(m_angular_velocity)
  _ARTAG(m_linear_friction_) _ARTAG(m_angular_friction_)
  _ARTAG(m_drag_force_) _ARTAG(m_force_) _ARTAG(m_torque_)
 )
@@ -52,18 +52,27 @@ namespace Engine::Components
 
   void Rigidbody::SetFixed(bool fixed) { m_bFixed = fixed; }
 
-  void Rigidbody::Synchronize() { m_t1_ = std::make_unique<Transform>(*GetOwner().lock()->GetComponent<Transform>().lock()); }
-
-  void Rigidbody::SetLinearMomentum(const Vector3& velocity)
+  void Rigidbody::Synchronize()
   {
-    Vector3CheckNanException(velocity);
-    m_linear_momentum_ = velocity;
+    m_t1_ = std::make_unique<Transform>(*GetOwner().lock()->GetComponent<Transform>().lock());
   }
 
-  void Rigidbody::SetAngularMomentum(const Vector3& velocity)
+  void Rigidbody::SetT0LinearVelocity(const Vector3& v) { m_linear_velocity = v; }
+
+  void Rigidbody::SetT0AngularVelocity(const Vector3& v) { m_angular_velocity = v; }
+
+  void Rigidbody::AddLinearImpulse(const Vector3& f)
   {
-    Vector3CheckNanException(velocity);
-    m_angular_momentum_ = velocity;
+    if (m_bFixed) { return; }
+    Vector3CheckNanException(f);
+    m_linear_velocity += f;
+  }
+
+  void Rigidbody::AddAngularImpulse(const Vector3& f)
+  {
+    if (m_bFixed) { return; }
+    Vector3CheckNanException(f);
+    m_angular_velocity += f;
   }
 
   void Rigidbody::SetLinearFriction(const Vector3& friction) { m_linear_friction_ = friction; }
@@ -72,27 +81,19 @@ namespace Engine::Components
 
   void Rigidbody::SetDragForce(const Vector3& drag) { m_drag_force_ = drag; }
 
-  void Rigidbody::AddLinearMomentum(const Vector3& velocity)
-  {
-    Vector3CheckNanException(velocity);
-    m_linear_momentum_ += velocity;
-  }
-
-  void Rigidbody::AddAngularMomentum(const Vector3& velocity)
-  {
-    Vector3CheckNanException(velocity);
-    m_angular_momentum_ += velocity;
-  }
-
   void Rigidbody::AddForce(const Vector3& force) { m_force_ += force; }
 
   void Rigidbody::AddTorque(const Vector3& torque) { m_torque_ += torque; }
 
   float Rigidbody::GetFrictionCoefficient() const { return m_friction_mu_; }
 
-  Vector3 Rigidbody::GetLinearMomentum() const { return m_linear_momentum_; }
+  Vector3 Rigidbody::GetT0LinearVelocity() const { return m_linear_velocity; }
 
-  Vector3 Rigidbody::GetAngularMomentum() const { return m_angular_momentum_; }
+  Vector3 Rigidbody::GetT0AngularVelocity() const { return m_angular_velocity; }
+
+  Vector3 Rigidbody::GetT1LinearVelocity(const float dt) const { return m_linear_velocity + GetForce() * dt; }
+
+  Vector3 Rigidbody::GetT1AngularVelocity(const float dt) const { return m_angular_velocity + GetTorque() * dt; }
 
   Vector3 Rigidbody::GetForce() const { return m_force_; }
 
@@ -137,8 +138,8 @@ namespace Engine::Components
     CheckboxAligned("Fixed", m_bFixed);
     ImGui::DragFloat("Rigidbody Friction", &m_friction_mu_, 0.01f, 0, 1);
 
-    ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_momentum_);
-    ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_momentum_);
+    ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity);
+    ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_velocity);
     ImGuiVector3Editable("Linear Friction", GetID(), "linear_friction", m_linear_friction_);
     ImGuiVector3Editable("Angular Friction", GetID(), "angular_friction", m_angular_friction_);
     ImGuiVector3Editable("Drag Force", GetID(), "drag_force", m_drag_force_);

@@ -22,22 +22,23 @@ namespace Engine::Components
     // This will update the T1 from current Transform.
     void Synchronize();
 
-    void SetLinearMomentum(const Vector3& velocity);
-    void SetAngularMomentum(const Vector3& velocity);
+    void SetT0LinearVelocity(const Vector3& v);
+    void SetT0AngularVelocity(const Vector3& v);
+    void AddLinearImpulse(const Vector3& f);
+    void AddAngularImpulse(const Vector3& f);
     void SetLinearFriction(const Vector3& friction);
     void SetAngularFriction(const Vector3& friction);
-
     void SetDragForce(const Vector3& drag);
 
-    void AddLinearMomentum(const Vector3& velocity);
-    void AddAngularMomentum(const Vector3& velocity);
     void AddForce(const Vector3& force);
     void AddTorque(const Vector3& torque);
 
     float GetFrictionCoefficient() const;
 
-    Vector3 GetLinearMomentum() const;
-    Vector3 GetAngularMomentum() const;
+    Vector3 GetT0LinearVelocity() const;
+    Vector3 GetT0AngularVelocity() const;
+    Vector3 GetT1LinearVelocity(const float dt) const;
+    Vector3 GetT1AngularVelocity(const float dt) const;
     Vector3 GetForce() const;
     Vector3 GetTorque() const;
 
@@ -69,8 +70,8 @@ namespace Engine::Components
 
     float m_friction_mu_;
 
-    Vector3 m_linear_momentum_;
-    Vector3 m_angular_momentum_;
+    Vector3 m_linear_velocity;
+    Vector3 m_angular_velocity;
 
     Vector3 m_linear_friction_;
     Vector3 m_angular_friction_;
