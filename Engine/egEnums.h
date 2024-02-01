@@ -71,6 +71,7 @@ namespace Engine
     TASK_ADD_OBJ,
     TASK_REM_OBJ,
     TASK_SYNC_SCENE,
+    TASK_INIT_SCENE,
     TASK_REM_SCENE,
     TASK_ACTIVE_SCENE,
     TASK_MAX

@@ -161,6 +161,7 @@ namespace Engine
     void AddObjectFinalize(eLayerType layer, const StrongObject& obj);
     // Remove the object from the scene finally. this function should be called at the next frame.
     void RemoveObjectFinalize(GlobalEntityID id, eLayerType layer);
+    void initializeFinalize();
 
     void synchronize(const WeakScene& ptr_scene);
 
