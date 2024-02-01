@@ -42,8 +42,8 @@ namespace Engine::Manager
         if (ImGui::Button("Load"))
         {
           const auto scene = Serializer::Deserialize<Scene>(buf);
-
-          GetActiveScene().lock()->Synchronize(scene);
+          AddScene(scene);
+          SetActive(scene);
 
           m_b_load_popup_ = false;
           ImGui::CloseCurrentPopup();
@@ -98,7 +98,7 @@ namespace Engine::Manager
 
         if (ImGui::MenuItem("Light")) { GetActiveScene().lock()->CreateGameObject<Objects::Light>(LAYER_LIGHT); }
 
-        GetActiveScene().lock()->AddCustomObject();
+        GetActiveScene().lock()->addCustomObject();
 
         ImGui::EndMenu();
       }
