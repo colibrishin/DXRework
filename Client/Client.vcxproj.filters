@@ -84,6 +84,9 @@
     <Filter Include="Object\Health">
       <UniqueIdentifier>{4d29236d-2f58-4473-96cc-35ff21cddfae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Missile">
+      <UniqueIdentifier>{c302eed8-34e3-44a6-abc3-3e6c02fde386}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -146,6 +149,9 @@
     <ClInclude Include="clHealth.h">
       <Filter>Object\Health</Filter>
     </ClInclude>
+    <ClInclude Include="clMissile.h">
+      <Filter>Object\Missile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -199,6 +205,9 @@
     <ClCompile Include="clHealth.cpp">
       <Filter>Object\Health</Filter>
     </ClCompile>
+    <ClCompile Include="clMissile.cpp">
+      <Filter>Object\Missile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -221,6 +230,9 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\Engine\cs_particle.hlsl">
       <Filter>Resource\ComputeShader</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Rocket.fbx">
+      <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

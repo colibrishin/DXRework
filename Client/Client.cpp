@@ -78,6 +78,7 @@ namespace Client
     Resources::Shape::Create("CharacterShape", "./Character.fbx");
     Resources::Shape::Create("RifleShape", "./Rifle.fbx");
     Resources::Shape::Create("PlayerShape", "./player.obj");
+    Resources::Shape::Create("MissileShape", "./Rocket.fbx");
 
     const auto cube = Resources::Shape::Create("CubeShape", "");
     cube->Add(Resources::Mesh::Get("CubeMesh"));
@@ -132,6 +133,12 @@ namespace Client
       const auto mtr = Resources::Material::Create("ColorCube", "");
       mtr->SetResource<Resources::Shader>("color");
       mtr->SetResource<Resources::Shape>("CubeShape");
+    }
+
+    {
+      const auto mtr = Resources::Material::Create("ColorMissile", "");
+      mtr->SetResource<Resources::Shader>("color");
+      mtr->SetResource<Resources::Shape>("MissileShape");
     }
 
     {
