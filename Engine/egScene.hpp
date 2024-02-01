@@ -158,8 +158,6 @@ namespace Engine
     void OpenLoadPopup(bool& is_load_open);
 
     void AssignLocalIDToObject(const StrongObject& obj);
-    void RegisterLightToManager(const StrongLight& obj);
-    void UnregisterLightFromManager(const StrongLight& obj);
 
     // Functions for the next frame.
     // Add the object from the scene finally. this function should be called at the next frame.

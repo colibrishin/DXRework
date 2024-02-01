@@ -76,13 +76,6 @@ namespace Engine
     obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
   }
 
-  void Scene::RegisterLightToManager(const StrongLight& obj)
-  {
-    GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
-  }
-
-  void Scene::UnregisterLightFromManager(const StrongLight& obj) { GetShadowManager().UnregisterLight(obj); }
-
   void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
   {
     // add object to scene
