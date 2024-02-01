@@ -113,8 +113,8 @@ namespace Engine::Manager::Physics
       if (!rb->IsFixed())
       {
         lt0->SetWorldPosition(pos + lhs_weight_pen);
-        rb->SetLinearMomentum(rb->GetLinearMomentum() - linear_vel);
-        rb->SetAngularMomentum(rb->GetAngularMomentum() - angular_vel);
+        rb->SetLinearMomentum(rb->GetLinearMomentum() + linear_vel);
+        rb->SetAngularMomentum(rb->GetAngularMomentum() + angular_vel);
         rb->Synchronize();
       }
 
