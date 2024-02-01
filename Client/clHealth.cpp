@@ -6,6 +6,12 @@
 #include "egGlobal.h"
 #include "egSceneManager.hpp"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Client::Object::HealthText,
+ _ARTAG(_BSTSUPER(Text))
+)
+
 namespace Client::Object
 {
   HealthText::HealthText()

@@ -6,6 +6,13 @@
 #include "egTransform.h"
 #include "egBaseCollider.hpp"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Client::Objects::Hitbox,
+ _ARTAG(_BSTSUPER(Engine::Abstract::Object))
+ _ARTAG(m_bounding_box_)
+)
+
 namespace Client::Objects
 {
   Vector3& operator*(XMFLOAT3& lhs, float rhs)

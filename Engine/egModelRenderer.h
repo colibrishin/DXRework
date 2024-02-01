@@ -24,3 +24,5 @@ namespace Engine::Components
 
   };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Components::ModelRenderer)

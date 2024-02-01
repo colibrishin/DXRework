@@ -9,6 +9,12 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(RenderComponent))
  _ARTAG(m_cs_name_)
  _ARTAG(m_instances_)
+ _ARTAG(m_b_follow_owner_)
+ _ARTAG(m_b_scaling_)
+ _ARTAG(m_duration_dt_)
+ _ARTAG(m_size_)
+ _ARTAG(m_max_scale_size_)
+ _ARTAG(m_min_scale_size_)
 )
 
 namespace Engine::Components
