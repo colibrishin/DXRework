@@ -331,16 +331,44 @@ namespace Engine
     }
   }
 
+  void Octree::Clear()
+  {
+    std::stack<Octree*> stack;
+    stack.push(this);
+
+    while (!stack.empty())
+    {
+      const auto node = stack.top();
+      stack.pop();
+
+      node->m_values_.clear();
+
+      for (int i = 0; i < octant_count; ++i)
+      {
+        if (node->m_children_[i])
+        {
+          if (node->m_children_[i]->m_active_children_ == 0 && node->m_values_.size() <= 1)
+          {
+            node->m_children_[i].reset();
+            node->m_active_children_.reset(i);
+          }
+          else
+          {
+            stack.push(node->m_children_[i].get());
+          }
+        }
+      }
+    }
+  }
+
   Octree::Octree(const BoundingBox& bounds)
     : m_parent_(nullptr),
       m_b_initialized_(false),
-      m_b_panic_(false),
       m_life_count_(node_lifespan) { m_bounds_ = bounds; }
 
   Octree::Octree(const BoundingBox& bounds, const std::vector<WeakT>& values)
     : m_parent_(nullptr),
       m_b_initialized_(false),
-      m_b_panic_(false),
       m_life_count_(node_lifespan)
   {
     m_bounds_ = bounds;
@@ -430,8 +458,9 @@ namespace Engine
       {
         if (node->m_children_[i])
         {
-          auto& child = node->m_children_[i];
-          if (child->m_active_children_ == 0 || child->m_values_.size() <= 1)
+          const auto& child = node->m_children_[i];
+
+          if (child->m_active_children_ == 0 && child->m_values_.size() <= 1)
           {
             if (child->m_values_.size() == 1) { m_insertion_queue_.push(child->m_values_[0]); }
 
