@@ -38,7 +38,7 @@ namespace Engine::Physics
     const Vector3 sumVel1 = vel1 + angVel1;
     const Vector3 sumVel2 = vel2 + angVel2;
 
-    const Vector3 contact_vel = rel1 - rel2;
+    const Vector3 contact_vel = rel2 - rel1;
 
     const float impulse_force = contact_vel.Dot(normal);
 
@@ -53,8 +53,8 @@ namespace Engine::Physics
 
     const Vector3 impulse = normal * j;
 
-    linear1 = -impulse / (1.f / invm1);
-    linear2 = impulse / (1.f / invm2);
+    linear1 = -impulse * (1.f / invm1);
+    linear2 = impulse * (1.f / invm2);
 
     angular1 = XMTensorCross(inertiaT1, -impulse.Cross(rel1));
     angular2 = XMTensorCross(inertiaT2, impulse.Cross(rel2));

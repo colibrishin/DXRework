@@ -41,7 +41,7 @@ namespace Client::State
   void CharacterController::PreUpdate(const float& dt)
   {
     StateController::PreUpdate(dt);
-    //CheckGround();
+    CheckGround();
   }
 
   void CharacterController::PostUpdate(const float& dt) { StateController::PostUpdate(dt); }
@@ -62,15 +62,14 @@ namespace Client::State
     const auto scene = GetSceneManager().GetActiveScene().lock();
 
     auto forward = GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
-    auto ortho   =
-      Vector3::Transform
-      (
-       forward,
-       Matrix::CreateRotationY(-XMConvertToRadians(90.0f))
-      ) * speed;
+    Vector3 ortho;
+    forward.Cross(Vector3::Up, ortho);
 
     forward *= {1.f, 0.f, 1.f};
     ortho *= {1.f, 0.f, 1.f};
+
+    forward *= speed;
+    ortho *= speed;
 
     bool pressed = false;
 
@@ -154,10 +153,14 @@ namespace Client::State
         const auto rcl = v.lock()->GetComponent<Components::Collider>().lock();
 
         if (!GetCollisionDetector().IsCollisionLayer(GetOwner().lock()->GetLayer(), v.lock()->GetLayer())) { continue; }
-
         if (!rcl || lcl == rcl) { continue; }
 
-        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down * 0.01f))
+        const auto owner = rcl->GetOwner().lock();
+        const auto owner_parent = owner->GetParent();
+
+        if (owner_parent.lock() == GetOwner().lock()) { continue; }
+
+        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down))
         {
           rb->SetGrounded(true);
           return;
@@ -360,4 +363,6 @@ namespace Client::State
       }
     }
   }
+
+  UINT CharacterController::GetHealth() const { return m_hp_; }
 } // namespace Client::State

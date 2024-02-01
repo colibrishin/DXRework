@@ -27,11 +27,9 @@ namespace Engine::Objects
     void SetRotation(float radian);
     void SetScale(float scale);
 
-  protected:
-    Text();
-
   private:
     SERIALIZER_ACCESS
+    Text();
 
     Vector2     m_position_;
     Vector4     m_color_;

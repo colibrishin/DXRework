@@ -30,6 +30,8 @@ namespace Client::State
     void Hit(const float damage);
     void Hitscan(const float damage, const float range) const;
 
+    UINT GetHealth() const;
+
   protected:
     CharacterController()
       : StateController({}),
