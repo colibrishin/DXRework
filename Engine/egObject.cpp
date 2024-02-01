@@ -272,8 +272,8 @@ namespace Engine::Abstract
 
     for (const auto& comp : m_components_ | std::views::values)
     {
-      comp->OnDeserialized();
       comp->SetOwner(GetSharedPtr<Object>());
+      comp->OnDeserialized();
       m_assigned_component_ids_.insert(comp->GetLocalID());
       m_cached_component_.insert(comp);
     }
