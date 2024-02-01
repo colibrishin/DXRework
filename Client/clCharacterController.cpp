@@ -62,15 +62,14 @@ namespace Client::State
     const auto scene = GetSceneManager().GetActiveScene().lock();
 
     auto forward = GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
-    auto ortho   =
-      Vector3::Transform
-      (
-       forward,
-       Matrix::CreateRotationY(-XMConvertToRadians(90.0f))
-      ) * speed;
+    Vector3 ortho;
+    forward.Cross(Vector3::Up, ortho);
 
     forward *= {1.f, 0.f, 1.f};
     ortho *= {1.f, 0.f, 1.f};
+
+    forward *= speed;
+    ortho *= speed;
 
     bool pressed = false;
 
