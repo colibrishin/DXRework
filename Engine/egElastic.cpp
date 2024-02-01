@@ -56,7 +56,7 @@ namespace Engine::Physics
     linear1 = -impulse * (1.f / invm1);
     linear2 = impulse * (1.f / invm2);
 
-    angular1 = XMTensorCross(inertiaT1, -impulse.Cross(rel1));
-    angular2 = XMTensorCross(inertiaT2, impulse.Cross(rel2));
+    angular1 = XMTensorCross(inertiaT1, -rel1.Cross(impulse));
+    angular2 = XMTensorCross(inertiaT2, rel2.Cross(impulse));
   }
 } // namespace Engine::Physics
