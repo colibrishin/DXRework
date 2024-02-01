@@ -246,7 +246,9 @@ namespace Engine
           continue; // Leaf node
         }
 
+#ifdef  _DEBUG
         GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
+#endif
         stack.pop();
         continue;
       }
@@ -426,24 +428,18 @@ namespace Engine
 
       for (int i = 0; i < octant_count; ++i)
       {
-	      if (node->m_children_[i])
-	      {
-	      	auto& child = node->m_children_[i];
-            if (child->m_active_children_ == 0 || child->m_values_.size() <= 1)
-            {
-                if (child->m_values_.size() == 1)
-				{
-					m_insertion_queue_.push(child->m_values_[0]);
-				}
+        if (node->m_children_[i])
+        {
+          auto& child = node->m_children_[i];
+          if (child->m_active_children_ == 0 || child->m_values_.size() <= 1)
+          {
+            if (child->m_values_.size() == 1) { m_insertion_queue_.push(child->m_values_[0]); }
 
-                node->m_children_[i].reset();
-                node->m_active_children_.reset(i);
-            }
-            else
-            {
-                stack.push(node->m_children_[i].get());
-            }
-	      }
+            node->m_children_[i].reset();
+            node->m_active_children_.reset(i);
+          }
+          else { stack.push(node->m_children_[i].get()); }
+        }
       }
     }
 
