@@ -52,25 +52,7 @@ namespace Engine
     light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
 
     Initialize_INTERNAL();
-
-    GetTaskScheduler().AddTask
-      (
-       TASK_INIT_SCENE,
-       {}, [this](const std::vector<std::any>&, const float) { InitializeFinalize(); }
-      );
-  }
-
-  void Scene::InitializeFinalize()
-  {
-#ifdef _DEBUG
-    if constexpr (g_debug_observer)
-    {
-      DisableControllers();
-      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-      m_observer_         = observer;
-      observer->AddChild(GetMainCamera());
-    }
-#endif // _DEBUG
+    AddObserver();
   }
 
   void Scene::AssignLocalIDToObject(const StrongObject& obj)
@@ -316,6 +298,20 @@ namespace Engine
   void Scene::PostUpdate(const float& dt)
   {
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt); }
+  }
+
+  void Scene::AddObserver()
+  {
+#ifdef _DEBUG
+    // add observer if flagged
+    if constexpr (g_debug_observer)
+    {
+      DisableControllers();
+      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
+      m_observer_         = observer;
+      observer->AddChild(GetMainCamera());
+    }
+#endif // _DEBUG
   }
 
   void Scene::OnDeserialized()

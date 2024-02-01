@@ -17,6 +17,7 @@ namespace Engine
 
     virtual void Initialize_INTERNAL() = 0;
     void         DisableControllers();
+    void         AddObserver();
     void         Initialize() final;
 
     void PreUpdate(const float& dt) override;
