@@ -96,6 +96,11 @@ namespace Engine::Manager
     friend struct SingletonDeleter;
     ~SceneManager() override = default;
 
+    // Internal usage of add scene, used for un-deducible type (runtime).
+    void AddScene(const WeakScene& ptr_scene);
+    // Internal usage of set active, used for un-deducible type (runtime).
+    void SetActive(const WeakScene& ptr_scene);
+
     void SetActiveFinalize(const WeakScene& it);
     void OpenLoadPopup();
 
