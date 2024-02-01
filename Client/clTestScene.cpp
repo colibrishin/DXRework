@@ -38,7 +38,7 @@ namespace Client::Scene
 
   void TestScene::PostRender(const float& dt) { Scene::PostRender(dt); }
 
-  void TestScene::AddCustomObject()
+  void TestScene::addCustomObject()
   {
     if (ImGui::MenuItem("PlaneObject")) { CreateGameObject<Object::PlaneObject>(LAYER_DEFAULT); }
   }

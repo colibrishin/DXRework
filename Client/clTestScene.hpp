@@ -29,7 +29,7 @@ namespace Client::Scene
     SERIALIZER_ACCESS
     GlobalEntityID m_player_id_;
 
-    void AddCustomObject() override;
+    void addCustomObject() override;
   };
 } // namespace Client::Scene
 
