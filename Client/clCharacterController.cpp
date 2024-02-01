@@ -41,7 +41,7 @@ namespace Client::State
   void CharacterController::PreUpdate(const float& dt)
   {
     StateController::PreUpdate(dt);
-    //CheckGround();
+    CheckGround();
   }
 
   void CharacterController::PostUpdate(const float& dt) { StateController::PostUpdate(dt); }
@@ -153,10 +153,14 @@ namespace Client::State
         const auto rcl = v.lock()->GetComponent<Components::Collider>().lock();
 
         if (!GetCollisionDetector().IsCollisionLayer(GetOwner().lock()->GetLayer(), v.lock()->GetLayer())) { continue; }
-
         if (!rcl || lcl == rcl) { continue; }
 
-        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down * 0.01f))
+        const auto owner = rcl->GetOwner().lock();
+        const auto owner_parent = owner->GetParent();
+
+        if (owner_parent.lock() == GetOwner().lock()) { continue; }
+
+        if (Components::Collider::Intersects(lcl, rcl, Vector3::Down))
         {
           rb->SetGrounded(true);
           return;
