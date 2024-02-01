@@ -68,19 +68,14 @@ namespace Engine::Manager::Physics
       rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto t1 = rb->GetT1();
 
-    float mass = 1.f;
-
-    if (cl) { mass = cl->GetInverseMass(); }
-
-    Vector3 linear_momentum = rb->GetLinearMomentum() + (rb->GetForce() * mass * dt);
+    Vector3 linear_momentum = rb->GetT1LinearVelocity(dt);
     const Vector3 linear_friction = Engine::Physics::EvalFriction
       (
        linear_momentum, rb->GetFrictionCoefficient(),
        dt
       );
 
-    const Vector3 angular_momentum =
-      rb->GetAngularMomentum() + rb->GetTorque() * mass * dt;
+    const Vector3 angular_momentum = rb->GetT1AngularVelocity(dt);
 
     linear_momentum += linear_friction;
     Engine::Physics::FrictionVelocityGuard(linear_momentum, linear_friction);
@@ -105,8 +100,8 @@ namespace Engine::Manager::Physics
 
     rb->Reset();
 
-    rb->SetLinearMomentum(linear_momentum);
-    rb->SetAngularMomentum(angular_momentum);
+    rb->SetT0LinearVelocity(linear_momentum);
+    rb->SetT0AngularVelocity(angular_momentum);
 
     rb->SetLinearFriction(linear_friction);
 

@@ -75,11 +75,7 @@ namespace Engine::Manager::Physics
 
       if (!cl || !cl_other) { return; }
 
-      Vector3 linear_vel;
-      Vector3 angular_vel;
-
-      Vector3 other_linear_vel;
-      Vector3 other_angular_vel;
+      Vector3 llimp, laimp, rlimp, raimp;
 
       const Vector3 pos       = lt0->GetWorldPosition();
       const Vector3 other_pos = rt0->GetWorldPosition();
@@ -103,26 +99,26 @@ namespace Engine::Manager::Physics
       Engine::Physics::EvalImpulse
         (
          pos, other_pos, collision_point, lhs_pen, lhs_normal, cl->GetInverseMass(),
-         cl_other->GetInverseMass(), rb->GetAngularMomentum(),
-         rb_other->GetAngularMomentum(), rb->GetLinearMomentum(),
-         rb_other->GetLinearMomentum(), cl->GetInertiaTensor(),
-         cl_other->GetInertiaTensor(), linear_vel, other_linear_vel, angular_vel,
-         other_angular_vel, lhs_weight_pen, rhs_weight_pen
+         cl_other->GetInverseMass(), rb->GetT0AngularVelocity(),
+         rb_other->GetT0AngularVelocity(), rb->GetT0LinearVelocity(),
+         rb_other->GetT0LinearVelocity(), cl->GetInertiaTensor(),
+         cl_other->GetInertiaTensor(), llimp, rlimp, laimp,
+         raimp, lhs_weight_pen, rhs_weight_pen
         );
 
       if (!rb->IsFixed())
       {
         lt0->SetWorldPosition(pos + lhs_weight_pen);
-        rb->SetLinearMomentum(rb->GetLinearMomentum() + linear_vel);
-        rb->SetAngularMomentum(rb->GetAngularMomentum() + angular_vel);
+        rb->AddLinearImpulse(llimp);
+        rb->AddAngularImpulse(laimp);
         rb->Synchronize();
       }
 
       if (!rb_other->IsFixed())
       {
         rt0->SetWorldPosition(pos + rhs_weight_pen);
-        rb_other->SetLinearMomentum(rb_other->GetLinearMomentum() + other_linear_vel);
-        rb_other->SetAngularMomentum(rb_other->GetAngularMomentum() + other_angular_vel);
+        rb_other->AddLinearImpulse(rlimp);
+        rb_other->AddAngularImpulse(raimp);
         rb_other->Synchronize();
       }
     }
@@ -148,7 +144,7 @@ namespace Engine::Manager::Physics
     const auto lbnd = lcl->GetBounding();
     const auto rbnd = rcl->GetBounding();
 
-    const auto vel = lrb->GetLinearMomentum();
+    const auto vel = lrb->GetT0LinearVelocity();
     Vector3    dir;
     vel.Normalize(dir);
 
