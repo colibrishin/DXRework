@@ -35,6 +35,8 @@ namespace Client::Scene
 
   void DarkScene::PostRender(const float& dt) { Scene::PostRender(dt); }
 
+  void DarkScene::addCustomObject() {}
+
   void DarkScene::Initialize_INTERNAL()
   {
     const auto cube = CreateGameObject<Object::TestCube>(LAYER_DEFAULT).lock();

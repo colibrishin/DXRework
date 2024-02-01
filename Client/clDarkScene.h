@@ -27,6 +27,8 @@ namespace Client::Scene
 
   private:
     SERIALIZER_ACCESS
+
+    void addCustomObject() override;
   };
 } // namespace Client::Scene
 
