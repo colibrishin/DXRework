@@ -71,13 +71,15 @@ namespace Engine
 
     if (layer == LAYER_LIGHT && obj->GetObjectType() != DEF_OBJ_T_LIGHT)
     {
-      static_assert
-        ("Only light object can be added to light layer");
+      throw std::logic_error("Only light object can be added to light layer");
     }
     else if (layer == LAYER_CAMERA && obj->GetObjectType() != DEF_OBJ_T_CAMERA)
     {
-      static_assert
-        ("Only camera object can be added to camera layer");
+      throw std::logic_error("Only camera object can be added to camera layer");
+    }
+    else if (layer != LAYER_UI && obj->GetObjectType() == DEF_OBJ_T_OBSERVER)
+    {
+      throw std::logic_error("Observer object can only be added to UI layer");
     }
 
     if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>()); }

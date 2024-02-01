@@ -70,7 +70,6 @@ namespace Engine
     TASK_NONE = 0,
     TASK_ADD_OBJ,
     TASK_REM_OBJ,
-    TASK_INIT_SCENE,
     TASK_SYNC_SCENE,
     TASK_REM_SCENE,
     TASK_ACTIVE_SCENE,

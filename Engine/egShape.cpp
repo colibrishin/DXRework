@@ -145,11 +145,11 @@ namespace Engine::Resources
 
     if (scene->HasMeshes())
     {
-      const auto shape_count = scene->mNumMeshes;
+      const unsigned shape_count = scene->mNumMeshes;
 
       std::vector<Vector3> total_vertices;
 
-      for (auto i = 0; i < shape_count; ++i)
+      for (unsigned i = 0; i < shape_count; ++i)
       {
         VertexCollection shape;
         IndexCollection  indices;
@@ -165,14 +165,14 @@ namespace Engine::Resources
           continue;
         }
 
-        const auto v_count = shape_->mNumVertices;
-        const auto f_count = shape_->mNumFaces;
-        const auto b_count = shape_->mNumBones;
+        const unsigned v_count = shape_->mNumVertices;
+        const unsigned f_count = shape_->mNumFaces;
+        const unsigned b_count = shape_->mNumBones;
 
         if (f_count == 0) { continue; }
 
         // extract vertices
-        for (auto j = 0; j < v_count; ++j)
+        for (unsigned j = 0; j < v_count; ++j)
         {
           auto vec = shape_->mVertices[j];
           vec *= axis;
@@ -221,20 +221,20 @@ namespace Engine::Resources
           total_vertices.push_back({vec.x, vec.y, vec.z});
         }
 
-        for (auto j = 0; j < f_count; ++j)
+        for (unsigned j = 0; j < f_count; ++j)
         {
           const auto face     = shape_->mFaces[j];
           const auto indices_ = face.mNumIndices;
 
           // extract indices
-          for (int k = 0; k < indices_; ++k) { indices.push_back(face.mIndices[k]); }
+          for (unsigned k = 0; k < indices_; ++k) { indices.push_back(face.mIndices[k]); }
         }
 
         if (shape_->HasBones())
         {
           BonePrimitiveMap bone_map;
 
-          for (auto j = 0; j < b_count; ++j)
+          for (unsigned j = 0; j < b_count; ++j)
           {
             const auto bone           = shape_->mBones[j];
             auto       offset         = bone->mOffsetMatrix;
@@ -251,9 +251,9 @@ namespace Engine::Resources
               break;
             }
 
-            const auto weight_count = bone->mNumWeights;
+            const unsigned weight_count = bone->mNumWeights;
             // todo: expand
-            for (int influence = 0; influence < weight_count; ++influence)
+            for (unsigned influence = 0; influence < weight_count; ++influence)
             {
               const auto weight    = bone->mWeights[influence];
               const auto vertex_id = weight.mVertexId;
@@ -328,12 +328,12 @@ namespace Engine::Resources
 
       if (scene->HasAnimations())
       {
-        const auto animation_count = scene->mNumAnimations;
+        const unsigned animation_count = scene->mNumAnimations;
 
-        for (auto j = 0; j < animation_count; ++j)
+        for (unsigned j = 0; j < animation_count; ++j)
         {
           const auto        animation_        = scene->mAnimations[j];
-          const auto        affect_bone_count = animation_->mNumChannels;
+          const unsigned    affect_bone_count = animation_->mNumChannels;
           const std::string anim_name         = animation_->mName.C_Str();
 
           if (const auto check = GetResourceManager().GetResource<BoneAnimation>(anim_name + "_ANIM").lock())
@@ -347,7 +347,7 @@ namespace Engine::Resources
 
           AnimationPrimitive animation
             (
-             anim_name, duration, ticks_per_second,
+             anim_name, static_cast<float>(duration), static_cast<float>(ticks_per_second),
              AiMatrixToDirectXTranspose
              (
               scene->mRootNode->mTransformation.
@@ -355,7 +355,7 @@ namespace Engine::Resources
              )
             );
 
-          for (auto k = 0; k < affect_bone_count; ++k)
+          for (unsigned k = 0; k < affect_bone_count; ++k)
           {
             const auto channel   = animation_->mChannels[k];
             const auto bone_name = channel->mNodeName;
@@ -372,8 +372,8 @@ namespace Engine::Resources
             BoneAnimationPrimitive bone_animation;
             bone_animation.SetIndex(bone->GetIndex());
 
-            const auto positions = channel->mNumPositionKeys;
-            for (auto l = 0; l < positions; ++l)
+            const unsigned positions = channel->mNumPositionKeys;
+            for (unsigned l = 0; l < positions; ++l)
             {
               const auto key   = channel->mPositionKeys[l];
               const auto time  = static_cast<float>(key.mTime);
@@ -382,8 +382,8 @@ namespace Engine::Resources
               bone_animation.AddPosition(time, Vector3{value.x, value.y, value.z});
             }
 
-            const auto rotations = channel->mNumRotationKeys;
-            for (auto l = 0; l < rotations; ++l)
+            const unsigned rotations = channel->mNumRotationKeys;
+            for (unsigned l = 0; l < rotations; ++l)
             {
               const auto key   = channel->mRotationKeys[l];
               const auto time  = static_cast<float>(key.mTime);
@@ -392,8 +392,8 @@ namespace Engine::Resources
               bone_animation.AddRotation(time, Quaternion{value.x, value.y, value.z, value.w});
             }
 
-            const auto scalings = channel->mNumScalingKeys;
-            for (auto l = 0; l < scalings; ++l)
+            const unsigned scalings = channel->mNumScalingKeys;
+            for (unsigned l = 0; l < scalings; ++l)
             {
               const auto key   = channel->mScalingKeys[l];
               const auto time  = static_cast<float>(key.mTime);

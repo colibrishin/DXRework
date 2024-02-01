@@ -69,12 +69,12 @@ namespace Engine::Manager::Graphics
     }
 
     // Notify the number of lights to the shader.
-    GetRenderPipeline().SetParam<int>(m_lights_.size(), light_slot);
+    GetRenderPipeline().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
 
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_.SetData(light_buffer.size(), light_buffer.data());
+    m_sb_light_buffer_.SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
   }
 
   void ShadowManager::PreRender(const float& dt)
@@ -119,7 +119,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(current_light_vp.size(), current_light_vp.data());
+      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
       m_sb_light_vps_buffer_.BindSRV(SHADER_GEOMETRY);
 
       UINT idx = 0;
@@ -169,7 +169,12 @@ namespace Engine::Manager::Graphics
     // todo: refactoring.
     // Bind the shadow map resource previously rendered to the pixel shader.
     GetRenderPipeline().BindResources
-      (RESERVED_SHADOW_MAP, SHADER_PIXEL, current_shadow_maps.data(), current_shadow_maps.size());
+      (
+       RESERVED_SHADOW_MAP,
+       SHADER_PIXEL,
+       current_shadow_maps.data(),
+       static_cast<UINT>(current_shadow_maps.size())
+      );
     // And bind the light view and projection matrix on to the constant buffer.
     m_sb_light_vps_buffer_.BindSRV(SHADER_PIXEL);
 

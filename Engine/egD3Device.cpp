@@ -579,8 +579,8 @@ namespace Engine::Manager::Graphics
       );
     s_ortho_matrix_ = XMMatrixOrthographicLH
       (
-       g_window_width,
-       g_window_height,
+       static_cast<float>(g_window_width),
+       static_cast<float>(g_window_height),
        g_screen_near, g_screen_far
       );
   }

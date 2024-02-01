@@ -52,7 +52,7 @@ namespace Engine
     return m_bounds_.Contains(point) == DirectX::ContainmentType::CONTAINS;
   }
 
-  UINT Octree::ActiveChildren() const { return m_active_children_.count(); }
+  UINT Octree::ActiveChildren() const { return static_cast<UINT>(m_active_children_.count()); }
 
   bool Octree::Insert(const WeakT& obj)
   {

@@ -50,16 +50,16 @@ namespace Engine::Resources
 
          auto* data = static_cast<float*>(mapped.pData);
 
-         for (int i = 0; i < GetDepth(); ++i)
+         for (UINT i = 0; i < GetDepth(); ++i)
          {
-           UINT d = slice / sizeof(float) * i;
+           const UINT d = slice / sizeof(float) * i;
 
-           for (int j = 0; j < GetHeight(); ++j)
+           for (UINT j = 0; j < GetHeight(); ++j)
            {
-             UINT h = row / sizeof(float) * j;
+             const UINT h = row / sizeof(float) * j;
              if (j >= m_evaluated_animations_[i].size()) break;
 
-             for (int k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
+             for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
              {
                if (k >= m_evaluated_animations_[i][j].size()) break;
 

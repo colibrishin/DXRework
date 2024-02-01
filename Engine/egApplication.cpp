@@ -24,7 +24,7 @@ namespace Engine::Manager
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton() {}
 
-  float Application::GetDeltaTime() const { return m_timer->GetElapsedSeconds(); }
+  float Application::GetDeltaTime() const { return static_cast<float>(m_timer->GetElapsedSeconds()); }
 
   uint32_t Application::GetFPS() const { return m_timer->GetFramesPerSecond(); }
 
