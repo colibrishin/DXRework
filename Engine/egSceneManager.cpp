@@ -119,6 +119,8 @@ namespace Engine::Manager
 
       ImGui::EndMainMenuBar();
     }
+
+    if (m_b_load_popup_) { OpenLoadPopup(); }
   }
 
   void SceneManager::AddScene(const WeakScene& ptr_scene)
