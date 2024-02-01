@@ -2,6 +2,8 @@
 #include "clTestScene.hpp"
 
 #include <egCamera.h>
+
+#include "clMissile.h"
 #include "clWater.hpp"
 #include "egHelper.hpp"
 
@@ -81,6 +83,12 @@ namespace Client::Scene
     player->GetComponent<Components::Transform>().lock()->SetLocalPosition
       (
        {-4.f, 2.f, 0.f}
+      );
+
+    const auto missile = CreateGameObject<Object::Missile>(LAYER_DEFAULT).lock();
+    missile->GetComponent<Components::Transform>().lock()->SetLocalPosition
+      (
+       {0.f, 20.f, 0.f}
       );
 
     GetCollisionDetector().SetCollisionLayer
