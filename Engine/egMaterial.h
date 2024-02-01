@@ -1,5 +1,7 @@
 #pragma once
+#include "egDXCommon.h"
 #include "egDebugger.hpp"
+#include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {
