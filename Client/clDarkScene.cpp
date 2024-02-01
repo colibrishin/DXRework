@@ -56,7 +56,7 @@ namespace Client::Scene
     CreateGameObject<Object::MousePositionText>(LAYER_UI);
     const auto go = CreateGameObject<Object::SkyBox>(LAYER_SKYBOX).lock();
 
-    go->GetComponent<Components::ModelRenderer>().lock()->SetMaterial(Resources::Material::Get("ThunderSky"));
+    go->GetComponent<Components::ModelRenderer>().lock()->SetMaterial(Resources::Material::Get("ThunderSkybox"));
 
     CreateGameObject<Object::PlaneObject>(LAYER_ENVIRONMENT);
 
