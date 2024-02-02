@@ -92,7 +92,7 @@ namespace Engine::Manager::Physics
       float distance = 0;
       if (!lbnd.TestRay(rbnd, lhs_normal, distance)) { return; }
 
-      Vector3 collision_point = pos - (lhs_normal * distance);
+      Vector3 collision_point = pos + (lhs_normal * distance);
       Vector3 lhs_weight_pen;
       Vector3 rhs_weight_pen;
 
@@ -141,8 +141,8 @@ namespace Engine::Manager::Physics
     const auto previous_position = t0->GetWorldPreviousPositionPerFrame();
     t0->SetWorldPosition(previous_position);
 
-    const auto lbnd = lcl->GetBounding();
-    const auto rbnd = rcl->GetBounding();
+    auto lbnd = lcl->GetBounding();
+    auto rbnd = rcl->GetBounding();
 
     const auto vel = lrb->GetT0LinearVelocity();
     Vector3    dir;
@@ -151,6 +151,32 @@ namespace Engine::Manager::Physics
     float distance = 0.f;
     // Ray test sanity check, and re-evaluate the distance.
     if (!lbnd.TestRay(rbnd, dir, distance)) { return; }
+
+    // Bisect the distance to find the closest point.
+    float f = 0.5f;
+    UINT iter = 0;
+
+    while (iter < g_speculation_bisection_max_iteration)
+    {
+      if (lbnd.TestRay(rbnd, dir, distance))
+      {
+        distance *= f;
+        f *= 0.5f;
+        lbnd.Translate(-dir * distance);
+
+        if (distance < g_epsilon) { break; }
+      }
+      else
+      {
+        distance *= f;
+        f *= 1.5f;
+        lbnd.Translate(dir * distance);
+
+        if (distance < g_epsilon) { break; }
+      }
+
+      ++iter;
+    }
 
     // Move object to the new position.
     const auto new_pos = previous_position + (dir * distance);

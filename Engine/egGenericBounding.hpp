@@ -204,6 +204,12 @@ namespace Engine::Physics
       return ret;
     }
 
+    __forceinline void __vectorcall Translate(const Vector3& v)
+    {
+      if (type == BOUNDING_TYPE_BOX) { m_boundings_.box.Center = m_boundings_.box.Center + v; }
+      else if (type == BOUNDING_TYPE_SPHERE) { m_boundings_.sphere.Center = m_boundings_.sphere.Center + v; }
+    }
+
   private:
     friend class boost::serialization::access;
 
