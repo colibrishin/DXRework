@@ -19,6 +19,7 @@ namespace Engine::Components
     void SetGrounded(bool grounded);
     void SetFrictionCoefficient(float mu);
     void SetFixed(bool fixed);
+    void SetNoAngular(bool no_angular);
     // This will update the T1 from current Transform.
     void Synchronize();
 
@@ -47,6 +48,7 @@ namespace Engine::Components
     bool IsGravityAllowed() const;
     bool IsFixed() const;
     bool IsGrounded() const;
+    bool GetNoAngular() const;
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -64,7 +66,7 @@ namespace Engine::Components
     SERIALIZER_ACCESS
 
     bool m_bGrounded;
-
+    bool m_b_no_angular_;
     bool m_bGravityOverride;
     bool m_bFixed;
 

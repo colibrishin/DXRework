@@ -38,6 +38,7 @@ namespace Engine::Components
   Rigidbody::Rigidbody(const WeakObject& object)
     : Component(COM_T_RIDIGBODY, object),
       m_bGrounded(false),
+      m_b_no_angular_(false),
       m_bGravityOverride(false),
       m_bFixed(false),
       m_friction_mu_(0.0f) {}
@@ -51,6 +52,8 @@ namespace Engine::Components
   void Rigidbody::SetFrictionCoefficient(float mu) { m_friction_mu_ = mu; }
 
   void Rigidbody::SetFixed(bool fixed) { m_bFixed = fixed; }
+
+  void Rigidbody::SetNoAngular(bool no_angular) { m_b_no_angular_ = no_angular; }
 
   void Rigidbody::Synchronize()
   {
@@ -107,6 +110,8 @@ namespace Engine::Components
 
   bool Rigidbody::IsGrounded() const { return m_bGrounded; }
 
+  bool Rigidbody::GetNoAngular() const { return m_b_no_angular_; }
+
   void Rigidbody::Reset()
   {
     m_bGrounded = false;
@@ -152,6 +157,7 @@ namespace Engine::Components
   Rigidbody::Rigidbody()
     : Component(COM_T_RIDIGBODY, {}),
       m_bGrounded(false),
+      m_b_no_angular_(false),
       m_bGravityOverride(false),
       m_bFixed(false),
       m_friction_mu_(0) {}
