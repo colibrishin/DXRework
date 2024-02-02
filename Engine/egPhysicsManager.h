@@ -1,11 +1,6 @@
 #pragma once
 #include "egManager.hpp"
 
-namespace Engine::Components
-{
-  class Rigidbody;
-}
-
 namespace Engine::Manager::Physics
 {
   class PhysicsManager : public Abstract::Singleton<PhysicsManager>
@@ -27,8 +22,7 @@ namespace Engine::Manager::Physics
     friend struct SingletonDeleter;
     ~PhysicsManager() override = default;
 
-    static void UpdateGravity(Components::Rigidbody* rb);
-    static void EpsilonGuard(Vector3& linear_momentum);
+    static void EpsilonGuard(Vector3& lvel);
     static void UpdateObject(Components::Rigidbody* rb, const float& dt);
   };
 } // namespace Engine::Manager::Physics

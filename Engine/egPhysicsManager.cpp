@@ -34,7 +34,6 @@ namespace Engine::Manager::Physics
 
       for (const auto rb : rbs)
       {
-        UpdateGravity(rb.lock()->GetSharedPtr<Components::Rigidbody>().get());
         UpdateObject(rb.lock()->GetSharedPtr<Components::Rigidbody>().get(), dt);
       }
     }
@@ -42,22 +41,11 @@ namespace Engine::Manager::Physics
 
   void PhysicsManager::PostUpdate(const float& dt) {}
 
-  void PhysicsManager::UpdateGravity(Components::Rigidbody* rb)
+  void PhysicsManager::EpsilonGuard(Vector3& lvel)
   {
-    if (rb->IsFixed() || !rb->IsGravityAllowed()) { return; }
-
-    const auto cl =
-      rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
-
-    if (!rb->IsGrounded()) { rb->AddForce(g_gravity_vec * cl->GetInverseMass()); }
-    else { rb->AddForce(Vector3::Zero); }
-  }
-
-  void PhysicsManager::EpsilonGuard(Vector3& linear_momentum)
-  {
-    if (linear_momentum.x < g_epsilon && linear_momentum.x > -g_epsilon) { linear_momentum.x = 0.0f; }
-    if (linear_momentum.y < g_epsilon && linear_momentum.y > -g_epsilon) { linear_momentum.y = 0.0f; }
-    if (linear_momentum.z < g_epsilon && linear_momentum.z > -g_epsilon) { linear_momentum.z = 0.0f; }
+    if (lvel.x < g_epsilon && lvel.x > -g_epsilon) { lvel.x = 0.0f; }
+    if (lvel.y < g_epsilon && lvel.y > -g_epsilon) { lvel.y = 0.0f; }
+    if (lvel.z < g_epsilon && lvel.z > -g_epsilon) { lvel.z = 0.0f; }
   }
 
   void PhysicsManager::UpdateObject(Components::Rigidbody* rb, const float& dt)
