@@ -75,25 +75,25 @@ namespace Client::State
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
     {
-      rb->AddForce(forward);
+      rb->AddT1Force(forward);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
     {
-      rb->AddForce(ortho);
+      rb->AddT1Force(ortho);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
     {
-      rb->AddForce(-forward);
+      rb->AddT1Force(-forward);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
     {
-      rb->AddForce(-ortho);
+      rb->AddT1Force(-ortho);
       pressed = true;
     }
 

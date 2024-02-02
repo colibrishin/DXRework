@@ -56,7 +56,7 @@ namespace Engine::Manager::Physics
       rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto t1 = rb->GetT1();
 
-    Vector3 lvel = rb->GetT1LinearVelocity(dt);
+    Vector3 lvel = rb->GetT0LinearVelocity();
 
     const Vector3 lfrc = Engine::Physics::EvalFriction
       (
@@ -64,41 +64,28 @@ namespace Engine::Manager::Physics
        dt
       );
 
-    const Vector3 rvel = rb->GetT1AngularVelocity(dt);
+    const Vector3 rvel = rb->GetT0AngularVelocity();
 
     lvel += lfrc;
     Engine::Physics::FrictionVelocityGuard(lvel, lfrc);
 
-    const Vector3 df = Engine::Physics::EvalDrag(lvel, g_drag_coefficient);
-
-    if (!rb->IsGrounded())
-    {
-      rb->SetDragForce(df);
-      lvel += df;
-      Engine::Physics::FrictionVelocityGuard(lvel, df);
-    }
-
     EpsilonGuard(lvel);
 
-    t1->SetLocalPosition(t1->GetLocalPosition() + lvel);
+    t1->SetLocalPosition(t1->GetLocalPosition() + (lvel * dt) + (rb->GetT0Force() * (dt * dt * 0.5f)));
 
     if (!rb->GetNoAngular())
     {
       Quaternion orientation = t1->GetLocalRotation();
-      orientation += Quaternion{rvel * dt, 0.0f} * orientation;
+      orientation += Quaternion{rvel * dt * 0.5f, 0.0f} * orientation;
       orientation.Normalize();
       t1->SetLocalRotation(orientation);
-      rb->SetT0AngularVelocity(rvel);
+      rb->SetT0AngularVelocity(rvel + (rb->GetT0Torque() + rb->GetT1Torque()) * (dt * 0.5f));
     }
+
+    rb->SetT0LinearVelocity(lvel + (rb->GetT0Force() + rb->GetT1Force()) * (dt * 0.5f));
 
     rb->Reset();
-    rb->SetT0LinearVelocity(lvel);
 
     rb->SetLinearFriction(lfrc);
-
-    if (!rb->IsGrounded())
-    {
-      rb->SetDragForce(df);
-    }
   }
 } // namespace Engine::Manager::Physics
