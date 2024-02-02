@@ -42,7 +42,7 @@ namespace Engine::Resources
     D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
 
     dsv_desc.Format = DXGI_FORMAT_D32_FLOAT;
-    dsv_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsv_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
     dsv_desc.Flags = 0;
     dsv_desc.Texture2D.MipSlice = 0;
     dsv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;

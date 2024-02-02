@@ -39,7 +39,13 @@ namespace Engine
     light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
 
     Initialize_INTERNAL();
-    AddObserver();
+
+    GetTaskScheduler().AddTask
+      (
+       TASK_INIT_SCENE,
+       {},
+       [this](const std::vector<std::any>&, const float) { initializeFinalize(); }
+      );
   }
 
   void Scene::AssignLocalIDToObject(const StrongObject& obj)
@@ -135,6 +141,11 @@ namespace Engine
     m_cached_objects_.erase(id);
     m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
     m_layers[layer]->RemoveGameObject(id);
+  }
+
+  void Scene::initializeFinalize()
+  {
+    AddObserver();
   }
 
   void Scene::synchronize(const WeakScene& ptr_scene)

@@ -120,7 +120,7 @@ namespace Engine::Objects
 
       if (const auto bound = GetParent().lock())
       {
-        if (const auto rb = bound->GetComponent<Components::Rigidbody>().lock()) { velocity = rb->GetLinearMomentum(); }
+        if (const auto rb = bound->GetComponent<Components::Rigidbody>().lock()) { velocity = rb->GetT0LinearVelocity(); }
       }
 
       GetToolkitAPI().Set3DListener

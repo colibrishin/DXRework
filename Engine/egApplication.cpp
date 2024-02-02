@@ -74,6 +74,7 @@ namespace Engine::Manager
     GetLerpManager().Initialize();
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
+    GetGraviton().Initialize();
 
     ImGui_ImplWin32_Init(hWnd);
     ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
@@ -93,6 +94,7 @@ namespace Engine::Manager
     GetSceneManager().PreUpdate(dt);
     GetShadowManager().PreUpdate(dt);
     GetResourceManager().PreUpdate(dt);
+    GetGraviton().PreUpdate(dt);
     GetConstraintSolver().PreUpdate(dt);
     GetPhysicsManager().PreUpdate(dt);
     GetLerpManager().PreUpdate(dt);
@@ -108,14 +110,17 @@ namespace Engine::Manager
   {
     GetTaskScheduler().FixedUpdate(dt);
     GetMouseManager().FixedUpdate(dt);
-    GetCollisionDetector().FixedUpdate(dt);
     GetReflectionEvaluator().FixedUpdate(dt);
     GetSceneManager().FixedUpdate(dt);
     GetShadowManager().FixedUpdate(dt);
     GetResourceManager().FixedUpdate(dt);
-    GetPhysicsManager().FixedUpdate(dt);
+
+    GetGraviton().FixedUpdate(dt);
+    GetCollisionDetector().FixedUpdate(dt);
     GetConstraintSolver().FixedUpdate(dt);
+    GetPhysicsManager().FixedUpdate(dt);
     GetLerpManager().FixedUpdate(dt);
+
     GetProjectionFrustum().FixedUpdate(dt);
     GetRenderer().FixedUpdate(dt);
     GetShadowManager().FixedUpdate(dt);
@@ -132,6 +137,7 @@ namespace Engine::Manager
     GetReflectionEvaluator().Update(dt);
     GetSceneManager().Update(dt);
     GetResourceManager().Update(dt);
+    GetGraviton().Update(dt);
     GetConstraintSolver().Update(dt);
     GetPhysicsManager().Update(dt);
     GetLerpManager().Update(dt);
@@ -152,6 +158,7 @@ namespace Engine::Manager
     GetReflectionEvaluator().PreRender(dt);
     GetSceneManager().PreRender(dt);
     GetResourceManager().PreRender(dt);
+    GetGraviton().PreRender(dt);
     GetConstraintSolver().PreRender(dt);
     GetPhysicsManager().PreRender(dt);
     GetLerpManager().PreRender(dt);
@@ -171,6 +178,7 @@ namespace Engine::Manager
     GetReflectionEvaluator().Render(dt);
     GetSceneManager().Render(dt);
     GetResourceManager().Render(dt);
+    GetGraviton().Render(dt);
     GetConstraintSolver().PreRender(dt);
     GetPhysicsManager().Render(dt);
     GetLerpManager().Render(dt);
@@ -190,6 +198,7 @@ namespace Engine::Manager
     GetReflectionEvaluator().PostRender(dt);
     GetSceneManager().PostRender(dt);
     GetResourceManager().PostRender(dt);
+    GetGraviton().PostRender(dt);
     GetConstraintSolver().PostRender(dt);
     GetPhysicsManager().PostRender(dt);
     GetLerpManager().PostRender(dt);
@@ -213,6 +222,7 @@ namespace Engine::Manager
     GetReflectionEvaluator().PostUpdate(dt);
     GetSceneManager().PostUpdate(dt);
     GetResourceManager().PostUpdate(dt);
+    GetGraviton().PostUpdate(dt);
     GetConstraintSolver().PostUpdate(dt);
     GetPhysicsManager().PostUpdate(dt);
     GetLerpManager().PostUpdate(dt);

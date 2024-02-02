@@ -268,7 +268,7 @@ namespace Engine::Manager::Physics
       bool collision2 = false;
 
       // lhs test
-      const auto lvel = lrb->GetLinearMomentum();
+      const auto lvel = lrb->GetT0LinearVelocity();
       Vector3    ldir;
       lvel.Normalize(ldir);
 
@@ -283,7 +283,7 @@ namespace Engine::Manager::Physics
       // rhs test, if exists.
       if (rrb && rrb->GetActive())
       {
-        const auto rvel = rrb->GetLinearMomentum();
+        const auto rvel = rrb->GetT0LinearVelocity();
         Vector3    rdir;
         rvel.Normalize(rdir);
         if (rdir != Vector3::Zero || !FloatCompare

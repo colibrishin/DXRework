@@ -38,7 +38,7 @@ namespace Engine::Physics
     const Vector3 sumVel1 = vel1 + angVel1;
     const Vector3 sumVel2 = vel2 + angVel2;
 
-    const Vector3 contact_vel = rel2 - rel1;
+    const Vector3 contact_vel = sumVel2 - sumVel1;
 
     const float impulse_force = contact_vel.Dot(normal);
 
@@ -49,14 +49,14 @@ namespace Engine::Physics
 
     const float angular_impulse = (inertia1 + inertia2).Dot(normal);
 
-    const float j = -(1.0f + g_restitution_coefficient) * ((impulse_force) / (total_mass + angular_impulse));
+    const float j = (-(1.0f + g_restitution_coefficient) * impulse_force) / (total_mass + angular_impulse);
 
     const Vector3 impulse = normal * j;
 
     linear1 = -impulse * (1.f / invm1);
     linear2 = impulse * (1.f / invm2);
 
-    angular1 = XMTensorCross(inertiaT1, -impulse.Cross(rel1));
-    angular2 = XMTensorCross(inertiaT2, impulse.Cross(rel2));
+    angular1 = XMTensorCross(inertiaT1, rel1.Cross(-impulse));
+    angular2 = XMTensorCross(inertiaT2, rel2.Cross(impulse));
   }
 } // namespace Engine::Physics

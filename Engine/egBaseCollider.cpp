@@ -251,14 +251,9 @@ namespace Engine::Components
     rotation.Conjugate(conjugate);
     const Matrix invOrientation = Matrix::CreateFromQuaternion(conjugate);
     const Matrix orientation    = Matrix::CreateFromQuaternion(rotation);
+    const Matrix inertiaScale   = Matrix::CreateScale(m_inverse_inertia_);
 
-    Vector3 dimensions;
-
-    if (m_type_ == BOUNDING_TYPE_BOX) { dimensions = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2; }
-    else if (m_type_ == BOUNDING_TYPE_SPHERE) { dimensions = Vector3(GetBounding<BoundingSphere>().Radius) * 2; }
-
-    const Matrix matrix = orientation *
-                          Matrix::CreateScale(dimensions) * invOrientation;
+    const Matrix matrix = orientation * inertiaScale * invOrientation;
 
     XMStoreFloat3x3(&m_inertia_tensor_, matrix);
   }
@@ -273,7 +268,7 @@ namespace Engine::Components
 
   void Collider::GenerateInertiaCube()
   {
-    const Vector3 dim                = GetBounding<BoundingOrientedBox>().Extents;
+    const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2.f;
     const Vector3 dimensions_squared = dim * dim;
 
     m_inverse_inertia_.x = (12.0f * GetInverseMass()) /

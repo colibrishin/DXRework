@@ -46,6 +46,7 @@ namespace Client::Object
 
     rb->SetFrictionCoefficient(0.1f);
     rb->SetGravityOverride(true);
+    rb->SetNoAngular(true);
 
     atr->SetAnimation(0);
 

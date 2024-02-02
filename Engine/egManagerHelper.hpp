@@ -4,6 +4,7 @@
 #include "egCollisionDetector.h"
 #include "egConstraintSolver.h"
 #include "egDebugger.hpp"
+#include "egGraviton.h"
 #include "egLerpManager.h"
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
@@ -69,4 +70,6 @@ namespace Engine
   }
 
   inline Manager::Graphics::Renderer& GetRenderer() { return Manager::Graphics::Renderer::GetInstance(); }
+
+  inline Manager::Physics::Graviton& GetGraviton() { return Manager::Physics::Graviton::GetInstance(); }
 } // namespace Engine

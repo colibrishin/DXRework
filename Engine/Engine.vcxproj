@@ -26,6 +26,7 @@
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egComputeShader.h" />
+    <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egParticleRenderer.h" />
     <ClInclude Include="egRenderComponent.h" />
     <ClInclude Include="egShadowTexture.h" />
@@ -123,6 +124,7 @@
     <ClCompile Include="egCubeMesh.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
+    <ClCompile Include="egGraviton.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
     <ClCompile Include="egShadowTexture.cpp" />

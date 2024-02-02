@@ -64,8 +64,8 @@ namespace Engine::Resources
       origin.lock()->GetComponent<Components::Rigidbody>().lock())
     {
       vel = {
-        rb->GetLinearMomentum().x, rb->GetLinearMomentum().y,
-        rb->GetLinearMomentum().z
+        rb->GetT0LinearVelocity().x, rb->GetT0LinearVelocity().y,
+        rb->GetT0LinearVelocity().z
       };
     }
 
@@ -121,8 +121,8 @@ namespace Engine::Resources
     if (const auto rb = origin.lock()->GetComponent<Components::Rigidbody>().lock())
     {
       vel = {
-        rb->GetLinearMomentum().x, rb->GetLinearMomentum().y,
-        rb->GetLinearMomentum().z
+        rb->GetT0LinearVelocity().x, rb->GetT0LinearVelocity().y,
+        rb->GetT0LinearVelocity().z
       };
     }
 

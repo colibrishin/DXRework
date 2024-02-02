@@ -34,7 +34,6 @@ namespace Engine::Manager::Physics
 
       for (const auto rb : rbs)
       {
-        UpdateGravity(rb.lock()->GetSharedPtr<Components::Rigidbody>().get());
         UpdateObject(rb.lock()->GetSharedPtr<Components::Rigidbody>().get(), dt);
       }
     }
@@ -42,22 +41,11 @@ namespace Engine::Manager::Physics
 
   void PhysicsManager::PostUpdate(const float& dt) {}
 
-  void PhysicsManager::UpdateGravity(Components::Rigidbody* rb)
+  void PhysicsManager::EpsilonGuard(Vector3& lvel)
   {
-    if (rb->IsFixed() || !rb->IsGravityAllowed()) { return; }
-
-    const auto cl =
-      rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
-
-    if (!rb->IsGrounded()) { rb->AddForce(g_gravity_vec * cl->GetInverseMass()); }
-    else { rb->AddForce(Vector3::Zero); }
-  }
-
-  void PhysicsManager::EpsilonGuard(Vector3& linear_momentum)
-  {
-    if (linear_momentum.x < g_epsilon && linear_momentum.x > -g_epsilon) { linear_momentum.x = 0.0f; }
-    if (linear_momentum.y < g_epsilon && linear_momentum.y > -g_epsilon) { linear_momentum.y = 0.0f; }
-    if (linear_momentum.z < g_epsilon && linear_momentum.z > -g_epsilon) { linear_momentum.z = 0.0f; }
+    if (lvel.x < g_epsilon && lvel.x > -g_epsilon) { lvel.x = 0.0f; }
+    if (lvel.y < g_epsilon && lvel.y > -g_epsilon) { lvel.y = 0.0f; }
+    if (lvel.z < g_epsilon && lvel.z > -g_epsilon) { lvel.z = 0.0f; }
   }
 
   void PhysicsManager::UpdateObject(Components::Rigidbody* rb, const float& dt)
@@ -68,51 +56,49 @@ namespace Engine::Manager::Physics
       rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto t1 = rb->GetT1();
 
-    float mass = 1.f;
+    Vector3 lvel = rb->GetT1LinearVelocity(dt);
 
-    if (cl) { mass = cl->GetInverseMass(); }
-
-    Vector3 linear_momentum = rb->GetLinearMomentum() + (rb->GetForce() * mass * dt);
-    const Vector3 linear_friction = Engine::Physics::EvalFriction
+    const Vector3 lfrc = Engine::Physics::EvalFriction
       (
-       linear_momentum, rb->GetFrictionCoefficient(),
+       lvel, rb->GetFrictionCoefficient(),
        dt
       );
 
-    const Vector3 angular_momentum =
-      rb->GetAngularMomentum() + rb->GetTorque() * mass * dt;
+    const Vector3 rvel = rb->GetT1AngularVelocity(dt);
 
-    linear_momentum += linear_friction;
-    Engine::Physics::FrictionVelocityGuard(linear_momentum, linear_friction);
+    lvel += lfrc;
+    Engine::Physics::FrictionVelocityGuard(lvel, lfrc);
 
-    const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, g_drag_coefficient);
+    const Vector3 df = Engine::Physics::EvalDrag(lvel, g_drag_coefficient);
 
     if (!rb->IsGrounded())
     {
-      rb->SetDragForce(drag_force);
-      linear_momentum += drag_force;
-      Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
+      rb->SetDragForce(df);
+      lvel += df;
+      Engine::Physics::FrictionVelocityGuard(lvel, df);
     }
 
-    EpsilonGuard(linear_momentum);
+    EpsilonGuard(lvel);
 
-    t1->SetLocalPosition(t1->GetLocalPosition() + linear_momentum);
+    t1->SetLocalPosition(t1->GetLocalPosition() + lvel);
 
-    // Quaternion orientation = tr->GetRotation();
-    // orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} *
-    // orientation; orientation.Normalize();
-    // tr->SetRotation(orientation);
+    if (!rb->GetNoAngular())
+    {
+      Quaternion orientation = t1->GetLocalRotation();
+      orientation += Quaternion{rvel * dt, 0.0f} * orientation;
+      orientation.Normalize();
+      t1->SetLocalRotation(orientation);
+      rb->SetT0AngularVelocity(rvel);
+    }
 
     rb->Reset();
+    rb->SetT0LinearVelocity(lvel);
 
-    rb->SetLinearMomentum(linear_momentum);
-    rb->SetAngularMomentum(angular_momentum);
-
-    rb->SetLinearFriction(linear_friction);
+    rb->SetLinearFriction(lfrc);
 
     if (!rb->IsGrounded())
     {
-      rb->SetDragForce(drag_force);
+      rb->SetDragForce(df);
     }
   }
 } // namespace Engine::Manager::Physics
