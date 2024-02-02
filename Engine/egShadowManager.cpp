@@ -47,6 +47,8 @@ namespace Engine::Manager::Graphics
 
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
+
+    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(); }
   }
 
   void ShadowManager::Update(const float& dt)
