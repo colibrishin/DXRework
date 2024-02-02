@@ -31,17 +31,18 @@ namespace Engine::Components
     void SetAngularFriction(const Vector3& friction);
     void SetDragForce(const Vector3& drag);
 
-    void AddForce(const Vector3& force);
-    void AddTorque(const Vector3& torque);
+    void AddT1Force(const Vector3& force);
+    void AddT1Torque(const Vector3& torque);
 
     float GetFrictionCoefficient() const;
 
     Vector3 GetT0LinearVelocity() const;
     Vector3 GetT0AngularVelocity() const;
-    Vector3 GetT1LinearVelocity(const float dt) const;
-    Vector3 GetT1AngularVelocity(const float dt) const;
-    Vector3 GetForce() const;
-    Vector3 GetTorque() const;
+    
+    Vector3 GetT0Force() const;
+    Vector3 GetT0Torque() const;
+    Vector3 GetT1Force() const;
+    Vector3 GetT1Torque() const;
 
     bool GetGrounded() const;
     void Reset();
@@ -79,8 +80,10 @@ namespace Engine::Components
     Vector3 m_angular_friction_;
     Vector3 m_drag_force_;
 
-    Vector3 m_force_;
-    Vector3 m_torque_;
+    Vector3 m_t0_force_;
+    Vector3 m_t0_torque_;
+    Vector3 m_t1_force_;
+    Vector3 m_t1_torque_;
 
     std::unique_ptr<Transform> m_t1_;
   };
