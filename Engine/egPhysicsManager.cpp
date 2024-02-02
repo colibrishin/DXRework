@@ -82,14 +82,17 @@ namespace Engine::Manager::Physics
 
     t1->SetLocalPosition(t1->GetLocalPosition() + lvel);
 
-    // Quaternion orientation = tr->GetRotation();
-    // orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} *
-    // orientation; orientation.Normalize();
-    // tr->SetRotation(orientation);
+    if (!rb->GetNoAngular())
+    {
+      Quaternion orientation = t1->GetLocalRotation();
+      orientation += Quaternion{rvel * dt, 0.0f} * orientation;
+      orientation.Normalize();
+      t1->SetLocalRotation(orientation);
+      rb->SetT0AngularVelocity(rvel);
+    }
 
     rb->Reset();
     rb->SetT0LinearVelocity(lvel);
-    rb->SetT0AngularVelocity(rvel);
 
     rb->SetLinearFriction(lfrc);
 

@@ -51,13 +51,18 @@ namespace Engine::Manager::Physics
 
           if (t0 && t1)
           {
-            const auto current = t0->GetLocalPosition();
-            const auto future  = t1->GetLocalPosition();
+            const auto t0pos = t0->GetLocalPosition();
+            const auto t1pos  = t1->GetLocalPosition();
             const auto f = GetLerpFactor();
-            const auto lerp    = Vector3::Lerp(current, future, f);
+            const auto lerp    = Vector3::Lerp(t0pos, t1pos, f);
             Vector3CheckNanException(lerp);
 
+            const auto t0rot = t0->GetLocalRotation();
+            const auto t1rot = t1->GetLocalRotation();
+            const auto slerp = Quaternion::Slerp(t0rot, t1rot, f);
+
             t0->SetLocalPosition(lerp);
+            t0->SetLocalRotation(slerp);
           }
         }
       }
