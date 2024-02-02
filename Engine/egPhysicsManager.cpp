@@ -56,30 +56,31 @@ namespace Engine::Manager::Physics
       rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto t1 = rb->GetT1();
 
-    Vector3 linear_momentum = rb->GetT1LinearVelocity(dt);
-    const Vector3 linear_friction = Engine::Physics::EvalFriction
+    Vector3 lvel = rb->GetT1LinearVelocity(dt);
+
+    const Vector3 lfrc = Engine::Physics::EvalFriction
       (
-       linear_momentum, rb->GetFrictionCoefficient(),
+       lvel, rb->GetFrictionCoefficient(),
        dt
       );
 
-    const Vector3 angular_momentum = rb->GetT1AngularVelocity(dt);
+    const Vector3 rvel = rb->GetT1AngularVelocity(dt);
 
-    linear_momentum += linear_friction;
-    Engine::Physics::FrictionVelocityGuard(linear_momentum, linear_friction);
+    lvel += lfrc;
+    Engine::Physics::FrictionVelocityGuard(lvel, lfrc);
 
-    const Vector3 drag_force = Engine::Physics::EvalDrag(linear_momentum, g_drag_coefficient);
+    const Vector3 df = Engine::Physics::EvalDrag(lvel, g_drag_coefficient);
 
     if (!rb->IsGrounded())
     {
-      rb->SetDragForce(drag_force);
-      linear_momentum += drag_force;
-      Engine::Physics::FrictionVelocityGuard(linear_momentum, drag_force);
+      rb->SetDragForce(df);
+      lvel += df;
+      Engine::Physics::FrictionVelocityGuard(lvel, df);
     }
 
-    EpsilonGuard(linear_momentum);
+    EpsilonGuard(lvel);
 
-    t1->SetLocalPosition(t1->GetLocalPosition() + linear_momentum);
+    t1->SetLocalPosition(t1->GetLocalPosition() + lvel);
 
     // Quaternion orientation = tr->GetRotation();
     // orientation += Quaternion{angular_momentum * dt * 0.5f, 0.0f} *
@@ -87,15 +88,14 @@ namespace Engine::Manager::Physics
     // tr->SetRotation(orientation);
 
     rb->Reset();
+    rb->SetT0LinearVelocity(lvel);
+    rb->SetT0AngularVelocity(rvel);
 
-    rb->SetT0LinearVelocity(linear_momentum);
-    rb->SetT0AngularVelocity(angular_momentum);
-
-    rb->SetLinearFriction(linear_friction);
+    rb->SetLinearFriction(lfrc);
 
     if (!rb->IsGrounded())
     {
-      rb->SetDragForce(drag_force);
+      rb->SetDragForce(df);
     }
   }
 } // namespace Engine::Manager::Physics
