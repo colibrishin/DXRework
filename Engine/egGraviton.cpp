@@ -31,8 +31,10 @@ namespace Engine::Manager::Physics
           if (!rb->GetActive()) { continue; }
 
           const auto cl = rb->GetOwner().lock()->GetComponent<Components::Collider>().lock();
+          const auto drag = Engine::Physics::EvalDrag(rb->GetT0LinearVelocity(), g_drag_coefficient);
 
-          rb->AddForce(g_gravity_vec * cl->GetInverseMass());
+          rb->AddT1Force((g_gravity_vec * cl->GetInverseMass()) + (drag * cl->GetInverseMass()));
+          rb->SetDragForce(drag);
         }
       }
     }

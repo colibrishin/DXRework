@@ -19,7 +19,10 @@ namespace Engine::Physics
     return invVel;
   }
 
-  Vector3 __vectorcall EvalDrag(const Vector3& vel, float k) { return -vel * k; }
+  Vector3 __vectorcall EvalDrag(const Vector3& vel, float k)
+  {
+    return 0.5f * k * vel * vel;
+  }
 
   void __vectorcall FrictionVelocityGuard(
     Vector3&       evaluated_velocity,

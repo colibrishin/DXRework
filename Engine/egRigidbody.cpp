@@ -13,7 +13,8 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(m_bGravityOverride) _ARTAG(m_bFixed) _ARTAG(m_friction_mu_)
  _ARTAG(m_linear_velocity) _ARTAG(m_angular_velocity)
  _ARTAG(m_linear_friction_) _ARTAG(m_angular_friction_)
- _ARTAG(m_drag_force_) _ARTAG(m_force_) _ARTAG(m_torque_)
+ _ARTAG(m_drag_force_) _ARTAG(m_t0_force_) _ARTAG(m_t0_torque_)
+ _ARTAG(m_t1_force_) _ARTAG(m_t1_torque_)
 )
 
 namespace Engine::Components
@@ -84,9 +85,9 @@ namespace Engine::Components
 
   void Rigidbody::SetDragForce(const Vector3& drag) { m_drag_force_ = drag; }
 
-  void Rigidbody::AddForce(const Vector3& force) { m_force_ += force; }
+  void Rigidbody::AddT1Force(const Vector3& force) { m_t1_force_ += force; }
 
-  void Rigidbody::AddTorque(const Vector3& torque) { m_torque_ += torque; }
+  void Rigidbody::AddT1Torque(const Vector3& torque) { m_t1_torque_ += torque; }
 
   float Rigidbody::GetFrictionCoefficient() const { return m_friction_mu_; }
 
@@ -94,13 +95,13 @@ namespace Engine::Components
 
   Vector3 Rigidbody::GetT0AngularVelocity() const { return m_angular_velocity; }
 
-  Vector3 Rigidbody::GetT1LinearVelocity(const float dt) const { return m_linear_velocity + GetForce() * dt; }
+  Vector3 Rigidbody::GetT0Force() const { return m_t0_force_; }
 
-  Vector3 Rigidbody::GetT1AngularVelocity(const float dt) const { return m_angular_velocity + GetTorque() * dt; }
+  Vector3 Rigidbody::GetT0Torque() const { return m_t0_torque_; }
 
-  Vector3 Rigidbody::GetForce() const { return m_force_; }
+  Vector3 Rigidbody::GetT1Force() const { return m_t1_force_; }
 
-  Vector3 Rigidbody::GetTorque() const { return m_torque_; }
+  Vector3 Rigidbody::GetT1Torque() const { return m_t1_torque_; }
 
   bool Rigidbody::GetGrounded() const { return m_bGrounded; }
 
@@ -116,8 +117,10 @@ namespace Engine::Components
   {
     m_bGrounded = false;
 
-    m_force_            = Vector3::Zero;
-    m_torque_           = Vector3::Zero;
+    m_t0_force_         = m_t1_force_;
+    m_t0_torque_        = m_t1_torque_;
+    m_t1_force_         = Vector3::Zero;
+    m_t1_torque_        = Vector3::Zero;
     m_drag_force_       = Vector3::Zero;
     m_linear_friction_  = Vector3::Zero;
     m_angular_friction_ = Vector3::Zero;
@@ -148,8 +151,8 @@ namespace Engine::Components
     ImGuiVector3Editable("Linear Friction", GetID(), "linear_friction", m_linear_friction_);
     ImGuiVector3Editable("Angular Friction", GetID(), "angular_friction", m_angular_friction_);
     ImGuiVector3Editable("Drag Force", GetID(), "drag_force", m_drag_force_);
-    ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_force_);
-    ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_torque_);
+    ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_t1_force_);
+    ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_t1_torque_);
 
     ImGui::Unindent(2);
   }
