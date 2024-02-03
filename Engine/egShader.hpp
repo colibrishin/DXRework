@@ -28,6 +28,8 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
+    void SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
+
     eShaderDomain GetDomain() const;
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);

@@ -215,6 +215,8 @@ namespace Engine::Resources
     GetRenderPipeline().DefaultSamplerState();
   }
 
+  void Shader::SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology) { m_topology_ = topology; }
+
   eShaderDomain Shader::GetDomain() const { return m_domain_; }
 
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
