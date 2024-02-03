@@ -24,6 +24,7 @@ namespace Engine::Manager::Graphics
     m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
     BindConstantBuffer(m_wvp_buffer_data_, SHADER_VERTEX);
     BindConstantBuffer(m_wvp_buffer_data_, SHADER_PIXEL);
+    BindConstantBuffer(m_wvp_buffer_data_, SHADER_GEOMETRY);
   }
 
   void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
@@ -227,6 +228,16 @@ namespace Engine::Manager::Graphics
        D3D11_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS
       );
+
+    const auto billboard = Shader::Create(
+       "billboard", "./billboard.hlsl", SHADER_DOMAIN_OPAQUE,
+       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+       SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
+       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS
+      );
+
+    billboard->SetTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
   }
 
   void RenderPipeline::InitializeSamplers()
