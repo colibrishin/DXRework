@@ -8,6 +8,16 @@ float4 GetTranslation(in matrix mat)
     return float4(mat._41, mat._42, mat._43, mat._44);
 }
 
+float3 GetScale(in matrix mat)
+{
+    return float3
+    (
+        length(float3(mat._11, mat._21, mat._31)),
+        length(float3(mat._12, mat._22, mat._32)),
+        length(float3(mat._13, mat._23, mat._33))
+    );
+}
+
 quaternion MatToQuaternion(in matrix world)
 {
   // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
