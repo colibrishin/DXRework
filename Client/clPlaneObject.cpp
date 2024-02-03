@@ -6,8 +6,10 @@
 #include <egSound.h>
 
 #include "egBaseCollider.hpp"
+#include "egComputeShader.h"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egParticleRenderer.h"
 #include "egRigidbody.h"
 #include "egShader.hpp"
 #include "egShape.h"
@@ -46,6 +48,19 @@ namespace Client::Object
     rb->SetFixed(true);
     rb->SetFrictionCoefficient(0.2f);
     rb->SetGravityOverride(false);
+
+    {
+      const auto child = GetScene().lock()->CreateGameObject<Engine::Abstract::Object>(GetLayer()).lock();
+      const auto ctr = child->AddComponent<Components::Transform>().lock();
+      ctr->SetLocalPosition({0.f, 0.5f, 0.f});
+      const auto pr = child->AddComponent<Components::ParticleRenderer>().lock();
+      pr->SetMaterial(Resources::Material::Get("Billboard"));
+      pr->SetCount(100);
+      pr->LinearSpread({-1.f, 0.f, -1.f}, {1.f, 0.f, 1.f});
+      child->SetName("Grass");
+
+      AddChild(child);
+    }
   }
 
   PlaneObject::~PlaneObject() {}

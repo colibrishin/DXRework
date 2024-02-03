@@ -22,6 +22,7 @@
 #include "egComputeShader.h"
 #include "egGlobal.h"
 #include "egMaterial.h"
+#include "egPointMesh.h"
 #include "egShader.hpp"
 #include "egShape.h"
 #include "egTexture.h"
@@ -52,6 +53,10 @@ namespace Client
     GetResourceManager().AddResource
       (
        "SphereMesh", boost::make_shared<Engine::Meshes::SphereMesh>()
+      );
+    GetResourceManager().AddResource
+      (
+       "PointMesh", boost::make_shared<Engine::Meshes::PointMesh>()
       );
   }
 
@@ -85,6 +90,9 @@ namespace Client
 
     const auto sphere = Resources::Shape::Create("SphereShape", "");
     sphere->Add(Resources::Mesh::Get("SphereMesh"));
+
+    const auto point = Resources::Shape::Create("PointShape", "");
+    point->Add(Resources::Mesh::Get("PointMesh"));
   }
 
   void InitializeAnimation()
@@ -179,6 +187,13 @@ namespace Client
       mtr->SetResource<Resources::Texture>("WaterNormalMap");
       mtr->SetResource<Resources::Shader>("refraction");
       mtr->SetResource<Resources::Shape>("CubeShape");
+    }
+
+    {
+      const auto mtr = Resources::Material::Create("Billboard", "");
+      mtr->SetResource<Resources::Texture>("TestTexture");
+      mtr->SetResource<Resources::Shader>("billboard");
+      mtr->SetResource<Resources::Shape>("PointShape");
     }
   }
 
