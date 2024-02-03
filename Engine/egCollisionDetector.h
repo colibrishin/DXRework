@@ -36,7 +36,7 @@ namespace Engine::Manager::Physics
     ~CollisionDetector() override = default;
 
     void TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs);
-    void TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs);
+    void TestSpeculation(const WeakObject & p_lhs, const WeakObject & p_rhs, const float dt);
 
     void DispatchInactiveExit(const WeakObject& lhs);
 
