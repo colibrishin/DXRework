@@ -28,6 +28,7 @@
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egParticleRenderer.h" />
+    <ClInclude Include="egPointMesh.h" />
     <ClInclude Include="egRenderComponent.h" />
     <ClInclude Include="egShadowTexture.h" />
     <ClInclude Include="egGenericBounding.hpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egGraviton.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
+    <ClCompile Include="egPointMesh.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
     <ClCompile Include="egShadowTexture.cpp" />
     <ClCompile Include="egElastic.cpp" />
@@ -799,6 +801,19 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="type.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="billboard.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>
