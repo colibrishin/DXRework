@@ -86,7 +86,7 @@ namespace Engine::Manager::Physics
 
             for (int j = i + 1; j < value.size(); ++j)
             {
-              if constexpr (g_speculation_enabled) { TestSpeculation(value[i], value[j]); }
+              if constexpr (g_speculation_enabled) { TestSpeculation(value[i], value[j], dt); }
               TestCollision(value[i], value[j]);
             }
           }
@@ -100,7 +100,7 @@ namespace Engine::Manager::Physics
             {
               for (int k = 0; k < parent_compare_set.size(); ++k)
               {
-                if constexpr (g_speculation_enabled) { TestSpeculation(value[j], parent_compare_set[k]); }
+                if constexpr (g_speculation_enabled) { TestSpeculation(value[j], parent_compare_set[k], dt); }
                 TestCollision(value[j], parent_compare_set[k]);
               }
             }
@@ -213,7 +213,7 @@ namespace Engine::Manager::Physics
     }
   }
 
-  void CollisionDetector::TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  void CollisionDetector::TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs, const float dt)
   {
     auto lhs = p_lhs.lock();
     auto rhs = p_rhs.lock();
@@ -268,7 +268,7 @@ namespace Engine::Manager::Physics
       bool collision2 = false;
 
       // lhs test
-      const auto lvel = lrb->GetT0LinearVelocity();
+      const auto lvel = Engine::Physics::EvalT1PositionDelta(lrb->GetT0LinearVelocity(), lrb->GetT0Force(), dt);
       Vector3    ldir;
       lvel.Normalize(ldir);
 
@@ -283,7 +283,7 @@ namespace Engine::Manager::Physics
       // rhs test, if exists.
       if (rrb && rrb->GetActive())
       {
-        const auto rvel = rrb->GetT0LinearVelocity();
+        const auto rvel = Engine::Physics::EvalT1PositionDelta(rrb->GetT0LinearVelocity(), rrb->GetT0Force(), dt);
         Vector3    rdir;
         rvel.Normalize(rdir);
         if (rdir != Vector3::Zero || !FloatCompare

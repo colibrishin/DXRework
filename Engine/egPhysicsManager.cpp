@@ -71,18 +71,34 @@ namespace Engine::Manager::Physics
 
     EpsilonGuard(lvel);
 
-    t1->SetLocalPosition(t1->GetLocalPosition() + (lvel * dt) + (rb->GetT0Force() * (dt * dt * 0.5f)));
+    t1->SetLocalPosition
+      (
+       t1->GetLocalPosition() + Engine::Physics::EvalT1PositionDelta(lvel, rb->GetT0Force(), dt)
+      );
 
     if (!rb->GetNoAngular())
     {
       Quaternion orientation = t1->GetLocalRotation();
-      orientation += Quaternion{rvel * dt * 0.5f, 0.0f} * orientation;
+      orientation += Quaternion{
+        Engine::Physics::EvalT1PositionDelta
+        (
+         rvel, rb->GetT0Torque(), dt
+        ),
+        0.0f
+      } * orientation;
+
       orientation.Normalize();
       t1->SetLocalRotation(orientation);
-      rb->SetT0AngularVelocity(rvel + (rb->GetT0Torque() + rb->GetT1Torque()) * (dt * 0.5f));
+      rb->SetT0AngularVelocity
+        (
+         Engine::Physics::EvalT1Velocity(rvel, rb->GetT0Torque(), rb->GetT1Torque(), dt)
+        );
     }
 
-    rb->SetT0LinearVelocity(lvel + (rb->GetT0Force() + rb->GetT1Force()) * (dt * 0.5f));
+    rb->SetT0LinearVelocity
+      (
+       Engine::Physics::EvalT1Velocity(lvel, rb->GetT0Force(), rb->GetT1Force(), dt)
+      );
 
     rb->Reset();
 
