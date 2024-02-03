@@ -57,6 +57,11 @@ namespace Engine::Resources
     };
 
     const auto&           indices = m_indices_;
+    if (indices.size() % 3 != 0)
+    {
+      return;
+    }
+
     std::vector<FacePair> faces;
 
     for (size_t i = 0; i < indices.size(); i += 3)

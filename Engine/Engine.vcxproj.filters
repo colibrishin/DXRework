@@ -257,6 +257,9 @@
     <Filter Include="Singleton\Physics\Graviton">
       <UniqueIdentifier>{c3790a24-e986-48ac-b9c6-9cbe5509b7ab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mesh\PointMesh">
+      <UniqueIdentifier>{f5d4787b-2a64-485f-b06a-f160e59437e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -508,6 +511,9 @@
     <ClInclude Include="egGraviton.h">
       <Filter>Singleton\Physics\Graviton</Filter>
     </ClInclude>
+    <ClInclude Include="egPointMesh.h">
+      <Filter>Mesh\PointMesh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -716,6 +722,9 @@
     <ClCompile Include="egGraviton.cpp">
       <Filter>Singleton\Physics\Graviton</Filter>
     </ClCompile>
+    <ClCompile Include="egPointMesh.cpp">
+      <Filter>Mesh\PointMesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -758,6 +767,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="utility.hlsli">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="billboard.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

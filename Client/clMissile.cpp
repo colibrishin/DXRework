@@ -45,7 +45,7 @@ namespace Client::Object
 
     const auto rb = GetComponent<Components::Rigidbody>().lock();
 
-    auto dir = rb->GetLinearMomentum();
+    auto dir = rb->GetT0LinearVelocity();
     dir.Normalize();
     auto major = dir.Cross(Vector3::Down);
     major.Normalize();

@@ -156,6 +156,7 @@ namespace Engine::Manager::Graphics
     StructuredBuffer<SBs::InstanceSB> sb;
     sb.Create(static_cast<UINT>(structured_buffers.size()), structured_buffers.data(), false);
     sb.BindSRV(SHADER_VERTEX);
+    sb.BindSRV(SHADER_GEOMETRY);
 
     material->SetTempParam
       (

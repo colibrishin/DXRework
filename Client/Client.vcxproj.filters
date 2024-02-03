@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -87,6 +87,12 @@
     <Filter Include="Object\Missile">
       <UniqueIdentifier>{c302eed8-34e3-44a6-abc3-3e6c02fde386}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\ComputeShader\ParticleCompute">
+      <UniqueIdentifier>{1cb6e23b-a956-4c5f-a930-63eef1351553}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\ComputeShader\GrassCompute">
+      <UniqueIdentifier>{def4098a-11b2-4a38-9759-26ba3e834c7b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -143,14 +149,14 @@
     <ClInclude Include="clHitboxScript.hpp">
       <Filter>Script</Filter>
     </ClInclude>
-    <ClInclude Include="clParticleCompute.h">
-      <Filter>Resource\ComputeShader</Filter>
-    </ClInclude>
     <ClInclude Include="clHealth.h">
       <Filter>Object\Health</Filter>
     </ClInclude>
     <ClInclude Include="clMissile.h">
       <Filter>Object\Missile</Filter>
+    </ClInclude>
+    <ClInclude Include="clParticleCompute.h">
+      <Filter>Resource\ComputeShader\ParticleCompute</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -199,14 +205,14 @@
     <ClCompile Include="clHitbox.cpp">
       <Filter>Object\Hitbox</Filter>
     </ClCompile>
-    <ClCompile Include="clParticleCompute.cpp">
-      <Filter>Resource\ComputeShader</Filter>
-    </ClCompile>
     <ClCompile Include="clHealth.cpp">
       <Filter>Object\Health</Filter>
     </ClCompile>
     <ClCompile Include="clMissile.cpp">
       <Filter>Object\Missile</Filter>
+    </ClCompile>
+    <ClCompile Include="clParticleCompute.cpp">
+      <Filter>Resource\ComputeShader\ParticleCompute</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -229,7 +235,7 @@
       <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\Engine\cs_particle.hlsl">
-      <Filter>Resource\ComputeShader</Filter>
+      <Filter>Resource\ComputeShader\ParticleCompute</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="Rocket.fbx">
       <Filter>Resource\Model</Filter>
