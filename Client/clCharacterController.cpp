@@ -58,7 +58,7 @@ namespace Client::State
     const boost::shared_ptr<Components::Rigidbody>& rb
   )
   {
-    float      speed = 1.0f;
+    float      speed = 10.0f;
     const auto scene = GetSceneManager().GetActiveScene().lock();
 
     auto forward = GetOwner().lock()->GetComponent<Components::Transform>().lock()->Forward();
