@@ -409,7 +409,7 @@ namespace Engine
     {
       for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
       {
-        if (ImGui::TreeNode(std::to_string(i).c_str()))
+        if (ImGui::TreeNode(g_layer_type_str[i]))
         {
           for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
           {

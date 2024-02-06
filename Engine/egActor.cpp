@@ -21,7 +21,7 @@ namespace Engine::Abstract
   {
     Renderable::OnImGui();
     ImGui::BulletText("Actor");
-    lldDisabled("Layer", m_layer_);
+    TextDisabled("Layer", g_layer_type_str[GetLayer()]);
     lldDisabled("Local ID", m_local_id_);
   }
 

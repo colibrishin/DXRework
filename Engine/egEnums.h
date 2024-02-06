@@ -176,7 +176,28 @@ namespace Engine
     RES_T_ANIMS_TEX,
     RES_T_COMPUTE_SHADER,
     RES_T_SHADOW_TEX,
+    RES_T_MAX,
   };
+
+  constexpr const char* g_resource_type_str[] = 
+  {
+     "Unknown",
+     "Shader",
+     "Texture",
+     "Font",
+     "Sound",
+     "Bone Animation",
+     "Bone",
+     "Base Animation",
+     "Material",
+     "Mesh",
+     "Shape",
+     "Animation Texture",
+     "Compute Shader",
+     "Shadow Texture",
+   };
+
+  static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
   enum eComponentType
   {
@@ -213,6 +234,20 @@ namespace Engine
     BOUNDING_TYPE_BOX = 0,
     BOUNDING_TYPE_SPHERE,
   };
+
+  constexpr const char* g_layer_type_str[] =
+  {
+     "None",
+     "Light",
+     "Default",
+     "Hitbox",
+     "Environment",
+     "Skybox",
+     "UI",
+     "Camera",
+  };
+
+  static_assert(ARRAYSIZE(g_layer_type_str) == LAYER_MAX);
 
   // THIS ENUM SHOULD BE DEFINED AT THE CLIENT!
   enum eSceneType : UINT;

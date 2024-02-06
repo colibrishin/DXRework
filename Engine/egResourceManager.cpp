@@ -27,13 +27,13 @@ namespace Engine::Manager
 
   void ResourceManager::OnImGui()
   {
-    if (ImGui::Begin("Resource Manager"))
+    if (ImGui::Begin("Resource Manager", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-      for (const auto& resources : m_resources_)
+      for (const auto& [type, resources] : m_resources_)
       {
-        if (ImGui::TreeNode(std::to_string(resources.first).c_str()))
+        if (ImGui::TreeNode(g_resource_type_str[type]))
         {
-          for (const auto& res : resources.second)
+          for (const auto& res : resources)
           {
             if (ImGui::TreeNode(res->GetName().c_str()))
             {
