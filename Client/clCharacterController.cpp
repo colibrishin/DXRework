@@ -12,6 +12,7 @@
 
 #include "clHitboxScript.hpp"
 #include "clPlayer.h"
+#include "egAnimator.h"
 #include "egBaseCollider.hpp"
 #include "egImGuiHeler.hpp"
 #include "egMouseManager.h"
@@ -72,32 +73,47 @@ namespace Client::State
     ortho *= speed;
 
     bool pressed = false;
+    const auto atr = GetOwner().lock()->GetComponent<Components::Animator>().lock();
+
+    constexpr UINT forward_anim = 20;
+    constexpr UINT backward_anim = 19;
+    constexpr UINT left_anim = 22;
+    constexpr UINT right_anim = 21;
+    constexpr UINT idle_anim = 0;
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
     {
+      atr->SetAnimation(forward_anim);
       rb->AddT1Force(forward);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
     {
+      atr->SetAnimation(left_anim);
       rb->AddT1Force(ortho);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
     {
+      atr->SetAnimation(backward_anim);
       rb->AddT1Force(-forward);
       pressed = true;
     }
 
     if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
     {
+      atr->SetAnimation(right_anim);
       rb->AddT1Force(-ortho);
       pressed = true;
     }
 
-    if (!pressed) { SetState(CHAR_STATE_IDLE); }
+    if (!pressed)
+    {
+      SetState(CHAR_STATE_IDLE);
+      atr->SetAnimation(idle_anim);
+    }
     else { SetState(CHAR_STATE_WALK); }
   }
 
