@@ -409,9 +409,24 @@ namespace Engine::Resources
           anim->SetName(anim_name + "_ANIM");
           anim->BindBone(m_bone_);
           anim->Load();
-          GetResourceManager().AddResource(anim);
           m_animation_catalog_.push_back(anim_name + "_ANIM");
           animations.push_back(anim);
+        }
+
+        // Sorts animations by name for consistency of the index of animation.
+        std::ranges::sort(m_animation_catalog_);
+        std::ranges::sort
+          (
+           animations
+           , [](const StrongBoneAnimation& lhs, const StrongBoneAnimation& rhs)
+           {
+             return lhs->GetName() < rhs->GetName();
+           }
+          );
+
+        for (const auto& anim : animations)
+        {
+          GetResourceManager().AddResource(anim);
         }
 
         const auto anims = boost::make_shared<AnimationsTexture>(animations);
