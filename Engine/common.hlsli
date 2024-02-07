@@ -147,20 +147,19 @@ matrix GetAnimationMatrix(in uint anim_idx, in uint frame, in uint bone_idx)
   return matrix(r0, r1, r2, r3);
 }
 
-matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint bone_idx)
+matrix LoadAnimation(in uint anim_idx, in float dt, in float fps, in int duration, in uint bone_idx)
 {
-  const float sampling_rate_frame = (frame * 10);
-  const int   idx                 = (int)sampling_rate_frame;
+  const float frame = fmod(dt * fps, duration);
 
-  const int frame_idx      = idx;
-  const int next_frame_idx = idx + 1;
-  const float t = sampling_rate_frame - frame_idx;
+  const int   frame_idx      = floor(frame);
+  const int   next_frame_idx = ceil(frame);
+  const float t              = (frame - frame_idx) / (next_frame_idx - frame_idx);
 
   matrix matT0, matT1;
 
   if (frame_idx < 0)
   {
-    if (duration == 1)
+    if (duration == 0)
     {
       matT0 = GetAnimationMatrix(anim_idx, 0, bone_idx);
       matT1 = GetAnimationMatrix(anim_idx, 0, bone_idx);
