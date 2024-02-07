@@ -135,12 +135,6 @@ matrix Compose(in float3 translation, in float3 scale, in float4 rotation)
 {
   matrix ret = QuaternionToMat(rotation);
 
-  // set the translation value.
-  ret._41 = translation.x;
-  ret._42 = translation.y;
-  ret._43 = translation.z;
-  ret._44 = 1.0f;
-
   // multiply matrix with scale for each column
   ret._11 *= scale.x;
   ret._21 *= scale.x;
@@ -153,6 +147,12 @@ matrix Compose(in float3 translation, in float3 scale, in float4 rotation)
   ret._13 *= scale.z;
   ret._23 *= scale.z;
   ret._33 *= scale.z;
+
+  // set the translation value.
+  ret._41 = translation.x;
+  ret._42 = translation.y;
+  ret._43 = translation.z;
+  ret._44 = 1.0f;
 
   return ret;
 }
@@ -173,9 +173,9 @@ void Decompose(in matrix mat, out float3 translation, out float3 scale, out quat
   // remove scale from matrix
   const matrix rotationMat = matrix
     (
-     float4(mat[0][0] / scale_x, mat[0][1] / scale_x, mat[0][2] / scale_x, 0),
-     float4(mat[1][0] / scale_y, mat[1][1] / scale_y, mat[1][2] / scale_y, 0),
-     float4(mat[2][0] / scale_z, mat[2][1] / scale_z, mat[2][2] / scale_z, 0),
+     float4(mat[0][0] / scale_x, mat[0][1] / scale_y, mat[0][2] / scale_z, 0),
+     float4(mat[1][0] / scale_x, mat[1][1] / scale_y, mat[1][2] / scale_z, 0),
+     float4(mat[2][0] / scale_x, mat[2][1] / scale_y, mat[2][2] / scale_z, 0),
      float4(0, 0, 0, 1)
     );
 
