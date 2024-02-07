@@ -91,6 +91,7 @@ namespace Engine::Graphics
       }
 
       void SetFrame(const float frame) { SetParam(0, frame); }
+      void SetFps(float anim_fps) { SetParam(1, anim_fps); }
 
       void SetAnimDuration(const UINT duration) { SetParam(0, (int)duration); }
       void SetAnimIndex(const UINT index) { SetParam(1, (int)index); }

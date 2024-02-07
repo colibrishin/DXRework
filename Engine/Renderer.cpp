@@ -186,6 +186,7 @@ namespace Engine::Manager::Graphics
 
     // animator parameters
     float anim_frame    = 0.0f;
+    float anim_fps      = 0.0f;
     UINT  anim_idx      = 0;
     UINT  anim_duration = 0;
     bool  no_anim       = false;
@@ -198,7 +199,8 @@ namespace Engine::Manager::Graphics
 
       if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
       {
-        anim_duration = (UINT)(bone_anim->GetDuration() / g_animation_sample_rate);
+        anim_fps      = bone_anim->GetTicksPerSecond();
+        anim_duration = bone_anim->GetDuration();
       }
     }
 
@@ -214,6 +216,7 @@ namespace Engine::Manager::Graphics
         SBs::InstanceModelSB sb{};
         sb.SetWorld(tr->GetWorldMatrix().Transpose());
         sb.SetFrame(anim_frame);
+        sb.SetFps(anim_fps);
         sb.SetAnimDuration(anim_duration);
         sb.SetAnimIndex(anim_idx);
         sb.SetNoAnim(no_anim);
