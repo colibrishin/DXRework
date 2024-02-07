@@ -84,9 +84,11 @@ namespace Engine::Resources
       std::vector<std::vector<Matrix>> sample_data;
       float t = 0.f;
 
-      for (;t < animation->GetDuration(); t += animation->GetDuration() / animation->GetTicksPerSecond())
+      for (;t < animation->GetDuration() / animation->GetTicksPerSecond(); 
+           t += 1.f / (animation->GetTicksPerSecond() + 0.99999f))
       {
-        auto        bones = animation->GetFrameAnimation(t);
+        const float frame_t = animation->ConvertDtToFrame(t, animation->GetTicksPerSecond(), animation->GetDuration());
+        auto        bones   = animation->GetFrameAnimation(frame_t);
 
         // todo: why transpose is not needed here??
         bone_count = std::max(bone_count, static_cast<UINT>(bones.size()));
