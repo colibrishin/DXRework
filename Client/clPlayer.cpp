@@ -105,7 +105,7 @@ namespace Client::Object
     if (!mtl) { return; }
 
     const auto anim   = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
-    auto       deform = anim->GetFrameAnimation(atr->GetFrame());
+    auto       deform = anim->GetFrameAnimationDt(atr->GetFrame());
     const auto rb     = GetComponent<Components::Rigidbody>().lock();
     Vector3    min    = {FLT_MAX, FLT_MAX, FLT_MAX};
     Vector3    max    = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
