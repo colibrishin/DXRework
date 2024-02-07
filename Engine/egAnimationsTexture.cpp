@@ -87,9 +87,8 @@ namespace Engine::Resources
       for (;t < animation->GetDuration() / animation->GetTicksPerSecond(); 
            t += 1.f / (animation->GetTicksPerSecond() + 0.99999f))
       {
-        auto        bones   = animation->GetFrameAnimationDt(t);
-
-        // todo: why transpose is not needed here??
+        // Transpose will be done while loading the texture to the shader.
+        auto bones = animation->GetFrameAnimationDt(t);
         bone_count = std::max(bone_count, static_cast<UINT>(bones.size()));
 
         sample_data.push_back(bones);

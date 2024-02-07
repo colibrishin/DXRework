@@ -138,7 +138,7 @@ matrix GetAnimationMatrix(in uint anim_idx, in uint frame, in uint bone_idx)
 {
   // since we are storing float4s, bone idx should be
   // multiplied by 4 to get the correct index
-
+  // matrix ctor will transpose the matrix.
   float4 r0 = texAnimations.Load(uint4(bone_idx * 4, frame, anim_idx, 0));
   float4 r1 = texAnimations.Load(uint4(bone_idx * 4 + 1, frame, anim_idx, 0));
   float4 r2 = texAnimations.Load(uint4(bone_idx * 4 + 2, frame, anim_idx, 0));
