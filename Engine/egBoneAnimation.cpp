@@ -46,13 +46,19 @@ namespace Engine::Resources
 
   eResourceType BoneAnimation::GetResourceType() const { return RES_T_BONE_ANIM; }
 
-  std::vector<Matrix> BoneAnimation::GetFrameAnimation(const float dt)
+  std::vector<Matrix> BoneAnimation::GetFrameAnimationDt(const float dt)
   {
-    if (dt != 0.f && m_evaluated_time_ == dt && !m_evaluated_data_.empty()) { return m_evaluated_data_; }
+    const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
+    return GetFrameAnimation(anim_time);
+  }
+
+  std::vector<Matrix> BoneAnimation::GetFrameAnimation(const float time)
+  {
+    if (time != 0.f && m_evaluated_time_ == time && !m_evaluated_data_.empty()) { return m_evaluated_data_; }
 
     m_evaluated_data_.clear();
-    m_evaluated_time_             = dt;
-    const auto          anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
+    m_evaluated_time_ = time;
+    
     std::vector<Matrix> memo;
 
     memo.clear();
@@ -65,9 +71,9 @@ namespace Engine::Resources
       const BonePrimitive*          bone           = m_bone_->GetBone(i);
       const BonePrimitive*          parent         = m_bone_->GetBoneParent(i);
 
-      const auto position = bone_animation->GetPosition(anim_time);
-      const auto rotation = bone_animation->GetRotation(anim_time);
-      const auto scale    = bone_animation->GetScale(anim_time);
+      const auto position = bone_animation->GetPosition(time);
+      const auto rotation = bone_animation->GetRotation(time);
+      const auto scale    = bone_animation->GetScale(time);
 
       const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion
                                       (rotation) * Matrix::CreateTranslation(position);

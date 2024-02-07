@@ -39,13 +39,26 @@ namespace Engine::Components
     const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
     const float duration  = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
 
-    if (tr_anim || bone_anim)
-    {
-      if (m_current_frame_ >= duration) { m_current_frame_ = 0.0f; }
+    m_current_frame_ += dt;
 
-      m_current_frame_ += dt;
+    if (tr_anim)
+    {
+      if (tr_anim->ConvertDtToFrame
+          (m_current_frame_, tr_anim->GetTicksPerSecond(), duration) >= duration)
+      {
+        m_current_frame_ = 0.0f;
+      }
 
       if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock()) { UpdateTransform(tr, tr_anim); }
+    }
+    else if (bone_anim)
+    {
+      const auto frame_t = bone_anim->ConvertDtToFrame
+          (m_current_frame_, bone_anim->GetTicksPerSecond(), duration);
+      if (frame_t >= duration)
+      {
+        m_current_frame_ = 0.0f;
+      }
     }
   }
 
