@@ -181,10 +181,10 @@ namespace Engine::Resources
           Vector3 tangent_  = {0.f, 0.f, 0.f};
           Vector3 binormal_ = {0.f, 0.f, 0.f};
 
-          if (shape_->HasTextureCoords(j))
+          if (shape_->HasTextureCoords(0))
           {
-            const auto tex = shape_->mTextureCoords[j]; // Assuming UV exists in 2D
-            tex_coord      = Vector2{tex->x, tex->y};
+            const auto tex = shape_->mTextureCoords[0]; // Assuming UV exists in 2D
+            tex_coord      = Vector2{tex[j].x, tex[j].y};
           }
 
           if (shape_->HasNormals())
