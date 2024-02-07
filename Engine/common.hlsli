@@ -151,7 +151,7 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in int duration, in uint 
 {
   const int   frame_idx      = floor(frame);
   const int   next_frame_idx = ceil(frame);
-  const float t              = (frame - frame_idx) / (next_frame_idx - frame_idx);
+  const float t              = frac(frame);
 
   matrix matT0, matT1;
 
