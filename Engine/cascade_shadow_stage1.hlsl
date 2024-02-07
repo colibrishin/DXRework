@@ -36,7 +36,6 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
         (
          bufInstance[instanceId].INST_ANIM_IDX,
          bufInstance[instanceId].INST_ANIM_FRAME,
-         bufInstance[instanceId].INST_ANIM_FPS,
          bufInstance[instanceId].INST_ANIM_DURATION,
          bone_index
         );

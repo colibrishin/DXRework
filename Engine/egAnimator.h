@@ -18,6 +18,7 @@ namespace Engine::Components
 
     UINT  GetAnimation() const;
     float GetFrame() const;
+    float GetDt() const;
 
   private:
     SERIALIZER_ACCESS
@@ -25,8 +26,25 @@ namespace Engine::Components
 
     void UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const;
 
+    template <typename T>
+    void ResetIfTimer(const boost::shared_ptr<T>& anim)
+    {
+      if (anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond(), anim->GetDuration()) >= anim->GetDuration())
+      {
+        m_current_frame_ = 0.0f;
+        m_total_dt_ = 0.0f;
+      }
+    }
+
+    template <typename T>
+    void UpdateTimer(const boost::shared_ptr<T>& anim)
+    {
+      m_current_frame_ = anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond(), anim->GetDuration());
+    }
+
     UINT  m_animation_id_;
     float m_current_frame_;
+    float m_total_dt_;
   };
 }
 
