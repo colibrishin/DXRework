@@ -168,7 +168,7 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in int duration, in uint 
       matT1 = GetAnimationMatrix(anim_idx, 1, bone_idx);
     }
   }
-  else if (next_frame_idx >= duration || frame_idx >= duration)
+  else if (next_frame_idx > duration || frame_idx > duration)
   {
     matT0 = GetAnimationMatrix(anim_idx, fmod(duration - 2, duration), bone_idx);
     matT1 = GetAnimationMatrix(anim_idx, fmod(duration - 1, duration), bone_idx);
