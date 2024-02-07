@@ -128,8 +128,7 @@ namespace Engine::Resources
        GetPath().string(),
        aiProcess_Triangulate | aiProcess_GenSmoothNormals |
        aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-       aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder |
-       aiProcess_PopulateArmatureData
+       aiProcess_MakeLeftHanded | aiProcess_PopulateArmatureData
       );
 
     if (scene == nullptr) { throw std::runtime_error(s_importer_.GetErrorString()); }
@@ -182,10 +181,10 @@ namespace Engine::Resources
           Vector3 tangent_  = {0.f, 0.f, 0.f};
           Vector3 binormal_ = {0.f, 0.f, 0.f};
 
-          if (shape_->HasTextureCoords(j))
+          if (shape_->HasTextureCoords(0))
           {
-            const auto tex = shape_->mTextureCoords[j]; // Assuming UV exists in 2D
-            tex_coord      = Vector2{tex->x, tex->y};
+            const auto tex = shape_->mTextureCoords[0]; // Assuming UV exists in 2D
+            tex_coord      = Vector2{tex[j].x, tex[j].y};
           }
 
           if (shape_->HasNormals())
@@ -409,9 +408,24 @@ namespace Engine::Resources
           anim->SetName(anim_name + "_ANIM");
           anim->BindBone(m_bone_);
           anim->Load();
-          GetResourceManager().AddResource(anim);
           m_animation_catalog_.push_back(anim_name + "_ANIM");
           animations.push_back(anim);
+        }
+
+        // Sorts animations by name for consistency of the index of animation.
+        std::ranges::sort(m_animation_catalog_);
+        std::ranges::sort
+          (
+           animations
+           , [](const StrongBoneAnimation& lhs, const StrongBoneAnimation& rhs)
+           {
+             return lhs->GetName() < rhs->GetName();
+           }
+          );
+
+        for (const auto& anim : animations)
+        {
+          GetResourceManager().AddResource(anim);
         }
 
         const auto anims = boost::make_shared<AnimationsTexture>(animations);

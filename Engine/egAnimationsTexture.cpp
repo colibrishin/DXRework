@@ -84,12 +84,11 @@ namespace Engine::Resources
       std::vector<std::vector<Matrix>> sample_data;
       float t = 0.f;
 
-      for (;t < animation->GetDuration(); t += g_animation_sample_rate)
+      for (;t < animation->GetDuration() / animation->GetTicksPerSecond(); 
+           t += 1.f / (animation->GetTicksPerSecond() + 0.99999f))
       {
-        const float f_dt  = animation->ConvertDtToFrame(t, animation->GetTicksPerSecond(), animation->GetDuration());
-        auto        bones = animation->GetFrameAnimation(f_dt);
-
-        // todo: why transpose is not needed here??
+        // Transpose will be done while loading the texture to the shader.
+        auto bones = animation->GetFrameAnimationDt(t);
         bone_count = std::max(bone_count, static_cast<UINT>(bones.size()));
 
         sample_data.push_back(bones);

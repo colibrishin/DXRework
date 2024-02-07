@@ -37,13 +37,13 @@ namespace Engine::Resources
     const float delta       = (deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x);
     const float denominator = 1.0f / delta;
 
-    tangent.x = denominator * (deltaUV2.y * edge1.x - deltaUV2.y * edge2.x);
-    tangent.y = denominator * (deltaUV2.y * edge1.y - deltaUV2.y * edge2.y);
-    tangent.z = denominator * (deltaUV2.y * edge1.z - deltaUV2.y * edge2.z);
+    tangent.x = denominator * (deltaUV1.y * edge1.x - deltaUV1.x * edge2.x);
+    tangent.y = denominator * (deltaUV1.y * edge1.y - deltaUV1.x * edge2.y);
+    tangent.z = denominator * (deltaUV1.y * edge1.z - deltaUV1.x * edge2.z);
 
-    binormal.x = denominator * (deltaUV1.x * edge2.x - deltaUV1.y * edge1.x);
-    binormal.y = denominator * (deltaUV1.x * edge2.y - deltaUV1.y * edge1.y);
-    binormal.z = denominator * (deltaUV1.x * edge2.z - deltaUV1.y * edge1.z);
+    binormal.x = denominator * (deltaUV2.x * edge2.x - deltaUV2.y * edge1.x);
+    binormal.y = denominator * (deltaUV2.x * edge2.y - deltaUV2.y * edge1.y);
+    binormal.z = denominator * (deltaUV2.x * edge2.z - deltaUV2.y * edge1.z);
 
     tangent.Normalize();
     binormal.Normalize();

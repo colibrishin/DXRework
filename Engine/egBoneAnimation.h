@@ -26,7 +26,8 @@ namespace Engine::Resources
     void          BindBone(const WeakBone& bone_info);
     eResourceType GetResourceType() const override;
 
-    std::vector<Matrix> GetFrameAnimation(float dt);
+    std::vector<Matrix> GetFrameAnimationDt(float dt);
+    std::vector<Matrix> GetFrameAnimation(const float time);
 
     RESOURCE_SELF_INFER_GETTER(BoneAnimation)
 

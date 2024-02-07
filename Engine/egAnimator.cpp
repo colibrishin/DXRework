@@ -20,7 +20,8 @@ namespace Engine::Components
   Animator::Animator(const WeakObject& owner)
     : Component(COM_T_ANIMATOR, owner),
       m_animation_id_(0),
-      m_current_frame_(0) {}
+      m_current_frame_(0),
+      m_total_dt_(0) {}
 
   void Animator::PreUpdate(const float& dt) {}
 
@@ -39,13 +40,19 @@ namespace Engine::Components
     const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
     const float duration  = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
 
-    if (tr_anim || bone_anim)
-    {
-      if (m_current_frame_ >= duration) { m_current_frame_ = 0.0f; }
+    m_total_dt_ += dt;
 
-      m_current_frame_ += dt;
+    if (tr_anim)
+    {
+      ResetIfTimer(tr_anim);
+      UpdateTimer(tr_anim);
 
       if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock()) { UpdateTransform(tr, tr_anim); }
+    }
+    else if (bone_anim)
+    {
+      ResetIfTimer(bone_anim);
+      UpdateTimer(bone_anim);
     }
   }
 
@@ -64,10 +71,13 @@ namespace Engine::Components
 
   float Animator::GetFrame() const { return m_current_frame_; }
 
+  float Animator::GetDt() const { return m_total_dt_; }
+
   Animator::Animator()
     : Component(COM_T_ANIMATOR, {}),
       m_animation_id_(0),
-      m_current_frame_(0) {}
+      m_current_frame_(0),
+      m_total_dt_(0) {}
 
   void Animator::UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const
   {

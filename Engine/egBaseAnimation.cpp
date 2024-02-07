@@ -53,6 +53,6 @@ namespace Engine::Resources
 
   float BaseAnimation::ConvertDtToFrame(const float& dt, const float ticks_per_second, const float duration)
   {
-    return std::fmod(dt * ticks_per_second, duration);
+    return dt * ticks_per_second;
   }
 }

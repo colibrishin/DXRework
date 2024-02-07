@@ -16,7 +16,6 @@ namespace Engine
   constexpr UINT g_max_slot_per_uav             = 2;
   constexpr UINT g_reserved_bind_slot           = 32;
   constexpr UINT g_reserved_struct_buffer_slot  = 48;
-  constexpr float g_animation_sample_rate       = 0.1f;
   constexpr UINT g_uav_slot_limit               = 8;
   constexpr UINT g_reserved_uav_slot            = 6;
 

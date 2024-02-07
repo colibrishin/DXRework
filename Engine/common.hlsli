@@ -138,7 +138,7 @@ matrix GetAnimationMatrix(in uint anim_idx, in uint frame, in uint bone_idx)
 {
   // since we are storing float4s, bone idx should be
   // multiplied by 4 to get the correct index
-
+  // matrix ctor will transpose the matrix.
   float4 r0 = texAnimations.Load(uint4(bone_idx * 4, frame, anim_idx, 0));
   float4 r1 = texAnimations.Load(uint4(bone_idx * 4 + 1, frame, anim_idx, 0));
   float4 r2 = texAnimations.Load(uint4(bone_idx * 4 + 2, frame, anim_idx, 0));
@@ -147,20 +147,17 @@ matrix GetAnimationMatrix(in uint anim_idx, in uint frame, in uint bone_idx)
   return matrix(r0, r1, r2, r3);
 }
 
-matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint bone_idx)
+matrix LoadAnimation(in uint anim_idx, in float frame, in int duration, in uint bone_idx)
 {
-  const float sampling_rate_frame = (frame * 10);
-  const int   idx                 = (int)sampling_rate_frame;
-
-  const int frame_idx      = idx;
-  const int next_frame_idx = idx + 1;
-  const float t = sampling_rate_frame - frame_idx;
+  const int   frame_idx      = floor(frame);
+  const int   next_frame_idx = ceil(frame);
+  const float t              = frac(frame);
 
   matrix matT0, matT1;
 
   if (frame_idx < 0)
   {
-    if (duration == 1)
+    if (duration == 0.f)
     {
       matT0 = GetAnimationMatrix(anim_idx, 0, bone_idx);
       matT1 = GetAnimationMatrix(anim_idx, 0, bone_idx);
@@ -171,10 +168,10 @@ matrix LoadAnimation(in uint anim_idx, in float frame, in uint duration, in uint
       matT1 = GetAnimationMatrix(anim_idx, 1, bone_idx);
     }
   }
-  else if (next_frame_idx >= duration || frame_idx >= duration)
+  else if (next_frame_idx > duration || frame_idx > duration)
   {
-    matT0 = GetAnimationMatrix(anim_idx, duration - 2, bone_idx);
-    matT1 = GetAnimationMatrix(anim_idx, duration - 1, bone_idx);
+    matT0 = GetAnimationMatrix(anim_idx, fmod(duration - 2, duration), bone_idx);
+    matT1 = GetAnimationMatrix(anim_idx, fmod(duration - 1, duration), bone_idx);
   }
   else
   {

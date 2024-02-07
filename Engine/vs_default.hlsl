@@ -33,7 +33,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   output.tangent  = input.tangent;
   output.binormal = input.binormal;
 
-#define INST_ANIM_FRAME  fParam[0]
+#define INST_ANIM_FRAME  fParam[0].x
 #define INST_ANIM_DURATION iParam[0].x   
 #define INST_ANIM_IDX  iParam[0].y
 #define INST_NO_ANIM   iParam[0].z
@@ -55,7 +55,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
          bone_index
         );
 
-      animation_transform += transform * weight;
+      animation_transform = (transform * weight) + animation_transform;
     }
 
     output.position = mul(output.position, animation_transform);
@@ -69,6 +69,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 
 #undef INST_NO_ANIM
 #undef INST_ANIM_IDX
+#undef INST_ANIM_FPS
 #undef INST_ANIM_FRAME
 #undef INST_ANIM_DURATION
 #undef INST_WORLD

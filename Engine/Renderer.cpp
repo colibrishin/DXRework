@@ -198,7 +198,7 @@ namespace Engine::Manager::Graphics
 
       if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
       {
-        anim_duration = (UINT)(bone_anim->GetDuration() / g_animation_sample_rate);
+        anim_duration = bone_anim->GetDuration();
       }
     }
 

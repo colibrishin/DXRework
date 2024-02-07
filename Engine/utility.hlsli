@@ -10,11 +10,11 @@ float4 GetTranslation(in matrix mat)
 
 float3 GetScale(in matrix mat)
 {
-    return float3
+  return float3
     (
-        length(float3(mat._11, mat._21, mat._31)),
-        length(float3(mat._12, mat._22, mat._32)),
-        length(float3(mat._13, mat._23, mat._33))
+     length(float3(mat[0][0], mat[1][0], mat[2][0])),
+     length(float3(mat[0][1], mat[1][1], mat[2][1])),
+     length(float3(mat[0][2], mat[1][2], mat[2][2]))
     );
 }
 
@@ -27,38 +27,38 @@ quaternion MatToQuaternion(in matrix world)
   // square root of w is not negative.
   if (trace > 0)
   {
-    float s = sqrt(trace + 1.0) * 2; // S=4*qw 
-    ret.w   = 0.25 * s;
-    ret.x   = (world._32 - world._23) / s;
-    ret.y   = (world._13 - world._31) / s;
-    ret.z   = (world._21 - world._12) / s;
+    float s = 0.5f / sqrt(trace + 1.0); // S=4*qw 
+    ret.w   = 0.25f / s;
+    ret.x   = (world[2][1] - world[1][2]) * s;
+    ret.y   = (world[0][2] - world[2][0]) * s;
+    ret.z   = (world[1][0] - world[0][1]) * s;
   }
-  else if ((world._11 > world._22) && (world._11 > world._33))
+  else if ((world[0][0] > world[1][1]) && (world[0][0] > world[2][2]))
   {
     // x is not negative and greatest.
-    float s = sqrt(1.0 + world._11 - world._22 - world._33) * 2; // S=4*qx 
-    ret.w   = (world._32 - world._23) / s;
-    ret.x   = 0.25 * s;
-    ret.y   = (world._12 + world._21) / s;
-    ret.z   = (world._13 + world._31) / s;
+    float s = sqrt(1.0 + world[0][0] - world[1][1] - world[2][2]) * 2.f; // S=4*qx 
+    ret.w   = (world[2][1] - world[1][2]) / s;
+    ret.x   = 0.25f * s;
+    ret.y   = (world[0][1] + world[1][0]) / s;
+    ret.z   = (world[0][2] + world[2][0]) / s;
   }
-  else if (world._22 > world._33)
+  else if (world[1][1] > world[2][2])
   {
     // y is not negative and greatest.
-    float s = sqrt(1.0 + world._22 - world._11 - world._33) * 2; // S=4*qy
-    ret.w   = (world._13 - world._31) / s;
-    ret.x   = (world._12 + world._21) / s;
-    ret.y   = 0.25 * s;
-    ret.z   = (world._23 + world._32) / s;
+    float s = sqrt(1.0 + world[1][1] - world[0][0] - world[2][2]) * 2.f; // S=4*qy
+    ret.w   = (world[0][2] - world[2][0]) / s;
+    ret.x   = (world[0][1] + world[1][0]) / s;
+    ret.y   = 0.25f * s;
+    ret.z   = (world[1][2] + world[2][1]) / s;
   }
   else
   {
     // z is not negative and greatest.
-    float s = sqrt(1.0 + world._33 - world._11 - world._22) * 2; // S=4*qz
-    ret.w   = (world._21 - world._12) / s;
-    ret.x   = (world._13 + world._31) / s;
-    ret.y   = (world._23 + world._32) / s;
-    ret.z   = 0.25 * s;
+    float s = sqrt(1.0 + world._33 - world._11 - world._22) * 2.f; // S=4*qz
+    ret.w   = (world[1][0] - world[0][1]) / s;
+    ret.x   = (world[0][2] + world[2][0]) / s;
+    ret.y   = (world[1][2] + world[2][1]) / s;
+    ret.z   = 0.25f * s;
   }
 
   return ret;
@@ -135,24 +135,24 @@ matrix Compose(in float3 translation, in float3 scale, in float4 rotation)
 {
   matrix ret = QuaternionToMat(rotation);
 
+  // multiply matrix with scale for each column
+  ret[0][0] *= scale.x;
+  ret[1][0] *= scale.x;
+  ret[2][0] *= scale.x;
+
+  ret[0][1] *= scale.y;
+  ret[1][1] *= scale.y;
+  ret[2][1] *= scale.y;
+
+  ret[0][2] *= scale.z;
+  ret[1][2] *= scale.z;
+  ret[2][2] *= scale.z;
+
   // set the translation value.
   ret._41 = translation.x;
   ret._42 = translation.y;
   ret._43 = translation.z;
   ret._44 = 1.0f;
-
-  // multiply matrix with scale for each column
-  ret._11 *= scale.x;
-  ret._21 *= scale.x;
-  ret._31 *= scale.x;
-
-  ret._12 *= scale.y;
-  ret._22 *= scale.y;
-  ret._32 *= scale.y;
-
-  ret._13 *= scale.z;
-  ret._23 *= scale.z;
-  ret._33 *= scale.z;
 
   return ret;
 }
@@ -162,9 +162,9 @@ void Decompose(in matrix mat, out float3 translation, out float3 scale, out quat
   translation = float3(mat._41, mat._42, mat._43);
 
   // scale is the length of each axis
-  float scale_x = length(float3(mat._11, mat._21, mat._31));
-  float scale_y = length(float3(mat._12, mat._22, mat._32));
-  float scale_z = length(float3(mat._13, mat._23, mat._33));
+  float scale_x = length(float3(mat[0][0], mat[1][0], mat[2][0]));
+  float scale_y = length(float3(mat[0][1], mat[1][1], mat[2][1]));
+  float scale_z = length(float3(mat[0][2], mat[1][2], mat[2][2]));
 
   // todo: why does this work?
   const float det = determinant(mat);
@@ -173,10 +173,10 @@ void Decompose(in matrix mat, out float3 translation, out float3 scale, out quat
   // remove scale from matrix
   const matrix rotationMat = matrix
     (
-     float4(mat._11 / scale_x, mat._12 / scale_x, mat._13 / scale_x, 0),
-     float4(mat._21 / scale_y, mat._22 / scale_y, mat._23 / scale_y, 0),
-     float4(mat._31 / scale_z, mat._32 / scale_z, mat._33 / scale_z, 0),
-     float4(0, 0, 0, 1)
+     mat[0][0] / scale_x, mat[0][1] / scale_y, mat[0][2] / scale_z, 0,
+     mat[1][0] / scale_x, mat[1][1] / scale_y, mat[1][2] / scale_z, 0,
+     mat[2][0] / scale_x, mat[2][1] / scale_y, mat[2][2] / scale_z, 0,
+     0, 0, 0, 1
     );
 
   rotation = MatToQuaternion(rotationMat);
