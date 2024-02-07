@@ -173,10 +173,10 @@ void Decompose(in matrix mat, out float3 translation, out float3 scale, out quat
   // remove scale from matrix
   const matrix rotationMat = matrix
     (
-     float4(mat[0][0] / scale_x, mat[0][1] / scale_y, mat[0][2] / scale_z, 0),
-     float4(mat[1][0] / scale_x, mat[1][1] / scale_y, mat[1][2] / scale_z, 0),
-     float4(mat[2][0] / scale_x, mat[2][1] / scale_y, mat[2][2] / scale_z, 0),
-     float4(0, 0, 0, 1)
+     mat[0][0] / scale_x, mat[0][1] / scale_y, mat[0][2] / scale_z, 0,
+     mat[1][0] / scale_x, mat[1][1] / scale_y, mat[1][2] / scale_z, 0,
+     mat[2][0] / scale_x, mat[2][1] / scale_y, mat[2][2] / scale_z, 0,
+     0, 0, 0, 1
     );
 
   rotation = MatToQuaternion(rotationMat);
