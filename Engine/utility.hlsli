@@ -12,9 +12,9 @@ float3 GetScale(in matrix mat)
 {
   return float3
     (
-     length(float3(mat[0][0], mat[0][1], mat[0][2])),
-     length(float3(mat[1][0], mat[1][1], mat[1][2])),
-     length(float3(mat[2][0], mat[2][1], mat[2][2]))
+     length(float3(mat[0][0], mat[1][0], mat[2][0])),
+     length(float3(mat[0][1], mat[1][1], mat[2][1])),
+     length(float3(mat[0][2], mat[1][2], mat[2][2]))
     );
 }
 
@@ -136,17 +136,17 @@ matrix Compose(in float3 translation, in float3 scale, in float4 rotation)
   matrix ret = QuaternionToMat(rotation);
 
   // multiply matrix with scale for each column
-  ret._11 *= scale.x;
-  ret._21 *= scale.x;
-  ret._31 *= scale.x;
+  ret[0][0] *= scale.x;
+  ret[1][0] *= scale.x;
+  ret[2][0] *= scale.x;
 
-  ret._12 *= scale.y;
-  ret._22 *= scale.y;
-  ret._32 *= scale.y;
+  ret[0][1] *= scale.y;
+  ret[1][1] *= scale.y;
+  ret[2][1] *= scale.y;
 
-  ret._13 *= scale.z;
-  ret._23 *= scale.z;
-  ret._33 *= scale.z;
+  ret[0][2] *= scale.z;
+  ret[1][2] *= scale.z;
+  ret[2][2] *= scale.z;
 
   // set the translation value.
   ret._41 = translation.x;
@@ -162,9 +162,9 @@ void Decompose(in matrix mat, out float3 translation, out float3 scale, out quat
   translation = float3(mat._41, mat._42, mat._43);
 
   // scale is the length of each axis
-  float scale_x = length(float3(mat[0][0], mat[0][1], mat[0][2]));
-  float scale_y = length(float3(mat[1][0], mat[1][1], mat[1][2]));
-  float scale_z = length(float3(mat[2][0], mat[2][1], mat[2][2]));
+  float scale_x = length(float3(mat[0][0], mat[1][0], mat[2][0]));
+  float scale_y = length(float3(mat[0][1], mat[1][1], mat[2][1]));
+  float scale_z = length(float3(mat[0][2], mat[1][2], mat[2][2]));
 
   // todo: why does this work?
   const float det = determinant(mat);
