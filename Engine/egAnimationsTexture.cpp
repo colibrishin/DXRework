@@ -87,8 +87,7 @@ namespace Engine::Resources
       for (;t < animation->GetDuration() / animation->GetTicksPerSecond(); 
            t += 1.f / (animation->GetTicksPerSecond() + 0.99999f))
       {
-        const float frame_t = animation->ConvertDtToFrame(t, animation->GetTicksPerSecond(), animation->GetDuration());
-        auto        bones   = animation->GetFrameAnimation(frame_t);
+        auto        bones   = animation->GetFrameAnimationDt(t);
 
         // todo: why transpose is not needed here??
         bone_count = std::max(bone_count, static_cast<UINT>(bones.size()));

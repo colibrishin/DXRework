@@ -18,7 +18,6 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
   output.position = float4(input.position, 1.0f);
 
 #define INST_ANIM_FRAME  fParam[0].x
-#define INST_ANIM_FPS    fParam[0].y
 #define INST_ANIM_DURATION iParam[0].x   
 #define INST_ANIM_IDX  iParam[0].y
 #define INST_NO_ANIM   iParam[0].z
