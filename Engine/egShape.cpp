@@ -128,8 +128,7 @@ namespace Engine::Resources
        GetPath().string(),
        aiProcess_Triangulate | aiProcess_GenSmoothNormals |
        aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices |
-       aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder |
-       aiProcess_PopulateArmatureData
+       aiProcess_MakeLeftHanded | aiProcess_PopulateArmatureData
       );
 
     if (scene == nullptr) { throw std::runtime_error(s_importer_.GetErrorString()); }
