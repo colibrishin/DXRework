@@ -51,6 +51,8 @@ namespace Engine::Manager::Physics
 
           if (t0 && t1)
           {
+            t0->m_previous_world_matrix_ = t0->GetWorldMatrix();
+
             const auto t0pos = t0->GetLocalPosition();
             const auto t1pos  = t1->GetLocalPosition();
             const auto f = GetLerpFactor();

@@ -59,6 +59,7 @@ namespace Engine::Manager
     GetD3Device().Initialize(hWnd);
     GetToolkitAPI().Initialize();
     GetRenderPipeline().Initialize();
+    GetMotionBlur().Initialize();
 
     GetResourceManager().Initialize();
     GetSceneManager().Initialize();
@@ -99,6 +100,7 @@ namespace Engine::Manager
     GetPhysicsManager().PreUpdate(dt);
     GetLerpManager().PreUpdate(dt);
     GetProjectionFrustum().PreUpdate(dt);
+    GetMotionBlur().PreUpdate(dt);
     GetRenderer().PreUpdate(dt);
     GetShadowManager().PreUpdate(dt);
     GetDebugger().PreUpdate(dt);
@@ -122,6 +124,7 @@ namespace Engine::Manager
     GetLerpManager().FixedUpdate(dt);
 
     GetProjectionFrustum().FixedUpdate(dt);
+    GetMotionBlur().FixedUpdate(dt);
     GetRenderer().FixedUpdate(dt);
     GetShadowManager().FixedUpdate(dt);
     GetDebugger().FixedUpdate(dt);
@@ -142,6 +145,7 @@ namespace Engine::Manager
     GetPhysicsManager().Update(dt);
     GetLerpManager().Update(dt);
     GetProjectionFrustum().Update(dt);
+    GetMotionBlur().Update(dt);
     GetRenderer().Update(dt);
     GetShadowManager().Update(dt);
     GetDebugger().Update(dt);
@@ -165,6 +169,7 @@ namespace Engine::Manager
     GetProjectionFrustum().PreRender(dt);
     GetRenderer().PreRender(dt);
     GetShadowManager().PreRender(dt);
+    GetMotionBlur().PreRender(dt);
     GetDebugger().PreRender(dt);
     GetRenderPipeline().PreRender(dt);
     GetD3Device().PreRender(dt);
@@ -185,6 +190,7 @@ namespace Engine::Manager
     GetProjectionFrustum().Render(dt);
     GetRenderer().Render(dt);
     GetShadowManager().Render(dt);
+    GetMotionBlur().Render(dt);
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
     GetD3Device().Render(dt);
@@ -205,6 +211,7 @@ namespace Engine::Manager
     GetProjectionFrustum().PostRender(dt);
     GetRenderer().PostRender(dt);
     GetShadowManager().PostRender(dt);
+    GetMotionBlur().PostRender(dt);
     GetDebugger().PostRender(dt);
 
     ImGui::Render();
@@ -227,6 +234,7 @@ namespace Engine::Manager
     GetPhysicsManager().PostUpdate(dt);
     GetLerpManager().PostUpdate(dt);
     GetProjectionFrustum().PostUpdate(dt);
+    GetMotionBlur().PostUpdate(dt);
     GetRenderer().PostUpdate(dt);
     GetShadowManager().PostUpdate(dt);
     GetDebugger().PostUpdate(dt);

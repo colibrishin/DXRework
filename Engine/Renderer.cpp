@@ -135,6 +135,10 @@ namespace Engine::Manager::Graphics
           {
             final_mapping[mtr].insert(final_mapping[mtr].end(), sbs.begin(), sbs.end());
           }
+          else if (!predicate)
+          {
+            final_mapping[mtr].insert(final_mapping[mtr].end(), sbs.begin(), sbs.end());
+          }
         }
       }
     }

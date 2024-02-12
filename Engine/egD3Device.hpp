@@ -262,6 +262,7 @@ namespace Engine::Manager::Graphics
     static float GetAspectRatio();
     void         UpdateRenderTarget();
     void         UpdateViewport();
+    ID3D11DepthStencilView* GetDepthStencilView() const { return s_depth_stencil_view_.Get(); }
 
     template <typename T>
     void CreateBuffer(D3D11_BIND_FLAG flag, UINT size, ID3D11Buffer** buffer)
@@ -342,11 +343,9 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
 
     const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
-
     const Matrix& GetOrthogonalMatrix() const { return s_ortho_matrix_; }
 
     ID3D11Device* GetDevice() const { return m_device_.Get(); }
-
     ID3D11DeviceContext* GetContext() const { return m_context_.Get(); }
 
     void CopySwapchain(ID3D11ShaderResourceView* buffer);

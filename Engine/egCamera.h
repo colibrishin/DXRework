@@ -48,6 +48,8 @@ namespace Engine::Objects
     Matrix m_world_matrix_;
     Matrix m_view_matrix_;
     Matrix m_projection_matrix_;
+    Matrix m_previous_view_matrix_;
+    Matrix m_previous_projection_matrix_;
 
     Graphics::CBs::PerspectiveCB m_wvp_buffer_;
   };

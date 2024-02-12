@@ -89,9 +89,6 @@
     <Filter Include="Object\Camera">
       <UniqueIdentifier>{f738052e-2873-4fa8-a656-a9c0c23b1bd3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\DelayedRenderObject">
-      <UniqueIdentifier>{a935ee61-95d9-415c-a068-6e3b4d4a7f41}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Object\Light">
       <UniqueIdentifier>{a66a35a1-0742-496b-b54b-b28814a26012}</UniqueIdentifier>
     </Filter>
@@ -259,6 +256,15 @@
     </Filter>
     <Filter Include="Mesh\PointMesh">
       <UniqueIdentifier>{f5d4787b-2a64-485f-b06a-f160e59437e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\MotionBlur">
+      <UniqueIdentifier>{598b28c7-1612-41da-b296-5b854a4616f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\PDepthTexture">
+      <UniqueIdentifier>{c7f6ea77-d250-4b26-af0a-572e786c3e6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\VelocityTexture">
+      <UniqueIdentifier>{a9450af8-1781-4520-ac2c-d009fd8de79a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -514,6 +520,15 @@
     <ClInclude Include="egPointMesh.h">
       <Filter>Mesh\PointMesh</Filter>
     </ClInclude>
+    <ClInclude Include="egMotionBlur.h">
+      <Filter>Singleton\Graphics\MotionBlur</Filter>
+    </ClInclude>
+    <ClInclude Include="egPDepthTexture.h">
+      <Filter>Resource\Textures\PDepthTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="egVelocityTexture.h">
+      <Filter>Resource\Textures\VelocityTexture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -725,6 +740,9 @@
     <ClCompile Include="egPointMesh.cpp">
       <Filter>Mesh\PointMesh</Filter>
     </ClCompile>
+    <ClCompile Include="egMotionBlur.cpp">
+      <Filter>Singleton\Graphics\MotionBlur</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -770,6 +788,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="billboard.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="motionblur.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

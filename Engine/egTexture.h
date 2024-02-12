@@ -51,6 +51,11 @@ namespace Engine::Resources
     ID3D11DepthStencilView*    GetDSV() const;
     ID3D11UnorderedAccessView* GetUAV() const;
 
+    ID3D11ShaderResourceView**  GetSRVAddress();
+    ID3D11RenderTargetView**    GetRTVAddress();
+    ID3D11DepthStencilView**    GetDSVAddress();
+    ID3D11UnorderedAccessView** GetUAVAddress();
+
     bool         IsHotload() const;
 
     void BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader);
@@ -89,8 +94,8 @@ namespace Engine::Resources
     Texture();
     void Load_INTERNAL() override final;
 
-    inline static ComPtr<ID3D11RenderTargetView> s_previous_rtv = nullptr;
-    inline static ComPtr<ID3D11DepthStencilView> s_previous_dsv = nullptr;
+    ComPtr<ID3D11RenderTargetView> m_previous_rtv_ = nullptr;
+    ComPtr<ID3D11DepthStencilView> m_previous_dsv_ = nullptr;
 
     bool                             m_b_lazy_window_;
 

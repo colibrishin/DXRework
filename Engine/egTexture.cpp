@@ -33,6 +33,14 @@ namespace Engine::Resources
 
   ID3D11UnorderedAccessView* Texture::GetUAV() const { return m_uav_.Get(); }
 
+  ID3D11ShaderResourceView** Texture::GetSRVAddress() { return m_srv_.GetAddressOf(); }
+
+  ID3D11RenderTargetView** Texture::GetRTVAddress() { return m_rtv_.GetAddressOf(); }
+
+  ID3D11DepthStencilView** Texture::GetDSVAddress() { return m_dsv_.GetAddressOf(); }
+
+  ID3D11UnorderedAccessView** Texture::GetUAVAddress() {return m_uav_.GetAddressOf(); }
+
   bool Texture::IsHotload() const { return GetPath().empty(); }
 
   void Texture::BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader)
@@ -141,7 +149,7 @@ namespace Engine::Resources
   {
     if (m_bind_to_ == D3D11_BIND_RENDER_TARGET)
     {
-      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
+      GetD3Device().GetContext()->OMGetRenderTargets(1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.GetAddressOf());
       GetD3Device().GetContext()->OMSetRenderTargets(1, m_rtv_.GetAddressOf(), nullptr);
     }
     else if (m_bind_to_ == D3D11_BIND_SHADER_RESOURCE)
@@ -173,7 +181,7 @@ namespace Engine::Resources
     else if (m_bind_to_ == D3D11_BIND_DEPTH_STENCIL)
     {
       ComPtr<ID3D11RenderTargetView> null_view = nullptr;
-      GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
+      GetD3Device().GetContext()->OMGetRenderTargets(1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.GetAddressOf());
       GetD3Device().GetContext()->OMSetRenderTargets(1, null_view.GetAddressOf(), m_dsv_.Get());
     }
     else if (m_bind_to_ == D3D11_BIND_UNORDERED_ACCESS)
@@ -184,10 +192,10 @@ namespace Engine::Resources
       }
       else if (m_bound_shader_ == SHADER_PIXEL)
       {
-        GetD3Device().GetContext()->OMGetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.GetAddressOf());
+        GetD3Device().GetContext()->OMGetRenderTargets(1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.GetAddressOf());
 
         GetD3Device().GetContext()->OMSetRenderTargetsAndUnorderedAccessViews
-          (1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get(), m_bound_slot_ + m_bound_slot_offset_, 1, m_uav_.GetAddressOf(), nullptr);
+          (1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.Get(), m_bound_slot_ + m_bound_slot_offset_, 1, m_uav_.GetAddressOf(), nullptr);
       }
       else { throw std::runtime_error("Unordered access view is not supported in this shader"); }
     }
@@ -197,7 +205,7 @@ namespace Engine::Resources
   {
     if (m_bind_to_ == D3D11_BIND_RENDER_TARGET)
     {
-      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get());
+      GetD3Device().GetContext()->OMSetRenderTargets(1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.Get());
     }
     else if (m_bind_to_ == D3D11_BIND_SHADER_RESOURCE)
     {
@@ -237,7 +245,7 @@ namespace Engine::Resources
       {
         GetD3Device().GetContext()->OMSetRenderTargetsAndUnorderedAccessViews
           (
-           1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get(), m_bound_slot_ + m_bound_slot_offset_, 1,
+           1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.Get(), m_bound_slot_ + m_bound_slot_offset_, 1,
            null_view.GetAddressOf(), nullptr
           );
       }
@@ -245,11 +253,11 @@ namespace Engine::Resources
     }
     else if (m_bind_to_ == D3D11_BIND_DEPTH_STENCIL)
     {
-      GetD3Device().GetContext()->OMSetRenderTargets(1, s_previous_rtv.GetAddressOf(), s_previous_dsv.Get());
+      GetD3Device().GetContext()->OMSetRenderTargets(1, m_previous_rtv_.GetAddressOf(), m_previous_dsv_.Get());
     }
 
-    s_previous_rtv.Reset();
-    s_previous_dsv.Reset();
+    m_previous_rtv_.Reset();
+    m_previous_dsv_.Reset();
   }
 
   void Texture::PostUpdate(const float& dt) {}
