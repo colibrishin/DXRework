@@ -30,9 +30,9 @@ namespace Engine::Resources
       return obj;
     }
 
-    UINT GetWidth() const override;
-    UINT GetHeight() const override;
-    UINT GetArraySize() const override;
+    UINT GetWidth() const override final;
+    UINT GetHeight() const override final;
+    UINT GetArraySize() const override final;
 
   protected:
     void loadDerived(ComPtr<ID3D11Resource>& res) override;

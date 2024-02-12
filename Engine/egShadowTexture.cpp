@@ -25,12 +25,6 @@ namespace Engine::Resources
 
   eResourceType ShadowTexture::GetResourceType() const { return RES_T_SHADOW_TEX; }
 
-  UINT ShadowTexture::GetArraySize() const { return Texture2D::GetArraySize(); }
-
-  UINT ShadowTexture::GetHeight() const { return Texture2D::GetHeight(); }
-
-  UINT ShadowTexture::GetWidth() const { return Texture2D::GetWidth(); }
-
   void ShadowTexture::Clear() const
   {
     GetD3Device().GetContext()->ClearDepthStencilView(m_dsv_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);

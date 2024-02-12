@@ -42,10 +42,6 @@ namespace Engine::Resources
     void          OnImGui() override;
     eResourceType GetResourceType() const override;
 
-    UINT GetArraySize() const override;
-    UINT GetHeight() const override;
-    UINT GetWidth() const override;
-
     void Clear() const;
 
   protected:
