@@ -8,10 +8,10 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float4 depth  = texVelocity.Sample(PSSampler, input.tex);
   float  zOverW = depth.z / depth.w;
   // H is the viewport position at this pixel in the range -1 to 1.
-  float4 H = float4(input.tex.x * 2 - 1, (1 - input.tex.y) * 2 - 1, zOverW, 1);
+  const float4 H = float4(input.tex.x * 2 - 1, (1 - input.tex.y) * 2 - 1, zOverW, 1);
 
   // Transform by the view-projection inverse.
-  const matrix invVP = mul(g_camInvView, g_camInvProj);
+  const matrix invVP = mul(g_camInvProj, g_camInvView);
   float4       D     = mul(H, invVP);
 
   // Divide by w to get the world position.
@@ -29,7 +29,6 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   // Use this frame's position and last frame's to compute the pixel velocity.
   float2 velocity = (currentPos - previousPos) / 2.f;
-  velocity.y = -velocity.y;
 
   return float4(velocity, 0.f, 1.f);
 }
