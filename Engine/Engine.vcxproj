@@ -27,7 +27,9 @@
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egGraviton.h" />
+    <ClInclude Include="egMotionBlur.h" />
     <ClInclude Include="egParticleRenderer.h" />
+    <ClInclude Include="egPDepthTexture.h" />
     <ClInclude Include="egPointMesh.h" />
     <ClInclude Include="egRenderComponent.h" />
     <ClInclude Include="egShadowTexture.h" />
@@ -101,6 +103,7 @@
     <ClInclude Include="egTransform.h" />
     <ClInclude Include="egLerpManager.h" />
     <ClInclude Include="egType.h" />
+    <ClInclude Include="egVelocityTexture.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer.h" />
@@ -126,6 +129,7 @@
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egGraviton.cpp" />
+    <ClCompile Include="egMotionBlur.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
     <ClCompile Include="egPointMesh.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
@@ -814,6 +818,19 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="billboard.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="motionblur.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>
