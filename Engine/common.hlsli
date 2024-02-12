@@ -2,6 +2,7 @@
 #define __COMMON_HLSLI__
 
 #define TRIANGLE_MACRO 3
+#define MOTION_BLUR_SAMPLING 5
 
 #include "type.hlsli"
 #include "utility.hlsli"
@@ -52,6 +53,7 @@ Texture1D      tex1d07 : register(t31);
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 Texture3D      texAnimations : register(t34);
+Texture2D      texVelocity : register(t35);
 
 StructuredBuffer<LightElement>         bufLight : register(t48);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t49);
@@ -67,6 +69,8 @@ cbuffer PerspectiveBuffer : register(b0)
 
   matrix g_camInvView;
   matrix g_camInvProj;
+  matrix g_camPrevView;
+  matrix g_camPrevProj;
 
   matrix g_camReflectView;
 };
@@ -96,6 +100,24 @@ cbuffer ParamBuffer : register(b3)
   int4   g_iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
   float4 g_vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
   matrix g_mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
+}
+
+float4 DoMotionBlur(in Texture2D tex, in float2 texCoord, in const float2 velocity)
+{
+  // Get the initial color at this pixel.
+  float4 color = tex.Sample(PSSampler, texCoord);
+
+  for (int i = 0; i < MOTION_BLUR_SAMPLING; ++i)
+  {
+    texCoord += velocity;
+    // Sample the color buffer along the velocity vector.
+    const float4 currentColor = tex.Sample(PSSampler, texCoord);
+    // Add the current color to our color sum.
+    color += currentColor;
+  }
+
+  // Average all of the samples to get the final blur color.
+  return color / MOTION_BLUR_SAMPLING;
 }
 
 float GetShadowFactorImpl(

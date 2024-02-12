@@ -238,6 +238,15 @@ namespace Engine::Manager::Graphics
       );
 
     billboard->SetTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+    Shader::Create
+      (
+       "motionblur", "./motionblur.hlsl", SHADER_DOMAIN_POST_PROCESS,
+       SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
+       SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
+       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS
+      );
   }
 
   void RenderPipeline::InitializeSamplers()
