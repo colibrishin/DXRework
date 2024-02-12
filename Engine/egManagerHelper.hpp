@@ -6,6 +6,7 @@
 #include "egDebugger.hpp"
 #include "egGraviton.h"
 #include "egLerpManager.h"
+#include "egMotionBlur.h"
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
 #include "egProjectionFrustum.h"
@@ -72,4 +73,6 @@ namespace Engine
   inline Manager::Graphics::Renderer& GetRenderer() { return Manager::Graphics::Renderer::GetInstance(); }
 
   inline Manager::Physics::Graviton& GetGraviton() { return Manager::Physics::Graviton::GetInstance(); }
+
+  inline Manager::Graphics::MotionBlur& GetMotionBlur() { return Manager::Graphics::MotionBlur::GetInstance(); }
 } // namespace Engine
