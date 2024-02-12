@@ -51,6 +51,11 @@ namespace Engine::Resources
     ID3D11DepthStencilView*    GetDSV() const;
     ID3D11UnorderedAccessView* GetUAV() const;
 
+    ID3D11ShaderResourceView**  GetSRVAddress();
+    ID3D11RenderTargetView**    GetRTVAddress();
+    ID3D11DepthStencilView**    GetDSVAddress();
+    ID3D11UnorderedAccessView** GetUAVAddress();
+
     bool         IsHotload() const;
 
     void BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader);

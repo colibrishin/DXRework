@@ -33,6 +33,14 @@ namespace Engine::Resources
 
   ID3D11UnorderedAccessView* Texture::GetUAV() const { return m_uav_.Get(); }
 
+  ID3D11ShaderResourceView** Texture::GetSRVAddress() { return m_srv_.GetAddressOf(); }
+
+  ID3D11RenderTargetView** Texture::GetRTVAddress() { return m_rtv_.GetAddressOf(); }
+
+  ID3D11DepthStencilView** Texture::GetDSVAddress() { return m_dsv_.GetAddressOf(); }
+
+  ID3D11UnorderedAccessView** Texture::GetUAVAddress() {return m_uav_.GetAddressOf(); }
+
   bool Texture::IsHotload() const { return GetPath().empty(); }
 
   void Texture::BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader)
