@@ -25,6 +25,7 @@ namespace Engine::Manager::Graphics
     ~MotionBlur() override = default;
 
     Resources::PDepthTexture m_previous_depth_;
+    Resources::PDepthTexture m_current_depth_;
     Resources::VelocityTexture m_velocity_texture_;
     StrongShader m_motion_blur_shader_;
 
