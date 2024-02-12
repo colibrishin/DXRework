@@ -110,7 +110,7 @@ namespace Engine::Components
 
   void Transform::SetAnimationMatrix(const Matrix& matrix) { m_animation_matrix_ = matrix; }
 
-  Vector3 Transform::GetWorldPosition()
+  Vector3 Transform::GetWorldPosition() const
   {
     Matrix world = GetWorldMatrix();
     return {world._41, world._42, world._43};
@@ -118,20 +118,6 @@ namespace Engine::Components
 
   Quaternion Transform::GetWorldRotation() const
   {
-    /*if (!m_b_lazy_)
-    {
-        const auto   scale = GetWorldScale();
-        const Matrix rot
-        {
-            {m_world_matrix_._11 / scale.x, m_world_matrix_._12 / scale.x, m_world_matrix_._13 / scale.x, 0.f},
-            {m_world_matrix_._21 / scale.y, m_world_matrix_._22 / scale.y, m_world_matrix_._23 / scale.y, 0.f},
-            {m_world_matrix_._31 / scale.z, m_world_matrix_._32 / scale.z, m_world_matrix_._33 / scale.z, 0.f},
-            {0.f, 0.f, 0.f, 1.f}
-        };
-
-        return Quaternion::CreateFromRotationMatrix(rot);
-    }*/
-
     Quaternion    world = GetLocalRotation();
     auto          tr_c  = const_cast<Transform*>(this);
     WeakTransform tr_p  = FindNextTransform(*this);
@@ -161,15 +147,6 @@ namespace Engine::Components
 
   Vector3 Transform::GetWorldScale() const
   {
-    /*if (!m_b_lazy_)
-    {
-        const Vector3 x = {m_world_matrix_._11, m_world_matrix_._12, m_world_matrix_._13};
-        const Vector3 y = {m_world_matrix_._21, m_world_matrix_._22, m_world_matrix_._23};
-        const Vector3 z = {m_world_matrix_._31, m_world_matrix_._32, m_world_matrix_._33};
-
-        return {x.Length(), y.Length(), z.Length()};
-    }*/
-
     Vector3       world = GetLocalScale();
     auto          tr_c  = const_cast<Transform*>(this);
     WeakTransform tr_p  = FindNextTransform(*this);
@@ -210,6 +187,7 @@ namespace Engine::Components
 
     m_world_previous_position_ = GetWorldPosition();
     m_previous_position_       = GetLocalPosition();
+    m_previous_world_matrix_   = GetWorldMatrix();
   }
 
   void Transform::FixedUpdate(const float& dt) {}
@@ -238,7 +216,7 @@ namespace Engine::Components
 
   Vector3 Transform::GetLocalPreviousPositionPerFrame() const { return m_previous_position_; }
 
-  Matrix Transform::GetWorldMatrix()
+  Matrix Transform::GetWorldMatrix() const
   {
     Matrix        world = GetLocalMatrix();
     auto          tr_c  = this;
