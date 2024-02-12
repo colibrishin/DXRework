@@ -36,6 +36,7 @@ namespace Engine::Objects
   {
     Object::PreRender(dt);
     m_previous_view_matrix_ = m_view_matrix_;
+    m_previous_projection_matrix_ = m_projection_matrix_;
 
     if (GetApplication().GetMouseState().scrollWheelValue > 1)
     {
