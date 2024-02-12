@@ -138,6 +138,8 @@ namespace Engine::Graphics
 
       Matrix invView;
       Matrix invProj;
+      Matrix prevView;
+      Matrix prevProj;
 
       Matrix reflectView;
     };

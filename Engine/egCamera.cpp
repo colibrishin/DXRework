@@ -35,6 +35,7 @@ namespace Engine::Objects
   void Camera::PreRender(const float& dt)
   {
     Object::PreRender(dt);
+    m_previous_view_matrix_ = m_view_matrix_;
 
     if (GetApplication().GetMouseState().scrollWheelValue > 1)
     {
@@ -91,6 +92,8 @@ namespace Engine::Objects
       m_wvp_buffer_.projection = m_projection_matrix_.Transpose();
       m_wvp_buffer_.invView    = invView.Transpose();
       m_wvp_buffer_.invProj    = invProj.Transpose();
+      m_wvp_buffer_.prevView   = m_previous_view_matrix_.Transpose();
+      m_wvp_buffer_.prevProj   = m_previous_projection_matrix_.Transpose();
 
       // do the same with 180 degree rotation
 
