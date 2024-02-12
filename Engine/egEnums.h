@@ -19,6 +19,7 @@ namespace Engine
     RESERVED_SHADOW_MAP = g_reserved_bind_slot,
     RESERVED_RENDERED,
     RESERVED_BONES,
+    RESERVED_VELOCITY,
     RESERVED_END,
   };
 
