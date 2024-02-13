@@ -44,6 +44,12 @@ namespace Engine::Abstract
     ImGui::Checkbox("Loaded", &m_bLoaded_);
     ImGui::Text("Path : %s", m_path_str_.c_str());
     ImGui::Unindent(2);
+
+    if (ImGui::Button("Save"))
+    {
+      // todo: future + promise (async)
+      Serializer::Serialize(GetName(), this);
+    }
   }
 
   Resource::Resource(std::filesystem::path path, eResourceType type)
