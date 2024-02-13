@@ -6,8 +6,8 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Resources::Mesh,
  _ARTAG(_BSTSUPER(Engine::Abstract::Resource))
- _ARTAG(m_vertices_)
- _ARTAG(m_indices_)
+ _ARTAG(m_vertices_) _ARTAG(m_indices_)
+ _ARTAG(m_bounding_box_)
 )
 
 namespace Engine::Resources

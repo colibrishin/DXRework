@@ -21,9 +21,14 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
 
   private:
+    SERIALIZER_ACCESS
+    Texture3D() : Texture("", TEX_TYPE_3D, {}) {}
+
     UINT GetArraySize() const override final;
 
     ComPtr<ID3D11Texture3D> m_tex_;
 
   };
-}
+} // namespace Engine::Resources
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture3D)

@@ -3,15 +3,24 @@
 #include "egD3Device.hpp"
 #include "egRenderPipeline.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Resources::Texture, _ARTAG(_BSTSUPER(Resource)))
+SERIALIZER_ACCESS_IMPL
+(
+    Engine::Resources::Texture, 
+    _ARTAG(_BSTSUPER(Resource))
+    _ARTAG(m_desc_) _ARTAG(m_type_)
+    _ARTAG(m_custom_desc_) _ARTAG(m_rtv_desc_)
+    _ARTAG(m_dsv_desc_) _ARTAG(m_uav_desc_)
+    _ARTAG(m_srv_desc_)
+)
 
 namespace Engine::Resources
 {
   Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
     : Resource(std::move(path), RES_T_TEX),
-      m_b_lazy_window_(true),
       m_desc_(description),
       m_type_(type),
+      m_custom_desc_{ false },
+      m_b_lazy_window_(true),
       m_bind_to_(D3D11_BIND_SHADER_RESOURCE),
       m_bound_slot_(BIND_SLOT_TEX),
       m_bound_slot_offset_(0),
@@ -88,7 +97,7 @@ namespace Engine::Resources
       throw std::runtime_error("Texture is already created with given description, Cannot initialize lazily");
     }
 
-    m_custom_desc_.set(0);
+    m_custom_desc_[0] = true;
     m_rtv_desc_ = desc;
   }
 
@@ -99,7 +108,7 @@ namespace Engine::Resources
       throw std::runtime_error("Texture is already created with given description, Cannot initialize lazily");
     }
 
-    m_custom_desc_.set(1);
+    m_custom_desc_[1] = true;
     m_dsv_desc_ = desc;
   }
 
@@ -110,7 +119,7 @@ namespace Engine::Resources
       throw std::runtime_error("Texture is already created with given description, Cannot initialize lazily");
     }
 
-    m_custom_desc_.set(2);
+    m_custom_desc_[2] = true;
     m_uav_desc_ = desc;
   }
 
@@ -121,13 +130,13 @@ namespace Engine::Resources
       throw std::runtime_error("Texture is already created with given description, Cannot initialize lazily");
     }
 
-    m_custom_desc_.set(3);
+    m_custom_desc_[3] = true;
     m_srv_desc_ = desc;
   }
 
   const Texture::GenericTextureDescription& Texture::GetDescription() const { return m_desc_; }
 
-  Texture::~Texture() {}
+  Texture::~Texture() = default;
 
   void Texture::Initialize() {}
 
@@ -331,7 +340,7 @@ namespace Engine::Resources
 
     if (m_desc_.BindFlags & D3D11_BIND_SHADER_RESOURCE && !m_srv_)
     {
-      if (m_custom_desc_.test(3))
+      if (m_custom_desc_[3])
       {
         DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateShaderResourceView(m_res_.Get(), &m_srv_desc_, m_srv_.ReleaseAndGetAddressOf()));
       }
@@ -343,7 +352,7 @@ namespace Engine::Resources
 
     if (m_desc_.BindFlags & D3D11_BIND_RENDER_TARGET)
     {
-      if (m_custom_desc_.test(0))
+      if (m_custom_desc_[0])
       {
         DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateRenderTargetView(m_res_.Get(), &m_rtv_desc_, m_rtv_.ReleaseAndGetAddressOf()));
       }
@@ -355,7 +364,7 @@ namespace Engine::Resources
 
     if (m_desc_.BindFlags & D3D11_BIND_DEPTH_STENCIL)
     {
-      if (m_custom_desc_.test(1))
+      if (m_custom_desc_[1])
       {
         DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), &m_dsv_desc_, m_dsv_.ReleaseAndGetAddressOf()));
       }
@@ -367,7 +376,7 @@ namespace Engine::Resources
 
     if (m_desc_.BindFlags & D3D11_BIND_UNORDERED_ACCESS)
     {
-      if (m_custom_desc_.test(2))
+      if (m_custom_desc_[2])
       {
         DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), &m_uav_desc_, m_uav_.ReleaseAndGetAddressOf()));
       }

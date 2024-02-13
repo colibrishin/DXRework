@@ -23,6 +23,25 @@ namespace Engine::Resources
       UINT        MiscFlags = 0;
       D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
       DXGI_SAMPLE_DESC SampleDesc = {.Count = 1, .Quality = 0};
+
+    private:
+      friend class boost::serialization::access;
+
+      template <class Archive>
+      void serialize(Archive& ar, const unsigned int version)
+      {
+        ar & Width;
+        ar & Height;
+        ar & Depth;
+        ar & ArraySize;
+        ar & Format;
+        ar & CPUAccessFlags;
+        ar & BindFlags;
+        ar & MipsLevel;
+        ar & MiscFlags;
+        ar & Usage;
+        ar & SampleDesc;
+      }
     };
 
     explicit Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description);
@@ -92,18 +111,19 @@ namespace Engine::Resources
     inline static ComPtr<ID3D11RenderTargetView> s_previous_rtv = nullptr;
     inline static ComPtr<ID3D11DepthStencilView> s_previous_dsv = nullptr;
 
-    bool                             m_b_lazy_window_;
 
     GenericTextureDescription        m_desc_;
     eTexType                         m_type_;
 
-    std::bitset<4>                   m_custom_desc_;
+    bool                             m_custom_desc_[4];
     D3D11_RENDER_TARGET_VIEW_DESC    m_rtv_desc_{};
     D3D11_DEPTH_STENCIL_VIEW_DESC    m_dsv_desc_{};
     D3D11_UNORDERED_ACCESS_VIEW_DESC m_uav_desc_{};
     D3D11_SHADER_RESOURCE_VIEW_DESC  m_srv_desc_{};
 
     // Non-serialized
+    bool                             m_b_lazy_window_;
+
     D3D11_BIND_FLAG                  m_bind_to_;
     eTexBindSlots                    m_bound_slot_;
     UINT                             m_bound_slot_offset_;

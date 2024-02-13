@@ -3,6 +3,14 @@
 
 #include "egBoneAnimation.h"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Engine::Resources::AnimationsTexture,
+ _ARTAG(_BSTSUPER(Texture3D))
+ _ARTAG(m_animations_)
+ _ARTAG(m_evaluated_animations_)
+)
+
 namespace Engine::Resources
 {
   AnimationsTexture::AnimationsTexture(const std::vector<StrongBoneAnimation>& animations)

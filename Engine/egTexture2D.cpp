@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "egTexture2D.h"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Engine::Resources::Texture2D,
+ _ARTAG(_BSTSUPER(Texture))
+)
+
 namespace Engine::Resources
 {
   UINT Texture2D::GetWidth() const { return Texture::GetWidth(); }

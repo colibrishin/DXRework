@@ -39,9 +39,14 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
 
   private:
+    SERIALIZER_ACCESS
+    Texture2D() : Texture("", TEX_TYPE_2D, {}) {}
+
     UINT GetDepth() const override;
 
     ComPtr<ID3D11Texture2D> m_tex_;
     
   };
-}
+} // namespace Engine::Resources
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture2D)

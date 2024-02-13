@@ -60,6 +60,6 @@ namespace Engine::Resources
     UINT m_group_[3];
 
   };
-}
+} // namespace Engine::Resources
 
 BOOST_CLASS_EXPORT_KEY(Engine::Resources::ComputeShader)

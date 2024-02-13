@@ -39,6 +39,9 @@ namespace Engine::Resources
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
 
   private:
+    SERIALIZER_ACCESS
+    AnimationsTexture() : Texture3D("", {}) {}
+
     constexpr static size_t s_vec4_to_mat = 4;
     constexpr static size_t s_float_per_mat = sizeof(Matrix) / sizeof(float);
 
@@ -49,3 +52,5 @@ namespace Engine::Resources
 
   };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::AnimationsTexture)
