@@ -95,13 +95,13 @@ namespace Engine::Resources
     RESOURCE_SELF_INFER_CREATE(Material)
 
   protected:
-    SERIALIZER_ACCESS
-
-    Material();
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
 
   private:
+    SERIALIZER_ACCESS
+    Material();
+
     CBs::MaterialCB m_material_cb_;
 
     std::vector<std::string>                                m_shaders_;
@@ -113,3 +113,5 @@ namespace Engine::Resources
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
   };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Material)

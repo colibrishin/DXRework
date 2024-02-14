@@ -61,15 +61,14 @@ namespace Engine::Resources
     RESOURCE_SELF_INFER_CREATE(Shape)
 
   protected:
-    SERIALIZER_ACCESS
-
-    friend class Manager::Graphics::Renderer;
-    Shape();
-
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
 
   private:
+    SERIALIZER_ACCESS
+    friend class Manager::Graphics::Renderer;
+    Shape();
+
     void UpdateVertices();
 
     std::vector<StrongMesh>             m_meshes_;

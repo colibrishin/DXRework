@@ -4,7 +4,14 @@
 #include "egManagerHelper.hpp"
 #include "egRenderPipeline.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Resources::Shader, _ARTAG(_BSTSUPER(Resource)))
+SERIALIZER_ACCESS_IMPL
+(
+    Engine::Resources::Shader, 
+    _ARTAG(_BSTSUPER(Resource))
+    _ARTAG(m_domain_) _ARTAG(m_depth_flag_) _ARTAG(m_depth_test_) _ARTAG(m_depth_func_)
+    _ARTAG(m_smp_filter_) _ARTAG(m_smp_address_) _ARTAG(m_smp_func_)
+    _ARTAG(m_cull_mode_) _ARTAG(m_fill_mode_) _ARTAG(m_topology_)
+)
 
 namespace Engine::Resources
 {
