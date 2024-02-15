@@ -27,6 +27,7 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void OnDeserialized() override;
+    void OnImGui() override;
 
     void SetTempParam(TempParam&& param) noexcept;
     bool IsRenderDomain(const eShaderDomain domain) const noexcept;

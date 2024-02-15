@@ -3,6 +3,7 @@
 
 #include "egDXCommon.h"
 #include "egDXType.h"
+#include "egImGuiHeler.hpp"
 #include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"
@@ -131,6 +132,23 @@ namespace Engine::Resources
   {
     Resource::OnDeserialized();
     Load();
+  }
+
+  void Material::OnImGui()
+  {
+    Resource::OnImGui();
+
+    // Material properties
+    FloatAligned("Specular Power", m_material_cb_.specular_power);
+    FloatAligned("Reflection Scale", m_material_cb_.reflection_scale);
+    FloatAligned("Refraction Scale", m_material_cb_.refraction_scale);
+    FloatAligned("Reflection Translation", m_material_cb_.reflection_translation);
+
+    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_cb_.override_color);
+    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specular_color);
+    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clip_plane));
+
+    // todo: Resource adder
   }
 
   void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
