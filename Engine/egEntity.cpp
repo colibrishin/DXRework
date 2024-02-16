@@ -25,6 +25,8 @@ bool Engine::Abstract::Entity::IsGarbage() const { return m_b_garbage_; }
 
 bool Engine::Abstract::Entity::IsInitialized() const { return m_b_initialized_; }
 
+bool& Engine::Abstract::Entity::IsImGuiOpened() { return m_b_imgui_opened_; }
+
 void Engine::Abstract::Entity::Initialize() { m_b_initialized_ = true; }
 
 void Engine::Abstract::Entity::OnDeserialized()
