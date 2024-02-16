@@ -224,6 +224,11 @@ namespace Engine::Resources
 
   void Material::SetResource(const StrongResource& resource)
   {
+    if (resource->GetResourceType() == RES_T_MTR)
+    {
+      return;
+    }
+
     if (resource->GetResourceType() == RES_T_MESH)
     {
       return;
