@@ -35,12 +35,28 @@ namespace Engine::Manager
         {
           for (const auto& res : resources)
           {
-            if (ImGui::TreeNode(res->GetName().c_str()))
+            if (ImGui::Selectable(res->GetName().c_str()))
             {
-              res->OnImGui();
-              ImGui::TreePop();
+              res->IsImGuiOpened() = !res->IsImGuiOpened();
+            }
+
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_AcceptPeekOnly | ImGuiDragDropFlags_AcceptBeforeDelivery))
+            {
+              ImGui::SetDragDropPayload("resource", &res, sizeof(res));
+              ImGui::Text(res->GetName().c_str());
+              ImGui::EndDragDropSource();
+            }
+
+            if (res->IsImGuiOpened())
+            {
+              if (ImGui::Begin(res->GetName().c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
+              {
+                res->OnImGui();
+                ImGui::End();
+              }
             }
           }
+
           ImGui::TreePop();
           ImGui::Separator();
         }
