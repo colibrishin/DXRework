@@ -155,32 +155,33 @@ namespace Engine::Resources
     if (m_b_edit_dialog_)
     {
         if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-      {
-        if (ImGui::BeginListBox("Resource Used"))
         {
-          for (auto& resources : m_resources_loaded_ | std::views::values)
+          if (ImGui::BeginListBox("Resource Used"))
           {
-            for (auto it = resources.begin(); it != resources.end();)
+            for (auto& [type, resources] : m_resources_loaded_)
             {
-              if (ImGui::Selectable((*it)->GetName().c_str(), false))
+              if (ImGui::TreeNode(g_resource_type_str[type]))
               {
-                std::erase_if
-                  (
-                   m_resources_[(*it)->GetResourceType()], [&it](const std::string& name)
-                   {
-                     return name == (*it)->GetName();
-                   }
-                  );
-                it = resources.erase(it);
-              }
-              else
-              {
-                ++it;
+                for (auto it = resources.begin(); it != resources.end();)
+                {
+                  if (ImGui::Selectable((*it)->GetName().c_str(), false))
+                  {
+                    std::erase_if
+                      (
+                       m_resources_[(*it)->GetResourceType()], [&it](const std::string& name)
+                       {
+                         return name == (*it)->GetName();
+                       }
+                      );
+                    it = resources.erase(it);
+                  }
+                  else { ++it; }
+                }
+                ImGui::TreePop();
               }
             }
+            ImGui::EndListBox();
           }
-          ImGui::EndListBox();
-        }
 
         if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
         {
@@ -232,6 +233,11 @@ namespace Engine::Resources
     if (resource->GetResourceType() == RES_T_MESH)
     {
       return;
+    }
+
+    if (!resource->IsLoaded())
+    {
+      resource->Load();
     }
 
     if (resource->GetResourceType() == RES_T_SHADER)
