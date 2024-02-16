@@ -35,9 +35,10 @@ namespace Engine::Components
     const auto mat = mr.lock()->GetMaterial();
     if (mat.expired()) { return; }
 
-    // Animator assumes that assigned material has animation.
     const auto  tr_anim   = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_id_).lock();
     const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
+
+    if (!tr_anim && !bone_anim) { return; }
     const float duration  = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
 
     m_total_dt_ += dt;
