@@ -265,11 +265,6 @@ namespace Engine::Resources
 
   void Texture::Load_INTERNAL()
   {
-    if (!GetPath().empty() && (m_desc_.Width + m_desc_.Height + m_desc_.Depth))
-    {
-      throw std::logic_error("While loading from file, width height depth does not needed");
-    }
-
     if ((m_desc_.BindFlags & D3D11_BIND_DEPTH_STENCIL) && (m_desc_.BindFlags & D3D11_BIND_UNORDERED_ACCESS))
     {
       throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
