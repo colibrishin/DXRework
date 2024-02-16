@@ -40,9 +40,9 @@ namespace Engine::Manager
               res->IsImGuiOpened() = !res->IsImGuiOpened();
             }
 
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_AcceptPeekOnly | ImGuiDragDropFlags_AcceptBeforeDelivery))
+            if (ImGui::BeginDragDropSource())
             {
-              ImGui::SetDragDropPayload("resource", &res, sizeof(res));
+              ImGui::SetDragDropPayload("RESOURCE", &res, sizeof(res));
               ImGui::Text(res->GetName().c_str());
               ImGui::EndDragDropSource();
             }

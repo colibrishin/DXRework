@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egMaterial.h"
 
+#include "egShader.hpp"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
@@ -153,7 +154,7 @@ namespace Engine::Resources
 
     if (m_b_edit_dialog_)
     {
-      if (ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
       {
         if (ImGui::BeginListBox("Resource Used"))
         {
@@ -179,6 +180,19 @@ namespace Engine::Resources
             }
           }
           ImGui::EndListBox();
+        }
+
+        if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+        {
+          if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE", ImGuiDragDropFlags_AcceptBeforeDelivery))
+          {
+            if (const auto resource = static_cast<StrongResource*>(payload->Data))
+            {
+              SetResource(*resource);
+            }
+          }
+
+          ImGui::EndDragDropTarget();
         }
 
         ImGui::End();
@@ -207,6 +221,24 @@ namespace Engine::Resources
     : Resource("", RES_T_MTR),
       m_material_cb_(),
       m_b_edit_dialog_(false) {}
+
+  void Material::SetResource(const StrongResource& resource)
+  {
+    if (resource->GetResourceType() == RES_T_MESH)
+    {
+      return;
+    }
+
+    if (resource->GetResourceType() == RES_T_SHADER)
+    {
+      m_shaders_.emplace_back(resource->GetName());
+      m_shaders_loaded_[resource->GetSharedPtr<Shader>()->GetDomain()] = resource->GetSharedPtr<Shader>();
+      return;
+    }
+
+    m_resources_[resource->GetResourceType()].push_back(resource->GetName());
+    m_resources_loaded_[resource->GetResourceType()].push_back(resource);
+  }
 
   void Material::Load_INTERNAL()
   {
