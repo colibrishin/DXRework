@@ -242,9 +242,19 @@ namespace Engine::Resources
 
     if (resource->GetResourceType() == RES_T_SHADER)
     {
+      if (std::ranges::find_if(m_shaders_, [&resource](const std::string& name) { return name == resource->GetName(); }) != m_shaders_.end())
+      {
+        return;
+      }
+
       m_shaders_.emplace_back(resource->GetName());
       m_shaders_loaded_[resource->GetSharedPtr<Shader>()->GetDomain()] = resource->GetSharedPtr<Shader>();
       return;
+    }
+
+    if (std::ranges::find_if(m_resources_[resource->GetResourceType()], [&resource](const std::string& name) { return name == resource->GetName(); }) != m_resources_[resource->GetResourceType()].end())
+    {
+           return;
     }
 
     m_resources_[resource->GetResourceType()].push_back(resource->GetName());
