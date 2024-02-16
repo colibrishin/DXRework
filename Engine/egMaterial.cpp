@@ -21,7 +21,8 @@ namespace Engine::Resources
 {
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_()
+      m_material_cb_(),
+      m_b_edit_dialog_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -148,7 +149,41 @@ namespace Engine::Resources
     ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specular_color);
     ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clip_plane));
 
-    // todo: Resource adder
+    if (ImGui::Button("Edit Resources")) { m_b_edit_dialog_ = true; }
+
+    if (m_b_edit_dialog_)
+    {
+      if (ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        if (ImGui::BeginListBox("Resource Used"))
+        {
+          for (auto& resources : m_resources_loaded_ | std::views::values)
+          {
+            for (auto it = resources.begin(); it != resources.end();)
+            {
+              if (ImGui::Selectable((*it)->GetName().c_str(), false))
+              {
+                std::erase_if
+                  (
+                   m_resources_[(*it)->GetResourceType()], [&it](const std::string& name)
+                   {
+                     return name == (*it)->GetName();
+                   }
+                  );
+                it = resources.erase(it);
+              }
+              else
+              {
+                ++it;
+              }
+            }
+          }
+          ImGui::EndListBox();
+        }
+
+        ImGui::End();
+      }
+    }
   }
 
   void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
@@ -170,7 +205,8 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_() {}
+      m_material_cb_(),
+      m_b_edit_dialog_(false) {}
 
   void Material::Load_INTERNAL()
   {

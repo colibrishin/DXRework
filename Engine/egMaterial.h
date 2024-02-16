@@ -109,6 +109,7 @@ namespace Engine::Resources
     std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
     // non-serialized
+    bool                                                       m_b_edit_dialog_;
     TempParam                                                  m_temp_param_;
     std::map<const eShaderDomain, StrongShader>                m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;
