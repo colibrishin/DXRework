@@ -12,10 +12,10 @@ namespace Engine
   class Scene : public Abstract::Renderable
   {
   public:
+    Scene();
     Scene(const Scene& other) = default;
     ~Scene() override         = default;
 
-    virtual void Initialize_INTERNAL() = 0;
     void         DisableControllers();
     void         AddObserver();
     void         Initialize() final;
@@ -69,7 +69,6 @@ namespace Engine
     WeakObject FindGameObject(GlobalEntityID id) const;
     WeakObject FindGameObjectByLocalID(LocalActorID id) const;
 
-    eSceneType           GetType() const;
     ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
     WeakCamera           GetMainCamera() const;
 
@@ -147,9 +146,6 @@ namespace Engine
 
     auto cend() const noexcept { return m_layers.cend(); }
 
-  protected:
-    explicit Scene(eSceneType type);
-
   private:
     SERIALIZER_ACCESS
     friend class Manager::SceneManager;
@@ -165,14 +161,10 @@ namespace Engine
 
     void synchronize(const WeakScene& ptr_scene);
 
-    // Add the entry to the imgui menu that will creates the object.
-    virtual void addCustomObject() = 0;
-
     bool m_b_scene_imgui_open_;
 
     LocalActorID             m_main_camera_local_id_;
     std::vector<StrongLayer> m_layers;
-    eSceneType               m_type_;
 
     // Non-serialized
     WeakObject m_observer_;
