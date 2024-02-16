@@ -405,30 +405,38 @@ namespace Engine
 
   void Scene::OnImGui()
   {
-    if (ImGui::Begin(GetTypeName().c_str()), &m_b_scene_imgui_open_, ImGuiWindowFlags_MenuBar)
+    if (ImGui::Begin(GetName().c_str()), &m_b_scene_imgui_open_, ImGuiWindowFlags_MenuBar)
     {
-      for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
+      if (ImGui::BeginListBox(GetName().c_str(), {-1, -1}))
       {
-        if (ImGui::TreeNode(g_layer_type_str[i]))
+        for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
-          for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
+          if (ImGui::TreeNode(g_layer_type_str[i]))
           {
-            if (const auto obj_ptr = obj.lock())
+            for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
             {
-              const auto unique_name = obj_ptr->GetName() + " " +
-                                       obj_ptr->GetTypeName() + " " +
-                                       std::to_string(obj_ptr->GetID());
+              if (const auto obj_ptr = obj.lock())
+              {
+                const auto unique_name = obj_ptr->GetName() + " " +
+                                         obj_ptr->GetTypeName() + " " +
+                                         std::to_string(obj_ptr->GetID());
 
-              if (ImGui::Button(unique_name.c_str())) { obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen()); }
+                if (ImGui::Selectable(unique_name.c_str()))
+                {
+                  obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+                }
 
-              if (obj_ptr->GetImGuiOpen()) { obj_ptr->OnImGui(); }
+                if (obj_ptr->GetImGuiOpen()) { obj_ptr->OnImGui(); }
+              }
             }
-          }
 
-          ImGui::TreePop();
-          ImGui::Separator();
+            ImGui::TreePop();
+            ImGui::Separator();
+          }
         }
+        ImGui::EndListBox();
       }
+
 
       ImGui::End();
     }
