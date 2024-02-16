@@ -21,6 +21,7 @@ namespace Engine::Abstract
     TypeName       GetTypeName() const;
     bool           IsGarbage() const;
     bool           IsInitialized() const;
+    bool&          IsImGuiOpened();
 
     template <typename T>
     __forceinline boost::weak_ptr<T> GetWeakPtr() { return boost::reinterpret_pointer_cast<T>(shared_from_this()); }
@@ -40,6 +41,7 @@ namespace Engine::Abstract
   protected:
     Entity()
       : m_b_initialized_(false),
+        m_b_imgui_opened_(false),
         m_b_garbage_(false) {}
 
   private:
@@ -47,6 +49,7 @@ namespace Engine::Abstract
 
     EntityName m_name_;
     bool       m_b_initialized_;
+    bool       m_b_imgui_opened_;
     bool       m_b_garbage_;
   };
 } // namespace Engine::Abstract

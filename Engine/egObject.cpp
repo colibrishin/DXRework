@@ -296,6 +296,32 @@ namespace Engine::Abstract
       ImGui::Checkbox("Active", &m_active_);
       ImGui::Checkbox("Culling", &m_culled_);
 
+      if (ImGui::Button("Children"))
+      {
+        m_imgui_children_open_ = !m_imgui_children_open_;
+      }
+      ImGui::SameLine();
+
+      if (m_imgui_children_open_)
+      {
+        if (ImGui::Begin("Children", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+          for (const auto& child : m_children_cache_ | std::views::values)
+          {
+            if (const auto locked = child.lock())
+            {
+              const auto child_id = locked->GetTypeName() + " " + locked->GetName() + " " + std::to_string(locked->GetID());
+
+              if (ImGui::Selectable(child_id.c_str())) { locked->SetImGuiOpen(!locked->GetImGuiOpen()); }
+
+              if (locked->GetImGuiOpen()) { locked->OnImGui(); }
+            }
+          }
+
+          ImGui::End();
+        }
+      }
+
       if (ImGui::TreeNode("Components"))
       {
         for (const auto& comp : m_components_ | std::views::values)

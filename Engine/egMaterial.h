@@ -27,6 +27,7 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void OnDeserialized() override;
+    void OnImGui() override;
 
     void SetTempParam(TempParam&& param) noexcept;
     bool IsRenderDomain(const eShaderDomain domain) const noexcept;
@@ -38,21 +39,7 @@ namespace Engine::Resources
 
       if (search.expired()) { return; }
 
-      static_assert
-        (
-         which_resource<T>::value != RES_T_MESH,
-         "Mesh sole cannot added into material, wrap it with shape instead."
-        );
-
-      if constexpr (which_resource<T>::value == RES_T_SHADER)
-      {
-        m_shaders_.emplace_back(name);
-        m_shaders_loaded_[search.lock()->template GetSharedPtr<Shader>()->GetDomain()] = search.lock();
-        return;
-      }
-
-      m_resources_[which_resource<T>::value].push_back(name);
-      m_resources_loaded_[which_resource<T>::value].push_back(search.lock());
+      SetResource(search.lock());
     }
 
     void SetProperties(CBs::MaterialCB&& material_cb) noexcept;
@@ -102,12 +89,15 @@ namespace Engine::Resources
     SERIALIZER_ACCESS
     Material();
 
+    void SetResource(const StrongResource& resource);
+
     CBs::MaterialCB m_material_cb_;
 
     std::vector<std::string>                                m_shaders_;
     std::map<const eResourceType, std::vector<std::string>> m_resources_;
 
     // non-serialized
+    bool                                                       m_b_edit_dialog_;
     TempParam                                                  m_temp_param_;
     std::map<const eShaderDomain, StrongShader>                m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;

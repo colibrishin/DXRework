@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "egMaterial.h"
 
+#include "egShader.hpp"
 #include "egDXCommon.h"
 #include "egDXType.h"
+#include "egImGuiHeler.hpp"
 #include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"
@@ -20,7 +22,8 @@ namespace Engine::Resources
 {
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_()
+      m_material_cb_(),
+      m_b_edit_dialog_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -133,6 +136,71 @@ namespace Engine::Resources
     Load();
   }
 
+  void Material::OnImGui()
+  {
+    Resource::OnImGui();
+
+    // Material properties
+    FloatAligned("Specular Power", m_material_cb_.specular_power);
+    FloatAligned("Reflection Scale", m_material_cb_.reflection_scale);
+    FloatAligned("Refraction Scale", m_material_cb_.refraction_scale);
+    FloatAligned("Reflection Translation", m_material_cb_.reflection_translation);
+
+    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_cb_.override_color);
+    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specular_color);
+    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clip_plane));
+
+    if (ImGui::Button("Edit Resources")) { m_b_edit_dialog_ = true; }
+
+    if (m_b_edit_dialog_)
+    {
+        if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+          if (ImGui::BeginListBox("Resource Used"))
+          {
+            for (auto& [type, resources] : m_resources_loaded_)
+            {
+              if (ImGui::TreeNode(g_resource_type_str[type]))
+              {
+                for (auto it = resources.begin(); it != resources.end();)
+                {
+                  if (ImGui::Selectable((*it)->GetName().c_str(), false))
+                  {
+                    std::erase_if
+                      (
+                       m_resources_[(*it)->GetResourceType()], [&it](const std::string& name)
+                       {
+                         return name == (*it)->GetName();
+                       }
+                      );
+                    it = resources.erase(it);
+                  }
+                  else { ++it; }
+                }
+                ImGui::TreePop();
+              }
+            }
+            ImGui::EndListBox();
+          }
+
+        if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+        {
+          if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE", ImGuiDragDropFlags_AcceptBeforeDelivery))
+          {
+            if (const auto resource = static_cast<StrongResource*>(payload->Data))
+            {
+              SetResource(*resource);
+            }
+          }
+
+          ImGui::EndDragDropTarget();
+        }
+
+        ImGui::End();
+      }
+    }
+  }
+
   void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
 
   bool Material::IsRenderDomain(eShaderDomain domain) const noexcept { return m_shaders_loaded_.contains(domain); }
@@ -152,7 +220,46 @@ namespace Engine::Resources
 
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_() {}
+      m_material_cb_(),
+      m_b_edit_dialog_(false) {}
+
+  void Material::SetResource(const StrongResource& resource)
+  {
+    if (resource->GetResourceType() == RES_T_MTR)
+    {
+      return;
+    }
+
+    if (resource->GetResourceType() == RES_T_MESH)
+    {
+      return;
+    }
+
+    if (!resource->IsLoaded())
+    {
+      resource->Load();
+    }
+
+    if (resource->GetResourceType() == RES_T_SHADER)
+    {
+      if (std::ranges::find_if(m_shaders_, [&resource](const std::string& name) { return name == resource->GetName(); }) != m_shaders_.end())
+      {
+        return;
+      }
+
+      m_shaders_.emplace_back(resource->GetName());
+      m_shaders_loaded_[resource->GetSharedPtr<Shader>()->GetDomain()] = resource->GetSharedPtr<Shader>();
+      return;
+    }
+
+    if (std::ranges::find_if(m_resources_[resource->GetResourceType()], [&resource](const std::string& name) { return name == resource->GetName(); }) != m_resources_[resource->GetResourceType()].end())
+    {
+           return;
+    }
+
+    m_resources_[resource->GetResourceType()].push_back(resource->GetName());
+    m_resources_loaded_[resource->GetResourceType()].push_back(resource);
+  }
 
   void Material::Load_INTERNAL()
   {
