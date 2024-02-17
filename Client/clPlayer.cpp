@@ -2,7 +2,6 @@
 #include "clPlayer.h"
 
 #include "clCharacterController.hpp"
-#include "clDarkScene.h"
 #include "clHealth.h"
 #include "clHitbox.h"
 #include "clRifile.h"
@@ -79,11 +78,6 @@ namespace Client::Object
   void Player::Update(const float& dt)
   {
     Object::Update(dt);
-
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::Space))
-    {
-      GetSceneManager().SetActive<Scene::DarkScene>("Thunder");
-    }
   }
 
   void Player::PreRender(const float& dt) { Object::PreRender(dt); }

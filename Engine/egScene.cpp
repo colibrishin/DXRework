@@ -11,7 +11,6 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(Renderable))
  _ARTAG(m_main_camera_local_id_)
  _ARTAG(m_layers)
- _ARTAG(m_type_)
 )
 
 namespace Engine

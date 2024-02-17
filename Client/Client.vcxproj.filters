@@ -60,17 +60,11 @@
     <Filter Include="Object\TestObject">
       <UniqueIdentifier>{d6ddae5c-4a7b-4c36-aa52-cdc366835b09}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scene\TestScene">
-      <UniqueIdentifier>{6f6bdb31-6658-4833-a2b4-74327a4b0da3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
     </Filter>
     <Filter Include="Object\Rifle">
       <UniqueIdentifier>{a7aef9eb-6d3b-44f2-adf4-7e29c5a5799a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\DarkScene">
-      <UniqueIdentifier>{7e2797b0-0e58-4b99-9f63-bd1a4ef1fa16}</UniqueIdentifier>
     </Filter>
     <Filter Include="Object\Hitbox">
       <UniqueIdentifier>{2f49c3ca-73ee-477f-bc6f-47a08f03927b}</UniqueIdentifier>
@@ -131,17 +125,11 @@
     <ClInclude Include="clTestObject.hpp">
       <Filter>Object\TestObject</Filter>
     </ClInclude>
-    <ClInclude Include="clTestScene.hpp">
-      <Filter>Scene\TestScene</Filter>
-    </ClInclude>
     <ClInclude Include="clPlayer.h">
       <Filter>Object\Player</Filter>
     </ClInclude>
     <ClInclude Include="clRifile.h">
       <Filter>Object\Rifle</Filter>
-    </ClInclude>
-    <ClInclude Include="clDarkScene.h">
-      <Filter>Scene\DarkScene</Filter>
     </ClInclude>
     <ClInclude Include="clHitbox.h">
       <Filter>Object\Hitbox</Filter>
@@ -190,17 +178,11 @@
     <ClCompile Include="clTestObject.cpp">
       <Filter>Object\TestObject</Filter>
     </ClCompile>
-    <ClCompile Include="clTestScene.cpp">
-      <Filter>Scene\TestScene</Filter>
-    </ClCompile>
     <ClCompile Include="clPlayer.cpp">
       <Filter>Object\Player</Filter>
     </ClCompile>
     <ClCompile Include="clRifle.cpp">
       <Filter>Object\Rifle</Filter>
-    </ClCompile>
-    <ClCompile Include="clDarkScene.cpp">
-      <Filter>Scene\DarkScene</Filter>
     </ClCompile>
     <ClCompile Include="clHitbox.cpp">
       <Filter>Object\Hitbox</Filter>

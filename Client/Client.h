@@ -2,13 +2,6 @@
 
 namespace Engine
 {
-  enum eSceneType : UINT
-  {
-    SCENE_T_UNK = 0,
-    SCENE_T_TEST,
-    SCENE_T_DARK
-  };
-
   enum eScriptType : UINT
   {
     SCRIPT_T_NONE = 0,

@@ -186,7 +186,6 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="clDarkScene.h" />
     <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="Client.h" />
@@ -198,7 +197,6 @@
     <ClInclude Include="clSkyBox.hpp" />
     <ClInclude Include="clTestCube.hpp" />
     <ClInclude Include="clTestObject.hpp" />
-    <ClInclude Include="clTestScene.hpp" />
     <ClInclude Include="clTriangleMesh.hpp" />
     <ClInclude Include="clCharacterController.hpp" />
     <ClInclude Include="clWater.hpp" />
@@ -210,7 +208,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clCharacterController.cpp" />
-    <ClCompile Include="clDarkScene.cpp" />
     <ClCompile Include="clFPSCounter.cpp" />
     <ClCompile Include="clHitbox.cpp" />
     <ClCompile Include="Client.cpp" />
@@ -223,7 +220,6 @@
     <ClCompile Include="clSkyBox.cpp" />
     <ClCompile Include="clTestCube.cpp" />
     <ClCompile Include="clTestObject.cpp" />
-    <ClCompile Include="clTestScene.cpp" />
     <ClCompile Include="clWater.cpp" />
     <ClCompile Include="clHealth.cpp" />
     <ClCompile Include="pch.cpp">

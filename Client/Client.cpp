@@ -15,9 +15,8 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
-#include "clDarkScene.h"
+#include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
-#include "clTestScene.hpp"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
 #include "egGlobal.h"
@@ -217,11 +216,6 @@ namespace Client
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
-
-
-    GetSceneManager().AddScene<Scene::TestScene>("Test");
-    GetSceneManager().AddScene<Scene::DarkScene>("Thunder");
-    GetSceneManager().SetActive<Scene::TestScene>("Test");
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }
