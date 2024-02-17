@@ -62,7 +62,12 @@ namespace Engine::Manager
     }
   }
 
-  void SceneManager::Initialize() { m_b_load_popup_ = false; }
+  void SceneManager::Initialize()
+  {
+    m_b_load_popup_ = false;
+    AddScene("Untitled");
+    SetActive("Untitled");
+  }
 
   void SceneManager::Update(const float& dt) { m_active_scene_.lock()->Update(dt); }
 
