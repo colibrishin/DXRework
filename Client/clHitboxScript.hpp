@@ -8,7 +8,7 @@ namespace Client::Scripts
   class HitboxScript : public Script
   {
   public:
-	  CLIENT_SCRIPT_T(SCRIPT_T_HITBOX)
+	  CLIENT_SCRIPT_T(HitboxScript, SCRIPT_T_HITBOX)
 
     explicit HitboxScript(const WeakObject& owner)
       : Script(owner),

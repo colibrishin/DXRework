@@ -15,6 +15,7 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
+#include "clHitboxScript.hpp"
 #include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
 #include "egCollisionDetector.h"
@@ -204,6 +205,7 @@ namespace Client
   void Initialize(HWND hwnd)
   {
     Manager::Application::GetInstance().Initialize(hwnd);
+    Script::Register<Scripts::HitboxScript>();
 
     InitializeTexture();
     InitializeMesh();

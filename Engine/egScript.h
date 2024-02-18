@@ -12,7 +12,15 @@ namespace Engine
     bool       GetActive() const { return m_b_active_; }
     WeakObject GetOwner() const { return m_owner_; }
 
+    using ScriptFactoryFunction = std::function<StrongScript(const WeakObject&)>;
+
+    template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    static void Register() { s_script_factory_[typeid(T).name()] = &T::Create; }
+
+    static std::map<std::string, ScriptFactoryFunction>& GetScriptFactory() { return s_script_factory_; }
+
   protected:
+    inline static std::map<std::string, ScriptFactoryFunction> s_script_factory_; 
     Script();
 
   private:
