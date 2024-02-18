@@ -1,12 +1,16 @@
 #include "pch.h"
 
 #include "egObject.hpp"
+#include "egAnimator.h"
 #include "egBaseCollider.hpp"
 #include "egCollision.h"
 #include "egComponent.h"
 #include "egManagerHelper.hpp"
 #include "egMesh.h"
+#include "egModelRenderer.h"
+#include "egParticleRenderer.h"
 #include "egRigidbody.h"
+#include "egSoundPlayer.h"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL
@@ -302,6 +306,13 @@ namespace Engine::Abstract
       }
       ImGui::SameLine();
 
+      if (ImGui::Button("Add Components"))
+      {
+        m_imgui_components_open_ = !m_imgui_components_open_;
+      }
+
+      ImGui::SameLine();
+
       if (m_imgui_children_open_)
       {
         if (ImGui::Begin("Children", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -318,6 +329,50 @@ namespace Engine::Abstract
             }
           }
 
+          ImGui::End();
+        }
+      }
+
+      if (m_imgui_components_open_)
+      {
+        if (ImGui::Begin("Add Components", &m_imgui_components_open_, ImGuiChildFlags_AlwaysAutoResize))
+        {
+          if (ImGui::Button("Transform"))
+          {
+            AddComponent<Components::Transform>();
+          }
+
+          if (ImGui::Button("Animator"))
+          {
+            AddComponent<Components::Animator>();
+          }
+
+          if (ImGui::Button("ModelRenderer"))
+          {
+            AddComponent<Components::ModelRenderer>();
+          }
+
+          if (ImGui::Button("ParticleRenderer"))
+          {
+            AddComponent<Components::ParticleRenderer>();
+          }
+
+          if (ImGui::Button("Collider"))
+          {
+            AddComponent<Components::Collider>();
+          }
+
+          if (ImGui::Button("Rigidbody"))
+          {
+            AddComponent<Components::Rigidbody>();
+          }
+
+          if (ImGui::Button("SoundPlayer"))
+          {
+            AddComponent<Components::SoundPlayer>();
+          }
+
+          ImGui::Separator();
           ImGui::End();
         }
       }

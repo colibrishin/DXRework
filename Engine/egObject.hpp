@@ -199,6 +199,7 @@ namespace Engine::Abstract
 
     bool m_imgui_open_ = false;
     bool m_imgui_children_open_ = false;
+    bool m_imgui_components_open_ = false;
 
     std::map<eComponentType, StrongComponent> m_components_;
 
