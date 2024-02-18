@@ -372,6 +372,14 @@ namespace Engine::Abstract
             AddComponent<Components::SoundPlayer>();
           }
 
+          for (const auto& [script_name, script_func] : Script::GetScriptFactory())
+          {
+            if (ImGui::Button(script_name.c_str()))
+            {
+              AddComponent(script_func(GetSharedPtr<Object>()));
+            }
+          }
+
           ImGui::Separator();
           ImGui::End();
         }

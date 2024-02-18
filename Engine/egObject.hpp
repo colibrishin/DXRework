@@ -70,6 +70,7 @@ namespace Engine::Abstract
       return {};
     }
 
+  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> AddScript(const std::string& name = "")
     {
@@ -81,6 +82,15 @@ namespace Engine::Abstract
       return boost::static_pointer_cast<T>(script);
     }
 
+  private:
+    void AddComponent(const StrongScript& script)
+    {
+      if (m_scripts_.contains(script->GetScriptType())) { return; }
+
+      m_scripts_[script->GetScriptType()].push_back(script);
+    }
+
+  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> GetScript(const std::string& name = "")
     {
