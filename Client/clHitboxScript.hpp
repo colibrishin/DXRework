@@ -11,7 +11,7 @@ namespace Client::Scripts
 	  CLIENT_SCRIPT_T(HitboxScript, SCRIPT_T_HITBOX)
 
     explicit HitboxScript(const WeakObject& owner)
-      : Script(owner),
+      : Script(SCRIPT_T_HITBOX, owner),
         m_modifier_(1.f) {}
 
 	~HitboxScript() override = default;
