@@ -373,6 +373,22 @@ namespace Engine::Abstract
         }
       }
 
+      if (ImGui::TreeNode("Scripts"))
+      {
+        for (const auto& script : m_scripts_ | std::views::values)
+        {
+          if (ImGui::TreeNode(script->GetTypeName().c_str()))
+          {
+            script->OnImGui();
+            ImGui::TreePop();
+            ImGui::Spacing();
+          }
+        }
+
+        ImGui::TreePop();
+        ImGui::Spacing();
+      }
+
       if (ImGui::TreeNode("Components"))
       {
         for (const auto& comp : m_components_ | std::views::values)
