@@ -27,17 +27,11 @@
     <Filter Include="Resource\Normal">
       <UniqueIdentifier>{5e54c69d-ea83-42da-9ce5-924bee7376ff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="State">
-      <UniqueIdentifier>{e1e610d3-8d69-45e9-b2eb-d054c6d18df9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Sound">
       <UniqueIdentifier>{17fa9dbc-6f7a-4745-95b6-84114aa6dedc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\Scene">
       <UniqueIdentifier>{1dbb809b-8ffa-49c9-adb8-c43a4dbb7f37}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Player">
-      <UniqueIdentifier>{9191c412-5fba-4843-8146-fd0240bbe22b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Object\Water">
       <UniqueIdentifier>{ac99b7d1-311b-4750-b5f4-1c862985b516}</UniqueIdentifier>
@@ -63,20 +57,11 @@
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Rifle">
-      <UniqueIdentifier>{a7aef9eb-6d3b-44f2-adf4-7e29c5a5799a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Hitbox">
-      <UniqueIdentifier>{2f49c3ca-73ee-477f-bc6f-47a08f03927b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Script">
       <UniqueIdentifier>{480a1e2a-0c63-47eb-990b-f117e6da8d83}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\ComputeShader">
       <UniqueIdentifier>{6e2bf49d-5f8d-4a30-a03d-176c473b9744}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Health">
-      <UniqueIdentifier>{4d29236d-2f58-4473-96cc-35ff21cddfae}</UniqueIdentifier>
     </Filter>
     <Filter Include="Object\Missile">
       <UniqueIdentifier>{c302eed8-34e3-44a6-abc3-3e6c02fde386}</UniqueIdentifier>
@@ -101,9 +86,6 @@
     <ClInclude Include="clTriangleMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clCharacterController.hpp">
-      <Filter>State</Filter>
-    </ClInclude>
     <ClInclude Include="clWater.hpp">
       <Filter>Object\Water</Filter>
     </ClInclude>
@@ -125,26 +107,17 @@
     <ClInclude Include="clTestObject.hpp">
       <Filter>Object\TestObject</Filter>
     </ClInclude>
-    <ClInclude Include="clPlayer.h">
-      <Filter>Object\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="clRifile.h">
-      <Filter>Object\Rifle</Filter>
-    </ClInclude>
-    <ClInclude Include="clHitbox.h">
-      <Filter>Object\Hitbox</Filter>
-    </ClInclude>
     <ClInclude Include="clHitboxScript.hpp">
       <Filter>Script</Filter>
-    </ClInclude>
-    <ClInclude Include="clHealth.h">
-      <Filter>Object\Health</Filter>
     </ClInclude>
     <ClInclude Include="clMissile.h">
       <Filter>Object\Missile</Filter>
     </ClInclude>
     <ClInclude Include="clParticleCompute.h">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlayerScript.h">
+      <Filter>Script</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -153,9 +126,6 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="clCharacterController.cpp">
-      <Filter>State</Filter>
     </ClCompile>
     <ClCompile Include="clWater.cpp">
       <Filter>Object\Water</Filter>
@@ -178,23 +148,14 @@
     <ClCompile Include="clTestObject.cpp">
       <Filter>Object\TestObject</Filter>
     </ClCompile>
-    <ClCompile Include="clPlayer.cpp">
-      <Filter>Object\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="clRifle.cpp">
-      <Filter>Object\Rifle</Filter>
-    </ClCompile>
-    <ClCompile Include="clHitbox.cpp">
-      <Filter>Object\Hitbox</Filter>
-    </ClCompile>
-    <ClCompile Include="clHealth.cpp">
-      <Filter>Object\Health</Filter>
-    </ClCompile>
     <ClCompile Include="clMissile.cpp">
       <Filter>Object\Missile</Filter>
     </ClCompile>
     <ClCompile Include="clParticleCompute.cpp">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayerScript.cpp">
+      <Filter>Script</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

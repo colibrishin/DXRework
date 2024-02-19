@@ -6,6 +6,7 @@ namespace Engine
   {
     SCRIPT_T_NONE = 0,
     SCRIPT_T_HITBOX,
+    SCRIPT_T_PLAYER,
   };
 }
 

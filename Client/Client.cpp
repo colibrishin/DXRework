@@ -18,6 +18,7 @@
 #include "clHitboxScript.hpp"
 #include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
+#include "clPlayerScript.h"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
 #include "egGlobal.h"
@@ -206,6 +207,7 @@ namespace Client
   {
     Manager::Application::GetInstance().Initialize(hwnd);
     Script::Register<Scripts::HitboxScript>();
+    Script::Register<Scripts::PlayerScript>();
 
     InitializeTexture();
     InitializeMesh();

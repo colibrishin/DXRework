@@ -1,5 +1,5 @@
 #pragma once
-#include "clCharacterController.hpp"
+#include "clPlayerScript.h"
 #include "egObject.hpp"
 #include "egScript.h"
 
@@ -24,7 +24,7 @@ namespace Client::Scripts
 	  {
 	    if (const auto player = hitbox->GetParent().lock())
 	    {
-	      if (const auto cc = player->GetComponent<State::CharacterController>().lock())
+	      if (const auto cc = player->GetScript<PlayerScript>().lock())
 	      {
 	        cc->Hit(damage);
 	      }
