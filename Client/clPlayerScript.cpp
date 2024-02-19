@@ -23,7 +23,7 @@ namespace Client::Scripts
     SetState(CHAR_STATE_IDLE);
 
     const auto obj = GetOwner().lock();
-    const auto model = Resources::Shape::Get("Character").lock();
+    const auto model = Resources::Shape::Get("CharacterShape").lock();
 
     const auto mr = GetOwner().lock()->AddComponent<Components::ModelRenderer>().lock();
     mr->SetMaterial(Resources::Material::Get("Character"));
@@ -54,7 +54,7 @@ namespace Client::Scripts
 
       const auto cmr = rifle->AddComponent<Components::ModelRenderer>().lock();
 
-      mr->SetMaterial(Resources::Material::Get("ColorRifle"));
+      cmr->SetMaterial(Resources::Material::Get("ColorRifle"));
 
       const auto ctr   = rifle->AddComponent<Components::Transform>().lock();
       const auto catr  = rifle->AddComponent<Components::Animator>().lock();
@@ -63,7 +63,7 @@ namespace Client::Scripts
       ctr->SetSizeAbsolute(true);
       ctr->SetRotateAbsolute(false);
       catr->SetAnimation(0);
-      ccldr->SetModel(model);
+      ccldr->SetModel(rifle_model);
       m_rifle_initialized_ = true;
     }
 
@@ -108,7 +108,7 @@ namespace Client::Scripts
     }
 
     // todo: determine local player
-    MoveCameraToChild(true);
+    //MoveCameraToChild(true);
   }
 
   void PlayerScript::PreUpdate(const float& dt)
