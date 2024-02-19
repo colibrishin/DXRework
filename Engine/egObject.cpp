@@ -376,7 +376,7 @@ namespace Engine::Abstract
           {
             if (ImGui::Button(script_name.c_str()))
             {
-              AddComponent(script_func(GetSharedPtr<Object>()));
+              AddScript(script_func(GetSharedPtr<Object>()));
             }
           }
 

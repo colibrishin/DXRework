@@ -83,7 +83,7 @@ namespace Engine::Abstract
     }
 
   private:
-    void AddComponent(const StrongScript& script)
+    void AddScript(const StrongScript& script)
     {
       if (m_scripts_.contains(script->GetScriptType())) { return; }
 
