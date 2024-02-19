@@ -8,7 +8,7 @@ namespace Engine
   public:
     explicit Script(eScriptType type, const WeakObject& owner);
 
-    void       SetActive(bool active);
+    virtual void       SetActive(bool active);
     bool       GetActive() const { return m_b_active_; }
     WeakObject GetOwner() const { return m_owner_; }
     eScriptType GetScriptType() const { return m_type_; }
