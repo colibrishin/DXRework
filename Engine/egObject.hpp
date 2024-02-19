@@ -30,7 +30,7 @@ namespace Engine::Abstract
     {
       if constexpr (std::is_base_of_v<Component, T>)
       {
-        if (m_components_.contains(which_component<T>::value)) { return {}; }
+        if (m_components_.contains(which_component<T>::value)) { return boost::static_pointer_cast<T>(m_components_[which_component<T>::value]); }
 
         const auto thisObject = GetSharedPtr<Object>();
 
