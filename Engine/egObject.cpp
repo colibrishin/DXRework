@@ -164,14 +164,11 @@ namespace Engine::Abstract
 
   void Object::Render(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->Render(dt);
-      }
+      script->Render(dt);
     }
 
     for (const auto& child : m_children_cache_ | std::views::values)
@@ -189,14 +186,11 @@ namespace Engine::Abstract
 
   void Object::PostRender(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->PostRender(dt);
-      }
+      script->PostRender(dt);
     }
 
     for (const auto& child : m_children_cache_ | std::views::values)
@@ -212,14 +206,11 @@ namespace Engine::Abstract
 
   void Object::FixedUpdate(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->FixedUpdate(dt);
-      }
+      script->FixedUpdate(dt);
     }
 
     for (const auto& component : m_components_ | std::views::values)
@@ -242,14 +233,11 @@ namespace Engine::Abstract
 
   void Object::PostUpdate(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->PostUpdate(dt);
-      }
+      script->PostUpdate(dt);
     }
 
     for (const auto& component : m_components_ | std::views::values)
@@ -410,14 +398,11 @@ namespace Engine::Abstract
 
   void Object::PreUpdate(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->PreUpdate(dt);
-      }
+      script->PreUpdate(dt);
     }
 
     for (const auto& component : m_components_ | std::views::values)
@@ -440,14 +425,11 @@ namespace Engine::Abstract
 
   void Object::PreRender(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->PreRender(dt);
-      }
+      script->PreRender(dt);
     }
 
     for (const auto& child : m_children_cache_ | std::views::values)
@@ -463,14 +445,11 @@ namespace Engine::Abstract
 
   void Object::Update(const float& dt)
   {
-    for (const auto& vec : m_scripts_ | std::views::values)
+    for (const auto& script : m_scripts_ | std::views::values)
     {
-      for (const auto& script : vec)
-      {
-        if (!script->GetActive()) { continue; }
+      if (!script->GetActive()) { continue; }
 
-        script->Update(dt);
-      }
+      script->Update(dt);
     }
 
     for (const auto& component : m_components_ | std::views::values)
