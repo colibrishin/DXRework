@@ -28,7 +28,7 @@ namespace Client::Scripts
     const auto mr = GetOwner().lock()->AddComponent<Components::ModelRenderer>().lock();
     mr->SetMaterial(Resources::Material::Get("Character"));
 
-    const auto tr = obj->GetComponent<Components::Transform>().lock();
+    const auto tr = obj->AddComponent<Components::Transform>().lock();
     const auto cldr = obj->AddComponent<Components::Collider>().lock();
     const auto rb = obj->AddComponent<Components::Rigidbody>().lock();
     const auto atr = obj->AddComponent<Components::Animator>().lock();
