@@ -31,11 +31,11 @@ namespace Engine
     void OnDeserialized() override;
     void OnImGui() override;
 
-    template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
-    boost::weak_ptr<T> CreateGameObject(eLayerType layer)
+    template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
+    boost::weak_ptr<T> CreateGameObject(eLayerType layer, Args&&... args)
     {
       // Create object, dynamic allocation from scene due to the access limitation.
-      auto obj_t = boost::shared_ptr<T>(new T);
+      auto obj_t = boost::shared_ptr<T>(new T(args...));
       auto obj   = obj_t->template GetSharedPtr<Abstract::Object>();
 
       // Set internal information as this scene and layer
