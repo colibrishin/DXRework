@@ -57,7 +57,8 @@
 // Static client provided scene type, this should be added to every scene in the client
 #define CLIENT_SCENE_T(enum_val) static constexpr Engine::eSceneType stype = enum_val;
 // Static client provided script type, this should be added to every script in the client
-#define CLIENT_SCRIPT_T(enum_val) static constexpr Engine::eScriptType scptype = enum_val;
+#define CLIENT_SCRIPT_T(typename, enum_val) static constexpr Engine::eScriptType scptype = enum_val; \
+  static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
 
 // Static inline resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \

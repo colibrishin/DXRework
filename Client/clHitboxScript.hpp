@@ -1,5 +1,5 @@
 #pragma once
-#include "clCharacterController.hpp"
+#include "clPlayerScript.h"
 #include "egObject.hpp"
 #include "egScript.h"
 
@@ -8,10 +8,10 @@ namespace Client::Scripts
   class HitboxScript : public Script
   {
   public:
-	  CLIENT_SCRIPT_T(SCRIPT_T_HITBOX)
+	  CLIENT_SCRIPT_T(HitboxScript, SCRIPT_T_HITBOX)
 
     explicit HitboxScript(const WeakObject& owner)
-      : Script(owner),
+      : Script(SCRIPT_T_HITBOX, owner),
         m_modifier_(1.f) {}
 
 	~HitboxScript() override = default;
@@ -24,7 +24,7 @@ namespace Client::Scripts
 	  {
 	    if (const auto player = hitbox->GetParent().lock())
 	    {
-	      if (const auto cc = player->GetComponent<State::CharacterController>().lock())
+	      if (const auto cc = player->GetScript<PlayerScript>().lock())
 	      {
 	        cc->Hit(damage);
 	      }

@@ -7,10 +7,12 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(Renderable))
 )
 
-Engine::Script::Script(const WeakObject& owner)
-  : m_b_active_(false) { if (const auto obj = owner.lock()) { m_owner_ = obj; } }
+Engine::Script::Script(eScriptType type, const WeakObject& owner)
+  : m_type_(type),
+    m_b_active_(true) { if (const auto obj = owner.lock()) { m_owner_ = obj; } }
 
 void Engine::Script::SetActive(const bool active) { m_b_active_ = active; }
 
 Engine::Script::Script()
-  : m_b_active_(false) {}
+  : m_type_(),
+    m_b_active_(true) {}

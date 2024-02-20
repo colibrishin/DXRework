@@ -11,7 +11,6 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(Renderable))
  _ARTAG(m_main_camera_local_id_)
  _ARTAG(m_layers)
- _ARTAG(m_type_)
 )
 
 namespace Engine
@@ -37,8 +36,6 @@ namespace Engine
 
     const auto light2 = CreateGameObject<Objects::Light>(LAYER_LIGHT).lock();
     light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
-
-    Initialize_INTERNAL();
 
     GetTaskScheduler().AddTask
       (
@@ -243,10 +240,9 @@ namespace Engine
     }
   }
 
-  Scene::Scene(const eSceneType type)
+  Scene::Scene()
     : m_b_scene_imgui_open_(false),
       m_main_camera_local_id_(g_invalid_id),
-      m_type_(type),
       m_object_position_tree_() {}
 
   void Scene::PreUpdate(const float& dt)
@@ -295,8 +291,6 @@ namespace Engine
 
     Serializer::Serialize(name, GetSharedPtr<Scene>());
   }
-  
-  eSceneType Scene::GetType() const { return m_type_; }
   
   ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const { return m_layers[layer]->GetGameObjects(); }
 

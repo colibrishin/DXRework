@@ -186,46 +186,34 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="clDarkScene.h" />
     <ClInclude Include="clFPSCounter.hpp" />
     <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="clMousePosition.hpp" />
     <ClInclude Include="clParticleCompute.h" />
     <ClInclude Include="clPlaneObject.hpp" />
-    <ClInclude Include="clPlayer.h" />
-    <ClInclude Include="clRifile.h" />
+    <ClInclude Include="clPlayerScript.h" />
     <ClInclude Include="clSkyBox.hpp" />
     <ClInclude Include="clTestCube.hpp" />
     <ClInclude Include="clTestObject.hpp" />
-    <ClInclude Include="clTestScene.hpp" />
     <ClInclude Include="clTriangleMesh.hpp" />
-    <ClInclude Include="clCharacterController.hpp" />
     <ClInclude Include="clWater.hpp" />
-    <ClInclude Include="clHitbox.h" />
-    <ClInclude Include="clHealth.h" />
     <ClInclude Include="clMissile.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="clCharacterController.cpp" />
-    <ClCompile Include="clDarkScene.cpp" />
     <ClCompile Include="clFPSCounter.cpp" />
-    <ClCompile Include="clHitbox.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="clMissile.cpp" />
     <ClCompile Include="clMousePosition.cpp" />
     <ClCompile Include="clParticleCompute.cpp" />
     <ClCompile Include="clPlaneObject.cpp" />
-    <ClCompile Include="clPlayer.cpp" />
-    <ClCompile Include="clRifle.cpp" />
     <ClCompile Include="clSkyBox.cpp" />
     <ClCompile Include="clTestCube.cpp" />
     <ClCompile Include="clTestObject.cpp" />
-    <ClCompile Include="clTestScene.cpp" />
     <ClCompile Include="clWater.cpp" />
-    <ClCompile Include="clHealth.cpp" />
+    <ClCompile Include="clPlayerScript.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

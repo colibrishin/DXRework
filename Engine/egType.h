@@ -299,12 +299,6 @@ namespace Engine
   };
 
   template <typename T>
-  struct which_scene
-  {
-    static constexpr eSceneType value = T::stype;
-  };
-
-  template <typename T>
   struct which_cb
   {
     static constexpr eCBType value = T::cbtype;

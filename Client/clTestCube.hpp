@@ -1,7 +1,6 @@
 #pragma once
 
 #include <egObject.hpp>
-#include "clCharacterController.hpp"
 #include "clTriangleMesh.hpp"
 
 namespace Client::Object

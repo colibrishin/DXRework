@@ -30,7 +30,7 @@ namespace Engine::Abstract
     {
       if constexpr (std::is_base_of_v<Component, T>)
       {
-        if (m_components_.contains(which_component<T>::value)) { return {}; }
+        if (m_components_.contains(which_component<T>::value)) { return boost::static_pointer_cast<T>(m_components_[which_component<T>::value]); }
 
         const auto thisObject = GetSharedPtr<Object>();
 
@@ -70,27 +70,46 @@ namespace Engine::Abstract
       return {};
     }
 
+  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> AddScript(const std::string& name = "")
     {
+      if (m_scripts_.contains(which_script<T>::value))
+      {
+        return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
+      }
+
       StrongScript script = boost::make_shared<T>(GetSharedPtr<Object>());
       script->SetName(name);
 
-      m_scripts_[which_script<T>::value].push_back(script);
+      m_scripts_[which_script<T>::value] = script;
+      script->Initialize();
 
       return boost::static_pointer_cast<T>(script);
     }
 
+  private:
+    boost::weak_ptr<Script> AddScript(const StrongScript& script)
+    {
+      if (m_scripts_.contains(script->GetScriptType()))
+      {
+        return boost::static_pointer_cast<Script>(m_scripts_[script->GetScriptType()]);
+      }
+
+      m_scripts_[script->GetScriptType()] = script;
+
+      script->Initialize();
+
+      return script;
+    }
+
+  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> GetScript(const std::string& name = "")
     {
       if (m_scripts_.contains(which_script<T>::value))
       {
-        auto& scripts = m_scripts_[which_script<T>::value];
-
-        if (name.empty() && !scripts.empty()) { return boost::static_pointer_cast<T>(scripts.front()); }
-
-        for (auto& script : scripts) { if (script->GetName() == name) { return boost::static_pointer_cast<T>(script); } }
+        return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
       }
 
       return {};
@@ -199,6 +218,7 @@ namespace Engine::Abstract
 
     bool m_imgui_open_ = false;
     bool m_imgui_children_open_ = false;
+    bool m_imgui_components_open_ = false;
 
     std::map<eComponentType, StrongComponent> m_components_;
 
@@ -207,7 +227,7 @@ namespace Engine::Abstract
     std::map<LocalActorID, WeakObject>                 m_children_cache_;
     std::set<LocalComponentID>                         m_assigned_component_ids_;
     std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
-    std::map<eScriptType, std::vector<StrongScript>>   m_scripts_;
+    std::map<eScriptType, StrongScript>   m_scripts_;
   };
 } // namespace Engine::Abstract
 

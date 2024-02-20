@@ -15,9 +15,10 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
-#include "clDarkScene.h"
+#include "clHitboxScript.hpp"
+#include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
-#include "clTestScene.hpp"
+#include "clPlayerScript.h"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
 #include "egGlobal.h"
@@ -205,6 +206,8 @@ namespace Client
   void Initialize(HWND hwnd)
   {
     Manager::Application::GetInstance().Initialize(hwnd);
+    Script::Register<Scripts::HitboxScript>();
+    Script::Register<Scripts::PlayerScript>();
 
     InitializeTexture();
     InitializeMesh();
@@ -217,11 +220,6 @@ namespace Client
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
-
-
-    GetSceneManager().AddScene<Scene::TestScene>("Test");
-    GetSceneManager().AddScene<Scene::DarkScene>("Thunder");
-    GetSceneManager().SetActive<Scene::TestScene>("Test");
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }
