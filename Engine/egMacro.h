@@ -62,9 +62,12 @@
 
 // Static inline resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
-  static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
+  static inline boost::weak_ptr<TYPE> Get(const std::string& name) {          \
+    return Engine::Manager::ResourceManager::GetInstance()                    \
+        .GetResource<TYPE>(name); }                                           \
+  static inline boost::weak_ptr<TYPE> Get(const LocalResourceID id)           \
     { return Engine::Manager::ResourceManager::GetInstance()                  \
-       .GetResource<TYPE>(name); }
+       .GetResource<TYPE>(id); }
 
 // Creatable resource creator which infers self as type
 #define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
