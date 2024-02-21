@@ -217,6 +217,7 @@ namespace Engine
   using GlobalEntityID = LONG_PTR;
   using LocalComponentID = LONG_PTR;
   using LocalActorID = LONG_PTR;
+  using LocalResourceID = LONG_PTR;
   using EntityName = std::string;
   using TypeName = std::string;
   using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;

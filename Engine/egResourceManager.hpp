@@ -26,6 +26,9 @@ namespace Engine::Manager
     {
       if (!resource->GetPath().empty() && GetResourceByPath<T>(resource->GetPath()).lock())  { return; }
 
+      resource->m_local_id_ = GenerateResourceID();
+      m_resource_ids_.insert({resource->m_local_id_, resource->GetID()});
+
       m_resources_[which_resource<T>::value].insert(resource);
     }
 
@@ -36,6 +39,9 @@ namespace Engine::Manager
       {
         throw std::runtime_error("Resource already exists");
       }
+
+      resource->m_local_id_ = GenerateResourceID();
+      m_resource_ids_.insert({resource->m_local_id_, resource->GetID()});
 
       m_resources_[which_resource<T>::value].insert(resource);
       resource->SetName(name);
@@ -108,6 +114,9 @@ namespace Engine::Manager
     friend struct SingletonDeleter;
     ~ResourceManager() override = default;
 
+    LocalResourceID GenerateResourceID() const;
+
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
+    std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
   };
 } // namespace Engine::Manager

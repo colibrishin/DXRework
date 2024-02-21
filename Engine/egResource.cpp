@@ -7,6 +7,8 @@
 
 #include <imgui_stdlib.h>
 
+#include "egImGuiHeler.hpp"
+
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Abstract::Resource,
@@ -44,6 +46,7 @@ namespace Engine::Abstract
     ImGui::Checkbox("Loaded", &m_bLoaded_);
     ImGui::Text("Path : %s", m_path_str_.c_str());
     ImGui::Unindent(2);
+    lldDisabled("Local ID", GetLocalID());
 
     if (ImGui::Button("Save"))
     {
@@ -55,7 +58,8 @@ namespace Engine::Abstract
   Resource::Resource(std::filesystem::path path, eResourceType type)
     : m_bLoaded_(false),
       m_path_(std::move(path)),
-      m_type_(type) { m_path_str_ = m_path_.string(); }
+      m_type_(type),
+      m_local_id_(g_invalid_id) { m_path_str_ = m_path_.string(); }
 
   void Resource::OnDeserialized()
   {
@@ -72,6 +76,8 @@ namespace Engine::Abstract
     m_path_     = std::move(path);
     m_path_str_ = m_path_.generic_string();
   }
+
+  LocalResourceID Resource::GetLocalID() const { return m_local_id_; }
 
   eResourceType Resource::GetResourceType() const { return m_type_; }
 } // namespace Engine::Abstract

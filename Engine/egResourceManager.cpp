@@ -65,4 +65,13 @@ namespace Engine::Manager
       ImGui::End();
     }
   }
+
+  LocalResourceID ResourceManager::GenerateResourceID() const
+  {
+    LocalResourceID id = 0;
+
+    while (m_resource_ids_.contains(id)) { id++; }
+
+    return id;
+  }
 }

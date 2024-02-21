@@ -20,6 +20,7 @@ namespace Engine::Abstract
     virtual eResourceType        GetResourceType() const;
 
     void SetPath(const std::filesystem::path& path);
+    LocalResourceID GetLocalID() const;
 
     void OnImGui() override;
 
@@ -33,10 +34,13 @@ namespace Engine::Abstract
     SERIALIZER_ACCESS
 
   private:
+    friend class Engine::Manager::ResourceManager;
+
     bool                  m_bLoaded_;
     std::filesystem::path m_path_;
     std::string           m_path_str_; // for serialization
     eResourceType         m_type_;
+    LocalResourceID       m_local_id_;
   };
 } // namespace Engine::Abstract
 
