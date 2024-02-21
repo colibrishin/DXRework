@@ -7,6 +7,7 @@ namespace Engine::Abstract
   class Resource : public Renderable
   {
   public:
+    using type = Resource;
     ~Resource() override;
 
     virtual void Load() final;
@@ -29,18 +30,20 @@ namespace Engine::Abstract
 
     virtual void Load_INTERNAL() = 0;
     virtual void Unload_INTERNAL() = 0;
+    virtual void serializeImpl() = 0;
 
   private:
+    Resource();
     SERIALIZER_ACCESS
-
-  private:
     friend class Engine::Manager::ResourceManager;
 
     bool                  m_bLoaded_;
-    std::filesystem::path m_path_;
     std::string           m_path_str_; // for serialization
     eResourceType         m_type_;
     LocalResourceID       m_local_id_;
+
+    // non-serialized
+    std::filesystem::path m_path_;
   };
 } // namespace Engine::Abstract
 

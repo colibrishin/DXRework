@@ -12,8 +12,10 @@
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Abstract::Resource,
- _ARTAG(_BSTSUPER(Renderable)) _ARTAG(m_bLoaded_)
- _ARTAG(m_path_str_) _ARTAG(m_type_)
+ _ARTAG(_BSTSUPER(Renderable)) 
+ _ARTAG(m_bLoaded_)
+ _ARTAG(m_path_str_)
+ _ARTAG(m_type_)
 )
 
 namespace Engine::Abstract
@@ -51,15 +53,20 @@ namespace Engine::Abstract
     if (ImGui::Button("Save"))
     {
       // todo: future + promise (async)
-      Serializer::Serialize(GetName(), this);
+      serializeImpl();
     }
   }
 
   Resource::Resource(std::filesystem::path path, eResourceType type)
     : m_bLoaded_(false),
-      m_path_(std::move(path)),
       m_type_(type),
-      m_local_id_(g_invalid_id) { m_path_str_ = m_path_.string(); }
+      m_local_id_(g_invalid_id),
+      m_path_(std::move(path)) { m_path_str_ = m_path_.string(); }
+
+  Resource::Resource()
+    : m_bLoaded_(false),
+      m_type_(RES_T_UNK),
+      m_local_id_(g_invalid_id) {}
 
   void Resource::OnDeserialized()
   {
