@@ -30,6 +30,7 @@ namespace Engine::Manager
       m_resource_ids_.insert({resource->m_local_id_, resource->GetID()});
 
       m_resources_[which_resource<T>::value].insert(resource);
+      m_resource_cache_.insert({resource->m_local_id_, resource});
     }
 
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
@@ -45,6 +46,7 @@ namespace Engine::Manager
 
       m_resources_[which_resource<T>::value].insert(resource);
       resource->SetName(name);
+      m_resource_cache_.insert({resource->m_local_id_, resource});
     }
 
     template <typename T>
@@ -65,6 +67,14 @@ namespace Engine::Manager
 
         return boost::reinterpret_pointer_cast<T>(*it);
       }
+
+      return {};
+    }
+
+    template <typename T>
+    boost::weak_ptr<T> GetResource(const LocalResourceID id)
+    {
+      if (const auto it = m_resource_cache_.find(id); it != m_resource_cache_.end()) { return boost::static_pointer_cast<T>(it->second.lock()); }
 
       return {};
     }
@@ -117,6 +127,7 @@ namespace Engine::Manager
     LocalResourceID GenerateResourceID() const;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
+    std::map<LocalResourceID, WeakResource>           m_resource_cache_;
     std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
   };
 } // namespace Engine::Manager

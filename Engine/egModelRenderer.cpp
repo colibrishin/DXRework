@@ -28,7 +28,7 @@ namespace Engine::Components
   void ModelRenderer::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Material Name", GetMaterialName());
+    lldDisabled("Material ID", GetMaterialID());
 
     if (ImGui::BeginDragDropTarget())
     {

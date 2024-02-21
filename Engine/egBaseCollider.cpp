@@ -17,7 +17,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::Collider,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
- _ARTAG(m_type_) _ARTAG(m_model_name_) _ARTAG(m_mass_)
+ _ARTAG(m_type_) _ARTAG(m_model_id_) _ARTAG(m_mass_)
  _ARTAG(m_boundings_)
 )
 
@@ -103,8 +103,8 @@ namespace Engine::Components
   {
     if (const auto locked = model.lock())
     {
-      m_model_name_ = locked->GetName();
-      m_model_      = locked;
+      m_model_id_ = locked->GetLocalID();
+      m_model_    = locked;
 
       BoundingOrientedBox obb;
       BoundingOrientedBox::CreateFromBoundingBox(obb, locked->GetBoundingBox());
@@ -206,6 +206,7 @@ namespace Engine::Components
   Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_type_(BOUNDING_TYPE_BOX),
+      m_model_id_(g_invalid_id),
       m_boundings_(),
       m_mass_(1.f),
       m_inertia_tensor_(),
@@ -261,6 +262,7 @@ namespace Engine::Components
   Collider::Collider(const WeakObject& owner)
     : Component(COM_T_COLLIDER, owner),
       m_type_(BOUNDING_TYPE_BOX),
+      m_model_id_(g_invalid_id),
       m_boundings_(),
       m_mass_(1.0f),
       m_inertia_tensor_(),

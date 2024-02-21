@@ -112,8 +112,8 @@ namespace Engine::Components
     void GenerateInertiaCube();
     void GenerateInertiaSphere();
 
-    eBoundingType m_type_;
-    EntityName    m_model_name_;
+    eBoundingType   m_type_;
+    LocalResourceID m_model_id_;
 
     Physics::GenericBounding m_boundings_;
 

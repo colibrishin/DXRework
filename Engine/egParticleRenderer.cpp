@@ -7,7 +7,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::ParticleRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))
- _ARTAG(m_cs_name_)
+ _ARTAG(m_cs_id_)
  _ARTAG(m_instances_)
  _ARTAG(m_b_follow_owner_)
  _ARTAG(m_b_scaling_)
@@ -26,7 +26,8 @@ namespace Engine::Components
       m_duration_dt_(100.0f),
       m_size_(0.5f),
       m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f) {}
+      m_min_scale_size_(1.f),
+      m_cs_id_(g_invalid_id) {}
 
   void ParticleRenderer::Initialize()
   {
@@ -122,7 +123,8 @@ namespace Engine::Components
       m_duration_dt_(100.0f),
       m_size_(0.5f),
       m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f) {}
+      m_min_scale_size_(1.f),
+      m_cs_id_(g_invalid_id) {}
 
   void ParticleRenderer::SetSize(const float size) { m_size_ = size; }
 
@@ -131,6 +133,7 @@ namespace Engine::Components
     if (const auto shader = cs.lock())
     {
       m_cs_ = shader;
+      m_cs_id_ = shader->GetID();
     }
   }
 

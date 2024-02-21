@@ -56,7 +56,7 @@ namespace Engine::Components
 
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
     std::vector<Graphics::SBs::InstanceParticleSB>                m_instances_;
-    std::string                                                   m_cs_name_;
+    LocalResourceID                                               m_cs_id_;
     StrongComputeShader                                           m_cs_;
   };
 }
