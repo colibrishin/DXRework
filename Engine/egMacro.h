@@ -86,6 +86,11 @@
         return obj;                                                           \
     }
 
+#define RESOURCE_SERIALIZER_OVERRIDE(TYPE)                                    \
+  void serializeImpl() override {                                             \
+    Serializer::Serialize(GetName(), GetSharedPtr<TYPE>());                   \
+  }
+
 // invalid id check for weak pointer
 #define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
   if ((ID) == g_invalid_id) return {};
