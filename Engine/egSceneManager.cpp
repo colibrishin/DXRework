@@ -2,6 +2,7 @@
 #include "egSceneManager.hpp"
 #include "egCamera.h"
 #include "egLight.h"
+#include "egMaterial.h"
 #include "egObject.hpp"
 #include "egScene.hpp"
 #include "egShadowManager.hpp"
@@ -65,8 +66,8 @@ namespace Engine::Manager
   void SceneManager::Initialize()
   {
     m_b_load_popup_ = false;
-    AddScene("Untitled");
-    SetActive("Untitled");
+    AddScene("UntitledScene");
+    SetActive("UntitledScene");
   }
 
   void SceneManager::Update(const float& dt) { m_active_scene_.lock()->Update(dt); }
@@ -101,8 +102,14 @@ namespace Engine::Manager
       {
         if (ImGui::MenuItem("Scene"))
         {
-          AddScene("Untitled");
-          SetActive("Untitled");
+          AddScene("UntitledScene");
+          SetActive("UntitledScene");
+        }
+
+        if (ImGui::MenuItem("Material"))
+        {
+          const auto mtr = Resources::Material::Create("UntitledMaterial", "");
+          mtr->IsImGuiOpened() = true;
         }
 
         ImGui::EndMenu();
