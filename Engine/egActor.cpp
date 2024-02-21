@@ -6,7 +6,9 @@
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Abstract::Actor,
- _ARTAG(m_layer_) _ARTAG(m_local_id_)
+ _ARTAG(_BSTSUPER(Renderable))
+ _ARTAG(m_layer_)
+ _ARTAG(m_local_id_)
 )
 
 namespace Engine::Abstract
