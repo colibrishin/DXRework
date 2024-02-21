@@ -49,7 +49,9 @@ namespace Engine::Manager
 
             if (res->IsImGuiOpened())
             {
-              if (ImGui::Begin(res->GetName().c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
+              const auto id = (res->GetName() + "###" + std::to_string(res->GetLocalID()));
+
+              if (ImGui::Begin(id.c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
               {
                 res->OnImGui();
                 ImGui::End();
