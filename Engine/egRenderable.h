@@ -14,6 +14,9 @@ namespace Engine::Abstract
     // Run before the present call.
     virtual void PostRender(const float& dt) = 0;
 
+  protected:
+    Renderable() = default;
+
   private:
     SERIALIZER_ACCESS
   };

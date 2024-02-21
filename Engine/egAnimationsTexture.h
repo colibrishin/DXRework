@@ -37,6 +37,7 @@ namespace Engine::Resources
 
   protected:
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
+     RESOURCE_SERIALIZER_OVERRIDE(AnimationsTexture)
 
   private:
     SERIALIZER_ACCESS
