@@ -486,7 +486,9 @@ namespace Engine::Manager::Graphics
     ID3D11ShaderResourceView**   shader_resource_view
   ) const
   {
-    DX::ThrowIfFailed
+    if (path.extension() == ".dds")
+    {
+      DX::ThrowIfFailed
       (
        CreateDDSTextureFromFileEx
        (
@@ -497,6 +499,20 @@ namespace Engine::Manager::Graphics
         shader_resource_view
        )
       );
+    }
+    else
+    {
+      DX::ThrowIfFailed
+        (
+         CreateWICTextureFromFileEx
+         (
+          m_device_.Get(), m_context_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT, bind_flag,
+          0, D3D11_RESOURCE_MISC_GENERATE_MIPS,
+          WIC_LOADER_DEFAULT, texture, shader_resource_view
+         )
+        );
+    }
+    
   }
 
   void D3Device::CreateTexture2D(
