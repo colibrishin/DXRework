@@ -548,7 +548,7 @@ namespace Engine
     static boost::shared_ptr<T> Deserialize(const std::string& filename)
     {
       // @todo: block deserialization of non-serializable types (e.g., weak_ptr)
-      boost::shared_ptr<T>          object = boost::shared_ptr<T>(new T);
+      boost::shared_ptr<T>          object = boost::shared_ptr<T>();
       std::fstream                  stream(filename, std::ios::in);
       if (!stream.is_open())
       {
