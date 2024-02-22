@@ -35,8 +35,8 @@ namespace Engine::Manager
 
           if (ImGui::Button("Load"))
           {
-            const auto scene = Serializer::Deserialize<T>(buf);
-            GetResourceManager().AddResource<T>(scene);
+            const auto resource = Serializer::Deserialize<T>(buf);
+            GetResourceManager().AddResource<T>(resource);
 
             flag = false;
             ImGui::CloseCurrentPopup();
