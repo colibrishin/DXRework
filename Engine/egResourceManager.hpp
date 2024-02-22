@@ -156,8 +156,49 @@ namespace Engine::Manager
     ~ResourceManager() override = default;
 
     void OpenNewTextureDialog();
+    void OpenNewShaderDialog();
+
+    template <typename T, typename... Args>
+    void OpenNewSimpleDialog(bool& flag, Args&&... args)
+    {
+      if (flag)
+      {
+        if (ImGui::Begin("New Texture", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+          static char name_buffer[256] = {};
+          static char path_buffer[256] = {};
+
+          ImGui::InputText("Name", name_buffer, 256);
+          ImGui::InputText("Path", path_buffer, 256);
+
+          if (ImGui::Button("Load"))
+          {
+            try
+            {
+              T::Create(name_buffer, path_buffer, std::forward<Args>(args)...);
+              std::memset(name_buffer, 0, 256);
+              std::memset(path_buffer, 0, 256);
+              flag = false;
+            }
+            catch (const std::exception& e)
+            {
+              ImGui::SameLine();
+              ImGui::Text(e.what());
+            }
+          }
+
+          if (ImGui::Button("Cancel")) { flag = false; }
+
+          ImGui::End();
+        }
+      }
+    }
 
     bool m_b_imgui_load_texture_dialog_ = false;
+    bool m_b_imgui_load_shape_dialog_   = false;
+    bool m_b_imgui_load_sound_dialog_  = false;
+    bool m_b_imgui_load_shader_dialog_  = false;
+    bool m_b_imgui_load_font_dialog_   = false;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
     std::map<LocalResourceID, WeakResource>           m_resource_cache_;

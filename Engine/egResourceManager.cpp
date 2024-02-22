@@ -4,6 +4,7 @@
 #include <boost/mp11/function.hpp>
 #include <boost/type.hpp>
 
+#include "egImGuiHeler.hpp"
 #include "egResourceManagerMeta.hpp"
 
 namespace Engine::Manager
@@ -40,9 +41,26 @@ namespace Engine::Manager
         {
           m_b_imgui_load_texture_dialog_ = true;
         }
-        // Sound
-        // Shader
-        // Font
+
+        if (ImGui::MenuItem("Shape")) 
+        {
+          m_b_imgui_load_shape_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Sound"))
+        {
+          m_b_imgui_load_sound_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Shader"))
+        {
+          m_b_imgui_load_shader_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Font"))
+        {
+          m_b_imgui_load_font_dialog_ = true;
+        }
 
         ImGui::EndMenu();
       }
@@ -57,10 +75,10 @@ namespace Engine::Manager
       ImGui::EndMainMenuBar();
     }
 
-    if (m_b_imgui_load_texture_dialog_)
-    {
-      OpenNewTextureDialog();
-    }
+    OpenNewTextureDialog();
+    OpenNewSimpleDialog<Resources::Shape>(m_b_imgui_load_shape_dialog_);
+    OpenNewSimpleDialog<Resources::Sound>(m_b_imgui_load_sound_dialog_);
+    OpenNewSimpleDialog<Resources::Font>(m_b_imgui_load_font_dialog_);
 
     boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
 
@@ -107,37 +125,87 @@ namespace Engine::Manager
 
   void ResourceManager::OpenNewTextureDialog()
   {
-    if (m_b_imgui_load_dialog_)
+    if (m_b_imgui_load_texture_dialog_)
     {
       if (ImGui::Begin("New Texture", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
       {
         static char name_buffer[256] = {};
         static char path_buffer[256] = {};
+        static bool load_from_file = true;
 
-        ImGui::InputText("Name", name_buffer, 256);
-        ImGui::InputText("Path", path_buffer, 256);
+        CheckboxAligned("From File", load_from_file);
+        if (load_from_file)
+        {
+          ImGui::InputText("Name", name_buffer, 256);
+          ImGui::InputText("Path", path_buffer, 256);
+
+          if (ImGui::Button("Load"))
+          {
+            try
+            {
+              Resources::Texture2D::Create(name_buffer, path_buffer, {});
+              m_b_imgui_load_texture_dialog_ = false;
+            }
+            catch (const std::exception& e)
+            {
+              ImGui::SameLine();
+              ImGui::Text(e.what());
+            }
+          }
+
+          if (ImGui::Button("Cancel")) { m_b_imgui_load_texture_dialog_ = false; }
+        }
+        else
+        {
+          static Resources::Texture::GenericTextureDescription desc
+          {
+            .Width = 0,
+            .Height = 0,
+            .Depth = 0,
+            .ArraySize = 0,
+            .Format = DXGI_FORMAT_UNKNOWN,
+            .CPUAccessFlags = 0,
+            .BindFlags = 0,
+            .MipsLevel = 0,
+            .MiscFlags = 0,
+            .Usage = D3D11_USAGE_DEFAULT,
+            .SampleDesc = {.Count = 1, .Quality = 0}
+          };
+
+          UINTAligned("Width", desc.Width);
+          UINTAligned("Height", desc.Height);
+          UINTAligned("Depth", desc.Depth);
+          UINTAligned("Array Size", desc.ArraySize);
+          // list
+          // list
+          // list
+          UINTAligned("Mips Level", desc.MipsLevel);
+          // list
+          // list
+          UINTAligned("Sampler Count", desc.SampleDesc.Count);
+          UINTAligned("Sampler Quality", desc.SampleDesc.Quality);
+        }
 
         if (ImGui::Button("Load"))
         {
-          try
-          {
-            Resources::Texture2D::Create(name_buffer, path_buffer, {});
-            m_b_imgui_load_texture_dialog_ = false;
-          }
-          catch (const std::exception& e)
-          {
-            ImGui::SameLine();
-            ImGui::Text(e.what());
-          }
+          using TextureList = boost::mpl::vector<Resources::Texture1D, Resources::Texture3D, Resources::Texture3D>;
+
+          // test texture type (by description)
+          // Create texture and try catch
         }
 
-        if (ImGui::Button("Cancel"))
-        {
-          m_b_imgui_load_texture_dialog_ = false;
-        }
+        if (ImGui::Button("Cancel")) { m_b_imgui_load_texture_dialog_ = false; }
 
         ImGui::End();
       }
+    }
+  }
+
+  void ResourceManager::OpenNewShaderDialog()
+  {
+    if (m_b_imgui_load_shader_dialog_)
+    {
+      
     }
   }
 }
