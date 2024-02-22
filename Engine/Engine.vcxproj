@@ -219,6 +219,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
     </CopyFileToFolders>
+    <None Include="egResourceManagerMeta.hpp" />
     <None Include="packages.config" />
     <CopyFileToFolders Include="utility.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
