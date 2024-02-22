@@ -1,4 +1,9 @@
 #pragma once
+#include <boost/type.hpp>
+#include <boost/mpl/find.hpp>
+#include <boost/mpl/size.hpp>
+#include <imgui.h>
+
 #include "egCommon.hpp"
 #include "egManager.hpp"
 #include "egResource.h"
@@ -24,7 +29,7 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetPath().empty() && GetResourceByPath<T>(resource->GetPath()).lock())  { return; }
+      if (!resource->GetPath().empty() && (GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock()))  { return; }
 
       m_resources_[which_resource<T>::value].insert(resource);
     }
@@ -32,9 +37,9 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetPath().empty() && GetResourceByPath<T>(resource->GetPath()).lock())
+      if (!resource->GetPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
       {
-        throw std::runtime_error("Resource already exists");
+        return;
       }
 
       m_resources_[which_resource<T>::value].insert(resource);
@@ -82,8 +87,27 @@ namespace Engine::Manager
       return {};
     }
 
+     WeakResource GetResource(const std::filesystem::path& path, const eResourceType& type)
+    {
+      auto&      resources = m_resources_[type];
+      const auto it        = std::ranges::find_if
+        (
+         resources
+         , [&path](const StrongResource& resource) { return resource->GetMetadataPath() == path; }
+        );
+
+      if (it != resources.end())
+      {
+        if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+        return *it;
+      }
+
+      return {};
+    }
+
     template <typename T>
-    boost::weak_ptr<T> GetResourceByPath(const std::filesystem::path& path)
+    boost::weak_ptr<T> GetResourceByRawPath(const std::filesystem::path& path)
     {
       auto& resources = m_resources_[which_resource<T>::value];
       auto  it        = std::find_if
@@ -104,10 +128,36 @@ namespace Engine::Manager
       return {};
     }
 
+    template <typename T>
+    boost::weak_ptr<T> GetResourceByMetadataPath(const std::filesystem::path& path)
+    {
+      auto& resources = m_resources_[which_resource<T>::value];
+      auto  it        = std::find_if
+        (
+         resources.begin(), resources.end(), [&path](const StrongResource& resource)
+         {
+           return resource->GetMetadataPath() == path;
+         }
+        );
+
+      if (it != resources.end())
+      {
+        if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+        return boost::reinterpret_pointer_cast<T>(*it);
+      }
+
+      return {};
+    }
+
+    inline static bool m_b_imgui_load_dialog_[boost::mpl::size<LoadableResourceTypes>::value] = {false};
+
   private:
     friend struct SingletonDeleter;
     ~ResourceManager() override = default;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
+    std::map<LocalResourceID, WeakResource>           m_resource_cache_;
+    std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
   };
 } // namespace Engine::Manager

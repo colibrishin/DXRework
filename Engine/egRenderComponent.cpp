@@ -7,7 +7,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::Base::RenderComponent,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
- _ARTAG(m_material_name_)
+ _ARTAG(m_mtr_meta_path_str_)
  _ARTAG(m_type_)
 )
 
@@ -17,8 +17,8 @@ namespace Engine::Components::Base
   {
     if (const auto mtr = material.lock())
     {
-      m_material_      = mtr;
-      m_material_name_ = mtr->GetName();
+      m_material_    = mtr;
+      m_mtr_meta_path_ = mtr->GetMetadataPath();
     }
   }
 
@@ -26,14 +26,14 @@ namespace Engine::Components::Base
 
   WeakMaterial RenderComponent::GetMaterial() const noexcept { return m_material_; }
 
-  std::string RenderComponent::GetMaterialName() const noexcept { return m_material_name_; }
+  const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept { return m_mtr_meta_path_str_; }
 
   eRenderComponentType RenderComponent::GetType() const noexcept { return m_type_; }
 
   void RenderComponent::OnDeserialized()
   {
     Component::OnDeserialized();
-    m_material_ = Resources::Material::Get(m_material_name_).lock();
+    m_material_ = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock();
   }
 
   RenderComponent::RenderComponent()

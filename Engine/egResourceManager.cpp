@@ -1,5 +1,10 @@
 #include "pch.h"
 #include "egResourceManager.hpp"
+#include <boost/mpl/for_each.hpp>
+#include <boost/mp11/function.hpp>
+#include <boost/type.hpp>
+
+#include "egResourceManagerMeta.hpp"
 
 namespace Engine::Manager
 {
@@ -27,6 +32,20 @@ namespace Engine::Manager
 
   void ResourceManager::OnImGui()
   {
+    if (ImGui::BeginMainMenuBar())
+    {
+      if (ImGui::BeginMenu("Load"))
+      {
+        // Second template parameter allows to use the type without instantiating it
+        boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaLoadMenu());
+
+        ImGui::EndMenu();
+      }
+      ImGui::EndMainMenuBar();
+    }
+
+    boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
+
     if (ImGui::Begin("Resource Manager", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
       for (const auto& [type, resources] : m_resources_)
@@ -49,7 +68,9 @@ namespace Engine::Manager
 
             if (res->IsImGuiOpened())
             {
-              if (ImGui::Begin(res->GetName().c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
+              const auto id = (res->GetName() + "###" + std::to_string(res->GetID()));
+
+              if (ImGui::Begin(id.c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
               {
                 res->OnImGui();
                 ImGui::End();

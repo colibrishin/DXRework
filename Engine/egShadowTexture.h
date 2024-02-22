@@ -51,6 +51,7 @@ namespace Engine::Resources
   protected:
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
     void Unload_INTERNAL() override;
+    RESOURCE_SERIALIZER_OVERRIDE(ShadowTexture)
 
   };
 }

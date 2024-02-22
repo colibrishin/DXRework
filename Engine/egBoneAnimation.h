@@ -36,6 +36,7 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
+    RESOURCE_SERIALIZER_OVERRIDE(BoneAnimation)
 
   private:
     BoneAnimation();

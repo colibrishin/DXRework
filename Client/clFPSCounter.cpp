@@ -10,7 +10,7 @@ namespace Client::Object
   FPSCounter::FPSCounter()
     : Text
     (
-     GetResourceManager().GetResource<Resources::Font>
+     GetResourceManager().GetResourceByMetadataPath<Resources::Font>
      (
       "DefaultFont"
      )

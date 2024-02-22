@@ -33,7 +33,7 @@ namespace Client::Scripts
     const auto rb = obj->AddComponent<Components::Rigidbody>().lock();
     const auto atr = obj->AddComponent<Components::Animator>().lock();
 
-    cldr->SetModel(model);
+    cldr->SetShape(model);
     cldr->SetType(BOUNDING_TYPE_BOX);
     cldr->SetMass(1.0f);
 
@@ -63,7 +63,7 @@ namespace Client::Scripts
       ctr->SetSizeAbsolute(true);
       ctr->SetRotateAbsolute(false);
       catr->SetAnimation(0);
-      ccldr->SetModel(rifle_model);
+      ccldr->SetShape(rifle_model);
       m_rifle_initialized_ = true;
     }
 

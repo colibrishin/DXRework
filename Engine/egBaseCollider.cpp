@@ -17,7 +17,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::Collider,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
- _ARTAG(m_type_) _ARTAG(m_model_name_) _ARTAG(m_mass_)
+ _ARTAG(m_type_) _ARTAG(m_shape_meta_path_str_) _ARTAG(m_mass_)
  _ARTAG(m_boundings_)
 )
 
@@ -25,7 +25,7 @@ namespace Engine::Components
 {
   const std::vector<Graphics::VertexElement>& Collider::GetVertices() const
   {
-    if (const auto model = m_model_.lock()) { return model->GetVertices(); }
+    if (const auto model = m_shape_.lock()) { return model->GetVertices(); }
 
     if (m_type_ == BOUNDING_TYPE_BOX) { return m_cube_stock_; }
     if (m_type_ == BOUNDING_TYPE_SPHERE) { return m_sphere_stock_; }
@@ -99,12 +99,12 @@ namespace Engine::Components
     UpdateInertiaTensor();
   }
 
-  void Collider::SetModel(const WeakModel& model)
+  void Collider::SetShape(const WeakModel& model)
   {
     if (const auto locked = model.lock())
     {
-      m_model_name_ = locked->GetName();
-      m_model_      = locked;
+      m_shape_meta_path_ = locked->GetPath();
+      m_shape_    = locked;
 
       BoundingOrientedBox obb;
       BoundingOrientedBox::CreateFromBoundingBox(obb, locked->GetBoundingBox());
@@ -206,6 +206,7 @@ namespace Engine::Components
   Collider::Collider()
     : Component(COM_T_COLLIDER, {}),
       m_type_(BOUNDING_TYPE_BOX),
+      m_shape_meta_path_(),
       m_boundings_(),
       m_mass_(1.f),
       m_inertia_tensor_(),
@@ -218,6 +219,8 @@ namespace Engine::Components
     Component::OnDeserialized();
 
     InitializeStockVertices();
+    m_shape_meta_path_ = m_shape_meta_path_str_;
+    m_shape_           = Resources::Shape::GetByMetadataPath(m_shape_meta_path_);
 
     if (m_type_ == BOUNDING_TYPE_BOX) { GenerateInertiaCube(); }
     else if (m_type_ == BOUNDING_TYPE_SPHERE) { GenerateInertiaSphere(); }
@@ -263,6 +266,7 @@ namespace Engine::Components
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),
       m_mass_(1.0f),
+      m_shape_meta_path_(),
       m_inertia_tensor_(),
       m_local_matrix_(Matrix::Identity) { }
 

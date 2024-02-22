@@ -46,11 +46,10 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
+    RESOURCE_SERIALIZER_OVERRIDE(Sound)
 
   private:
     SERIALIZER_ACCESS
-
-    friend class boost::serialization::access;
 
     void CommitDistance() const;
 
