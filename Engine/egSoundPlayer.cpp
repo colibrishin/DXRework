@@ -9,14 +9,13 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::SoundPlayer,
  _ARTAG(_BSTSUPER(Abstract::Component))
- _ARTAG(m_sound_id_)
+ _ARTAG(m_sound_meta_path_)
 )
 
 namespace Engine::Components
 {
   SoundPlayer::SoundPlayer(const WeakObject& owner)
-    : Component(COMP_T_SOUND_PLAYER, owner),
-      m_sound_id_(g_invalid_id) {}
+    : Component(COMP_T_SOUND_PLAYER, owner) {}
 
   void SoundPlayer::PreUpdate(const float& dt) {}
 
@@ -36,22 +35,23 @@ namespace Engine::Components
   void SoundPlayer::SetSound(const StrongSound& sound)
   {
     m_sound_      = sound;
-    m_sound_id_   = sound->GetLocalID();
+    m_sound_meta_path_   = sound->GetMetadataPath().string();
   }
 
   void SoundPlayer::OnDeserialized()
   {
     Component::OnDeserialized();
 
-    if (m_sound_id_ == g_invalid_id) { return; }
-
-    m_sound_ = GetResourceManager().GetResource<Resources::Sound>(m_sound_id_).lock();
+    if (const auto sound = Resources::Sound::GetByMetadataPath(m_sound_meta_path_).lock())
+    {
+      SetSound(sound);
+    }
   }
 
   void SoundPlayer::OnImGui()
   {
     Component::OnImGui();
-    lldDisabled("Sound ID", m_sound_id_);
+    TextDisabled("Sound Metadata", m_sound_meta_path_);
 
     if (ImGui::BeginDragDropTarget())
     {
@@ -93,6 +93,5 @@ namespace Engine::Components
   }
 
   SoundPlayer::SoundPlayer()
-    : Component(COMP_T_SOUND_PLAYER, {}),
-      m_sound_id_(g_invalid_id) {}
+    : Component(COMP_T_SOUND_PLAYER, {}) {}
 }

@@ -25,6 +25,7 @@ namespace Engine::Components
     void Update(const float& dt) override;
     void PreUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
+    void OnDeserialized() override;
 
     const std::vector<Graphics::SBs::InstanceSB>& GetParticles() const;
 
@@ -56,7 +57,8 @@ namespace Engine::Components
 
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
     std::vector<Graphics::SBs::InstanceParticleSB>                m_instances_;
-    LocalResourceID                                               m_cs_id_;
+    std::string                                                   m_cs_meta_path_str_;
+    // Note that we need to store in strong sense due to the gc by the resource manager.
     StrongComputeShader                                           m_cs_;
   };
 }

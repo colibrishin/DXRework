@@ -26,7 +26,7 @@ void Client::Object::Water::Initialize()
 
   AddComponent<Components::Transform>();
   const auto cldr = AddComponent<Components::Collider>().lock();
-  cldr->SetModel(model);
+  cldr->SetShape(model);
 }
 
 void Client::Object::Water::PreUpdate(const float& dt) { Object::PreUpdate(dt); }

@@ -10,15 +10,15 @@ namespace Engine::Components::Base
 
     explicit RenderComponent(eRenderComponentType type, const WeakObject& owner)
       : Component(COM_T_RENDERER, owner),
-        m_material_id_(g_invalid_id),
+        m_mtr_meta_path_(),
         m_type_(type) {}
 
     void SetMaterial(const WeakMaterial& material) noexcept;
 
-    eRenderComponentType GetRenderType() const noexcept;
-    WeakMaterial         GetMaterial() const noexcept;
-    LocalResourceID      GetMaterialID() const noexcept;
-    eRenderComponentType GetType() const noexcept;
+    eRenderComponentType         GetRenderType() const noexcept;
+    WeakMaterial                 GetMaterial() const noexcept;
+    const std::filesystem::path& GetMaterialMetadataPath() const noexcept;
+    eRenderComponentType         GetType() const noexcept;
 
     void OnDeserialized() override;
 
@@ -27,9 +27,11 @@ namespace Engine::Components::Base
     RenderComponent();
 
     StrongMaterial m_material_;
+    eRenderComponentType  m_type_;
+    std::string m_mtr_meta_path_str_;
 
-    LocalResourceID      m_material_id_;
-    eRenderComponentType m_type_;
+    // non-serialized
+    std::filesystem::path m_mtr_meta_path_;
   };
 }
 

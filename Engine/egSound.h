@@ -51,8 +51,6 @@ namespace Engine::Resources
   private:
     SERIALIZER_ACCESS
 
-    friend class boost::serialization::access;
-
     void CommitDistance() const;
 
     void Play_INTERNAL(const WeakObject& origin);

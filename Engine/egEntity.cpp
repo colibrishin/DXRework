@@ -9,11 +9,13 @@
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_))
+SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_) _ARTAG(m_meta_str_))
 
 void Engine::Abstract::Entity::SetName(const EntityName& name) { m_name_ = name; }
 
 void Engine::Abstract::Entity::SetGarbage(bool garbage) { m_b_garbage_ = garbage; }
+
+const std::filesystem::path& Engine::Abstract::Entity::GetMetadataPath() const { return m_meta_path_; }
 
 Engine::GlobalEntityID Engine::Abstract::Entity::GetID() const { return reinterpret_cast<GlobalEntityID>(this); }
 
@@ -31,9 +33,8 @@ void Engine::Abstract::Entity::Initialize() { m_b_initialized_ = true; }
 
 void Engine::Abstract::Entity::OnDeserialized()
 {
-  if (m_b_initialized_) { throw std::runtime_error("Entity already initialized"); }
-
-  m_b_initialized_ = true;
+  m_b_initialized_ = false;
+  m_meta_path_ = m_meta_str_;
 }
 
 void Engine::Abstract::Entity::OnImGui()

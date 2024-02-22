@@ -15,7 +15,7 @@ namespace Client::Object
   MousePositionText::MousePositionText()
     : Text
     (
-     GetResourceManager().GetResource<Resources::Font>
+     GetResourceManager().GetResourceByMetadataPath<Resources::Font>
      (
       "DefaultFont"
      )

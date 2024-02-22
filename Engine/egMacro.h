@@ -61,13 +61,16 @@
   static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
 
 // Static inline resource getter which infers self as type
-#define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
-  static inline boost::weak_ptr<TYPE> Get(const std::string& name) {          \
-    return Engine::Manager::ResourceManager::GetInstance()                    \
-        .GetResource<TYPE>(name); }                                           \
-  static inline boost::weak_ptr<TYPE> Get(const LocalResourceID id)           \
-    { return Engine::Manager::ResourceManager::GetInstance()                  \
-       .GetResource<TYPE>(id); }
+#define RESOURCE_SELF_INFER_GETTER(TYPE)                                                    \
+  static inline boost::weak_ptr<TYPE> Get(const std::string& name) {                        \
+    return Engine::Manager::ResourceManager::GetInstance()                                  \
+        .GetResource<TYPE>(name); }                                                         \
+  static inline boost::weak_ptr<TYPE> GetByMetadataPath(const std::filesystem::path& path)  \
+    { return Engine::Manager::ResourceManager::GetInstance()                                \
+       .GetResourceByMetadataPath<TYPE>(path); }                                            \
+  static inline boost::weak_ptr<TYPE> GetByRawPath(const std::filesystem::path& path)       \
+    { return Engine::Manager::ResourceManager::GetInstance()                                \
+       .GetResourceByRawPath<TYPE>(path); }
 
 // Creatable resource creator which infers self as type
 #define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
@@ -75,7 +78,7 @@
     const std::string& name, const std::filesystem::path& path)               \
     {                                                                         \
         if (const auto pcheck = GetResourceManager().                         \
-                               GetResourceByPath<TYPE>(path).lock();          \
+                               GetResourceByRawPath<TYPE>(path).lock();       \
             const auto ncheck = GetResourceManager().                         \
                                GetResource<TYPE>(name).lock())                \
         {                                                                     \

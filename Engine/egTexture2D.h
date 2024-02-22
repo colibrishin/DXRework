@@ -20,7 +20,7 @@ namespace Engine::Resources
       const GenericTextureDescription& desc
     )
     {
-      if (const auto pcheck = GetResourceManager().GetResourceByPath<Texture2D>(path).lock(); 
+      if (const auto pcheck = GetResourceManager().GetResourceByRawPath<Texture2D>(path).lock(); 
           const auto ncheck = GetResourceManager().GetResource<Texture2D>(name).lock())
       {
         return ncheck;

@@ -28,7 +28,7 @@ namespace Engine::Components
     SERIALIZER_ACCESS
     SoundPlayer();
 
-    LocalResourceID m_sound_id_;
+    std::string m_sound_meta_path_;
 
     // non-serialized
     StrongSound m_sound_;

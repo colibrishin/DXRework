@@ -14,8 +14,8 @@ SERIALIZER_ACCESS_IMPL
  Engine::Resources::Material,
  _ARTAG(_BSTSUPER(Resource))
  _ARTAG(m_material_cb_)
- _ARTAG(m_shaders_)
- _ARTAG(m_resources_)
+ _ARTAG(m_shader_paths_)
+ _ARTAG(m_resource_paths_)
 )
 
 namespace Engine::Resources
@@ -168,9 +168,9 @@ namespace Engine::Resources
                   {
                     std::erase_if
                       (
-                       m_resources_[(*it)->GetResourceType()], [&it](const std::string& name)
+                       m_resource_paths_[(*it)->GetResourceType()], [&it](const std::string& path)
                        {
-                         return name == (*it)->GetName();
+                         return path == (*it)->GetMetadataPath();
                        }
                       );
                     it = resources.erase(it);
@@ -242,22 +242,29 @@ namespace Engine::Resources
 
     if (resource->GetResourceType() == RES_T_SHADER)
     {
-      if (std::ranges::find_if(m_shaders_, [&resource](const std::string& name) { return name == resource->GetName(); }) != m_shaders_.end())
+      if (std::ranges::find_if(m_shader_paths_, [&resource](const std::string& path)
+      {
+        return path == resource->GetMetadataPath();
+      }) != m_shader_paths_.end())
       {
         return;
       }
 
-      m_shaders_.emplace_back(resource->GetName());
+      m_shader_paths_.emplace_back(resource->GetMetadataPath().string());
       m_shaders_loaded_[resource->GetSharedPtr<Shader>()->GetDomain()] = resource->GetSharedPtr<Shader>();
       return;
     }
 
-    if (std::ranges::find_if(m_resources_[resource->GetResourceType()], [&resource](const std::string& name) { return name == resource->GetName(); }) != m_resources_[resource->GetResourceType()].end())
-    {
-           return;
-    }
+    if (std::ranges::find_if
+        (
+         m_resource_paths_[resource->GetResourceType()],
+         [&resource](const std::string& path)
+         {
+           return path == resource->GetMetadataPath();
+         }
+        ) != m_resource_paths_[resource->GetResourceType()].end()) { return; }
 
-    m_resources_[resource->GetResourceType()].push_back(resource->GetName());
+    m_resource_paths_[resource->GetResourceType()].push_back(resource->GetMetadataPath().string());
     m_resources_loaded_[resource->GetResourceType()].push_back(resource);
   }
 
@@ -266,20 +273,20 @@ namespace Engine::Resources
     m_resources_loaded_.clear();
     m_shaders_loaded_.clear();
 
-    for (const auto& name : m_shaders_)
+    for (const std::filesystem::path path : m_shader_paths_)
     {
-      if (const auto res = GetResourceManager().GetResource(name, RES_T_SHADER).lock())
+      if (const auto res = GetResourceManager().GetResource(path, RES_T_SHADER).lock())
       {
         const auto shader = res->GetSharedPtr<Shader>();
         m_shaders_loaded_[shader->GetDomain()] = shader;
       }
     }
 
-    for (const auto& [type, names] : m_resources_)
+    for (const auto& [type, paths] : m_resource_paths_)
     {
-      for (const auto& name : names)
+      for (const std::filesystem::path path : paths)
       {
-        if (const auto res = GetResourceManager().GetResource(name, type).lock())
+        if (const auto res = GetResourceManager().GetResource(path, type).lock())
         {
           m_resources_loaded_[type].push_back(res);
         }

@@ -7,7 +7,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::ParticleRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))
- _ARTAG(m_cs_id_)
+ _ARTAG(m_cs_meta_path_str_)
  _ARTAG(m_instances_)
  _ARTAG(m_b_follow_owner_)
  _ARTAG(m_b_scaling_)
@@ -26,8 +26,7 @@ namespace Engine::Components
       m_duration_dt_(100.0f),
       m_size_(0.5f),
       m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f),
-      m_cs_id_(g_invalid_id) {}
+      m_min_scale_size_(1.f) {}
 
   void ParticleRenderer::Initialize()
   {
@@ -80,6 +79,15 @@ namespace Engine::Components
 
   void ParticleRenderer::FixedUpdate(const float& dt) {}
 
+  void ParticleRenderer::OnDeserialized()
+  {
+    RenderComponent::OnDeserialized();
+    if (const auto cs = Resources::ComputeShader::Get(m_cs_meta_path_str_).lock())
+    {
+      m_cs_ = cs;
+    }
+  }
+
   const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const
   {
     return reinterpret_cast<const std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
@@ -123,8 +131,7 @@ namespace Engine::Components
       m_duration_dt_(100.0f),
       m_size_(0.5f),
       m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f),
-      m_cs_id_(g_invalid_id) {}
+      m_min_scale_size_(1.f) {}
 
   void ParticleRenderer::SetSize(const float size) { m_size_ = size; }
 
@@ -133,7 +140,7 @@ namespace Engine::Components
     if (const auto shader = cs.lock())
     {
       m_cs_ = shader;
-      m_cs_id_ = shader->GetID();
+      m_cs_meta_path_str_ = shader->GetMetadataPath().string();
     }
   }
 

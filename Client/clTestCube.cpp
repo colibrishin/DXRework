@@ -44,7 +44,7 @@ namespace Client::Object
     rb->SetGravityOverride(true);
 
     const auto snd = AddComponent<Components::SoundPlayer>().lock();
-    snd->SetSound(GetResourceManager().GetResource<Resources::Sound>("AmbientSound").lock());
+    snd->SetSound(GetResourceManager().GetResourceByMetadataPath<Resources::Sound>("AmbientSound").lock());
     snd->PlaySound();
 
     {

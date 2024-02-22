@@ -68,7 +68,7 @@ namespace Engine::Manager
 
             if (res->IsImGuiOpened())
             {
-              const auto id = (res->GetName() + "###" + std::to_string(res->GetLocalID()));
+              const auto id = (res->GetName() + "###" + std::to_string(res->GetID()));
 
               if (ImGui::Begin(id.c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
               {
@@ -85,14 +85,5 @@ namespace Engine::Manager
 
       ImGui::End();
     }
-  }
-
-  LocalResourceID ResourceManager::GenerateResourceID() const
-  {
-    LocalResourceID id = 0;
-
-    while (m_resource_ids_.contains(id)) { id++; }
-
-    return id;
   }
 }

@@ -540,6 +540,8 @@ namespace Engine
     {
       std::fstream                  stream(filename + ".meta", std::ios::out);
       boost::archive::text_oarchive archive(stream);
+      object->m_meta_path_ = filename + ".meta";
+      object->m_meta_str_ = filename + ".meta";
       archive << object;
       return true;
     }
