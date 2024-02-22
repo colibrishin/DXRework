@@ -1,4 +1,9 @@
 #pragma once
+#include <boost/type.hpp>
+#include <boost/mpl/find.hpp>
+#include <boost/mpl/size.hpp>
+#include <imgui.h>
+
 #include "egCommon.hpp"
 #include "egManager.hpp"
 #include "egResource.h"
@@ -119,6 +124,8 @@ namespace Engine::Manager
 
       return {};
     }
+
+    inline static bool m_b_imgui_load_dialog_[boost::mpl::size<LoadableResourceTypes>::value] = {false};
 
   private:
     friend struct SingletonDeleter;

@@ -1,5 +1,25 @@
 #pragma once
 #include "egConstant.h"
+#include <boost/mpl/vector.hpp>
+
+namespace Engine::Resources
+{
+  class Mesh;
+  class Shape;
+  class Material;
+  class ShadowTexture;
+  class AnimationsTexture;
+  class Shader;
+  class Texture3D;
+  class Texture2D;
+  class Texture1D;
+  class Sound;
+  class ComputeShader;
+  class Font;
+  class BoneAnimation;
+  class Bone;
+  class BaseAnimation;
+}
 
 namespace Engine
 {
@@ -196,6 +216,23 @@ namespace Engine
      "Compute Shader",
      "Shadow Texture",
    };
+
+  using LoadableResourceTypes = boost::mpl::vector<
+    Resources::ComputeShader,
+    Resources::BaseAnimation,
+    Resources::Bone,
+    Resources::BoneAnimation,
+    Resources::Font,
+    Resources::Mesh,
+    Resources::Shader,
+    Resources::Sound,
+    Resources::AnimationsTexture,
+    Resources::ShadowTexture,
+    Resources::Texture1D,
+    Resources::Texture2D,
+    Resources::Texture3D,
+    Resources::Material,
+    Resources::Shape>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
