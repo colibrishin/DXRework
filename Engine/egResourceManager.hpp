@@ -156,6 +156,10 @@ namespace Engine::Manager
     friend struct SingletonDeleter;
     ~ResourceManager() override = default;
 
+    void OpenNewTextureDialog();
+
+    bool m_b_imgui_load_texture_dialog_ = false;
+
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
     std::map<LocalResourceID, WeakResource>           m_resource_cache_;
     std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;

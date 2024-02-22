@@ -34,6 +34,19 @@ namespace Engine::Manager
   {
     if (ImGui::BeginMainMenuBar())
     {
+      if (ImGui::BeginMenu("New"))
+      {
+        if (ImGui::MenuItem("Texture")) 
+        {
+          m_b_imgui_load_texture_dialog_ = true;
+        }
+        // Sound
+        // Shader
+        // Font
+
+        ImGui::EndMenu();
+      }
+
       if (ImGui::BeginMenu("Load"))
       {
         // Second template parameter allows to use the type without instantiating it
@@ -42,6 +55,11 @@ namespace Engine::Manager
         ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
+    }
+
+    if (m_b_imgui_load_texture_dialog_)
+    {
+      OpenNewTextureDialog();
     }
 
     boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
@@ -84,6 +102,42 @@ namespace Engine::Manager
       }
 
       ImGui::End();
+    }
+  }
+
+  void ResourceManager::OpenNewTextureDialog()
+  {
+    if (m_b_imgui_load_dialog_)
+    {
+      if (ImGui::Begin("New Texture", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        static char name_buffer[256] = {};
+        static char path_buffer[256] = {};
+
+        ImGui::InputText("Name", name_buffer, 256);
+        ImGui::InputText("Path", path_buffer, 256);
+
+        if (ImGui::Button("Load"))
+        {
+          try
+          {
+            Resources::Texture2D::Create(name_buffer, path_buffer, {});
+            m_b_imgui_load_texture_dialog_ = false;
+          }
+          catch (const std::exception& e)
+          {
+            ImGui::SameLine();
+            ImGui::Text(e.what());
+          }
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+          m_b_imgui_load_texture_dialog_ = false;
+        }
+
+        ImGui::End();
+      }
     }
   }
 }
