@@ -29,7 +29,8 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetPath().empty() && (GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock()))  { return; }
+      if (!resource->GetMetadataPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())  { return; }
+      if (!resource->GetPath().empty() && GetResourceByRawPath<T>(resource->GetPath()).lock()) { return; }
 
       m_resources_[which_resource<T>::value].insert(resource);
     }
@@ -37,10 +38,8 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
-      {
-        return;
-      }
+      if (!resource->GetMetadataPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock()) { return; }
+      if (!resource->GetPath().empty() && GetResourceByRawPath<T>(resource->GetPath()).lock()) { return; }
 
       m_resources_[which_resource<T>::value].insert(resource);
       resource->SetName(name);
@@ -155,6 +154,59 @@ namespace Engine::Manager
   private:
     friend struct SingletonDeleter;
     ~ResourceManager() override = default;
+
+    void OpenNewShaderDialog();
+
+    template <typename T, typename... Args>
+    void OpenNewSimpleDialog(bool& flag, Args&&... args)
+    {
+      if (flag)
+      {
+        const std::string title = std::string("New ") + typeid(T).name();
+
+        if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+          static char name_buffer[256] = {};
+          static char path_buffer[256] = {};
+
+          ImGui::InputText("Name", name_buffer, 256);
+          ImGui::InputText("Path", path_buffer, 256);
+
+          if (ImGui::Button("Load"))
+          {
+            try
+            {
+              T::Create(name_buffer, path_buffer, std::forward<Args>(args)...);
+              std::memset(name_buffer, 0, 256);
+              std::memset(path_buffer, 0, 256);
+              flag = false;
+            }
+            catch (const std::exception& e)
+            {
+              ImGui::SameLine();
+              ImGui::Text(e.what());
+              std::memset(name_buffer, 0, 256);
+              std::memset(path_buffer, 0, 256);
+            }
+          }
+
+          if (ImGui::Button("Cancel"))
+          {
+            std::memset(name_buffer, 0, 256);
+            std::memset(path_buffer, 0, 256);
+            flag = false;
+          }
+
+          ImGui::End();
+        }
+      }
+    }
+
+    bool m_b_imgui_load_texture_dialog_ = false;
+    bool m_b_imgui_load_shape_dialog_   = false;
+    bool m_b_imgui_load_sound_dialog_  = false;
+    bool m_b_imgui_load_shader_dialog_  = false;
+    bool m_b_imgui_load_font_dialog_   = false;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
     std::map<LocalResourceID, WeakResource>           m_resource_cache_;

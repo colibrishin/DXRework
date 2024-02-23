@@ -4,6 +4,7 @@
 #include <boost/mp11/function.hpp>
 #include <boost/type.hpp>
 
+#include "egImGuiHeler.hpp"
 #include "egResourceManagerMeta.hpp"
 
 namespace Engine::Manager
@@ -34,6 +35,36 @@ namespace Engine::Manager
   {
     if (ImGui::BeginMainMenuBar())
     {
+      if (ImGui::BeginMenu("New"))
+      {
+        if (ImGui::MenuItem("Texture")) 
+        {
+          m_b_imgui_load_texture_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Shape")) 
+        {
+          m_b_imgui_load_shape_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Sound"))
+        {
+          m_b_imgui_load_sound_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Shader"))
+        {
+          m_b_imgui_load_shader_dialog_ = true;
+        }
+
+        if (ImGui::MenuItem("Font"))
+        {
+          m_b_imgui_load_font_dialog_ = true;
+        }
+
+        ImGui::EndMenu();
+      }
+
       if (ImGui::BeginMenu("Load"))
       {
         // Second template parameter allows to use the type without instantiating it
@@ -43,6 +74,12 @@ namespace Engine::Manager
       }
       ImGui::EndMainMenuBar();
     }
+
+    OpenNewSimpleDialog<Resources::Texture2D>(m_b_imgui_load_texture_dialog_, Resources::Texture::GenericTextureDescription{});
+    OpenNewSimpleDialog<Resources::Shape>(m_b_imgui_load_shape_dialog_);
+    OpenNewSimpleDialog<Resources::Sound>(m_b_imgui_load_sound_dialog_);
+    OpenNewSimpleDialog<Resources::Font>(m_b_imgui_load_font_dialog_);
+    OpenNewShaderDialog();
 
     boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
 
@@ -84,6 +121,92 @@ namespace Engine::Manager
       }
 
       ImGui::End();
+    }
+  }
+
+  void ResourceManager::OpenNewShaderDialog()
+  {
+    if (m_b_imgui_load_shader_dialog_)
+    {
+      if (ImGui::Begin("New Shader", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        static char name_buffer[256] = {};
+        static char path_buffer[256] = {};
+
+        static const char* domain_chars[] = {"Opaque", "Mask", "Transparent", "Postprocessing"};
+        static const char* depth_flag[]   = {"None", "All"};
+        static const char* depth_func[]   = {
+          "Never", "Less", "Equal", "LessEqual", "Greater", "NotEqual", "GreaterEqual", "Always"
+        };
+        static const char* cull_flag[]   = {"None", "Front", "Back"};
+        static const char* fill_flag[]   = {"Wireframe", "Solid"};
+        static const char* filter_func[] = {
+          "MinMagMipPoint", "MinMagPointMipLinear", "MinPointMagLinearMipPoint", "MinPointMagMipLinear",
+          "MinLinearMagMipPoint", "MinLinearMagPointMipLinear", "MinMagLinearMipPoint", "MinMagMipLinear", "Anisotropic"
+        };
+        static const char* sampler_address[] = {"Wrap", "Mirror", "Clamp", "Border", "MirrorOnce"};
+        static const char* sampler_func[]    = {
+          "Never", "Less", "Equal", "LessEqual", "Greater", "NotEqual", "GreaterEqual", "Always"
+        };
+
+        int sel_domain          = 0;
+        int sel_depth           = 0;
+        int sel_depth_func      = 0;
+        int sel_cull            = 0;
+        int sel_fill            = 0;
+        int sel_filter          = 0;
+        int sel_sampler_address = 0;
+        int sel_sampler_func    = 0;
+
+        ImGui::InputText("Name", name_buffer, 256);
+        ImGui::InputText("Path", path_buffer, 256);
+
+        ImGui::Combo("Domain", &sel_domain, domain_chars, IM_ARRAYSIZE(domain_chars));
+        ImGui::Combo("Depth", &sel_depth, depth_flag, IM_ARRAYSIZE(depth_flag));
+        ImGui::Combo("Depth Func", &sel_depth_func, depth_func, IM_ARRAYSIZE(depth_func));
+        ImGui::Combo("Cull", &sel_cull, cull_flag, IM_ARRAYSIZE(cull_flag));
+        ImGui::Combo("Fill", &sel_fill, fill_flag, IM_ARRAYSIZE(fill_flag));
+        ImGui::Combo("Filter", &sel_filter, filter_func, IM_ARRAYSIZE(filter_func));
+        ImGui::Combo("Sampler Address", &sel_sampler_address, sampler_address, IM_ARRAYSIZE(sampler_address));
+        ImGui::Combo("Sampler Func", &sel_sampler_func, sampler_func, IM_ARRAYSIZE(sampler_func));
+
+        if (ImGui::Button("Load"))
+        {
+          try
+          {
+            Resources::Shader::Create
+              (
+               name_buffer,
+               path_buffer,
+               (eShaderDomain)(sel_domain),
+               (UINT)(sel_depth | sel_depth_func >> 2),
+               (UINT)(sel_cull | sel_fill >> 3),
+               (D3D11_FILTER)(sel_filter),
+               (UINT)(sel_sampler_address | sel_sampler_func >> 5)
+              );
+
+            m_b_imgui_load_shader_dialog_ = false;
+            std::memset(name_buffer, 0, 256);
+            std::memset(path_buffer, 0, 256);
+          }
+          catch (const std::exception& e)
+          {
+            ImGui::SameLine();
+            ImGui::Text(e.what());
+            std::memset(name_buffer, 0, 256);
+            std::memset(path_buffer, 0, 256);
+          }
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+          m_b_imgui_load_shader_dialog_ = false;
+          std::memset(name_buffer, 0, 256);
+          std::memset(path_buffer, 0, 256);;
+        }
+
+        ImGui::End();
+      }
     }
   }
 }

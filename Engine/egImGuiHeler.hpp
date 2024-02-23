@@ -67,6 +67,24 @@ namespace Engine
     ImGui::Checkbox(_labelPrefix(label.c_str()).c_str(), &flag);
   }
 
+  inline static void UINTAligned(const std::string& label, UINT& value)
+  {
+    ImGui::InputScalar
+      (
+       _labelPrefix(label.c_str()).c_str(), ImGuiDataType_U32, &value,
+       nullptr, nullptr, nullptr, ImGuiInputTextFlags_CharsDecimal
+      );
+  }
+
+  inline static void lldAligned(const std::string& label, long long& value)
+  {
+    ImGui::InputScalar
+      (
+       _labelPrefix(label.c_str()).c_str(), ImGuiDataType_S64, &value,
+       nullptr, nullptr, nullptr, ImGuiInputTextFlags_CharsDecimal
+      );
+  }
+
   inline static void ImGuiColorEditable(
     const std::string&   label,
     const GlobalEntityID id,
