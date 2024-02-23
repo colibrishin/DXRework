@@ -155,7 +155,6 @@ namespace Engine::Manager
     friend struct SingletonDeleter;
     ~ResourceManager() override = default;
 
-    void OpenNewTextureDialog();
     void OpenNewShaderDialog();
 
     template <typename T, typename... Args>
@@ -163,7 +162,9 @@ namespace Engine::Manager
     {
       if (flag)
       {
-        if (ImGui::Begin("New Texture", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        const std::string title = std::string("New ") + typeid(T).name();
+
+        if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
           static char name_buffer[256] = {};
           static char path_buffer[256] = {};
@@ -184,10 +185,17 @@ namespace Engine::Manager
             {
               ImGui::SameLine();
               ImGui::Text(e.what());
+              std::memset(name_buffer, 0, 256);
+              std::memset(path_buffer, 0, 256);
             }
           }
 
-          if (ImGui::Button("Cancel")) { flag = false; }
+          if (ImGui::Button("Cancel"))
+          {
+            std::memset(name_buffer, 0, 256);
+            std::memset(path_buffer, 0, 256);
+            flag = false;
+          }
 
           ImGui::End();
         }
