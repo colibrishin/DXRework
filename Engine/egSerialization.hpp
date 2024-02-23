@@ -538,10 +538,23 @@ namespace Engine
     template <typename T>
     static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
     {
-      std::fstream                  stream(filename + ".meta", std::ios::out);
+      int                   i               = 0;
+      std::string           tagged_filename = filename + "_%d";
+      char                  buffer[1024]    = {};
+      std::filesystem::path final_path      = filename;
+      std::string           extension       = ".meta";
+
+      while (std::filesystem::exists(final_path.string() + extension))
+      {
+        sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
+        final_path = buffer;
+      }
+
+      std::fstream                  stream(final_path.concat(extension), std::ios::out);
       boost::archive::text_oarchive archive(stream);
-      object->m_meta_path_ = filename + ".meta";
-      object->m_meta_str_ = filename + ".meta";
+
+      object->m_meta_path_ = final_path;
+      object->m_meta_str_  = final_path.string();
       archive << object;
       return true;
     }
