@@ -220,6 +220,8 @@ namespace Engine
   using LocalResourceID = LONG_PTR;
   using EntityName = std::string;
   using TypeName = std::string;
+  using MetadataPathStr = std::string;
+  using RawPathStr = std::string;
   using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
   using VertexCollection = std::vector<Graphics::VertexElement>;
   using IndexCollection = std::vector<UINT>;
