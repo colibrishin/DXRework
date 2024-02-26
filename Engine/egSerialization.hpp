@@ -581,17 +581,19 @@ namespace Engine
         }
       }
 
-      int                   i               = 0;
-      std::string           tagged_filename = fixed_name + "_%d";
-      char                  buffer[1024]    = {};
-      std::filesystem::path final_path      = fixed_name;
+      //int                   i               = 0;
+      //std::string           tagged_filename = fixed_name + "_%d";
+      //char                  buffer[1024]    = {};
+      //std::filesystem::path final_path      = fixed_name;
       std::string           extension       = ".meta";
 
-      while (std::filesystem::exists(final_path.string() + extension))
-      {
-        sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
-        final_path = buffer;
-      }
+      //while (std::filesystem::exists(final_path.string() + extension))
+      //{
+      //  sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
+      //  final_path = buffer;
+      //}
+
+      std::filesystem::path final_path = fixed_name;
 
       std::fstream                  stream(final_path.concat(extension), std::ios::out);
       boost::archive::text_oarchive archive(stream);
