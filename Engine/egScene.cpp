@@ -418,6 +418,28 @@ namespace Engine
         {
           if (ImGui::TreeNode(g_layer_type_str[i]))
           {
+            if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+            {
+              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT", ImGuiDragDropFlags_AcceptBeforeDelivery))
+              {
+                GetTaskScheduler().AddTask
+                  (
+                   TASK_CHANGE_LAYER,
+                   {GetSharedPtr<Scene>(), static_cast<WeakObject*>(payload->Data), i},
+                   [this, i](const std::vector<std::any>& args, const float)
+                   {
+                     const auto scene = std::any_cast<StrongScene>(args[0]);
+                     const auto obj   = std::any_cast<WeakObject*>(args[1])->lock();
+                     const auto layer = std::any_cast<int>(args[2]);
+
+                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+                     (*scene)[layer]->AddGameObject(obj);
+                   }
+                  );
+              }
+              ImGui::EndDragDropTarget();
+            }
+
             for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
             {
               if (const auto obj_ptr = obj.lock())
@@ -429,6 +451,13 @@ namespace Engine
                 if (ImGui::Selectable(unique_name.c_str()))
                 {
                   obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+                }
+
+                if (ImGui::BeginDragDropSource())
+                {
+                  ImGui::SetDragDropPayload("OBJECT", &obj, sizeof(WeakObject));
+                  ImGui::Text(unique_name.c_str());
+                  ImGui::EndDragDropSource();
                 }
 
                 if (obj_ptr->GetImGuiOpen()) { obj_ptr->OnImGui(); }

@@ -90,6 +90,7 @@ namespace Engine
     TASK_NONE = 0,
     TASK_ADD_OBJ,
     TASK_REM_OBJ,
+    TASK_CHANGE_LAYER,
     TASK_SYNC_SCENE,
     TASK_INIT_SCENE,
     TASK_REM_SCENE,
