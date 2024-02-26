@@ -214,6 +214,14 @@ namespace Engine::Components
 
   void Collider::FixedUpdate(const float& dt) {}
 
+  void Collider::OnSerialized()
+  {
+    if (const auto shape = m_shape_.lock())
+    {
+      Serializer::Serialize(shape->GetName(), shape);
+    }
+  }
+
   void Collider::OnDeserialized()
   {
     Component::OnDeserialized();

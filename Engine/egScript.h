@@ -13,6 +13,8 @@ namespace Engine
     WeakObject GetOwner() const { return m_owner_; }
     eScriptType GetScriptType() const { return m_type_; }
 
+    void OnSerialized() override;
+
     using ScriptFactoryFunction = std::function<StrongScript(const WeakObject&)>;
 
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>

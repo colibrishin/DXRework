@@ -293,6 +293,11 @@ namespace Engine
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt); }
   }
 
+  void Scene::OnSerialized()
+  {
+    for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->OnSerialized(); }
+  }
+
   void Scene::Save()
   {
     auto name = std::to_string(GetID()) + " " + typeid(*this).name();

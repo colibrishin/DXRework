@@ -34,6 +34,12 @@ namespace Engine::Components
 
   void ObserverController::PostUpdate(const float& dt) { StateController::PostUpdate(dt); }
 
+  void ObserverController::OnSerialized() {}
+
+  void ObserverController::OnDeserialized() { StateController::OnDeserialized(); }
+
+  void ObserverController::OnImGui() { StateController::OnImGui(); }
+
   ObserverController::ObserverController()
     : StateController({}) {}
 

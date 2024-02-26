@@ -134,6 +134,8 @@ namespace Engine::Components
 
   void Rigidbody::FixedUpdate(const float& dt) { Synchronize(); }
 
+  void Rigidbody::OnSerialized() {}
+
   void Rigidbody::OnDeserialized() { Component::OnDeserialized(); }
 
   void Rigidbody::OnImGui()

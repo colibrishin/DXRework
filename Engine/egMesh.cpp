@@ -117,6 +117,8 @@ namespace Engine::Resources
 
   void Mesh::OnDeserialized() { Resource::OnDeserialized(); }
 
+  void Mesh::OnSerialized() {}
+
   void Mesh::Initialize() {}
 
   void Mesh::Render(const float& dt)

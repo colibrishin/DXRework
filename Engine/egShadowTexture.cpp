@@ -19,6 +19,8 @@ namespace Engine::Resources
 
   void ShadowTexture::Update(const float& dt) { Texture2D::Update(dt); }
 
+  void ShadowTexture::OnSerialized() { Texture2D::OnSerialized(); }
+
   void ShadowTexture::OnDeserialized() { Texture2D::OnDeserialized(); }
 
   void ShadowTexture::OnImGui() { Texture2D::OnImGui(); }

@@ -130,6 +130,22 @@ namespace Engine::Resources
     m_temp_param_ = {};
   }
 
+  void Material::OnSerialized()
+  {
+    for (const auto& shader : m_shaders_loaded_ | std::views::values)
+    {
+      Serializer::Serialize(shader->GetName(), shader);
+    }
+
+    for (const auto& resources : m_resources_loaded_ | std::views::values)
+    {
+      for (const auto& resource : resources)
+      {
+        Serializer::Serialize(resource->GetName(), resource);
+      }
+    }
+  }
+
   void Material::OnDeserialized()
   {
     Resource::OnDeserialized();

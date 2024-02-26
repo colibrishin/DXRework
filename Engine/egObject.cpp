@@ -258,6 +258,14 @@ namespace Engine::Abstract
     }
   }
 
+  void Object::OnSerialized()
+  {
+    for (const auto& comp : m_components_ | std::views::values)
+    {
+      comp->OnSerialized();
+    }
+  }
+
   void Object::OnDeserialized()
   {
     Actor::OnDeserialized();

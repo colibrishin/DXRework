@@ -1,4 +1,7 @@
 #include "pch.h"
+#include <DirectXTex.h>
+#include <wincodec.h>
+
 #include "egTexture.h"
 #include "egD3Device.hpp"
 #include "egRenderPipeline.h"
@@ -395,6 +398,37 @@ namespace Engine::Resources
   }
 
   void Texture::FixedUpdate(const float& dt) {}
+
+  void Texture::OnSerialized()
+  {
+    const auto name = GetName();
+    const auto wstr = std::wstring(name.begin(), name.end());
+
+    if (m_res_)
+    {
+      DirectX::ScratchImage image;
+
+      DX::ThrowIfFailed
+        (
+         DirectX::CaptureTexture
+         (
+          GetD3Device().GetDevice(), GetD3Device().GetContext(), m_res_.Get(), image
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         DirectX::SaveToDDSFile
+         (
+             image.GetImages(),
+             image.GetImageCount(),
+             image.GetMetadata(),
+             DirectX::DDS_FLAGS_ALLOW_LARGE_FILES,
+             wstr.c_str()
+         )
+        );
+    }
+  }
 
   eResourceType Texture::GetResourceType() const { return Resource::GetResourceType(); }
 } // namespace Engine::Resources

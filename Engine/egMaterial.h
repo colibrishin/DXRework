@@ -26,6 +26,8 @@ namespace Engine::Resources
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 

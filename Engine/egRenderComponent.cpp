@@ -30,6 +30,11 @@ namespace Engine::Components::Base
 
   eRenderComponentType RenderComponent::GetType() const noexcept { return m_type_; }
 
+  void RenderComponent::OnSerialized()
+  {
+    m_material_->OnSerialized();
+  }
+
   void RenderComponent::OnDeserialized()
   {
     Component::OnDeserialized();

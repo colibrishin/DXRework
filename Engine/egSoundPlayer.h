@@ -16,6 +16,8 @@ namespace Engine::Components
     void PostUpdate(const float& dt) override;
 
     void SetSound(const StrongSound& sound);
+
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 

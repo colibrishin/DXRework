@@ -21,6 +21,8 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
 
     void          BindBone(const WeakBone& bone_info);

@@ -44,6 +44,7 @@ namespace Engine::Resources
     );
 
   protected:
+    void OnSerialized() override;
     void OnDeserialized() override;
 
     void Load_INTERNAL() override;

@@ -38,6 +38,7 @@ namespace Engine::Resources
     void          Render(const float& dt) override;
     void          Update(const float& dt) override;
 
+    void          OnSerialized() override;
     void          OnDeserialized() override;
     void          OnImGui() override;
     eResourceType GetResourceType() const override;
