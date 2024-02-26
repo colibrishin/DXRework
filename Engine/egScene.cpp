@@ -155,8 +155,19 @@ namespace Engine
       m_observer_ = scene->m_observer_;
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
-      m_cached_objects_ = scene->m_cached_objects_;
-      m_cached_components_ = scene->m_cached_components_;
+
+      for (const auto& layer : m_layers)
+      {
+        for (const auto& obj : layer->GetGameObjects())
+        {
+          m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+
+          for (const auto& comp : obj.lock()->GetAllComponents())
+          {
+            AddCacheComponent(comp.lock());
+          }
+        }
+      }
 
       m_object_position_tree_.Clear();
 
