@@ -147,7 +147,7 @@ namespace Engine::Manager::Physics
   {
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
-      if (ImGui::Begin("Collision Detector"))
+      if (ImGui::Begin("Collision Detector", nullptr))
       {
         if (ImGui::TreeNode("Layer Mask"))
         {

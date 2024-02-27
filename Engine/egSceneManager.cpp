@@ -5,6 +5,7 @@
 #include "egMaterial.h"
 #include "egObject.hpp"
 #include "egScene.hpp"
+#include "egText.h"
 #include "egShadowManager.hpp"
 
 namespace Engine::Manager
@@ -122,6 +123,13 @@ namespace Engine::Manager
         if (ImGui::MenuItem("Light")) { GetActiveScene().lock()->CreateGameObject<Objects::Light>(LAYER_LIGHT); }
 
         if (ImGui::MenuItem("Object")) { GetActiveScene().lock()->CreateGameObject<Abstract::Object>(LAYER_DEFAULT); }
+
+        if (ImGui::MenuItem("Text"))
+        {
+          GetActiveScene().lock()->CreateGameObject<Objects::Text>(
+            LAYER_UI, 
+            GetResourceManager().GetResource<Resources::Font>("DefaultFont"));
+        }
 
         ImGui::EndMenu();
       }
