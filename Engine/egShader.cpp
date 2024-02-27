@@ -236,7 +236,7 @@ namespace Engine::Resources
     const UINT         rasterizer, const D3D11_FILTER     filter, const UINT        sampler
   )
   {
-    if (const auto              pcheck = GetResourceManager().GetResourceByMetadataPath<Shader>
+    if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
       (path).lock(); const auto ncheck = GetResourceManager().GetResource<Shader>(name).lock()) { return ncheck; }
 
     const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler);
