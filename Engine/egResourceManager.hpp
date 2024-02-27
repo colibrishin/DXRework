@@ -126,6 +126,16 @@ namespace Engine::Manager
 
         return boost::reinterpret_pointer_cast<T>(*it);
       }
+      else
+      {
+        if (std::filesystem::exists(path))
+        {
+          const auto res = Serializer::Deserialize<T>(path.generic_string());
+          m_resources_[which_resource<T>::value].insert(res);
+          res->Load();
+          return res;
+        }
+      }
 
       return {};
     }
@@ -167,6 +177,18 @@ namespace Engine::Manager
         if (!(*it)->IsLoaded()) { (*it)->Load(); }
 
         return *it;
+      }
+      else
+      {
+        if (std::filesystem::exists(path))
+        {
+          const auto res = Serializer::Deserialize<Abstract::Resource>(path.generic_string());
+          if (res->GetResourceType() != type) { return {}; }
+
+          m_resources_[type].insert(res);
+          res->Load();
+          return res;
+        }
       }
 
       return {};
