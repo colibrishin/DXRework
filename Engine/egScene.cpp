@@ -126,8 +126,12 @@ namespace Engine
 
       if (m_cached_components_.find(comp_acc, comp.lock()->GetComponentType()))
       {
-        comp_acc->second.erase
-          (comp.lock()->GetID());
+        comp_acc->second.erase(comp.lock()->GetID());
+      }
+
+      if (comp.lock()->GetComponentType() == COM_T_TRANSFORM)
+      {
+        m_object_position_tree_.Remove(obj.lock());
       }
     }
 

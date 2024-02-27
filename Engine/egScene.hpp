@@ -120,6 +120,11 @@ namespace Engine
           comp_acc->second.erase(component->GetID());
         }
       }
+
+      if (which_component<T>::value == COM_T_TRANSFORM)
+      {
+        m_object_position_tree_.Remove(component->GetOwner().lock());
+      }
     }
 
     template <typename T>
