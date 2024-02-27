@@ -162,6 +162,58 @@ namespace Engine
     return false;
   }
 
+  void Octree::Remove(const WeakT& obj)
+  {
+    std::stack<Octree*> stack;
+    stack.push(this);
+
+    while (!stack.empty())
+    {
+      const auto node = stack.top();
+      stack.pop();
+
+      auto&       node_value           = node->m_values_;
+      auto&       node_children        = node->m_children_;
+      auto&       node_active_children = node->m_active_children_;
+      const auto& node_bound           = node->m_bounds_;
+      const auto& node_extent          = node->Extent();
+      const auto& node_center          = node->WorldCenter();
+
+      if (!node_value.empty())
+      {
+        for (auto it = node_value.begin(); it != node_value.end();)
+        {
+          if (it->expired())
+          {
+            it = node_value.erase(it);
+            continue;
+          }
+
+          if (it->lock() == obj.lock())
+          {
+            it = node_value.erase(it);
+            continue;
+          }
+
+          ++it;
+        }
+      }
+
+      for (int i = 0; i < octant_count; ++i)
+      {
+        if (node_children[i])
+        {
+          if (node_children[i]->garbage())
+          {
+            node_children[i].reset();
+            node_active_children.reset(i);
+          }
+          else { stack.push(node_children[i].get()); }
+        }
+      }
+    }
+  }
+
   void Octree::Update()
   {
     unsigned attempt = 0;

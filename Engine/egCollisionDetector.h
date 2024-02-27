@@ -21,6 +21,8 @@ namespace Engine::Manager::Physics
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
+    void OnImGui() override;
+
     void SetCollisionLayer(eLayerType layer, eLayerType mask);
     void UnsetCollisionLayer(eLayerType layer, eLayerType layer2);
     bool IsCollisionLayer(eLayerType layer1, eLayerType layer2);
@@ -40,8 +42,8 @@ namespace Engine::Manager::Physics
 
     void DispatchInactiveExit(const WeakObject& lhs);
 
-    std::mutex                                    m_layer_mask_mutex_;
-    std::array<std::bitset<LAYER_MAX>, LAYER_MAX> m_layer_mask_;
+    std::mutex m_layer_mask_mutex_;
+    bool       m_layer_mask_[LAYER_MAX][LAYER_MAX];
 
     concurrent_vector<CollisionInfo> m_collision_produce_queue_;
 
