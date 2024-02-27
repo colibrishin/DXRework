@@ -439,6 +439,7 @@ namespace Engine
 
                      (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
                      (*scene)[layer]->AddGameObject(obj);
+                     obj->SetLayer(static_cast<eLayerType>(layer));
                    }
                   );
               }
