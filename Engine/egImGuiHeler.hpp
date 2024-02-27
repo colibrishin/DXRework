@@ -124,4 +124,24 @@ namespace Engine
     ImGui::DragFloat3("##vector", &v.x);
     ImGui::PopID();
   }
+
+  inline static void ImGuiVector2Editable(
+    const std::string&   label,
+    const GlobalEntityID id,
+    const std::string&   var_name,
+    Vector2&             v
+  )
+  {
+    const auto  unique_id = std::to_string(id) + var_name;
+    const float width     = ImGui::CalcItemWidth();
+    const float x         = ImGui::GetCursorPosX();
+
+    ImGui::PushID(unique_id.c_str());
+    ImGui::Text(label.c_str());
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
+
+    ImGui::DragFloat2("##vector", &v.x);
+    ImGui::PopID();
+  }
 }
