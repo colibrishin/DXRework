@@ -14,6 +14,7 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(BaseAnimation))
  _ARTAG(m_primitive_)
  _ARTAG(m_bone_)
+ _ARTAG(m_bone_meta_path_str_)
 )
 
 namespace Engine::Resources
@@ -41,9 +42,23 @@ namespace Engine::Resources
   {
     BaseAnimation::OnSerialized();
     Serializer::Serialize(m_bone_->GetName(), m_bone_);
+    m_bone_meta_path_str_ = m_bone_->GetMetadataPath().string();
   }
 
-  void BoneAnimation::OnDeserialized() { BaseAnimation::OnDeserialized(); }
+  void BoneAnimation::OnDeserialized()
+  {
+    BaseAnimation::OnDeserialized();
+
+    if (const auto res_check = Resources::Bone::GetByMetadataPath(m_bone_meta_path_str_).lock(); 
+        res_check && !res_check->GetMetadataPath().empty())
+    {
+      m_bone_ = res_check;
+    }
+    else
+    {
+      m_bone_ = GetResourceManager().GetResourceByMetadataPath<Resources::Bone>(m_bone_meta_path_str_).lock();
+    }
+  }
 
   void BoneAnimation::BindBone(const WeakBone& bone_info)
   {

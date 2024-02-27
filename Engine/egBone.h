@@ -32,6 +32,7 @@ namespace Engine::Resources
     [[nodiscard]] const BonePrimitive* GetBoneParent(UINT idx) const;
     UINT                               GetBoneCount() const;
 
+    RESOURCE_SELF_INFER_GETTER(Bone)
   protected:
     SERIALIZER_ACCESS
 

@@ -32,13 +32,25 @@ namespace Engine::Components::Base
 
   void RenderComponent::OnSerialized()
   {
-    m_material_->OnSerialized();
+    if (m_material_)
+    {
+      Serializer::Serialize(m_material_->GetName(), m_material_);
+      m_mtr_meta_path_str_ = m_material_->GetMetadataPath().string();
+    }
   }
 
   void RenderComponent::OnDeserialized()
   {
     Component::OnDeserialized();
-    m_material_ = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock();
+    if (const auto res_check = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock(); 
+        res_check && !res_check->GetMetadataPath().empty())
+    {
+      m_material_ = res_check;
+    }
+    else
+    {
+      m_material_ = GetResourceManager().GetResourceByMetadataPath<Resources::Material>(m_mtr_meta_path_str_).lock();
+    }
   }
 
   RenderComponent::RenderComponent()

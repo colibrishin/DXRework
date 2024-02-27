@@ -77,7 +77,7 @@ namespace Engine::Resources
     std::vector<StrongMesh>             m_meshes_;
     std::vector<std::string>            m_animation_catalog_;
     StrongBone                          m_bone_;
-    StrongAnimsTexture                    m_animations_;
+    StrongAnimsTexture                  m_animations_;
     BoundingBox                         m_bounding_box_;
     std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 

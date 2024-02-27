@@ -594,12 +594,11 @@ namespace Engine
       //}
 
       std::filesystem::path final_path = fixed_name;
-
-      std::fstream                  stream(final_path.concat(extension), std::ios::out);
-      boost::archive::text_oarchive archive(stream);
-
-      object->m_meta_path_ = final_path;
+      object->m_meta_path_ = final_path.concat(extension);
       object->m_meta_str_  = final_path.string();
+
+      std::fstream                  stream(final_path, std::ios::out);
+      boost::archive::text_oarchive archive(stream);
       archive << object;
       return true;
     }
