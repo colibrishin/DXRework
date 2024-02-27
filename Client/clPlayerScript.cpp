@@ -15,6 +15,13 @@
 #include "egShape.h"
 #include "egText.h"
 
+SERIALIZER_ACCESS_IMPL
+(
+ Client::Scripts::PlayerScript,
+ _ARTAG(_BSTSUPER(Script)) _ARTAG(m_hp_) _ARTAG(m_state_) _ARTAG(m_prev_state_)
+ _ARTAG(m_top_view_) _ARTAG(m_cam_id_) _ARTAG(m_shoot_interval)
+)
+
 namespace Client::Scripts
 {
   void PlayerScript::Initialize()
@@ -202,6 +209,10 @@ namespace Client::Scripts
       SetState(CHAR_STATE_HIT);
     }
   }
+
+  PlayerScript::PlayerScript() : m_state_(CHAR_STATE_IDLE), m_prev_state_(CHAR_STATE_IDLE), m_bone_initialized_(false),
+                                 m_rifle_initialized_(false), m_health_initialized_(false), m_top_view_(false),
+                                 m_cam_id_(0), m_shoot_interval(0.3f), m_hp_(100.f) {}
 
   void PlayerScript::Hitscan(const float damage, const float range) const
   {

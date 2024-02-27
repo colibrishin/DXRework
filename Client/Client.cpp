@@ -16,6 +16,7 @@
 #include <egSphereMesh.h>
 
 #include "clHitboxScript.hpp"
+#include "clHpTextScript.h"
 #include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
 #include "clPlayerScript.h"
@@ -208,6 +209,7 @@ namespace Client
     Manager::Application::GetInstance().Initialize(hwnd);
     Script::Register<Scripts::HitboxScript>();
     Script::Register<Scripts::PlayerScript>();
+    Script::Register<Scripts::HpTextScript>();
 
     InitializeTexture();
     InitializeMesh();
