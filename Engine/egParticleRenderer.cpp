@@ -83,6 +83,7 @@ namespace Engine::Components
   {
     RenderComponent::OnSerialized();
     Serializer::Serialize(m_cs_->GetName(), m_cs_);
+    m_cs_meta_path_str_ = m_cs_->GetMetadataPath().string();
   }
 
   void ParticleRenderer::OnDeserialized()

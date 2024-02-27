@@ -132,9 +132,13 @@ namespace Engine::Resources
 
   void Material::OnSerialized()
   {
+    m_shader_paths_.clear();
+    m_resource_paths_.clear();
+
     for (const auto& shader : m_shaders_loaded_ | std::views::values)
     {
       Serializer::Serialize(shader->GetName(), shader);
+      m_shader_paths_.emplace_back(shader->GetName(), shader->GetMetadataPath().string());
     }
 
     for (const auto& resources : m_resources_loaded_ | std::views::values)
@@ -142,6 +146,7 @@ namespace Engine::Resources
       for (const auto& resource : resources)
       {
         Serializer::Serialize(resource->GetName(), resource);
+        m_resource_paths_[resource->GetResourceType()].emplace_back(resource->GetName(), resource->GetMetadataPath().string());
       }
     }
   }

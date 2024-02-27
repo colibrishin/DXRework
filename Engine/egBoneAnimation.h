@@ -45,6 +45,7 @@ namespace Engine::Resources
 
     AnimationPrimitive m_primitive_;
     StrongBone         m_bone_;
+    MetadataPathStr    m_bone_meta_path_str_;
 
     // non-serialized
     float               m_evaluated_time_;

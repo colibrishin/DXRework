@@ -68,12 +68,12 @@ namespace Engine::Components
         if (const auto tr_anim = mat->GetResource<Resources::BaseAnimation>
           (m_animation_id_).lock())
         {
-          tr_anim->OnSerialized();
+          Serializer::Serialize(tr_anim->GetName(), tr_anim);
         }
         else if (const auto bone_anim = mat->GetResource<Resources::BoneAnimation>
           (m_animation_id_).lock())
         {
-          bone_anim->OnSerialized();
+          Serializer::Serialize(bone_anim->GetName(), bone_anim);
         }
       }
     }

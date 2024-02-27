@@ -41,6 +41,7 @@ namespace Engine::Components
   void SoundPlayer::OnSerialized()
   {
     Serializer::Serialize(m_sound_->GetName(), m_sound_);
+    m_sound_meta_path_ = m_sound_->GetMetadataPath().string();
   }
 
   void SoundPlayer::OnDeserialized()
