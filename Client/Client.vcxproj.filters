@@ -18,9 +18,6 @@
     <Filter Include="Resource\Texture">
       <UniqueIdentifier>{7c6a1fc5-8492-4703-9979-e9e7af7b9f50}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object">
-      <UniqueIdentifier>{f35b906c-66cf-4b65-9a28-80cc3e41846a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{edc00468-205b-4df0-903f-d5a189d31598}</UniqueIdentifier>
     </Filter>
@@ -33,27 +30,6 @@
     <Filter Include="Resource\Scene">
       <UniqueIdentifier>{1dbb809b-8ffa-49c9-adb8-c43a4dbb7f37}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Water">
-      <UniqueIdentifier>{ac99b7d1-311b-4750-b5f4-1c862985b516}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\TestCube">
-      <UniqueIdentifier>{963fc1d0-8671-474a-b9db-9594b0838310}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\MousePosition">
-      <UniqueIdentifier>{bf74148a-6bd7-44bd-ab90-91a9719db0bf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\FPSCounter">
-      <UniqueIdentifier>{5ad0c76d-f91b-43e9-aa58-c0276bb60549}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\PlaneObject">
-      <UniqueIdentifier>{efdfa963-3918-436d-9908-77ed70e5f3b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\SkyBox">
-      <UniqueIdentifier>{7807774c-1bb6-48c6-9239-86a8011559d1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\TestObject">
-      <UniqueIdentifier>{d6ddae5c-4a7b-4c36-aa52-cdc366835b09}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
     </Filter>
@@ -63,14 +39,20 @@
     <Filter Include="Resource\ComputeShader">
       <UniqueIdentifier>{6e2bf49d-5f8d-4a30-a03d-176c473b9744}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Missile">
-      <UniqueIdentifier>{c302eed8-34e3-44a6-abc3-3e6c02fde386}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\ComputeShader\ParticleCompute">
       <UniqueIdentifier>{1cb6e23b-a956-4c5f-a930-63eef1351553}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\ComputeShader\GrassCompute">
       <UniqueIdentifier>{def4098a-11b2-4a38-9759-26ba3e834c7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\HitboxScript">
+      <UniqueIdentifier>{6affa97b-3e7b-42a8-8946-d7a033781beb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\HpTextScript">
+      <UniqueIdentifier>{53f78c5a-199a-48d0-971a-dc663b3bebcd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\PlayerScript">
+      <UniqueIdentifier>{931117ce-5039-43ba-b329-7343e4f8fc65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -86,38 +68,17 @@
     <ClInclude Include="clTriangleMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clWater.hpp">
-      <Filter>Object\Water</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestCube.hpp">
-      <Filter>Object\TestCube</Filter>
-    </ClInclude>
-    <ClInclude Include="clMousePosition.hpp">
-      <Filter>Object\MousePosition</Filter>
-    </ClInclude>
-    <ClInclude Include="clFPSCounter.hpp">
-      <Filter>Object\FPSCounter</Filter>
-    </ClInclude>
-    <ClInclude Include="clPlaneObject.hpp">
-      <Filter>Object\PlaneObject</Filter>
-    </ClInclude>
-    <ClInclude Include="clSkyBox.hpp">
-      <Filter>Object\SkyBox</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestObject.hpp">
-      <Filter>Object\TestObject</Filter>
-    </ClInclude>
-    <ClInclude Include="clHitboxScript.hpp">
-      <Filter>Script</Filter>
-    </ClInclude>
-    <ClInclude Include="clMissile.h">
-      <Filter>Object\Missile</Filter>
-    </ClInclude>
     <ClInclude Include="clParticleCompute.h">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
     </ClInclude>
+    <ClInclude Include="clHitboxScript.hpp">
+      <Filter>Script\HitboxScript</Filter>
+    </ClInclude>
+    <ClInclude Include="clHpTextScript.h">
+      <Filter>Script\HpTextScript</Filter>
+    </ClInclude>
     <ClInclude Include="clPlayerScript.h">
-      <Filter>Script</Filter>
+      <Filter>Script\PlayerScript</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -127,35 +88,17 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="clWater.cpp">
-      <Filter>Object\Water</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestCube.cpp">
-      <Filter>Object\TestCube</Filter>
-    </ClCompile>
-    <ClCompile Include="clMousePosition.cpp">
-      <Filter>Object\MousePosition</Filter>
-    </ClCompile>
-    <ClCompile Include="clFPSCounter.cpp">
-      <Filter>Object\FPSCounter</Filter>
-    </ClCompile>
-    <ClCompile Include="clPlaneObject.cpp">
-      <Filter>Object\PlaneObject</Filter>
-    </ClCompile>
-    <ClCompile Include="clSkyBox.cpp">
-      <Filter>Object\SkyBox</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestObject.cpp">
-      <Filter>Object\TestObject</Filter>
-    </ClCompile>
-    <ClCompile Include="clMissile.cpp">
-      <Filter>Object\Missile</Filter>
-    </ClCompile>
     <ClCompile Include="clParticleCompute.cpp">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
     </ClCompile>
+    <ClCompile Include="clHitboxScript.cpp">
+      <Filter>Script\HitboxScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clHpTextScript.cpp">
+      <Filter>Script\HpTextScript</Filter>
+    </ClCompile>
     <ClCompile Include="clPlayerScript.cpp">
-      <Filter>Script</Filter>
+      <Filter>Script\PlayerScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

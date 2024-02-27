@@ -41,6 +41,7 @@ namespace Client::Scripts
 
   private:
     SERIALIZER_ACCESS
+    PlayerScript();
 
     void Hitscan(const float damage, const float range) const;
 
@@ -74,3 +75,5 @@ namespace Client::Scripts
     float        m_hp_;
   };
 }
+
+BOOST_CLASS_EXPORT_KEY(Client::Scripts::PlayerScript)
