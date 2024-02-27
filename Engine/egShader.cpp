@@ -244,6 +244,8 @@ namespace Engine::Resources
     return obj;
   }
 
+  void Shader::OnSerialized() {}
+
   Shader::Shader()
     : Resource("", RES_T_SHADER),
       m_domain_(),

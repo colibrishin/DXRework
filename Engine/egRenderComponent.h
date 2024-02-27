@@ -20,6 +20,7 @@ namespace Engine::Components::Base
     const std::filesystem::path& GetMaterialMetadataPath() const noexcept;
     eRenderComponentType         GetType() const noexcept;
 
+    void OnSerialized() override;
     void OnDeserialized() override;
 
   private:

@@ -26,6 +26,8 @@ namespace Engine::Resources
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 
@@ -94,8 +96,8 @@ namespace Engine::Resources
 
     CBs::MaterialCB m_material_cb_;
 
-    std::vector<std::string>                                m_shader_paths_;
-    std::map<const eResourceType, std::vector<std::string>> m_resource_paths_;
+    std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
+    std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
 
     // non-serialized
     bool                                                       m_b_edit_dialog_;

@@ -37,6 +37,12 @@ namespace Engine::Resources
 
   void BoneAnimation::PostUpdate(const float& dt) {}
 
+  void BoneAnimation::OnSerialized()
+  {
+    BaseAnimation::OnSerialized();
+    Serializer::Serialize(m_bone_->GetName(), m_bone_);
+  }
+
   void BoneAnimation::OnDeserialized() { BaseAnimation::OnDeserialized(); }
 
   void BoneAnimation::BindBone(const WeakBone& bone_info)

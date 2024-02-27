@@ -35,6 +35,16 @@ namespace Engine::Resources
 
   void AnimationsTexture::PostUpdate(const float& dt) {}
 
+  void AnimationsTexture::OnSerialized()
+  {
+    Texture3D::OnSerialized();
+
+    for (const auto& anim : m_animations_)
+    {
+      anim->OnSerialized();
+    }
+  }
+
   void AnimationsTexture::OnDeserialized() { Texture3D::OnDeserialized(); }
 
   eResourceType AnimationsTexture::GetResourceType() const { return RES_T_ANIMS_TEX; }

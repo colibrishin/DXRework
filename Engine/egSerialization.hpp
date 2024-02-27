@@ -538,17 +538,62 @@ namespace Engine
     template <typename T>
     static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
     {
-      int                   i               = 0;
-      std::string           tagged_filename = filename + "_%d";
-      char                  buffer[1024]    = {};
-      std::filesystem::path final_path      = filename;
+      object->OnSerialized();
+      std::string fixed_name = filename;
+
+      constexpr const char illegal_chars[] =
+      {
+        '#',
+        '%',
+        '&',
+        '{',
+        '}',
+        '\\',
+        '<',
+        '>',
+        '?',
+        '/',
+        ' ',
+        '$',
+        '!',
+        '\'',
+        '\"',
+        ':',
+        '@',
+        '+',
+        '|',
+        '`',
+        '='
+      };
+
+      for (const auto& illegal : illegal_chars)
+      {
+        while (const auto pos = fixed_name.find(illegal))
+        {
+          if (pos == std::string::npos)
+          {
+            break;
+          }
+          else
+          {
+            fixed_name.replace(pos, 1, "_");
+          }
+        }
+      }
+
+      //int                   i               = 0;
+      //std::string           tagged_filename = fixed_name + "_%d";
+      //char                  buffer[1024]    = {};
+      //std::filesystem::path final_path      = fixed_name;
       std::string           extension       = ".meta";
 
-      while (std::filesystem::exists(final_path.string() + extension))
-      {
-        sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
-        final_path = buffer;
-      }
+      //while (std::filesystem::exists(final_path.string() + extension))
+      //{
+      //  sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
+      //  final_path = buffer;
+      //}
+
+      std::filesystem::path final_path = fixed_name;
 
       std::fstream                  stream(final_path.concat(extension), std::ios::out);
       boost::archive::text_oarchive archive(stream);

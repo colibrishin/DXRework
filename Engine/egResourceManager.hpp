@@ -86,25 +86,6 @@ namespace Engine::Manager
       return {};
     }
 
-     WeakResource GetResource(const std::filesystem::path& path, const eResourceType& type)
-    {
-      auto&      resources = m_resources_[type];
-      const auto it        = std::ranges::find_if
-        (
-         resources
-         , [&path](const StrongResource& resource) { return resource->GetMetadataPath() == path; }
-        );
-
-      if (it != resources.end())
-      {
-        if (!(*it)->IsLoaded()) { (*it)->Load(); }
-
-        return *it;
-      }
-
-      return {};
-    }
-
     template <typename T>
     boost::weak_ptr<T> GetResourceByRawPath(const std::filesystem::path& path)
     {
@@ -144,6 +125,48 @@ namespace Engine::Manager
         if (!(*it)->IsLoaded()) { (*it)->Load(); }
 
         return boost::reinterpret_pointer_cast<T>(*it);
+      }
+
+      return {};
+    }
+
+    WeakResource GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
+    {
+      auto& resources = m_resources_[type];
+      auto  it        = std::find_if
+        (
+         resources.begin(), resources.end(), [&path](const StrongResource& resource)
+         {
+           return resource->GetPath() == path;
+         }
+        );
+
+      if (it != resources.end())
+      {
+        if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+        return *it;
+      }
+
+      return {};
+    }
+
+    WeakResource GetResourceByMetadataPath(const std::filesystem::path& path, const eResourceType type)
+    {
+      auto& resources = m_resources_[type];
+      auto  it        = std::find_if
+        (
+         resources.begin(), resources.end(), [&path](const StrongResource& resource)
+         {
+           return resource->GetMetadataPath() == path;
+         }
+        );
+
+      if (it != resources.end())
+      {
+        if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+        return *it;
       }
 
       return {};

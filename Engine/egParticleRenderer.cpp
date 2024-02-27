@@ -79,6 +79,12 @@ namespace Engine::Components
 
   void ParticleRenderer::FixedUpdate(const float& dt) {}
 
+  void ParticleRenderer::OnSerialized()
+  {
+    RenderComponent::OnSerialized();
+    Serializer::Serialize(m_cs_->GetName(), m_cs_);
+  }
+
   void ParticleRenderer::OnDeserialized()
   {
     RenderComponent::OnDeserialized();

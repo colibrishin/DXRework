@@ -38,6 +38,11 @@ namespace Engine::Components
     m_sound_meta_path_   = sound->GetMetadataPath().string();
   }
 
+  void SoundPlayer::OnSerialized()
+  {
+    Serializer::Serialize(m_sound_->GetName(), m_sound_);
+  }
+
   void SoundPlayer::OnDeserialized()
   {
     Component::OnDeserialized();

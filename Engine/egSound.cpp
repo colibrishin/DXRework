@@ -152,6 +152,10 @@ namespace Engine::Resources
     CommitDistance();
   }
 
+  void Sound::OnSerialized() {}
+
+  void Sound::OnDeserialized() { Resource::OnDeserialized(); }
+
   void Sound::Load_INTERNAL()
   {
     GetToolkitAPI().LoadSound(&m_sound_, GetPath().generic_string());

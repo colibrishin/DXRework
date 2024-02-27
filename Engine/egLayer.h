@@ -19,6 +19,8 @@ namespace Engine
     void PostRender(const float& dt) override;
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
 
     void                 AddGameObject(const StrongObject& obj);

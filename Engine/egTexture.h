@@ -58,6 +58,8 @@ namespace Engine::Resources
     void PostUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
+    void OnSerialized() override;
+
     eResourceType GetResourceType() const override;
 
     eTexBindSlots GetSlot() const;

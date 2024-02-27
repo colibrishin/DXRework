@@ -66,6 +66,32 @@ namespace Engine::Resources
 
   void Shape::PostUpdate(const float& dt) {}
 
+  void Shape::OnSerialized()
+  {
+    for (const auto& mesh : m_meshes_)
+    {
+      Serializer::Serialize(mesh->GetName(), mesh);
+    }
+
+    for (const auto& animation : m_animation_catalog_)
+    {
+      if (const auto anim = GetResourceManager().GetResource<BoneAnimation>(animation).lock())
+      {
+        Serializer::Serialize(anim->GetName(), anim);
+      }
+    }
+
+    if (m_bone_)
+    {
+      Serializer::Serialize(m_bone_->GetName(), m_bone_);
+    }
+
+    if (m_animations_)
+    {
+      Serializer::Serialize(m_animations_->GetName(), m_animations_);
+    }
+  }
+
   void Shape::OnDeserialized()
   {
     Resource::OnDeserialized();

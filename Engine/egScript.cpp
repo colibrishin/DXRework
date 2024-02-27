@@ -13,6 +13,8 @@ Engine::Script::Script(eScriptType type, const WeakObject& owner)
 
 void Engine::Script::SetActive(const bool active) { m_b_active_ = active; }
 
+void Engine::Script::OnSerialized() {}
+
 Engine::Script::Script()
   : m_type_(),
     m_b_active_(true) {}

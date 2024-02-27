@@ -100,6 +100,14 @@ namespace Engine
     }
   }
 
+  void Layer::OnSerialized()
+  {
+    for (const auto& object : m_objects_)
+    {
+      object->OnSerialized();
+    }
+  }
+
   void Layer::OnDeserialized()
   {
     Renderable::OnDeserialized();

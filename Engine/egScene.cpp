@@ -155,8 +155,19 @@ namespace Engine
       m_observer_ = scene->m_observer_;
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
-      m_cached_objects_ = scene->m_cached_objects_;
-      m_cached_components_ = scene->m_cached_components_;
+
+      for (const auto& layer : m_layers)
+      {
+        for (const auto& obj : layer->GetGameObjects())
+        {
+          m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+
+          for (const auto& comp : obj.lock()->GetAllComponents())
+          {
+            AddCacheComponent(comp.lock());
+          }
+        }
+      }
 
       m_object_position_tree_.Clear();
 
@@ -280,6 +291,11 @@ namespace Engine
   void Scene::PostUpdate(const float& dt)
   {
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt); }
+  }
+
+  void Scene::OnSerialized()
+  {
+    for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->OnSerialized(); }
   }
 
   void Scene::Save()
@@ -407,6 +423,28 @@ namespace Engine
         {
           if (ImGui::TreeNode(g_layer_type_str[i]))
           {
+            if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+            {
+              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT", ImGuiDragDropFlags_AcceptBeforeDelivery))
+              {
+                GetTaskScheduler().AddTask
+                  (
+                   TASK_CHANGE_LAYER,
+                   {GetSharedPtr<Scene>(), static_cast<WeakObject*>(payload->Data), i},
+                   [this, i](const std::vector<std::any>& args, const float)
+                   {
+                     const auto scene = std::any_cast<StrongScene>(args[0]);
+                     const auto obj   = std::any_cast<WeakObject*>(args[1])->lock();
+                     const auto layer = std::any_cast<int>(args[2]);
+
+                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+                     (*scene)[layer]->AddGameObject(obj);
+                   }
+                  );
+              }
+              ImGui::EndDragDropTarget();
+            }
+
             for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
             {
               if (const auto obj_ptr = obj.lock())
@@ -418,6 +456,13 @@ namespace Engine
                 if (ImGui::Selectable(unique_name.c_str()))
                 {
                   obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+                }
+
+                if (ImGui::BeginDragDropSource())
+                {
+                  ImGui::SetDragDropPayload("OBJECT", &obj, sizeof(WeakObject));
+                  ImGui::Text(unique_name.c_str());
+                  ImGui::EndDragDropSource();
                 }
 
                 if (obj_ptr->GetImGuiOpen()) { obj_ptr->OnImGui(); }

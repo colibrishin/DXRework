@@ -12,6 +12,9 @@ namespace Engine::Components
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void FixedUpdate(const float& dt) override;
+
+    void OnSerialized() override;
+    void OnDeserialized() override;
     void OnImGui() override;
 
     void SetAnimation(UINT idx);
