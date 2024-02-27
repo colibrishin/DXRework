@@ -281,7 +281,7 @@ namespace Engine::Abstract
 
   void Object::OnImGui()
   {
-    const auto id = GetTypeName() + " " + GetName() + " " + std::to_string(GetID());
+    const auto id = GetTypeName() + " " + GetName() + "###" + std::to_string(GetID());
 
     if (ImGui::Begin
       (
