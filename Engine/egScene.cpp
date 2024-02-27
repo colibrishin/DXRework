@@ -86,10 +86,6 @@ namespace Engine
     }
 
     if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>()); }
-
-    if (const auto tr = obj->GetComponent<Components::Transform>().lock()) { m_object_position_tree_.Insert(obj); }
-
-    for (const auto& comp : obj->GetAllComponents()) { AddCacheComponent(comp.lock()); }
   }
 
   void Scene::RemoveObjectFinalize(const GlobalEntityID id, eLayerType layer)
@@ -248,6 +244,11 @@ namespace Engine
         m_cached_components_.insert(comp_acc, component->GetComponentType());
         comp_acc->second.emplace(component->GetID(), component);
       }
+    }
+
+    if (component->GetComponentType() == COM_T_TRANSFORM)
+    {
+      m_object_position_tree_.Insert(component->GetOwner().lock());
     }
   }
 

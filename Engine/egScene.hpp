@@ -97,6 +97,11 @@ namespace Engine
           comp_acc->second.emplace(component->GetID(), component);
         }
       }
+
+      if (which_component<T>::value == COM_T_TRANSFORM)
+      {
+        m_object_position_tree_.Insert(component->GetOwner().lock());
+      }
     }
 
     // Add cache component from the object. Type is deduced in runtime.
