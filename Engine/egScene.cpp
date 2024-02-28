@@ -157,6 +157,7 @@ namespace Engine
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
 
       m_cached_objects_.clear();
+      m_cached_components_.clear();
 
       for (const auto& layer : m_layers)
       {
