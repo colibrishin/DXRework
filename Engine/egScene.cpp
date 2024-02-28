@@ -383,7 +383,21 @@ namespace Engine
           }
         }
 
-        obj.lock()->m_parent_ = FindGameObjectByLocalID(obj.lock()->m_parent_id_).lock();
+        const auto& children = obj.lock()->m_children_;
+
+        for (const auto& child_id : children)
+        {
+          if (const auto child = FindGameObjectByLocalID(child_id).lock())
+          {
+            obj.lock()->m_children_cache_.emplace(child->GetLocalID(), child);
+          }
+        }
+
+        if (const auto parent = FindGameObjectByLocalID(obj.lock()->m_parent_id_).lock())
+        {
+          obj.lock()->m_parent_ = parent;
+        }
+
         obj.lock()->OnDeserialized();
       }
     }
