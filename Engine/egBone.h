@@ -48,4 +48,4 @@ namespace Engine::Resources
   };
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Bone);
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Bone)
