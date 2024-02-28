@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 
 #include "egType.h"
 #include "egMacro.h"
@@ -347,3 +348,8 @@ namespace Engine::Graphics
     UINT  bone_count;
   };
 }
+
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::BonePrimitive)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::BoneAnimationPrimitive)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::AnimationPrimitive)
