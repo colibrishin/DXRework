@@ -19,6 +19,7 @@ namespace Engine::Abstract
     virtual void SetActive(bool active);
     void PostUpdate(const float& dt) override;
 
+    void OnDeserialized() override;
     void OnImGui() override;
 
   protected:
@@ -28,8 +29,7 @@ namespace Engine::Abstract
     SERIALIZER_ACCESS
     friend class Object;
 
-    void SetOwner(const WeakObject& owner) { m_owner_ = owner; }
-
+    void SetOwner(const WeakObject& owner);
     void SetLocalID(LocalComponentID id) { if (const auto locked = m_owner_.lock()) { m_local_id_ = id; } }
 
   private:

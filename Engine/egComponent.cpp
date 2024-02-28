@@ -2,11 +2,13 @@
 #include "egComponent.h"
 
 #include "egImGuiHeler.hpp"
+#include "egSceneManager.hpp"
 
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Abstract::Component,
- _ARTAG(_BSTSUPER(Entity)) _ARTAG(m_local_id_)
+ _ARTAG(_BSTSUPER(Entity)) 
+ _ARTAG(m_local_id_)
  _ARTAG(m_type_)
 )
 
@@ -23,6 +25,11 @@ namespace Engine::Abstract
   void Component::SetActive(bool active) { m_b_active_ = active; }
 
   void Component::PostUpdate(const float& dt) { m_b_ticked_ = true; }
+
+  void Component::OnDeserialized()
+  {
+    Entity::OnDeserialized();
+  }
 
   bool Component::GetActive() const { return m_b_active_; }
 
@@ -41,4 +48,12 @@ namespace Engine::Abstract
       m_owner_(owner),
       m_b_ticked_(false),
       m_b_active_(true) {}
+
+  void Component::SetOwner(const WeakObject& owner)
+  {
+    if (const auto obj = owner.lock())
+    {
+      m_owner_    = owner;
+    }
+  }
 } // namespace Engine::Abstract
