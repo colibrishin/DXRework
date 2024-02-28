@@ -72,6 +72,7 @@ namespace Engine::Resources
     {
       if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
+      if (m_resources_loaded_.at(which_resource<T>::value).size() <= idx) { return {}; }
 
       const auto& anims = m_resources_loaded_.at(which_resource<T>::value);
 
