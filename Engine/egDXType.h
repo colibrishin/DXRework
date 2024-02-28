@@ -65,5 +65,19 @@ namespace Engine::Graphics
     Vector3 binormal;
 
     VertexBoneElement boneElement;
+
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+           ar & position;
+      ar & color;
+      ar & texCoord;
+      ar & normal;
+      ar & tangent;
+      ar & binormal;
+      ar & boneElement;
+    }
   };
 }
