@@ -209,6 +209,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObject(GlobalEntityID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentWeakObjGlobalMap::const_accessor acc;
 
     if (m_cached_objects_.find(acc, id)) { return acc->second; }
@@ -218,6 +220,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObjectByLocalID(LocalActorID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
 
     if (m_assigned_actor_ids_.find(actor_acc, id))
