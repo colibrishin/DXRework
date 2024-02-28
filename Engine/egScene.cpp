@@ -156,6 +156,8 @@ namespace Engine
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
 
+      m_cached_objects_.clear();
+
       for (const auto& layer : m_layers)
       {
         for (const auto& obj : layer->GetGameObjects())
@@ -379,6 +381,9 @@ namespace Engine
             acc->second.emplace(comp.lock()->GetID(), comp);
           }
         }
+
+        obj.lock()->m_parent_ = FindGameObjectByLocalID(obj.lock()->m_parent_id_).lock();
+        obj.lock()->OnDeserialized();
       }
     }
 
