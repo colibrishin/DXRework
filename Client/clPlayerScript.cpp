@@ -130,17 +130,20 @@ namespace Client::Scripts
 
     if (!rb) { return; }
 
-    if (const auto head = m_head_.lock() && !m_top_view_)
+    if constexpr (Engine::g_debug_observer)
     {
-      const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
-      const auto mouse_y = GetMouseManager().GetMouseYRotation();
-      head_tr->SetLocalRotation(mouse_y);
+      if (const auto head = m_head_.lock() && !m_top_view_)
+      {
+        const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+        const auto mouse_y = GetMouseManager().GetMouseYRotation();
+        head_tr->SetLocalRotation(mouse_y);
+      }
+
+      const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
+      const auto mouse_x = GetMouseManager().GetMouseXRotation();
+
+      body_tr->SetLocalRotation(mouse_x);
     }
-
-    const auto body_tr = GetOwner().lock()->GetComponent<Components::Transform>().lock();
-    const auto mouse_x = GetMouseManager().GetMouseXRotation();
-
-    body_tr->SetLocalRotation(mouse_x);
 
     CheckJump(rb);
     CheckMove(rb);
@@ -352,6 +355,11 @@ namespace Client::Scripts
 
   void PlayerScript::CheckMove(const boost::shared_ptr<Components::Rigidbody>& rb)
   {
+    if constexpr (Engine::g_debug_observer)
+    {
+      return;
+    }
+
     float      speed = 10.0f;
     const auto scene = GetOwner().lock()->GetScene().lock();
 
@@ -412,6 +420,11 @@ namespace Client::Scripts
 
   void PlayerScript::CheckAttack(const float& dt)
   {
+    if constexpr (Engine::g_debug_observer)
+    {
+      return;
+    }
+
     if (GetApplication().GetMouseState().leftButton)
     {
       SetState(CHAR_STATE_ATTACK);
@@ -498,55 +511,57 @@ namespace Client::Scripts
 
     if (!mtl) { return; }
 
-    const auto anim   = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock();
-    auto       deform = anim->GetFrameAnimation(atr->GetFrame());
-    const auto rb     = obj->GetComponent<Components::Rigidbody>().lock();
-    Vector3    min    = {FLT_MAX, FLT_MAX, FLT_MAX};
-    Vector3    max    = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
-
-    for (const auto& [idx, id] : m_child_bones_)
+    if (const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
     {
-      const auto child = obj->GetChild(id).lock();
+      auto       deform = anim->GetFrameAnimation(atr->GetFrame());
+      const auto rb     = obj->GetComponent<Components::Rigidbody>().lock();
+      Vector3    min    = {FLT_MAX, FLT_MAX, FLT_MAX};
+      Vector3    max    = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-      const auto ctr = child->GetComponent<Components::Transform>().lock();
-      ctr->SetAnimationMatrix(deform[idx]);
-
-      static const std::vector<Vector3> stock_vertices
+      for (const auto& [idx, id] : m_child_bones_)
       {
-        {0.5f, 0.5f, 0.5f},
-        {0.5f, -0.5f, 0.5f},
-        {-0.5f, -0.5f, 0.5f},
-        {-0.5f, 0.5f, 0.5f},
-        {0.5f, 0.5f, -0.5f},
-        {0.5f, -0.5f, -0.5f},
-        {-0.5f, -0.5f, -0.5f},
-        {-0.5f, 0.5f, -0.5f},
-      };
+        const auto child = obj->GetChild(id).lock();
 
-      std::vector<Vector3> out_vertices;
-      out_vertices.resize(stock_vertices.size());
+        const auto ctr = child->GetComponent<Components::Transform>().lock();
+        ctr->SetAnimationMatrix(deform[idx]);
 
-      XMVector3TransformCoordStream
-        (
-         out_vertices.data(),
-         sizeof(Vector3),
-         stock_vertices.data(),
-         sizeof(Vector3),
-         stock_vertices.size(),
-         ctr->GetLocalMatrix()
-        );
+        static const std::vector<Vector3> stock_vertices
+        {
+          {0.5f, 0.5f, 0.5f},
+          {0.5f, -0.5f, 0.5f},
+          {-0.5f, -0.5f, 0.5f},
+          {-0.5f, 0.5f, 0.5f},
+          {0.5f, 0.5f, -0.5f},
+          {0.5f, -0.5f, -0.5f},
+          {-0.5f, -0.5f, -0.5f},
+          {-0.5f, 0.5f, -0.5f},
+        };
 
-      for (const auto& v : out_vertices)
-      {
-        min = Vector3::Min(min, v);
-        max = Vector3::Max(max, v);
+        std::vector<Vector3> out_vertices;
+        out_vertices.resize(stock_vertices.size());
+
+        XMVector3TransformCoordStream
+          (
+           out_vertices.data(),
+           sizeof(Vector3),
+           stock_vertices.data(),
+           sizeof(Vector3),
+           stock_vertices.size(),
+           ctr->GetLocalMatrix()
+          );
+
+        for (const auto& v : out_vertices)
+        {
+          min = Vector3::Min(min, v);
+          max = Vector3::Max(max, v);
+        }
       }
-    }
 
-    BoundingOrientedBox new_obb;
-    BoundingBox         bb;
-    BoundingBox::CreateFromPoints(bb, min, max);
-    BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
-    cl->SetBoundingBox(new_obb);
+      BoundingOrientedBox new_obb;
+      BoundingBox         bb;
+      BoundingBox::CreateFromPoints(bb, min, max);
+      BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
+      cl->SetBoundingBox(new_obb);
+    }
   }
 }
