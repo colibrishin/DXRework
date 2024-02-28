@@ -185,18 +185,6 @@ namespace Engine::Manager
 
         return *it;
       }
-      else
-      {
-        if (std::filesystem::exists(path))
-        {
-          const auto res = Serializer::Deserialize<Abstract::Resource>(path.generic_string());
-          if (res->GetResourceType() != type) { return {}; }
-
-          m_resources_[type].insert(res);
-          res->Load();
-          return res;
-        }
-      }
 
       return {};
     }
