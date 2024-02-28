@@ -33,6 +33,8 @@ namespace Engine::Objects
     SERIALIZER_ACCESS
     Text();
 
+    MetadataPathStr m_font_meta_path_str_;
+
     Vector2     m_position_;
     Color     m_color_;
     float       m_rotation_radian_;
