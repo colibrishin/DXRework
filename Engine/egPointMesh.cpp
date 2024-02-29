@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egPointMesh.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Meshes::PointMesh, _ARTAG(_BSTSUPER(Mesh)));
+SERIALIZER_ACCESS_IMPL(Engine::Meshes::PointMesh, _ARTAG(_BSTSUPER(Mesh)))
 
 namespace Engine::Meshes
 {
