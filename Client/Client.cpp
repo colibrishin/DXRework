@@ -82,7 +82,7 @@ namespace Client
   void InitializeModel()
   {
     Resources::Shape::Create("BobShape", "./bob_lamp_update_export.fbx");
-    Resources::Shape::Create("CharacterShape", "./Character.fbx");
+    //Resources::Shape::Create("CharacterShape", "./Character.fbx");
     Resources::Shape::Create("RifleShape", "./Rifle.fbx");
     Resources::Shape::Create("PlayerShape", "./player.obj");
     Resources::Shape::Create("MissileShape", "./Rocket.fbx");
@@ -151,7 +151,7 @@ namespace Client
       mtr->SetResource<Resources::Shape>("MissileShape");
     }
 
-    {
+    /*{
       const auto mtr = Resources::Material::Create("Character", "");
       mtr->SetResource<Resources::Shader>("color");
 
@@ -161,7 +161,7 @@ namespace Client
       }
 
       mtr->SetResource<Resources::Shape>("CharacterShape");
-    }
+    }*/
 
     {
       const auto mtr = Resources::Material::Create("ThunderSkybox", "");
