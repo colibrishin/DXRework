@@ -134,4 +134,5 @@ namespace Engine::Resources
   };
 } // namespace Engine::Resources
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::Texture)
 BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

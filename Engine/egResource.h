@@ -44,4 +44,5 @@ namespace Engine::Abstract
   };
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Resource)
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Resource)
