@@ -29,7 +29,6 @@ namespace Engine::Abstract
 
     virtual void Load_INTERNAL() = 0;
     virtual void Unload_INTERNAL() = 0;
-    virtual void serializeImpl() = 0;
 
   private:
     Resource();
@@ -37,7 +36,6 @@ namespace Engine::Abstract
     friend class Engine::Manager::ResourceManager;
 
     bool                  m_bLoaded_;
-    std::string           m_meta_str_; // for serialization
     std::string           m_path_str_; // for serialization
     eResourceType         m_type_;
 

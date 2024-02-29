@@ -7,6 +7,7 @@
   friend class boost::serialization::access;                                   \
   template <class Archive>                                                     \
   void serialize(Archive &ar, const unsigned int file_version);
+
 // part of serialization access implementation, forward declaration of serialize
 // function
 #define SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                \
@@ -14,7 +15,8 @@
       boost::archive::text_iarchive & ar, const unsigned int file_version);    \
   template void NAMESPACE_TYPE::serialize<boost::archive::text_oarchive>(      \
       boost::archive::text_oarchive & ar, const unsigned int file_version);    \
-  BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE)
+    BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE)
+
 // serialization macros
 #define _ARTAG(TYPENAME) ar & TYPENAME;
 // serialization macros, requires if object is inherited from another object
@@ -88,11 +90,6 @@
         GetResourceManager().AddResource(name, obj);                          \
         return obj;                                                           \
     }
-
-#define RESOURCE_SERIALIZER_OVERRIDE(TYPE)                                    \
-  void serializeImpl() override {                                             \
-    Serializer::Serialize(GetName(), GetSharedPtr<TYPE>());                   \
-  }
 
 // invalid id check for weak pointer
 #define INVALID_ID_CHECK_WEAK_RETURN(ID)                                      \
