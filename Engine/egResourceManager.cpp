@@ -7,6 +7,8 @@
 #include "egImGuiHeler.hpp"
 #include "egResourceManagerMeta.hpp"
 
+#include "egResource.h"
+
 namespace Engine::Manager
 {
   void ResourceManager::Initialize() {}
@@ -124,7 +126,68 @@ namespace Engine::Manager
     }
   }
 
-  void ResourceManager::OpenNewShaderDialog()
+  WeakResource ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
+  {
+    if (path.empty()) { return {}; }
+
+    auto& resources = m_resources_[type];
+    auto  it        = std::find_if
+      (
+       resources.begin(), resources.end(), [&path](const StrongResource& resource)
+       {
+         return resource->GetPath() == path;
+       }
+      );
+
+    if (it != resources.end())
+    {
+      if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+      return *it;
+    }
+
+    return {};
+  }
+
+  WeakResource ResourceManager::GetResourceByMetadataPath(
+    const std::filesystem::path& path, const eResourceType type
+  )
+  {
+    if (path.empty())
+    {
+      return {};
+    }
+
+    auto& resources = m_resources_[type];
+    auto  it        = std::find_if
+      (
+       resources.begin(), resources.end(), [&path](const StrongResource& resource)
+       {
+         return resource->GetMetadataPath() == path;
+       }
+      );
+
+    if (it != resources.end())
+    {
+      if (!(*it)->IsLoaded()) { (*it)->Load(); }
+
+      return *it;
+    }
+    else
+    {
+      if (std::filesystem::exists(path))
+      {
+        const auto res = Serializer::Deserialize<Entity>(path.generic_string())->GetSharedPtr<Abstract::Resource>();
+        m_resources_[type].insert(res);
+        res->Load();
+        return res;
+      }
+    }
+
+    return {};
+  }
+
+  void       ResourceManager::OpenNewShaderDialog()
   {
     if (m_b_imgui_load_shader_dialog_)
     {

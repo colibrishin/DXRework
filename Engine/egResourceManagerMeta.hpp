@@ -35,7 +35,7 @@ namespace Engine::Manager
 
           if (ImGui::Button("Load"))
           {
-            const auto resource = Serializer::Deserialize<T>(buf);
+            const auto resource = Serializer::Deserialize<Abstract::Entity>(buf)->GetSharedPtr<T>();
             GetResourceManager().AddResource<T>(resource);
 
             flag = false;
