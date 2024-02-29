@@ -103,7 +103,7 @@ namespace Engine::Components
   {
     if (const auto locked = model.lock())
     {
-      m_shape_meta_path_ = locked->GetPath();
+      m_shape_meta_path_ = locked->GetMetadataPath();
       m_shape_    = locked;
 
       BoundingOrientedBox obb;
