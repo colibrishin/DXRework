@@ -495,7 +495,7 @@ namespace Engine::Manager::Graphics
         m_device_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT,
         bind_flag,
         0,
-        D3D11_RESOURCE_MISC_GENERATE_MIPS, DDS_LOADER_DEFAULT, texture,
+        0, DDS_LOADER_DEFAULT, texture,
         shader_resource_view
        )
       );
@@ -507,7 +507,7 @@ namespace Engine::Manager::Graphics
          CreateWICTextureFromFileEx
          (
           m_device_.Get(), m_context_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT, bind_flag,
-          0, D3D11_RESOURCE_MISC_GENERATE_MIPS,
+          0, 0,
           WIC_LOADER_DEFAULT, texture, shader_resource_view
          )
         );
