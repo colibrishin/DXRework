@@ -67,9 +67,10 @@ namespace Engine::Resources
 
   Texture::Texture()
     : Resource("", RES_T_TEX),
-      m_b_lazy_window_(true),
       m_desc_({}),
       m_type_(TEX_TYPE_2D),
+      m_custom_desc_{ false },
+      m_b_lazy_window_(true),
       m_bind_to_(D3D11_BIND_SHADER_RESOURCE),
       m_bound_slot_(BIND_SLOT_TEX),
       m_bound_slot_offset_(0),
@@ -402,7 +403,7 @@ namespace Engine::Resources
   void Texture::OnSerialized()
   {
     const auto name = GetName();
-    const auto wstr = std::wstring(name.begin(), name.end());
+    const auto wstr = std::wstring(name.begin(), name.end()) + L".dds";
 
     if (m_res_)
     {
@@ -427,6 +428,8 @@ namespace Engine::Resources
              wstr.c_str()
          )
         );
+
+      SetPath(wstr);
     }
   }
 
