@@ -31,6 +31,11 @@ bool& Engine::Abstract::Entity::IsImGuiOpened() { return m_b_imgui_opened_; }
 
 void Engine::Abstract::Entity::Initialize() { m_b_initialized_ = true; }
 
+void Engine::Abstract::Entity::OnSerialized()
+{
+  m_meta_path_ = m_meta_str_;
+}
+
 void Engine::Abstract::Entity::OnDeserialized()
 {
   m_b_initialized_ = false;
@@ -41,4 +46,11 @@ void Engine::Abstract::Entity::OnImGui()
 {
   lldDisabled("Entity ID", GetID());
   TextAligned("Name", m_name_);
+  TextDisabled("Metadata Path", m_meta_str_);
+
+  if (ImGui::Button("Save")) 
+  {
+	  Serializer::Serialize(GetName(), GetSharedPtr<Entity>());
+  }
 }
+
