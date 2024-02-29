@@ -16,9 +16,10 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Resources::Shape,
  _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_bone_)
- _ARTAG(m_meshes_)
  _ARTAG(m_animation_catalog_)
+ _ARTAG(m_animations_path_)
+ _ARTAG(m_bone_path_)
+ _ARTAG(m_mesh_paths_)
  _ARTAG(m_bounding_box_)
  _ARTAG(m_bone_bounding_boxes_)
 )
@@ -68,9 +69,10 @@ namespace Engine::Resources
 
   void Shape::OnSerialized()
   {
-    for (const auto& mesh : m_meshes_)
+    for (int i = 0; i < m_meshes_.size(); ++i)
     {
-      Serializer::Serialize(mesh->GetName(), mesh);
+      Serializer::Serialize(m_meshes_[i]->GetName(), m_meshes_[i]);
+      m_mesh_paths_[i] = m_meshes_[i]->GetMetadataPath().generic_string();
     }
 
     for (const auto& animation : m_animation_catalog_)
@@ -84,17 +86,20 @@ namespace Engine::Resources
     if (m_bone_)
     {
       Serializer::Serialize(m_bone_->GetName(), m_bone_);
+      m_bone_path_ = m_bone_->GetMetadataPath().generic_string();
     }
 
     if (m_animations_)
     {
       Serializer::Serialize(m_animations_->GetName(), m_animations_);
+      m_animations_path_ = m_animations_->GetMetadataPath().generic_string();
     }
   }
 
   void Shape::OnDeserialized()
   {
     Resource::OnDeserialized();
+
     Load();
   }
 
@@ -148,6 +153,25 @@ namespace Engine::Resources
   void Shape::Load_INTERNAL()
   {
     if (GetPath().empty()) { return; }
+
+    if (!GetMetadataPath().empty())
+    {
+      for (int i = 0; i < m_mesh_paths_.size(); ++i)
+      {
+        if (const auto mesh = GetResourceManager().GetResourceByMetadataPath<Mesh>
+          (m_mesh_paths_[i]).lock()) { m_meshes_.push_back(mesh); }
+      }
+
+      if (const auto bone = GetResourceManager().GetResourceByMetadataPath<Bone>
+        (m_bone_path_).lock()) { m_bone_ = bone; }
+
+      if (const auto anims = GetResourceManager().GetResourceByMetadataPath<AnimationsTexture>
+        (m_animations_path_).lock()) { m_animations_ = anims; }
+
+      UpdateVertices();
+
+      return;
+    }
 
     const auto scene = s_importer_.ReadFile
       (
@@ -307,6 +331,7 @@ namespace Engine::Resources
           bone->SetName(mesh_lookup_name + "_BONE");
           GetResourceManager().AddResource(bone);
           bone->Load();
+          m_bone_path_ = bone->GetMetadataPath().generic_string();
           m_bone_ = bone;
         }
 
@@ -314,6 +339,7 @@ namespace Engine::Resources
         mesh->SetName(mesh_lookup_name);
         mesh->Load();
         GetResourceManager().AddResource(mesh);
+        m_mesh_paths_.push_back(mesh->GetMetadataPath().generic_string());
         m_meshes_.push_back(mesh);
       }
 
@@ -458,6 +484,7 @@ namespace Engine::Resources
         anims->SetName(GetName() + "_ANIMS");
         anims->Load();
         GetResourceManager().AddResource(anims);
+        m_animations_path_ = anims->GetMetadataPath().generic_string();
         m_animations_ = anims;
       }
 
