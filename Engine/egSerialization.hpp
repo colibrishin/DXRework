@@ -587,7 +587,14 @@ namespace Engine
       //  final_path = buffer;
       //}
 
-      std::filesystem::path final_path = fixed_name;
+      const std::filesystem::path folder = object->GetPrettyTypeName();
+
+      if (!std::filesystem::exists(folder))
+      {
+        std::filesystem::create_directory(folder);
+      }
+
+      std::filesystem::path final_path =  folder / fixed_name;
       object->m_meta_path_             = final_path.concat(extension);
       object->m_meta_str_              = final_path.string();
 
