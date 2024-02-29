@@ -20,6 +20,7 @@ namespace Engine::Abstract
     GlobalEntityID               GetID() const;
     EntityName                   GetName() const;
     TypeName                     GetTypeName() const;
+    virtual TypeName             GetPrettyTypeName() const;
     bool                         IsGarbage() const;
     bool                         IsInitialized() const;
     bool&                        IsImGuiOpened();
