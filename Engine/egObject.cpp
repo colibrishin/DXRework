@@ -23,6 +23,7 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(m_active_)
  _ARTAG(m_culled_)
  _ARTAG(m_components_)
+ _ARTAG(m_scripts_)
 )
 
 namespace Engine::Abstract
@@ -276,6 +277,12 @@ namespace Engine::Abstract
       comp->OnDeserialized();
       m_assigned_component_ids_.insert(comp->GetLocalID());
       m_cached_component_.insert(comp);
+    }
+
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      script->SetOwner(GetSharedPtr<Object>());
+      script->OnDeserialized();
     }
   }
 

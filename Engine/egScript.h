@@ -28,6 +28,9 @@ namespace Engine
 
   private:
     SERIALIZER_ACCESS
+    friend class Abstract::Object;
+
+    void SetOwner(const WeakObject& owner);
 
     eScriptType m_type_;
     WeakObject m_owner_;
