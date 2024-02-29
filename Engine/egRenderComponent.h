@@ -10,8 +10,8 @@ namespace Engine::Components::Base
 
     explicit RenderComponent(eRenderComponentType type, const WeakObject& owner)
       : Component(COM_T_RENDERER, owner),
-        m_mtr_meta_path_(),
-        m_type_(type) {}
+        m_type_(type),
+        m_mtr_meta_path_() {}
 
     void SetMaterial(const WeakMaterial& material) noexcept;
 
