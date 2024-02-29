@@ -20,6 +20,7 @@ SERIALIZER_ACCESS_IMPL
  Client::Scripts::PlayerScript,
  _ARTAG(_BSTSUPER(Script)) _ARTAG(m_hp_) _ARTAG(m_state_) _ARTAG(m_prev_state_)
  _ARTAG(m_top_view_) _ARTAG(m_cam_id_) _ARTAG(m_shoot_interval)
+ _ARTAG(m_bone_initialized_) _ARTAG(m_rifle_initialized_) _ARTAG(m_health_initialized_)
 )
 
 namespace Client::Scripts
@@ -184,6 +185,26 @@ namespace Client::Scripts
   {
     MoveCameraToChild(active);
     Script::SetActive(active);
+  }
+
+  void PlayerScript::OnDeserialized()
+  {
+    Script::OnDeserialized();
+    if (m_bone_initialized_)
+    {
+      const auto& children = GetOwner().lock()->GetChildren();
+
+      for (const auto& child : children)
+      {
+        if (const auto candidate = child.lock())
+        {
+          if (candidate->GetName() == "Bone5")
+          {
+            m_head_ = candidate;
+          }
+        }
+      }
+    }
   }
 
   void PlayerScript::OnImGui()
