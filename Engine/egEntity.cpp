@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "egEntity.hpp"
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-
 #include "egImGuiHeler.hpp"
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"

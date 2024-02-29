@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -17,6 +17,8 @@
 #include <boost/serialization/version.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 
+#include "egEntity.hpp"
+
 namespace boost::serialization
 {
   // Vector2 serialization
@@ -26,8 +28,7 @@ namespace boost::serialization
     const unsigned int version
   )
   {
-    ar & x.x;
-    ar & x.y;
+    ar & base_object<DirectX::XMFLOAT2>(x);
   }
 
   // Vector3 serialization
@@ -37,9 +38,7 @@ namespace boost::serialization
     const unsigned int version
   )
   {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
+    ar & base_object<DirectX::XMFLOAT3>(x);
   }
 
   // Vector4 serialization
@@ -49,10 +48,7 @@ namespace boost::serialization
     const unsigned int version
   )
   {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
-    ar & x.w;
+    ar & base_object<DirectX::XMFLOAT4>(x);
   }
 
   // Color serialization
@@ -62,10 +58,7 @@ namespace boost::serialization
     const unsigned int version
   )
   {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
-    ar & x.w;
+    ar & base_object<DirectX::XMFLOAT4>(x);
   }
 
   // Quaternion serialization
@@ -75,10 +68,7 @@ namespace boost::serialization
     const unsigned int version
   )
   {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
-    ar & x.w;
+    ar & base_object<DirectX::XMFLOAT4>(x);
   }
 
   // Matrix serialization
@@ -87,6 +77,48 @@ namespace boost::serialization
     Archive&           ar, DirectX::SimpleMath::Matrix& x,
     const unsigned int version
   )
+  {
+    ar & base_object<DirectX::XMFLOAT4X4>(x);
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, DirectX::XMFLOAT2& x,
+    const unsigned int version
+  )
+  {
+    ar & x.x;
+    ar & x.y;
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, DirectX::XMFLOAT3& x,
+    const unsigned int version
+  )
+  {
+    ar & x.x;
+    ar & x.y;
+    ar & x.z;
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, DirectX::XMFLOAT4& x,
+    const unsigned int version
+  )
+  {
+    ar & x.x;
+    ar & x.y;
+    ar & x.z;
+    ar & x.w;
+  }
+
+  template <class Archive>
+  void serialize(
+     Archive&           ar, DirectX::XMFLOAT4X4& x,
+         const unsigned int version
+   )
   {
     ar & x._11;
     ar & x._12;
@@ -104,32 +136,6 @@ namespace boost::serialization
     ar & x._42;
     ar & x._43;
     ar & x._44;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, Engine::Graphics::VertexElement& x,
-    const unsigned int version
-  )
-  {
-    ar & x.position;
-    ar & x.texCoord;
-    ar & x.normal;
-    ar & x.tangent;
-    ar & x.binormal;
-    ar & x.color;
-    ar & x.boneElement;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, DirectX::XMFLOAT3& x,
-    const unsigned int version
-  )
-  {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
   }
 
   template <class Archive>
@@ -161,18 +167,6 @@ namespace boost::serialization
   {
     ar & x.Center;
     ar & x.Radius;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, DirectX::XMFLOAT4& x,
-    const unsigned int version
-  )
-  {
-    ar & x.x;
-    ar & x.y;
-    ar & x.z;
-    ar & x.w;
   }
 
   template <class Archive>
@@ -585,7 +579,7 @@ namespace Engine
       //std::string           tagged_filename = fixed_name + "_%d";
       //char                  buffer[1024]    = {};
       //std::filesystem::path final_path      = fixed_name;
-      std::string           extension       = ".meta";
+      std::string extension = ".meta";
 
       //while (std::filesystem::exists(final_path.string() + extension))
       //{
@@ -594,30 +588,29 @@ namespace Engine
       //}
 
       std::filesystem::path final_path = fixed_name;
-      object->m_meta_path_ = final_path.concat(extension);
-      object->m_meta_str_  = final_path.string();
+      object->m_meta_path_             = final_path.concat(extension);
+      object->m_meta_str_              = final_path.string();
 
-      std::fstream                  stream(final_path, std::ios::out);
-      boost::archive::text_oarchive archive(stream);
-      archive << object;
+      const auto entity = boost::static_pointer_cast<Abstract::Entity>(object);
+
+      std::fstream                    stream(final_path, std::ios::out | std::ios::binary);
+      boost::archive::binary_oarchive archive(stream);
+      archive << entity;
       return true;
     }
 
     template <typename T>
     static boost::shared_ptr<T> Deserialize(const std::string& filename)
     {
-      boost::shared_ptr<T>          object;
-      std::fstream                  stream(filename, std::ios::in);
+      boost::shared_ptr<Abstract::Entity> object;
+      std::fstream                        stream(filename, std::ios::in  | std::ios::binary);
 
-      if (!stream.is_open())
-      {
-        throw std::runtime_error("Failed to open file for deserialization");
-      }
+      if (!stream.is_open()) { throw std::runtime_error("Failed to open file for deserialization"); }
 
-      boost::archive::text_iarchive archive(stream);
+      boost::archive::binary_iarchive archive(stream);
       archive >> object;
       object->OnDeserialized();
-      return object;
+      return boost::static_pointer_cast<T>(object);
     }
   };
 } // namespace Engine

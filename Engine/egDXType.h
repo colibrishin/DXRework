@@ -66,12 +66,13 @@ namespace Engine::Graphics
 
     VertexBoneElement boneElement;
 
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version)
     {
-           ar & position;
+      ar & position;
       ar & color;
       ar & texCoord;
       ar & normal;
@@ -81,3 +82,6 @@ namespace Engine::Graphics
     }
   };
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::MaterialBindFlag)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexElement)
