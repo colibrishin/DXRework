@@ -58,6 +58,8 @@ namespace Engine::Resources
     {
       m_bone_ = GetResourceManager().GetResourceByMetadataPath<Resources::Bone>(m_bone_meta_path_str_).lock();
     }
+
+    m_primitive_.RebuildIndexCache();
   }
 
   void BoneAnimation::BindBone(const WeakBone& bone_info)
