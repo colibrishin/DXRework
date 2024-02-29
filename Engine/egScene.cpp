@@ -156,15 +156,35 @@ namespace Engine
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
 
+      m_cached_objects_.clear();
+      m_cached_components_.clear();
+
       for (const auto& layer : m_layers)
       {
         for (const auto& obj : layer->GetGameObjects())
         {
-          m_cached_objects_.emplace(obj.lock()->GetID(), obj);
-
-          for (const auto& comp : obj.lock()->GetAllComponents())
+          if (const auto locked = obj.lock())
           {
-            AddCacheComponent(comp.lock());
+            m_cached_objects_.emplace(locked->GetID(), obj);
+
+            locked->SetScene(GetSharedPtr<Scene>());
+
+            for (const auto& comp : locked->GetAllComponents()) { AddCacheComponent(comp.lock()); }
+
+            const auto& children = locked->m_children_;
+
+            for (const auto& child_id : children)
+            {
+              if (const auto child = FindGameObjectByLocalID(child_id).lock())
+              {
+                locked->m_children_cache_.emplace(child->GetLocalID(), child);
+              }
+            }
+
+            if (const auto parent = FindGameObjectByLocalID(locked->m_parent_id_).lock())
+            {
+              locked->m_parent_ = parent;
+            }
           }
         }
       }
@@ -209,6 +229,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObject(GlobalEntityID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentWeakObjGlobalMap::const_accessor acc;
 
     if (m_cached_objects_.find(acc, id)) { return acc->second; }
@@ -218,6 +240,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObjectByLocalID(LocalActorID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
 
     if (m_assigned_actor_ids_.find(actor_acc, id))
@@ -305,10 +329,7 @@ namespace Engine
 
   void Scene::Save()
   {
-    auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-    std::ranges::replace(name, ' ', '_');
-    std::ranges::replace(name, ':', '_');
-    name += ".txt";
+    const auto name = std::to_string(GetID()) + " " + typeid(*this).name();
 
     Serializer::Serialize(name, GetSharedPtr<Scene>());
   }
@@ -375,6 +396,29 @@ namespace Engine
             acc->second.emplace(comp.lock()->GetID(), comp);
           }
         }
+      }
+    }
+
+    for (const auto& layer : m_layers)
+    {
+      for (const auto& obj : layer->GetGameObjects())
+      {
+        const auto& children = obj.lock()->m_children_;
+
+        for (const auto& child_id : children)
+        {
+          if (const auto child = FindGameObjectByLocalID(child_id).lock())
+          {
+            obj.lock()->m_children_cache_.emplace(child->GetLocalID(), child);
+          }
+        }
+
+        if (const auto parent = FindGameObjectByLocalID(obj.lock()->m_parent_id_).lock())
+        {
+          obj.lock()->m_parent_ = parent;
+        }
+
+        obj.lock()->OnDeserialized();
       }
     }
 

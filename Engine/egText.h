@@ -27,11 +27,14 @@ namespace Engine::Objects
     void SetRotation(float radian);
     void SetScale(float scale);
 
+    void OnSerialized() override;
     void OnImGui() override;
 
   private:
     SERIALIZER_ACCESS
     Text();
+
+    MetadataPathStr m_font_meta_path_str_;
 
     Vector2     m_position_;
     Color     m_color_;

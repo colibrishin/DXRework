@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "egResource.h"
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-
 #include <imgui_stdlib.h>
 
 #include "egImGuiHeler.hpp"
@@ -47,14 +43,7 @@ namespace Engine::Abstract
     ImGui::Indent(2);
     ImGui::Checkbox("Loaded", &m_bLoaded_);
     TextDisabled("Resource Path", m_path_str_);
-    TextDisabled("Metadata Path", m_meta_str_);
     ImGui::Unindent(2);
-
-    if (ImGui::Button("Save"))
-    {
-      // todo: future + promise (async)
-      serializeImpl();
-    }
   }
 
   Resource::Resource(std::filesystem::path path, eResourceType type)
@@ -68,6 +57,7 @@ namespace Engine::Abstract
 
   void Resource::OnDeserialized()
   {
+    Renderable::OnDeserialized();
     m_bLoaded_ = false;
     m_path_    = m_path_str_;
   }

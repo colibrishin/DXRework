@@ -103,7 +103,7 @@ namespace Engine::Components
   {
     if (const auto locked = model.lock())
     {
-      m_shape_meta_path_ = locked->GetPath();
+      m_shape_meta_path_ = locked->GetMetadataPath();
       m_shape_    = locked;
 
       BoundingOrientedBox obb;
@@ -219,6 +219,8 @@ namespace Engine::Components
     if (const auto shape = m_shape_.lock())
     {
       Serializer::Serialize(shape->GetName(), shape);
+      m_shape_meta_path_str_ = shape->GetMetadataPath().string();
+      m_shape_meta_path_     = shape->GetMetadataPath();
     }
   }
 
@@ -228,7 +230,11 @@ namespace Engine::Components
 
     InitializeStockVertices();
     m_shape_meta_path_ = m_shape_meta_path_str_;
-    m_shape_           = Resources::Shape::GetByMetadataPath(m_shape_meta_path_);
+
+    if (!m_shape_meta_path_.empty())
+    {
+      SetShape(Resources::Shape::GetByMetadataPath(m_shape_meta_path_));
+    }
 
     if (m_type_ == BOUNDING_TYPE_BOX) { GenerateInertiaCube(); }
     else if (m_type_ == BOUNDING_TYPE_SPHERE) { GenerateInertiaSphere(); }

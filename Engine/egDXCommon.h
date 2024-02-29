@@ -1,5 +1,8 @@
 #pragma once
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/base_object.hpp>
+
 #include "egConstant.h"
 #include "egDXType.h"
 #include "egMacro.h"
@@ -77,6 +80,14 @@ namespace Engine::Graphics
     {
       SB_T(SB_TYPE_INSTANCE)
       SB_UAV_T(SB_TYPE_UAV_INSTANCE)
+
+    private:
+      friend class boost::serialization::access;
+      template <class Archive>
+      void serialize(Archive& ar, const unsigned int file_version)
+      {
+        ar & boost::serialization::base_object<ParamBase>(*this);
+      }
     };
 
     struct InstanceModelSB : public InstanceSB
@@ -186,3 +197,7 @@ namespace Engine::Graphics
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
   }} // namespace Engine
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::ParamBase)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::CBs::MaterialCB)

@@ -10,8 +10,8 @@ namespace Engine::Components::Base
 
     explicit RenderComponent(eRenderComponentType type, const WeakObject& owner)
       : Component(COM_T_RENDERER, owner),
-        m_mtr_meta_path_(),
-        m_type_(type) {}
+        m_type_(type),
+        m_mtr_meta_path_() {}
 
     void SetMaterial(const WeakMaterial& material) noexcept;
 
@@ -36,4 +36,5 @@ namespace Engine::Components::Base
   };
 }
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Components::Base::RenderComponent)
 BOOST_CLASS_EXPORT_KEY(Engine::Components::Base::RenderComponent)

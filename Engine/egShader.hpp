@@ -49,8 +49,7 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(Shader)
-
+    
     inline static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version =
     {
       {SHADER_VERTEX, "vs_main", "vs_5_0"},

@@ -36,7 +36,7 @@ namespace Engine::Abstract
     virtual void PostUpdate(const float& dt) = 0;
     virtual void FixedUpdate(const float& dt) = 0;
 
-    virtual void OnSerialized() = 0;
+    virtual void OnSerialized();
     virtual void OnDeserialized();
     virtual void OnImGui();
 
@@ -62,4 +62,5 @@ namespace Engine::Abstract
   };
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Entity)
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Entity)

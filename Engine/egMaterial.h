@@ -72,6 +72,7 @@ namespace Engine::Resources
     {
       if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
+      if (m_resources_loaded_.at(which_resource<T>::value).size() <= idx) { return {}; }
 
       const auto& anims = m_resources_loaded_.at(which_resource<T>::value);
 
@@ -86,8 +87,7 @@ namespace Engine::Resources
   protected:
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(Material)
-
+    
   private:
     SERIALIZER_ACCESS
     Material();

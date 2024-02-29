@@ -34,6 +34,8 @@ namespace Client::Scripts
     void PostRender(const float& dt) override;
 
     void SetActive(bool active) override;
+
+    void OnDeserialized() override;
     void OnImGui() override;
 
     UINT GetHealth() const;

@@ -18,3 +18,5 @@ void Engine::Script::OnSerialized() {}
 Engine::Script::Script()
   : m_type_(),
     m_b_active_(true) {}
+
+void Engine::Script::SetOwner(const WeakObject& owner) { m_owner_ = owner; }

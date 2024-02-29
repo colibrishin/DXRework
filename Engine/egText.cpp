@@ -7,7 +7,8 @@
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Objects::Text,
- _ARTAG(_BSTSUPER(Object)) _ARTAG(m_position_)
+ _ARTAG(_BSTSUPER(Object)) 
+ _ARTAG(m_font_meta_path_str_) _ARTAG(m_position_)
  _ARTAG(m_color_) _ARTAG(m_scale_) _ARTAG(m_text_)
 )
 
@@ -30,6 +31,14 @@ namespace Engine::Objects
   void Text::SetRotation(const float radian) { m_rotation_radian_ = radian; }
 
   void Text::SetScale(const float scale) { m_scale_ = scale; }
+
+  void Text::OnSerialized()
+  {
+    Object::OnSerialized();
+
+    Serializer::Serialize(m_font_->GetName(), m_font_);
+    m_font_meta_path_str_ = m_font_->GetMetadataPath().string();
+  }
 
   void Text::OnImGui()
   {
@@ -90,5 +99,10 @@ namespace Engine::Objects
 
   void Text::PostRender(const float& dt) { Object::PostRender(dt); }
 
-  void Text::OnDeserialized() { Object::OnDeserialized(); }
+  void Text::OnDeserialized()
+  {
+    Object::OnDeserialized();
+
+    m_font_ = Resources::Font::GetByMetadataPath(m_font_meta_path_str_).lock();
+  }
 } // namespace Engine::Objects

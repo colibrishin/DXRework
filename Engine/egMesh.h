@@ -46,8 +46,7 @@ namespace Engine::Resources
     void         Load_INTERNAL() final;
     virtual void Load_CUSTOM();
     void         Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(Mesh)
-
+    
     static void __vectorcall GenerateTangentBinormal(
       const Vector3& v0, const Vector3&  v1,
       const Vector3& v2, const Vector2&  uv0,

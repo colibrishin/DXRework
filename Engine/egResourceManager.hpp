@@ -89,6 +89,8 @@ namespace Engine::Manager
     template <typename T>
     boost::weak_ptr<T> GetResourceByRawPath(const std::filesystem::path& path)
     {
+      if (path.empty()) { return {}; }
+
       auto& resources = m_resources_[which_resource<T>::value];
       auto  it        = std::find_if
         (
@@ -111,6 +113,8 @@ namespace Engine::Manager
     template <typename T>
     boost::weak_ptr<T> GetResourceByMetadataPath(const std::filesystem::path& path)
     {
+      if (path.empty()) { return {}; }
+
       auto& resources = m_resources_[which_resource<T>::value];
       auto  it        = std::find_if
         (
@@ -130,7 +134,7 @@ namespace Engine::Manager
       {
         if (std::filesystem::exists(path))
         {
-          const auto res = Serializer::Deserialize<T>(path.generic_string());
+          const auto res = Serializer::Deserialize<Entity>(path.generic_string())->GetSharedPtr<T>();
           m_resources_[which_resource<T>::value].insert(res);
           res->Load();
           return res;
@@ -140,59 +144,8 @@ namespace Engine::Manager
       return {};
     }
 
-    WeakResource GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
-    {
-      auto& resources = m_resources_[type];
-      auto  it        = std::find_if
-        (
-         resources.begin(), resources.end(), [&path](const StrongResource& resource)
-         {
-           return resource->GetPath() == path;
-         }
-        );
-
-      if (it != resources.end())
-      {
-        if (!(*it)->IsLoaded()) { (*it)->Load(); }
-
-        return *it;
-      }
-
-      return {};
-    }
-
-    WeakResource GetResourceByMetadataPath(const std::filesystem::path& path, const eResourceType type)
-    {
-      auto& resources = m_resources_[type];
-      auto  it        = std::find_if
-        (
-         resources.begin(), resources.end(), [&path](const StrongResource& resource)
-         {
-           return resource->GetMetadataPath() == path;
-         }
-        );
-
-      if (it != resources.end())
-      {
-        if (!(*it)->IsLoaded()) { (*it)->Load(); }
-
-        return *it;
-      }
-      else
-      {
-        if (std::filesystem::exists(path))
-        {
-          const auto res = Serializer::Deserialize<Abstract::Resource>(path.generic_string());
-          if (res->GetResourceType() != type) { return {}; }
-
-          m_resources_[type].insert(res);
-          res->Load();
-          return res;
-        }
-      }
-
-      return {};
-    }
+    WeakResource GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type);
+    WeakResource GetResourceByMetadataPath(const std::filesystem::path& path, const eResourceType type);
 
     inline static bool m_b_imgui_load_dialog_[boost::mpl::size<LoadableResourceTypes>::value] = {false};
 

@@ -62,4 +62,5 @@ namespace Engine::Resources
   };
 } // namespace Engine::Resources
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::ComputeShader)
 BOOST_CLASS_EXPORT_KEY(Engine::Resources::ComputeShader)

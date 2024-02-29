@@ -49,8 +49,7 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(BaseAnimation)
-
+    
     BaseAnimation();
 
     float m_ticks_per_second_;

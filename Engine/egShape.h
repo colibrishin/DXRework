@@ -28,7 +28,7 @@ namespace Engine::Resources
     BoundingBox                                GetBoundingBox() const;
     WeakMesh                                   GetMesh(const std::string& name) const;
     WeakMesh                                   GetMesh(UINT index) const;
-    WeakAnimsTexture                             GetAnimations() const;
+    WeakAnimsTexture                           GetAnimations() const;
     const std::vector<VertexElement>&          GetVertices() const;
     std::vector<StrongMesh>                    GetMeshes() const;
     const std::vector<std::string>&            GetAnimationCatalog() const;
@@ -52,8 +52,19 @@ namespace Engine::Resources
         {
           BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, mesh->GetBoundingBox());
         }
+
+        m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());
       }
-      else if constexpr (which_resource<T>::value == RES_T_BONE) { m_bone_ = res.lock(); }
+      else if constexpr (which_resource<T>::value == RES_T_BONE)
+      {
+        m_bone_ = res.lock();
+        m_bone_path_ = res.lock()->GetMetadataPath().generic_string();
+      }
+      else if constexpr (which_resource<T>::value == RES_T_ANIMS_TEX)
+      {
+        m_animations_      = res.lock();
+        m_animations_path_ = res.lock()->GetMetadataPath().generic_string();
+      }
       else { static_assert("Invalid resource type"); }
 
       UpdateVertices();
@@ -65,8 +76,7 @@ namespace Engine::Resources
   protected:
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(Shape)
-
+    
   private:
     SERIALIZER_ACCESS
     friend class Manager::Graphics::Renderer;
@@ -74,15 +84,20 @@ namespace Engine::Resources
 
     void UpdateVertices();
 
-    std::vector<StrongMesh>             m_meshes_;
     std::vector<std::string>            m_animation_catalog_;
-    StrongBone                          m_bone_;
-    StrongAnimsTexture                  m_animations_;
+    std::vector<MetadataPathStr>        m_mesh_paths_;
+    MetadataPathStr                     m_bone_path_;
+    MetadataPathStr                     m_animations_path_;
+
     BoundingBox                         m_bounding_box_;
     std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 
     // non-serialized
     inline static Assimp::Importer s_importer_;
+    std::vector<StrongMesh>        m_meshes_;
+    StrongBone                     m_bone_;
+    StrongAnimsTexture             m_animations_;
+
     std::vector<VertexElement>     m_cached_vertices_;
     UINT                           m_instance_count_;
   };

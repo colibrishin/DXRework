@@ -28,6 +28,9 @@ namespace Engine
 
   private:
     SERIALIZER_ACCESS
+    friend class Abstract::Object;
+
+    void SetOwner(const WeakObject& owner);
 
     eScriptType m_type_;
     WeakObject m_owner_;
@@ -35,4 +38,5 @@ namespace Engine
   };
 } // namespace Engine::Component
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Script)
 BOOST_CLASS_EXPORT_KEY(Engine::Script);

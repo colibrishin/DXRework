@@ -41,8 +41,7 @@ namespace Engine::Resources
     Font(); // for serialization
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-    RESOURCE_SERIALIZER_OVERRIDE(Font)
-
+    
   private:
     SERIALIZER_ACCESS
 
