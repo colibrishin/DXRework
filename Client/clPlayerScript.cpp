@@ -21,6 +21,7 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(Script)) _ARTAG(m_hp_) _ARTAG(m_state_) _ARTAG(m_prev_state_)
  _ARTAG(m_top_view_) _ARTAG(m_cam_id_) _ARTAG(m_shoot_interval)
  _ARTAG(m_bone_initialized_) _ARTAG(m_rifle_initialized_) _ARTAG(m_health_initialized_)
+ _ARTAG(m_child_bones_)
 )
 
 namespace Client::Scripts
