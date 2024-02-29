@@ -27,6 +27,7 @@ namespace Engine::Objects
     void SetRotation(float radian);
     void SetScale(float scale);
 
+    void OnSerialized() override;
     void OnImGui() override;
 
   private:

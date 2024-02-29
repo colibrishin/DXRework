@@ -32,6 +32,14 @@ namespace Engine::Objects
 
   void Text::SetScale(const float scale) { m_scale_ = scale; }
 
+  void Text::OnSerialized()
+  {
+    Object::OnSerialized();
+
+    Serializer::Serialize(m_font_->GetName(), m_font_);
+    m_font_meta_path_str_ = m_font_->GetMetadataPath().string();
+  }
+
   void Text::OnImGui()
   {
     Object::OnImGui();
@@ -94,6 +102,7 @@ namespace Engine::Objects
   void Text::OnDeserialized()
   {
     Object::OnDeserialized();
+
     m_font_ = Resources::Font::GetByMetadataPath(m_font_meta_path_str_).lock();
   }
 } // namespace Engine::Objects
