@@ -329,10 +329,7 @@ namespace Engine
 
   void Scene::Save()
   {
-    auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-    std::ranges::replace(name, ' ', '_');
-    std::ranges::replace(name, ':', '_');
-    name += ".txt";
+    const auto name = std::to_string(GetID()) + " " + typeid(*this).name();
 
     Serializer::Serialize(name, GetSharedPtr<Scene>());
   }
