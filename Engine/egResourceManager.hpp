@@ -113,6 +113,8 @@ namespace Engine::Manager
     template <typename T>
     boost::weak_ptr<T> GetResourceByMetadataPath(const std::filesystem::path& path)
     {
+      if (path.empty()) { return {}; }
+
       auto& resources = m_resources_[which_resource<T>::value];
       auto  it        = std::find_if
         (
