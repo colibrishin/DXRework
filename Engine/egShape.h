@@ -52,8 +52,19 @@ namespace Engine::Resources
         {
           BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, mesh->GetBoundingBox());
         }
+
+        m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());
       }
-      else if constexpr (which_resource<T>::value == RES_T_BONE) { m_bone_ = res.lock(); }
+      else if constexpr (which_resource<T>::value == RES_T_BONE)
+      {
+        m_bone_ = res.lock();
+        m_bone_path_ = res.lock()->GetMetadataPath().generic_string();
+      }
+      else if constexpr (which_resource<T>::value == RES_T_ANIMS_TEX)
+      {
+        m_animations_      = res.lock();
+        m_animations_path_ = res.lock()->GetMetadataPath().generic_string();
+      }
       else { static_assert("Invalid resource type"); }
 
       UpdateVertices();
