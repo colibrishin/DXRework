@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egRenderComponent.h"
 
+#include "egImGuiHeler.hpp"
 #include "egMaterial.h"
 
 SERIALIZER_ACCESS_IMPL
@@ -50,6 +51,25 @@ namespace Engine::Components::Base
     else
     {
       m_material_ = GetResourceManager().GetResourceByMetadataPath<Resources::Material>(m_mtr_meta_path_str_).lock();
+    }
+  }
+
+  void RenderComponent::OnImGui()
+  {
+    Component::OnImGui();
+    TextDisabled("Material", m_mtr_meta_path_str_);
+    if (ImGui::BeginDragDropTarget())
+    {
+      if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+      {
+        const StrongResource res = *static_cast<StrongResource*>(payload->Data);
+        if (const auto mtr = boost::dynamic_pointer_cast<Resources::Material>(res))
+        {
+          mtr->Load();
+          m_material_          = mtr;
+          m_mtr_meta_path_str_ = mtr->GetMetadataPath().string();
+        }
+      }
     }
   }
 
