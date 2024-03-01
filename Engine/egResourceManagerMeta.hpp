@@ -5,6 +5,7 @@
 #include "egBoneAnimation.h"
 #include "egComputeShader.h"
 #include "egFont.h"
+#include "egHelper.hpp"
 #include "egMaterial.h"
 #include "egMesh.h"
 #include "egResourceManager.hpp"
@@ -26,7 +27,7 @@ namespace Engine::Manager
       bool& flag = ResourceManager::m_b_imgui_load_dialog_[boost::mpl::find<LoadableResourceTypes, T>::type::pos::value];
       if (flag)
       {
-        const auto title = std::string("Load ") + typeid(T).name();
+        const auto title = std::string("Load ") + pretty_name<T>::get();
         if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
           static char buf[256] = {0};
@@ -61,7 +62,7 @@ namespace Engine::Manager
     template <typename T>
     void operator()(boost::type<T>) const
     {
-      if (ImGui::MenuItem(typeid(T).name()))
+      if (ImGui::MenuItem(pretty_name<T>::get().c_str()))
       {
         ResourceManager::m_b_imgui_load_dialog_[boost::mpl::find<LoadableResourceTypes, T>::type::pos::value] = true;
       }

@@ -17,6 +17,17 @@ namespace Engine
   template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
   inline static boost::weak_ptr<T> Get(const std::string& name) { return GetResourceManager().GetResource<T>(name); }
 
+  template <typename T>
+  struct pretty_name
+  {
+    static std::string get()
+    {
+      const std::string type_name = typeid(T).name();
+      const auto pos = type_name.find_last_of(":");
+      return type_name.substr(pos + 1);
+    }
+  };
+
   inline static bool __vectorcall IsSamePolarity(const float v1, const float v2)
   {
     return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);

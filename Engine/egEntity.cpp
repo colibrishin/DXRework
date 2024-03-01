@@ -19,6 +19,14 @@ Engine::EntityName Engine::Abstract::Entity::GetName() const { return m_name_; }
 
 Engine::TypeName Engine::Abstract::Entity::GetTypeName() const { return typeid(*this).name(); }
 
+Engine::TypeName Engine::Abstract::Entity::GetPrettyTypeName() const
+{
+  const auto type_name = GetTypeName();
+  const auto pos = type_name.find_last_of(":");
+
+  return type_name.substr(pos + 1);
+}
+
 bool Engine::Abstract::Entity::IsGarbage() const { return m_b_garbage_; }
 
 bool Engine::Abstract::Entity::IsInitialized() const { return m_b_initialized_; }

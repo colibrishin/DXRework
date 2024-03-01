@@ -130,11 +130,11 @@ namespace Engine::Graphics
     {
       D3D11_SUBRESOURCE_DATA data;
       data.pSysMem = initial_data;
-      DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateBuffer(&desc, &data, m_buffer_.ReleaseAndGetAddressOf()));
+      DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateBuffer(&desc, &data, m_buffer_.GetAddressOf()));
     }
     else
     {
-      DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateBuffer(&desc, nullptr, m_buffer_.ReleaseAndGetAddressOf()));
+      DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateBuffer(&desc, nullptr, m_buffer_.GetAddressOf()));
     }
   }
 
