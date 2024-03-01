@@ -24,11 +24,7 @@ namespace Engine::Resources
       return v;
     }
 
-    static inline boost::weak_ptr<ComputeShader> Get(const std::string& name)
-    {
-      return GetResourceManager().GetResource<ComputeShader>(name).lock();
-    }
-
+    RESOURCE_SELF_INFER_GETTER(ComputeShader)
 	protected:
     ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
 
