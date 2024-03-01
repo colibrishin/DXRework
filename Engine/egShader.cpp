@@ -244,7 +244,15 @@ namespace Engine::Resources
     return obj;
   }
 
-  void Shader::OnSerialized() {}
+  void Shader::OnSerialized()
+  {
+    if (std::filesystem::exists(GetPath()))
+    {
+      const std::filesystem::path p = GetPrettyTypeName() / GetPath();
+      std::filesystem::copy(GetPath(), p);
+      SetPath(p);
+    }
+  }
 
   Shader::Shader()
     : Resource("", RES_T_SHADER),
