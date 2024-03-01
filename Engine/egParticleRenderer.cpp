@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egParticleRenderer.h"
 #include "egComputeShader.h"
+#include "egImGuiHeler.hpp"
 #include "egTransform.h"
 
 SERIALIZER_ACCESS_IMPL
@@ -82,16 +83,70 @@ namespace Engine::Components
   void ParticleRenderer::OnSerialized()
   {
     RenderComponent::OnSerialized();
-    Serializer::Serialize(m_cs_->GetName(), m_cs_);
-    m_cs_meta_path_str_ = m_cs_->GetMetadataPath().string();
+
+    if (m_cs_)
+    {
+      Serializer::Serialize(m_cs_->GetName(), m_cs_);
+      m_cs_meta_path_str_ = m_cs_->GetMetadataPath().string();
+    }
   }
 
   void ParticleRenderer::OnDeserialized()
   {
     RenderComponent::OnDeserialized();
-    if (const auto cs = Resources::ComputeShader::Get(m_cs_meta_path_str_).lock())
+
+    if (const auto cs = Resources::ComputeShader::GetByMetadataPath(m_cs_meta_path_str_).lock())
     {
       m_cs_ = cs;
+    }
+  }
+
+  void ParticleRenderer::OnImGui()
+  {
+    RenderComponent::OnImGui();
+
+    CheckboxAligned("Follow Owner", m_b_follow_owner_);
+    CheckboxAligned("Scaling Effect", m_b_scaling_);
+
+    if (m_b_scaling_)
+    {
+      FloatAligned("Min Scale", m_min_scale_size_);
+      FloatAligned("Max Scale", m_max_scale_size_);
+    }
+
+    FloatAligned("Duration", m_duration_dt_);
+    FloatAligned("Size", m_size_);
+
+    if (ImGui::Button("Spread Linearly"))
+    {
+      LinearSpread(Vector3::One, Vector3::Zero);
+    }
+
+    static UINT count = m_instances_.size();
+    UINTAligned("Particle Count", count);
+
+    if (ImGui::Button("Set Count"))
+    {
+      if (count != m_instances_.size())
+      {
+        SetCount(count);
+      }
+    }
+
+    TextDisabled("Compute Shader", m_cs_meta_path_str_);
+    if (ImGui::BeginDragDropTarget())
+    {
+      if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+      {
+        const StrongResource res = *static_cast<StrongResource*>(payload->Data);
+        if (const auto cs = boost::dynamic_pointer_cast<Resources::ComputeShader>(res))
+        {
+          cs->Load();
+          m_cs_               = cs;
+          m_cs_meta_path_str_ = cs->GetMetadataPath().string();
+        }
+      }
+      ImGui::EndDragDropTarget();
     }
   }
 
