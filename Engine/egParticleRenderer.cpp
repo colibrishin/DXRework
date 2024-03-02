@@ -11,48 +11,25 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(m_cs_meta_path_str_)
  _ARTAG(m_instances_)
  _ARTAG(m_b_follow_owner_)
- _ARTAG(m_b_scaling_)
- _ARTAG(m_duration_dt_)
- _ARTAG(m_size_)
- _ARTAG(m_max_scale_size_)
- _ARTAG(m_min_scale_size_)
 )
 
 namespace Engine::Components
 {
   ParticleRenderer::ParticleRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_PARTICLE, owner),
-      m_b_follow_owner_(true),
-      m_b_scaling_(false),
-      m_duration_dt_(100.0f),
-      m_size_(0.5f),
-      m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f) {}
+      m_b_follow_owner_(true) {}
 
   void ParticleRenderer::Initialize()
   {
     m_sb_buffer_.Create(1, nullptr, true);
-    LinearSpread(Vector3::One, Vector3::Zero);
+    SetCount(1);
   }
 
   void ParticleRenderer::Update(const float& dt)
   {
-    if (m_cs_)
+    if (m_cs_ && GetMaterial().lock())
     {
-      // Particle count
-      GetRenderPipeline().SetParam((int)m_instances_.size(), particle_count_slot);
-      // Current delta time
-      GetRenderPipeline().SetParam(dt, dt_slot);
-      // Max life time of a particle.
-      GetRenderPipeline().SetParam(m_duration_dt_, duration_slot);
-
-      // Scaling properties
-      if (m_b_scaling_)
-      {
-        GetRenderPipeline().SetParam((int)m_b_scaling_, scaling_active_slot);
-        GetRenderPipeline().SetParam(m_min_scale_size_, scaling_min_slot);
-        GetRenderPipeline().SetParam(m_max_scale_size_, scaling_max_slot);
-      }
+      const auto& ticket = GetRenderPipeline().SetParam(m_params_);
 
       m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
       m_sb_buffer_.BindUAV();
@@ -106,30 +83,16 @@ namespace Engine::Components
     RenderComponent::OnImGui();
 
     CheckboxAligned("Follow Owner", m_b_follow_owner_);
-    CheckboxAligned("Scaling Effect", m_b_scaling_);
 
-    if (m_b_scaling_)
-    {
-      FloatAligned("Min Scale", m_min_scale_size_);
-      FloatAligned("Max Scale", m_max_scale_size_);
-    }
-
-    FloatAligned("Duration", m_duration_dt_);
-    FloatAligned("Size", m_size_);
-
-    if (ImGui::Button("Spread Linearly"))
-    {
-      LinearSpread(Vector3::One, Vector3::Zero);
-    }
-
-    static UINT count = m_instances_.size();
-    UINTAligned("Particle Count", count);
+    FloatAligned("Duration", m_params_.GetParam<float>(duration_slot));
+    FloatAligned("Size", m_params_.GetParam<float>(size_slot));
+    UINTAligned("Count", m_params_.GetParam<UINT>(particle_count_slot));
 
     if (ImGui::Button("Set Count"))
     {
-      if (count != m_instances_.size())
+      if (m_params_.GetParam<UINT>(size_slot) != m_instances_.size())
       {
-        SetCount(count);
+        SetCount(m_params_.GetParam<UINT>(size_slot));
       }
     }
 
@@ -147,6 +110,11 @@ namespace Engine::Components
         }
       }
       ImGui::EndDragDropTarget();
+    }
+
+    if (m_cs_)
+    {
+      m_cs_->OnImGui(GetSharedPtr<ParticleRenderer>());
     }
   }
 
@@ -167,35 +135,26 @@ namespace Engine::Components
     }
   }
 
-  void ParticleRenderer::SetDuration(const float duration) { m_duration_dt_ = duration; }
-
-  void ParticleRenderer::LinearSpread(const Vector3& local_min, const Vector3& local_max)
+  void ParticleRenderer::SetDuration(const float duration)
   {
-    const auto count = m_instances_.size();
-    for (auto i = 0; i < count; ++i)
+    m_params_.SetParam(duration, duration_slot);
+
+    for (auto& instance : m_instances_)
     {
-      auto& instance = m_instances_[i];
-      auto  world    = instance.GetWorld().Transpose();
-
-      const auto new_pos = Vector3::Lerp(local_min, local_max, static_cast<float>(i) / static_cast<float>(count));
-
-      world *= Matrix::CreateScale(m_size_) * Matrix::CreateTranslation(new_pos - world.Translation());
-      instance.SetWorld(world.Transpose());
+      instance.SetLife(duration);
     }
+  }
+
+  void ParticleRenderer::SetSize(const float size)
+  {
+    m_params_.SetParam(size, size_slot);
   }
 
   bool ParticleRenderer::IsFollowOwner() const { return m_b_follow_owner_; }
 
   ParticleRenderer::ParticleRenderer()
     : RenderComponent(RENDER_COM_T_PARTICLE, {}),
-      m_b_follow_owner_(true),
-      m_b_scaling_(false),
-      m_duration_dt_(100.0f),
-      m_size_(0.5f),
-      m_max_scale_size_(1.f),
-      m_min_scale_size_(1.f) {}
-
-  void ParticleRenderer::SetSize(const float size) { m_size_ = size; }
+      m_b_follow_owner_(true) {}
 
   void ParticleRenderer::SetComputeShader(const WeakComputeShader& cs)
   {
@@ -204,13 +163,5 @@ namespace Engine::Components
       m_cs_ = shader;
       m_cs_meta_path_str_ = shader->GetMetadataPath().string();
     }
-  }
-
-  void ParticleRenderer::SetScaling(const bool scaling) { m_b_scaling_ = scaling; }
-
-  void ParticleRenderer::SetScalingParam(const float min, const float max)
-  {
-    m_min_scale_size_ = min;
-    m_max_scale_size_ = max;
   }
 }

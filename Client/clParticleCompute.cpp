@@ -2,6 +2,8 @@
 #include "clParticleCompute.h"
 
 #include "egApplication.h"
+#include "egImGuiHeler.hpp"
+#include "egParticleRenderer.h"
 #include "egRenderPipeline.h"
 #include "egTexture2D.h"
 
@@ -65,6 +67,50 @@ namespace Client::ComputeShaders
     m_noises_[0].reset();
     m_noises_[1].reset();
     m_noises_[2].reset();
+  }
+
+  void ParticleCompute::OnImGui(const StrongParticleRenderer& pr)
+  {
+    CheckboxAligned("Scaling", getParam(pr).GetParam<bool>(scaling_active_slot));
+
+    if (getParam(pr).GetParam<bool>(scaling_active_slot))
+    {
+      FloatAligned("Min", getParam(pr).GetParam<float>(scaling_min_slot));
+      FloatAligned("Max", getParam(pr).GetParam<float>(scaling_max_slot));
+    }
+
+    if (ImGui::Button("Linear Spread"))
+    {
+      LinearSpread(Vector3(-1.f, 0.f, -1.f), Vector3(1.f, 0.f, 1.f), getInstances(pr), getParam(pr));
+    }
+  }
+
+  void ParticleCompute::SetScaling(const bool scaling, Graphics::ParamBase& config)
+  {
+    config.SetParam((int)scaling, scaling_active_slot);
+  }
+
+  void ParticleCompute::SetScalingParam(const float min, const float max, Graphics::ParamBase& config)
+  {
+    config.SetParam(min, scaling_min_slot);
+    config.SetParam(max, scaling_max_slot);
+  }
+
+  void ParticleCompute::LinearSpread(
+    const Vector3& local_min, const Vector3& local_max, InstanceParticles& particles, const Graphics::ParamBase& config
+  )
+  {
+    const auto count = particles.size();
+    for (auto i = 0; i < count; ++i)
+    {
+      auto& instance = particles[i];
+      auto  world    = instance.GetWorld().Transpose();
+
+      const auto new_pos = Vector3::Lerp(local_min, local_max, static_cast<float>(i) / static_cast<float>(count));
+
+      world *= Matrix::CreateScale(config.GetParam<float>(Components::ParticleRenderer::size_slot)) * Matrix::CreateTranslation(new_pos - world.Translation());
+      instance.SetWorld(world.Transpose());
+    }
   }
 
   std::mt19937_64 ParticleCompute::getRandomEngine() const
