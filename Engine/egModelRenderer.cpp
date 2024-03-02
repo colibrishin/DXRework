@@ -27,22 +27,7 @@ namespace Engine::Components
 
   void ModelRenderer::OnImGui()
   {
-    Component::OnImGui();
-    TextDisabled("Material ID", GetMaterialMetadataPath().string());
-
-    if (ImGui::BeginDragDropTarget())
-    {
-      if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
-      {
-        const auto& resource = *static_cast<StrongResource*>(payload->Data);
-        if (resource->GetResourceType() == RES_T_MTR)
-        {
-          SetMaterial(resource->GetSharedPtr<Resources::Material>());
-        }
-      }
-
-      ImGui::EndDragDropTarget();
-    }
+    RenderComponent::OnImGui();
   }
 
   ModelRenderer::ModelRenderer()

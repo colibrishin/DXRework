@@ -329,9 +329,7 @@ namespace Engine
 
   void Scene::Save()
   {
-    const auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-
-    Serializer::Serialize(name, GetSharedPtr<Scene>());
+    Serializer::Serialize(GetName(), GetSharedPtr<Scene>());
   }
   
   ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const { return m_layers[layer]->GetGameObjects(); }
@@ -464,9 +462,14 @@ namespace Engine
 
   void Scene::OnImGui()
   {
-    if (ImGui::Begin(GetName().c_str()), &m_b_scene_imgui_open_, ImGuiWindowFlags_MenuBar)
+    const auto name = GetName() + "###" + std::to_string(GetID());
+    const auto list_name = "###Layers" + std::to_string(GetID());
+
+    if (ImGui::Begin(name.c_str()), &m_b_scene_imgui_open_)
     {
-      if (ImGui::BeginListBox(GetName().c_str(), {-1, -1}))
+      Renderable::OnImGui();
+
+      if (ImGui::BeginListBox(list_name.c_str(), {-1, -1}))
       {
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
@@ -474,7 +477,7 @@ namespace Engine
           {
             if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
             {
-              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT", ImGuiDragDropFlags_AcceptBeforeDelivery))
+              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
               {
                 GetTaskScheduler().AddTask
                   (

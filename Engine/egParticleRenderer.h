@@ -28,6 +28,7 @@ namespace Engine::Components
 
     void OnSerialized() override;
     void OnDeserialized() override;
+    void OnImGui() override;
 
     const std::vector<Graphics::SBs::InstanceSB>& GetParticles() const;
 

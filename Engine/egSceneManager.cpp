@@ -141,13 +141,6 @@ namespace Engine::Manager
         ImGui::EndMenu();
       }
 
-      if (ImGui::BeginMenu("Save"))
-      {
-        if (ImGui::MenuItem("Scene")) { GetActiveScene().lock()->Save(); }
-
-        ImGui::EndMenu();
-      }
-
       ImGui::EndMainMenuBar();
     }
 

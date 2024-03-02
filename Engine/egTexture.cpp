@@ -403,7 +403,9 @@ namespace Engine::Resources
   void Texture::OnSerialized()
   {
     const auto name = GetName();
-    const auto wstr = std::wstring(name.begin(), name.end()) + L".dds";
+    const std::filesystem::path folder = GetPrettyTypeName();
+    const std::filesystem::path filename = name + ".dds";
+    const std::filesystem::path final_path = folder / filename;
 
     if (m_res_)
     {
@@ -425,11 +427,11 @@ namespace Engine::Resources
              image.GetImageCount(),
              image.GetMetadata(),
              DirectX::DDS_FLAGS_ALLOW_LARGE_FILES,
-             wstr.c_str()
+             final_path.c_str()
          )
         );
 
-      SetPath(wstr);
+      SetPath(final_path);
     }
   }
 

@@ -22,6 +22,7 @@ namespace Engine::Components::Base
 
     void OnSerialized() override;
     void OnDeserialized() override;
+    void OnImGui() override;
 
   private:
     SERIALIZER_ACCESS

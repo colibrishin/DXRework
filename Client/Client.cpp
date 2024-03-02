@@ -199,18 +199,16 @@ namespace Client
     }
   }
 
-  void InitializeComputeShader()
-  {
-    Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
-  }
-
   void Initialize(HWND hwnd)
   {
     Manager::Application::GetInstance().Initialize(hwnd);
+
     Script::Register<Scripts::HitboxScript>();
     Script::Register<Scripts::PlayerScript>();
     Script::Register<Scripts::HpTextScript>();
+    Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 
+    // todo: refactor
     InitializeTexture();
     InitializeMesh();
     InitializeNormal();
@@ -218,7 +216,6 @@ namespace Client
     InitializeAnimation();
     InitializeFont();
     InitializeSound();
-    InitializeComputeShader();
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);

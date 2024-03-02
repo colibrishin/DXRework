@@ -152,7 +152,16 @@ namespace Engine::Resources
     CommitDistance();
   }
 
-  void Sound::OnSerialized() {}
+  void Sound::OnSerialized()
+  {
+    if (std::filesystem::exists(GetPath()))
+    {
+      const std::filesystem::path folder = GetPrettyTypeName();
+      std::filesystem::path filename = GetName();
+      filename.replace_extension(GetPath().extension());
+      std::filesystem::copy(GetPath(), folder / filename);
+    }
+  }
 
   void Sound::OnDeserialized() { Resource::OnDeserialized(); }
 
