@@ -25,9 +25,24 @@ namespace Engine::Graphics
     }
 
     template <typename T>
+    T& GetParam(const size_t slot)
+    {
+      if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
+      else if constexpr (std::is_same_v<T, bool>) { return reinterpret_cast<bool&>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, UINT>) { return reinterpret_cast<UINT&>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
+      else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
+      else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
+      else if constexpr (std::is_same_v<T, Matrix>) { return m_param[slot]; }
+      else { throw std::runtime_error("Invalid type"); }
+    }
+
+    template <typename T>
     T GetParam(const size_t slot) const
     {
       if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
+      else if constexpr (std::is_same_v<T, bool>) { return static_cast<bool>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, UINT>) { return static_cast<UINT>(i_param[slot]); }
       else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
       else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
       else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
@@ -129,9 +144,9 @@ namespace Engine::Graphics
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
 
-      Matrix GetWorld() const { return GetParam<Matrix>(0); }
+      Matrix& GetWorld() { return GetParam<Matrix>(0); }
 
-      bool GetActive() const { return GetParam<int>(0) != 0; }
+      bool& GetActive() { return reinterpret_cast<bool&>(GetParam<int>(0)); }
     };
   }
 

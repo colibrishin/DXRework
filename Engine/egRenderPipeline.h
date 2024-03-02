@@ -12,6 +12,34 @@ namespace Engine::Manager::Graphics
 
   class RenderPipeline final : public Abstract::Singleton<RenderPipeline>
   {
+  private:
+    struct TempParamTicket
+    {
+      TempParamTicket(const ParamBase& previousParam)
+        : previousParam(previousParam) {}
+
+      ~TempParamTicket()
+      {
+        reinterpret_cast<ParamBase&>(GetRenderPipeline().m_param_buffer_) = previousParam;
+        GetRenderPipeline().m_param_buffer_data_.SetData
+          (
+           GetD3Device().GetContext(), GetRenderPipeline().m_param_buffer_
+          );
+        GetRenderPipeline().BindConstantBuffer
+          (
+           GetRenderPipeline().m_param_buffer_data_, SHADER_VERTEX
+          );
+        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_PIXEL);
+        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_GEOMETRY);
+        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_COMPUTE);
+        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_HULL);
+        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_DOMAIN);
+      }
+
+    private:
+      const ParamBase previousParam;
+    };
+
   public:
     explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
@@ -41,6 +69,9 @@ namespace Engine::Manager::Graphics
       BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
       BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
     }
+
+    // Returns a ticket that will reset to the previous param when it goes out of scope.
+    [[nodiscard]] RenderPipeline::TempParamTicket&& SetParam(const ParamBase& param);
 
     void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
     void SetDepthStencilState(ID3D11DepthStencilState* state);

@@ -27,6 +27,23 @@ namespace Engine::Manager::Graphics
     BindConstantBuffer(m_wvp_buffer_data_, SHADER_GEOMETRY);
   }
 
+  RenderPipeline::TempParamTicket&& RenderPipeline::SetParam(const ParamBase& param)
+  {
+    TempParamTicket ticket(m_param_buffer_); // RAII
+
+    reinterpret_cast<ParamBase&>(m_param_buffer_) = param;
+    m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
+
+    BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
+    BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
+    BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
+    BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
+    BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
+    BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
+
+    return std::move(ticket);
+  }
+
   void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
   {
     GetD3Device().GetContext()->IASetPrimitiveTopology(topology);

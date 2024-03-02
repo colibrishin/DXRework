@@ -93,6 +93,12 @@ namespace Engine
     struct BonePrimitive;
     struct BoneAnimationPrimitive;
     struct VertexElement;
+
+    namespace SBs
+    {
+      struct InstanceSB;
+      struct InstanceParticleSB;
+    } // namespace SBs
   } // namespace Graphic
 
   namespace Resources
@@ -227,6 +233,7 @@ namespace Engine
   using IndexCollection = std::vector<UINT>;
   using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
   using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+  using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
   // Concurrent type definitions
   using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObject>;
