@@ -9,7 +9,7 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::SoundPlayer,
  _ARTAG(_BSTSUPER(Abstract::Component))
- _ARTAG(m_sound_name_)
+ _ARTAG(m_sound_meta_path_)
 )
 
 namespace Engine::Components
@@ -35,22 +35,29 @@ namespace Engine::Components
   void SoundPlayer::SetSound(const StrongSound& sound)
   {
     m_sound_      = sound;
-    m_sound_name_ = sound->GetName();
+    m_sound_meta_path_   = sound->GetMetadataPath().string();
+  }
+
+  void SoundPlayer::OnSerialized()
+  {
+    Serializer::Serialize(m_sound_->GetName(), m_sound_);
+    m_sound_meta_path_ = m_sound_->GetMetadataPath().string();
   }
 
   void SoundPlayer::OnDeserialized()
   {
     Component::OnDeserialized();
 
-    if (m_sound_name_.empty()) { return; }
-
-    m_sound_ = GetResourceManager().GetResource<Resources::Sound>(m_sound_name_).lock();
+    if (const auto sound = Resources::Sound::GetByMetadataPath(m_sound_meta_path_).lock())
+    {
+      SetSound(sound);
+    }
   }
 
   void SoundPlayer::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Sound name", m_sound_name_);
+    TextDisabled("Sound Metadata", m_sound_meta_path_);
 
     if (ImGui::BeginDragDropTarget())
     {
@@ -67,11 +74,29 @@ namespace Engine::Components
     }
   }
 
-  void SoundPlayer::PlaySound() { m_sound_->Play(GetOwner()); }
+  void SoundPlayer::PlaySound()
+  {
+    if (m_sound_)
+    {
+      m_sound_->Play(GetOwner());
+    }
+  }
 
-  void SoundPlayer::PlaySoundLoop() { m_sound_->PlayLoop(GetOwner()); }
+  void SoundPlayer::PlaySoundLoop()
+  {
+    if (m_sound_)
+    {
+      m_sound_->PlayLoop(GetOwner());
+    }
+  }
 
-  void SoundPlayer::StopSound() { m_sound_->Stop(GetOwner()); }
+  void SoundPlayer::StopSound()
+  {
+    if (m_sound_)
+    {
+      m_sound_->Stop(GetOwner());
+    }
+  }
 
   SoundPlayer::SoundPlayer()
     : Component(COMP_T_SOUND_PLAYER, {}) {}

@@ -54,8 +54,9 @@ namespace Engine::Components
     void PostUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
-    void OnImGui() override;
+    void OnSerialized() override;
     void OnDeserialized() override;
+    void OnImGui() override;
 
     Matrix GetLocalMatrix() const;
     Matrix GetWorldMatrix();

@@ -1,13 +1,14 @@
 #include "pch.h"
 #include "egRenderComponent.h"
 
+#include "egImGuiHeler.hpp"
 #include "egMaterial.h"
 
 SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::Base::RenderComponent,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
- _ARTAG(m_material_name_)
+ _ARTAG(m_mtr_meta_path_str_)
  _ARTAG(m_type_)
 )
 
@@ -17,8 +18,8 @@ namespace Engine::Components::Base
   {
     if (const auto mtr = material.lock())
     {
-      m_material_      = mtr;
-      m_material_name_ = mtr->GetName();
+      m_material_    = mtr;
+      m_mtr_meta_path_ = mtr->GetMetadataPath();
     }
   }
 
@@ -26,14 +27,50 @@ namespace Engine::Components::Base
 
   WeakMaterial RenderComponent::GetMaterial() const noexcept { return m_material_; }
 
-  std::string RenderComponent::GetMaterialName() const noexcept { return m_material_name_; }
+  const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept { return m_mtr_meta_path_str_; }
 
   eRenderComponentType RenderComponent::GetType() const noexcept { return m_type_; }
+
+  void RenderComponent::OnSerialized()
+  {
+    if (m_material_)
+    {
+      Serializer::Serialize(m_material_->GetName(), m_material_);
+      m_mtr_meta_path_str_ = m_material_->GetMetadataPath().string();
+    }
+  }
 
   void RenderComponent::OnDeserialized()
   {
     Component::OnDeserialized();
-    m_material_ = Resources::Material::Get(m_material_name_).lock();
+    if (const auto res_check = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock(); 
+        res_check && !res_check->GetMetadataPath().empty())
+    {
+      m_material_ = res_check;
+    }
+    else
+    {
+      m_material_ = GetResourceManager().GetResourceByMetadataPath<Resources::Material>(m_mtr_meta_path_str_).lock();
+    }
+  }
+
+  void RenderComponent::OnImGui()
+  {
+    Component::OnImGui();
+    TextDisabled("Material", m_mtr_meta_path_str_);
+    if (ImGui::BeginDragDropTarget())
+    {
+      if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+      {
+        const StrongResource res = *static_cast<StrongResource*>(payload->Data);
+        if (const auto mtr = boost::dynamic_pointer_cast<Resources::Material>(res))
+        {
+          mtr->Load();
+          m_material_          = mtr;
+          m_mtr_meta_path_str_ = mtr->GetMetadataPath().string();
+        }
+      }
+    }
   }
 
   RenderComponent::RenderComponent()

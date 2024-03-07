@@ -20,13 +20,13 @@ namespace Engine::Manager::Physics
       {
         if (i == j)
         {
-          m_layer_mask_[i].set(j, true);
-          m_layer_mask_[j].set(i, true);
+          m_layer_mask_[i][j] = true;
+          m_layer_mask_[j][i] = true;
         }
         else
         {
-          m_layer_mask_[i].set(j, false);
-          m_layer_mask_[j].set(i, false);
+          m_layer_mask_[i][j] = false;
+          m_layer_mask_[j][i] = false;
         }
       }
     }
@@ -38,7 +38,10 @@ namespace Engine::Manager::Physics
 
   void CollisionDetector::PreRender(const float& dt) {}
 
-  void CollisionDetector::Render(const float& dt) {}
+  void CollisionDetector::Render(const float& dt)
+  {
+    OnImGui();
+  }
 
   void CollisionDetector::PostRender(const float& dt) {}
 
@@ -139,6 +142,63 @@ namespace Engine::Manager::Physics
   }
 
   void CollisionDetector::PostUpdate(const float& dt) {}
+
+  void CollisionDetector::OnImGui()
+  {
+    if (const auto scene = GetSceneManager().GetActiveScene().lock())
+    {
+      if (ImGui::Begin("Collision Detector", nullptr))
+      {
+        if (ImGui::TreeNode("Layer Mask"))
+        {
+          if (ImGui::BeginTable("Layer Mask", LAYER_MAX))
+          {
+            for (int i = 0; i < LAYER_MAX; ++i)
+            {
+              ImGui::TableNextRow();
+              for (int j = 0; j < LAYER_MAX; ++j)
+              {
+                ImGui::TableSetColumnIndex(j);
+                ImGui::Text("%s\n%s", g_layer_type_str[i], g_layer_type_str[j]);
+
+                const std::string label = std::format("##{}{}", i, j);
+                if (ImGui::Checkbox(label.c_str(), &m_layer_mask_[i][j]))
+                {
+                  if (m_layer_mask_[i][j]) { UnsetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j)); }
+                  else { SetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j)); }
+                }
+              }
+            }
+
+            ImGui::EndTable();
+          }
+
+          ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Collision Info"))
+        {
+          for (const auto& [lhs, rhs_set] : m_collision_map_)
+          {
+            for (const auto& rhs : rhs_set)
+            {
+              if (const auto lhs_obj = scene->FindGameObject(lhs).lock())
+              {
+                if (const auto rhs_obj = scene->FindGameObject(rhs).lock())
+                {
+                  ImGui::Text("%s - %s", lhs_obj->GetName().c_str(), rhs_obj->GetName().c_str());
+                }
+              }
+            }
+          }
+
+          ImGui::TreePop();
+        }
+
+        ImGui::End();
+      }
+    }
+  }
 
   void CollisionDetector::TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
   {
@@ -349,20 +409,20 @@ namespace Engine::Manager::Physics
     const eLayerType b
   )
   {
-    m_layer_mask_[a].set(b, true);
-    m_layer_mask_[b].set(a, true);
+    m_layer_mask_[a][b] = true;
+    m_layer_mask_[b][a] = true;
   }
 
   void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
   {
-    m_layer_mask_[layer].set(layer2, false);
-    m_layer_mask_[layer2].set(layer, false);
+    m_layer_mask_[layer][layer2] = false;
+    m_layer_mask_[layer2][layer] = false;
   }
 
   bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
   {
     std::lock_guard l(m_layer_mask_mutex_);
-    return m_layer_mask_[layer1].test(layer2);
+    return m_layer_mask_[layer1][layer2];
   }
 
   bool CollisionDetector::IsCollided(GlobalEntityID id) const

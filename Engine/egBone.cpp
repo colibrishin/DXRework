@@ -74,6 +74,8 @@ namespace Engine::Resources
 
   void Bone::PostUpdate(const float& dt) {}
 
+  void Bone::OnSerialized() {}
+
   void Bone::OnDeserialized()
   {
     Resource::OnDeserialized();

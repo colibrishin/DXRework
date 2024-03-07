@@ -7,6 +7,8 @@ SERIALIZER_ACCESS_IMPL
 (
  Engine::Components::StateController,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
+ _ARTAG(m_state_)
+ _ARTAG(m_previous_state_)
 )
 
 namespace Engine::Components

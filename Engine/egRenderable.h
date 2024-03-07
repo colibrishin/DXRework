@@ -14,9 +14,13 @@ namespace Engine::Abstract
     // Run before the present call.
     virtual void PostRender(const float& dt) = 0;
 
+  protected:
+    Renderable() = default;
+
   private:
     SERIALIZER_ACCESS
   };
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Renderable)
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Renderable)

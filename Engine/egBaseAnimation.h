@@ -21,6 +21,8 @@ namespace Engine::Resources
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
+    void OnSerialized() override;
+
     void  SetTicksPerSecond(const float& ticks_per_second);
     void  SetDuration(const float& duration);
     float GetTicksPerSecond() const;
@@ -47,7 +49,7 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-
+    
     BaseAnimation();
 
     float m_ticks_per_second_;

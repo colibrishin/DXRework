@@ -18,14 +18,22 @@ namespace Engine::Resources
 
     Mesh(const VertexCollection& shape, const IndexCollection& indices);
     ~Mesh() override = default;
-    void        Initialize() override;
-    void        Render(const float& dt) override;
-    void        PostRender(const float& dt) override;
-    void        PostUpdate(const float& dt) override;
+    void Initialize() override;
+    void Render(const float& dt) override;
+    void PostRender(const float& dt) override;
+    void PostUpdate(const float& dt) override;
+    void PreUpdate(const float& dt) override;
+    void Update(const float& dt) override;
+    void FixedUpdate(const float& dt) override;
+    void PreRender(const float& dt) override;
+
     BoundingBox GetBoundingBox() const;
 
     UINT                    GetIndexCount() const;
     const VertexCollection& GetVertexCollection() const;
+
+    void OnDeserialized() override;
+    void OnSerialized() override;
 
     RESOURCE_SELF_INFER_GETTER(Mesh)
 
@@ -38,8 +46,7 @@ namespace Engine::Resources
     void         Load_INTERNAL() final;
     virtual void Load_CUSTOM();
     void         Unload_INTERNAL() override;
-
-
+    
     static void __vectorcall GenerateTangentBinormal(
       const Vector3& v0, const Vector3&  v1,
       const Vector3& v2, const Vector2&  uv0,
@@ -47,13 +54,6 @@ namespace Engine::Resources
       Vector3&       tangent, Vector3&   binormal
     );
     void UpdateTangentBinormal();
-
-  public:
-    void PreUpdate(const float& dt) override;
-    void Update(const float& dt) override;
-    void FixedUpdate(const float& dt) override;
-    void PreRender(const float& dt) override;
-    void OnDeserialized() override;
 
   protected:
     VertexCollection m_vertices_;

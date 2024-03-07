@@ -58,6 +58,8 @@ namespace Engine::Resources
     void PostUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
+    void OnSerialized() override;
+
     eResourceType GetResourceType() const override;
 
     eTexBindSlots GetSlot() const;
@@ -132,4 +134,5 @@ namespace Engine::Resources
   };
 } // namespace Engine::Resources
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::Texture)
 BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

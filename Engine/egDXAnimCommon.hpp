@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 
 #include "egType.h"
 #include "egMacro.h"
@@ -170,13 +171,19 @@ namespace Engine::Graphics
   public:
     AnimationPrimitive()
       : duration(0.f),
-        ticks_per_second(0.f) { }
+        ticks_per_second(0.f)
+    {
+      RebuildIndexCache();
+    }
 
     AnimationPrimitive(std::string name, float duration, float ticks_per_second, Matrix global_inverse_transform)
       : name(std::move(name)),
         duration(duration),
         ticks_per_second(ticks_per_second),
-        global_inverse_transform(std::move(global_inverse_transform)) { }
+        global_inverse_transform(std::move(global_inverse_transform))
+    {
+      RebuildIndexCache();
+    }
 
     AnimationPrimitive(const AnimationPrimitive& other) noexcept
     {
@@ -186,10 +193,7 @@ namespace Engine::Graphics
       global_inverse_transform = other.global_inverse_transform;
       bone_animations          = other.bone_animations;
 
-      for (auto& [key, value] : bone_animations)
-      {
-        bone_animations_index_wise[value.GetIndex()] = &bone_animations[key];
-      }
+      RebuildIndexCache();
     }
 
     AnimationPrimitive(AnimationPrimitive&& other) noexcept
@@ -210,10 +214,7 @@ namespace Engine::Graphics
       global_inverse_transform = other.global_inverse_transform;
       bone_animations          = other.bone_animations;
 
-      for (auto& [key, value] : bone_animations)
-      {
-        bone_animations_index_wise[value.GetIndex()] = &bone_animations[key];
-      }
+      RebuildIndexCache();
 
       return *this;
     }
@@ -347,3 +348,8 @@ namespace Engine::Graphics
     UINT  bone_count;
   };
 }
+
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::BonePrimitive)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::BoneAnimationPrimitive)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::AnimationPrimitive)

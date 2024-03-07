@@ -35,3 +35,6 @@ namespace Engine::Components
     int m_previous_state_;
   };
 } // namespace Engine::Abstract
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Components::StateController)
+BOOST_CLASS_EXPORT_KEY(Engine::Components::StateController)

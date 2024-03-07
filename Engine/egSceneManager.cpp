@@ -2,8 +2,10 @@
 #include "egSceneManager.hpp"
 #include "egCamera.h"
 #include "egLight.h"
+#include "egMaterial.h"
 #include "egObject.hpp"
 #include "egScene.hpp"
+#include "egText.h"
 #include "egShadowManager.hpp"
 
 namespace Engine::Manager
@@ -43,7 +45,7 @@ namespace Engine::Manager
         {
           const auto scene = Serializer::Deserialize<Scene>(buf);
           AddScene(scene);
-          SetActive(scene);
+          SetActive(scene->GetName());
 
           m_b_load_popup_ = false;
           ImGui::CloseCurrentPopup();
@@ -62,7 +64,12 @@ namespace Engine::Manager
     }
   }
 
-  void SceneManager::Initialize() { m_b_load_popup_ = false; }
+  void SceneManager::Initialize()
+  {
+    m_b_load_popup_ = false;
+    AddScene("UntitledScene");
+    SetActive("UntitledScene");
+  }
 
   void SceneManager::Update(const float& dt) { m_active_scene_.lock()->Update(dt); }
 
@@ -92,13 +99,37 @@ namespace Engine::Manager
 
     if (ImGui::BeginMainMenuBar())
     {
+      if (ImGui::BeginMenu("New"))
+      {
+        if (ImGui::MenuItem("Scene"))
+        {
+          AddScene("UntitledScene");
+          SetActive("UntitledScene");
+        }
+
+        if (ImGui::MenuItem("Material"))
+        {
+          const auto mtr = Resources::Material::Create("UntitledMaterial", "");
+          mtr->IsImGuiOpened() = true;
+        }
+
+        ImGui::EndMenu();
+      }
+
       if (ImGui::BeginMenu("Add"))
       {
         if (ImGui::MenuItem("Camera")) { GetActiveScene().lock()->CreateGameObject<Objects::Camera>(LAYER_CAMERA); }
 
         if (ImGui::MenuItem("Light")) { GetActiveScene().lock()->CreateGameObject<Objects::Light>(LAYER_LIGHT); }
 
-        GetActiveScene().lock()->addCustomObject();
+        if (ImGui::MenuItem("Object")) { GetActiveScene().lock()->CreateGameObject<Abstract::Object>(LAYER_DEFAULT); }
+
+        if (ImGui::MenuItem("Text"))
+        {
+          GetActiveScene().lock()->CreateGameObject<Objects::Text>(
+            LAYER_UI, 
+            GetResourceManager().GetResource<Resources::Font>("DefaultFont"));
+        }
 
         ImGui::EndMenu();
       }
@@ -106,13 +137,6 @@ namespace Engine::Manager
       if (ImGui::BeginMenu("Load"))
       {
         if (ImGui::MenuItem("Scene")) { m_b_load_popup_ = true; }
-
-        ImGui::EndMenu();
-      }
-
-      if (ImGui::BeginMenu("Save"))
-      {
-        if (ImGui::MenuItem("Scene")) { GetActiveScene().lock()->Save(); }
 
         ImGui::EndMenu();
       }
@@ -125,61 +149,28 @@ namespace Engine::Manager
 
   void SceneManager::AddScene(const WeakScene& ptr_scene)
   {
-    if (const auto scene = ptr_scene.lock())
+    if (const auto param_scene = ptr_scene.lock())
     {
-      if (m_scenes_[scene->GetType()].contains(scene->GetName()))
+      if (const auto target = std::ranges::find_if(m_scenes_, [param_scene](const auto& v_s)
+      {
+        return v_s->GetName() == param_scene->GetName();
+      }); m_scenes_.end() != target)
       {
         GetTaskScheduler().AddTask
           (
            TASK_SYNC_SCENE,
-           {ptr_scene},
+           {*target, param_scene},
            [this](const std::vector<std::any>& params, float)
            {
-             const auto scene = std::any_cast<WeakScene>(params[0]);
-             m_active_scene_.lock()->synchronize(scene);
+             const auto target = std::any_cast<StrongScene>(params[0]);
+             const auto scene = std::any_cast<StrongScene>(params[1]);
+             target->synchronize(scene);
            }
           );
       }
       else
       {
-        m_scenes_[scene->GetType()][scene->GetName()] = scene;
-      }
-    }
-  }
-
-  void SceneManager::SetActive(const WeakScene& ptr_scene)
-  {
-    if (const auto scene = ptr_scene.lock())
-    {
-      if (m_scenes_[scene->GetType()].contains(scene->GetName()))
-      {
-        GetTaskScheduler().AddTask
-          (
-           TASK_SYNC_SCENE,
-           {ptr_scene},
-           [this](const std::vector<std::any>& params, float)
-           {
-             const auto scene = std::any_cast<WeakScene>(params[0]);
-             m_active_scene_.lock()->synchronize(scene);
-           }
-          );
-      }
-      else
-      {
-        if (m_scenes_.contains(scene->GetType()) &&
-            m_scenes_[scene->GetType()].contains(scene->GetName()))
-        {
-          GetTaskScheduler().AddTask
-          (
-           TASK_ACTIVE_SCENE,
-           {ptr_scene},
-           [this](const std::vector<std::any>& params, float)
-           {
-             const auto scene = std::any_cast<WeakScene>(params[0]);
-             SetActiveFinalize(scene);
-           }
-          );
-        }
+        m_scenes_.push_back(param_scene);
       }
     }
   }

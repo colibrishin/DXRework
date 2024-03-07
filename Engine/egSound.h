@@ -38,6 +38,9 @@ namespace Engine::Resources
     void SetMinDistance(const float& min_distance);
     void SetMaxDistance(const float& max_distance);
 
+    void OnSerialized() override;
+    void OnDeserialized() override;
+
     RESOURCE_SELF_INFER_GETTER(Sound)
     RESOURCE_SELF_INFER_CREATE(Sound)
 
@@ -46,11 +49,9 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-
+    
   private:
     SERIALIZER_ACCESS
-
-    friend class boost::serialization::access;
 
     void CommitDistance() const;
 

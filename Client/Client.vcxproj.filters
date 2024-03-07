@@ -18,17 +18,11 @@
     <Filter Include="Resource\Texture">
       <UniqueIdentifier>{7c6a1fc5-8492-4703-9979-e9e7af7b9f50}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object">
-      <UniqueIdentifier>{f35b906c-66cf-4b65-9a28-80cc3e41846a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{edc00468-205b-4df0-903f-d5a189d31598}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\Normal">
       <UniqueIdentifier>{5e54c69d-ea83-42da-9ce5-924bee7376ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="State">
-      <UniqueIdentifier>{e1e610d3-8d69-45e9-b2eb-d054c6d18df9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\Sound">
       <UniqueIdentifier>{17fa9dbc-6f7a-4745-95b6-84114aa6dedc}</UniqueIdentifier>
@@ -36,44 +30,8 @@
     <Filter Include="Resource\Scene">
       <UniqueIdentifier>{1dbb809b-8ffa-49c9-adb8-c43a4dbb7f37}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Player">
-      <UniqueIdentifier>{9191c412-5fba-4843-8146-fd0240bbe22b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Water">
-      <UniqueIdentifier>{ac99b7d1-311b-4750-b5f4-1c862985b516}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\TestCube">
-      <UniqueIdentifier>{963fc1d0-8671-474a-b9db-9594b0838310}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\MousePosition">
-      <UniqueIdentifier>{bf74148a-6bd7-44bd-ab90-91a9719db0bf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\FPSCounter">
-      <UniqueIdentifier>{5ad0c76d-f91b-43e9-aa58-c0276bb60549}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\PlaneObject">
-      <UniqueIdentifier>{efdfa963-3918-436d-9908-77ed70e5f3b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\SkyBox">
-      <UniqueIdentifier>{7807774c-1bb6-48c6-9239-86a8011559d1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\TestObject">
-      <UniqueIdentifier>{d6ddae5c-4a7b-4c36-aa52-cdc366835b09}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\TestScene">
-      <UniqueIdentifier>{6f6bdb31-6658-4833-a2b4-74327a4b0da3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Model">
       <UniqueIdentifier>{1d546260-c8f3-4fc2-a810-1e9ffb232909}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Rifle">
-      <UniqueIdentifier>{a7aef9eb-6d3b-44f2-adf4-7e29c5a5799a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\DarkScene">
-      <UniqueIdentifier>{7e2797b0-0e58-4b99-9f63-bd1a4ef1fa16}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Hitbox">
-      <UniqueIdentifier>{2f49c3ca-73ee-477f-bc6f-47a08f03927b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Script">
       <UniqueIdentifier>{480a1e2a-0c63-47eb-990b-f117e6da8d83}</UniqueIdentifier>
@@ -81,17 +39,20 @@
     <Filter Include="Resource\ComputeShader">
       <UniqueIdentifier>{6e2bf49d-5f8d-4a30-a03d-176c473b9744}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Health">
-      <UniqueIdentifier>{4d29236d-2f58-4473-96cc-35ff21cddfae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object\Missile">
-      <UniqueIdentifier>{c302eed8-34e3-44a6-abc3-3e6c02fde386}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\ComputeShader\ParticleCompute">
       <UniqueIdentifier>{1cb6e23b-a956-4c5f-a930-63eef1351553}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource\ComputeShader\GrassCompute">
       <UniqueIdentifier>{def4098a-11b2-4a38-9759-26ba3e834c7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\HitboxScript">
+      <UniqueIdentifier>{6affa97b-3e7b-42a8-8946-d7a033781beb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\HpTextScript">
+      <UniqueIdentifier>{53f78c5a-199a-48d0-971a-dc663b3bebcd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\PlayerScript">
+      <UniqueIdentifier>{931117ce-5039-43ba-b329-7343e4f8fc65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -107,56 +68,17 @@
     <ClInclude Include="clTriangleMesh.hpp">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="clCharacterController.hpp">
-      <Filter>State</Filter>
-    </ClInclude>
-    <ClInclude Include="clWater.hpp">
-      <Filter>Object\Water</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestCube.hpp">
-      <Filter>Object\TestCube</Filter>
-    </ClInclude>
-    <ClInclude Include="clMousePosition.hpp">
-      <Filter>Object\MousePosition</Filter>
-    </ClInclude>
-    <ClInclude Include="clFPSCounter.hpp">
-      <Filter>Object\FPSCounter</Filter>
-    </ClInclude>
-    <ClInclude Include="clPlaneObject.hpp">
-      <Filter>Object\PlaneObject</Filter>
-    </ClInclude>
-    <ClInclude Include="clSkyBox.hpp">
-      <Filter>Object\SkyBox</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestObject.hpp">
-      <Filter>Object\TestObject</Filter>
-    </ClInclude>
-    <ClInclude Include="clTestScene.hpp">
-      <Filter>Scene\TestScene</Filter>
-    </ClInclude>
-    <ClInclude Include="clPlayer.h">
-      <Filter>Object\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="clRifile.h">
-      <Filter>Object\Rifle</Filter>
-    </ClInclude>
-    <ClInclude Include="clDarkScene.h">
-      <Filter>Scene\DarkScene</Filter>
-    </ClInclude>
-    <ClInclude Include="clHitbox.h">
-      <Filter>Object\Hitbox</Filter>
-    </ClInclude>
-    <ClInclude Include="clHitboxScript.hpp">
-      <Filter>Script</Filter>
-    </ClInclude>
-    <ClInclude Include="clHealth.h">
-      <Filter>Object\Health</Filter>
-    </ClInclude>
-    <ClInclude Include="clMissile.h">
-      <Filter>Object\Missile</Filter>
-    </ClInclude>
     <ClInclude Include="clParticleCompute.h">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
+    </ClInclude>
+    <ClInclude Include="clHitboxScript.hpp">
+      <Filter>Script\HitboxScript</Filter>
+    </ClInclude>
+    <ClInclude Include="clHpTextScript.h">
+      <Filter>Script\HpTextScript</Filter>
+    </ClInclude>
+    <ClInclude Include="clPlayerScript.h">
+      <Filter>Script\PlayerScript</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -166,53 +88,17 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="clCharacterController.cpp">
-      <Filter>State</Filter>
-    </ClCompile>
-    <ClCompile Include="clWater.cpp">
-      <Filter>Object\Water</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestCube.cpp">
-      <Filter>Object\TestCube</Filter>
-    </ClCompile>
-    <ClCompile Include="clMousePosition.cpp">
-      <Filter>Object\MousePosition</Filter>
-    </ClCompile>
-    <ClCompile Include="clFPSCounter.cpp">
-      <Filter>Object\FPSCounter</Filter>
-    </ClCompile>
-    <ClCompile Include="clPlaneObject.cpp">
-      <Filter>Object\PlaneObject</Filter>
-    </ClCompile>
-    <ClCompile Include="clSkyBox.cpp">
-      <Filter>Object\SkyBox</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestObject.cpp">
-      <Filter>Object\TestObject</Filter>
-    </ClCompile>
-    <ClCompile Include="clTestScene.cpp">
-      <Filter>Scene\TestScene</Filter>
-    </ClCompile>
-    <ClCompile Include="clPlayer.cpp">
-      <Filter>Object\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="clRifle.cpp">
-      <Filter>Object\Rifle</Filter>
-    </ClCompile>
-    <ClCompile Include="clDarkScene.cpp">
-      <Filter>Scene\DarkScene</Filter>
-    </ClCompile>
-    <ClCompile Include="clHitbox.cpp">
-      <Filter>Object\Hitbox</Filter>
-    </ClCompile>
-    <ClCompile Include="clHealth.cpp">
-      <Filter>Object\Health</Filter>
-    </ClCompile>
-    <ClCompile Include="clMissile.cpp">
-      <Filter>Object\Missile</Filter>
-    </ClCompile>
     <ClCompile Include="clParticleCompute.cpp">
       <Filter>Resource\ComputeShader\ParticleCompute</Filter>
+    </ClCompile>
+    <ClCompile Include="clHitboxScript.cpp">
+      <Filter>Script\HitboxScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clHpTextScript.cpp">
+      <Filter>Script\HpTextScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayerScript.cpp">
+      <Filter>Script\PlayerScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

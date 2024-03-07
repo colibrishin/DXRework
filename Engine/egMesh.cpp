@@ -117,6 +117,8 @@ namespace Engine::Resources
 
   void Mesh::OnDeserialized() { Resource::OnDeserialized(); }
 
+  void Mesh::OnSerialized() {}
+
   void Mesh::Initialize() {}
 
   void Mesh::Render(const float& dt)
@@ -157,14 +159,14 @@ namespace Engine::Resources
       (
        D3D11_BIND_VERTEX_BUFFER,
        static_cast<UINT>(m_vertices_.size()),
-       m_vertex_buffer_.ReleaseAndGetAddressOf(),
+       m_vertex_buffer_.GetAddressOf(),
        m_vertices_.data()
       );
 
     GetD3Device().CreateBuffer<UINT>
       (
        D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_.size()),
-       m_index_buffer_.ReleaseAndGetAddressOf(), m_indices_.data()
+       m_index_buffer_.GetAddressOf(), m_indices_.data()
       );
   }
 

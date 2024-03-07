@@ -26,6 +26,8 @@ namespace Engine::Resources
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 
@@ -57,11 +59,11 @@ namespace Engine::Resources
       if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
 
-      const auto it = std::ranges::find(m_resources_.at(which_resource<T>::value), name);
+      const auto it = std::ranges::find(m_resources_loaded_.at(which_resource<T>::value), name);
 
-      if (it == m_resources_.at(which_resource<T>::value).end()) { return {}; }
+      if (it == m_resources_loaded_.at(which_resource<T>::value).end()) { return {}; }
 
-      const auto idx = std::distance(m_resources_.at(which_resource<T>::value).begin(), it);
+      const auto idx = std::distance(m_resources_loaded_.at(which_resource<T>::value).begin(), it);
       return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
     }
 
@@ -70,6 +72,7 @@ namespace Engine::Resources
     {
       if (!m_resources_loaded_.contains(which_resource<T>::value)) { return {}; }
       if (m_resources_loaded_.at(which_resource<T>::value).empty()) { return {}; }
+      if (m_resources_loaded_.at(which_resource<T>::value).size() <= idx) { return {}; }
 
       const auto& anims = m_resources_loaded_.at(which_resource<T>::value);
 
@@ -84,7 +87,7 @@ namespace Engine::Resources
   protected:
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-
+    
   private:
     SERIALIZER_ACCESS
     Material();
@@ -93,8 +96,8 @@ namespace Engine::Resources
 
     CBs::MaterialCB m_material_cb_;
 
-    std::vector<std::string>                                m_shaders_;
-    std::map<const eResourceType, std::vector<std::string>> m_resources_;
+    std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
+    std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
 
     // non-serialized
     bool                                                       m_b_edit_dialog_;

@@ -67,6 +67,24 @@ namespace Engine
     ImGui::Checkbox(_labelPrefix(label.c_str()).c_str(), &flag);
   }
 
+  inline static void UINTAligned(const std::string& label, UINT& value)
+  {
+    ImGui::InputScalar
+      (
+       _labelPrefix(label.c_str()).c_str(), ImGuiDataType_U32, &value,
+       nullptr, nullptr, nullptr, ImGuiInputTextFlags_CharsDecimal
+      );
+  }
+
+  inline static void lldAligned(const std::string& label, long long& value)
+  {
+    ImGui::InputScalar
+      (
+       _labelPrefix(label.c_str()).c_str(), ImGuiDataType_S64, &value,
+       nullptr, nullptr, nullptr, ImGuiInputTextFlags_CharsDecimal
+      );
+  }
+
   inline static void ImGuiColorEditable(
     const std::string&   label,
     const GlobalEntityID id,
@@ -104,6 +122,26 @@ namespace Engine
     ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
 
     ImGui::DragFloat3("##vector", &v.x);
+    ImGui::PopID();
+  }
+
+  inline static void ImGuiVector2Editable(
+    const std::string&   label,
+    const GlobalEntityID id,
+    const std::string&   var_name,
+    Vector2&             v
+  )
+  {
+    const auto  unique_id = std::to_string(id) + var_name;
+    const float width     = ImGui::CalcItemWidth();
+    const float x         = ImGui::GetCursorPosX();
+
+    ImGui::PushID(unique_id.c_str());
+    ImGui::Text(label.c_str());
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
+
+    ImGui::DragFloat2("##vector", &v.x);
     ImGui::PopID();
   }
 }

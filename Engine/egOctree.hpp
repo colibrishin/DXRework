@@ -55,6 +55,7 @@ namespace Engine
     bool                         Contains(const Vector3& point) const;
     UINT                         ActiveChildren() const;
     bool                         Insert(const WeakT& obj);
+    void                         Remove(const WeakT& obj);
     void                         Update();
     void                         Clear();
 

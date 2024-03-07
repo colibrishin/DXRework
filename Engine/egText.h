@@ -23,16 +23,21 @@ namespace Engine::Objects
 
     void SetText(const std::string& text);
     void SetPosition(const Vector2& position);
-    void SetColor(const Vector4& color);
+    void SetColor(const Vector4 & color);
     void SetRotation(float radian);
     void SetScale(float scale);
+
+    void OnSerialized() override;
+    void OnImGui() override;
 
   private:
     SERIALIZER_ACCESS
     Text();
 
+    MetadataPathStr m_font_meta_path_str_;
+
     Vector2     m_position_;
-    Vector4     m_color_;
+    Color     m_color_;
     float       m_rotation_radian_;
     float       m_scale_;
     std::string m_text_;

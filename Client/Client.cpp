@@ -15,9 +15,11 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
-#include "clDarkScene.h"
+#include "clHitboxScript.hpp"
+#include "clHpTextScript.h"
+#include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
-#include "clTestScene.hpp"
+#include "clPlayerScript.h"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
 #include "egGlobal.h"
@@ -80,7 +82,7 @@ namespace Client
   void InitializeModel()
   {
     Resources::Shape::Create("BobShape", "./bob_lamp_update_export.fbx");
-    Resources::Shape::Create("CharacterShape", "./Character.fbx");
+    //Resources::Shape::Create("CharacterShape", "./Character.fbx");
     Resources::Shape::Create("RifleShape", "./Rifle.fbx");
     Resources::Shape::Create("PlayerShape", "./player.obj");
     Resources::Shape::Create("MissileShape", "./Rocket.fbx");
@@ -149,7 +151,7 @@ namespace Client
       mtr->SetResource<Resources::Shape>("MissileShape");
     }
 
-    {
+    /*{
       const auto mtr = Resources::Material::Create("Character", "");
       mtr->SetResource<Resources::Shader>("color");
 
@@ -159,7 +161,7 @@ namespace Client
       }
 
       mtr->SetResource<Resources::Shape>("CharacterShape");
-    }
+    }*/
 
     {
       const auto mtr = Resources::Material::Create("ThunderSkybox", "");
@@ -197,15 +199,16 @@ namespace Client
     }
   }
 
-  void InitializeComputeShader()
-  {
-    Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
-  }
-
   void Initialize(HWND hwnd)
   {
     Manager::Application::GetInstance().Initialize(hwnd);
 
+    Script::Register<Scripts::HitboxScript>();
+    Script::Register<Scripts::PlayerScript>();
+    Script::Register<Scripts::HpTextScript>();
+    Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
+
+    // todo: refactor
     InitializeTexture();
     InitializeMesh();
     InitializeNormal();
@@ -213,15 +216,9 @@ namespace Client
     InitializeAnimation();
     InitializeFont();
     InitializeSound();
-    InitializeComputeShader();
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
-
-
-    GetSceneManager().AddScene<Scene::TestScene>("Test");
-    GetSceneManager().AddScene<Scene::DarkScene>("Thunder");
-    GetSceneManager().SetActive<Scene::TestScene>("Test");
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }

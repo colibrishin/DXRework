@@ -25,14 +25,12 @@ namespace Engine::Components
 
     if (!GetOwner().lock()->GetComponent<Transform>().lock())
     {
-      throw std::exception
-        ("Rigidbody must have a transform component");
+      GetOwner().lock()->AddComponent<Transform>();
     }
 
     if (!GetOwner().lock()->GetComponent<Collider>().lock())
     {
-      throw std::exception
-        ("Rigidbody must have a collider component");
+      GetOwner().lock()->AddComponent<Collider>();
     }
   }
 
@@ -133,6 +131,8 @@ namespace Engine::Components
   void Rigidbody::PostUpdate(const float& dt) { Component::PostUpdate(dt); }
 
   void Rigidbody::FixedUpdate(const float& dt) { Synchronize(); }
+
+  void Rigidbody::OnSerialized() {}
 
   void Rigidbody::OnDeserialized() { Component::OnDeserialized(); }
 

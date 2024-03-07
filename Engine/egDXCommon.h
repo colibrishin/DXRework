@@ -1,5 +1,8 @@
 #pragma once
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/base_object.hpp>
+
 #include "egConstant.h"
 #include "egDXType.h"
 #include "egMacro.h"
@@ -22,9 +25,24 @@ namespace Engine::Graphics
     }
 
     template <typename T>
+    T& GetParam(const size_t slot)
+    {
+      if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
+      else if constexpr (std::is_same_v<T, bool>) { return reinterpret_cast<bool&>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, UINT>) { return reinterpret_cast<UINT&>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
+      else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
+      else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
+      else if constexpr (std::is_same_v<T, Matrix>) { return m_param[slot]; }
+      else { throw std::runtime_error("Invalid type"); }
+    }
+
+    template <typename T>
     T GetParam(const size_t slot) const
     {
       if constexpr (std::is_same_v<T, int>) { return i_param[slot]; }
+      else if constexpr (std::is_same_v<T, bool>) { return static_cast<bool>(i_param[slot]); }
+      else if constexpr (std::is_same_v<T, UINT>) { return static_cast<UINT>(i_param[slot]); }
       else if constexpr (std::is_same_v<T, float>) { return f_param[slot]; }
       else if constexpr (std::is_same_v<T, Vector3>) { return Vector3(v_param[slot]); }
       else if constexpr (std::is_same_v<T, Vector4>) { return v_param[slot]; }
@@ -77,6 +95,14 @@ namespace Engine::Graphics
     {
       SB_T(SB_TYPE_INSTANCE)
       SB_UAV_T(SB_TYPE_UAV_INSTANCE)
+
+    private:
+      friend class boost::serialization::access;
+      template <class Archive>
+      void serialize(Archive& ar, const unsigned int file_version)
+      {
+        ar & boost::serialization::base_object<ParamBase>(*this);
+      }
     };
 
     struct InstanceModelSB : public InstanceSB
@@ -118,9 +144,9 @@ namespace Engine::Graphics
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
 
-      Matrix GetWorld() const { return GetParam<Matrix>(0); }
+      Matrix& GetWorld() { return GetParam<Matrix>(0); }
 
-      bool GetActive() const { return GetParam<int>(0) != 0; }
+      bool& GetActive() { return reinterpret_cast<bool&>(GetParam<int>(0)); }
     };
   }
 
@@ -186,3 +212,7 @@ namespace Engine::Graphics
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
   }} // namespace Engine
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::ParamBase)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::CBs::MaterialCB)

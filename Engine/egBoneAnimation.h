@@ -21,6 +21,8 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
 
     void          BindBone(const WeakBone& bone_info);
@@ -36,12 +38,13 @@ namespace Engine::Resources
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-
+    
   private:
     BoneAnimation();
 
     AnimationPrimitive m_primitive_;
     StrongBone         m_bone_;
+    MetadataPathStr    m_bone_meta_path_str_;
 
     // non-serialized
     float               m_evaluated_time_;

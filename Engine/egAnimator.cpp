@@ -59,6 +59,28 @@ namespace Engine::Components
 
   void Animator::FixedUpdate(const float& dt) {}
 
+  void Animator::OnSerialized()
+  {
+    if (const auto mr = GetOwner().lock()->GetComponent<ModelRenderer>().lock())
+    {
+      if (const auto mat = mr->GetMaterial().lock())
+      {
+        if (const auto tr_anim = mat->GetResource<Resources::BaseAnimation>
+          (m_animation_id_).lock())
+        {
+          Serializer::Serialize(tr_anim->GetName(), tr_anim);
+        }
+        else if (const auto bone_anim = mat->GetResource<Resources::BoneAnimation>
+          (m_animation_id_).lock())
+        {
+          Serializer::Serialize(bone_anim->GetName(), bone_anim);
+        }
+      }
+    }
+  }
+
+  void Animator::OnDeserialized() { Component::OnDeserialized(); }
+
   void Animator::OnImGui()
   {
     Component::OnImGui();

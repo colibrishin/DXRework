@@ -34,6 +34,8 @@ namespace Engine::Resources
 
   void BaseAnimation::PostUpdate(const float& dt) {}
 
+  void BaseAnimation::OnSerialized() {}
+
   void BaseAnimation::SetTicksPerSecond(const float& ticks_per_second) { m_ticks_per_second_ = ticks_per_second; }
 
   void BaseAnimation::SetDuration(const float& duration) { m_duration_ = duration; }

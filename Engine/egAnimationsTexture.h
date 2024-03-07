@@ -18,6 +18,8 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
+
+    void OnSerialized() override;
     void OnDeserialized() override;
 
     eResourceType GetResourceType() const override;
@@ -37,7 +39,7 @@ namespace Engine::Resources
 
   protected:
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
-
+     
   private:
     SERIALIZER_ACCESS
     AnimationsTexture() : Texture3D("", {}) {}

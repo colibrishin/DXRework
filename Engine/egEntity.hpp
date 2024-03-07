@@ -16,12 +16,14 @@ namespace Engine::Abstract
     void SetName(const EntityName& name);
     void SetGarbage(bool garbage);
 
-    GlobalEntityID GetID() const;
-    EntityName     GetName() const;
-    TypeName       GetTypeName() const;
-    bool           IsGarbage() const;
-    bool           IsInitialized() const;
-    bool&          IsImGuiOpened();
+    const std::filesystem::path& GetMetadataPath() const;
+    GlobalEntityID               GetID() const;
+    EntityName                   GetName() const;
+    TypeName                     GetTypeName() const;
+    virtual TypeName             GetPrettyTypeName() const;
+    bool                         IsGarbage() const;
+    bool                         IsInitialized() const;
+    bool&                        IsImGuiOpened();
 
     template <typename T>
     __forceinline boost::weak_ptr<T> GetWeakPtr() { return boost::reinterpret_pointer_cast<T>(shared_from_this()); }
@@ -35,6 +37,7 @@ namespace Engine::Abstract
     virtual void PostUpdate(const float& dt) = 0;
     virtual void FixedUpdate(const float& dt) = 0;
 
+    virtual void OnSerialized();
     virtual void OnDeserialized();
     virtual void OnImGui();
 
@@ -51,7 +54,14 @@ namespace Engine::Abstract
     bool       m_b_initialized_;
     bool       m_b_imgui_opened_;
     bool       m_b_garbage_;
+
+    std::string m_meta_str_; // for serialization
+
+    // non-serialized
+    std::filesystem::path m_meta_path_;
+
   };
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Entity)
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Entity)

@@ -5,16 +5,16 @@
 
 namespace Client::Scripts
 {
-  class HitboxScript : public Script
+  class HpTextScript : public Script
   {
   public:
-	  CLIENT_SCRIPT_T(HitboxScript, SCRIPT_T_HITBOX)
+	  CLIENT_SCRIPT_T(HpTextScript, SCRIPT_T_HP_TEXT)
 
-    explicit HitboxScript(const WeakObject& owner);
+    explicit HpTextScript(const WeakObject& owner)
+      : Script(SCRIPT_T_HP_TEXT, owner) {}
 
-	~HitboxScript() override;
+	  ~HpTextScript() override = default;
 
-	  void Hit(const float dmg) const;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void PostUpdate(const float& dt) override;
@@ -24,11 +24,10 @@ namespace Client::Scripts
     void PostRender(const float& dt) override;
 
   private:
-	  float m_modifier_;
-    HitboxScript();
+    HpTextScript();
     SERIALIZER_ACCESS
 
   };
 }
 
-BOOST_CLASS_EXPORT_KEY(Client::Scripts::HitboxScript)
+BOOST_CLASS_EXPORT_KEY(Client::Scripts::HpTextScript)

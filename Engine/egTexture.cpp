@@ -1,4 +1,7 @@
 #include "pch.h"
+#include <DirectXTex.h>
+#include <wincodec.h>
+
 #include "egTexture.h"
 #include "egD3Device.hpp"
 #include "egRenderPipeline.h"
@@ -64,9 +67,10 @@ namespace Engine::Resources
 
   Texture::Texture()
     : Resource("", RES_T_TEX),
-      m_b_lazy_window_(true),
       m_desc_({}),
       m_type_(TEX_TYPE_2D),
+      m_custom_desc_{ false },
+      m_b_lazy_window_(true),
       m_bind_to_(D3D11_BIND_SHADER_RESOURCE),
       m_bound_slot_(BIND_SLOT_TEX),
       m_bound_slot_offset_(0),
@@ -395,6 +399,41 @@ namespace Engine::Resources
   }
 
   void Texture::FixedUpdate(const float& dt) {}
+
+  void Texture::OnSerialized()
+  {
+    const auto name = GetName();
+    const std::filesystem::path folder = GetPrettyTypeName();
+    const std::filesystem::path filename = name + ".dds";
+    const std::filesystem::path final_path = folder / filename;
+
+    if (m_res_)
+    {
+      DirectX::ScratchImage image;
+
+      DX::ThrowIfFailed
+        (
+         DirectX::CaptureTexture
+         (
+          GetD3Device().GetDevice(), GetD3Device().GetContext(), m_res_.Get(), image
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         DirectX::SaveToDDSFile
+         (
+             image.GetImages(),
+             image.GetImageCount(),
+             image.GetMetadata(),
+             DirectX::DDS_FLAGS_ALLOW_LARGE_FILES,
+             final_path.c_str()
+         )
+        );
+
+      SetPath(final_path);
+    }
+  }
 
   eResourceType Texture::GetResourceType() const { return Resource::GetResourceType(); }
 } // namespace Engine::Resources

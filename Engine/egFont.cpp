@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "egFont.h"
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
 #include "egSerialization.hpp"
 
 SERIALIZER_ACCESS_IMPL
@@ -69,6 +66,10 @@ namespace Engine::Resources
     SetPath(path);
     m_lazy_reload_ = true;
   }
+
+  void Font::OnSerialized() {}
+
+  void Font::OnDeserialized() { Resource::OnDeserialized(); }
 
   void Font::Unload_INTERNAL() { m_font_.reset(); }
 

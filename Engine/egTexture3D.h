@@ -19,7 +19,7 @@ namespace Engine::Resources
   protected:
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
     void Unload_INTERNAL() override;
-
+    
   private:
     SERIALIZER_ACCESS
     Texture3D() : Texture("", TEX_TYPE_3D, {}) {}

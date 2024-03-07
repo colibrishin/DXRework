@@ -7,14 +7,16 @@
   friend class boost::serialization::access;                                   \
   template <class Archive>                                                     \
   void serialize(Archive &ar, const unsigned int file_version);
+
 // part of serialization access implementation, forward declaration of serialize
 // function
-#define SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                \
-  template void NAMESPACE_TYPE::serialize<boost::archive::text_iarchive>(      \
-      boost::archive::text_iarchive & ar, const unsigned int file_version);    \
-  template void NAMESPACE_TYPE::serialize<boost::archive::text_oarchive>(      \
-      boost::archive::text_oarchive & ar, const unsigned int file_version);    \
-  BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE)
+#define SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                  \
+  template void NAMESPACE_TYPE::serialize<boost::archive::binary_iarchive>(      \
+      boost::archive::binary_iarchive & ar, const unsigned int file_version);    \
+  template void NAMESPACE_TYPE::serialize<boost::archive::binary_oarchive>(      \
+      boost::archive::binary_oarchive & ar, const unsigned int file_version);    \
+    BOOST_CLASS_EXPORT_IMPLEMENT(NAMESPACE_TYPE)
+
 // serialization macros
 #define _ARTAG(TYPENAME) ar & TYPENAME;
 // serialization macros, requires if object is inherited from another object
@@ -57,13 +59,20 @@
 // Static client provided scene type, this should be added to every scene in the client
 #define CLIENT_SCENE_T(enum_val) static constexpr Engine::eSceneType stype = enum_val;
 // Static client provided script type, this should be added to every script in the client
-#define CLIENT_SCRIPT_T(enum_val) static constexpr Engine::eScriptType scptype = enum_val;
+#define CLIENT_SCRIPT_T(typename, enum_val) static constexpr Engine::eScriptType scptype = enum_val; \
+  static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
 
 // Static inline resource getter which infers self as type
-#define RESOURCE_SELF_INFER_GETTER(TYPE)                                      \
-  static inline boost::weak_ptr<TYPE> Get(const std::string& name)            \
-    { return Engine::Manager::ResourceManager::GetInstance()                  \
-       .GetResource<TYPE>(name); }
+#define RESOURCE_SELF_INFER_GETTER(TYPE)                                                    \
+  static inline boost::weak_ptr<TYPE> Get(const std::string& name) {                        \
+    return Engine::Manager::ResourceManager::GetInstance()                                  \
+        .GetResource<TYPE>(name); }                                                         \
+  static inline boost::weak_ptr<TYPE> GetByMetadataPath(const std::filesystem::path& path)  \
+    { return Engine::Manager::ResourceManager::GetInstance()                                \
+       .GetResourceByMetadataPath<TYPE>(path); }                                            \
+  static inline boost::weak_ptr<TYPE> GetByRawPath(const std::filesystem::path& path)       \
+    { return Engine::Manager::ResourceManager::GetInstance()                                \
+       .GetResourceByRawPath<TYPE>(path); }
 
 // Creatable resource creator which infers self as type
 #define RESOURCE_SELF_INFER_CREATE(TYPE)                                      \
@@ -71,7 +80,7 @@
     const std::string& name, const std::filesystem::path& path)               \
     {                                                                         \
         if (const auto pcheck = GetResourceManager().                         \
-                               GetResourceByPath<TYPE>(path).lock();          \
+                               GetResourceByRawPath<TYPE>(path).lock();       \
             const auto ncheck = GetResourceManager().                         \
                                GetResource<TYPE>(name).lock())                \
         {                                                                     \

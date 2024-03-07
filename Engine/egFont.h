@@ -31,6 +31,9 @@ namespace Engine::Resources
     void SetScale(float scale);
     void ChangeFont(const std::filesystem::path& path);
 
+    void OnSerialized() override;
+    void OnDeserialized() override;
+
     RESOURCE_SELF_INFER_GETTER(Font)
     RESOURCE_SELF_INFER_CREATE(Font)
 
@@ -38,7 +41,7 @@ namespace Engine::Resources
     Font(); // for serialization
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;
-
+    
   private:
     SERIALIZER_ACCESS
 

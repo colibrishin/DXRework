@@ -16,6 +16,8 @@ namespace Engine::Components
     void PostUpdate(const float& dt) override;
 
     void SetSound(const StrongSound& sound);
+
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 
@@ -28,7 +30,7 @@ namespace Engine::Components
     SERIALIZER_ACCESS
     SoundPlayer();
 
-    std::string m_sound_name_;
+    std::string m_sound_meta_path_;
 
     // non-serialized
     StrongSound m_sound_;

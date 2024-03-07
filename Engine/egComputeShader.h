@@ -2,6 +2,7 @@
 #include "egMacro.h"
 #include "egShader.hpp"
 #include "egResourceManager.hpp"
+#include "egDXCommon.h"
 
 namespace Engine::Resources
 {
@@ -24,13 +25,14 @@ namespace Engine::Resources
       return v;
     }
 
-    static inline boost::weak_ptr<ComputeShader> Get(const std::string& name)
-    {
-      return GetResourceManager().GetResource<ComputeShader>(name).lock();
-    }
+    virtual void OnImGui(const StrongParticleRenderer& pr) = 0;
 
+    RESOURCE_SELF_INFER_GETTER(ComputeShader)
 	protected:
     ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
+
+    static Graphics::ParamBase& getParam(const StrongParticleRenderer& pr);
+    static InstanceParticles& getInstances(const StrongParticleRenderer& pr);
 
     virtual void preDispatch() = 0;
     virtual void postDispatch() = 0;
@@ -62,4 +64,5 @@ namespace Engine::Resources
   };
 } // namespace Engine::Resources
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::ComputeShader)
 BOOST_CLASS_EXPORT_KEY(Engine::Resources::ComputeShader)

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egComputeShader.h"
 
+#include "egParticleRenderer.h"
 #include "egTexture.h"
 
 SERIALIZER_ACCESS_IMPL
@@ -64,6 +65,16 @@ namespace Engine::Resources
   {
     SetPath(path);
     std::ranges::copy(thread, m_thread_);
+  }
+
+  ParamBase& ComputeShader::getParam(const StrongParticleRenderer& pr)
+  {
+    return pr->m_params_;
+  }
+
+  InstanceParticles& ComputeShader::getInstances(const StrongParticleRenderer& pr)
+  {
+    return pr->m_instances_;
   }
 
   void ComputeShader::SetGroup(const std::array<UINT, 3>& group) { std::ranges::copy(group, m_group_); }

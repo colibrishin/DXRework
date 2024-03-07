@@ -11,7 +11,6 @@ SERIALIZER_ACCESS_IMPL
  _ARTAG(_BSTSUPER(Renderable))
  _ARTAG(m_main_camera_local_id_)
  _ARTAG(m_layers)
- _ARTAG(m_type_)
 )
 
 namespace Engine
@@ -37,8 +36,6 @@ namespace Engine
 
     const auto light2 = CreateGameObject<Objects::Light>(LAYER_LIGHT).lock();
     light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
-
-    Initialize_INTERNAL();
 
     GetTaskScheduler().AddTask
       (
@@ -89,10 +86,6 @@ namespace Engine
     }
 
     if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>()); }
-
-    if (const auto tr = obj->GetComponent<Components::Transform>().lock()) { m_object_position_tree_.Insert(obj); }
-
-    for (const auto& comp : obj->GetAllComponents()) { AddCacheComponent(comp.lock()); }
   }
 
   void Scene::RemoveObjectFinalize(const GlobalEntityID id, eLayerType layer)
@@ -133,8 +126,12 @@ namespace Engine
 
       if (m_cached_components_.find(comp_acc, comp.lock()->GetComponentType()))
       {
-        comp_acc->second.erase
-          (comp.lock()->GetID());
+        comp_acc->second.erase(comp.lock()->GetID());
+      }
+
+      if (comp.lock()->GetComponentType() == COM_T_TRANSFORM)
+      {
+        m_object_position_tree_.Remove(obj.lock());
       }
     }
 
@@ -158,8 +155,39 @@ namespace Engine
       m_observer_ = scene->m_observer_;
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
-      m_cached_objects_ = scene->m_cached_objects_;
-      m_cached_components_ = scene->m_cached_components_;
+
+      m_cached_objects_.clear();
+      m_cached_components_.clear();
+
+      for (const auto& layer : m_layers)
+      {
+        for (const auto& obj : layer->GetGameObjects())
+        {
+          if (const auto locked = obj.lock())
+          {
+            m_cached_objects_.emplace(locked->GetID(), obj);
+
+            locked->SetScene(GetSharedPtr<Scene>());
+
+            for (const auto& comp : locked->GetAllComponents()) { AddCacheComponent(comp.lock()); }
+
+            const auto& children = locked->m_children_;
+
+            for (const auto& child_id : children)
+            {
+              if (const auto child = FindGameObjectByLocalID(child_id).lock())
+              {
+                locked->m_children_cache_.emplace(child->GetLocalID(), child);
+              }
+            }
+
+            if (const auto parent = FindGameObjectByLocalID(locked->m_parent_id_).lock())
+            {
+              locked->m_parent_ = parent;
+            }
+          }
+        }
+      }
 
       m_object_position_tree_.Clear();
 
@@ -201,6 +229,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObject(GlobalEntityID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentWeakObjGlobalMap::const_accessor acc;
 
     if (m_cached_objects_.find(acc, id)) { return acc->second; }
@@ -210,6 +240,8 @@ namespace Engine
 
   WeakObject Scene::FindGameObjectByLocalID(LocalActorID id) const
   {
+    INVALID_ID_CHECK_WEAK_RETURN(id)
+
     ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
 
     if (m_assigned_actor_ids_.find(actor_acc, id))
@@ -241,12 +273,16 @@ namespace Engine
         comp_acc->second.emplace(component->GetID(), component);
       }
     }
+
+    if (component->GetComponentType() == COM_T_TRANSFORM)
+    {
+      m_object_position_tree_.Insert(component->GetOwner().lock());
+    }
   }
 
-  Scene::Scene(const eSceneType type)
+  Scene::Scene()
     : m_b_scene_imgui_open_(false),
       m_main_camera_local_id_(g_invalid_id),
-      m_type_(type),
       m_object_position_tree_() {}
 
   void Scene::PreUpdate(const float& dt)
@@ -286,17 +322,15 @@ namespace Engine
     for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->PostUpdate(dt); }
   }
 
+  void Scene::OnSerialized()
+  {
+    for (int i = LAYER_NONE; i < LAYER_MAX; ++i) { m_layers[static_cast<eLayerType>(i)]->OnSerialized(); }
+  }
+
   void Scene::Save()
   {
-    auto name = std::to_string(GetID()) + " " + typeid(*this).name();
-    std::ranges::replace(name, ' ', '_');
-    std::ranges::replace(name, ':', '_');
-    name += ".txt";
-
-    Serializer::Serialize(name, GetSharedPtr<Scene>());
+    Serializer::Serialize(GetName(), GetSharedPtr<Scene>());
   }
-  
-  eSceneType Scene::GetType() const { return m_type_; }
   
   ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const { return m_layers[layer]->GetGameObjects(); }
 
@@ -363,6 +397,29 @@ namespace Engine
       }
     }
 
+    for (const auto& layer : m_layers)
+    {
+      for (const auto& obj : layer->GetGameObjects())
+      {
+        const auto& children = obj.lock()->m_children_;
+
+        for (const auto& child_id : children)
+        {
+          if (const auto child = FindGameObjectByLocalID(child_id).lock())
+          {
+            obj.lock()->m_children_cache_.emplace(child->GetLocalID(), child);
+          }
+        }
+
+        if (const auto parent = FindGameObjectByLocalID(obj.lock()->m_parent_id_).lock())
+        {
+          obj.lock()->m_parent_ = parent;
+        }
+
+        obj.lock()->OnDeserialized();
+      }
+    }
+
     // set main camera
     const auto& cameras = m_layers[LAYER_CAMERA]->GetGameObjects();
     const auto it = std::ranges::find_if
@@ -405,14 +462,42 @@ namespace Engine
 
   void Scene::OnImGui()
   {
-    if (ImGui::Begin(GetName().c_str()), &m_b_scene_imgui_open_, ImGuiWindowFlags_MenuBar)
+    const auto name = GetName() + "###" + std::to_string(GetID());
+    const auto list_name = "###Layers" + std::to_string(GetID());
+
+    if (ImGui::Begin(name.c_str()), &m_b_scene_imgui_open_)
     {
-      if (ImGui::BeginListBox(GetName().c_str(), {-1, -1}))
+      Renderable::OnImGui();
+
+      if (ImGui::BeginListBox(list_name.c_str(), {-1, -1}))
       {
         for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
         {
           if (ImGui::TreeNode(g_layer_type_str[i]))
           {
+            if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+            {
+              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
+              {
+                GetTaskScheduler().AddTask
+                  (
+                   TASK_CHANGE_LAYER,
+                   {GetSharedPtr<Scene>(), static_cast<WeakObject*>(payload->Data), i},
+                   [this, i](const std::vector<std::any>& args, const float)
+                   {
+                     const auto scene = std::any_cast<StrongScene>(args[0]);
+                     const auto obj   = std::any_cast<WeakObject*>(args[1])->lock();
+                     const auto layer = std::any_cast<int>(args[2]);
+
+                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+                     (*scene)[layer]->AddGameObject(obj);
+                     obj->SetLayer(static_cast<eLayerType>(layer));
+                   }
+                  );
+              }
+              ImGui::EndDragDropTarget();
+            }
+
             for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
             {
               if (const auto obj_ptr = obj.lock())
@@ -424,6 +509,13 @@ namespace Engine
                 if (ImGui::Selectable(unique_name.c_str()))
                 {
                   obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
+                }
+
+                if (ImGui::BeginDragDropSource())
+                {
+                  ImGui::SetDragDropPayload("OBJECT", &obj, sizeof(WeakObject));
+                  ImGui::Text(unique_name.c_str());
+                  ImGui::EndDragDropSource();
                 }
 
                 if (obj_ptr->GetImGuiOpen()) { obj_ptr->OnImGui(); }

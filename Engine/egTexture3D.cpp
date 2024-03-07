@@ -24,7 +24,7 @@ namespace Engine::Resources
       throw std::logic_error("Hotloading texture should be define in width, height, depth");
     }
 
-    if (gd.ArraySize != 1) { throw std::logic_error("3D Texture cannot be array"); }
+    if (gd.ArraySize > 1) { throw std::logic_error("3D Texture cannot be array"); }
 
     if (!GetPath().empty())
     {

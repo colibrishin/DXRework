@@ -219,6 +219,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
     </CopyFileToFolders>
+    <None Include="egResourceManagerMeta.hpp" />
     <None Include="packages.config" />
     <CopyFileToFolders Include="utility.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -491,6 +492,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -521,6 +523,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -550,6 +553,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -580,6 +584,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -605,6 +610,7 @@
     <Import Project="$(VCTargetsPath)\BuildCustomizations\ImageContentTask.targets" />
     <Import Project="..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets" Condition="Exists('..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets')" />
     <Import Project="..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets" Condition="Exists('..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets')" />
+    <Import Project="..\DX\packages\directxtex_desktop_win10.2024.2.22.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('..\DX\packages\directxtex_desktop_win10.2024.2.22.1\build\native\directxtex_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -614,6 +620,7 @@
     <Error Condition="!Exists('..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtk_desktop_win10.2023.10.31.1\build\native\directxtk_desktop_win10.targets'))" />
     <Error Condition="!Exists('..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.redist.win.2021.11.0.49514\build\native\inteltbb.redist.win.targets'))" />
     <Error Condition="!Exists('..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.devel.win.2021.11.0.49514\build\native\inteltbb.devel.win.targets'))" />
+    <Error Condition="!Exists('..\DX\packages\directxtex_desktop_win10.2024.2.22.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxtex_desktop_win10.2024.2.22.1\build\native\directxtex_desktop_win10.targets'))" />
   </Target>
   <ItemGroup>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">

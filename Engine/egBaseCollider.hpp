@@ -23,7 +23,7 @@ namespace Engine::Components
     void SetMass(float mass);
 
     void SetBoundingBox(const BoundingOrientedBox& bounding);
-    void SetModel(const WeakModel& model);
+    void SetShape(const WeakModel& model);
 
     static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir);
     static bool Intersects(const StrongCollider& lhs, const StrongCollider& rhs, float epsilon = g_epsilon);
@@ -58,6 +58,7 @@ namespace Engine::Components
     void PostUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
 
+    void OnSerialized() override;
     void OnDeserialized() override;
     void OnImGui() override;
 
@@ -112,8 +113,8 @@ namespace Engine::Components
     void GenerateInertiaCube();
     void GenerateInertiaSphere();
 
-    eBoundingType m_type_;
-    EntityName    m_model_name_;
+    eBoundingType   m_type_;
+    std::string     m_shape_meta_path_str_;
 
     Physics::GenericBounding m_boundings_;
 
@@ -123,13 +124,16 @@ namespace Engine::Components
     inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
     inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
 
+    // Theoretically we could fallback the model by using the raw resource
+    // path, however it stores the meta data for the consistency.
+    std::filesystem::path m_shape_meta_path_;
     std::set<GlobalEntityID> m_collided_objects_;
 
     Vector3    m_inverse_inertia_;
     XMFLOAT3X3 m_inertia_tensor_;
     Matrix     m_local_matrix_;
 
-    WeakModel m_model_;
+    WeakModel m_shape_;
   };
 } // namespace Engine::Component
 
