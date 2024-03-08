@@ -30,6 +30,11 @@ float4 ps_main(PixelInputType input) : SV_TARGET
     lightIntensity[i] = saturate(dot(input.normal, input.lightDelta[i]));
     colorArray[i]     =
       LerpShadow(shadowFactor[i]) * bufLight[i].color * lightIntensity[i];
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      lightIntensity[i] *= saturate(1.0f - dist / bufLight[i].range);
+    }
   }
 
   float4 colorSum = g_ambientColor;
