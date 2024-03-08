@@ -54,6 +54,9 @@
     <Filter Include="Script\PlayerScript">
       <UniqueIdentifier>{931117ce-5039-43ba-b329-7343e4f8fc65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Script\ShadowIntersectionScript">
+      <UniqueIdentifier>{58a8756a-f731-4787-860f-e97c27f481db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -80,6 +83,9 @@
     <ClInclude Include="clPlayerScript.h">
       <Filter>Script\PlayerScript</Filter>
     </ClInclude>
+    <ClInclude Include="clShadowIntersectionScript.h">
+      <Filter>Script\ShadowIntersectionScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -99,6 +105,9 @@
     </ClCompile>
     <ClCompile Include="clPlayerScript.cpp">
       <Filter>Script\PlayerScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clShadowIntersectionScript.cpp">
+      <Filter>Script\ShadowIntersectionScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

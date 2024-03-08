@@ -195,6 +195,7 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="clParticleCompute.h" />
     <ClInclude Include="clPlayerScript.h" />
+    <ClInclude Include="clShadowIntersectionScript.h" />
     <ClInclude Include="clTriangleMesh.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="clParticleCompute.cpp" />
     <ClCompile Include="clPlayerScript.cpp" />
+    <ClCompile Include="clShadowIntersectionScript.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
