@@ -80,6 +80,8 @@ namespace Engine::Graphics
 
       Matrix world;
       Color  color;
+      OffsetT<int> type;
+      OffsetT<float> range;
     };
 
     struct LightVPSB
