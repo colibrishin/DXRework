@@ -89,9 +89,6 @@
     <Filter Include="Object\Camera">
       <UniqueIdentifier>{f738052e-2873-4fa8-a656-a9c0c23b1bd3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\DelayedRenderObject">
-      <UniqueIdentifier>{a935ee61-95d9-415c-a068-6e3b4d4a7f41}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Object\Light">
       <UniqueIdentifier>{a66a35a1-0742-496b-b54b-b28814a26012}</UniqueIdentifier>
     </Filter>
