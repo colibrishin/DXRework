@@ -59,6 +59,8 @@ namespace Engine::Components
 
   void ObserverController::Move(const float& dt)
   {
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) { return; }
+
     const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
     const float speed   = 2.0f * dt;

@@ -267,6 +267,13 @@ namespace Engine
     DEF_OBJ_T_TEXT,
   };
 
+  enum eLightType
+  {
+    LIGHT_T_UNK = 0,
+    LIGHT_T_DIRECTIONAL,
+    LIGHT_T_SPOT,
+  };
+
   enum eBoundingType
   {
     BOUNDING_TYPE_BOX = 0,

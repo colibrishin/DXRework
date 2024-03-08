@@ -66,7 +66,13 @@ namespace Engine::Manager::Graphics
 
         const auto world = tr->GetWorldMatrix();
 
-        light_buffer.emplace_back(world.Transpose(), locked->GetColor());
+        light_buffer.emplace_back
+          (
+           world.Transpose(),
+           locked->GetColor(),
+           locked->GetType(),
+           locked->GetRange()
+          );
       }
     }
 

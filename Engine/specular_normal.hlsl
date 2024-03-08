@@ -28,10 +28,24 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
+    const float dist = length(input.lightDelta[i]);
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      if (dist > bufLight[i].range)
+      {
+        normalColorArray[i] = 0.f;
+        textureColorArray[i] = 0.f;
+        normalColorArray[i]  = LerpShadow(shadowFactor[i]) * g_ambientColor;
+        textureColorArray[i] = LerpShadow(shadowFactor[i]) * g_ambientColor;
+        continue;
+      }
+    }
+
     textureLightIntensity[i] =
-      saturate(dot(input.normal, input.lightDirection[i]));
+      saturate(dot(input.normal, input.lightDelta[i]));
     normalLightIntensity[i] =
-      saturate(dot(bumpNormal, input.lightDirection[i]));
+      saturate(dot(bumpNormal, input.lightDelta[i]));
 
     const float4 shadow = LerpShadow(shadowFactor[i]);
 
@@ -41,10 +55,16 @@ float4 ps_main(PixelInputType input) : SV_TARGET
     reflection[i] = normalize
       (
        2.0f * normalLightIntensity[i] * input.normal -
-       input.lightDirection[i]
+       input.lightDelta[i]
       );
     specular[i] =
       pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+    }
   }
 
   float4 normalLightColor = g_ambientColor;

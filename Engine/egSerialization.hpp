@@ -594,7 +594,9 @@ namespace Engine
         std::filesystem::create_directory(folder);
       }
 
-      std::filesystem::path final_path =  folder / fixed_name;
+      std::filesystem::path final_filename = fixed_name + extension;
+
+      std::filesystem::path final_path =  folder / final_filename;
       object->m_meta_path_             = final_path.concat(extension);
       object->m_meta_str_              = final_path.string();
 

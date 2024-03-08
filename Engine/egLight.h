@@ -17,6 +17,8 @@ namespace Engine::Objects
     ~Light() override;
 
     void SetColor(Vector4 color);
+    void SetType(eLightType type);
+    void SetRange(float range);
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -27,11 +29,17 @@ namespace Engine::Objects
     void PostUpdate(const float& dt) override;
 
     void OnDeserialized() override;
+    void OnImGui() override;
 
     Color GetColor() const { return m_color_; }
+    eLightType GetType() const { return m_type_; }
+    float GetRange() const { return m_range_; }
 
   private:
     SERIALIZER_ACCESS
+
+    float m_range_;
+    eLightType m_type_;
     Color m_color_;
   };
 } // namespace Engine::Objects

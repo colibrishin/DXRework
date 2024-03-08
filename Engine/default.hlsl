@@ -15,7 +15,19 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
-    lightIntensity[i] = saturate(dot(input.normal, input.lightDirection[i]));
+    const float dist = length(input.lightDelta[i]);
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      if (dist > bufLight[i].range)
+      {
+        lightIntensity[i] = 0.f;
+        colorArray[i]     = LerpShadow(shadowFactor[i]) * g_ambientColor;
+        continue;
+      }
+    }
+
+    lightIntensity[i] = saturate(dot(input.normal, input.lightDelta[i]));
     colorArray[i]     =
       LerpShadow(shadowFactor[i]) * bufLight[i].color * lightIntensity[i];
   }

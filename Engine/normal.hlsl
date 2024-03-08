@@ -26,15 +26,33 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
   for (i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
+    const float dist = length(input.lightDelta[i]);
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      if (dist > bufLight[i].range)
+      {
+        normalLightIntensity[i]  = LerpShadow(shadowFactor[i]) * g_ambientColor;
+        textureLightIntensity[i] = LerpShadow(shadowFactor[i]) * g_ambientColor;
+        continue;
+      }
+    }
+
     normalLightIntensity[i] =
-      saturate(dot(bumpNormal, input.lightDirection[i]));
+      saturate(dot(bumpNormal, input.lightDelta[i]));
     textureLightIntensity[i] =
-      saturate(dot(input.normal, input.lightDirection[i]));
+      saturate(dot(input.normal, input.lightDelta[i]));
 
     const float4 shadow = LerpShadow(shadowFactor[i]);
 
     normalColorArray[i]  = shadow * bufLight[i].color * normalLightIntensity[i];
     textureColorArray[i] = shadow * bufLight[i].color * textureLightIntensity[i];
+
+    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+    {
+      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+    }
   }
 
   float4 normalLightColor = g_ambientColor;
