@@ -36,6 +36,8 @@ namespace Engine::Manager::Graphics
     void RegisterLight(const WeakLight& light);
     void UnregisterLight(const WeakLight& light);
 
+    static void EvalShadowVP(const WeakCamera & ptr_cam, const Vector3 & light_dir, SBs::LightVPSB & buffer);
+
   private:
     friend struct SingletonDeleter;
     ~ShadowManager() override;
@@ -45,11 +47,10 @@ namespace Engine::Manager::Graphics
     void BuildShadowMap(const float dt) const;
     void ClearShadowMaps();
 
-    void CreateSubfrusta(
+    static void CreateSubfrusta(
       const Matrix& projection, float start, float end,
       Subfrusta&    subfrusta
-    ) const;
-    void EvalShadowVP(const Vector3& light_dir, SBs::LightVPSB& buffer);
+    );
 
     StrongMaterial m_shadow_shaders_;
 
