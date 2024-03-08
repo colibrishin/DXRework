@@ -17,7 +17,7 @@ struct PixelInputType
   float4 refraction : POSITION2;
 
   float3 viewDirection : TEXCOORD2;
-  float3 lightDirection[MAX_NUM_LIGHTS] : TEXCOORD3;
+  float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;
 
   float clipSpacePosZ : SV_ClipDistance0;
   float clipPlane : SV_ClipDistance1;
@@ -89,8 +89,8 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   [unroll] for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     const float4 light_position = GetTranslation(bufLight[i].world);
-    output.lightDirection[i]    = light_position.xyz - output.world_position.xyz;
-    output.lightDirection[i]    = normalize(output.lightDirection[i]);
+    output.lightDelta[i]    = light_position.xyz - output.world_position.xyz;
+    output.lightDelta[i]    = output.lightDelta[i];
   }
 
   const float3 cam_position = GetTranslation(g_camWorld);

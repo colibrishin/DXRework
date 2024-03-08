@@ -24,6 +24,8 @@ struct LightElement
 {
   matrix world : LIGHTWORLD;
   float4 color : LIGHTCOLOR;
+  int4 type : LIGHTTYPE;
+  float4 range : LIGHTRANGE;
 };
 
 struct BoneTransformElement
