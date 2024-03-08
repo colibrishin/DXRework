@@ -42,10 +42,12 @@ float4 ps_main(PixelInputType input) : SV_TARGET
       }
     }
 
+    const float3 light_dir = normalize(input.lightDelta[i]);
+
     textureLightIntensity[i] =
-      saturate(dot(input.normal, input.lightDelta[i]));
+      saturate(dot(input.normal, light_dir));
     normalLightIntensity[i] =
-      saturate(dot(bumpNormal, input.lightDelta[i]));
+      saturate(dot(bumpNormal, light_dir));
 
     const float4 shadow = LerpShadow(shadowFactor[i]);
 
@@ -54,8 +56,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     reflection[i] = normalize
       (
-       2.0f * normalLightIntensity[i] * input.normal -
-       input.lightDelta[i]
+       2.0f * normalLightIntensity[i] * input.normal - light_dir
       );
     specular[i] =
       pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);

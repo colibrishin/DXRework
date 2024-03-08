@@ -38,10 +38,12 @@ float4 ps_main(PixelInputType input) : SV_TARGET
       }
     }
 
+    const float3 light_dir = normalize(input.lightDelta[i]);
+
     normalLightIntensity[i] =
-      saturate(dot(bumpNormal, input.lightDelta[i]));
+      saturate(dot(bumpNormal, light_dir));
     textureLightIntensity[i] =
-      saturate(dot(input.normal, input.lightDelta[i]));
+      saturate(dot(input.normal, light_dir));
 
     const float4 shadow = LerpShadow(shadowFactor[i]);
 
