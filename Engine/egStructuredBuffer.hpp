@@ -25,13 +25,26 @@ namespace Engine::Graphics
 
       if (m_b_srv_bound_) { throw std::logic_error("StructuredBuffer is already bound as SRV"); }
 
-      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+      if constexpr (is_client_uav_sb<T>::value == true)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews
+          (
+           which_client_sb<T>::value,
+           1,
+           m_uav_.GetAddressOf(),
+           nullptr
+          );
+      }
+      if constexpr (is_uav_sb<T>::value == true)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews
         (
          which_sb_uav<T>::value,
          1,
          m_uav_.GetAddressOf(),
          nullptr
         );
+      }
 
       m_b_uav_bound_ = true;
     }
@@ -42,13 +55,28 @@ namespace Engine::Graphics
       static_assert(is_uav_sb<T>::value == true, "It is not defined in UAV structured buffer");
 
       ComPtr<ID3D11UnorderedAccessView> null_uav = nullptr;
-      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+
+      if constexpr (is_client_uav_sb<T>::value == true)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews
+          (
+           which_client_sb<T>::value,
+           1,
+           null_uav.GetAddressOf(),
+           nullptr
+          );
+
+      }
+      if constexpr (is_uav_sb<T>::value == true)
+      {
+        GetD3Device().GetContext()->CSSetUnorderedAccessViews
         (
          which_sb_uav<T>::value,
          1,
          null_uav.GetAddressOf(),
          nullptr
         );
+      }
 
       m_b_uav_bound_ = false;
     }
@@ -230,7 +258,14 @@ namespace Engine::Graphics
   {
     if (m_b_uav_bound_) { throw std::logic_error("StructuredBuffer is already bound as UAV"); }
 
-    GetRenderPipeline().BindResource(which_sb<T>::value, shader, m_srv_.GetAddressOf());
+    if constexpr (is_client_sb<T>::value == true)
+    {
+      GetRenderPipeline().BindResource(which_client_sb<T>::value, shader, m_srv_.GetAddressOf());
+    }
+    else
+    {
+      GetRenderPipeline().BindResource(which_sb<T>::value, shader, m_srv_.GetAddressOf());
+    }
 
     m_b_srv_bound_ = true;
   }
@@ -238,7 +273,14 @@ namespace Engine::Graphics
   template <typename T>
   void StructuredBuffer<T>::UnbindSRV(const eShaderType shader)
   {
-    GetRenderPipeline().UnbindResource(which_sb<T>::value, shader);
+    if constexpr (is_client_sb<T>::value == true)
+    {
+      GetRenderPipeline().UnbindResource(which_client_sb<T>::value, shader);
+    }
+    else
+    {
+      GetRenderPipeline().UnbindResource(which_sb<T>::value, shader);
+    }
 
     m_b_srv_bound_ = false;
   }

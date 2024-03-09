@@ -321,6 +321,12 @@ namespace Engine
   };
 
   template <typename T>
+  struct which_client_sb
+  {
+    static constexpr eClientSBType value = T::csbtype;
+  };
+
+  template <typename T>
   struct which_script
   {
     static constexpr eScriptType value = T::scptype;
@@ -330,6 +336,12 @@ namespace Engine
   struct which_sb_uav
   {
     static constexpr eSBUAVType value = T::sbuavtype;
+  };
+
+  template <typename T>
+  struct which_client_sb_uav
+  {
+    static constexpr eClientSBUAVType value = T::csbuavtype;
   };
 
 
@@ -344,7 +356,18 @@ namespace Engine
   struct is_uav_sb : std::false_type {};
   template <typename T>
   struct is_uav_sb<T, void_t<decltype(T::sbuavtype == true)>> : std::true_type {};
+  template <typename T>
+  struct is_uav_sb<T, void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
 
+  template <typename T, typename = void>
+  struct is_client_uav_sb : std::false_type {};
+  template <typename T>
+  struct is_client_uav_sb<T, void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
+
+  template <typename T, typename = void>
+  struct is_client_sb : std::false_type {};
+  template <typename T>
+  struct is_client_sb<T, void_t<decltype(T::csbtype == true)>> : std::true_type {};
 
   struct GUIDComparer
   {

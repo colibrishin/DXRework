@@ -10,6 +10,11 @@ namespace Engine
     SCRIPT_T_HP_TEXT,
     SCRIPT_T_SHADOW,
   };
+
+  enum eClientSBUAVType : UINT
+  {
+    CLIENT_SBUAV_TYPE_INTERSECTION = 7,
+  };
 }
 
 namespace Client

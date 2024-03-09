@@ -62,6 +62,9 @@ namespace Engine
     CB_TYPE_PARAM,
   };
 
+  enum eClientSBType : UINT;
+  enum eClientSBUAVType : UINT;
+
   enum eSBType
   {
     SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
