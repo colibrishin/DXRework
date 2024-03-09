@@ -1,11 +1,12 @@
 #include "pch.h"
 #include "clShadowIntersectionScript.h"
 
-#include "Renderer.h"
-#include "egMaterial.h"
-#include "egRenderPipeline.h"
-#include "egSceneManager.hpp"
-#include "egTransform.h"
+#include <Renderer.h>
+#include <egMaterial.h>
+#include <egRenderPipeline.h>
+#include <egSceneManager.hpp>
+#include <egTransform.h>
+#include <egShader.hpp>
 
 namespace Client::Scripts
 {
@@ -13,13 +14,29 @@ namespace Client::Scripts
   {
 	  Script::Initialize();
 
-    if (const auto& material = Resources::Material::Get("ShadowMap").lock())
+    if (const auto& material = Engine::Resources::Material::Get("ShadowMap").lock())
     {
       // borrow the shader from shadow manager.
       m_shadow_material_ = material;
     }
 
+    if (const auto& mtr = Engine::Resources::Material::Get("IntensityTest").lock())
+    {
+      m_intensity_test_material_ = mtr;
+    }
+    else
+    {
+      m_intensity_test_material_ = Engine::Resources::Material::Create("IntensityTest", "");
+      m_intensity_test_material_->SetResource<Engine::Resources::Shader>("intensity_test");
+    }
+
     for (auto& tex : m_shadow_texs_)
+    {
+      tex.Initialize();
+      tex.Load();
+    }
+
+    for (auto& tex : m_intensity_test_texs_)
     {
       tex.Initialize();
       tex.Load();
@@ -43,9 +60,24 @@ namespace Client::Scripts
     {
       tex.Clear();
     }
+
+    for (auto& tex : m_intensity_test_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
   }
 
-  void ShadowIntersectionScript::Update(const float& dt)
+  void ShadowIntersectionScript::Update(const float& dt) {}
+
+  void ShadowIntersectionScript::PostUpdate(const float& dt) {}
+
+  void ShadowIntersectionScript::FixedUpdate(const float& dt) {}
+
+  void ShadowIntersectionScript::PreRender(const float& dt) {}
+
+  void ShadowIntersectionScript::Render(const float& dt)
   {
     GetRenderPipeline().SetViewport(m_viewport_);
 
@@ -131,7 +163,14 @@ namespace Client::Scripts
       m_sb_light_vp_.BindSRV(SHADER_VERTEX);
       m_sb_light_vp_.BindSRV(SHADER_PIXEL);
 
-      // TODO: mocking default render, check whether shadow is leaning onto the object where light intensity is above ambient color.
+      m_intensity_test_material_->PreRender(0.f);
+      m_intensity_test_material_->Render(0.f);
+
+      constexpr size_t target_light_slot = 2;
+      constexpr size_t custom_vp_slot    = 3;
+
+      constexpr size_t custom_view_slot = 1;
+      constexpr size_t custom_proj_slot = 2;
 
       // In light VP Render objects,
       // In pixel shader, while sampling shadow factor, do not use own shadow map
@@ -139,18 +178,63 @@ namespace Client::Scripts
       // then it intersects with light and shadow
       // Fill the pixel with light index (Do not use the sampler state, need raw value)
 
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        GetRenderPipeline().SetParam<int>(i, target_light_slot);
+        GetRenderPipeline().SetParam<int>(true, custom_vp_slot);
+
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[0], custom_view_slot);
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[0], custom_proj_slot);
+
+        m_intensity_test_texs_[i].BindAs(D3D11_BIND_RENDER_TARGET, 0, 0, SHADER_UNKNOWN);
+
+        m_intensity_test_texs_[i].PreRender(0.f);
+        m_intensity_test_texs_[i].Render(0.f);
+
+        GetRenderer().RenderPass
+          (
+           dt, SHADER_DOMAIN_OPAQUE, true,
+           [this](const StrongObject& obj)
+           {
+             if (obj->GetID() == GetOwner().lock()->GetID())
+             {
+               return false;
+             }
+
+             return true;
+           }
+          );
+
+        m_intensity_test_texs_[i].PostRender(0.f);
+        GetRenderPipeline().SetParam<int>(false, custom_vp_slot);
+      }
+
+      // TODO: mocking default render, check whether shadow is leaning onto the object where light intensity is above ambient color.
+
+      //std::vector<ID3D11ShaderResourceView*> intensity_srv;
+
+      //for (const auto& tex : m_intensity_test_texs_)
+      //{
+      //  intensity_srv.push_back(tex.GetSRV());
+      //}
+
+      //GetRenderPipeline().BindResources
+      //  (
+      //   BIND_SLOT_UAV_TEX_2D,
+      //   SHADER_COMPUTE,
+      //   intensity_srv.data(),
+      //   intensity_srv.size()
+      //  );
+
+      //for (int i = 0; i < lights->size(); ++i)
+      //{
+      //  GetRenderPipeline().SetParam<int>(i, target_light_slot);
+      //}
+
       // By compute shader, For each pixel if it has light index, which is non-zero,
       // then this object shadow intersects with designated light.
     }
   }
-
-  void ShadowIntersectionScript::PostUpdate(const float& dt) {}
-
-  void ShadowIntersectionScript::FixedUpdate(const float& dt) {}
-
-  void ShadowIntersectionScript::PreRender(const float& dt) {}
-
-  void ShadowIntersectionScript::Render(const float& dt) {}
 
   void ShadowIntersectionScript::PostRender(const float& dt) {}
 

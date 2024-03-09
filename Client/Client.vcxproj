@@ -193,6 +193,8 @@
     <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="clHpTextScript.h" />
     <ClInclude Include="Client.h" />
+    <ClInclude Include="clIntensityTexture.h" />
+    <ClInclude Include="clIntersectionCompute.h" />
     <ClInclude Include="clParticleCompute.h" />
     <ClInclude Include="clPlayerScript.h" />
     <ClInclude Include="clShadowIntersectionScript.h" />
@@ -204,6 +206,7 @@
     <ClCompile Include="clHitboxScript.cpp" />
     <ClCompile Include="clHpTextScript.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="clIntersectionCompute.cpp" />
     <ClCompile Include="clParticleCompute.cpp" />
     <ClCompile Include="clPlayerScript.cpp" />
     <ClCompile Include="clShadowIntersectionScript.cpp" />
@@ -411,6 +414,29 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </ImageContentTask>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\Engine\cs_intensity_test.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\Engine\intensity_test.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

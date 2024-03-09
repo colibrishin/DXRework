@@ -1,9 +1,11 @@
 #pragma once
 #include "Client.h"
+#include "egGlobal.h"
 #include "egObject.hpp"
 #include "egScript.h"
 #include "egShadowTexture.h"
 #include "egStructuredBuffer.hpp"
+#include "clIntensityTexture.h"
 
 namespace Client::Scripts
 {
@@ -27,9 +29,6 @@ namespace Client::Scripts
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
-    void OnDeserialized() override;
-    void OnImGui() override;
-
   private:
     SERIALIZER_ACCESS
     ShadowIntersectionScript();
@@ -39,8 +38,11 @@ namespace Client::Scripts
     Graphics::StructuredBuffer<Graphics::SBs::LightVPSB> m_sb_light_vp_;
 
 
-    Resources::ShadowTexture m_shadow_texs_[g_max_lights];
+    Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
+    Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
+
     StrongMaterial m_shadow_material_;
+    StrongMaterial m_intensity_test_material_;
   };
 }
 
