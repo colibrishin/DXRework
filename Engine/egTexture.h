@@ -1,6 +1,7 @@
 #pragma once
 #include "egD3Device.hpp"
 #include "egResource.h"
+#include "egResourceManager.hpp"
 #include <bitset>
 
 namespace Engine::Resources

@@ -1,5 +1,6 @@
 #pragma once
 #include "egTexture.h"
+#include "egResourceManager.hpp"
 
 namespace Engine::Resources
 {

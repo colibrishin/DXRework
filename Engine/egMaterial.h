@@ -44,7 +44,7 @@ namespace Engine::Resources
       SetResource(search.lock());
     }
 
-    void SetProperties(CBs::MaterialCB&& material_cb) noexcept;
+    void SetProperties(Graphics::CBs::MaterialCB&& material_cb) noexcept;
 
     template <typename T>
     [[nodiscard]] auto GetResources() const
@@ -94,7 +94,7 @@ namespace Engine::Resources
 
     void SetResource(const StrongResource& resource);
 
-    CBs::MaterialCB m_material_cb_;
+    Graphics::CBs::MaterialCB m_material_cb_;
 
     std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
     std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
