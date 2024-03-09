@@ -42,23 +42,44 @@ struct VertexBoneElement
 
 struct VertexInputType
 {
-  float3 position : POSITION;
-  float4 color : COLOR;
+  float3 position : POSITION0;
+  float4 color : COLOR0;
+  float2 tex : TEXCOORD0;
+
+  float3 normal : NORMAL0;
+  float3 tangent : TANGENT0;
+  float3 binormal : BINOARML0;
+
+  VertexBoneElement bone_element : BONE;
+};
+
+struct PixelInputType
+{
+  float4 position : SV_Position;
+  float4 world_position : POSITION0;
+  float4 color : COLOR0;
   float2 tex : TEXCOORD0;
 
   float3 normal : NORMAL;
   float3 tangent : TANGENT;
   float3 binormal : BINOARML;
 
-  VertexBoneElement bone_element : BONE;
+  float4 reflection : POSITION1;
+  float4 refraction : POSITION2;
+
+  float3 viewDirection : TEXCOORD2;
+  float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;
+
+  float clipSpacePosZ : SV_ClipDistance0;
+  float clipPlane : SV_ClipDistance1;
 };
 
 struct InstanceElement
 {
-  float4  fParam[MAX_PARAM_TYPE_SLOTS] : FPARAM;
-  int4    iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
-  float4 vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
-  matrix mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
+  float4  fParam[MAX_PARAM_TYPE_SLOTS];
+  int4    iParam[MAX_PARAM_TYPE_SLOTS];
+  float4 vParam[MAX_PARAM_TYPE_SLOTS];
+  matrix mParam[MAX_PARAM_TYPE_SLOTS];
 };
 
 #endif // __TYPE_HLSLI__

@@ -2,27 +2,6 @@
 
 #define PARAM_NUM_LIGHT g_iParam[0].x
 
-struct PixelInputType
-{
-  float4 position : SV_POSITION;
-  float4 world_position : POSITION0;
-  float4 color : COLOR;
-  float2 tex : TEXCOORD0;
-
-  float3 normal : NORMAL;
-  float3 tangent : TANGENT;
-  float3 binormal : BINOARML;
-
-  float4 reflection : POSITION1;
-  float4 refraction : POSITION2;
-
-  float3 viewDirection : TEXCOORD2;
-  float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;
-
-  float clipSpacePosZ : SV_ClipDistance0;
-  float clipPlane : SV_ClipDistance1;
-};
-
 PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 {
   PixelInputType output;

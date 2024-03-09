@@ -94,10 +94,10 @@ cbuffer MaterialBuffer : register(b2)
 
 cbuffer ParamBuffer : register(b3)
 {
-  float4 g_fParam[MAX_PARAM_TYPE_SLOTS] : FPARAM;
-  int4   g_iParam[MAX_PARAM_TYPE_SLOTS] : IPARAM;
-  float4 g_vParam[MAX_PARAM_TYPE_SLOTS] : VPARAM;
-  matrix g_mParam[MAX_PARAM_TYPE_SLOTS] : MPARAM;
+  float4 g_fParam[MAX_PARAM_TYPE_SLOTS];
+  int4   g_iParam[MAX_PARAM_TYPE_SLOTS];
+  float4 g_vParam[MAX_PARAM_TYPE_SLOTS];
+  matrix g_mParam[MAX_PARAM_TYPE_SLOTS];
 }
 
 float GetShadowFactorImpl(
