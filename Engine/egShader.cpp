@@ -56,7 +56,7 @@ namespace Engine::Resources
           const auto ids = GetD3Device().GenerateInputDescription(blob.Get());
           GetD3Device().GetDevice()->CreateInputLayout
             (
-             ids.data(), static_cast<UINT>(ids.size()), blob->GetBufferPointer(),
+             ids.first.data(), static_cast<UINT>(ids.first.size()), blob->GetBufferPointer(),
              blob->GetBufferSize(), m_il_.ReleaseAndGetAddressOf()
             );
           GetD3Device().GetDevice()->CreateVertexShader
@@ -210,10 +210,10 @@ namespace Engine::Resources
   void Shader::PostRender(const float& dt)
   {
     GetD3Device().GetContext()->IASetInputLayout(nullptr);
+    GetD3Device().GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
     GetD3Device().GetContext()->PSSetShader(nullptr, nullptr, 0);
     GetD3Device().GetContext()->GSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
     GetD3Device().GetContext()->HSSetShader(nullptr, nullptr, 0);
     GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
 
