@@ -67,7 +67,7 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PostUpdate(const float& dt) {}
 
-  void ToolkitAPI::BeginPrimitiveBatch()
+  void ToolkitAPI::BeginPrimitiveBatch() const
   {
     const auto context = GetD3Device().GetContext();
 
@@ -90,8 +90,10 @@ namespace Engine::Manager::Graphics
     m_primitive_batch_->Begin();
   }
 
-  void ToolkitAPI::EndPrimitiveBatch()
+  void ToolkitAPI::EndPrimitiveBatch() const
   {
+    m_primitive_batch_->End();
+
     GetD3Device().GetContext()->RSSetState
       (
        GetRenderPipeline().m_rasterizer_state_.Get()
@@ -104,8 +106,6 @@ namespace Engine::Manager::Graphics
       (
        GetRenderPipeline().m_depth_stencil_state_.Get(), 1
       );
-
-    m_primitive_batch_->End();
   }
 
   SpriteBatch* ToolkitAPI::GetSpriteBatch() const { return m_sprite_batch_.get(); }
