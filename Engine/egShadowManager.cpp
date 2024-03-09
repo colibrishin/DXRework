@@ -98,12 +98,12 @@ namespace Engine::Manager::Graphics
     // Set the viewport to the size of the shadow map.
     GetRenderPipeline().SetViewport(m_viewport_);
 
-    // bind the shadow map shaders.
-    m_shadow_shaders_->PreRender(placeholder);
-    m_shadow_shaders_->Render(placeholder);
-
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
+      // bind the shadow map shaders.
+      m_shadow_shaders_->PreRender(placeholder);
+      m_shadow_shaders_->Render(placeholder);
+
       // Build light view and projection matrix in frustum.
       std::vector<SBs::LightVPSB> current_light_vp;
 
@@ -153,12 +153,12 @@ namespace Engine::Manager::Graphics
 
       // Geometry shader's work is done.
       m_sb_light_vps_buffer_.UnbindSRV(SHADER_GEOMETRY);
+
+      GetRenderPipeline().SetParam<int>(0, shadow_slot);
+
+      // Unload the shadow map shaders.
+      m_shadow_shaders_->PostRender(placeholder);
     }
-
-    GetRenderPipeline().SetParam<int>(0, shadow_slot);
-
-    // Unload the shadow map shaders.
-    m_shadow_shaders_->PostRender(placeholder);
 
     // post-processing for serialization and binding
     std::vector<ID3D11ShaderResourceView*> current_shadow_maps;
