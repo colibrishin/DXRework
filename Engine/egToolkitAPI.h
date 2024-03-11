@@ -22,8 +22,8 @@ namespace Engine::Manager::Graphics
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void BeginPrimitiveBatch();
-    void EndPrimitiveBatch();
+    void BeginPrimitiveBatch() const;
+    void EndPrimitiveBatch() const;
 
     SpriteBatch*                         GetSpriteBatch() const;
     CommonStates*                        GetCommonStates() const;

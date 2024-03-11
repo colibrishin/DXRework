@@ -41,21 +41,23 @@ namespace Engine::Manager::Graphics
     m_context_->Unmap(buffer, 0);
   }
 
-  std::vector<D3D11_INPUT_ELEMENT_DESC> D3Device::GenerateInputDescription(ID3DBlob* blob)
+  std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> D3Device::GenerateInputDescription(
+    ID3DBlob* blob
+  )
   {
     ComPtr<ID3D11ShaderReflection> reflection = nullptr;
 
-    D3DReflect
+    DX::ThrowIfFailed(D3DReflect
       (
        blob->GetBufferPointer(), blob->GetBufferSize(),
        IID_ID3D11ShaderReflection,
        reinterpret_cast<void**>(reflection.GetAddressOf())
-      );
+      ));
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> input_descs;
+    std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> input_descs_with_name;
 
     D3D11_SHADER_DESC desc{};
-    reflection->GetDesc(&desc);
+    DX::ThrowIfFailed(reflection->GetDesc(&desc));
 
     UINT byteOffset = 0;
 
@@ -63,9 +65,11 @@ namespace Engine::Manager::Graphics
     {
       D3D11_SIGNATURE_PARAMETER_DESC param_desc;
       D3D11_INPUT_ELEMENT_DESC       input_desc{};
-      reflection->GetInputParameterDesc(i, &param_desc);
+      DX::ThrowIfFailed(reflection->GetInputParameterDesc(i, &param_desc));
 
-      input_desc.SemanticName         = param_desc.SemanticName;
+      std::string name_buffer(param_desc.SemanticName);
+
+      input_desc.SemanticName         = name_buffer.c_str();
       input_desc.SemanticIndex        = param_desc.SemanticIndex;
       input_desc.InputSlot            = 0;
       input_desc.AlignedByteOffset    = byteOffset;
@@ -120,10 +124,16 @@ namespace Engine::Manager::Graphics
         byteOffset += 16;
       }
 
-      input_descs.push_back(input_desc);
+      input_descs_with_name.first.emplace_back(input_desc);
+      input_descs_with_name.second.emplace_back(std::move(name_buffer));
     }
 
-    return input_descs;
+    for (auto& dsc : input_descs_with_name.first)
+    {
+      dsc.SemanticName = input_descs_with_name.second.at(&dsc - &input_descs_with_name.first[0]).c_str();
+    }
+
+    return input_descs_with_name;
   }
 
   void D3Device::BindSampler(

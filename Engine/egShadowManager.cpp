@@ -98,12 +98,12 @@ namespace Engine::Manager::Graphics
     // Set the viewport to the size of the shadow map.
     GetRenderPipeline().SetViewport(m_viewport_);
 
-    // bind the shadow map shaders.
-    m_shadow_shaders_->PreRender(placeholder);
-    m_shadow_shaders_->Render(placeholder);
-
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
+      // bind the shadow map shaders.
+      m_shadow_shaders_->PreRender(placeholder);
+      m_shadow_shaders_->Render(placeholder);
+
       // Build light view and projection matrix in frustum.
       std::vector<SBs::LightVPSB> current_light_vp;
 
@@ -119,7 +119,7 @@ namespace Engine::Manager::Graphics
 
           SBs::LightVPSB light_vp{};
           // Get the light's view and projection matrix in g_max_shadow_cascades parts.
-          EvalShadowVP(light_dir, light_vp);
+          EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
           current_light_vp.emplace_back(light_vp);
         }
       }
@@ -153,12 +153,12 @@ namespace Engine::Manager::Graphics
 
       // Geometry shader's work is done.
       m_sb_light_vps_buffer_.UnbindSRV(SHADER_GEOMETRY);
+
+      GetRenderPipeline().SetParam<int>(0, shadow_slot);
+
+      // Unload the shadow map shaders.
+      m_shadow_shaders_->PostRender(placeholder);
     }
-
-    GetRenderPipeline().SetParam<int>(0, shadow_slot);
-
-    // Unload the shadow map shaders.
-    m_shadow_shaders_->PostRender(placeholder);
 
     // post-processing for serialization and binding
     std::vector<ID3D11ShaderResourceView*> current_shadow_maps;
@@ -172,7 +172,6 @@ namespace Engine::Manager::Graphics
     // Reverts the viewport to the size of the screen, render target, and the depth stencil state.
     GetRenderPipeline().DefaultViewport();
     GetRenderPipeline().DefaultRenderTarget();
-    GetRenderPipeline().DefaultDepthStencilState();
 
     // todo: refactoring.
     // Bind the shadow map resource previously rendered to the pixel shader.
@@ -225,7 +224,7 @@ namespace Engine::Manager::Graphics
   void ShadowManager::CreateSubfrusta(
     const Matrix& projection, float start,
     float         end, Subfrusta&   subfrusta
-  ) const
+  )
   {
     BoundingFrustum frustum(projection);
 
@@ -265,85 +264,83 @@ namespace Engine::Manager::Graphics
     subfrusta.corners[7] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabY);
   }
 
-  void ShadowManager::EvalShadowVP(const Vector3& light_dir, SBs::LightVPSB& buffer)
+  void ShadowManager::EvalShadowVP(const WeakCamera& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer)
   {
     // https://cutecatgame.tistory.com/6
-
-    if (const auto scene = GetSceneManager().GetActiveScene().lock())
+    if (const auto& camera = ptr_cam.lock())
     {
-      if (const auto camera = scene->GetMainCamera().lock())
+      const float near_plane = g_screen_near;
+      const float far_plane  = g_screen_far;
+
+      const float cascadeEnds[] {near_plane, 10.f, 80.f, far_plane};
+
+      // for cascade shadow mapping, total 3 parts are used.
+      // (near, 6), (6, 18), (18, far)
+      for (auto i = 0; i < g_max_shadow_cascades; ++i)
       {
-        const float near_plane = g_screen_near;
-        const float far_plane  = g_screen_far;
+        Subfrusta subfrusta[g_max_shadow_cascades];
 
-        const float cascadeEnds[]{near_plane, 10.f, 80.f, far_plane};
+        // frustum = near points 4 + far points 4
+        CreateSubfrusta
+          (
+           camera->GetProjectionMatrix(), cascadeEnds[i],
+           cascadeEnds[i + 1], subfrusta[i]
+          );
 
-        // for cascade shadow mapping, total 3 parts are used.
-        // (near, 6), (6, 18), (18, far)
-        for (auto i = 0; i < g_max_shadow_cascades; ++i)
+        const auto view_inv = camera->GetViewMatrix().Invert();
+
+        // transform to world space
+        Vector4 center{};
+        for (auto& corner : subfrusta[i].corners)
         {
-          // frustum = near points 4 + far points 4
-          CreateSubfrusta
-            (
-             camera->GetProjectionMatrix(), cascadeEnds[i],
-             cascadeEnds[i + 1], m_subfrusta_[i]
-            );
-
-          const auto view_inv = camera->GetViewMatrix().Invert();
-
-          // transform to world space
-          Vector4 center{};
-          for (auto& corner : m_subfrusta_[i].corners)
-          {
-            corner = Vector4::Transform(corner, view_inv);
-            center += corner;
-          }
-
-          // Get center by averaging
-          center /= 8.f;
-
-          float radius = 0.f;
-          for (const auto& corner : m_subfrusta_[i].corners)
-          {
-            float distance = Vector4::Distance(center, corner);
-            radius         = std::max(radius, distance);
-          }
-
-          radius = std::ceil(radius * 16.f) / 16.f;
-
-          auto          maxExtent      = Vector3{radius, radius, radius};
-          Vector3       minExtent      = -maxExtent;
-          const Vector3 cascadeExtents = maxExtent - minExtent;
-
-          const auto pos = center + (light_dir * std::fabsf(minExtent.z));
-
-          // DX11 uses row major matrix
-
-          buffer.view[i] = XMMatrixTranspose
-            (
-             XMMatrixLookAtLH(pos, Vector3(center), Vector3::Up)
-            );
-
-          buffer.proj[i] =
-            XMMatrixTranspose
-            (
-             XMMatrixOrthographicOffCenterLH
-             (
-              minExtent.x, maxExtent.x, minExtent.y,
-              maxExtent.y, 0.f,
-              cascadeExtents.z
-             )
-            );
-
-          buffer.end_clip_spaces[i] =
-            Vector4{0.f, 0.f, cascadeEnds[i + 1], 1.f};
-          buffer.end_clip_spaces[i] =
-            Vector4::Transform
-            (
-             buffer.end_clip_spaces[i],
-             camera->GetProjectionMatrix()
-            ); // use z axis
+          corner = Vector4::Transform(corner, view_inv);
+          center += corner;
         }
+
+        // Get center by averaging
+        center /= 8.f;
+
+        float radius = 0.f;
+        for (const auto& corner : subfrusta[i].corners)
+        {
+          float distance = Vector4::Distance(center, corner);
+          radius         = std::max(radius, distance);
+        }
+
+        radius = std::ceil(radius * 16.f) / 16.f;
+
+        auto          maxExtent      = Vector3{radius, radius, radius};
+        Vector3       minExtent      = -maxExtent;
+        const Vector3 cascadeExtents = maxExtent - minExtent;
+
+        const auto pos = center + (light_dir * std::fabsf(minExtent.z));
+
+        // DX11 uses row major matrix
+
+        buffer.view[i] = XMMatrixTranspose
+          (
+           XMMatrixLookAtLH(pos, Vector3(center), Vector3::Up)
+          );
+
+        buffer.proj[i] =
+          XMMatrixTranspose
+          (
+           XMMatrixOrthographicOffCenterLH
+           (
+            minExtent.x, maxExtent.x, minExtent.y,
+            maxExtent.y, 0.f,
+            cascadeExtents.z
+           )
+          );
+
+        buffer.end_clip_spaces[i] =
+          Vector4{0.f, 0.f, cascadeEnds[i + 1], 1.f};
+        buffer.end_clip_spaces[i] =
+          Vector4::Transform
+          (
+           buffer.end_clip_spaces[i],
+           camera->GetProjectionMatrix()
+          ); // use z axis
       }
     }
   }

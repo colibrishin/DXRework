@@ -2,27 +2,6 @@
 
 #define PARAM_NUM_LIGHT g_iParam[0].x
 
-struct PixelInputType
-{
-  float4 position : SV_POSITION;
-  float4 world_position : POSITION0;
-  float4 color : COLOR;
-  float2 tex : TEXCOORD0;
-
-  float3 normal : NORMAL;
-  float3 tangent : TANGENT;
-  float3 binormal : BINOARML;
-
-  float4 reflection : POSITION1;
-  float4 refraction : POSITION2;
-
-  float3 viewDirection : TEXCOORD2;
-  float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;
-
-  float clipSpacePosZ : SV_ClipDistance0;
-  float clipPlane : SV_ClipDistance1;
-};
-
 PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 {
   PixelInputType output;
@@ -79,8 +58,22 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   output.position       = mul(output.position, world);
   output.world_position = output.position;
 
-  output.position = mul(output.position, g_camView);
-  output.position = mul(output.position, g_camProj);
+#define PARAM_CUSTOM_VP g_iParam[0].w
+#define PARAM_CUSTOM_VIEW g_mParam[1]
+#define PARAM_CUSTOM_PROJ g_mParam[2]
+  if (PARAM_CUSTOM_VP)
+  {
+    output.position = mul(output.position, PARAM_CUSTOM_VIEW);
+    output.position = mul(output.position, PARAM_CUSTOM_PROJ);
+  }
+  else
+  {
+    output.position = mul(output.position, g_camView);
+    output.position = mul(output.position, g_camProj);
+  }
+#undef PARAM_CUSTOM_PROJ
+#undef PARAM_CUSTOM_VIEW
+#undef PARAM_CUSTOM_VP
 
   // Store the input color for the pixel shader to use.
   output.color = input.color;

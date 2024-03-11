@@ -212,6 +212,11 @@ namespace Engine::Manager
           "Never", "Less", "Equal", "LessEqual", "Greater", "NotEqual", "GreaterEqual", "Always"
         };
 
+        static const char* topologies[] = 
+        {
+          "PointList", "LineList", "LineStrip", "TriangleList", "TriangleStrip", "LineListAdj", "LineStripAdj", "TriangleListAdj", "TriangleStripAdj", "PatchList"
+        };
+
         int sel_domain          = 0;
         int sel_depth           = 0;
         int sel_depth_func      = 0;
@@ -220,6 +225,7 @@ namespace Engine::Manager
         int sel_filter          = 0;
         int sel_sampler_address = 0;
         int sel_sampler_func    = 0;
+        int sel_topology        = 0;
 
         ImGui::InputText("Name", name_buffer, 256);
         ImGui::InputText("Path", path_buffer, 256);
@@ -232,6 +238,8 @@ namespace Engine::Manager
         ImGui::Combo("Filter", &sel_filter, filter_func, IM_ARRAYSIZE(filter_func));
         ImGui::Combo("Sampler Address", &sel_sampler_address, sampler_address, IM_ARRAYSIZE(sampler_address));
         ImGui::Combo("Sampler Func", &sel_sampler_func, sampler_func, IM_ARRAYSIZE(sampler_func));
+        ImGui::Combo("Topology", &sel_topology, topologies, IM_ARRAYSIZE(topologies));
+        
 
         if (ImGui::Button("Load"))
         {
@@ -245,7 +253,8 @@ namespace Engine::Manager
                (UINT)(sel_depth | sel_depth_func >> 2),
                (UINT)(sel_cull | sel_fill >> 3),
                (D3D11_FILTER)(sel_filter),
-               (UINT)(sel_sampler_address | sel_sampler_func >> 5)
+               (UINT)(sel_sampler_address | sel_sampler_func >> 5),
+               (D3D11_PRIMITIVE_TOPOLOGY)(sel_topology + 1)
               );
 
             m_b_imgui_load_shader_dialog_ = false;

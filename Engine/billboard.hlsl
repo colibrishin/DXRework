@@ -2,14 +2,14 @@
 
 struct PixelBillboardInputType
 {
-  float4 position : SV_POSITION;
-  float4 color : COLOR;
+  float4 position : SV_Position;
+  float4 color : COLOR0;
   float2 tex : TEXCOORD0;
 };
 
 struct GeometryBillboardInputType
 {
-  float4 position : POSITION;
+  float4 position : POSITION0;
   uint   InstanceID : SV_InstanceID;
 };
 

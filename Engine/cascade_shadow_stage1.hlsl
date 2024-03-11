@@ -2,13 +2,13 @@
 
 struct PixelShadowInputType
 {
-  float4 position : SV_POSITION;
+  float4 position : SV_Position;
   uint   RTIndex : SV_RenderTargetArrayIndex;
 };
 
 struct GeometryShadowInputType
 {
-  float4 position : SV_POSITION;
+  float4 position : SV_Position;
 };
 
 GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)

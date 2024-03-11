@@ -20,6 +20,7 @@
 #include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
 #include "clPlayerScript.h"
+#include "clShadowIntersectionScript.h"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
 #include "egGlobal.h"
@@ -206,6 +207,7 @@ namespace Client
     Script::Register<Scripts::HitboxScript>();
     Script::Register<Scripts::PlayerScript>();
     Script::Register<Scripts::HpTextScript>();
+    Script::Register<Scripts::ShadowIntersectionScript>();
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 
     // todo: refactor

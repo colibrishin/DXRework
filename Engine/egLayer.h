@@ -34,6 +34,7 @@ namespace Engine
     auto end() const noexcept { return m_objects_.end(); }
     auto cbegin() const noexcept { return m_objects_.cbegin(); }
     auto cend() const noexcept { return m_objects_.cend(); }
+    auto size() const noexcept { return m_objects_.size(); }
 
   private:
     Layer();

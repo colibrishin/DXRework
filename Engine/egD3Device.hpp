@@ -329,7 +329,7 @@ namespace Engine::Manager::Graphics
 
     void CreateRasterizerState(const D3D11_RASTERIZER_DESC& rd, ID3D11RasterizerState** id_3d11_rasterizer_state) const;
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> GenerateInputDescription(
+    std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> GenerateInputDescription(
       ID3DBlob* blob
     );
 
