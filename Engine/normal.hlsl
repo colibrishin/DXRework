@@ -30,7 +30,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
-      if (dist > bufLight[i].range)
+      if (dist > bufLight[i].range.x)
       {
         normalLightIntensity[i]  = LerpShadow(shadowFactor[i]) * g_ambientColor;
         textureLightIntensity[i] = LerpShadow(shadowFactor[i]) * g_ambientColor;
@@ -52,8 +52,8 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
-      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
-      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range.x);
+      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range.x);
     }
   }
 

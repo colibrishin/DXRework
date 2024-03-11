@@ -32,7 +32,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
-      if (dist > bufLight[i].range)
+      if (dist > bufLight[i].range.x)
       {
         normalColorArray[i] = 0.f;
         textureColorArray[i] = 0.f;
@@ -63,8 +63,8 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
-      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
-      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range);
+      normalColorArray[i] *= saturate(1.0f - dist / bufLight[i].range.x);
+      textureColorArray[i] *= saturate(1.0f - dist / bufLight[i].range.x);
     }
   }
 
