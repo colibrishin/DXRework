@@ -73,6 +73,8 @@ namespace Client::Scripts
     m_viewport_.TopLeftX = 0.0f;
     m_viewport_.TopLeftY = 0.0f;
 
+    m_sb_light_table_.Create(g_max_lights, nullptr, true);
+
     // also borrow the sampler state from shadow manager.
   }
 
@@ -250,25 +252,25 @@ namespace Client::Scripts
 
       // TODO: mocking default render, check whether shadow is leaning onto the object where light intensity is above ambient color.
 
-      //std::vector<ID3D11ShaderResourceView*> intensity_srv;
+      std::vector<ID3D11ShaderResourceView*> intensity_srv;
 
-      //for (const auto& tex : m_intensity_test_texs_)
-      //{
-      //  intensity_srv.push_back(tex.GetSRV());
-      //}
+      for (const auto& tex : m_intensity_test_texs_)
+      {
+        intensity_srv.push_back(tex.GetSRV());
+      }
 
-      //GetRenderPipeline().BindResources
-      //  (
-      //   BIND_SLOT_UAV_TEX_2D,
-      //   SHADER_COMPUTE,
-      //   intensity_srv.data(),
-      //   intensity_srv.size()
-      //  );
+      GetRenderPipeline().BindResources
+        (
+         BIND_SLOT_UAV_TEXARR,
+         SHADER_COMPUTE,
+         intensity_srv.data(),
+         intensity_srv.size()
+        );
 
-      //for (int i = 0; i < lights->size(); ++i)
-      //{
-      //  GetRenderPipeline().SetParam<int>(i, target_light_slot);
-      //}
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        GetRenderPipeline().SetParam<int>(i, target_light_slot);
+      }
 
       // By compute shader, For each pixel if it has light index, which is non-zero,
       // then this object shadow intersects with designated light.
