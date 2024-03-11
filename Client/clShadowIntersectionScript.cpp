@@ -30,6 +30,28 @@ namespace Client::Scripts
       m_intensity_test_material_->SetResource<Engine::Resources::Shader>("intensity_test");
     }
 
+    m_shadow_depth_ = Engine::Resources::Texture2D::Create
+      (
+       std::to_string(GetID()) + "ShadowDepth",
+       "",
+       {
+         .Width = g_max_shadow_map_size,
+         .Height = g_max_shadow_map_size,
+         .Depth = 0,
+         .ArraySize = 1,
+         .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+         .CPUAccessFlags = 0,
+         .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+         .MipsLevel = 1,
+         .MiscFlags = 0,
+         .Usage = D3D11_USAGE_DEFAULT,
+         .SampleDesc = {1, 0},
+       }
+      );
+
+    m_shadow_depth_->Initialize();
+    m_shadow_depth_->Load();
+
     for (auto& tex : m_shadow_texs_)
     {
       tex.Initialize();
@@ -178,6 +200,8 @@ namespace Client::Scripts
       // then it intersects with light and shadow
       // Fill the pixel with light index (Do not use the sampler state, need raw value)
 
+      GetRenderPipeline().SetViewport(m_viewport_);
+
       for (int i = 0; i < lights->size(); ++i)
       {
         GetRenderPipeline().SetParam<int>(i, target_light_slot);
@@ -186,10 +210,15 @@ namespace Client::Scripts
         GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[0], custom_view_slot);
         GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[0], custom_proj_slot);
 
-        m_intensity_test_texs_[i].BindAs(D3D11_BIND_RENDER_TARGET, 0, 0, SHADER_UNKNOWN);
+        ID3D11RenderTargetView* previous_rtv = nullptr;
+        ID3D11DepthStencilView* previous_dsv = nullptr;
 
-        m_intensity_test_texs_[i].PreRender(0.f);
-        m_intensity_test_texs_[i].Render(0.f);
+        GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
+
+        auto* rtv = m_intensity_test_texs_[i].GetRTV();
+        auto** rtv_ptr = &rtv;
+
+        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr, m_shadow_depth_->GetDSV());
 
         GetRenderer().RenderPass
           (
@@ -205,9 +234,19 @@ namespace Client::Scripts
            }
           );
 
-        m_intensity_test_texs_[i].PostRender(0.f);
+        GetD3Device().GetContext()->ClearDepthStencilView
+          (
+           m_shadow_depth_->GetDSV(),
+           D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+           1.f,
+           0
+          );
         GetRenderPipeline().SetParam<int>(false, custom_vp_slot);
+
+        GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
       }
+
+      GetRenderPipeline().DefaultViewport();
 
       // TODO: mocking default render, check whether shadow is leaning onto the object where light intensity is above ambient color.
 
