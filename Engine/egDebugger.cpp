@@ -19,6 +19,8 @@ namespace Engine::Manager
   {
     if (!GetDebugFlag()) { return; }
 
+    if (m_render_queue.empty()) { return; }
+
     GetToolkitAPI().BeginPrimitiveBatch();
 
     if (m_render_queue.size() > g_debug_message_max)
