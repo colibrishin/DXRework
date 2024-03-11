@@ -15,8 +15,8 @@ RWTexture1D<float4>      uav00 : register(u0);
 RWTexture1D<float4>      uav01 : register(u1);
 RWTexture2D<float4>      uav02 : register(u2);
 RWTexture2D<float4>      uav03 : register(u3);
-RWTexture2DArray<float4> uavArr04 : register(u4);
-RWTexture2DArray<float4> uavArr05 : register(u5);
+RWTexture2DArray<float4> uavArr00 : register(u4);
+RWTexture2DArray<float4> uavArr01 : register(u5);
 RWStructuredBuffer<InstanceElement> uavInstance : register(u6);
 
 Texture2D      tex00 : register(t0);
