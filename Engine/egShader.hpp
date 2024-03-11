@@ -14,7 +14,8 @@ namespace Engine::Resources
     Shader(
       const EntityName&  name, const std::filesystem::path& path,
       eShaderDomain      domain, eShaderDepths              depth,
-      eShaderRasterizers rasterizer, D3D11_FILTER           sampler_filter, eShaderSamplers sampler
+      eShaderRasterizers rasterizer, D3D11_FILTER           sampler_filter, eShaderSamplers sampler,
+      D3D11_PRIMITIVE_TOPOLOGY topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
     );
     ~Shader() override = default;
 
@@ -34,13 +35,13 @@ namespace Engine::Resources
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
-      const std::string&           name,
-      const std::filesystem::path& path,
-      eShaderDomain                domain,
-      eShaderDepths                depth,
-      eShaderRasterizers           rasterizer,
-      D3D11_FILTER                 filter,
-      eShaderSamplers              sampler
+      const std::string &           name,
+      const std::filesystem::path & path,
+      const eShaderDomain           domain,
+      const UINT                    depth,
+      const UINT                    rasterizer,
+      const D3D11_FILTER            filter,
+      const UINT                    sampler, D3D11_PRIMITIVE_TOPOLOGY topology
     );
 
   protected:

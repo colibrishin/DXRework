@@ -148,7 +148,7 @@ namespace Engine::Resources
 
   Shader::Shader(
     const EntityName& name, const std::filesystem::path& path, const eShaderDomain      domain,
-    const UINT        depth, const UINT                  rasterizer, const D3D11_FILTER filter, const UINT sampler
+    const UINT        depth, const UINT                  rasterizer, const D3D11_FILTER filter, const UINT sampler, D3D11_PRIMITIVE_TOPOLOGY topology
   )
     : Resource(path, RES_T_SHADER),
       m_domain_(domain),
@@ -160,7 +160,7 @@ namespace Engine::Resources
       m_smp_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(sampler >> 3))),
       m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
       m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+      m_topology_(topology)
   {
     SetName(name);
   }
@@ -233,13 +233,13 @@ namespace Engine::Resources
 
   boost::shared_ptr<Shader> Shader::Create(
     const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-    const UINT         rasterizer, const D3D11_FILTER     filter, const UINT        sampler
+    const UINT         rasterizer, const D3D11_FILTER     filter, const UINT        sampler, D3D11_PRIMITIVE_TOPOLOGY topology
   )
   {
     if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
       (path).lock(); const auto ncheck = GetResourceManager().GetResource<Shader>(name).lock()) { return ncheck; }
 
-    const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler);
+    const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler, topology);
     GetResourceManager().AddResource(name, obj);
     return obj;
   }
