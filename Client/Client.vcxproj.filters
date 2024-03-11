@@ -153,10 +153,10 @@
     <CopyFileToFolders Include="Rocket.fbx">
       <Filter>Resource\Model</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\Engine\cs_intensity_test.hlsl">
+    <CopyFileToFolders Include="cs_intensity_test.hlsl">
       <Filter>Resource\ComputeShader\IntersectionCompute</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\Engine\intensity_test.hlsl">
+    <CopyFileToFolders Include="intensity_test.hlsl">
       <Filter>Resource\Shader</Filter>
     </CopyFileToFolders>
   </ItemGroup>
