@@ -35,7 +35,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
-      lightIntensity[i] *= saturate((1.0f - dist) / bufLight[i].range.x);
+      lightIntensity[i] *= saturate(1.0f - (dist / bufLight[i].range.x));
     }
   }
 
