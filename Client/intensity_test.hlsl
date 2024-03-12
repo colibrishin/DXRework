@@ -1,7 +1,13 @@
 #include "common.hlsli"
 #include "vs_default.hlsl"
 
-uint4 ps_main(PixelInputType input) : SV_TARGET
+struct PixelIntensityOutput
+{
+  uint4 availability : SV_Target0;
+  float4 worldPosition : SV_Target1;
+};
+
+PixelIntensityOutput ps_main(PixelInputType input)
 {
   float shadowFactor[MAX_NUM_LIGHTS];
   bool intersection = false;
@@ -39,10 +45,16 @@ uint4 ps_main(PixelInputType input) : SV_TARGET
   // todo: expandable bit-masking or alternative for more lights
   if (intersection)
   {
-    return uint4(availability, 0, 0, 1);
+    PixelIntensityOutput output;
+    output.availability  = uint4(availability, 0, 0, 1);
+    output.worldPosition = input.world_position;
+    return output;
   }
   else
   {
-    return uint4(0.f, 0.f, 0.f, 0.f);
+    PixelIntensityOutput output;
+    output.availability  = uint4(0, 0, 0, 0);
+    output.worldPosition = float4(0.f, 0.f, 0.f, 0.f);
+    return output;
   }
 }

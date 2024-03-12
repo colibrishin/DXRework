@@ -8,6 +8,8 @@
 #include <egTransform.h>
 #include <egShader.hpp>
 
+#include "egCamera.h"
+
 namespace Client::Scripts
 {
   void ShadowIntersectionScript::Initialize()
@@ -75,6 +77,12 @@ namespace Client::Scripts
       tex.Load();
     }
 
+    for (auto& tex : m_intensity_position_texs_)
+    {
+      tex.Initialize();
+      tex.Load();
+    }
+
     m_sb_light_vp_.Create(g_max_lights, nullptr, true);
 
     m_viewport_.Width    = g_max_shadow_map_size;
@@ -94,6 +102,13 @@ namespace Client::Scripts
 	  for (auto& tex : m_shadow_texs_)
     {
       tex.Clear();
+    }
+
+    for (auto& tex : m_intensity_position_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
     }
 
     for (auto& tex : m_intensity_test_texs_)
@@ -215,23 +230,40 @@ namespace Client::Scripts
 
       GetRenderPipeline().SetViewport(m_viewport_);
 
+      int z_clip = 0;
+
+      if (const auto camera = scene->GetMainCamera().lock())
+      {
+        const float z = camera->GetComponent<Components::Transform>().lock()->GetWorldPosition().z;
+
+        for (int i = 0; i < 3; ++i)
+        {
+          if (light_vps[0].end_clip_spaces[i].z > z )
+          {
+            z_clip = i;
+            break;
+          }
+        }
+      }
+
       for (int i = 0; i < lights->size(); ++i)
       {
         GetRenderPipeline().SetParam<int>(i, target_light_slot);
         GetRenderPipeline().SetParam<int>(true, custom_vp_slot);
 
-        GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[0], custom_view_slot);
-        GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[0], custom_proj_slot);
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[z_clip], custom_view_slot);
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[z_clip], custom_proj_slot);
 
         ID3D11RenderTargetView* previous_rtv = nullptr;
         ID3D11DepthStencilView* previous_dsv = nullptr;
 
         GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
 
-        auto* rtv = m_intensity_test_texs_[i].GetRTV();
-        auto** rtv_ptr = &rtv;
+        std::vector<ID3D11RenderTargetView*> rtv_ptr;
+        rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTV());
+        rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTV());
 
-        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr, m_shadow_depth_->GetDSV());
+        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_shadow_depth_->GetDSV());
 
         GetRenderer().RenderPass
           (
@@ -268,16 +300,34 @@ namespace Client::Scripts
         const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
 
         cast->SetIntersectionTexture(m_intensity_test_texs_[i]);
+        cast->SetPositionTexture(m_intensity_position_texs_[i]);
         cast->SetLightTable(&m_sb_light_table_);
         cast->SetTargetLight(i);
 
         cast->Dispatch();
       }
 
-      Client::ComputeShaders::IntersectionCompute::LightTableSB light_table{};
+      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
+      light_table.resize(g_max_lights);
 
-      m_sb_light_table_.GetData(1, &light_table);
-      HELPME
+      m_sb_light_table_.GetData(g_max_lights, light_table.data());
+
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        for (int j = 0; j < lights->size(); ++j)
+        {
+          if (light_table[i].lightTable[j].value > 0)
+          {
+            const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
+            const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
+
+            const auto average = Vector3::Lerp(wp_min, wp_max , 0.5f);
+
+            GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
+            GetDebugger().Draw(average, average * 100.f, Colors::AntiqueWhite);
+          }
+        }
+      }
     }
   }
 

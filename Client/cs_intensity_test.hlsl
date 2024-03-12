@@ -3,9 +3,12 @@
 struct LightTable
 {
   uint4 table[MAX_NUM_LIGHTS];
+  float4 min[MAX_NUM_LIGHTS];
+  float4 max[MAX_NUM_LIGHTS];
 };
 
-Texture2D<uint> integerTex00 : register(t0);
+Texture2D<uint> idxTex00 : register(t0);
+Texture2D positionTex00 : register(t1);
 RWStructuredBuffer<LightTable> g_lightTable : register(u7);
 
 #define PARAM_NUM_LIGHTS g_iParam[0].x
@@ -24,9 +27,15 @@ void cs_main(uint3 tId : SV_DispatchThreadID)
 
   if (flat_idx >= width * height) { return; }
 
-  const uint4 texel = integerTex00.Load
+  const float2 texel_pos = float2
     (
-     int3(flat_idx / width, flat_idx % height, 0)
+     (flat_idx / width),
+     (flat_idx % height)
+    );
+
+  const uint4 texel = idxTex00.Load
+    (
+     int3(texel_pos, 0)
     );
 
   for (int j = 0; j < PARAM_NUM_LIGHTS; ++j)
@@ -34,6 +43,21 @@ void cs_main(uint3 tId : SV_DispatchThreadID)
     if (texel.x & (1 << j))
     {
       g_lightTable[PARAM_TARGET_LIGHT].table[j].x = 1;
+
+      const float4 position = positionTex00.Load
+        (
+         int3(texel_pos, 0)
+        );
+
+      if (length(position) < length(g_lightTable[PARAM_TARGET_LIGHT].min[j]))
+      {
+        g_lightTable[PARAM_TARGET_LIGHT].min[j] = position;
+      }
+
+      if (length(position) > length(g_lightTable[PARAM_TARGET_LIGHT].max[j]))
+      {
+        g_lightTable[PARAM_TARGET_LIGHT].max[j] = position;
+      }
     }
   }
 

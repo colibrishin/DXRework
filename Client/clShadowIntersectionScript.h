@@ -1,5 +1,6 @@
 #pragma once
 #include "Client.h"
+#include "clIntensityPositionTexture.h"
 #include "egGlobal.h"
 #include "egObject.hpp"
 #include "egScript.h"
@@ -42,6 +43,8 @@ namespace Client::Scripts
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
     Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
+    Client::Resource::IntensityPositionTexture m_intensity_position_texs_[g_max_lights];
+
     StrongTexture2D m_shadow_depth_;
     StrongComputeShader m_intersection_compute_;
 
