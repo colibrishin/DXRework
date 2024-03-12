@@ -328,6 +328,11 @@ namespace Client::Scripts
           }
         }
       }
+
+      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
+      empty_light_table.resize(g_max_lights);
+
+      m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
     }
   }
 
