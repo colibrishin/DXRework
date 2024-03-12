@@ -274,9 +274,20 @@ namespace Client::Scripts
         cast->Dispatch();
       }
 
-      Client::ComputeShaders::IntersectionCompute::LightTableSB light_table{};
+      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
+      light_table.resize(g_max_lights);
 
-      m_sb_light_table_.GetData(1, &light_table);
+      m_sb_light_table_.GetData(g_max_lights, light_table.data());
+      HELPME
+
+      const auto average = Vector2::Lerp(light_table[1].min[0], light_table[1].max[0], 0.5f);
+      auto coord = Vector3(average.x, average.y, 0.f) / 512.f;
+      coord.z = 1.f;
+
+      const Matrix inverse_vp =
+          light_vps[1].view[0].Transpose() * light_vps[1].proj[0].Transpose();
+
+      const Vector3 position = Vector3::Transform(coord, inverse_vp);
       HELPME
     }
   }
