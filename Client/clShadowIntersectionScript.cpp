@@ -215,13 +215,29 @@ namespace Client::Scripts
 
       GetRenderPipeline().SetViewport(m_viewport_);
 
+      int z_clip = 0;
+
+      if (const auto camera = scene->GetMainCamera().lock())
+      {
+        const float z = camera->GetComponent<Components::Transform>().lock()->GetWorldPosition().z;
+
+        for (int i = 0; i < 3; ++i)
+        {
+          if (light_vps[0].end_clip_spaces[i].z > z )
+          {
+            z_clip = i;
+            break;
+          }
+        }
+      }
+
       for (int i = 0; i < lights->size(); ++i)
       {
         GetRenderPipeline().SetParam<int>(i, target_light_slot);
         GetRenderPipeline().SetParam<int>(true, custom_vp_slot);
 
-        GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[0], custom_view_slot);
-        GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[0], custom_proj_slot);
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[z_clip], custom_view_slot);
+        GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[z_clip], custom_proj_slot);
 
         ID3D11RenderTargetView* previous_rtv = nullptr;
         ID3D11DepthStencilView* previous_dsv = nullptr;
