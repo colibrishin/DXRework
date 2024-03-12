@@ -29,13 +29,13 @@ namespace Engine::Graphics
       {
         GetD3Device().GetContext()->CSSetUnorderedAccessViews
           (
-           which_client_sb<T>::value,
+           which_client_sb_uav<T>::value,
            1,
            m_uav_.GetAddressOf(),
            nullptr
           );
       }
-      if constexpr (is_uav_sb<T>::value == true)
+      if constexpr (!is_client_uav_sb<T>::value && is_uav_sb<T>::value)
       {
         GetD3Device().GetContext()->CSSetUnorderedAccessViews
         (
@@ -60,14 +60,14 @@ namespace Engine::Graphics
       {
         GetD3Device().GetContext()->CSSetUnorderedAccessViews
           (
-           which_client_sb<T>::value,
+           which_client_sb_uav<T>::value,
            1,
            null_uav.GetAddressOf(),
            nullptr
           );
 
       }
-      if constexpr (is_uav_sb<T>::value == true)
+      if constexpr (!is_client_uav_sb<T>::value && is_uav_sb<T>::value)
       {
         GetD3Device().GetContext()->CSSetUnorderedAccessViews
         (

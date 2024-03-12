@@ -51,10 +51,10 @@
 
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
-#define CLIENT_SB_T(enum_val) static constexpr eClientSBType sbtype = enum_val;
+#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
 
 // Static structured buffer UAV type, this should be added to every structured buffer UAV
-#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType sbuavtype = enum_val;
+#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType csbuavtype = enum_val;
 #define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
 
 // Static texture type, this should be added to every texture.
