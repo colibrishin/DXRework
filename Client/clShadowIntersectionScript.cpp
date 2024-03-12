@@ -8,6 +8,8 @@
 #include <egTransform.h>
 #include <egShader.hpp>
 
+#include "egCamera.h"
+
 namespace Client::Scripts
 {
   void ShadowIntersectionScript::Initialize()
@@ -294,17 +296,31 @@ namespace Client::Scripts
       light_table.resize(g_max_lights);
 
       m_sb_light_table_.GetData(g_max_lights, light_table.data());
-      HELPME
 
-      const auto average = Vector2::Lerp(light_table[1].min[0], light_table[1].max[0], 0.5f);
-      auto coord = Vector3(average.x, average.y, 0.f) / 512.f;
-      coord.z = 1.f;
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        for (int j = 0; j < lights->size(); ++j)
+        {
+          if (light_table[i].lightTable[j].value > 0)
+          {
+            const auto average = Vector2::Lerp(light_table[i].min[j], light_table[i].max[j], 0.5f);
+            auto coord = Vector4(average.x, average.y, 0.f, 0.f) / 512.f;
+            coord = (coord * 2.f) - Vector4(1.f, 1.f, 0.f, 0.f);
+            coord.w = 1.f;
 
-      const Matrix inverse_vp =
-          light_vps[1].view[0].Transpose() * light_vps[1].proj[0].Transpose();
+            const Matrix wvp =
+                (GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldMatrix() *
+                light_vps[i].view[z_clip].Transpose() *
+                light_vps[i].proj[z_clip].Transpose()).Invert();
 
-      const Vector3 position = Vector3::Transform(coord, inverse_vp);
-      HELPME
+            const Vector4 world_pos = Vector4::Transform(coord, wvp);
+            const Vector3 position = Vector3(world_pos) / world_pos.w;
+
+            GetDebugger().Draw(BoundingSphere(position, 0.1f), Colors::YellowGreen);
+            GetDebugger().Draw(position, position * 100.f, Colors::AntiqueWhite);
+          }
+        }
+      }
     }
   }
 
