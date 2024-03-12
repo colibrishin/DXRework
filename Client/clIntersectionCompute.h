@@ -20,6 +20,18 @@ namespace Client::ComputeShaders
       CLIENT_SB_UAV_T(CLIENT_SBUAV_TYPE_INTERSECTION)
 
       Graphics::OffsetT<int> lightTable[g_max_lights];
+      Vector2 min[g_max_lights];
+      Vector2 max[g_max_lights];
+
+      LightTableSB()
+      {
+        for (int i = 0; i < g_max_lights; ++i)
+        {
+          lightTable[i] = 0;
+          min[i] = Vector2(FLT_MAX, FLT_MAX);
+          max[i] = Vector2(FLT_MIN, FLT_MIN);
+        }
+      }
     };
 
     void OnImGui(const StrongParticleRenderer& pr) override;

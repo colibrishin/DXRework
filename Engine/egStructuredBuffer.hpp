@@ -220,8 +220,12 @@ namespace Engine::Graphics
       InitializeUAV(size);
     }
 
-    if (is_mutable) { InitializeWriteBuffer(size); }
-
+    if (is_mutable)
+    {
+      InitializeWriteBuffer(size);
+      std::vector<T> data(size);
+      SetData(size, data.data());
+    }
     InitializeReadBuffer(size);
   }
 
