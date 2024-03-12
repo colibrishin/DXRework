@@ -206,6 +206,7 @@
     <ClCompile Include="clHitboxScript.cpp" />
     <ClCompile Include="clHpTextScript.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClInclude Include="clIntensityPositionTexture.h" />
     <ClCompile Include="clIntersectionCompute.cpp" />
     <ClCompile Include="clParticleCompute.cpp" />
     <ClCompile Include="clPlayerScript.cpp" />

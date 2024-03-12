@@ -66,6 +66,9 @@
     <Filter Include="Resource\Shader">
       <UniqueIdentifier>{2a4c2cc1-3086-4fe3-a5dd-b06d27d06c10}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Texture\IntensityPositionTexture">
+      <UniqueIdentifier>{62877f23-6cea-4b54-bcdd-326054c762ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="clIntensityTexture.h">
       <Filter>Resource\Texture\IntensityTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="clIntensityPositionTexture.h">
+      <Filter>Resource\Texture\IntensityPositionTexture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
