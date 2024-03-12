@@ -77,6 +77,12 @@ namespace Client::Scripts
       tex.Load();
     }
 
+    for (auto& tex : m_intensity_position_texs_)
+    {
+      tex.Initialize();
+      tex.Load();
+    }
+
     m_sb_light_vp_.Create(g_max_lights, nullptr, true);
 
     m_viewport_.Width    = g_max_shadow_map_size;
@@ -96,6 +102,13 @@ namespace Client::Scripts
 	  for (auto& tex : m_shadow_texs_)
     {
       tex.Clear();
+    }
+
+    for (auto& tex : m_intensity_position_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
     }
 
     for (auto& tex : m_intensity_test_texs_)
@@ -246,10 +259,11 @@ namespace Client::Scripts
 
         GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
 
-        auto* rtv = m_intensity_test_texs_[i].GetRTV();
-        auto** rtv_ptr = &rtv;
+        std::vector<ID3D11RenderTargetView*> rtv_ptr;
+        rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTV());
+        rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTV());
 
-        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr, m_shadow_depth_->GetDSV());
+        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_shadow_depth_->GetDSV());
 
         GetRenderer().RenderPass
           (
@@ -286,6 +300,7 @@ namespace Client::Scripts
         const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
 
         cast->SetIntersectionTexture(m_intensity_test_texs_[i]);
+        cast->SetPositionTexture(m_intensity_position_texs_[i]);
         cast->SetLightTable(&m_sb_light_table_);
         cast->SetTargetLight(i);
 
@@ -303,21 +318,13 @@ namespace Client::Scripts
         {
           if (light_table[i].lightTable[j].value > 0)
           {
-            const auto average = Vector2::Lerp(light_table[i].min[j], light_table[i].max[j], 0.5f);
-            auto coord = Vector4(average.x, average.y, 0.f, 0.f) / 512.f;
-            coord = (coord * 2.f) - Vector4(1.f, 1.f, 0.f, 0.f);
-            coord.w = 1.f;
+            const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
+            const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
 
-            const Matrix wvp =
-                (GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldMatrix() *
-                light_vps[i].view[z_clip].Transpose() *
-                light_vps[i].proj[z_clip].Transpose()).Invert();
+            const auto average = Vector3::Lerp(wp_min, wp_max , 0.5f);
 
-            const Vector4 world_pos = Vector4::Transform(coord, wvp);
-            const Vector3 position = Vector3(world_pos) / world_pos.w;
-
-            GetDebugger().Draw(BoundingSphere(position, 0.1f), Colors::YellowGreen);
-            GetDebugger().Draw(position, position * 100.f, Colors::AntiqueWhite);
+            GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
+            GetDebugger().Draw(average, average * 100.f, Colors::AntiqueWhite);
           }
         }
       }

@@ -3,6 +3,7 @@
 #include <egComputeShader.h>
 
 #include "Client.h"
+#include "clIntensityPositionTexture.h"
 #include "clIntensityTexture.h"
 #include "egStructuredBuffer.hpp"
 
@@ -20,16 +21,16 @@ namespace Client::ComputeShaders
       CLIENT_SB_UAV_T(CLIENT_SBUAV_TYPE_INTERSECTION)
 
       Graphics::OffsetT<int> lightTable[g_max_lights];
-      Vector2 min[g_max_lights];
-      Vector2 max[g_max_lights];
+      Vector4 min[g_max_lights];
+      Vector4 max[g_max_lights];
 
       LightTableSB()
       {
         for (int i = 0; i < g_max_lights; ++i)
         {
           lightTable[i] = 0;
-          min[i] = Vector2(FLT_MAX, FLT_MAX);
-          max[i] = Vector2(FLT_MIN, FLT_MIN);
+          min[i] = Vector4(FLT_MAX);
+          max[i] = Vector4(FLT_MIN);
         }
       }
     };
@@ -38,6 +39,7 @@ namespace Client::ComputeShaders
 
     void SetLightTable(Graphics::StructuredBuffer<LightTableSB>* light_table_ptr) { m_light_table_ptr_ = light_table_ptr; }
     void SetIntersectionTexture(Client::Resource::IntensityTexture& texs) { m_intersection_texture_ = &texs; }
+    void SetPositionTexture(Client::Resource::IntensityPositionTexture& texs) { m_position_texture_ = &texs; }
     void SetTargetLight(const UINT target_light) { m_target_light_ = target_light; }
 
 
@@ -50,6 +52,7 @@ namespace Client::ComputeShaders
   private:
     Graphics::StructuredBuffer<LightTableSB>* m_light_table_ptr_;
     Client::Resource::IntensityTexture* m_intersection_texture_;
+    Client::Resource::IntensityPositionTexture* m_position_texture_;
     UINT m_target_light_;
 
   };
