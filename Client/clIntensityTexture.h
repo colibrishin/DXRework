@@ -16,7 +16,7 @@ namespace Client::Resource
          .ArraySize = 1,
          .Format = DXGI_FORMAT_R32G32B32A32_UINT,
          .CPUAccessFlags = 0,
-         .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS,
+         .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
          .MipsLevel = 1,
          .MiscFlags = 0,
          .Usage = D3D11_USAGE_DEFAULT,

@@ -30,6 +30,17 @@ namespace Client::Scripts
       m_intensity_test_material_->SetResource<Engine::Resources::Shader>("intensity_test");
     }
 
+    if (const auto& cs = Engine::Resources::ComputeShader::Get("IntersectionCompute").lock())
+    {
+      m_intersection_compute_ = cs;
+    }
+    else
+    {
+      const auto& new_cs = Engine::Resources::ComputeShader::Create<ComputeShaders::IntersectionCompute>().lock();
+
+      m_intersection_compute_ = new_cs;
+    }
+
     m_shadow_depth_ = Engine::Resources::Texture2D::Create
       (
        std::to_string(GetID()) + "ShadowDepth",
@@ -72,6 +83,8 @@ namespace Client::Scripts
     m_viewport_.MaxDepth = 1.0f;
     m_viewport_.TopLeftX = 0.0f;
     m_viewport_.TopLeftY = 0.0f;
+
+    m_sb_light_table_.Create(g_max_lights, nullptr, true);
 
     // also borrow the sampler state from shadow manager.
   }
@@ -248,30 +261,23 @@ namespace Client::Scripts
 
       GetRenderPipeline().DefaultViewport();
 
-      // TODO: mocking default render, check whether shadow is leaning onto the object where light intensity is above ambient color.
-
-      //std::vector<ID3D11ShaderResourceView*> intensity_srv;
-
-      //for (const auto& tex : m_intensity_test_texs_)
-      //{
-      //  intensity_srv.push_back(tex.GetSRV());
-      //}
-
-      //GetRenderPipeline().BindResources
-      //  (
-      //   BIND_SLOT_UAV_TEX_2D,
-      //   SHADER_COMPUTE,
-      //   intensity_srv.data(),
-      //   intensity_srv.size()
-      //  );
-
-      //for (int i = 0; i < lights->size(); ++i)
-      //{
-      //  GetRenderPipeline().SetParam<int>(i, target_light_slot);
-      //}
-
       // By compute shader, For each pixel if it has light index, which is non-zero,
       // then this object shadow intersects with designated light.
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
+
+        cast->SetIntersectionTexture(m_intensity_test_texs_[i]);
+        cast->SetLightTable(&m_sb_light_table_);
+        cast->SetTargetLight(i);
+
+        cast->Dispatch();
+      }
+
+      Client::ComputeShaders::IntersectionCompute::LightTableSB light_table{};
+
+      m_sb_light_table_.GetData(1, &light_table);
+      HELPME
     }
   }
 

@@ -334,6 +334,20 @@ namespace Engine::Manager::Graphics
       );
   }
 
+  void RenderPipeline::BindResources(
+    UINT        slot,
+    eShaderType shader_type, ID3D11UnorderedAccessView** textures, UINT size
+  )
+  {
+    if (shader_type == SHADER_COMPUTE)
+    {
+      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+        (
+         slot, size, textures, nullptr
+        );
+    }
+  }
+
   void RenderPipeline::ResetShaders()
   {
     GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
@@ -382,5 +396,11 @@ namespace Engine::Manager::Graphics
        GetD3Device().GetContext(), null_view.GetAddressOf(),
        slot, 1
       );
+  }
+
+  void RenderPipeline::UnbindUAVResource(UINT slot)
+  {
+    ComPtr<ID3D11UnorderedAccessView> null_views(nullptr);
+    GetD3Device().GetContext()->CSSetUnorderedAccessViews(slot, 1, null_views.GetAddressOf(), nullptr);
   }
 } // namespace Engine::Manager::Graphics

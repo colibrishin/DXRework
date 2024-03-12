@@ -6,6 +6,7 @@
 #include "egShadowTexture.h"
 #include "egStructuredBuffer.hpp"
 #include "clIntensityTexture.h"
+#include "clIntersectionCompute.h"
 
 namespace Client::Scripts
 {
@@ -36,11 +37,13 @@ namespace Client::Scripts
     D3D11_VIEWPORT m_viewport_;
 
     Graphics::StructuredBuffer<Graphics::SBs::LightVPSB> m_sb_light_vp_;
+    Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB> m_sb_light_table_;
 
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
     Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
     StrongTexture2D m_shadow_depth_;
+    StrongComputeShader m_intersection_compute_;
 
     StrongMaterial m_shadow_material_;
     StrongMaterial m_intensity_test_material_;
