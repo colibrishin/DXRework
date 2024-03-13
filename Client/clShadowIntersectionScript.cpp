@@ -147,6 +147,8 @@ namespace Client::Scripts
         GetDebugger().Draw(bbox, Colors::Red);
       }
     }
+
+    m_shadow_bbox_.clear();
   }
 
   void ShadowIntersectionScript::PostUpdate(const float& dt) {}
@@ -155,7 +157,9 @@ namespace Client::Scripts
 
   void ShadowIntersectionScript::PreRender(const float& dt) {}
 
-  void ShadowIntersectionScript::Render(const float& dt)
+  void ShadowIntersectionScript::Render(const float& dt) {}
+
+  void ShadowIntersectionScript::PostRender(const float& dt)
   {
     GetRenderPipeline().SetViewport(m_viewport_);
 
@@ -314,10 +318,17 @@ namespace Client::Scripts
            1.f,
            0
           );
+
+        GetRenderPipeline().SetParam<int>(0, target_light_slot);
         GetRenderPipeline().SetParam<int>(false, custom_vp_slot);
 
         GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
       }
+
+      m_intensity_test_material_->PostRender(0.f);
+      m_sb_light_vp_.UnbindSRV(SHADER_VERTEX);
+      m_sb_light_vp_.UnbindSRV(SHADER_PIXEL);
+      GetRenderPipeline().UnbindResources(RESERVED_SHADOW_MAP, SHADER_PIXEL, g_max_lights);
 
       GetRenderPipeline().DefaultViewport();
 
@@ -368,11 +379,8 @@ namespace Client::Scripts
       empty_light_table.resize(g_max_lights);
 
       m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
-      m_shadow_bbox_.clear();
     }
   }
-
-  void ShadowIntersectionScript::PostRender(const float& dt) {}
 
   ShadowIntersectionScript::ShadowIntersectionScript()
     : m_viewport_() {}
