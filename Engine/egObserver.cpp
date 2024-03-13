@@ -40,6 +40,4 @@ namespace Engine::Objects
   void Observer::FixedUpdate(const float& dt) { Object::FixedUpdate(dt); }
 
   void Observer::OnImGui() { Object::OnImGui(); }
-
-  void Observer::OnDeserialized() {}
 } // namespace Engine::Objects

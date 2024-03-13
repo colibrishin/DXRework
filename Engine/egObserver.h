@@ -19,7 +19,6 @@ namespace Engine::Objects
     void PostRender(const float& dt) override;
     void FixedUpdate(const float& dt) override;
     void OnImGui() override;
-    void OnDeserialized() override;
 
   private:
     SERIALIZER_ACCESS

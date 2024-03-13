@@ -398,6 +398,17 @@ namespace Engine::Manager::Graphics
       );
   }
 
+  void RenderPipeline::UnbindResources(UINT slot, eShaderType type, UINT size)
+  {
+    std::vector<ID3D11ShaderResourceView*> null_views(size, nullptr);
+
+    g_shader_rs_bind_map.at(type)
+      (
+       GetD3Device().GetContext(), null_views.data(),
+       slot, size
+      );
+  }
+
   void RenderPipeline::UnbindUAVResource(UINT slot)
   {
     ComPtr<ID3D11UnorderedAccessView> null_views(nullptr);
