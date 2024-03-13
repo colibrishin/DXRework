@@ -97,6 +97,7 @@ namespace Engine::Manager::Graphics
     void BindResources(UINT slot, eShaderType shader_type, ID3D11UnorderedAccessView** textures, UINT size);
 
     void UnbindResource(UINT slot, eShaderType type);
+    void UnbindResources(UINT slot, eShaderType type, UINT size);
     void UnbindUAVResource(UINT slot);
 
     void DrawIndexed(UINT index_count);
