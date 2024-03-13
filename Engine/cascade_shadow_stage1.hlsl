@@ -89,7 +89,8 @@ void gs_main(
 }
 
 
-void ps_main(PixelShadowInputType input)
+float4 ps_main(PixelShadowInputType input) : SV_Target
 {
-  // Passing through
+  // Returns 1.0f if the pixel is in the shadow. (for masking)
+  return float4(1.f, 1.f, 1.f, 1.f);
 }

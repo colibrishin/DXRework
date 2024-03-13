@@ -8,6 +8,7 @@
 #include "egStructuredBuffer.hpp"
 #include "clIntensityTexture.h"
 #include "clIntersectionCompute.h"
+#include "clShadowMaskTexture.h"
 
 namespace Client::Scripts
 {
@@ -43,6 +44,8 @@ namespace Client::Scripts
     Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB> m_sb_light_table_;
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
+    Client::Resource::ShadowMaskTexture m_shadow_mask_texs_[g_max_lights];
+
     Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
     Client::Resource::IntensityPositionTexture m_intensity_position_texs_[g_max_lights];
 

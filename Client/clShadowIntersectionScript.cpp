@@ -84,6 +84,12 @@ namespace Client::Scripts
       tex.Load();
     }
 
+    for (auto& tex : m_shadow_mask_texs_)
+    {
+      tex.Initialize();
+      tex.Load();
+    }
+
     m_sb_light_vp_.Create(g_max_lights, nullptr, true);
 
     m_viewport_.Width    = g_max_shadow_map_size;
@@ -113,6 +119,13 @@ namespace Client::Scripts
     }
 
     for (auto& tex : m_intensity_test_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
+
+    for (auto& tex : m_shadow_mask_texs_)
     {
       constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
 
@@ -193,11 +206,45 @@ namespace Client::Scripts
 
       UINT idx = 0;
 
+      // Draw shadow map except the object itself.
       for (const auto& light : *lights)
       {
         m_shadow_texs_[idx].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
         m_shadow_texs_[idx].PreRender(0.f);
         m_shadow_texs_[idx].Render(0.f);
+
+        GetRenderPipeline().SetParam<int>(idx, shadow_slot);
+
+        GetRenderer().RenderPass
+          (
+           dt, SHADER_DOMAIN_OPAQUE, true,
+           [this](const StrongObject& obj)
+           {
+             if (obj->GetID() == GetOwner().lock()->GetID())
+             {
+               return false;
+             }
+
+             return true;
+           }
+          );
+
+        m_shadow_texs_[idx++].PostRender(0.f);
+      }
+
+      idx = 0;
+
+      // Render object only for picking up the exact shadow position.
+      for (const auto& light : *lights)
+      {
+        ID3D11RenderTargetView* previous_rtv = nullptr;
+        ID3D11DepthStencilView* previous_dsv = nullptr;
+
+        GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
+
+        ComPtr<ID3D11RenderTargetView> rtv_ptr = m_shadow_mask_texs_[idx].GetRTV();
+
+        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr.GetAddressOf(), m_shadow_texs_[idx].GetDSV());
 
         GetRenderPipeline().SetParam<int>(idx, shadow_slot);
 
@@ -215,7 +262,9 @@ namespace Client::Scripts
            }
           );
 
-        m_shadow_texs_[idx++].PostRender(0.f);
+        GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
+
+        idx++;
       }
 
       m_shadow_material_->PostRender(0.f);
@@ -297,6 +346,10 @@ namespace Client::Scripts
 
         GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_shadow_depth_->GetDSV());
 
+        m_shadow_mask_texs_[i].BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 0, SHADER_PIXEL);
+        m_shadow_mask_texs_[i].PreRender(0.f);
+        m_shadow_mask_texs_[i].Render(0.f);
+
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
@@ -318,6 +371,8 @@ namespace Client::Scripts
            1.f,
            0
           );
+
+        m_shadow_mask_texs_[i].PostRender(0.f);
 
         GetRenderPipeline().SetParam<int>(0, target_light_slot);
         GetRenderPipeline().SetParam<int>(false, custom_vp_slot);

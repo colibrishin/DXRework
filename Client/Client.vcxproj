@@ -198,6 +198,7 @@
     <ClInclude Include="clParticleCompute.h" />
     <ClInclude Include="clPlayerScript.h" />
     <ClInclude Include="clShadowIntersectionScript.h" />
+    <ClInclude Include="clShadowMaskTexture.h" />
     <ClInclude Include="clTriangleMesh.hpp" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
