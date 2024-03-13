@@ -14,7 +14,7 @@ namespace Client::Resource
          .Height = g_max_shadow_map_size,
          .Depth = 0,
          .ArraySize = g_max_shadow_cascades,
-         .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
          .CPUAccessFlags = 0,
          .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
          .MipsLevel = 1,

@@ -44,7 +44,7 @@ namespace Client::Scripts
       m_intersection_compute_ = new_cs;
     }
 
-    m_shadow_depth_ = Engine::Resources::Texture2D::Create
+    m_tmp_shadow_depth_ = Engine::Resources::Texture2D::Create
       (
        std::to_string(GetID()) + "ShadowDepth",
        "",
@@ -63,8 +63,8 @@ namespace Client::Scripts
        }
       );
 
-    m_shadow_depth_->Initialize();
-    m_shadow_depth_->Load();
+    m_tmp_shadow_depth_->Initialize();
+    m_tmp_shadow_depth_->Load();
 
     for (auto& tex : m_shadow_texs_)
     {
@@ -327,6 +327,21 @@ namespace Client::Scripts
         }
       }
 
+      std::vector<ID3D11ShaderResourceView*> srv_ptr;
+
+      for (auto& tex : m_shadow_mask_texs_)
+      {
+        srv_ptr.push_back(tex.GetSRV());
+      }
+
+      GetRenderPipeline().BindResources
+        (
+         BIND_SLOT_TEXARR,
+         SHADER_PIXEL,
+         srv_ptr.data(),
+         static_cast<UINT>(srv_ptr.size())
+        );
+
       for (int i = 0; i < lights->size(); ++i)
       {
         GetRenderPipeline().SetParam<int>(i, target_light_slot);
@@ -344,11 +359,7 @@ namespace Client::Scripts
         rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTV());
         rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTV());
 
-        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_shadow_depth_->GetDSV());
-
-        m_shadow_mask_texs_[i].BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 0, SHADER_PIXEL);
-        m_shadow_mask_texs_[i].PreRender(0.f);
-        m_shadow_mask_texs_[i].Render(0.f);
+        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_tmp_shadow_depth_->GetDSV());
 
         GetRenderer().RenderPass
           (
@@ -366,13 +377,11 @@ namespace Client::Scripts
 
         GetD3Device().GetContext()->ClearDepthStencilView
           (
-           m_shadow_depth_->GetDSV(),
+           m_tmp_shadow_depth_->GetDSV(),
            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
            1.f,
            0
           );
-
-        m_shadow_mask_texs_[i].PostRender(0.f);
 
         GetRenderPipeline().SetParam<int>(0, target_light_slot);
         GetRenderPipeline().SetParam<int>(false, custom_vp_slot);
@@ -383,7 +392,9 @@ namespace Client::Scripts
       m_intensity_test_material_->PostRender(0.f);
       m_sb_light_vp_.UnbindSRV(SHADER_VERTEX);
       m_sb_light_vp_.UnbindSRV(SHADER_PIXEL);
+
       GetRenderPipeline().UnbindResources(RESERVED_SHADOW_MAP, SHADER_PIXEL, g_max_lights);
+      GetRenderPipeline().UnbindResources(BIND_SLOT_TEXARR, SHADER_PIXEL, g_max_lights);
 
       GetRenderPipeline().DefaultViewport();
 
