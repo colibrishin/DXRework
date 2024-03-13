@@ -9,6 +9,7 @@
 #include <egShader.hpp>
 
 #include "egCamera.h"
+#include "egMouseManager.h"
 
 namespace Client::Scripts
 {
@@ -119,7 +120,34 @@ namespace Client::Scripts
     }
   }
 
-  void ShadowIntersectionScript::Update(const float& dt) {}
+  void ShadowIntersectionScript::Update(const float& dt)
+  {
+    Vector3 position;
+    Vector3 dir;
+
+    if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+    {
+      if (const auto& camera = scene->GetMainCamera().lock())
+      {
+        position = camera->GetComponent<Components::Transform>().lock()->GetWorldPosition();
+        dir      = camera->GetComponent<Components::Transform>().lock()->Forward();
+      }
+    }
+
+    for (const auto& [key, bbox] : m_shadow_bbox_)
+    {
+      float dist = 0.f;
+
+      if (bbox.Intersects(position, dir, dist))
+      {
+        GetDebugger().Draw(bbox, Colors::YellowGreen);
+      }
+      else
+      {
+        GetDebugger().Draw(bbox, Colors::Red);
+      }
+    }
+  }
 
   void ShadowIntersectionScript::PostUpdate(const float& dt) {}
 
@@ -324,7 +352,14 @@ namespace Client::Scripts
             const auto average = Vector3::Lerp(wp_min, wp_max , 0.5f);
 
             GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
-            GetDebugger().Draw(average, average * 100.f, Colors::AntiqueWhite);
+
+            BoundingBox bbox;
+            BoundingBox::CreateFromPoints(
+                bbox, 
+                wp_min, 
+                wp_max);
+
+            m_shadow_bbox_.emplace(std::make_pair(i, j), bbox);
           }
         }
       }
@@ -333,6 +368,7 @@ namespace Client::Scripts
       empty_light_table.resize(g_max_lights);
 
       m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
+      m_shadow_bbox_.clear();
     }
   }
 

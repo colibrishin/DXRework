@@ -37,9 +37,10 @@ namespace Client::Scripts
 
     D3D11_VIEWPORT m_viewport_;
 
+    std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
+
     Graphics::StructuredBuffer<Graphics::SBs::LightVPSB> m_sb_light_vp_;
     Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB> m_sb_light_table_;
-
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
     Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
