@@ -69,6 +69,9 @@
     <Filter Include="Resource\Texture\IntensityPositionTexture">
       <UniqueIdentifier>{62877f23-6cea-4b54-bcdd-326054c762ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Texture\ShadowMaskTexture">
+      <UniqueIdentifier>{8b6a23f1-b34e-4ff4-ba0a-34f8fb4081e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -106,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="clIntensityPositionTexture.h">
       <Filter>Resource\Texture\IntensityPositionTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="clShadowMaskTexture.h">
+      <Filter>Resource\Texture\ShadowMaskTexture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

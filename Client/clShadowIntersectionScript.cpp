@@ -44,7 +44,7 @@ namespace Client::Scripts
       m_intersection_compute_ = new_cs;
     }
 
-    m_shadow_depth_ = Engine::Resources::Texture2D::Create
+    m_tmp_shadow_depth_ = Engine::Resources::Texture2D::Create
       (
        std::to_string(GetID()) + "ShadowDepth",
        "",
@@ -63,8 +63,8 @@ namespace Client::Scripts
        }
       );
 
-    m_shadow_depth_->Initialize();
-    m_shadow_depth_->Load();
+    m_tmp_shadow_depth_->Initialize();
+    m_tmp_shadow_depth_->Load();
 
     for (auto& tex : m_shadow_texs_)
     {
@@ -79,6 +79,12 @@ namespace Client::Scripts
     }
 
     for (auto& tex : m_intensity_position_texs_)
+    {
+      tex.Initialize();
+      tex.Load();
+    }
+
+    for (auto& tex : m_shadow_mask_texs_)
     {
       tex.Initialize();
       tex.Load();
@@ -113,6 +119,13 @@ namespace Client::Scripts
     }
 
     for (auto& tex : m_intensity_test_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
+
+    for (auto& tex : m_shadow_mask_texs_)
     {
       constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
 
@@ -193,11 +206,45 @@ namespace Client::Scripts
 
       UINT idx = 0;
 
+      // Draw shadow map except the object itself.
       for (const auto& light : *lights)
       {
         m_shadow_texs_[idx].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
         m_shadow_texs_[idx].PreRender(0.f);
         m_shadow_texs_[idx].Render(0.f);
+
+        GetRenderPipeline().SetParam<int>(idx, shadow_slot);
+
+        GetRenderer().RenderPass
+          (
+           dt, SHADER_DOMAIN_OPAQUE, true,
+           [this](const StrongObject& obj)
+           {
+             if (obj->GetID() == GetOwner().lock()->GetID())
+             {
+               return false;
+             }
+
+             return true;
+           }
+          );
+
+        m_shadow_texs_[idx++].PostRender(0.f);
+      }
+
+      idx = 0;
+
+      // Render object only for picking up the exact shadow position.
+      for (const auto& light : *lights)
+      {
+        ID3D11RenderTargetView* previous_rtv = nullptr;
+        ID3D11DepthStencilView* previous_dsv = nullptr;
+
+        GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
+
+        ComPtr<ID3D11RenderTargetView> rtv_ptr = m_shadow_mask_texs_[idx].GetRTV();
+
+        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr.GetAddressOf(), m_shadow_texs_[idx].GetDSV());
 
         GetRenderPipeline().SetParam<int>(idx, shadow_slot);
 
@@ -215,7 +262,9 @@ namespace Client::Scripts
            }
           );
 
-        m_shadow_texs_[idx++].PostRender(0.f);
+        GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
+
+        idx++;
       }
 
       m_shadow_material_->PostRender(0.f);
@@ -278,6 +327,21 @@ namespace Client::Scripts
         }
       }
 
+      std::vector<ID3D11ShaderResourceView*> srv_ptr;
+
+      for (auto& tex : m_shadow_mask_texs_)
+      {
+        srv_ptr.push_back(tex.GetSRV());
+      }
+
+      GetRenderPipeline().BindResources
+        (
+         BIND_SLOT_TEXARR,
+         SHADER_PIXEL,
+         srv_ptr.data(),
+         static_cast<UINT>(srv_ptr.size())
+        );
+
       for (int i = 0; i < lights->size(); ++i)
       {
         GetRenderPipeline().SetParam<int>(i, target_light_slot);
@@ -295,7 +359,7 @@ namespace Client::Scripts
         rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTV());
         rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTV());
 
-        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_shadow_depth_->GetDSV());
+        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_tmp_shadow_depth_->GetDSV());
 
         GetRenderer().RenderPass
           (
@@ -313,7 +377,7 @@ namespace Client::Scripts
 
         GetD3Device().GetContext()->ClearDepthStencilView
           (
-           m_shadow_depth_->GetDSV(),
+           m_tmp_shadow_depth_->GetDSV(),
            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
            1.f,
            0
@@ -328,7 +392,9 @@ namespace Client::Scripts
       m_intensity_test_material_->PostRender(0.f);
       m_sb_light_vp_.UnbindSRV(SHADER_VERTEX);
       m_sb_light_vp_.UnbindSRV(SHADER_PIXEL);
+
       GetRenderPipeline().UnbindResources(RESERVED_SHADOW_MAP, SHADER_PIXEL, g_max_lights);
+      GetRenderPipeline().UnbindResources(BIND_SLOT_TEXARR, SHADER_PIXEL, g_max_lights);
 
       GetRenderPipeline().DefaultViewport();
 
