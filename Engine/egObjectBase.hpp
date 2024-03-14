@@ -229,4 +229,5 @@ namespace Engine::Abstract
   };
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::ObjectBase)
 BOOST_CLASS_EXPORT_KEY(Engine::Abstract::ObjectBase)
