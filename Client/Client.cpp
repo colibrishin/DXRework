@@ -15,6 +15,7 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
+#include "clButtonScript.h"
 #include "clHitboxScript.hpp"
 #include "clHpTextScript.h"
 #include "clTriangleMesh.hpp"
@@ -208,6 +209,7 @@ namespace Client
     Script::Register<Scripts::PlayerScript>();
     Script::Register<Scripts::HpTextScript>();
     Script::Register<Scripts::ShadowIntersectionScript>();
+    Script::Register<Scripts::ButtonScript>();
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 
     // todo: refactor
