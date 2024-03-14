@@ -25,7 +25,7 @@ namespace Client::Scripts
 
   private:
     HpTextScript();
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
   };
 }

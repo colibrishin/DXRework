@@ -43,7 +43,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     Vector2     m_position_;
     Vector4     m_color_;

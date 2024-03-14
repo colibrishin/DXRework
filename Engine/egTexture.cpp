@@ -6,7 +6,7 @@
 #include "egD3Device.hpp"
 #include "egRenderPipeline.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
     Engine::Resources::Texture, 
     _ARTAG(_BSTSUPER(Resource))

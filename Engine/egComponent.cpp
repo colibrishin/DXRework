@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egSceneManager.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Abstract::Component,
  _ARTAG(_BSTSUPER(Entity)) 

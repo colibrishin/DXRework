@@ -19,7 +19,7 @@ namespace Engine::Meshes
     void FixedUpdate(const float& dt) override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
   };
 } // namespace Engine::Mesh
 

@@ -9,7 +9,7 @@
 #include "egTransform.h"
 #include "imgui_stdlib.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Animator,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))

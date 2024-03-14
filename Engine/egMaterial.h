@@ -89,7 +89,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Material();
 
     void SetResource(const StrongResource& resource);

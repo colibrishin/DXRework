@@ -18,7 +18,7 @@ namespace Engine::Abstract
     Renderable() = default;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
   };
 } // namespace Engine::Abstract
 

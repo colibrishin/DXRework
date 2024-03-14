@@ -151,7 +151,7 @@ namespace Engine
     auto cend() const noexcept { return m_layers.cend(); }
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Manager::SceneManager;
 
     void AssignLocalIDToObject(const StrongObject& obj);

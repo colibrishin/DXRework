@@ -211,7 +211,7 @@ namespace Engine::Manager::Graphics
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
-       [this](const StrongObject& obj)
+       [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }

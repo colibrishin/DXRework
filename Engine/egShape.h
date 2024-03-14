@@ -78,7 +78,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Manager::Graphics::Renderer;
     Shape();
 

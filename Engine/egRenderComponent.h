@@ -25,7 +25,7 @@ namespace Engine::Components::Base
     void OnImGui() override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     RenderComponent();
 
     StrongMaterial m_material_;

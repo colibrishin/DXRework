@@ -2,7 +2,7 @@
 
 // Need to be included before boost only in the header, requires a default
 // constructor
-#define SERIALIZER_ACCESS                                                      \
+#define SERIALIZE_DECL                                                         \
   friend class Engine::Serializer;                                             \
   friend class boost::serialization::access;                                   \
   template <class Archive>                                                     \
@@ -32,7 +32,7 @@
   }
 // full serialization access implementation for a class only in the cpp file,
 // requires a boost include
-#define SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE, ...)                            \
+#define SERIALIZE_IMPL(NAMESPACE_TYPE, ...)                                    \
   SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                      \
   SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)
 

@@ -4,7 +4,7 @@
 #include "egRigidbody.h"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Objects::Observer,
  _ARTAG(_BSTSUPER(Engine::Abstract::Object))

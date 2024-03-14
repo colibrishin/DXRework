@@ -3,7 +3,7 @@
 
 #include "egImGuiHeler.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::StateController,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))

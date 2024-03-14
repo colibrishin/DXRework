@@ -9,7 +9,7 @@
 #include "egTransform.h"
 
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::ObserverController,
  _ARTAG(_BSTSUPER(Engine::Components::StateController))

@@ -98,7 +98,7 @@ namespace Engine::Resources
     virtual void loadDerived(ComPtr<ID3D11Resource>& res) = 0;
     void Unload_INTERNAL() override;
 
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     // Non-serialized
     ComPtr<ID3D11Resource>            m_res_;
 

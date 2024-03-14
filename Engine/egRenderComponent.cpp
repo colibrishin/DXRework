@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egMaterial.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Base::RenderComponent,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))

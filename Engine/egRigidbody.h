@@ -65,7 +65,7 @@ namespace Engine::Components
     Rigidbody();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     bool m_bGrounded;
     bool m_b_no_angular_;

@@ -22,7 +22,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Texture1D() : Texture("", TEX_TYPE_1D, {}) {}
 
     UINT GetHeight() const override final;

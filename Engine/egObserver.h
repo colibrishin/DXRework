@@ -21,7 +21,8 @@ namespace Engine::Objects
     void OnImGui() override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+
   };
 } // namespace Engine::Objects
 

@@ -4,7 +4,7 @@
 #include "egParticleRenderer.h"
 #include "egTexture.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::ComputeShader,
  _ARTAG(_BSTSUPER(Shader))

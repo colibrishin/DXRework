@@ -63,7 +63,7 @@ namespace Engine::Resources
 
   private:
     Shader();
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     eShaderDomain              m_domain_;
     bool                       m_depth_flag_;

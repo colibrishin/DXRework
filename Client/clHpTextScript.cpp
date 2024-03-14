@@ -5,7 +5,7 @@
 #include "egSceneManager.hpp"
 #include "egText.h"
 
-SERIALIZER_ACCESS_IMPL(Client::Scripts::HpTextScript, _ARTAG(_BSTSUPER(Script)))
+SERIALIZE_IMPL(Client::Scripts::HpTextScript, _ARTAG(_BSTSUPER(Script)))
 
 namespace Client::Scripts
 {

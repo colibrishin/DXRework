@@ -53,7 +53,7 @@ namespace Engine::Resources
     void Load_INTERNAL() override final;
     void Unload_INTERNAL() override final;
 
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     ComputeShader();
 
     ComPtr<ID3D11ComputeShader> m_cs_;

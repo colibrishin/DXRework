@@ -27,7 +27,7 @@ namespace Engine
     Script();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Abstract::Object;
 
     void SetOwner(const WeakObject& owner);

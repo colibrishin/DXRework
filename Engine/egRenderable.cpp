@@ -3,4 +3,4 @@
 
 #include <boost/serialization/export.hpp>
 
-SERIALIZER_ACCESS_IMPL(Engine::Abstract::Renderable, _ARTAG(_BSTSUPER(Entity)))
+SERIALIZE_IMPL(Engine::Abstract::Renderable, _ARTAG(_BSTSUPER(Entity)))

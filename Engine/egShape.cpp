@@ -12,7 +12,7 @@
 #include "egMesh.h"
 #include "egResourceManager.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Shape,
  _ARTAG(_BSTSUPER(Resource))

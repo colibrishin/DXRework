@@ -13,7 +13,7 @@
 
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Collider,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))

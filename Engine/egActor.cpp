@@ -3,7 +3,7 @@
 
 #include "egImGuiHeler.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Abstract::Actor,
  _ARTAG(_BSTSUPER(Renderable))

@@ -31,7 +31,7 @@ namespace Engine::Objects
     void OnImGui() override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Text();
 
     MetadataPathStr m_font_meta_path_str_;

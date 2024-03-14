@@ -26,7 +26,7 @@ namespace Engine::Abstract
     Component(eComponentType type, const WeakObject& owner);
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Object;
 
     void SetOwner(const WeakObject& owner);

@@ -39,7 +39,7 @@ namespace Engine
   private:
     Layer();
 
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     eLayerType             m_layer_type_;
     std::set<StrongObject> m_objects_;

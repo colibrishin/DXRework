@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "clHitboxScript.hpp"
 
-SERIALIZER_ACCESS_IMPL(Client::Scripts::HitboxScript, _ARTAG(_BSTSUPER(Script)) _ARTAG(m_modifier_))
+SERIALIZE_IMPL(Client::Scripts::HitboxScript, _ARTAG(_BSTSUPER(Script)) _ARTAG(m_modifier_))
 
 namespace Client::Scripts
 {

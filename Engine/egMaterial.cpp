@@ -9,7 +9,7 @@
 #include "egTexture.h"
 #include "egType.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Material,
  _ARTAG(_BSTSUPER(Resource))

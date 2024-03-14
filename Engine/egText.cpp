@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egResourceManager.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Objects::Text,
  _ARTAG(_BSTSUPER(Object)) 

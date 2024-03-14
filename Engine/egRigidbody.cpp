@@ -6,7 +6,7 @@
 #include "egObject.hpp"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Rigidbody,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component)) _ARTAG(m_bGrounded)

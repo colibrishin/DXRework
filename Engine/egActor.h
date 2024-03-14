@@ -19,7 +19,7 @@ namespace Engine::Abstract
     explicit Actor();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Scene;
 
     void SetLayer(eLayerType layer);

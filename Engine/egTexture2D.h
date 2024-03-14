@@ -40,7 +40,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Texture2D() : Texture("", TEX_TYPE_2D, {}) {}
 
     UINT GetDepth() const override;

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egSphereMesh.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Meshes::SphereMesh, _ARTAG(_BSTSUPER(Mesh)))
+SERIALIZE_IMPL(Engine::Meshes::SphereMesh, _ARTAG(_BSTSUPER(Mesh)))
 
 namespace Engine::Meshes
 {

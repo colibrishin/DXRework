@@ -29,7 +29,7 @@ namespace Engine::Components
     void SetState(Enum state) { m_state_ = static_cast<Enum>(state); }
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     int m_state_;
     int m_previous_state_;

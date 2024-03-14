@@ -3,7 +3,7 @@
 
 #include "egBoneAnimation.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::AnimationsTexture,
  _ARTAG(_BSTSUPER(Texture3D))

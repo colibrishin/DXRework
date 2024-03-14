@@ -41,7 +41,7 @@ namespace Engine::Resources
     void loadDerived(ComPtr<ID3D11Resource>& res) override;
      
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     AnimationsTexture() : Texture3D("", {}) {}
 
     constexpr static size_t s_vec4_to_mat = 4;

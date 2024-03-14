@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egScript.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Script,
  _ARTAG(_BSTSUPER(Renderable))

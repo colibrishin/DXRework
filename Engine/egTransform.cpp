@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Transform,
  _ARTAG(_BSTSUPER(Component))

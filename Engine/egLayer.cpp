@@ -2,7 +2,7 @@
 #include "egLayer.h"
 #include "egObject.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Layer,
  _ARTAG(_BSTSUPER(Engine::Abstract::Renderable))

@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::ParticleRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))

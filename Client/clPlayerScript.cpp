@@ -15,7 +15,7 @@
 #include "egShape.h"
 #include "egText.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Client::Scripts::PlayerScript,
  _ARTAG(_BSTSUPER(Script)) _ARTAG(m_hp_) _ARTAG(m_state_) _ARTAG(m_prev_state_)

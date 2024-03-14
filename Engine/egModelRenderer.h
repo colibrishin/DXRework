@@ -17,7 +17,7 @@ namespace Engine::Components
     void OnImGui() override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     ModelRenderer();
 
     friend class Manager::Graphics::Renderer;

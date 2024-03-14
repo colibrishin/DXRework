@@ -5,7 +5,7 @@
 #include "egManagerHelper.hpp"
 #include "egObserver.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Scene,
  _ARTAG(_BSTSUPER(Renderable))

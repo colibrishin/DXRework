@@ -5,7 +5,7 @@
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-SERIALIZER_ACCESS_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_) _ARTAG(m_meta_str_))
+SERIALIZE_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_) _ARTAG(m_meta_str_))
 
 void Engine::Abstract::Entity::SetName(const EntityName& name) { m_name_ = name; }
 

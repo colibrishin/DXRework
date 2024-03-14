@@ -26,7 +26,7 @@ namespace Client::Scripts
   private:
 	  float m_modifier_;
     HitboxScript();
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
   };
 }

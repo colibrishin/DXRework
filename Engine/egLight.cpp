@@ -3,7 +3,7 @@
 #include "egCamera.h"
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Objects::Light,
  _ARTAG(_BSTSUPER(Object)) _ARTAG(m_color_)

@@ -36,7 +36,7 @@ namespace Engine::Objects
     float GetRange() const { return m_range_; }
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     float m_range_;
     eLightType m_type_;

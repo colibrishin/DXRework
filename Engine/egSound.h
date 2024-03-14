@@ -51,14 +51,14 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     void CommitDistance() const;
 
     void Play_INTERNAL(const WeakObject& origin);
 
     FMOD::Sound* m_sound_ = nullptr;
-    std::map<WeakObject, FMOD::Channel*, WeakComparer<Abstract::Object>>
+    std::map<WeakObject, FMOD::Channel*, WeakComparer<Abstract::ObjectBase>>
     m_channel_map_;
     FMOD_MODE m_mode_;
 

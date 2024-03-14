@@ -5,7 +5,7 @@
 #include "egRigidbody.h"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Sound,
  _ARTAG(_BSTSUPER(Resource)) _ARTAG(m_mode_)

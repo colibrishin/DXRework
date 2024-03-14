@@ -5,7 +5,7 @@
 #include "egResourceManager.hpp"
 #include "egSound.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::SoundPlayer,
  _ARTAG(_BSTSUPER(Abstract::Component))

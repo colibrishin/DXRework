@@ -24,7 +24,7 @@ namespace Engine::Components
     float GetDt() const;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Animator();
 
     void UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const;
