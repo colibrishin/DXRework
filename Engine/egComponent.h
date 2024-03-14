@@ -27,7 +27,7 @@ namespace Engine::Abstract
 
   private:
     SERIALIZE_DECL
-    friend class Object;
+    friend class ObjectBase;
 
     void SetOwner(const WeakObject& owner);
     void SetLocalID(LocalComponentID id) { if (const auto locked = m_owner_.lock()) { m_local_id_ = id; } }

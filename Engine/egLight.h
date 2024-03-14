@@ -8,7 +8,7 @@
 
 namespace Engine::Objects
 {
-  class Light final : public Abstract::Object
+  class Light final : public Abstract::ObjectBase
   {
   public:
     OBJECT_T(DEF_OBJ_T_LIGHT)
@@ -37,6 +37,7 @@ namespace Engine::Objects
 
   private:
     SERIALIZE_DECL
+    OBJ_CLONE_DECL
 
     float m_range_;
     eLightType m_type_;

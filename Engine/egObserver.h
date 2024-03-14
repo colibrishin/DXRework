@@ -4,7 +4,7 @@
 
 namespace Engine::Objects
 {
-  class Observer : public Abstract::Object
+  class Observer : public Abstract::ObjectBase
   {
   public:
     OBJECT_T(DEF_OBJ_T_OBSERVER)
@@ -22,6 +22,7 @@ namespace Engine::Objects
 
   private:
     SERIALIZE_DECL
+    OBJ_CLONE_DECL
 
   };
 } // namespace Engine::Objects

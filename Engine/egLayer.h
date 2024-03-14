@@ -23,7 +23,7 @@ namespace Engine
     void OnSerialized() override;
     void OnDeserialized() override;
 
-    void                 AddGameObject(const StrongObject& obj);
+    void                 AddGameObject(const StrongObjectBase& obj);
     void                 RemoveGameObject(GlobalEntityID id);
     WeakObject           GetGameObject(GlobalEntityID id) const;
     ConcurrentWeakObjVec GetGameObjects() const;
@@ -42,7 +42,7 @@ namespace Engine
     SERIALIZE_DECL
 
     eLayerType             m_layer_type_;
-    std::set<StrongObject> m_objects_;
+    std::set<StrongObjectBase> m_objects_;
 
     // Non-serialized
     ConcurrentWeakObjGlobalMap m_weak_objects_cache_;

@@ -120,7 +120,7 @@ namespace Engine
     }
   }
 
-  void Layer::AddGameObject(const StrongObject& obj)
+  void Layer::AddGameObject(const StrongObjectBase& obj)
   {
     if (m_objects_.contains(obj)) { return; }
 

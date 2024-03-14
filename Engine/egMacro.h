@@ -67,6 +67,11 @@
 #define CLIENT_SCRIPT_T(typename, enum_val) static constexpr Engine::eScriptType scptype = enum_val; \
   static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
 
+// Cloning object declaration macro
+#define OBJ_CLONE_DECL StrongObjectBase cloneImpl() const override;
+// Cloning object implementation macro
+#define OBJ_CLONE_IMPL(CLASS) StrongObjectBase CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
 // Static inline resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                                    \
   static inline boost::weak_ptr<TYPE> Get(const std::string& name) {                        \

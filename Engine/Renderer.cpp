@@ -74,7 +74,7 @@ namespace Engine::Manager::Graphics
         for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
           // Check culling.
-          RenderPass(dt, (eShaderDomain)i, false, [](const StrongObject& obj)
+          RenderPass(dt, (eShaderDomain)i, false, [](const StrongObjectBase& obj)
           {
             return GetProjectionFrustum().CheckRender(obj);
           });
@@ -111,7 +111,7 @@ namespace Engine::Manager::Graphics
     const float                                     dt,
     eShaderDomain                                   domain,
     bool                                            shader_bypass,
-    const std::function<bool(const StrongObject&)>& predicate
+    const std::function<bool(const StrongObjectBase&)>& predicate
   ) const
   {
     if (!Ready())

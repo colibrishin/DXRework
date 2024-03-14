@@ -5,7 +5,7 @@
 
 namespace Engine::Objects
 {
-  class Text : public Abstract::Object
+  class Text : public Abstract::ObjectBase
   {
   public:
     OBJECT_T(DEF_OBJ_T_TEXT)
@@ -32,6 +32,7 @@ namespace Engine::Objects
 
   private:
     SERIALIZE_DECL
+    OBJ_CLONE_DECL
     Text();
 
     MetadataPathStr m_font_meta_path_str_;

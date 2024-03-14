@@ -4,13 +4,13 @@
 
 namespace Engine::Objects
 {
-  class Camera final : public Abstract::Object
+  class Camera final : public Abstract::ObjectBase
   {
   public:
     OBJECT_T(DEF_OBJ_T_CAMERA)
 
     Camera()
-      : Object(DEF_OBJ_T_CAMERA),
+      : ObjectBase(DEF_OBJ_T_CAMERA),
         m_zoom_(1.0f),
         m_b_orthogonal_(false),
         m_b_fixed_up_(true) {}
@@ -38,11 +38,13 @@ namespace Engine::Objects
     bool    GetOrthogonal() const;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    OBJ_CLONE_DECL
 
-    float m_zoom_;
-    bool m_b_orthogonal_;
-    bool m_b_fixed_up_;
+  private:
+    float            m_zoom_;
+    bool             m_b_orthogonal_;
+    bool             m_b_fixed_up_;
 
     // Non-serialized
     Matrix m_world_matrix_;

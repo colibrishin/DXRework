@@ -56,7 +56,7 @@ namespace Client::Scripts
     // todo: swappable weapons
     if (!m_rifle_initialized_)
     {
-      const auto rifle = obj->GetScene().lock()->CreateGameObject<Abstract::Object>(GetOwner().lock()->GetLayer()).lock();
+      const auto rifle = obj->GetScene().lock()->CreateGameObject<Object>(GetOwner().lock()->GetLayer()).lock();
       GetOwner().lock()->AddChild(rifle);
 
       const auto rifle_model = Resources::Shape::Get("RifleShape").lock();
@@ -83,7 +83,7 @@ namespace Client::Scripts
 
       for (const auto& [idx, box] : bb_map)
       {
-        const auto child = obj->GetScene().lock()->CreateGameObject<Abstract::Object>(LAYER_HITBOX).lock();
+        const auto child = obj->GetScene().lock()->CreateGameObject<Object>(LAYER_HITBOX).lock();
         const auto ctr = child->AddComponent<Components::Transform>().lock();
         child->AddComponent<Components::Collider>();
         child->AddScript<HitboxScript>();

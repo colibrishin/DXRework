@@ -36,7 +36,7 @@ namespace Engine
     return Left.lock()->GetID() < Right.lock()->GetID();
   }
 
-  Physics::GenericBounding bounding_getter::value(Abstract::Object& object)
+  Physics::GenericBounding bounding_getter::value(Abstract::ObjectBase& object)
   {
     const auto tr = object.GetComponent<Components::Transform>().lock();
 

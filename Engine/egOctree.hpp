@@ -11,7 +11,7 @@ namespace Engine
   class Octree
   {
   private:
-    using WeakT = boost::weak_ptr<Abstract::Object>;
+    using WeakT = boost::weak_ptr<Abstract::ObjectBase>;
     constexpr static size_t   octant_count   = 8;
     constexpr static int      node_lifespan  = 10;
     constexpr static unsigned retry_exhaust  = 100;

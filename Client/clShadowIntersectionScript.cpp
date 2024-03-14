@@ -218,7 +218,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() == GetOwner().lock()->GetID())
              {
@@ -251,7 +251,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() != GetOwner().lock()->GetID())
              {
@@ -364,7 +364,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() == GetOwner().lock()->GetID())
              {

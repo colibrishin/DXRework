@@ -28,7 +28,7 @@ namespace Engine
 
   private:
     SERIALIZE_DECL
-    friend class Abstract::Object;
+    friend class Abstract::ObjectBase;
 
     void SetOwner(const WeakObject& owner);
 

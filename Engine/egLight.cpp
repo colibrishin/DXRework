@@ -6,14 +6,16 @@
 SERIALIZE_IMPL
 (
  Engine::Objects::Light,
- _ARTAG(_BSTSUPER(Object)) _ARTAG(m_color_)
+ _ARTAG(_BSTSUPER(ObjectBase)) _ARTAG(m_color_)
  _ARTAG(m_type_)
 )
 
 namespace Engine::Objects
 {
+  OBJ_CLONE_IMPL(Light)
+
   Light::Light()
-    : Object(DEF_OBJ_T_LIGHT),
+    : ObjectBase(DEF_OBJ_T_LIGHT),
       m_range_(10.f),
       m_type_(LIGHT_T_DIRECTIONAL) {}
 
@@ -46,15 +48,15 @@ namespace Engine::Objects
     SetCulled(false);
   }
 
-  void Light::PreUpdate(const float& dt) { Object::PreUpdate(dt); }
+  void Light::PreUpdate(const float& dt) { ObjectBase::PreUpdate(dt); }
 
-  void Light::Update(const float& dt) { Object::Update(dt); }
+  void Light::Update(const float& dt) { ObjectBase::Update(dt); }
 
-  void Light::PreRender(const float& dt) { Object::PreRender(dt); }
+  void Light::PreRender(const float& dt) { ObjectBase::PreRender(dt); }
 
   void Light::Render(const float& dt)
   {
-    Object::Render(dt);
+    ObjectBase::Render(dt);
 #ifdef _DEBUG
     const auto tr = GetComponent<Components::Transform>().lock();
 
@@ -63,15 +65,15 @@ namespace Engine::Objects
 #endif
   }
 
-  void Light::PostRender(const float& dt) { Object::PostRender(dt); }
+  void Light::PostRender(const float& dt) { ObjectBase::PostRender(dt); }
 
-  void Light::PostUpdate(const float& dt) { Object::PostUpdate(dt); }
+  void Light::PostUpdate(const float& dt) { ObjectBase::PostUpdate(dt); }
 
-  void Light::OnDeserialized() { Object::OnDeserialized(); }
+  void Light::OnDeserialized() { ObjectBase::OnDeserialized(); }
 
   void Light::OnImGui()
   {
-    Object::OnImGui();
+    ObjectBase::OnImGui();
 
     const auto title = GetName() + "###" + std::to_string(GetID());
 
