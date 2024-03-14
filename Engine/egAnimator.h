@@ -25,6 +25,7 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
     Animator();
 
     void UpdateTransform(const StrongTransform& tr, const StrongBaseAnimation& anim) const;

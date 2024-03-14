@@ -18,9 +18,10 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
-    ModelRenderer();
-
+    COMP_CLONE_DECL
     friend class Manager::Graphics::Renderer;
+
+    ModelRenderer();
 
   };
 }

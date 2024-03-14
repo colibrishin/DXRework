@@ -14,6 +14,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(SoundPlayer)
+
   SoundPlayer::SoundPlayer(const WeakObject& owner)
     : Component(COMP_T_SOUND_PLAYER, owner) {}
 

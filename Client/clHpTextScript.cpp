@@ -9,7 +9,9 @@ SERIALIZE_IMPL(Client::Scripts::HpTextScript, _ARTAG(_BSTSUPER(Script)))
 
 namespace Client::Scripts
 {
-   HpTextScript::HpTextScript() = default;
+  SCRIPT_CLONE_IMPL(HpTextScript)
+
+  HpTextScript::HpTextScript() = default;
 
   void HpTextScript::PreUpdate(const float& dt) {}
 

@@ -17,6 +17,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Animator)
+
   Animator::Animator(const WeakObject& owner)
     : Component(COM_T_ANIMATOR, owner),
       m_animation_id_(0),

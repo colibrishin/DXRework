@@ -43,6 +43,8 @@ namespace Client::Scripts
 
   private:
     SERIALIZE_DECL
+    SCRIPT_CLONE_DECL
+
     PlayerScript();
 
     void Hitscan(const float damage, const float range) const;

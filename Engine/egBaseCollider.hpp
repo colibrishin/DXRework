@@ -105,6 +105,8 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
+
     friend class Manager::Physics::LerpManager;
 
     static void InitializeStockVertices();

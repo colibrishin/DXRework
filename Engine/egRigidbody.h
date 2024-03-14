@@ -10,6 +10,7 @@ namespace Engine::Components
     COMPONENT_T(COM_T_RIDIGBODY)
 
     explicit Rigidbody(const WeakObject& object);
+    Rigidbody(const Rigidbody& other);
 
     ~Rigidbody() override = default;
 
@@ -66,6 +67,7 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
 
     bool m_bGrounded;
     bool m_b_no_angular_;

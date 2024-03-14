@@ -17,6 +17,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ObserverController)
+
   ObserverController::ObserverController(const WeakObject& owner)
     : StateController(owner) {}
 

@@ -13,6 +13,8 @@
 
 namespace Client::Scripts
 {
+  SCRIPT_CLONE_IMPL(ShadowIntersectionScript)
+
   void ShadowIntersectionScript::Initialize()
   {
 	  Script::Initialize();

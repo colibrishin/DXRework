@@ -15,6 +15,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ParticleRenderer)
+
   ParticleRenderer::ParticleRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_PARTICLE, owner),
       m_b_follow_owner_(true) {}

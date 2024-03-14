@@ -14,6 +14,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ModelRenderer)
+
   ModelRenderer::ModelRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_MODEL, owner) {}
 

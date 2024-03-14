@@ -26,6 +26,8 @@ SERIALIZE_IMPL
 
 namespace Client::Scripts
 {
+  SCRIPT_CLONE_IMPL(PlayerScript)
+
   void PlayerScript::Initialize()
   {
     Script::Initialize();

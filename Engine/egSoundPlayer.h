@@ -28,6 +28,7 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
     SoundPlayer();
 
     std::string m_sound_meta_path_;

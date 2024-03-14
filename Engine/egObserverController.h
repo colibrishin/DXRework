@@ -27,6 +27,8 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
+
   };
 } // namespace Engine::Component
 

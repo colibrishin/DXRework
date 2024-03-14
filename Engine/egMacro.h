@@ -72,6 +72,16 @@
 // Cloning object implementation macro
 #define OBJ_CLONE_IMPL(CLASS) StrongObjectBase CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
 
+// Cloning component declaration macro
+#define COMP_CLONE_DECL StrongComponent cloneImpl() const override;
+// Cloning component implementation macro
+#define COMP_CLONE_IMPL(CLASS) StrongComponent CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
+// Cloning script declaration macro
+#define SCRIPT_CLONE_DECL StrongScript cloneImpl() const override;
+// Cloning script implementation macro
+#define SCRIPT_CLONE_IMPL(CLASS) StrongScript CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
 // Static inline resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                                    \
   static inline boost::weak_ptr<TYPE> Get(const std::string& name) {                        \

@@ -19,6 +19,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Rigidbody)
+
   void Rigidbody::Initialize()
   {
     Component::Initialize();
@@ -41,6 +43,26 @@ namespace Engine::Components
       m_bGravityOverride(false),
       m_bFixed(false),
       m_friction_mu_(0.0f) {}
+
+  Rigidbody::Rigidbody(const Rigidbody& other)
+    : Component(other)
+  {
+    m_bGrounded         = other.m_bGrounded;
+    m_b_no_angular_     = other.m_b_no_angular_;
+    m_bGravityOverride  = other.m_bGravityOverride;
+    m_bFixed            = other.m_bFixed;
+    m_friction_mu_      = other.m_friction_mu_;
+    m_linear_velocity   = other.m_linear_velocity;
+    m_angular_velocity  = other.m_angular_velocity;
+    m_linear_friction_  = other.m_linear_friction_;
+    m_angular_friction_ = other.m_angular_friction_;
+    m_drag_force_       = other.m_drag_force_;
+    m_t0_force_         = other.m_t0_force_;
+    m_t0_torque_        = other.m_t0_torque_;
+    m_t1_force_         = other.m_t1_force_;
+    m_t1_torque_        = other.m_t1_torque_;
+    // ignore t1 transform
+  }
 
   Transform* Rigidbody::GetT1() const { return m_t1_.get(); }
 

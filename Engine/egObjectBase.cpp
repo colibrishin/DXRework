@@ -506,7 +506,8 @@ namespace Engine::Abstract
 
     for (const auto& comp : m_components_ | std::views::values)
     {
-      
+      const auto& cloned_comp = comp->Clone(cloned);
+      cloned->addComponent(cloned_comp);
     }
 
     // Keep intact with the parent.

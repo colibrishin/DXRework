@@ -34,6 +34,8 @@ namespace Client::Scripts
 
   private:
     SERIALIZE_DECL
+    SCRIPT_CLONE_DECL
+
     ShadowIntersectionScript();
 
     D3D11_VIEWPORT m_viewport_;

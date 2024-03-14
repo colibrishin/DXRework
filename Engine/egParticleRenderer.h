@@ -40,6 +40,8 @@ namespace Engine::Components
 
   private:
     SERIALIZE_DECL
+    COMP_CLONE_DECL
+
     friend class Resources::ComputeShader;
     ParticleRenderer();
 

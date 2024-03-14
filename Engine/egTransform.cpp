@@ -22,6 +22,8 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Transform)
+
   Transform::Transform(const WeakObject& owner)
     : Component(COM_T_TRANSFORM, owner),
       m_b_s_absolute_(true),
