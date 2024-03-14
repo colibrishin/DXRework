@@ -72,6 +72,9 @@
     <Filter Include="Resource\Texture\ShadowMaskTexture">
       <UniqueIdentifier>{8b6a23f1-b34e-4ff4-ba0a-34f8fb4081e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Script\ButtonScript">
+      <UniqueIdentifier>{e4df6f5d-34d5-4dc4-a733-7f85761b1d06}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -112,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="clShadowMaskTexture.h">
       <Filter>Resource\Texture\ShadowMaskTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="clButtonScript.h">
+      <Filter>Script\ButtonScript</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

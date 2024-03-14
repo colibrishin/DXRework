@@ -190,6 +190,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="clButtonScript.h" />
     <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="clHpTextScript.h" />
     <ClInclude Include="Client.h" />
