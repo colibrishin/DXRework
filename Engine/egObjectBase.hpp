@@ -54,31 +54,16 @@ namespace Engine::Abstract
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> AddScript(const std::string& name = "")
     {
+      const auto type = which_script<T>::value;
+
       if (m_scripts_.contains(which_script<T>::value))
       {
         return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
       }
 
-      StrongScript script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
+      boost::shared_ptr<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
       script->SetName(name);
-
-      m_scripts_[which_script<T>::value] = script;
-      script->Initialize();
-
-      return boost::static_pointer_cast<T>(script);
-    }
-
-  private:
-    boost::weak_ptr<Script> AddScript(const StrongScript& script)
-    {
-      if (m_scripts_.contains(script->GetScriptType()))
-      {
-        return boost::static_pointer_cast<Script>(m_scripts_[script->GetScriptType()]);
-      }
-
-      m_scripts_[script->GetScriptType()] = script;
-
-      script->Initialize();
+      addScriptImpl(script, type);
 
       return script;
     }
@@ -201,6 +186,9 @@ namespace Engine::Abstract
 
     // Add pre-existing component to the object.
     WeakComponent addComponent(const StrongComponent& component);
+
+    // Add pre-existing script to the object.
+    void addScriptImpl(const StrongScript & script, const eScriptType type);
 
     // Remove component from the object.
     void removeComponentImpl(eComponentType type);

@@ -196,6 +196,22 @@ namespace Engine::Abstract
     return component;
   }
 
+  void ObjectBase::addScriptImpl(const StrongScript& script, const eScriptType type)
+  {
+    if (m_scripts_.contains(type))
+    {
+      return;
+    }
+
+    script->SetOwner(GetSharedPtr<ObjectBase>());
+    if (!script->IsInitialized())
+    {
+      script->Initialize();
+    }
+
+    m_scripts_.emplace(type, script);
+  }
+
   void ObjectBase::removeComponentImpl(const eComponentType type)
   {
     if (m_components_.contains(type))
@@ -450,7 +466,8 @@ namespace Engine::Abstract
           {
             if (ImGui::Button(script_name.c_str()))
             {
-              AddScript(script_func(GetSharedPtr<ObjectBase>()));
+              const auto& script = script_func(GetSharedPtr<ObjectBase>());
+              addScriptImpl(script, script->GetScriptType());
             }
           }
 
