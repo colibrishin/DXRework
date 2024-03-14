@@ -33,34 +33,25 @@ namespace Engine
     void OnDeserialized() override;
     void OnImGui() override;
 
+    // Add Object to the scene. Type is deduced in compile time.
+    // If the object is bound to another scene or layer, it will be moved to this scene and layer.
+    template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
+    void AddGameObject(eLayerType layer, const boost::shared_ptr<T>& obj)
+    {
+      const auto& downcast = obj->template GetSharedPtr<Abstract::Object>();
+      addGameObjectImpl(layer, downcast);
+    }
+
     template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
     boost::weak_ptr<T> CreateGameObject(eLayerType layer, Args&&... args)
     {
       // Create object, dynamic allocation from scene due to the access limitation.
-      auto obj_t = boost::shared_ptr<T>(new T(args...));
-      auto obj   = obj_t->template GetSharedPtr<Abstract::Object>();
+      const auto& obj_t = boost::shared_ptr<T>(new T(args...));
+      const auto& obj   = obj_t->template GetSharedPtr<Abstract::Object>();
 
-      // Set internal information as this scene and layer
-      obj->template GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
-      obj->template GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
-      AssignLocalIDToObject(obj);
-
-      obj->Initialize();
-
-      // finalize the object registration at the next frame
-      GetTaskScheduler().AddTask
-        (
-         TASK_ADD_OBJ,
-         {obj, layer}, // keep the object alive, scene does not own the object yet.
-         [this](const std::vector<std::any>& params, const float dt)
-         {
-           const auto obj   = std::any_cast<StrongObject>(params[0]);
-           const auto layer = std::any_cast<eLayerType>(params[1]);
-
-           AddObjectFinalize(layer, obj);
-         }
-        );
-
+      // Set internal information as this scene and layer, segmenting this process for
+      // code re-usability.
+      addGameObjectImpl(layer, obj);
 
       // yield the currently created object
       return obj_t;
@@ -163,6 +154,9 @@ namespace Engine
     friend class Manager::SceneManager;
 
     void AssignLocalIDToObject(const StrongObject& obj);
+
+    // Set the scene and layer to the object, and schedule the object to be added at the next frame.
+    void addGameObjectImpl(eLayerType layer, const StrongObject& obj);
 
     // Functions for the next frame.
     // Add the object from the scene finally. this function should be called at the next frame.
