@@ -6,6 +6,7 @@
 #include "egOctree.hpp"
 #include "egRenderable.h"
 #include "egTaskScheduler.h"
+#include "egComponent.h"
 
 namespace Engine
 {
@@ -68,54 +69,54 @@ namespace Engine
     const Octree& GetObjectTree();
 
     // Add cache component from the object. Type is deduced in compile time.
+    // If component type is generic, use the overloaded runtime version.
     template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
-    void AddCacheComponent(const boost::shared_ptr<T>& component)
+    void AddCacheComponent(const boost::weak_ptr<T>& component)
     {
-      ConcurrentWeakObjGlobalMap::const_accessor acc;
+      GetTaskScheduler().AddTask
+        (
+         TASK_CACHE_COMPONENT,
+         {component},
+         [this](const std::vector<std::any>& params, const float)
+         {
+           const auto& component = std::any_cast<boost::weak_ptr<T>>(params[0]).lock();
 
-      if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
-      {
-        ConcurrentWeakComRootMap::accessor comp_acc;
-
-        if (m_cached_components_.find(comp_acc, which_component<T>::value))
-        {
-          comp_acc->second.emplace
-            (component->GetID(), component);
-        }
-        else
-        {
-          m_cached_components_.insert(comp_acc, which_component<T>::value);
-          comp_acc->second.emplace(component->GetID(), component);
-        }
-      }
-
-      if (which_component<T>::value == COM_T_TRANSFORM)
-      {
-        m_object_position_tree_.Insert(component->GetOwner().lock());
-      }
+           addCacheComponentImpl(component, which_component<T>::value);
+         }
+        );
     }
 
     // Add cache component from the object. Type is deduced in runtime.
-    void AddCacheComponent(const StrongComponent& component);
+    void AddCacheComponent(const WeakComponent& component)
+    {
+      GetTaskScheduler().AddTask
+        (
+         TASK_CACHE_COMPONENT,
+         {component},
+         [this](const std::vector<std::any>& params, const float)
+         {
+           const auto& component = std::any_cast<WeakComponent>(params[0]).lock();
 
+           addCacheComponentImpl(component, component->GetComponentType());
+         }
+        );
+    }
+
+    // Remove cache component from the object. Type is deduced in compile time.
     template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
     void RemoveCacheComponent(const boost::shared_ptr<T>& component)
     {
-      ConcurrentWeakObjGlobalMap::const_accessor acc;
+      GetTaskScheduler().AddTask
+        (
+         TASK_UNCACHE_COMPONENT,
+         {component},
+         [this](const std::vector<std::any>& params, const float)
+         {
+           const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
 
-      if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
-      {
-        ConcurrentWeakComRootMap::accessor comp_acc;
-        if (m_cached_components_.find(comp_acc, which_component<T>::value))
-        {
-          comp_acc->second.erase(component->GetID());
-        }
-      }
-
-      if (which_component<T>::value == COM_T_TRANSFORM)
-      {
-        m_object_position_tree_.Remove(component->GetOwner().lock());
-      }
+           removeCacheComponentImpl(component, which_component<T>::value);
+         }
+        );
     }
 
     template <typename T>
@@ -157,8 +158,13 @@ namespace Engine
 
     // Set the scene and layer to the object, and schedule the object to be added at the next frame.
     void addGameObjectImpl(eLayerType layer, const StrongObject& obj);
+    // Add cache component from the object.
+    void addCacheComponentImpl(const StrongComponent& component, const eComponentType type);
+    // Remove cache component from the object.
+    void removeCacheComponentImpl(const StrongComponent& component, const eComponentType type);
 
     // Functions for the next frame.
+
     // Add the object from the scene finally. this function should be called at the next frame.
     void AddObjectFinalize(eLayerType layer, const StrongObject& obj);
     // Remove the object from the scene finally. this function should be called at the next frame.
