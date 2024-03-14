@@ -66,6 +66,48 @@ namespace Engine
     obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
   }
 
+  void Scene::addGameObjectImpl(eLayerType layer, const StrongObject& obj)
+  {
+    // Disconnect the object from the previous scene and layer, if it exists.
+    if (const auto scene = obj->GetScene().lock())
+    {
+      if (const auto& obj_check = scene->FindGameObjectByLocalID(obj->GetLocalID()).lock())
+      {
+        scene->RemoveGameObject(obj_check->GetID(), obj_check->GetLayer());
+      }
+    }
+
+    // Cache the pre-existing components
+    for (const auto& comp : obj->GetAllComponents())
+    {
+      AddCacheComponent(comp);
+    }
+
+    // Set internal information as this scene and layer
+    obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
+    obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
+    AssignLocalIDToObject(obj);
+
+    if (!obj->IsInitialized())
+    {
+      obj->Initialize();
+    }
+
+    // finalize the object registration at the next frame
+    GetTaskScheduler().AddTask
+      (
+       TASK_ADD_OBJ,
+       {obj, layer}, // keep the object alive, scene does not own the object yet.
+       [this](const std::vector<std::any>& params, const float dt)
+       {
+         const auto obj   = std::any_cast<StrongObject>(params[0]);
+         const auto layer = std::any_cast<eLayerType>(params[1]);
+
+         AddObjectFinalize(layer, obj);
+       }
+      );
+  }
+
   void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
   {
     // add object to scene
