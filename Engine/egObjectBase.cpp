@@ -517,14 +517,33 @@ namespace Engine::Abstract
   {
     const auto& cloned = cloneImpl();
 
+    // Flip the ImGui flags just in case.
+    cloned->m_imgui_children_open_ = false;
+    cloned->m_imgui_components_open_ = false;
+    cloned->m_imgui_open_ = false;
+
     // Clone components and scripts
     cloned->m_components_.clear();
     cloned->m_scripts_.clear();
 
+    // Erase the copied pointers that indicates original object.
+    cloned->m_assigned_component_ids_.clear();
+    cloned->m_cached_component_.clear();
+    cloned->m_scripts_.clear();
+    cloned->m_components_.clear();
+
+    // Copy components
     for (const auto& comp : m_components_ | std::views::values)
     {
       const auto& cloned_comp = comp->Clone(cloned);
       cloned->addComponent(cloned_comp);
+    }
+
+    // Copy scripts
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      const auto& cloned_script = script->Clone(cloned);
+      cloned->addScriptImpl(cloned_script, cloned_script->GetScriptType());
     }
 
     // Keep intact with the parent.
