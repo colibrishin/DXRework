@@ -205,7 +205,10 @@ namespace Engine
 
             locked->SetScene(GetSharedPtr<Scene>());
 
-            for (const auto& comp : locked->GetAllComponents()) { AddCacheComponent(comp.lock()); }
+            for (const auto& comp : locked->GetAllComponents())
+            {
+              AddCacheComponent(comp.lock());
+            }
 
             const auto& children = locked->m_children_;
 
@@ -290,7 +293,7 @@ namespace Engine
     return {};
   }
 
-  void Scene::AddCacheComponent(const StrongComponent& component)
+  void Scene::addCacheComponentImpl(const StrongComponent& component, const eComponentType type)
   {
     ConcurrentWeakObjGlobalMap::const_accessor acc;
 
@@ -298,21 +301,40 @@ namespace Engine
     {
       ConcurrentWeakComRootMap::accessor comp_acc;
 
-      if (m_cached_components_.find(comp_acc, component->GetComponentType()))
+      if (m_cached_components_.find(comp_acc, type))
       {
         comp_acc->second.emplace
           (component->GetID(), component);
       }
       else
       {
-        m_cached_components_.insert(comp_acc, component->GetComponentType());
+        m_cached_components_.insert(comp_acc, type);
         comp_acc->second.emplace(component->GetID(), component);
       }
     }
 
-    if (component->GetComponentType() == COM_T_TRANSFORM)
+    if (type == COM_T_TRANSFORM)
     {
       m_object_position_tree_.Insert(component->GetOwner().lock());
+    }
+  }
+
+  void Scene::removeCacheComponentImpl(const StrongComponent& component, const eComponentType type)
+  {
+    ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+    if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+    {
+      ConcurrentWeakComRootMap::accessor comp_acc;
+      if (m_cached_components_.find(comp_acc, type))
+      {
+        comp_acc->second.erase(component->GetID());
+      }
+    }
+
+    if (type == COM_T_TRANSFORM)
+    {
+      m_object_position_tree_.Remove(component->GetOwner().lock());
     }
   }
 
