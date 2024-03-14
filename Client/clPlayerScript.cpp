@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "clPlayerScript.h"
 
+#include "clButtonScript.h"
 #include "clHitboxScript.hpp"
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
@@ -150,6 +151,7 @@ namespace Client::Scripts
     CheckJump(rb);
     CheckMove(rb);
     CheckAttack(dt);
+    CheckInteraction();
 
     switch (GetState())
     {
@@ -516,6 +518,70 @@ namespace Client::Scripts
         if (child &&
             child->Contains
             (GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition())) { q.push(child); }
+      }
+    }
+  }
+
+  void PlayerScript::CheckInteraction() const
+  {
+    if (GetApplication().GetKeyState().E)
+    {
+      const auto scene = GetOwner().lock()->GetScene().lock();
+      const auto& tree = scene->GetObjectTree();
+
+      const auto& watch_position = m_head_.lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition();
+      const auto& watch_forward = m_head_.lock()->GetComponent<Components::Transform>().lock()->Forward();
+
+      bool pressed = false;
+      std::queue<const Octree*> q;
+      q.push(&tree);
+
+      while (!q.empty())
+      {
+        const auto node = q.front();
+        q.pop();
+
+        const auto& value    = node->Read();
+        const auto& children = node->Next();
+
+        for (const auto v : value)
+        {
+          const auto lcl = m_head_.lock()->GetComponent<Components::Collider>().lock();
+          const auto rcl = v.lock()->GetComponent<Components::Collider>().lock();
+
+          if (!GetCollisionDetector().IsCollisionLayer
+            (GetOwner().lock()->GetLayer(), v.lock()->GetLayer())) { continue; }
+          if (!rcl || lcl == rcl) { continue; }
+
+          const auto owner        = rcl->GetOwner().lock();
+          const auto owner_parent = owner->GetParent();
+
+          if (owner_parent.lock() == GetOwner().lock()) { continue; }
+
+          const auto& lbnd = rcl->GetBounding();
+          const auto& rbnd = lcl->GetBounding();
+
+          float dist = 0;
+
+          if (rbnd.TestRay(rbnd, watch_forward, dist))
+          {
+            if (const auto script = owner->GetScript<Scripts::ButtonScript>().lock())
+            {
+              script->Press();
+              pressed = true;
+              break;
+            }
+          }
+        }
+
+        if (pressed) { break; }
+
+        for (const auto& child : children)
+        {
+          if (child &&
+              child->Contains
+              (GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition())) { q.push(child); }
+        }
       }
     }
   }

@@ -58,6 +58,7 @@ namespace Client::Scripts
     void CheckMove(const boost::shared_ptr<Components::Rigidbody>& rb);
     void CheckAttack(const float& dt);
     void CheckGround() const;
+    void CheckInteraction() const;
 
     void UpdateHitbox();
 
