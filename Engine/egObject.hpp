@@ -27,49 +27,26 @@ namespace Engine::Abstract
     void OnDeserialized() override;
     void OnImGui() override;
 
-    template <typename T, typename... Args>
+    template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
     boost::weak_ptr<T> AddComponent(Args&&... args)
     {
-      if constexpr (std::is_base_of_v<Component, T>)
+      const auto type = which_component<T>::value;
+
+      if (const auto comp = checkComponent(type).lock())
       {
-        if (m_components_.contains(which_component<T>::value)) { return boost::static_pointer_cast<T>(m_components_[which_component<T>::value]); }
-
-        const auto thisObject = GetSharedPtr<Object>();
-
-        boost::shared_ptr<T> component =
-          boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
-        component->Initialize();
-
-        m_components_.emplace
-          (
-           which_component<T>::value,
-           boost::reinterpret_pointer_cast<Component>(component)
-          );
-
-        UINT idx = 0;
-
-        while (true)
-        {
-          if (idx == g_invalid_id) { throw std::exception("Component ID overflow"); }
-
-          if (!m_assigned_component_ids_.contains(idx))
-          {
-            component->SetLocalID(idx);
-            m_assigned_component_ids_.insert(idx);
-            break;
-          }
-
-          idx++;
-        }
-
-        if (const auto scene = GetScene().lock()) { scene->AddCacheComponent<T>(component); }
-
-        m_cached_component_.insert(component);
-
-        return component;
+        return boost::static_pointer_cast<T>(comp);
       }
 
-      return {};
+      const auto thisObject = GetSharedPtr<Object>();
+
+      boost::shared_ptr<T> component =
+        boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
+      component->Initialize();
+
+      addComponentImpl(component, type);
+      addComponentToSceneCache<T>(component);
+
+      return component;
     }
 
   public:
@@ -211,6 +188,33 @@ namespace Engine::Abstract
     SERIALIZER_ACCESS
     friend class Scene;
     friend class Manager::Graphics::ShadowManager;
+
+    // Check whether the component is already added to the object.
+    WeakComponent checkComponent(const eComponentType type);
+
+    // Merging runtime and compile time branches of addComponent into one function.
+    template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
+    void addComponentToSceneCache(const boost::shared_ptr<T>& component)
+    {
+      if (const auto scene = GetScene().lock())
+      {
+        // If the component is given in base form, call runtime function.
+        if constexpr (std::is_same_v<T, Component>)
+        {
+          scene->AddCacheComponent(component);
+        }
+        else
+        {
+          scene->AddCacheComponent<T>(component);
+        }
+      }
+    }
+
+    // Add pre-existing component to the object.
+    WeakComponent addComponent(const StrongComponent& component);
+
+    // Commit the component to the object.
+    void          addComponentImpl(const StrongComponent& component, eComponentType type);
 
     LocalActorID              m_parent_id_;
     std::vector<LocalActorID> m_children_;

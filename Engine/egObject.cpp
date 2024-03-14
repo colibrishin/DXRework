@@ -163,6 +163,57 @@ namespace Engine::Abstract
     if (!GetComponent<Components::Collider>().lock()) { throw std::exception("Object has no collider"); }
   }
 
+  WeakComponent Object::checkComponent(const eComponentType type)
+  {
+    if (m_components_.contains(type))
+    {
+      return m_components_[type];
+    }
+
+    return {};
+  }
+
+  WeakComponent Object::addComponent(const StrongComponent& component)
+  {
+    const auto type = component->GetComponentType();
+
+    if (const auto comp = checkComponent(type).lock())
+    {
+      return comp;
+    }
+
+    addComponentImpl(component, type);
+    addComponentToSceneCache(component);
+
+    return component;
+  }
+
+  void Object::addComponentImpl(const StrongComponent& component, eComponentType type)
+  {
+    m_components_.emplace(type, component);
+
+    UINT idx = 0;
+
+    while (true)
+    {
+      if (idx == g_invalid_id)
+      {
+        throw std::exception("Component ID overflow");
+      }
+
+      if (!m_assigned_component_ids_.contains(idx))
+      {
+        component->SetLocalID(idx);
+        m_assigned_component_ids_.insert(idx);
+        break;
+      }
+
+      idx++;
+    }
+
+    m_cached_component_.insert(component);
+  }
+
   void Object::Render(const float& dt)
   {
     for (const auto& script : m_scripts_ | std::views::values)
