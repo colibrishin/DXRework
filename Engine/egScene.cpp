@@ -66,6 +66,48 @@ namespace Engine
     obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
   }
 
+  void Scene::addGameObjectImpl(eLayerType layer, const StrongObject& obj)
+  {
+    // Disconnect the object from the previous scene and layer, if it exists.
+    if (const auto scene = obj->GetScene().lock())
+    {
+      if (const auto& obj_check = scene->FindGameObjectByLocalID(obj->GetLocalID()).lock())
+      {
+        scene->RemoveGameObject(obj_check->GetID(), obj_check->GetLayer());
+      }
+    }
+
+    // Cache the pre-existing components
+    for (const auto& comp : obj->GetAllComponents())
+    {
+      AddCacheComponent(comp);
+    }
+
+    // Set internal information as this scene and layer
+    obj->GetSharedPtr<Abstract::Actor>()->SetScene(GetSharedPtr<Scene>());
+    obj->GetSharedPtr<Abstract::Actor>()->SetLayer(layer);
+    AssignLocalIDToObject(obj);
+
+    if (!obj->IsInitialized())
+    {
+      obj->Initialize();
+    }
+
+    // finalize the object registration at the next frame
+    GetTaskScheduler().AddTask
+      (
+       TASK_ADD_OBJ,
+       {obj, layer}, // keep the object alive, scene does not own the object yet.
+       [this](const std::vector<std::any>& params, const float dt)
+       {
+         const auto obj   = std::any_cast<StrongObject>(params[0]);
+         const auto layer = std::any_cast<eLayerType>(params[1]);
+
+         AddObjectFinalize(layer, obj);
+       }
+      );
+  }
+
   void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
   {
     // add object to scene
@@ -169,7 +211,10 @@ namespace Engine
 
             locked->SetScene(GetSharedPtr<Scene>());
 
-            for (const auto& comp : locked->GetAllComponents()) { AddCacheComponent(comp.lock()); }
+            for (const auto& comp : locked->GetAllComponents())
+            {
+              AddCacheComponent(comp.lock());
+            }
 
             const auto& children = locked->m_children_;
 
@@ -254,7 +299,7 @@ namespace Engine
     return {};
   }
 
-  void Scene::AddCacheComponent(const StrongComponent& component)
+  void Scene::addCacheComponentImpl(const StrongComponent& component, const eComponentType type)
   {
     ConcurrentWeakObjGlobalMap::const_accessor acc;
 
@@ -262,21 +307,40 @@ namespace Engine
     {
       ConcurrentWeakComRootMap::accessor comp_acc;
 
-      if (m_cached_components_.find(comp_acc, component->GetComponentType()))
+      if (m_cached_components_.find(comp_acc, type))
       {
         comp_acc->second.emplace
           (component->GetID(), component);
       }
       else
       {
-        m_cached_components_.insert(comp_acc, component->GetComponentType());
+        m_cached_components_.insert(comp_acc, type);
         comp_acc->second.emplace(component->GetID(), component);
       }
     }
 
-    if (component->GetComponentType() == COM_T_TRANSFORM)
+    if (type == COM_T_TRANSFORM)
     {
       m_object_position_tree_.Insert(component->GetOwner().lock());
+    }
+  }
+
+  void Scene::removeCacheComponentImpl(const StrongComponent& component, const eComponentType type)
+  {
+    ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+    if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+    {
+      ConcurrentWeakComRootMap::accessor comp_acc;
+      if (m_cached_components_.find(comp_acc, type))
+      {
+        comp_acc->second.erase(component->GetID());
+      }
+    }
+
+    if (type == COM_T_TRANSFORM)
+    {
+      m_object_position_tree_.Remove(component->GetOwner().lock());
     }
   }
 
