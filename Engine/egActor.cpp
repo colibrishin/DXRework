@@ -13,6 +13,14 @@ SERIALIZE_IMPL
 
 namespace Engine::Abstract
 {
+  Actor::Actor(const Actor& other)
+  {
+    m_assigned_scene_ = other.m_assigned_scene_;
+    m_layer_          = other.m_layer_;
+    // Do not copy the previous local id
+    m_local_id_       = g_invalid_id;
+  }
+
   eLayerType Actor::GetLayer() const { return m_layer_; }
 
   WeakScene Actor::GetScene() const { return m_assigned_scene_; }

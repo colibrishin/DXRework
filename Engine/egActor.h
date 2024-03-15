@@ -9,6 +9,8 @@ namespace Engine::Abstract
   public:
     ~Actor() override = default;
 
+    Actor(const Actor& other);
+
     eLayerType   GetLayer() const;
     WeakScene    GetScene() const;
     LocalActorID GetLocalID() const;
