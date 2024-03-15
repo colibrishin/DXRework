@@ -89,6 +89,8 @@ namespace Engine::Resources
     {
       const auto& cloned_child = child->m_object_->Clone(false);
       cloned_child->SetGarbage(false);
+
+      scene->AddGameObject(cloned_child->GetLayer(), cloned_child);
       cloned->AddChild(cloned_child);
     }
   }
