@@ -124,7 +124,10 @@ namespace Engine::Abstract
       m_children_.push_back(child->GetLocalID());
       m_children_cache_.insert({child->GetLocalID(), child});
 
-      if (child->m_parent_id_ != g_invalid_id) { child->m_parent_.lock()->DetachChild(child->GetLocalID()); }
+      if (child->m_parent_id_ != g_invalid_id)
+      {
+        child->m_parent_.lock()->DetachChild(child->GetLocalID());
+      }
 
       child->m_parent_id_ = GetLocalID();
       child->m_parent_    = GetSharedPtr<ObjectBase>();
@@ -567,7 +570,10 @@ namespace Engine::Abstract
     }
 
     // Add to the scene finally.
-    GetScene().lock()->AddGameObject(GetLayer(), cloned);
+    if (const auto& scene = GetScene().lock())
+    {
+      scene->AddGameObject(GetLayer(), cloned);
+    }
 
     // Keep in mind that this object is yielded, not added to the scene yet.
     return cloned;
