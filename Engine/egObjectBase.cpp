@@ -227,6 +227,20 @@ namespace Engine::Abstract
     }
   }
 
+  void ObjectBase::removeComponentImpl(const GlobalEntityID id)
+  {
+    for (const auto& [type, comp] : m_components_)
+    {
+      if (comp->GetID() == id)
+      {
+        m_assigned_component_ids_.erase(comp->GetLocalID());
+        m_cached_component_.erase(comp);
+        m_components_.erase(type);
+        break;
+      }
+    }
+  }
+
   void ObjectBase::addComponentImpl(const StrongComponent& component, eComponentType type)
   {
     m_components_.emplace(type, component);

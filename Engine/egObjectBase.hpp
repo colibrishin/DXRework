@@ -192,6 +192,8 @@ namespace Engine::Abstract
 
     // Remove component from the object.
     void removeComponentImpl(eComponentType type);
+    // Remove specific component from the object.
+    void removeComponentImpl(const GlobalEntityID id);
 
     // Commit the component to the object.
     void          addComponentImpl(const StrongComponent& component, eComponentType type);
