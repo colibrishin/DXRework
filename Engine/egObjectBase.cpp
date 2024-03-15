@@ -390,6 +390,12 @@ namespace Engine::Abstract
       ImGui::Checkbox("Active", &m_active_);
       ImGui::Checkbox("Culling", &m_culled_);
 
+      if (ImGui::Button("Clone"))
+      {
+        const auto& cloned = Clone();
+      }
+      ImGui::SameLine();
+
       if (ImGui::Button("Children"))
       {
         m_imgui_children_open_ = !m_imgui_children_open_;
