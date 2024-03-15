@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egPrefab.h"
 
+#include "egSceneManager.hpp"
+
 SERIALIZE_IMPL
 (
   Engine::Resources::Prefab,
@@ -52,7 +54,22 @@ namespace Engine::Resources
     Resource::OnSerialized();
   }
 
-  void Prefab::OnImGui() { Resource::OnImGui(); }
+  void Prefab::OnImGui()
+  {
+    Resource::OnImGui();
+
+    static int selected = 0;
+
+    ImGui::Combo("Layer", &selected, g_layer_type_str, std::size(g_layer_type_str));
+
+    if (ImGui::Button("Extract"))
+    {
+      if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+      {
+        ExtractObject(scene, (eLayerType)selected);
+      }
+    }
+  }
 
   void Prefab::ExtractObject(const StrongScene& scene, const eLayerType layer) const
   {
