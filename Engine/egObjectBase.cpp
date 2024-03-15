@@ -9,6 +9,7 @@
 #include "egMesh.h"
 #include "egModelRenderer.h"
 #include "egParticleRenderer.h"
+#include "egPrefab.h"
 #include "egRigidbody.h"
 #include "egSoundPlayer.h"
 #include "egTransform.h"
@@ -185,12 +186,13 @@ namespace Engine::Abstract
       return comp;
     }
 
-    // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
-    if(const auto prev = component->GetOwner().lock())
+    // Remove the component from the previous owner.
+    if (const auto prev = component->GetOwner().lock())
     {
-      prev->removeComponentImpl(component->GetComponentType());
+      prev->removeComponentImpl(component->GetID());
     }
 
+    // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
     component->SetOwner(GetSharedPtr<ObjectBase>());
 
     // Add the component to the object.
@@ -410,6 +412,12 @@ namespace Engine::Abstract
       if (ImGui::Button("Clone"))
       {
         const auto& cloned = Clone();
+      }
+      ImGui::SameLine();
+
+      if (ImGui::Button("To Prefab"))
+      {
+        Resources::Prefab::Create("Prefab_" + GetName(), "", GetSharedPtr<ObjectBase>());
       }
       ImGui::SameLine();
 
