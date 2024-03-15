@@ -71,7 +71,7 @@ namespace Engine
     // Disconnect the object from the previous scene and layer, if it exists.
     if (const auto scene = obj->GetScene().lock())
     {
-      if (const auto& obj_check = scene->FindGameObjectByLocalID(obj->GetLocalID()).lock())
+      if (const auto& obj_check = scene->FindGameObject(obj->GetID()).lock())
       {
         scene->RemoveGameObject(obj_check->GetID(), obj_check->GetLayer());
       }
