@@ -20,6 +20,7 @@ namespace Engine::Resources
     const auto& cloned = object->Clone(false);
     cloned->GetScene().lock()->RemoveGameObject(cloned->GetID(), object->GetLayer());
     cloned->SetName(object->GetName());
+    m_object_ = cloned;
 
     for (const auto& child : cloned->GetChildren())
     {
