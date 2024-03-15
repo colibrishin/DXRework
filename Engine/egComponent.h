@@ -21,7 +21,7 @@ namespace Engine::Abstract
 
     void OnDeserialized() override;
     void OnImGui() override;
-    [[nodiscard]] StrongComponent Clone(const WeakObject& owner) const;
+    [[nodiscard]] StrongComponent Clone() const;
 
   protected:
     Component(eComponentType type, const WeakObject& owner);

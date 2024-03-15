@@ -42,10 +42,9 @@ namespace Engine::Abstract
     ImGui::Unindent(2);
   }
 
-  StrongComponent Component::Clone(const WeakObject& owner) const
+  StrongComponent Component::Clone() const
   {
     const auto& cloned = cloneImpl();
-    cloned->SetOwner(owner);
     return cloned;
   }
 
