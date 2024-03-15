@@ -536,7 +536,7 @@ namespace Engine::Abstract
     }
   }
 
-  StrongObjectBase ObjectBase::Clone() const
+  StrongObjectBase ObjectBase::Clone(bool register_scene) const
   {
     const auto& cloned = cloneImpl();
 
@@ -558,7 +558,7 @@ namespace Engine::Abstract
     // Copy components
     for (const auto& comp : m_components_ | std::views::values)
     {
-      const auto& cloned_comp = comp->Clone(cloned);
+      const auto& cloned_comp = comp->Clone();
       cloned->addComponent(cloned_comp);
     }
 
@@ -578,13 +578,14 @@ namespace Engine::Abstract
     {
       if (const auto locked = child.lock())
       {
-        const auto cloned_child = locked->Clone();
+        const auto cloned_child = locked->Clone(register_scene);
         cloned->AddChild(cloned_child);
       }
     }
 
     // Add to the scene finally.
-    if (const auto& scene = GetScene().lock())
+    if (const auto& scene = GetScene().lock(); 
+        scene && register_scene)
     {
       scene->AddGameObject(GetLayer(), cloned);
     }

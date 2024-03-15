@@ -26,7 +26,7 @@ namespace Engine::Abstract
     void OnDeserialized() override;
     void OnImGui() override;
 
-    [[nodiscard]] StrongObjectBase Clone() const;
+    [[nodiscard]] StrongObjectBase Clone(bool register_scene = true) const;
 
     template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
     boost::weak_ptr<T> AddComponent(Args&&... args)
