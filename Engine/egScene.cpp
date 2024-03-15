@@ -181,7 +181,6 @@ namespace Engine
     }
 
     obj.lock()->SetScene({});
-    obj.lock()->SetLayer(LAYER_NONE);
 
     m_cached_objects_.erase(id);
     m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
