@@ -260,6 +260,9 @@
     <Filter Include="Abstract\ObjectBase">
       <UniqueIdentifier>{ca9cd22c-42b5-4f1a-819d-875a3ca2aab4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Prefab">
+      <UniqueIdentifier>{01af9f6f-8057-4315-9f38-78af22431f94}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -517,6 +520,9 @@
     <ClInclude Include="egObjectBase.hpp">
       <Filter>Abstract\ObjectBase</Filter>
     </ClInclude>
+    <ClInclude Include="egPrefab.h">
+      <Filter>Resource\Prefab</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -733,6 +739,9 @@
     </ClCompile>
     <ClCompile Include="egObjectBase.cpp">
       <Filter>Abstract\ObjectBase</Filter>
+    </ClCompile>
+    <ClCompile Include="egPrefab.cpp">
+      <Filter>Resource\Prefab</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -30,6 +30,7 @@
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egParticleRenderer.h" />
     <ClInclude Include="egPointMesh.h" />
+    <ClInclude Include="egPrefab.h" />
     <ClInclude Include="egRenderComponent.h" />
     <ClInclude Include="egShadowTexture.h" />
     <ClInclude Include="egGenericBounding.hpp" />
@@ -130,6 +131,7 @@
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
     <ClCompile Include="egPointMesh.cpp" />
+    <ClCompile Include="egPrefab.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
     <ClCompile Include="egShadowTexture.cpp" />
     <ClCompile Include="egElastic.cpp" />
