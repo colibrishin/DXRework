@@ -103,6 +103,7 @@ namespace Engine
 
   namespace Resources
   {
+    class Prefab;
     class Font;
     class Mesh;
     class Sound;
@@ -188,6 +189,7 @@ namespace Engine
   using WeakParticleRenderer = boost::weak_ptr<Components::ParticleRenderer>;
   using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
   using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
+  using WeakPrefab = boost::weak_ptr<Resources::Prefab>;
 
   // Strong pointer type definitions
   using StrongObjectBase = boost::shared_ptr<Abstract::ObjectBase>;
@@ -217,6 +219,7 @@ namespace Engine
   using StrongRenderComponent = boost::shared_ptr<Components::Base::RenderComponent>;
   using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
   using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
+  using StrongPrefab = boost::shared_ptr<Resources::Prefab>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;

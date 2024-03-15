@@ -4,6 +4,7 @@
 
 namespace Engine::Resources
 {
+  class Prefab;
   class Mesh;
   class Shape;
   class Material;
@@ -202,6 +203,7 @@ namespace Engine
     RES_T_ANIMS_TEX,
     RES_T_COMPUTE_SHADER,
     RES_T_SHADOW_TEX,
+    RES_T_PREFAB,
     RES_T_MAX,
   };
 
@@ -221,6 +223,7 @@ namespace Engine
      "Animation Texture",
      "Compute Shader",
      "Shadow Texture",
+     "Prefab",
    };
 
   using LoadableResourceTypes = boost::mpl::vector<
@@ -238,7 +241,8 @@ namespace Engine
     Resources::Texture2D,
     Resources::Texture3D,
     Resources::Material,
-    Resources::Shape>;
+    Resources::Shape,
+    Resources::Prefab>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
