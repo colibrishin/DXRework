@@ -6,7 +6,7 @@
 #include "egMaterial.h"
 #include "egShape.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::ModelRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))
@@ -14,6 +14,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ModelRenderer)
+
   ModelRenderer::ModelRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_MODEL, owner) {}
 

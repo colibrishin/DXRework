@@ -8,7 +8,7 @@ namespace Engine::Manager::Graphics
   class Renderer : public Abstract::Singleton<Renderer>
   {
   private:
-    using CandidatePair = std::pair<StrongObject, std::vector<SBs::InstanceSB>>;
+    using CandidatePair = std::pair<StrongObjectBase, std::vector<SBs::InstanceSB>>;
 
     template <typename T>
     using MaterialMap = std::map<StrongMaterial, std::vector<T>>;
@@ -35,7 +35,7 @@ namespace Engine::Manager::Graphics
       float                                           dt,
       eShaderDomain                                   domain,
       bool                                            shader_bypass,
-      const std::function<bool(const StrongObject&)>& predicate
+      const std::function<bool(const StrongObjectBase&)>& predicate
     ) const;
 
   private:

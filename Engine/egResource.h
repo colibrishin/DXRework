@@ -32,7 +32,7 @@ namespace Engine::Abstract
 
   private:
     Resource();
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Engine::Manager::ResourceManager;
 
     bool                  m_bLoaded_;

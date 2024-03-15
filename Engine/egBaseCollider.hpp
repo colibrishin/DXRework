@@ -104,7 +104,9 @@ namespace Engine::Components
     Collider();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
+
     friend class Manager::Physics::LerpManager;
 
     static void InitializeStockVertices();

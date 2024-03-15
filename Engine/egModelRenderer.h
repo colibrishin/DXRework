@@ -17,10 +17,11 @@ namespace Engine::Components
     void OnImGui() override;
 
   private:
-    SERIALIZER_ACCESS
-    ModelRenderer();
-
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
     friend class Manager::Graphics::Renderer;
+
+    ModelRenderer();
 
   };
 }

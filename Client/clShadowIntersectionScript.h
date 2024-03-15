@@ -33,7 +33,9 @@ namespace Client::Scripts
     void PostRender(const float& dt) override;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    SCRIPT_CLONE_DECL
+
     ShadowIntersectionScript();
 
     D3D11_VIEWPORT m_viewport_;

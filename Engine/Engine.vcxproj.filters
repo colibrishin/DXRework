@@ -257,6 +257,9 @@
     <Filter Include="Mesh\PointMesh">
       <UniqueIdentifier>{f5d4787b-2a64-485f-b06a-f160e59437e9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Abstract\ObjectBase">
+      <UniqueIdentifier>{ca9cd22c-42b5-4f1a-819d-875a3ca2aab4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -511,6 +514,9 @@
     <ClInclude Include="egPointMesh.h">
       <Filter>Mesh\PointMesh</Filter>
     </ClInclude>
+    <ClInclude Include="egObjectBase.hpp">
+      <Filter>Abstract\ObjectBase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -724,6 +730,9 @@
     </ClCompile>
     <ClCompile Include="egPointMesh.cpp">
       <Filter>Mesh\PointMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="egObjectBase.cpp">
+      <Filter>Abstract\ObjectBase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -34,7 +34,7 @@ namespace Engine::Resources
     RESOURCE_SELF_INFER_GETTER(BoneAnimation)
 
   protected:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;

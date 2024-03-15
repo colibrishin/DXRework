@@ -21,13 +21,16 @@ namespace Engine::Abstract
 
     void OnDeserialized() override;
     void OnImGui() override;
+    [[nodiscard]] StrongComponent Clone(const WeakObject& owner) const;
 
   protected:
     Component(eComponentType type, const WeakObject& owner);
 
   private:
-    SERIALIZER_ACCESS
-    friend class Object;
+    SERIALIZE_DECL
+    friend class ObjectBase;
+
+    [[nodiscard]] virtual StrongComponent cloneImpl() const = 0;
 
     void SetOwner(const WeakObject& owner);
     void SetLocalID(LocalComponentID id) { if (const auto locked = m_owner_.lock()) { m_local_id_ = id; } }

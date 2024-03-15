@@ -74,7 +74,8 @@ namespace Engine::Components
 
     static WeakTransform FindNextTransform(const Transform& transform_);
 
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
 
     bool       m_b_s_absolute_;
     bool       m_b_r_absolute_;

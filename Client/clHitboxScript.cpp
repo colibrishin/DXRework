@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "clHitboxScript.hpp"
 
-SERIALIZER_ACCESS_IMPL(Client::Scripts::HitboxScript, _ARTAG(_BSTSUPER(Script)) _ARTAG(m_modifier_))
+SERIALIZE_IMPL(Client::Scripts::HitboxScript, _ARTAG(_BSTSUPER(Script)) _ARTAG(m_modifier_))
 
 namespace Client::Scripts
 {
-   HitboxScript::HitboxScript(const WeakObject& owner): Script(SCRIPT_T_HITBOX, owner),
+  SCRIPT_CLONE_IMPL(HitboxScript)
+
+  HitboxScript::HitboxScript(const WeakObject& owner): Script(SCRIPT_T_HITBOX, owner),
                                                               m_modifier_(1.f) {}
 
   HitboxScript::~HitboxScript() = default;

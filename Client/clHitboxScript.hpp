@@ -24,9 +24,12 @@ namespace Client::Scripts
     void PostRender(const float& dt) override;
 
   private:
-	  float m_modifier_;
+    SERIALIZE_DECL
+    SCRIPT_CLONE_DECL
+
     HitboxScript();
-    SERIALIZER_ACCESS
+
+    float m_modifier_;
 
   };
 }

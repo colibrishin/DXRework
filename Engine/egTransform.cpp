@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Transform,
  _ARTAG(_BSTSUPER(Component))
@@ -22,6 +22,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Transform)
+
   Transform::Transform(const WeakObject& owner)
     : Component(COM_T_TRANSFORM, owner),
       m_b_s_absolute_(true),

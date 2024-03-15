@@ -9,7 +9,7 @@
 #include "egTransform.h"
 #include "imgui_stdlib.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Animator,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
@@ -17,6 +17,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Animator)
+
   Animator::Animator(const WeakObject& owner)
     : Component(COM_T_ANIMATOR, owner),
       m_animation_id_(0),

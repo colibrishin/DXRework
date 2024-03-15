@@ -4,20 +4,22 @@
 #include "egRigidbody.h"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Objects::Observer,
- _ARTAG(_BSTSUPER(Engine::Abstract::Object))
+ _ARTAG(_BSTSUPER(Engine::Abstract::ObjectBase))
 )
 
 namespace Engine::Objects
 {
+  OBJ_CLONE_IMPL(Observer)
+
   Observer::Observer()
-    : Object(DEF_OBJ_T_OBSERVER) {}
+    : ObjectBase(DEF_OBJ_T_OBSERVER) {}
 
   void Observer::Initialize()
   {
-    Object::Initialize();
+    ObjectBase::Initialize();
 
     const auto tr = AddComponent<Components::Transform>().lock();
     AddComponent<Components::ObserverController>();
@@ -27,17 +29,17 @@ namespace Engine::Objects
 
   Observer::~Observer() {}
 
-  void Observer::PreUpdate(const float& dt) { Object::PreUpdate(dt); }
+  void Observer::PreUpdate(const float& dt) { ObjectBase::PreUpdate(dt); }
 
-  void Observer::Update(const float& dt) { Object::Update(dt); }
+  void Observer::Update(const float& dt) { ObjectBase::Update(dt); }
 
-  void Observer::PreRender(const float& dt) { Object::PreRender(dt); }
+  void Observer::PreRender(const float& dt) { ObjectBase::PreRender(dt); }
 
-  void Observer::Render(const float& dt) { Object::Render(dt); }
+  void Observer::Render(const float& dt) { ObjectBase::Render(dt); }
 
-  void Observer::PostRender(const float& dt) { Object::PostRender(dt); }
+  void Observer::PostRender(const float& dt) { ObjectBase::PostRender(dt); }
 
-  void Observer::FixedUpdate(const float& dt) { Object::FixedUpdate(dt); }
+  void Observer::FixedUpdate(const float& dt) { ObjectBase::FixedUpdate(dt); }
 
-  void Observer::OnImGui() { Object::OnImGui(); }
+  void Observer::OnImGui() { ObjectBase::OnImGui(); }
 } // namespace Engine::Objects

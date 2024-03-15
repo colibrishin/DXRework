@@ -27,7 +27,8 @@ namespace Engine::Components
     void StopSound();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
     SoundPlayer();
 
     std::string m_sound_meta_path_;

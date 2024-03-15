@@ -5,7 +5,7 @@
 
 #include "egImGuiHeler.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Abstract::Resource,
  _ARTAG(_BSTSUPER(Renderable)) 

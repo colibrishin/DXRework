@@ -54,7 +54,7 @@ namespace Engine
 
   struct bounding_getter
   {
-    static Physics::GenericBounding value(Abstract::Object& object);
+    static Physics::GenericBounding value(Abstract::ObjectBase& object);
   };
 
   struct CollisionInfo

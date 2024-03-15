@@ -48,7 +48,7 @@ namespace Engine::Abstract
         m_b_garbage_(false) {}
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     EntityName m_name_;
     bool       m_b_initialized_;

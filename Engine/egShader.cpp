@@ -4,7 +4,7 @@
 #include "egManagerHelper.hpp"
 #include "egRenderPipeline.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
     Engine::Resources::Shader, 
     _ARTAG(_BSTSUPER(Resource))

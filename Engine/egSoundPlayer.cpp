@@ -5,7 +5,7 @@
 #include "egResourceManager.hpp"
 #include "egSound.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::SoundPlayer,
  _ARTAG(_BSTSUPER(Abstract::Component))
@@ -14,6 +14,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(SoundPlayer)
+
   SoundPlayer::SoundPlayer(const WeakObject& owner)
     : Component(COMP_T_SOUND_PLAYER, owner) {}
 

@@ -45,7 +45,7 @@ namespace Engine::Resources
   protected:
     friend class Components::Animator;
 
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     void Load_INTERNAL() override;
     void Unload_INTERNAL() override;

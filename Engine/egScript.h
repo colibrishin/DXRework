@@ -13,6 +13,8 @@ namespace Engine
     WeakObject GetOwner() const { return m_owner_; }
     eScriptType GetScriptType() const { return m_type_; }
 
+    [[nodiscard]] StrongScript Clone(const WeakObject& owner) const;
+
     void OnSerialized() override;
 
     using ScriptFactoryFunction = std::function<StrongScript(const WeakObject&)>;
@@ -27,8 +29,10 @@ namespace Engine
     Script();
 
   private:
-    SERIALIZER_ACCESS
-    friend class Abstract::Object;
+    SERIALIZE_DECL
+    friend class Abstract::ObjectBase;
+
+    [[nodiscard]] virtual StrongScript cloneImpl() const = 0;
 
     void SetOwner(const WeakObject& owner);
 

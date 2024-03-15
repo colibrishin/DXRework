@@ -124,7 +124,7 @@ namespace Engine
   namespace Abstract
   {
     class Entity;
-    class Object;
+    class ObjectBase;
     class Component;
     class Actor;
     class Renderable;
@@ -164,7 +164,7 @@ namespace Engine
   } // namespace Manager
 
   // Weak pointer type definitions
-  using WeakObject = boost::weak_ptr<Abstract::Object>;
+  using WeakObject = boost::weak_ptr<Abstract::ObjectBase>;
   using WeakComponent = boost::weak_ptr<Abstract::Component>;
   using WeakResource = boost::weak_ptr<Abstract::Resource>;
   using WeakMesh = boost::weak_ptr<Resources::Mesh>;
@@ -190,7 +190,7 @@ namespace Engine
   using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
 
   // Strong pointer type definitions
-  using StrongObject = boost::shared_ptr<Abstract::Object>;
+  using StrongObjectBase = boost::shared_ptr<Abstract::ObjectBase>;
   using StrongComponent = boost::shared_ptr<Abstract::Component>;
   using StrongResource = boost::shared_ptr<Abstract::Resource>;
   using StrongScene = boost::shared_ptr<Scene>;

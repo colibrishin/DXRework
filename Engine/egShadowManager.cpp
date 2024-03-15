@@ -38,13 +38,6 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::PreUpdate(const float& dt)
   {
-    // Unbind the light information structured buffer from the shader.
-    m_sb_light_buffer_.UnbindSRV(SHADER_VERTEX);
-    m_sb_light_buffer_.UnbindSRV(SHADER_PIXEL);
-
-    // And the light view and projection matrix buffer to re-evaluate.
-    m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
-
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
 
@@ -192,7 +185,15 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::Render(const float& dt) {}
 
-  void ShadowManager::PostRender(const float& dt) {}
+  void ShadowManager::PostRender(const float& dt)
+  {
+    // Unbind the light information structured buffer from the shader.
+    m_sb_light_buffer_.UnbindSRV(SHADER_VERTEX);
+    m_sb_light_buffer_.UnbindSRV(SHADER_PIXEL);
+
+    // And the light view and projection matrix buffer to re-evaluate.
+    m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
+  }
 
   void ShadowManager::FixedUpdate(const float& dt) {}
 
@@ -211,7 +212,7 @@ namespace Engine::Manager::Graphics
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
-       [this](const StrongObject& obj)
+       [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }

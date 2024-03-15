@@ -27,6 +27,7 @@
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egGraviton.h" />
+    <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egParticleRenderer.h" />
     <ClInclude Include="egPointMesh.h" />
     <ClInclude Include="egRenderComponent.h" />
@@ -73,7 +74,7 @@
     <ClInclude Include="egManager.hpp" />
     <ClInclude Include="egManagerHelper.hpp" />
     <ClInclude Include="egMesh.h" />
-    <ClInclude Include="egObject.hpp" />
+    <ClInclude Include="egObjectBase.hpp" />
     <ClInclude Include="egReflectionEvaluator.h" />
     <ClInclude Include="egRenderable.h" />
     <ClInclude Include="egRenderPipeline.h" />
@@ -126,6 +127,7 @@
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egGraviton.cpp" />
+    <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
     <ClCompile Include="egPointMesh.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
@@ -146,7 +148,7 @@
     <ClCompile Include="egModelRenderer.cpp" />
     <ClCompile Include="egMouseManager.cpp" />
     <ClCompile Include="egObserverController.cpp" />
-    <ClCompile Include="egObject.cpp" />
+    <ClCompile Include="egObjectBase.cpp" />
     <ClCompile Include="egObserver.cpp" />
     <ClCompile Include="egPhysicsManager.cpp" />
     <ClCompile Include="egProjectionFrustum.cpp" />

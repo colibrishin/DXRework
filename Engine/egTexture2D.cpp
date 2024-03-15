@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "egTexture2D.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Texture2D,
  _ARTAG(_BSTSUPER(Texture))

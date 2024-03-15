@@ -34,21 +34,24 @@ namespace Engine
     void OnDeserialized() override;
     void OnImGui() override;
 
-    // Add Object to the scene. Type is deduced in compile time.
+    // Add Object to the scene.
     // If the object is bound to another scene or layer, it will be moved to this scene and layer.
-    template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
+    // Note that the object will be added finally at the next frame.
+    template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::ObjectBase, T>>>
     void AddGameObject(eLayerType layer, const boost::shared_ptr<T>& obj)
     {
-      const auto& downcast = obj->template GetSharedPtr<Abstract::Object>();
+      const auto& downcast = obj->template GetSharedPtr<Abstract::ObjectBase>();
       addGameObjectImpl(layer, downcast);
     }
 
-    template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::Object, T>>>
+    // Create Object and add it to the scene.
+    // Note that the object will be added finally at the next frame.
+    template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstract::ObjectBase, T>>>
     boost::weak_ptr<T> CreateGameObject(eLayerType layer, Args&&... args)
     {
       // Create object, dynamic allocation from scene due to the access limitation.
       const auto& obj_t = boost::shared_ptr<T>(new T(args...));
-      const auto& obj   = obj_t->template GetSharedPtr<Abstract::Object>();
+      const auto& obj   = obj_t->template GetSharedPtr<Abstract::ObjectBase>();
 
       // Set internal information as this scene and layer, segmenting this process for
       // code re-usability.
@@ -68,55 +71,74 @@ namespace Engine
 
     const Octree& GetObjectTree();
 
-    // Add cache component from the object. Type is deduced in compile time.
-    // If component type is generic, use the overloaded runtime version.
+    // Add cache component from the object.
     template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
-    void AddCacheComponent(const boost::weak_ptr<T>& component)
+    void AddCacheComponent(const boost::shared_ptr<T>& component)
     {
-      GetTaskScheduler().AddTask
-        (
-         TASK_CACHE_COMPONENT,
-         {component},
-         [this](const std::vector<std::any>& params, const float)
-         {
-           const auto& component = std::any_cast<boost::weak_ptr<T>>(params[0]).lock();
+      // If the component cannot be deduced, go with runtime.
+      if constexpr (std::is_same_v<Abstract::Component, T>)
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_CACHE_COMPONENT,
+           {component},
+           [this](const std::vector<std::any>& params, const float)
+           {
+             const auto& component = std::any_cast<StrongComponent>(params[0]);
 
-           addCacheComponentImpl(component, which_component<T>::value);
-         }
-        );
+             addCacheComponentImpl(component, component->GetComponentType());
+           }
+          );
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_CACHE_COMPONENT,
+           {component},
+           [this](const std::vector<std::any>& params, const float)
+           {
+             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
+
+             addCacheComponentImpl(component, which_component<T>::value);
+           }
+          );
+      }
     }
 
-    // Add cache component from the object. Type is deduced in runtime.
-    void AddCacheComponent(const WeakComponent& component)
-    {
-      GetTaskScheduler().AddTask
-        (
-         TASK_CACHE_COMPONENT,
-         {component},
-         [this](const std::vector<std::any>& params, const float)
-         {
-           const auto& component = std::any_cast<WeakComponent>(params[0]).lock();
-
-           addCacheComponentImpl(component, component->GetComponentType());
-         }
-        );
-    }
-
-    // Remove cache component from the object. Type is deduced in compile time.
+    // Remove cache component from the object.
     template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
     void RemoveCacheComponent(const boost::shared_ptr<T>& component)
     {
-      GetTaskScheduler().AddTask
-        (
-         TASK_UNCACHE_COMPONENT,
-         {component},
-         [this](const std::vector<std::any>& params, const float)
-         {
-           const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
+      // If the component cannot be deduced, go with runtime.
+      if constexpr (std::is_same_v<Abstract::Component, T>)
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_UNCACHE_COMPONENT,
+           {component},
+           [this](const std::vector<std::any>& params, const float)
+           {
+             const auto& component = std::any_cast<StrongComponent>(params[0]);
 
-           removeCacheComponentImpl(component, which_component<T>::value);
-         }
-        );
+             removeCacheComponentImpl(component, component->GetComponentType());
+           }
+          );
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_UNCACHE_COMPONENT,
+           {component},
+           [this](const std::vector<std::any>& params, const float)
+           {
+             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
+
+             removeCacheComponentImpl(component, which_component<T>::value);
+           }
+          );
+      }
     }
 
     template <typename T>
@@ -151,13 +173,13 @@ namespace Engine
     auto cend() const noexcept { return m_layers.cend(); }
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Manager::SceneManager;
 
-    void AssignLocalIDToObject(const StrongObject& obj);
+    void AssignLocalIDToObject(const StrongObjectBase& obj);
 
     // Set the scene and layer to the object, and schedule the object to be added at the next frame.
-    void addGameObjectImpl(eLayerType layer, const StrongObject& obj);
+    void addGameObjectImpl(eLayerType layer, const StrongObjectBase& obj);
     // Add cache component from the object.
     void addCacheComponentImpl(const StrongComponent& component, const eComponentType type);
     // Remove cache component from the object.
@@ -166,7 +188,7 @@ namespace Engine
     // Functions for the next frame.
 
     // Add the object from the scene finally. this function should be called at the next frame.
-    void AddObjectFinalize(eLayerType layer, const StrongObject& obj);
+    void AddObjectFinalize(eLayerType layer, const StrongObjectBase& obj);
     // Remove the object from the scene finally. this function should be called at the next frame.
     void RemoveObjectFinalize(GlobalEntityID id, eLayerType layer);
     void initializeFinalize();

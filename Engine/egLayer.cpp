@@ -2,7 +2,7 @@
 #include "egLayer.h"
 #include "egObject.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Layer,
  _ARTAG(_BSTSUPER(Engine::Abstract::Renderable))
@@ -120,7 +120,7 @@ namespace Engine
     }
   }
 
-  void Layer::AddGameObject(const StrongObject& obj)
+  void Layer::AddGameObject(const StrongObjectBase& obj)
   {
     if (m_objects_.contains(obj)) { return; }
 

@@ -7,7 +7,7 @@
 #include "egRenderPipeline.h"
 #include "egTexture2D.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Client::ComputeShaders::ParticleCompute,
  _ARTAG(_BSTSUPER(ComputeShader))

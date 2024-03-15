@@ -2,7 +2,7 @@
 #include "egMesh.h"
 #include <execution>
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Mesh,
  _ARTAG(_BSTSUPER(Engine::Abstract::Resource))

@@ -26,7 +26,9 @@ namespace Engine::Components
     virtual void Move(const float& dt);
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
+
   };
 } // namespace Engine::Component
 

@@ -5,7 +5,7 @@
 
 namespace Engine::Manager::Graphics
 {
-  void ReflectionEvaluator::PreUpdate(const float& dt) { m_copy_.PostRender(0.f); }
+  void ReflectionEvaluator::PreUpdate(const float& dt) {}
 
   void ReflectionEvaluator::Update(const float& dt) {}
 
@@ -15,7 +15,10 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::Render(const float& dt) {}
 
-  void ReflectionEvaluator::PostRender(const float& dt) {}
+  void ReflectionEvaluator::PostRender(const float& dt)
+  {
+    m_copy_.PostRender(0.f);
+  }
 
   void ReflectionEvaluator::PostUpdate(const float& dt) {}
 

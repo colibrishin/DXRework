@@ -2,7 +2,7 @@
 
 // Need to be included before boost only in the header, requires a default
 // constructor
-#define SERIALIZER_ACCESS                                                      \
+#define SERIALIZE_DECL                                                         \
   friend class Engine::Serializer;                                             \
   friend class boost::serialization::access;                                   \
   template <class Archive>                                                     \
@@ -32,7 +32,7 @@
   }
 // full serialization access implementation for a class only in the cpp file,
 // requires a boost include
-#define SERIALIZER_ACCESS_IMPL(NAMESPACE_TYPE, ...)                            \
+#define SERIALIZE_IMPL(NAMESPACE_TYPE, ...)                                    \
   SERIALIZER_ACCESS_IMPL1(NAMESPACE_TYPE)                                      \
   SERIALIZER_ACCESS_IMPL2(NAMESPACE_TYPE, __VA_ARGS__)
 
@@ -66,6 +66,21 @@
 // Static client provided script type, this should be added to every script in the client
 #define CLIENT_SCRIPT_T(typename, enum_val) static constexpr Engine::eScriptType scptype = enum_val; \
   static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
+
+// Cloning object declaration macro
+#define OBJ_CLONE_DECL StrongObjectBase cloneImpl() const override;
+// Cloning object implementation macro
+#define OBJ_CLONE_IMPL(CLASS) StrongObjectBase CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
+// Cloning component declaration macro
+#define COMP_CLONE_DECL StrongComponent cloneImpl() const override;
+// Cloning component implementation macro
+#define COMP_CLONE_IMPL(CLASS) StrongComponent CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
+// Cloning script declaration macro
+#define SCRIPT_CLONE_DECL StrongScript cloneImpl() const override;
+// Cloning script implementation macro
+#define SCRIPT_CLONE_IMPL(CLASS) StrongScript CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
 
 // Static inline resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER(TYPE)                                                    \

@@ -39,7 +39,9 @@ namespace Engine::Components
     bool IsFollowOwner() const;
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
+    COMP_CLONE_DECL
+
     friend class Resources::ComputeShader;
     ParticleRenderer();
 

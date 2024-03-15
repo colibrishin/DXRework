@@ -9,6 +9,8 @@ namespace Engine::Abstract
   public:
     ~Actor() override = default;
 
+    Actor(const Actor& other);
+
     eLayerType   GetLayer() const;
     WeakScene    GetScene() const;
     LocalActorID GetLocalID() const;
@@ -19,7 +21,7 @@ namespace Engine::Abstract
     explicit Actor();
 
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     friend class Scene;
 
     void SetLayer(eLayerType layer);

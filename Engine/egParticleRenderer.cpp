@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egTransform.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::ParticleRenderer,
  _ARTAG(_BSTSUPER(RenderComponent))
@@ -15,6 +15,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ParticleRenderer)
+
   ParticleRenderer::ParticleRenderer(const WeakObject& owner)
     : RenderComponent(RENDER_COM_T_PARTICLE, owner),
       m_b_follow_owner_(true) {}

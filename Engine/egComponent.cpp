@@ -4,7 +4,7 @@
 #include "egImGuiHeler.hpp"
 #include "egSceneManager.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Abstract::Component,
  _ARTAG(_BSTSUPER(Entity)) 
@@ -40,6 +40,13 @@ namespace Engine::Abstract
     lldDisabled("Local ID", m_local_id_);
     CheckboxAligned("Active", m_b_active_);
     ImGui::Unindent(2);
+  }
+
+  StrongComponent Component::Clone(const WeakObject& owner) const
+  {
+    const auto& cloned = cloneImpl();
+    cloned->SetOwner(owner);
+    return cloned;
   }
 
   Component::Component(eComponentType type, const WeakObject& owner)

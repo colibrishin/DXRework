@@ -13,6 +13,8 @@
 
 namespace Client::Scripts
 {
+  SCRIPT_CLONE_IMPL(ShadowIntersectionScript)
+
   void ShadowIntersectionScript::Initialize()
   {
 	  Script::Initialize();
@@ -218,7 +220,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() == GetOwner().lock()->GetID())
              {
@@ -251,7 +253,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() != GetOwner().lock()->GetID())
              {
@@ -364,7 +366,7 @@ namespace Client::Scripts
         GetRenderer().RenderPass
           (
            dt, SHADER_DOMAIN_OPAQUE, true,
-           [this](const StrongObject& obj)
+           [this](const StrongObjectBase& obj)
            {
              if (obj->GetID() == GetOwner().lock()->GetID())
              {

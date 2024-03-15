@@ -5,7 +5,7 @@
 #include "egManagerHelper.hpp"
 #include "egObserver.h"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Scene,
  _ARTAG(_BSTSUPER(Renderable))
@@ -45,7 +45,7 @@ namespace Engine
       );
   }
 
-  void Scene::AssignLocalIDToObject(const StrongObject& obj)
+  void Scene::AssignLocalIDToObject(const StrongObjectBase& obj)
   {
     LocalActorID id = 0;
 
@@ -66,12 +66,12 @@ namespace Engine
     obj->GetSharedPtr<Abstract::Actor>()->SetLocalID(id);
   }
 
-  void Scene::addGameObjectImpl(eLayerType layer, const StrongObject& obj)
+  void Scene::addGameObjectImpl(eLayerType layer, const StrongObjectBase& obj)
   {
     // Disconnect the object from the previous scene and layer, if it exists.
     if (const auto scene = obj->GetScene().lock())
     {
-      if (const auto& obj_check = scene->FindGameObjectByLocalID(obj->GetLocalID()).lock())
+      if (const auto& obj_check = scene->FindGameObject(obj->GetID()).lock())
       {
         scene->RemoveGameObject(obj_check->GetID(), obj_check->GetLayer());
       }
@@ -80,7 +80,10 @@ namespace Engine
     // Cache the pre-existing components
     for (const auto& comp : obj->GetAllComponents())
     {
-      AddCacheComponent(comp);
+      if (const auto& locked = comp.lock())
+      {
+        AddCacheComponent(locked);
+      }
     }
 
     // Set internal information as this scene and layer
@@ -100,7 +103,7 @@ namespace Engine
        {obj, layer}, // keep the object alive, scene does not own the object yet.
        [this](const std::vector<std::any>& params, const float dt)
        {
-         const auto obj   = std::any_cast<StrongObject>(params[0]);
+         const auto obj   = std::any_cast<StrongObjectBase>(params[0]);
          const auto layer = std::any_cast<eLayerType>(params[1]);
 
          AddObjectFinalize(layer, obj);
@@ -108,7 +111,7 @@ namespace Engine
       );
   }
 
-  void Scene::AddObjectFinalize(const eLayerType layer, const StrongObject& obj)
+  void Scene::AddObjectFinalize(const eLayerType layer, const StrongObjectBase& obj)
   {
     // add object to scene
     m_layers[layer]->AddGameObject(obj);

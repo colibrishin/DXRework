@@ -13,7 +13,7 @@
 
 #include "egManagerHelper.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::Collider,
  _ARTAG(_BSTSUPER(Engine::Abstract::Component))
@@ -23,6 +23,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(Collider)
+
   const std::vector<Graphics::VertexElement>& Collider::GetVertices() const
   {
     if (const auto model = m_shape_.lock()) { return model->GetVertices(); }

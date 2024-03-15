@@ -13,7 +13,7 @@ namespace Client::ComputeShaders
       : ComputeShader("cs_particle", "cs_particle.hlsl", {32, 32, 1}) {}
 
   protected:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
 
     void preDispatch() override;
     void postDispatch() override;

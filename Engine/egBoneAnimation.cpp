@@ -8,7 +8,7 @@ namespace Engine::Graphics
   struct BoneTransformElement;
 }
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::BoneAnimation,
  _ARTAG(_BSTSUPER(BaseAnimation))

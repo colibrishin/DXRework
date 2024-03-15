@@ -3,7 +3,7 @@
 
 #include "egSerialization.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::Font,
  _ARTAG(_BSTSUPER(Resource)) _ARTAG(m_position_)

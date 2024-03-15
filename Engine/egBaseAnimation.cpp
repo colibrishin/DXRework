@@ -3,7 +3,7 @@
 
 #include "egDXAnimCommon.hpp"
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Resources::BaseAnimation,
  _ARTAG(_BSTSUPER(Resource))

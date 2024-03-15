@@ -9,7 +9,7 @@
 #include "egTransform.h"
 
 
-SERIALIZER_ACCESS_IMPL
+SERIALIZE_IMPL
 (
  Engine::Components::ObserverController,
  _ARTAG(_BSTSUPER(Engine::Components::StateController))
@@ -17,6 +17,8 @@ SERIALIZER_ACCESS_IMPL
 
 namespace Engine::Components
 {
+  COMP_CLONE_IMPL(ObserverController)
+
   ObserverController::ObserverController(const WeakObject& owner)
     : StateController(owner) {}
 

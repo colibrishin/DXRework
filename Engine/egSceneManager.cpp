@@ -122,7 +122,7 @@ namespace Engine::Manager
 
         if (ImGui::MenuItem("Light")) { GetActiveScene().lock()->CreateGameObject<Objects::Light>(LAYER_LIGHT); }
 
-        if (ImGui::MenuItem("Object")) { GetActiveScene().lock()->CreateGameObject<Abstract::Object>(LAYER_DEFAULT); }
+        if (ImGui::MenuItem("Object")) { GetActiveScene().lock()->CreateGameObject<Object>(LAYER_DEFAULT); }
 
         if (ImGui::MenuItem("Text"))
         {

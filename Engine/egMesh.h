@@ -38,7 +38,7 @@ namespace Engine::Resources
     RESOURCE_SELF_INFER_GETTER(Mesh)
 
   protected:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Mesh();
 
     friend class Components::Collider;

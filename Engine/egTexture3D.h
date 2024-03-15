@@ -21,7 +21,7 @@ namespace Engine::Resources
     void Unload_INTERNAL() override;
     
   private:
-    SERIALIZER_ACCESS
+    SERIALIZE_DECL
     Texture3D() : Texture("", TEX_TYPE_3D, {}) {}
 
     UINT GetArraySize() const override final;
