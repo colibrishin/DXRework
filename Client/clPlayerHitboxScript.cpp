@@ -28,6 +28,8 @@ namespace Client::Scripts
 
   void PlayerHitboxScript::Initialize()
   {
+    Script::Initialize();
+
     const auto& obj = GetOwner().lock();
     const auto model = Resources::Shape::Get("CharacterShape").lock();
     const auto& bb_map = model->GetBoneBoundingBoxes();

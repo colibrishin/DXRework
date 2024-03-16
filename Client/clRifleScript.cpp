@@ -26,6 +26,8 @@ namespace Client::Scripts
 
   void RifleScript::Initialize()
   {
+    Script::Initialize();
+
     const auto obj = GetOwner().lock();
     const auto rifle = obj->GetScene().lock()->CreateGameObject<Object>(GetOwner().lock()->GetLayer()).lock();
     obj->AddChild(rifle);
