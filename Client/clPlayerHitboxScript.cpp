@@ -46,11 +46,6 @@ namespace Client::Scripts
 
       child->SetName("Bone" + std::to_string(idx));
       obj->AddChild(child);
-
-      if (child->GetName() == "Bone5")
-      {
-        m_head_hitbox_ = child;
-      }
     }
   }
 
@@ -79,30 +74,27 @@ namespace Client::Scripts
   void PlayerHitboxScript::OnDeserialized()
   {
     Script::OnDeserialized();
-
-    GetTaskScheduler().AddTask
-      (
-       TASK_SCRIPT_EVENT, {}, [this](const auto& params, const auto dt)
-       {
-         if (const auto& owner = GetOwner().lock())
-         {
-           for (const auto& child : owner->GetChildren())
-           {
-             if (const auto& locked = child.lock())
-             {
-               if (locked->GetName().find("Bone5") != std::string::npos) { m_head_hitbox_ = locked; }
-             }
-           }
-         }
-       }
-      );
   }
 
   void PlayerHitboxScript::OnImGui() {}
 
   WeakObjectBase PlayerHitboxScript::GetHead() const
   {
-    return m_head_hitbox_;
+    if (const auto& owner = GetOwner().lock())
+    {
+      for (const auto& child : owner->GetChildren())
+      {
+        if (const auto& locked = child.lock())
+        {
+          if (locked->GetName().find("Bone5") != std::string::npos)
+          {
+            return locked;
+          }
+        }
+      }
+    }
+
+    return {};
   }
 
   PlayerHitboxScript::PlayerHitboxScript()

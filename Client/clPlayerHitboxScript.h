@@ -34,8 +34,6 @@ namespace Client::Scripts
 
     void updateHitbox() const;
 
-    WeakObjectBase m_head_hitbox_;
-
   };
 } // namespace Client::Scripts
 
