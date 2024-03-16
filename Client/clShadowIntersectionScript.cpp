@@ -106,34 +106,7 @@ namespace Client::Scripts
     // also borrow the sampler state from shadow manager.
   }
 
-  void ShadowIntersectionScript::PreUpdate(const float& dt)
-  {
-	  for (auto& tex : m_shadow_texs_)
-    {
-      tex.Clear();
-    }
-
-    for (auto& tex : m_intensity_position_texs_)
-    {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
-    }
-
-    for (auto& tex : m_intensity_test_texs_)
-    {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
-    }
-
-    for (auto& tex : m_shadow_mask_texs_)
-    {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
-    }
-  }
+  void ShadowIntersectionScript::PreUpdate(const float& dt) {}
 
   void ShadowIntersectionScript::Update(const float& dt)
   {
@@ -162,15 +135,47 @@ namespace Client::Scripts
         GetDebugger().Draw(bbox, Colors::Red);
       }
     }
-
-    m_shadow_bbox_.clear();
   }
 
   void ShadowIntersectionScript::PostUpdate(const float& dt) {}
 
   void ShadowIntersectionScript::FixedUpdate(const float& dt) {}
 
-  void ShadowIntersectionScript::PreRender(const float& dt) {}
+  void ShadowIntersectionScript::PreRender(const float& dt)
+  {
+    for (auto& tex : m_shadow_texs_)
+    {
+      tex.Clear();
+    }
+
+    for (auto& tex : m_intensity_position_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
+
+    for (auto& tex : m_intensity_test_texs_)
+    {
+      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
+
+    for (auto& tex : m_shadow_mask_texs_)
+    {
+      constexpr float clear_color[4] = {0.f, 0.f, 0.f, 0.f};
+
+      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+    }
+
+    m_shadow_bbox_.clear();
+
+    std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
+    empty_light_table.resize(g_max_lights);
+
+    m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
+  }
 
   void ShadowIntersectionScript::Render(const float& dt) {}
 
@@ -428,10 +433,6 @@ namespace Client::Scripts
             const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
             const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
 
-            const auto average = Vector3::Lerp(wp_min, wp_max , 0.5f);
-
-            GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
-
             BoundingBox bbox;
             BoundingBox::CreateFromPoints(
                 bbox, 
@@ -442,11 +443,6 @@ namespace Client::Scripts
           }
         }
       }
-
-      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
-      empty_light_table.resize(g_max_lights);
-
-      m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
     }
   }
 

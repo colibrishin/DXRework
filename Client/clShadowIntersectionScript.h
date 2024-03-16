@@ -32,6 +32,8 @@ namespace Client::Scripts
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
+    const std::map<std::pair<UINT, UINT>, BoundingBox>& GetShadowBBox() const { return m_shadow_bbox_; }
+
   private:
     SERIALIZE_DECL
     SCRIPT_CLONE_DECL
