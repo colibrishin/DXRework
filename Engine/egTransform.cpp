@@ -24,7 +24,7 @@ namespace Engine::Components
 {
   COMP_CLONE_IMPL(Transform)
 
-  Transform::Transform(const WeakObject& owner)
+  Transform::Transform(const WeakObjectBase& owner)
     : Component(COM_T_TRANSFORM, owner),
       m_b_s_absolute_(true),
       m_b_r_absolute_(false),
@@ -286,7 +286,7 @@ namespace Engine::Components
 
   WeakTransform Transform::FindNextTransform(const Transform& transform_)
   {
-    WeakObject next = transform_.GetOwner().lock()->GetParent();
+    WeakObjectBase next = transform_.GetOwner().lock()->GetParent();
 
     while (const auto parent = next.lock())
     {

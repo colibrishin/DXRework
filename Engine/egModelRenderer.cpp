@@ -16,7 +16,7 @@ namespace Engine::Components
 {
   COMP_CLONE_IMPL(ModelRenderer)
 
-  ModelRenderer::ModelRenderer(const WeakObject& owner)
+  ModelRenderer::ModelRenderer(const WeakObjectBase& owner)
     : RenderComponent(RENDER_COM_T_MODEL, owner) {}
 
   void ModelRenderer::PreUpdate(const float& dt) {}

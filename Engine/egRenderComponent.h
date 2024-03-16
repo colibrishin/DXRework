@@ -8,7 +8,7 @@ namespace Engine::Components::Base
   public:
     COMPONENT_T(COM_T_RENDERER)
 
-    explicit RenderComponent(eRenderComponentType type, const WeakObject& owner)
+    explicit RenderComponent(eRenderComponentType type, const WeakObjectBase& owner)
       : Component(COM_T_RENDERER, owner),
         m_type_(type),
         m_mtr_meta_path_() {}

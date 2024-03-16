@@ -49,7 +49,7 @@ namespace Engine::Resources
 
   void Sound::PostUpdate(const float& dt) {}
 
-  void Sound::Play_INTERNAL(const WeakObject& origin)
+  void Sound::Play_INTERNAL(const WeakObjectBase& origin)
   {
     FMOD_VECTOR pos{};
     FMOD_VECTOR vel{};
@@ -73,14 +73,14 @@ namespace Engine::Resources
     GetToolkitAPI().PlaySound(m_sound_, pos, vel, &m_channel_map_[origin]);
   }
 
-  void Sound::Play(const WeakObject& origin)
+  void Sound::Play(const WeakObjectBase& origin)
   {
     m_mode_ |= FMOD_LOOP_OFF;
     m_mode_ &= ~FMOD_LOOP_NORMAL;
     Play_INTERNAL(origin);
   }
 
-  void Sound::PlayLoop(const WeakObject& origin)
+  void Sound::PlayLoop(const WeakObjectBase& origin)
   {
     m_mode_ &= ~FMOD_LOOP_OFF;
     m_mode_ |= FMOD_LOOP_NORMAL;
@@ -88,20 +88,20 @@ namespace Engine::Resources
     Play(origin);
   }
 
-  bool Sound::IsPlaying(const WeakObject& origin)
+  bool Sound::IsPlaying(const WeakObjectBase& origin)
   {
     bool is_playing = false;
     m_channel_map_[origin]->isPlaying(&is_playing);
     return is_playing;
   }
 
-  void Sound::Stop(const WeakObject& origin)
+  void Sound::Stop(const WeakObjectBase& origin)
   {
     GetToolkitAPI().StopSound(m_sound_, &m_channel_map_[origin]);
     m_channel_map_.erase(origin);
   }
 
-  void Sound::StopLoop(const WeakObject& origin)
+  void Sound::StopLoop(const WeakObjectBase& origin)
   {
     m_mode_ |= FMOD_LOOP_OFF;
     m_mode_ &= ~FMOD_LOOP_NORMAL;
@@ -109,7 +109,7 @@ namespace Engine::Resources
     Stop(origin);
   }
 
-  void Sound::UpdatePosition(const WeakObject& origin)
+  void Sound::UpdatePosition(const WeakObjectBase& origin)
   {
     FMOD_VECTOR pos{};
     FMOD_VECTOR vel{};

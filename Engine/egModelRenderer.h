@@ -9,7 +9,7 @@ namespace Engine::Components
   public:
     RENDER_COM_T(RENDER_COM_T_MODEL)
 
-    ModelRenderer(const WeakObject& owner);
+    ModelRenderer(const WeakObjectBase& owner);
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void FixedUpdate(const float& dt) override;

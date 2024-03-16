@@ -277,7 +277,7 @@ namespace Engine::Components
     XMStoreFloat3x3(&m_inertia_tensor_, matrix);
   }
 
-  Collider::Collider(const WeakObject& owner)
+  Collider::Collider(const WeakObjectBase& owner)
     : Component(COM_T_COLLIDER, owner),
       m_type_(BOUNDING_TYPE_BOX),
       m_boundings_(),

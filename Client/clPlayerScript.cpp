@@ -470,7 +470,7 @@ namespace Client::Scripts
       constexpr float distance = 5.f;
 
       GetDebugger().Draw(ray, Colors::AliceBlue);
-      std::vector<WeakObject> out;
+      std::vector<WeakObjectBase> out;
 
       Hitscan(10.f, 10.f);
     }

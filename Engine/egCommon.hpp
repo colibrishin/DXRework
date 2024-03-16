@@ -59,8 +59,8 @@ namespace Engine
 
   struct CollisionInfo
   {
-    WeakObject lhs;
-    WeakObject rhs;
+    WeakObjectBase lhs;
+    WeakObjectBase rhs;
 
     bool speculative;
     bool collision;

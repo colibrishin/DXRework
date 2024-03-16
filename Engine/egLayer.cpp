@@ -130,7 +130,7 @@ namespace Engine
 
   void Layer::RemoveGameObject(GlobalEntityID id)
   {
-    WeakObject obj;
+    WeakObjectBase obj;
 
     {
       ConcurrentWeakObjGlobalMap::const_accessor acc;
@@ -145,7 +145,7 @@ namespace Engine
     }
   }
 
-  WeakObject Layer::GetGameObject(GlobalEntityID id) const
+  WeakObjectBase Layer::GetGameObject(GlobalEntityID id) const
   {
     ConcurrentWeakObjGlobalMap::const_accessor obj;
 

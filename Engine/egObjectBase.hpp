@@ -26,7 +26,7 @@ namespace Engine::Abstract
     void OnDeserialized() override;
     void OnImGui() override;
 
-    [[nodiscard]] StrongObjectBase Clone() const;
+    [[nodiscard]] StrongObjectBase Clone(bool register_scene = true) const;
 
     template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
     boost::weak_ptr<T> AddComponent(Args&&... args)
@@ -134,11 +134,11 @@ namespace Engine::Abstract
     bool           GetImGuiOpen() const;
     eDefObjectType GetObjectType() const;
 
-    WeakObject              GetParent() const;
-    WeakObject              GetChild(LocalActorID id) const;
-    std::vector<WeakObject> GetChildren() const;
+    WeakObjectBase              GetParent() const;
+    WeakObjectBase              GetChild(LocalActorID id) const;
+    std::vector<WeakObjectBase> GetChildren() const;
 
-    void AddChild(const WeakObject& child);
+    void AddChild(const WeakObjectBase& child);
     bool DetachChild(LocalActorID id);
 
   protected:
@@ -192,6 +192,8 @@ namespace Engine::Abstract
 
     // Remove component from the object.
     void removeComponentImpl(eComponentType type);
+    // Remove specific component from the object.
+    void removeComponentImpl(const GlobalEntityID id);
 
     // Commit the component to the object.
     void          addComponentImpl(const StrongComponent& component, eComponentType type);
@@ -209,8 +211,8 @@ namespace Engine::Abstract
     std::map<eComponentType, StrongComponent> m_components_;
 
     // Non-serialized
-    WeakObject                                         m_parent_;
-    std::map<LocalActorID, WeakObject>                 m_children_cache_;
+    WeakObjectBase                                         m_parent_;
+    std::map<LocalActorID, WeakObjectBase>                 m_children_cache_;
     std::set<LocalComponentID>                         m_assigned_component_ids_;
     std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
     std::map<eScriptType, StrongScript>   m_scripts_;

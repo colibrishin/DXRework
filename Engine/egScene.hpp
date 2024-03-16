@@ -63,8 +63,8 @@ namespace Engine
 
     void RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
-    WeakObject FindGameObject(GlobalEntityID id) const;
-    WeakObject FindGameObjectByLocalID(LocalActorID id) const;
+    WeakObjectBase FindGameObject(GlobalEntityID id) const;
+    WeakObjectBase FindGameObjectByLocalID(LocalActorID id) const;
 
     ConcurrentWeakObjVec GetGameObjects(eLayerType layer) const;
     WeakCamera           GetMainCamera() const;
@@ -201,7 +201,7 @@ namespace Engine
     std::vector<StrongLayer> m_layers;
 
     // Non-serialized
-    WeakObject m_observer_;
+    WeakObjectBase m_observer_;
     WeakCamera m_mainCamera_;
 
     ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;

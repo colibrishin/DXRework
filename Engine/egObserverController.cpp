@@ -19,7 +19,7 @@ namespace Engine::Components
 {
   COMP_CLONE_IMPL(ObserverController)
 
-  ObserverController::ObserverController(const WeakObject& owner)
+  ObserverController::ObserverController(const WeakObjectBase& owner)
     : StateController(owner) {}
 
   void ObserverController::Initialize() { StateController::Initialize(); }

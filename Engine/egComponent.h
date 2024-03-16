@@ -10,7 +10,7 @@ namespace Engine::Abstract
     ~Component() override       = default;
     Component(const Component&) = default;
 
-    WeakObject       GetOwner() const;
+    WeakObjectBase       GetOwner() const;
     eComponentType   GetComponentType() const;
     LocalComponentID GetLocalID() const;
     bool             IsTicked() const;
@@ -21,10 +21,10 @@ namespace Engine::Abstract
 
     void OnDeserialized() override;
     void OnImGui() override;
-    [[nodiscard]] StrongComponent Clone(const WeakObject& owner) const;
+    [[nodiscard]] StrongComponent Clone() const;
 
   protected:
-    Component(eComponentType type, const WeakObject& owner);
+    Component(eComponentType type, const WeakObjectBase& owner);
 
   private:
     SERIALIZE_DECL
@@ -32,7 +32,7 @@ namespace Engine::Abstract
 
     [[nodiscard]] virtual StrongComponent cloneImpl() const = 0;
 
-    void SetOwner(const WeakObject& owner);
+    void SetOwner(const WeakObjectBase& owner);
     void SetLocalID(LocalComponentID id) { if (const auto locked = m_owner_.lock()) { m_local_id_ = id; } }
 
   private:
@@ -40,7 +40,7 @@ namespace Engine::Abstract
     eComponentType   m_type_;
 
     // Non-serialized
-    WeakObject m_owner_;
+    WeakObjectBase m_owner_;
     bool       m_b_ticked_;
     bool       m_b_active_;
   };

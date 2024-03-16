@@ -8,7 +8,7 @@ namespace Engine::Components
   public:
     COMPONENT_T(COM_T_ANIMATOR)
 
-    Animator(const WeakObject& owner);
+    Animator(const WeakObjectBase& owner);
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void FixedUpdate(const float& dt) override;

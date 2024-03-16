@@ -9,6 +9,7 @@
 #include "egMesh.h"
 #include "egModelRenderer.h"
 #include "egParticleRenderer.h"
+#include "egPrefab.h"
 #include "egRigidbody.h"
 #include "egSoundPlayer.h"
 #include "egTransform.h"
@@ -90,13 +91,13 @@ namespace Engine::Abstract
 
   eDefObjectType ObjectBase::GetObjectType() const { return m_type_; }
 
-  WeakObject ObjectBase::GetParent() const
+  WeakObjectBase ObjectBase::GetParent() const
   {
     INVALID_ID_CHECK_WEAK_RETURN(m_parent_id_)
     return m_parent_;
   }
 
-  WeakObject ObjectBase::GetChild(const LocalActorID id) const
+  WeakObjectBase ObjectBase::GetChild(const LocalActorID id) const
   {
     INVALID_ID_CHECK_WEAK_RETURN(id)
 
@@ -105,9 +106,9 @@ namespace Engine::Abstract
     return {};
   }
 
-  std::vector<WeakObject> ObjectBase::GetChildren() const
+  std::vector<WeakObjectBase> ObjectBase::GetChildren() const
   {
-    std::vector<WeakObject> out;
+    std::vector<WeakObjectBase> out;
 
     for (const auto& child : m_children_cache_ | std::views::values)
     {
@@ -117,18 +118,38 @@ namespace Engine::Abstract
     return out;
   }
 
-  void ObjectBase::AddChild(const WeakObject& p_child)
+  void ObjectBase::AddChild(const WeakObjectBase& p_child)
   {
-    if (const auto child = p_child.lock())
+    if (const auto child = p_child.lock(); 
+        !child || child == GetSharedPtr<ObjectBase>())
     {
-      m_children_.push_back(child->GetLocalID());
-      m_children_cache_.insert({child->GetLocalID(), child});
-
-      if (child->m_parent_id_ != g_invalid_id) { child->m_parent_.lock()->DetachChild(child->GetLocalID()); }
-
-      child->m_parent_id_ = GetLocalID();
-      child->m_parent_    = GetSharedPtr<ObjectBase>();
+      return;
     }
+
+    GetTaskScheduler().AddTask
+      (
+       TASK_ADD_CHILD, {p_child}, [this](auto& params, const auto dt)
+       {
+         const auto& cast_child = std::any_cast<WeakObjectBase>(params[0]);
+
+         if (const auto child = cast_child.lock())
+         {
+           m_children_.push_back(child->GetLocalID());
+           m_children_cache_.insert({child->GetLocalID(), child});
+
+           if (child->m_parent_id_ != g_invalid_id)
+           {
+             if (const auto& parent = child->m_parent_.lock())
+             {
+               parent->DetachChild(child->GetLocalID()); 
+             }
+           }
+
+           child->m_parent_id_ = GetLocalID();
+           child->m_parent_    = GetSharedPtr<ObjectBase>();
+         }
+       }
+      );
   }
 
   bool ObjectBase::DetachChild(const LocalActorID id)
@@ -137,10 +158,24 @@ namespace Engine::Abstract
 
     if (m_children_cache_.contains(id))
     {
-      m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
-      m_children_cache_.at(id).lock()->m_parent_    = {};
-      m_children_cache_.erase(id);
-      m_children_.erase(std::ranges::find(m_children_, id));
+      GetTaskScheduler().AddTask
+      (
+       TASK_REM_CHILD, {id}, [this](auto& params, const auto dt)
+       {
+         const auto id = std::any_cast<LocalActorID>(params[0]);
+
+         if (m_children_cache_.contains(id))
+         {
+           m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
+           m_children_cache_.at(id).lock()->m_parent_    = {};
+           m_children_cache_.erase(id);
+           std::erase_if(m_children_, [&id](const auto v_id)
+           {
+             return v_id == id;
+           });
+         }
+       }
+      );
 
       return true;
     }
@@ -182,12 +217,13 @@ namespace Engine::Abstract
       return comp;
     }
 
-    // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
-    if(const auto prev = component->GetOwner().lock())
+    // Remove the component from the previous owner.
+    if (const auto prev = component->GetOwner().lock())
     {
-      prev->removeComponentImpl(component->GetComponentType());
+      prev->removeComponentImpl(component->GetID());
     }
 
+    // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
     component->SetOwner(GetSharedPtr<ObjectBase>());
 
     // Add the component to the object.
@@ -221,6 +257,20 @@ namespace Engine::Abstract
       m_assigned_component_ids_.erase(comp->GetLocalID());
       m_cached_component_.erase(comp);
       m_components_.erase(type);
+    }
+  }
+
+  void ObjectBase::removeComponentImpl(const GlobalEntityID id)
+  {
+    for (const auto& [type, comp] : m_components_)
+    {
+      if (comp->GetID() == id)
+      {
+        m_assigned_component_ids_.erase(comp->GetLocalID());
+        m_cached_component_.erase(comp);
+        m_components_.erase(type);
+        break;
+      }
     }
   }
 
@@ -396,6 +446,12 @@ namespace Engine::Abstract
       }
       ImGui::SameLine();
 
+      if (ImGui::Button("To Prefab"))
+      {
+        Resources::Prefab::Create("Prefab_" + GetName(), "", GetSharedPtr<ObjectBase>());
+      }
+      ImGui::SameLine();
+
       if (ImGui::Button("Children"))
       {
         m_imgui_children_open_ = !m_imgui_children_open_;
@@ -411,18 +467,35 @@ namespace Engine::Abstract
 
       if (m_imgui_children_open_)
       {
-        if (ImGui::Begin("Children", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::Begin("Children", &m_imgui_children_open_, ImGuiWindowFlags_AlwaysAutoResize))
         {
-          for (const auto& child : m_children_cache_ | std::views::values)
+          if (ImGui::BeginListBox("Children List"))
           {
-            if (const auto locked = child.lock())
+            for (const auto& child : m_children_cache_ | std::views::values)
             {
-              const auto child_id = locked->GetTypeName() + " " + locked->GetName() + " " + std::to_string(locked->GetID());
+              if (const auto locked = child.lock())
+              {
+                const auto child_id = locked->GetTypeName() + " " + locked->GetName() + " " + std::to_string
+                                      (locked->GetID());
 
-              if (ImGui::Selectable(child_id.c_str())) { locked->SetImGuiOpen(!locked->GetImGuiOpen()); }
+                if (ImGui::Selectable(child_id.c_str())) { locked->SetImGuiOpen(!locked->GetImGuiOpen()); }
 
-              if (locked->GetImGuiOpen()) { locked->OnImGui(); }
+                if (locked->GetImGuiOpen()) { locked->OnImGui(); }
+              }
             }
+
+            ImGui::EndListBox();
+          }
+
+          if (ImGui::BeginDragDropTarget())
+          {
+            if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
+            {
+              const auto dropped = *static_cast<WeakObjectBase*>(payload->Data);
+              if (const auto child = dropped.lock()) { AddChild(dropped); }
+            }
+
+            ImGui::EndDragDropTarget();
           }
 
           ImGui::End();
@@ -519,7 +592,7 @@ namespace Engine::Abstract
     }
   }
 
-  StrongObjectBase ObjectBase::Clone() const
+  StrongObjectBase ObjectBase::Clone(bool register_scene) const
   {
     const auto& cloned = cloneImpl();
 
@@ -541,7 +614,7 @@ namespace Engine::Abstract
     // Copy components
     for (const auto& comp : m_components_ | std::views::values)
     {
-      const auto& cloned_comp = comp->Clone(cloned);
+      const auto& cloned_comp = comp->Clone();
       cloned->addComponent(cloned_comp);
     }
 
@@ -561,13 +634,17 @@ namespace Engine::Abstract
     {
       if (const auto locked = child.lock())
       {
-        const auto cloned_child = locked->Clone();
+        const auto cloned_child = locked->Clone(register_scene);
         cloned->AddChild(cloned_child);
       }
     }
 
     // Add to the scene finally.
-    GetScene().lock()->AddGameObject(GetLayer(), cloned);
+    if (const auto& scene = GetScene().lock(); 
+        scene && register_scene)
+    {
+      scene->AddGameObject(GetLayer(), cloned);
+    }
 
     // Keep in mind that this object is yielded, not added to the scene yet.
     return cloned;

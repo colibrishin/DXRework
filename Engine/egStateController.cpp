@@ -13,7 +13,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
-  StateController::StateController(const WeakObject& owner)
+  StateController::StateController(const WeakObjectBase& owner)
     : Component(COM_T_STATE, owner),
       m_state_(0),
       m_previous_state_(0) {}

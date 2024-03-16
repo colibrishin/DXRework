@@ -54,7 +54,7 @@ namespace Engine::Manager::Physics
       std::stack<const Octree*> stack;
       stack.push(&tree);
 
-      std::vector<std::vector<WeakObject>> node_objects;
+      std::vector<std::vector<WeakObjectBase>> node_objects;
       std::map<const Octree*, bool>        visited;
 
       while (!stack.empty())
@@ -200,7 +200,7 @@ namespace Engine::Manager::Physics
     }
   }
 
-  void CollisionDetector::TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  void CollisionDetector::TestCollision(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs)
   {
     const auto lhs = p_lhs.lock();
     const auto rhs = p_rhs.lock();
@@ -273,7 +273,7 @@ namespace Engine::Manager::Physics
     }
   }
 
-  void CollisionDetector::TestSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs, const float dt)
+  void CollisionDetector::TestSpeculation(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs, const float dt)
   {
     auto lhs = p_lhs.lock();
     auto rhs = p_rhs.lock();
@@ -374,7 +374,7 @@ namespace Engine::Manager::Physics
     }
   }
 
-  void CollisionDetector::DispatchInactiveExit(const WeakObject& lhs)
+  void CollisionDetector::DispatchInactiveExit(const WeakObjectBase& lhs)
   {
     const auto lcl   = lhs.lock()->GetComponent<Components::Collider>().lock();
     const auto scene = GetSceneManager().GetActiveScene().lock();

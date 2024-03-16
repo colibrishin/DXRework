@@ -42,7 +42,7 @@ namespace Engine::Manager::Physics
 
   void ConstraintSolver::PostUpdate(const float& dt) {}
 
-  void ConstraintSolver::ResolveCollision(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  void ConstraintSolver::ResolveCollision(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs)
   {
     auto lhs = p_lhs;
     auto rhs = p_rhs;
@@ -124,7 +124,7 @@ namespace Engine::Manager::Physics
     }
   }
 
-  void ConstraintSolver::ResolveSpeculation(const WeakObject& p_lhs, const WeakObject& p_rhs)
+  void ConstraintSolver::ResolveSpeculation(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs)
   {
     const auto lhs = p_lhs.lock();
     const auto rhs = p_rhs.lock();

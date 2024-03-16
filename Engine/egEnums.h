@@ -4,6 +4,7 @@
 
 namespace Engine::Resources
 {
+  class Prefab;
   class Mesh;
   class Shape;
   class Material;
@@ -95,6 +96,8 @@ namespace Engine
     TASK_REM_OBJ,
     TASK_CACHE_COMPONENT,
     TASK_UNCACHE_COMPONENT,
+    TASK_ADD_CHILD,
+    TASK_REM_CHILD,
     TASK_CHANGE_LAYER,
     TASK_SYNC_SCENE,
     TASK_INIT_SCENE,
@@ -202,6 +205,7 @@ namespace Engine
     RES_T_ANIMS_TEX,
     RES_T_COMPUTE_SHADER,
     RES_T_SHADOW_TEX,
+    RES_T_PREFAB,
     RES_T_MAX,
   };
 
@@ -221,6 +225,7 @@ namespace Engine
      "Animation Texture",
      "Compute Shader",
      "Shadow Texture",
+     "Prefab",
    };
 
   using LoadableResourceTypes = boost::mpl::vector<
@@ -238,7 +243,8 @@ namespace Engine
     Resources::Texture2D,
     Resources::Texture3D,
     Resources::Material,
-    Resources::Shape>;
+    Resources::Shape,
+    Resources::Prefab>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
@@ -249,7 +255,7 @@ namespace Engine
     COM_T_COLLIDER,
     COM_T_RIDIGBODY,
     COM_T_STATE,
-    COMP_T_SOUND_PLAYER,
+    COM_T_SOUND_PLAYER,
     COM_T_ANIMATOR,
     COM_T_RENDERER,
     COM_T_SCRIPT,

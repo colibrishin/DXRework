@@ -17,7 +17,7 @@ namespace Engine::Components
 
     RENDER_COM_T(RENDER_COM_T_PARTICLE)
 
-    ParticleRenderer(const WeakObject& owner);
+    ParticleRenderer(const WeakObjectBase& owner);
 
     void Initialize() override;
     void Update(const float& dt) override;

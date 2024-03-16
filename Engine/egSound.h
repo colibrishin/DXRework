@@ -27,13 +27,13 @@ namespace Engine::Resources
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void Play(const WeakObject& origin);
-    void PlayLoop(const WeakObject& origin);
-    bool IsPlaying(const WeakObject& origin);
-    void Stop(const WeakObject& origin);
-    void StopLoop(const WeakObject& origin);
+    void Play(const WeakObjectBase& origin);
+    void PlayLoop(const WeakObjectBase& origin);
+    bool IsPlaying(const WeakObjectBase& origin);
+    void Stop(const WeakObjectBase& origin);
+    void StopLoop(const WeakObjectBase& origin);
 
-    void UpdatePosition(const WeakObject& origin);
+    void UpdatePosition(const WeakObjectBase& origin);
     void SetRollOff(const FMOD_MODE& roll_off) const;
     void SetMinDistance(const float& min_distance);
     void SetMaxDistance(const float& max_distance);
@@ -55,10 +55,10 @@ namespace Engine::Resources
 
     void CommitDistance() const;
 
-    void Play_INTERNAL(const WeakObject& origin);
+    void Play_INTERNAL(const WeakObjectBase& origin);
 
     FMOD::Sound* m_sound_ = nullptr;
-    std::map<WeakObject, FMOD::Channel*, WeakComparer<Abstract::ObjectBase>>
+    std::map<WeakObjectBase, FMOD::Channel*, WeakComparer<Abstract::ObjectBase>>
     m_channel_map_;
     FMOD_MODE m_mode_;
 

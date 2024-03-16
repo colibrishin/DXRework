@@ -9,7 +9,7 @@ namespace Engine::Components
   public:
     COMPONENT_T(COM_T_RIDIGBODY)
 
-    explicit Rigidbody(const WeakObject& object);
+    explicit Rigidbody(const WeakObjectBase& object);
     Rigidbody(const Rigidbody& other);
 
     ~Rigidbody() override = default;

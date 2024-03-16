@@ -135,7 +135,7 @@ namespace Engine
 
   void Scene::RemoveObjectFinalize(const GlobalEntityID id, eLayerType layer)
   {
-    WeakObject obj;
+    WeakObjectBase obj;
 
     {
       ConcurrentWeakObjGlobalMap::const_accessor acc;
@@ -179,6 +179,8 @@ namespace Engine
         m_object_position_tree_.Remove(obj.lock());
       }
     }
+
+    obj.lock()->SetScene({});
 
     m_cached_objects_.erase(id);
     m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
@@ -275,7 +277,7 @@ namespace Engine
       );
   }
 
-  WeakObject Scene::FindGameObject(GlobalEntityID id) const
+  WeakObjectBase Scene::FindGameObject(GlobalEntityID id) const
   {
     INVALID_ID_CHECK_WEAK_RETURN(id)
 
@@ -286,7 +288,7 @@ namespace Engine
     return {};
   }
 
-  WeakObject Scene::FindGameObjectByLocalID(LocalActorID id) const
+  WeakObjectBase Scene::FindGameObjectByLocalID(LocalActorID id) const
   {
     INVALID_ID_CHECK_WEAK_RETURN(id)
 
@@ -549,11 +551,11 @@ namespace Engine
                 GetTaskScheduler().AddTask
                   (
                    TASK_CHANGE_LAYER,
-                   {GetSharedPtr<Scene>(), static_cast<WeakObject*>(payload->Data), i},
+                   {GetSharedPtr<Scene>(), static_cast<WeakObjectBase*>(payload->Data), i},
                    [this, i](const std::vector<std::any>& args, const float)
                    {
                      const auto scene = std::any_cast<StrongScene>(args[0]);
-                     const auto obj   = std::any_cast<WeakObject*>(args[1])->lock();
+                     const auto obj   = std::any_cast<WeakObjectBase*>(args[1])->lock();
                      const auto layer = std::any_cast<int>(args[2]);
 
                      (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
@@ -580,7 +582,7 @@ namespace Engine
 
                 if (ImGui::BeginDragDropSource())
                 {
-                  ImGui::SetDragDropPayload("OBJECT", &obj, sizeof(WeakObject));
+                  ImGui::SetDragDropPayload("OBJECT", &obj, sizeof(WeakObjectBase));
                   ImGui::Text(unique_name.c_str());
                   ImGui::EndDragDropSource();
                 }

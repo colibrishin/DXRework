@@ -7,7 +7,7 @@ namespace Engine::Components
   class ObserverController final : public StateController
   {
   public:
-    explicit ObserverController(const WeakObject& owner);
+    explicit ObserverController(const WeakObjectBase& owner);
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;

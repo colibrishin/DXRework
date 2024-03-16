@@ -10,7 +10,7 @@ namespace Client::Scripts
   public:
 	  CLIENT_SCRIPT_T(HpTextScript, SCRIPT_T_HP_TEXT)
 
-    explicit HpTextScript(const WeakObject& owner)
+    explicit HpTextScript(const WeakObjectBase& owner)
       : Script(SCRIPT_T_HP_TEXT, owner) {}
 
 	  ~HpTextScript() override = default;

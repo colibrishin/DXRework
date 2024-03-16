@@ -16,8 +16,8 @@ namespace Engine::Components
 {
   COMP_CLONE_IMPL(SoundPlayer)
 
-  SoundPlayer::SoundPlayer(const WeakObject& owner)
-    : Component(COMP_T_SOUND_PLAYER, owner) {}
+  SoundPlayer::SoundPlayer(const WeakObjectBase& owner)
+    : Component(COM_T_SOUND_PLAYER, owner) {}
 
   void SoundPlayer::PreUpdate(const float& dt) {}
 
@@ -101,5 +101,5 @@ namespace Engine::Components
   }
 
   SoundPlayer::SoundPlayer()
-    : Component(COMP_T_SOUND_PLAYER, {}) {}
+    : Component(COM_T_SOUND_PLAYER, {}) {}
 }

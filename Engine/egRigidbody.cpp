@@ -36,7 +36,7 @@ namespace Engine::Components
     }
   }
 
-  Rigidbody::Rigidbody(const WeakObject& object)
+  Rigidbody::Rigidbody(const WeakObjectBase& object)
     : Component(COM_T_RIDIGBODY, object),
       m_bGrounded(false),
       m_b_no_angular_(false),

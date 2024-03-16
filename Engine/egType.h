@@ -103,6 +103,7 @@ namespace Engine
 
   namespace Resources
   {
+    class Prefab;
     class Font;
     class Mesh;
     class Sound;
@@ -164,7 +165,7 @@ namespace Engine
   } // namespace Manager
 
   // Weak pointer type definitions
-  using WeakObject = boost::weak_ptr<Abstract::ObjectBase>;
+  using WeakObjectBase = boost::weak_ptr<Abstract::ObjectBase>;
   using WeakComponent = boost::weak_ptr<Abstract::Component>;
   using WeakResource = boost::weak_ptr<Abstract::Resource>;
   using WeakMesh = boost::weak_ptr<Resources::Mesh>;
@@ -188,6 +189,7 @@ namespace Engine
   using WeakParticleRenderer = boost::weak_ptr<Components::ParticleRenderer>;
   using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
   using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
+  using WeakPrefab = boost::weak_ptr<Resources::Prefab>;
 
   // Strong pointer type definitions
   using StrongObjectBase = boost::shared_ptr<Abstract::ObjectBase>;
@@ -217,6 +219,7 @@ namespace Engine
   using StrongRenderComponent = boost::shared_ptr<Components::Base::RenderComponent>;
   using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
   using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
+  using StrongPrefab = boost::shared_ptr<Resources::Prefab>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -236,8 +239,8 @@ namespace Engine
   using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
   // Concurrent type definitions
-  using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObject>;
-  using ConcurrentWeakObjVec = concurrent_vector<WeakObject>;
+  using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObjectBase>;
+  using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase>;
   using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
   using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
   using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;

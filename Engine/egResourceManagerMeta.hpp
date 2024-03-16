@@ -8,6 +8,7 @@
 #include "egHelper.hpp"
 #include "egMaterial.h"
 #include "egMesh.h"
+#include "egPrefab.h"
 #include "egResourceManager.hpp"
 #include "egShader.hpp"
 #include "egShadowTexture.h"

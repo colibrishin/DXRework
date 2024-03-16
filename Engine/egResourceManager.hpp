@@ -29,8 +29,16 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetMetadataPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())  { return; }
-      if (!resource->GetPath().empty() && GetResourceByRawPath<T>(resource->GetPath()).lock()) { return; }
+      if (!resource->GetMetadataPath().empty() && 
+          GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
+      {
+        return;
+      }
+      if (!resource->GetPath().empty() && 
+          GetResourceByRawPath<T>(resource->GetPath()).lock())
+      {
+        return;
+      }
 
       m_resources_[which_resource<T>::value].insert(resource);
     }
@@ -38,8 +46,16 @@ namespace Engine::Manager
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
     void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
     {
-      if (!resource->GetMetadataPath().empty() && GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock()) { return; }
-      if (!resource->GetPath().empty() && GetResourceByRawPath<T>(resource->GetPath()).lock()) { return; }
+      if (!resource->GetMetadataPath().empty() && 
+          GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
+      {
+        return;
+      }
+      if (!resource->GetPath().empty() && 
+          GetResourceByRawPath<T>(resource->GetPath()).lock())
+      {
+        return;
+      }
 
       m_resources_[which_resource<T>::value].insert(resource);
       resource->SetName(name);
@@ -61,7 +77,7 @@ namespace Engine::Manager
       {
         if (!(*it)->IsLoaded()) { (*it)->Load(); }
 
-        return boost::reinterpret_pointer_cast<T>(*it);
+        return boost::static_pointer_cast<T>(*it);
       }
 
       return {};
@@ -72,8 +88,11 @@ namespace Engine::Manager
       auto&      resources = m_resources_[type];
       const auto it        = std::ranges::find_if
         (
-         resources
-         , [&name](const StrongResource& resource) { return resource->GetName() == name; }
+         resources, 
+            [&name](const StrongResource& resource)
+            {
+              return resource->GetName() == name;
+            }
         );
 
       if (it != resources.end())
