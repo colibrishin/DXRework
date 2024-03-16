@@ -163,7 +163,10 @@ namespace Engine::Abstract
            m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
            m_children_cache_.at(id).lock()->m_parent_    = {};
            m_children_cache_.erase(id);
-           m_children_.erase(std::ranges::find(m_children_, id));
+           std::erase_if(m_children_, [&id](const auto v_id)
+           {
+             return v_id == id;
+           });
          }
        }
       );
