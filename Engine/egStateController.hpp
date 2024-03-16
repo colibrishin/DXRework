@@ -8,7 +8,7 @@ namespace Engine::Components
   public:
     COMPONENT_T(COM_T_STATE)
 
-    explicit StateController(const WeakObject& owner);
+    explicit StateController(const WeakObjectBase& owner);
 
     template <typename Enum>
     Enum GetState() const { return static_cast<Enum>(m_state_); }

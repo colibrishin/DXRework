@@ -7,7 +7,7 @@ namespace Client::Scripts
 {
   SCRIPT_CLONE_IMPL(HitboxScript)
 
-  HitboxScript::HitboxScript(const WeakObject& owner): Script(SCRIPT_T_HITBOX, owner),
+  HitboxScript::HitboxScript(const WeakObjectBase& owner): Script(SCRIPT_T_HITBOX, owner),
                                                               m_modifier_(1.f) {}
 
   HitboxScript::~HitboxScript() = default;

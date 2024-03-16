@@ -11,7 +11,7 @@ namespace Engine::Components
   public:
     COMPONENT_T(COM_T_TRANSFORM)
 
-    Transform(const WeakObject& owner);
+    Transform(const WeakObjectBase& owner);
     ~Transform() override = default;
 
     void __vectorcall SetWorldPosition(const Vector3& position);

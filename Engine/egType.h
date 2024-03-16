@@ -165,7 +165,7 @@ namespace Engine
   } // namespace Manager
 
   // Weak pointer type definitions
-  using WeakObject = boost::weak_ptr<Abstract::ObjectBase>;
+  using WeakObjectBase = boost::weak_ptr<Abstract::ObjectBase>;
   using WeakComponent = boost::weak_ptr<Abstract::Component>;
   using WeakResource = boost::weak_ptr<Abstract::Resource>;
   using WeakMesh = boost::weak_ptr<Resources::Mesh>;
@@ -239,8 +239,8 @@ namespace Engine
   using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
   // Concurrent type definitions
-  using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObject>;
-  using ConcurrentWeakObjVec = concurrent_vector<WeakObject>;
+  using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObjectBase>;
+  using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase>;
   using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
   using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
   using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;

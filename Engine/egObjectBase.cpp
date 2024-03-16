@@ -91,13 +91,13 @@ namespace Engine::Abstract
 
   eDefObjectType ObjectBase::GetObjectType() const { return m_type_; }
 
-  WeakObject ObjectBase::GetParent() const
+  WeakObjectBase ObjectBase::GetParent() const
   {
     INVALID_ID_CHECK_WEAK_RETURN(m_parent_id_)
     return m_parent_;
   }
 
-  WeakObject ObjectBase::GetChild(const LocalActorID id) const
+  WeakObjectBase ObjectBase::GetChild(const LocalActorID id) const
   {
     INVALID_ID_CHECK_WEAK_RETURN(id)
 
@@ -106,9 +106,9 @@ namespace Engine::Abstract
     return {};
   }
 
-  std::vector<WeakObject> ObjectBase::GetChildren() const
+  std::vector<WeakObjectBase> ObjectBase::GetChildren() const
   {
-    std::vector<WeakObject> out;
+    std::vector<WeakObjectBase> out;
 
     for (const auto& child : m_children_cache_ | std::views::values)
     {
@@ -118,7 +118,7 @@ namespace Engine::Abstract
     return out;
   }
 
-  void ObjectBase::AddChild(const WeakObject& p_child)
+  void ObjectBase::AddChild(const WeakObjectBase& p_child)
   {
     if (const auto child = p_child.lock(); 
         !child || child == GetSharedPtr<ObjectBase>())
@@ -130,7 +130,7 @@ namespace Engine::Abstract
       (
        TASK_ADD_CHILD, {p_child}, [this](auto& params, const auto dt)
        {
-         const auto& cast_child = std::any_cast<WeakObject>(params[0]);
+         const auto& cast_child = std::any_cast<WeakObjectBase>(params[0]);
 
          if (const auto child = cast_child.lock())
          {
@@ -485,7 +485,7 @@ namespace Engine::Abstract
           {
             if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
             {
-              const auto dropped = *static_cast<WeakObject*>(payload->Data);
+              const auto dropped = *static_cast<WeakObjectBase*>(payload->Data);
               if (const auto child = dropped.lock()) { AddChild(dropped); }
             }
 

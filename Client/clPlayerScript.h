@@ -10,7 +10,7 @@ namespace Client::Scripts
   public:
 	  CLIENT_SCRIPT_T(PlayerScript, SCRIPT_T_PLAYER)
 
-    explicit PlayerScript(const WeakObject& owner)
+    explicit PlayerScript(const WeakObjectBase& owner)
       : Script(SCRIPT_T_PLAYER, owner),
         m_state_(CHAR_STATE_IDLE),
         m_prev_state_(CHAR_STATE_IDLE),
@@ -73,7 +73,7 @@ namespace Client::Scripts
     std::map<UINT, LocalActorID> m_child_bones_;
 
     bool         m_top_view_;
-    WeakObject   m_head_;
+    WeakObjectBase   m_head_;
     LocalActorID m_cam_id_;
     float        m_shoot_interval;
     float        m_hp_;

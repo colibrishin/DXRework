@@ -20,7 +20,7 @@ namespace Engine::Manager
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    bool CheckRender(const WeakObject& object) const;
+    bool CheckRender(const WeakObjectBase& object) const;
 
     BoundingFrustum GetFrustum() const;
 

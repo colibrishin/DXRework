@@ -17,7 +17,7 @@ namespace Client::Scripts
   public:
 	  CLIENT_SCRIPT_T(ShadowIntersectionScript, SCRIPT_T_SHADOW)
 
-    explicit ShadowIntersectionScript(const WeakObject& owner)
+    explicit ShadowIntersectionScript(const WeakObjectBase& owner)
       : Script(SCRIPT_T_SHADOW, owner),
         m_viewport_() {}
 

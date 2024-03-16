@@ -14,7 +14,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Abstract
 {
-  WeakObject Component::GetOwner() const { return m_owner_; }
+  WeakObjectBase Component::GetOwner() const { return m_owner_; }
 
   eComponentType Component::GetComponentType() const { return m_type_; }
 
@@ -48,14 +48,14 @@ namespace Engine::Abstract
     return cloned;
   }
 
-  Component::Component(eComponentType type, const WeakObject& owner)
+  Component::Component(eComponentType type, const WeakObjectBase& owner)
     : m_local_id_(g_invalid_id),
       m_type_(type),
       m_owner_(owner),
       m_b_ticked_(false),
       m_b_active_(true) {}
 
-  void Component::SetOwner(const WeakObject& owner)
+  void Component::SetOwner(const WeakObjectBase& owner)
   {
     if (const auto obj = owner.lock())
     {

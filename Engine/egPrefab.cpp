@@ -22,12 +22,23 @@ namespace Engine::Resources
     cloned->SetName(object->GetName());
     m_object_ = cloned;
 
-    for (const auto& child : cloned->GetChildren())
+    const std::vector<WeakObjectBase>& children = object->GetChildren();
+    std::vector<StrongObjectBase> strong_children;
+
+    // Get the reference so that it won't be de-allocated.
+    // Remove child information from the object, and store it in the prefab manner.
+    for (const auto& child : children)
     {
       if (const auto& locked = child.lock())
       {
-        m_children_.push_back(Create(locked->GetName(), "", locked));
+        strong_children.push_back(locked);
+        cloned->DetachChild(locked->GetLocalID());
       }
+    }
+
+    for (const auto& child : strong_children)
+    {
+      m_children_.push_back(Create(child->GetName(), "", child));
     }
   }
 

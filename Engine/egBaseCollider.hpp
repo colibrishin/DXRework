@@ -14,7 +14,7 @@ namespace Engine::Components
   public:
     COMPONENT_T(COM_T_COLLIDER)
 
-    Collider(const WeakObject& owner);
+    Collider(const WeakObjectBase& owner);
     ~Collider() override = default;
 
     void FromMatrix(const Matrix& mat);

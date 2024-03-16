@@ -65,7 +65,7 @@
 #define CLIENT_SCENE_T(enum_val) static constexpr Engine::eSceneType stype = enum_val;
 // Static client provided script type, this should be added to every script in the client
 #define CLIENT_SCRIPT_T(typename, enum_val) static constexpr Engine::eScriptType scptype = enum_val; \
-  static StrongScript Create(const WeakObject& owner) { return boost::make_shared<typename>(owner); }
+  static StrongScript Create(const WeakObjectBase& owner) { return boost::make_shared<typename>(owner); }
 
 // Cloning object declaration macro
 #define OBJ_CLONE_DECL StrongObjectBase cloneImpl() const override;

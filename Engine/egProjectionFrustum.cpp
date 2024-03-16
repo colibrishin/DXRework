@@ -47,7 +47,7 @@ namespace Engine::Manager
 
   void ProjectionFrustum::PostRender(const float& dt) {}
 
-  bool ProjectionFrustum::CheckRender(const WeakObject& object) const
+  bool ProjectionFrustum::CheckRender(const WeakObjectBase& object) const
   {
     if (const auto tr =
       object.lock()->GetComponent<Components::Transform>().lock())

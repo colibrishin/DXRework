@@ -37,10 +37,10 @@ namespace Engine::Manager::Physics
     friend struct SingletonDeleter;
     ~CollisionDetector() override = default;
 
-    void TestCollision(const WeakObject& p_lhs, const WeakObject& p_rhs);
-    void TestSpeculation(const WeakObject & p_lhs, const WeakObject & p_rhs, const float dt);
+    void TestCollision(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs);
+    void TestSpeculation(const WeakObjectBase & p_lhs, const WeakObjectBase & p_rhs, const float dt);
 
-    void DispatchInactiveExit(const WeakObject& lhs);
+    void DispatchInactiveExit(const WeakObjectBase& lhs);
 
     std::mutex m_layer_mask_mutex_;
     bool       m_layer_mask_[LAYER_MAX][LAYER_MAX];

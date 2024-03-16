@@ -10,7 +10,7 @@ namespace Client::Scripts
   public:
 	  CLIENT_SCRIPT_T(HitboxScript, SCRIPT_T_HITBOX)
 
-    explicit HitboxScript(const WeakObject& owner);
+    explicit HitboxScript(const WeakObjectBase& owner);
 
 	~HitboxScript() override;
 
