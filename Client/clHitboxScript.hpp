@@ -12,7 +12,7 @@ namespace Client::Scripts
 
     explicit HitboxScript(const WeakObjectBase& owner);
 
-	~HitboxScript() override;
+	  ~HitboxScript() override;
 
 	  void Hit(const float dmg) const;
     void PreUpdate(const float& dt) override;
@@ -29,6 +29,7 @@ namespace Client::Scripts
 
     HitboxScript();
 
+  private:
     float m_modifier_;
 
   };

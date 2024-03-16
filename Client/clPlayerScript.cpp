@@ -2,6 +2,8 @@
 #include "clPlayerScript.h"
 
 #include "clHitboxScript.hpp"
+#include "clPlayerHitboxScript.h"
+#include "clRIfleScript.h"
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
 #include "egBoneAnimation.h"
@@ -19,9 +21,7 @@ SERIALIZE_IMPL
 (
  Client::Scripts::PlayerScript,
  _ARTAG(_BSTSUPER(Script)) _ARTAG(m_hp_) _ARTAG(m_state_) _ARTAG(m_prev_state_)
- _ARTAG(m_top_view_) _ARTAG(m_cam_id_) _ARTAG(m_shoot_interval)
- _ARTAG(m_bone_initialized_) _ARTAG(m_rifle_initialized_) _ARTAG(m_health_initialized_)
- _ARTAG(m_child_bones_)
+ _ARTAG(m_top_view_) _ARTAG(m_cam_id_)
 )
 
 namespace Client::Scripts
@@ -33,89 +33,26 @@ namespace Client::Scripts
     Script::Initialize();
     SetState(CHAR_STATE_IDLE);
 
-    const auto obj = GetOwner().lock();
-    const auto model = Resources::Shape::Get("CharacterShape").lock();
-
-    const auto mr = GetOwner().lock()->AddComponent<Components::ModelRenderer>().lock();
-    mr->SetMaterial(Resources::Material::Get("Character"));
-
-    const auto tr = obj->AddComponent<Components::Transform>().lock();
-    const auto cldr = obj->AddComponent<Components::Collider>().lock();
-    const auto rb = obj->AddComponent<Components::Rigidbody>().lock();
-    const auto atr = obj->AddComponent<Components::Animator>().lock();
-
-    cldr->SetShape(model);
-    cldr->SetType(BOUNDING_TYPE_BOX);
-    cldr->SetMass(1.0f);
-
-    rb->SetFrictionCoefficient(0.1f);
-    rb->SetGravityOverride(true);
-    rb->SetNoAngular(true);
-
-    atr->SetAnimation(0);
-
-    // Rifle initialization
-    // todo: swappable weapons
-    if (!m_rifle_initialized_)
+    if (const auto& owner = GetOwner().lock())
     {
-      const auto rifle = obj->GetScene().lock()->CreateGameObject<Object>(GetOwner().lock()->GetLayer()).lock();
-      GetOwner().lock()->AddChild(rifle);
+      const auto& tr = owner->AddComponent<Components::Transform>().lock();
+      const auto& mr = owner->AddComponent<Components::ModelRenderer>().lock();
+      const auto& rb = owner->AddComponent<Components::Rigidbody>().lock();
+      const auto& atr = owner->AddComponent<Components::Animator>().lock();
+      const auto& cldr = owner->AddComponent<Components::Collider>().lock();
 
-      const auto rifle_model = Resources::Shape::Get("RifleShape").lock();
+      const auto model = Resources::Shape::Get("CharacterShape").lock();
+      mr->SetMaterial(Resources::Material::Get("Character"));
 
-      const auto cmr = rifle->AddComponent<Components::ModelRenderer>().lock();
+      cldr->SetShape(model);
+      cldr->SetType(BOUNDING_TYPE_BOX);
+      cldr->SetMass(1.0f);
 
-      cmr->SetMaterial(Resources::Material::Get("ColorRifle"));
+      rb->SetFrictionCoefficient(0.1f);
+      rb->SetGravityOverride(true);
+      rb->SetNoAngular(true);
 
-      const auto ctr   = rifle->AddComponent<Components::Transform>().lock();
-      const auto catr  = rifle->AddComponent<Components::Animator>().lock();
-      const auto ccldr = rifle->AddComponent<Components::Collider>().lock();
-
-      ctr->SetSizeAbsolute(true);
-      ctr->SetRotateAbsolute(false);
-      catr->SetAnimation(0);
-      ccldr->SetShape(rifle_model);
-      m_rifle_initialized_ = true;
-    }
-
-    // Bone Initialization
-    if (!m_bone_initialized_) 
-    {
-      const auto bb_map = model->GetBoneBoundingBoxes();
-
-      for (const auto& [idx, box] : bb_map)
-      {
-        const auto child = obj->GetScene().lock()->CreateGameObject<Object>(LAYER_HITBOX).lock();
-        const auto ctr = child->AddComponent<Components::Transform>().lock();
-        child->AddComponent<Components::Collider>();
-        child->AddScript<HitboxScript>();
-
-        ctr->SetLocalPosition(box.Center);
-        ctr->SetLocalScale(Vector3(box.Extents) * 2.f);
-        ctr->SetLocalRotation(box.Orientation);
-
-        child->SetName("Bone" + std::to_string(idx));
-        obj->AddChild(child);
-        m_child_bones_[idx] = child->GetLocalID();
-
-        if (child->GetName() == "Bone5")
-        {
-          m_head_ = child;
-        }
-      }
-
-      m_bone_initialized_ = true;
-    }
-
-    // Health Text
-    if (!m_health_initialized_) 
-    {
-      const auto child = obj->GetScene().lock()->CreateGameObject<Objects::Text>(LAYER_UI, Resources::Font::Get("DefaultFont")).lock();
-      child->SetText("");
-      child->SetPosition({0.f, 64.f});
-      child->SetColor({1.f, 1.f, 1.f, 1.f});
-      child->SetScale(1.f);
-      m_health_initialized_ = true;
+      atr->SetAnimation(0);
     }
 
     // todo: determine local player
@@ -136,9 +73,10 @@ namespace Client::Scripts
 
     if constexpr (Engine::g_debug_observer)
     {
-      if (const auto head = m_head_.lock() && !m_top_view_)
+      if (const auto head = getHead().lock(); 
+          head && !m_top_view_)
       {
-        const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+        const auto head_tr = head->GetComponent<Components::Transform>().lock();
         const auto mouse_y = GetMouseManager().GetMouseYRotation();
         head_tr->SetLocalRotation(mouse_y);
       }
@@ -173,10 +111,7 @@ namespace Client::Scripts
 
   void PlayerScript::PostUpdate(const float& dt) {}
 
-  void PlayerScript::FixedUpdate(const float& dt)
-  {
-    UpdateHitbox();
-  }
+  void PlayerScript::FixedUpdate(const float& dt) {}
 
   void PlayerScript::PreRender(const float& dt) {}
 
@@ -190,26 +125,6 @@ namespace Client::Scripts
     Script::SetActive(active);
   }
 
-  void PlayerScript::OnDeserialized()
-  {
-    Script::OnDeserialized();
-    if (m_bone_initialized_)
-    {
-      const auto& children = GetOwner().lock()->GetChildren();
-
-      for (const auto& child : children)
-      {
-        if (const auto candidate = child.lock())
-        {
-          if (candidate->GetName() == "Bone5")
-          {
-            m_head_ = candidate;
-          }
-        }
-      }
-    }
-  }
-
   void PlayerScript::OnImGui()
   {
     Script::OnImGui();
@@ -217,7 +132,6 @@ namespace Client::Scripts
     Engine::intDisabled("Previous State", m_prev_state_);
     Engine::CheckboxAligned("Top View", m_top_view_);
     Engine::lldDisabled("Camera ID", m_cam_id_);
-    Engine::FloatAligned("Shoot Interval", m_shoot_interval);
     Engine::FloatAligned("HP", m_hp_);
   }
 
@@ -237,13 +151,43 @@ namespace Client::Scripts
     }
   }
 
-  PlayerScript::PlayerScript() : m_state_(CHAR_STATE_IDLE), m_prev_state_(CHAR_STATE_IDLE), m_bone_initialized_(false),
-                                 m_rifle_initialized_(false), m_health_initialized_(false), m_top_view_(false),
-                                 m_cam_id_(0), m_shoot_interval(0.3f), m_hp_(100.f) {}
+  PlayerScript::PlayerScript()
+    : m_state_(CHAR_STATE_IDLE),
+      m_prev_state_(CHAR_STATE_IDLE),
+      m_top_view_(false),
+      m_cam_id_(0),
+      m_hp_(100.f),
+      m_shoot_interval_(0) {}
+
+  WeakObjectBase PlayerScript::getHead() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& script = owner->GetScript<PlayerHitboxScript>().lock())
+      {
+        return script->GetHead();
+      }
+    }
+
+    return {};
+  }
+
+  float PlayerScript::getFireRate() const
+  {
+    if (const auto owner = GetOwner().lock(); owner)
+    {
+      if (const auto script = owner->GetScript<RifleScript>().lock())
+      {
+        return script->GetFireRate();
+      }
+    }
+
+    return FLT_MAX;
+  }
 
   void PlayerScript::Hitscan(const float damage, const float range) const
   {
-    const auto head_tr = m_head_.lock()->GetComponent<Components::Transform>().lock();
+    const auto head_tr = getHead().lock()->GetComponent<Components::Transform>().lock();
     const auto owner = GetOwner().lock();
     const auto lcl = GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto start   = head_tr->GetWorldPosition();
@@ -322,7 +266,7 @@ namespace Client::Scripts
 
   void PlayerScript::MoveCameraToChild(bool active)
   {
-    if (const auto head = m_head_.lock(); 
+    if (const auto head = getHead().lock(); 
         const auto scene = GetOwner().lock()->GetScene().lock())
     {
       const auto cam = scene->GetMainCamera().lock();
@@ -344,7 +288,7 @@ namespace Client::Scripts
   {
     if (m_cam_id_ == g_invalid_id) { return; }
 
-    const auto head = m_head_.lock();
+    const auto head = getHead().lock();
 
     if (!head) { return; }
 
@@ -453,13 +397,15 @@ namespace Client::Scripts
     {
       SetState(CHAR_STATE_ATTACK);
 
-      if (m_shoot_interval < 0.5f)
+      const auto& fire_rate = getFireRate();
+
+      if (m_shoot_interval_ < fire_rate)
       {
-        m_shoot_interval += dt;
+        m_shoot_interval_ += dt;
         return;
       }
 
-      m_shoot_interval = 0.f;
+      m_shoot_interval_ = 0.f;
       const auto tr    =
         GetOwner().lock()->GetComponent<Components::Transform>().lock();
 
@@ -515,77 +461,12 @@ namespace Client::Scripts
 
       for (const auto& child : children)
       {
-        if (child &&
-            child->Contains
-            (GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition())) { q.push(child); }
-      }
-    }
-  }
-
-  void PlayerScript::UpdateHitbox()
-  {
-    const auto obj = GetOwner().lock();
-    const auto cl  = obj->GetComponent<Components::Collider>().lock();
-    const auto mr  = obj->GetComponent<Components::ModelRenderer>().lock();
-    const auto atr = obj->GetComponent<Components::Animator>().lock();
-
-    if (!cl || !mr || !atr) { return; }
-
-    const auto mtl = mr->GetMaterial().lock();
-
-    if (!mtl) { return; }
-
-    if (const auto anim = mtl->GetResource<Resources::BoneAnimation>(atr->GetAnimation()).lock())
-    {
-      auto       deform = anim->GetFrameAnimation(atr->GetFrame());
-      const auto rb     = obj->GetComponent<Components::Rigidbody>().lock();
-      Vector3    min    = {FLT_MAX, FLT_MAX, FLT_MAX};
-      Vector3    max    = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
-
-      for (const auto& [idx, id] : m_child_bones_)
-      {
-        const auto child = obj->GetChild(id).lock();
-
-        const auto ctr = child->GetComponent<Components::Transform>().lock();
-        ctr->SetAnimationMatrix(deform[idx]);
-
-        static const std::vector<Vector3> stock_vertices
+        if (child && child->Contains(
+            GetOwner().lock()->GetComponent<Components::Transform>().lock()->GetWorldPosition()))
         {
-          {0.5f, 0.5f, 0.5f},
-          {0.5f, -0.5f, 0.5f},
-          {-0.5f, -0.5f, 0.5f},
-          {-0.5f, 0.5f, 0.5f},
-          {0.5f, 0.5f, -0.5f},
-          {0.5f, -0.5f, -0.5f},
-          {-0.5f, -0.5f, -0.5f},
-          {-0.5f, 0.5f, -0.5f},
-        };
-
-        std::vector<Vector3> out_vertices;
-        out_vertices.resize(stock_vertices.size());
-
-        XMVector3TransformCoordStream
-          (
-           out_vertices.data(),
-           sizeof(Vector3),
-           stock_vertices.data(),
-           sizeof(Vector3),
-           stock_vertices.size(),
-           ctr->GetLocalMatrix()
-          );
-
-        for (const auto& v : out_vertices)
-        {
-          min = Vector3::Min(min, v);
-          max = Vector3::Max(max, v);
+          q.push(child);
         }
       }
-
-      BoundingOrientedBox new_obb;
-      BoundingBox         bb;
-      BoundingBox::CreateFromPoints(bb, min, max);
-      BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
-      cl->SetBoundingBox(new_obb);
     }
   }
 }

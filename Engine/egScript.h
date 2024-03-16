@@ -1,11 +1,13 @@
 #pragma once
 #include "egCommon.hpp"
+#include "egRenderable.h"
 
 namespace Engine
 {
   class Script : public Abstract::Renderable
   {
   public:
+    virtual  ~Script() = default;
     explicit Script(eScriptType type, const WeakObjectBase& owner);
 
     virtual void       SetActive(bool active);
@@ -14,8 +16,6 @@ namespace Engine
     eScriptType GetScriptType() const { return m_type_; }
 
     [[nodiscard]] StrongScript Clone(const WeakObjectBase& owner) const;
-
-    void OnSerialized() override;
 
     using ScriptFactoryFunction = std::function<StrongScript(const WeakObjectBase&)>;
 
