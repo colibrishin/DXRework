@@ -643,6 +643,7 @@ namespace Engine::Abstract
 
     // Clone children
     cloned->m_children_.clear();
+    cloned->m_children_cache_.clear();
 
     for (const auto& child : m_children_cache_ | std::views::values)
     {
