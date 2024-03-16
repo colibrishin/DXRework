@@ -5,7 +5,14 @@
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-SERIALIZE_IMPL(Engine::Abstract::Entity, _ARTAG(m_name_) _ARTAG(m_meta_str_))
+SERIALIZE_IMPL
+(
+	Engine::Abstract::Entity, 
+	_ARTAG(m_name_) 
+	_ARTAG(m_meta_str_)
+  _ARTAG(m_b_garbage_)
+  _ARTAG(m_b_initialized_)
+)
 
 void Engine::Abstract::Entity::SetName(const EntityName& name) { m_name_ = name; }
 
@@ -42,7 +49,6 @@ void Engine::Abstract::Entity::OnSerialized()
 
 void Engine::Abstract::Entity::OnDeserialized()
 {
-  m_b_initialized_ = false;
   m_meta_path_ = m_meta_str_;
 }
 
