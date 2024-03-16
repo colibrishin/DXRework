@@ -131,10 +131,15 @@ namespace Client::Scripts
       for (const auto& child : GetOwner().lock()->GetChildren())
       {
         if (const auto locked = child.lock(); 
-            locked && locked->GetName().find("Bone") != std::string::npos)
+            locked)
         {
+          const auto& name = locked->GetName();
+          const auto pos = name.find("Bone");
+
+          if (pos == std::string::npos) { continue; }
+
           const auto ctr = locked->GetComponent<Components::Transform>().lock();
-          const auto idx = std::stoi(locked->GetName().substr(4));
+          const auto idx = std::stoi(name.substr(4));
 
           ctr->SetAnimationMatrix(deform[idx]);
 
