@@ -18,7 +18,6 @@ namespace Engine::Resources
   {
     // Clone object and remove from scene for isolation.
     const auto& cloned = object->Clone(false);
-    cloned->GetScene().lock()->RemoveGameObject(cloned->GetID(), object->GetLayer());
     cloned->SetName(object->GetName());
     m_object_ = cloned;
 
