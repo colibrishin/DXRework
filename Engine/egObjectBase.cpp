@@ -97,6 +97,20 @@ namespace Engine::Abstract
     return m_parent_;
   }
 
+  WeakObjectBase ObjectBase::GetChild(const std::string& name) const
+  {
+    for (const auto& child : m_children_cache_ | std::views::values)
+    {
+      if (const auto locked = child.lock(); 
+          locked && locked->GetName() == name)
+      {
+        return locked;
+      }
+    }
+
+    return {};
+  }
+
   WeakObjectBase ObjectBase::GetChild(const LocalActorID id) const
   {
     INVALID_ID_CHECK_WEAK_RETURN(id)
