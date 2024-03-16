@@ -137,7 +137,13 @@ namespace Engine::Abstract
            m_children_.push_back(child->GetLocalID());
            m_children_cache_.insert({child->GetLocalID(), child});
 
-           if (child->m_parent_id_ != g_invalid_id) { child->m_parent_.lock()->DetachChild(child->GetLocalID()); }
+           if (child->m_parent_id_ != g_invalid_id)
+           {
+             if (const auto& parent = child->m_parent_.lock())
+             {
+               parent->DetachChild(child->GetLocalID()); 
+             }
+           }
 
            child->m_parent_id_ = GetLocalID();
            child->m_parent_    = GetSharedPtr<ObjectBase>();
