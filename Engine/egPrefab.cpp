@@ -58,11 +58,25 @@ namespace Engine::Resources
   void Prefab::OnDeserialized()
   {
     Resource::OnDeserialized();
+
+    m_object_->OnDeserialized();
+
+    for (const auto& child : m_children_)
+    {
+      child->OnDeserialized();
+    }
   }
 
   void Prefab::OnSerialized()
   {
     Resource::OnSerialized();
+
+    m_object_->OnSerialized();
+
+    for (const auto& child : m_children_)
+    {
+      child->OnSerialized();
+    }
   }
 
   void Prefab::OnImGui()
@@ -71,7 +85,7 @@ namespace Engine::Resources
 
     static int selected = 0;
 
-    ImGui::Combo("Layer", &selected, g_layer_type_str, std::size(g_layer_type_str));
+    ImGui::Combo("Layer", &selected, g_layer_type_str, static_cast<int>(std::size(g_layer_type_str)));
 
     if (ImGui::Button("Extract"))
     {
