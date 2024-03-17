@@ -187,7 +187,11 @@ namespace Client::Scripts
 
   void PlayerScript::Hitscan(const float damage, const float range) const
   {
-    const auto head_tr = getHead().lock()->GetComponent<Components::Transform>().lock();
+    const auto& head = getHead().lock();
+
+    if (!head) { return; }
+
+    const auto head_tr = head->GetComponent<Components::Transform>().lock();
     const auto owner = GetOwner().lock();
     const auto lcl = GetOwner().lock()->GetComponent<Components::Collider>().lock();
     const auto start   = head_tr->GetWorldPosition();
