@@ -634,6 +634,12 @@ namespace Engine::Manager::Graphics
        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
        1.f, 0
       );
+
+    m_context_->OMSetRenderTargets
+      (
+       1, s_render_target_view_.GetAddressOf(),
+       s_depth_stencil_view_.Get()
+      );
   }
 
   void D3Device::Present() const
