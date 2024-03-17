@@ -20,9 +20,9 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
+        m_shadow_map_mask_("", {}),
         m_current_shadow_maps_{} {}
 
-    void InitializeViewport();
     void Initialize() override;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
@@ -42,9 +42,11 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     ~ShadowManager() override;
 
+    void InitializeViewport();
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
-    void BuildShadowMap(const float dt) const;
+
+    void BuildShadowMap(const float dt);
     void ClearShadowMaps();
 
     static void CreateSubfrusta(
@@ -69,6 +71,7 @@ namespace Engine::Manager::Graphics
     StructuredBuffer<SBs::LightVPSB> m_sb_light_vps_buffer_;
 
     D3D11_VIEWPORT m_viewport_;
+    Resources::Texture2D m_shadow_map_mask_;
 
     // todo: refactoring
     ID3D11ShaderResourceView*  m_current_shadow_maps_[g_max_lights];
