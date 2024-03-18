@@ -64,6 +64,11 @@ namespace Engine::Manager
           m_b_imgui_load_font_dialog_ = true;
         }
 
+        if (ImGui::MenuItem("Atlas"))
+        {
+          m_b_imgui_load_atlas_dialog_ = true;
+        }
+
         ImGui::EndMenu();
       }
 
@@ -82,6 +87,7 @@ namespace Engine::Manager
     OpenNewSimpleDialog<Resources::Sound>(m_b_imgui_load_sound_dialog_);
     OpenNewSimpleDialog<Resources::Font>(m_b_imgui_load_font_dialog_);
     OpenNewShaderDialog();
+    OpenNewAtlasDialog();
 
     boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
 
@@ -191,7 +197,7 @@ namespace Engine::Manager
   {
     if (m_b_imgui_load_shader_dialog_)
     {
-      if (ImGui::Begin("New Shader", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      if (ImGui::Begin("New Shader", &m_b_imgui_load_shader_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
       {
         static char name_buffer[256] = {};
         static char path_buffer[256] = {};
@@ -275,6 +281,56 @@ namespace Engine::Manager
           m_b_imgui_load_shader_dialog_ = false;
           std::memset(name_buffer, 0, 256);
           std::memset(path_buffer, 0, 256);;
+        }
+
+        ImGui::End();
+      }
+    }
+  }
+
+  void ResourceManager::OpenNewAtlasDialog()
+  {
+    if (m_b_imgui_load_atlas_dialog_)
+    {
+      const std::string title = "New Atlas";
+
+      if (ImGui::Begin(title.c_str(), &m_b_imgui_load_atlas_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        static char name_buffer[256] = {};
+        static char tex_path_buffer[256] = {};
+        static char xml_path_buffer[256] = {};
+
+        ImGui::InputText("Name", name_buffer, 256);
+        ImGui::InputText("Texture Path", tex_path_buffer, 256);
+        ImGui::InputText("XML Path", xml_path_buffer, 256);
+
+        if (ImGui::Button("Load"))
+        {
+          try
+          {
+            Resources::AtlasTexture::Create(name_buffer, tex_path_buffer);
+            Resources::AtlasAnimation::Create(name_buffer, xml_path_buffer);
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+            m_b_imgui_load_atlas_dialog_ = false;
+          }
+          catch (const std::exception& e)
+          {
+            ImGui::SameLine();
+            ImGui::Text(e.what());
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+          }
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+          std::memset(name_buffer, 0, 256);
+          std::memset(tex_path_buffer, 0, 256);
+          std::memset(xml_path_buffer, 0, 256);
+          m_b_imgui_load_atlas_dialog_ = false;
         }
 
         ImGui::End();

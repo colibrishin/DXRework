@@ -173,6 +173,7 @@ namespace Engine::Manager
     ~ResourceManager() override = default;
 
     void OpenNewShaderDialog();
+    void OpenNewAtlasDialog();
 
     template <typename T, typename... Args>
     void OpenNewSimpleDialog(bool& flag, Args&&... args)
@@ -221,12 +222,14 @@ namespace Engine::Manager
 
     bool m_b_imgui_load_texture_dialog_ = false;
     bool m_b_imgui_load_shape_dialog_   = false;
-    bool m_b_imgui_load_sound_dialog_  = false;
+    bool m_b_imgui_load_sound_dialog_   = false;
     bool m_b_imgui_load_shader_dialog_  = false;
-    bool m_b_imgui_load_font_dialog_   = false;
+    bool m_b_imgui_load_font_dialog_    = false;
+    bool m_b_imgui_load_atlas_dialog_   = false;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
     std::map<LocalResourceID, WeakResource>           m_resource_cache_;
     std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
+    
   };
 } // namespace Engine::Manager
