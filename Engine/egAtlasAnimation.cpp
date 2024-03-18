@@ -12,7 +12,7 @@ SERIALIZE_IMPL
 namespace Engine::Resources
 {
   AtlasAnimation::AtlasAnimation(const AtlasAnimationPrimitive& primitive)
-    : m_primitive_() {}
+    : m_primitive_(primitive) {}
 
   void AtlasAnimation::PreUpdate(const float& dt) { BaseAnimation::PreUpdate(dt); }
 
@@ -57,7 +57,7 @@ namespace Engine::Resources
       for (size_t i = 0; i < frame_count; ++i)
       {
         const auto& [X, Y, Width, Height, Duration] = m_primitive_.GetFrame(i);
-        ImGui::Text("Frame %d: %lld, %lld, %lld, %lld, %lld", i, X, Y, Width, Height, Duration);
+        ImGui::Text("Frame %d: %lld, %lld, %lld, %lld, %f", i, X, Y, Width, Height, Duration);
       }
 
       ImGui::EndListBox();
@@ -90,8 +90,8 @@ namespace Engine::Resources
 
     const UINT width = anim_tag.attribute("width").as_uint();
     const UINT height = anim_tag.attribute("height").as_uint();
-    const UINT unit_width = anim_tag.attribute("unit_width").as_uint();
-    const UINT unit_height = anim_tag.attribute("unit_height").as_uint();
+    const UINT unit_width = anim_tag.attribute("actualWidth").as_uint();
+    const UINT unit_height = anim_tag.attribute("actualHeight").as_uint();
 
     primitive.SetTextureHeight(width);
     primitive.SetTextureWidth(height);
@@ -106,7 +106,7 @@ namespace Engine::Resources
       // todo: proper conversion
       constexpr UINT tick = DX::StepTimer::TicksPerSecond;
 
-      const float duration = static_cast<float>(child.attribute("duration").as_uint() / tick);
+      const float duration = static_cast<float>(child.attribute("duration").as_uint()) / tick;
       const auto rect = child.child("Rectangle");
 
       const UINT x = rect.attribute("x").as_uint();
