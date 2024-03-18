@@ -32,6 +32,28 @@ namespace Engine::Manager::Graphics
     m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
     m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
 
+    // Render target for shadow map mask.
+    m_shadow_map_mask_ = Resources::Texture2D
+      (
+       "",
+       {
+         .Width = g_window_width,
+         .Height = g_window_height,
+         .Depth = 0,
+         .ArraySize = 1,
+         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+         .CPUAccessFlags = 0,
+         .BindFlags = D3D11_BIND_RENDER_TARGET,
+         .MipsLevel = 1,
+         .MiscFlags = 0,
+         .Usage = D3D11_USAGE_DEFAULT,
+         .SampleDesc = {1, 0}
+       }
+      );
+
+    m_shadow_map_mask_.Load();
+    m_shadow_map_mask_.Initialize();
+
     InitializeViewport();
     InitializeProcessor();
   }
@@ -207,8 +229,13 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(const float dt) const
+  void ShadowManager::BuildShadowMap(const float dt)
   {
+    // Will not clear the texture, since there is no usage for now. this behaves as "ground" for evading warnings.
+    m_shadow_map_mask_.BindAs(D3D11_BIND_RENDER_TARGET, 0, 0, SHADER_UNKNOWN);
+    m_shadow_map_mask_.PreRender(dt);
+    m_shadow_map_mask_.Render(dt);
+
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
@@ -220,6 +247,8 @@ namespace Engine::Manager::Graphics
          return true;
        }
       );
+
+    m_shadow_map_mask_.PostRender(dt);
   }
 
   void ShadowManager::CreateSubfrusta(

@@ -163,11 +163,12 @@ namespace Engine::Manager
     GetPhysicsManager().PreRender(dt);
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
+
+    GetD3Device().PreRender(dt);
+    GetRenderPipeline().PreRender(dt);
     GetRenderer().PreRender(dt);
     GetShadowManager().PreRender(dt);
     GetDebugger().PreRender(dt);
-    GetRenderPipeline().PreRender(dt);
-    GetD3Device().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -183,11 +184,13 @@ namespace Engine::Manager
     GetPhysicsManager().Render(dt);
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
+
+    GetToolkitAPI().Render(dt);
+    GetD3Device().Render(dt);
+    GetRenderPipeline().Render(dt);
     GetRenderer().Render(dt);
     GetShadowManager().Render(dt);
     GetDebugger().Render(dt);
-    GetToolkitAPI().Render(dt);
-    GetD3Device().Render(dt);
   }
 
   void Application::PostRender(const float& dt)

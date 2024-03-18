@@ -19,7 +19,9 @@
 #include "clHpTextScript.h"
 #include "clTriangleMesh.hpp"
 #include "clParticleCompute.h"
+#include "clPlayerHitboxScript.h"
 #include "clPlayerScript.h"
+#include "clRIfleScript.h"
 #include "clShadowIntersectionScript.h"
 #include "egCollisionDetector.h"
 #include "egComputeShader.h"
@@ -83,7 +85,7 @@ namespace Client
   void InitializeModel()
   {
     Resources::Shape::Create("BobShape", "./bob_lamp_update_export.fbx");
-    //Resources::Shape::Create("CharacterShape", "./Character.fbx");
+    Resources::Shape::Create("CharacterShape", "./Character.fbx");
     Resources::Shape::Create("RifleShape", "./Rifle.fbx");
     Resources::Shape::Create("PlayerShape", "./player.obj");
     Resources::Shape::Create("MissileShape", "./Rocket.fbx");
@@ -152,7 +154,7 @@ namespace Client
       mtr->SetResource<Resources::Shape>("MissileShape");
     }
 
-    /*{
+    {
       const auto mtr = Resources::Material::Create("Character", "");
       mtr->SetResource<Resources::Shader>("color");
 
@@ -162,7 +164,7 @@ namespace Client
       }
 
       mtr->SetResource<Resources::Shape>("CharacterShape");
-    }*/
+    }
 
     {
       const auto mtr = Resources::Material::Create("ThunderSkybox", "");
@@ -208,6 +210,8 @@ namespace Client
     Script::Register<Scripts::PlayerScript>();
     Script::Register<Scripts::HpTextScript>();
     Script::Register<Scripts::ShadowIntersectionScript>();
+    Script::Register<Scripts::RifleScript>();
+    Script::Register<Scripts::PlayerHitboxScript>();
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 
     // todo: refactor

@@ -14,6 +14,7 @@ SERIALIZE_IMPL
 namespace Engine::Abstract
 {
   Actor::Actor(const Actor& other)
+    : Renderable(other)
   {
     m_assigned_scene_ = other.m_assigned_scene_;
     m_layer_          = other.m_layer_;

@@ -103,6 +103,7 @@ namespace Engine
     TASK_INIT_SCENE,
     TASK_REM_SCENE,
     TASK_ACTIVE_SCENE,
+    TASK_SCRIPT_EVENT,
     TASK_MAX
   };
 

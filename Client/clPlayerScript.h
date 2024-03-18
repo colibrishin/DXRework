@@ -14,12 +14,9 @@ namespace Client::Scripts
       : Script(SCRIPT_T_PLAYER, owner),
         m_state_(CHAR_STATE_IDLE),
         m_prev_state_(CHAR_STATE_IDLE),
-        m_bone_initialized_(false),
-        m_rifle_initialized_(false),
-        m_health_initialized_(false),
         m_top_view_(false),
         m_cam_id_(0),
-        m_shoot_interval(0.3f),
+        m_shoot_interval_(0.f),
         m_hp_(100.f) {}
 
 	  ~PlayerScript() override = default;
@@ -35,7 +32,6 @@ namespace Client::Scripts
 
     void SetActive(bool active) override;
 
-    void OnDeserialized() override;
     void OnImGui() override;
 
     UINT GetHealth() const;
@@ -46,6 +42,9 @@ namespace Client::Scripts
     SCRIPT_CLONE_DECL
 
     PlayerScript();
+
+    [[nodiscard]] __forceinline WeakObjectBase getHead() const;
+    [[nodiscard]] __forceinline float getFireRate() const;
 
     void Hitscan(const float damage, const float range) const;
 
@@ -59,24 +58,17 @@ namespace Client::Scripts
     void CheckJump(const boost::shared_ptr<Components::Rigidbody>& rb);
     void CheckMove(const boost::shared_ptr<Components::Rigidbody>& rb);
     void CheckAttack(const float& dt);
-    void CheckGround() const;
+    void CheckGround() const;    
 
-    void UpdateHitbox();
-
+  private:
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
 
-    bool m_bone_initialized_;
-    bool m_rifle_initialized_;
-    bool m_health_initialized_;
-
-    std::map<UINT, LocalActorID> m_child_bones_;
-
     bool         m_top_view_;
-    WeakObjectBase   m_head_;
     LocalActorID m_cam_id_;
-    float        m_shoot_interval;
+
     float        m_hp_;
+    float        m_shoot_interval_;
   };
 }
 
