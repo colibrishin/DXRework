@@ -81,12 +81,13 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_CACHE_COMPONENT,
-           {component},
-           [this](const std::vector<std::any>& params, const float)
+           {GetSharedPtr<Scene>(), component},
+           [](const std::vector<std::any>& params, const float)
            {
-             const auto& component = std::any_cast<StrongComponent>(params[0]);
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& component = std::any_cast<StrongComponent>(params[1]);
 
-             addCacheComponentImpl(component, component->GetComponentType());
+             scene->addCacheComponentImpl(component, component->GetComponentType());
            }
           );
       }
@@ -95,12 +96,13 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_CACHE_COMPONENT,
-           {component},
-           [this](const std::vector<std::any>& params, const float)
+           {GetSharedPtr<Scene>(), component},
+           [](const std::vector<std::any>& params, const float)
            {
-             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
 
-             addCacheComponentImpl(component, which_component<T>::value);
+             scene->addCacheComponentImpl(component, which_component<T>::value);
            }
           );
       }
@@ -116,12 +118,13 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_UNCACHE_COMPONENT,
-           {component},
-           [this](const std::vector<std::any>& params, const float)
+           {GetSharedPtr<Scene>(), component},
+           [](const std::vector<std::any>& params, const float)
            {
-             const auto& component = std::any_cast<StrongComponent>(params[0]);
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& component = std::any_cast<StrongComponent>(params[1]);
 
-             removeCacheComponentImpl(component, component->GetComponentType());
+             scene->removeCacheComponentImpl(component, component->GetComponentType());
            }
           );
       }
@@ -130,12 +133,13 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_UNCACHE_COMPONENT,
-           {component},
-           [this](const std::vector<std::any>& params, const float)
+           {GetSharedPtr<Scene>(), component},
+           [](const std::vector<std::any>& params, const float)
            {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
              const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
 
-             removeCacheComponentImpl(component, which_component<T>::value);
+             scene->removeCacheComponentImpl(component, which_component<T>::value);
            }
           );
       }
