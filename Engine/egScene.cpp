@@ -594,6 +594,34 @@ namespace Engine
             ImGui::TreePop();
             ImGui::Separator();
           }
+
+          if (ImGui::BeginDragDropTarget())
+          {
+            if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
+            {
+              if (const auto& obj = static_cast<WeakObjectBase*>(payload->Data)->lock())
+              {
+                if (obj->GetLayer() == i) { continue; }
+
+                GetTaskScheduler().AddTask
+                  (
+                   TASK_CHANGE_LAYER,
+                   {GetSharedPtr<Scene>(), obj->GetSharedPtr<Abstract::ObjectBase>(), i},
+                   [this, i](const std::vector<std::any>& args, const float)
+                   {
+                     const auto scene = std::any_cast<StrongScene>(args[0]);
+                     const auto obj   = std::any_cast<StrongObjectBase>(args[1]);
+                     const auto layer = std::any_cast<int>(args[2]);
+
+                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+                     (*scene)[layer]->AddGameObject(obj);
+                     obj->SetLayer(static_cast<eLayerType>(layer));
+                   }
+                  );
+              }
+            }
+            ImGui::EndDragDropTarget();
+            }
         }
         ImGui::EndListBox();
       }
