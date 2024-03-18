@@ -419,6 +419,11 @@ namespace Engine::Resources
          )
         );
 
+      if (!std::filesystem::exists(folder))
+      {
+        std::filesystem::create_directories(folder);
+      }
+
       DX::ThrowIfFailed
         (
          DirectX::SaveToDDSFile

@@ -9,6 +9,8 @@ namespace Engine
     SCRIPT_T_PLAYER,
     SCRIPT_T_HP_TEXT,
     SCRIPT_T_SHADOW,
+    SCRIPT_T_PLAYER_HITBOX,
+    SCRIPT_T_RIFLE,
   };
 
   enum eClientSBUAVType : UINT

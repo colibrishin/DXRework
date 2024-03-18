@@ -21,6 +21,7 @@ namespace Engine::Resources
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
+    void OnDeserialized() override;
     void OnSerialized() override;
 
     void  SetTicksPerSecond(const float& ticks_per_second);

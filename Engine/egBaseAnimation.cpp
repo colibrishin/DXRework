@@ -34,7 +34,9 @@ namespace Engine::Resources
 
   void BaseAnimation::PostUpdate(const float& dt) {}
 
-  void BaseAnimation::OnSerialized() {}
+  void BaseAnimation::OnDeserialized() { Resource::OnDeserialized(); }
+
+  void BaseAnimation::OnSerialized() { Resource::OnSerialized(); }
 
   void BaseAnimation::SetTicksPerSecond(const float& ticks_per_second) { m_ticks_per_second_ = ticks_per_second; }
 

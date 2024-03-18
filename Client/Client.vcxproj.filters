@@ -72,6 +72,12 @@
     <Filter Include="Resource\Texture\ShadowMaskTexture">
       <UniqueIdentifier>{8b6a23f1-b34e-4ff4-ba0a-34f8fb4081e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Script\PlayerHitboxScript">
+      <UniqueIdentifier>{75925318-c30b-444d-a567-d01ca746d799}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script\RifleScript">
+      <UniqueIdentifier>{46772bb8-6410-4cc9-a372-912eded7e3f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -113,6 +119,12 @@
     <ClInclude Include="clShadowMaskTexture.h">
       <Filter>Resource\Texture\ShadowMaskTexture</Filter>
     </ClInclude>
+    <ClInclude Include="clPlayerHitboxScript.h">
+      <Filter>Script\PlayerHitboxScript</Filter>
+    </ClInclude>
+    <ClInclude Include="clRIfleScript.h">
+      <Filter>Script\RifleScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -138,6 +150,12 @@
     </ClCompile>
     <ClCompile Include="clIntersectionCompute.cpp">
       <Filter>Resource\ComputeShader\IntersectionCompute</Filter>
+    </ClCompile>
+    <ClCompile Include="clPlayerHitboxScript.cpp">
+      <Filter>Script\PlayerHitboxScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clRifleScript.cpp">
+      <Filter>Script\RifleScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

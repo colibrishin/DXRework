@@ -50,7 +50,6 @@ namespace Engine::Abstract
       return component;
     }
 
-  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> AddScript(const std::string& name = "")
     {
@@ -68,7 +67,6 @@ namespace Engine::Abstract
       return script;
     }
 
-  public:
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
     boost::weak_ptr<T> GetScript(const std::string& name = "")
     {
@@ -135,6 +133,7 @@ namespace Engine::Abstract
     eDefObjectType GetObjectType() const;
 
     WeakObjectBase              GetParent() const;
+    WeakObjectBase              GetChild(const std::string& name) const;
     WeakObjectBase              GetChild(LocalActorID id) const;
     std::vector<WeakObjectBase> GetChildren() const;
 

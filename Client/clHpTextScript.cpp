@@ -13,6 +13,20 @@ namespace Client::Scripts
 
   HpTextScript::HpTextScript() = default;
 
+  void HpTextScript::Initialize()
+  {
+    Script::Initialize();
+
+    const auto& obj   = GetOwner().lock();
+    const auto  child = obj->GetScene().lock()->CreateGameObject<Objects::Text>
+      (LAYER_UI, Resources::Font::Get("DefaultFont")).lock();
+
+    child->SetText("");
+    child->SetPosition({0.f, 64.f});
+    child->SetColor({1.f, 1.f, 1.f, 1.f});
+    child->SetScale(1.f);
+  }
+
   void HpTextScript::PreUpdate(const float& dt) {}
 
   void HpTextScript::Update(const float& dt)
