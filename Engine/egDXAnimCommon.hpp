@@ -193,9 +193,6 @@ namespace Engine::Graphics
 
     void Append(const AtlasFramePrimitive& frame)
     {
-      if (frame.Width > m_unit_width_ || frame.Height > m_unit_height_) { return; }
-      if (frame.X + frame.Width > m_texture_width_ || frame.Y + frame.Height > m_texture_height_) { return; }
-
       m_frames_.push_back(frame);
       m_total_duration_ += frame.Duration;
     }
@@ -255,13 +252,13 @@ namespace Engine::Graphics
   private:
     friend class boost::serialization::access;
 
-    UINT m_texture_width_;
-    UINT m_texture_height_;
+    UINT m_texture_width_ = 0;
+    UINT m_texture_height_ = 0;
 
-    UINT m_unit_width_;
-    UINT m_unit_height_;
+    UINT m_unit_width_ = 0;
+    UINT m_unit_height_ = 0;
 
-    float m_total_duration_;
+    float m_total_duration_ = 0;
 
     std::vector<AtlasFramePrimitive> m_frames_;
 
