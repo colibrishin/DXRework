@@ -512,8 +512,6 @@ namespace Engine
         {
           obj.lock()->m_parent_ = parent;
         }
-
-        obj.lock()->OnDeserialized();
       }
     }
 
