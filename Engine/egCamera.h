@@ -11,7 +11,7 @@ namespace Engine::Objects
 
     Camera()
       : ObjectBase(DEF_OBJ_T_CAMERA),
-        m_fov_(90.0f),
+        m_fov_(20.0f),
         m_b_orthogonal_(false),
         m_b_fixed_up_(true) {}
 
