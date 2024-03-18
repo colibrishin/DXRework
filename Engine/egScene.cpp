@@ -40,8 +40,13 @@ namespace Engine
     GetTaskScheduler().AddTask
       (
        TASK_INIT_SCENE,
-       {},
-       [this](const std::vector<std::any>&, const float) { initializeFinalize(); }
+       {GetSharedPtr<Scene>()},
+       [](const std::vector<std::any>& params, const float)
+       {
+         const auto& scene = std::any_cast<StrongScene>(params[0]);
+
+         scene->initializeFinalize();
+       }
       );
   }
 
@@ -100,13 +105,14 @@ namespace Engine
     GetTaskScheduler().AddTask
       (
        TASK_ADD_OBJ,
-       {obj, layer}, // keep the object alive, scene does not own the object yet.
-       [this](const std::vector<std::any>& params, const float dt)
+       {GetSharedPtr<Scene>(), obj, layer}, // keep the object alive, scene does not own the object yet.
+       [](const std::vector<std::any>& params, const float dt)
        {
-         const auto obj   = std::any_cast<StrongObjectBase>(params[0]);
-         const auto layer = std::any_cast<eLayerType>(params[1]);
+         const auto& scene = std::any_cast<StrongScene>(params[0]);
+         const auto& obj   = std::any_cast<StrongObjectBase>(params[1]);
+         const auto& layer = std::any_cast<eLayerType>(params[2]);
 
-         AddObjectFinalize(layer, obj);
+         scene->AddObjectFinalize(layer, obj);
        }
       );
   }
@@ -130,7 +136,10 @@ namespace Engine
       throw std::logic_error("Observer object can only be added to UI layer");
     }
 
-    if (obj->GetObjectType() == DEF_OBJ_T_LIGHT) { GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>()); }
+    if (obj->GetObjectType() == DEF_OBJ_T_LIGHT)
+    {
+      GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
+    }
   }
 
   void Scene::RemoveObjectFinalize(const GlobalEntityID id, eLayerType layer)
@@ -196,6 +205,14 @@ namespace Engine
   {
     if (const auto scene = ptr_scene.lock())
     {
+      for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
+      {
+        if (const auto locked = light.lock())
+        {
+          GetShadowManager().UnregisterLight(locked->GetSharedPtr<Objects::Light>());
+        }
+      }
+
       m_b_scene_imgui_open_ = scene->m_b_scene_imgui_open_;
       m_main_camera_local_id_ = scene->m_main_camera_local_id_;
       m_layers = scene->m_layers;
@@ -203,8 +220,18 @@ namespace Engine
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
 
+      for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
+      {
+        if (const auto locked = light.lock())
+        {
+          GetShadowManager().RegisterLight(locked->GetSharedPtr<Objects::Light>());
+        }
+      }
+
+      m_object_position_tree_.Clear();
       m_cached_objects_.clear();
       m_cached_components_.clear();
+      m_object_position_tree_.Clear();
 
       for (const auto& layer : m_layers)
       {
@@ -212,16 +239,19 @@ namespace Engine
         {
           if (const auto locked = obj.lock())
           {
-            m_cached_objects_.emplace(locked->GetID(), obj);
-
-            locked->SetScene(GetSharedPtr<Scene>());
+            m_cached_objects_.emplace(locked->GetID(), locked);
 
             for (const auto& comp : locked->GetAllComponents())
             {
-              AddCacheComponent(comp.lock());
+              if (const auto locked_comp = comp.lock())
+              {
+                AddCacheComponent(locked_comp);
+              }
             }
 
             const auto& children = locked->m_children_;
+
+            locked->m_children_cache_.clear();
 
             for (const auto& child_id : children)
             {
@@ -239,41 +269,34 @@ namespace Engine
         }
       }
 
-      m_object_position_tree_.Clear();
-
-      for (const auto obj : m_cached_objects_ | std::views::values)
-      {
-        if (const auto locked = obj.lock())
-        {
-          if (const auto tr = locked->GetComponent<Components::Transform>().lock())
-          {
-            m_object_position_tree_.Insert(locked);
-          }
-        }
-      }
-
       m_object_position_tree_.Update();
     }
   }
 
   void Scene::RemoveGameObject(const GlobalEntityID id, eLayerType layer)
   {
-    ConcurrentWeakObjGlobalMap::const_accessor acc;
+    {
+      ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-    if (!m_cached_objects_.find(acc, id)) { return; }
+      if (!m_cached_objects_.find(acc, id)) { return; }
+      if (!m_layers[layer]->GetGameObject(id).lock()) { return; }
 
-    if (!m_layers[layer]->GetGameObject(id).lock()) { return; }
+      // This object is already flagged to be deleted.
+      if (acc->second.lock()->IsGarbage()) { return; }
 
-    // This object is already flagged to be deleted.
-    if (acc->second.lock()->IsGarbage()) { return; }
-
-    acc->second.lock()->SetGarbage(true);
+      acc->second.lock()->SetGarbage(true);
+    }
 
     GetTaskScheduler().AddTask
       (
        TASK_REM_OBJ,
-       {},
-       [this, id, layer](const std::vector<std::any>&, const float) { RemoveObjectFinalize(id, layer); }
+       {GetSharedPtr<Scene>()},
+       [id, layer](const std::vector<std::any>& param, const float)
+       {
+         const auto& scene = std::any_cast<StrongScene>(param[0]);
+
+         scene->RemoveObjectFinalize(id, layer);
+       }
       );
   }
 
@@ -306,27 +329,32 @@ namespace Engine
 
   void Scene::addCacheComponentImpl(const StrongComponent& component, const eComponentType type)
   {
-    ConcurrentWeakObjGlobalMap::const_accessor acc;
+    if (!component->GetOwner().lock()) { return; }
 
-    if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+    if (ConcurrentWeakObjGlobalMap::const_accessor acc; 
+        m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
     {
-      ConcurrentWeakComRootMap::accessor comp_acc;
-
-      if (m_cached_components_.find(comp_acc, type))
+      if (ConcurrentWeakComRootMap::accessor comp_acc; 
+          m_cached_components_.find(comp_acc, type))
       {
-        comp_acc->second.emplace
-          (component->GetID(), component);
+        if (ConcurrentWeakComMap::const_accessor comp_map_acc; 
+            comp_acc->second.find(comp_map_acc, component->GetID()))
+        {
+          return;
+        }
+
+        comp_acc->second.emplace(component->GetID(), component);
       }
       else
       {
         m_cached_components_.insert(comp_acc, type);
         comp_acc->second.emplace(component->GetID(), component);
       }
-    }
 
-    if (type == COM_T_TRANSFORM)
-    {
-      m_object_position_tree_.Insert(component->GetOwner().lock());
+      if (type == COM_T_TRANSFORM)
+      {
+        m_object_position_tree_.Insert(component->GetOwner().lock());
+      }
     }
   }
 
@@ -484,8 +512,6 @@ namespace Engine
         {
           obj.lock()->m_parent_ = parent;
         }
-
-        obj.lock()->OnDeserialized();
       }
     }
 
@@ -544,29 +570,6 @@ namespace Engine
         {
           if (ImGui::TreeNode(g_layer_type_str[i]))
           {
-            if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
-            {
-              if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
-              {
-                GetTaskScheduler().AddTask
-                  (
-                   TASK_CHANGE_LAYER,
-                   {GetSharedPtr<Scene>(), static_cast<WeakObjectBase*>(payload->Data), i},
-                   [this, i](const std::vector<std::any>& args, const float)
-                   {
-                     const auto scene = std::any_cast<StrongScene>(args[0]);
-                     const auto obj   = std::any_cast<WeakObjectBase*>(args[1])->lock();
-                     const auto layer = std::any_cast<int>(args[2]);
-
-                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
-                     (*scene)[layer]->AddGameObject(obj);
-                     obj->SetLayer(static_cast<eLayerType>(layer));
-                   }
-                  );
-              }
-              ImGui::EndDragDropTarget();
-            }
-
             for (const auto& obj : GetGameObjects(static_cast<eLayerType>(i)))
             {
               if (const auto obj_ptr = obj.lock())
@@ -594,6 +597,34 @@ namespace Engine
             ImGui::TreePop();
             ImGui::Separator();
           }
+
+          if (ImGui::BeginDragDropTarget())
+          {
+            if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
+            {
+              if (const auto& obj = static_cast<WeakObjectBase*>(payload->Data)->lock())
+              {
+                if (obj->GetLayer() == i) { continue; }
+
+                GetTaskScheduler().AddTask
+                  (
+                   TASK_CHANGE_LAYER,
+                   {GetSharedPtr<Scene>(), obj->GetSharedPtr<Abstract::ObjectBase>(), i},
+                   [this, i](const std::vector<std::any>& args, const float)
+                   {
+                     const auto scene = std::any_cast<StrongScene>(args[0]);
+                     const auto obj   = std::any_cast<StrongObjectBase>(args[1]);
+                     const auto layer = std::any_cast<int>(args[2]);
+
+                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+                     (*scene)[layer]->AddGameObject(obj);
+                     obj->SetLayer(static_cast<eLayerType>(layer));
+                   }
+                  );
+              }
+            }
+            ImGui::EndDragDropTarget();
+            }
         }
         ImGui::EndListBox();
       }

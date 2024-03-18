@@ -25,6 +25,7 @@ namespace Engine::Manager::Graphics
   void ReflectionEvaluator::Initialize()
   {
     m_copy_.Load();
+    m_copy_.Initialize();
   }
 
   void ReflectionEvaluator::RenderFinished()
