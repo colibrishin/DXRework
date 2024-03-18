@@ -111,8 +111,7 @@ namespace Engine::Components
       const auto time = Resources::BaseAnimation::ConvertDtToFrame
         (
          m_current_frame_,
-         anim->GetTicksPerSecond(),
-         anim->GetDuration()
+         anim->GetTicksPerSecond()
         );
 
       const auto& primitive = anim->m_simple_primitive_;
