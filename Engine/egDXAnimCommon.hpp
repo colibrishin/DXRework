@@ -166,6 +166,89 @@ namespace Engine::Graphics
     std::vector<std::pair<float, Quaternion>> m_rotations_;
   };
 
+  struct AtlasAnimationPrimitive
+  {
+  public:
+    struct AtlasFramePrimitive
+    {
+      UINT X;
+      UINT Y;
+      UINT Width;
+      UINT Height;
+      UINT Duration;
+
+    private:
+      friend class boost::serialization::access;
+
+      template <class Archive>
+      void serialize(Archive& ar, const unsigned int version)
+      {
+        ar & X;
+        ar & Y;
+        ar & Width;
+        ar & Height;
+        ar & Duration;
+      }
+    };
+
+    void Append(const AtlasFramePrimitive& frame)
+    {
+      if (frame.Width > m_unit_width_ || frame.Height > m_unit_height_) { return; }
+      if (frame.X + frame.Width > m_texture_width_ || frame.Y + frame.Height > m_texture_height_) { return; }
+
+      m_frames_.push_back(frame);
+    }
+
+    void SetTextureWidth(const UINT width) { m_texture_width_ = width; }
+    void SetTextureHeight(const UINT height) { m_texture_height_ = height; }
+    void SetUnitWidth(const UINT width) { m_unit_width_ = width; }
+    void SetUnitHeight(const UINT height) { m_unit_height_ = height; }
+    
+    [[nodiscard]] UINT GetTextureWidth() const noexcept { return m_texture_width_; }
+    [[nodiscard]] UINT GetTextureHeight() const noexcept { return m_texture_height_; }
+    [[nodiscard]] UINT GetUnitWidth() const noexcept { return m_unit_width_; }
+    [[nodiscard]] UINT GetUnitHeight() const noexcept { return m_unit_height_; }
+
+    const AtlasFramePrimitive& GetFrame(const size_t idx) const
+    {
+      if (idx < m_frames_.size()) { return m_frames_[idx]; }
+
+      return m_frames_.back();
+    }
+
+    [[nodiscard]] size_t GetFrameCount() const noexcept { return m_frames_.size(); }
+    [[nodiscard]] size_t GetTotalFrameDuration() const noexcept
+    {
+      UINT total = 0;
+
+      for (const auto& frame : m_frames_)
+      {
+        total += frame.Duration;
+      }
+
+      return total;
+    }
+
+  private:
+    friend class boost::serialization::access;
+
+    UINT m_texture_width_;
+    UINT m_texture_height_;
+
+    UINT m_unit_width_;
+    UINT m_unit_height_;
+
+    std::vector<AtlasFramePrimitive> m_frames_;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & m_unit_width_;
+      ar & m_unit_height_;
+      ar & m_frames_;
+    }
+  };
+
   struct AnimationPrimitive
   {
   public:
