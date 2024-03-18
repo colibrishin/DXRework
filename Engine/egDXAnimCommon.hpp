@@ -175,7 +175,7 @@ namespace Engine::Graphics
       UINT Y;
       UINT Width;
       UINT Height;
-      UINT Duration;
+      float Duration;
 
     private:
       friend class boost::serialization::access;
@@ -197,6 +197,7 @@ namespace Engine::Graphics
       if (frame.X + frame.Width > m_texture_width_ || frame.Y + frame.Height > m_texture_height_) { return; }
 
       m_frames_.push_back(frame);
+      m_total_duration_ += frame.Duration;
     }
 
     void SetTextureWidth(const UINT width) { m_texture_width_ = width; }
@@ -209,24 +210,46 @@ namespace Engine::Graphics
     [[nodiscard]] UINT GetUnitWidth() const noexcept { return m_unit_width_; }
     [[nodiscard]] UINT GetUnitHeight() const noexcept { return m_unit_height_; }
 
-    const AtlasFramePrimitive& GetFrame(const size_t idx) const
+    [[nodiscard]] const AtlasFramePrimitive& GetFrame(const size_t idx) const
     {
-      if (idx < m_frames_.size()) { return m_frames_[idx]; }
+      if (idx >= m_frames_.size()) { return m_frames_.back(); }
 
-      return m_frames_.back();
+      return m_frames_[idx];
     }
 
-    [[nodiscard]] size_t GetFrameCount() const noexcept { return m_frames_.size(); }
-    [[nodiscard]] size_t GetTotalFrameDuration() const noexcept
+    // Get atlas frame by duration.
+    void __vectorcall GetFrame(const float frame, AtlasFramePrimitive& out) const
     {
-      UINT total = 0;
+      float total_duration;
+      GetTotalFrameDuration(total_duration);
+      size_t frame_count;
+      GetFrameCount(frame_count);
 
-      for (const auto& frame : m_frames_)
+      float total = 0;
+
+      for (size_t i = 0; i < frame_count; ++i)
       {
-        total += frame.Duration;
+        total += m_frames_[i].Duration;
+
+        if (frame < total)
+        {
+          out = m_frames_[i];
+        }
       }
 
-      return total;
+      out = m_frames_.back();
+    }
+
+    // Get atlas frame by index, for tight loop.
+    void __vectorcall GetFrameCount(size_t& count) const noexcept
+    {
+      count = m_frames_.size();
+    }
+
+    // Get total duration of the atlas animation, for tight loop.
+    void __vectorcall GetTotalFrameDuration(float& total) const noexcept
+    {
+      total = m_total_duration_;
     }
 
   private:
@@ -238,6 +261,8 @@ namespace Engine::Graphics
     UINT m_unit_width_;
     UINT m_unit_height_;
 
+    float m_total_duration_;
+
     std::vector<AtlasFramePrimitive> m_frames_;
 
     template <class Archive>
@@ -246,6 +271,9 @@ namespace Engine::Graphics
       ar & m_unit_width_;
       ar & m_unit_height_;
       ar & m_frames_;
+      ar & m_texture_width_;
+      ar & m_texture_height_;
+      ar & m_total_duration_;
     }
   };
 

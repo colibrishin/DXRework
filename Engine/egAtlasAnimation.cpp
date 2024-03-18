@@ -51,7 +51,10 @@ namespace Engine::Resources
 
     if (ImGui::BeginListBox("Frame metadata"))
     {
-      for (int i = 0; i < m_primitive_.GetFrameCount(); ++i)
+      size_t frame_count;
+      m_primitive_.GetFrameCount(frame_count);
+
+      for (size_t i = 0; i < frame_count; ++i)
       {
         const auto& [X, Y, Width, Height, Duration] = m_primitive_.GetFrame(i);
         ImGui::Text("Frame %d: %lld, %lld, %lld, %lld, %lld", i, X, Y, Width, Height, Duration);
@@ -59,6 +62,11 @@ namespace Engine::Resources
 
       ImGui::EndListBox();
     }
+  }
+
+  void AtlasAnimation::GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const
+  {
+    m_primitive_.GetFrame(dt, out);
   }
 
   void AtlasAnimation::Load_INTERNAL()
@@ -95,7 +103,10 @@ namespace Engine::Resources
     // For each FramePC
     for (const auto& child : frames.children())
     {
-      const UINT duration = child.attribute("duration").as_uint();
+      // todo: proper conversion
+      constexpr UINT tick = DX::StepTimer::TicksPerSecond;
+
+      const float duration = static_cast<float>(child.attribute("duration").as_uint() / tick);
       const auto rect = child.child("Rectangle");
 
       const UINT x = rect.attribute("x").as_uint();

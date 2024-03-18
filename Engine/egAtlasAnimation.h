@@ -26,6 +26,8 @@ namespace Engine::Resources
     void OnSerialized() override;
     void OnImGui() override;
 
+    void __vectorcall GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive & out) const;
+
     RESOURCE_SELF_INFER_GETTER(AtlasAnimation)
 
     [[nodiscard]] static AtlasAnimationPrimitive ParseXML(const std::filesystem::path& path);
@@ -46,9 +48,10 @@ namespace Engine::Resources
       // Save primitive value for serialization and loading.
       obj->m_xml_path_ = xml_path.string();
 
-      // Assuming 30 fps
-      obj->SetTicksPerSecond(30.f);
-      const auto duration = primitive.GetTotalFrameDuration() / (60.f * obj->GetTicksPerSecond());
+      obj->SetTicksPerSecond(1.f);
+
+      float duration = 0.f;
+      primitive.GetTotalFrameDuration(duration);
       obj->SetDuration(duration);
 
       GetResourceManager().AddResource(name, obj);
