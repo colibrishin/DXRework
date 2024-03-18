@@ -123,6 +123,10 @@ namespace Engine::Graphics
       void SetAnimDuration(const UINT duration) { SetParam(0, (int)duration); }
       void SetAnimIndex(const UINT index) { SetParam(1, (int)index); }
       void SetNoAnim(const bool no_anim) { SetParam(2, (int)no_anim); }
+      void SetAtlasX(const UINT x) { SetParam(3, (int)x); }
+      void SetAtlasY(const UINT y) { SetParam(4, (int)y); }
+      void SetAtlasW(const UINT w) { SetParam(5, (int)w); }
+      void SetAtlasH(const UINT h) { SetParam(6, (int)h); }
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
     };
