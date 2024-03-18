@@ -61,9 +61,9 @@ namespace Engine
 
     if (!m_b_initialized_)
     {
-    	m_insertion_queue_.push(obj);
-        Build();
-        return true;
+      m_insertion_queue_.push(obj);
+      Build();
+      return true;
     }
 
     // This will be the last node that successfully contains the object

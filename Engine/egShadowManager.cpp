@@ -37,10 +37,10 @@ namespace Engine::Manager::Graphics
       (
        "",
        {
-         .Width = g_window_width,
-         .Height = g_window_height,
+         .Width = g_max_shadow_map_size,
+         .Height = g_max_shadow_map_size,
          .Depth = 0,
-         .ArraySize = 1,
+         .ArraySize = 3,
          .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
          .CPUAccessFlags = 0,
          .BindFlags = D3D11_BIND_RENDER_TARGET,
@@ -105,8 +105,6 @@ namespace Engine::Manager::Graphics
     constexpr size_t shadow_slot = 1;
 
     // # Pass 1 : depth only, building shadow map
-    // Unbind the shadow map resource from the pixel shader to build the shadow map.
-    GetRenderPipeline().UnbindResource(RESERVED_SHADOW_MAP, SHADER_PIXEL);
     
     // Clear all shadow map data.
     ClearShadowMaps();
@@ -153,8 +151,14 @@ namespace Engine::Manager::Graphics
         {
           // It only needs to render the depth of the object from the light's point of view.
           // Swap the depth stencil to the each light's shadow map.
-          m_shadow_texs_[light->GetLocalID()].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
-          m_shadow_texs_[light->GetLocalID()].Render(placeholder);
+          ComPtr<ID3D11RenderTargetView> prev_rtv = nullptr;
+          ComPtr<ID3D11DepthStencilView> prev_dsv = nullptr;
+
+          ComPtr<ID3D11RenderTargetView> rtv = m_shadow_map_mask_.GetRTV();
+          ComPtr<ID3D11DepthStencilView> dsv = m_shadow_texs_[light->GetLocalID()].GetDSV();
+
+          GetD3Device().GetContext()->OMGetRenderTargets(0, prev_rtv.GetAddressOf(), prev_dsv.GetAddressOf());
+          GetD3Device().GetContext()->OMSetRenderTargets(1, rtv.GetAddressOf(), dsv.Get());
 
           // Notify the index of the shadow map to the shader.
           GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
@@ -162,7 +166,7 @@ namespace Engine::Manager::Graphics
           BuildShadowMap(dt);
 
           // Cleanup
-          m_shadow_texs_[light->GetLocalID()].PostRender(placeholder);
+          GetD3Device().GetContext()->OMSetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.Get());
         }
       }
 
@@ -215,6 +219,8 @@ namespace Engine::Manager::Graphics
 
     // And the light view and projection matrix buffer to re-evaluate.
     m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
+
+    GetRenderPipeline().UnbindResource(RESERVED_SHADOW_MAP, SHADER_PIXEL);
   }
 
   void ShadowManager::FixedUpdate(const float& dt) {}
@@ -231,11 +237,6 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::BuildShadowMap(const float dt)
   {
-    // Will not clear the texture, since there is no usage for now. this behaves as "ground" for evading warnings.
-    m_shadow_map_mask_.BindAs(D3D11_BIND_RENDER_TARGET, 0, 0, SHADER_UNKNOWN);
-    m_shadow_map_mask_.PreRender(dt);
-    m_shadow_map_mask_.Render(dt);
-
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
@@ -247,8 +248,6 @@ namespace Engine::Manager::Graphics
          return true;
        }
       );
-
-    m_shadow_map_mask_.PostRender(dt);
   }
 
   void ShadowManager::CreateSubfrusta(

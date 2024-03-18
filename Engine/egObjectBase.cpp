@@ -416,6 +416,11 @@ namespace Engine::Abstract
     {
       comp->OnSerialized();
     }
+
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      script->OnSerialized();
+    }
   }
 
   void ObjectBase::OnDeserialized()

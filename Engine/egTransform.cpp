@@ -34,7 +34,8 @@ namespace Engine::Components
       m_scale_(Vector3::One),
       m_animation_position_(Vector3::Zero),
       m_animation_rotation_(Quaternion::Identity),
-      m_animation_scale_(Vector3::One) {}
+      m_animation_scale_(Vector3::One),
+      m_animation_matrix_(Matrix::Identity){}
 
   void __vectorcall Transform::SetWorldPosition(const Vector3& position)
   {
@@ -282,7 +283,8 @@ namespace Engine::Components
       m_scale_(Vector3::One),
       m_animation_position_(Vector3::Zero),
       m_animation_rotation_(Quaternion::Identity),
-      m_animation_scale_(Vector3::One) {}
+      m_animation_scale_(Vector3::One),
+      m_animation_matrix_(Matrix::Identity){}
 
   WeakTransform Transform::FindNextTransform(const Transform& transform_)
   {
