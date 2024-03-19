@@ -166,6 +166,9 @@ namespace Engine::Manager
     WeakResource GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type);
     WeakResource GetResourceByMetadataPath(const std::filesystem::path& path, const eResourceType type);
 
+    bool RequestMultipleChoiceDialog();
+    bool OpenMultipleChoiceDialog(std::vector<StrongResource>& selected);
+
     inline static bool m_b_imgui_load_dialog_[boost::mpl::size<LoadableResourceTypes>::value] = {false};
 
   private:
@@ -226,6 +229,7 @@ namespace Engine::Manager
     bool m_b_imgui_load_shader_dialog_  = false;
     bool m_b_imgui_load_font_dialog_    = false;
     bool m_b_imgui_load_atlas_dialog_   = false;
+    bool m_b_imgui_multiple_choice_dialog_ = false;
 
     std::map<eResourceType, std::set<StrongResource>> m_resources_;
     std::map<LocalResourceID, WeakResource>           m_resource_cache_;

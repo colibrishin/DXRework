@@ -193,6 +193,64 @@ namespace Engine::Manager
     return {};
   }
 
+  bool ResourceManager::RequestMultipleChoiceDialog()
+  {
+    if (m_b_imgui_multiple_choice_dialog_)
+    {
+      return false;
+    }
+
+    m_b_imgui_multiple_choice_dialog_ = true;
+    return true;
+  }
+
+  bool ResourceManager::OpenMultipleChoiceDialog(std::vector<StrongResource>& selected)
+  {
+    if (m_b_imgui_multiple_choice_dialog_)
+    {
+      if (ImGui::Begin("Multiple Choice", &m_b_imgui_multiple_choice_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        for (const auto& [type, resources] : m_resources_)
+        {
+          if (ImGui::TreeNode(g_resource_type_str[type]))
+          {
+            for (const auto& res : resources)
+            {
+              const auto it     = std::ranges::find(selected, res);
+              const bool chosen = it != selected.end();
+
+              if (ImGui::Selectable(res->GetName().c_str(), chosen))
+              {
+                if (it == selected.end())
+                {
+                  selected.emplace_back(res);
+                }
+                else
+                {
+                  selected.erase(it);
+                }
+              }
+            }
+
+            ImGui::TreePop();
+            ImGui::Separator();
+          }
+        }
+
+        if (ImGui::Button("Close"))
+        {
+          m_b_imgui_multiple_choice_dialog_ = false;
+          ImGui::End();
+          return true;
+        }
+
+        ImGui::End();
+      }
+    }
+
+    return false;
+  }
+
   void       ResourceManager::OpenNewShaderDialog()
   {
     if (m_b_imgui_load_shader_dialog_)
