@@ -188,6 +188,8 @@ namespace Client::Scripts
     else if (m_state_ == CHAR_STATE_ROTATE)
     {
       m_state_ = CHAR_STATE_IDLE;
+      // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
+      rb->Reset();
       rb->SetFixed(false);
     }
   }
