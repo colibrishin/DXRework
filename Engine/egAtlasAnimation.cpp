@@ -42,6 +42,13 @@ namespace Engine::Resources
 
     // Backup the xml file
     const std::filesystem::path xml_path = m_xml_path_;
+    const std::filesystem::path p = GetPrettyTypeName() / xml_path.filename();
+
+    if (m_xml_path_ == p.string())
+    {
+      return;
+    }
+
     std::filesystem::copy_file(m_xml_path_, GetPrettyTypeName() / xml_path.filename(), std::filesystem::copy_options::overwrite_existing);
     m_xml_path_ = (GetPrettyTypeName() / xml_path.filename()).string();
   }

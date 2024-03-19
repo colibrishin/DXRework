@@ -166,6 +166,8 @@ namespace Engine::Resources
         std::filesystem::create_directory(folder);
       }
 
+      if (GetPath() == p) { return; }
+
       if (std::filesystem::exists(p))
       {
         std::filesystem::copy_file(GetPath(), p, std::filesystem::copy_options::update_existing);

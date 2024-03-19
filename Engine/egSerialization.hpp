@@ -601,6 +601,11 @@ namespace Engine
       object->m_meta_path_             = final_path;
       object->m_meta_str_              = final_path.string();
 
+      if (std::filesystem::exists(final_path))
+      {
+        std::filesystem::remove(final_path);
+      }
+
       const auto entity = boost::static_pointer_cast<Abstract::Entity>(object);
 
       std::fstream                    stream(final_path, std::ios::out | std::ios::binary);
