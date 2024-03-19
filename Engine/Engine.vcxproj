@@ -22,7 +22,7 @@
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
     <ClInclude Include="egAtlasAnimation.h" />
-    <ClInclude Include="egAtlasTexture.h" />
+    <ClInclude Include="egAtlasAnimationTexture.h" />
     <ClInclude Include="egAnimationsTexture.h" />
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
@@ -115,7 +115,7 @@
     <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egAnimationsTexture.cpp" />
     <ClCompile Include="egAtlasAnimation.cpp" />
-    <ClCompile Include="egAtlasTexture.cpp" />
+    <ClCompile Include="egAtlasAnimationTexture.cpp" />
     <ClCompile Include="egBoneAnimation.cpp" />
     <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
