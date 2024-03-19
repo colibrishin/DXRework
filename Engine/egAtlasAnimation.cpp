@@ -41,8 +41,8 @@ namespace Engine::Resources
 
     // Backup the xml file
     const std::filesystem::path xml_path = m_xml_path_;
-    std::filesystem::copy_file(m_xml_path_, GetPrettyTypeName() / xml_path, std::filesystem::copy_options::overwrite_existing);
-    m_xml_path_ = (GetPrettyTypeName() / xml_path).string();
+    std::filesystem::copy_file(m_xml_path_, GetPrettyTypeName() / xml_path.filename(), std::filesystem::copy_options::overwrite_existing);
+    m_xml_path_ = (GetPrettyTypeName() / xml_path.filename()).string();
   }
 
   void AtlasAnimation::OnImGui()

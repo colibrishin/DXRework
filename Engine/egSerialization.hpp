@@ -529,6 +529,7 @@ namespace Engine
   class Serializer
   {
   public:
+    // Serialize the object. Use when the object is nested, and if nested objects are required to be serialized.
     template <typename T>
     static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
     {

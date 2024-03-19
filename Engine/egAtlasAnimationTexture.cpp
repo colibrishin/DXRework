@@ -37,10 +37,10 @@ namespace Engine::Resources
   {
     Texture3D::OnSerialized();
 
-    // Backup the atlases.
+    // Backup the atlases. This could be removed.
     for (const auto& atlas : m_atlases_)
     {
-      atlas->OnSerialized();
+      Serializer::Serialize(atlas->GetName(), atlas);
     }
   }
 

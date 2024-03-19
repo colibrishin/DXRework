@@ -249,35 +249,20 @@ namespace Engine::Resources
     if (std::filesystem::exists(GetPath()))
     {
       const std::filesystem::path folder = GetPrettyTypeName();
-      std::filesystem::path p;
+      const std::filesystem::path filename = GetPath().filename();
+      const std::filesystem::path p = folder / filename;
 
-      if (GetPath().parent_path() != folder)
+      if (!std::filesystem::exists(folder)) { std::filesystem::create_directory(folder); }
+
+      if (std::filesystem::exists(p))
       {
-        if (!std::filesystem::exists(folder)) { std::filesystem::create_directory(folder); }
-
-        const std::string current_path_symbol = "./";
-
-        p /= folder;
-        std::string path = GetPath().generic_string();
-
-        if (const auto find = path.find(current_path_symbol); find != std::string::npos)
-        {
-          path.erase(find, 2);
-        }
-
-        p /= path;
+        std::filesystem::copy_file(GetPath(), p, std::filesystem::copy_options::update_existing);
       }
       else
       {
-        p = GetPath();
+        std::filesystem::copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
       }
 
-      if (p == GetPath())
-      {
-        return;
-      }
-
-      std::filesystem::copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
       SetPath(p);
     }
   }
