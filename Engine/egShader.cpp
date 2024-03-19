@@ -252,7 +252,10 @@ namespace Engine::Resources
       const std::filesystem::path filename = GetPath().filename();
       const std::filesystem::path p = folder / filename;
 
-      if (!std::filesystem::exists(folder)) { std::filesystem::create_directory(folder); }
+      if (!std::filesystem::exists(folder))
+      {
+        std::filesystem::create_directory(folder);
+      }
 
       if (std::filesystem::exists(p))
       {

@@ -28,7 +28,7 @@ namespace Engine::Resources
 
     eResourceType GetResourceType() const override;
 
-    void __vectorcall GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive & out) const;
+    void __vectorcall GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const;
 
     RESOURCE_SELF_INFER_GETTER(AtlasAnimation)
 
