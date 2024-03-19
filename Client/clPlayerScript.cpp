@@ -354,28 +354,28 @@ namespace Client::Scripts
     constexpr UINT right_anim = 21;
     constexpr UINT idle_anim = 0;
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::W))
     {
       atr->SetAnimation(forward_anim);
       rb->AddT1Force(forward);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::A))
     {
       atr->SetAnimation(left_anim);
       rb->AddT1Force(ortho);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::S))
     {
       atr->SetAnimation(backward_anim);
       rb->AddT1Force(-forward);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::D))
     {
       atr->SetAnimation(right_anim);
       rb->AddT1Force(-ortho);

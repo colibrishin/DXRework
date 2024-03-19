@@ -9,7 +9,7 @@ namespace Engine::Manager
 
   void Debugger::PreUpdate(const float& dt) {}
 
-  void Debugger::Update(const float& dt) { if (GetApplication().GetKeyState().Scroll) { m_bDebug = !m_bDebug; } }
+  void Debugger::Update(const float& dt) { if (GetApplication().GetCurrentKeyState().Scroll) { m_bDebug = !m_bDebug; } }
 
   void Debugger::PreRender(const float& dt) {}
 
