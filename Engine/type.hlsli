@@ -73,6 +73,7 @@ struct PixelInputType
 
   float clipSpacePosZ : SV_ClipDistance0;
   float clipPlane : SV_ClipDistance1;
+  uint  instanceId : SV_InstanceID;
 };
 
 struct InstanceElement
