@@ -6,6 +6,7 @@ SERIALIZE_IMPL
 (
   Engine::Resources::AtlasAnimation,
   _ARTAG(_BSTSUPER(Engine::Resources::BaseAnimation))
+  _ARTAG(m_xml_path_)
   _ARTAG(m_primitive_)
 )
 
