@@ -12,7 +12,8 @@ namespace Client::Scripts
     explicit FezPlayerScript(const WeakObjectBase& owner)
       : Script(SCRIPT_T_FEZ_PLAYER, owner),
         m_state_(CHAR_STATE_IDLE),
-        m_prev_state_(CHAR_STATE_IDLE) { }
+        m_prev_state_(CHAR_STATE_IDLE),
+        m_rotation_count_(0) { }
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -36,6 +37,7 @@ namespace Client::Scripts
 
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
+    UINT m_rotation_count_;
 
   };
 }

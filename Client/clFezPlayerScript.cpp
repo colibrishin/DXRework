@@ -113,7 +113,7 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cam->GetActive()) { return; }
 
     const auto& right = tr->Right();
-    const auto& key_state = GetApplication().GetKeyState();
+    const auto& key_state = GetApplication().GetCurrentKeyState();
     constexpr float speed = 1.f;
     bool moving = false;
 
@@ -142,6 +142,14 @@ namespace Client::Scripts
   {
     if (GetOwner().expired()) { return; }
 
+    static const Quaternion rotations[4] = 
+    {
+      Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, 90.0f),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, 180.0f),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, 270.0f)
+    };
+
     const auto& owner = GetOwner().lock();
     const auto& tr    = owner->GetComponent<Components::Transform>().lock();
     const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
@@ -149,18 +157,26 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
-    const auto& key_state = GetApplication().GetKeyState();
     const auto  rot       = tr->GetLocalRotation();
     bool        rotating  = false;
+    const auto  angle     = Quaternion::Angle(rot, Quaternion::CreateFromAxisAngle(Vector3::Right, 0.f));
 
-    if (key_state.IsKeyDown(Keyboard::Q))
+    // due to the slerp, rotation is not exact.
+    if (tr->GetLocalRotation() != rotations[m_rotation_count_])
     {
-      tr->SetLocalRotation(rot * Quaternion::CreateFromAxisAngle(Vector3::Up, -90.0f));
+      tr->SetLocalRotation(rotations[m_rotation_count_]);
+    }
+
+    if (GetApplication().HasKeyChanged(Keyboard::Q))
+    {
+      m_rotation_count_ = (m_rotation_count_ + 1) % 4;
+      tr->SetLocalRotation(rotations[m_rotation_count_]);
       rotating = true;
     }
-    if (key_state.IsKeyDown(Keyboard::E))
+    if (GetApplication().HasKeyChanged(Keyboard::E))
     {
-      tr->SetLocalRotation(rot * Quaternion::CreateFromAxisAngle(Vector3::Up, 90.0f));
+      m_rotation_count_ = (m_rotation_count_ + 3) % 4;
+      tr->SetLocalRotation(rotations[m_rotation_count_]);
       rotating = true;
     }
 
@@ -168,9 +184,8 @@ namespace Client::Scripts
     {
       m_state_ = CHAR_STATE_ROTATE;
       rb->SetFixed(true);
-      rb->AddT1Force(-rb->GetT1Force());
     }
-    else
+    else if (m_state_ == CHAR_STATE_ROTATE)
     {
       m_state_ = CHAR_STATE_IDLE;
       rb->SetFixed(false);
