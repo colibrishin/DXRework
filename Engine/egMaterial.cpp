@@ -23,7 +23,8 @@ namespace Engine::Resources
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
       m_material_cb_(),
-      m_b_edit_dialog_(false)
+      m_b_edit_dialog_(false),
+      m_b_wait_for_choices_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -181,7 +182,7 @@ namespace Engine::Resources
 
     if (m_b_edit_dialog_)
     {
-      if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      if (ImGui::Begin(GetName().c_str(), &m_b_edit_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
       {
         if (ImGui::BeginListBox("Resource Used"))
         {
@@ -250,6 +251,29 @@ namespace Engine::Resources
           ImGui::EndDragDropTarget();
         }
 
+        if (ImGui::Button("Add multiple resources"))
+        {
+          if (GetResourceManager().RequestMultipleChoiceDialog())
+          {
+            m_b_wait_for_choices_ = true;
+          }
+        }
+
+        if (m_b_wait_for_choices_ && ImGui::Begin("Add multiple resources..."))
+        {
+          if (GetResourceManager().OpenMultipleChoiceDialog(m_resources_to_load_))
+          {
+            for (const auto& resource : m_resources_to_load_)
+            {
+              SetResource(resource);
+            }
+
+            m_b_wait_for_choices_ = false;
+          }
+
+          ImGui::End();
+        }
+
         ImGui::End();
       }
     }
@@ -275,7 +299,8 @@ namespace Engine::Resources
   Material::Material()
     : Resource("", RES_T_MTR),
       m_material_cb_(),
-      m_b_edit_dialog_(false) {}
+      m_b_edit_dialog_(false),
+      m_b_wait_for_choices_(false) {}
 
   void Material::SetResource(const StrongResource& resource)
   {
