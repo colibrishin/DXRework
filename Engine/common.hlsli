@@ -54,6 +54,7 @@ Texture1D      tex1d07 : register(t31);
 Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
 Texture2D      texRendered : register(t33);
 Texture3D      texAnimations : register(t34);
+Texture3D      texAtlases : register(t35);
 
 StructuredBuffer<LightElement>         bufLight : register(t48);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t49);

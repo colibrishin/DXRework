@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<AnimatedTexturePC width="128" height="64" actualWidth="15" actualHeight="19">
+  <Frames>
+    <FramePC duration="1000000">
+      <Rectangle x="0" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="16" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="32" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="48" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="0" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="16" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="2500000">
+      <Rectangle x="0" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="32" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="16" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="48" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="32" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="48" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="2500000">
+      <Rectangle x="64" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="80" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="64" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="96" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="80" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="2500000">
+      <Rectangle x="64" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="112" y="0" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="96" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="80" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="112" y="20" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="96" y="40" w="15" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="112" y="40" w="15" h="19"/>
+    </FramePC>
+  </Frames>
+</AnimatedTexturePC>

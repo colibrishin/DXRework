@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="egActor.h" />
+    <ClInclude Include="egAtlasAnimation.h" />
+    <ClInclude Include="egAtlasAnimationTexture.h" />
     <ClInclude Include="egAnimationsTexture.h" />
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
@@ -112,6 +114,8 @@
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="egActor.cpp" />
     <ClCompile Include="egAnimationsTexture.cpp" />
+    <ClCompile Include="egAtlasAnimation.cpp" />
+    <ClCompile Include="egAtlasAnimationTexture.cpp" />
     <ClCompile Include="egBoneAnimation.cpp" />
     <ClCompile Include="egAnimator.cpp" />
     <ClCompile Include="egApplication.cpp" />
@@ -825,6 +829,19 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="billboard.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="atlas.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>

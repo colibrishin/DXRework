@@ -407,6 +407,11 @@ namespace Engine::Resources
     const std::filesystem::path filename = name + ".dds";
     const std::filesystem::path final_path = folder / filename;
 
+    if (!IsLoaded())
+    {
+      Load();
+    }
+
     if (m_res_)
     {
       DirectX::ScratchImage image;
