@@ -158,6 +158,7 @@ namespace Engine::Manager::Graphics
     sb.Create(static_cast<UINT>(structured_buffers.size()), structured_buffers.data(), false);
     sb.BindSRV(SHADER_VERTEX);
     sb.BindSRV(SHADER_GEOMETRY);
+    sb.BindSRV(SHADER_PIXEL);
 
     material->SetTempParam
       (
@@ -173,6 +174,8 @@ namespace Engine::Manager::Graphics
     material->PostRender(dt);
 
     sb.UnbindSRV(SHADER_VERTEX);
+    sb.UnbindSRV(SHADER_GEOMETRY);
+    sb.UnbindSRV(SHADER_PIXEL);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
