@@ -231,6 +231,7 @@ namespace Engine::Graphics
         if (frame < total)
         {
           out = m_frames_[i];
+          return;
         }
       }
 
