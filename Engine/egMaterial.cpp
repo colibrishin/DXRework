@@ -296,7 +296,8 @@ namespace Engine::Resources
 
     if (resource->GetResourceType() == RES_T_SHADER)
     {
-      if (std::ranges::find_if(m_shader_paths_, [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
+      if (!resource->GetMetadataPath().empty() && 
+          std::ranges::find_if(m_shader_paths_, [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
       {
         return pair.second == resource->GetMetadataPath();
       }) != m_shader_paths_.end())
@@ -310,14 +311,18 @@ namespace Engine::Resources
       return;
     }
 
-    if (std::ranges::find_if
+    if (!resource->GetMetadataPath().empty() &&
+        std::ranges::find_if
         (
          m_resource_paths_[resource->GetResourceType()],
          [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
          {
            return pair.second == resource->GetMetadataPath();
          }
-        ) != m_resource_paths_[resource->GetResourceType()].end()) { return; }
+        ) != m_resource_paths_[resource->GetResourceType()].end())
+    {
+      return;
+    }
 
     m_resource_paths_[resource->GetResourceType()].emplace_back(resource->GetName(), resource->GetMetadataPath().string());
     m_resources_loaded_[resource->GetResourceType()].push_back(resource);
