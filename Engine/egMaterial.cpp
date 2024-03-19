@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "egMaterial.h"
 
-#include "egAtlasTexture.h"
-#include "egShader.hpp"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
+#include "egShader.hpp"
 #include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"

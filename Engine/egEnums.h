@@ -20,7 +20,7 @@ namespace Engine::Resources
   class BoneAnimation;
   class Bone;
   class BaseAnimation;
-  class AtlasTexture;
+  class AtlasAnimationTexture;
   class AtlasAnimation;
 }
 
@@ -253,7 +253,7 @@ namespace Engine
     Resources::Material,
     Resources::Shape,
     Resources::Prefab,
-    Resources::AtlasTexture,
+    Resources::AtlasAnimationTexture,
     Resources::AtlasAnimation>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);

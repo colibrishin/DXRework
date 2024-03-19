@@ -1,7 +1,7 @@
 #pragma once
 #include "egAnimationsTexture.h"
 #include "egAtlasAnimation.h"
-#include "egAtlasTexture.h"
+#include "egAtlasAnimationTexture.h"
 #include "egBaseAnimation.h"
 #include "egBone.h"
 #include "egBoneAnimation.h"
