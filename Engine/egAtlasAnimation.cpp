@@ -72,7 +72,7 @@ namespace Engine::Resources
 
   void AtlasAnimation::GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const
   {
-    m_primitive_.GetFrame(dt, out);
+    m_primitive_.GetFrame(ConvertDtToFrame(dt, GetTicksPerSecond()), out);
   }
 
   void AtlasAnimation::Load_INTERNAL()
