@@ -296,20 +296,122 @@ namespace Engine::Manager
 
       if (ImGui::Begin(title.c_str(), &m_b_imgui_load_atlas_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
       {
+        static char atlas_name_buffer[256] = {};
         static char name_buffer[256] = {};
         static char tex_path_buffer[256] = {};
         static char xml_path_buffer[256] = {};
 
+        static std::vector<std::tuple<std::string, std::string, std::string>> pair;
+
+        ImGui::InputText("Atlas Name", atlas_name_buffer, 256);
         ImGui::InputText("Name", name_buffer, 256);
         ImGui::InputText("Texture Path", tex_path_buffer, 256);
         ImGui::InputText("XML Path", xml_path_buffer, 256);
+
+        if (ImGui::Button("Add Texture"))
+        {
+          if (!std::strlen(xml_path_buffer))
+          {
+            const std::filesystem::path tex_path = tex_path_buffer;
+            std::filesystem::path expected_xml = tex_path.filename();
+            expected_xml.replace_extension(".xml");
+
+            const std::filesystem::path               folder = tex_path.parent_path();
+            const std::filesystem::directory_iterator it(folder);
+
+            for (const auto& entry : it)
+            {
+              if (entry.path().filename() == expected_xml)
+              {
+                strcpy_s(xml_path_buffer, entry.path().generic_string().c_str());
+                break;
+              }
+            }
+          }
+
+          if (!std::strlen(tex_path_buffer))
+          {
+            const std::filesystem::path xml_path = xml_path_buffer;
+            std::filesystem::path expected_tex = xml_path.filename();
+            expected_tex.replace_extension(".png");
+
+            const std::filesystem::path               folder = xml_path.parent_path();
+            const std::filesystem::directory_iterator it(folder);
+
+            for (const auto& entry : it)
+            {
+              if (entry.path().filename() == expected_tex)
+              {
+                strcpy_s(tex_path_buffer, entry.path().generic_string().c_str());
+                break;
+              }
+            }
+          }
+
+          if (std::filesystem::exists(tex_path_buffer) && std::filesystem::exists(xml_path_buffer))
+          {
+            pair.emplace_back(name_buffer, tex_path_buffer, xml_path_buffer);
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+          }
+        }
+
+        static std::string buffer;
+        ImGui::InputText("Folder", &buffer);
+
+        if (ImGui::Button("Add multiples..."))
+        {
+          std::filesystem::path folder = buffer;
+          const std::filesystem::recursive_directory_iterator it(folder);
+
+          for (const auto& entry : it)
+          {
+            if (entry.path().extension() == ".xml")
+            {
+              std::filesystem::path tex_path = entry.path();
+              tex_path.replace_extension(".png");
+
+              if (std::filesystem::exists(tex_path))
+              {
+                pair.emplace_back
+                  (
+                   tex_path.stem().generic_string(),
+                   tex_path.generic_string(),
+                   entry.path().generic_string()
+                  );
+              }
+            }
+          }
+        }
+
+        if (ImGui::BeginChild("Texture List", ImVec2(0, 300)))
+        {
+          for (const auto& [name, tex_path, xml_path] : pair)
+          {
+            ImGui::Text("Name: %s", name.c_str());
+            ImGui::Text("Texture Path: %s", tex_path.c_str());
+            ImGui::Text("XML Path: %s", xml_path.c_str());
+            ImGui::Separator();
+          }
+
+          ImGui::EndChild();
+        }
 
         if (ImGui::Button("Load"))
         {
           try
           {
-            Resources::AtlasTexture::Create(name_buffer, tex_path_buffer);
-            Resources::AtlasAnimation::Create(name_buffer, xml_path_buffer);
+            std::vector<StrongTexture2D> textures;
+
+            for (const auto& [name, tex_path, xml_path] : pair)
+            {
+              Resources::AtlasAnimation::Create(name, xml_path);
+              textures.emplace_back(Resources::Texture2D::Create(name, tex_path, {}));
+            }
+
+            Resources::AtlasAnimationTexture::Create(atlas_name_buffer, "", textures);
+
             std::memset(name_buffer, 0, 256);
             std::memset(tex_path_buffer, 0, 256);
             std::memset(xml_path_buffer, 0, 256);
