@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "clFezPlayerScript.h"
 
+#include "egBaseCollider.hpp"
 #include "egCamera.h"
+#include "egCollisionDetector.h"
 #include "egObjectBase.hpp"
 #include "egRigidbody.h"
 #include "egTransform.h"
@@ -58,9 +60,11 @@ namespace Client::Scripts
       case CHAR_STATE_IDLE: 
           UpdateMove();
           UpdateRotate();
+          UpdateJump();
           break;
       case CHAR_STATE_WALK: 
           UpdateMove();
+          UpdateJump();
           break;
       case CHAR_STATE_RUN: break;
       case CHAR_STATE_JUMP: 
@@ -71,7 +75,8 @@ namespace Client::Scripts
       case CHAR_STATE_ROTATE:
           UpdateRotate();
           break;
-      case CHAR_STATE_FALL: break;
+      case CHAR_STATE_FALL: 
+          break;
       case CHAR_STATE_ATTACK: break;
       case CHAR_STATE_HIT: break;
       case CHAR_STATE_DIE: break;
@@ -79,6 +84,8 @@ namespace Client::Scripts
       default: ;
       }
     }
+
+    UpdateGrounded();
 
     m_prev_state_ = m_state_;
   }
@@ -98,7 +105,8 @@ namespace Client::Scripts
   FezPlayerScript::FezPlayerScript()
     : Script(SCRIPT_T_FEZ_PLAYER, {}),
       m_state_(CHAR_STATE_IDLE),
-      m_prev_state_(CHAR_STATE_IDLE) { }
+      m_prev_state_(CHAR_STATE_IDLE),
+      m_rotation_count_(0) { }
 
   void FezPlayerScript::UpdateMove()
   {
@@ -191,6 +199,88 @@ namespace Client::Scripts
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
       rb->Reset();
       rb->SetFixed(false);
+    }
+  }
+
+  void FezPlayerScript::UpdateJump()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto&     up         = tr->Up();
+    constexpr float jump_force = 300.f;
+
+    if (GetApplication().HasKeyChanged(Keyboard::Space) || GetApplication().HasKeyChanged(Keyboard::W))
+    {
+      rb->AddT1Force(up * jump_force);
+      m_state_ = CHAR_STATE_JUMP;
+    }
+  }
+
+  void FezPlayerScript::UpdateGrounded()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& scene = owner->GetScene().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
+
+    if (!tr || !rb || !scene || !cldr) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cldr->GetActive()) { return; }
+
+    const auto& up = tr->Up();
+    const auto& down = -up;
+    const auto& pos = tr->GetLocalPosition();
+    bool        hit = false;
+
+    const auto& octree = scene->GetObjectTree();
+    octree.Iterate
+      (
+       pos, [&hit, &owner, &cldr](const WeakObjectBase& obj)
+       {
+         if (const auto& locked = obj.lock())
+         {
+           if (locked == owner) { return false; }
+           if (!GetCollisionDetector().IsCollisionLayer(owner->GetLayer(), locked->GetLayer())) { return false; }
+
+           const auto& rcl = locked->GetComponent<Components::Collider>().lock();
+
+           if (!rcl) { return false; }
+           if (!rcl->GetActive()) { return false; }
+
+           const auto& rowner = rcl->GetOwner().lock();
+           if (!rowner) { return false; }
+           if (const auto& parent = owner->GetParent().lock(); 
+               rowner == parent) { return false; }
+
+           if (Components::Collider::Intersects(cldr, rcl, Vector3::Down) &&
+               !Components::Collider::Intersects(cldr, rcl, Vector3::Up))
+           {
+             hit = true;
+             return true;
+           }
+         }
+
+         return false;
+       }
+      );
+
+    if (hit)
+    {
+      rb->SetGrounded(true);
+
+      if (m_state_ == CHAR_STATE_JUMP || m_state_ == CHAR_STATE_FALL)
+      {
+        m_state_ = CHAR_STATE_IDLE;
+      }
     }
   }
 }

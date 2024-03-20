@@ -32,6 +32,8 @@ namespace Client::Scripts
 
     void UpdateMove();
     void UpdateRotate();
+    void UpdateJump();
+    void UpdateGrounded();
 
     void MoveCameraToChild() const;
 
