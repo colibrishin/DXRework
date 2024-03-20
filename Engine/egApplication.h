@@ -35,7 +35,10 @@ namespace Engine::Manager
 
     float           GetDeltaTime() const;
     uint32_t        GetFPS() const;
-    Keyboard::State GetKeyState() const;
+    Keyboard::State GetCurrentKeyState() const;
+    // More strict key change check. Returns true if previously not pressed
+    // and now pressed.
+    bool            HasKeyChanged(DirectX::Keyboard::Keys key) const;
     Mouse::State    GetMouseState() const;
 
   private:
@@ -58,6 +61,8 @@ namespace Engine::Manager
     // Input
     std::unique_ptr<Keyboard> m_keyboard;
     std::unique_ptr<Mouse>    m_mouse;
+
+    Keyboard::State m_previous_keyboard_state_;
 
     // Time
     std::unique_ptr<DX::StepTimer> m_timer;
