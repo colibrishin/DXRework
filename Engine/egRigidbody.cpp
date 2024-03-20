@@ -150,6 +150,8 @@ namespace Engine::Components
   {
     m_bGrounded = false;
 
+    m_linear_velocity   = Vector3::Zero;
+    m_angular_velocity  = Vector3::Zero;
     m_t0_force_         = Vector3::Zero;
     m_t0_torque_        = Vector3::Zero;
     m_t1_force_         = Vector3::Zero;
@@ -157,6 +159,8 @@ namespace Engine::Components
     m_drag_force_       = Vector3::Zero;
     m_linear_friction_  = Vector3::Zero;
     m_angular_friction_ = Vector3::Zero;
+
+    Synchronize();
   }
 
   void Rigidbody::PreUpdate(const float& dt) {}

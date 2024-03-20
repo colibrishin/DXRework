@@ -26,6 +26,11 @@ namespace Client::Scripts
 
     WeakObjectBase GetHead() const;
 
+  protected:
+    void OnCollisionEnter(const WeakCollider& other) override;
+    void OnCollisionContinue(const WeakCollider& other) override;
+    void OnCollisionExit(const WeakCollider& other) override;
+
   private:
     SERIALIZE_DECL
     SCRIPT_CLONE_DECL

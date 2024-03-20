@@ -28,6 +28,10 @@ namespace Engine
     inline static std::map<std::string, ScriptFactoryFunction> s_script_factory_; 
     Script();
 
+    virtual void OnCollisionEnter(const WeakCollider& other) = 0;
+    virtual void OnCollisionContinue(const WeakCollider& other) = 0;
+    virtual void OnCollisionExit(const WeakCollider& other) = 0;
+
   private:
     SERIALIZE_DECL
     friend class Abstract::ObjectBase;

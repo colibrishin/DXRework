@@ -170,7 +170,7 @@ namespace Engine
   using WeakResource = boost::weak_ptr<Abstract::Resource>;
   using WeakMesh = boost::weak_ptr<Resources::Mesh>;
   using WeakScene = boost::weak_ptr<Scene>;
-  using WeakBaseCollider = boost::weak_ptr<Components::Collider>;
+  using WeakCollider = boost::weak_ptr<Components::Collider>;
   using WeakFont = boost::weak_ptr<Resources::Font>;
   using WeakCamera = boost::weak_ptr<Objects::Camera>;
   using WeakLight = boost::weak_ptr<Objects::Light>;

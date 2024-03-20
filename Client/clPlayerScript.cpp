@@ -151,6 +151,12 @@ namespace Client::Scripts
     }
   }
 
+  void PlayerScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void PlayerScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void PlayerScript::OnCollisionExit(const WeakCollider& other) {}
+
   PlayerScript::PlayerScript()
     : m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),

@@ -133,6 +133,11 @@ namespace Engine::Components
     return test && distance <= dist;
   }
 
+  bool Collider::ContainsBy(const StrongCollider& test, const StrongCollider& container)
+  {
+    return test->m_boundings_.ContainsBy(container->m_boundings_, test->GetWorldMatrix(), container->GetWorldMatrix());
+  }
+
   bool Collider::Intersects(
     const Vector3& start, const Vector3& dir, float distance,
     float&         intersection

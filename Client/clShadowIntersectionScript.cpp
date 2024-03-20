@@ -450,6 +450,12 @@ namespace Client::Scripts
     }
   }
 
+  void ShadowIntersectionScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void ShadowIntersectionScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void ShadowIntersectionScript::OnCollisionExit(const WeakCollider& other) {}
+
   ShadowIntersectionScript::ShadowIntersectionScript()
     : m_viewport_() {}
 }
