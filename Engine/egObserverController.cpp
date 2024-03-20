@@ -77,12 +77,12 @@ namespace Engine::Components
       ) *
       speed;
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W)) { tr->Translate(forward * speed); }
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::W)) { tr->Translate(forward * speed); }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A)) { tr->Translate(ortho); }
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::A)) { tr->Translate(ortho); }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S)) { tr->Translate(-forward * speed); }
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::S)) { tr->Translate(-forward * speed); }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D)) { tr->Translate(-ortho); }
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::D)) { tr->Translate(-ortho); }
   }
 } // namespace Engine::Component

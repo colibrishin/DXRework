@@ -413,6 +413,37 @@ namespace Engine
     }
   }
 
+  void Octree::Iterate(const Vector3& point, const std::function<bool(const WeakT&)>& func) const
+  {
+    std::queue<const Octree*> q;
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.front();
+      q.pop();
+
+      const auto& value = node->m_values_;
+      const auto& children = node->m_children_;
+
+      for (const auto& v : value)
+      {
+        if (func(v))
+        {
+          return;
+        }
+      }
+
+      for (const auto& child : children)
+      {
+        if (child && child->Contains(point))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+  }
+
   Octree::Octree(const BoundingBox& bounds)
     : m_parent_(nullptr),
       m_b_initialized_(false),

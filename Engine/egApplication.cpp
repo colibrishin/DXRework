@@ -22,13 +22,19 @@ namespace Engine::Manager
   }
 
   Application::Application(SINGLETON_LOCK_TOKEN)
-    : Singleton() {}
+    : Singleton(),
+      m_previous_keyboard_state_() {}
 
   float Application::GetDeltaTime() const { return static_cast<float>(m_timer->GetElapsedSeconds()); }
 
   uint32_t Application::GetFPS() const { return m_timer->GetFramesPerSecond(); }
 
-  Keyboard::State Application::GetKeyState() const { return m_keyboard->GetState(); }
+  Keyboard::State Application::GetCurrentKeyState() const { return m_keyboard->GetState(); }
+
+  bool Application::HasKeyChanged(const DirectX::Keyboard::Keys key) const
+  {
+    return m_previous_keyboard_state_.IsKeyUp(key) && m_keyboard->GetState().IsKeyDown(key);
+  }
 
   Mouse::State Application::GetMouseState() const { return m_mouse->GetState(); }
 
@@ -261,6 +267,8 @@ namespace Engine::Manager
     PreRender(dt);
     Render(dt);
     PostRender(dt);
+
+    m_previous_keyboard_state_ = m_keyboard->GetState();
 
     elapsed += dt;
   }

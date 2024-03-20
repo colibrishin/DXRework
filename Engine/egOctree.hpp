@@ -58,6 +58,7 @@ namespace Engine
     void                         Remove(const WeakT& obj);
     void                         Update();
     void                         Clear();
+    void                         Iterate(const Vector3 & point, const std::function<bool(const WeakT&)> & func) const;
 
   private:
     explicit Octree(const BoundingBox& bounds);
