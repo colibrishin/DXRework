@@ -34,15 +34,29 @@ namespace Engine
     BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + g_max_slot_per_texture,
     BIND_SLOT_END
   };
-  
+
+  static_assert(BIND_SLOT_END < g_reserved_struct_buffer_slot);
   static_assert(BIND_SLOT_END < 128);
+
+  enum eSBType
+  {
+    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
+    SB_TYPE_SHADOW,
+    SB_TYPE_INSTANCE,
+    SB_TYPE_MAX
+  };
+
+  static_assert(SB_TYPE_MAX < g_reserved_bind_slot);
+  static_assert(SB_TYPE_MAX < 128);
 
   enum eReservedTexBindSlot
   {
-    RESERVED_SHADOW_MAP = g_reserved_bind_slot,
-    RESERVED_RENDERED,
+    RESERVED_RENDERED = g_reserved_bind_slot,
     RESERVED_BONES,
     RESERVED_ATLAS,
+
+    // Texture Array
+    RESERVED_SHADOW_MAP,
     RESERVED_END,
   };
 
@@ -68,13 +82,6 @@ namespace Engine
 
   enum eClientSBType : UINT;
   enum eClientSBUAVType : UINT;
-
-  enum eSBType
-  {
-    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
-    SB_TYPE_SHADOW,
-    SB_TYPE_INSTANCE,
-  };
 
   enum eSBUAVType
   {

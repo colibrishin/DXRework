@@ -143,6 +143,11 @@ namespace Engine::Manager::Graphics
       m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
       m_sb_light_vps_buffer_.BindSRV(SHADER_GEOMETRY);
 
+      ComPtr<ID3D11RenderTargetView> prev_rtv = nullptr;
+      ComPtr<ID3D11DepthStencilView> prev_dsv = nullptr;
+
+      GetD3Device().GetContext()->OMGetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.GetAddressOf());
+
       UINT idx = 0;
 
       for (const auto& ptr_light : m_lights_ | std::views::values)
@@ -151,24 +156,20 @@ namespace Engine::Manager::Graphics
         {
           // It only needs to render the depth of the object from the light's point of view.
           // Swap the depth stencil to the each light's shadow map.
-          ComPtr<ID3D11RenderTargetView> prev_rtv = nullptr;
-          ComPtr<ID3D11DepthStencilView> prev_dsv = nullptr;
-
           ComPtr<ID3D11RenderTargetView> rtv = m_shadow_map_mask_.GetRTV();
           ComPtr<ID3D11DepthStencilView> dsv = m_shadow_texs_[light->GetLocalID()].GetDSV();
 
-          GetD3Device().GetContext()->OMGetRenderTargets(0, prev_rtv.GetAddressOf(), prev_dsv.GetAddressOf());
           GetD3Device().GetContext()->OMSetRenderTargets(1, rtv.GetAddressOf(), dsv.Get());
 
           // Notify the index of the shadow map to the shader.
           GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
           // Render the depth of the object from the light's point of view.
           BuildShadowMap(dt);
-
-          // Cleanup
-          GetD3Device().GetContext()->OMSetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.Get());
         }
       }
+
+      // Cleanup
+      GetD3Device().GetContext()->OMSetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.Get());
 
       // Geometry shader's work is done.
       m_sb_light_vps_buffer_.UnbindSRV(SHADER_GEOMETRY);
@@ -220,7 +221,12 @@ namespace Engine::Manager::Graphics
     // And the light view and projection matrix buffer to re-evaluate.
     m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
 
-    GetRenderPipeline().UnbindResource(RESERVED_SHADOW_MAP, SHADER_PIXEL);
+    GetRenderPipeline().UnbindResources
+      (
+       RESERVED_SHADOW_MAP,
+       SHADER_PIXEL,
+       static_cast<UINT>(m_lights_.size())
+      );
   }
 
   void ShadowManager::FixedUpdate(const float& dt) {}
