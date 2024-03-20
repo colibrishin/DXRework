@@ -12,6 +12,9 @@ SERIALIZE_IMPL
 (
  Client::Scripts::FezPlayerScript,
  _ARTAG(_BSTSUPER(Engine::Script))
+ _ARTAG(m_state_)
+ _ARTAG(m_prev_state_)
+ _ARTAG(m_rotation_count_)
 )
 
 namespace Client::Scripts
@@ -145,9 +148,9 @@ namespace Client::Scripts
     static const Quaternion rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 90.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 180.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 270.0f)
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(90.0f)),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(180.0f)),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(270.0f))
     };
 
     const auto& owner = GetOwner().lock();
@@ -183,13 +186,14 @@ namespace Client::Scripts
     if (rotating || tr->GetLocalRotation() != Quaternion::Identity)
     {
       m_state_ = CHAR_STATE_ROTATE;
+      rb->FullReset();
       rb->SetFixed(true);
     }
     else if (m_state_ == CHAR_STATE_ROTATE)
     {
       m_state_ = CHAR_STATE_IDLE;
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->Reset();
+      rb->FullReset();
       rb->SetFixed(false);
     }
   }
