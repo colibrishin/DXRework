@@ -15,6 +15,8 @@ SERIALIZE_IMPL
  _ARTAG(m_state_)
  _ARTAG(m_prev_state_)
  _ARTAG(m_rotation_count_)
+ _ARTAG(m_normal_spin_)
+ _ARTAG(m_rotate_allowed_)
 )
 
 namespace Client::Scripts
@@ -105,7 +107,9 @@ namespace Client::Scripts
     : Script(SCRIPT_T_FEZ_PLAYER, {}),
       m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),
-      m_rotation_count_(0) { }
+      m_rotation_count_(0),
+      m_normal_spin_(0),
+      m_rotate_allowed_(true) { }
 
   void FezPlayerScript::UpdateMove()
   {
@@ -149,6 +153,7 @@ namespace Client::Scripts
   {
     if (GetOwner().expired()) { return; }
 
+    // Rotation table for the player.
     static const Quaternion rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
@@ -168,11 +173,15 @@ namespace Client::Scripts
     bool        rotating  = false;
     const auto  angle     = Quaternion::Angle(rot, Quaternion::CreateFromAxisAngle(Vector3::Right, 0.f));
 
-    // due to the slerp, rotation is not exact.
+    // Due to the slerp, rotation is not exact.
+    // Wait for the rotation to be close to the target rotation.
     if (tr->GetLocalRotation() != rotations[m_rotation_count_])
     {
       tr->SetLocalRotation(rotations[m_rotation_count_]);
+      return;
     }
+
+    if (!m_rotate_allowed_) { return; }
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
@@ -187,14 +196,17 @@ namespace Client::Scripts
       rotating = true;
     }
 
-    if (rotating || tr->GetLocalRotation() != Quaternion::Identity)
+    if (rotating || m_normal_spin_ != m_rotation_count_)
     {
       m_state_ = CHAR_STATE_ROTATE;
       rb->FullReset();
       rb->SetFixed(true);
     }
-    else if (m_state_ == CHAR_STATE_ROTATE)
+    else if (m_state_ == CHAR_STATE_ROTATE && 
+             m_normal_spin_ == m_rotation_count_)
     {
+      // Check the player's "normal" rotational position and if it is the same as the current rotation position,
+      // then set the player's state to idle.
       m_state_ = CHAR_STATE_IDLE;
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
       rb->FullReset();
@@ -213,12 +225,15 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
+    const auto& key_state = GetApplication().GetCurrentKeyState();
     const auto&     up         = tr->Up();
     constexpr float jump_force = 400.f;
     constexpr float jump_apex = 5.f;
 
-    if (GetApplication().HasKeyChanged(Keyboard::Space) || GetApplication().HasKeyChanged(Keyboard::W))
+    // Use the continuous jump check to threshold the jump height.
+    if (key_state.W || key_state.Space)
     {
+      // If the player has reached the apex of the jump, then set the player's state to fall.
       if (rb->GetT0LinearVelocity().y > jump_apex)
       {
         m_state_ = CHAR_STATE_FALL;
@@ -231,6 +246,7 @@ namespace Client::Scripts
     }
     else
     {
+      // If the player lets go of the jump key, then set the player's state to fall.
       if (rb->GetT0LinearVelocity().y > 0.f)
       {
         m_state_ = CHAR_STATE_FALL;

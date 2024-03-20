@@ -13,7 +13,9 @@ namespace Client::Scripts
       : Script(SCRIPT_T_FEZ_PLAYER, owner),
         m_state_(CHAR_STATE_IDLE),
         m_prev_state_(CHAR_STATE_IDLE),
-        m_rotation_count_(0) { }
+        m_rotation_count_(0),
+        m_normal_spin_(0),
+        m_rotate_allowed_(true) { }
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -23,6 +25,7 @@ namespace Client::Scripts
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+    void SetRotateAllowed(const bool allowed) { m_rotate_allowed_ = allowed; }
 
   private:
     SERIALIZE_DECL
@@ -39,7 +42,11 @@ namespace Client::Scripts
 
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
+
     UINT m_rotation_count_;
+    UINT m_normal_spin_;
+
+    bool m_rotate_allowed_;
 
   };
 } // namespace Client::Scripts
