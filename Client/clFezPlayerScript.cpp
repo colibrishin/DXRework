@@ -12,6 +12,9 @@ SERIALIZE_IMPL
 (
  Client::Scripts::FezPlayerScript,
  _ARTAG(_BSTSUPER(Engine::Script))
+ _ARTAG(m_state_)
+ _ARTAG(m_prev_state_)
+ _ARTAG(m_rotation_count_)
 )
 
 namespace Client::Scripts
