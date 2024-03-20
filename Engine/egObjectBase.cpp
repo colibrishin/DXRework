@@ -200,16 +200,37 @@ namespace Engine::Abstract
   void ObjectBase::OnCollisionEnter(const StrongCollider& other)
   {
     if (!GetComponent<Components::Collider>().lock()) { throw std::exception("Object has no collider"); }
+
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      if (!script->GetActive()) { continue; }
+
+      script->OnCollisionEnter(other);
+    }
   }
 
   void ObjectBase::OnCollisionContinue(const StrongCollider& other)
   {
     if (!GetComponent<Components::Collider>().lock()) { throw std::exception("Object has no collider"); }
+
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      if (!script->GetActive()) { continue; }
+
+      script->OnCollisionContinue(other);
+    }
   }
 
   void ObjectBase::OnCollisionExit(const StrongCollider& other)
   {
     if (!GetComponent<Components::Collider>().lock()) { throw std::exception("Object has no collider"); }
+
+    for (const auto& script : m_scripts_ | std::views::values)
+    {
+      if (!script->GetActive()) { continue; }
+
+      script->OnCollisionExit(other);
+    }
   }
 
   WeakComponent ObjectBase::checkComponent(const eComponentType type)

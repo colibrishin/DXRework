@@ -72,4 +72,10 @@ namespace Client::Scripts
   }
 
   void HpTextScript::PostRender(const float& dt) {}
+
+  void HpTextScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void HpTextScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void HpTextScript::OnCollisionExit(const WeakCollider& other) {}
 }

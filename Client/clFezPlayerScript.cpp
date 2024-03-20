@@ -15,6 +15,7 @@ SERIALIZE_IMPL
  _ARTAG(m_state_)
  _ARTAG(m_prev_state_)
  _ARTAG(m_rotation_count_)
+ _ARTAG(m_rotate_allowed_)
 )
 
 namespace Client::Scripts
@@ -58,19 +59,23 @@ namespace Client::Scripts
   {
     switch (m_state_)
     {
-    case CHAR_STATE_IDLE: UpdateMove();
-      UpdateRotate();
+    case CHAR_STATE_IDLE: 
+      UpdateMove();
+      UpdateRotate(dt);
       UpdateJump();
       break;
-    case CHAR_STATE_WALK: UpdateMove();
+    case CHAR_STATE_WALK:
+      UpdateMove();
       UpdateJump();
       break;
     case CHAR_STATE_RUN: break;
-    case CHAR_STATE_JUMP: UpdateMove();
+    case CHAR_STATE_JUMP: 
+      UpdateMove();
       break;
     case CHAR_STATE_CLIMB: break;
     case CHAR_STATE_SWIM: break;
-    case CHAR_STATE_ROTATE: UpdateRotate();
+    case CHAR_STATE_ROTATE: 
+      UpdateRotate(dt);
       break;
     case CHAR_STATE_FALL: break;
     case CHAR_STATE_ATTACK: break;
@@ -95,13 +100,20 @@ namespace Client::Scripts
 
   void FezPlayerScript::PostRender(const float& dt) {}
 
+  void FezPlayerScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void FezPlayerScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void FezPlayerScript::OnCollisionExit(const WeakCollider& other) {}
+
   SCRIPT_CLONE_IMPL(FezPlayerScript)
 
   FezPlayerScript::FezPlayerScript()
     : Script(SCRIPT_T_FEZ_PLAYER, {}),
       m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),
-      m_rotation_count_(0) { }
+      m_rotation_count_(0),
+      m_rotate_allowed_(true) { }
 
   void FezPlayerScript::UpdateMove()
   {
@@ -116,16 +128,15 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cam->GetActive()) { return; }
 
     const auto& right = tr->Right();
-    const auto& key_state = GetApplication().GetCurrentKeyState();
     constexpr float speed = 1.f;
     bool moving = false;
 
-    if (key_state.IsKeyDown(Keyboard::D))
+    if (GetApplication().IsKeyPressed(Keyboard::D))
     {
       rb->AddT1Force(right * speed);
       moving = true;
     }
-    if (key_state.IsKeyDown(Keyboard::A))
+    if (GetApplication().IsKeyPressed(Keyboard::A))
     {
       rb->AddT1Force(-right * speed);
       moving = true;
@@ -141,17 +152,9 @@ namespace Client::Scripts
     }
   }
 
-  void FezPlayerScript::UpdateRotate()
+  void FezPlayerScript::UpdateRotate(const float dt)
   {
     if (GetOwner().expired()) { return; }
-
-    static const Quaternion rotations[4] = 
-    {
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(90.0f)),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(180.0f)),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(270.0f))
-    };
 
     const auto& owner = GetOwner().lock();
     const auto& tr    = owner->GetComponent<Components::Transform>().lock();
@@ -162,39 +165,54 @@ namespace Client::Scripts
 
     const auto  rot       = tr->GetLocalRotation();
     bool        rotating  = false;
-    const auto  angle     = Quaternion::Angle(rot, Quaternion::CreateFromAxisAngle(Vector3::Right, 0.f));
 
-    // due to the slerp, rotation is not exact.
-    if (tr->GetLocalRotation() != rotations[m_rotation_count_])
+    // If the player is not allowed to rotate.
+    if (!m_rotate_allowed_) { return; }
+
+    // Case where the player is rotating.
+    if (m_state_ == CHAR_STATE_ROTATE)
     {
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
+      // Wait for the rotation to be close to the target rotation.
+      if (s_rotation_speed > m_accumulated_dt_)
+      {
+        tr->SetLocalRotation(Quaternion::Slerp(rot, s_rotations[m_rotation_count_], m_accumulated_dt_));
+        m_accumulated_dt_ += dt;
+        return;
+      }
+      // If the player is rotating and rotation is completed,
+      else
+      {
+        // Set the rotation to the target rotation and reset the accumulated time.
+        tr->SetLocalRotation(s_rotations[m_rotation_count_]);
+        m_accumulated_dt_ = 0.f;
+
+        // Set the player's state back to idle.
+        m_state_ = CHAR_STATE_IDLE;
+        // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
+        rb->FullReset();
+        rb->SetFixed(false);
+        return;
+      }
     }
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
       m_rotation_count_ = (m_rotation_count_ + 1) % 4;
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
       rotating = true;
     }
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
       m_rotation_count_ = (m_rotation_count_ + 3) % 4;
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
       rotating = true;
     }
 
-    if (rotating || tr->GetLocalRotation() != Quaternion::Identity)
+    // If the player starts rotating, then set the player's state to rotate.
+    // Make the player full stop.
+    if (rotating)
     {
       m_state_ = CHAR_STATE_ROTATE;
       rb->FullReset();
       rb->SetFixed(true);
-    }
-    else if (m_state_ == CHAR_STATE_ROTATE)
-    {
-      m_state_ = CHAR_STATE_IDLE;
-      // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->FullReset();
-      rb->SetFixed(false);
     }
   }
 
@@ -209,12 +227,15 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
+    const auto& key_state = GetApplication().GetCurrentKeyState();
     const auto&     up         = tr->Up();
     constexpr float jump_force = 400.f;
     constexpr float jump_apex = 5.f;
 
-    if (GetApplication().HasKeyChanged(Keyboard::Space) || GetApplication().HasKeyChanged(Keyboard::W))
+    // Use the continuous jump check to threshold the jump height.
+    if (key_state.W || key_state.Space)
     {
+      // If the player has reached the apex of the jump, then set the player's state to fall.
       if (rb->GetT0LinearVelocity().y > jump_apex)
       {
         m_state_ = CHAR_STATE_FALL;
@@ -227,6 +248,7 @@ namespace Client::Scripts
     }
     else
     {
+      // If the player lets go of the jump key, then set the player's state to fall.
       if (rb->GetT0LinearVelocity().y > 0.f)
       {
         m_state_ = CHAR_STATE_FALL;

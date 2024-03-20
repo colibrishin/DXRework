@@ -97,6 +97,12 @@ namespace Client::Scripts
     return {};
   }
 
+  void PlayerHitboxScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void PlayerHitboxScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void PlayerHitboxScript::OnCollisionExit(const WeakCollider& other) {}
+
   PlayerHitboxScript::PlayerHitboxScript()
     : Script(SCRIPT_T_PLAYER_HITBOX, {}) {}
 
