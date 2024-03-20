@@ -58,19 +58,23 @@ namespace Client::Scripts
   {
     switch (m_state_)
     {
-    case CHAR_STATE_IDLE: UpdateMove();
+    case CHAR_STATE_IDLE: 
+      UpdateMove();
       UpdateRotate();
       UpdateJump();
       break;
-    case CHAR_STATE_WALK: UpdateMove();
+    case CHAR_STATE_WALK:
+      UpdateMove();
       UpdateJump();
       break;
     case CHAR_STATE_RUN: break;
-    case CHAR_STATE_JUMP: UpdateMove();
+    case CHAR_STATE_JUMP: 
+      UpdateMove();
       break;
     case CHAR_STATE_CLIMB: break;
     case CHAR_STATE_SWIM: break;
-    case CHAR_STATE_ROTATE: UpdateRotate();
+    case CHAR_STATE_ROTATE: 
+      UpdateRotate();
       break;
     case CHAR_STATE_FALL: break;
     case CHAR_STATE_ATTACK: break;
