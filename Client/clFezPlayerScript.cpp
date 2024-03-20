@@ -130,16 +130,15 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cam->GetActive()) { return; }
 
     const auto& right = tr->Right();
-    const auto& key_state = GetApplication().GetCurrentKeyState();
     constexpr float speed = 1.f;
     bool moving = false;
 
-    if (key_state.IsKeyDown(Keyboard::D))
+    if (GetApplication().IsKeyPressed(Keyboard::D))
     {
       rb->AddT1Force(right * speed);
       moving = true;
     }
-    if (key_state.IsKeyDown(Keyboard::A))
+    if (GetApplication().IsKeyPressed(Keyboard::A))
     {
       rb->AddT1Force(-right * speed);
       moving = true;
