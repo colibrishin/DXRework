@@ -2,6 +2,7 @@
 #include "egCamera.h"
 #include "egApplication.h"
 #include "egGlobal.h"
+#include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 #include "egRigidbody.h"
 #include "egTransform.h"
@@ -77,7 +78,7 @@ namespace Engine::Objects
 
         m_projection_matrix_ = DirectX::XMMatrixOrthographicLH
           (
-           m_zoom_ * aspectRatio, aspectRatio, g_screen_near, g_screen_far
+           m_fov_ * aspectRatio, m_fov_, g_screen_near, g_screen_far
           );
       }
       else
@@ -156,9 +157,9 @@ namespace Engine::Objects
 
   void Camera::SetFixedUp(bool bFixedUp) { m_b_fixed_up_ = bFixedUp; }
 
-  void Camera::SetZoom(float zoom)
+  void Camera::SetFOV(float zoom)
   {
-    m_zoom_ = zoom;
+    m_fov_ = zoom;
   }
 
   bool Camera::GetOrthogonal() const { return m_b_orthogonal_; }
@@ -199,7 +200,11 @@ namespace Engine::Objects
       ))
     {
       ImGui::Text("Orthogonal");
+      ImGui::SameLine();
       ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
+      ImGui::Text("FOV");
+      ImGui::SameLine();
+      ImGui::SliderFloat("##FOV", &m_fov_, 10.f, 40.f);
       ImGui::End();
     }
   }

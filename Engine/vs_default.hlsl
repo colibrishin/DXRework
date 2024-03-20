@@ -106,5 +106,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   output.clipSpacePosZ = output.position.z;
   output.clipPlane     = dot(mul(input.position, world), g_clipPlane);
 
+  output.instanceId = instanceId;
+
   return output;
 }

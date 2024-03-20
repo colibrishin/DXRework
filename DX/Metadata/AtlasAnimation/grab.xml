@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<AnimatedTexturePC width="64" height="64" actualWidth="14" actualHeight="19">
+  <Frames>
+    <FramePC duration="1600000">
+      <Rectangle x="0" y="0" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="1600000">
+      <Rectangle x="15" y="0" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="800000">
+      <Rectangle x="30" y="0" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="800000">
+      <Rectangle x="45" y="0" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="800000">
+      <Rectangle x="0" y="20" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="15" y="20" w="14" h="19"/>
+    </FramePC>
+    <FramePC duration="1000000">
+      <Rectangle x="0" y="40" w="14" h="19"/>
+    </FramePC>
+  </Frames>
+</AnimatedTexturePC>

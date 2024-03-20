@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "egMaterial.h"
 
-#include "egShader.hpp"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
+#include "egShader.hpp"
 #include "egShape.h"
 #include "egTexture.h"
 #include "egType.h"
@@ -23,7 +23,8 @@ namespace Engine::Resources
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
       m_material_cb_(),
-      m_b_edit_dialog_(false)
+      m_b_edit_dialog_(false),
+      m_b_wait_for_choices_(false)
   {
     m_material_cb_.specular_power         = 100.0f;
     m_material_cb_.specular_color         = DirectX::Colors::White;
@@ -60,6 +61,12 @@ namespace Engine::Resources
         continue;
       }
 
+      if (type == RES_T_ATLAS_ANIM)
+      {
+        m_material_cb_.flags.atlas = 1;
+        continue;
+      }
+
       for (auto it = resources.begin(); it != resources.end(); ++it)
       {
         const auto res = *it;
@@ -87,7 +94,7 @@ namespace Engine::Resources
     for (const auto& [type, resources] : m_resources_loaded_)
     {
       // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM) { continue; }
+      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_ANIM) { continue; }
 
       for (auto it = resources.begin(); it != resources.end(); ++it)
       {
@@ -122,7 +129,7 @@ namespace Engine::Resources
     for (const auto& [type, resources] : m_resources_loaded_)
     {
       // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM) { continue; }
+      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_TEX) { continue; }
 
       for (const auto& res : resources) { res->PostRender(dt); }
     }
@@ -175,38 +182,65 @@ namespace Engine::Resources
 
     if (m_b_edit_dialog_)
     {
-        if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      if (ImGui::Begin(GetName().c_str(), &m_b_edit_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        if (ImGui::BeginListBox("Resource Used"))
         {
-          if (ImGui::BeginListBox("Resource Used"))
+          for (auto& [type, resources] : m_resources_loaded_)
           {
-            for (auto& [type, resources] : m_resources_loaded_)
+            if (ImGui::TreeNode(g_resource_type_str[type]))
             {
-              if (ImGui::TreeNode(g_resource_type_str[type]))
+              for (auto it = resources.begin(); it != resources.end();)
               {
-                for (auto it = resources.begin(); it != resources.end();)
+                if (ImGui::Selectable((*it)->GetName().c_str(), false))
                 {
-                  if (ImGui::Selectable((*it)->GetName().c_str(), false))
-                  {
-                    std::erase_if
-                      (
-                       m_resource_paths_[(*it)->GetResourceType()], [&it](const std::pair<EntityName, MetadataPathStr>& pair)
-                       {
-                         return pair.first == (*it)->GetName() && pair.second == (*it)->GetMetadataPath();
-                       }
-                      );
-                    it = resources.erase(it);
-                  }
-                  else { ++it; }
+                  std::erase_if
+                    (
+                     m_resource_paths_[(*it)->GetResourceType()],
+                     [&it](const std::pair<EntityName, MetadataPathStr>& pair)
+                     {
+                       return pair.first == (*it)->GetName() && pair.second == (*it)->GetMetadataPath();
+                     }
+                    );
+                  it = resources.erase(it);
                 }
-                ImGui::TreePop();
+                else { ++it; }
               }
+              ImGui::TreePop();
             }
-            ImGui::EndListBox();
           }
 
-        if (ImGui::BeginDragDropTarget() && ImGui::IsMouseReleased(0))
+          if (!m_shaders_loaded_.empty())
+          {
+            if (ImGui::TreeNode("Shader"))
+            {
+              for (auto it = m_shaders_loaded_.begin(); it != m_shaders_loaded_.end();)
+              {
+                if (ImGui::Selectable(it->second->GetName().c_str(), false))
+                {
+                  std::erase_if
+                    (
+                     m_shader_paths_,
+                     [&it](const std::pair<EntityName, MetadataPathStr>& pair)
+                     {
+                       return pair.first == it->second->GetName() && pair.second == it->second->GetMetadataPath();
+                     }
+                    );
+                  m_shaders_loaded_.erase(it);
+                }
+                else { ++it; }
+              }
+
+              ImGui::TreePop();
+            }
+          }
+
+          ImGui::EndListBox();
+        }
+
+        if (ImGui::BeginDragDropTarget())
         {
-          if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE", ImGuiDragDropFlags_AcceptBeforeDelivery))
+          if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
           {
             if (const auto resource = static_cast<StrongResource*>(payload->Data))
             {
@@ -215,6 +249,29 @@ namespace Engine::Resources
           }
 
           ImGui::EndDragDropTarget();
+        }
+
+        if (ImGui::Button("Add multiple resources"))
+        {
+          if (GetResourceManager().RequestMultipleChoiceDialog())
+          {
+            m_b_wait_for_choices_ = true;
+          }
+        }
+
+        if (m_b_wait_for_choices_ && ImGui::Begin("Add multiple resources..."))
+        {
+          if (GetResourceManager().OpenMultipleChoiceDialog(m_resources_to_load_))
+          {
+            for (const auto& resource : m_resources_to_load_)
+            {
+              SetResource(resource);
+            }
+
+            m_b_wait_for_choices_ = false;
+          }
+
+          ImGui::End();
         }
 
         ImGui::End();
@@ -242,7 +299,8 @@ namespace Engine::Resources
   Material::Material()
     : Resource("", RES_T_MTR),
       m_material_cb_(),
-      m_b_edit_dialog_(false) {}
+      m_b_edit_dialog_(false),
+      m_b_wait_for_choices_(false) {}
 
   void Material::SetResource(const StrongResource& resource)
   {
@@ -263,7 +321,8 @@ namespace Engine::Resources
 
     if (resource->GetResourceType() == RES_T_SHADER)
     {
-      if (std::ranges::find_if(m_shader_paths_, [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
+      if (!resource->GetMetadataPath().empty() && 
+          std::ranges::find_if(m_shader_paths_, [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
       {
         return pair.second == resource->GetMetadataPath();
       }) != m_shader_paths_.end())
@@ -273,20 +332,34 @@ namespace Engine::Resources
 
       m_shader_paths_.emplace_back(resource->GetName(), resource->GetMetadataPath().string());
       m_shaders_loaded_[resource->GetSharedPtr<Shader>()->GetDomain()] = resource->GetSharedPtr<Shader>();
+
       return;
     }
 
-    if (std::ranges::find_if
+    if (!resource->GetMetadataPath().empty() &&
+        std::ranges::find_if
         (
          m_resource_paths_[resource->GetResourceType()],
          [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
          {
            return pair.second == resource->GetMetadataPath();
          }
-        ) != m_resource_paths_[resource->GetResourceType()].end()) { return; }
+        ) != m_resource_paths_[resource->GetResourceType()].end())
+    {
+      return;
+    }
 
     m_resource_paths_[resource->GetResourceType()].emplace_back(resource->GetName(), resource->GetMetadataPath().string());
     m_resources_loaded_[resource->GetResourceType()].push_back(resource);
+
+    std::ranges::sort
+      (
+       m_resources_loaded_[resource->GetResourceType()],
+       [](const StrongResource& lhs, const StrongResource& rhs)
+       {
+         return lhs->GetName() < rhs->GetName();
+       }
+      );
   }
 
   void Material::Load_INTERNAL()

@@ -101,6 +101,8 @@ namespace Engine::Resources
 
     // non-serialized
     bool                                                       m_b_edit_dialog_;
+    bool                                                       m_b_wait_for_choices_;
+    std::vector<StrongResource>                                m_resources_to_load_;
     TempParam                                                  m_temp_param_;
     std::map<const eShaderDomain, StrongShader>                m_shaders_loaded_;
     std::map<const eResourceType, std::vector<StrongResource>> m_resources_loaded_;

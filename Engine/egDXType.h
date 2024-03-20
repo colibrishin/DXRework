@@ -52,6 +52,7 @@ namespace Engine::Graphics
     OffsetT<int> texArr[g_max_slot_per_texture];
     OffsetT<int> texCube[g_max_slot_per_texture];
     OffsetT<int> bone;
+    OffsetT<int> atlas;
   };
 
   struct VertexElement

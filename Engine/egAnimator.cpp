@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "egAnimator.h"
+#include "egAtlasAnimation.h"
 #include "egBaseAnimation.h"
 #include "egBoneAnimation.h"
 #include "egImGuiHeler.hpp"
@@ -39,9 +40,7 @@ namespace Engine::Components
 
     const auto  tr_anim   = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_id_).lock();
     const auto  bone_anim = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
-
-    if (!tr_anim && !bone_anim) { return; }
-    const float duration  = tr_anim ? tr_anim->GetDuration() : bone_anim->GetDuration();
+    const auto  atlas_anim = mat.lock()->GetResource<Resources::AtlasAnimation>(m_animation_id_).lock();
 
     m_total_dt_ += dt;
 
@@ -56,6 +55,11 @@ namespace Engine::Components
     {
       ResetIfTimer(bone_anim);
       UpdateTimer(bone_anim);
+    }
+    else if (atlas_anim)
+    {
+      ResetIfTimer(atlas_anim);
+      UpdateTimer(atlas_anim);
     }
   }
 
@@ -111,8 +115,7 @@ namespace Engine::Components
       const auto time = Resources::BaseAnimation::ConvertDtToFrame
         (
          m_current_frame_,
-         anim->GetTicksPerSecond(),
-         anim->GetDuration()
+         anim->GetTicksPerSecond()
         );
 
       const auto& primitive = anim->m_simple_primitive_;
