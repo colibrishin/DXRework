@@ -183,13 +183,14 @@ namespace Client::Scripts
     if (rotating || tr->GetLocalRotation() != Quaternion::Identity)
     {
       m_state_ = CHAR_STATE_ROTATE;
+      rb->FullReset();
       rb->SetFixed(true);
     }
     else if (m_state_ == CHAR_STATE_ROTATE)
     {
       m_state_ = CHAR_STATE_IDLE;
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->Reset();
+      rb->FullReset();
       rb->SetFixed(false);
     }
   }
