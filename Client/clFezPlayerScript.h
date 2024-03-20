@@ -42,4 +42,6 @@ namespace Client::Scripts
     UINT m_rotation_count_;
 
   };
-}
+} // namespace Client::Scripts
+
+BOOST_CLASS_EXPORT_KEY(Client::Scripts::FezPlayerScript)

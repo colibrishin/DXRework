@@ -46,7 +46,11 @@ namespace Engine::Components
     Vector3 GetT1Torque() const;
 
     bool GetGrounded() const;
+    // Reset state of the rigidbody. T1 force and torque will be now be T0.
     void Reset();
+    // Reset state of the rigidbody. Every force and torque will set to be zero.
+    void FullReset();
+
     bool IsGravityAllowed() const;
     bool IsFixed() const;
     bool IsGrounded() const;
