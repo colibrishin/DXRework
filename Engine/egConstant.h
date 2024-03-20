@@ -14,8 +14,8 @@ namespace Engine
   constexpr UINT g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
   constexpr UINT g_max_slot_per_texture         = 8;
   constexpr UINT g_max_slot_per_uav             = 2;
-  constexpr UINT g_reserved_bind_slot           = 32;
-  constexpr UINT g_reserved_struct_buffer_slot  = 48;
+  constexpr UINT g_reserved_struct_buffer_slot  = 32;
+  constexpr UINT g_reserved_bind_slot           = 48;
   constexpr UINT g_uav_slot_limit               = 8;
   constexpr UINT g_reserved_uav_slot            = 6;
 
