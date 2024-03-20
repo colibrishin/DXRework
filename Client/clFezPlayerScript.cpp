@@ -237,6 +237,7 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cldr->GetActive()) { return; }
 
     const auto& up = tr->Up();
+    const auto& center = tr->GetWorldPosition();
     const auto& down = -up;
     const auto& pos = tr->GetLocalPosition();
     bool        hit = false;
@@ -244,7 +245,7 @@ namespace Client::Scripts
     const auto& octree = scene->GetObjectTree();
     octree.Iterate
       (
-       pos, [&hit, &owner, &cldr](const WeakObjectBase& obj)
+       pos, [&hit, &owner, &cldr, &center](const WeakObjectBase& obj)
        {
          if (const auto& locked = obj.lock())
          {
@@ -252,17 +253,20 @@ namespace Client::Scripts
            if (!GetCollisionDetector().IsCollisionLayer(owner->GetLayer(), locked->GetLayer())) { return false; }
 
            const auto& rcl = locked->GetComponent<Components::Collider>().lock();
+           const auto& rtr = locked->GetComponent<Components::Transform>().lock();
 
-           if (!rcl) { return false; }
-           if (!rcl->GetActive()) { return false; }
+           if (!rcl || !rtr) { return false; }
+           if (!rcl->GetActive() || !rtr->GetActive()) { return false; }
 
            const auto& rowner = rcl->GetOwner().lock();
            if (!rowner) { return false; }
            if (const auto& parent = owner->GetParent().lock(); 
                rowner == parent) { return false; }
 
+           // Check whether two objects are colliding in direction of down
+           // Also check for position in y-axis so that it doesn't collide with ceiling
            if (Components::Collider::Intersects(cldr, rcl, Vector3::Down) &&
-               !Components::Collider::Intersects(cldr, rcl, Vector3::Up))
+               center.y > rtr->GetWorldPosition().y)
            {
              hit = true;
              return true;
