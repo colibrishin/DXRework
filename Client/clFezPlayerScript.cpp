@@ -15,7 +15,6 @@ SERIALIZE_IMPL
  _ARTAG(m_state_)
  _ARTAG(m_prev_state_)
  _ARTAG(m_rotation_count_)
- _ARTAG(m_normal_spin_)
  _ARTAG(m_rotate_allowed_)
 )
 
@@ -62,7 +61,7 @@ namespace Client::Scripts
     {
     case CHAR_STATE_IDLE: 
       UpdateMove();
-      UpdateRotate();
+      UpdateRotate(dt);
       UpdateJump();
       break;
     case CHAR_STATE_WALK:
@@ -76,7 +75,7 @@ namespace Client::Scripts
     case CHAR_STATE_CLIMB: break;
     case CHAR_STATE_SWIM: break;
     case CHAR_STATE_ROTATE: 
-      UpdateRotate();
+      UpdateRotate(dt);
       break;
     case CHAR_STATE_FALL: break;
     case CHAR_STATE_ATTACK: break;
@@ -114,7 +113,6 @@ namespace Client::Scripts
       m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),
       m_rotation_count_(0),
-      m_normal_spin_(0),
       m_rotate_allowed_(true) { }
 
   void FezPlayerScript::UpdateMove()
@@ -154,7 +152,7 @@ namespace Client::Scripts
     }
   }
 
-  void FezPlayerScript::UpdateRotate()
+  void FezPlayerScript::UpdateRotate(const float dt)
   {
     if (GetOwner().expired()) { return; }
 
@@ -167,46 +165,54 @@ namespace Client::Scripts
 
     const auto  rot       = tr->GetLocalRotation();
     bool        rotating  = false;
-    const auto  angle     = Quaternion::Angle(rot, Quaternion::CreateFromAxisAngle(Vector3::Right, 0.f));
 
-    // Due to the slerp, rotation is not exact.
-    // Wait for the rotation to be close to the target rotation.
-    if (tr->GetLocalRotation() != s_rotations[m_rotation_count_])
-    {
-      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
-      return;
-    }
-
+    // If the player is not allowed to rotate.
     if (!m_rotate_allowed_) { return; }
+
+    // Case where the player is rotating.
+    if (m_state_ == CHAR_STATE_ROTATE)
+    {
+      // Wait for the rotation to be close to the target rotation.
+      if (s_rotation_speed > m_accumulated_dt_)
+      {
+        tr->SetLocalRotation(Quaternion::Slerp(rot, s_rotations[m_rotation_count_], m_accumulated_dt_));
+        m_accumulated_dt_ += dt;
+        return;
+      }
+      // If the player is rotating and rotation is completed,
+      else
+      {
+        // Set the rotation to the target rotation and reset the accumulated time.
+        tr->SetLocalRotation(s_rotations[m_rotation_count_]);
+        m_accumulated_dt_ = 0.f;
+
+        // Set the player's state back to idle.
+        m_state_ = CHAR_STATE_IDLE;
+        // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
+        rb->FullReset();
+        rb->SetFixed(false);
+        return;
+      }
+    }
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
       m_rotation_count_ = (m_rotation_count_ + 1) % 4;
-      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       rotating = true;
     }
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
       m_rotation_count_ = (m_rotation_count_ + 3) % 4;
-      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       rotating = true;
     }
 
-    if (rotating || m_normal_spin_ != m_rotation_count_)
+    // If the player starts rotating, then set the player's state to rotate.
+    // Make the player full stop.
+    if (rotating)
     {
       m_state_ = CHAR_STATE_ROTATE;
       rb->FullReset();
       rb->SetFixed(true);
-    }
-    else if (m_state_ == CHAR_STATE_ROTATE && 
-             m_normal_spin_ == m_rotation_count_)
-    {
-      // Check the player's "normal" rotational position and if it is the same as the current rotation position,
-      // then set the player's state to idle.
-      m_state_ = CHAR_STATE_IDLE;
-      // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->FullReset();
-      rb->SetFixed(false);
     }
   }
 

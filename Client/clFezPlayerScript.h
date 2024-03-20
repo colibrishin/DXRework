@@ -9,6 +9,7 @@ namespace Client::Scripts
   public:
     // Vector3::Up is non-const static
     constexpr static Vector3 s_up = {0, 1, 0};
+    constexpr static float s_rotation_speed = 1.f;
 
     inline static const Quaternion s_rotations[4] = 
     {
@@ -25,7 +26,6 @@ namespace Client::Scripts
         m_state_(CHAR_STATE_IDLE),
         m_prev_state_(CHAR_STATE_IDLE),
         m_rotation_count_(0),
-        m_normal_spin_(0),
         m_rotate_allowed_(true) { }
 
     void Initialize() override;
@@ -50,7 +50,7 @@ namespace Client::Scripts
     FezPlayerScript();
 
     void UpdateMove();
-    void UpdateRotate();
+    void UpdateRotate(const float dt);
     void UpdateJump();
     void UpdateGrounded();
 
@@ -60,8 +60,10 @@ namespace Client::Scripts
     eCharacterState m_prev_state_;
 
     UINT m_rotation_count_;
-    UINT m_normal_spin_;
 
+    float m_accumulated_dt_;
+
+    // Flag for whether player has red hat.
     bool m_rotate_allowed_;
 
   };
