@@ -105,6 +105,24 @@ namespace Engine::Physics
       else if (type == BOUNDING_TYPE_SPHERE) { m_boundings_.sphere = TranslateBounding(m_boundings_.sphere, world); }
     }
 
+    [[nodiscard]] bool __vectorcall ContainsBy(const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat) const
+    {
+      if (other.type == BOUNDING_TYPE_BOX)
+      {
+        BoundingOrientedBox box = other.m_boundings_.box;
+        box                     = TranslateBounding(box, other_mat);
+        return ContainsBy(box);
+      }
+      else if (other.type == BOUNDING_TYPE_SPHERE)
+      {
+        BoundingSphere sphere = other.m_boundings_.sphere;
+        sphere                = TranslateBounding(sphere, other_mat);
+        return ContainsBy(sphere);
+      }
+
+      return false;
+    }
+
     [[nodiscard]] bool __vectorcall Intersects(
       const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat, const Vector3& dir,
       const float            epsilon = g_epsilon
