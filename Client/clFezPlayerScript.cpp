@@ -145,9 +145,9 @@ namespace Client::Scripts
     static const Quaternion rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 90.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 180.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 270.0f)
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(90.0f)),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(180.0f)),
+      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(270.0f))
     };
 
     const auto& owner = GetOwner().lock();
