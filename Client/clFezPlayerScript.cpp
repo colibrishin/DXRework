@@ -101,6 +101,12 @@ namespace Client::Scripts
 
   void FezPlayerScript::PostRender(const float& dt) {}
 
+  void FezPlayerScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void FezPlayerScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void FezPlayerScript::OnCollisionExit(const WeakCollider& other) {}
+
   SCRIPT_CLONE_IMPL(FezPlayerScript)
 
   FezPlayerScript::FezPlayerScript()

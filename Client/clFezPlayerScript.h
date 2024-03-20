@@ -27,6 +27,11 @@ namespace Client::Scripts
     void PostRender(const float& dt) override;
     void SetRotateAllowed(const bool allowed) { m_rotate_allowed_ = allowed; }
 
+  protected:
+    void OnCollisionEnter(const WeakCollider& other) override;
+    void OnCollisionContinue(const WeakCollider& other) override;
+    void OnCollisionExit(const WeakCollider& other) override;
+
   private:
     SERIALIZE_DECL
     SCRIPT_CLONE_DECL

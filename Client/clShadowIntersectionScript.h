@@ -32,6 +32,11 @@ namespace Client::Scripts
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
+  protected:
+    void OnCollisionEnter(const WeakCollider& other) override;
+    void OnCollisionContinue(const WeakCollider& other) override;
+    void OnCollisionExit(const WeakCollider& other) override;
+
   private:
     SERIALIZE_DECL
     SCRIPT_CLONE_DECL
