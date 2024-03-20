@@ -214,12 +214,27 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
     const auto&     up         = tr->Up();
-    constexpr float jump_force = 300.f;
+    constexpr float jump_force = 400.f;
+    constexpr float jump_apex = 5.f;
 
     if (GetApplication().HasKeyChanged(Keyboard::Space) || GetApplication().HasKeyChanged(Keyboard::W))
     {
-      rb->AddT1Force(up * jump_force);
-      m_state_ = CHAR_STATE_JUMP;
+      if (rb->GetT0LinearVelocity().y > jump_apex)
+      {
+        m_state_ = CHAR_STATE_FALL;
+      }
+      else
+      {
+        rb->AddT1Force(up * jump_force);
+        m_state_ = CHAR_STATE_JUMP; 
+      }
+    }
+    else
+    {
+      if (rb->GetT0LinearVelocity().y > 0.f)
+      {
+        m_state_ = CHAR_STATE_FALL;
+      }
     }
   }
 
