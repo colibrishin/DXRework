@@ -33,7 +33,7 @@ namespace Engine::Manager
 
   bool Application::HasKeyChanged(const DirectX::Keyboard::Keys key) const
   {
-    return m_previous_keyboard_state_.IsKeyDown(key) && m_keyboard->GetState().IsKeyUp(key);
+    return m_previous_keyboard_state_.IsKeyUp(key) && m_keyboard->GetState().IsKeyDown(key);
   }
 
   Mouse::State Application::GetMouseState() const { return m_mouse->GetState(); }
