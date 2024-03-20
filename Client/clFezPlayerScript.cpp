@@ -159,15 +159,6 @@ namespace Client::Scripts
   {
     if (GetOwner().expired()) { return; }
 
-    // Rotation table for the player.
-    static const Quaternion rotations[4] = 
-    {
-      Quaternion::CreateFromAxisAngle(Vector3::Up, 0.0f),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(90.0f)),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(180.0f)),
-      Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(270.0f))
-    };
-
     const auto& owner = GetOwner().lock();
     const auto& tr    = owner->GetComponent<Components::Transform>().lock();
     const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
@@ -181,9 +172,9 @@ namespace Client::Scripts
 
     // Due to the slerp, rotation is not exact.
     // Wait for the rotation to be close to the target rotation.
-    if (tr->GetLocalRotation() != rotations[m_rotation_count_])
+    if (tr->GetLocalRotation() != s_rotations[m_rotation_count_])
     {
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
+      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       return;
     }
 
@@ -192,13 +183,13 @@ namespace Client::Scripts
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
       m_rotation_count_ = (m_rotation_count_ + 1) % 4;
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
+      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       rotating = true;
     }
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
       m_rotation_count_ = (m_rotation_count_ + 3) % 4;
-      tr->SetLocalRotation(rotations[m_rotation_count_]);
+      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       rotating = true;
     }
 

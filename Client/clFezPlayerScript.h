@@ -7,6 +7,17 @@ namespace Client::Scripts
   class FezPlayerScript : public Engine::Script
   {
   public:
+    // Vector3::Up is non-const static
+    constexpr static Vector3 s_up = {0, 1, 0};
+
+    inline static const Quaternion s_rotations[4] = 
+    {
+      Quaternion::CreateFromAxisAngle(s_up, 0.0f),
+      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(90.0f)),
+      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(180.0f)),
+      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(270.0f))
+    };
+
     CLIENT_SCRIPT_T(FezPlayerScript, SCRIPT_T_FEZ_PLAYER)
 
     explicit FezPlayerScript(const WeakObjectBase& owner)
