@@ -574,14 +574,24 @@ namespace Engine
             {
               if (const auto obj_ptr = obj.lock())
               {
+                ImGui::Unindent(4);
+
+                std::string unique_button_name = "Remove###" + std::to_string(obj_ptr->GetID());
+
+                if (ImGui::Button(unique_button_name.c_str()))
+                {
+                  RemoveGameObject(obj_ptr->GetID(), static_cast<eLayerType>(i));
+                }
+
+                ImGui::Indent(4);
+
+                ImGui::SameLine();
+
                 const auto unique_name = obj_ptr->GetName() + " " +
-                                         obj_ptr->GetTypeName() + " " +
+                                         obj_ptr->GetPrettyTypeName() + "##" +
                                          std::to_string(obj_ptr->GetID());
 
-                if (ImGui::Selectable(unique_name.c_str()))
-                {
-                  obj_ptr->SetImGuiOpen(!obj_ptr->GetImGuiOpen());
-                }
+                ImGui::Selectable(unique_name.c_str(), &obj_ptr->GetImGuiOpen());
 
                 if (ImGui::BeginDragDropSource())
                 {
