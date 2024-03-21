@@ -79,21 +79,9 @@ namespace Engine::Abstract
     }
 
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-    void RemoveScript(const std::string& name = "")
+    void RemoveScript()
     {
-      if (m_scripts_.contains(which_script<T>::value))
-      {
-        auto& scripts = m_scripts_[which_script<T>::value];
-
-        if (name.empty() && !scripts.empty()) { scripts.erase(scripts.begin()); }
-        else
-        {
-          std::erase_if
-            (
-             scripts, [&name](const StrongScript& script) { return script->GetName() == name; }
-            );
-        }
-      }
+      removeScript(which_script<T>::value);
     }
 
     const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
@@ -129,7 +117,7 @@ namespace Engine::Abstract
 
     bool           GetActive() const;
     bool           GetCulled() const;
-    bool           GetImGuiOpen() const;
+    bool&          GetImGuiOpen();
     eDefObjectType GetObjectType() const;
 
     WeakObjectBase              GetParent() const;
@@ -182,6 +170,8 @@ namespace Engine::Abstract
         scene->RemoveCacheComponent<T>(component);
       }
     }
+
+    void removeScript(const eScriptType type);
 
     // Add pre-existing component to the object.
     WeakComponent addComponent(const StrongComponent& component);
