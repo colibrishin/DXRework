@@ -12,6 +12,7 @@ SERIALIZE_IMPL
 (
  Client::Scripts::CubifyScript,
  _ARTAG(_BSTSUPER(Engine::Script))
+ _ARTAG(m_cube_ids_)
 )
 
 namespace Client::Scripts
