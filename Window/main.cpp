@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "../Client/Client.h"
 
-#include "../Engine/egConstant.h"
+#include "../Engine/egDebugConstant.h"
 
 int WINAPI WinMain(
   HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
