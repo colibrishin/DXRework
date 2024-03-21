@@ -25,6 +25,8 @@ namespace Client::Scripts
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
+    [[nodiscard]] WeakObjectBase GetDepthNearestCube(const Vector3& pos) const;
+
   protected:
     void OnCollisionEnter(const WeakCollider& other) override;
     void OnCollisionContinue(const WeakCollider& other) override;
@@ -37,6 +39,11 @@ namespace Client::Scripts
     CubifyScript();
 
     std::vector<LocalActorID> m_cube_ids_;
+
+    int m_z_length_;
+    int m_x_length_;
+
+    void ExcludeCubes();
 
   };
 }

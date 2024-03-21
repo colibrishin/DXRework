@@ -5,6 +5,8 @@
 #include "egObjectBase.hpp"
 #include "egTransform.h"
 #include "egBaseCollider.hpp"
+#include "egCamera.h"
+#include "egGlobal.h"
 #include "egProjectionFrustum.h"
 #include "egRigidbody.h"
 
@@ -13,12 +15,16 @@ SERIALIZE_IMPL
  Client::Scripts::CubifyScript,
  _ARTAG(_BSTSUPER(Engine::Script))
  _ARTAG(m_cube_ids_)
+ _ARTAG(m_z_length_)
+ _ARTAG(m_x_length_)
 )
 
 namespace Client::Scripts
 {
   CubifyScript::CubifyScript(const WeakObjectBase& owner)
-    : Script(SCRIPT_T_CUBIFY, owner) {}
+    : Script(SCRIPT_T_CUBIFY, owner),
+      m_z_length_(0),
+      m_x_length_(0) {}
 
   CubifyScript::~CubifyScript() = default;
 
@@ -32,8 +38,6 @@ namespace Client::Scripts
       const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
 
       if (!cldr || !rb) { return; }
-      cldr->SetActive(false);
-      rb->SetActive(false);
 
       if (const auto& tr = owner->GetComponent<Components::Transform>().lock())
       {
@@ -53,17 +57,67 @@ namespace Client::Scripts
         constexpr auto y_step_half = s_cube_dimension.y * 0.5f;
         constexpr auto z_step_half = z_step * 0.5f;
 
-        for (float x = -half_scale.x + x_step_half; x < half_scale.x; x += x_step)  // NOLINT(cert-flp30-c)
+        constexpr Vector3 move_offsets[4] = 
         {
-          for (float y = -half_scale.y + y_step_half; y < half_scale.y; y += y_step) // NOLINT(cert-flp30-c)
+          {1.f, 0.f, 0.f},
+          {0.f, 0.f, 1.f},
+          {-1.f, 0.f, 0.f},
+          {0.f, 0.f, -1.f}
+        };
+
+        const Vector3 offsets[4] = 
+        {
+          move_offsets[0] * x_step,
+          move_offsets[1] * z_step,
+          move_offsets[2] * z_step,
+          move_offsets[3] * x_step
+        };
+
+        const float x_count = half_scale.x / x_step;
+        const float z_count = half_scale.z / z_step;
+
+        constexpr float steps[4] =
+        {
+          x_step,
+          z_step,
+          x_step,
+          z_step
+        };
+
+        const float target_iterations[4] = 
+        {
+          x_count,
+          z_count,
+          x_count,
+          z_count
+        };
+
+        Vector3 start_pos = 
+        {
+          -half_scale.x + x_step_half,
+          -half_scale.y + y_step_half,
+          -half_scale.z + z_step_half
+        };
+
+        m_z_length_ = static_cast<int>(z_count / z_step_half);
+        m_x_length_ = static_cast<int>(x_count / x_step_half);
+
+        for (float y = start_pos.y; y < half_scale.y; y += y_step) // NOLINT(cert-flp30-c)
+        {
+          int iteration = 0;
+
+          while (iteration < 4)
           {
-            for (float z = -half_scale.z + z_step_half; z < half_scale.z; z += z_step) // NOLINT(cert-flp30-c)
+            float       sub_iteration = 0.f;
+            const float target_count  = target_iterations[iteration] * 2.f;
+
+            while (sub_iteration + steps[iteration] < target_count)
             {
               const auto& cube = scene->CreateGameObject<Object>(LAYER_ENVIRONMENT).lock();
-              cube->SetName(owner->GetName() + " Cube " + std::format("{}_{}_{}", x, 0.f, z));
+              cube->SetName(owner->GetName() + " Cube " + std::format("{}_{}_{}", start_pos.x, y, start_pos.z));
               const auto& cube_tr = cube->AddComponent<Components::Transform>().lock();
 
-              cube_tr->SetLocalPosition({x, 0.f, z});
+              cube_tr->SetLocalPosition(start_pos);
 
               cube->AddComponent<Components::Collider>();
               const auto& crb = cube->AddComponent<Components::Rigidbody>().lock();
@@ -73,7 +127,13 @@ namespace Client::Scripts
               owner->AddChild(cube);
 
               m_cube_ids_.push_back(cube->GetLocalID());
+
+              start_pos += offsets[iteration];
+              sub_iteration += steps[iteration];
+              
             }
+
+            iteration++;
           }
         }
       }
@@ -88,21 +148,7 @@ namespace Client::Scripts
 
     if (!owner) { return; }
 
-    // Active cubes only if they are in the frustum (in the camera view)
-    for (const auto& id : m_cube_ids_)
-    {
-      if (const auto& cube = owner->GetChild(id).lock())
-      {
-        if (!GetProjectionFrustum().CheckRender(cube))
-        {
-          cube->SetActive(false);
-        }
-        else
-        {
-          cube->SetActive(true);
-        }
-      }
-    }
+    ExcludeCubes();
   }
 
   void CubifyScript::PostUpdate(const float& dt) {}
@@ -115,6 +161,38 @@ namespace Client::Scripts
 
   void CubifyScript::PostRender(const float& dt) {}
 
+  WeakObjectBase CubifyScript::GetDepthNearestCube(const Vector3& pos) const
+  {
+    const auto& owner = GetOwner().lock();
+
+    if (!owner) { return {}; }
+
+    WeakObjectBase nearest_cube;
+    float nearest_distance = std::numeric_limits<float>::max();
+
+    for (const auto& id : m_cube_ids_)
+    {
+      if (const auto& cube = owner->GetChild(id).lock())
+      {
+        const auto& tr = cube->GetComponent<Components::Transform>().lock();
+
+        if (!tr) { continue; }
+        // If cube is not active, then cube is not in the view.
+        if (!cube->GetActive()) { continue; }
+
+        const auto& distance = Vector3::Distance(tr->GetWorldPosition(), pos);
+
+        if (distance < nearest_distance)
+        {
+          nearest_distance = distance;
+          nearest_cube     = cube;
+        }
+      }
+    }
+
+    return nearest_cube;
+  }
+
   void CubifyScript::OnCollisionEnter(const WeakCollider& other) {}
 
   void CubifyScript::OnCollisionContinue(const WeakCollider& other) {}
@@ -123,5 +201,17 @@ namespace Client::Scripts
 
   SCRIPT_CLONE_IMPL(CubifyScript)
 
-  CubifyScript::CubifyScript() : Script(SCRIPT_T_CUBIFY, {}) {}
+  CubifyScript::CubifyScript()
+    : Script(SCRIPT_T_CUBIFY, {}),
+      m_z_length_(0),
+      m_x_length_(0) {}
+
+  void CubifyScript::ExcludeCubes()
+  {
+    // 1. Exclude player forward cubes that are furthest from player.
+    // 2. Exclude camera forward cubes that are furthest from camera.
+    // 3. Exclude player left, right cubes that are nearest from player.
+
+
+  }
 }
