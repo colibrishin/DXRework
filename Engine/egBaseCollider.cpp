@@ -322,17 +322,31 @@ namespace Engine::Components
   void Collider::PostUpdate(const float& dt)
   {
     Component::PostUpdate(dt);
-#ifdef _DEBUG
-    if (m_collided_objects_.empty())
+
+    if constexpr (g_debug)
     {
-      if (m_type_ == BOUNDING_TYPE_BOX) { GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed); }
-      else { GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed); }
+      if (m_collided_objects_.empty())
+      {
+        if (m_type_ == BOUNDING_TYPE_BOX)
+        {
+          GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
+        }
+        else
+        {
+          GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
+        }
+      }
+      else
+      {
+        if (m_type_ == BOUNDING_TYPE_BOX)
+        {
+          GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
+        }
+        else
+        {
+          GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
+        }
+      }
     }
-    else
-    {
-      if (m_type_ == BOUNDING_TYPE_BOX) { GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow); }
-      else { GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow); }
-    }
-#endif
   }
 } // namespace Engine::Component

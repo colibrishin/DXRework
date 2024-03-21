@@ -437,16 +437,17 @@ namespace Engine
 
   void Scene::AddObserver()
   {
-#ifdef _DEBUG
-    // add observer if flagged
-    if constexpr (g_debug_observer)
+    if constexpr (g_debug)
     {
-      DisableControllers();
-      const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
-      m_observer_         = observer;
-      observer->AddChild(GetMainCamera());
+      // add observer if flagged
+      if constexpr (g_debug_observer)
+      {
+        DisableControllers();
+        const auto observer = CreateGameObject<Objects::Observer>(LAYER_UI).lock();
+        m_observer_         = observer;
+        observer->AddChild(GetMainCamera());
+      }
     }
-#endif // _DEBUG
   }
 
   void Scene::OnDeserialized()

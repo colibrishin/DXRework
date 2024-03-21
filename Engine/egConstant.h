@@ -38,6 +38,7 @@ namespace Engine
   constexpr float  g_debug_message_life_time = 1.0f;
   constexpr size_t g_debug_message_max       = 1000;
   constexpr bool   g_debug_observer          = false;
+  constexpr bool   g_debug                   = true;
 
   // Misc
   constexpr LONG_PTR g_invalid_id               = -1;

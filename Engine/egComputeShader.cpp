@@ -114,9 +114,10 @@ namespace Engine::Resources
     ComPtr<ID3DBlob> error;
     UINT             flag = 0;
 
-#if defined(_DEBUG)
-    flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
-#endif
+    if constexpr (g_debug)
+    {
+      flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
+    }
 
     const auto [type, entry, version] = s_main_version[SHADER_COMPUTE];
 

@@ -220,9 +220,10 @@ namespace Engine::Manager::Graphics
 
     UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 
-#if defined(_DEBUG)
-    creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+    if constexpr (g_debug)
+    {
+      creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+    }
 
     ComPtr<ID3D11Device>        tmp_dev;
     ComPtr<ID3D11DeviceContext> tmp_ctx;
