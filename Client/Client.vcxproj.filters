@@ -81,6 +81,9 @@
     <Filter Include="Script\FezPlayerScript">
       <UniqueIdentifier>{6f8f59bf-7d39-4134-84c9-28647277e381}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Script\CubifyScript">
+      <UniqueIdentifier>{b1a96f2c-cec5-46cd-9049-6e4cfe51605c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -131,6 +134,9 @@
     <ClInclude Include="clFezPlayerScript.h">
       <Filter>Script\FezPlayerScript</Filter>
     </ClInclude>
+    <ClInclude Include="clCubifyScript.h">
+      <Filter>Script\CubifyScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -165,6 +171,9 @@
     </ClCompile>
     <ClCompile Include="clFezPlayerScript.cpp">
       <Filter>Script\FezPlayerScript</Filter>
+    </ClCompile>
+    <ClCompile Include="clCubifyScript.cpp">
+      <Filter>Script\CubifyScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

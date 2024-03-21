@@ -12,6 +12,7 @@ namespace Engine
     SCRIPT_T_PLAYER_HITBOX,
     SCRIPT_T_RIFLE,
     SCRIPT_T_FEZ_PLAYER,
+    SCRIPT_T_CUBIFY,
   };
 
   enum eClientSBUAVType : UINT
