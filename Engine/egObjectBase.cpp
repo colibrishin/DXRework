@@ -87,7 +87,7 @@ namespace Engine::Abstract
 
   bool ObjectBase::GetCulled() const { return m_culled_; }
 
-  bool ObjectBase::GetImGuiOpen() const { return m_imgui_open_; }
+  bool& ObjectBase::GetImGuiOpen() { return m_imgui_open_; }
 
   eDefObjectType ObjectBase::GetObjectType() const { return m_type_; }
 
@@ -502,8 +502,6 @@ namespace Engine::Abstract
       {
         m_imgui_components_open_ = !m_imgui_components_open_;
       }
-
-      ImGui::SameLine();
 
       if (m_imgui_children_open_)
       {

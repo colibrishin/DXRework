@@ -129,7 +129,7 @@ namespace Engine::Abstract
 
     bool           GetActive() const;
     bool           GetCulled() const;
-    bool           GetImGuiOpen() const;
+    bool&          GetImGuiOpen();
     eDefObjectType GetObjectType() const;
 
     WeakObjectBase              GetParent() const;
