@@ -160,20 +160,6 @@ namespace Engine
 
     if (layer == LAYER_LIGHT) { GetShadowManager().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>()); }
 
-    if (const auto locked = obj.lock())
-    {
-      if (const auto parent = locked->GetParent().lock()) { parent->DetachChild(locked->GetLocalID()); }
-
-      if (locked->GetChildren().size() > 0)
-      {
-        for (const auto& child : locked->GetChildren())
-        {
-          RemoveGameObject
-            (child.lock()->GetID(), child.lock()->GetLayer());
-        }
-      }
-    }
-
     for (const auto& comp : obj.lock()->GetAllComponents())
     {
       ConcurrentWeakComRootMap::accessor comp_acc;
@@ -297,6 +283,23 @@ namespace Engine
       if (acc->second.lock()->IsGarbage()) { return; }
 
       acc->second.lock()->SetGarbage(true);
+    }
+
+    if (const auto locked = FindGameObject(id).lock())
+    {
+      if (const auto parent = locked->GetParent().lock())
+      {
+        parent->DetachChild(locked->GetLocalID());
+      }
+
+      if (locked->GetChildren().size() > 0)
+      {
+        for (const auto& child : locked->GetChildren())
+        {
+          RemoveGameObject
+            (child.lock()->GetID(), child.lock()->GetLayer());
+        }
+      }
     }
 
     GetTaskScheduler().AddTask
