@@ -66,6 +66,15 @@ namespace Engine
     bool collision;
   };
 
+  // todo: Using this function would remove the const qualifier from the object.
+  template <typename T>
+  inline static bool __vectorcall LockWeak(const boost::weak_ptr<T>& weak, boost::shared_ptr<T>& strong)
+  {
+    if (weak.expired()) { return false; }
+    strong = weak.lock();
+    return true;
+  }
+
   inline static bool IsAssigned(const LONG_PTR id) { return id != g_invalid_id; }
 
   inline static float __vectorcall MaxElement(const Vector3& v) { return std::max(std::max(v.x, v.y), v.z); }
