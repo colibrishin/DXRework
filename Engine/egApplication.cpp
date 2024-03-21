@@ -45,9 +45,13 @@ namespace Engine::Manager
 
   Application::~Application()
   {
-    ImGui_ImplDX11_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+    if (g_debug)
+    {
+      ImGui_ImplDX11_Shutdown();
+      ImGui_ImplWin32_Shutdown();
+      ImGui::DestroyContext();
+    }
+    
     Graphics::D3Device::DEBUG_MEMORY();
   }
 
@@ -59,13 +63,16 @@ namespace Engine::Manager
     m_timer = std::make_unique<DX::StepTimer>();
     UpdateWindowSize(hWnd);
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+    if constexpr (g_debug)
+    {
+      IMGUI_CHECKVERSION();
+      ImGui::CreateContext();
+      ImGuiIO& io = ImGui::GetIO();
+      io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+      io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+    }
 
     GetD3Device().Initialize(hWnd);
     GetToolkitAPI().Initialize();
@@ -87,8 +94,12 @@ namespace Engine::Manager
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
 
-    ImGui_ImplWin32_Init(hWnd);
-    ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
+    if constexpr (g_debug)
+    {
+      ImGui_ImplWin32_Init(hWnd);
+      ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
+    }
+    
   }
 
   void Application::Tick()
@@ -221,8 +232,11 @@ namespace Engine::Manager
     GetShadowManager().PostRender(dt);
     GetDebugger().PostRender(dt);
 
-    ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    if constexpr (g_debug)
+    {
+      ImGui::Render();
+      ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    }
 
     GetToolkitAPI().PostRender(dt);
     GetD3Device().PostRender(dt);
@@ -255,9 +269,12 @@ namespace Engine::Manager
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
     const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
 
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    if constexpr (g_debug)
+    {
+      ImGui_ImplDX11_NewFrame();
+      ImGui_ImplWin32_NewFrame();
+      ImGui::NewFrame();
+    }
 
     PreUpdate(dt);
     Update(dt);

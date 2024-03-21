@@ -535,6 +535,9 @@
     <ClInclude Include="egAtlasAnimationTexture.h">
       <Filter>Resource\Textures\AtlasAnimationTexture</Filter>
     </ClInclude>
+    <ClInclude Include="egDebugConstant.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

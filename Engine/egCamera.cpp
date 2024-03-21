@@ -140,13 +140,14 @@ namespace Engine::Objects
   {
     ObjectBase::Render(dt);
 
-#ifdef _DEBUG
-    BoundingFrustum frustum;
+    if constexpr (g_debug)
+    {
+      BoundingFrustum frustum;
 
-    BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
-    frustum.Transform(frustum, GetViewMatrix().Invert());
-    GetDebugger().Draw(frustum, DirectX::Colors::WhiteSmoke);
-#endif
+      BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
+      frustum.Transform(frustum, GetViewMatrix().Invert());
+      GetDebugger().Draw(frustum, DirectX::Colors::WhiteSmoke);
+    }
   }
 
   void Camera::PostRender(const float& dt) { ObjectBase::PostRender(dt); }

@@ -87,7 +87,7 @@ namespace Engine::Abstract
 
   bool ObjectBase::GetCulled() const { return m_culled_; }
 
-  bool ObjectBase::GetImGuiOpen() const { return m_imgui_open_; }
+  bool& ObjectBase::GetImGuiOpen() { return m_imgui_open_; }
 
   eDefObjectType ObjectBase::GetObjectType() const { return m_type_; }
 
@@ -241,6 +241,14 @@ namespace Engine::Abstract
     }
 
     return {};
+  }
+
+  void ObjectBase::removeScript(const eScriptType type)
+  {
+    if (m_scripts_.contains(type))
+    {
+      m_scripts_.erase(type);
+    }
   }
 
   WeakComponent ObjectBase::addComponent(const StrongComponent& component)
@@ -503,8 +511,6 @@ namespace Engine::Abstract
         m_imgui_components_open_ = !m_imgui_components_open_;
       }
 
-      ImGui::SameLine();
-
       if (m_imgui_children_open_)
       {
         if (ImGui::Begin("Children", &m_imgui_children_open_, ImGuiWindowFlags_AlwaysAutoResize))
@@ -599,6 +605,14 @@ namespace Engine::Abstract
       {
         for (const auto& script : m_scripts_ | std::views::values)
         {
+          std::string script_id = "Remove###" + std::to_string(script->GetID());
+          if (ImGui::Button(script_id.c_str()))
+          {
+            removeScript(script->GetScriptType());
+          }
+
+          ImGui::SameLine();
+
           if (ImGui::TreeNode(script->GetTypeName().c_str()))
           {
             script->OnImGui();
@@ -615,6 +629,14 @@ namespace Engine::Abstract
       {
         for (const auto& comp : m_components_ | std::views::values)
         {
+          std::string comp_id = "Remove###" + std::to_string(comp->GetID());
+          if (ImGui::Button(comp_id.c_str()))
+          {
+            removeComponentImpl(comp->GetID());
+          }
+
+          ImGui::SameLine();
+
           if (ImGui::TreeNode(comp->GetTypeName().c_str()))
           {
             comp->OnImGui();

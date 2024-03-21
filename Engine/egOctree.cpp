@@ -298,9 +298,11 @@ namespace Engine
           continue; // Leaf node
         }
 
-#ifdef  _DEBUG
-        GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
-#endif
+        if (g_debug) 
+        {
+          GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
+        }
+        
         stack.pop();
         continue;
       }

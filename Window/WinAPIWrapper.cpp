@@ -1,6 +1,8 @@
 #include "WinAPIWrapper.hpp"
 #include "../Client/Client.h"
 
+#include "../Engine/egDebugConstant.h"
+
 namespace WinAPI
 {
   HWND WinAPIWrapper::InitializeWindow(HINSTANCE hInstance)
@@ -74,10 +76,12 @@ namespace WinAPI
     SetFocus(hwnd);
     ShowCursor(false);
 
-#ifdef _DEBUG
-    // Hide the mouse cursor.
-    ShowCursor(true);
-#endif
+
+    if constexpr (Engine::g_debug)
+    {
+      // Show mouse cursor for debugging.
+      ShowCursor(true);
+    }
 
     return hwnd;
   }
