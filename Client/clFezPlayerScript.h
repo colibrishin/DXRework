@@ -26,6 +26,7 @@ namespace Client::Scripts
         m_state_(CHAR_STATE_IDLE),
         m_prev_state_(CHAR_STATE_IDLE),
         m_rotation_count_(0),
+        m_accumulated_dt_(0),
         m_rotate_allowed_(true) { }
 
     void Initialize() override;
@@ -37,6 +38,9 @@ namespace Client::Scripts
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
     void SetRotateAllowed(const bool allowed) { m_rotate_allowed_ = allowed; }
+
+    eCharacterState GetState() const { return m_state_; }
+    eCharacterState GetPrevState() const { return m_prev_state_; }
 
   protected:
     void OnCollisionEnter(const WeakCollider& other) override;
@@ -60,8 +64,9 @@ namespace Client::Scripts
     eCharacterState m_prev_state_;
 
     UINT m_rotation_count_;
-
     float m_accumulated_dt_;
+
+    Vector3 m_latest_spin_position_;
 
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;

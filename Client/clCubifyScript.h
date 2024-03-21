@@ -38,12 +38,12 @@ namespace Client::Scripts
 
     CubifyScript();
 
+    void UpdateCubes();
+
     std::vector<LocalActorID> m_cube_ids_;
 
     int m_z_length_;
     int m_x_length_;
-
-    void ExcludeCubes();
 
   };
 }

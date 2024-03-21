@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "clFezPlayerScript.h"
 
+#include "clCubifyScript.h"
 #include "egBaseCollider.hpp"
 #include "egCamera.h"
 #include "egCollisionDetector.h"
@@ -31,6 +32,8 @@ namespace Client::Scripts
 
       if (const auto& scene = owner->GetScene().lock())
       {
+        scene->SetMainActor(owner->GetLocalID());
+
         if (const auto& cam = scene->GetMainCamera().lock())
         {
           owner->AddChild(cam->GetSharedPtr<Abstract::ObjectBase>());
@@ -57,6 +60,8 @@ namespace Client::Scripts
 
   void FezPlayerScript::Update(const float& dt)
   {
+    m_prev_state_ = m_state_;
+
     switch (m_state_)
     {
     case CHAR_STATE_IDLE: 
@@ -77,6 +82,9 @@ namespace Client::Scripts
     case CHAR_STATE_ROTATE: 
       UpdateRotate(dt);
       break;
+    case CHAR_STATE_POST_ROTATE:
+      UpdateRotate(dt);
+      break;
     case CHAR_STATE_FALL: break;
     case CHAR_STATE_ATTACK: break;
     case CHAR_STATE_HIT: break;
@@ -86,8 +94,6 @@ namespace Client::Scripts
     }
 
     UpdateGrounded();
-
-    m_prev_state_ = m_state_;
   }
 
   void FezPlayerScript::PostUpdate(const float& dt) {}
@@ -113,6 +119,7 @@ namespace Client::Scripts
       m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),
       m_rotation_count_(0),
+      m_accumulated_dt_(0),
       m_rotate_allowed_(true) { }
 
   void FezPlayerScript::UpdateMove()
@@ -186,8 +193,33 @@ namespace Client::Scripts
         tr->SetLocalRotation(s_rotations[m_rotation_count_]);
         m_accumulated_dt_ = 0.f;
 
-        // Set the player's state back to idle.
-        m_state_ = CHAR_STATE_IDLE;
+        const auto& cldr = owner->GetComponent<Components::Collider>().lock();
+        const auto& scene = owner->GetScene().lock();
+        if (!cldr || !scene) { return; }
+
+        // Find the ground and ask for other cubes whether the player can stand on.
+        for (const auto& id : cldr->GetCollidedObjects())
+        {
+          const auto& candidate = scene->FindGameObject(id).lock();
+          if (!candidate) { continue; }
+
+          const auto& script = candidate->GetScript<CubifyScript>().lock();
+          if (!script) { continue; }
+
+          // Active nearest cube should be the one that the player can stand on.
+          if (const auto& nearest = script->GetDepthNearestCube(m_latest_spin_position_).lock())
+          {
+            const auto& ntr = nearest->GetComponent<Components::Transform>().lock();
+            const auto& cube_pos = ntr->GetWorldPosition();
+            const auto& player_pos = m_latest_spin_position_;
+
+            //tr->SetWorldPosition(new_pos);
+          }
+        }
+
+        // Set the player's state to post rotate,
+        // if the player do any other movement, reset to idle.
+        m_state_ = CHAR_STATE_POST_ROTATE;
         // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
         rb->FullReset();
         rb->SetFixed(false);
@@ -204,6 +236,7 @@ namespace Client::Scripts
     {
       m_rotation_count_ = (m_rotation_count_ + 3) % 4;
       rotating = true;
+      
     }
 
     // If the player starts rotating, then set the player's state to rotate.
@@ -211,6 +244,9 @@ namespace Client::Scripts
     if (rotating)
     {
       m_state_ = CHAR_STATE_ROTATE;
+      // Remember the player's position before rotation, If the player keeps following rotation
+      // then player's position will always be the same, the end of the edge.
+      m_latest_spin_position_ = tr->GetWorldPosition();
       rb->FullReset();
       rb->SetFixed(true);
     }
