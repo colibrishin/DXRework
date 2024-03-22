@@ -70,6 +70,7 @@ namespace Client::Scripts
 
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;
+    bool m_rotate_finished_;
 
   };
 } // namespace Client::Scripts

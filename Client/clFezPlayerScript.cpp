@@ -189,34 +189,6 @@ namespace Client::Scripts
       // If the player is rotating and rotation is completed,
       else
       {
-        // Set the rotation to the target rotation and reset the accumulated time.
-        tr->SetLocalRotation(s_rotations[m_rotation_count_]);
-        m_accumulated_dt_ = 0.f;
-
-        const auto& cldr = owner->GetComponent<Components::Collider>().lock();
-        const auto& scene = owner->GetScene().lock();
-        if (!cldr || !scene) { return; }
-
-        // Find the ground and ask for other cubes whether the player can stand on.
-        for (const auto& id : cldr->GetCollidedObjects())
-        {
-          const auto& candidate = scene->FindGameObject(id).lock();
-          if (!candidate) { continue; }
-
-          const auto& script = candidate->GetScript<CubifyScript>().lock();
-          if (!script) { continue; }
-
-          // Active nearest cube should be the one that the player can stand on.
-          if (const auto& nearest = script->GetDepthNearestCube(m_latest_spin_position_).lock())
-          {
-            const auto& ntr = nearest->GetComponent<Components::Transform>().lock();
-            const auto& cube_pos = ntr->GetWorldPosition();
-            const auto& player_pos = m_latest_spin_position_;
-
-            //tr->SetWorldPosition(new_pos);
-          }
-        }
-
         // Set the player's state to post rotate,
         // if the player do any other movement, reset to idle.
         m_state_ = CHAR_STATE_POST_ROTATE;
@@ -225,6 +197,46 @@ namespace Client::Scripts
         rb->SetFixed(false);
         return;
       }
+    }
+    else if (m_prev_state_ == CHAR_STATE_POST_ROTATE && 
+             m_state_ == CHAR_STATE_POST_ROTATE && 
+             !m_rotate_finished_)
+    {
+      // Set the rotation to the target rotation and reset the accumulated time.
+      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
+      m_accumulated_dt_ = 0.f;
+
+      const auto& cldr  = owner->GetComponent<Components::Collider>().lock();
+      const auto& scene = owner->GetScene().lock();
+      if (!cldr || !scene) { return; }
+
+      // Find the ground and ask for other cubes whether the player can stand on.
+      for (const auto& id : cldr->GetCollidedObjects())
+      {
+        const auto& candidate = scene->FindGameObject(id).lock();
+        if (!candidate) { continue; }
+
+        const auto& script = candidate->GetScript<CubifyScript>().lock();
+        if (!script) { continue; }
+
+        // Active nearest cube should be the one that the player can stand on.
+        if (const auto& nearest = script->GetDepthNearestCube(m_latest_spin_position_).lock())
+        {
+          const auto& ntr        = nearest->GetComponent<Components::Transform>().lock();
+          const auto& cube_pos   = ntr->GetWorldPosition();
+          const auto& player_pos = m_latest_spin_position_;
+          const auto& new_pos    = Vector3
+          {
+            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
+            player_pos.y,
+            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+        }
+      }
+
+      m_rotate_finished_ = true;
     }
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
@@ -249,6 +261,7 @@ namespace Client::Scripts
       m_latest_spin_position_ = tr->GetWorldPosition();
       rb->FullReset();
       rb->SetFixed(true);
+      m_rotate_finished_ = false;
     }
   }
 
