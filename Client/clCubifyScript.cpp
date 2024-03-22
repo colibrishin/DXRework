@@ -89,6 +89,9 @@ namespace Client::Scripts
         // If cube is not active, then cube is not in the view.
         if (!cube->GetActive()) { continue; }
 
+        // Blocking player teleporting to upper side.
+        if (tr->GetWorldPosition().y > pos.y) { continue; }
+
         const auto& distance = Vector3::DistanceSquared(tr->GetWorldPosition(), pos);
 
         if (distance < nearest_distance)
