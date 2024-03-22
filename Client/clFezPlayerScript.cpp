@@ -64,12 +64,13 @@ namespace Client::Scripts
 
     switch (m_state_)
     {
-    case CHAR_STATE_IDLE: 
-      UpdateMove();
+    case CHAR_STATE_IDLE:
       UpdateRotate(dt);
+      UpdateMove();
       UpdateJump();
       break;
     case CHAR_STATE_WALK:
+      UpdateRotate(dt);
       UpdateMove();
       UpdateJump();
       break;
@@ -83,6 +84,13 @@ namespace Client::Scripts
       UpdateRotate(dt);
       break;
     case CHAR_STATE_POST_ROTATE:
+      if (m_state_ == CHAR_STATE_POST_ROTATE &&
+          m_prev_state_ == CHAR_STATE_POST_ROTATE &&
+          m_rotate_finished_)
+      {
+        UpdateMove();
+        UpdateJump();
+      }
       UpdateRotate(dt);
       break;
     case CHAR_STATE_FALL: break;
@@ -120,7 +128,9 @@ namespace Client::Scripts
       m_prev_state_(CHAR_STATE_IDLE),
       m_rotation_count_(0),
       m_accumulated_dt_(0),
-      m_rotate_allowed_(true) { }
+      m_rotate_allowed_(true),
+      m_rotate_finished_(false),
+      m_rotate_consecutive_(false) { }
 
   void FezPlayerScript::UpdateMove()
   {
@@ -152,10 +162,6 @@ namespace Client::Scripts
     if (moving)
     {
       m_state_ = CHAR_STATE_WALK;
-    }
-    else
-    {
-      m_state_ = CHAR_STATE_IDLE;
     }
   }
 
@@ -192,9 +198,6 @@ namespace Client::Scripts
         // Set the player's state to post rotate,
         // if the player do any other movement, reset to idle.
         m_state_ = CHAR_STATE_POST_ROTATE;
-        // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-        rb->FullReset();
-        rb->SetFixed(false);
         return;
       }
     }
@@ -202,10 +205,19 @@ namespace Client::Scripts
              m_state_ == CHAR_STATE_POST_ROTATE && 
              !m_rotate_finished_)
     {
-      // Set the rotation to the target rotation and reset the accumulated time.
+      // Set the rotation to the accurate target rotation.
       tr->SetLocalRotation(s_rotations[m_rotation_count_]);
       m_accumulated_dt_ = 0.f;
 
+      // Player rotation is finished.
+      m_rotate_finished_ = true;
+      return;
+    }
+    else if (m_prev_state_ == CHAR_STATE_POST_ROTATE &&
+             m_state_ != CHAR_STATE_POST_ROTATE &&
+             m_state_ != CHAR_STATE_ROTATE &&
+             m_rotate_finished_)
+    {
       const auto& cldr  = owner->GetComponent<Components::Collider>().lock();
       const auto& scene = owner->GetScene().lock();
       if (!cldr || !scene) { return; }
@@ -233,10 +245,16 @@ namespace Client::Scripts
           };
 
           tr->SetWorldPosition(new_pos);
+          break;
         }
       }
 
-      m_rotate_finished_ = true;
+      // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
+      rb->FullReset();
+      rb->SetFixed(false);
+      m_rotate_finished_ = false;
+      m_rotate_consecutive_ = false;
+      return;
     }
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
@@ -255,10 +273,23 @@ namespace Client::Scripts
     // Make the player full stop.
     if (rotating)
     {
+      if (m_state_ == CHAR_STATE_POST_ROTATE)
+      {
+        m_rotate_consecutive_ = true;
+      }
+      else
+      {
+        m_rotate_consecutive_ = false;
+      }
       m_state_ = CHAR_STATE_ROTATE;
+
       // Remember the player's position before rotation, If the player keeps following rotation
       // then player's position will always be the same, the end of the edge.
-      m_latest_spin_position_ = tr->GetWorldPosition();
+      if (!m_rotate_consecutive_)
+      {
+        m_latest_spin_position_ = tr->GetWorldPosition();
+      }
+      
       rb->FullReset();
       rb->SetFixed(true);
       m_rotate_finished_ = false;

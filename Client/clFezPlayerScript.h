@@ -27,7 +27,9 @@ namespace Client::Scripts
         m_prev_state_(CHAR_STATE_IDLE),
         m_rotation_count_(0),
         m_accumulated_dt_(0),
-        m_rotate_allowed_(true) { }
+        m_rotate_allowed_(true),
+        m_rotate_finished_(false),
+        m_rotate_consecutive_(false) { }
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -71,6 +73,7 @@ namespace Client::Scripts
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;
     bool m_rotate_finished_;
+    bool m_rotate_consecutive_;
 
   };
 } // namespace Client::Scripts
