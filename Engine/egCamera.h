@@ -36,6 +36,7 @@ namespace Engine::Objects
     Matrix  GetWorldMatrix() const;
     Vector2 GetWorldMousePosition();
     bool    GetOrthogonal() const;
+    float   GetFOV() const;
 
   private:
     SERIALIZE_DECL

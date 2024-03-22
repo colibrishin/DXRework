@@ -160,20 +160,6 @@ namespace Engine
 
     if (layer == LAYER_LIGHT) { GetShadowManager().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>()); }
 
-    if (const auto locked = obj.lock())
-    {
-      if (const auto parent = locked->GetParent().lock()) { parent->DetachChild(locked->GetLocalID()); }
-
-      if (locked->GetChildren().size() > 0)
-      {
-        for (const auto& child : locked->GetChildren())
-        {
-          RemoveGameObject
-            (child.lock()->GetID(), child.lock()->GetLayer());
-        }
-      }
-    }
-
     for (const auto& comp : obj.lock()->GetAllComponents())
     {
       ConcurrentWeakComRootMap::accessor comp_acc;
@@ -190,6 +176,12 @@ namespace Engine
     }
 
     obj.lock()->SetScene({});
+
+    if (obj.lock()->GetLocalID() == m_main_actor_local_id_)
+    {
+      m_main_actor_local_id_ = g_invalid_id;
+      m_main_actor_ = {};
+    }
 
     m_cached_objects_.erase(id);
     m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
@@ -219,6 +211,7 @@ namespace Engine
       m_observer_ = scene->m_observer_;
       m_mainCamera_ = scene->m_mainCamera_;
       m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
+      m_main_actor_local_id_ = scene->m_main_actor_local_id_;
 
       for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
       {
@@ -240,6 +233,11 @@ namespace Engine
           if (const auto locked = obj.lock())
           {
             m_cached_objects_.emplace(locked->GetID(), locked);
+
+            if (locked->GetLocalID() == m_main_actor_local_id_)
+            {
+              m_main_actor_ = locked;
+            }
 
             for (const auto& comp : locked->GetAllComponents())
             {
@@ -285,6 +283,23 @@ namespace Engine
       if (acc->second.lock()->IsGarbage()) { return; }
 
       acc->second.lock()->SetGarbage(true);
+    }
+
+    if (const auto locked = FindGameObject(id).lock())
+    {
+      if (const auto parent = locked->GetParent().lock())
+      {
+        parent->DetachChild(locked->GetLocalID());
+      }
+
+      if (locked->GetChildren().size() > 0)
+      {
+        for (const auto& child : locked->GetChildren())
+        {
+          RemoveGameObject
+            (child.lock()->GetID(), child.lock()->GetLayer());
+        }
+      }
     }
 
     GetTaskScheduler().AddTask
@@ -380,6 +395,7 @@ namespace Engine
   Scene::Scene()
     : m_b_scene_imgui_open_(false),
       m_main_camera_local_id_(g_invalid_id),
+      m_main_actor_local_id_(g_invalid_id),
       m_object_position_tree_() {}
 
   void Scene::PreUpdate(const float& dt)
@@ -481,6 +497,11 @@ namespace Engine
         obj.lock()->SetScene(GetSharedPtr<Scene>());
         obj.lock()->SetLayer(static_cast<eLayerType>(i));
         m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID(), obj.lock()->GetID());
+
+        if (m_main_actor_local_id_ == obj.lock()->GetLocalID())
+        {
+          m_main_actor_ = obj;
+        }
 
         for (const auto& comp : obj.lock()->GetAllComponents())
         {
@@ -643,6 +664,20 @@ namespace Engine
 
       ImGui::End();
     }
+  }
+
+  void Scene::SetMainActor(const LocalActorID id)
+  {
+    if (const auto& obj = FindGameObjectByLocalID(id).lock())
+    {
+      m_main_actor_local_id_ = id;
+      m_main_actor_ = obj;
+    }
+  }
+
+  WeakObjectBase Scene::GetMainActor() const
+  {
+    return m_main_actor_;
   }
 
   void Scene::DisableControllers()

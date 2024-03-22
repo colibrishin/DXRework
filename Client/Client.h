@@ -12,6 +12,7 @@ namespace Engine
     SCRIPT_T_PLAYER_HITBOX,
     SCRIPT_T_RIFLE,
     SCRIPT_T_FEZ_PLAYER,
+    SCRIPT_T_CUBIFY,
   };
 
   enum eClientSBUAVType : UINT
@@ -39,6 +40,7 @@ namespace Client
     CHAR_STATE_CLIMB,
     CHAR_STATE_SWIM,
     CHAR_STATE_ROTATE,
+    CHAR_STATE_POST_ROTATE,
     CHAR_STATE_FALL,
     CHAR_STATE_ATTACK,
     CHAR_STATE_HIT,

@@ -39,15 +39,18 @@ namespace Engine::Objects
   {
     ObjectBase::PreRender(dt);
 
-    if (GetApplication().GetMouseState().scrollWheelValue > 1)
+    if constexpr (g_debug_observer)
     {
-      GetComponent<Components::Transform>().lock()->Translate
-        (g_forward * 0.1f);
-    }
-    else if (GetApplication().GetMouseState().scrollWheelValue < 0)
-    {
-      GetComponent<Components::Transform>().lock()->
-                                            Translate(g_backward * 0.1f);
+      if (GetApplication().GetMouseState().scrollWheelValue > 1)
+      {
+        GetComponent<Components::Transform>().lock()->Translate
+          (g_forward * 0.1f);
+      }
+      else if (GetApplication().GetMouseState().scrollWheelValue < 0)
+      {
+        GetComponent<Components::Transform>().lock()->
+                                              Translate(g_backward * 0.1f);
+      }
     }
 
     if (const auto transform = GetComponent<Components::Transform>().lock())
@@ -164,6 +167,8 @@ namespace Engine::Objects
   }
 
   bool Camera::GetOrthogonal() const { return m_b_orthogonal_; }
+
+  float Camera::GetFOV() const { return m_fov_; }
 
   Vector2 Camera::GetWorldMousePosition()
   {

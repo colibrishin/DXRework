@@ -15,6 +15,7 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
+#include "clCubifyScript.h"
 #include "clFezPlayerScript.h"
 #include "clHitboxScript.hpp"
 #include "clHpTextScript.h"
@@ -214,6 +215,7 @@ namespace Client
     Script::Register<Scripts::RifleScript>();
     Script::Register<Scripts::PlayerHitboxScript>();
     Script::Register<Scripts::FezPlayerScript>();
+    Script::Register<Scripts::CubifyScript>();
 
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 

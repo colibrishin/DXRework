@@ -34,7 +34,7 @@ namespace Engine::Manager
         BoundingFrustum::CreateFromMatrix
           (
            m_frustum,
-           GetD3Device().GetProjectionMatrix()
+           camera->GetProjectionMatrix()
           );
         m_frustum.Transform(m_frustum, camera->GetViewMatrix().Invert());
 

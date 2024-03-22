@@ -34,6 +34,9 @@ namespace Engine
     void OnDeserialized() override;
     void OnImGui() override;
 
+    void           SetMainActor(const LocalActorID id);
+    WeakObjectBase GetMainActor() const;
+
     // Add Object to the scene.
     // If the object is bound to another scene or layer, it will be moved to this scene and layer.
     // Note that the object will be added finally at the next frame.
@@ -202,11 +205,13 @@ namespace Engine
     bool m_b_scene_imgui_open_;
 
     LocalActorID             m_main_camera_local_id_;
+    LocalActorID             m_main_actor_local_id_;
     std::vector<StrongLayer> m_layers;
 
     // Non-serialized
     WeakObjectBase m_observer_;
     WeakCamera m_mainCamera_;
+    WeakObjectBase m_main_actor_;
 
     ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
     ConcurrentWeakObjGlobalMap m_cached_objects_;
