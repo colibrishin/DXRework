@@ -46,6 +46,9 @@ namespace Engine::Manager::Physics
       {
         if (const auto rigidbody = rb.lock())
         {
+          if (!rigidbody->GetActive()) { continue; }
+          if (rigidbody->GetSharedPtr<Components::Rigidbody>()->IsFixed()) { continue; }
+
           const auto t0 = rigidbody->GetOwner().lock()->GetComponent<Components::Transform>().lock();
           const auto t1 = rigidbody->GetSharedPtr<Components::Rigidbody>()->GetT1();
 
