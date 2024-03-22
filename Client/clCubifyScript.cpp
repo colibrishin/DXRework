@@ -89,7 +89,7 @@ namespace Client::Scripts
         // If cube is not active, then cube is not in the view.
         if (!cube->GetActive()) { continue; }
 
-        const auto& distance = Vector3::Distance(tr->GetWorldPosition(), pos);
+        const auto& distance = Vector3::DistanceSquared(tr->GetWorldPosition(), pos);
 
         if (distance < nearest_distance)
         {
@@ -123,7 +123,7 @@ namespace Client::Scripts
     constexpr auto z_step = s_cube_dimension.z;
 
     constexpr auto x_step_half = x_step * 0.5f;
-    constexpr auto y_step_half = s_cube_dimension.y * 0.5f;
+    constexpr auto y_step_half = y_step * 0.5f;
     constexpr auto z_step_half = z_step * 0.5f;
 
     constexpr Vector3 move_offsets[4] =
@@ -180,23 +180,24 @@ namespace Client::Scripts
       {
         move_offsets[0] * x_step,
         move_offsets[1] * z_step,
-        move_offsets[2] * z_step,
-        move_offsets[3] * x_step
+        move_offsets[2] * x_step,
+        move_offsets[3] * z_step
       };
 
+      // todo: refactoring
       const Vector3 start_poses[4] = 
       {
-        {(-half_scale.x) + x_step_half, -half_scale.y + y_step_half, (-half_scale.z) + z_step_half},
-        {half_scale.x + x_step_half, -half_scale.y + y_step_half, -half_scale.z + z_step_half},
-        {half_scale.x + x_step_half, -half_scale.y + y_step_half, half_scale.z + z_step_half},
-        {-half_scale.x + x_step_half, -half_scale.y + y_step_half, half_scale.z + z_step_half}
+        {-half_scale.x + x_step_half, -half_scale.y + x_step_half, -half_scale.z + z_step_half},
+        {half_scale.x - x_step_half, -half_scale.y + x_step_half, -half_scale.z + x_step_half},
+        {half_scale.x - x_step_half, -half_scale.y + x_step_half, half_scale.z - z_step_half},
+        {-half_scale.x + x_step_half, -half_scale.y + x_step_half, half_scale.z - z_step_half}
       };
 
       const float x_count = half_scale.x / x_step;
       const float z_count = half_scale.z / z_step;
 
-      m_z_length_ = static_cast<int>(z_count / z_step_half);
-      m_x_length_ = static_cast<int>(x_count / x_step_half);
+      m_z_length_ = static_cast<int>(z_count / 0.5f);
+      m_x_length_ = static_cast<int>(x_count / 0.5f);
 
       Vector3 start_pos = start_poses[offset];
 
