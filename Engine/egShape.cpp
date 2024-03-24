@@ -230,6 +230,7 @@ namespace Engine::Resources
           Vector3 normal_   = {0.f, 0.f, 0.f};
           Vector3 tangent_  = {0.f, 0.f, 0.f};
           Vector3 binormal_ = {0.f, 0.f, 0.f};
+          Vector4 color     = {1.f, 0.f, 0.f, 1.f};
 
           if (shape_->HasTextureCoords(0))
           {
@@ -256,10 +257,16 @@ namespace Engine::Resources
             binormal_ = Vector3{binormal.x, binormal.y, binormal.z};
           }
 
+          if (shape_->HasVertexColors(0))
+          {
+            const auto& col = shape_->mColors[0];
+            color = Vector4{col[j].r, col[j].g, col[j].b, col[j].a};
+          }
+
           const auto vtx = VertexElement
           {
             {vec.x, vec.y, vec.z},
-            {1.0f, 0.f, 0.f, 1.f},
+            color,
             tex_coord,
             normal_,
             tangent_,
