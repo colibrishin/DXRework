@@ -8,8 +8,6 @@ namespace Client::Scripts
   class CubifyScript : public Script
   {
   public:
-    constexpr static Vector3 s_cube_dimension = {1.f, 1.f, 1.f};
-
 	  CLIENT_SCRIPT_T(CubifyScript, SCRIPT_T_CUBIFY)
 
     explicit CubifyScript(const WeakObjectBase& owner);
@@ -24,6 +22,10 @@ namespace Client::Scripts
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
+
+    void OnImGui() override;
+
+    void SetCubeDimension(const Vector3& dimension);
 
     [[nodiscard]] WeakObjectBase GetDepthNearestCube(const Vector3& pos) const;
 
@@ -41,6 +43,7 @@ namespace Client::Scripts
     void UpdateCubes();
 
     std::vector<LocalActorID> m_cube_ids_;
+    Vector3 m_cube_dimension_;
 
     int m_z_length_;
     int m_x_length_;

@@ -105,7 +105,7 @@ namespace Engine
     ImGui::PopID();
   }
 
-  inline static void ImGuiVector3Editable(
+  inline static bool ImGuiVector3Editable(
     const std::string&   label,
     const GlobalEntityID id,
     const std::string&   var_name,
@@ -121,8 +121,12 @@ namespace Engine
     ImGui::SameLine();
     ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
 
-    ImGui::DragFloat3("##vector", &v.x);
+    bool changed = false;
+
+    changed = ImGui::DragFloat3("##vector", &v.x, 0.1f);
     ImGui::PopID();
+
+    return changed;
   }
 
   inline static void ImGuiVector2Editable(
