@@ -59,7 +59,7 @@ namespace Engine::Components
     void OnImGui() override;
 
     Matrix GetLocalMatrix() const;
-    Matrix GetWorldMatrix();
+    Matrix GetWorldMatrix() const;
 
     static void __fastcall Bind(Transform& transform);
     static void            Unbind();

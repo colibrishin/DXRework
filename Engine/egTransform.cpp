@@ -249,7 +249,7 @@ namespace Engine::Components
 
   Vector3 Transform::GetLocalPreviousPositionPerFrame() const { return m_previous_position_; }
 
-  Matrix Transform::GetWorldMatrix()
+  Matrix Transform::GetWorldMatrix() const
   {
     Matrix        world = GetLocalMatrix();
     auto          tr_c  = this;
