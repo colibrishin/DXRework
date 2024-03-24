@@ -105,7 +105,7 @@ namespace Engine::Abstract
     void RemoveComponent()
     {
       removeComponentFromSceneCache<T>(m_components_[which_component<T>::value]);
-      removeComponentImpl(which_component<T>::value);
+      removeComponent(which_component<T>::value);
     }
 
     template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
@@ -179,10 +179,12 @@ namespace Engine::Abstract
     // Add pre-existing script to the object.
     void addScriptImpl(const StrongScript & script, const eScriptType type);
 
-    // Remove component from the object.
-    void removeComponentImpl(eComponentType type);
-    // Remove specific component from the object.
-    void removeComponentImpl(const GlobalEntityID id);
+    // Remove component from the object. Cached component at the scene should be removed manually.
+    void removeComponent(eComponentType type);
+    // Remove specific component from the object. Cached component at the scene should be removed manually.
+    void removeComponent(const GlobalEntityID id);
+    // Remove component from the object finally, notify task scheduler to remove the component.
+    void removeComponentImpl(const eComponentType type, const StrongComponent & comp);
 
     // Commit the component to the object.
     void          addComponentImpl(const StrongComponent& component, eComponentType type);
