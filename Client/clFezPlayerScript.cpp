@@ -68,17 +68,22 @@ namespace Client::Scripts
       UpdateRotate(dt);
       UpdateMove();
       UpdateJump();
+      UpdateInitialClimb();
       break;
     case CHAR_STATE_WALK:
       UpdateRotate(dt);
       UpdateMove();
       UpdateJump();
+      UpdateInitialClimb();
       break;
     case CHAR_STATE_RUN: break;
     case CHAR_STATE_JUMP: 
       UpdateMove();
+      UpdateInitialClimb();
       break;
-    case CHAR_STATE_CLIMB: break;
+    case CHAR_STATE_CLIMB: 
+      UpdateClimb();
+      break;
     case CHAR_STATE_SWIM: break;
     case CHAR_STATE_ROTATE: 
       UpdateRotate(dt);
@@ -93,7 +98,9 @@ namespace Client::Scripts
       }
       UpdateRotate(dt);
       break;
-    case CHAR_STATE_FALL: break;
+    case CHAR_STATE_FALL: 
+      UpdateMove();
+      break;
     case CHAR_STATE_ATTACK: break;
     case CHAR_STATE_HIT: break;
     case CHAR_STATE_DIE: break;
@@ -113,6 +120,33 @@ namespace Client::Scripts
   void FezPlayerScript::Render(const float& dt) {}
 
   void FezPlayerScript::PostRender(const float& dt) {}
+
+  void FezPlayerScript::OnImGui()
+  {
+    Script::OnImGui();
+    constexpr const char* states[] =
+    {
+      "Idle",
+      "Walk",
+      "Run",
+      "Jump",
+      "Climb",
+      "Post Climb",
+      "Swim",
+      "Rotate",
+      "Post Rotate",
+      "Fall",
+      "Attack",
+      "Hit",
+      "Die",
+      "Max"
+    };
+
+    ImGui::BeginDisabled();
+    ImGui::Combo("State", &reinterpret_cast<int&>(m_state_), states, std::size(states));
+    ImGui::Combo("Prev State", &reinterpret_cast<int&>(m_prev_state_), states, std::size(states));
+    ImGui::EndDisabled();
+  }
 
   void FezPlayerScript::OnCollisionEnter(const WeakCollider& other) {}
 
@@ -399,5 +433,91 @@ namespace Client::Scripts
         m_state_ = CHAR_STATE_IDLE;
       }
     }
+  }
+
+  void FezPlayerScript::UpdateInitialClimb()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+    
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& pos = tr->GetWorldPosition();
+
+    const auto& scene = owner->GetScene().lock();
+    const auto& octree = scene->GetObjectTree();
+
+    if (GetApplication().HasKeyChanged(Keyboard::W))
+    {
+      for (const auto& nearest = octree.Nearest(pos, 1.5f); 
+           const auto& obj : nearest)
+      {
+        if (const auto& locked = obj.lock())
+        {
+          if (const auto& script = locked->GetScript<CubifyScript>().lock())
+          {
+            if (script->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+
+            if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
+            {
+              const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
+              const auto& cube_pos = ntr->GetWorldPosition();
+
+              const auto& new_pos  = Vector3
+              {
+                m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
+                pos.y,
+                m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
+              };
+
+              tr->SetWorldPosition(new_pos);
+              rb->SetGravityOverride(false);
+
+              m_state_ = CHAR_STATE_CLIMB;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void FezPlayerScript::UpdateClimb()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& up = tr->Up();
+    const auto& down = -up;
+    const auto& right = tr->Right();
+    const auto& left = -right;
+
+    const auto& key_state = GetApplication().GetCurrentKeyState();
+    const auto& pos = tr->GetLocalPosition();
+    const auto& scene = owner->GetScene().lock();
+    const auto& octree = scene->GetObjectTree();
+
+    if (const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon); 
+        nearest.empty())
+    {
+      rb->SetGravityOverride(true);
+      m_state_ = CHAR_STATE_FALL;
+      return;
+    }
+
+    if (key_state.W) { rb->AddT1Force(up * 1.f); }
+    if (key_state.S) { rb->AddT1Force(down * 1.f); }
+    if (key_state.D) { rb->AddT1Force(right * 1.f); }
+    if (key_state.A) { rb->AddT1Force(left * 1.f); }
   }
 }

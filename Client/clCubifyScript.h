@@ -26,8 +26,10 @@ namespace Client::Scripts
     void OnImGui() override;
 
     void SetCubeDimension(const Vector3& dimension);
+    void SetCubeType(const eCubeType type);
 
     [[nodiscard]] WeakObjectBase GetDepthNearestCube(const Vector3& pos) const;
+    [[nodiscard]] eCubeType GetCubeType() const;
 
   protected:
     void OnCollisionEnter(const WeakCollider& other) override;
@@ -44,6 +46,8 @@ namespace Client::Scripts
 
     std::vector<LocalActorID> m_cube_ids_;
     Vector3 m_cube_dimension_;
+
+    eCubeType m_cube_type_;
 
     int m_z_length_;
     int m_x_length_;

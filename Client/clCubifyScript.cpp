@@ -20,6 +20,7 @@ SERIALIZE_IMPL
  _ARTAG(m_cube_dimension_)
  _ARTAG(m_z_length_)
  _ARTAG(m_x_length_)
+ _ARTAG(m_cube_type_)
 )
 
 namespace Client::Scripts
@@ -28,7 +29,8 @@ namespace Client::Scripts
     : Script(SCRIPT_T_CUBIFY, owner),
       m_z_length_(0),
       m_x_length_(0),
-      m_cube_dimension_(Vector3::One){}
+      m_cube_dimension_(Vector3::One),
+      m_cube_type_(CUBE_TYPE_NORMAL) {}
 
   CubifyScript::~CubifyScript() = default;
 
@@ -76,7 +78,13 @@ namespace Client::Scripts
   void CubifyScript::OnImGui()
   {
     Script::OnImGui();
-    if (ImGuiVector3Editable("Cube Dimension", GetID(), "cube_dimension", m_cube_dimension_))
+
+    if (ImGuiVector3Editable("Cube Dimension", GetID(), "cube_dimension", m_cube_dimension_, 0.1f, 0.1f))
+    {
+      UpdateCubes();
+    }
+
+    if (ImGui::Combo("Cube Type", reinterpret_cast<int*>(&m_cube_type_), "Normal\0Ladder\0Ice\0"))
     {
       UpdateCubes();
     }
@@ -87,6 +95,11 @@ namespace Client::Scripts
     if (dimension == Vector3::Zero) { return; }
     if (dimension.x <= 0 || dimension.y <= 0 || dimension.z <= 0) { return; }
     m_cube_dimension_ = dimension;
+  }
+
+  void CubifyScript::SetCubeType(const eCubeType type)
+  {
+    m_cube_type_ = type;
   }
 
   WeakObjectBase CubifyScript::GetDepthNearestCube(const Vector3& pos) const
@@ -124,6 +137,8 @@ namespace Client::Scripts
     return nearest_cube;
   }
 
+  eCubeType CubifyScript::GetCubeType() const { return m_cube_type_; }
+
   void CubifyScript::OnCollisionEnter(const WeakCollider& other) {}
 
   void CubifyScript::OnCollisionContinue(const WeakCollider& other) {}
@@ -136,10 +151,24 @@ namespace Client::Scripts
     : Script(SCRIPT_T_CUBIFY, {}),
       m_z_length_(0),
       m_x_length_(0),
-      m_cube_dimension_(Vector3::One) {}
+      m_cube_dimension_(Vector3::One),
+      m_cube_type_(CUBE_TYPE_NORMAL) {}
 
   void CubifyScript::UpdateCubes()
   {
+    if (m_cube_dimension_.x == 0.f)
+    {
+      m_cube_dimension_.x = g_epsilon;
+    }
+    if (m_cube_dimension_.y == 0.f)
+    {
+      m_cube_dimension_.y = g_epsilon;
+    }
+    if (m_cube_dimension_.z == 0.f)
+    {
+      m_cube_dimension_.z = g_epsilon;
+    }
+
      // Cube statics
     const auto x_step = m_cube_dimension_.x;
     const auto y_step = m_cube_dimension_.y;
