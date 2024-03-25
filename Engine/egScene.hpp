@@ -64,6 +64,8 @@ namespace Engine
       return obj_t;
     }
 
+    void ChangeLayer(const eLayerType to, const GlobalEntityID id);
+
     void RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
     WeakObjectBase FindGameObject(GlobalEntityID id) const;

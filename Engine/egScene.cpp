@@ -271,6 +271,30 @@ namespace Engine
     }
   }
 
+  void Scene::ChangeLayer(const eLayerType to, const GlobalEntityID id)
+  {
+    if (const auto& obj = FindGameObject(id).lock())
+    {
+      if (obj->GetLayer() == to) return;
+
+      GetTaskScheduler().AddTask
+        (
+         TASK_CHANGE_LAYER,
+         {GetSharedPtr<Scene>(), obj->GetSharedPtr<Abstract::ObjectBase>(),to},
+         [this](const std::vector<std::any>& args, const float)
+         {
+           const auto scene = std::any_cast<StrongScene>(args[0]);
+           const auto obj   = std::any_cast<StrongObjectBase>(args[1]);
+           const auto layer = std::any_cast<eLayerType>(args[2]);
+
+           (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+           (*scene)[layer]->AddGameObject(obj);
+           obj->SetLayer(layer);
+         }
+        );
+    }
+  }
+
   void Scene::RemoveGameObject(const GlobalEntityID id, eLayerType layer)
   {
     {
@@ -638,21 +662,7 @@ namespace Engine
               {
                 if (obj->GetLayer() == i) { continue; }
 
-                GetTaskScheduler().AddTask
-                  (
-                   TASK_CHANGE_LAYER,
-                   {GetSharedPtr<Scene>(), obj->GetSharedPtr<Abstract::ObjectBase>(), i},
-                   [this, i](const std::vector<std::any>& args, const float)
-                   {
-                     const auto scene = std::any_cast<StrongScene>(args[0]);
-                     const auto obj   = std::any_cast<StrongObjectBase>(args[1]);
-                     const auto layer = std::any_cast<int>(args[2]);
-
-                     (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
-                     (*scene)[layer]->AddGameObject(obj);
-                     obj->SetLayer(static_cast<eLayerType>(layer));
-                   }
-                  );
+                ChangeLayer(static_cast<eLayerType>(i), obj->GetID());
               }
             }
             ImGui::EndDragDropTarget();
