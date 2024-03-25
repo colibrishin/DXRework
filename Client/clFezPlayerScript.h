@@ -57,10 +57,16 @@ namespace Client::Scripts
 
     FezPlayerScript();
 
+    constexpr static float s_jump_speed = g_gravity_acc * 1.1f;
+    constexpr static float s_jump_apex = 5.f;
+
     void UpdateMove();
     void UpdateRotate(const float dt);
-    void UpdateJump();
     void UpdateGrounded();
+
+    void UpdateInitialJump();
+    void UpdateJump();
+    void UpdateFall();
 
     void UpdateInitialClimb();
     void UpdateClimb();

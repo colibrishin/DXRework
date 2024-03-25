@@ -65,20 +65,16 @@ namespace Client::Scripts
     switch (m_state_)
     {
     case CHAR_STATE_IDLE:
-      UpdateRotate(dt);
-      UpdateMove();
-      UpdateJump();
-      UpdateInitialClimb();
-      break;
     case CHAR_STATE_WALK:
       UpdateRotate(dt);
       UpdateMove();
-      UpdateJump();
+      UpdateInitialJump();
       UpdateInitialClimb();
       break;
     case CHAR_STATE_RUN: break;
     case CHAR_STATE_JUMP: 
       UpdateMove();
+      UpdateJump();
       UpdateInitialClimb();
       break;
     case CHAR_STATE_CLIMB: 
@@ -94,12 +90,13 @@ namespace Client::Scripts
           m_rotate_finished_)
       {
         UpdateMove();
-        UpdateJump();
+        UpdateInitialJump();
       }
       UpdateRotate(dt);
       break;
     case CHAR_STATE_FALL: 
       UpdateMove();
+      UpdateFall();
       break;
     case CHAR_STATE_ATTACK: break;
     case CHAR_STATE_HIT: break;
@@ -124,22 +121,10 @@ namespace Client::Scripts
   void FezPlayerScript::OnImGui()
   {
     Script::OnImGui();
-    constexpr const char* states[] =
+    constexpr const char* states[]
     {
-      "Idle",
-      "Walk",
-      "Run",
-      "Jump",
-      "Climb",
-      "Post Climb",
-      "Swim",
-      "Rotate",
-      "Post Rotate",
-      "Fall",
-      "Attack",
-      "Hit",
-      "Die",
-      "Max"
+      "Idle", "Walk", "Run", "Jump", "Climb", "Swim", "Rotate", "Post Rotate",
+      "Fall", "Attack", "Hit", "Die", "Max"
     };
 
     ImGui::BeginDisabled();
@@ -193,7 +178,9 @@ namespace Client::Scripts
       moving = true;
     }
 
-    if (moving)
+    if (moving && 
+        (m_state_ == CHAR_STATE_IDLE ||
+         m_state_ == CHAR_STATE_POST_ROTATE))
     {
       m_state_ = CHAR_STATE_WALK;
     }
@@ -330,6 +317,31 @@ namespace Client::Scripts
     }
   }
 
+  void FezPlayerScript::UpdateInitialJump()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& key_state = GetApplication().GetCurrentKeyState();
+    const auto& up        = tr->Up();
+    const auto& scene     = owner->GetScene().lock();
+
+    // Use the continuous jump check to threshold the jump height.
+    if (GetApplication().HasKeyChanged(Keyboard::W) || GetApplication().HasKeyChanged(Keyboard::Space))
+    {
+      rb->AddT1Force(up * s_jump_speed);
+      m_state_ = CHAR_STATE_JUMP;
+      // Change the layer to none so that the player can jump through the cube.
+      scene->ChangeLayer(LAYER_NONE, owner->GetID());
+    }
+  }
+
   void FezPlayerScript::UpdateJump()
   {
     if (GetOwner().expired()) { return; }
@@ -342,31 +354,40 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
     const auto& key_state = GetApplication().GetCurrentKeyState();
-    const auto&     up         = tr->Up();
-    constexpr float jump_force = 400.f;
-    constexpr float jump_apex = 5.f;
+    const auto& up        = tr->Up();
+    const auto& scene     = owner->GetScene().lock();
 
-    // Use the continuous jump check to threshold the jump height.
     if (key_state.W || key_state.Space)
     {
-      // If the player has reached the apex of the jump, then set the player's state to fall.
-      if (rb->GetT0LinearVelocity().y > jump_apex)
+      rb->AddT1Force(up * s_jump_speed);
+
+      if (rb->GetT0LinearVelocity().y >= s_jump_apex)
       {
         m_state_ = CHAR_STATE_FALL;
-      }
-      else
-      {
-        rb->AddT1Force(up * jump_force);
-        m_state_ = CHAR_STATE_JUMP; 
+        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
       }
     }
     else
     {
-      // If the player lets go of the jump key, then set the player's state to fall.
-      if (rb->GetT0LinearVelocity().y > 0.f)
-      {
-        m_state_ = CHAR_STATE_FALL;
-      }
+      m_state_ = CHAR_STATE_FALL;
+      scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+    }
+  }
+
+  void FezPlayerScript::UpdateFall()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    if (rb->GetGrounded())
+    {
+      m_state_ = CHAR_STATE_IDLE;
     }
   }
 
@@ -427,11 +448,6 @@ namespace Client::Scripts
     if (hit)
     {
       rb->SetGrounded(true);
-
-      if (m_state_ == CHAR_STATE_JUMP || m_state_ == CHAR_STATE_FALL)
-      {
-        m_state_ = CHAR_STATE_IDLE;
-      }
     }
   }
 
