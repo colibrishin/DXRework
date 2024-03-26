@@ -350,8 +350,8 @@ namespace Client::Scripts
       }
 
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->FullReset();
-      rb->SetFixed(false);
+      Fullstop();
+      ApplyLerp();
       m_rotate_finished_ = false;
       m_rotate_consecutive_ = false;
       return;
@@ -390,10 +390,18 @@ namespace Client::Scripts
         m_latest_spin_position_ = tr->GetWorldPosition();
       }
       
-      rb->FullReset();
-      rb->SetFixed(true);
+      Fullstop();
+      ApplyLerp();
       m_rotate_finished_ = false;
     }
+  }
+
+  void FezPlayerScript::DoInitialJump(const StrongRigidbody& rb, const Vector3& up)
+  {
+    rb->AddT1Force(up * s_jump_initial_speed);
+    m_state_ = CHAR_STATE_JUMP;
+    // Change the layer to none so that the player can jump through the cube.
+    IgnoreCollision();
   }
 
   void FezPlayerScript::UpdateInitialJump()
@@ -411,13 +419,10 @@ namespace Client::Scripts
     const auto& up        = tr->Up();
     const auto& scene     = owner->GetScene().lock();
 
-    // Use the continuous jump check to threshold the jump height.
-    if (GetApplication().HasKeyChanged(Keyboard::W) || GetApplication().HasKeyChanged(Keyboard::Space))
+    // Discrete key check for initial jump. Continuous key check for jump will be done in jump state.
+    if (GetApplication().HasKeyChanged(Keyboard::Space))
     {
-      rb->AddT1Force(up * s_jump_speed);
-      m_state_ = CHAR_STATE_JUMP;
-      // Change the layer to none so that the player can jump through the cube.
-      scene->ChangeLayer(LAYER_NONE, owner->GetID());
+      DoInitialJump(rb, up);
     }
   }
 
@@ -432,24 +437,23 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
-    const auto& key_state = GetApplication().GetCurrentKeyState();
     const auto& up        = tr->Up();
     const auto& scene     = owner->GetScene().lock();
 
-    if (key_state.W || key_state.Space)
+    if (GetApplication().IsKeyPressed(Keyboard::W) || GetApplication().IsKeyPressed(Keyboard::Space))
     {
       rb->AddT1Force(up * s_jump_speed);
 
       if (rb->GetT0LinearVelocity().y >= s_jump_apex)
       {
         m_state_ = CHAR_STATE_FALL;
-        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+        ApplyCollision();
       }
     }
     else
     {
       m_state_ = CHAR_STATE_FALL;
-      scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+      ApplyCollision();
     }
   }
 
@@ -570,7 +574,7 @@ namespace Client::Scripts
               };
 
               tr->SetWorldPosition(new_pos);
-              rb->SetGravityOverride(false);
+              IgnoreGravity();
 
               m_state_ = CHAR_STATE_CLIMB;
               break;
@@ -605,7 +609,7 @@ namespace Client::Scripts
     if (const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon); 
         nearest.empty())
     {
-      rb->SetGravityOverride(true);
+      ApplyGravity();
       m_state_ = CHAR_STATE_FALL;
       return;
     }

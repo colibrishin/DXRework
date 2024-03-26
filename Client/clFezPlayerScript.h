@@ -85,6 +85,9 @@ namespace Client::Scripts
 
     void MoveCameraToChild() const;
 
+    // Subroutine for state changes
+    void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
+
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
 
