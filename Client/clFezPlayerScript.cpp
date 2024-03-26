@@ -62,6 +62,8 @@ namespace Client::Scripts
   {
     m_prev_state_ = m_state_;
 
+    UpdateGrounded();
+
     switch (m_state_)
     {
     case CHAR_STATE_IDLE:
