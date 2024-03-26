@@ -151,6 +151,83 @@ namespace Client::Scripts
       m_rotate_finished_(false),
       m_rotate_consecutive_(false) { }
 
+  void FezPlayerScript::IgnoreCollision() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& scene = owner->GetScene().lock())
+      {
+        scene->ChangeLayer(LAYER_NONE, owner->GetID());
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyCollision() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& scene = owner->GetScene().lock())
+      {
+        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+      }
+    }
+  }
+
+  void FezPlayerScript::Fullstop() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->FullReset();
+      }
+    }
+  }
+
+  void FezPlayerScript::IgnoreGravity() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetGravityOverride(false);
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyGravity() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetGravityOverride(true);
+      }
+    }
+  }
+
+  void FezPlayerScript::IgnoreLerp() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetFixed(true);
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyLerp() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetFixed(false);
+      }
+    }
+  }
+
   void FezPlayerScript::UpdateMove()
   {
     if (GetOwner().expired()) { return; }

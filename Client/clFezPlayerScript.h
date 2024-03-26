@@ -57,9 +57,21 @@ namespace Client::Scripts
 
     FezPlayerScript();
 
-    constexpr static float s_jump_speed = g_gravity_acc * 1.1f;
-    constexpr static float s_jump_apex = 5.f;
+    constexpr static float s_jump_initial_speed = g_gravity_acc * 3.f;
+    constexpr static float s_jump_speed = g_gravity_acc;
+    constexpr static float s_jump_apex = 10.f;
 
+    // Utilities
+    void IgnoreCollision() const;
+    void ApplyCollision() const;
+    void IgnoreGravity() const;
+    void ApplyGravity() const;
+    void IgnoreLerp() const;
+    void ApplyLerp() const;
+    void Fullstop() const;
+    void MoveCameraToChild() const;
+
+    // State changes
     void UpdateMove();
     void UpdateRotate(const float dt);
     void UpdateGrounded();
