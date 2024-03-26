@@ -108,6 +108,7 @@ namespace Client::Scripts
     case CHAR_STATE_POST_CLIMB: break;
     case CHAR_STATE_VAULT: 
       UpdateVault();
+      UpdateInitialJump();
       break;
     default: ;
     }
@@ -738,13 +739,6 @@ namespace Client::Scripts
       ApplyCollision();
 
       m_state_ = CHAR_STATE_IDLE;
-      return;
-    }
-
-    // Jumping while vaulting.
-    if (GetApplication().HasKeyChanged(Keyboard::Space))
-    {
-      DoInitialJump(rb, tr->Up());
       return;
     }
 
