@@ -83,7 +83,8 @@ namespace Client::Scripts
     void UpdateInitialClimb();
     void UpdateClimb();
 
-    void MoveCameraToChild() const;
+    void UpdateInitialVault();
+    void UpdateVault();
 
     // Subroutine for state changes
     void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
