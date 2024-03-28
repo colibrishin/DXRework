@@ -92,8 +92,20 @@ namespace Client::Scripts
           m_prev_state_ == CHAR_STATE_POST_ROTATE &&
           m_rotate_finished_)
       {
-        UpdateMove();
-        UpdateInitialJump();
+        if (m_b_vaulting_)
+        {
+          UpdateVault();
+          UpdateInitialJump();
+        }
+        else if (m_b_climbing_)
+        {
+          UpdateClimb();
+        }
+        else
+        {
+          UpdateMove();
+          UpdateInitialJump();
+        }
       }
       UpdateRotate(dt);
       break;
@@ -155,7 +167,9 @@ namespace Client::Scripts
       m_accumulated_dt_(0),
       m_rotate_allowed_(true),
       m_rotate_finished_(false),
-      m_rotate_consecutive_(false) { }
+      m_rotate_consecutive_(false),
+      m_b_vaulting_(false),
+      m_b_climbing_(false) { }
 
   void FezPlayerScript::IgnoreCollision() const
   {
@@ -580,6 +594,7 @@ namespace Client::Scripts
               tr->SetWorldPosition(new_pos);
               IgnoreGravity();
 
+              m_b_climbing_ = true;
               m_state_ = CHAR_STATE_CLIMB;
               break;
             }
@@ -614,6 +629,7 @@ namespace Client::Scripts
         nearest.empty())
     {
       ApplyGravity();
+      m_b_climbing_ = false;
       m_state_ = CHAR_STATE_FALL;
       return;
     }
@@ -654,6 +670,7 @@ namespace Client::Scripts
       IgnoreCollision();
 
       m_state_ = CHAR_STATE_VAULT;
+      m_b_vaulting_ = true;
       return;
     }
 
@@ -690,6 +707,7 @@ namespace Client::Scripts
           IgnoreCollision();
 
           m_state_ = CHAR_STATE_VAULT;
+          m_b_vaulting_ = true;
           return;
         }
       }
@@ -740,6 +758,7 @@ namespace Client::Scripts
       // Revert the layer to default.
       ApplyCollision();
 
+      m_b_vaulting_ = false;
       m_state_ = CHAR_STATE_IDLE;
       return;
     }
@@ -749,6 +768,8 @@ namespace Client::Scripts
     {
       ApplyGravity();
       Fullstop();
+
+      bool found = false;
 
       // todo: Move the player to the down position of the nearest ground.
       for (const auto& id : cldr->GetCollidedObjects())
@@ -774,13 +795,17 @@ namespace Client::Scripts
           };
 
           tr->SetWorldPosition(new_pos);
+          found = true;
           break;
         }
       }
 
+      if (!found) { return; }
+
       // Revert the layer to default.
       ApplyCollision();
 
+      m_b_vaulting_ = false;
       m_state_ = CHAR_STATE_FALL;
     }
   }
