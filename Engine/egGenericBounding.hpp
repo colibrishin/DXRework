@@ -123,6 +123,15 @@ namespace Engine::Physics
       return false;
     }
 
+    template <typename T>
+    [[nodiscard]] bool __vectorcall Intersects(const T& bounding) const
+    {
+      if (type == BOUNDING_TYPE_BOX) { return m_boundings_.box.Intersects(bounding); }
+      else if (type == BOUNDING_TYPE_SPHERE) { return m_boundings_.sphere.Intersects(bounding); }
+
+      throw std::exception("Intersects: Invalid type");
+    }
+
     [[nodiscard]] bool __vectorcall Intersects(
       const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat, const Vector3& dir,
       const float            epsilon = g_epsilon
@@ -197,7 +206,7 @@ namespace Engine::Physics
     void __vectorcall UpdateFromBoundingBox(const BoundingOrientedBox& box_) { m_boundings_.box = box_; }
 
     template <typename BoundingType>
-    void CreateFromPoints(size_t count, const Vector3* points, size_t stride)
+    void __vectorcall CreateFromPoints(const size_t count, const Vector3* points, const size_t stride)
     {
       if (std::is_same_v<BoundingType, BoundingOrientedBox>)
       {
@@ -222,10 +231,15 @@ namespace Engine::Physics
       return ret;
     }
 
-    __forceinline void __vectorcall Translate(const Vector3& v)
+    __forceinline void Translate(const Vector3& v)
     {
       if (type == BOUNDING_TYPE_BOX) { m_boundings_.box.Center = m_boundings_.box.Center + v; }
       else if (type == BOUNDING_TYPE_SPHERE) { m_boundings_.sphere.Center = m_boundings_.sphere.Center + v; }
+    }
+
+    [[nodiscard]] float Distance(const Vector3& point) const
+    {
+      return std::sqrtf(Vector3::DistanceSquared(m_boundings_.box.Center, point));
     }
 
   private:

@@ -17,6 +17,13 @@ namespace Engine
   template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
   inline static boost::weak_ptr<T> Get(const std::string& name) { return GetResourceManager().GetResource<T>(name); }
 
+  inline static void ZeroToEpsilon(Vector3& v)
+  {
+    if (v.x == 0.0f) { v.x = g_epsilon; }
+    if (v.y == 0.0f) { v.y = g_epsilon; }
+    if (v.z == 0.0f) { v.z = g_epsilon; }
+  }
+
   template <typename T>
   struct pretty_name
   {

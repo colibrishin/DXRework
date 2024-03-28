@@ -220,6 +220,7 @@ namespace Engine
   using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
   using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
   using StrongPrefab = boost::shared_ptr<Resources::Prefab>;
+  using StrongRigidbody = boost::shared_ptr<Components::Rigidbody>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;

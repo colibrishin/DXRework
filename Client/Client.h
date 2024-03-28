@@ -31,6 +31,13 @@ namespace Client
   UINT GetHeight();
   bool IsFullScreen();
 
+  enum eCubeType
+  {
+    CUBE_TYPE_NORMAL,
+    CUBE_TYPE_LADDER,
+    CUBE_TYPE_WATER,
+  };
+
   enum eCharacterState
   {
     CHAR_STATE_IDLE,
@@ -38,6 +45,8 @@ namespace Client
     CHAR_STATE_RUN,
     CHAR_STATE_JUMP,
     CHAR_STATE_CLIMB,
+    CHAR_STATE_POST_CLIMB,
+    CHAR_STATE_VAULT,
     CHAR_STATE_SWIM,
     CHAR_STATE_ROTATE,
     CHAR_STATE_POST_ROTATE,

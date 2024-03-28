@@ -230,6 +230,7 @@ namespace Client
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
+    GetCollisionDetector().UnsetCollisionLayer(LAYER_NONE, LAYER_NONE);
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }
