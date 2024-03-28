@@ -757,6 +757,8 @@ namespace Client::Scripts
       ApplyGravity();
       Fullstop();
 
+      bool found = false;
+
       // todo: Move the player to the down position of the nearest ground.
       for (const auto& id : cldr->GetCollidedObjects())
       {
@@ -781,9 +783,12 @@ namespace Client::Scripts
           };
 
           tr->SetWorldPosition(new_pos);
+          found = true;
           break;
         }
       }
+
+      if (!found) { return; }
 
       // Revert the layer to default.
       ApplyCollision();
