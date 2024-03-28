@@ -732,7 +732,8 @@ namespace Client::Scripts
     // Vaulting up.
     if (GetApplication().HasKeyChanged(Keyboard::W))
     {
-      tr->SetLocalPosition(pos + (tr->GetLocalScale() * 0.5f));
+      const auto& size = tr->GetLocalScale();
+      tr->SetLocalPosition(pos + Vector3{0.f, size.y / 2, 0.f});
       ApplyGravity();
       Fullstop();
 
