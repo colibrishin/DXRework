@@ -92,8 +92,20 @@ namespace Client::Scripts
           m_prev_state_ == CHAR_STATE_POST_ROTATE &&
           m_rotate_finished_)
       {
-        UpdateMove();
-        UpdateInitialJump();
+        if (m_b_vaulting_)
+        {
+          UpdateVault();
+          UpdateInitialJump();
+        }
+        else if (m_b_climbing_)
+        {
+          UpdateClimb();
+        }
+        else
+        {
+          UpdateMove();
+          UpdateInitialJump();
+        }
       }
       UpdateRotate(dt);
       break;
