@@ -53,12 +53,23 @@ namespace Engine
     const std::vector<WeakT>&    Read() const;
     std::array<const Octree*, 8> Next() const;
     bool                         Contains(const Vector3& point) const;
+
+    // Checks if the given point or bounds intersects with the node.
+    template <typename T>
+    bool                         Intersects(const T& point_or_bounds) const
+    {
+      return m_bounds_.Intersects(point_or_bounds);
+    }
+
+    // Gets the distance between node bounding box and the given point.
+    float                        Distance(const Vector3& point) const;
     UINT                         ActiveChildren() const;
     bool                         Insert(const WeakT& obj);
     void                         Remove(const WeakT& obj);
     void                         Update();
     void                         Clear();
     void                         Iterate(const Vector3 & point, const std::function<bool(const WeakT&)> & func) const;
+    std::vector<Octree::WeakT>   Nearest(const Vector3& point, const float distance) const;
 
   private:
     explicit Octree(const BoundingBox& bounds);

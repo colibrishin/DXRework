@@ -52,6 +52,11 @@ namespace Engine
     return m_bounds_.Contains(point) == DirectX::ContainmentType::CONTAINS;
   }
 
+  float Octree::Distance(const Vector3& point) const
+  {
+    return std::sqrtf(Vector3::DistanceSquared(m_bounds_.Center, point));
+  }
+
   UINT Octree::ActiveChildren() const { return static_cast<UINT>(m_active_children_.count()); }
 
   bool Octree::Insert(const WeakT& obj)
@@ -444,6 +449,55 @@ namespace Engine
         }
       }
     }
+  }
+
+  std::vector<Octree::WeakT> Octree::Nearest(const Vector3& point, const float distance) const
+  {
+    std::queue<const Octree*> q;
+    std::set<const Octree*> visited;
+    std::vector<WeakT> result;
+    const BoundingSphere search_sphere(point, distance);
+
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.front();
+      
+      const auto& value = node->m_values_;
+      const auto& children = node->m_children_;
+
+      if (visited.contains(node))
+      {
+        q.pop();
+
+        for (const auto& v : value)
+        {
+          if (const auto& locked = v.lock())
+          {
+            if (const auto& bounding = bounding_getter::value(*locked); 
+                bounding.Intersects(search_sphere))
+            {
+              result.push_back(v);
+            }
+          }
+        }
+
+        continue;
+      }
+
+      visited.insert(node);
+
+      for (const auto& child : children)
+      {
+        if (child && child->Intersects(search_sphere))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+
+    return result;
   }
 
   Octree::Octree(const BoundingBox& bounds)

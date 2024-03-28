@@ -263,7 +263,7 @@ namespace Engine::Abstract
     // Remove the component from the previous owner.
     if (const auto prev = component->GetOwner().lock())
     {
-      prev->removeComponentImpl(component->GetID());
+      prev->removeComponent(component->GetID());
     }
 
     // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
@@ -291,27 +291,42 @@ namespace Engine::Abstract
     m_scripts_.emplace(type, script);
   }
 
-  void ObjectBase::removeComponentImpl(const eComponentType type)
+  void ObjectBase::removeComponentImpl(const eComponentType type, const StrongComponent& comp)
+  {
+    GetTaskScheduler().AddTask
+      (
+       TASK_REM_COMPONENT,
+       {GetSharedPtr<ObjectBase>(), comp, type},
+       [](const std::vector<std::any>& params, const float)
+       {
+         const auto& obj  = std::any_cast<StrongObjectBase>(params[0]);
+         const auto& comp = std::any_cast<StrongComponent>(params[1]);
+         const auto& type = std::any_cast<eComponentType>(params[2]);
+
+         obj->m_assigned_component_ids_.erase(comp->GetLocalID());
+         obj->m_cached_component_.erase(comp);
+         obj->m_components_.erase(type);
+       }
+      );
+  }
+
+  void ObjectBase::removeComponent(const eComponentType type)
   {
     if (m_components_.contains(type))
     {
       const auto comp = m_components_[type];
 
-      m_assigned_component_ids_.erase(comp->GetLocalID());
-      m_cached_component_.erase(comp);
-      m_components_.erase(type);
+      removeComponentImpl(type, comp);
     }
   }
 
-  void ObjectBase::removeComponentImpl(const GlobalEntityID id)
+  void ObjectBase::removeComponent(const GlobalEntityID id)
   {
     for (const auto& [type, comp] : m_components_)
     {
       if (comp->GetID() == id)
       {
-        m_assigned_component_ids_.erase(comp->GetLocalID());
-        m_cached_component_.erase(comp);
-        m_components_.erase(type);
+        removeComponentImpl(type, comp);
         break;
       }
     }
@@ -632,7 +647,7 @@ namespace Engine::Abstract
           std::string comp_id = "Remove###" + std::to_string(comp->GetID());
           if (ImGui::Button(comp_id.c_str()))
           {
-            removeComponentImpl(comp->GetID());
+            removeComponent(comp->GetID());
           }
 
           ImGui::SameLine();

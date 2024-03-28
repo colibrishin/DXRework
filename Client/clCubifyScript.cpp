@@ -8,6 +8,7 @@
 #include "egBaseCollider.hpp"
 #include "egCamera.h"
 #include "egGlobal.h"
+#include "egImGuiHeler.hpp"
 #include "egProjectionFrustum.h"
 #include "egRigidbody.h"
 
@@ -16,8 +17,10 @@ SERIALIZE_IMPL
  Client::Scripts::CubifyScript,
  _ARTAG(_BSTSUPER(Engine::Script))
  _ARTAG(m_cube_ids_)
+ _ARTAG(m_cube_dimension_)
  _ARTAG(m_z_length_)
  _ARTAG(m_x_length_)
+ _ARTAG(m_cube_type_)
 )
 
 namespace Client::Scripts
@@ -25,7 +28,9 @@ namespace Client::Scripts
   CubifyScript::CubifyScript(const WeakObjectBase& owner)
     : Script(SCRIPT_T_CUBIFY, owner),
       m_z_length_(0),
-      m_x_length_(0) {}
+      m_x_length_(0),
+      m_cube_dimension_(Vector3::One),
+      m_cube_type_(CUBE_TYPE_NORMAL) {}
 
   CubifyScript::~CubifyScript() = default;
 
@@ -70,6 +75,33 @@ namespace Client::Scripts
 
   void CubifyScript::PostRender(const float& dt) {}
 
+  void CubifyScript::OnImGui()
+  {
+    Script::OnImGui();
+
+    if (ImGuiVector3Editable("Cube Dimension", GetID(), "cube_dimension", m_cube_dimension_, 0.1f, 0.1f))
+    {
+      UpdateCubes();
+    }
+
+    if (ImGui::Combo("Cube Type", reinterpret_cast<int*>(&m_cube_type_), "Normal\0Ladder\0Ice\0"))
+    {
+      UpdateCubes();
+    }
+  }
+
+  void CubifyScript::SetCubeDimension(const Vector3& dimension)
+  {
+    if (dimension == Vector3::Zero) { return; }
+    if (dimension.x <= 0 || dimension.y <= 0 || dimension.z <= 0) { return; }
+    m_cube_dimension_ = dimension;
+  }
+
+  void CubifyScript::SetCubeType(const eCubeType type)
+  {
+    m_cube_type_ = type;
+  }
+
   WeakObjectBase CubifyScript::GetDepthNearestCube(const Vector3& pos) const
   {
     const auto& owner = GetOwner().lock();
@@ -105,6 +137,8 @@ namespace Client::Scripts
     return nearest_cube;
   }
 
+  eCubeType CubifyScript::GetCubeType() const { return m_cube_type_; }
+
   void CubifyScript::OnCollisionEnter(const WeakCollider& other) {}
 
   void CubifyScript::OnCollisionContinue(const WeakCollider& other) {}
@@ -116,18 +150,33 @@ namespace Client::Scripts
   CubifyScript::CubifyScript()
     : Script(SCRIPT_T_CUBIFY, {}),
       m_z_length_(0),
-      m_x_length_(0) {}
+      m_x_length_(0),
+      m_cube_dimension_(Vector3::One),
+      m_cube_type_(CUBE_TYPE_NORMAL) {}
 
   void CubifyScript::UpdateCubes()
   {
-     // Cube statics
-    constexpr auto x_step = s_cube_dimension.x;
-    constexpr auto y_step = s_cube_dimension.y;
-    constexpr auto z_step = s_cube_dimension.z;
+    if (m_cube_dimension_.x == 0.f)
+    {
+      m_cube_dimension_.x = g_epsilon;
+    }
+    if (m_cube_dimension_.y == 0.f)
+    {
+      m_cube_dimension_.y = g_epsilon;
+    }
+    if (m_cube_dimension_.z == 0.f)
+    {
+      m_cube_dimension_.z = g_epsilon;
+    }
 
-    constexpr auto x_step_half = x_step * 0.5f;
-    constexpr auto y_step_half = y_step * 0.5f;
-    constexpr auto z_step_half = z_step * 0.5f;
+     // Cube statics
+    const auto x_step = m_cube_dimension_.x;
+    const auto y_step = m_cube_dimension_.y;
+    const auto z_step = m_cube_dimension_.z;
+
+    const auto x_step_half = x_step * 0.5f;
+    const auto y_step_half = y_step * 0.5f;
+    const auto z_step_half = z_step * 0.5f;
 
     constexpr Vector3 move_offsets[4] =
     {
@@ -137,7 +186,7 @@ namespace Client::Scripts
       {0.f, 0.f, -1.f}
     };
 
-    constexpr float move_steps[4] =
+    const float move_steps[4] =
     {
       x_step,
       z_step,
@@ -190,30 +239,34 @@ namespace Client::Scripts
       // todo: refactoring
       const Vector3 start_poses[4] = 
       {
-        {-half_scale.x + x_step_half, -half_scale.y + x_step_half, -half_scale.z + z_step_half},
-        {half_scale.x - x_step_half, -half_scale.y + x_step_half, -half_scale.z + x_step_half},
-        {half_scale.x - x_step_half, -half_scale.y + x_step_half, half_scale.z - z_step_half},
-        {-half_scale.x + x_step_half, -half_scale.y + x_step_half, half_scale.z - z_step_half}
+        {-half_scale.x + x_step_half, -half_scale.y + y_step_half, -half_scale.z + z_step_half},
+        {half_scale.x - x_step_half, -half_scale.y + y_step_half, -half_scale.z + z_step_half},
+        {half_scale.x - x_step_half, -half_scale.y + y_step_half, half_scale.z - z_step_half},
+        {-half_scale.x + x_step_half, -half_scale.y + y_step_half, half_scale.z - z_step_half}
       };
 
       const float x_count = half_scale.x / x_step;
       const float z_count = half_scale.z / z_step;
 
-      m_z_length_ = static_cast<int>(z_count / 0.5f);
-      m_x_length_ = static_cast<int>(x_count / 0.5f);
+      m_z_length_ = static_cast<int>(z_count * 2.f);
+      m_x_length_ = static_cast<int>(x_count * 2.f);
 
       Vector3 start_pos = start_poses[offset];
 
-      const int target_count = offset == 0 || offset == 2 ? m_z_length_ : m_x_length_;
+      const int target_count = offset == 0 || offset == 3 ? m_x_length_ : m_z_length_;
 
       for (float y = start_pos.y; y < half_scale.y; y += y_step) // NOLINT(cert-flp30-c)
       {
+        start_pos = start_poses[offset];
+        start_pos.y = y;
+
         for (int i = 0; i < target_count; ++i)
         {
           const auto& cube = scene->CreateGameObject<Object>(LAYER_ENVIRONMENT).lock();
           cube->SetName(owner->GetName() + " Cube " + std::format("{}_{}_{}", start_pos.x, y, start_pos.z));
           const auto& cube_tr = cube->AddComponent<Components::Transform>().lock();
 
+          cube_tr->SetLocalScale(m_cube_dimension_);
           cube_tr->SetLocalPosition(start_pos);
 
           cube->AddComponent<Components::Collider>();

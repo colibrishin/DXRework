@@ -105,11 +105,14 @@ namespace Engine
     ImGui::PopID();
   }
 
-  inline static void ImGuiVector3Editable(
+  inline static bool ImGuiVector3Editable(
     const std::string&   label,
     const GlobalEntityID id,
     const std::string&   var_name,
-    Vector3&             v
+    Vector3&             v,
+    const float          drag_step = 0.1f,
+    const float          min_value  = 0,
+    const float          max_value  = 0
   )
   {
     const auto  unique_id = std::to_string(id) + var_name;
@@ -121,8 +124,12 @@ namespace Engine
     ImGui::SameLine();
     ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
 
-    ImGui::DragFloat3("##vector", &v.x);
+    bool changed = false;
+
+    changed = ImGui::DragFloat3("##vector", &v.x, drag_step, min_value, max_value);
     ImGui::PopID();
+
+    return changed;
   }
 
   inline static void ImGuiVector2Editable(

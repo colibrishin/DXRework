@@ -225,7 +225,13 @@ namespace Engine::Components
     ImGui::Indent(2);
     ImGuiVector3Editable("Previous Position", GetID(), "previous_position", m_previous_position_);
     ImGuiVector3Editable("Position", GetID(), "position", m_position_);
-    ImGuiVector3Editable("Scale", GetID(), "scale", m_scale_);
+    if (ImGuiVector3Editable("Scale", GetID(), "scale", m_scale_, 0.1f, 0.1f))
+    {
+      ZeroToEpsilon(m_scale_);
+    }
+
+    CheckboxAligned("Size Absolute", m_b_s_absolute_);
+    CheckboxAligned("Rotate Absolute", m_b_r_absolute_);
     ImGui::Unindent(2);
   }
 
@@ -243,7 +249,7 @@ namespace Engine::Components
 
   Vector3 Transform::GetLocalPreviousPositionPerFrame() const { return m_previous_position_; }
 
-  Matrix Transform::GetWorldMatrix()
+  Matrix Transform::GetWorldMatrix() const
   {
     Matrix        world = GetLocalMatrix();
     auto          tr_c  = this;

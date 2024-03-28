@@ -62,23 +62,27 @@ namespace Client::Scripts
   {
     m_prev_state_ = m_state_;
 
+    UpdateGrounded();
+
     switch (m_state_)
     {
     case CHAR_STATE_IDLE:
-      UpdateRotate(dt);
-      UpdateMove();
-      UpdateJump();
-      break;
     case CHAR_STATE_WALK:
       UpdateRotate(dt);
       UpdateMove();
-      UpdateJump();
+      UpdateInitialJump();
+      UpdateInitialClimb();
+      UpdateInitialVault();
       break;
     case CHAR_STATE_RUN: break;
     case CHAR_STATE_JUMP: 
       UpdateMove();
+      UpdateJump();
+      UpdateInitialClimb();
       break;
-    case CHAR_STATE_CLIMB: break;
+    case CHAR_STATE_CLIMB: 
+      UpdateClimb();
+      break;
     case CHAR_STATE_SWIM: break;
     case CHAR_STATE_ROTATE: 
       UpdateRotate(dt);
@@ -89,19 +93,25 @@ namespace Client::Scripts
           m_rotate_finished_)
       {
         UpdateMove();
-        UpdateJump();
+        UpdateInitialJump();
       }
       UpdateRotate(dt);
       break;
-    case CHAR_STATE_FALL: break;
+    case CHAR_STATE_FALL: 
+      UpdateMove();
+      UpdateFall();
+      break;
     case CHAR_STATE_ATTACK: break;
     case CHAR_STATE_HIT: break;
     case CHAR_STATE_DIE: break;
     case CHAR_STATE_MAX: break;
+    case CHAR_STATE_POST_CLIMB: break;
+    case CHAR_STATE_VAULT: 
+      UpdateVault();
+      UpdateInitialJump();
+      break;
     default: ;
     }
-
-    UpdateGrounded();
   }
 
   void FezPlayerScript::PostUpdate(const float& dt) {}
@@ -113,6 +123,21 @@ namespace Client::Scripts
   void FezPlayerScript::Render(const float& dt) {}
 
   void FezPlayerScript::PostRender(const float& dt) {}
+
+  void FezPlayerScript::OnImGui()
+  {
+    Script::OnImGui();
+    constexpr const char* states[]
+    {
+      "Idle", "Walk", "Run", "Jump", "Climb", "Swim", "Rotate", "Post Rotate",
+      "Fall", "Attack", "Hit", "Die", "Max"
+    };
+
+    ImGui::BeginDisabled();
+    ImGui::Combo("State", &reinterpret_cast<int&>(m_state_), states, std::size(states));
+    ImGui::Combo("Prev State", &reinterpret_cast<int&>(m_prev_state_), states, std::size(states));
+    ImGui::EndDisabled();
+  }
 
   void FezPlayerScript::OnCollisionEnter(const WeakCollider& other) {}
 
@@ -131,6 +156,83 @@ namespace Client::Scripts
       m_rotate_allowed_(true),
       m_rotate_finished_(false),
       m_rotate_consecutive_(false) { }
+
+  void FezPlayerScript::IgnoreCollision() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& scene = owner->GetScene().lock())
+      {
+        scene->ChangeLayer(LAYER_NONE, owner->GetID());
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyCollision() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& scene = owner->GetScene().lock())
+      {
+        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+      }
+    }
+  }
+
+  void FezPlayerScript::Fullstop() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->FullReset();
+      }
+    }
+  }
+
+  void FezPlayerScript::IgnoreGravity() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetGravityOverride(false);
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyGravity() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetGravityOverride(true);
+      }
+    }
+  }
+
+  void FezPlayerScript::IgnoreLerp() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetFixed(true);
+      }
+    }
+  }
+
+  void FezPlayerScript::ApplyLerp() const
+  {
+    if (const auto& owner = GetOwner().lock())
+    {
+      if (const auto& rb = owner->GetComponent<Components::Rigidbody>().lock())
+      {
+        rb->SetFixed(false);
+      }
+    }
+  }
 
   void FezPlayerScript::UpdateMove()
   {
@@ -159,7 +261,9 @@ namespace Client::Scripts
       moving = true;
     }
 
-    if (moving)
+    if (moving && 
+        (m_state_ == CHAR_STATE_IDLE ||
+         m_state_ == CHAR_STATE_POST_ROTATE))
     {
       m_state_ = CHAR_STATE_WALK;
     }
@@ -250,8 +354,8 @@ namespace Client::Scripts
       }
 
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
-      rb->FullReset();
-      rb->SetFixed(false);
+      Fullstop();
+      ApplyLerp();
       m_rotate_finished_ = false;
       m_rotate_consecutive_ = false;
       return;
@@ -290,9 +394,39 @@ namespace Client::Scripts
         m_latest_spin_position_ = tr->GetWorldPosition();
       }
       
-      rb->FullReset();
-      rb->SetFixed(true);
+      Fullstop();
+      ApplyLerp();
       m_rotate_finished_ = false;
+    }
+  }
+
+  void FezPlayerScript::DoInitialJump(const StrongRigidbody& rb, const Vector3& up)
+  {
+    rb->AddT1Force(up * s_jump_initial_speed);
+    m_state_ = CHAR_STATE_JUMP;
+    // Change the layer to none so that the player can jump through the cube.
+    IgnoreCollision();
+  }
+
+  void FezPlayerScript::UpdateInitialJump()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& key_state = GetApplication().GetCurrentKeyState();
+    const auto& up        = tr->Up();
+    const auto& scene     = owner->GetScene().lock();
+
+    // Discrete key check for initial jump. Continuous key check for jump will be done in jump state.
+    if (GetApplication().HasKeyChanged(Keyboard::Space))
+    {
+      DoInitialJump(rb, up);
     }
   }
 
@@ -307,32 +441,40 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
-    const auto& key_state = GetApplication().GetCurrentKeyState();
-    const auto&     up         = tr->Up();
-    constexpr float jump_force = 400.f;
-    constexpr float jump_apex = 5.f;
+    const auto& up        = tr->Up();
+    const auto& scene     = owner->GetScene().lock();
 
-    // Use the continuous jump check to threshold the jump height.
-    if (key_state.W || key_state.Space)
+    if (GetApplication().IsKeyPressed(Keyboard::W) || GetApplication().IsKeyPressed(Keyboard::Space))
     {
-      // If the player has reached the apex of the jump, then set the player's state to fall.
-      if (rb->GetT0LinearVelocity().y > jump_apex)
+      rb->AddT1Force(up * s_jump_speed);
+
+      if (rb->GetT0LinearVelocity().y >= s_jump_apex)
       {
         m_state_ = CHAR_STATE_FALL;
-      }
-      else
-      {
-        rb->AddT1Force(up * jump_force);
-        m_state_ = CHAR_STATE_JUMP; 
+        ApplyCollision();
       }
     }
     else
     {
-      // If the player lets go of the jump key, then set the player's state to fall.
-      if (rb->GetT0LinearVelocity().y > 0.f)
-      {
-        m_state_ = CHAR_STATE_FALL;
-      }
+      m_state_ = CHAR_STATE_FALL;
+      ApplyCollision();
+    }
+  }
+
+  void FezPlayerScript::UpdateFall()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    if (rb->GetGrounded())
+    {
+      m_state_ = CHAR_STATE_IDLE;
     }
   }
 
@@ -393,11 +535,253 @@ namespace Client::Scripts
     if (hit)
     {
       rb->SetGrounded(true);
+    }
+  }
 
-      if (m_state_ == CHAR_STATE_JUMP || m_state_ == CHAR_STATE_FALL)
+  void FezPlayerScript::UpdateInitialClimb()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+    
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& pos = tr->GetWorldPosition();
+
+    const auto& scene = owner->GetScene().lock();
+    const auto& octree = scene->GetObjectTree();
+
+    if (GetApplication().HasKeyChanged(Keyboard::W))
+    {
+      for (const auto& nearest = octree.Nearest(pos, 1.5f); 
+           const auto& obj : nearest)
       {
-        m_state_ = CHAR_STATE_IDLE;
+        if (const auto& locked = obj.lock())
+        {
+          if (const auto& script = locked->GetScript<CubifyScript>().lock())
+          {
+            if (script->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+
+            if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
+            {
+              const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
+              const auto& cube_pos = ntr->GetWorldPosition();
+
+              const auto& new_pos  = Vector3
+              {
+                m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
+                pos.y,
+                m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
+              };
+
+              tr->SetWorldPosition(new_pos);
+              IgnoreGravity();
+
+              m_state_ = CHAR_STATE_CLIMB;
+              break;
+            }
+          }
+        }
       }
+    }
+  }
+
+  void FezPlayerScript::UpdateClimb()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr    = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+
+    if (!tr || !rb) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& up = tr->Up();
+    const auto& down = -up;
+    const auto& right = tr->Right();
+    const auto& left = -right;
+
+    const auto& key_state = GetApplication().GetCurrentKeyState();
+    const auto& pos = tr->GetLocalPosition();
+    const auto& scene = owner->GetScene().lock();
+    const auto& octree = scene->GetObjectTree();
+
+    if (const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon); 
+        nearest.empty())
+    {
+      ApplyGravity();
+      m_state_ = CHAR_STATE_FALL;
+      return;
+    }
+
+    if (key_state.W) { rb->AddT1Force(up * 1.f); }
+    if (key_state.S) { rb->AddT1Force(down * 1.f); }
+    if (key_state.D) { rb->AddT1Force(right * 1.f); }
+    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+  }
+  void FezPlayerScript::UpdateInitialVault()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
+
+    if (!tr || !rb || !cldr) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+
+    const auto& scene = owner->GetScene().lock();
+
+    // Check state change just in case, whether the other check succeeds before vault check.
+    if (GetApplication().IsKeyPressed(Keyboard::S) && 
+        (m_state_ == CHAR_STATE_IDLE || m_state_ == CHAR_STATE_WALK))
+    {
+      tr->SetLocalPosition(tr->GetLocalPosition() - (tr->GetLocalScale() * 0.5f));
+
+      // Set the player to fixed for avoiding the lerp.
+      IgnoreLerp();
+      IgnoreGravity();
+
+      // Reset the rigidbody for avoiding the player slipping down.
+      Fullstop();
+
+      // Change the layer to none for ignoring the collision.
+      IgnoreCollision();
+
+      m_state_ = CHAR_STATE_VAULT;
+      return;
+    }
+
+    // Check whether caught the cube, if so, set the player's state to vault.
+    // Use the HasKeyChanged to avoid the easy vaulting by pressing the key.
+    if (GetApplication().HasKeyChanged(Keyboard::W) &&
+        (m_state_ == CHAR_STATE_JUMP || m_state_ == CHAR_STATE_FALL))
+    {
+      for (const auto& id : cldr->GetCollidedObjects())
+      {
+        const auto& candidate = scene->FindGameObject(id).lock();
+        if (!candidate) { continue; }
+
+        const auto& script = candidate->GetScript<CubifyScript>().lock();
+        if (!script) { continue; }
+
+        if (const auto& nearest_cube = script->GetDepthNearestCube(tr->GetWorldPosition()).lock())
+        {
+          const auto& ntr        = nearest_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_pos   = ntr->GetWorldPosition();
+          const auto& player_pos = tr->GetWorldPosition();
+          const auto& new_pos    = Vector3
+          {
+            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
+            player_pos.y,
+            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          IgnoreGravity();
+          Fullstop();
+
+          // Change the layer to default.
+          IgnoreCollision();
+
+          m_state_ = CHAR_STATE_VAULT;
+          return;
+        }
+      }
+    }
+  }
+
+  void FezPlayerScript::UpdateVault()
+  {
+    if (GetOwner().expired()) { return; }
+
+    const auto& owner = GetOwner().lock();
+    const auto& tr = owner->GetComponent<Components::Transform>().lock();
+    const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
+
+    if (!tr || !rb || !cldr) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cldr->GetActive()) { return; }
+
+    const auto& up = tr->Up();
+    const auto& down = -up;
+    const auto& right = tr->Right();
+    const auto& left = -right;
+
+    const auto& scene = owner->GetScene().lock();
+
+    const auto& key_state = GetApplication().GetCurrentKeyState();
+    const auto& pos = tr->GetLocalPosition();
+
+    // todo: slight overhead.
+    if (rb->IsFixed())
+    {
+      // Revert the fixed state.
+      ApplyLerp();
+    }
+
+    // Moving while in vault state.
+    if (key_state.D) { rb->AddT1Force(right * 1.f); }
+    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+
+    // Vaulting up.
+    if (GetApplication().HasKeyChanged(Keyboard::W))
+    {
+      const auto& size = tr->GetLocalScale();
+      tr->SetLocalPosition(pos + Vector3{0.f, size.y / 2, 0.f});
+      ApplyGravity();
+      Fullstop();
+
+      // Revert the layer to default.
+      ApplyCollision();
+
+      m_state_ = CHAR_STATE_IDLE;
+      return;
+    }
+
+    // Vaulting down. (falling)
+    if (GetApplication().HasKeyChanged(Keyboard::S))
+    {
+      ApplyGravity();
+      Fullstop();
+
+      // todo: Move the player to the down position of the nearest ground.
+      for (const auto& id : cldr->GetCollidedObjects())
+      {
+        const auto& candidate = scene->FindGameObject(id).lock();
+        if (!candidate) { continue; }
+
+        const auto& script = candidate->GetScript<CubifyScript>().lock();
+        if (!script) { continue; }
+
+        if (const auto& nearest_cube = script->GetDepthNearestCube(tr->GetWorldPosition()).lock())
+        {
+          const auto& ntr        = nearest_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_size = ntr->GetLocalScale();
+          const auto& cube_pos = ntr->GetWorldPosition();
+          const auto& player_size = tr->GetLocalScale();
+          const auto& player_pos = tr->GetWorldPosition();
+          const auto& new_pos    = Vector3
+          {
+            player_pos.x,
+            cube_pos.y - (cube_size.y / 2) - (player_size.y / 2),
+            player_pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          break;
+        }
+      }
+
+      // Revert the layer to default.
+      ApplyCollision();
+
+      m_state_ = CHAR_STATE_FALL;
     }
   }
 }

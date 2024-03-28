@@ -44,6 +44,8 @@ namespace Client::Scripts
     eCharacterState GetState() const { return m_state_; }
     eCharacterState GetPrevState() const { return m_prev_state_; }
 
+    void OnImGui() override;
+
   protected:
     void OnCollisionEnter(const WeakCollider& other) override;
     void OnCollisionContinue(const WeakCollider& other) override;
@@ -55,25 +57,59 @@ namespace Client::Scripts
 
     FezPlayerScript();
 
+    constexpr static float s_jump_initial_speed = g_gravity_acc * 3.f;
+    constexpr static float s_jump_speed = g_gravity_acc;
+    constexpr static float s_jump_apex = 10.f;
+
+    // Utilities
+    void IgnoreCollision() const;
+    void ApplyCollision() const;
+    void IgnoreGravity() const;
+    void ApplyGravity() const;
+    void IgnoreLerp() const;
+    void ApplyLerp() const;
+    void Fullstop() const;
+    void MoveCameraToChild() const;
+
+    // State changes
     void UpdateMove();
     void UpdateRotate(const float dt);
-    void UpdateJump();
     void UpdateGrounded();
 
-    void MoveCameraToChild() const;
+    void UpdateInitialJump();
+    void UpdateJump();
+    void UpdateFall();
+
+    void UpdateInitialClimb();
+    void UpdateClimb();
+
+    void UpdateInitialVault();
+    void UpdateVault();
+
+    // Subroutine for state changes
+    void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
 
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
 
+    // Rotation variables
+    // Count of 90 degree rotations
     UINT m_rotation_count_;
+    // Animation time for rotation
     float m_accumulated_dt_;
 
+    // Latest position of player when rotating
     Vector3 m_latest_spin_position_;
 
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;
+    // Flag for whether player has finished rotating
     bool m_rotate_finished_;
+    // Flag for whether player has consecutive rotations
     bool m_rotate_consecutive_;
+
+    // Climb variables
+
 
   };
 } // namespace Client::Scripts
