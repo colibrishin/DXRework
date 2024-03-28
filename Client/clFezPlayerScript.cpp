@@ -703,9 +703,10 @@ namespace Client::Scripts
     const auto& owner = GetOwner().lock();
     const auto& tr = owner->GetComponent<Components::Transform>().lock();
     const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
 
-    if (!tr || !rb) { return; }
-    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
+    if (!tr || !rb || !cldr) { return; }
+    if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cldr->GetActive()) { return; }
 
     const auto& up = tr->Up();
     const auto& down = -up;
@@ -749,6 +750,32 @@ namespace Client::Scripts
       Fullstop();
 
       // todo: Move the player to the down position of the nearest ground.
+      for (const auto& id : cldr->GetCollidedObjects())
+      {
+        const auto& candidate = scene->FindGameObject(id).lock();
+        if (!candidate) { continue; }
+
+        const auto& script = candidate->GetScript<CubifyScript>().lock();
+        if (!script) { continue; }
+
+        if (const auto& nearest_cube = script->GetDepthNearestCube(tr->GetWorldPosition()).lock())
+        {
+          const auto& ntr        = nearest_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_size = ntr->GetLocalScale();
+          const auto& cube_pos = ntr->GetWorldPosition();
+          const auto& player_size = tr->GetLocalScale();
+          const auto& player_pos = tr->GetWorldPosition();
+          const auto& new_pos    = Vector3
+          {
+            player_pos.x,
+            cube_pos.y - (cube_size.y / 2) - (player_size.y / 2),
+            player_pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          break;
+        }
+      }
 
       // Revert the layer to default.
       ApplyCollision();
