@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui\imgui.vcxite
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{B44B161C-8E72-49C0-A57D-37A1319FA4E7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pugixml_vs2022", "pugixml\scripts\pugixml_vs2022.vcxproj", "{833DE85D-15EA-4878-8804-549B1A9CF243}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -47,6 +49,14 @@ Global
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x64.Build.0 = Release|x64
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.ActiveCfg = Release|Win32
 		{8F17EB0B-FD49-4998-92EA-E1052985777B}.Release|x86.Build.0 = Release|Win32
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Debug|x64.ActiveCfg = Debug|x64
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Debug|x64.Build.0 = Debug|x64
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Debug|x86.ActiveCfg = Debug|Win32
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Debug|x86.Build.0 = Debug|Win32
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Release|x64.ActiveCfg = Release|x64
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Release|x64.Build.0 = Release|x64
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Release|x86.ActiveCfg = Release|Win32
+		{833DE85D-15EA-4878-8804-549B1A9CF243}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +64,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{70BEAC34-4AB1-485A-AFB7-81F047D85BFE} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
 		{B06DEDD4-4E9B-43C2-9E80-D3D135CD61E5} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
+		{833DE85D-15EA-4878-8804-549B1A9CF243} = {B44B161C-8E72-49C0-A57D-37A1319FA4E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {036DBBA2-0644-447C-AAAB-F0A347C22A16}

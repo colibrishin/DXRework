@@ -20,6 +20,8 @@ namespace Engine::Resources
   class BoneAnimation;
   class Bone;
   class BaseAnimation;
+  class AtlasAnimationTexture;
+  class AtlasAnimation;
 }
 
 namespace Engine
@@ -40,6 +42,7 @@ namespace Engine
     RESERVED_SHADOW_MAP = g_reserved_bind_slot,
     RESERVED_RENDERED,
     RESERVED_BONES,
+    RESERVED_ATLAS,
     RESERVED_END,
   };
 
@@ -207,6 +210,8 @@ namespace Engine
     RES_T_COMPUTE_SHADER,
     RES_T_SHADOW_TEX,
     RES_T_PREFAB,
+    RES_T_ATLAS_TEX,
+    RES_T_ATLAS_ANIM,
     RES_T_MAX,
   };
 
@@ -227,6 +232,8 @@ namespace Engine
      "Compute Shader",
      "Shadow Texture",
      "Prefab",
+     "Atlas Texture",
+     "Atlas Animation"
    };
 
   using LoadableResourceTypes = boost::mpl::vector<
@@ -245,7 +252,9 @@ namespace Engine
     Resources::Texture3D,
     Resources::Material,
     Resources::Shape,
-    Resources::Prefab>;
+    Resources::Prefab,
+    Resources::AtlasAnimationTexture,
+    Resources::AtlasAnimation>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 

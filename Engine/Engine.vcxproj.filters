@@ -263,6 +263,12 @@
     <Filter Include="Resource\Prefab">
       <UniqueIdentifier>{01af9f6f-8057-4315-9f38-78af22431f94}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\AtlasAnimation">
+      <UniqueIdentifier>{1e0fca33-9589-4c13-995d-c859b883b36b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Textures\AtlasAnimationTexture">
+      <UniqueIdentifier>{caf7854b-c5b8-4838-8e3e-50c7a0e2dfaa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -523,6 +529,12 @@
     <ClInclude Include="egPrefab.h">
       <Filter>Resource\Prefab</Filter>
     </ClInclude>
+    <ClInclude Include="egAtlasAnimation.h">
+      <Filter>Resource\AtlasAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="egAtlasAnimationTexture.h">
+      <Filter>Resource\Textures\AtlasAnimationTexture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -743,6 +755,12 @@
     <ClCompile Include="egPrefab.cpp">
       <Filter>Resource\Prefab</Filter>
     </ClCompile>
+    <ClCompile Include="egAtlasAnimation.cpp">
+      <Filter>Resource\AtlasAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="egAtlasAnimationTexture.cpp">
+      <Filter>Resource\Textures\AtlasAnimationTexture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -788,6 +806,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="billboard.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="atlas.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

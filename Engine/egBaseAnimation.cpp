@@ -55,7 +55,7 @@ namespace Engine::Resources
       m_ticks_per_second_(0),
       m_duration_(0) {}
 
-  float BaseAnimation::ConvertDtToFrame(const float& dt, const float ticks_per_second, const float duration)
+  float BaseAnimation::ConvertDtToFrame(const float & dt, const float ticks_per_second)
   {
     return dt * ticks_per_second;
   }

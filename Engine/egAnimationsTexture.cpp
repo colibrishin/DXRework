@@ -41,7 +41,7 @@ namespace Engine::Resources
 
     for (const auto& anim : m_animations_)
     {
-      anim->OnSerialized();
+      Serializer::Serialize(anim->GetName(), anim);
     }
   }
 

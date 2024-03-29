@@ -78,6 +78,14 @@ namespace Engine::Resources
     void BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader);
     void Map(const std::function<void(const D3D11_MAPPED_SUBRESOURCE&)> & copy_func) const;
 
+    template <typename T>
+    ComPtr<T> As() const
+    {
+      ComPtr<T> ret;
+      DX::ThrowIfFailed(m_res_.As(&ret));
+      return ret;
+    }
+
     RESOURCE_SELF_INFER_GETTER(Texture)
 
   protected:

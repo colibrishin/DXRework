@@ -71,7 +71,7 @@ namespace Engine::Resources
 
   std::vector<Matrix> BoneAnimation::GetFrameAnimationDt(const float dt)
   {
-    const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond(), m_primitive_.GetDuration());
+    const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond());
     return GetFrameAnimation(anim_time);
   }
 

@@ -395,7 +395,6 @@ prefab/
 pythonenv3.8/
 .venv/
 
+DX/Metadata
 
 !DX/fmod/lib/*
-!DX/Metadata/*
-!DX/Metadata/**/*.meta

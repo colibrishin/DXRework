@@ -529,6 +529,7 @@ namespace Engine
   class Serializer
   {
   public:
+    // Serialize the object. Use when the object is nested, and if nested objects are required to be serialized.
     template <typename T>
     static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
     {
@@ -599,6 +600,11 @@ namespace Engine
       std::filesystem::path final_path =  folder / final_filename;
       object->m_meta_path_             = final_path;
       object->m_meta_str_              = final_path.string();
+
+      if (std::filesystem::exists(final_path))
+      {
+        std::filesystem::remove(final_path);
+      }
 
       const auto entity = boost::static_pointer_cast<Abstract::Entity>(object);
 
