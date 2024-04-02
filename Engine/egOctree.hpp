@@ -61,6 +61,12 @@ namespace Engine
       return m_bounds_.Intersects(point_or_bounds);
     }
 
+    template <typename T>
+    bool Contains(const T& point_or_bounds) const
+    {
+      return m_bounds_.Contains(point_or_bounds) == DirectX::ContainmentType::CONTAINS;
+    }
+
     // Gets the distance between node bounding box and the given point.
     float                        Distance(const Vector3& point) const;
     UINT                         ActiveChildren() const;

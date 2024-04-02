@@ -453,7 +453,7 @@ namespace Engine
 
   std::vector<Octree::WeakT> Octree::Nearest(const Vector3& point, const float distance) const
   {
-    std::queue<const Octree*> q;
+    std::stack<const Octree*> q;
     std::set<const Octree*> visited;
     std::vector<WeakT> result;
     const BoundingSphere search_sphere(point, distance);
@@ -462,7 +462,7 @@ namespace Engine
 
     while (!q.empty())
     {
-      const auto node = q.front();
+      const auto node = q.top();
       
       const auto& value = node->m_values_;
       const auto& children = node->m_children_;
@@ -476,7 +476,7 @@ namespace Engine
           if (const auto& locked = v.lock())
           {
             if (const auto& bounding = bounding_getter::value(*locked); 
-                bounding.Intersects(search_sphere))
+                bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere))
             {
               result.push_back(v);
             }
