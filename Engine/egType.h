@@ -245,7 +245,10 @@ namespace Engine
   using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
   using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
   using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
+  using ConcurrentWeakScpVec = concurrent_vector<WeakScript>;
+  using ConcurrentWeakScpMap = concurrent_hash_map<GlobalEntityID, WeakScript>;
   using ConcurrentWeakComRootMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
+  using ConcurrentWeakScpRootMap = concurrent_hash_map<eScriptType, ConcurrentWeakScpMap>;
   using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
   // Bitwise Enums
