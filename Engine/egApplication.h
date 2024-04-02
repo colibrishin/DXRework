@@ -61,6 +61,7 @@ namespace Engine::Manager
 
     void tickInternal();
 
+    static void SIGTERM();
 
     HWND m_hWnd = nullptr;
 
@@ -72,5 +73,9 @@ namespace Engine::Manager
 
     // Time
     std::unique_ptr<DX::StepTimer> m_timer;
+
+    // Check for Sigterm registration
+    inline static bool s_instantiated_ = false;
+
   };
 } // namespace Engine::Manager

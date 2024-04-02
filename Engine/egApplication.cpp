@@ -23,7 +23,16 @@ namespace Engine::Manager
 
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
-      m_previous_keyboard_state_() {}
+      m_previous_keyboard_state_()
+  {
+    if (s_instantiated_)
+    {
+      throw std::runtime_error("Application is already instantiated");
+    }
+
+    s_instantiated_ = true;
+    std::set_terminate(SIGTERM);
+  }
 
   float Application::GetDeltaTime() const { return static_cast<float>(m_timer->GetElapsedSeconds()); }
 
@@ -293,6 +302,27 @@ namespace Engine::Manager
     m_previous_keyboard_state_ = m_keyboard->GetState();
 
     elapsed += dt;
+  }
+
+  void Application::SIGTERM()
+  {
+    GetTaskScheduler().Destroy();
+    GetMouseManager().Destroy();
+    GetCollisionDetector().Destroy();
+    GetReflectionEvaluator().Destroy();
+    GetSceneManager().Destroy();
+    GetResourceManager().Destroy();
+    GetGraviton().Destroy();
+    GetConstraintSolver().Destroy();
+    GetPhysicsManager().Destroy();
+    GetLerpManager().Destroy();
+    GetProjectionFrustum().Destroy();
+    GetRenderer().Destroy();
+    GetShadowManager().Destroy();
+    GetDebugger().Destroy();
+    GetD3Device().Destroy();
+    GetToolkitAPI().Destroy();
+    GetApplication().Destroy();
   }
 
   LRESULT Application::MessageHandler(
