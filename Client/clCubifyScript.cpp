@@ -7,10 +7,12 @@
 #include "egTransform.h"
 #include "egBaseCollider.hpp"
 #include "egCamera.h"
+#include "egCollisionDetector.h"
 #include "egGlobal.h"
 #include "egImGuiHeler.hpp"
 #include "egProjectionFrustum.h"
 #include "egRigidbody.h"
+#include "egSceneManager.hpp"
 
 SERIALIZE_IMPL
 (
@@ -27,25 +29,49 @@ namespace Client::Scripts
 {
   CubifyScript::CubifyScript(const WeakObjectBase& owner)
     : Script(SCRIPT_T_CUBIFY, owner),
-      m_z_length_(0),
-      m_x_length_(0),
       m_cube_dimension_(Vector3::One),
-      m_cube_type_(CUBE_TYPE_NORMAL) {}
+      m_cube_type_(CUBE_TYPE_NORMAL),
+      m_z_length_(0),
+      m_y_length_(0),
+      m_x_length_(0) {}
 
   CubifyScript::~CubifyScript() = default;
 
   void CubifyScript::Initialize()
   {
     Script::Initialize();
-
-    UpdateCubes();
   }
 
-  void CubifyScript::PreUpdate(const float& dt) {}
+  void CubifyScript::PreUpdate(const float& dt) { }
 
-  void CubifyScript::Update(const float& dt)
+  bool CubifyScript::CheckLocal() const
   {
     StrongScene scene;
+    StrongObjectBase owner;
+    StrongObjectBase player;
+
+    if (!LockWeak(GetOwner(), owner)) { return false; }
+    if (!LockWeak(owner->GetScene(), scene)) { return false; }
+    if (!LockWeak(scene->GetMainActor(), player)) { return false; }
+
+    bool is_local = GetCollisionDetector().IsCollided(owner->GetID(), player->GetID());
+
+    for (const auto& id : m_cube_ids_)
+    {
+      if (const auto& cube = owner->GetChild(id).lock())
+      {
+        is_local |= GetCollisionDetector().IsCollided(owner->GetID(), cube->GetID());
+      }
+    }
+
+    return is_local;
+  }
+
+  void CubifyScript::Update(const float& dt) { }
+
+  void CubifyScript::UpdateCubes()
+  {
+    StrongScene      scene;
     StrongObjectBase owner;
     StrongObjectBase player;
 
@@ -56,16 +82,13 @@ namespace Client::Scripts
     const auto& player_script = player->GetScript<FezPlayerScript>().lock();
     if (!player_script) { return; }
 
-    const auto& state = player_script->GetState();
-    const auto& prev_state = player_script->GetPrevState();
+    const auto& player_state = player_script->GetState();
+    const auto& player_prev_state = player_script->GetPrevState();
 
-    if (prev_state == CHAR_STATE_ROTATE && state == CHAR_STATE_POST_ROTATE)
-    {
-      UpdateCubes();
-    }
+    updateCubesImpl(CheckLocal());
   }
 
-  void CubifyScript::PostUpdate(const float& dt) {}
+  void CubifyScript::PostUpdate(const float& dt) { }
 
   void CubifyScript::FixedUpdate(const float& dt) {}
 
@@ -139,6 +162,46 @@ namespace Client::Scripts
 
   eCubeType CubifyScript::GetCubeType() const { return m_cube_type_; }
 
+  void CubifyScript::DispatchLocalUpdate()
+  {
+    StrongScene scene;
+    if (!LockWeak(GetSceneManager().GetActiveScene(), scene)) { return; }
+
+    const auto& scripts = scene->GetCachedScripts<CubifyScript>();
+
+    for (const auto& scp : scripts)
+    {
+      if (const auto& locked = scp.lock())
+      {
+        const auto& casted = boost::static_pointer_cast<CubifyScript>(locked);
+        if (casted->CheckLocal())
+        {
+          casted->UpdateCubes();
+        }
+      }
+    }
+  }
+
+  void CubifyScript::DispatchUpdate()
+  {
+    StrongScene scene;
+    if (!LockWeak(GetSceneManager().GetActiveScene(), scene)) { return; }
+
+    const auto& scripts = scene->GetCachedScripts<CubifyScript>();
+
+    for (const auto& scp : scripts)
+    {
+      if (const auto& locked = scp.lock())
+      {
+        const auto& casted = boost::static_pointer_cast<CubifyScript>(locked);
+        if (!casted->CheckLocal())
+        {
+          casted->UpdateCubes();
+        }
+      }
+    }
+  }
+
   void CubifyScript::OnCollisionEnter(const WeakCollider& other) {}
 
   void CubifyScript::OnCollisionContinue(const WeakCollider& other) {}
@@ -149,25 +212,25 @@ namespace Client::Scripts
 
   CubifyScript::CubifyScript()
     : Script(SCRIPT_T_CUBIFY, {}),
-      m_z_length_(0),
-      m_x_length_(0),
       m_cube_dimension_(Vector3::One),
-      m_cube_type_(CUBE_TYPE_NORMAL) {}
+      m_cube_type_(CUBE_TYPE_NORMAL),
+      m_z_length_(0),
+      m_y_length_(0),
+      m_x_length_(0) {}
 
-  void CubifyScript::UpdateCubes()
+  int CubifyScript::getCameraForward(const Vector3& cam_forward)
   {
-    if (m_cube_dimension_.x == 0.f)
-    {
-      m_cube_dimension_.x = g_epsilon;
-    }
-    if (m_cube_dimension_.y == 0.f)
-    {
-      m_cube_dimension_.y = g_epsilon;
-    }
-    if (m_cube_dimension_.z == 0.f)
-    {
-      m_cube_dimension_.z = g_epsilon;
-    }
+    if (Vector3Compare(cam_forward, g_forward)) { return 0; }
+    else if (Vector3Compare(cam_forward, Vector3::Left)) { return  1; }
+    else if (Vector3Compare(cam_forward, g_backward)) { return  2; }
+    else if (Vector3Compare(cam_forward, Vector3::Right)) { return  3; }
+
+    return 0;
+  }
+
+  void CubifyScript::updateCubesImpl(bool is_local)
+  {
+    ZeroToEpsilon(m_cube_dimension_);
 
      // Cube statics
     const auto x_step = m_cube_dimension_.x;
@@ -178,15 +241,7 @@ namespace Client::Scripts
     const auto y_step_half = y_step * 0.5f;
     const auto z_step_half = z_step * 0.5f;
 
-    constexpr Vector3 move_offsets[4] =
-    {
-      {1.f, 0.f, 0.f},
-      {0.f, 0.f, 1.f},
-      {-1.f, 0.f, 0.f},
-      {0.f, 0.f, -1.f}
-    };
-
-    const float move_steps[4] =
+    const float move_step_by_rotation[4] =
     {
       x_step,
       z_step,
@@ -194,10 +249,30 @@ namespace Client::Scripts
       z_step
     };
 
+    const Vector3 move_offset_by_rotation[4] =
+    {
+      s_move_offsets[0] * x_step,
+      s_move_offsets[1] * z_step,
+      s_move_offsets[2] * x_step,
+      s_move_offsets[3] * z_step
+    };
+
+    // Fix values of axis with player's value, to correct the cube with player's movement.
+    // This values are same as the opposite of camera's forward, left, backward, right.
+    static const Vector3 fixed_axis[4] =
+    {
+      g_backward,
+      Vector3::Right,
+      g_forward,
+      Vector3::Left
+    };
+
     if (const auto& owner = GetOwner().lock())
     {
-      StrongScene scene;
+      StrongObjectBase player;
+      StrongScene      scene;
       if (!LockWeak(owner->GetScene(), scene)) { return; }
+      if (!LockWeak(scene->GetMainActor(), player)) { return; }
 
       for (const auto& id : m_cube_ids_)
       {
@@ -220,24 +295,22 @@ namespace Client::Scripts
       const auto& scale = tr->GetLocalScale();
       const auto& half_scale = scale * 0.5f;
       const auto& cam_forward = camera->GetComponent<Components::Transform>().lock()->Forward();
+      const auto& player_tr = player->GetComponent<Components::Transform>().lock();
+      const auto& player_pos = player_tr->GetWorldPosition();
+      const auto& obj_pos = tr->GetWorldPosition();
 
-      int offset = 0;
+      const int rotation_offset = getCameraForward(cam_forward);
 
-      if (Vector3Compare(cam_forward, g_forward)) { offset = 0; }
-      else if (Vector3Compare(cam_forward, Vector3::Left)) { offset = 1; }
-      else if (Vector3Compare(cam_forward, g_backward)) { offset = 2; }
-      else if (Vector3Compare(cam_forward, Vector3::Right)) { offset = 3; }
+      const float x_count = half_scale.x / x_step;
+      const float y_count = half_scale.y / y_step;
+      const float z_count = half_scale.z / z_step;
 
-      const Vector3 offsets[4] =
-      {
-        move_offsets[0] * x_step,
-        move_offsets[1] * z_step,
-        move_offsets[2] * x_step,
-        move_offsets[3] * z_step
-      };
+      m_z_length_ = static_cast<int>(z_count * 2.f);
+      m_y_length_ = static_cast<int>(y_count * 2.f);
+      m_x_length_ = static_cast<int>(x_count * 2.f);
 
       // todo: refactoring
-      const Vector3 start_poses[4] = 
+      const Vector3 start_pos_by_rotation[4] = 
       {
         {-half_scale.x + x_step_half, -half_scale.y + y_step_half, -half_scale.z + z_step_half},
         {half_scale.x - x_step_half, -half_scale.y + y_step_half, -half_scale.z + z_step_half},
@@ -245,41 +318,56 @@ namespace Client::Scripts
         {-half_scale.x + x_step_half, -half_scale.y + y_step_half, half_scale.z - z_step_half}
       };
 
-      const float x_count = half_scale.x / x_step;
-      const float z_count = half_scale.z / z_step;
+      Vector3 start_pos = start_pos_by_rotation[rotation_offset];
 
-      m_z_length_ = static_cast<int>(z_count * 2.f);
-      m_x_length_ = static_cast<int>(x_count * 2.f);
-
-      Vector3 start_pos = start_poses[offset];
-
-      const int target_count = offset == 0 || offset == 3 ? m_x_length_ : m_z_length_;
-
-      for (float y = start_pos.y; y < half_scale.y; y += y_step) // NOLINT(cert-flp30-c)
+      if (!is_local)
       {
-        start_pos = start_poses[offset];
+        const auto& delta = player_pos - obj_pos;
+        const auto& axis_offset = fixed_axis[rotation_offset] * delta.Dot(fixed_axis[rotation_offset]);
+        start_pos = start_pos + axis_offset;
+      }
+
+      float y = start_pos.y;
+
+      const int target_count = rotation_offset == 0 || rotation_offset == 3 ? m_x_length_ : m_z_length_;
+
+      for (int i = 0; i < m_y_length_; ++i)
+      {
+        start_pos = start_pos_by_rotation[rotation_offset];
+
+        if (!is_local)
+        {
+          const auto& delta = player_pos - obj_pos;
+          const auto& proj = delta.Dot(fixed_axis[rotation_offset]);
+          const auto& axis_offset = fixed_axis[rotation_offset] * proj;
+          start_pos = start_pos + axis_offset;
+        }
+
         start_pos.y = y;
 
-        for (int i = 0; i < target_count; ++i)
+        for (int j = 0; j < target_count; ++j)
         {
           const auto& cube = scene->CreateGameObject<Object>(LAYER_ENVIRONMENT).lock();
-          cube->SetName(owner->GetName() + " Cube " + std::format("{}_{}_{}", start_pos.x, y, start_pos.z));
+          cube->SetName(owner->GetName() + " Cube " + std::format("{}_{}_{}", start_pos.x, start_pos.y, start_pos.z));
           const auto& cube_tr = cube->AddComponent<Components::Transform>().lock();
-
-          cube_tr->SetLocalScale(m_cube_dimension_);
-          cube_tr->SetLocalPosition(start_pos);
 
           cube->AddComponent<Components::Collider>();
           const auto& crb = cube->AddComponent<Components::Rigidbody>().lock();
           crb->SetFixed(true);
           crb->SetGravityOverride(false);
 
-          owner->AddChild(cube);
+          owner->AddChild(cube, true);
+
+          cube_tr->SetLocalScale(m_cube_dimension_);
+          // Note that this uses local space.
+          cube_tr->SetLocalPosition(start_pos);
 
           m_cube_ids_.push_back(cube->GetLocalID());
 
-          start_pos += offsets[offset];
+          start_pos += move_offset_by_rotation[rotation_offset];
         }
+
+        y += y_step;
       }
     }
   }

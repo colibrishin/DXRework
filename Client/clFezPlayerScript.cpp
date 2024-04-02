@@ -250,6 +250,7 @@ namespace Client::Scripts
     constexpr float speed = 1.f;
     bool moving = false;
 
+    // todo: speed limit
     if (GetApplication().IsKeyPressed(Keyboard::D))
     {
       rb->AddT1Force(right * speed);
@@ -335,6 +336,8 @@ namespace Client::Scripts
         const auto& script = candidate->GetScript<CubifyScript>().lock();
         if (!script) { continue; }
 
+        CubifyScript::DispatchLocalUpdate();
+
         // Active nearest cube should be the one that the player can stand on.
         if (const auto& nearest = script->GetDepthNearestCube(m_latest_spin_position_).lock())
         {
@@ -358,6 +361,8 @@ namespace Client::Scripts
       ApplyLerp();
       m_rotate_finished_ = false;
       m_rotate_consecutive_ = false;
+
+      CubifyScript::DispatchUpdate();
       return;
     }
 
@@ -561,7 +566,19 @@ namespace Client::Scripts
       {
         if (const auto& locked = obj.lock())
         {
-          if (const auto& script = locked->GetScript<CubifyScript>().lock())
+          const auto& parent = locked->GetParent().lock();
+          boost::shared_ptr<CubifyScript> script;
+
+          if (!parent)
+          {
+            script = locked->GetScript<CubifyScript>().lock();
+          }
+          else
+          {
+            script = parent->GetScript<CubifyScript>().lock();
+          }
+
+          if (script)
           {
             if (script->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
 
@@ -610,8 +627,37 @@ namespace Client::Scripts
     const auto& scene = owner->GetScene().lock();
     const auto& octree = scene->GetObjectTree();
 
-    if (const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon); 
-        nearest.empty())
+    const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon);
+
+    if (std::ranges::find_if
+      (
+       nearest, [](const WeakObjectBase& obj)
+       {
+         if (const auto& locked = obj.lock())
+         {
+           boost::shared_ptr<CubifyScript> script;
+
+           if (const auto& parent = locked->GetParent().lock())
+           {
+             script = parent->GetScript<CubifyScript>().lock();
+           }
+           else
+           {
+             script = locked->GetScript<CubifyScript>().lock();
+           }
+
+           if (script)
+           {
+             if (script->GetCubeType() == CUBE_TYPE_LADDER)
+             {
+               return true;
+             }
+           }
+         }
+
+         return false;
+       }
+      ) == nearest.end())
     {
       ApplyGravity();
       m_state_ = CHAR_STATE_FALL;
