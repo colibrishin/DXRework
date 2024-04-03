@@ -288,9 +288,8 @@ namespace Client::Scripts
       if (!LockWeak(scene->GetMainCamera(), camera)) { return; }
 
       const auto& cldr = owner->GetComponent<Components::Collider>().lock();
-      const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
       const auto& tr = owner->GetComponent<Components::Transform>().lock();
-      if (!cldr || !rb || !tr) { return; }
+      if (!cldr || !tr) { return; }
 
       const auto& scale = tr->GetLocalScale();
       const auto& half_scale = scale * 0.5f;
@@ -352,9 +351,6 @@ namespace Client::Scripts
           const auto& cube_tr = cube->AddComponent<Components::Transform>().lock();
 
           cube->AddComponent<Components::Collider>();
-          const auto& crb = cube->AddComponent<Components::Rigidbody>().lock();
-          crb->SetFixed(true);
-          crb->SetGravityOverride(false);
 
           owner->AddChild(cube, true);
 
