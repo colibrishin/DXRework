@@ -350,12 +350,12 @@ namespace Client::Scripts
 
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
-      m_rotation_count_ = (m_rotation_count_ + 1) % 4;
+      m_rotation_count_ = (m_rotation_count_ + 3) % 4;
       rotating = true;
     }
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
-      m_rotation_count_ = (m_rotation_count_ + 3) % 4;
+      m_rotation_count_ = (m_rotation_count_ + 1) % 4;
       rotating = true;
       
     }

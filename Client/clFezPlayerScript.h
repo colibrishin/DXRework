@@ -11,12 +11,13 @@ namespace Client::Scripts
     constexpr static Vector3 s_up = {0, 1, 0};
     constexpr static float s_rotation_speed = 1.f;
 
+    // Clockwise movement
     inline static const Quaternion s_rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(s_up, 0.0f),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(90.0f)),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(180.0f)),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(270.0f))
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(90.f)),
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(180.f)),
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(270.f))
     };
 
     CLIENT_SCRIPT_T(FezPlayerScript, SCRIPT_T_FEZ_PLAYER)
