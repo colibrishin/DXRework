@@ -2,6 +2,8 @@
 #include "Client.h"
 #include <egScript.h>
 
+#include "clCubifyScript.h"
+
 namespace Client::Scripts
 {
   class FezPlayerScript : public Engine::Script
@@ -92,6 +94,11 @@ namespace Client::Scripts
 
     // Subroutine for state changes
     void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
+
+    bool movePlayerToNearestCube(
+      const StrongTransform & tr, 
+      const boost::shared_ptr<CubifyScript>& script,
+      const Vector3& player_pos) const;
 
     eCharacterState m_state_;
     eCharacterState m_prev_state_;

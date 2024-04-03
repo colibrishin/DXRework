@@ -287,6 +287,27 @@ namespace Client::Scripts
     }
   }
 
+  bool FezPlayerScript::movePlayerToNearestCube(const StrongTransform& tr, const boost::shared_ptr<CubifyScript>& script, const Vector3& player_pos) const
+  {
+    // Active nearest cube should be the one that the player can stand on.
+    if (const auto& near_cube = script->GetDepthNearestCube(m_last_spin_position_).lock())
+    {
+      const auto& ntr      = near_cube->GetComponent<Components::Transform>().lock();
+      const auto& cube_pos = ntr->GetWorldPosition();
+      const auto& new_pos  = Vector3
+      {
+        m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
+        player_pos.y,
+        m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
+      };
+
+      tr->SetWorldPosition(new_pos);
+      return true;
+    }
+
+    return false;
+  }
+
   void FezPlayerScript::UpdateRotate(const float dt)
   {
     if (GetOwner().expired()) { return; }
@@ -405,25 +426,23 @@ namespace Client::Scripts
         }
 
         if (!script) { continue; }
-        if (script->GetCubeType() != CUBE_TYPE_NORMAL) { continue; }
 
         const auto& player_pos = m_last_spin_position_;
 
-        // Active nearest cube should be the one that the player can stand on.
-        if (const auto& near_cube = script->GetDepthNearestCube(m_last_spin_position_).lock())
+        if (script->GetCubeType() == CUBE_TYPE_NORMAL)
         {
-          const auto& ntr        = near_cube->GetComponent<Components::Transform>().lock();
-          const auto& cube_pos   = ntr->GetWorldPosition();
-          const auto& new_pos    = Vector3
+          if (movePlayerToNearestCube(tr, script, player_pos)) 
           {
-            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
-            player_pos.y,
-            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
-          };
-
-          tr->SetWorldPosition(new_pos);
-          CubifyScript::DispatchUpdateWithoutNormal();
-          break;
+            CubifyScript::DispatchUpdateWithoutNormal();
+            break;
+          }
+        }
+        else
+        {
+          if (movePlayerToNearestCube(tr, script, player_pos))
+          {
+            break; 
+          }
         }
       }
 
