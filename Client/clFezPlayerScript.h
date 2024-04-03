@@ -45,6 +45,7 @@ namespace Client::Scripts
 
     eCharacterState GetState() const { return m_state_; }
     eCharacterState GetPrevState() const { return m_prev_state_; }
+    UINT GetRotationOffset() const { return m_rotation_count_; }
 
     void OnImGui() override;
 
@@ -100,8 +101,8 @@ namespace Client::Scripts
     // Animation time for rotation
     float m_accumulated_dt_;
 
-    // Latest position of player when rotating
-    Vector3 m_latest_spin_position_;
+    // Last position of player when rotating
+    Vector3 m_last_spin_position_;
 
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;

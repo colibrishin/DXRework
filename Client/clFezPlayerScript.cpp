@@ -339,56 +339,12 @@ namespace Client::Scripts
              m_state_ != CHAR_STATE_ROTATE &&
              m_rotate_finished_)
     {
-      const auto& scene  = owner->GetScene().lock();
-      const auto& octree = scene->GetObjectTree();
-      if (!scene) { return; }
-
-      // Find the ground and ask for other cubes whether the player can stand on.
-      for (const auto& nearest = octree.Nearest(tr->GetWorldPosition(), 1.5f); const auto& obj : nearest)
-      {
-        const auto& candidate = obj.lock();
-        if (!candidate) { continue; }
-
-        boost::shared_ptr<CubifyScript> script;
-
-        if (const auto& parent = candidate->GetParent().lock())
-        {
-          script = parent->GetScript<CubifyScript>().lock();
-        }
-        else
-        {
-          script = candidate->GetScript<CubifyScript>().lock();
-        }
-
-        if (!script) { continue; }
-
-        CubifyScript::DispatchLocalUpdate();
-
-        // Active nearest cube should be the one that the player can stand on.
-        if (const auto& near_cube = script->GetDepthNearestCube(m_latest_spin_position_).lock())
-        {
-          const auto& ntr        = near_cube->GetComponent<Components::Transform>().lock();
-          const auto& cube_pos   = ntr->GetWorldPosition();
-          const auto& player_pos = m_latest_spin_position_;
-          const auto& new_pos    = Vector3
-          {
-            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
-            player_pos.y,
-            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
-          };
-
-          tr->SetWorldPosition(new_pos);
-          break;
-        }
-      }
-
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
       Fullstop();
       ApplyLerp();
       m_rotate_finished_ = false;
       m_rotate_consecutive_ = false;
 
-      CubifyScript::DispatchUpdate();
       return;
     }
 
@@ -418,13 +374,59 @@ namespace Client::Scripts
       }
       m_state_ = CHAR_STATE_ROTATE;
 
-      // Remember the player's position before rotation, If the player keeps following rotation
-      // then player's position will always be the same, the end of the edge.
       if (!m_rotate_consecutive_)
       {
-        m_latest_spin_position_ = tr->GetWorldPosition();
+        m_last_spin_position_ = tr->GetWorldPosition();
       }
-      
+
+      const auto& scene  = owner->GetScene().lock();
+      const auto& cldr = owner->GetComponent<Components::Collider>().lock();
+      if (!scene || !cldr) { return; }
+
+      // Find the ground and ask for other cubes whether the player can stand on.
+      for (const auto& id : cldr->GetCollidedObjects())
+      {
+        const auto obj = scene->FindGameObject(id);
+
+        const auto& candidate = obj.lock();
+        if (!candidate) { continue; }
+
+        boost::shared_ptr<CubifyScript> script;
+
+        if (const auto& parent = candidate->GetParent().lock())
+        {
+          script = parent->GetScript<CubifyScript>().lock();
+        }
+        else
+        {
+          script = candidate->GetScript<CubifyScript>().lock();
+        }
+
+        if (!script) { continue; }
+
+        CubifyScript::DispatchLocalUpdate();
+
+        const auto& player_pos = m_last_spin_position_;
+
+        // Active nearest cube should be the one that the player can stand on.
+        if (const auto& near_cube = script->GetDepthNearestCube(m_last_spin_position_).lock())
+        {
+          const auto& ntr        = near_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_pos   = ntr->GetWorldPosition();
+          const auto& new_pos    = Vector3
+          {
+            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
+            player_pos.y,
+            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          break;
+        }
+      }
+
+      CubifyScript::DispatchUpdate();
+
       Fullstop();
       ApplyLerp();
       m_rotate_finished_ = false;
