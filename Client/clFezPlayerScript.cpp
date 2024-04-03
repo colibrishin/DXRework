@@ -379,6 +379,8 @@ namespace Client::Scripts
         m_last_spin_position_ = tr->GetWorldPosition();
       }
 
+      CubifyScript::DispatchNormalUpdate();
+
       const auto& scene  = owner->GetScene().lock();
       const auto& cldr = owner->GetComponent<Components::Collider>().lock();
       if (!scene || !cldr) { return; }
@@ -403,8 +405,7 @@ namespace Client::Scripts
         }
 
         if (!script) { continue; }
-
-        CubifyScript::DispatchLocalUpdate();
+        if (script->GetCubeType() != CUBE_TYPE_NORMAL) { continue; }
 
         const auto& player_pos = m_last_spin_position_;
 
@@ -421,11 +422,10 @@ namespace Client::Scripts
           };
 
           tr->SetWorldPosition(new_pos);
+          CubifyScript::DispatchUpdateWithoutNormal();
           break;
         }
       }
-
-      CubifyScript::DispatchUpdate();
 
       Fullstop();
       ApplyLerp();

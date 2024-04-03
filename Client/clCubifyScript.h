@@ -24,9 +24,8 @@ namespace Client::Scripts
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
-    bool CheckLocal() const;
     void Update(const float& dt) override;
-    void UpdateCubes();
+    void UpdateCubes(bool normal);
     void PostUpdate(const float& dt) override;
     void FixedUpdate(const float& dt) override;
     void PreRender(const float& dt) override;
@@ -41,8 +40,8 @@ namespace Client::Scripts
     [[nodiscard]] WeakObjectBase GetDepthNearestCube(const Vector3& pos) const;
     [[nodiscard]] eCubeType GetCubeType() const;
 
-    static void DispatchLocalUpdate();
-    static void DispatchUpdate();
+    static void DispatchNormalUpdate();
+    static void DispatchUpdateWithoutNormal();
 
   protected:
     void OnCollisionEnter(const WeakCollider& other) override;
@@ -57,7 +56,6 @@ namespace Client::Scripts
 
     CubifyScript();
 
-    int getCameraForward(const Vector3 & cam_forward);
     void updateCubesImpl(bool local);
 
     std::vector<LocalActorID> m_cube_ids_;

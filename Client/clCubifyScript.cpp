@@ -44,32 +44,9 @@ namespace Client::Scripts
 
   void CubifyScript::PreUpdate(const float& dt) { }
 
-  bool CubifyScript::CheckLocal() const
-  {
-    StrongScene scene;
-    StrongObjectBase owner;
-    StrongObjectBase player;
-
-    if (!LockWeak(GetOwner(), owner)) { return false; }
-    if (!LockWeak(owner->GetScene(), scene)) { return false; }
-    if (!LockWeak(scene->GetMainActor(), player)) { return false; }
-
-    bool is_local = GetCollisionDetector().IsCollided(owner->GetID(), player->GetID());
-
-    for (const auto& id : m_cube_ids_)
-    {
-      if (const auto& cube = owner->GetChild(id).lock())
-      {
-        is_local |= GetCollisionDetector().IsCollided(owner->GetID(), cube->GetID());
-      }
-    }
-
-    return is_local;
-  }
-
   void CubifyScript::Update(const float& dt) { }
 
-  void CubifyScript::UpdateCubes()
+  void CubifyScript::UpdateCubes(bool normal)
   {
     StrongScene      scene;
     StrongObjectBase owner;
@@ -82,10 +59,7 @@ namespace Client::Scripts
     const auto& player_script = player->GetScript<FezPlayerScript>().lock();
     if (!player_script) { return; }
 
-    const auto& player_state = player_script->GetState();
-    const auto& player_prev_state = player_script->GetPrevState();
-
-    updateCubesImpl(CheckLocal());
+    updateCubesImpl(normal);
   }
 
   void CubifyScript::PostUpdate(const float& dt) { }
@@ -104,12 +78,14 @@ namespace Client::Scripts
 
     if (ImGuiVector3Editable("Cube Dimension", GetID(), "cube_dimension", m_cube_dimension_, 0.1f, 0.1f))
     {
-      UpdateCubes();
+      CubifyScript::DispatchNormalUpdate();
+      CubifyScript::DispatchUpdateWithoutNormal();
     }
 
     if (ImGui::Combo("Cube Type", reinterpret_cast<int*>(&m_cube_type_), "Normal\0Ladder\0Ice\0"))
     {
-      UpdateCubes();
+      CubifyScript::DispatchNormalUpdate();
+      CubifyScript::DispatchUpdateWithoutNormal();
     }
   }
 
@@ -162,7 +138,7 @@ namespace Client::Scripts
 
   eCubeType CubifyScript::GetCubeType() const { return m_cube_type_; }
 
-  void CubifyScript::DispatchLocalUpdate()
+  void CubifyScript::DispatchNormalUpdate()
   {
     StrongScene scene;
     if (!LockWeak(GetSceneManager().GetActiveScene(), scene)) { return; }
@@ -174,15 +150,15 @@ namespace Client::Scripts
       if (const auto& locked = scp.lock())
       {
         const auto& casted = boost::static_pointer_cast<CubifyScript>(locked);
-        if (casted->CheckLocal())
+        if (casted->GetCubeType() == CUBE_TYPE_NORMAL)
         {
-          casted->UpdateCubes();
+          casted->UpdateCubes(true);
         }
       }
     }
   }
 
-  void CubifyScript::DispatchUpdate()
+  void CubifyScript::DispatchUpdateWithoutNormal()
   {
     StrongScene scene;
     if (!LockWeak(GetSceneManager().GetActiveScene(), scene)) { return; }
@@ -194,9 +170,9 @@ namespace Client::Scripts
       if (const auto& locked = scp.lock())
       {
         const auto& casted = boost::static_pointer_cast<CubifyScript>(locked);
-        if (!casted->CheckLocal())
+        if (casted->GetCubeType() != CUBE_TYPE_NORMAL)
         {
-          casted->UpdateCubes();
+          casted->UpdateCubes(false);
         }
       }
     }
@@ -218,17 +194,7 @@ namespace Client::Scripts
       m_y_length_(0),
       m_x_length_(0) {}
 
-  int CubifyScript::getCameraForward(const Vector3& cam_forward)
-  {
-    if (Vector3Compare(cam_forward, g_forward)) { return 0; }
-    else if (Vector3Compare(cam_forward, Vector3::Left)) { return  1; }
-    else if (Vector3Compare(cam_forward, g_backward)) { return  2; }
-    else if (Vector3Compare(cam_forward, Vector3::Right)) { return  3; }
-
-    return 0;
-  }
-
-  void CubifyScript::updateCubesImpl(bool is_local)
+  void CubifyScript::updateCubesImpl(bool normal)
   {
     ZeroToEpsilon(m_cube_dimension_);
 
@@ -258,13 +224,13 @@ namespace Client::Scripts
     };
 
     // Fix values of axis with player's value, to correct the cube with player's movement.
-    // This values are same as the opposite of camera's forward, left, backward, right.
+    // This values are same as the camera's forward, left, backward, right.
     static const Vector3 fixed_axis[4] =
     {
-      g_backward,
-      Vector3::Right,
       g_forward,
-      Vector3::Left
+      Vector3::Left,
+      g_backward,
+      Vector3::Right
     };
 
     if (const auto& owner = GetOwner().lock())
@@ -295,10 +261,11 @@ namespace Client::Scripts
       const auto& half_scale = scale * 0.5f;
       const auto& cam_forward = camera->GetComponent<Components::Transform>().lock()->Forward();
       const auto& player_tr = player->GetComponent<Components::Transform>().lock();
+      const auto& player_script = player->GetScript<FezPlayerScript>().lock();
       const auto& player_pos = player_tr->GetWorldPosition();
       const auto& obj_pos = tr->GetWorldPosition();
 
-      const int rotation_offset = getCameraForward(cam_forward);
+      const int rotation_offset = player_script->GetRotationOffset();
 
       const float x_count = half_scale.x / x_step;
       const float y_count = half_scale.y / y_step;
@@ -319,7 +286,7 @@ namespace Client::Scripts
 
       Vector3 start_pos = start_pos_by_rotation[rotation_offset];
 
-      if (!is_local)
+      if (!normal && m_cube_type_ != CUBE_TYPE_NORMAL)
       {
         const auto& delta = player_pos - obj_pos;
         const auto& axis_offset = fixed_axis[rotation_offset] * delta.Dot(fixed_axis[rotation_offset]);
@@ -334,7 +301,7 @@ namespace Client::Scripts
       {
         start_pos = start_pos_by_rotation[rotation_offset];
 
-        if (!is_local)
+        if (!normal && m_cube_type_ != CUBE_TYPE_NORMAL)
         {
           const auto& delta = player_pos - obj_pos;
           const auto& proj = delta.Dot(fixed_axis[rotation_offset]);
