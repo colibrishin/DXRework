@@ -34,7 +34,10 @@ namespace Engine::Manager::Physics
 
       for (const auto rb : rbs)
       {
-        UpdateObject(rb.lock()->GetSharedPtr<Components::Rigidbody>().get(), dt);
+        if (const auto locked = rb.lock())
+        {
+          UpdateObject(locked->GetSharedPtr<Components::Rigidbody>().get(), dt);
+        }
       }
     }
   }
