@@ -82,6 +82,7 @@ namespace Client::Scripts
       break;
     case CHAR_STATE_CLIMB: 
       UpdateClimb();
+      UpdateRotate(dt);
       break;
     case CHAR_STATE_SWIM: break;
     case CHAR_STATE_ROTATE: 
@@ -92,8 +93,21 @@ namespace Client::Scripts
           m_prev_state_ == CHAR_STATE_POST_ROTATE &&
           m_rotate_finished_)
       {
-        UpdateMove();
-        UpdateInitialJump();
+        if (m_b_vaulting_)
+        {
+          UpdateVault();
+          UpdateInitialJump();
+        }
+        else if (m_b_climbing_)
+        {
+          UpdateClimb();
+          UpdateInitialJump();
+        }
+        else
+        {
+          UpdateMove();
+          UpdateInitialJump();
+        }
       }
       UpdateRotate(dt);
       break;
@@ -106,8 +120,9 @@ namespace Client::Scripts
     case CHAR_STATE_DIE: break;
     case CHAR_STATE_MAX: break;
     case CHAR_STATE_POST_CLIMB: break;
-    case CHAR_STATE_VAULT: 
+    case CHAR_STATE_VAULT:
       UpdateVault();
+      UpdateRotate(dt);
       UpdateInitialJump();
       break;
     default: ;
@@ -155,7 +170,9 @@ namespace Client::Scripts
       m_accumulated_dt_(0),
       m_rotate_allowed_(true),
       m_rotate_finished_(false),
-      m_rotate_consecutive_(false) { }
+      m_rotate_consecutive_(false),
+      m_b_climbing_(false),
+      m_b_vaulting_(false) { }
 
   void FezPlayerScript::IgnoreCollision() const
   {
@@ -598,6 +615,7 @@ namespace Client::Scripts
               IgnoreGravity();
 
               m_state_ = CHAR_STATE_CLIMB;
+              m_b_climbing_ = true;
               break;
             }
           }
@@ -628,6 +646,8 @@ namespace Client::Scripts
     const auto& octree = scene->GetObjectTree();
 
     const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon);
+
+    bool climbing = false;
 
     if (std::ranges::find_if
       (
@@ -661,13 +681,27 @@ namespace Client::Scripts
     {
       ApplyGravity();
       m_state_ = CHAR_STATE_FALL;
+      m_b_climbing_ = false;
       return;
     }
 
-    if (key_state.W) { rb->AddT1Force(up * 1.f); }
-    if (key_state.S) { rb->AddT1Force(down * 1.f); }
-    if (key_state.D) { rb->AddT1Force(right * 1.f); }
-    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+    if (key_state.W)
+    {
+      rb->AddT1Force(up * 1.f);
+    }
+    if (key_state.S)
+    {
+      rb->AddT1Force(down * 1.f);
+    }
+    if (key_state.D)
+    {
+      rb->AddT1Force(right * 1.f);
+    }
+    if (key_state.A)
+    {
+      rb->AddT1Force(left * 1.f);
+    }
+
   }
   void FezPlayerScript::UpdateInitialVault()
   {
@@ -700,6 +734,7 @@ namespace Client::Scripts
       IgnoreCollision();
 
       m_state_ = CHAR_STATE_VAULT;
+      m_b_vaulting_ = true;
       return;
     }
 
@@ -736,6 +771,7 @@ namespace Client::Scripts
           IgnoreCollision();
 
           m_state_ = CHAR_STATE_VAULT;
+          m_b_vaulting_ = true;
           return;
         }
       }

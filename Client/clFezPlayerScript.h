@@ -109,7 +109,8 @@ namespace Client::Scripts
     bool m_rotate_consecutive_;
 
     // Climb variables
-
+    bool m_b_climbing_;
+    bool m_b_vaulting_;
 
   };
 } // namespace Client::Scripts
