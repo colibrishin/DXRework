@@ -428,7 +428,7 @@ namespace Client::Scripts
       }
 
       Fullstop();
-      ApplyLerp();
+      IgnoreLerp();
       m_rotate_finished_ = false;
     }
   }
