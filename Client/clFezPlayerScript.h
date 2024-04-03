@@ -29,7 +29,9 @@ namespace Client::Scripts
         m_accumulated_dt_(0),
         m_rotate_allowed_(true),
         m_rotate_finished_(false),
-        m_rotate_consecutive_(false) { }
+        m_rotate_consecutive_(false),
+        m_b_climbing_(false),
+        m_b_vaulting_(false) { }
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;

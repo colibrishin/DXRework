@@ -317,8 +317,7 @@ namespace Client::Scripts
       // If the player is rotating and rotation is completed,
       else
       {
-        // Set the player's state to post rotate,
-        // if the player do any other movement, reset to idle.
+        // Set the player's state to post rotate
         m_state_ = CHAR_STATE_POST_ROTATE;
         return;
       }
@@ -647,7 +646,7 @@ namespace Client::Scripts
 
     const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon);
 
-    bool climbing = false;
+    bool pressed = false;
 
     if (std::ranges::find_if
       (
@@ -687,19 +686,29 @@ namespace Client::Scripts
 
     if (key_state.W)
     {
+      pressed = true;
       rb->AddT1Force(up * 1.f);
     }
     if (key_state.S)
     {
+      pressed = true;
       rb->AddT1Force(down * 1.f);
     }
     if (key_state.D)
     {
+      pressed = true;
       rb->AddT1Force(right * 1.f);
     }
     if (key_state.A)
     {
+      pressed = true;
       rb->AddT1Force(left * 1.f);
+    }
+
+    // If the player is previously climbing, revert back to the climb state.
+    if (m_state_ == CHAR_STATE_POST_ROTATE && pressed && m_rotate_finished_)
+    {
+      m_state_ = CHAR_STATE_CLIMB;
     }
 
   }
@@ -800,6 +809,8 @@ namespace Client::Scripts
     const auto& key_state = GetApplication().GetCurrentKeyState();
     const auto& pos = tr->GetLocalPosition();
 
+    bool pressed = false;
+
     // todo: slight overhead.
     if (rb->IsFixed())
     {
@@ -808,8 +819,22 @@ namespace Client::Scripts
     }
 
     // Moving while in vault state.
-    if (key_state.D) { rb->AddT1Force(right * 1.f); }
-    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+    if (key_state.D)
+    {
+      pressed = true;
+      rb->AddT1Force(right * 1.f);
+    }
+    if (key_state.A)
+    {
+      pressed = true;
+      rb->AddT1Force(left * 1.f);
+    }
+
+    // If the player is previously vaulted, revert back to the vault state.
+    if (m_state_ == CHAR_STATE_POST_ROTATE && pressed && m_rotate_finished_)
+    {
+      m_state_ = CHAR_STATE_VAULT;
+    }
 
     // Vaulting up.
     if (GetApplication().HasKeyChanged(Keyboard::W))
