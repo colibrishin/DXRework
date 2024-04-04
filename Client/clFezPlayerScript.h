@@ -14,7 +14,8 @@ namespace Client::Scripts
     constexpr static float s_rotation_speed = 1.f;
 
     // Clockwise movement
-    inline static const Quaternion s_rotations[4] = 
+    // Since forward is facing to the screen, rotation is inverted.
+    inline static const Quaternion s_cw_rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(s_up, 0.0f),
       Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(90.f)),

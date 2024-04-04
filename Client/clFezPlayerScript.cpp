@@ -333,7 +333,7 @@ namespace Client::Scripts
       if (s_rotation_speed > m_accumulated_dt_)
       {
         const auto  rot       = tr->GetLocalRotation();
-        tr->SetLocalRotation(Quaternion::Slerp(rot, s_rotations[m_rotation_count_], m_accumulated_dt_));
+        tr->SetLocalRotation(Quaternion::Slerp(rot, s_cw_rotations[m_rotation_count_], m_accumulated_dt_));
         m_accumulated_dt_ += dt;
         return;
       }
@@ -350,7 +350,7 @@ namespace Client::Scripts
              !m_rotate_finished_)
     {
       // Set the rotation to the accurate target rotation.
-      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
+      tr->SetLocalRotation(s_cw_rotations[m_rotation_count_]);
       m_accumulated_dt_ = 0.f;
 
       // Player rotation is finished.
@@ -371,11 +371,14 @@ namespace Client::Scripts
       return;
     }
 
+    // CW
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
       m_rotation_count_ = (m_rotation_count_ + 3) % 4;
       rotating = true;
     }
+
+    // CCW
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
       m_rotation_count_ = (m_rotation_count_ + 1) % 4;
