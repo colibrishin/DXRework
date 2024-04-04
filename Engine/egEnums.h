@@ -131,6 +131,7 @@ namespace Engine
   {
     LAYER_NONE = 0,
     LAYER_LIGHT,
+    LAYER_PLAYER,
     LAYER_DEFAULT,
     LAYER_HITBOX,
     LAYER_ENVIRONMENT,
@@ -320,14 +321,15 @@ namespace Engine
 
   constexpr const char* g_layer_type_str[] =
   {
-     "None",
-     "Light",
-     "Default",
-     "Hitbox",
-     "Environment",
-     "Skybox",
-     "UI",
-     "Camera",
+    "None",
+    "Light",
+    "Player",
+    "Default",
+    "Hitbox",
+    "Environment",
+    "Skybox",
+    "UI",
+    "Camera",
   };
 
   static_assert(ARRAYSIZE(g_layer_type_str) == LAYER_MAX);
