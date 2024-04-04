@@ -319,7 +319,6 @@ namespace Client::Scripts
     if (!tr || !rb) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
-    const auto  rot       = tr->GetLocalRotation();
     bool        rotating  = false;
 
     // If the player is not allowed to rotate.
@@ -329,8 +328,10 @@ namespace Client::Scripts
     if (m_state_ == CHAR_STATE_ROTATE)
     {
       // Wait for the rotation to be close to the target rotation.
+      // todo: lerp rotation speed between 0 to 1
       if (s_rotation_speed > m_accumulated_dt_)
       {
+        const auto  rot       = tr->GetLocalRotation();
         tr->SetLocalRotation(Quaternion::Slerp(rot, s_rotations[m_rotation_count_], m_accumulated_dt_));
         m_accumulated_dt_ += dt;
         return;
@@ -403,14 +404,13 @@ namespace Client::Scripts
       CubifyScript::DispatchNormalUpdate();
 
       const auto& scene  = owner->GetScene().lock();
-      const auto& cldr = owner->GetComponent<Components::Collider>().lock();
-      if (!scene || !cldr) { return; }
+      const auto& octree = scene->GetObjectTree();
+      if (!scene) { return; }
 
       // Find the ground and ask for other cubes whether the player can stand on.
-      for (const auto& id : cldr->GetCollidedObjects())
+      for (const auto& nearest = octree.Nearest(m_last_spin_position_, 1.5f);
+           const auto& obj : nearest)
       {
-        const auto obj = scene->FindGameObject(id);
-
         const auto& candidate = obj.lock();
         if (!candidate) { continue; }
 
@@ -437,17 +437,16 @@ namespace Client::Scripts
             break;
           }
         }
-        else
-        {
-          if (movePlayerToNearestCube(tr, script, player_pos))
-          {
-            break; 
-          }
-        }
       }
 
       Fullstop();
       IgnoreLerp();
+
+      if (m_b_climbing_)
+      {
+        // Search 
+      }
+
       m_rotate_finished_ = false;
     }
   }
@@ -590,6 +589,56 @@ namespace Client::Scripts
     }
   }
 
+  bool FezPlayerScript::doInitialClimb(const StrongTransform& tr, const Vector3& pos, const WeakObjectBase& obj, bool& continues)
+  {
+    continues = false;
+
+    if (const auto& locked = obj.lock())
+    {
+      const auto&                     parent = locked->GetParent().lock();
+      boost::shared_ptr<CubifyScript> script;
+
+      if (!parent)
+      {
+        script = locked->GetScript<CubifyScript>().lock();
+      }
+      else
+      {
+        script = parent->GetScript<CubifyScript>().lock();
+      }
+
+      if (script)
+      {
+        if (script->GetCubeType() != CUBE_TYPE_LADDER) 
+        {
+          continues = true;
+          return false;
+        }
+
+        if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
+        {
+          const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_pos = ntr->GetWorldPosition();
+
+          const auto& new_pos = Vector3
+          {
+            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
+            pos.y,
+            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          IgnoreGravity();
+
+          m_state_      = CHAR_STATE_CLIMB;
+          m_b_climbing_ = true;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void FezPlayerScript::UpdateInitialClimb()
   {
     if (GetOwner().expired()) { return; }
@@ -605,51 +654,29 @@ namespace Client::Scripts
 
     const auto& scene = owner->GetScene().lock();
     const auto& octree = scene->GetObjectTree();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
 
     if (GetApplication().HasKeyChanged(Keyboard::W))
     {
-      for (const auto& nearest = octree.Nearest(pos, 1.5f); 
-           const auto& obj : nearest)
+      const auto& nearest = octree.Hitscan(tr->GetWorldPosition(), tr->Forward(), 1);
+
+      for (const auto& obj : nearest)
       {
-        if (const auto& locked = obj.lock())
-        {
-          const auto& parent = locked->GetParent().lock();
-          boost::shared_ptr<CubifyScript> script;
+        bool continues;
+        if (doInitialClimb(tr, pos, obj, continues)) break;
+        if (continues) continue;
+      }
 
-          if (!parent)
-          {
-            script = locked->GetScript<CubifyScript>().lock();
-          }
-          else
-          {
-            script = parent->GetScript<CubifyScript>().lock();
-          }
+      const auto& ids = cldr->GetCollidedObjects();
 
-          if (script)
-          {
-            if (script->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+      for (const auto& id : ids)
+      {
+        const auto obj = scene->FindGameObject(id).lock();
+        if (!obj) { continue; }
+        bool continues = false;
 
-            if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
-            {
-              const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
-              const auto& cube_pos = ntr->GetWorldPosition();
-
-              const auto& new_pos  = Vector3
-              {
-                m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
-                pos.y,
-                m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
-              };
-
-              tr->SetWorldPosition(new_pos);
-              IgnoreGravity();
-
-              m_state_ = CHAR_STATE_CLIMB;
-              m_b_climbing_ = true;
-              break;
-            }
-          }
-        }
+        if (doInitialClimb(tr, pos, obj, continues)) break;
+        if (continues) continue;
       }
     }
   }
@@ -743,6 +770,24 @@ namespace Client::Scripts
     }
 
   }
+
+  void FezPlayerScript::doDownVault(const StrongTransform& tr)
+  {
+    tr->SetLocalPosition(tr->GetLocalPosition() - (tr->GetLocalScale() * 0.5f));
+
+    // Set the player to fixed for avoiding the lerp.
+    IgnoreLerp();
+    IgnoreGravity();
+
+    // Reset the rigidbody for avoiding the player slipping down.
+    Fullstop();
+
+    // Change the layer to none for ignoring the collision.
+    IgnoreCollision();
+
+    m_state_ = CHAR_STATE_VAULT;
+  }
+
   void FezPlayerScript::UpdateInitialVault()
   {
     if (GetOwner().expired()) { return; }
@@ -761,19 +806,7 @@ namespace Client::Scripts
     if (GetApplication().IsKeyPressed(Keyboard::S) && 
         (m_state_ == CHAR_STATE_IDLE || m_state_ == CHAR_STATE_WALK))
     {
-      tr->SetLocalPosition(tr->GetLocalPosition() - (tr->GetLocalScale() * 0.5f));
-
-      // Set the player to fixed for avoiding the lerp.
-      IgnoreLerp();
-      IgnoreGravity();
-
-      // Reset the rigidbody for avoiding the player slipping down.
-      Fullstop();
-
-      // Change the layer to none for ignoring the collision.
-      IgnoreCollision();
-
-      m_state_ = CHAR_STATE_VAULT;
+      doDownVault(tr);
       m_b_vaulting_ = true;
       return;
     }

@@ -224,7 +224,7 @@ namespace Client::Scripts
     };
 
     // Fix values of axis with player's value, to correct the cube with player's movement.
-    // This values are same as the camera's forward, left, backward, right.
+    // This values are same as the camera's forward.
     static const Vector3 fixed_axis[4] =
     {
       g_forward,

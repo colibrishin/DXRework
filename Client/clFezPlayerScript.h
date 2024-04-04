@@ -95,10 +95,15 @@ namespace Client::Scripts
     // Subroutine for state changes
     void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
 
+    bool doInitialClimb(
+      const StrongTransform& tr, const Vector3& pos, const WeakObjectBase& obj, bool& continues);
+
     bool movePlayerToNearestCube(
       const StrongTransform & tr, 
       const boost::shared_ptr<CubifyScript>& script,
       const Vector3& player_pos) const;
+
+    void doDownVault(const StrongTransform& tr);
 
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
