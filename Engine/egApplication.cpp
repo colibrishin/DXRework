@@ -50,6 +50,27 @@ namespace Engine::Manager
     return m_previous_keyboard_state_.IsKeyDown(key) && m_keyboard->GetState().IsKeyDown(key);
   }
 
+  bool Application::HasScrollChanged(int& value) const
+  {
+    if (m_previous_mouse_state_.scrollWheelValue != m_mouse->GetState().scrollWheelValue)
+    {
+      if (m_previous_mouse_state_.scrollWheelValue < m_mouse->GetState().scrollWheelValue)
+      {
+        value = 1;
+      }
+      else
+      {
+        value = -1;
+      }
+      return true;
+    }
+    else
+    {
+      value = 0;
+      return false;
+    }
+  }
+
   Mouse::State Application::GetMouseState() const { return m_mouse->GetState(); }
 
   Application::~Application()
@@ -300,6 +321,7 @@ namespace Engine::Manager
     PostRender(dt);
 
     m_previous_keyboard_state_ = m_keyboard->GetState();
+    m_previous_mouse_state_ = m_mouse->GetState();
 
     elapsed += dt;
   }

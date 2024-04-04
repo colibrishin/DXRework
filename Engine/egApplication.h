@@ -45,6 +45,9 @@ namespace Engine::Manager
     // and still pressed.
     bool            IsKeyPressed(DirectX::Keyboard::Keys key) const;
 
+    // Discrete scroll value changes.
+    bool HasScrollChanged(int & value) const;
+
     Mouse::State    GetMouseState() const;
 
   private:
@@ -70,6 +73,7 @@ namespace Engine::Manager
     std::unique_ptr<Mouse>    m_mouse;
 
     Keyboard::State m_previous_keyboard_state_;
+    Mouse::State    m_previous_mouse_state_;
 
     // Time
     std::unique_ptr<DX::StepTimer> m_timer;
