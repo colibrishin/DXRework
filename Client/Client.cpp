@@ -231,6 +231,8 @@ namespace Client
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
     GetCollisionDetector().UnsetCollisionLayer(LAYER_NONE, LAYER_NONE);
+    GetCollisionDetector().SetCollisionLayer(LAYER_PLAYER, LAYER_DEFAULT);
+    GetCollisionDetector().SetCollisionLayer(LAYER_PLAYER, LAYER_ENVIRONMENT);
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }
