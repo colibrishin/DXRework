@@ -39,17 +39,13 @@ namespace Engine::Objects
   {
     ObjectBase::PreRender(dt);
 
-    if constexpr (g_debug_observer)
+    if constexpr (g_debug)
     {
-      if (GetApplication().GetMouseState().scrollWheelValue > 1)
+      int value = 0;
+
+      if (GetApplication().HasScrollChanged(value))
       {
-        GetComponent<Components::Transform>().lock()->Translate
-          (g_forward * 0.1f);
-      }
-      else if (GetApplication().GetMouseState().scrollWheelValue < 0)
-      {
-        GetComponent<Components::Transform>().lock()->
-                                              Translate(g_backward * 0.1f);
+        GetComponent<Components::Transform>().lock()->Translate(g_forward * -value);
       }
     }
 
@@ -71,7 +67,7 @@ namespace Engine::Objects
       m_view_matrix_ = XMMatrixLookAtLH
         (
          position,
-         position + forward,
+         position - forward,
          up
         );
 

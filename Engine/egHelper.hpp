@@ -57,6 +57,29 @@ namespace Engine
     }
   }
 
+  inline static Vector3 __vectorcall Vector3Overwrite(const Vector3& vec1, const Vector3& vec2, const Vector3& select)
+  {
+    return Vector3
+    {
+      FloatCompare(select.x, 0.f) ? vec1.x : vec2.x,
+      FloatCompare(select.y, 0.f) ? vec1.y : vec2.y,
+      FloatCompare(select.z, 0.f) ? vec1.z : vec2.z
+    };
+  }
+
+  inline static Vector3 __vectorcall Vector3SignCopy(const Vector3& vec, const Vector3& sign)
+  {
+    Vector3 clamped;
+    sign.Clamp(-Vector3::One, Vector3::One, clamped);
+
+    return Vector3
+    {
+      vec.x * clamped.x,
+      vec.y * clamped.y,
+      vec.z * clamped.z
+    };
+  }
+
   inline static Matrix __vectorcall AiMatrixToDirectXTranspose(const aiMatrix4x4& from)
   {
     return Matrix

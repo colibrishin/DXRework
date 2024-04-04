@@ -23,7 +23,16 @@ namespace Engine::Manager
 
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
-      m_previous_keyboard_state_() {}
+      m_previous_keyboard_state_()
+  {
+    if (s_instantiated_)
+    {
+      throw std::runtime_error("Application is already instantiated");
+    }
+
+    s_instantiated_ = true;
+    std::set_terminate(SIGTERM);
+  }
 
   float Application::GetDeltaTime() const { return static_cast<float>(m_timer->GetElapsedSeconds()); }
 
@@ -39,6 +48,27 @@ namespace Engine::Manager
   bool Application::IsKeyPressed(const DirectX::Keyboard::Keys key) const
   {
     return m_previous_keyboard_state_.IsKeyDown(key) && m_keyboard->GetState().IsKeyDown(key);
+  }
+
+  bool Application::HasScrollChanged(int& value) const
+  {
+    if (m_previous_mouse_state_.scrollWheelValue != m_mouse->GetState().scrollWheelValue)
+    {
+      if (m_previous_mouse_state_.scrollWheelValue < m_mouse->GetState().scrollWheelValue)
+      {
+        value = 1;
+      }
+      else
+      {
+        value = -1;
+      }
+      return true;
+    }
+    else
+    {
+      value = 0;
+      return false;
+    }
   }
 
   Mouse::State Application::GetMouseState() const { return m_mouse->GetState(); }
@@ -291,8 +321,30 @@ namespace Engine::Manager
     PostRender(dt);
 
     m_previous_keyboard_state_ = m_keyboard->GetState();
+    m_previous_mouse_state_ = m_mouse->GetState();
 
     elapsed += dt;
+  }
+
+  void Application::SIGTERM()
+  {
+    GetTaskScheduler().Destroy();
+    GetMouseManager().Destroy();
+    GetCollisionDetector().Destroy();
+    GetReflectionEvaluator().Destroy();
+    GetSceneManager().Destroy();
+    GetResourceManager().Destroy();
+    GetGraviton().Destroy();
+    GetConstraintSolver().Destroy();
+    GetPhysicsManager().Destroy();
+    GetLerpManager().Destroy();
+    GetProjectionFrustum().Destroy();
+    GetRenderer().Destroy();
+    GetShadowManager().Destroy();
+    GetDebugger().Destroy();
+    GetD3Device().Destroy();
+    GetToolkitAPI().Destroy();
+    GetApplication().Destroy();
   }
 
   LRESULT Application::MessageHandler(

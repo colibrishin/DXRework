@@ -103,14 +103,22 @@ namespace Engine
   {
     TASK_NONE = 0,
     TASK_CHANGE_LAYER,
+    TASK_ADD_OBJ,
+    TASK_ADD_CHILD,
+    TASK_ADD_COMPONENT,
+    TASK_ADD_SCRIPT,
+
     TASK_CACHE_COMPONENT,
     TASK_UNCACHE_COMPONENT,
-    TASK_ADD_COMPONENT,
+    TASK_CACHE_SCRIPT,
+    TASK_UNCACHE_SCRIPT,
+    
+
     TASK_REM_COMPONENT,
-    TASK_ADD_CHILD,
+    TASK_REM_SCRIPT,
     TASK_REM_CHILD,
-    TASK_ADD_OBJ,
     TASK_REM_OBJ,
+
     TASK_SYNC_SCENE,
     TASK_INIT_SCENE,
     TASK_REM_SCENE,
@@ -123,6 +131,7 @@ namespace Engine
   {
     LAYER_NONE = 0,
     LAYER_LIGHT,
+    LAYER_PLAYER,
     LAYER_DEFAULT,
     LAYER_HITBOX,
     LAYER_ENVIRONMENT,
@@ -312,14 +321,15 @@ namespace Engine
 
   constexpr const char* g_layer_type_str[] =
   {
-     "None",
-     "Light",
-     "Default",
-     "Hitbox",
-     "Environment",
-     "Skybox",
-     "UI",
-     "Camera",
+    "None",
+    "Light",
+    "Player",
+    "Default",
+    "Hitbox",
+    "Environment",
+    "Skybox",
+    "UI",
+    "Camera",
   };
 
   static_assert(ARRAYSIZE(g_layer_type_str) == LAYER_MAX);

@@ -281,16 +281,8 @@ namespace Client::Scripts
     {
       const auto cam = scene->GetMainCamera().lock();
 
-      if (head && scene && cam && !active)
-      {
-        head->DetachChild(m_cam_id_);
-        m_cam_id_ = g_invalid_id;
-      }
-      else if (head && scene && cam && active)
-      {
-        head->AddChild(cam);
-        m_cam_id_ = cam->GetLocalID();
-      }
+      head->AddChild(cam);
+      m_cam_id_ = cam->GetLocalID();
     }
   }
 

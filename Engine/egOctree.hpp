@@ -61,6 +61,18 @@ namespace Engine
       return m_bounds_.Intersects(point_or_bounds);
     }
 
+    // Check if the given ray intersects with the node.
+    bool Intersects(const Vector3& point, const Vector3& dir, float& distance) const
+    {
+      return m_bounds_.Intersects(point, dir, distance);
+    }
+
+    template <typename T>
+    bool Contains(const T& point_or_bounds) const
+    {
+      return m_bounds_.Contains(point_or_bounds) == DirectX::ContainmentType::CONTAINS;
+    }
+
     // Gets the distance between node bounding box and the given point.
     float                        Distance(const Vector3& point) const;
     UINT                         ActiveChildren() const;
@@ -70,6 +82,7 @@ namespace Engine
     void                         Clear();
     void                         Iterate(const Vector3 & point, const std::function<bool(const WeakT&)> & func) const;
     std::vector<Octree::WeakT>   Nearest(const Vector3& point, const float distance) const;
+    std::vector<Octree::WeakT>   Hitscan(const Vector3& point, const Vector3& direction, const size_t count, const float distance = 0.f) const;
 
   private:
     explicit Octree(const BoundingBox& bounds);

@@ -10,6 +10,7 @@ SERIALIZE_IMPL
  Engine::Scene,
  _ARTAG(_BSTSUPER(Renderable))
  _ARTAG(m_main_camera_local_id_)
+ _ARTAG(m_main_actor_local_id_)
  _ARTAG(m_layers)
 )
 
@@ -416,6 +417,46 @@ namespace Engine
     }
   }
 
+  void Scene::addCacheScriptImpl(const StrongScript& script, const eScriptType type)
+  {
+    if (!script->GetOwner().lock()) { return; }
+
+    if (ConcurrentWeakObjGlobalMap::const_accessor acc; 
+        m_cached_objects_.find(acc, script->GetOwner().lock()->GetID()))
+    {
+      if (ConcurrentWeakScpRootMap::accessor scp_acc; 
+          m_cached_scripts_.find(scp_acc, type))
+      {
+        if (ConcurrentWeakScpMap::const_accessor scp_map_acc; 
+            scp_acc->second.find(scp_map_acc, script->GetID()))
+        {
+          return;
+        }
+
+        scp_acc->second.emplace(script->GetID(), script);
+      }
+      else
+      {
+        m_cached_scripts_.insert(scp_acc, type);
+        scp_acc->second.emplace(script->GetID(), script);
+      }
+    }
+  }
+
+  void Scene::removeCacheScriptImpl(const StrongScript& component, const eScriptType type)
+  {
+    ConcurrentWeakObjGlobalMap::const_accessor acc;
+
+    if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+    {
+      ConcurrentWeakScpRootMap::accessor scp_acc;
+      if (m_cached_scripts_.find(scp_acc, type))
+      {
+        scp_acc->second.erase(component->GetID());
+      }
+    }
+  }
+
   Scene::Scene()
     : m_b_scene_imgui_open_(false),
       m_main_camera_local_id_(g_invalid_id),
@@ -535,6 +576,17 @@ namespace Engine
           {
             m_cached_components_.insert(acc, comp.lock()->GetComponentType());
             acc->second.emplace(comp.lock()->GetID(), comp);
+          }
+        }
+
+        for (const auto& scp : obj.lock()->GetAllScripts())
+        {
+          if (ConcurrentWeakScpRootMap::accessor acc; m_cached_scripts_.find
+            (acc, scp.lock()->GetScriptType())) { acc->second.emplace(scp.lock()->GetID(), scp); }
+          else
+          {
+            m_cached_scripts_.insert(acc, scp.lock()->GetScriptType());
+            acc->second.emplace(scp.lock()->GetID(), scp);
           }
         }
       }

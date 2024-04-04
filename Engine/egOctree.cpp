@@ -453,7 +453,7 @@ namespace Engine
 
   std::vector<Octree::WeakT> Octree::Nearest(const Vector3& point, const float distance) const
   {
-    std::queue<const Octree*> q;
+    std::stack<const Octree*> q;
     std::set<const Octree*> visited;
     std::vector<WeakT> result;
     const BoundingSphere search_sphere(point, distance);
@@ -462,7 +462,7 @@ namespace Engine
 
     while (!q.empty())
     {
-      const auto node = q.front();
+      const auto node = q.top();
       
       const auto& value = node->m_values_;
       const auto& children = node->m_children_;
@@ -476,7 +476,7 @@ namespace Engine
           if (const auto& locked = v.lock())
           {
             if (const auto& bounding = bounding_getter::value(*locked); 
-                bounding.Intersects(search_sphere))
+                bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere))
             {
               result.push_back(v);
             }
@@ -491,6 +491,67 @@ namespace Engine
       for (const auto& child : children)
       {
         if (child && child->Intersects(search_sphere))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+
+    return result;
+  }
+
+  std::vector<Octree::WeakT> Octree::Hitscan(
+    const Vector3& point, const Vector3& direction, const size_t count, const float distance
+  ) const
+  {
+    std::stack<const Octree*> q;
+    std::set<const Octree*>   visited;
+    std::vector<WeakT>        result;
+    float dist = 0.f;
+
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.top();
+
+      const auto& value    = node->m_values_;
+      const auto& children = node->m_children_;
+
+      if (visited.contains(node))
+      {
+        q.pop();
+
+        for (const auto& v : value)
+        {
+          if (const auto& locked = v.lock())
+          {
+            if (const auto& bounding = bounding_getter::value(*locked); 
+                bounding.TestRay(point, direction, dist))
+            {
+              if (!FloatCompare(distance, 0.f))
+              {
+                if (dist > distance) { continue; }
+              }
+
+              result.push_back(v);
+
+              if (result.size() == count)
+              {
+                break;
+              }
+            }
+          }
+        }
+
+        continue;
+      }
+
+      visited.insert(node);
+
+      for (const auto& child : children)
+      {
+        if (child && child->Intersects(point, direction, dist))
         {
           q.push(child.get());
         }

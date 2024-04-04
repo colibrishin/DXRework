@@ -2,6 +2,8 @@
 #include "Client.h"
 #include <egScript.h>
 
+#include "clCubifyScript.h"
+
 namespace Client::Scripts
 {
   class FezPlayerScript : public Engine::Script
@@ -11,12 +13,14 @@ namespace Client::Scripts
     constexpr static Vector3 s_up = {0, 1, 0};
     constexpr static float s_rotation_speed = 1.f;
 
-    inline static const Quaternion s_rotations[4] = 
+    // Clockwise movement
+    // Since forward is facing to the screen, rotation is inverted.
+    inline static const Quaternion s_cw_rotations[4] = 
     {
       Quaternion::CreateFromAxisAngle(s_up, 0.0f),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(90.0f)),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(180.0f)),
-      Quaternion::CreateFromAxisAngle(s_up, XMConvertToRadians(270.0f))
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(90.f)),
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(180.f)),
+      Quaternion::CreateFromAxisAngle(s_up, -XMConvertToRadians(270.f))
     };
 
     CLIENT_SCRIPT_T(FezPlayerScript, SCRIPT_T_FEZ_PLAYER)
@@ -29,7 +33,9 @@ namespace Client::Scripts
         m_accumulated_dt_(0),
         m_rotate_allowed_(true),
         m_rotate_finished_(false),
-        m_rotate_consecutive_(false) { }
+        m_rotate_consecutive_(false),
+        m_b_climbing_(false),
+        m_b_vaulting_(false) { }
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -43,6 +49,7 @@ namespace Client::Scripts
 
     eCharacterState GetState() const { return m_state_; }
     eCharacterState GetPrevState() const { return m_prev_state_; }
+    UINT GetRotationOffset() const { return m_rotation_count_; }
 
     void OnImGui() override;
 
@@ -89,6 +96,16 @@ namespace Client::Scripts
     // Subroutine for state changes
     void DoInitialJump(const StrongRigidbody& rb, const Vector3& up);
 
+    bool doInitialClimb(
+      const StrongTransform& tr, const Vector3& pos, const WeakObjectBase& obj, bool& continues);
+
+    bool movePlayerToNearestCube(
+      const StrongTransform & tr, 
+      const boost::shared_ptr<CubifyScript>& script,
+      const Vector3& player_pos) const;
+
+    void doDownVault(const StrongTransform& tr);
+
     eCharacterState m_state_;
     eCharacterState m_prev_state_;
 
@@ -98,8 +115,8 @@ namespace Client::Scripts
     // Animation time for rotation
     float m_accumulated_dt_;
 
-    // Latest position of player when rotating
-    Vector3 m_latest_spin_position_;
+    // Last position of player when rotating
+    Vector3 m_last_spin_position_;
 
     // Flag for whether player has red hat.
     bool m_rotate_allowed_;
@@ -109,7 +126,8 @@ namespace Client::Scripts
     bool m_rotate_consecutive_;
 
     // Climb variables
-
+    bool m_b_climbing_;
+    bool m_b_vaulting_;
 
   };
 } // namespace Client::Scripts

@@ -190,6 +190,20 @@ namespace Engine::Physics
       throw std::exception("Test: Invalid type");
     }
 
+    [[nodiscard]] bool __vectorcall TestRay(const Vector3& center, const Vector3& dir, float& dist) const
+    {
+      if (type == BOUNDING_TYPE_BOX) { return m_boundings_.box.Intersects(center, dir, dist); }
+      if (type == BOUNDING_TYPE_SPHERE) { return m_boundings_.sphere.Intersects(center, dir, dist); }
+      throw std::exception("Test: Invalid type");
+    }
+
+    [[nodiscard]] bool __vectorcall Contains(const Vector3& point) const
+    {
+      if (type == BOUNDING_TYPE_BOX) { return m_boundings_.box.Contains(point); }
+      if (type == BOUNDING_TYPE_SPHERE) { return m_boundings_.sphere.Contains(point); }
+      throw std::exception("Contains: Invalid type");
+    }
+
     template <typename BoundingType>
     [[nodiscard]] DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
     {

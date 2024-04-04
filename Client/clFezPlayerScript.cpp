@@ -82,6 +82,7 @@ namespace Client::Scripts
       break;
     case CHAR_STATE_CLIMB: 
       UpdateClimb();
+      UpdateRotate(dt);
       break;
     case CHAR_STATE_SWIM: break;
     case CHAR_STATE_ROTATE: 
@@ -92,8 +93,21 @@ namespace Client::Scripts
           m_prev_state_ == CHAR_STATE_POST_ROTATE &&
           m_rotate_finished_)
       {
-        UpdateMove();
-        UpdateInitialJump();
+        if (m_b_vaulting_)
+        {
+          UpdateVault();
+          UpdateInitialJump();
+        }
+        else if (m_b_climbing_)
+        {
+          UpdateClimb();
+          UpdateInitialJump();
+        }
+        else
+        {
+          UpdateMove();
+          UpdateInitialJump();
+        }
       }
       UpdateRotate(dt);
       break;
@@ -106,8 +120,9 @@ namespace Client::Scripts
     case CHAR_STATE_DIE: break;
     case CHAR_STATE_MAX: break;
     case CHAR_STATE_POST_CLIMB: break;
-    case CHAR_STATE_VAULT: 
+    case CHAR_STATE_VAULT:
       UpdateVault();
+      UpdateRotate(dt);
       UpdateInitialJump();
       break;
     default: ;
@@ -155,7 +170,9 @@ namespace Client::Scripts
       m_accumulated_dt_(0),
       m_rotate_allowed_(true),
       m_rotate_finished_(false),
-      m_rotate_consecutive_(false) { }
+      m_rotate_consecutive_(false),
+      m_b_climbing_(false),
+      m_b_vaulting_(false) { }
 
   void FezPlayerScript::IgnoreCollision() const
   {
@@ -250,6 +267,7 @@ namespace Client::Scripts
     constexpr float speed = 1.f;
     bool moving = false;
 
+    // todo: speed limit
     if (GetApplication().IsKeyPressed(Keyboard::D))
     {
       rb->AddT1Force(right * speed);
@@ -269,6 +287,27 @@ namespace Client::Scripts
     }
   }
 
+  bool FezPlayerScript::movePlayerToNearestCube(const StrongTransform& tr, const boost::shared_ptr<CubifyScript>& script, const Vector3& player_pos) const
+  {
+    // Active nearest cube should be the one that the player can stand on.
+    if (const auto& near_cube = script->GetDepthNearestCube(player_pos).lock())
+    {
+      const auto& ntr      = near_cube->GetComponent<Components::Transform>().lock();
+      const auto& cube_pos = ntr->GetWorldPosition();
+      const auto& new_pos  = Vector3
+      {
+        cube_pos.x,
+        player_pos.y,
+        cube_pos.z
+      };
+
+      tr->SetWorldPosition(new_pos);
+      return true;
+    }
+
+    return false;
+  }
+
   void FezPlayerScript::UpdateRotate(const float dt)
   {
     if (GetOwner().expired()) { return; }
@@ -276,11 +315,11 @@ namespace Client::Scripts
     const auto& owner = GetOwner().lock();
     const auto& tr    = owner->GetComponent<Components::Transform>().lock();
     const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
 
-    if (!tr || !rb) { return; }
+    if (!tr || !rb || !cldr) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
-    const auto  rot       = tr->GetLocalRotation();
     bool        rotating  = false;
 
     // If the player is not allowed to rotate.
@@ -290,27 +329,28 @@ namespace Client::Scripts
     if (m_state_ == CHAR_STATE_ROTATE)
     {
       // Wait for the rotation to be close to the target rotation.
+      // todo: lerp rotation speed between 0 to 1
       if (s_rotation_speed > m_accumulated_dt_)
       {
-        tr->SetLocalRotation(Quaternion::Slerp(rot, s_rotations[m_rotation_count_], m_accumulated_dt_));
+        const auto  rot       = tr->GetLocalRotation();
+        tr->SetLocalRotation(Quaternion::Slerp(rot, s_cw_rotations[m_rotation_count_], m_accumulated_dt_));
         m_accumulated_dt_ += dt;
         return;
       }
       // If the player is rotating and rotation is completed,
       else
       {
-        // Set the player's state to post rotate,
-        // if the player do any other movement, reset to idle.
+        // Set the player's state to post rotate
         m_state_ = CHAR_STATE_POST_ROTATE;
         return;
       }
     }
-    else if (m_prev_state_ == CHAR_STATE_POST_ROTATE && 
-             m_state_ == CHAR_STATE_POST_ROTATE && 
+    else if (m_prev_state_ == CHAR_STATE_POST_ROTATE &&
+             m_state_ == CHAR_STATE_POST_ROTATE &&
              !m_rotate_finished_)
     {
       // Set the rotation to the accurate target rotation.
-      tr->SetLocalRotation(s_rotations[m_rotation_count_]);
+      tr->SetLocalRotation(s_cw_rotations[m_rotation_count_]);
       m_accumulated_dt_ = 0.f;
 
       // Player rotation is finished.
@@ -322,53 +362,26 @@ namespace Client::Scripts
              m_state_ != CHAR_STATE_ROTATE &&
              m_rotate_finished_)
     {
-      const auto& cldr  = owner->GetComponent<Components::Collider>().lock();
-      const auto& scene = owner->GetScene().lock();
-      if (!cldr || !scene) { return; }
-
-      // Find the ground and ask for other cubes whether the player can stand on.
-      for (const auto& id : cldr->GetCollidedObjects())
-      {
-        const auto& candidate = scene->FindGameObject(id).lock();
-        if (!candidate) { continue; }
-
-        const auto& script = candidate->GetScript<CubifyScript>().lock();
-        if (!script) { continue; }
-
-        // Active nearest cube should be the one that the player can stand on.
-        if (const auto& nearest = script->GetDepthNearestCube(m_latest_spin_position_).lock())
-        {
-          const auto& ntr        = nearest->GetComponent<Components::Transform>().lock();
-          const auto& cube_pos   = ntr->GetWorldPosition();
-          const auto& player_pos = m_latest_spin_position_;
-          const auto& new_pos    = Vector3
-          {
-            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
-            player_pos.y,
-            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
-          };
-
-          tr->SetWorldPosition(new_pos);
-          break;
-        }
-      }
-
       // Clear accumulated forces (e.g., collision reaction force) and set fixed to false
       Fullstop();
       ApplyLerp();
       m_rotate_finished_ = false;
       m_rotate_consecutive_ = false;
+
       return;
     }
 
+    // CW
     if (GetApplication().HasKeyChanged(Keyboard::Q))
     {
-      m_rotation_count_ = (m_rotation_count_ + 1) % 4;
+      m_rotation_count_ = (m_rotation_count_ + 3) % 4;
       rotating = true;
     }
+
+    // CCW
     if (GetApplication().HasKeyChanged(Keyboard::E))
     {
-      m_rotation_count_ = (m_rotation_count_ + 3) % 4;
+      m_rotation_count_ = (m_rotation_count_ + 1) % 4;
       rotating = true;
       
     }
@@ -387,15 +400,84 @@ namespace Client::Scripts
       }
       m_state_ = CHAR_STATE_ROTATE;
 
-      // Remember the player's position before rotation, If the player keeps following rotation
-      // then player's position will always be the same, the end of the edge.
       if (!m_rotate_consecutive_)
       {
-        m_latest_spin_position_ = tr->GetWorldPosition();
+        m_last_spin_position_ = tr->GetWorldPosition();
       }
-      
+
+      const auto& scene  = owner->GetScene().lock();
+      const auto& octree = scene->GetObjectTree();
+      if (!scene) { return; }
+
+      Strong<CubifyScript> ladder;
+
+      if (m_b_climbing_)
+      {
+        for (const auto& id : cldr->GetCollidedObjects())
+        {
+          const auto& obj = scene->FindGameObject(id).lock();
+          if (!obj) { continue; }
+
+          if (const auto& parent = obj->GetParent().lock())
+          {
+            ladder = parent->GetScript<CubifyScript>().lock();
+          }
+          else
+          {
+            ladder = obj->GetScript<CubifyScript>().lock();
+          }
+
+          if (!ladder) { continue; }
+          if (ladder->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+          break;
+        }
+      }
+
+      CubifyScript::DispatchNormalUpdate();
+
+      // Find the ground and ask for other cubes whether the player can stand on.
+      for (const auto& nearest = octree.Nearest(m_last_spin_position_, 1.5f);
+           const auto& obj : nearest)
+      {
+        const auto& candidate = obj.lock();
+        if (!candidate) { continue; }
+
+        Strong<CubifyScript> script;
+
+        if (const auto& parent = candidate->GetParent().lock())
+        {
+          script = parent->GetScript<CubifyScript>().lock();
+        }
+        else
+        {
+          script = candidate->GetScript<CubifyScript>().lock();
+        }
+
+        if (!script) { continue; }
+
+        const auto& player_pos = m_last_spin_position_;
+
+        if (script->GetCubeType() == CUBE_TYPE_NORMAL)
+        {
+          if (movePlayerToNearestCube(tr, script, player_pos)) 
+          {
+            CubifyScript::DispatchUpdateWithoutNormal();
+            break;
+          }
+        }
+      }
+
+      if (m_b_climbing_)
+      {
+        if (ladder)
+        {
+          movePlayerToNearestCube(tr, ladder, tr->GetWorldPosition());
+        }
+      }
+
       Fullstop();
-      ApplyLerp();
+      IgnoreLerp();
+
       m_rotate_finished_ = false;
     }
   }
@@ -538,6 +620,56 @@ namespace Client::Scripts
     }
   }
 
+  bool FezPlayerScript::doInitialClimb(const StrongTransform& tr, const Vector3& pos, const WeakObjectBase& obj, bool& continues)
+  {
+    continues = false;
+
+    if (const auto& locked = obj.lock())
+    {
+      const auto&                     parent = locked->GetParent().lock();
+      boost::shared_ptr<CubifyScript> script;
+
+      if (!parent)
+      {
+        script = locked->GetScript<CubifyScript>().lock();
+      }
+      else
+      {
+        script = parent->GetScript<CubifyScript>().lock();
+      }
+
+      if (script)
+      {
+        if (script->GetCubeType() != CUBE_TYPE_LADDER) 
+        {
+          continues = true;
+          return false;
+        }
+
+        if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
+        {
+          const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
+          const auto& cube_pos = ntr->GetWorldPosition();
+
+          const auto& new_pos = Vector3
+          {
+            m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
+            pos.y,
+            m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
+          };
+
+          tr->SetWorldPosition(new_pos);
+          IgnoreGravity();
+
+          m_state_      = CHAR_STATE_CLIMB;
+          m_b_climbing_ = true;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void FezPlayerScript::UpdateInitialClimb()
   {
     if (GetOwner().expired()) { return; }
@@ -553,38 +685,29 @@ namespace Client::Scripts
 
     const auto& scene = owner->GetScene().lock();
     const auto& octree = scene->GetObjectTree();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
 
     if (GetApplication().HasKeyChanged(Keyboard::W))
     {
-      for (const auto& nearest = octree.Nearest(pos, 1.5f); 
-           const auto& obj : nearest)
+      const auto& nearest = octree.Hitscan(tr->GetWorldPosition(), tr->Forward(), 1);
+
+      for (const auto& obj : nearest)
       {
-        if (const auto& locked = obj.lock())
-        {
-          if (const auto& script = locked->GetScript<CubifyScript>().lock())
-          {
-            if (script->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+        bool continues;
+        if (doInitialClimb(tr, pos, obj, continues)) break;
+        if (continues) continue;
+      }
 
-            if (const auto& nearest_cube = script->GetDepthNearestCube(pos).lock())
-            {
-              const auto& ntr      = nearest_cube->GetComponent<Components::Transform>().lock();
-              const auto& cube_pos = ntr->GetWorldPosition();
+      const auto& ids = cldr->GetCollidedObjects();
 
-              const auto& new_pos  = Vector3
-              {
-                m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : pos.x,
-                pos.y,
-                m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : pos.z
-              };
+      for (const auto& id : ids)
+      {
+        const auto obj = scene->FindGameObject(id).lock();
+        if (!obj) { continue; }
+        bool continues = false;
 
-              tr->SetWorldPosition(new_pos);
-              IgnoreGravity();
-
-              m_state_ = CHAR_STATE_CLIMB;
-              break;
-            }
-          }
-        }
+        if (doInitialClimb(tr, pos, obj, continues)) break;
+        if (continues) continue;
       }
     }
   }
@@ -610,19 +733,92 @@ namespace Client::Scripts
     const auto& scene = owner->GetScene().lock();
     const auto& octree = scene->GetObjectTree();
 
-    if (const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon); 
-        nearest.empty())
+    const auto& nearest = octree.Nearest(pos, (tr->GetLocalScale().y * 0.5f) - g_epsilon);
+
+    bool pressed = false;
+
+    if (std::ranges::find_if
+      (
+       nearest, [](const WeakObjectBase& obj)
+       {
+         if (const auto& locked = obj.lock())
+         {
+           boost::shared_ptr<CubifyScript> script;
+
+           if (const auto& parent = locked->GetParent().lock())
+           {
+             script = parent->GetScript<CubifyScript>().lock();
+           }
+           else
+           {
+             script = locked->GetScript<CubifyScript>().lock();
+           }
+
+           if (script)
+           {
+             if (script->GetCubeType() == CUBE_TYPE_LADDER)
+             {
+               return true;
+             }
+           }
+         }
+
+         return false;
+       }
+      ) == nearest.end())
     {
       ApplyGravity();
       m_state_ = CHAR_STATE_FALL;
+      m_b_climbing_ = false;
       return;
     }
 
-    if (key_state.W) { rb->AddT1Force(up * 1.f); }
-    if (key_state.S) { rb->AddT1Force(down * 1.f); }
-    if (key_state.D) { rb->AddT1Force(right * 1.f); }
-    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+    if (key_state.W)
+    {
+      pressed = true;
+      rb->AddT1Force(up * 1.f);
+    }
+    if (key_state.S)
+    {
+      pressed = true;
+      rb->AddT1Force(down * 1.f);
+    }
+    if (key_state.D)
+    {
+      pressed = true;
+      rb->AddT1Force(right * 1.f);
+    }
+    if (key_state.A)
+    {
+      pressed = true;
+      rb->AddT1Force(left * 1.f);
+    }
+
+    // If the player is previously climbing, revert back to the climb state.
+    if (m_state_ == CHAR_STATE_POST_ROTATE && pressed && m_rotate_finished_)
+    {
+      m_state_ = CHAR_STATE_CLIMB;
+    }
+
   }
+
+  void FezPlayerScript::doDownVault(const StrongTransform& tr)
+  {
+    tr->SetLocalPosition(tr->GetLocalPosition() - (tr->GetLocalScale() * 0.5f));
+
+    // Set the player to fixed for avoiding the lerp.
+    IgnoreLerp();
+    IgnoreGravity();
+
+    // Reset the rigidbody for avoiding the player slipping down.
+    Fullstop();
+
+    // Change the layer to none for ignoring the collision.
+    IgnoreCollision();
+
+    m_state_ = CHAR_STATE_VAULT;
+  }
+
   void FezPlayerScript::UpdateInitialVault()
   {
     if (GetOwner().expired()) { return; }
@@ -641,19 +837,8 @@ namespace Client::Scripts
     if (GetApplication().IsKeyPressed(Keyboard::S) && 
         (m_state_ == CHAR_STATE_IDLE || m_state_ == CHAR_STATE_WALK))
     {
-      tr->SetLocalPosition(tr->GetLocalPosition() - (tr->GetLocalScale() * 0.5f));
-
-      // Set the player to fixed for avoiding the lerp.
-      IgnoreLerp();
-      IgnoreGravity();
-
-      // Reset the rigidbody for avoiding the player slipping down.
-      Fullstop();
-
-      // Change the layer to none for ignoring the collision.
-      IgnoreCollision();
-
-      m_state_ = CHAR_STATE_VAULT;
+      doDownVault(tr);
+      m_b_vaulting_ = true;
       return;
     }
 
@@ -690,6 +875,7 @@ namespace Client::Scripts
           IgnoreCollision();
 
           m_state_ = CHAR_STATE_VAULT;
+          m_b_vaulting_ = true;
           return;
         }
       }
@@ -718,6 +904,8 @@ namespace Client::Scripts
     const auto& key_state = GetApplication().GetCurrentKeyState();
     const auto& pos = tr->GetLocalPosition();
 
+    bool pressed = false;
+
     // todo: slight overhead.
     if (rb->IsFixed())
     {
@@ -726,8 +914,22 @@ namespace Client::Scripts
     }
 
     // Moving while in vault state.
-    if (key_state.D) { rb->AddT1Force(right * 1.f); }
-    if (key_state.A) { rb->AddT1Force(left * 1.f); }
+    if (key_state.D)
+    {
+      pressed = true;
+      rb->AddT1Force(right * 1.f);
+    }
+    if (key_state.A)
+    {
+      pressed = true;
+      rb->AddT1Force(left * 1.f);
+    }
+
+    // If the player is previously vaulted, revert back to the vault state.
+    if (m_state_ == CHAR_STATE_POST_ROTATE && pressed && m_rotate_finished_)
+    {
+      m_state_ = CHAR_STATE_VAULT;
+    }
 
     // Vaulting up.
     if (GetApplication().HasKeyChanged(Keyboard::W))

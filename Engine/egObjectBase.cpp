@@ -132,11 +132,17 @@ namespace Engine::Abstract
     return out;
   }
 
-  void ObjectBase::AddChild(const WeakObjectBase& p_child)
+  void ObjectBase::AddChild(const WeakObjectBase& p_child, const bool immediate)
   {
     if (const auto child = p_child.lock(); 
         !child || child == GetSharedPtr<ObjectBase>())
     {
+      return;
+    }
+
+    if (immediate)
+    {
+      addChildImpl(p_child);
       return;
     }
 
@@ -145,56 +151,71 @@ namespace Engine::Abstract
        TASK_ADD_CHILD, {p_child}, [this](auto& params, const auto dt)
        {
          const auto& cast_child = std::any_cast<WeakObjectBase>(params[0]);
-
-         if (const auto child = cast_child.lock())
-         {
-           m_children_.push_back(child->GetLocalID());
-           m_children_cache_.insert({child->GetLocalID(), child});
-
-           if (child->m_parent_id_ != g_invalid_id)
-           {
-             if (const auto& parent = child->m_parent_.lock())
-             {
-               parent->DetachChild(child->GetLocalID()); 
-             }
-           }
-
-           child->m_parent_id_ = GetLocalID();
-           child->m_parent_    = GetSharedPtr<ObjectBase>();
-         }
+         addChildImpl(cast_child);
        }
       );
   }
 
-  bool ObjectBase::DetachChild(const LocalActorID id)
+  void ObjectBase::addChildImpl(const WeakObjectBase& child)
+  {
+    if (const auto locked = child.lock())
+    {
+      m_children_.push_back(locked->GetLocalID());
+      m_children_cache_.insert({locked->GetLocalID(), child});
+
+      if (locked->m_parent_id_ != g_invalid_id)
+      {
+        if (const auto& parent = locked->m_parent_.lock())
+        {
+          parent->DetachChild(locked->GetLocalID(), true);
+        }
+      }
+
+      locked->m_parent_id_ = GetLocalID();
+      locked->m_parent_    = GetSharedPtr<ObjectBase>();
+    }
+  }
+
+  bool ObjectBase::DetachChild(const LocalActorID id, const bool immediate)
   {
     if (id == g_invalid_id) { return false; }
 
     if (m_children_cache_.contains(id))
     {
-      GetTaskScheduler().AddTask
-      (
-       TASK_REM_CHILD, {id}, [this](auto& params, const auto dt)
-       {
-         const auto id = std::any_cast<LocalActorID>(params[0]);
-
-         if (m_children_cache_.contains(id))
+      if (immediate)
+      {
+        detachChildImpl(id);
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+        (
+         TASK_REM_CHILD, {id}, [this](auto& params, const auto dt)
          {
-           m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
-           m_children_cache_.at(id).lock()->m_parent_    = {};
-           m_children_cache_.erase(id);
-           std::erase_if(m_children_, [&id](const auto v_id)
-           {
-             return v_id == id;
-           });
+           detachChildImpl(std::any_cast<LocalActorID>(params[0]));
          }
-       }
-      );
+        );
+      }
 
       return true;
     }
 
     return false;
+  }
+
+  void ObjectBase::detachChildImpl(const LocalActorID id)
+  {
+    if (m_children_cache_.contains(id))
+    {
+      if (const auto locked = m_children_cache_[id].lock())
+      {
+        locked->m_parent_id_ = g_invalid_id;
+        locked->m_parent_.reset();
+      }
+
+      m_children_cache_.erase(id);
+      std::erase(m_children_, id);
+    }
   }
 
   void ObjectBase::OnCollisionEnter(const StrongCollider& other)
@@ -243,11 +264,47 @@ namespace Engine::Abstract
     return {};
   }
 
-  void ObjectBase::removeScript(const eScriptType type)
+  WeakScript ObjectBase::checkScript(const eScriptType type)
   {
     if (m_scripts_.contains(type))
     {
-      m_scripts_.erase(type);
+      return m_scripts_[type];
+    }
+
+    return {};
+  }
+
+  void ObjectBase::removeScript(const eScriptType type)
+  {
+    removeScriptFromSceneCache(m_scripts_[type]);
+    removeScriptImpl(type);
+  }
+
+  void ObjectBase::removeScriptImpl(const eScriptType type)
+  {
+    if (m_scripts_.contains(type))
+    {
+      GetTaskScheduler().AddTask
+      (
+       TASK_REM_SCRIPT,
+       {GetSharedPtr<ObjectBase>(), type},
+       [](const std::vector<std::any>& params, const float)
+       {
+         const auto& obj  = std::any_cast<StrongObjectBase>(params[0]);
+         const auto& type = std::any_cast<eScriptType>(params[1]);
+
+         std::erase_if(obj->m_cached_script_, [type](const auto& script)
+         {
+           if (const auto& locked = script.lock())
+           {
+             return locked->GetScriptType() == type;
+           }
+
+           return false;
+         });
+         obj->m_scripts_.erase(type);
+       }
+      );
     }
   }
 
@@ -261,7 +318,8 @@ namespace Engine::Abstract
     }
 
     // Remove the component from the previous owner.
-    if (const auto prev = component->GetOwner().lock())
+    if (const auto prev = component->GetOwner().lock();
+        prev && prev != GetSharedPtr<ObjectBase>())
     {
       prev->removeComponent(component->GetID());
     }
@@ -275,20 +333,44 @@ namespace Engine::Abstract
     return component;
   }
 
-  void ObjectBase::addScriptImpl(const StrongScript& script, const eScriptType type)
+  WeakScript ObjectBase::addScript(const StrongScript& script)
   {
-    if (m_scripts_.contains(type))
+    const auto type = script->GetScriptType();
+
+    if (const auto scp = checkScript(type).lock())
     {
-      return;
+      return scp;
     }
 
+    // Remove the component from the previous owner.
+    if (const auto prev = script->GetOwner().lock();
+        prev && prev != GetSharedPtr<ObjectBase>())
+    {
+      prev->removeScript(script->GetScriptType());
+    }
+
+    // Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
     script->SetOwner(GetSharedPtr<ObjectBase>());
+
+    // Add the component to the object.
+    addScriptImpl(script, type);
+    addScriptToSceneCache(script);
+
+    return script;
+  }
+
+  void ObjectBase::addScriptImpl(const StrongScript& script, const eScriptType type)
+  {
+    script->SetOwner(GetSharedPtr<ObjectBase>());
+
     if (!script->IsInitialized())
     {
       script->Initialize();
     }
 
     m_scripts_.emplace(type, script);
+
+    m_cached_script_.push_back(script);
   }
 
   void ObjectBase::removeComponentImpl(const eComponentType type, const StrongComponent& comp)
@@ -483,6 +565,7 @@ namespace Engine::Abstract
     {
       script->SetOwner(GetSharedPtr<ObjectBase>());
       script->OnDeserialized();
+      m_cached_script_.push_back(script);
     }
   }
 
@@ -607,7 +690,7 @@ namespace Engine::Abstract
             if (ImGui::Button(script_name.c_str()))
             {
               const auto& script = script_func(GetSharedPtr<ObjectBase>());
-              addScriptImpl(script, script->GetScriptType());
+              addScript(script);
             }
           }
 
@@ -699,7 +782,7 @@ namespace Engine::Abstract
     for (const auto& script : m_scripts_ | std::views::values)
     {
       const auto& cloned_script = script->Clone(cloned);
-      cloned->addScriptImpl(cloned_script, cloned_script->GetScriptType());
+      cloned->addScript(cloned_script);
     }
 
     // Keep intact with the parent.
@@ -728,7 +811,15 @@ namespace Engine::Abstract
     return cloned;
   }
 
-  const std::set<WeakComponent, ComponentPriorityComparer>& ObjectBase::GetAllComponents() { return m_cached_component_; }
+  const std::set<WeakComponent, ComponentPriorityComparer>& ObjectBase::GetAllComponents()
+  {
+    return m_cached_component_;
+  }
+
+  const std::vector<WeakScript>& ObjectBase::GetAllScripts()
+  {
+    return m_cached_script_;
+  }
 
   void ObjectBase::PreUpdate(const float& dt)
   {
