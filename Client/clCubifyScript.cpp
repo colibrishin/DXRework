@@ -40,6 +40,15 @@ namespace Client::Scripts
   void CubifyScript::Initialize()
   {
     Script::Initialize();
+
+    if (m_cube_type_ == CUBE_TYPE_NORMAL)
+    {
+      UpdateCubes(true); 
+    }
+    else
+    {
+      UpdateCubes(false);
+    }
   }
 
   void CubifyScript::PreUpdate(const float& dt) { }
