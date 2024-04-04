@@ -191,6 +191,9 @@ namespace Engine
   using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
   using WeakPrefab = boost::weak_ptr<Resources::Prefab>;
 
+  template <typename T>
+  using Weak = boost::weak_ptr<T>;
+
   // Strong pointer type definitions
   using StrongObjectBase = boost::shared_ptr<Abstract::ObjectBase>;
   using StrongComponent = boost::shared_ptr<Abstract::Component>;
@@ -221,6 +224,9 @@ namespace Engine
   using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
   using StrongPrefab = boost::shared_ptr<Resources::Prefab>;
   using StrongRigidbody = boost::shared_ptr<Components::Rigidbody>;
+
+  template <typename T>
+  using Strong = boost::shared_ptr<T>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
