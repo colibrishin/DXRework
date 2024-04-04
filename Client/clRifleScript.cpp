@@ -66,6 +66,12 @@ namespace Client::Scripts
 
   float RifleScript::GetFireRate() const { return m_fire_rate_; }
 
+  void RifleScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void RifleScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void RifleScript::OnCollisionExit(const WeakCollider& other) {}
+
   RifleScript::RifleScript()
     : Script(SCRIPT_T_RIFLE, {}),
       m_fire_rate_(.3f) {}

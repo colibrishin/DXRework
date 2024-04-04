@@ -151,6 +151,12 @@ namespace Client::Scripts
     }
   }
 
+  void PlayerScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void PlayerScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void PlayerScript::OnCollisionExit(const WeakCollider& other) {}
+
   PlayerScript::PlayerScript()
     : m_state_(CHAR_STATE_IDLE),
       m_prev_state_(CHAR_STATE_IDLE),
@@ -275,16 +281,8 @@ namespace Client::Scripts
     {
       const auto cam = scene->GetMainCamera().lock();
 
-      if (head && scene && cam && !active)
-      {
-        head->DetachChild(m_cam_id_);
-        m_cam_id_ = g_invalid_id;
-      }
-      else if (head && scene && cam && active)
-      {
-        head->AddChild(cam);
-        m_cam_id_ = cam->GetLocalID();
-      }
+      head->AddChild(cam);
+      m_cam_id_ = cam->GetLocalID();
     }
   }
 
@@ -354,28 +352,28 @@ namespace Client::Scripts
     constexpr UINT right_anim = 21;
     constexpr UINT idle_anim = 0;
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::W))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::W))
     {
       atr->SetAnimation(forward_anim);
       rb->AddT1Force(forward);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::A))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::A))
     {
       atr->SetAnimation(left_anim);
       rb->AddT1Force(ortho);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::S))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::S))
     {
       atr->SetAnimation(backward_anim);
       rb->AddT1Force(-forward);
       pressed = true;
     }
 
-    if (GetApplication().GetKeyState().IsKeyDown(Keyboard::D))
+    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::D))
     {
       atr->SetAnimation(right_anim);
       rb->AddT1Force(-ortho);

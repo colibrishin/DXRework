@@ -170,7 +170,7 @@ namespace Engine
   using WeakResource = boost::weak_ptr<Abstract::Resource>;
   using WeakMesh = boost::weak_ptr<Resources::Mesh>;
   using WeakScene = boost::weak_ptr<Scene>;
-  using WeakBaseCollider = boost::weak_ptr<Components::Collider>;
+  using WeakCollider = boost::weak_ptr<Components::Collider>;
   using WeakFont = boost::weak_ptr<Resources::Font>;
   using WeakCamera = boost::weak_ptr<Objects::Camera>;
   using WeakLight = boost::weak_ptr<Objects::Light>;
@@ -190,6 +190,9 @@ namespace Engine
   using WeakComputeShader = boost::weak_ptr<Resources::ComputeShader>;
   using WeakTexture2D = boost::weak_ptr<Resources::Texture2D>;
   using WeakPrefab = boost::weak_ptr<Resources::Prefab>;
+
+  template <typename T>
+  using Weak = boost::weak_ptr<T>;
 
   // Strong pointer type definitions
   using StrongObjectBase = boost::shared_ptr<Abstract::ObjectBase>;
@@ -220,6 +223,10 @@ namespace Engine
   using StrongParticleRenderer = boost::shared_ptr<Components::ParticleRenderer>;
   using StrongComputeShader = boost::shared_ptr<Resources::ComputeShader>;
   using StrongPrefab = boost::shared_ptr<Resources::Prefab>;
+  using StrongRigidbody = boost::shared_ptr<Components::Rigidbody>;
+
+  template <typename T>
+  using Strong = boost::shared_ptr<T>;
 
   // Misc type definitions
   using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
@@ -244,7 +251,10 @@ namespace Engine
   using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
   using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
   using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
+  using ConcurrentWeakScpVec = concurrent_vector<WeakScript>;
+  using ConcurrentWeakScpMap = concurrent_hash_map<GlobalEntityID, WeakScript>;
   using ConcurrentWeakComRootMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
+  using ConcurrentWeakScpRootMap = concurrent_hash_map<eScriptType, ConcurrentWeakScpMap>;
   using ConcurrentVector3Vec = concurrent_vector<Vector3>;
 
   // Bitwise Enums

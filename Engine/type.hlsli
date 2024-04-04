@@ -11,6 +11,7 @@ struct BindFlag
   int4 texArrayFlag[MAX_NUM_SLOTS];
   int4 texCubeFlag[MAX_NUM_SLOTS];
   int4 boneFlag;
+  int4 atlasFlag;
 };
 
 struct CascadeShadowElement
@@ -72,6 +73,7 @@ struct PixelInputType
 
   float clipSpacePosZ : SV_ClipDistance0;
   float clipPlane : SV_ClipDistance1;
+  uint  instanceId : SV_InstanceID;
 };
 
 struct InstanceElement

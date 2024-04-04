@@ -64,6 +64,11 @@ namespace Engine::Manager
           m_b_imgui_load_font_dialog_ = true;
         }
 
+        if (ImGui::MenuItem("Atlas"))
+        {
+          m_b_imgui_load_atlas_dialog_ = true;
+        }
+
         ImGui::EndMenu();
       }
 
@@ -82,6 +87,7 @@ namespace Engine::Manager
     OpenNewSimpleDialog<Resources::Sound>(m_b_imgui_load_sound_dialog_);
     OpenNewSimpleDialog<Resources::Font>(m_b_imgui_load_font_dialog_);
     OpenNewShaderDialog();
+    OpenNewAtlasDialog();
 
     boost::mpl::for_each<LoadableResourceTypes, boost::type<boost::mpl::_>>(MetaResourceLoadDialog());
 
@@ -187,11 +193,69 @@ namespace Engine::Manager
     return {};
   }
 
+  bool ResourceManager::RequestMultipleChoiceDialog()
+  {
+    if (m_b_imgui_multiple_choice_dialog_)
+    {
+      return false;
+    }
+
+    m_b_imgui_multiple_choice_dialog_ = true;
+    return true;
+  }
+
+  bool ResourceManager::OpenMultipleChoiceDialog(std::vector<StrongResource>& selected)
+  {
+    if (m_b_imgui_multiple_choice_dialog_)
+    {
+      if (ImGui::Begin("Multiple Choice", &m_b_imgui_multiple_choice_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        for (const auto& [type, resources] : m_resources_)
+        {
+          if (ImGui::TreeNode(g_resource_type_str[type]))
+          {
+            for (const auto& res : resources)
+            {
+              const auto it     = std::ranges::find(selected, res);
+              const bool chosen = it != selected.end();
+
+              if (ImGui::Selectable(res->GetName().c_str(), chosen))
+              {
+                if (it == selected.end())
+                {
+                  selected.emplace_back(res);
+                }
+                else
+                {
+                  selected.erase(it);
+                }
+              }
+            }
+
+            ImGui::TreePop();
+            ImGui::Separator();
+          }
+        }
+
+        if (ImGui::Button("Close"))
+        {
+          m_b_imgui_multiple_choice_dialog_ = false;
+          ImGui::End();
+          return true;
+        }
+
+        ImGui::End();
+      }
+    }
+
+    return false;
+  }
+
   void       ResourceManager::OpenNewShaderDialog()
   {
     if (m_b_imgui_load_shader_dialog_)
     {
-      if (ImGui::Begin("New Shader", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+      if (ImGui::Begin("New Shader", &m_b_imgui_load_shader_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
       {
         static char name_buffer[256] = {};
         static char path_buffer[256] = {};
@@ -275,6 +339,158 @@ namespace Engine::Manager
           m_b_imgui_load_shader_dialog_ = false;
           std::memset(name_buffer, 0, 256);
           std::memset(path_buffer, 0, 256);;
+        }
+
+        ImGui::End();
+      }
+    }
+  }
+
+  void ResourceManager::OpenNewAtlasDialog()
+  {
+    if (m_b_imgui_load_atlas_dialog_)
+    {
+      const std::string title = "New Atlas";
+
+      if (ImGui::Begin(title.c_str(), &m_b_imgui_load_atlas_dialog_, ImGuiWindowFlags_AlwaysAutoResize))
+      {
+        static char atlas_name_buffer[256] = {};
+        static char name_buffer[256] = {};
+        static char tex_path_buffer[256] = {};
+        static char xml_path_buffer[256] = {};
+
+        static std::vector<std::tuple<std::string, std::string, std::string>> pair;
+
+        ImGui::InputText("Atlas Name", atlas_name_buffer, 256);
+        ImGui::InputText("Name", name_buffer, 256);
+        ImGui::InputText("Texture Path", tex_path_buffer, 256);
+        ImGui::InputText("XML Path", xml_path_buffer, 256);
+
+        if (ImGui::Button("Add Texture"))
+        {
+          if (!std::strlen(xml_path_buffer))
+          {
+            const std::filesystem::path tex_path = tex_path_buffer;
+            std::filesystem::path expected_xml = tex_path.filename();
+            expected_xml.replace_extension(".xml");
+
+            const std::filesystem::path               folder = tex_path.parent_path();
+            const std::filesystem::directory_iterator it(folder);
+
+            for (const auto& entry : it)
+            {
+              if (entry.path().filename() == expected_xml)
+              {
+                strcpy_s(xml_path_buffer, entry.path().generic_string().c_str());
+                break;
+              }
+            }
+          }
+
+          if (!std::strlen(tex_path_buffer))
+          {
+            const std::filesystem::path xml_path = xml_path_buffer;
+            std::filesystem::path expected_tex = xml_path.filename();
+            expected_tex.replace_extension(".png");
+
+            const std::filesystem::path               folder = xml_path.parent_path();
+            const std::filesystem::directory_iterator it(folder);
+
+            for (const auto& entry : it)
+            {
+              if (entry.path().filename() == expected_tex)
+              {
+                strcpy_s(tex_path_buffer, entry.path().generic_string().c_str());
+                break;
+              }
+            }
+          }
+
+          if (std::filesystem::exists(tex_path_buffer) && std::filesystem::exists(xml_path_buffer))
+          {
+            pair.emplace_back(name_buffer, tex_path_buffer, xml_path_buffer);
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+          }
+        }
+
+        static std::string buffer;
+        ImGui::InputText("Folder", &buffer);
+
+        if (ImGui::Button("Add multiples..."))
+        {
+          std::filesystem::path folder = buffer;
+          const std::filesystem::recursive_directory_iterator it(folder);
+
+          for (const auto& entry : it)
+          {
+            if (entry.path().extension() == ".xml")
+            {
+              std::filesystem::path tex_path = entry.path();
+              tex_path.replace_extension(".png");
+
+              if (std::filesystem::exists(tex_path))
+              {
+                pair.emplace_back
+                  (
+                   tex_path.stem().generic_string(),
+                   tex_path.generic_string(),
+                   entry.path().generic_string()
+                  );
+              }
+            }
+          }
+        }
+
+        if (ImGui::BeginChild("Texture List", ImVec2(0, 300)))
+        {
+          for (const auto& [name, tex_path, xml_path] : pair)
+          {
+            ImGui::Text("Name: %s", name.c_str());
+            ImGui::Text("Texture Path: %s", tex_path.c_str());
+            ImGui::Text("XML Path: %s", xml_path.c_str());
+            ImGui::Separator();
+          }
+
+          ImGui::EndChild();
+        }
+
+        if (ImGui::Button("Load"))
+        {
+          try
+          {
+            std::vector<StrongTexture2D> textures;
+
+            for (const auto& [name, tex_path, xml_path] : pair)
+            {
+              Resources::AtlasAnimation::Create(name, xml_path);
+              textures.emplace_back(Resources::Texture2D::Create(name, tex_path, {}));
+            }
+
+            Resources::AtlasAnimationTexture::Create(atlas_name_buffer, "", textures);
+
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+            m_b_imgui_load_atlas_dialog_ = false;
+          }
+          catch (const std::exception& e)
+          {
+            ImGui::SameLine();
+            ImGui::Text(e.what());
+            std::memset(name_buffer, 0, 256);
+            std::memset(tex_path_buffer, 0, 256);
+            std::memset(xml_path_buffer, 0, 256);
+          }
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+          std::memset(name_buffer, 0, 256);
+          std::memset(tex_path_buffer, 0, 256);
+          std::memset(xml_path_buffer, 0, 256);
+          m_b_imgui_load_atlas_dialog_ = false;
         }
 
         ImGui::End();

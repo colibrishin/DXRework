@@ -164,8 +164,7 @@ namespace Engine::Manager::Physics
                 const std::string label = std::format("##{}{}", i, j);
                 if (ImGui::Checkbox(label.c_str(), &m_layer_mask_[i][j]))
                 {
-                  if (m_layer_mask_[i][j]) { UnsetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j)); }
-                  else { SetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j)); }
+                  m_layer_mask_[j][i] = m_layer_mask_[i][j];
                 }
               }
             }

@@ -53,6 +53,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        submodules: true
     
     - name: Setup anew (or from cache) vcpkg (and does not build any package)
       uses: lukka/run-vcpkg@v11 # Always specify the specific _version_ of the

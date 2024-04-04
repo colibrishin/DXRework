@@ -57,12 +57,14 @@ namespace Engine::Objects
   void Light::Render(const float& dt)
   {
     ObjectBase::Render(dt);
-#ifdef _DEBUG
-    const auto tr = GetComponent<Components::Transform>().lock();
 
-    const BoundingSphere sphere(tr->GetWorldPosition(), 0.5f);
-    GetDebugger().Draw(sphere, DirectX::Colors::Yellow);
-#endif
+    if (g_debug)
+    {
+      const auto tr = GetComponent<Components::Transform>().lock();
+
+      const BoundingSphere sphere(tr->GetWorldPosition(), 0.5f);
+      GetDebugger().Draw(sphere, DirectX::Colors::Yellow);
+    }
   }
 
   void Light::PostRender(const float& dt) { ObjectBase::PostRender(dt); }

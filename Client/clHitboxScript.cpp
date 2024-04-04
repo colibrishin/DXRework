@@ -12,7 +12,8 @@ namespace Client::Scripts
 
   HitboxScript::~HitboxScript() = default;
 
-  void HitboxScript::Hit(const float dmg) const {
+  void HitboxScript::Hit(const float dmg) const
+  {
     const auto damage = dmg * m_modifier_;
 	  
     if (const auto hitbox = GetOwner().lock())
@@ -40,6 +41,12 @@ namespace Client::Scripts
   void HitboxScript::Render(const float& dt) { }
 
   void HitboxScript::PostRender(const float& dt) { }
+
+  void HitboxScript::OnCollisionEnter(const WeakCollider& other) {}
+
+  void HitboxScript::OnCollisionContinue(const WeakCollider& other) {}
+
+  void HitboxScript::OnCollisionExit(const WeakCollider& other) {}
 
   HitboxScript::HitboxScript() = default;
 }

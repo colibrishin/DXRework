@@ -15,6 +15,8 @@
 #include <egSphereMesh.h>
 #include <egSphereMesh.h>
 
+#include "clCubifyScript.h"
+#include "clFezPlayerScript.h"
 #include "clHitboxScript.hpp"
 #include "clHpTextScript.h"
 #include "clTriangleMesh.hpp"
@@ -212,6 +214,9 @@ namespace Client
     Script::Register<Scripts::ShadowIntersectionScript>();
     Script::Register<Scripts::RifleScript>();
     Script::Register<Scripts::PlayerHitboxScript>();
+    Script::Register<Scripts::FezPlayerScript>();
+    Script::Register<Scripts::CubifyScript>();
+
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 
     // todo: refactor
@@ -225,6 +230,9 @@ namespace Client
     InitializeMaterial();
 
     GetCollisionDetector().UnsetCollisionLayer(LAYER_HITBOX, LAYER_HITBOX);
+    GetCollisionDetector().UnsetCollisionLayer(LAYER_NONE, LAYER_NONE);
+    GetCollisionDetector().SetCollisionLayer(LAYER_PLAYER, LAYER_DEFAULT);
+    GetCollisionDetector().SetCollisionLayer(LAYER_PLAYER, LAYER_ENVIRONMENT);
   }
 
   void Tick() { Manager::Application::GetInstance().Tick(); }

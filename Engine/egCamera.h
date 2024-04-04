@@ -11,7 +11,7 @@ namespace Engine::Objects
 
     Camera()
       : ObjectBase(DEF_OBJ_T_CAMERA),
-        m_zoom_(1.0f),
+        m_fov_(20.0f),
         m_b_orthogonal_(false),
         m_b_fixed_up_(true) {}
 
@@ -29,20 +29,21 @@ namespace Engine::Objects
 
     void SetOrthogonal(bool bOrthogonal);
     void SetFixedUp(bool bFixedUp);
-    void SetZoom(float zoom);
+    void SetFOV(float zoom);
 
     Matrix  GetViewMatrix() const;
     Matrix  GetProjectionMatrix() const;
     Matrix  GetWorldMatrix() const;
     Vector2 GetWorldMousePosition();
     bool    GetOrthogonal() const;
+    float   GetFOV() const;
 
   private:
     SERIALIZE_DECL
     OBJ_CLONE_DECL
 
   private:
-    float            m_zoom_;
+    float            m_fov_;
     bool             m_b_orthogonal_;
     bool             m_b_fixed_up_;
 

@@ -63,6 +63,7 @@ namespace Engine::Abstract
       boost::shared_ptr<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
       script->SetName(name);
       addScriptImpl(script, type);
+      addScriptToSceneCache<T>(script);
 
       return script;
     }
@@ -79,24 +80,14 @@ namespace Engine::Abstract
     }
 
     template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-    void RemoveScript(const std::string& name = "")
+    void RemoveScript()
     {
-      if (m_scripts_.contains(which_script<T>::value))
-      {
-        auto& scripts = m_scripts_[which_script<T>::value];
-
-        if (name.empty() && !scripts.empty()) { scripts.erase(scripts.begin()); }
-        else
-        {
-          std::erase_if
-            (
-             scripts, [&name](const StrongScript& script) { return script->GetName() == name; }
-            );
-        }
-      }
+      removeScriptFromSceneCache<T>(m_scripts_[which_script<T>::value]);
+      removeScriptImpl(which_script<T>::value);
     }
 
     const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
+    const std::vector<WeakScript>&                            GetAllScripts();
 
     template <typename T>
     boost::weak_ptr<T> GetComponent()
@@ -117,7 +108,7 @@ namespace Engine::Abstract
     void RemoveComponent()
     {
       removeComponentFromSceneCache<T>(m_components_[which_component<T>::value]);
-      removeComponentImpl(which_component<T>::value);
+      removeComponent(which_component<T>::value);
     }
 
     template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
@@ -129,7 +120,7 @@ namespace Engine::Abstract
 
     bool           GetActive() const;
     bool           GetCulled() const;
-    bool           GetImGuiOpen() const;
+    bool&          GetImGuiOpen();
     eDefObjectType GetObjectType() const;
 
     WeakObjectBase              GetParent() const;
@@ -137,8 +128,13 @@ namespace Engine::Abstract
     WeakObjectBase              GetChild(LocalActorID id) const;
     std::vector<WeakObjectBase> GetChildren() const;
 
-    void AddChild(const WeakObjectBase& child);
-    bool DetachChild(LocalActorID id);
+    // Add child to object, if immediate flag is set, the child will be added in frame.
+    void AddChild(const WeakObjectBase& p_child, bool immediate = false);
+    void addChildImpl(const WeakObjectBase& child);
+
+    // Detach child from object, if immediate flag is set, the child will be detached in frame.
+    bool DetachChild(const LocalActorID id, const bool immediate = false);
+    void detachChildImpl(LocalActorID id);
 
   protected:
     explicit ObjectBase(eDefObjectType type = DEF_OBJ_T_NONE)
@@ -163,6 +159,7 @@ namespace Engine::Abstract
 
     // Check whether the component is already added to the object.
     WeakComponent checkComponent(const eComponentType type);
+    WeakScript    checkScript(eScriptType type);
 
     // Add component to the scene cache.
     template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
@@ -183,19 +180,46 @@ namespace Engine::Abstract
       }
     }
 
+    // Add script to the scene cache.
+    template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    void addScriptToSceneCache(const boost::shared_ptr<T>& script)
+    {
+      if (const auto scene = GetScene().lock())
+      {
+        scene->AddCacheScript<T>(script);
+      }
+    }
+
+    // Remove script from the scene cache.
+    template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    void removeScriptFromSceneCache(const boost::shared_ptr<T>& script)
+    {
+      if (const auto scene = GetScene().lock())
+      {
+        scene->RemoveCacheScript<T>(script);
+      }
+    }
+
+    void removeScript(const eScriptType type);
+    void removeScriptImpl(eScriptType type);
+
     // Add pre-existing component to the object.
     WeakComponent addComponent(const StrongComponent& component);
 
     // Add pre-existing script to the object.
-    void addScriptImpl(const StrongScript & script, const eScriptType type);
+    WeakScript addScript(const StrongScript& script);
 
-    // Remove component from the object.
-    void removeComponentImpl(eComponentType type);
-    // Remove specific component from the object.
-    void removeComponentImpl(const GlobalEntityID id);
+    // Remove component from the object. Cached component at the scene should be removed manually.
+    void removeComponent(eComponentType type);
+    // Remove specific component from the object. Cached component at the scene should be removed manually.
+    void removeComponent(const GlobalEntityID id);
+    // Remove component from the object finally, notify task scheduler to remove the component.
+    void removeComponentImpl(const eComponentType type, const StrongComponent & comp);
 
     // Commit the component to the object.
-    void          addComponentImpl(const StrongComponent& component, eComponentType type);
+    void addComponentImpl(const StrongComponent& component, eComponentType type);
+    // Commit the script to the object.
+    void addScriptImpl(const StrongScript & script, const eScriptType type);
 
     LocalActorID              m_parent_id_;
     std::vector<LocalActorID> m_children_;
@@ -208,13 +232,14 @@ namespace Engine::Abstract
     bool m_imgui_components_open_ = false;
 
     std::map<eComponentType, StrongComponent> m_components_;
+    std::map<eScriptType, StrongScript>   m_scripts_;
 
     // Non-serialized
     WeakObjectBase                                         m_parent_;
     std::map<LocalActorID, WeakObjectBase>                 m_children_cache_;
     std::set<LocalComponentID>                         m_assigned_component_ids_;
     std::set<WeakComponent, ComponentPriorityComparer> m_cached_component_;
-    std::map<eScriptType, StrongScript>   m_scripts_;
+    std::vector<WeakScript>                               m_cached_script_;
   };
 } // namespace Engine::Abstract
 

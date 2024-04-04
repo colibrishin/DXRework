@@ -7,6 +7,7 @@
 #include "egRenderable.h"
 #include "egTaskScheduler.h"
 #include "egComponent.h"
+#include "egScript.h"
 
 namespace Engine
 {
@@ -34,6 +35,9 @@ namespace Engine
     void OnDeserialized() override;
     void OnImGui() override;
 
+    void           SetMainActor(const LocalActorID id);
+    WeakObjectBase GetMainActor() const;
+
     // Add Object to the scene.
     // If the object is bound to another scene or layer, it will be moved to this scene and layer.
     // Note that the object will be added finally at the next frame.
@@ -60,6 +64,8 @@ namespace Engine
       // yield the currently created object
       return obj_t;
     }
+
+    void ChangeLayer(const eLayerType to, const GlobalEntityID id);
 
     void RemoveGameObject(GlobalEntityID id, eLayerType layer);
 
@@ -110,7 +116,7 @@ namespace Engine
 
     // Remove cache component from the object.
     template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstract::Component, T>>>
-    void RemoveCacheComponent(const boost::shared_ptr<T>& component)
+    void RemoveCacheComponent(const boost::shared_ptr<T>& script)
     {
       // If the component cannot be deduced, go with runtime.
       if constexpr (std::is_same_v<Abstract::Component, T>)
@@ -118,7 +124,7 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_UNCACHE_COMPONENT,
-           {GetSharedPtr<Scene>(), component},
+           {GetSharedPtr<Scene>(), script},
            [](const std::vector<std::any>& params, const float)
            {
              const auto& scene = std::any_cast<StrongScene>(params[0]);
@@ -133,13 +139,87 @@ namespace Engine
         GetTaskScheduler().AddTask
           (
            TASK_UNCACHE_COMPONENT,
-           {GetSharedPtr<Scene>(), component},
+           {GetSharedPtr<Scene>(), script},
            [](const std::vector<std::any>& params, const float)
            {
              const auto& scene = std::any_cast<StrongScene>(params[0]);
-             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[0]);
+             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
 
              scene->removeCacheComponentImpl(component, which_component<T>::value);
+           }
+          );
+      }
+    }
+
+    // Add cache script from the object.
+    template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    void AddCacheScript(const boost::shared_ptr<T>& script)
+    {
+      // If the component cannot be deduced, go with runtime.
+      if constexpr (std::is_same_v<Script, T>)
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_CACHE_SCRIPT,
+           {GetSharedPtr<Scene>(), script},
+           [](const std::vector<std::any>& params, const float)
+           {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& scp = std::any_cast<StrongScript>(params[1]);
+
+             scene->addCacheScriptImpl(scp, scp->GetScriptType());
+           }
+          );
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_CACHE_COMPONENT,
+           {GetSharedPtr<Scene>(), script},
+           [](const std::vector<std::any>& params, const float)
+           {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
+
+             scene->addCacheScriptImpl(component, which_script<T>::value);
+           }
+          );
+      }
+    }
+
+    // Remove cache script from the object.
+    template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
+    void RemoveCacheScript(const boost::shared_ptr<T>& script)
+    {
+      // If the component cannot be deduced, go with runtime.
+      if constexpr (std::is_same_v<Script, T>)
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_UNCACHE_SCRIPT,
+           {GetSharedPtr<Scene>(), script},
+           [](const std::vector<std::any>& params, const float)
+           {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& scp = std::any_cast<StrongScript>(params[1]);
+
+             scene->removeCacheScriptImpl(scp, scp->GetScriptType());
+           }
+          );
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_UNCACHE_SCRIPT,
+           {GetSharedPtr<Scene>(), script},
+           [](const std::vector<std::any>& params, const float)
+           {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& scp = std::any_cast<boost::shared_ptr<T>>(params[1]);
+
+             scene->removeCacheScriptImpl(scp, which_script<T>::value);
            }
           );
       }
@@ -154,7 +234,30 @@ namespace Engine
       {
         ConcurrentWeakComVec result;
 
-        for (const auto& comp : acc->second | std::views::values) { result.push_back(comp); }
+        for (const auto& comp : acc->second | std::views::values)
+        {
+          result.push_back(comp);
+        }
+
+        return result;
+      }
+
+      return {};
+    }
+
+    template <typename T>
+    ConcurrentWeakScpVec GetCachedScripts()
+    {
+      ConcurrentWeakScpRootMap::const_accessor acc;
+
+      if (m_cached_scripts_.find(acc, which_script<T>::value))
+      {
+        ConcurrentWeakScpVec result;
+
+        for (const auto& scp : acc->second | std::views::values)
+        {
+          result.push_back(scp);
+        }
 
         return result;
       }
@@ -189,6 +292,11 @@ namespace Engine
     // Remove cache component from the object.
     void removeCacheComponentImpl(const StrongComponent& component, const eComponentType type);
 
+    // Add cache script from the object.
+    void addCacheScriptImpl(const StrongScript& script, const eScriptType type);
+    // Remove cache script from the object.
+    void removeCacheScriptImpl(const StrongScript& component, const eScriptType type);
+
     // Functions for the next frame.
 
     // Add the object from the scene finally. this function should be called at the next frame.
@@ -202,15 +310,18 @@ namespace Engine
     bool m_b_scene_imgui_open_;
 
     LocalActorID             m_main_camera_local_id_;
+    LocalActorID             m_main_actor_local_id_;
     std::vector<StrongLayer> m_layers;
 
     // Non-serialized
     WeakObjectBase m_observer_;
     WeakCamera m_mainCamera_;
+    WeakObjectBase m_main_actor_;
 
     ConcurrentLocalGlobalIDMap m_assigned_actor_ids_;
     ConcurrentWeakObjGlobalMap m_cached_objects_;
     ConcurrentWeakComRootMap   m_cached_components_;
+    ConcurrentWeakScpRootMap   m_cached_scripts_;
     Octree                     m_object_position_tree_;
   };
 } // namespace Engine

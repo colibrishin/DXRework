@@ -35,7 +35,19 @@ namespace Engine::Manager
 
     float           GetDeltaTime() const;
     uint32_t        GetFPS() const;
-    Keyboard::State GetKeyState() const;
+    Keyboard::State GetCurrentKeyState() const;
+
+    // More strict key change check. Returns true if previously not pressed
+    // and now pressed.
+    bool            HasKeyChanged(DirectX::Keyboard::Keys key) const;
+
+    // More strict key change check. Returns true if previously pressed
+    // and still pressed.
+    bool            IsKeyPressed(DirectX::Keyboard::Keys key) const;
+
+    // Discrete scroll value changes.
+    bool HasScrollChanged(int & value) const;
+
     Mouse::State    GetMouseState() const;
 
   private:
@@ -52,6 +64,7 @@ namespace Engine::Manager
 
     void tickInternal();
 
+    static void SIGTERM();
 
     HWND m_hWnd = nullptr;
 
@@ -59,7 +72,14 @@ namespace Engine::Manager
     std::unique_ptr<Keyboard> m_keyboard;
     std::unique_ptr<Mouse>    m_mouse;
 
+    Keyboard::State m_previous_keyboard_state_;
+    Mouse::State    m_previous_mouse_state_;
+
     // Time
     std::unique_ptr<DX::StepTimer> m_timer;
+
+    // Check for Sigterm registration
+    inline static bool s_instantiated_ = false;
+
   };
 } // namespace Engine::Manager

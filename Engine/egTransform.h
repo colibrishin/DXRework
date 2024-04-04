@@ -42,6 +42,7 @@ namespace Engine::Components
     Vector3    GetAnimationScale() const;
     Quaternion GetAnimationRotation() const;
 
+    // The direction moving towards to the screen if no rotation applied.
     Vector3 Forward() const;
     Vector3 Right() const;
     Vector3 Up() const;
@@ -59,7 +60,7 @@ namespace Engine::Components
     void OnImGui() override;
 
     Matrix GetLocalMatrix() const;
-    Matrix GetWorldMatrix();
+    Matrix GetWorldMatrix() const;
 
     static void __fastcall Bind(Transform& transform);
     static void            Unbind();

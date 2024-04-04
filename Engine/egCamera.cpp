@@ -2,6 +2,7 @@
 #include "egCamera.h"
 #include "egApplication.h"
 #include "egGlobal.h"
+#include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 #include "egRigidbody.h"
 #include "egTransform.h"
@@ -38,15 +39,14 @@ namespace Engine::Objects
   {
     ObjectBase::PreRender(dt);
 
-    if (GetApplication().GetMouseState().scrollWheelValue > 1)
+    if constexpr (g_debug)
     {
-      GetComponent<Components::Transform>().lock()->Translate
-        (g_forward * 0.1f);
-    }
-    else if (GetApplication().GetMouseState().scrollWheelValue < 0)
-    {
-      GetComponent<Components::Transform>().lock()->
-                                            Translate(g_backward * 0.1f);
+      int value = 0;
+
+      if (GetApplication().HasScrollChanged(value))
+      {
+        GetComponent<Components::Transform>().lock()->Translate(g_forward * -value);
+      }
     }
 
     if (const auto transform = GetComponent<Components::Transform>().lock())
@@ -67,7 +67,7 @@ namespace Engine::Objects
       m_view_matrix_ = XMMatrixLookAtLH
         (
          position,
-         position + forward,
+         position - forward,
          up
         );
 
@@ -77,7 +77,7 @@ namespace Engine::Objects
 
         m_projection_matrix_ = DirectX::XMMatrixOrthographicLH
           (
-           m_zoom_ * aspectRatio, aspectRatio, g_screen_near, g_screen_far
+           m_fov_ * aspectRatio, m_fov_, g_screen_near, g_screen_far
           );
       }
       else
@@ -139,13 +139,14 @@ namespace Engine::Objects
   {
     ObjectBase::Render(dt);
 
-#ifdef _DEBUG
-    BoundingFrustum frustum;
+    if constexpr (g_debug)
+    {
+      BoundingFrustum frustum;
 
-    BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
-    frustum.Transform(frustum, GetViewMatrix().Invert());
-    GetDebugger().Draw(frustum, DirectX::Colors::WhiteSmoke);
-#endif
+      BoundingFrustum::CreateFromMatrix(frustum, GetProjectionMatrix());
+      frustum.Transform(frustum, GetViewMatrix().Invert());
+      GetDebugger().Draw(frustum, DirectX::Colors::WhiteSmoke);
+    }
   }
 
   void Camera::PostRender(const float& dt) { ObjectBase::PostRender(dt); }
@@ -156,12 +157,14 @@ namespace Engine::Objects
 
   void Camera::SetFixedUp(bool bFixedUp) { m_b_fixed_up_ = bFixedUp; }
 
-  void Camera::SetZoom(float zoom)
+  void Camera::SetFOV(float zoom)
   {
-    m_zoom_ = zoom;
+    m_fov_ = zoom;
   }
 
   bool Camera::GetOrthogonal() const { return m_b_orthogonal_; }
+
+  float Camera::GetFOV() const { return m_fov_; }
 
   Vector2 Camera::GetWorldMousePosition()
   {
@@ -199,7 +202,11 @@ namespace Engine::Objects
       ))
     {
       ImGui::Text("Orthogonal");
+      ImGui::SameLine();
       ImGui::Checkbox("##orthogonal", &m_b_orthogonal_);
+      ImGui::Text("FOV");
+      ImGui::SameLine();
+      ImGui::SliderFloat("##FOV", &m_fov_, 10.f, 40.f);
       ImGui::End();
     }
   }

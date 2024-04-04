@@ -29,7 +29,7 @@ namespace Engine::Resources
     float GetTicksPerSecond() const;
     float GetDuration() const;
 
-    static float ConvertDtToFrame(const float& dt, float ticks_per_second, float duration);
+    static float ConvertDtToFrame(const float & dt, const float ticks_per_second);
 
     RESOURCE_SELF_INFER_GETTER(BaseAnimation)
 

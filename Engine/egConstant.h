@@ -1,4 +1,5 @@
 #pragma once
+#include "egDebugConstant.h"
 
 namespace Engine
 {
@@ -14,8 +15,8 @@ namespace Engine
   constexpr UINT g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
   constexpr UINT g_max_slot_per_texture         = 8;
   constexpr UINT g_max_slot_per_uav             = 2;
-  constexpr UINT g_reserved_bind_slot           = 32;
-  constexpr UINT g_reserved_struct_buffer_slot  = 48;
+  constexpr UINT g_reserved_struct_buffer_slot  = 32;
+  constexpr UINT g_reserved_bind_slot           = 48;
   constexpr UINT g_uav_slot_limit               = 8;
   constexpr UINT g_reserved_uav_slot            = 6;
 
@@ -32,19 +33,11 @@ namespace Engine
   constexpr size_t  g_speculation_bisection_max_iteration = 64;
   constexpr bool    g_speculation_enabled                 = true;
 
-  // Debug Constants
-  constexpr int    g_debug_y_movement        = 15;
-  constexpr int    g_debug_y_initial         = 0;
-  constexpr float  g_debug_message_life_time = 1.0f;
-  constexpr size_t g_debug_message_max       = 1000;
-  constexpr bool   g_debug_observer          = false;
-
   // Misc
   constexpr LONG_PTR g_invalid_id               = -1;
-  constexpr Vector3  g_forward                  = {0.f, 0.f, 1.f};
-  constexpr Vector3  g_backward                 = {0.f, 0.f, -1.f};
+  constexpr Vector3  g_forward                  = {0.f, 0.f, -1.f};
+  constexpr Vector3  g_backward                 = {0.f, 0.f, 1.f};
   constexpr size_t   g_max_map_size             = 2048; // only in power of 2
-  constexpr size_t   g_octree_negative_round_up = g_max_map_size / 2;
 
   static_assert(g_max_map_size % 2 == 0, "Map size should be in the power of 2");
 }

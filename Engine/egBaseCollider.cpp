@@ -133,6 +133,11 @@ namespace Engine::Components
     return test && distance <= dist;
   }
 
+  bool Collider::ContainsBy(const StrongCollider& test, const StrongCollider& container)
+  {
+    return test->m_boundings_.ContainsBy(container->m_boundings_, test->GetWorldMatrix(), container->GetWorldMatrix());
+  }
+
   bool Collider::Intersects(
     const Vector3& start, const Vector3& dir, float distance,
     float&         intersection
@@ -317,17 +322,31 @@ namespace Engine::Components
   void Collider::PostUpdate(const float& dt)
   {
     Component::PostUpdate(dt);
-#ifdef _DEBUG
-    if (m_collided_objects_.empty())
+
+    if constexpr (g_debug)
     {
-      if (m_type_ == BOUNDING_TYPE_BOX) { GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed); }
-      else { GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed); }
+      if (m_collided_objects_.empty())
+      {
+        if (m_type_ == BOUNDING_TYPE_BOX)
+        {
+          GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
+        }
+        else
+        {
+          GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
+        }
+      }
+      else
+      {
+        if (m_type_ == BOUNDING_TYPE_BOX)
+        {
+          GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
+        }
+        else
+        {
+          GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
+        }
+      }
     }
-    else
-    {
-      if (m_type_ == BOUNDING_TYPE_BOX) { GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow); }
-      else { GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow); }
-    }
-#endif
   }
 } // namespace Engine::Component

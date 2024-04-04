@@ -52,6 +52,11 @@ namespace Engine
     return m_bounds_.Contains(point) == DirectX::ContainmentType::CONTAINS;
   }
 
+  float Octree::Distance(const Vector3& point) const
+  {
+    return std::sqrtf(Vector3::DistanceSquared(m_bounds_.Center, point));
+  }
+
   UINT Octree::ActiveChildren() const { return static_cast<UINT>(m_active_children_.count()); }
 
   bool Octree::Insert(const WeakT& obj)
@@ -298,9 +303,11 @@ namespace Engine
           continue; // Leaf node
         }
 
-#ifdef  _DEBUG
-        GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
-#endif
+        if (g_debug) 
+        {
+          GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
+        }
+        
         stack.pop();
         continue;
       }
@@ -411,6 +418,147 @@ namespace Engine
         }
       }
     }
+  }
+
+  void Octree::Iterate(const Vector3& point, const std::function<bool(const WeakT&)>& func) const
+  {
+    std::queue<const Octree*> q;
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.front();
+      q.pop();
+
+      const auto& value = node->m_values_;
+      const auto& children = node->m_children_;
+
+      for (const auto& v : value)
+      {
+        if (func(v))
+        {
+          return;
+        }
+      }
+
+      for (const auto& child : children)
+      {
+        if (child && child->Contains(point))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+  }
+
+  std::vector<Octree::WeakT> Octree::Nearest(const Vector3& point, const float distance) const
+  {
+    std::stack<const Octree*> q;
+    std::set<const Octree*> visited;
+    std::vector<WeakT> result;
+    const BoundingSphere search_sphere(point, distance);
+
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.top();
+      
+      const auto& value = node->m_values_;
+      const auto& children = node->m_children_;
+
+      if (visited.contains(node))
+      {
+        q.pop();
+
+        for (const auto& v : value)
+        {
+          if (const auto& locked = v.lock())
+          {
+            if (const auto& bounding = bounding_getter::value(*locked); 
+                bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere))
+            {
+              result.push_back(v);
+            }
+          }
+        }
+
+        continue;
+      }
+
+      visited.insert(node);
+
+      for (const auto& child : children)
+      {
+        if (child && child->Intersects(search_sphere))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+
+    return result;
+  }
+
+  std::vector<Octree::WeakT> Octree::Hitscan(
+    const Vector3& point, const Vector3& direction, const size_t count, const float distance
+  ) const
+  {
+    std::stack<const Octree*> q;
+    std::set<const Octree*>   visited;
+    std::vector<WeakT>        result;
+    float dist = 0.f;
+
+    q.push(this);
+
+    while (!q.empty())
+    {
+      const auto node = q.top();
+
+      const auto& value    = node->m_values_;
+      const auto& children = node->m_children_;
+
+      if (visited.contains(node))
+      {
+        q.pop();
+
+        for (const auto& v : value)
+        {
+          if (const auto& locked = v.lock())
+          {
+            if (const auto& bounding = bounding_getter::value(*locked); 
+                bounding.TestRay(point, direction, dist))
+            {
+              if (!FloatCompare(distance, 0.f))
+              {
+                if (dist > distance) { continue; }
+              }
+
+              result.push_back(v);
+
+              if (result.size() == count)
+              {
+                break;
+              }
+            }
+          }
+        }
+
+        continue;
+      }
+
+      visited.insert(node);
+
+      for (const auto& child : children)
+      {
+        if (child && child->Intersects(point, direction, dist))
+        {
+          q.push(child.get());
+        }
+      }
+    }
+
+    return result;
   }
 
   Octree::Octree(const BoundingBox& bounds)

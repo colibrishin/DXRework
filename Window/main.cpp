@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "../Client/Client.h"
 
+#include "../Engine/egDebugConstant.h"
+
 int WINAPI WinMain(
   HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
   int       iCmdshow
@@ -21,7 +23,10 @@ LRESULT CALLBACK WndProc(
   LPARAM lparam
 )
 {
-  if (ImGui_ImplWin32_WndProcHandler(hwnd, umessage, wparam, lparam)) { return true; }
+  if constexpr (Engine::g_debug)
+  {
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, umessage, wparam, lparam)) { return true; }
+  }
 
   switch (umessage)
   {

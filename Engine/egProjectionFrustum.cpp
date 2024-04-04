@@ -34,7 +34,7 @@ namespace Engine::Manager
         BoundingFrustum::CreateFromMatrix
           (
            m_frustum,
-           GetD3Device().GetProjectionMatrix()
+           camera->GetProjectionMatrix()
           );
         m_frustum.Transform(m_frustum, camera->GetViewMatrix().Invert());
 
@@ -58,11 +58,19 @@ namespace Engine::Manager
         tr->GetWorldRotation()
       };
 
-      const auto check_plane  = m_frustum.Contains(box);
-      const auto check_sphere = m_sphere.Contains(box);
+      try
+      {
+        const auto check_plane  = m_frustum.Contains(box);
+        const auto check_sphere = m_sphere.Contains(box);
 
-      return check_plane != DirectX::DISJOINT ||
+        return check_plane != DirectX::DISJOINT ||
              check_sphere != DirectX::DISJOINT;
+      }
+      catch (const std::exception& e)
+      {
+        GetDebugger().Log(e.what());
+        return false;
+      }
     }
 
     return false;

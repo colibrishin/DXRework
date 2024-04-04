@@ -21,9 +21,10 @@ namespace Engine::Resources
     ComPtr<ID3DBlob> error;
     UINT             flag = 0;
 
-#if defined(_DEBUG)
-    flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
-#endif
+    if constexpr (g_debug)
+    {
+      flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
+    }
 
     for (const auto& [t, ep, v] : s_main_version)
     {
@@ -249,35 +250,23 @@ namespace Engine::Resources
     if (std::filesystem::exists(GetPath()))
     {
       const std::filesystem::path folder = GetPrettyTypeName();
-      std::filesystem::path p;
+      const std::filesystem::path filename = GetPath().filename();
+      const std::filesystem::path p = folder / filename;
 
-      if (GetPath().parent_path() != folder)
+      if (!std::filesystem::exists(folder))
       {
-        if (!std::filesystem::exists(folder)) { std::filesystem::create_directory(folder); }
-
-        const std::string current_path_symbol = "./";
-
-        p /= folder;
-        std::string path = GetPath().generic_string();
-
-        if (const auto find = path.find(current_path_symbol); find != std::string::npos)
-        {
-          path.erase(find, 2);
-        }
-
-        p /= path;
-      }
-      else
-      {
-        p = GetPath();
+        std::filesystem::create_directory(folder);
       }
 
-      if (p == GetPath())
+      if (GetPath() == p) { return; }
+
+      if (std::filesystem::exists(p))
       {
-        return;
+        std::filesystem::remove(p);
       }
 
       std::filesystem::copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
+
       SetPath(p);
     }
   }

@@ -59,7 +59,7 @@ namespace Engine::Abstract
 
     struct SingletonDeleter final
     {
-      void operator()(T* ptr) const { delete ptr; }
+      void operator()(const T* ptr) const { delete ptr; }
     };
 
   private:

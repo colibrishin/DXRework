@@ -33,7 +33,7 @@ namespace Engine::Components
     template <typename T>
     void ResetIfTimer(const boost::shared_ptr<T>& anim)
     {
-      if (anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond(), anim->GetDuration()) >= anim->GetDuration())
+      if (anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond()) >= anim->GetDuration())
       {
         m_current_frame_ = 0.0f;
         m_total_dt_ = 0.0f;
@@ -43,7 +43,7 @@ namespace Engine::Components
     template <typename T>
     void UpdateTimer(const boost::shared_ptr<T>& anim)
     {
-      m_current_frame_ = anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond(), anim->GetDuration());
+      m_current_frame_ = anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond());
     }
 
     UINT  m_animation_id_;

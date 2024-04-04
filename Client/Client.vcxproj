@@ -118,7 +118,8 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
+      <Command>MKDIR -P "$(SolutionDir)Metadata\"
+XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -146,7 +147,8 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
+      <Command>MKDIR -P "$(SolutionDir)Metadata\"
+XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -170,7 +172,8 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
+      <Command>MKDIR -P "$(SolutionDir)Metadata\"
+XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -198,10 +201,13 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
+      <Command>MKDIR -P "$(SolutionDir)Metadata\"
+XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="clCubifyScript.h" />
+    <ClInclude Include="clFezPlayerScript.h" />
     <ClInclude Include="clHitboxScript.hpp" />
     <ClInclude Include="clHpTextScript.h" />
     <ClInclude Include="Client.h" />
@@ -218,6 +224,8 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="clCubifyScript.cpp" />
+    <ClCompile Include="clFezPlayerScript.cpp" />
     <ClCompile Include="clHitboxScript.cpp" />
     <ClCompile Include="clHpTextScript.cpp" />
     <ClCompile Include="Client.cpp" />

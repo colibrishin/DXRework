@@ -51,13 +51,16 @@ Texture1D      tex1d04 : register(t28);
 Texture1D      tex1d05 : register(t29);
 Texture1D      tex1d06 : register(t30);
 Texture1D      tex1d07 : register(t31);
-Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t32);
-Texture2D      texRendered : register(t33);
-Texture3D      texAnimations : register(t34);
 
-StructuredBuffer<LightElement>         bufLight : register(t48);
-StructuredBuffer<CascadeShadowElement> bufLightVP : register(t49);
-StructuredBuffer<InstanceElement>      bufInstance : register(t50);
+StructuredBuffer<LightElement>         bufLight : register(t32);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t33);
+StructuredBuffer<InstanceElement>      bufInstance : register(t34);
+
+Texture2D texRendered : register(t48);
+Texture3D texAnimations : register(t49);
+Texture3D texAtlases : register(t50);
+
+Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t51);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 

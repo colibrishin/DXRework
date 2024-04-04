@@ -20,6 +20,8 @@ namespace Engine::Resources
   class BoneAnimation;
   class Bone;
   class BaseAnimation;
+  class AtlasAnimationTexture;
+  class AtlasAnimation;
 }
 
 namespace Engine
@@ -32,14 +34,29 @@ namespace Engine
     BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + g_max_slot_per_texture,
     BIND_SLOT_END
   };
-  
+
+  static_assert(BIND_SLOT_END < g_reserved_struct_buffer_slot);
   static_assert(BIND_SLOT_END < 128);
+
+  enum eSBType
+  {
+    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
+    SB_TYPE_SHADOW,
+    SB_TYPE_INSTANCE,
+    SB_TYPE_MAX
+  };
+
+  static_assert(SB_TYPE_MAX < g_reserved_bind_slot);
+  static_assert(SB_TYPE_MAX < 128);
 
   enum eReservedTexBindSlot
   {
-    RESERVED_SHADOW_MAP = g_reserved_bind_slot,
-    RESERVED_RENDERED,
+    RESERVED_RENDERED = g_reserved_bind_slot,
     RESERVED_BONES,
+    RESERVED_ATLAS,
+
+    // Texture Array
+    RESERVED_SHADOW_MAP,
     RESERVED_END,
   };
 
@@ -66,13 +83,6 @@ namespace Engine
   enum eClientSBType : UINT;
   enum eClientSBUAVType : UINT;
 
-  enum eSBType
-  {
-    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
-    SB_TYPE_SHADOW,
-    SB_TYPE_INSTANCE,
-  };
-
   enum eSBUAVType
   {
     SB_TYPE_UAV_INSTANCE = g_reserved_uav_slot,
@@ -94,11 +104,21 @@ namespace Engine
     TASK_NONE = 0,
     TASK_CHANGE_LAYER,
     TASK_ADD_OBJ,
-    TASK_REM_OBJ,
+    TASK_ADD_CHILD,
+    TASK_ADD_COMPONENT,
+    TASK_ADD_SCRIPT,
+
     TASK_CACHE_COMPONENT,
     TASK_UNCACHE_COMPONENT,
-    TASK_ADD_CHILD,
+    TASK_CACHE_SCRIPT,
+    TASK_UNCACHE_SCRIPT,
+    
+
+    TASK_REM_COMPONENT,
+    TASK_REM_SCRIPT,
     TASK_REM_CHILD,
+    TASK_REM_OBJ,
+
     TASK_SYNC_SCENE,
     TASK_INIT_SCENE,
     TASK_REM_SCENE,
@@ -111,6 +131,7 @@ namespace Engine
   {
     LAYER_NONE = 0,
     LAYER_LIGHT,
+    LAYER_PLAYER,
     LAYER_DEFAULT,
     LAYER_HITBOX,
     LAYER_ENVIRONMENT,
@@ -207,6 +228,8 @@ namespace Engine
     RES_T_COMPUTE_SHADER,
     RES_T_SHADOW_TEX,
     RES_T_PREFAB,
+    RES_T_ATLAS_TEX,
+    RES_T_ATLAS_ANIM,
     RES_T_MAX,
   };
 
@@ -227,6 +250,8 @@ namespace Engine
      "Compute Shader",
      "Shadow Texture",
      "Prefab",
+     "Atlas Texture",
+     "Atlas Animation"
    };
 
   using LoadableResourceTypes = boost::mpl::vector<
@@ -245,7 +270,9 @@ namespace Engine
     Resources::Texture3D,
     Resources::Material,
     Resources::Shape,
-    Resources::Prefab>;
+    Resources::Prefab,
+    Resources::AtlasAnimationTexture,
+    Resources::AtlasAnimation>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
@@ -294,14 +321,15 @@ namespace Engine
 
   constexpr const char* g_layer_type_str[] =
   {
-     "None",
-     "Light",
-     "Default",
-     "Hitbox",
-     "Environment",
-     "Skybox",
-     "UI",
-     "Camera",
+    "None",
+    "Light",
+    "Player",
+    "Default",
+    "Hitbox",
+    "Environment",
+    "Skybox",
+    "UI",
+    "Camera",
   };
 
   static_assert(ARRAYSIZE(g_layer_type_str) == LAYER_MAX);

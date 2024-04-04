@@ -17,6 +17,13 @@ namespace Engine
   template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstract::Resource, T>>>
   inline static boost::weak_ptr<T> Get(const std::string& name) { return GetResourceManager().GetResource<T>(name); }
 
+  inline static void ZeroToEpsilon(Vector3& v)
+  {
+    if (v.x == 0.0f) { v.x = g_epsilon; }
+    if (v.y == 0.0f) { v.y = g_epsilon; }
+    if (v.z == 0.0f) { v.z = g_epsilon; }
+  }
+
   template <typename T>
   struct pretty_name
   {
@@ -48,6 +55,29 @@ namespace Engine
       throw std::runtime_error
         ("Vector3CheckNan: NaN detected");
     }
+  }
+
+  inline static Vector3 __vectorcall Vector3Overwrite(const Vector3& vec1, const Vector3& vec2, const Vector3& select)
+  {
+    return Vector3
+    {
+      FloatCompare(select.x, 0.f) ? vec1.x : vec2.x,
+      FloatCompare(select.y, 0.f) ? vec1.y : vec2.y,
+      FloatCompare(select.z, 0.f) ? vec1.z : vec2.z
+    };
+  }
+
+  inline static Vector3 __vectorcall Vector3SignCopy(const Vector3& vec, const Vector3& sign)
+  {
+    Vector3 clamped;
+    sign.Clamp(-Vector3::One, Vector3::One, clamped);
+
+    return Vector3
+    {
+      vec.x * clamped.x,
+      vec.y * clamped.y,
+      vec.z * clamped.z
+    };
   }
 
   inline static Matrix __vectorcall AiMatrixToDirectXTranspose(const aiMatrix4x4& from)

@@ -66,6 +66,15 @@ namespace Engine
     bool collision;
   };
 
+  // todo: Using this function would remove the const qualifier from the object.
+  template <typename T>
+  inline static bool __vectorcall LockWeak(const boost::weak_ptr<T>& weak, boost::shared_ptr<T>& strong)
+  {
+    if (weak.expired()) { return false; }
+    strong = weak.lock();
+    return true;
+  }
+
   inline static bool IsAssigned(const LONG_PTR id) { return id != g_invalid_id; }
 
   inline static float __vectorcall MaxElement(const Vector3& v) { return std::max(std::max(v.x, v.y), v.z); }
@@ -94,6 +103,11 @@ namespace Engine
   {
     return std::fabs(a - b) <
            g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
+  }
+
+  inline static bool __vectorcall Vector3Compare(const Vector3& lhs, const Vector3& rhs)
+  {
+    return FloatCompare(lhs.x, rhs.x) && FloatCompare(lhs.y, rhs.y) && FloatCompare(lhs.z, rhs.z);
   }
 
   inline static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
