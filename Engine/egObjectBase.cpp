@@ -132,7 +132,7 @@ namespace Engine::Abstract
     return out;
   }
 
-  void ObjectBase::AddChild(const WeakObjectBase& p_child, bool immediate)
+  void ObjectBase::AddChild(const WeakObjectBase& p_child, const bool immediate)
   {
     if (const auto child = p_child.lock(); 
         !child || child == GetSharedPtr<ObjectBase>())
@@ -167,7 +167,7 @@ namespace Engine::Abstract
       {
         if (const auto& parent = locked->m_parent_.lock())
         {
-          parent->DetachChild(locked->GetLocalID());
+          parent->DetachChild(locked->GetLocalID(), true);
         }
       }
 
@@ -176,35 +176,46 @@ namespace Engine::Abstract
     }
   }
 
-  bool ObjectBase::DetachChild(const LocalActorID id)
+  bool ObjectBase::DetachChild(const LocalActorID id, const bool immediate)
   {
     if (id == g_invalid_id) { return false; }
 
     if (m_children_cache_.contains(id))
     {
-      GetTaskScheduler().AddTask
-      (
-       TASK_REM_CHILD, {id}, [this](auto& params, const auto dt)
-       {
-         const auto id = std::any_cast<LocalActorID>(params[0]);
-
-         if (m_children_cache_.contains(id))
+      if (immediate)
+      {
+        detachChildImpl(id);
+      }
+      else
+      {
+        GetTaskScheduler().AddTask
+        (
+         TASK_REM_CHILD, {id}, [this](auto& params, const auto dt)
          {
-           m_children_cache_.at(id).lock()->m_parent_id_ = g_invalid_id;
-           m_children_cache_.at(id).lock()->m_parent_    = {};
-           m_children_cache_.erase(id);
-           std::erase_if(m_children_, [&id](const auto v_id)
-           {
-             return v_id == id;
-           });
+           detachChildImpl(std::any_cast<LocalActorID>(params[0]));
          }
-       }
-      );
+        );
+      }
 
       return true;
     }
 
     return false;
+  }
+
+  void ObjectBase::detachChildImpl(const LocalActorID id)
+  {
+    if (m_children_cache_.contains(id))
+    {
+      if (const auto locked = m_children_cache_[id].lock())
+      {
+        locked->m_parent_id_ = g_invalid_id;
+        locked->m_parent_.reset();
+      }
+
+      m_children_cache_.erase(id);
+      std::erase(m_children_, id);
+    }
   }
 
   void ObjectBase::OnCollisionEnter(const StrongCollider& other)
@@ -265,7 +276,15 @@ namespace Engine::Abstract
 
   void ObjectBase::removeScript(const eScriptType type)
   {
-    GetTaskScheduler().AddTask
+    removeScriptFromSceneCache(m_scripts_[type]);
+    removeScriptImpl(type);
+  }
+
+  void ObjectBase::removeScriptImpl(const eScriptType type)
+  {
+    if (m_scripts_.contains(type))
+    {
+      GetTaskScheduler().AddTask
       (
        TASK_REM_SCRIPT,
        {GetSharedPtr<ObjectBase>(), type},
@@ -274,10 +293,19 @@ namespace Engine::Abstract
          const auto& obj  = std::any_cast<StrongObjectBase>(params[0]);
          const auto& type = std::any_cast<eScriptType>(params[1]);
 
+         std::erase_if(obj->m_cached_script_, [type](const auto& script)
+         {
+           if (const auto& locked = script.lock())
+           {
+             return locked->GetScriptType() == type;
+           }
+
+           return false;
+         });
          obj->m_scripts_.erase(type);
-         obj->m_cached_script_.clear();
        }
       );
+    }
   }
 
   WeakComponent ObjectBase::addComponent(const StrongComponent& component)
@@ -326,6 +354,7 @@ namespace Engine::Abstract
 
     // Add the component to the object.
     addScriptImpl(script, type);
+    addScriptToSceneCache(script);
 
     return script;
   }
@@ -661,7 +690,7 @@ namespace Engine::Abstract
             if (ImGui::Button(script_name.c_str()))
             {
               const auto& script = script_func(GetSharedPtr<ObjectBase>());
-              addScriptImpl(script, script->GetScriptType());
+              addScript(script);
             }
           }
 

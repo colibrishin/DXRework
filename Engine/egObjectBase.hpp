@@ -83,7 +83,7 @@ namespace Engine::Abstract
     void RemoveScript()
     {
       removeScriptFromSceneCache<T>(m_scripts_[which_script<T>::value]);
-      removeScript(which_script<T>::value);
+      removeScriptImpl(which_script<T>::value);
     }
 
     const std::set<WeakComponent, ComponentPriorityComparer>& GetAllComponents();
@@ -131,7 +131,10 @@ namespace Engine::Abstract
     // Add child to object, if immediate flag is set, the child will be added in frame.
     void AddChild(const WeakObjectBase& p_child, bool immediate = false);
     void addChildImpl(const WeakObjectBase& child);
-    bool DetachChild(LocalActorID id);
+
+    // Detach child from object, if immediate flag is set, the child will be detached in frame.
+    bool DetachChild(const LocalActorID id, const bool immediate = false);
+    void detachChildImpl(LocalActorID id);
 
   protected:
     explicit ObjectBase(eDefObjectType type = DEF_OBJ_T_NONE)
@@ -198,6 +201,7 @@ namespace Engine::Abstract
     }
 
     void removeScript(const eScriptType type);
+    void removeScriptImpl(eScriptType type);
 
     // Add pre-existing component to the object.
     WeakComponent addComponent(const StrongComponent& component);
