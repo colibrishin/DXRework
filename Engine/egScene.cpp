@@ -10,6 +10,7 @@ SERIALIZE_IMPL
  Engine::Scene,
  _ARTAG(_BSTSUPER(Renderable))
  _ARTAG(m_main_camera_local_id_)
+ _ARTAG(m_main_actor_local_id_)
  _ARTAG(m_layers)
 )
 
