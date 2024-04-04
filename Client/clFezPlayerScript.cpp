@@ -290,15 +290,15 @@ namespace Client::Scripts
   bool FezPlayerScript::movePlayerToNearestCube(const StrongTransform& tr, const boost::shared_ptr<CubifyScript>& script, const Vector3& player_pos) const
   {
     // Active nearest cube should be the one that the player can stand on.
-    if (const auto& near_cube = script->GetDepthNearestCube(m_last_spin_position_).lock())
+    if (const auto& near_cube = script->GetDepthNearestCube(player_pos).lock())
     {
       const auto& ntr      = near_cube->GetComponent<Components::Transform>().lock();
       const auto& cube_pos = ntr->GetWorldPosition();
       const auto& new_pos  = Vector3
       {
-        m_rotation_count_ == 1 || m_rotation_count_ == 3 ? cube_pos.x : player_pos.x,
+        cube_pos.x,
         player_pos.y,
-        m_rotation_count_ == 0 || m_rotation_count_ == 2 ? cube_pos.z : player_pos.z
+        cube_pos.z
       };
 
       tr->SetWorldPosition(new_pos);
@@ -315,8 +315,9 @@ namespace Client::Scripts
     const auto& owner = GetOwner().lock();
     const auto& tr    = owner->GetComponent<Components::Transform>().lock();
     const auto& rb    = owner->GetComponent<Components::Rigidbody>().lock();
+    const auto& cldr = owner->GetComponent<Components::Collider>().lock();
 
-    if (!tr || !rb) { return; }
+    if (!tr || !rb || !cldr) { return; }
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive()) { return; }
 
     bool        rotating  = false;
@@ -401,11 +402,35 @@ namespace Client::Scripts
         m_last_spin_position_ = tr->GetWorldPosition();
       }
 
-      CubifyScript::DispatchNormalUpdate();
-
       const auto& scene  = owner->GetScene().lock();
       const auto& octree = scene->GetObjectTree();
       if (!scene) { return; }
+
+      Strong<CubifyScript> ladder;
+
+      if (m_b_climbing_)
+      {
+        for (const auto& id : cldr->GetCollidedObjects())
+        {
+          const auto& obj = scene->FindGameObject(id).lock();
+          if (!obj) { continue; }
+
+          if (const auto& parent = obj->GetParent().lock())
+          {
+            ladder = parent->GetScript<CubifyScript>().lock();
+          }
+          else
+          {
+            ladder = obj->GetScript<CubifyScript>().lock();
+          }
+
+          if (!ladder) { continue; }
+          if (ladder->GetCubeType() != CUBE_TYPE_LADDER) { continue; }
+          break;
+        }
+      }
+
+      CubifyScript::DispatchNormalUpdate();
 
       // Find the ground and ask for other cubes whether the player can stand on.
       for (const auto& nearest = octree.Nearest(m_last_spin_position_, 1.5f);
@@ -414,7 +439,7 @@ namespace Client::Scripts
         const auto& candidate = obj.lock();
         if (!candidate) { continue; }
 
-        boost::shared_ptr<CubifyScript> script;
+        Strong<CubifyScript> script;
 
         if (const auto& parent = candidate->GetParent().lock())
         {
@@ -439,13 +464,16 @@ namespace Client::Scripts
         }
       }
 
-      Fullstop();
-      IgnoreLerp();
-
       if (m_b_climbing_)
       {
-        // Search 
+        if (ladder)
+        {
+          movePlayerToNearestCube(tr, ladder, tr->GetWorldPosition());
+        }
       }
+
+      Fullstop();
+      IgnoreLerp();
 
       m_rotate_finished_ = false;
     }
