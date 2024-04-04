@@ -42,6 +42,7 @@ namespace Engine::Components
     Vector3    GetAnimationScale() const;
     Quaternion GetAnimationRotation() const;
 
+    // The direction moving towards to the screen if no rotation applied.
     Vector3 Forward() const;
     Vector3 Right() const;
     Vector3 Up() const;

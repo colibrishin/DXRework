@@ -45,7 +45,7 @@ namespace Engine::Objects
 
       if (GetApplication().HasScrollChanged(value))
       {
-        GetComponent<Components::Transform>().lock()->Translate(g_forward * value);
+        GetComponent<Components::Transform>().lock()->Translate(g_forward * -value);
       }
     }
 
@@ -67,7 +67,7 @@ namespace Engine::Objects
       m_view_matrix_ = XMMatrixLookAtLH
         (
          position,
-         position + forward,
+         position - forward,
          up
         );
 
