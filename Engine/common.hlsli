@@ -93,6 +93,7 @@ cbuffer MaterialBuffer : register(b2)
   float4 g_overrideColor : OVERRIDECOLOR;
   float4 g_specularColor : SPECULARCOLOR;
   float4 g_clipPlane : CLIPPLANE;
+  int4   g_repeatMaterial : REPEATMATERIAL;
 }
 
 cbuffer ParamBuffer : register(b3)

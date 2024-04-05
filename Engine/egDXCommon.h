@@ -127,6 +127,7 @@ namespace Engine::Graphics
       void SetAtlasY(const UINT y) { SetParam(4, (int)y); }
       void SetAtlasW(const UINT w) { SetParam(5, (int)w); }
       void SetAtlasH(const UINT h) { SetParam(6, (int)h); }
+      void SetRepeat(const bool repeat) { SetParam(7, (int)repeat); }
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
     };
@@ -190,25 +191,26 @@ namespace Engine::Graphics
       void serialize(Archive& ar, const unsigned int file_version)
       {
         ar & flags;
-        ar & specular_power;
-        ar & reflection_translation;
-        ar & reflection_scale;
-        ar & refraction_scale;
-        ar & override_color;
-        ar & specular_color;
-        ar & clip_plane;
+        ar & specularPower;
+        ar & reflectionTranslation;
+        ar & reflectionScale;
+        ar & refractionScale;
+        ar & overrideColor;
+        ar & specularColor;
+        ar & clipPlane;
       }
 
       MaterialBindFlag flags;
 
-      float specular_power;
-      float reflection_translation;
-      float reflection_scale;
-      float refraction_scale;
+      float specularPower;
+      float reflectionTranslation;
+      float reflectionScale;
+      float refractionScale;
 
-      Color   override_color;
-      Color   specular_color;
-      Vector4 clip_plane;
+      Color        overrideColor;
+      Color        specularColor;
+      Vector4      clipPlane;
+      OffsetT<int> repeatTexture;
     };
 
     struct ParamCB : public ParamBase
