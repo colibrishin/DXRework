@@ -82,7 +82,7 @@ namespace Engine
     void                         Clear();
     void                         Iterate(const Vector3 & point, const std::function<bool(const WeakT&)> & func) const;
     std::vector<Octree::WeakT>   Nearest(const Vector3& point, const float distance) const;
-    std::vector<Octree::WeakT>   Hitscan(const Vector3& point, const Vector3& direction, const size_t count, const float distance = 0.f) const;
+    std::vector<Octree::WeakT>   Hitscan(const Vector3& point, const Vector3& direction, const size_t count = 0, const float distance = 0.f) const;
 
   private:
     explicit Octree(const BoundingBox& bounds);
