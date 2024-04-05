@@ -54,6 +54,14 @@ namespace Client::Scripts
   {
     Script::Initialize();
     MoveCameraToChild();
+
+    const auto& owner = GetOwner().lock();
+    if (!owner) { return; }
+
+    const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
+    if (!rb) { return; }
+
+    rb->SetFrictionCoefficient(0.1);
   }
 
   void FezPlayerScript::PreUpdate(const float& dt) {}
@@ -217,7 +225,7 @@ namespace Client::Scripts
     {
       if (const auto& scene = owner->GetScene().lock())
       {
-        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+        scene->ChangeLayer(LAYER_PLAYER, owner->GetID());
       }
     }
   }
@@ -290,19 +298,25 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cam->GetActive()) { return; }
 
     const auto& right = tr->Right();
-    constexpr float speed = 1.f;
+    constexpr float speed = 10.f;
     bool moving = false;
 
     // todo: speed limit
     if (GetApplication().IsKeyPressed(Keyboard::D))
     {
-      rb->AddT1Force(right * speed);
-      moving = true;
+      if (rb->GetT0LinearVelocity().x <= speed)
+      {
+        rb->AddT1Force(right * speed);
+        moving = true;
+      }
     }
     if (GetApplication().IsKeyPressed(Keyboard::A))
     {
-      rb->AddT1Force(-right * speed);
-      moving = true;
+      if (rb->GetT0LinearVelocity().x >= -speed)
+      {
+        rb->AddT1Force(-right * speed);
+        moving = true;
+      }
     }
 
     if (moving && 
