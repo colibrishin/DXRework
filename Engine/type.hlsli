@@ -57,7 +57,7 @@ struct VertexInputType
 struct PixelInputType
 {
   float4 position : SV_Position;
-  float4 world_position : POSITION0;
+  float4 worldPosition : POSITION0;
   float4 color : COLOR0;
   float2 tex : TEXCOORD0;
 
@@ -67,6 +67,7 @@ struct PixelInputType
 
   float4 reflection : POSITION1;
   float4 refraction : POSITION2;
+  float3 scale : POSITION3;
 
   float3 viewDirection : TEXCOORD2;
   float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;

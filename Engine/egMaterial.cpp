@@ -26,12 +26,13 @@ namespace Engine::Resources
       m_b_edit_dialog_(false),
       m_b_wait_for_choices_(false)
   {
-    m_material_cb_.specular_power         = 100.0f;
-    m_material_cb_.specular_color         = DirectX::Colors::White;
-    m_material_cb_.reflection_scale       = 0.15f;
-    m_material_cb_.refraction_scale       = 0.15f;
-    m_material_cb_.clip_plane             = Vector4::Zero;
-    m_material_cb_.reflection_translation = 0.5f;
+    m_material_cb_.specularPower         = 100.0f;
+    m_material_cb_.specularColor         = DirectX::Colors::White;
+    m_material_cb_.reflectionScale       = 0.15f;
+    m_material_cb_.refractionScale       = 0.15f;
+    m_material_cb_.clipPlane             = Vector4::Zero;
+    m_material_cb_.reflectionTranslation = 0.5f;
+    m_material_cb_.repeatTexture         = false;
   }
 
 
@@ -169,14 +170,16 @@ namespace Engine::Resources
     Resource::OnImGui();
 
     // Material properties
-    FloatAligned("Specular Power", m_material_cb_.specular_power);
-    FloatAligned("Reflection Scale", m_material_cb_.reflection_scale);
-    FloatAligned("Refraction Scale", m_material_cb_.refraction_scale);
-    FloatAligned("Reflection Translation", m_material_cb_.reflection_translation);
+    FloatAligned("Specular Power", m_material_cb_.specularPower);
+    FloatAligned("Reflection Scale", m_material_cb_.reflectionScale);
+    FloatAligned("Refraction Scale", m_material_cb_.refractionScale);
+    FloatAligned("Reflection Translation", m_material_cb_.reflectionTranslation);
 
-    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_cb_.override_color);
-    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specular_color);
-    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clip_plane));
+    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_cb_.overrideColor);
+    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specularColor);
+    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clipPlane));
+
+    CheckboxAligned("Repeat Texture", reinterpret_cast<bool&>(m_material_cb_.repeatTexture.value));
 
     if (ImGui::Button("Edit Resources")) { m_b_edit_dialog_ = true; }
 
