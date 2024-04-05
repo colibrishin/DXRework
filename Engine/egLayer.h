@@ -25,7 +25,8 @@ namespace Engine
 
     void                 AddGameObject(const StrongObjectBase& obj);
     void                 RemoveGameObject(GlobalEntityID id);
-    WeakObjectBase           GetGameObject(GlobalEntityID id) const;
+    WeakObjectBase       FindGameObject(GlobalEntityID id) const;
+    WeakObjectBase       FindGameObjectByLocalID(const LocalActorID id) const;
     ConcurrentWeakObjVec GetGameObjects() const;
 
     auto begin() noexcept { return m_objects_.begin(); }
