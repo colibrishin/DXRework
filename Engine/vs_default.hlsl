@@ -45,6 +45,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   }
 
   const matrix world = bufInstance[instanceId].INST_WORLD;
+  output.scale = GetScale(world);
 
 #undef INST_NO_ANIM
 #undef INST_ANIM_IDX
@@ -56,7 +57,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   // Calculate the position of the vertex against the world, view, and
   // projection matrices.
   output.position       = mul(output.position, world);
-  output.world_position = output.position;
+  output.worldPosition = output.position;
 
 #define PARAM_CUSTOM_VP g_iParam[0].w
 #define PARAM_CUSTOM_VIEW g_mParam[1]
@@ -82,13 +83,13 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   [unroll] for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
   {
     const float4 light_position = GetTranslation(bufLight[i].world);
-    output.lightDelta[i]    = light_position.xyz - output.world_position.xyz;
+    output.lightDelta[i]    = light_position.xyz - output.worldPosition.xyz;
     output.lightDelta[i]    = output.lightDelta[i];
   }
 
   const float3 cam_position = GetTranslation(g_camWorld);
 
-  output.viewDirection = cam_position.xyz - output.world_position.xyz;
+  output.viewDirection = cam_position.xyz - output.worldPosition.xyz;
   output.viewDirection = normalize(output.viewDirection);
 
   output.normal   = mul(output.normal, (float3x3)world);
