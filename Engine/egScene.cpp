@@ -209,9 +209,7 @@ namespace Engine
       m_b_scene_imgui_open_ = scene->m_b_scene_imgui_open_;
       m_main_camera_local_id_ = scene->m_main_camera_local_id_;
       m_layers = scene->m_layers;
-      m_observer_ = scene->m_observer_;
       m_mainCamera_ = scene->m_mainCamera_;
-      m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
       m_main_actor_local_id_ = scene->m_main_actor_local_id_;
 
       for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
@@ -226,6 +224,7 @@ namespace Engine
       m_cached_objects_.clear();
       m_cached_components_.clear();
       m_object_position_tree_.Clear();
+      m_assigned_actor_ids_.clear();
 
       for (const auto& layer : m_layers)
       {
@@ -234,6 +233,9 @@ namespace Engine
           if (const auto locked = obj.lock())
           {
             m_cached_objects_.emplace(locked->GetID(), locked);
+            m_assigned_actor_ids_.emplace(
+                locked->GetLocalID(), 
+                locked->GetID());
 
             if (locked->GetLocalID() == m_main_actor_local_id_)
             {
@@ -249,14 +251,19 @@ namespace Engine
             }
 
             const auto& children = locked->m_children_;
-
             locked->m_children_cache_.clear();
 
             for (const auto& child_id : children)
             {
               if (const auto child = FindGameObjectByLocalID(child_id).lock())
               {
-                locked->m_children_cache_.emplace(child->GetLocalID(), child);
+                locked->m_children_cache_.emplace(
+                    child->GetLocalID(), 
+                    child);
+
+                m_assigned_actor_ids_.emplace(
+                    child->GetLocalID(), 
+                    child->GetID());
               }
             }
 
@@ -269,6 +276,12 @@ namespace Engine
       }
 
       m_object_position_tree_.Update();
+
+      if (g_debug_observer)
+      {
+        DisableControllers();
+        AddObserver();
+      }
     }
   }
 
@@ -302,7 +315,7 @@ namespace Engine
       ConcurrentWeakObjGlobalMap::const_accessor acc;
 
       if (!m_cached_objects_.find(acc, id)) { return; }
-      if (!m_layers[layer]->GetGameObject(id).lock()) { return; }
+      if (!m_layers[layer]->FindGameObject(id).lock()) { return; }
 
       // This object is already flagged to be deleted.
       if (acc->second.lock()->IsGarbage()) { return; }
@@ -348,6 +361,15 @@ namespace Engine
 
     if (m_cached_objects_.find(acc, id)) { return acc->second; }
 
+    std::find_if
+      (
+       m_layers.begin(), m_layers.end(),
+       [id, &acc](const auto& layer)
+       {
+         return layer->FindGameObject(id).lock();
+       }
+      );
+
     return {};
   }
 
@@ -361,7 +383,18 @@ namespace Engine
     {
       ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-      if (m_cached_objects_.find(acc, actor_acc->second)) { return acc->second; }
+      if (m_cached_objects_.find(acc, actor_acc->second))
+      {
+        return acc->second;
+      }
+    }
+
+    for (const auto& layer : m_layers)
+    {
+      if (const auto obj = layer->FindGameObjectByLocalID(id).lock())
+      {
+        return obj;
+      }
     }
 
     return {};
