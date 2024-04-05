@@ -139,7 +139,33 @@ namespace Client::Scripts
 
   void FezPlayerScript::PostRender(const float& dt) {}
 
-  void FezPlayerScript::OnImGui()
+  Vector3 FezPlayerScript::GetForward() const
+  {
+    return Vector3::Transform(g_forward, s_cw_rotations[m_rotation_count_]);
+  }
+
+  bool FezPlayerScript::IsVisible(const WeakTransform& otr) const
+  {
+    if (const auto& locked = otr.lock())
+    {
+      const auto& owner = GetOwner().lock();
+      if (!owner) { return false; }
+
+      const auto& tr = owner->GetComponent<Components::Transform>().lock();
+      if (!tr) { return false; }
+
+      const auto& pos = locked->GetWorldPosition();
+      const auto& forward = GetForward();
+      const auto& obj_forward = locked->Forward();
+      const auto& dot = forward.Dot(obj_forward);
+
+      return !FloatCompare(dot, -1.f);
+    }
+
+    return false;
+  }
+
+  void  FezPlayerScript::OnImGui()
   {
     Script::OnImGui();
     constexpr const char* states[]
