@@ -99,7 +99,9 @@ namespace Engine::Manager
         {
           for (const auto& res : resources)
           {
-            if (ImGui::Selectable(res->GetName().c_str()))
+            const auto id = (res->GetName() + "###" + std::to_string(res->GetID()));
+
+            if (ImGui::Selectable(id.c_str()))
             {
               res->IsImGuiOpened() = !res->IsImGuiOpened();
             }
@@ -113,8 +115,6 @@ namespace Engine::Manager
 
             if (res->IsImGuiOpened())
             {
-              const auto id = (res->GetName() + "###" + std::to_string(res->GetID()));
-
               if (ImGui::Begin(id.c_str(), &res->IsImGuiOpened(), ImGuiWindowFlags_AlwaysAutoResize))
               {
                 res->OnImGui();
