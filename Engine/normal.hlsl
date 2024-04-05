@@ -8,6 +8,13 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float shadowFactor[MAX_NUM_LIGHTS];
   GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
 
+  if (g_repeatMaterial.x == true)
+  {
+    const float2 scaleWiseTex = input.tex * input.scale.xy;
+    const float2 repeatTex    = frac(scaleWiseTex);
+    input.tex = repeatTex;
+  }
+
   const float4 textureColor = tex00.Sample(PSSampler, input.tex);
   float        normalLightIntensity[MAX_NUM_LIGHTS];
   float        textureLightIntensity[MAX_NUM_LIGHTS];
