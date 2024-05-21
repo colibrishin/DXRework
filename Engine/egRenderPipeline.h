@@ -94,9 +94,8 @@ namespace Engine::Manager::Graphics
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
     D3D12_VIEWPORT              GetViewport();
 
-    static void           SetPSO(const StrongShader& Shader);
-
     ID3D12RootSignature* GetRootSignature() const;
+    void SetPSO(const StrongShader& Shader);
 
   private:
     friend class ToolkitAPI;
@@ -110,6 +109,10 @@ namespace Engine::Manager::Graphics
     void InitializeRootSignature();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
+    ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
+
+    D3D12_VIEWPORT m_viewport_{};
+    D3D12_RECT    m_scissor_rect_{};
     
     CBs::ParamCB       m_param_buffer_;
 
