@@ -791,6 +791,20 @@ namespace Engine::Manager::Graphics
     return m_root_signature_.Get();
   }
 
+  void RenderPipeline::SetPSO(const StrongShader& Shader)
+  {
+    const auto& shader_description = Shader->GetPipelineStateDesc();
+    
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateGraphicsPipelineState
+       (
+        &shader_description,
+        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
+       )
+      );
+  }
+
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
     GetD3Device().GetDirectCommandList()->RSSetViewports(1, &viewport);
