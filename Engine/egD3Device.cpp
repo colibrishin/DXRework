@@ -455,21 +455,7 @@ namespace Engine::Manager::Graphics
       dsv_handle
      );
 
-    ComPtr<ID3D12GraphicsCommandList> command_list;
-    
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateCommandList
-       (
-        0,
-        D3D12_COMMAND_LIST_TYPE_COPY,
-        m_command_allocator_[m_frame_idx_].Get(),
-        nullptr,
-        IID_PPV_ARGS(command_list.GetAddressOf())
-       )
-      );
-
-    command_list->OMSetRenderTargets
+    m_command_list_->OMSetRenderTargets
     (
       1,
       &rtv_handle,
@@ -477,7 +463,7 @@ namespace Engine::Manager::Graphics
       &dsv_handle
     );
 
-    command_list->ClearDepthStencilView
+    m_command_list_->ClearDepthStencilView
     (
       dsv_handle,
       D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
@@ -487,8 +473,8 @@ namespace Engine::Manager::Graphics
       nullptr
     );
 
-    DX::ThrowIfFailed(command_list->Close());
-    const std::vector<ID3D12CommandList*> command_lists = { command_list.Get() };
+    DX::ThrowIfFailed(m_command_list_->Close());
+    const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
     m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
 
     WaitForSingleCompletion();
