@@ -601,6 +601,16 @@ namespace Engine::Manager::Graphics
   void D3Device::FrameBegin()
   {
     WaitForPreviousFrame();
+
+    DX::ThrowIfFailed
+    (
+      m_command_allocator_[m_frame_idx_]->Reset()
+    );
+
+    DX::ThrowIfFailed
+    (
+      m_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
+    );
     
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = GetRTVHandle();
