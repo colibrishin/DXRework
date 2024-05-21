@@ -48,7 +48,31 @@ namespace Engine::Manager::Graphics
 
     return feature;
   }
-  
+
+  ID3D12GraphicsCommandList* D3Device::GetCommandList() const
+  {
+    return m_command_list_.Get();
+  }
+
+  void D3Device::ForceExecuteCommandList() const
+  {
+    const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
+    m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+  }
+
+  void D3Device::WaitForUploadCompletion()
+  {
+    ++m_fences_nonce_[m_frame_idx_];
+    DX::ThrowIfFailed
+    (
+      m_command_queue_->Signal
+      (
+        m_fences_[m_frame_idx_].Get(),
+        m_fences_nonce_[m_frame_idx_]
+      )
+    );
+  }
+
   void D3Device::UpdateBuffer
   (
     const UINT64 size, const void* src, ID3D12Resource* dst
@@ -597,7 +621,6 @@ namespace Engine::Manager::Graphics
     InitializeCommandAllocator();
     InitializeFence();
     InitializeDepthStencil();
-    UpdateViewport();
 
   void D3Device::Reset(const eCommandListIndex type, UINT64 buffer_idx) const
   {
