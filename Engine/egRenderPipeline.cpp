@@ -101,38 +101,24 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
+  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
   {
-    constexpr UINT stride = sizeof(VertexElement);
-    constexpr UINT offset = 0;
-    GetD3Device().GetContext()->IASetVertexBuffers
-      (
-       0, 1, &buffer, &stride,
-       &offset
-      );
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
   }
 
-  void RenderPipeline::BindIndexBuffer(ID3D11Buffer* buffer)
+  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
   {
-    GetD3Device().GetContext()->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, 0);
+    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
   }
 
   void RenderPipeline::UnbindVertexBuffer()
   {
-    constexpr UINT stride      = 0;
-    constexpr UINT offset      = 0;
-    ID3D11Buffer*  null_buffer = nullptr;
-    GetD3Device().GetContext()->IASetVertexBuffers
-      (
-       0, 1, &null_buffer, &stride,
-       &offset
-      );
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
   }
 
   void RenderPipeline::UnbindIndexBuffer()
   {
-    ID3D11Buffer* null_buffer = nullptr;
-    GetD3Device().GetContext()->IASetIndexBuffer(null_buffer, DXGI_FORMAT_R32_UINT, 0);
+    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
   }
 
   void RenderPipeline::BindResource(

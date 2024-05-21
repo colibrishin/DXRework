@@ -83,10 +83,10 @@ namespace Engine::Manager::Graphics
     void SetNoneCullState() const;
     void SetFrontCullState() const;
 
-    void BindVertexBuffer(ID3D11Buffer* buffer);
-    void BindIndexBuffer(ID3D11Buffer* buffer);
-    void UnbindVertexBuffer();
-    void UnbindIndexBuffer();
+    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
+    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
+    static void UnbindVertexBuffer();
+    static void UnbindIndexBuffer();
 
     void BindResource(
       UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
