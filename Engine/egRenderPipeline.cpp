@@ -47,6 +47,34 @@ namespace Engine::Manager::Graphics
     m_param_buffer_data_.Create(nullptr);
   }
 
+  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
+  {
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
+  }
+
+  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
+  {
+    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
+  }
+
+  void RenderPipeline::UnbindVertexBuffer()
+  {
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
+  }
+
+  void RenderPipeline::UnbindIndexBuffer()
+  {
+    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
+  }
+
+  void RenderPipeline::BindResource(
+    UINT                       slot,
+    eShaderType                shader_type,
+    ID3D11ShaderResourceView** texture
+  ) { g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture, slot, 1); }
+
+  RenderPipeline::~RenderPipeline() { ResetShaders(); }
+
   void RenderPipeline::Initialize()
   {
     PrecompileShaders();

@@ -60,9 +60,13 @@ namespace Engine::Manager::Graphics
     void        DrawIndexedDeferred(UINT index_count);
     static void DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count);
 
-    RTVDSVHandlePair SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv);
-    RTVDSVHandlePair SetRenderTargetDeferred(
-      const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
+    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
+    static void UnbindVertexBuffer();
+    static void UnbindIndexBuffer();
+
+    void BindResource(
+      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
     );
     void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
     RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
