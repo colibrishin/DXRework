@@ -77,16 +77,33 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
     GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
 
-    // CBV
-    buffer_handle.Offset(BIND_SLOT_END, m_buffer_descriptor_size_);
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
-
-    // UAV
-    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
+  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
+  {
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
   }
+
+  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
+  {
+    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
+  }
+
+  void RenderPipeline::UnbindVertexBuffer()
+  {
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
+  }
+
+  void RenderPipeline::UnbindIndexBuffer()
+  {
+    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
+  }
+
+  void RenderPipeline::BindResource(
+    UINT                       slot,
+    eShaderType                shader_type,
+    ID3D11ShaderResourceView** texture
+  ) { g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture, slot, 1); }
+
+  RenderPipeline::~RenderPipeline() { ResetShaders(); }
 
   void RenderPipeline::Initialize()
   {

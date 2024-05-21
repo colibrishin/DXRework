@@ -76,9 +76,10 @@ namespace Engine::Manager::Graphics
     void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
     void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
 
-    RTVDSVHandlePair SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
-    void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
-    static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
+    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
+    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
+    static void UnbindVertexBuffer();
+    static void UnbindIndexBuffer();
 
     void CopyBackBuffer(ID3D12Resource* resource) const;
 
