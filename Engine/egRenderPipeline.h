@@ -106,14 +106,8 @@ namespace Engine::Manager::Graphics
     void TargetDepthOnly(ID3D11DepthStencilView* view);
     void SetViewport(const D3D11_VIEWPORT& viewport);
 
-    void DefaultRenderTarget() const;
-    void DefaultViewport() const;
-    void ResetShaders();
-    void DefaultDepthStencilState() const;
-    void DefaultRasterizerState() const;
-    void DefaultSamplerState() const;
-
     ID3D12RootSignature* GetRootSignature() const;
+    void SetPSO(const StrongShader& Shader);
 
   private:
     friend class ToolkitAPI;
@@ -127,6 +121,10 @@ namespace Engine::Manager::Graphics
     void InitializeRootSignature();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
+    ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
+
+    D3D12_VIEWPORT m_viewport_{};
+    D3D12_RECT    m_scissor_rect_{};
     
     CBs::ParamCB       m_param_buffer_;
 
