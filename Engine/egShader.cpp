@@ -82,6 +82,7 @@ namespace Engine::Resources
       throw std::runtime_error("Vertex shader is not found");
     }
 
+    // todo: bind with PSO
     D3D12_DEPTH_STENCIL_DESC dsd;
     dsd.DepthEnable                  = m_depth_flag_;
     dsd.DepthWriteMask               = m_depth_test_;
@@ -140,48 +141,15 @@ namespace Engine::Resources
     D3D12_BLEND_DESC bd;
     bd.AlphaToCoverageEnable = SHADER_DOMAIN_TRANSPARENT ? true : false;
     bd.IndependentBlendEnable = false;
-    bd.RenderTarget[0].BlendEnable           = SHADER_DOMAIN_TRANSPARENT ? true : false;
-    bd.RenderTarget[0].LogicOpEnable         = false;
-    bd.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
-    bd.RenderTarget[0].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
-    bd.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
-    bd.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
-    bd.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;
-    bd.RenderTarget[0].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
-    bd.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
-    bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     GetD3Device().CreateSampler(sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
-    m_il_elements_.reserve(m_il_.size());
-
-    for (const auto& element : m_il_ | std::views::keys)
-    {
-      m_il_elements_.push_back(element);
-    }
-
-    const D3D12_INPUT_LAYOUT_DESC il
-    {
-      .pInputElementDescs = m_il_elements_.data(),
-      .NumElements        = static_cast<UINT>(m_il_.size())
-    };
-
-    constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
-
     m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
-    m_pipeline_state_desc_.InputLayout = il;
     m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
     m_pipeline_state_desc_.PS = {m_ps_blob_->GetBufferPointer(), m_ps_blob_->GetBufferSize()};
-
-    if (m_gs_blob_) { m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()}; }
-    else { m_pipeline_state_desc_.GS = empty_shader; }
-
-    if (m_hs_blob_) { m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()}; }
-    else { m_pipeline_state_desc_.HS = empty_shader; }
-
-    if (m_ds_blob_) { m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()}; }
-    else { m_pipeline_state_desc_.DS = empty_shader; }
-
+    m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()};
     m_pipeline_state_desc_.SampleDesc = {1, 0};
     m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_;
     m_pipeline_state_desc_.RasterizerState = rd;
@@ -191,15 +159,6 @@ namespace Engine::Resources
     m_pipeline_state_desc_.NodeMask = 0;
     m_pipeline_state_desc_.CachedPSO = {};
     m_pipeline_state_desc_.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateGraphicsPipelineState
-       (
-        &m_pipeline_state_desc_,
-        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
-       )
-      );
   }
 
   Shader::Shader(
@@ -241,9 +200,7 @@ namespace Engine::Resources
     m_hs_blob_.Reset();
     m_ds_blob_.Reset();
     m_il_.clear();
-    m_il_elements_.clear();
     m_sampler_descriptor_heap_.Reset();
-    m_pipeline_state_.Reset();
   }
 
   void Shader::OnDeserialized() {}
@@ -274,7 +231,7 @@ namespace Engine::Resources
 
   boost::shared_ptr<Shader> Shader::Create(
     const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
+    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY topology
   )
   {
     if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
