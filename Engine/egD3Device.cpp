@@ -9,12 +9,10 @@
 
 namespace Engine::Manager::Graphics
 {
-  void D3Device::CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const
+  void D3Device::CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList* command_list) const
   {
-    {
-      CommandGuard cg;
-      command_list->CopyResource(buffer, m_render_targets_[m_frame_idx_].Get());
-    }
+    command_list->CopyResource(buffer, m_render_targets_[m_frame_idx_].Get());
+    DX::ThrowIfFailed(command_list->Close());
   }
 
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
@@ -49,31 +47,7 @@ namespace Engine::Manager::Graphics
 
     return feature;
   }
-
-  ID3D12GraphicsCommandList1* D3Device::GetCommandList() const
-  {
-    return m_command_list_.Get();
-  }
-
-  void D3Device::ForceExecuteCommandList() const
-  {
-    const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
-    m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
-  }
-
-  void D3Device::WaitForUploadCompletion()
-  {
-    ++m_fences_nonce_[m_frame_idx_];
-    DX::ThrowIfFailed
-    (
-      m_command_queue_->Signal
-      (
-        m_fences_[m_frame_idx_].Get(),
-        m_fences_nonce_[m_frame_idx_]
-      )
-    );
-  }
-
+  
   void D3Device::UpdateBuffer
   (
     const UINT64 size, const void* src, ID3D12Resource* dst
@@ -481,26 +455,43 @@ namespace Engine::Manager::Graphics
       dsv_handle
      );
 
-    {
-      ForceCommandExecutionGuard fcg;
-      m_command_list_->OMSetRenderTargets
+    ComPtr<ID3D12GraphicsCommandList> command_list;
+    
+    DX::ThrowIfFailed
       (
-        1,
-        &rtv_handle,
-        false,
-        &dsv_handle
+       m_device_->CreateCommandList
+       (
+        0,
+        D3D12_COMMAND_LIST_TYPE_COPY,
+        m_command_allocator_[m_frame_idx_].Get(),
+        nullptr,
+        IID_PPV_ARGS(command_list.GetAddressOf())
+       )
       );
 
-      m_command_list_->ClearDepthStencilView
-      (
-        dsv_handle,
-        D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-        1.0f,
-        0,
-        0,
-        nullptr
-      );
-    }
+    command_list->OMSetRenderTargets
+    (
+      1,
+      &rtv_handle,
+      false,
+      &dsv_handle
+    );
+
+    command_list->ClearDepthStencilView
+    (
+      dsv_handle,
+      D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+      1.0f,
+      0,
+      0,
+      nullptr
+    );
+
+    DX::ThrowIfFailed(command_list->Close());
+    const std::vector<ID3D12CommandList*> command_lists = { command_list.Get() };
+    m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+
+    WaitForSingleCompletion();
   }
 
   void D3Device::WaitForSingleCompletion()
@@ -602,54 +593,41 @@ namespace Engine::Manager::Graphics
   {
     const auto& rtv_handle = GetRTVHandle();
     const auto& dsv_handle = GetDSVHandle();
-
-    {
-      CommandGuard cg;
-      m_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
-    }
+    
+    m_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    DX::ThrowIfFailed(m_command_list_->Close());
   }
 
   void D3Device::FrameBegin()
   {
     WaitForPreviousFrame();
-
-    DX::ThrowIfFailed
-    (
-      m_command_allocator_[m_frame_idx_]->Reset()
-    );
-
-    DX::ThrowIfFailed
-    (
-      m_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
-    );
-
-    {
-      CommandGuard cg;
-      constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
-      const auto&      rtv_handle = GetRTVHandle();
-      const auto&      dsv_handle = GetDSVHandle();
     
-      const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_render_targets_[m_frame_idx_].Get(),
-         D3D12_RESOURCE_STATE_PRESENT,
-         D3D12_RESOURCE_STATE_RENDER_TARGET
-        );
-
-      m_command_list_->ResourceBarrier(1, &initial_barrier);
-      UpdateRenderTarget();
-      m_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-      m_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = GetRTVHandle();
+    const auto&      dsv_handle = GetDSVHandle();
     
-      const auto revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_render_targets_[m_frame_idx_].Get(),
-         D3D12_RESOURCE_STATE_RENDER_TARGET,
-         D3D12_RESOURCE_STATE_PRESENT
-        );
+    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[m_frame_idx_].Get(),
+       D3D12_RESOURCE_STATE_PRESENT,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
 
-      m_command_list_->ResourceBarrier(1, &revert_barrier);
-    }
+    m_command_list_->ResourceBarrier(1, &initial_barrier);
+    UpdateRenderTarget();
+    m_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    m_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    
+    const auto revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[m_frame_idx_].Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_PRESENT
+      );
+
+    m_command_list_->ResourceBarrier(1, &revert_barrier);
+
+    DX::ThrowIfFailed(m_command_list_->Close());
   }
 
   void D3Device::Present() const
