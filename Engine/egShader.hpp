@@ -29,9 +29,11 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
-    void SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
+    void SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology);
 
     eShaderDomain GetDomain() const;
+
+    [[nodiscard]] D3D12_GRAPHICS_PIPELINE_STATE_DESC GetPipelineStateDesc() const;
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(

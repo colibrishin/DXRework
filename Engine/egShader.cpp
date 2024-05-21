@@ -215,9 +215,14 @@ namespace Engine::Resources
     // todo: revert back to default PSO
   }
 
-  void Shader::SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology) { m_topology_ = topology; }
+  void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology) { m_topology_ = topology; }
 
   eShaderDomain Shader::GetDomain() const { return m_domain_; }
+
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC Shader::GetPipelineStateDesc() const
+  {
+    return m_pipeline_state_desc_;
+  }
 
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
   {
