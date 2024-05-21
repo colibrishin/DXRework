@@ -1,8 +1,6 @@
 #pragma once
 #include <d2d1.h>
 #include <d3d12.h>
-#include <d3dcompiler.h>
-#include <dxgi1_4.h>
 #include <dxgi1_5.h>
 #include <dxgidebug.h>
 #include "egManager.hpp"
@@ -91,16 +89,25 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetRTVHandle() const;
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
     [[nodiscard]] D3D12_FEATURE_DATA_ROOT_SIGNATURE GetRootSignatureFeature() const;
-    
-  private:
-    friend struct SingletonDeleter;
-    friend class RenderPipeline;
-    friend class ToolkitAPI;
-    ~D3Device() override = default;
+
+    [[nodiscard]] ID3D12GraphicsCommandList* GetCommandList() const;
+
+    template <typename T>
+    void CreateBuffer1D
+    (
+      ID3D12Resource** buffer,
+      const void* data,
+      const UINT64 size,
+      const D3D12_RESOURCE_BARRIER& barrier,
+      const std::wstring& name = L""
+      ) const
+    {
+      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 
       DX::ThrowIfFailed
         (
-         m_device_->CreateCommittedResource
+         GetD3Device().GetDevice()->CreateCommittedResource
          (
           &default_prop,
           D3D12_HEAP_FLAG_NONE,
@@ -111,6 +118,56 @@ namespace Engine::Manager::Graphics
          )
         );
 
+      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
+
+      ComPtr<ID3D12Resource> upload_buffer;
+      const auto& upload_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &upload_prop,
+          D3D12_HEAP_FLAG_NONE,
+          &resource_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(upload_buffer.GetAddressOf())
+         )
+        );
+
+      const D3D12_SUBRESOURCE_DATA data_desc
+      {
+        .pData = data,
+        .RowPitch = sizeof(T) * size,
+        .SlicePitch = sizeof(T) * size
+      };
+
+      UpdateSubresources
+      (
+        m_command_list_.Get(),
+        *buffer,
+        upload_buffer.Get(),
+        0,
+        0,
+        1,
+        &data_desc
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
+      DX::ThrowIfFailed(m_command_list_->Close());
+      GetD3Device().ForceExecuteCommandList();
+      GetD3Device().WaitForUploadCompletion();
+    }
+    
+  private:
+    friend struct SingletonDeleter;
+    friend class RenderPipeline;
+    friend class ToolkitAPI;
+    ~D3Device() override = default;
+
+    D3Device() = default;
+    
     static void UpdateBuffer(UINT64 size, const void* src, ID3D12Resource* dst);
 
     void InitializeDevice();
@@ -119,10 +176,12 @@ namespace Engine::Manager::Graphics
     void InitializeFence();
     void InitializeD2D();
     void InitializeDepthStencil();
-
-    void WaitForSingleCompletion();
     
     void WaitForPreviousFrame();
+    void WaitForUploadCompletion();
+    void WaitForSingleCompletion();
+    void ForceExecuteCommandList() const;
+    
     void FrameBegin();
     void Present() const;
 
