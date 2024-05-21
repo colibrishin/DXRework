@@ -49,79 +49,57 @@ namespace Engine::Resources
         }
       }
 
-      // If compiled, set shader.
+      
       if (res == S_OK)
       {
+        // If shader is vertex shader, generate input layout.
         if (t == SHADER_VERTEX)
         {
-          const auto ids = GetD3Device().GenerateInputDescription(blob.Get());
-          GetD3Device().GetDevice()->CreateInputLayout
-            (
-             ids.first.data(), static_cast<UINT>(ids.first.size()), blob->GetBufferPointer(),
-             blob->GetBufferSize(), m_il_.ReleaseAndGetAddressOf()
-            );
-          GetD3Device().GetDevice()->CreateVertexShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_vs_.ReleaseAndGetAddressOf()
-            );
+          m_il_ = GetD3Device().GenerateInputDescription(blob.Get());
+          m_vs_blob_ = blob;
         }
         else if (t == SHADER_PIXEL)
         {
-          GetD3Device().GetDevice()->CreatePixelShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_ps_.ReleaseAndGetAddressOf()
-            );
+          m_ps_blob_ = blob;
         }
         else if (t == SHADER_GEOMETRY)
         {
-          GetD3Device().GetDevice()->CreateGeometryShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_gs_.ReleaseAndGetAddressOf()
-            );
+          m_gs_blob_ = blob;
         }
         else if (t == SHADER_HULL)
         {
-          GetD3Device().GetDevice()->CreateHullShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_hs_.ReleaseAndGetAddressOf()
-            );
+          m_hs_blob_ = blob;
         }
         else if (t == SHADER_DOMAIN)
         {
-          GetD3Device().GetDevice()->CreateDomainShader
-            (
-             blob->GetBufferPointer(), blob->GetBufferSize(),
-             nullptr, m_ds_.ReleaseAndGetAddressOf()
-            );
+          m_ds_blob_ = blob;
         }
       }
     }
 
-    if (!m_vs_) { throw std::runtime_error("Vertex shader is not found"); }
+    if (!m_vs_blob_)
+    {
+      throw std::runtime_error("Vertex shader is not found");
+    }
 
-    D3D11_DEPTH_STENCIL_DESC dsd;
+    // todo: bind with PSO
+    D3D12_DEPTH_STENCIL_DESC dsd;
     dsd.DepthEnable                  = m_depth_flag_;
     dsd.DepthWriteMask               = m_depth_test_;
     dsd.DepthFunc                    = m_depth_func_;
     dsd.StencilEnable                = true;
     dsd.StencilReadMask              = 0xFF;
     dsd.StencilWriteMask             = 0xFF;
-    dsd.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-    dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    dsd.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-    dsd.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-    dsd.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
-    dsd.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_DECR;
-    dsd.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
-    dsd.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
+    dsd.FrontFace.StencilFailOp      = D3D12_STENCIL_OP_KEEP;
+    dsd.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_INCR;
+    dsd.FrontFace.StencilPassOp      = D3D12_STENCIL_OP_KEEP;
+    dsd.FrontFace.StencilFunc        = D3D12_COMPARISON_FUNC_ALWAYS;
+    dsd.BackFace.StencilFailOp       = D3D12_STENCIL_OP_KEEP;
+    dsd.BackFace.StencilDepthFailOp  = D3D12_STENCIL_OP_DECR;
+    dsd.BackFace.StencilPassOp       = D3D12_STENCIL_OP_KEEP;
+    dsd.BackFace.StencilFunc         = D3D12_COMPARISON_FUNC_ALWAYS;
 
-    GetD3Device().CreateDepthStencilState(dsd, m_dss_.ReleaseAndGetAddressOf());
-
-    D3D11_RASTERIZER_DESC rd;
+    D3D12_RASTERIZER_DESC rd;
     rd.AntialiasedLineEnable = true;
     rd.DepthBias             = 0;
     rd.DepthBiasClamp        = 0.0f;
@@ -130,12 +108,28 @@ namespace Engine::Resources
     rd.FillMode              = m_fill_mode_;
     rd.FrontCounterClockwise = false;
     rd.MultisampleEnable     = false;
-    rd.ScissorEnable         = false;
+    rd.ForcedSampleCount     = 0;
     rd.SlopeScaledDepthBias  = 0.0f;
+    rd.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-    GetD3Device().CreateRasterizerState(rd, m_rs_.ReleaseAndGetAddressOf());
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC dhd =
+      {
+        .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+        .NumDescriptors = 1,
+        .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+        .NodeMask       = 0
+      };
 
-    D3D11_SAMPLER_DESC sd;
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &dhd,
+        IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+    
+    D3D12_SAMPLER_DESC sd;
     sd.Filter         = m_smp_filter_;
     sd.AddressU       = m_smp_address_;
     sd.AddressV       = m_smp_address_;
@@ -144,23 +138,43 @@ namespace Engine::Resources
     sd.MaxAnisotropy  = 1;
     sd.ComparisonFunc = m_smp_func_;
 
-    GetD3Device().CreateSampler(sd, m_ss_.ReleaseAndGetAddressOf());
+    D3D12_BLEND_DESC bd;
+    bd.AlphaToCoverageEnable = SHADER_DOMAIN_TRANSPARENT ? true : false;
+    bd.IndependentBlendEnable = false;
+
+    GetD3Device().CreateSampler(sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
+    m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.PS = {m_ps_blob_->GetBufferPointer(), m_ps_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()};
+    m_pipeline_state_desc_.SampleDesc = {1, 0};
+    m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_;
+    m_pipeline_state_desc_.RasterizerState = rd;
+    m_pipeline_state_desc_.DepthStencilState = dsd;
+    m_pipeline_state_desc_.SampleMask = UINT_MAX;
+    m_pipeline_state_desc_.BlendState = bd;
+    m_pipeline_state_desc_.NodeMask = 0;
+    m_pipeline_state_desc_.CachedPSO = {};
+    m_pipeline_state_desc_.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
   }
 
   Shader::Shader(
     const EntityName& name, const std::filesystem::path& path, const eShaderDomain      domain,
-    const UINT        depth, const UINT                  rasterizer, const D3D11_FILTER filter, const UINT sampler, D3D11_PRIMITIVE_TOPOLOGY topology
+    const UINT        depth, const UINT                  rasterizer, const D3D12_FILTER filter, const UINT sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
   )
     : Resource(path, RES_T_SHADER),
       m_domain_(domain),
       m_depth_flag_(depth != 0),
-      m_depth_test_(static_cast<D3D11_DEPTH_WRITE_MASK>(depth & 1)),
-      m_depth_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(depth >> 1) + 1)),
+      m_depth_test_(static_cast<D3D12_DEPTH_WRITE_MASK>(depth & 1)),
+      m_depth_func_(static_cast<D3D12_COMPARISON_FUNC>(std::log2(depth >> 1) + 1)),
       m_smp_filter_(filter),
-      m_smp_address_(static_cast<D3D11_TEXTURE_ADDRESS_MODE>((sampler & shader_sampler_address_mask) + 1)),
-      m_smp_func_(static_cast<D3D11_COMPARISON_FUNC>(std::log2(sampler >> 3))),
-      m_cull_mode_(static_cast<D3D11_CULL_MODE>((rasterizer & 2) + 1)),
-      m_fill_mode_(static_cast<D3D11_FILL_MODE>((rasterizer >> 2) + 1)),
+      m_smp_address_(static_cast<D3D12_TEXTURE_ADDRESS_MODE>((sampler & shader_sampler_address_mask) + 1)),
+      m_smp_func_(static_cast<D3D12_COMPARISON_FUNC>(std::log2(sampler >> 3))),
+      m_cull_mode_(static_cast<D3D12_CULL_MODE>((rasterizer & 2) + 1)),
+      m_fill_mode_(static_cast<D3D12_FILL_MODE>((rasterizer >> 2) + 1)),
       m_topology_(topology)
   {
     SetName(name);
@@ -180,47 +194,25 @@ namespace Engine::Resources
 
   void Shader::Unload_INTERNAL()
   {
-    m_vs_.Reset();
-    m_ps_.Reset();
-    m_gs_.Reset();
-    m_hs_.Reset();
-    m_ds_.Reset();
-    m_il_.Reset();
-    m_ss_.Reset();
-    m_dss_.Reset();
-    m_rs_.Reset();
+    m_vs_blob_.Reset();
+    m_ps_blob_.Reset();
+    m_gs_blob_.Reset();
+    m_hs_blob_.Reset();
+    m_ds_blob_.Reset();
+    m_il_.clear();
+    m_sampler_descriptor_heap_.Reset();
   }
 
   void Shader::OnDeserialized() {}
 
   void Shader::Render(const float& dt)
   {
-    GetD3Device().GetContext()->IASetInputLayout(m_il_.Get());
-    GetD3Device().GetContext()->IASetPrimitiveTopology(m_topology_);
-    GetD3Device().GetContext()->VSSetShader(m_vs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->PSSetShader(m_ps_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->GSSetShader(m_gs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->HSSetShader(m_hs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->DSSetShader(m_ds_.Get(), nullptr, 0);
-
-    GetRenderPipeline().SetDepthStencilState(m_dss_.Get());
-    GetRenderPipeline().SetRasterizerState(m_rs_.Get());
-    GetRenderPipeline().SetSamplerState(m_ss_.Get());
+    // todo: override PSO
   }
 
   void Shader::PostRender(const float& dt)
   {
-    GetD3Device().GetContext()->IASetInputLayout(nullptr);
-    GetD3Device().GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->PSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->GSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->HSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
-
-    GetRenderPipeline().DefaultDepthStencilState();
-    GetRenderPipeline().DefaultRasterizerState();
-    GetRenderPipeline().DefaultSamplerState();
+    // todo: revert back to default PSO
   }
 
   void Shader::SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology) { m_topology_ = topology; }
@@ -234,7 +226,7 @@ namespace Engine::Resources
 
   boost::shared_ptr<Shader> Shader::Create(
     const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-    const UINT         rasterizer, const D3D11_FILTER     filter, const UINT        sampler, D3D11_PRIMITIVE_TOPOLOGY topology
+    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY topology
   )
   {
     if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
@@ -273,6 +265,7 @@ namespace Engine::Resources
 
   Shader::Shader()
     : Resource("", RES_T_SHADER),
+      m_pipeline_state_desc_(),
       m_domain_(),
       m_depth_flag_(false),
       m_depth_test_(),
@@ -282,5 +275,5 @@ namespace Engine::Resources
       m_smp_func_(),
       m_cull_mode_(),
       m_fill_mode_(),
-      m_topology_(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST) { }
+      m_topology_(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE) { }
 } // namespace Engine::Graphic
