@@ -219,9 +219,9 @@ namespace Engine::Resources
 
   eShaderDomain Shader::GetDomain() const { return m_domain_; }
 
-  ID3D12PipelineState* Shader::GetPipelineState() const
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC Shader::GetPipelineStateDesc() const
   {
-    return m_pipeline_state_.Get();
+    return m_pipeline_state_desc_;
   }
 
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
