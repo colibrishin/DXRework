@@ -125,8 +125,8 @@ namespace Engine::Resources
 
   void Mesh::Render(const float& dt)
   {
-    GetD3Device().GetDirectCommandList()->IASetVertexBuffers(0, 1, &m_vertex_buffer_view_);
-    GetD3Device().GetDirectCommandList()->IASetIndexBuffer(&m_index_buffer_view_);
+    GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_view_);
+    GetRenderPipeline().BindIndexBuffer(m_index_buffer_view_);
   }
 
   void Mesh::PostRender(const float& dt)
@@ -163,97 +163,25 @@ namespace Engine::Resources
 
     const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
-    // -- Vertex Buffer -- //
-    // Initialize vertex buffer.
-    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    const auto& vtx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(VertexElement) * m_vertices_.size());
-
-    DX::ThrowIfFailed
+    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &default_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &vtx_buffer_desc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(m_vertex_buffer_.GetAddressOf())
-       )
+       m_vertex_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
 
-    DX::ThrowIfFailed(m_vertex_buffer_->SetName(vertex_name.c_str()));
+    GetD3Device().CreateBuffer1D<VertexElement>
+      (
+       m_vertex_buffer_.GetAddressOf(), m_vertices_.data(),
+       sizeof(VertexElement) * m_vertices_.size(),
+       vtx_trans,
+       vertex_name
+      );
 
-    // -- Upload Buffer -- //
-    // Create the upload heap.
-    DX::ThrowIfFailed
-    (
-        DirectX::CreateUploadBuffer
-        (
-            GetD3Device().GetDevice(),
-            m_vertices_.data(),
-            m_vertices_.size(),
-            m_vertex_buffer_upload_.GetAddressOf()
-        )
-    );
-
-    // -- Upload Data -- //
-    // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
-    char* data = nullptr;
-
-    DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
-    m_vertex_buffer_upload_->Unmap(0, nullptr);
-
-    GetD3Device().GetCopyCommandList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
-
-    // -- Vertex Buffer View -- //
-    // Initialize vertex buffer view.
     m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
     m_vertex_buffer_view_.SizeInBytes = sizeof(VertexElement) * m_vertices_.size();
     m_vertex_buffer_view_.StrideInBytes = sizeof(VertexElement);
 
     const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
-
-    const auto& idx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_vertices_.size());
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &default_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &vtx_buffer_desc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(m_index_buffer_.GetAddressOf())
-       )
-      );
-
-    DX::ThrowIfFailed(m_index_buffer_->SetName(vertex_name.c_str()));
-
-    // Create the upload heap.
-    DX::ThrowIfFailed
-    (
-        DirectX::CreateUploadBuffer
-        (
-            GetD3Device().GetDevice(),
-            m_indices_.data(),
-            m_indices_.size(),
-            m_index_buffer_upload_.GetAddressOf()
-        )
-    );
-
-    DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
-    m_index_buffer_upload_->Unmap(0, nullptr);
-
-    GetD3Device().GetCopyCommandList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
-
-    GetD3Device().ExecuteCopyCommandList();
-
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -261,23 +189,17 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
       );
 
+    GetD3Device().CreateBuffer1D<UINT>
+      (
+       m_index_buffer_.GetAddressOf(), m_indices_.data(),
+       sizeof(UINT) * m_indices_.size(),
+       idx_trans,
+       index_name
+      );
+
     m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
     m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
     m_index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
-
-    // -- Resource Barrier -- //
-    // Transition from copy dest buffer to vertex buffer.
-    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_vertex_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-      );
-
-    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &vtx_trans);
-
-    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &idx_trans);
-
-    GetD3Device().ExecuteSubDirectCommandList();
   }
 
   void Mesh::Load_CUSTOM() {}
