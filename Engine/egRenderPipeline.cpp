@@ -94,10 +94,7 @@ namespace Engine::Manager::Graphics
 
     PrecompileShaders();
     InitializeRootSignature();
-    InitializeHeaps();
-    InitializeRenderTargets();
-    InitializeDepthStencil();
-    InitializeStaticBuffers();
+    InitializeDefaultPSO();
   }
 
   void RenderPipeline::PrecompileShaders()
@@ -108,8 +105,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS,
-       D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -118,7 +114,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -127,7 +123,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -137,7 +133,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -146,7 +142,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -155,7 +151,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -164,7 +160,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -173,7 +169,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -182,7 +178,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     const auto billboard = Shader::Create
@@ -191,7 +187,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
       );
 
     Shader::Create
@@ -200,7 +196,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_POINT,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
     Shader::Create
@@ -209,55 +205,49 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
   }
 
-  void RenderPipeline::FallbackPSO()
+  void RenderPipeline::InitializeDefaultPSO()
   {
-    SetPSO(Shader::Get("default").lock());
+    
   }
 
   void RenderPipeline::InitializeRootSignature()
   {
-    CD3DX12_DESCRIPTOR_RANGE1 ranges[DESCRIPTOR_SLOT_COUNT];
-    ranges[DESCRIPTOR_SLOT_SRV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, g_max_engine_texture_slots, 0);
-    ranges[DESCRIPTOR_SLOT_CB].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, g_max_cb_slots, 0);
-    ranges[DESCRIPTOR_SLOT_UAV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, g_max_uav_slots, 0);
-    ranges[DESCRIPTOR_SLOT_SAMPLER].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, SAMPLER_END, 0);
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
+    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[DESCRIPTOR_SLOT_COUNT];
-    root_parameters[DESCRIPTOR_SLOT_SRV].InitAsDescriptorTable(1, &ranges[DESCRIPTOR_SLOT_SRV], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[DESCRIPTOR_SLOT_CB].InitAsDescriptorTable(1, &ranges[DESCRIPTOR_SLOT_CB], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[DESCRIPTOR_SLOT_UAV].InitAsDescriptorTable(1, &ranges[DESCRIPTOR_SLOT_UAV], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[DESCRIPTOR_SLOT_SAMPLER].InitAsDescriptorTable(1, &ranges[DESCRIPTOR_SLOT_SAMPLER], D3D12_SHADER_VISIBILITY_ALL);
+    CD3DX12_ROOT_PARAMETER1 root_parameters[3];
+    root_parameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
+
+    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[2];
+    static_sampler_desc[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+    static_sampler_desc[1].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT);
 
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC root_signature_desc
-      (
-       DESCRIPTOR_SLOT_COUNT,
-       root_parameters,
-       0,
-       nullptr,
-       D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
-      );
+    (
+      _countof(root_parameters),
+      root_parameters,
+      _countof(static_sampler_desc),
+      static_sampler_desc
+    );
 
     ComPtr<ID3DBlob> signature_blob = nullptr;
-    ComPtr<ID3DBlob> error_blob = nullptr;
-
-    D3D12SerializeVersionedRootSignature
+    DX::ThrowIfFailed
+      (
+       D3D12SerializeVersionedRootSignature
        (
-        &root_signature_desc, 
-           signature_blob.GetAddressOf(),
-           error_blob.GetAddressOf()
-       );
-
-    if (error_blob)
-    {
-      const std::string error_message =
-          static_cast<char*>(error_blob->GetBufferPointer());
-
-      OutputDebugStringA(error_message.c_str());
-    }
+        &root_signature_desc, signature_blob.GetAddressOf(), nullptr
+       )
+      );
 
     DX::ThrowIfFailed
     (
@@ -786,7 +776,12 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data)
+  ID3D12RootSignature* RenderPipeline::GetRootSignature() const
+  {
+    return m_root_signature_.Get();
+  }
+
+  void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
     CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (

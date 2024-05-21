@@ -95,11 +95,7 @@ namespace Engine::Manager::Graphics
 
     static void           SetPSO(const StrongShader& Shader);
 
-    UINT GetBufferDescriptorSize() const;
-    UINT GetSamplerDescriptorSize() const;
-
-    void UploadConstantBuffers();
-    void ExecuteDirectCommandList();
+    ID3D12RootSignature* GetRootSignature() const;
 
   private:
     friend class ToolkitAPI;
@@ -109,46 +105,11 @@ namespace Engine::Manager::Graphics
     ~RenderPipeline() override;
 
     void PrecompileShaders();
-    void FallbackPSO();
+    void InitializeDefaultPSO();
     void InitializeRootSignature();
-    void InitializeRenderTargets();
-    void InitializeDepthStencil();
-    void InitializeNullDescriptors();
-    void InitializeHeaps();
-    void InitializeStaticBuffers();
-
-    void SetRootSignature();
-    void SetHeaps();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
-    ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
-
-    UINT m_rtv_descriptor_size_ = 0;
-    UINT m_dsv_descriptor_size_ = 0;
-    UINT m_buffer_descriptor_size_ = 0;
-    UINT m_sampler_descriptor_size_ = 0;
-
-    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
-
-    ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_null_cbv_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
-
-    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
-    ComPtr<ID3D12Resource> m_depth_stencil_;
-
-    D3D12_VIEWPORT m_viewport_{};
-    D3D12_RECT    m_scissor_rect_{};
-
-    CBs::PerspectiveCB m_wvp_buffer_;
-    CBs::TransformCB   m_transform_buffer_;
-    CBs::MaterialCB    m_material_buffer_;
+    
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
@@ -156,5 +117,6 @@ namespace Engine::Manager::Graphics
     ConstantBuffer<CBs::MaterialCB> m_material_buffer_data_{};
     ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
+    std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
   };
 } // namespace Engine::Manager::Graphics
