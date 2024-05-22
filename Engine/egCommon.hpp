@@ -127,6 +127,16 @@ namespace Engine
       lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
     };
   }
+
+  struct CommandGuard
+  {
+    ~CommandGuard();
+  };
+
+  struct ForceCommandExecutionGuard
+  {
+    ~ForceCommandExecutionGuard();
+  };
 } // namespace Engine
 
 namespace DX
