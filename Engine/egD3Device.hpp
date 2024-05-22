@@ -87,15 +87,47 @@ namespace Engine::Manager::Graphics
 
     ID3D12Device* GetDevice() const { return m_device_.Get(); }
     
-    void __fastcall CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList* command_list) const;
+    void __fastcall CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const;
 
     [[nodiscard]] HANDLE                            GetSwapchainAwaiter() const;
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetRTVHandle() const;
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
     [[nodiscard]] D3D12_FEATURE_DATA_ROOT_SIGNATURE GetRootSignatureFeature() const;
 
-    [[nodiscard]] ID3D12GraphicsCommandList* GetCommandList() const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
+  
+    void WaitForUploadCompletion();
+    void ForceExecuteCommandList() const;
 
+    template <typename T>
+    void CreateBuffer
+    (
+      ID3D12Resource** buffer,
+      const UINT64 size,
+      const D3D12_HEAP_TYPE heap_type = D3D12_HEAP_TYPE_DEFAULT,
+      const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
+      const std::wstring& name = L""
+    ) const
+    {
+      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(heap_type);
+      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &default_prop,
+          D3D12_HEAP_FLAG_NONE,
+          &resource_desc,
+          state,
+          nullptr,
+          IID_PPV_ARGS(buffer)
+         )
+        );
+
+      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
+    }
+    
     template <typename T>
     void CreateBuffer1D
     (
@@ -107,11 +139,11 @@ namespace Engine::Manager::Graphics
       ) const
     {
       const auto& default_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
       DX::ThrowIfFailed
         (
-         GetD3Device().GetDevice()->CreateCommittedResource
+         m_device_->CreateCommittedResource
          (
           &default_prop,
           D3D12_HEAP_FLAG_NONE,
@@ -168,15 +200,8 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
-    friend class GarbageCollector;
-
-    inline static constexpr eCommandListType s_target_types[] =
-    {
-      COMMAND_DIRECT,
-      COMMAND_COPY,
-      COMMAND_COMPUTE,
-      COMMAND_SUB_DIRECT
-    };
+    friend struct CommandGuard;
+    friend struct ForceCommandExecutionGuard;
     
     ~D3Device() override = default;
 
@@ -192,9 +217,7 @@ namespace Engine::Manager::Graphics
     void InitializeDepthStencil();
     
     void WaitForPreviousFrame();
-    void WaitForUploadCompletion();
     void WaitForSingleCompletion();
-    void ForceExecuteCommandList() const;
     
     void FrameBegin();
     void Present() const;
@@ -225,10 +248,10 @@ namespace Engine::Manager::Graphics
     UINT64                                      m_frame_idx_         = 0;
     UINT64                                      m_rtv_desc_size_     = 0;
     std::vector<ComPtr<ID3D12Resource>>         m_render_targets_    = {nullptr,};
-    std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
 
+    std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
     // todo: multi pipeline?
-    ComPtr<ID3D12GraphicsCommandList> m_command_list_ = {nullptr, };
+    ComPtr<ID3D12GraphicsCommandList1> m_command_list_ = {nullptr, };
     
     D3D11_VIEWPORT s_viewport_{};
 
