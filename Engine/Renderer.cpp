@@ -157,7 +157,11 @@ namespace Engine::Manager::Graphics
     const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
-    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
+    StructuredBuffer<SBs::InstanceSB> sb;
+    sb.Create(static_cast<UINT>(structured_buffers.size()), structured_buffers.data(), false);
+    sb.BindSRV();
+    sb.BindSRV();
+    sb.BindSRV();
 
     m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
@@ -174,6 +178,10 @@ namespace Engine::Manager::Graphics
     material->Render(dt);
     GetRenderPipeline().ExecuteDirectCommandList();
     material->PostRender(dt);
+
+    sb.UnbindSRV();
+    sb.UnbindSRV();
+    sb.UnbindSRV();
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
