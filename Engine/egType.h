@@ -378,6 +378,11 @@ namespace Engine
   struct is_client_uav_sb<T, void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
 
   template <typename T, typename = void>
+  struct is_sb : std::false_type {};
+  template <typename T>
+  struct is_sb<T, void_t<decltype(T::sbtype == true)>> : std::true_type {};
+  
+  template <typename T, typename = void>
   struct is_client_sb : std::false_type {};
   template <typename T>
   struct is_client_sb<T, void_t<decltype(T::csbtype == true)>> : std::true_type {};
