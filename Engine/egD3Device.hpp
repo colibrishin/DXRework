@@ -203,9 +203,11 @@ namespace Engine::Manager::Graphics
     void InitializeCommandAllocator();
     void InitializeFence();
     void InitializeDepthStencil();
-    
-    void WaitForPreviousFrame();
-    void WaitForSingleCompletion();
+
+    void WaitForEventCompletion(UINT64 buffer_idx) const;
+
+    void Signal(const UINT64 buffer_idx);
+    void WaitForBackBuffer() const;
     
     void FrameBegin();
     void Present() const;
