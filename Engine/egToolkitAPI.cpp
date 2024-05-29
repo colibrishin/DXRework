@@ -22,14 +22,15 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
-    m_sprite_batch_          = std::make_unique<SpriteBatch>
-      (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+    m_effect_pipeline_state_ = std::make_unique<EffectPipelineStateDescription>(TODO);
 
-    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
+    m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
     
     m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
+    m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice(), 0, *m_effect_pipeline_state_.get());
 
-    m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
+     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
+    m_basic_effect_->Apply(GetD3Device().GetCommandList());
 
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
@@ -66,21 +67,24 @@ namespace Engine::Manager::Graphics
 
     FrameEnd();
 
-    m_sprite_batch_callbacks_.clear();
-  }
-
-  void ToolkitAPI::FixedUpdate(const float& dt) { }
-
-  void ToolkitAPI::PostUpdate(const float& dt) { }
-
-  void ToolkitAPI::AppendSpriteBatch(const std::function<void()>& callback)
-  {
-    m_sprite_batch_callbacks_.push_back(callback);
-  }
-
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
-    m_primitive_batch_->Begin(GetD3Device().GetDirectCommandList());
+    TODO->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
+    TODO->OMSetDepthStencilState(m_states_->DepthNone(), 0);
+    TODO->RSSetState(m_states_->CullNone());
+
+    m_basic_effect_->Apply(GetD3Device().GetCommandList());
+
+    if (const auto scene = GetSceneManager().GetActiveScene().lock())
+    {
+      if (const auto camera = scene->GetMainCamera().lock())
+      {
+        m_basic_effect_->SetView(camera->GetViewMatrix());
+        m_basic_effect_->SetProjection(camera->GetProjectionMatrix());
+      }
+    }
+
+    m_primitive_batch_->Begin(GetD3Device().GetCommandList());
   }
 
   void ToolkitAPI::EndPrimitiveBatch() const
@@ -94,9 +98,9 @@ namespace Engine::Manager::Graphics
 
   PrimitiveBatch<VertexPositionColor>* ToolkitAPI::GetPrimitiveBatch() const { return m_primitive_batch_.get(); }
 
-  DescriptorHeap* ToolkitAPI::GetDescriptorHeap() const
+  ResourceUploadBatch* ToolkitAPI::GetResourceUploadBatch() const
   {
-    return m_descriptor_heap_.get();
+    return m_resource_upload_batch_.get();
   }
 
   void ToolkitAPI::LoadSound(FMOD::Sound** sound, const std::string& path) const
@@ -178,7 +182,7 @@ namespace Engine::Manager::Graphics
 
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetToolkitCommandList(), 
+        GetD3Device().GetCommandList(), 
         SpriteSortMode_Deferred
     );
   }
