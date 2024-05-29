@@ -52,7 +52,7 @@ namespace Engine::Manager::Graphics
     void         UpdateRenderTarget() const;
 
     void CreateShaderResourceView(
-      ID3D12Resource * resource, const D3D12_SHADER_RESOURCE_VIEW_DESC & srv, ID3D11ShaderResourceView ** view
+      ID3D12Resource * resource, const D3D12_SHADER_RESOURCE_VIEW_DESC & srv, const D3D12_CPU_DESCRIPTOR_HANDLE & srv_handle
     ) const;
 
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
@@ -209,14 +209,12 @@ namespace Engine::Manager::Graphics
     void Signal(const UINT64 buffer_idx);
     void WaitForBackBuffer() const;
     
-    void FrameBegin();
-    void Present() const;
+    void FrameBegin() const;
+    void Present();
 
     HWND m_hwnd_ = nullptr;
 
-    ComPtr<ID3D12Device>        m_device_  = nullptr;
-    ComPtr<IDXGISurface1>     m_surface_                = nullptr;
-    ComPtr<ID2D1RenderTarget> m_d2d_render_target_view_ = nullptr;
+    ComPtr<ID3D12Device2> m_device_ = nullptr;
 
     UINT s_video_card_memory_        = 0;
     UINT s_refresh_rate_numerator_   = 0;
@@ -224,26 +222,23 @@ namespace Engine::Manager::Graphics
 
     DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
-    ComPtr<IDXGISwapChain4>      m_swap_chain_      = nullptr;
-    ComPtr<ID3D12CommandQueue>   m_command_queue_   = nullptr;
-    
-    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_ = nullptr;
-    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_ = nullptr;
-    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_ = nullptr;
+    ComPtr<IDXGISwapChain4>    m_swap_chain_    = nullptr;
+    ComPtr<ID3D12CommandQueue> m_command_queue_ = nullptr;
 
-    std::vector<ComPtr<ID3D12Fence>> m_fences_       = {nullptr,};
-    HANDLE                           m_fence_event_  = nullptr;
-    std::vector<UINT64>              m_fences_nonce_ = {0,};
+    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_     = nullptr;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_     = nullptr;
+    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_  = nullptr;
 
-    UINT64                                      m_frame_idx_         = 0;
-    UINT64                                      m_rtv_desc_size_     = 0;
-    std::vector<ComPtr<ID3D12Resource>>         m_render_targets_    = {nullptr,};
+    ComPtr<ID3D12Fence> m_fence_        = nullptr;
+    HANDLE              m_fence_event_  = nullptr;
+    std::vector<std::atomic<UINT64>> m_fence_nonce_ = {0, };
+
+    UINT64                              m_frame_idx_      = 0;
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_ = {nullptr,};
 
     std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
     // todo: multi pipeline?
-    ComPtr<ID3D12GraphicsCommandList1> m_command_list_ = {nullptr, };
-    
-    D3D11_VIEWPORT s_viewport_{};
+    ComPtr<ID3D12GraphicsCommandList1> m_command_list_ = {nullptr,};
 
     UINT64 m_frame_idx_ = 0;
 
