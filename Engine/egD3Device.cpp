@@ -32,21 +32,6 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  D3D12_FEATURE_DATA_ROOT_SIGNATURE D3Device::GetRootSignatureFeature() const
-  {
-    D3D12_FEATURE_DATA_ROOT_SIGNATURE feature
-    {
-      .HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1
-    };
-
-    if (FAILED(m_device_->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &feature, sizeof(feature))))
-    {
-      feature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-    }
-
-    return feature;
-  }
-
   ID3D12GraphicsCommandList1* D3Device::GetCommandList() const
   {
     return m_command_list_.Get();
@@ -431,38 +416,6 @@ namespace Engine::Manager::Graphics
       DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
   }
-
-  void D3Device::InitializeD2D()
-  {
-    ComPtr<ID2D1Factory> d2d_factory;
-    DX::ThrowIfFailed
-      (
-       D2D1CreateFactory
-       (
-        D2D1_FACTORY_TYPE_SINGLE_THREADED,
-        d2d_factory.GetAddressOf()
-       )
-      );
-
-    const auto dpiX =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX));
-    const auto dpiY =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY));
-
-    const D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties
-      (
-       D2D1_RENDER_TARGET_TYPE_DEFAULT,
-       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-       dpiX, dpiY
-      );
-
-    DX::ThrowIfFailed
-      (
-       d2d_factory->CreateDxgiSurfaceRenderTarget
-       (
-        m_surface_.Get(), &props, m_d2d_render_target_view_.GetAddressOf()
-       )
-      );
   }
 
   void D3Device::InitializeDepthStencil()
