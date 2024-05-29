@@ -1,6 +1,7 @@
 #pragma once
 #include <CommonStates.h>
 #include <SpriteBatch.h>
+#include <ResourceUploadBatch.h>
 
 #include <fmod_studio.hpp>
 #include "GeometricPrimitive.h"
@@ -28,6 +29,7 @@ namespace Engine::Manager::Graphics
     SpriteBatch*                         GetSpriteBatch() const;
     CommonStates*                        GetCommonStates() const;
     PrimitiveBatch<VertexPositionColor>* GetPrimitiveBatch() const;
+    ResourceUploadBatch*                 GetResourceUploadBatch() const;
 
     void LoadSound(FMOD::Sound** sound, const std::string& path) const;
     void PlaySound(
@@ -48,9 +50,13 @@ namespace Engine::Manager::Graphics
     void FrameBegin() const;
     void FrameEnd() const;
 
-    std::unique_ptr<CommonStates>       m_states_              = nullptr;
-    std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
-    std::unique_ptr<SpriteBatch>        m_sprite_batch_        = nullptr;
+    std::unique_ptr<CommonStates>                        m_states_                = nullptr;
+    std::unique_ptr<GeometricPrimitive>                  m_geometric_primitive_   = nullptr;
+    std::unique_ptr<SpriteBatch>                         m_sprite_batch_          = nullptr;
+    std::unique_ptr<ResourceUploadBatch>                 m_resource_upload_batch_ = nullptr;
+    std::unique_ptr<SpriteBatchPipelineStateDescription> m_pipeline_state_        = nullptr;
+    std::unique_ptr<EffectPipelineStateDescription>      m_effect_pipeline_state_ = nullptr;
+    std::unique_ptr<RenderTargetState>                   m_render_target_state_   = nullptr;
 
     std::unique_ptr<PrimitiveBatch<VertexPositionColor>> m_primitive_batch_ =
       nullptr;
