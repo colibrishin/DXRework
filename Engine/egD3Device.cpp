@@ -37,23 +37,15 @@ namespace Engine::Manager::Graphics
     return m_command_list_.Get();
   }
 
+  void D3Device::WaitForUploadCompletion()
+  {
+    Signal(m_frame_idx_);
+  }
+
   void D3Device::ForceExecuteCommandList() const
   {
     const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
     m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
-  }
-
-  void D3Device::WaitForUploadCompletion()
-  {
-    ++m_fences_nonce_[m_frame_idx_];
-    DX::ThrowIfFailed
-    (
-      m_command_queue_->Signal
-      (
-        m_fences_[m_frame_idx_].Get(),
-        m_fences_nonce_[m_frame_idx_]
-      )
-    );
   }
 
   void D3Device::UpdateBuffer
@@ -494,48 +486,41 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  void D3Device::WaitForSingleCompletion()
+  void D3Device::WaitForEventCompletion(const UINT64 buffer_idx) const
   {
-    DX::ThrowIfFailed
-    (
-      m_command_queue_->Signal
-      (
-        m_fences_[m_frame_idx_].Get(),
-        m_fences_nonce_[m_frame_idx_]
-      )
-    );
-
-    ++m_fences_nonce_[m_frame_idx_];
-  }
-
-  void D3Device::WaitForPreviousFrame()
-  {
-    if (WaitForSingleObjectEx
-        (
-         GetSwapchainAwaiter(), g_max_frame_latency_ms,
-         true
-        ) != WAIT_OBJECT_0)
-    {
-      GetDebugger().Log("Waiting for Swap chain had an issue.");
-    }
-    
-    const auto backbuffer = m_swap_chain_->GetCurrentBackBufferIndex();
-
-    if (m_fences_[backbuffer]->GetCompletedValue() < m_fences_nonce_[backbuffer])
+    if (m_fence_->GetCompletedValue() < m_fence_nonce_[buffer_idx])
     {
       DX::ThrowIfFailed
       (
-        m_fences_[backbuffer]->SetEventOnCompletion
+        m_fence_->SetEventOnCompletion
         (
-          m_fences_nonce_[backbuffer],
+          m_fence_nonce_[buffer_idx],
           m_fence_event_
         )
       );
 
       WaitForSingleObject(m_fence_event_, INFINITE);
     }
+  }
 
-    ++m_fences_nonce_[backbuffer];
+  void D3Device::Signal(const UINT64 buffer_idx)
+  {
+    DX::ThrowIfFailed
+    (
+      m_command_queue_->Signal
+      (
+        m_fence_.Get(),
+        ++m_fence_nonce_[buffer_idx]
+      )
+    );
+  }
+
+  void D3Device::WaitForBackBuffer() const
+  {
+    // Buffer for next frame.
+    const auto& back_buffer_idx = m_swap_chain_->GetCurrentBackBufferIndex();
+
+    WaitForEventCompletion(back_buffer_idx);
   }
 
   void D3Device::CreateShaderResourceView(
