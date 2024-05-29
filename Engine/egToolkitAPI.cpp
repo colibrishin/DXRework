@@ -14,32 +14,19 @@ namespace Engine::Manager::Graphics
   void ToolkitAPI::Initialize()
   {
     m_states_              = std::make_unique<CommonStates>(GetD3Device().GetDevice());
-    m_geometric_primitive_ =
-      GeometricPrimitive::CreateTeapot(GetD3Device().GetContext());
-    GeometricPrimitive::SetDepthBufferMode(false);
+    m_resource_upload_batch_ = std::make_unique<ResourceUploadBatch>(GetD3Device().GetDevice());
+    m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
-    m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetContext());
-    m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>
-      (
-       GetD3Device().GetContext()
-      );
-    m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice());
-    m_basic_effect_->SetVertexColorEnabled(true);
+    m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
+    m_effect_pipeline_state_ = std::make_unique<EffectPipelineStateDescription>(TODO);
 
-    const void* shaderByteCode;
-    size_t      byteCodeLength;
+    m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+    
+    m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
+    m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice(), 0, *m_effect_pipeline_state_.get());
 
-    m_basic_effect_->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateInputLayout
-       (
-        VertexPositionColor::InputElements,
-        VertexPositionColor::InputElementCount,
-        shaderByteCode, byteCodeLength,
-        m_debug_input_layout_.ReleaseAndGetAddressOf()
-       )
-      );
+     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
+    m_basic_effect_->Apply(GetD3Device().GetCommandList());
 
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
@@ -69,14 +56,11 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
-    const auto context = GetD3Device().GetContext();
+    TODO->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
+    TODO->OMSetDepthStencilState(m_states_->DepthNone(), 0);
+    TODO->RSSetState(m_states_->CullNone());
 
-    context->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
-    context->OMSetDepthStencilState(m_states_->DepthNone(), 0);
-    context->RSSetState(m_states_->CullNone());
-
-    m_basic_effect_->Apply(context);
-    context->IASetInputLayout(m_debug_input_layout_.Get());
+    m_basic_effect_->Apply(GetD3Device().GetCommandList());
 
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
@@ -87,25 +71,12 @@ namespace Engine::Manager::Graphics
       }
     }
 
-    m_primitive_batch_->Begin();
+    m_primitive_batch_->Begin(GetD3Device().GetCommandList());
   }
 
   void ToolkitAPI::EndPrimitiveBatch() const
   {
     m_primitive_batch_->End();
-
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetRenderPipeline().m_rasterizer_state_.Get()
-      );
-    GetD3Device().GetContext()->OMSetBlendState
-      (
-       GetRenderPipeline().m_blend_state_.Get(), nullptr, 0xFFFFFFFF
-      );
-    GetD3Device().GetContext()->OMSetDepthStencilState
-      (
-       GetRenderPipeline().m_depth_stencil_state_.Get(), 1
-      );
   }
 
   SpriteBatch* ToolkitAPI::GetSpriteBatch() const { return m_sprite_batch_.get(); }
@@ -113,6 +84,11 @@ namespace Engine::Manager::Graphics
   CommonStates* ToolkitAPI::GetCommonStates() const { return m_states_.get(); }
 
   PrimitiveBatch<VertexPositionColor>* ToolkitAPI::GetPrimitiveBatch() const { return m_primitive_batch_.get(); }
+
+  ResourceUploadBatch* ToolkitAPI::GetResourceUploadBatch() const
+  {
+    return m_resource_upload_batch_.get();
+  }
 
   void ToolkitAPI::LoadSound(FMOD::Sound** sound, const std::string& path) const
   {
@@ -178,13 +154,10 @@ namespace Engine::Manager::Graphics
   void ToolkitAPI::FrameBegin() const
   {
     m_sprite_batch_->Begin
-      (
-       SpriteSortMode_Deferred,
-       GetRenderPipeline().m_blend_state_.Get(),
-       GetRenderPipeline().m_sampler_state_[SAMPLER_TEXTURE],
-       GetRenderPipeline().m_depth_stencil_state_.Get(),
-       GetRenderPipeline().m_rasterizer_state_.Get()
-      );
+    (
+        GetD3Device().GetCommandList(), 
+        SpriteSortMode_Deferred
+    );
   }
 
   void ToolkitAPI::FrameEnd() const { m_sprite_batch_->End(); }
