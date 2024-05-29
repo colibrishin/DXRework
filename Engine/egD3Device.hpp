@@ -58,7 +58,7 @@ namespace Engine::Manager::Graphics
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
       ID3DBlob* blob
     );
-    void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) const;
+    void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const;
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
