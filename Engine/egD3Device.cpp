@@ -57,7 +57,7 @@ namespace Engine::Manager::Graphics
     void*               mapped_data = nullptr;
     const CD3DX12_RANGE range(0, 0);
     DX::ThrowIfFailed(dst->Map(0, &range, &mapped_data));
-    memcpy(mapped_data, src, size);
+    std::memcpy(mapped_data, src, size);
     dst->Unmap(0, nullptr);
   }
 
@@ -155,9 +155,9 @@ namespace Engine::Manager::Graphics
     return input_descs_with_name;
   }
 
-  void D3Device::CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) const
+  void D3Device::CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const
   {
-    m_device_->CreateSampler(&description, handle);
+    m_device_->CreateSampler(&description, sampler_handle);
   }
 
   void D3Device::InitializeDevice()
