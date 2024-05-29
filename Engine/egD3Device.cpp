@@ -33,21 +33,6 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  D3D12_FEATURE_DATA_ROOT_SIGNATURE D3Device::GetRootSignatureFeature() const
-  {
-    D3D12_FEATURE_DATA_ROOT_SIGNATURE feature
-    {
-      .HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1
-    };
-
-    if (FAILED(m_device_->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &feature, sizeof(feature))))
-    {
-      feature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-    }
-
-    return feature;
-  }
-
   ID3D12GraphicsCommandList1* D3Device::GetCommandList() const
   {
     return m_command_list_.Get();
@@ -432,51 +417,6 @@ namespace Engine::Manager::Graphics
       DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
   }
-
-  void D3Device::InitializeFence()
-  {
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateFence
-       (
-        0, D3D12_FENCE_FLAG_NONE,
-        IID_PPV_ARGS(m_fence_.GetAddressOf())
-       )
-      );
-
-    const auto dpiX =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX));
-    const auto dpiY =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY));
-
-    m_fence_event_ = CreateEvent(nullptr, false, false, nullptr);
-
-    if (m_fence_event_ == nullptr)
-    {
-      DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-    }
-  }
-
-  void D3Device::WaitForEventCompletion(const UINT64 buffer_idx) const
-  {
-    if (m_fence_->GetCompletedValue() < m_fence_nonce_[buffer_idx])
-    {
-      DX::ThrowIfFailed
-      (
-        m_fence_->SetEventOnCompletion
-        (
-          m_fence_nonce_[buffer_idx],
-          m_fence_event_
-        )
-      );
-
-    DX::ThrowIfFailed
-      (
-       d2d_factory->CreateDxgiSurfaceRenderTarget
-       (
-        m_surface_.Get(), &props, m_d2d_render_target_view_.GetAddressOf()
-       )
-      );
   }
 
   void D3Device::WaitForBackBuffer() const
