@@ -267,6 +267,8 @@ namespace Engine::Resources
 
     GetD3Device().GetCommandList()->ResourceBarrier(1, &idx_trans);
 
+    DX::ThrowIfFailed(GetD3Device().GetCommandList()->Close());
+
     m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
     m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
     m_index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
