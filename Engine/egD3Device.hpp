@@ -15,16 +15,6 @@ namespace Engine::Manager::Graphics
   using Microsoft::WRL::ComPtr;
   using namespace Engine::Graphics;
 
-  const std::map<GUID, eShaderType, GUIDComparer> g_shader_enum_type_map =
-    {
-    {__uuidof(ID3D11VertexShader), SHADER_VERTEX},
-    {__uuidof(ID3D11PixelShader), SHADER_PIXEL},
-    {__uuidof(ID3D11GeometryShader), SHADER_GEOMETRY},
-    {__uuidof(ID3D11ComputeShader), SHADER_COMPUTE},
-    {__uuidof(ID3D11HullShader), SHADER_HULL},
-    {__uuidof(ID3D11DomainShader), SHADER_DOMAIN}
-  };
-
   const std::unordered_map<std::wstring, eShaderType> g_shader_type_map = {
     {L"vs", SHADER_VERTEX}, {L"ps", SHADER_PIXEL}, {L"gs", SHADER_GEOMETRY},
     {L"cs", SHADER_COMPUTE}, {L"hs", SHADER_HULL}, {L"ds", SHADER_DOMAIN}
@@ -88,7 +78,6 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] HANDLE                            GetSwapchainAwaiter() const;
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetRTVHandle() const;
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
-    [[nodiscard]] D3D12_FEATURE_DATA_ROOT_SIGNATURE GetRootSignatureFeature() const;
 
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
   
@@ -209,7 +198,6 @@ namespace Engine::Manager::Graphics
     void InitializeRenderTargetView();
     void InitializeCommandAllocator();
     void InitializeFence();
-    void InitializeD2D();
     void InitializeDepthStencil();
     
     void WaitForPreviousFrame();
