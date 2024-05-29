@@ -242,7 +242,7 @@ namespace Engine::Manager::Graphics
     }
 
     // If an acceptable adapter is found, create a device and a command queue.
-    const D3D12_COMMAND_QUEUE_DESC queue_desc
+    constexpr D3D12_COMMAND_QUEUE_DESC queue_desc
     {
       .Type = D3D12_COMMAND_LIST_TYPE_DIRECT, // All command, compute only, copy only
       .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL, // Queue priority between multiple queues.
@@ -341,7 +341,7 @@ namespace Engine::Manager::Graphics
       )
     );
 
-    m_rtv_desc_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    const auto desc_size = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     auto rtv_handle = GetRTVHandle();
     
     m_render_targets_.resize(g_frame_buffer);
@@ -355,7 +355,7 @@ namespace Engine::Manager::Graphics
 
       m_device_->CreateRenderTargetView(m_render_targets_[i].Get(), nullptr, rtv_handle);
 
-      rtv_handle.Offset(1, m_rtv_desc_size_);
+      rtv_handle.Offset(desc_size);
     }
   }
 
@@ -389,26 +389,23 @@ namespace Engine::Manager::Graphics
 
   void D3Device::InitializeFence()
   {
-    for (int i = 0; i < g_frame_buffer; ++i)
-    {
-      DX::ThrowIfFailed
+    DX::ThrowIfFailed
       (
-        m_device_->CreateFence
-        (
-          0, D3D12_FENCE_FLAG_NONE,
-          IID_PPV_ARGS(m_fences_[i].GetAddressOf())
-        )
+       m_device_->CreateFence
+       (
+        0, D3D12_FENCE_FLAG_NONE,
+        IID_PPV_ARGS(m_fence_.GetAddressOf())
+       )
       );
 
-      m_fences_nonce_[i] = 0;
-    }
+    m_fence_nonce_.resize(g_frame_buffer, 0);
 
     m_fence_event_ = CreateEvent(nullptr, false, false, nullptr);
+
     if (m_fence_event_ == nullptr)
     {
       DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
-  }
   }
 
   void D3Device::WaitForBackBuffer() const
@@ -525,11 +522,10 @@ namespace Engine::Manager::Graphics
   }
 
   void D3Device::CreateShaderResourceView(
-    ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11ShaderResourceView** view
+    ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& srv, const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle
   ) const
   {
-    const auto rtv_handle = GetRTVHandle();
-    m_device_->CreateShaderResourceView(resource, &srv, rtv_handle);
+    m_device_->CreateShaderResourceView(resource, &srv, srv_handle);
   }
 
   ID3D12CommandAllocator* D3Device::GetDirectCommandAllocator(UINT frame_idx) const
@@ -650,16 +646,11 @@ namespace Engine::Manager::Graphics
     const auto& rtv_handle = GetRTVHandle();
     const auto& dsv_handle = GetDSVHandle();
 
-    {
-      CommandGuard cg;
-      m_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
-    }
+    m_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
-  void D3Device::FrameBegin()
+  void D3Device::FrameBegin() const
   {
-    WaitForPreviousFrame();
-
     DX::ThrowIfFailed
     (
       m_command_allocator_[m_frame_idx_]->Reset()
@@ -670,50 +661,41 @@ namespace Engine::Manager::Graphics
       m_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
     );
 
-    {
-      CommandGuard cg;
-      constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
-      const auto&      rtv_handle = GetRTVHandle();
-      const auto&      dsv_handle = GetDSVHandle();
-    
-      const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_render_targets_[m_frame_idx_].Get(),
-         D3D12_RESOURCE_STATE_PRESENT,
-         D3D12_RESOURCE_STATE_RENDER_TARGET
-        );
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = GetRTVHandle();
+    const auto&      dsv_handle = GetDSVHandle();
+  
+    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[m_frame_idx_].Get(),
+       D3D12_RESOURCE_STATE_PRESENT,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
 
-      m_command_list_->ResourceBarrier(1, &initial_barrier);
-      UpdateRenderTarget();
-      m_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-      m_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-    
-      const auto revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_render_targets_[m_frame_idx_].Get(),
-         D3D12_RESOURCE_STATE_RENDER_TARGET,
-         D3D12_RESOURCE_STATE_PRESENT
-        );
+    m_command_list_->ResourceBarrier(1, &initial_barrier);
+    UpdateRenderTarget();
 
-      m_command_list_->ResourceBarrier(1, &revert_barrier);
-    }
+    m_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    m_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
-  ID3D12CommandQueue* D3Device::GetComputeCommandQueue() const
+  void D3Device::Present()
   {
+    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+     m_render_targets_[m_frame_idx_].Get(),
+     D3D12_RESOURCE_STATE_RENDER_TARGET,
+     D3D12_RESOURCE_STATE_PRESENT
+    );
+
+    m_command_list_->ResourceBarrier(1, &present_barrier);
+
+    DX::ThrowIfFailed(m_command_list_->Close());
+
     const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
 
     m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
 
-    DX::ThrowIfFailed
-    (
-      m_command_queue_->Signal
-      (
-        m_fences_[m_frame_idx_].Get(),
-        m_fences_nonce_[m_frame_idx_]
-      )
-    );
-    
     DXGI_PRESENT_PARAMETERS params;
     params.DirtyRectsCount = 0;
     params.pDirtyRects     = nullptr;
@@ -721,12 +703,27 @@ namespace Engine::Manager::Graphics
     params.pScrollOffset   = nullptr;
 
     DX::ThrowIfFailed
-    (
-      m_swap_chain_->Present1
       (
-       g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-       &params
-      )
-    );
+       m_swap_chain_->Present1
+       (
+        g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
+        &params
+       )
+      );
+
+    if (WaitForSingleObjectEx
+        (
+         GetSwapchainAwaiter(), g_max_frame_latency_ms,
+         true
+        ) != WAIT_OBJECT_0)
+    {
+      GetDebugger().Log("Waiting for Swap chain had an issue.");
+    }
+
+    // Signaling the next frame.
+    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
+
+    Signal(m_frame_idx_);
+    WaitForBackBuffer();
   }
 } // namespace Engine::Manager::Graphics
