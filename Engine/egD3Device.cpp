@@ -12,10 +12,7 @@ namespace Engine::Manager::Graphics
 {
   void D3Device::CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const
   {
-    {
-      CommandGuard cg;
-      command_list->CopyResource(buffer, m_render_targets_[m_frame_idx_].Get());
-    }
+    command_list->CopyResource(buffer, m_render_targets_[m_frame_idx_].Get());
   }
 
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
