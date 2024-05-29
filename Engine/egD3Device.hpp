@@ -54,7 +54,7 @@ namespace Engine::Manager::Graphics
 
       IDXGIDebug* pDXGIDebug;
       DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-      pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_DETAIL);
+      pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
 #endif
     }
 
