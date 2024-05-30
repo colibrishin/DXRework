@@ -49,16 +49,15 @@ namespace Engine::Manager::Graphics
     }
 
     static float GetAspectRatio();
-    void         UpdateRenderTarget() const;
-
-    void CreateShaderResourceView(
-      ID3D12Resource * resource, const D3D12_SHADER_RESOURCE_VIEW_DESC & srv, const D3D12_CPU_DESCRIPTOR_HANDLE & srv_handle
-    ) const;
 
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
       ID3DBlob* blob
     );
     void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const;
+
+    void CreateConstantBufferView(
+      const D3D12_CONSTANT_BUFFER_VIEW_DESC & description
+    ) const;
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
@@ -72,18 +71,17 @@ namespace Engine::Manager::Graphics
     const Matrix& GetOrthogonalMatrix() const { return m_ortho_matrix_; }
 
     ID3D12Device* GetDevice() const { return m_device_.Get(); }
-    
-    void __fastcall CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const;
 
-    [[nodiscard]] HANDLE                            GetSwapchainAwaiter() const;
-    [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetRTVHandle() const;
-    [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
+    [[nodiscard]] HANDLE                        GetSwapchainAwaiter() const;
 
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList() const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList() const;
+
+    [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
   
     void WaitForUploadCompletion();
+    void ExecuteDirectCommandList() const;
     void ExecuteCopyCommandList();
     void ExecuteComputeCommandList();
     
@@ -96,14 +94,10 @@ namespace Engine::Manager::Graphics
     ~D3Device() override = default;
 
     D3Device() = default;
-    
-    static void UpdateBuffer(UINT64 size, const void* src, ID3D12Resource* dst);
 
     void InitializeDevice();
-    void InitializeRenderTargetView();
     void InitializeCommandAllocator();
     void InitializeFence();
-    void InitializeDepthStencil();
 
     void WaitForEventCompletion(UINT64 buffer_idx) const;
 
@@ -111,7 +105,7 @@ namespace Engine::Manager::Graphics
     void WaitForBackBuffer() const;
     
     void FrameBegin() const;
-    void Present();
+    void WaitNextFrame();
 
   private:
     HWND m_hwnd_ = nullptr;
@@ -124,26 +118,22 @@ namespace Engine::Manager::Graphics
 
     DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
-    ComPtr<IDXGISwapChain4>    m_swap_chain_    = nullptr;
+    ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
 
-    ComPtr<ID3D12CommandQueue> m_direct_command_queue_ = nullptr;
-    ComPtr<ID3D12CommandQueue> m_copy_command_queue_   = nullptr;
+    ComPtr<ID3D12CommandQueue> m_direct_command_queue_  = nullptr;
+    ComPtr<ID3D12CommandQueue> m_copy_command_queue_    = nullptr;
     ComPtr<ID3D12CommandQueue> m_compute_command_queue_ = nullptr;
 
-    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_     = nullptr;
-    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_     = nullptr;
+    ComPtr<ID3D12Fence>              m_fence_       = nullptr;
+    HANDLE                           m_fence_event_ = nullptr;
+    std::vector<std::atomic<UINT64>> m_fence_nonce_ = {0,};
 
-    ComPtr<ID3D12Fence> m_fence_        = nullptr;
-    HANDLE              m_fence_event_  = nullptr;
-    std::vector<std::atomic<UINT64>> m_fence_nonce_ = {0, };
-
-    UINT64                              m_frame_idx_      = 0;
-    std::vector<ComPtr<ID3D12Resource>> m_render_targets_ = {nullptr,};
+    UINT64 m_frame_idx_ = 0;
 
     std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
-    
-    ComPtr<ID3D12GraphicsCommandList1> m_direct_command_list_ = {nullptr};
-    ComPtr<ID3D12GraphicsCommandList1> m_copy_command_list_   = {nullptr};
+
+    ComPtr<ID3D12GraphicsCommandList1> m_direct_command_list_  = {nullptr};
+    ComPtr<ID3D12GraphicsCommandList1> m_copy_command_list_    = {nullptr};
     ComPtr<ID3D12GraphicsCommandList1> m_compute_command_list_ = {nullptr};
 
     XMMATRIX s_world_matrix_      = {};
