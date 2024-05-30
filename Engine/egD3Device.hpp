@@ -80,113 +80,18 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
 
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList() const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList() const;
   
     void WaitForUploadCompletion();
-    void ForceExecuteCommandList() const;
-
-    template <typename T>
-    void CreateBuffer
-    (
-      ID3D12Resource** buffer,
-      const UINT64 size,
-      const D3D12_HEAP_TYPE heap_type = D3D12_HEAP_TYPE_DEFAULT,
-      const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
-      const std::wstring& name = L""
-    ) const
-    {
-      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(heap_type);
-      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
-      DX::ThrowIfFailed
-        (
-         m_device_->CreateCommittedResource
-         (
-          &default_prop,
-          D3D12_HEAP_FLAG_NONE,
-          &resource_desc,
-          state,
-          nullptr,
-          IID_PPV_ARGS(buffer)
-         )
-        );
-
-      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
-    }
-    
-    template <typename T>
-    void CreateBuffer1D
-    (
-      ID3D12Resource** buffer,
-      const void* data,
-      const UINT64 size,
-      const D3D12_RESOURCE_BARRIER& barrier,
-      const std::wstring& name = L""
-      ) const
-    {
-      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
-      DX::ThrowIfFailed
-        (
-         m_device_->CreateCommittedResource
-         (
-          &default_prop,
-          D3D12_HEAP_FLAG_NONE,
-          &resource_desc,
-          D3D12_RESOURCE_STATE_COPY_DEST,
-          nullptr,
-          IID_PPV_ARGS(buffer)
-         )
-        );
-
-      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
-
-      ComPtr<ID3D12Resource> upload_buffer;
-      const auto& upload_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-
-      DX::ThrowIfFailed
-        (
-         m_device_->CreateCommittedResource
-         (
-          &upload_prop,
-          D3D12_HEAP_FLAG_NONE,
-          &resource_desc,
-          D3D12_RESOURCE_STATE_GENERIC_READ,
-          nullptr,
-          IID_PPV_ARGS(upload_buffer.GetAddressOf())
-         )
-        );
-
-      const D3D12_SUBRESOURCE_DATA data_desc
-      {
-        .pData = data,
-        .RowPitch = sizeof(T) * size,
-        .SlicePitch = sizeof(T) * size
-      };
-
-      UpdateSubresources
-      (
-        m_command_list_.Get(),
-        *buffer,
-        upload_buffer.Get(),
-        0,
-        0,
-        1,
-        &data_desc
-      );
-
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
-      DX::ThrowIfFailed(m_command_list_->Close());
-      GetD3Device().ForceExecuteCommandList();
-      GetD3Device().WaitForUploadCompletion();
-    }
+    void ExecuteCopyCommandList();
+    void ExecuteComputeCommandList();
     
   private:
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
-    friend struct CommandGuard;
-    friend struct ForceCommandExecutionGuard;
+    friend struct DirectCommandGuard;
     
     ~D3Device() override = default;
 
@@ -220,11 +125,13 @@ namespace Engine::Manager::Graphics
     DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
     ComPtr<IDXGISwapChain4>    m_swap_chain_    = nullptr;
-    ComPtr<ID3D12CommandQueue> m_command_queue_ = nullptr;
+
+    ComPtr<ID3D12CommandQueue> m_direct_command_queue_ = nullptr;
+    ComPtr<ID3D12CommandQueue> m_copy_command_queue_   = nullptr;
+    ComPtr<ID3D12CommandQueue> m_compute_command_queue_ = nullptr;
 
     ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_     = nullptr;
     ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_     = nullptr;
-    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_  = nullptr;
 
     ComPtr<ID3D12Fence> m_fence_        = nullptr;
     HANDLE              m_fence_event_  = nullptr;
@@ -234,8 +141,10 @@ namespace Engine::Manager::Graphics
     std::vector<ComPtr<ID3D12Resource>> m_render_targets_ = {nullptr,};
 
     std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
-    // todo: multi pipeline?
-    ComPtr<ID3D12GraphicsCommandList1> m_command_list_ = {nullptr,};
+    
+    ComPtr<ID3D12GraphicsCommandList1> m_direct_command_list_ = {nullptr};
+    ComPtr<ID3D12GraphicsCommandList1> m_copy_command_list_   = {nullptr};
+    ComPtr<ID3D12GraphicsCommandList1> m_compute_command_list_ = {nullptr};
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
