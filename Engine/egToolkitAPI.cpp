@@ -54,24 +54,27 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PreRender(const float& dt) {  }
 
-  void ToolkitAPI::Render(const float& dt) {}
+  void ToolkitAPI::Render(const float& dt)
+  {
+    //FrameBegin();
+  }
 
   void ToolkitAPI::PostRender(const float& dt)
   {
-    FrameBegin();
+    //FrameEnd();
+  }
 
-    for (const auto& callback : m_sprite_batch_callbacks_)
-    {
-      callback();
-    }
+  void ToolkitAPI::FixedUpdate(const float& dt) { }
 
-    FrameEnd();
+  void ToolkitAPI::PostUpdate(const float& dt) { }
 
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
     TODO->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
     TODO->OMSetDepthStencilState(m_states_->DepthNone(), 0);
     TODO->RSSetState(m_states_->CullNone());
+
+    // todo: separate command list.
 
     m_basic_effect_->Apply(GetD3Device().GetCommandList());
 

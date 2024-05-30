@@ -462,13 +462,16 @@ namespace Engine::Manager::Graphics
     WaitForEventCompletion(back_buffer_idx);
   }
 
-  void D3Device::PreUpdate(const float& dt) { FrameBegin(); }
+  void D3Device::PreUpdate(const float& dt) { }
 
   void D3Device::Update(const float& dt) {}
 
   void D3Device::PreRender(const float& dt) {}
 
-  void D3Device::Render(const float& dt) { WaitNextFrame(); }
+  void D3Device::Render(const float& dt)
+  {
+    CleanupCommandList();
+  }
 
   ID3D12CommandAllocator* D3Device::GetComputeCommandAllocator(UINT frame_idx) const
   {
@@ -477,7 +480,11 @@ namespace Engine::Manager::Graphics
       frame_idx = m_frame_idx_;
     }
 
-  void D3Device::PostRender(const float& dt) {}
+  void D3Device::PostRender(const float& dt)
+  {
+    WaitNextFrame();
+    CleanupCommandList();
+  }
 
   ID3D12CommandAllocator* D3Device::GetToolkitCommandAllocator(UINT frame_idx) const
   {
@@ -560,7 +567,7 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  void D3Device::FrameBegin() const
+  void D3Device::CleanupCommandList() const
   {
 
     DX::ThrowIfFailed
