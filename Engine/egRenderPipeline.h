@@ -76,6 +76,7 @@ namespace Engine::Manager::Graphics
 
     ID3D12RootSignature* GetRootSignature() const;
     void SetPSO(const StrongShader& Shader);
+    static void          SetPSO(const StrongShader& Shader);
 
   private:
     friend class ToolkitAPI;
