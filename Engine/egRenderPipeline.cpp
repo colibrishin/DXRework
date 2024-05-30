@@ -796,18 +796,11 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
-    const auto& shader_description = Shader->GetPipelineStateDesc();
-    
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateGraphicsPipelineState
-       (
-        &shader_description,
-        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
-       )
-      );
+    DirectCommandGuard dcg;
 
-    GetD3Device().GetCommandList()->SetPipelineState(m_pipeline_state_.Get());
+    const auto& shader_pso = Shader->GetPipelineState();
+
+    GetD3Device().GetCommandList()->SetPipelineState(shader_pso);
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
