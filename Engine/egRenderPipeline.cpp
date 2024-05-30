@@ -37,15 +37,16 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DefaultRenderTarget() const
   {
-    GetD3Device().GetContext()->OMSetDepthStencilState
-      (
-       m_depth_stencil_state_.Get(), 0
-      );
-    GetD3Device().UpdateRenderTarget();
+    const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+    const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable
-      (DESCRIPTOR_SLOT_SAMPLER, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart());
+  void RenderPipeline::DefaultViewport() const
+  {
+    GetD3Device().GetCommandList()->RSSetViewports(1, &m_viewport_);
+  }
 
     GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable
       (DESCRIPTOR_SLOT_SAMPLER, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart());
@@ -55,36 +56,33 @@ namespace Engine::Manager::Graphics
        m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
       );
 
-    // SRV
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
-
-  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
+  void RenderPipeline::SetFrontCullState() const
   {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
+    GetD3Device().GetContext()->RSSetState
+      (
+       GetToolkitAPI().GetCommonStates()->CullClockwise()
+      );
   }
+  
+  RenderPipeline::~RenderPipeline() { }
 
   void RenderPipeline::InitializeStaticBuffers()
   {
-    m_transform_buffer_data_.Create(nullptr);
     m_wvp_buffer_data_.Create(nullptr);
+    m_transform_buffer_data_.Create(nullptr);
     m_material_buffer_data_.Create(nullptr);
     m_param_buffer_data_.Create(nullptr);
   }
-  void RenderPipeline::BindResource(
-    UINT                       slot,
-    eShaderType                shader_type,
-    ID3D11ShaderResourceView** texture
-  ) { g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture, slot, 1); }
-
-  RenderPipeline::~RenderPipeline() { ResetShaders(); }
 
   void RenderPipeline::Initialize()
   {
-    InitializeStaticBuffers();
     PrecompileShaders();
     InitializeRootSignature();
+    InitializeRenderTargets();
+    InitializeDepthStencil();
     InitializeDefaultPSO();
+    InitializeHeaps();
+    InitializeStaticBuffers();
   }
 
   void RenderPipeline::PrecompileShaders()
@@ -95,7 +93,8 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS,
+       D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -104,7 +103,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -113,7 +112,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -123,7 +122,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -132,7 +131,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -141,7 +140,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -150,7 +149,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -159,7 +158,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -168,7 +167,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     const auto billboard = Shader::Create
@@ -177,7 +176,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT
       );
 
     Shader::Create
@@ -186,7 +185,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_POINT,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -195,7 +194,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
   }
 
@@ -206,16 +205,18 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::InitializeRootSignature()
   {
+    DirectCommandGuard dcg;
+
     CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
-    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
+    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[3];
+    CD3DX12_ROOT_PARAMETER1 root_parameters[4];
     root_parameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
     root_parameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
     root_parameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[2];
@@ -249,6 +250,8 @@ namespace Engine::Manager::Graphics
         IID_PPV_ARGS(m_root_signature_.ReleaseAndGetAddressOf())
         )
     );
+
+    GetD3Device().GetCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
   }
 
   void RenderPipeline::InitializeRenderTargets()
@@ -271,11 +274,14 @@ namespace Engine::Manager::Graphics
        )
       );
 
+    const auto rtv_descriptor_size = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
     constexpr D3D12_RENDER_TARGET_VIEW_DESC rtv_desc
     {
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+      .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
       .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
       .Texture2D = { 0, 0 }
     };
@@ -295,7 +301,7 @@ namespace Engine::Manager::Graphics
          m_render_targets_[i].Get(), &rtv_desc, rtv_handle
         );
 
-      rtv_handle.Offset(1, m_rtv_descriptor_size_);
+      rtv_handle.Offset(1, rtv_descriptor_size);
     }
   }
 
@@ -351,192 +357,14 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::InitializeNullDescriptors()
-  {
-    // Dummy (null) descriptor
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_buffer_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_sampler_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_rtv_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_dsv_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_buffer_heap_desc,
-        IID_PPV_ARGS(m_null_cbv_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_buffer_heap_desc,
-        IID_PPV_ARGS(m_null_srv_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_buffer_heap_desc,
-        IID_PPV_ARGS(m_null_uav_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    GetD3Device().GetDevice()->CreateConstantBufferView
-      (
-       nullptr, m_null_cbv_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    constexpr D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc
-    {
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-      .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-      .Texture2D = {0, 0, 0, 0}
-    };
-
-    GetD3Device().GetDevice()->CreateShaderResourceView
-      (
-       nullptr, &srv_desc, m_null_srv_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    constexpr D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc
-    {
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
-      .Texture2D = { 0, 0, }
-    };
-
-    GetD3Device().GetDevice()->CreateUnorderedAccessView
-      (
-       nullptr, nullptr, &uav_desc, m_null_uav_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_sampler_heap_desc,
-        IID_PPV_ARGS(m_null_sampler_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_rtv_heap_desc,
-        IID_PPV_ARGS(m_null_rtv_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &null_dsv_heap_desc,
-        IID_PPV_ARGS(m_null_dsv_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    constexpr D3D12_SAMPLER_DESC sampler_desc
-    {
-      .Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-      .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-      .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-      .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-      .MipLODBias = 0,
-      .MaxAnisotropy = 0,
-      .ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER,
-      .BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
-      .MinLOD = 0,
-      .MaxLOD = D3D12_FLOAT32_MAX
-    };
-
-    GetD3Device().GetDevice()->CreateSampler
-      (
-       &sampler_desc, m_null_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    constexpr D3D12_RENDER_TARGET_VIEW_DESC rtv_desc
-    {
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-      .Texture2D = {0, 0}
-    };
-
-    GetD3Device().GetDevice()->CreateRenderTargetView
-      (
-       nullptr, &rtv_desc, m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    constexpr D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc
-    {
-      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
-      .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
-      .Flags = D3D12_DSV_FLAG_NONE,
-      .Texture2D = {0}
-    };
-
-    GetD3Device().GetDevice()->CreateDepthStencilView
-      (
-       nullptr, &dsv_desc, m_null_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-  }
-
   void RenderPipeline::InitializeHeaps()
   {
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = g_total_engine_slots,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &buffer_heap_desc, IID_PPV_ARGS(m_buffer_descriptor_heap_.ReleaseAndGetAddressOf())
-       )
-      );
+    DirectCommandGuard dcg;
 
     constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-      .NumDescriptors = g_max_sampler_slots,
+      .NumDescriptors = 2,
       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       .NodeMask = 0
     };
@@ -549,28 +377,76 @@ namespace Engine::Manager::Graphics
        )
       );
 
-    m_buffer_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
-      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC cb_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = CB_TYPE_END,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      .NodeMask = 0
+    };
 
-    m_rtv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &cb_heap_desc, IID_PPV_ARGS(m_cb_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
 
-    m_dsv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = BIND_SLOT_END,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      .NodeMask = 0
+    };
 
-    m_sampler_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &srv_heap_desc, IID_PPV_ARGS(m_srv_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
 
-    InitializeNullDescriptors();
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC uav_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = BIND_SLOT_UAV_END,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &uav_heap_desc, IID_PPV_ARGS(m_uav_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    ID3D12DescriptorHeap* cb_heaps[]
+    {
+      m_sampler_descriptor_heap_.Get(),
+      m_cb_descriptor_heap_.Get(),
+      m_uav_descriptor_heap_.Get(),
+      m_srv_descriptor_heap_.Get()
+    };
+
+    GetD3Device().GetCommandList()->SetDescriptorHeaps(_countof(cb_heaps), cb_heaps);
+
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
   }
 
-  void RenderPipeline::PreUpdate(const float& dt) {}
-
-  void RenderPipeline::PreRender(const float& dt)
+  void RenderPipeline::PreUpdate(const float& dt)
   {
-    GetD3Device().WaitNextFrame();
+    DirectCommandGuard dcg;
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
-
-    SetRootSignature();
-    SetHeaps();
+    _reset_constant_buffer();
+    _reset_structured_buffer();
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
@@ -583,32 +459,32 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &initial_barrier);
+    GetD3Device().GetCommandList()->ResourceBarrier(1, &initial_barrier);
 
-    GetD3Device().GetDirectCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-    FallbackPSO();
+    GetD3Device().GetCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
+
+  void RenderPipeline::PreRender(const float& dt) {}
 
   void RenderPipeline::Update(const float& dt) {}
 
-  void RenderPipeline::Render(const float& dt) {}
-
-  void RenderPipeline::FixedUpdate(const float& dt) {}
-
-  void RenderPipeline::PostRender(const float& dt)
+  void RenderPipeline::Render(const float& dt)
   {
-    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_PRESENT
-      );
+    {
+      DirectCommandGuard dcg;
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
+      const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         D3D12_RESOURCE_STATE_RENDER_TARGET,
+         D3D12_RESOURCE_STATE_PRESENT
+        );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &present_barrier);
+    }
 
     GetD3Device().ExecuteDirectCommandList();
 
@@ -637,138 +513,43 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  void RenderPipeline::FixedUpdate(const float& dt) {}
+
+  void RenderPipeline::PostRender(const float& dt) {}
+
   void RenderPipeline::PostUpdate(const float& dt) {}
 
-  void RenderPipeline::DrawIndexedDeferred(UINT index_count)
+  void RenderPipeline::DrawIndexed(UINT index_count)
   {
-    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
   }
 
-  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv)
+  void RenderPipeline::DrawIndexedInstanced(UINT index_count, UINT instance_count)
   {
-    const auto& current_rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       GetD3Device().GetFrameIndex(),
-       m_rtv_descriptor_size_
-      );
-
-    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv, false, &current_dsv);
-
-    return {current_rtv_handle, current_dsv};
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
   }
 
-  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
-    const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
-  )
+  void RenderPipeline::TargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
   {
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       GetD3Device().GetFrameIndex(),
-       m_rtv_descriptor_size_
-      );
-
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
-      (
-       m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(
-        1, 
-        &rtv, 
-        false, 
-        &dsv);
-
-    return {current_rtv_handle, current_dsv_handle};
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
   }
 
-  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
-    const UINT count, const D3D12_CPU_DESCRIPTOR_HANDLE* srv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
-  )
+  void RenderPipeline::SetViewport(const D3D12_VIEWPORT& viewport)
   {
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
-      (
-            m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-                GetD3Device().GetFrameIndex(),
-                m_rtv_descriptor_size_
-           );
-
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
-      (
-            m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
-           );
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets
-      (
-       count, srv, false, &dsv
-      );
-
-    return {current_rtv_handle, current_dsv_handle};
-  }
-
-  void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
-  {
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
-  }
-
-  RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
-  {
-    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       GetD3Device().GetFrameIndex(),
-       m_rtv_descriptor_size_
-      );
-
-    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
-
-    return {current_rtv, current_dsv};
-  }
-
-  RTVDSVHandlePair RenderPipeline::SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
-  {
-    const auto& null_rtv = m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       GetD3Device().GetFrameIndex(),
-       m_rtv_descriptor_size_
-      );
-
-    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, &null_rtv, false, &dsv);
-
-    return {current_rtv, current_dsv};
-  }
-
-  void RenderPipeline::SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const
-  {
-    const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
-      (
-       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       g_srv_offset + slot,
-       m_buffer_descriptor_size_
-      );
-
-    GetD3Device().GetDevice()->CopyDescriptorsSimple
-      (
-       1,
-       heap_handle,
-       srv_handle,
-       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-      );
+    GetD3Device().GetCommandList()->RSSetViewports(1, &viewport);
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const
   {
     return m_root_signature_.Get();
+  }
+
+  ID3D12DescriptorHeap* RenderPipeline::GetCBHeap() const
+  {
+    return m_cb_descriptor_heap_.Get();
   }
 
   void RenderPipeline::SetPSO(const StrongShader& Shader)

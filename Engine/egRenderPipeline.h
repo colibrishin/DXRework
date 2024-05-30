@@ -57,6 +57,9 @@ namespace Engine::Manager::Graphics
     // Returns a ticket that will reset to the previous param when it goes out of scope.
     [[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param);
 
+    void DefaultRenderTarget() const;
+    void DefaultViewport() const;
+
     void SetWireframeState() const;
     void SetFillState() const;
     void SetNoneCullState() const;
@@ -74,9 +77,9 @@ namespace Engine::Manager::Graphics
     void        TargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
     static void SetViewport(const D3D12_VIEWPORT& viewport);
 
-    ID3D12RootSignature* GetRootSignature() const;
-    void SetPSO(const StrongShader& Shader);
-    static void          SetPSO(const StrongShader& Shader);
+    ID3D12RootSignature*  GetRootSignature() const;
+    ID3D12DescriptorHeap* GetCBHeap() const;
+    static void           SetPSO(const StrongShader& Shader);
 
   private:
     friend class ToolkitAPI;
@@ -85,14 +88,26 @@ namespace Engine::Manager::Graphics
     RenderPipeline() = default;
     ~RenderPipeline() override;
 
-    void InitializeStaticBuffers();
-
     void PrecompileShaders();
     void InitializeDefaultPSO();
     void InitializeRootSignature();
+    void InitializeRenderTargets();
+    void InitializeDepthStencil();
+    void InitializeHeaps();
+    void InitializeStaticBuffers();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
+
+    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_cb_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_srv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_uav_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
+
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
+    ComPtr<ID3D12Resource> m_depth_stencil_;
 
     D3D12_VIEWPORT m_viewport_{};
     D3D12_RECT    m_scissor_rect_{};
