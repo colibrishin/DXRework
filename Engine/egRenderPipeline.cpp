@@ -15,53 +15,22 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
   {
-    m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-    BindConstantBuffer(m_transform_buffer_data_, SHADER_VERTEX);
+    m_transform_buffer_data_.SetData(&matrix);
   }
 
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
-    m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_PIXEL);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_GEOMETRY);
+    m_wvp_buffer_data_.SetData(&matrix);
   }
 
   RenderPipeline::TempParamTicket&& RenderPipeline::SetParam(const ParamBase& param)
   {
     TempParamTicket ticket(m_param_buffer_); // RAII
 
-    reinterpret_cast<ParamBase&>(m_param_buffer_) = param;
-    m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
-
-    BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
-
+    m_param_buffer_ = static_cast<CBs::ParamCB>(param);
+    m_param_buffer_data_.SetData(&m_param_buffer_);
+    
     return std::move(ticket);
-  }
-
-  void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
-  {
-    GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
-  }
-
-  void RenderPipeline::SetDepthStencilState(ID3D11DepthStencilState* state)
-  {
-    GetD3Device().GetContext()->OMSetDepthStencilState(state, 0);
-  }
-
-  void RenderPipeline::SetRasterizerState(ID3D11RasterizerState* state)
-  {
-    GetD3Device().GetContext()->RSSetState(state);
-  }
-
-  void RenderPipeline::SetSamplerState(ID3D11SamplerState* sampler)
-  {
-    GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_TEXTURE);
   }
 
   void RenderPipeline::DefaultRenderTarget() const
@@ -106,21 +75,13 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
   }
 
-  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
+  void RenderPipeline::InitializeStaticBuffers()
   {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
+    m_transform_buffer_data_.Create(nullptr);
+    m_wvp_buffer_data_.Create(nullptr);
+    m_material_buffer_data_.Create(nullptr);
+    m_param_buffer_data_.Create(nullptr);
   }
-
-  void RenderPipeline::UnbindVertexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
-  }
-
-  void RenderPipeline::UnbindIndexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
-  }
-
   void RenderPipeline::BindResource(
     UINT                       slot,
     eShaderType                shader_type,
@@ -131,11 +92,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::Initialize()
   {
-    GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_material_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_param_buffer_data_);
-
+    InitializeStaticBuffers();
     PrecompileShaders();
     InitializeRootSignature();
     InitializeDefaultPSO();
@@ -422,43 +379,12 @@ namespace Engine::Manager::Graphics
         IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
        )
       );
+
+    GetD3Device().GetCommandList()->SetPipelineState(m_pipeline_state_.Get());
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
-    m_material_buffer_data_.SetData
-      (
-       GetD3Device().GetContext(),
-       material_buffer
-      );
-    BindConstantBuffer(m_material_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
-  }
-
-  void RenderPipeline::UnbindResource(UINT slot, eShaderType type)
-  {
-    ComPtr<ID3D11ShaderResourceView> null_view = nullptr;
-    g_shader_rs_bind_map.at(type)
-      (
-       GetD3Device().GetContext(), null_view.GetAddressOf(),
-       slot, 1
-      );
-  }
-
-  void RenderPipeline::UnbindResources(UINT slot, eShaderType type, UINT size)
-  {
-    std::vector<ID3D11ShaderResourceView*> null_views(size, nullptr);
-
-    g_shader_rs_bind_map.at(type)
-      (
-       GetD3Device().GetContext(), null_views.data(),
-       slot, size
-      );
-  }
-
-  void RenderPipeline::UnbindUAVResource(UINT slot)
-  {
-    ComPtr<ID3D11UnorderedAccessView> null_views(nullptr);
-    GetD3Device().GetContext()->CSSetUnorderedAccessViews(slot, 1, null_views.GetAddressOf(), nullptr);
+    m_material_buffer_data_.SetData(&material_buffer);
   }
 } // namespace Engine::Manager::Graphics
