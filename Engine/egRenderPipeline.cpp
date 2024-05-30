@@ -47,22 +47,6 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().GetCommandList()->RSSetViewports(1, &m_viewport_);
   }
-
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable
-      (DESCRIPTOR_SLOT_SAMPLER, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart());
-
-    CD3DX12_GPU_DESCRIPTOR_HANDLE buffer_handle
-      (
-       m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-  void RenderPipeline::SetFrontCullState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->CullClockwise()
-      );
-  }
   
   RenderPipeline::~RenderPipeline() { }
 
