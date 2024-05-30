@@ -98,6 +98,11 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
+    UINT m_rtv_descriptor_size_ = 0;
+    UINT m_dsv_descriptor_size_ = 0;
+    UINT m_buffer_descriptor_size_ = 0;
+    UINT m_sampler_descriptor_size_ = 0;
+    
     ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_cb_descriptor_heap_;
