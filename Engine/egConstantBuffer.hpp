@@ -80,7 +80,7 @@ namespace Engine::Graphics
         .SizeInBytes    = m_alignment_size_
       };
 
-      GetD3Device().CreateConstantBufferView(cbv_desc);
+      GetD3Device().CreateConstantBufferView(which_cb<T>::value, cbv_desc);
     }
 
     void SetData(const T* src_data)
