@@ -450,7 +450,9 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::PreUpdate(const float& dt)
+  void RenderPipeline::PreUpdate(const float& dt) {}
+
+  void RenderPipeline::PreRender(const float& dt)
   {
     DirectCommandGuard dcg;
 
@@ -476,11 +478,16 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
-  void RenderPipeline::PreRender(const float& dt) {}
-
   void RenderPipeline::Update(const float& dt) {}
 
   void RenderPipeline::Render(const float& dt)
+  {
+    GetD3Device().ExecuteDirectCommandList();
+  }
+
+  void RenderPipeline::FixedUpdate(const float& dt) {}
+
+  void RenderPipeline::PostRender(const float& dt)
   {
     {
       DirectCommandGuard dcg;
@@ -521,10 +528,6 @@ namespace Engine::Manager::Graphics
       GetDebugger().Log("Waiting for Swap chain had an issue.");
     }
   }
-
-  void RenderPipeline::FixedUpdate(const float& dt) {}
-
-  void RenderPipeline::PostRender(const float& dt) {}
 
   void RenderPipeline::PostUpdate(const float& dt) {}
 

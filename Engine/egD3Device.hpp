@@ -104,7 +104,7 @@ namespace Engine::Manager::Graphics
     void Signal(const UINT64 buffer_idx);
     void WaitForBackBuffer() const;
     
-    void FrameBegin() const;
+    void CleanupCommandList() const;
     void WaitNextFrame();
 
   private:
