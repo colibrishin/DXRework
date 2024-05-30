@@ -28,6 +28,7 @@
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egComputeShader.h" />
+    <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
     <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egObject.hpp" />
