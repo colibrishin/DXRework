@@ -16,12 +16,22 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
   {
-    m_transform_buffer_ = matrix;
+    m_transform_buffer_data_.SetData(&matrix);
   }
 
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
-    m_wvp_buffer_ = matrix;
+    m_wvp_buffer_data_.SetData(&matrix);
+  }
+
+  RenderPipeline::TempParamTicket&& RenderPipeline::SetParam(const ParamBase& param)
+  {
+    TempParamTicket ticket(m_param_buffer_); // RAII
+
+    m_param_buffer_ = static_cast<CBs::ParamCB>(param);
+    m_param_buffer_data_.SetData(&m_param_buffer_);
+    
+    return std::move(ticket);
   }
 
   void RenderPipeline::DefaultRenderTarget() const
@@ -52,21 +62,13 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
   }
 
-  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
+  void RenderPipeline::InitializeStaticBuffers()
   {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
+    m_transform_buffer_data_.Create(nullptr);
+    m_wvp_buffer_data_.Create(nullptr);
+    m_material_buffer_data_.Create(nullptr);
+    m_param_buffer_data_.Create(nullptr);
   }
-
-  void RenderPipeline::UnbindVertexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
-  }
-
-  void RenderPipeline::UnbindIndexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
-  }
-
   void RenderPipeline::BindResource(
     UINT                       slot,
     eShaderType                shader_type,
@@ -77,6 +79,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::Initialize()
   {
+    InitializeStaticBuffers();
     PrecompileShaders();
     InitializeRootSignature();
     InitializeDefaultPSO();
@@ -803,123 +806,12 @@ namespace Engine::Manager::Graphics
         IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
        )
       );
+
+    GetD3Device().GetCommandList()->SetPipelineState(m_pipeline_state_.Get());
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
-    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &viewport);
-  }
-
-  void RenderPipeline::CopyBackBuffer(ID3D12Resource* resource) const
-  {
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
-    const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_COPY_SOURCE
-      );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_transition);
-
-    GetD3Device().GetCopyCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
-
-    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_COPY_SOURCE,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &rtv_transition);
-
-    GetD3Device().ExecuteCopyCommandList();
-  }
-
-  ID3D12RootSignature* RenderPipeline::GetRootSignature() const
-  {
-    return m_root_signature_.Get();
-  }
-
-  ID3D12DescriptorHeap* RenderPipeline::GetBufferHeap() const
-  {
-    return m_buffer_descriptor_heap_.Get();
-  }
-
-  ID3D12DescriptorHeap* RenderPipeline::GetSamplerHeap() const
-  {
-    return m_sampler_descriptor_heap_.Get();
-  }
-
-  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPURTVHandle(UINT index) const
-  {
-    return CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       index,
-       m_rtv_descriptor_size_
-      );
-  }
-
-  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPUDSVHandle() const
-  {
-    return m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-  }
-
-  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPURTVHandle(UINT index) const
-  {
-    return CD3DX12_GPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-       index,
-       m_rtv_descriptor_size_
-      );
-  }
-
-  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPUDSVHandle() const
-  {
-    return m_dsv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
-  }
-
-  D3D12_VIEWPORT RenderPipeline::GetViewport()
-  {
-    return m_viewport_;
-  }
-
-  void RenderPipeline::SetPSO(const StrongShader& Shader)
-  {
-    const auto& shader_pso = Shader->GetPipelineState();
-
-    GetD3Device().GetDirectCommandList()->SetPipelineState(shader_pso);
-  }
-
-  UINT RenderPipeline::GetBufferDescriptorSize() const
-  {
-    return m_buffer_descriptor_size_;
-  }
-
-  UINT RenderPipeline::GetSamplerDescriptorSize() const
-  {
-    return m_sampler_descriptor_size_;
-  }
-
-  void RenderPipeline::UploadConstantBuffersDeferred()
-  {
-    m_wvp_buffer_data_.SetData(&m_wvp_buffer_);
-    m_transform_buffer_data_.SetData(&m_transform_buffer_);
-    m_material_buffer_data_.SetData(&m_material_buffer_);
-    m_param_buffer_data_.SetData(&m_param_buffer_);
-  }
-
-  void RenderPipeline::ExecuteDirectCommandList()
-  {
-    UploadConstantBuffersDeferred();
-    GetD3Device().ExecuteDirectCommandList();
-  }
-
-  void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
-  {
-    m_material_buffer_ = material_buffer;
+    m_material_buffer_data_.SetData(&material_buffer);
   }
 } // namespace Engine::Manager::Graphics

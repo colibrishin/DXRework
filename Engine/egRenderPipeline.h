@@ -21,6 +21,7 @@ namespace Engine::Manager::Graphics
 
       ~TempParamTicket()
       {
+        reinterpret_cast<ParamBase&>(GetRenderPipeline().m_param_buffer_) = previousParam;
         GetRenderPipeline().m_param_buffer_ = previousParam;
         GetRenderPipeline().m_param_buffer_data_.SetData(&previousParam);
       }
@@ -49,40 +50,28 @@ namespace Engine::Manager::Graphics
     void SetParam(const T& v, const size_t slot)
     {
       m_param_buffer_.SetParam(slot, v);
+      m_param_buffer_data_.SetData(&m_param_buffer_);
     }
 
     // Returns a ticket that will reset to the previous param when it goes out of scope.
     [[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param);
 
-    void DefaultRenderTarget() const;
-    void DefaultViewport() const;
-
-    void        DrawIndexedDeferred(UINT index_count);
-    static void DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count);
-
-    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
-    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
-    static void UnbindVertexBuffer();
-    static void UnbindIndexBuffer();
+    void SetWireframeState() const;
+    void SetFillState() const;
+    void SetNoneCullState() const;
+    void SetFrontCullState() const;
 
     void BindResource(
-      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
+      const UINT slot, const D3D12_GPU_VIRTUAL_ADDRESS& address
     );
-    void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
-    RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
-    void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
-    void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
-    void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
 
-    RTVDSVHandlePair SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
-    void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
-    static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
+    void UnbindResource(const UINT slot);
 
-    void CopyBackBuffer(ID3D12Resource* resource) const;
+    void        DrawIndexed(UINT index_count);
+    static void DrawIndexedInstanced(UINT index_count, UINT instance_count);
 
-    ID3D12RootSignature*  GetRootSignature() const;
-    ID3D12DescriptorHeap* GetBufferHeap() const;
-    ID3D12DescriptorHeap* GetSamplerHeap() const;
+    void        TargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
+    static void SetViewport(const D3D12_VIEWPORT& viewport);
 
     ID3D12RootSignature* GetRootSignature() const;
     void SetPSO(const StrongShader& Shader);
@@ -94,6 +83,8 @@ namespace Engine::Manager::Graphics
     RenderPipeline() = default;
     ~RenderPipeline() override;
 
+    void InitializeStaticBuffers();
+
     void PrecompileShaders();
     void InitializeDefaultPSO();
     void InitializeRootSignature();
@@ -103,7 +94,7 @@ namespace Engine::Manager::Graphics
 
     D3D12_VIEWPORT m_viewport_{};
     D3D12_RECT    m_scissor_rect_{};
-    
+
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
@@ -111,6 +102,5 @@ namespace Engine::Manager::Graphics
     ConstantBuffer<CBs::MaterialCB> m_material_buffer_data_{};
     ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
   };
 } // namespace Engine::Manager::Graphics
