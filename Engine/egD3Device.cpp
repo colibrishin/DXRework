@@ -165,11 +165,16 @@ namespace Engine::Manager::Graphics
     m_device_->CreateSampler(&description, sampler_handle);
   }
 
-  void D3Device::CreateConstantBufferView(const D3D12_CONSTANT_BUFFER_VIEW_DESC& description) const
+  void D3Device::CreateConstantBufferView(const UINT slot, const D3D12_CONSTANT_BUFFER_VIEW_DESC& description) const
   {
-    m_device_->CreateConstantBufferView(
-        &description, 
-        GetRenderPipeline().GetCBHeap()->GetCPUDescriptorHandleForHeapStart());
+    const auto& cbv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       GetRenderPipeline().GetCBHeap()->GetCPUDescriptorHandleForHeapStart(),
+       slot,
+       m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
+      );
+
+    m_device_->CreateConstantBufferView(&description, cbv_handle);
   }
 
   void D3Device::InitializeDevice()
