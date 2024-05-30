@@ -722,6 +722,9 @@ namespace Engine::Manager::Graphics
 
   void D3Device::FrameBegin() const
   {
+    _reset_constant_buffer();
+    _reset_structured_buffer();
+
     DX::ThrowIfFailed
     (
       m_command_allocator_[m_frame_idx_]->Reset()

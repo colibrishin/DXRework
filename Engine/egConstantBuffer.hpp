@@ -2,6 +2,18 @@
 
 namespace Engine::Graphics
 {
+  inline static std::vector<ComPtr<ID3D12Resource>> g_cb_upload_buffers = {};
+
+  static void _reset_constant_buffer()
+  {
+    for (auto& buffer : g_cb_upload_buffers)
+    {
+      buffer.Reset();
+    }
+
+    g_cb_upload_buffers.clear();
+  }
+
   template <typename T>
   class ConstantBuffer
   {
@@ -43,7 +55,7 @@ namespace Engine::Graphics
            )
           );
 
-        s_upload_buffers_.push_back(upload_buffer);
+        g_cb_upload_buffers.push_back(upload_buffer);
 
         char* data = nullptr;
 
@@ -80,7 +92,7 @@ namespace Engine::Graphics
          )
         );
 
-      s_upload_buffers_.push_back(upload_buffer);
+      g_cb_upload_buffers.push_back(upload_buffer);
 
       char* data = nullptr;
 
@@ -130,18 +142,7 @@ namespace Engine::Graphics
       GetD3Device().GetCommandList()->SetGraphicsRootConstantBufferView(which_cb<T>::value, 0);
     }
 
-    static void Reset()
-    {
-      for (auto& buffer : s_upload_buffers_)
-      {
-        buffer.Reset();
-      }
-
-      s_upload_buffers_.clear();
-    }
-
   private:
-    inline static std::vector<ComPtr<ID3D12Resource>> s_upload_buffers_ = {};
 
     ComPtr<ID3D12DescriptorHeap> m_cbv_heap_;
     ComPtr<ID3D12Resource> m_buffer_;
