@@ -46,29 +46,6 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().GetCommandList()->RSSetViewports(1, &m_viewport_);
   }
-
-  void RenderPipeline::SetWireframeState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->Wireframe()
-      );
-  }
-
-  void RenderPipeline::DefaultViewport() const
-  {
-    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &m_viewport_);
-  }
-  
-  RenderPipeline::~RenderPipeline() { }
-
-  void RenderPipeline::InitializeStaticBuffers()
-  {
-    m_wvp_buffer_data_.Create(nullptr);
-    m_transform_buffer_data_.Create(nullptr);
-    m_material_buffer_data_.Create(nullptr);
-    m_param_buffer_data_.Create(nullptr);
-  }
   
   RenderPipeline::~RenderPipeline() { }
 

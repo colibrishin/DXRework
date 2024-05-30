@@ -59,17 +59,6 @@ namespace Engine::Manager::Graphics
     void DefaultRenderTarget() const;
     void DefaultViewport() const;
 
-    void SetWireframeState() const;
-    void SetFillState() const;
-    void SetNoneCullState() const;
-    void SetFrontCullState() const;
-
-    void BindResource(
-      const UINT slot, const D3D12_GPU_VIRTUAL_ADDRESS& address
-    );
-
-    void UnbindResource(const UINT slot);
-
     void        DrawIndexed(UINT index_count);
     static void DrawIndexedInstanced(UINT index_count, UINT instance_count);
 
