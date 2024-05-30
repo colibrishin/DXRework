@@ -78,6 +78,7 @@ namespace Engine
     CB_TYPE_TRANSFORM,
     CB_TYPE_MATERIAL,
     CB_TYPE_PARAM,
+    CB_TYPE_END,
   };
 
   enum eClientSBType : UINT;
