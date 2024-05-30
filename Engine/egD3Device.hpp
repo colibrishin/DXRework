@@ -56,7 +56,7 @@ namespace Engine::Manager::Graphics
     void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const;
 
     void CreateConstantBufferView(
-      const D3D12_CONSTANT_BUFFER_VIEW_DESC & description
+      const UINT slot, const D3D12_CONSTANT_BUFFER_VIEW_DESC & description
     ) const;
 
     void PreUpdate(const float& dt) override;
