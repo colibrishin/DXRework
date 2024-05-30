@@ -35,7 +35,17 @@ namespace Engine::Manager::Graphics
 
   ID3D12GraphicsCommandList1* D3Device::GetCommandList() const
   {
-    return m_command_list_.Get();
+    return m_direct_command_list_.Get();
+  }
+
+  ID3D12GraphicsCommandList1* D3Device::GetCopyCommandList() const
+  {
+    return m_copy_command_list_.Get();
+  }
+
+  ID3D12GraphicsCommandList1* D3Device::GetComputeCommandList() const
+  {
+    return m_compute_command_list_.Get();
   }
 
   void D3Device::WaitForUploadCompletion()
@@ -43,10 +53,28 @@ namespace Engine::Manager::Graphics
     Signal(m_frame_idx_);
   }
 
-  void D3Device::ForceExecuteCommandList() const
+  void D3Device::ExecuteCopyCommandList()
   {
-    const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
-    m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+    const std::vector<ID3D12CommandList*> command_lists = { m_copy_command_list_.Get() };
+    m_copy_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+
+    DX::ThrowIfFailed(m_copy_command_queue_->Signal(m_fence_.Get(), ++m_fence_nonce_[m_frame_idx_]));
+
+    WaitForEventCompletion(m_frame_idx_);
+
+    DX::ThrowIfFailed(m_copy_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr));
+  }
+
+  void D3Device::ExecuteComputeCommandList()
+  {
+    const std::vector<ID3D12CommandList*> command_lists = { m_compute_command_list_.Get() };
+    m_compute_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+
+    DX::ThrowIfFailed(m_compute_command_queue_->Signal(m_fence_.Get(), ++m_fence_nonce_[m_frame_idx_]));
+
+    WaitForEventCompletion(m_frame_idx_);
+
+    DX::ThrowIfFailed(m_compute_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr));
   }
 
   void D3Device::UpdateBuffer
@@ -242,10 +270,26 @@ namespace Engine::Manager::Graphics
     }
 
     // If an acceptable adapter is found, create a device and a command queue.
-    constexpr D3D12_COMMAND_QUEUE_DESC queue_desc
+    constexpr D3D12_COMMAND_QUEUE_DESC direct_desc
     {
       .Type = D3D12_COMMAND_LIST_TYPE_DIRECT, // All command, compute only, copy only
       .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL, // Queue priority between multiple queues.
+      .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_COMMAND_QUEUE_DESC copy_desc
+    {
+      .Type = D3D12_COMMAND_LIST_TYPE_COPY,
+      .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+      .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_COMMAND_QUEUE_DESC compute_desc
+    {
+      .Type = D3D12_COMMAND_LIST_TYPE_COMPUTE,
+      .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
       .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
       .NodeMask = 0
     };
@@ -254,10 +298,28 @@ namespace Engine::Manager::Graphics
     (
      m_device_->CreateCommandQueue
      (
-      &queue_desc,
-      IID_PPV_ARGS(&m_command_queue_)
+      &direct_desc,
+      IID_PPV_ARGS(&m_direct_command_queue_)
      )
     );
+
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateCommandQueue
+       (
+        &copy_desc,
+        IID_PPV_ARGS(&m_copy_command_queue_)
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateCommandQueue
+       (
+        &compute_desc,
+        IID_PPV_ARGS(&m_compute_command_queue_)
+       )
+      );
 
     // Create swap chain
     DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
@@ -302,23 +364,6 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second));
     m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-    (
-      m_device_->CreateDescriptorHeap
-      (
-        &buffer_desc,
-        IID_PPV_ARGS(m_buffer_descriptor_heap_.GetAddressOf())
-      )
-    );
   }
 
   void D3Device::InitializeCommandAllocator()
@@ -380,11 +425,37 @@ namespace Engine::Manager::Graphics
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         m_command_allocator_[m_frame_idx_].Get(),
         nullptr,
-        IID_PPV_ARGS(m_command_list_.GetAddressOf())
+        IID_PPV_ARGS(m_direct_command_list_.GetAddressOf())
         )
     );
 
-    DX::ThrowIfFailed(m_command_list_->Close());
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateCommandList
+       (
+        0,
+        D3D12_COMMAND_LIST_TYPE_COPY,
+        m_command_allocator_[m_frame_idx_].Get(),
+        nullptr,
+        IID_PPV_ARGS(m_copy_command_list_.GetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateCommandList
+       (
+        0,
+        D3D12_COMMAND_LIST_TYPE_COMPUTE,
+        m_command_allocator_[m_frame_idx_].Get(),
+        nullptr,
+        IID_PPV_ARGS(m_compute_command_list_.GetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed(m_direct_command_list_->Close());
+    DX::ThrowIfFailed(m_copy_command_list_->Close());
+    DX::ThrowIfFailed(m_compute_command_list_->Close());
   }
 
   void D3Device::InitializeFence()
@@ -463,8 +534,8 @@ namespace Engine::Manager::Graphics
      );
 
     {
-      ForceCommandExecutionGuard fcg;
-      m_command_list_->OMSetRenderTargets
+      DirectCommandGuard dcg;
+      m_direct_command_list_->OMSetRenderTargets
       (
         1,
         &rtv_handle,
@@ -472,7 +543,7 @@ namespace Engine::Manager::Graphics
         &dsv_handle
       );
 
-      m_command_list_->ClearDepthStencilView
+      m_direct_command_list_->ClearDepthStencilView
       (
         dsv_handle,
         D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
@@ -505,7 +576,7 @@ namespace Engine::Manager::Graphics
   {
     DX::ThrowIfFailed
     (
-      m_command_queue_->Signal
+      m_direct_command_queue_->Signal
       (
         m_fence_.Get(),
         ++m_fence_nonce_[buffer_idx]
@@ -661,7 +732,7 @@ namespace Engine::Manager::Graphics
     const auto& rtv_handle = GetRTVHandle();
     const auto& dsv_handle = GetDSVHandle();
 
-    m_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    m_direct_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
   void D3Device::FrameBegin() const
@@ -673,8 +744,18 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed
     (
-      m_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
+      m_direct_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
     );
+
+    DX::ThrowIfFailed
+      (
+       m_copy_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
+      );
+
+    DX::ThrowIfFailed
+      (
+       m_compute_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
+      );
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = GetRTVHandle();
@@ -687,11 +768,11 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    m_command_list_->ResourceBarrier(1, &initial_barrier);
+    m_direct_command_list_->ResourceBarrier(1, &initial_barrier);
     UpdateRenderTarget();
 
-    m_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    m_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    m_direct_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    m_direct_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
   void D3Device::Present()
@@ -703,13 +784,13 @@ namespace Engine::Manager::Graphics
      D3D12_RESOURCE_STATE_PRESENT
     );
 
-    m_command_list_->ResourceBarrier(1, &present_barrier);
+    m_direct_command_list_->ResourceBarrier(1, &present_barrier);
 
-    DX::ThrowIfFailed(m_command_list_->Close());
+    DX::ThrowIfFailed(m_direct_command_list_->Close());
 
-    const std::vector<ID3D12CommandList*> command_lists = { m_command_list_.Get() };
+    const std::vector<ID3D12CommandList*> command_lists = { m_direct_command_list_.Get() };
 
-    m_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
+    m_direct_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
 
     DXGI_PRESENT_PARAMETERS params;
     params.DirtyRectsCount = 0;
