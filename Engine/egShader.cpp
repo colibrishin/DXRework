@@ -82,7 +82,6 @@ namespace Engine::Resources
       throw std::runtime_error("Vertex shader is not found");
     }
 
-    // todo: bind with PSO
     D3D12_DEPTH_STENCIL_DESC dsd;
     dsd.DepthEnable                  = m_depth_flag_;
     dsd.DepthWriteMask               = m_depth_test_;
@@ -159,6 +158,15 @@ namespace Engine::Resources
     m_pipeline_state_desc_.NodeMask = 0;
     m_pipeline_state_desc_.CachedPSO = {};
     m_pipeline_state_desc_.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateGraphicsPipelineState
+       (
+        &m_pipeline_state_desc_,
+        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
+       )
+      );
   }
 
   Shader::Shader(
@@ -201,6 +209,7 @@ namespace Engine::Resources
     m_ds_blob_.Reset();
     m_il_.clear();
     m_sampler_descriptor_heap_.Reset();
+    m_pipeline_state_.Reset();
   }
 
   void Shader::OnDeserialized() {}
@@ -219,9 +228,9 @@ namespace Engine::Resources
 
   eShaderDomain Shader::GetDomain() const { return m_domain_; }
 
-  D3D12_GRAPHICS_PIPELINE_STATE_DESC Shader::GetPipelineStateDesc() const
+  ID3D12PipelineState* Shader::GetPipelineState() const
   {
-    return m_pipeline_state_desc_;
+    return m_pipeline_state_.Get();
   }
 
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
@@ -231,7 +240,7 @@ namespace Engine::Resources
 
   boost::shared_ptr<Shader> Shader::Create(
     const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY topology
+    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
   )
   {
     if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
