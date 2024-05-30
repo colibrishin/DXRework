@@ -64,7 +64,7 @@ namespace Engine::Manager::Graphics
     InitializeRootSignature();
     InitializeRenderTargets();
     InitializeDepthStencil();
-    InitializeDefaultPSO();
+    FallbackPSO();
     InitializeHeaps();
     InitializeStaticBuffers();
   }
@@ -182,9 +182,9 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::InitializeDefaultPSO()
+  void RenderPipeline::FallbackPSO()
   {
-    
+    SetPSO(Shader::Get("default").lock());
   }
 
   void RenderPipeline::InitializeRootSignature()
@@ -258,9 +258,6 @@ namespace Engine::Manager::Graphics
        )
       );
 
-    const auto rtv_descriptor_size = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
-      (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
     constexpr D3D12_RENDER_TARGET_VIEW_DESC rtv_desc
@@ -285,7 +282,7 @@ namespace Engine::Manager::Graphics
          m_render_targets_[i].Get(), &rtv_desc, rtv_handle
         );
 
-      rtv_handle.Offset(1, rtv_descriptor_size);
+      rtv_handle.Offset(1, m_rtv_descriptor_size_);
     }
   }
 
@@ -432,6 +429,41 @@ namespace Engine::Manager::Graphics
       (
        0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
       );
+
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+      (
+        1, m_cb_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+      (
+        2, m_uav_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+      (
+        3, m_srv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+      (
+       1, m_cb_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+      (
+       2, m_uav_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+      (
+       3, m_srv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
   }
 
   void RenderPipeline::PreUpdate(const float& dt) {}
@@ -460,6 +492,8 @@ namespace Engine::Manager::Graphics
 
     GetD3Device().GetCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
     GetD3Device().GetCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+    FallbackPSO();
   }
 
   void RenderPipeline::Update(const float& dt) {}
@@ -548,6 +582,16 @@ namespace Engine::Manager::Graphics
     return m_cb_descriptor_heap_.Get();
   }
 
+  ID3D12DescriptorHeap* RenderPipeline::GetSRVHeap() const
+  {
+    return m_srv_descriptor_heap_.Get();
+  }
+
+  ID3D12DescriptorHeap* RenderPipeline::GetUAVHeap() const
+  {
+    return m_uav_descriptor_heap_.Get();
+  }
+
   void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
     DirectCommandGuard dcg;
@@ -555,6 +599,11 @@ namespace Engine::Manager::Graphics
     const auto& shader_pso = Shader->GetPipelineState();
 
     GetD3Device().GetCommandList()->SetPipelineState(shader_pso);
+  }
+
+  UINT RenderPipeline::GetBufferDescriptorSize() const
+  {
+    return m_buffer_descriptor_size_;
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
