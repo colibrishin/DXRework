@@ -128,14 +128,9 @@ namespace Engine
     };
   }
 
-  struct CommandGuard
+  struct DirectCommandGuard
   {
-    ~CommandGuard();
-  };
-
-  struct ForceCommandExecutionGuard
-  {
-    ~ForceCommandExecutionGuard();
+    ~DirectCommandGuard();
   };
 } // namespace Engine
 
