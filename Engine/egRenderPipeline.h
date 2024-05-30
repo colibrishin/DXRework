@@ -67,7 +67,12 @@ namespace Engine::Manager::Graphics
 
     ID3D12RootSignature*  GetRootSignature() const;
     ID3D12DescriptorHeap* GetCBHeap() const;
+    ID3D12DescriptorHeap* GetSRVHeap() const;
+    ID3D12DescriptorHeap* GetUAVHeap() const;
+
     static void           SetPSO(const StrongShader& Shader);
+
+    UINT GetBufferDescriptorSize() const;
 
   private:
     friend class ToolkitAPI;
@@ -77,7 +82,7 @@ namespace Engine::Manager::Graphics
     ~RenderPipeline() override;
 
     void PrecompileShaders();
-    void InitializeDefaultPSO();
+    void FallbackPSO();
     void InitializeRootSignature();
     void InitializeRenderTargets();
     void InitializeDepthStencil();
