@@ -1,4 +1,6 @@
 #pragma once
+#include "egGlobal.h"
+#include "egRenderPipeline.h"
 
 namespace Engine::Graphics
 {
@@ -14,6 +16,7 @@ namespace Engine::Graphics
     g_cb_upload_buffers.clear();
   }
 
+  // Creates a constant buffer for only current back buffer.
   template <typename T>
   class ConstantBuffer
   {
@@ -25,7 +28,7 @@ namespace Engine::Graphics
       DirectCommandGuard dcg;
 
       const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-      const auto& cb_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T));
+      const auto& cb_desc      = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
 
       DX::ThrowIfFailed
         (
@@ -66,9 +69,18 @@ namespace Engine::Graphics
         GetD3Device().GetCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
       }
 
-      const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+      const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
+        (m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
       GetD3Device().GetCommandList()->ResourceBarrier(1, &cb_trans);
+
+      const D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc
+      {
+        .BufferLocation = m_buffer_->GetGPUVirtualAddress(),
+        .SizeInBytes    = m_alignment_size_
+      };
+
+      GetD3Device().CreateConstantBufferView(cbv_desc);
     }
 
     void SetData(const T* src_data)
@@ -79,6 +91,7 @@ namespace Engine::Graphics
 
       GetD3Device().GetCommandList()->ResourceBarrier(1, &copy_trans);
 
+      // Use upload buffer for synchronization.
       ComPtr<ID3D12Resource> upload_buffer;
 
       DX::ThrowIfFailed
@@ -108,53 +121,20 @@ namespace Engine::Graphics
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
       GetD3Device().GetCommandList()->ResourceBarrier(1, &cb_trans);
-
-      constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
-      {
-        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-        .NumDescriptors = 1,
-        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-        .NodeMask = 0
-      };
-
-      DX::ThrowIfFailed
-        (GetD3Device().GetDevice()->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(m_cbv_heap_.GetAddressOf())));
-
-      m_cbv_desc_.BufferLocation = m_buffer_->GetGPUVirtualAddress();
-      m_cbv_desc_.SizeInBytes = sizeof(T);
-
-      GetD3Device().GetDevice()->CreateConstantBufferView(
-          &m_cbv_desc_, 
-          m_cbv_heap_->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    void Bind() const
-    {
-      DirectCommandGuard dcg;
-
-      GetD3Device().GetCommandList()->SetGraphicsRootConstantBufferView(which_cb<T>::value, m_buffer_->GetGPUVirtualAddress());
-    }
-
-    void Unbind() const
-    {
-      DirectCommandGuard dcg;
-
-      GetD3Device().GetCommandList()->SetGraphicsRootConstantBufferView(which_cb<T>::value, 0);
     }
 
   private:
 
-    ComPtr<ID3D12DescriptorHeap> m_cbv_heap_;
     ComPtr<ID3D12Resource> m_buffer_;
-    D3D12_CONSTANT_BUFFER_VIEW_DESC m_cbv_desc_;
+    UINT m_alignment_size_;
 
   };
 
   template <typename T>
   ConstantBuffer<T>::ConstantBuffer()
-    : m_cbv_desc_()
   {
-    static_assert(sizeof(T) % 256 == 0, "Constant buffer size must be 256-byte aligned");
     static_assert(std::is_pod_v<T>, "Constant buffer type must be a POD type");
+
+    m_alignment_size_ = (sizeof(T) + 255) & ~255; 
   }
 }
