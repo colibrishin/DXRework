@@ -431,6 +431,15 @@ namespace Engine::Manager::Graphics
        )
       );
 
+    m_buffer_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    m_rtv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    m_dsv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    m_sampler_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    
     ID3D12DescriptorHeap* cb_heaps[]
     {
       m_sampler_descriptor_heap_.Get(),
