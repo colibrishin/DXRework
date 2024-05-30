@@ -40,25 +40,33 @@ namespace Engine::Manager::Graphics
     m_master_channel_group_->setVolume(0.5f);
   }
 
-  void ToolkitAPI::PreUpdate(const float& dt) {}
+  void ToolkitAPI::PreUpdate(const float& dt) {  }
 
   void ToolkitAPI::Update(const float& dt) { m_audio_engine_->update(); }
 
-  void ToolkitAPI::PreRender(const float& dt) { FrameBegin(); }
+  void ToolkitAPI::PreRender(const float& dt) {  }
 
-  void ToolkitAPI::Render(const float& dt) {}
+  void ToolkitAPI::Render(const float& dt)
+  {
+    //FrameBegin();
+  }
 
-  void ToolkitAPI::PostRender(const float& dt) { FrameEnd(); }
+  void ToolkitAPI::PostRender(const float& dt)
+  {
+    //FrameEnd();
+  }
 
-  void ToolkitAPI::FixedUpdate(const float& dt) {}
+  void ToolkitAPI::FixedUpdate(const float& dt) { }
 
-  void ToolkitAPI::PostUpdate(const float& dt) {}
+  void ToolkitAPI::PostUpdate(const float& dt) { }
 
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
     TODO->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
     TODO->OMSetDepthStencilState(m_states_->DepthNone(), 0);
     TODO->RSSetState(m_states_->CullNone());
+
+    // todo: separate command list.
 
     m_basic_effect_->Apply(GetD3Device().GetCommandList());
 

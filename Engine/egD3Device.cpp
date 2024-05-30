@@ -462,17 +462,24 @@ namespace Engine::Manager::Graphics
     WaitForEventCompletion(back_buffer_idx);
   }
 
-  void D3Device::PreUpdate(const float& dt) { FrameBegin(); }
+  void D3Device::PreUpdate(const float& dt) { }
 
   void D3Device::Update(const float& dt) {}
 
   void D3Device::PreRender(const float& dt) {}
 
-  void D3Device::Render(const float& dt) { WaitNextFrame(); }
+  void D3Device::Render(const float& dt)
+  {
+    CleanupCommandList();
+  }
 
   void D3Device::FixedUpdate(const float& dt) {}
 
-  void D3Device::PostRender(const float& dt) {}
+  void D3Device::PostRender(const float& dt)
+  {
+    WaitNextFrame();
+    CleanupCommandList();
+  }
 
   void D3Device::PostUpdate(const float& dt) {}
 
@@ -503,7 +510,7 @@ namespace Engine::Manager::Graphics
            static_cast<float>(g_window_height);
   }
 
-  void D3Device::FrameBegin() const
+  void D3Device::CleanupCommandList() const
   {
 
     DX::ThrowIfFailed

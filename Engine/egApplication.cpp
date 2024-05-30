@@ -139,6 +139,9 @@ namespace Engine::Manager
 
   void Application::PreUpdate(const float& dt)
   {
+    // Toolkit rendering clean up
+    GetToolkitAPI().PreUpdate(dt);
+
     GetTaskScheduler().PreUpdate(dt);
     GetMouseManager().PreUpdate(dt);
     GetCollisionDetector().PreUpdate(dt);
@@ -155,7 +158,7 @@ namespace Engine::Manager
     GetShadowManager().PreUpdate(dt);
     GetDebugger().PreUpdate(dt);
     GetD3Device().PreUpdate(dt);
-    GetToolkitAPI().PreUpdate(dt);
+    GetRenderPipeline().PreUpdate(dt);
   }
 
   void Application::FixedUpdate(const float& dt)
@@ -216,11 +219,11 @@ namespace Engine::Manager
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
 
-    GetD3Device().PreRender(dt);
-    GetRenderPipeline().PreRender(dt);
     GetRenderer().PreRender(dt);
     GetShadowManager().PreRender(dt);
     GetDebugger().PreRender(dt);
+    GetD3Device().PreRender(dt);
+    GetRenderPipeline().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -237,12 +240,16 @@ namespace Engine::Manager
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
 
-    GetToolkitAPI().Render(dt);
-    GetD3Device().Render(dt);
-    GetRenderPipeline().Render(dt);
     GetRenderer().Render(dt);
     GetShadowManager().Render(dt);
     GetDebugger().Render(dt);
+
+    // Render pass 1 (Opaque, direct execution)
+    GetRenderPipeline().Render(dt);
+    // Cleanup direct command list.
+    GetD3Device().Render(dt);
+    // todo: execute toolkit render, separate command list
+    GetToolkitAPI().Render(dt);
   }
 
   void Application::PostRender(const float& dt)
@@ -268,8 +275,13 @@ namespace Engine::Manager
       ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     }
 
-    GetToolkitAPI().PostRender(dt);
+    // Render pass 2 (post-render, direct execution) -> Present
+    GetRenderPipeline().PostRender(dt);
+    // Final Cleanup, wait for next frame
     GetD3Device().PostRender(dt);
+
+    // todo: cleanup
+    GetToolkitAPI().PostRender(dt);
   }
 
   void Application::PostUpdate(const float& dt)
