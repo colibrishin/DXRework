@@ -10,28 +10,7 @@
 
 namespace Engine::Manager::Graphics
 {
-  void D3Device::CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const
-  {
-    command_list->CopyResource(buffer, m_render_targets_[m_frame_idx_].Get());
-  }
-
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
-
-  CD3DX12_CPU_DESCRIPTOR_HANDLE D3Device::GetRTVHandle() const
-  {
-    return CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-  }
-
-  CD3DX12_CPU_DESCRIPTOR_HANDLE D3Device::GetDSVHandle() const
-  {
-    return CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
-      );
-  }
 
   ID3D12GraphicsCommandList1* D3Device::GetCommandList() const
   {
@@ -51,6 +30,16 @@ namespace Engine::Manager::Graphics
   void D3Device::WaitForUploadCompletion()
   {
     Signal(m_frame_idx_);
+  }
+
+  void D3Device::ExecuteDirectCommandList() const
+  {
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetD3Device().GetCommandList()
+    };
+
+    m_direct_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
   }
 
   void D3Device::ExecuteCopyCommandList()
@@ -75,18 +64,6 @@ namespace Engine::Manager::Graphics
     WaitForEventCompletion(m_frame_idx_);
 
     DX::ThrowIfFailed(m_compute_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr));
-  }
-
-  void D3Device::UpdateBuffer
-  (
-    const UINT64 size, const void* src, ID3D12Resource* dst
-  )
-  {
-    void*               mapped_data = nullptr;
-    const CD3DX12_RANGE range(0, 0);
-    DX::ThrowIfFailed(dst->Map(0, &range, &mapped_data));
-    std::memcpy(mapped_data, src, size);
-    dst->Unmap(0, nullptr);
   }
 
   std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> D3Device::GenerateInputDescription(
@@ -186,6 +163,13 @@ namespace Engine::Manager::Graphics
   void D3Device::CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const
   {
     m_device_->CreateSampler(&description, sampler_handle);
+  }
+
+  void D3Device::CreateConstantBufferView(const D3D12_CONSTANT_BUFFER_VIEW_DESC& description) const
+  {
+    m_device_->CreateConstantBufferView(
+        &description, 
+        GetRenderPipeline().GetCBHeap()->GetCPUDescriptorHandleForHeapStart());
   }
 
   void D3Device::InitializeDevice()
@@ -366,44 +350,6 @@ namespace Engine::Manager::Graphics
     m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
   }
 
-  void D3Device::InitializeRenderTargetView()
-  {
-    // RTV Descriptor heap
-    const D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-      .NumDescriptors = g_frame_buffer,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-    (
-      m_device_->CreateDescriptorHeap
-      (
-        &rtv_heap_desc,
-        IID_PPV_ARGS(m_rtv_descriptor_heap_.GetAddressOf())
-      )
-    );
-
-    const auto desc_size = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    auto rtv_handle = GetRTVHandle();
-    
-    m_render_targets_.resize(g_frame_buffer);
-
-    for (int i = 0; i < g_frame_buffer; ++i)
-    {
-      DX::ThrowIfFailed
-      (
-        m_swap_chain_->GetBuffer(i, IID_PPV_ARGS(&m_render_targets_[i]))
-      );
-
-      m_device_->CreateRenderTargetView(m_render_targets_[i].Get(), nullptr, rtv_handle);
-
-      rtv_handle.Offset(desc_size);
-    }
-  }
-
   void D3Device::InitializeCommandAllocator()
   {
     for (int i = 0; i < g_frame_buffer; ++i)
@@ -479,82 +425,6 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  void D3Device::InitializeDepthStencil()
-  {
-    ComPtr<ID3D12Resource> depth_stencil_buffer;
-    const auto             heap_prop     = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    const auto             resource_desc = CD3DX12_RESOURCE_DESC::Tex2D
-      (
-       DXGI_FORMAT_D24_UNORM_S8_UINT, g_window_width, g_window_height, 1, 0, 1, 0,
-       D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-      );
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC descriptor_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-      .NumDescriptors = 1,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateDescriptorHeap
-       (
-        &descriptor_heap_desc,
-        IID_PPV_ARGS(m_dsv_descriptor_heap_.GetAddressOf())
-       )
-      );
-    
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateCommittedResource
-       (
-        &heap_prop,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        nullptr,
-        IID_PPV_ARGS(depth_stencil_buffer.ReleaseAndGetAddressOf())
-       )
-      );
-
-    const auto rtv_handle = GetRTVHandle();
-    const auto dsv_handle = GetDSVHandle();
-    
-    D3D12_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
-    depth_stencil_view_desc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depth_stencil_view_desc.ViewDimension      = D3D12_DSV_DIMENSION_TEXTURE2D;
-    depth_stencil_view_desc.Texture2D.MipSlice = 0;
-
-    m_device_->CreateDepthStencilView
-     (
-      depth_stencil_buffer.Get(), &depth_stencil_view_desc,
-      dsv_handle
-     );
-
-    {
-      DirectCommandGuard dcg;
-      m_direct_command_list_->OMSetRenderTargets
-      (
-        1,
-        &rtv_handle,
-        false,
-        &dsv_handle
-      );
-
-      m_direct_command_list_->ClearDepthStencilView
-      (
-        dsv_handle,
-        D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-        1.0f,
-        0,
-        0,
-        nullptr
-      );
-    }
-  }
-
   void D3Device::WaitForEventCompletion(const UINT64 buffer_idx) const
   {
     if (m_fence_->GetCompletedValue() < m_fence_nonce_[buffer_idx])
@@ -592,24 +462,17 @@ namespace Engine::Manager::Graphics
     WaitForEventCompletion(back_buffer_idx);
   }
 
-  void D3Device::CreateShaderResourceView(
-    ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& srv, const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle
-  ) const
-  {
-    m_device_->CreateShaderResourceView(resource, &srv, srv_handle);
-  }
-
-  void D3Device::PreUpdate(const float& dt) {}
+  void D3Device::PreUpdate(const float& dt) { FrameBegin(); }
 
   void D3Device::Update(const float& dt) {}
 
-  void D3Device::PreRender(const float& dt) { FrameBegin(); }
+  void D3Device::PreRender(const float& dt) {}
 
-  void D3Device::Render(const float& dt) {}
+  void D3Device::Render(const float& dt) { WaitNextFrame(); }
 
   void D3Device::FixedUpdate(const float& dt) {}
 
-  void D3Device::PostRender(const float& dt) { Present(); }
+  void D3Device::PostRender(const float& dt) {}
 
   void D3Device::PostUpdate(const float& dt) {}
 
@@ -618,10 +481,8 @@ namespace Engine::Manager::Graphics
     m_hwnd_ = hwnd;
 
     InitializeDevice();
-    InitializeRenderTargetView();
     InitializeCommandAllocator();
     InitializeFence();
-    InitializeDepthStencil();
 
     m_projection_matrix_ = XMMatrixPerspectiveFovLH
       (
@@ -642,18 +503,8 @@ namespace Engine::Manager::Graphics
            static_cast<float>(g_window_height);
   }
 
-  void D3Device::UpdateRenderTarget() const
-  {
-    const auto& rtv_handle = GetRTVHandle();
-    const auto& dsv_handle = GetDSVHandle();
-
-    m_direct_command_list_->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
-  }
-
   void D3Device::FrameBegin() const
   {
-    _reset_constant_buffer();
-    _reset_structured_buffer();
 
     DX::ThrowIfFailed
     (
@@ -674,66 +525,10 @@ namespace Engine::Manager::Graphics
       (
        m_compute_command_list_->Reset(m_command_allocator_[m_frame_idx_].Get(), nullptr)
       );
-
-    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
-    const auto&      rtv_handle = GetRTVHandle();
-    const auto&      dsv_handle = GetDSVHandle();
-  
-    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[m_frame_idx_].Get(),
-       D3D12_RESOURCE_STATE_PRESENT,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
-
-    m_direct_command_list_->ResourceBarrier(1, &initial_barrier);
-    UpdateRenderTarget();
-
-    m_direct_command_list_->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    m_direct_command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
-  void D3Device::Present()
+  void D3Device::WaitNextFrame()
   {
-    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-    (
-     m_render_targets_[m_frame_idx_].Get(),
-     D3D12_RESOURCE_STATE_RENDER_TARGET,
-     D3D12_RESOURCE_STATE_PRESENT
-    );
-
-    m_direct_command_list_->ResourceBarrier(1, &present_barrier);
-
-    DX::ThrowIfFailed(m_direct_command_list_->Close());
-
-    const std::vector<ID3D12CommandList*> command_lists = { m_direct_command_list_.Get() };
-
-    m_direct_command_queue_->ExecuteCommandLists(command_lists.size(), command_lists.data());
-
-    DXGI_PRESENT_PARAMETERS params;
-    params.DirtyRectsCount = 0;
-    params.pDirtyRects     = nullptr;
-    params.pScrollRect     = nullptr;
-    params.pScrollOffset   = nullptr;
-
-    DX::ThrowIfFailed
-      (
-       m_swap_chain_->Present1
-       (
-        g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-        &params
-       )
-      );
-
-    if (WaitForSingleObjectEx
-        (
-         GetSwapchainAwaiter(), g_max_frame_latency_ms,
-         true
-        ) != WAIT_OBJECT_0)
-    {
-      GetDebugger().Log("Waiting for Swap chain had an issue.");
-    }
-
     // Signaling the next frame.
     m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
