@@ -46,32 +46,6 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().GetCommandList()->RSSetViewports(1, &m_viewport_);
   }
-
-  void RenderPipeline::SetWireframeState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->Wireframe()
-      );
-  }
-
-  void RenderPipeline::SetFillState() const { GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get()); }
-
-  void RenderPipeline::SetNoneCullState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->CullNone()
-      );
-  }
-
-  void RenderPipeline::SetFrontCullState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->CullClockwise()
-      );
-  }
   
   RenderPipeline::~RenderPipeline() { }
 
