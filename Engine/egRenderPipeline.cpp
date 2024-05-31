@@ -464,6 +464,125 @@ namespace Engine::Manager::Graphics
       (
        3, m_srv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
       );
+
+
+    // Dummy (null) descriptor
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_buffer_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_sampler_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_rtv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_dsv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_cbv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_srv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_uav_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateConstantBufferView
+      (
+       nullptr, m_null_cbv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateShaderResourceView
+      (
+       nullptr, nullptr, m_null_srv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateUnorderedAccessView
+      (
+       nullptr, nullptr, nullptr, m_null_uav_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_sampler_heap_desc,
+        IID_PPV_ARGS(m_null_sampler_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_rtv_heap_desc,
+        IID_PPV_ARGS(m_null_rtv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_dsv_heap_desc,
+        IID_PPV_ARGS(m_null_dsv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateSampler
+      (
+       nullptr, m_null_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateRenderTargetView
+      (
+       nullptr, nullptr, m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateDepthStencilView
+      (
+       nullptr, nullptr, m_null_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
   }
 
   void RenderPipeline::PreUpdate(const float& dt) {}
@@ -549,27 +668,139 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PostUpdate(const float& dt) {}
 
-  void RenderPipeline::DrawIndexed(UINT index_count)
+  void RenderPipeline::DrawIndexedDeferred(UINT index_count)
   {
     DirectCommandGuard dcg;
     GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
   }
 
-  void RenderPipeline::DrawIndexedInstanced(UINT index_count, UINT instance_count)
+  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv)
+  {
+    DirectCommandGuard dcg;
+
+    const auto& current_rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv, false, &current_dsv);
+
+    return {current_rtv_handle, current_dsv};
+  }
+
+  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
+    const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+  )
+  {
+    DirectCommandGuard dcg;
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
+      (
+       m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetCommandList()->OMSetRenderTargets(
+        1, 
+        &rtv, 
+        false, 
+        &dsv);
+
+    return {current_rtv_handle, current_dsv_handle};
+  }
+
+  void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
+  {
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
+  }
+
+  RTVDSVHandlePair RenderPipeline::SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
+  {
+    DirectCommandGuard dcg;
+    const auto& null_rtv = m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList()->OMSetRenderTargets(0, &null_rtv, false, &dsv);
+
+    return {current_rtv, current_dsv};
+  }
+
+  void RenderPipeline::SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const
+  {
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
+      (
+       m_srv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       slot,
+       m_buffer_descriptor_size_
+      );
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+      (
+       1,
+       heap_handle,
+       srv_handle,
+       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+      );
+  }
+
+  void RenderPipeline::SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const
+  {
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
+      (
+       m_uav_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       slot,
+       m_buffer_descriptor_size_
+      );
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+      (
+       1,
+       uav_handle,
+       uav,
+       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+      );
+  }
+
+  void RenderPipeline::DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count)
   {
     DirectCommandGuard dcg;
     GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
   }
 
-  void RenderPipeline::TargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
+  void RenderPipeline::TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
   {
     DirectCommandGuard dcg;
     GetD3Device().GetCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
   }
 
-  void RenderPipeline::SetViewport(const D3D12_VIEWPORT& viewport)
+  void RenderPipeline::SetViewportDeferred(const D3D12_VIEWPORT& viewport)
   {
     GetD3Device().GetCommandList()->RSSetViewports(1, &viewport);
+  }
+
+  void RenderPipeline::CopyBackBufferDeferred(ID3D12Resource* resource)
+  {
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const
@@ -592,6 +823,11 @@ namespace Engine::Manager::Graphics
     return m_uav_descriptor_heap_.Get();
   }
 
+  ID3D12DescriptorHeap* RenderPipeline::GetSamplerHeap() const
+  {
+    return m_sampler_descriptor_heap_.Get();
+  }
+
   void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
     DirectCommandGuard dcg;
@@ -604,6 +840,11 @@ namespace Engine::Manager::Graphics
   UINT RenderPipeline::GetBufferDescriptorSize() const
   {
     return m_buffer_descriptor_size_;
+  }
+
+  UINT RenderPipeline::GetSamplerDescriptorSize() const
+  {
+    return m_sampler_descriptor_size_;
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
