@@ -26,31 +26,6 @@ namespace Engine::Resources
 
 namespace Engine
 {
-  enum eCommandPrimitiveType
-  {
-    COMMAND_PRIMITIVE_DIRECT = 0,
-    COMMAND_PRIMITIVE_COPY,
-    COMMAND_PRIMITIVE_COMPUTE,
-    COMMAND_PRIMITIVE_COUNT,
-  };
-
-  enum eCommandListIndex
-  {
-    COMMAND_IDX_DIRECT = 0,
-    COMMAND_IDX_COPY,
-    COMMAND_IDX_COMPUTE,
-    COMMAND_IDX_TOOLKIT,
-    COMMAND_IDX_COUNT
-  };
-
-  enum eCommandListType
-  {
-    COMMAND_DIRECT = D3D12_COMMAND_LIST_TYPE_DIRECT,
-    COMMAND_COPY = D3D12_COMMAND_LIST_TYPE_COPY,
-    COMMAND_COMPUTE = D3D12_COMMAND_LIST_TYPE_COMPUTE,
-    COMMAND_TOOLKIT = D3D12_COMMAND_LIST_TYPE_DIRECT
-  };
-
   enum eStaticSamplerSlot
   {
     STATIC_SAMPLER_SLOT_LINEAR = 0,
@@ -60,23 +35,21 @@ namespace Engine
 
   enum eDescriptorSlot
   {
-    DESCRIPTOR_SLOT_SRV,
-    DESCRIPTOR_SLOT_CB,
     DESCRIPTOR_SLOT_SAMPLER,
+    DESCRIPTOR_SLOT_CB = 0,
     DESCRIPTOR_SLOT_UAV,
+    DESCRIPTOR_SLOT_SRV,
     DESCRIPTOR_SLOT_COUNT
   };
 
   enum eBindType
   {
     BIND_TYPE_SAMPLER = 0,
-    BIND_TYPE_CB,
+    BIND_TYPE_CB = 1,
     BIND_TYPE_UAV,
     BIND_TYPE_SRV,
     BIND_TYPE_RTV,
-    BIND_TYPE_DSV,
-    BIND_TYPE_DSV_ONLY,
-    BIND_TYPE_COUNT
+    BIND_TYPE_DSV
   };
 
   enum eTexBindSlot
