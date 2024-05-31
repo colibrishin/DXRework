@@ -64,6 +64,8 @@ namespace Engine::Resources
       {SHADER_DOMAIN, "ds_main", "ds_5_0"}
     };
 
+    ComPtr<ID3D12PipelineState> m_pipeline_state_;
+
   private:
     Shader();
     SERIALIZE_DECL
@@ -82,13 +84,13 @@ namespace Engine::Resources
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_;
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> m_il_;
+    std::vector<D3D12_INPUT_ELEMENT_DESC>                         m_il_elements_;
 
     ComPtr<ID3DBlob>            m_vs_blob_;
     ComPtr<ID3DBlob>            m_ps_blob_;
     ComPtr<ID3DBlob>            m_gs_blob_;
     ComPtr<ID3DBlob>            m_hs_blob_;
     ComPtr<ID3DBlob>            m_ds_blob_;
-    ComPtr<ID3D12PipelineState> m_pipeline_state_;
 
     ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
   };

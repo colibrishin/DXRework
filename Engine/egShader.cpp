@@ -143,7 +143,21 @@ namespace Engine::Resources
 
     GetD3Device().CreateSampler(sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
+    m_il_elements_.reserve(m_il_.size());
+
+    for (const auto& element : m_il_ | std::views::keys)
+    {
+      m_il_elements_.push_back(element);
+    }
+
+    const D3D12_INPUT_LAYOUT_DESC il
+    {
+      .pInputElementDescs = m_il_elements_.data(),
+      .NumElements        = static_cast<UINT>(m_il_.size())
+    };
+
     m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
+    m_pipeline_state_desc_.InputLayout = il;
     m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
     m_pipeline_state_desc_.PS = {m_ps_blob_->GetBufferPointer(), m_ps_blob_->GetBufferSize()};
     m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()};
@@ -208,6 +222,7 @@ namespace Engine::Resources
     m_hs_blob_.Reset();
     m_ds_blob_.Reset();
     m_il_.clear();
+    m_il_elements_.clear();
     m_sampler_descriptor_heap_.Reset();
     m_pipeline_state_.Reset();
   }
