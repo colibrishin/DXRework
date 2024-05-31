@@ -28,7 +28,7 @@ namespace Engine::Graphics
     ~StructuredBuffer() = default;
 
     void            Create(UINT size, const T* initial_data, bool is_mutable = false);
-    void __fastcall SetData(UINT size, const T* src_ptr);
+    void __fastcall SetDataDeferred(UINT size, const T* src_ptr);
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
@@ -38,6 +38,52 @@ namespace Engine::Graphics
     void InitializeMainBuffer(UINT size, const T* initial_data);
     void InitializeWriteBuffer(UINT size);
     void InitializeReadBuffer(UINT size);
+
+    void BindSRV();
+    void UnbindSRV();
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void BindUAV()
+    {
+      if (m_b_srv_bound_)
+      {
+        throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
+      }
+
+      if (m_b_uav_bound_) { return; }
+
+      DirectCommandGuard dcg;
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_ = true;
+    }
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAV()
+    {
+      if (!m_b_uav_bound_) { return; }
+
+      DirectCommandGuard dcg;
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_ = false;
+    }
 
     bool        m_b_srv_bound_;
     bool        m_b_uav_bound_;
@@ -260,14 +306,16 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRVGraphicDeferred()
+  void StructuredBuffer<T>::BindSRV()
   {
     if (m_b_uav_bound_)
     {
       throw std::logic_error("StructuredBuffer is bound as UAV, cannot bind as SRV");
     }
 
-    if (m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+    if (m_b_srv_bound_) { return; }
+
+    DirectCommandGuard dcg;
 
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -276,15 +324,17 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
       );
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
+    GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
 
     m_b_srv_bound_ = true;
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRVGraphicDeferred()
+  void StructuredBuffer<T>::UnbindSRV()
   {
-    if (!m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+    if (!m_b_srv_bound_) { return; }
+
+    DirectCommandGuard dcg;
 
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -293,7 +343,7 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
+    GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
 
     m_b_srv_bound_ = false;
   }
@@ -320,13 +370,13 @@ namespace Engine::Graphics
     {
       InitializeWriteBuffer(size);
       std::vector<T> data(size);
-      SetData(size, data.data());
+      SetDataDeferred(size, data.data());
     }
     InitializeReadBuffer(size);
   }
 
   template <typename T>
-  void StructuredBuffer<T>::SetData(const UINT size, const T* src_ptr)
+  void StructuredBuffer<T>::SetDataDeferred(const UINT size, const T* src_ptr)
   {
     if (!m_b_mutable_) { throw std::logic_error("StructuredBuffer is defined as not mutable"); }
 
@@ -413,10 +463,10 @@ namespace Engine::Graphics
 
     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
-          m_buffer_.Get(),
-              before_state,
-              D3D12_RESOURCE_STATE_COPY_SOURCE
-         );
+       m_buffer_.Get(),
+       before_state,
+       D3D12_RESOURCE_STATE_COPY_SOURCE
+      );
 
     GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &barrier);
 
