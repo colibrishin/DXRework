@@ -1,4 +1,6 @@
 #pragma once
+#include <d3dx12.h>
+
 #include "egGlobal.h"
 #include "egRenderPipeline.h"
 
@@ -133,7 +135,7 @@ namespace Engine::Graphics
   template <typename T>
   ConstantBuffer<T>::ConstantBuffer()
   {
-    static_assert(std::is_pod_v<T>, "Constant buffer type must be a POD type");
+    static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
 
     m_alignment_size_ = (sizeof(T) + 255) & ~255; 
   }
