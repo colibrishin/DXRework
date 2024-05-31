@@ -86,8 +86,8 @@
 
 #include <d2d1.h>
 #include <d3d12.h>
-#include "../DX-Headers/include/directx/d3dx12.h"
 #include <d3dcompiler.h>
+#include <d3dx12.h>
 #include <directxmath.h>
 #include <dxcapi.h>
 #include <dxgi1_5.h>
