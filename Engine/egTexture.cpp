@@ -26,7 +26,14 @@ namespace Engine::Resources
       m_desc_(description),
       m_type_(type),
       m_custom_desc_{false},
-      m_b_lazy_window_(true) {}
+      m_b_lazy_window_(true),
+      m_bound_type_(BIND_TYPE_SRV),
+      m_bound_slot_(BIND_SLOT_TEX),
+      m_bound_slot_offset_(0) {}
+
+  eTexType Texture::GetPrimitiveTextureType() const { return m_type_; }
+
+  ID3D12DescriptorHeap* Texture::GetSRVDescriptor() const { return m_srv_.Get(); }
 
   eTexType Texture::GetPrimitiveTextureType() const { return m_type_; }
 
@@ -45,146 +52,28 @@ namespace Engine::Resources
 
   bool Texture::IsHotload() const { return GetPath().empty(); }
 
-  void Texture::Unbind(const eCommandList list, const Texture& dsv) const
+  void Texture::BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset)
   {
-    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       dsv.GetRawResource(),
-       D3D12_RESOURCE_STATE_DEPTH_WRITE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &rtv_transition);
-    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &dsv_transition);
-  }
-
-  void Texture::Unbind(const CommandPair& cmd, const Texture& dsv) const
-  {
-    const auto& rtv_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    const auto& dsv_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       dsv.GetRawResource(),
-       D3D12_RESOURCE_STATE_DEPTH_WRITE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    cmd.GetList()->ResourceBarrier(1, &rtv_transition_back);
-    cmd.GetList()->ResourceBarrier(1, &dsv_transition_back);
-  }
-
-  void Texture::Bind(const CommandPair& cmd, const DescriptorPtr& heap, const eBindType type, const UINT slot, const UINT offset) const
-  {
-    Bind(cmd.GetList(), heap, type, slot, offset);
-  }
-
-  void Texture::Bind(
-    ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& heap, const eBindType type, const UINT slot,
-    const UINT offset
-  ) const
-  {
-    const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
-
-    const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_DEPTH_WRITE
-      );
-
-    const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
-      );
-
-    const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-      );
-
-    switch (type)
+    if (type == BIND_TYPE_SAMPLER || type == BIND_TYPE_CB)
     {
-    case BIND_TYPE_SRV: 
-      {
-        cmd->ResourceBarrier(1, &srv_trans);
-        heap->SetShaderResource(m_srv_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
-        break;
-      }
-    case BIND_TYPE_UAV:
-      {
-        cmd->ResourceBarrier(1, &uav_trans);
-        heap->SetUnorderedAccess(m_uav_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
-        break;
-      }
-    case BIND_TYPE_RTV:
-      {
-        cmd->ResourceBarrier(1, &rtv_trans);
-
-        const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
-        {
-          m_rtv_->GetCPUDescriptorHandleForHeapStart()
-        };
-
-        cmd->OMSetRenderTargets
-        (
-            1, 
-            rtv_handle,
-            false,
-            nullptr
-          );
-        break;
-      }
-    case BIND_TYPE_DSV:
-      {
-        
-        break;
-      }
-    case BIND_TYPE_DSV_ONLY:
-      {
-        cmd->ResourceBarrier(1, &dsv_trans);
-
-        const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
-        {
-          m_dsv_->GetCPUDescriptorHandleForHeapStart()
-        };
-
-        cmd->OMSetRenderTargets
-          (
-           0,
-           nullptr,
-           false,
-           dsv_handle
-          );
-
-        break;
-      }
-    case BIND_TYPE_SAMPLER:
-    case BIND_TYPE_CB:
-    case BIND_TYPE_COUNT:
-    default: 
-        break;
+      throw std::runtime_error("Cannot bind texture as sampler or constant buffer");
     }
+
+    m_bound_type_   = type;
+    m_bound_slot_   = slot;
+    m_bound_slot_offset_ = slot_offset;
+  }
+
+  void Texture::Map(const std::function<void(char*)>& copy_func) const
+  {
+    char* mapped = nullptr;
+
+    DX::ThrowIfFailed(
+        m_res_->Map(0, nullptr, reinterpret_cast<void**>(&mapped)));
+
+    copy_func(mapped);
+
+    m_res_->Unmap(0, nullptr);
   }
 
   void Texture::Bind(const CommandPair& cmd, const Texture& dsv) const
@@ -804,7 +693,10 @@ namespace Engine::Resources
       m_desc_({}),
       m_type_(TEX_TYPE_2D),
       m_custom_desc_{false},
-      m_b_lazy_window_(true) {}
+      m_b_lazy_window_(true),
+      m_bound_type_(BIND_TYPE_SRV),
+      m_bound_slot_(BIND_SLOT_TEX),
+      m_bound_slot_offset_(0) {}
 
   UINT Texture::GetWidth() const { return m_desc_.Width; }
 
@@ -878,9 +770,49 @@ namespace Engine::Resources
 
   void Texture::PreRender(const float& dt) {}
 
-  void Texture::Render(const float& dt) {}
+  void Texture::Render(const float& dt)
+  {
+    if (m_bound_type_ == BIND_TYPE_RTV)
+    {
+      m_previous_handles_ = GetRenderPipeline().SetRenderTargetDeferred(
+      m_rtv_->GetCPUDescriptorHandleForHeapStart());
+    }
+    else if (m_bound_type_ == BIND_TYPE_SRV)
+    {
+      GetRenderPipeline().SetShaderResource(
+          m_srv_->GetCPUDescriptorHandleForHeapStart(), 
+          m_bound_slot_ + m_bound_slot_offset_);
+    }
+    else if (m_bound_type_ == BIND_TYPE_DSV)
+    {
+      m_previous_handles_ = GetRenderPipeline().SetDepthStencilOnlyDeferred(
+          m_dsv_->GetCPUDescriptorHandleForHeapStart());
+    }
+    else if (m_bound_type_ == BIND_TYPE_UAV)
+    {
+      GetRenderPipeline().SetUnorderedAccess(
+          m_uav_->GetCPUDescriptorHandleForHeapStart(), 
+          m_bound_slot_ + m_bound_slot_offset_);
+    }
+  }
 
-  void Texture::PostRender(const float& dt) {}
+  void Texture::PostUpdate(const float& dt) {}
+
+  void Texture::InitializeDescriptorHeaps()
+  {
+    switch (m_bound_type_)
+    {
+      case BIND_TYPE_RTV:
+      case BIND_TYPE_DSV:
+        GetRenderPipeline().SetRenderTargetDeferred(m_previous_handles_);
+        break;
+      case BIND_TYPE_UAV:
+      case BIND_TYPE_SRV:
+      default:
+        // todo: unbind or just keep it?
+        break;
+    }
+  }
 
   void Texture::PostUpdate(const float& dt) {}
 
@@ -890,7 +822,7 @@ namespace Engine::Resources
     {
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
       1,
-      D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       0
     };
 
@@ -949,8 +881,7 @@ namespace Engine::Resources
 
   void Texture::Load_INTERNAL()
   {
-    if ((m_desc_.Flags & D3D11_BIND_DEPTH_STENCIL) && 
-        (m_desc_.Flags & D3D11_BIND_UNORDERED_ACCESS))
+    if ((m_desc_.Flags & D3D11_BIND_DEPTH_STENCIL) && (m_desc_.Flags & D3D11_BIND_UNORDERED_ACCESS))
     {
       throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
     }
@@ -959,6 +890,8 @@ namespace Engine::Resources
 
     if (!GetPath().empty())
     {
+      const UINT flag = m_desc_.Flags;
+
       GetD3Device().CreateTextureFromFile
         (
          absolute(GetPath()),
@@ -986,14 +919,26 @@ namespace Engine::Resources
       if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE1D)
       {
         m_type_ = TEX_TYPE_1D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.ArraySize;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = 0;
       }
       else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)
       {
         m_type_ = TEX_TYPE_2D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.ArraySize;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = desc.Height;
       }
       else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
       {
         m_type_ = TEX_TYPE_3D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.Depth;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = desc.Height;
       }
       else
       {
@@ -1012,6 +957,8 @@ namespace Engine::Resources
     }
     else
     {
+      loadDerived(m_res_);
+
       const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
       D3D12_RESOURCE_DIMENSION dim;
@@ -1045,28 +992,6 @@ namespace Engine::Resources
         .Flags = m_desc_.Flags
       };
 
-      D3D12_CLEAR_VALUE clear_value = {};
-
-      if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
-      {
-        clear_value.Format = m_custom_desc_[0] ? m_rtv_desc_.Format : m_desc_.Format;
-        clear_value.Color[0] = 0.0f;
-        clear_value.Color[1] = 0.0f;
-        clear_value.Color[2] = 0.0f;
-        clear_value.Color[3] = 1.0f;
-      }
-
-      if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-      {
-        clear_value.Format = m_custom_desc_[1] ? m_dsv_desc_.Format : m_desc_.Format;
-        clear_value.DepthStencil.Depth = 1.0f;
-        clear_value.DepthStencil.Stencil = 0;
-      }
-
-      const D3D12_CLEAR_VALUE* cv_ptr = (
-                                          m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) || 
-                                        (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? &clear_value : nullptr;
-
       DX::ThrowIfFailed
         (
          GetD3Device().GetDevice()->CreateCommittedResource
@@ -1075,28 +1000,15 @@ namespace Engine::Resources
           D3D12_HEAP_FLAG_NONE,
           &desc,
           D3D12_RESOURCE_STATE_COMMON,
-          cv_ptr,
+          nullptr,
           IID_PPV_ARGS(m_res_.GetAddressOf())
          )
         );
     }
 
-    const auto name = GetName();
-
-    if (name.empty())
-    {
-      DX::ThrowIfFailed(m_res_->SetName(L"Texture"));
-    }
-    else
-    {
-      const auto wname = L"Texture" + std::wstring(name.begin(), name.end());
-      DX::ThrowIfFailed(m_res_->SetName(wname.c_str()));
-    }
-
-    mapInternal();
-
     InitializeDescriptorHeaps();
 
+    // todo: lazy initialization is not necessary now.
     if (m_custom_desc_[3])
     {
       GetD3Device().GetDevice()->CreateShaderResourceView(
@@ -1112,31 +1024,31 @@ namespace Engine::Resources
           m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[0] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    if (m_custom_desc_[0])
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), &m_rtv_desc_, m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    else
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), nullptr, m_rtv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[1] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+    if (m_custom_desc_[1])
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), &m_dsv_desc_, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+    else
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), nullptr, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[2] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+    if (m_custom_desc_[2])
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, &m_uav_desc_, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+    else
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, nullptr, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
@@ -1186,8 +1098,7 @@ namespace Engine::Resources
         (
          DirectX::CaptureTexture
          (
-          GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE), m_res_.Get(), false, image, D3D12_RESOURCE_STATE_COMMON,
-          D3D12_RESOURCE_STATE_COMMON
+             GetD3Device().GetCommandQueue(), m_res_.Get(), false, image /* + state transition */
          )
         );
 
