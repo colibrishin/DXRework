@@ -624,6 +624,7 @@
     <Import Project="..\DX\packages\directxmath.2024.2.15.1\build\native\directxmath.targets" Condition="Exists('..\DX\packages\directxmath.2024.2.15.1\build\native\directxmath.targets')" />
     <Import Project="..\DX\packages\inteltbb.redist.win.2021.12.0.496\build\native\inteltbb.redist.win.targets" Condition="Exists('..\DX\packages\inteltbb.redist.win.2021.12.0.496\build\native\inteltbb.redist.win.targets')" />
     <Import Project="..\DX\packages\inteltbb.devel.win.2021.12.0.496\build\native\inteltbb.devel.win.targets" Condition="Exists('..\DX\packages\inteltbb.devel.win.2021.12.0.496\build\native\inteltbb.devel.win.targets')" />
+    <Import Project="..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -634,6 +635,8 @@
     <Error Condition="!Exists('..\DX\packages\directxmath.2024.2.15.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\directxmath.2024.2.15.1\build\native\directxmath.targets'))" />
     <Error Condition="!Exists('..\DX\packages\inteltbb.redist.win.2021.12.0.496\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.redist.win.2021.12.0.496\build\native\inteltbb.redist.win.targets'))" />
     <Error Condition="!Exists('..\DX\packages\inteltbb.devel.win.2021.12.0.496\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\inteltbb.devel.win.2021.12.0.496\build\native\inteltbb.devel.win.targets'))" />
+    <Error Condition="!Exists('..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\DX\packages\Microsoft.Direct3D.D3D12.1.614.0\build\native\Microsoft.Direct3D.D3D12.targets'))" />
   </Target>
   <ItemGroup>
     <CopyFileToFolders Update="D:\document\Work\git\DX\DXRework\DX\fbx-sdk\lib\x64\debug\libfbxsdk-md.lib">
