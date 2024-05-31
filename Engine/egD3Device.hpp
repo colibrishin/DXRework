@@ -76,12 +76,10 @@ namespace Engine::Manager::Graphics
 
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList() const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList()const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
-  
-    void WaitForUploadCompletion();
-    void ExecuteDirectCommandList() const;
+
     void ExecuteCopyCommandList();
     void ExecuteComputeCommandList();
     
@@ -99,8 +97,9 @@ namespace Engine::Manager::Graphics
     void InitializeCommandAllocator();
     void InitializeFence();
 
-    void WaitForEventCompletion(UINT64 buffer_idx) const;
+    void ExecuteDirectCommandList() const;
 
+    void WaitForEventCompletion(UINT64 buffer_idx) const;
     void Signal(const UINT64 buffer_idx);
     void WaitForBackBuffer() const;
     
@@ -126,7 +125,7 @@ namespace Engine::Manager::Graphics
 
     ComPtr<ID3D12Fence>              m_fence_       = nullptr;
     HANDLE                           m_fence_event_ = nullptr;
-    std::vector<std::atomic<UINT64>> m_fence_nonce_ = {0,};
+    std::vector<std::atomic<UINT64>> m_fence_nonce_;
 
     UINT64 m_frame_idx_ = 0;
 
