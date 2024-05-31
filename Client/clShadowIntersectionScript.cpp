@@ -215,8 +215,8 @@ namespace Client::Scripts
         light_vps.push_back(light_vp);
       }
 
-      m_sb_light_vp_.SetData(light_vps.size(), light_vps.data());
-      m_sb_light_vp_.BindSRVGraphicDeferred();
+      m_sb_light_vp_.SetDataDeferred(light_vps.size(), light_vps.data());
+      m_sb_light_vp_.BindSRVDeferred();
 
       UINT idx = 0;
 
@@ -282,7 +282,7 @@ namespace Client::Scripts
       }
 
       m_shadow_material_->PostRender(0.f);
-      m_sb_light_vp_.BindSRVGraphicDeferred();
+      m_sb_light_vp_.UnbindSRVDeferred();
 
       GetRenderPipeline().SetParam<int>(0, shadow_slot);
 
@@ -304,8 +304,8 @@ namespace Client::Scripts
          shadow_srv
         );
 
-      m_sb_light_vp_.BindSRVGraphicDeferred();
-      m_sb_light_vp_.BindSRVGraphicDeferred();
+      m_sb_light_vp_.BindSRVDeferred();
+      m_sb_light_vp_.BindSRVDeferred();
 
       m_intensity_test_material_->PreRender(0.f);
       m_intensity_test_material_->Render(0.f);
@@ -439,7 +439,8 @@ namespace Client::Scripts
       }
 
       m_intensity_test_material_->PostRender(0.f);
-      m_sb_light_vp_.UnbindSRVGraphicDeferred();
+      m_sb_light_vp_.UnbindSRVDeferred();
+      m_sb_light_vp_.UnbindSRVDeferred();
 
       GetRenderPipeline().DefaultViewport();
 
@@ -489,7 +490,7 @@ namespace Client::Scripts
       std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
       empty_light_table.resize(g_max_lights);
 
-      m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
+      m_sb_light_table_.SetDataDeferred(g_max_lights, empty_light_table.data());
     }
   }
 
