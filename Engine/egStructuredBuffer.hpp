@@ -21,13 +21,11 @@ namespace Engine::Graphics
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
-    void BindSRVGraphicDeferred();
-    void UnbindSRVGraphicDeferred();
-    void BindSRVComputeDeferred();
-    void UnbindSRVComputeDeferred();
+    void BindSRVDeferred();
+    void UnbindSRVDeferred();
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void BindUAVGraphicDeferred()
+    void BindUAVDeferred()
     {
       if (m_b_srv_bound_ || m_b_srv_bound_compute_)
       {
@@ -49,7 +47,7 @@ namespace Engine::Graphics
     }
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void BindUAVComputeDeferred()
+    void UnbindUAVDeferred()
     {
       if (m_b_srv_bound_ || m_b_srv_bound_compute_)
       {
@@ -85,23 +83,6 @@ namespace Engine::Graphics
       GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
 
       m_b_uav_bound_ = false;
-    }
-
-    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void UnbindUAVComputeDeferred()
-    {
-      if (!m_b_uav_bound_compute_) { return; }
-
-      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-         D3D12_RESOURCE_STATE_COMMON
-        );
-
-      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
-
-      m_b_uav_bound_compute_ = false;
     }
 
   private:
@@ -331,7 +312,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRVGraphicDeferred()
+  void StructuredBuffer<T>::BindSRVDeferred()
   {
     if (m_b_uav_bound_)
     {
@@ -353,7 +334,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRVGraphicDeferred()
+  void StructuredBuffer<T>::UnbindSRVDeferred()
   {
     if (!m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
 

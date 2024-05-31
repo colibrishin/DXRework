@@ -95,7 +95,7 @@ namespace Engine::Manager::Graphics
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_.SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
+    m_sb_light_buffer_.SetDataDeferred(static_cast<UINT>(light_buffer.size()), light_buffer.data());
   }
 
   void ShadowManager::PreRender(const float& dt)
@@ -138,7 +138,8 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_vps_buffer_.SetDataDeferred(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_vps_buffer_.BindSRV();
 
       UINT idx = 0;
 
