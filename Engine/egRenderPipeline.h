@@ -21,7 +21,6 @@ namespace Engine::Manager::Graphics
 
       ~TempParamTicket()
       {
-        reinterpret_cast<ParamBase&>(GetRenderPipeline().m_param_buffer_) = previousParam;
         GetRenderPipeline().m_param_buffer_ = previousParam;
         GetRenderPipeline().m_param_buffer_data_.SetData(&previousParam);
       }
@@ -49,6 +48,7 @@ namespace Engine::Manager::Graphics
     template <typename T>
     void SetParam(const T& v, const size_t slot)
     {
+      // todo: commit param value at the end of the execution
       m_param_buffer_.SetParam(slot, v);
       m_param_buffer_data_.SetData(&m_param_buffer_);
     }
@@ -59,20 +59,33 @@ namespace Engine::Manager::Graphics
     void DefaultRenderTarget() const;
     void DefaultViewport() const;
 
-    void        DrawIndexed(UINT index_count);
-    static void DrawIndexedInstanced(UINT index_count, UINT instance_count);
+    void        DrawIndexedDeferred(UINT index_count);
+    static void DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count);
 
-    void        TargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
-    static void SetViewport(const D3D12_VIEWPORT& viewport);
+    RTVDSVHandlePair SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv);
+    RTVDSVHandlePair SetRenderTargetDeferred(
+      const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+    );
+    void SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
+    RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
+    void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
+    void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
+
+    void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
+    static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
+
+    void CopyBackBufferDeferred(ID3D12Resource* resource);
 
     ID3D12RootSignature*  GetRootSignature() const;
     ID3D12DescriptorHeap* GetCBHeap() const;
     ID3D12DescriptorHeap* GetSRVHeap() const;
     ID3D12DescriptorHeap* GetUAVHeap() const;
+    ID3D12DescriptorHeap* GetSamplerHeap() const;
 
     static void           SetPSO(const StrongShader& Shader);
 
     UINT GetBufferDescriptorSize() const;
+    UINT GetSamplerDescriptorSize() const;
 
   private:
     friend class ToolkitAPI;
@@ -103,6 +116,13 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12DescriptorHeap> m_srv_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_uav_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
+
+    ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_cbv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
 
     std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
     ComPtr<ID3D12Resource> m_depth_stencil_;
