@@ -48,9 +48,7 @@ namespace Engine::Manager::Graphics
     template <typename T>
     void SetParam(const T& v, const size_t slot)
     {
-      // todo: commit param value at the end of the execution
       m_param_buffer_.SetParam(slot, v);
-      m_param_buffer_data_.SetData(&m_param_buffer_);
     }
 
     // Returns a ticket that will reset to the previous param when it goes out of scope.
@@ -84,6 +82,10 @@ namespace Engine::Manager::Graphics
 
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
+
+    void UploadConstantBuffersDeferred();
+    void ExecuteDirectCommandList();
+    void WaitForGPU();
 
   private:
     friend class ToolkitAPI;
@@ -126,6 +128,9 @@ namespace Engine::Manager::Graphics
     D3D12_VIEWPORT m_viewport_{};
     D3D12_RECT    m_scissor_rect_{};
 
+    CBs::PerspectiveCB m_wvp_buffer_;
+    CBs::TransformCB   m_transform_buffer_;
+    CBs::MaterialCB    m_material_buffer_;
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
