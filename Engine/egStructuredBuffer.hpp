@@ -32,18 +32,11 @@ namespace Engine::Graphics
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
-  private:
-    void InitializeSRV(UINT size);
-    void InitializeUAV(UINT size);
-    void InitializeMainBuffer(UINT size, const T* initial_data);
-    void InitializeWriteBuffer(UINT size);
-    void InitializeReadBuffer(UINT size);
-
-    void BindSRV();
-    void UnbindSRV();
+    void BindSRVDeferred();
+    void UnbindSRVDeferred();
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void BindUAV()
+    void BindUAVDeferred()
     {
       if (m_b_srv_bound_)
       {
@@ -67,7 +60,7 @@ namespace Engine::Graphics
     }
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void UnbindUAV()
+    void UnbindUAVDeferred()
     {
       if (!m_b_uav_bound_) { return; }
 
@@ -84,6 +77,13 @@ namespace Engine::Graphics
 
       m_b_uav_bound_ = false;
     }
+
+  private:
+    void InitializeSRV(UINT size);
+    void InitializeUAV(UINT size);
+    void InitializeMainBuffer(UINT size, const T* initial_data);
+    void InitializeWriteBuffer(UINT size);
+    void InitializeReadBuffer(UINT size);
 
     bool        m_b_srv_bound_;
     bool        m_b_uav_bound_;
@@ -297,7 +297,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRV()
+  void StructuredBuffer<T>::BindSRVDeferred()
   {
     if (m_b_uav_bound_)
     {
@@ -321,7 +321,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRV()
+  void StructuredBuffer<T>::UnbindSRVDeferred()
   {
     if (!m_b_srv_bound_) { return; }
 
