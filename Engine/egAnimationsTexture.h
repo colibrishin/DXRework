@@ -38,7 +38,7 @@ namespace Engine::Resources
     }
 
   protected:
-    void loadDerived(ComPtr<ID3D11Resource>& res) override;
+    void loadDerived(ComPtr<ID3D12Resource>& res) override;
      
   private:
     SERIALIZE_DECL

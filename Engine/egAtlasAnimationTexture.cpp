@@ -25,7 +25,7 @@ namespace Engine::Resources
 
   void AtlasAnimationTexture::Render(const float& dt)
   {
-    BindAs(D3D11_BIND_SHADER_RESOURCE, RESERVED_ATLAS, 0, SHADER_PIXEL);
+    BindAs(BIND_TYPE_SRV, RESERVED_ATLAS, 0);
     Texture3D::Render(dt);
   }
 
@@ -51,7 +51,7 @@ namespace Engine::Resources
 
   eResourceType AtlasAnimationTexture::GetResourceType() const { return RES_T_ATLAS_TEX; }
 
-  void AtlasAnimationTexture::loadDerived(ComPtr<ID3D11Resource>& res)
+  void AtlasAnimationTexture::loadDerived(ComPtr<ID3D12Resource>& res)
   {
     const UINT num_atlases = static_cast<UINT>(m_atlases_.size());
 
@@ -71,16 +71,14 @@ namespace Engine::Resources
       LazyDescription
         (
          {
+           .Alignment = 0,
            .Width = width,
            .Height = height,
-           .Depth = num_atlases,
-           .ArraySize = 1,
+           .DepthOrArraySize = static_cast<UINT16>(num_atlases),
            .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-           .CPUAccessFlags = 0,
-           .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+           .Flags = D3D12_RESOURCE_FLAG_NONE,
            .MipsLevel = 1,
-           .MiscFlags = 0,
-           .Usage = D3D11_USAGE_DEFAULT,
+           .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
            .SampleDesc = {1, 0}
          }
         );
@@ -98,18 +96,32 @@ namespace Engine::Resources
       // for matching with xml data.
       for (UINT i = 0; i < num_atlases; ++i)
       {
-        ComPtr<ID3D11Texture2D> anim = m_atlases_[i]->As<ID3D11Texture2D>();
-        D3D11_BOX               box  = {0, 0, 0, m_atlases_[i]->GetWidth(), m_atlases_[i]->GetHeight(), 1};
+        DirectCommandGuard dcg;
 
-        GetD3Device().GetContext()->CopySubresourceRegion
+        ComPtr<ID3D12Resource> anim = m_atlases_[i]->GetRawResoruce();
+        D3D12_BOX               box  = {0, 0, 0, m_atlases_[i]->GetWidth(), m_atlases_[i]->GetHeight(), 1};
+
+        D3D12_TEXTURE_COPY_LOCATION dst
+        {
+          .pResource = GetRawResoruce(),
+          .Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
+          .PlacedFootprint = {0, {DXGI_FORMAT_B8G8R8A8_UNORM, 0, i}}
+        };
+
+        D3D12_TEXTURE_COPY_LOCATION src
+        {
+          .pResource = anim.Get(),
+          .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+          .SubresourceIndex = 0
+        };
+
+        GetD3Device().GetCommandList()->CopyTextureRegion
           (
-           tex.Get(),
+           &dst,
            0,
            0,
            0,
-           i,
-           anim.Get(),
-           0,
+           &src,
            &box
           );
       }
