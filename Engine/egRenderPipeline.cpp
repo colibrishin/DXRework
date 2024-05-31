@@ -730,7 +730,7 @@ namespace Engine::Manager::Graphics
 
     for (INT i = 0; i < count; ++i)
     {
-      const auto& current_handle = heap_handle.Offset(i, m_buffer_descriptor_size_);
+      const auto& current_handle = heap_handle.Offset(1, m_buffer_descriptor_size_);
 
       GetD3Device().GetDevice()->CopyDescriptorsSimple
         (
