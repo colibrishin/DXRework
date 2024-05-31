@@ -26,6 +26,8 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DefaultRenderTarget() const
   {
+    DirectCommandGuard dcg;
+
     const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
@@ -753,6 +755,24 @@ namespace Engine::Manager::Graphics
     const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
     GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
+
+    return {current_rtv, current_dsv};
+  }
+
+  RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
+  {
+    DirectCommandGuard dcg;
+
+    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
 
     return {current_rtv, current_dsv};
   }

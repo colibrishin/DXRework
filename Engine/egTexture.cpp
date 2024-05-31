@@ -158,24 +158,76 @@ namespace Engine::Resources
 
   void Texture::Render(const float& dt)
   {
+    DirectCommandGuard dcg;
+
     if (m_bound_type_ == BIND_TYPE_RTV)
     {
+      const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &rtv_transition);
+
       m_previous_handles_ = GetRenderPipeline().SetRenderTargetDeferred(
       m_rtv_->GetCPUDescriptorHandleForHeapStart());
     }
     else if (m_bound_type_ == BIND_TYPE_SRV)
     {
+      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
+
       GetRenderPipeline().SetShaderResource(
           m_srv_->GetCPUDescriptorHandleForHeapStart(), 
           m_bound_slot_ + m_bound_slot_offset_);
     }
     else if (m_bound_type_ == BIND_TYPE_DSV)
     {
+      const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_DEPTH_WRITE
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &dsv_transition);
+
+      m_previous_handles_ = GetRenderPipeline().SetDepthStencilDeferred(
+          m_dsv_->GetCPUDescriptorHandleForHeapStart());
+    }
+    else if (m_bound_type_ == BIND_TYPE_DSV_ONLY)
+    {
+      const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_DEPTH_WRITE
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &dsv_transition);
+
       m_previous_handles_ = GetRenderPipeline().SetDepthStencilOnlyDeferred(
           m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
     else if (m_bound_type_ == BIND_TYPE_UAV)
     {
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+
       GetRenderPipeline().SetUnorderedAccess(
           m_uav_->GetCPUDescriptorHandleForHeapStart(), 
           m_bound_slot_ + m_bound_slot_offset_);
@@ -229,16 +281,57 @@ namespace Engine::Resources
 
   void Texture::PostRender(const float& dt)
   {
+    DirectCommandGuard dcg;
+
     switch (m_bound_type_)
     {
       case BIND_TYPE_RTV:
-      case BIND_TYPE_DSV:
+          const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_res_.Get(),
+           D3D12_RESOURCE_STATE_RENDER_TARGET,
+           D3D12_RESOURCE_STATE_COMMON
+          );
+
+        GetD3Device().GetCommandList()->ResourceBarrier(1, &rtv_transition);
+
         GetRenderPipeline().SetRenderTargetDeferred(m_previous_handles_);
         break;
-      case BIND_TYPE_UAV:
-      case BIND_TYPE_SRV:
+      case BIND_TYPE_DSV:
+      case BIND_TYPE_DSV_ONLY:
+        const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_res_.Get(),
+             D3D12_RESOURCE_STATE_DEPTH_WRITE,
+             D3D12_RESOURCE_STATE_COMMON
+            );
+
+          GetD3Device().GetCommandList()->ResourceBarrier(1, &dsv_transition);
+
+          GetRenderPipeline().SetRenderTargetDeferred(m_previous_handles_);
+          break;
+      case BIND_TYPE_UAV: 
+          const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_res_.Get(),
+             D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+             D3D12_RESOURCE_STATE_COMMON
+            );
+
+          GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+        break;
+      case BIND_TYPE_SRV: 
+          const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_res_.Get(),
+             D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+             D3D12_RESOURCE_STATE_COMMON
+            );
+
+          GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
+          break;
       default:
-        // todo: unbind or just keep it?
+        throw std::runtime_error("Unknown bind type");
         break;
     }
   }
@@ -371,8 +464,6 @@ namespace Engine::Resources
     }
     else
     {
-      loadDerived(m_res_);
-
       const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
       D3D12_RESOURCE_DIMENSION dim;
@@ -418,6 +509,26 @@ namespace Engine::Resources
           IID_PPV_ARGS(m_res_.GetAddressOf())
          )
         );
+    }
+
+    {
+      DirectCommandGuard dcg;
+
+      const auto& state_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_COPY_DEST
+      );
+
+      loadDerived(m_res_);
+
+      const auto& stable_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
     }
 
     InitializeDescriptorHeaps();
