@@ -57,8 +57,7 @@ namespace Engine::Manager::Graphics
     std::unique_ptr<GeometricPrimitive>                  m_geometric_primitive_   = nullptr;
     std::unique_ptr<SpriteBatch>                         m_sprite_batch_          = nullptr;
     std::unique_ptr<ResourceUploadBatch>                 m_resource_upload_batch_ = nullptr;
-    std::unique_ptr<SpriteBatchPipelineStateDescription> m_pipeline_state_        = nullptr;
-    std::unique_ptr<EffectPipelineStateDescription>      m_effect_pipeline_state_ = nullptr;
+    std::unique_ptr<SpriteBatchPipelineStateDescription> m_sprite_pipeline_state_        = nullptr;
     std::unique_ptr<RenderTargetState>                   m_render_target_state_   = nullptr;
 
     std::unique_ptr<CommonStates>                        m_states_                = nullptr;
