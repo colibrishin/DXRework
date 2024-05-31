@@ -45,11 +45,13 @@ namespace Engine
   enum eBindType
   {
     BIND_TYPE_SAMPLER = 0,
-    BIND_TYPE_CB = 1,
+    BIND_TYPE_CB,
     BIND_TYPE_UAV,
     BIND_TYPE_SRV,
     BIND_TYPE_RTV,
-    BIND_TYPE_DSV
+    BIND_TYPE_DSV,
+    BIND_TYPE_DSV_ONLY,
+    BIND_TYPE_COUNT
   };
 
   enum eTexBindSlot
