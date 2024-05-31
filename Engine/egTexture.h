@@ -13,17 +13,15 @@ namespace Engine::Resources
 
     struct GenericTextureDescription
     {
-      UINT        Width = 0;
-      UINT        Height = 0;
-      UINT        Depth = 0;
-      UINT        ArraySize = 0;
-      DXGI_FORMAT Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-      UINT        CPUAccessFlags = 0;
-      UINT        BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS);
-      UINT        MipsLevel = 1;
-      UINT        MiscFlags = 0;
-      D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
-      DXGI_SAMPLE_DESC SampleDesc = {.Count = 1, .Quality = 0};
+      UINT                 Alignment        = 0;
+      UINT                 Width            = 0;
+      UINT                 Height           = 0;
+      UINT16               DepthOrArraySize = 0;
+      DXGI_FORMAT          Format           = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      D3D12_RESOURCE_FLAGS Flags            = D3D12_RESOURCE_FLAG_NONE;
+      UINT16               MipsLevel        = 1;
+      D3D12_TEXTURE_LAYOUT Layout           = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
+      DXGI_SAMPLE_DESC     SampleDesc       = {.Count = 1, .Quality = 0};
 
     private:
       friend class boost::serialization::access;
@@ -31,16 +29,14 @@ namespace Engine::Resources
       template <class Archive>
       void serialize(Archive& ar, const unsigned int version)
       {
+        ar & Alignment;
         ar & Width;
         ar & Height;
-        ar & Depth;
-        ar & ArraySize;
+        ar & DepthOrArraySize;
         ar & Format;
-        ar & CPUAccessFlags;
-        ar & BindFlags;
+        ar & Flags;
         ar & MipsLevel;
-        ar & MiscFlags;
-        ar & Usage;
+        ar & Layout;
         ar & SampleDesc;
       }
     };
