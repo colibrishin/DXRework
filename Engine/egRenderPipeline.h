@@ -65,9 +65,10 @@ namespace Engine::Manager::Graphics
     RTVDSVHandlePair SetRenderTargetDeferred(
       const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
     );
-    void SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
+    void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
     RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
     void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
+    void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
     void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
 
     void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
@@ -78,6 +79,12 @@ namespace Engine::Manager::Graphics
     ID3D12RootSignature*  GetRootSignature() const;
     ID3D12DescriptorHeap* GetBufferHeap() const;
     ID3D12DescriptorHeap* GetSamplerHeap() const;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPURTVHandle(UINT index) const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDSVHandle() const;
+
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPURTVHandle(UINT index) const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
 
     static void           SetPSO(const StrongShader& Shader);
 
@@ -100,6 +107,7 @@ namespace Engine::Manager::Graphics
     void InitializeRootSignature();
     void InitializeRenderTargets();
     void InitializeDepthStencil();
+    void InitializeNullDescriptors();
     void InitializeHeaps();
     void InitializeStaticBuffers();
 

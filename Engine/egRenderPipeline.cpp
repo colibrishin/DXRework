@@ -719,6 +719,29 @@ namespace Engine::Manager::Graphics
       );
   }
 
+  void RenderPipeline::SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data)
+  {
+    CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
+      (
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
+       m_buffer_descriptor_size_
+      );
+
+    for (INT i = 0; i < count; ++i)
+    {
+      const auto& current_handle = heap_handle.Offset(i, m_buffer_descriptor_size_);
+
+      GetD3Device().GetDevice()->CopyDescriptorsSimple
+        (
+         1,
+         current_handle,
+         data[i],
+         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        );
+    }
+  }
+
   void RenderPipeline::SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const
   {
     const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
@@ -775,7 +798,37 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_heap_.Get();
   }
 
-  void RenderPipeline::SetPSO(const StrongShader& Shader)
+  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPURTVHandle(UINT index) const
+  {
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       index,
+       m_rtv_descriptor_size_
+      );
+  }
+
+  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPUDSVHandle() const
+  {
+    return m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+  }
+
+  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPURTVHandle(UINT index) const
+  {
+    return CD3DX12_GPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
+       index,
+       m_rtv_descriptor_size_
+      );
+  }
+
+  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPUDSVHandle() const
+  {
+    return m_dsv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
+  }
+
+  void                      RenderPipeline::SetPSO(const StrongShader& Shader)
   {
     DirectCommandGuard dcg;
 
