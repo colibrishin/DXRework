@@ -143,7 +143,6 @@ namespace Engine::Manager
 
   void Application::PreUpdate(const float& dt)
   {
-    // Toolkit rendering clean up
     GetToolkitAPI().PreUpdate(dt);
 
     GetTaskScheduler().PreUpdate(dt);
@@ -233,11 +232,12 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
 
+    GetRenderPipeline().PreRender(dt);
     GetRenderer().PreRender(dt);
     GetShadowManager().PreRender(dt);
+
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
-    GetRenderPipeline().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -254,8 +254,11 @@ namespace Engine::Manager
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
 
-    GetRenderer().Render(dt);
+    // Shadow resource binding
+    GetShadowManager().Render(dt);
 
+    // Render commanding
+    GetRenderer().Render(dt);
     GetDebugger().Render(dt);
 
     // Render pass 1 (Opaque, direct execution)
@@ -287,16 +290,12 @@ namespace Engine::Manager
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          GetD3Device().GetDirectCommandList()
+          GetD3Device().GetCommandList()
       );
     }
 
-    // Render pass 2 (post-render, direct execution) -> Present
     GetRenderPipeline().PostRender(dt);
-    // Final Cleanup, wait for next frame
     GetD3Device().PostRender(dt);
-
-    // todo: cleanup
     GetToolkitAPI().PostRender(dt);
   }
 
