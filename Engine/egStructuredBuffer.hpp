@@ -70,9 +70,9 @@ namespace Engine::Graphics
       }
     };
 
-    const auto& srv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetSRVHeap()->GetCPUDescriptorHandleForHeapStart());
+    auto srv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
 
-    srv_handle.Offset(which_sb<T>::value, GetRenderPipeline().GetBufferDescriptorSize());
+    srv_handle.Offset(static_cast<INT>(CB_TYPE_END + BIND_SLOT_UAV_END + which_sb<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
 
     GetD3Device().GetDevice()->CreateShaderResourceView
      (
@@ -94,15 +94,15 @@ namespace Engine::Graphics
     uav_desc.Buffer.CounterOffsetInBytes = 0;
     uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-    const auto& uav_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetUAVHeap()->GetCPUDescriptorHandleForHeapStart());
+    auto uav_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
 
     if constexpr (is_client_sb<T>::value == true)
     {
-      uav_handle.Offset(which_client_sb<T>::value, GetRenderPipeline().GetBufferDescriptorSize());
+      uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_client_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
     }
     else
     {
-      uav_handle.Offset(which_sb<T>::value, GetRenderPipeline().GetBufferDescriptorSize());
+      uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
     }
 
     GetD3Device().GetDevice()->CreateUnorderedAccessView
@@ -185,13 +185,15 @@ namespace Engine::Graphics
     }
     else
     {
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
       DX::ThrowIfFailed
         (
          GetD3Device().GetDevice()->CreateCommittedResource
          (
           &default_heap,
           D3D12_HEAP_FLAG_NONE,
-          &CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size),
+          &buffer_desc,
           D3D12_RESOURCE_STATE_COMMON,
           nullptr,
           IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
@@ -206,6 +208,7 @@ namespace Engine::Graphics
     if (m_write_buffer_ != nullptr) { return; }
 
     const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
     DX::ThrowIfFailed
       (
@@ -213,7 +216,7 @@ namespace Engine::Graphics
        (
         &upload_heap,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size),
+        &buffer_desc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(m_write_buffer_.ReleaseAndGetAddressOf())
@@ -239,13 +242,16 @@ namespace Engine::Graphics
   {
     const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+
     DX::ThrowIfFailed
       (
        GetD3Device().GetDevice()->CreateCommittedResource
        (
         &readback_heap,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size),
+        &buffer_desc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(m_read_buffer_.ReleaseAndGetAddressOf())
