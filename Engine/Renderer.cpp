@@ -157,11 +157,7 @@ namespace Engine::Manager::Graphics
     const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
-    StructuredBuffer<SBs::InstanceSB> sb;
-    sb.Create(static_cast<UINT>(structured_buffers.size()), structured_buffers.data(), false);
-    sb.BindSRV();
-    sb.BindSRV();
-    sb.BindSRV();
+    m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
     m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
@@ -177,11 +173,9 @@ namespace Engine::Manager::Graphics
     material->PreRender(dt);
     material->Render(dt);
     GetRenderPipeline().ExecuteDirectCommandList();
+    // todo: async preparation, texture shader resource is not ready yet.
+    GetRenderPipeline().WaitForGPU();
     material->PostRender(dt);
-
-    sb.UnbindSRV();
-    sb.UnbindSRV();
-    sb.UnbindSRV();
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
