@@ -62,66 +62,16 @@ namespace Engine::Resources
     m_bound_slot_offset_ = slot_offset;
   }
 
-  void Texture::mapInternal()
+  void Texture::Map(const std::function<void(char*)>& copy_func) const
   {
-    const auto& total_size = m_desc_.Width * m_desc_.Height * m_desc_.DepthOrArraySize;
-
-    const auto& dest_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_COPY_DEST
-      );
-
-    DX::ThrowIfFailed
-    (
-        DirectX::CreateUploadBuffer
-        (
-            GetD3Device().GetDevice(),
-            nullptr,
-            total_size,
-            DirectX::BitsPerPixel(m_desc_.Format) / 8,
-            m_upload_buffer_.GetAddressOf()
-        )
-    );
-
     char* mapped = nullptr;
 
     DX::ThrowIfFailed(
-        m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped)));
+        m_res_->Map(0, nullptr, reinterpret_cast<void**>(&mapped)));
 
-    const bool map_flag = map(mapped);
+    copy_func(mapped);
 
-    m_upload_buffer_->Unmap(0, nullptr);
-
-    if (!map_flag)
-    {
-      return;
-    }
-
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &dest_transition);
-
-    auto dst = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
-    auto src = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
-    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    src.PlacedFootprint = {0, {m_desc_.Format, m_desc_.Width, m_desc_.Height, m_desc_.DepthOrArraySize}};
-    src.PlacedFootprint.Footprint.RowPitch = m_desc_.Width * DirectX::BitsPerPixel(m_desc_.Format) / 8;
-    src.PlacedFootprint.Footprint.Depth = m_desc_.DepthOrArraySize;
-    src.PlacedFootprint.Footprint.Width = m_desc_.Width;
-    src.PlacedFootprint.Footprint.Height = m_desc_.Height;
-    src.PlacedFootprint.Footprint.Format = m_desc_.Format;
-
-    GetD3Device().GetCopyCommandList()->CopyTextureRegion
-      (
-       &dst,
-       0, 0, 0,
-       &src,
-       nullptr
-      );
-
-    GetD3Device().ExecuteCopyCommandList();
+    m_res_->Unmap(0, nullptr);
   }
 
   Texture::Texture()
@@ -210,60 +160,25 @@ namespace Engine::Resources
   {
     if (m_bound_type_ == BIND_TYPE_RTV)
     {
-      const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
-
-      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &rtv_transition);
-
       m_previous_handles_ = GetRenderPipeline().SetRenderTargetDeferred(
       m_rtv_->GetCPUDescriptorHandleForHeapStart());
     }
     else if (m_bound_type_ == BIND_TYPE_SRV)
     {
-      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
-      );
-
-      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
-
       GetRenderPipeline().SetShaderResource(
           m_srv_->GetCPUDescriptorHandleForHeapStart(), 
           m_bound_slot_ + m_bound_slot_offset_);
     }
     else if (m_bound_type_ == BIND_TYPE_DSV)
     {
-      const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_DEPTH_WRITE
-      );
-
-      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &dsv_transition);
-
-      m_previous_handles_ = GetRenderPipeline().SetDepthStencilDeferred(
-          m_dsv_->GetCPUDescriptorHandleForHeapStart());
-    }
-    else if (m_bound_type_ == BIND_TYPE_DSV_ONLY)
-    {
-      const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_DEPTH_WRITE
-      );
-
-      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &dsv_transition);
-
       m_previous_handles_ = GetRenderPipeline().SetDepthStencilOnlyDeferred(
           m_dsv_->GetCPUDescriptorHandleForHeapStart());
+    }
+    else if (m_bound_type_ == BIND_TYPE_UAV)
+    {
+      GetRenderPipeline().SetUnorderedAccess(
+          m_uav_->GetCPUDescriptorHandleForHeapStart(), 
+          m_bound_slot_ + m_bound_slot_offset_);
     }
     else if (m_bound_type_ == BIND_TYPE_UAV)
     {
@@ -314,55 +229,16 @@ namespace Engine::Resources
 
   void Texture::PostRender(const float& dt)
   {
-    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_DEPTH_WRITE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
     switch (m_bound_type_)
     {
       case BIND_TYPE_RTV:
-        GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &rtv_transition);
-
+      case BIND_TYPE_DSV:
         GetRenderPipeline().SetRenderTargetDeferred(m_previous_handles_);
         break;
-      case BIND_TYPE_DSV:
-      case BIND_TYPE_DSV_ONLY:
-          GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &dsv_transition);
-
-          GetRenderPipeline().SetRenderTargetDeferred(m_previous_handles_);
-          break;
-      case BIND_TYPE_UAV: 
-          GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
-        break;
-      case BIND_TYPE_SRV: 
-          GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
-          break;
+      case BIND_TYPE_UAV:
+      case BIND_TYPE_SRV:
       default:
-        throw std::runtime_error("Unknown bind type");
+        // todo: unbind or just keep it?
         break;
     }
   }
@@ -375,7 +251,7 @@ namespace Engine::Resources
     {
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
       1,
-      D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       0
     };
 
@@ -443,6 +319,8 @@ namespace Engine::Resources
 
     if (!GetPath().empty())
     {
+      const UINT flag = m_desc_.Flags;
+
       GetD3Device().CreateTextureFromFile
         (
          absolute(GetPath()),
@@ -455,14 +333,26 @@ namespace Engine::Resources
       if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE1D)
       {
         m_type_ = TEX_TYPE_1D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.ArraySize;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = 0;
       }
       else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)
       {
         m_type_ = TEX_TYPE_2D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.ArraySize;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = desc.Height;
       }
       else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
       {
         m_type_ = TEX_TYPE_3D;
+        m_desc_.Format = desc.Format;
+        m_desc_.DepthOrArraySize = desc.Depth;
+        m_desc_.Width = desc.Width;
+        m_desc_.Height = desc.Height;
       }
       else
       {
@@ -481,6 +371,8 @@ namespace Engine::Resources
     }
     else
     {
+      loadDerived(m_res_);
+
       const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
       D3D12_RESOURCE_DIMENSION dim;
@@ -528,10 +420,9 @@ namespace Engine::Resources
         );
     }
 
-    mapInternal();
-
     InitializeDescriptorHeaps();
 
+    // todo: lazy initialization is not necessary now.
     if (m_custom_desc_[3])
     {
       GetD3Device().GetDevice()->CreateShaderResourceView(
@@ -547,31 +438,31 @@ namespace Engine::Resources
           m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[0] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    if (m_custom_desc_[0])
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), &m_rtv_desc_, m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    else
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), nullptr, m_rtv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[1] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+    if (m_custom_desc_[1])
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), &m_dsv_desc_, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+    else
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), nullptr, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[2] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+    if (m_custom_desc_[2])
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, &m_uav_desc_, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
-    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+    else
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, nullptr, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
@@ -616,8 +507,7 @@ namespace Engine::Resources
         (
          DirectX::CaptureTexture
          (
-          GetD3Device().GetCopyCommandQueue(), m_res_.Get(), false, image, D3D12_RESOURCE_STATE_COMMON,
-          D3D12_RESOURCE_STATE_COMMON
+             GetD3Device().GetCommandQueue(), m_res_.Get(), false, image /* + state transition */
          )
         );
 

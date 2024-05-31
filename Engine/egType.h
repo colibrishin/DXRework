@@ -289,6 +289,9 @@ namespace Engine
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
 
+
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
+
   // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
   template <typename WrapT>
   struct unwrap;
