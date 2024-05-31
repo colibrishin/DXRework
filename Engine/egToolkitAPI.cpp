@@ -18,15 +18,12 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
-    m_effect_pipeline_state_ = std::make_unique<EffectPipelineStateDescription>(TODO);
 
     m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
     
     m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
-    m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice(), 0, *m_effect_pipeline_state_.get());
 
-     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
-    m_basic_effect_->Apply(GetD3Device().GetCommandList());
+    m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
 
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
@@ -38,6 +35,7 @@ namespace Engine::Manager::Graphics
       );
 
     m_master_channel_group_->setVolume(0.5f);
+
   }
 
   void ToolkitAPI::PreUpdate(const float& dt) {  }
@@ -62,23 +60,6 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
-    TODO->OMSetBlendState(m_states_->Opaque(), nullptr, 0xFFFFFFFF);
-    TODO->OMSetDepthStencilState(m_states_->DepthNone(), 0);
-    TODO->RSSetState(m_states_->CullNone());
-
-    // todo: separate command list.
-
-    m_basic_effect_->Apply(GetD3Device().GetCommandList());
-
-    if (const auto scene = GetSceneManager().GetActiveScene().lock())
-    {
-      if (const auto camera = scene->GetMainCamera().lock())
-      {
-        m_basic_effect_->SetView(camera->GetViewMatrix());
-        m_basic_effect_->SetProjection(camera->GetProjectionMatrix());
-      }
-    }
-
     m_primitive_batch_->Begin(GetD3Device().GetCommandList());
   }
 
