@@ -18,7 +18,7 @@ namespace Engine::Resources
     UINT GetWidth() const override final;
 
   protected:
-    void loadDerived(ComPtr<ID3D11Resource>& res) override;
+    void loadDerived(ComPtr<ID3D12Resource>& res) override;
     void Unload_INTERNAL() override;
     
   private:
@@ -27,7 +27,6 @@ namespace Engine::Resources
 
     UINT GetHeight() const override final;
     UINT GetDepth() const override final;
-    UINT GetArraySize() const override final;
 
     ComPtr<ID3D11Texture1D> m_tex_;
 
