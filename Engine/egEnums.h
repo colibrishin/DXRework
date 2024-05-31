@@ -26,6 +26,32 @@ namespace Engine::Resources
 
 namespace Engine
 {
+  enum eStaticSamplerSlot
+  {
+    STATIC_SAMPLER_SLOT_LINEAR = 0,
+    STATIC_SAMPLER_SLOT_SHADOW,
+    STATIC_SAMPLER_SLOT_COUNT
+  };
+
+  enum eDescriptorSlot
+  {
+    DESCRIPTOR_SLOT_SAMPLER,
+    DESCRIPTOR_SLOT_CB = 0,
+    DESCRIPTOR_SLOT_UAV,
+    DESCRIPTOR_SLOT_SRV,
+    DESCRIPTOR_SLOT_COUNT
+  };
+
+  enum eBindType
+  {
+    BIND_TYPE_SAMPLER = 0,
+    BIND_TYPE_CB = 1,
+    BIND_TYPE_UAV,
+    BIND_TYPE_SRV,
+    BIND_TYPE_RTV,
+    BIND_TYPE_DSV
+  };
+
   enum eTexBindSlot
   {
     BIND_SLOT_TEX     = 0,

@@ -77,9 +77,7 @@ namespace Engine::Manager::Graphics
     void CopyBackBufferDeferred(ID3D12Resource* resource);
 
     ID3D12RootSignature*  GetRootSignature() const;
-    ID3D12DescriptorHeap* GetCBHeap() const;
-    ID3D12DescriptorHeap* GetSRVHeap() const;
-    ID3D12DescriptorHeap* GetUAVHeap() const;
+    ID3D12DescriptorHeap* GetBufferHeap() const;
     ID3D12DescriptorHeap* GetSamplerHeap() const;
 
     static void           SetPSO(const StrongShader& Shader);
@@ -109,12 +107,10 @@ namespace Engine::Manager::Graphics
     UINT m_dsv_descriptor_size_ = 0;
     UINT m_buffer_descriptor_size_ = 0;
     UINT m_sampler_descriptor_size_ = 0;
-    
+
     ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_cb_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_srv_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_uav_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
 
     ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
