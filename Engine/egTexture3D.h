@@ -17,14 +17,12 @@ namespace Engine::Resources
     UINT GetDepth() const override final;
 
   protected:
-    void loadDerived(ComPtr<ID3D11Resource>& res) override;
+    void loadDerived(ComPtr<ID3D12Resource>& res) override;
     void Unload_INTERNAL() override;
     
   private:
     SERIALIZE_DECL
     Texture3D() : Texture("", TEX_TYPE_3D, {}) {}
-
-    UINT GetArraySize() const override final;
 
     ComPtr<ID3D11Texture3D> m_tex_;
 
