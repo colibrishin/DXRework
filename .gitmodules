@@ -1,6 +1,3 @@
 [submodule "DX/pugixml"]
 	path = DX/pugixml
 	url = https://github.com/zeux/pugixml
-[submodule "DX/DX-Headers"]
-	path = DX/DX-Headers
-	url = https://github.com/microsoft/DirectX-Headers.git
