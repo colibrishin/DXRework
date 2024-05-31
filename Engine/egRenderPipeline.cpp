@@ -190,27 +190,27 @@ namespace Engine::Manager::Graphics
   {
     DirectCommandGuard dcg;
 
-    CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
-    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
-    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[DESCRIPTOR_SLOT_COUNT];
+    ranges[DESCRIPTOR_SLOT_SAMPLER].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
+    ranges[DESCRIPTOR_SLOT_CB].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+    ranges[DESCRIPTOR_SLOT_UAV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
+    ranges[DESCRIPTOR_SLOT_SRV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[4];
-    root_parameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-    root_parameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-    root_parameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
+    CD3DX12_ROOT_PARAMETER1 root_parameters[DESCRIPTOR_SLOT_COUNT];
+    root_parameters[DESCRIPTOR_SLOT_SAMPLER].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[DESCRIPTOR_SLOT_CB].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[DESCRIPTOR_SLOT_UAV].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[DESCRIPTOR_SLOT_SRV].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
 
-    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[2];
-    static_sampler_desc[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
-    static_sampler_desc[1].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT);
+    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[STATIC_SAMPLER_SLOT_COUNT];
+    static_sampler_desc[STATIC_SAMPLER_SLOT_LINEAR].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+    static_sampler_desc[STATIC_SAMPLER_SLOT_SHADOW].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR);
 
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC root_signature_desc
     (
-      _countof(root_parameters),
+      DESCRIPTOR_SLOT_COUNT,
       root_parameters,
-      _countof(static_sampler_desc),
+      STATIC_SAMPLER_SLOT_COUNT,
       static_sampler_desc
     );
 
@@ -337,136 +337,9 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::InitializeHeaps()
+  void RenderPipeline::InitializeNullDescriptors()
   {
-    DirectCommandGuard dcg;
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-      .NumDescriptors = 2,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &sampler_heap_desc, IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC cb_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = CB_TYPE_END,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &cb_heap_desc, IID_PPV_ARGS(m_cb_descriptor_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = BIND_SLOT_END,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &srv_heap_desc, IID_PPV_ARGS(m_srv_descriptor_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC uav_heap_desc
-    {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = BIND_SLOT_UAV_END,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &uav_heap_desc, IID_PPV_ARGS(m_uav_descriptor_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    m_buffer_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
-      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    m_rtv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-    m_dsv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-    m_sampler_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-    
-    ID3D12DescriptorHeap* cb_heaps[]
-    {
-      m_sampler_descriptor_heap_.Get(),
-      m_cb_descriptor_heap_.Get(),
-      m_uav_descriptor_heap_.Get(),
-      m_srv_descriptor_heap_.Get()
-    };
-
-    GetD3Device().GetCommandList()->SetDescriptorHeaps(_countof(cb_heaps), cb_heaps);
-
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
-      (
-       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
-      (
-        1, m_cb_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
-      (
-        2, m_uav_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
-      (
-        3, m_srv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
-      (
-       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
-      (
-       1, m_cb_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
-      (
-       2, m_uav_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
-      (
-       3, m_srv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
-      );
-
-
     // Dummy (null) descriptor
-
     constexpr D3D12_DESCRIPTOR_HEAP_DESC null_buffer_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -582,6 +455,101 @@ namespace Engine::Manager::Graphics
       (
        nullptr, nullptr, m_null_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
       );
+  }
+
+  void RenderPipeline::InitializeHeaps()
+  {
+    DirectCommandGuard dcg;
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = STATIC_SAMPLER_SLOT_COUNT,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &sampler_heap_desc, IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = CB_TYPE_END + BIND_SLOT_UAV_END + BIND_SLOT_END,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &buffer_heap_desc, IID_PPV_ARGS(m_buffer_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    m_buffer_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    m_rtv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    m_dsv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    m_sampler_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    
+    ID3D12DescriptorHeap* heaps[]
+    {
+      m_buffer_descriptor_heap_.Get(),
+      m_sampler_descriptor_heap_.Get(),
+    };
+
+    GetD3Device().GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE buffer_handle
+      (
+       m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    // CBV (Graphic)
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(1, buffer_handle);
+
+    // UAV (Graphic)
+    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(2, buffer_handle);
+
+    // SRV (Graphic)
+    buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
+    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(3, buffer_handle);
+
+    buffer_handle = m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    // CBV (Compute)
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(1, buffer_handle);
+
+    // UAV (Compute)
+    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(2, buffer_handle);
+
+    // SRV (Compute)
+    buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
+    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(3, buffer_handle);
+
+    InitializeNullDescriptors();
   }
 
   void RenderPipeline::PreUpdate(const float& dt) {}
@@ -747,8 +715,8 @@ namespace Engine::Manager::Graphics
   {
     const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (
-       m_srv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       slot,
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
        m_buffer_descriptor_size_
       );
 
@@ -765,8 +733,8 @@ namespace Engine::Manager::Graphics
   {
     const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
       (
-       m_uav_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       slot,
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + slot,
        m_buffer_descriptor_size_
       );
 
@@ -807,19 +775,9 @@ namespace Engine::Manager::Graphics
     return m_root_signature_.Get();
   }
 
-  ID3D12DescriptorHeap* RenderPipeline::GetCBHeap() const
+  ID3D12DescriptorHeap* RenderPipeline::GetBufferHeap() const
   {
-    return m_cb_descriptor_heap_.Get();
-  }
-
-  ID3D12DescriptorHeap* RenderPipeline::GetSRVHeap() const
-  {
-    return m_srv_descriptor_heap_.Get();
-  }
-
-  ID3D12DescriptorHeap* RenderPipeline::GetUAVHeap() const
-  {
-    return m_uav_descriptor_heap_.Get();
+    return m_buffer_descriptor_heap_.Get();
   }
 
   ID3D12DescriptorHeap* RenderPipeline::GetSamplerHeap() const
