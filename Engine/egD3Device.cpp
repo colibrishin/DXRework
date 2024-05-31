@@ -27,11 +27,6 @@ namespace Engine::Manager::Graphics
     return m_compute_command_list_.Get();
   }
 
-  void D3Device::WaitForUploadCompletion()
-  {
-    Signal(m_frame_idx_);
-  }
-
   void D3Device::ExecuteDirectCommandList() const
   {
     const std::vector<ID3D12CommandList*> command_lists
@@ -169,7 +164,7 @@ namespace Engine::Manager::Graphics
   {
     const auto& cbv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
-       GetRenderPipeline().GetCBHeap()->GetCPUDescriptorHandleForHeapStart(),
+       GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart(),
        slot,
        m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
       );
@@ -473,10 +468,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::PreRender(const float& dt) {}
 
-  void D3Device::Render(const float& dt)
-  {
-    CleanupCommandList();
-  }
+  void D3Device::Render(const float& dt) {}
 
   ID3D12CommandAllocator* D3Device::GetCopyCommandAllocator(UINT frame_idx) const
   {
@@ -485,11 +477,7 @@ namespace Engine::Manager::Graphics
       frame_idx = m_frame_idx_;
     }
 
-  void D3Device::PostRender(const float& dt)
-  {
-    WaitNextFrame();
-    CleanupCommandList();
-  }
+  void D3Device::PostRender(const float& dt) {}
 
   ID3D12CommandAllocator* D3Device::GetComputeCommandAllocator(UINT frame_idx) const
   {
@@ -590,7 +578,6 @@ namespace Engine::Manager::Graphics
 
   void D3Device::CleanupCommandList() const
   {
-
     DX::ThrowIfFailed
     (
       m_command_allocator_[m_frame_idx_]->Reset()
