@@ -16,23 +16,12 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
   {
-    m_transform_buffer_data_.SetData(&matrix);
+    m_transform_buffer_ = matrix;
   }
 
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
-    m_wvp_buffer_data_.SetData(&matrix);
-  }
-
-  void RenderPipeline::DefaultRenderTarget() const
-  {
-    const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-    const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    m_param_buffer_ = static_cast<CBs::ParamCB>(param);
-    m_param_buffer_data_.SetData(&m_param_buffer_);
-    
-    return std::move(ticket);
+    m_wvp_buffer_ = matrix;
   }
 
   void RenderPipeline::DefaultRenderTarget() const
@@ -802,8 +791,28 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_size_;
   }
 
+  void RenderPipeline::UploadConstantBuffersDeferred()
+  {
+    m_wvp_buffer_data_.SetData(&m_wvp_buffer_);
+    m_transform_buffer_data_.SetData(&m_transform_buffer_);
+    m_material_buffer_data_.SetData(&m_material_buffer_);
+    m_param_buffer_data_.SetData(&m_param_buffer_);
+  }
+
+  void RenderPipeline::ExecuteDirectCommandList()
+  {
+    UploadConstantBuffersDeferred();
+    GetD3Device().ExecuteDirectCommandList();
+  }
+
+  void RenderPipeline::WaitForGPU()
+  {
+    GetD3Device().Signal(GetD3Device().GetFrameIndex());
+    GetD3Device().WaitForEventCompletion(GetD3Device().GetFrameIndex());
+  }
+
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
-    m_material_buffer_data_.SetData(&material_buffer);
+    m_material_buffer_ = material_buffer;
   }
 } // namespace Engine::Manager::Graphics
