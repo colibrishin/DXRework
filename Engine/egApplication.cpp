@@ -3,6 +3,7 @@
 
 #include "egGlobal.h"
 #include "egManagerHelper.hpp"
+#include "imgui_impl_dx12.h"
 
 namespace Engine::Manager
 {
@@ -23,12 +24,10 @@ namespace Engine::Manager
 
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
-      m_previous_keyboard_state_()
+      m_previous_keyboard_state_(),
+      m_previous_mouse_state_()
   {
-    if (s_instantiated_)
-    {
-      throw std::runtime_error("Application is already instantiated");
-    }
+    if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
     s_instantiated_ = true;
     std::set_terminate(SIGTERM);
@@ -77,7 +76,7 @@ namespace Engine::Manager
   {
     if (g_debug)
     {
-      ImGui_ImplDX11_Shutdown();
+      ImGui_ImplDX12_Shutdown();
       ImGui_ImplWin32_Shutdown();
       ImGui::DestroyContext();
     }
@@ -127,7 +126,12 @@ namespace Engine::Manager
     if constexpr (g_debug)
     {
       ImGui_ImplWin32_Init(hWnd);
-      ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
+      ImGui_ImplDX12_Init
+        (
+         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_B8G8R8A8_UNORM, GetRenderPipeline().GetBufferHeap(),
+         GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart(),
+         GetRenderPipeline().GetBufferHeap()->GetGPUDescriptorHandleForHeapStart()
+        );
     }
     
   }
@@ -139,7 +143,6 @@ namespace Engine::Manager
 
   void Application::PreUpdate(const float& dt)
   {
-    // Toolkit rendering clean up
     GetToolkitAPI().PreUpdate(dt);
 
     GetTaskScheduler().PreUpdate(dt);
@@ -219,11 +222,12 @@ namespace Engine::Manager
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
 
+    GetRenderPipeline().PreRender(dt);
     GetRenderer().PreRender(dt);
     GetShadowManager().PreRender(dt);
+
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
-    GetRenderPipeline().PreRender(dt);
   }
 
   void Application::Render(const float& dt)
@@ -240,8 +244,11 @@ namespace Engine::Manager
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
 
-    GetRenderer().Render(dt);
+    // Shadow resource binding
     GetShadowManager().Render(dt);
+
+    // Render commanding
+    GetRenderer().Render(dt);
     GetDebugger().Render(dt);
 
     // Render pass 1 (Opaque, direct execution)
@@ -272,15 +279,15 @@ namespace Engine::Manager
     if constexpr (g_debug)
     {
       ImGui::Render();
-      ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+      ImGui_ImplDX12_RenderDrawData
+      (
+          ImGui::GetDrawData(),
+          GetD3Device().GetCommandList()
+      );
     }
 
-    // Render pass 2 (post-render, direct execution) -> Present
     GetRenderPipeline().PostRender(dt);
-    // Final Cleanup, wait for next frame
     GetD3Device().PostRender(dt);
-
-    // todo: cleanup
     GetToolkitAPI().PostRender(dt);
   }
 
@@ -313,7 +320,7 @@ namespace Engine::Manager
 
     if constexpr (g_debug)
     {
-      ImGui_ImplDX11_NewFrame();
+      ImGui_ImplDX12_NewFrame();
       ImGui_ImplWin32_NewFrame();
       ImGui::NewFrame();
     }
