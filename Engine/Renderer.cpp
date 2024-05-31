@@ -157,7 +157,7 @@ namespace Engine::Manager::Graphics
     const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
-    m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
+    m_instance_buffer_.SetDataDeferred(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
     material->SetTempParam
       (
