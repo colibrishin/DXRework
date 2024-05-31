@@ -1,5 +1,7 @@
 #pragma once
 #include <BufferHelpers.h>
+#include <d3dx12.h>
+
 #include "Windows.h"
 #include "egCommon.hpp"
 #include "egType.h"
@@ -121,33 +123,35 @@ namespace Engine::Graphics
 
     if (initial_data != nullptr)
     {
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
       DX::ThrowIfFailed
-      (
-          GetD3Device().GetDevice()->CreateCommittedResource
         (
-         &default_heap,
-         D3D12_HEAP_FLAG_NONE,
-         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         nullptr,
-         IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
-        )
-      );
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_COPY_DEST,
+          nullptr,
+          IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
+         )
+        );
 
       // Use upload buffer to transfer data to the default buffer
       // Note that resource is copied if command list executed,
       // therefore it is not executed immediately.
 
       DX::ThrowIfFailed
-      (
-          DirectX::CreateUploadBuffer
-          (
-              GetD3Device().GetDevice(),
-              initial_data,
-              size,
-              m_write_buffer_.GetAddressOf()
-          )
-      );
+        (
+         DirectX::CreateUploadBuffer
+         (
+          GetD3Device().GetDevice(),
+          initial_data,
+          size,
+          m_write_buffer_.GetAddressOf()
+         )
+        );
 
       char* data = nullptr;
 
@@ -344,7 +348,7 @@ namespace Engine::Graphics
 
       if (m_b_srv_bound_)
       {
-        before_state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        before_state = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
       }
       if (m_b_uav_bound_)
       {
@@ -385,7 +389,7 @@ namespace Engine::Graphics
 
     if (m_b_srv_bound_)
     {
-      before_state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+      before_state = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
     }
 
     if (m_b_uav_bound_)
