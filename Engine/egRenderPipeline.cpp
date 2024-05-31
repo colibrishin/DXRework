@@ -585,10 +585,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::Update(const float& dt) {}
 
-  void RenderPipeline::Render(const float& dt)
-  {
-    GetD3Device().ExecuteDirectCommandList();
-  }
+  void RenderPipeline::Render(const float& dt) {}
 
   void RenderPipeline::FixedUpdate(const float& dt) {}
 
