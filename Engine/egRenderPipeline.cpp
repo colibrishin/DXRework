@@ -659,6 +659,9 @@ namespace Engine::Manager::Graphics
     {
       GetDebugger().Log("Waiting for Swap chain had an issue.");
     }
+
+    GetD3Device().Signal(GetD3Device().GetFrameIndex());
+    GetD3Device().WaitNextFrame();
   }
 
   void RenderPipeline::PostUpdate(const float& dt) {}
