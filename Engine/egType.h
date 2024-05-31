@@ -33,7 +33,6 @@ namespace Engine
   using DirectX::SpriteFont;
   using DirectX::VertexPositionColor;
   using DirectX::BasicEffect;
-  using DirectX::ConstantBuffer;
 
   using DirectX::BoundingBox;
   using DirectX::BoundingFrustum;
@@ -241,8 +240,8 @@ namespace Engine
   using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
   using VertexCollection = std::vector<Graphics::VertexElement>;
   using IndexCollection = std::vector<UINT>;
-  using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
-  using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+  using VertexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
+  using IndexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
   using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
   // Concurrent type definitions
@@ -281,6 +280,9 @@ namespace Engine
   extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
   extern Manager::Graphics::ShadowManager&       GetShadowManager();
   extern Manager::Graphics::Renderer&            GetRenderer();
+
+
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
 
   // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
   template <typename WrapT>
