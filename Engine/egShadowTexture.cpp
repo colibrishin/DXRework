@@ -35,7 +35,8 @@ namespace Engine::Resources
 
   void ShadowTexture::Clear() const
   {
-    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(
+    DirectCommandGuard dcg;
+    GetD3Device().GetCommandList()->ClearDepthStencilView(
         m_rtv_->GetCPUDescriptorHandleForHeapStart(), 
         D3D12_CLEAR_FLAG_DEPTH, 
         1.0f, 
