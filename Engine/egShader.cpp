@@ -184,6 +184,19 @@ namespace Engine::Resources
 
     constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
 
+    m_il_elements_.reserve(m_il_.size());
+
+    for (const auto& element : m_il_ | std::views::keys)
+    {
+      m_il_elements_.push_back(element);
+    }
+
+    const D3D12_INPUT_LAYOUT_DESC il
+    {
+      .pInputElementDescs = m_il_elements_.data(),
+      .NumElements        = static_cast<UINT>(m_il_.size())
+    };
+
     m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
     m_pipeline_state_desc_.InputLayout = il;
     m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
