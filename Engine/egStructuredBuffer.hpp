@@ -8,18 +8,6 @@
 
 namespace Engine::Graphics
 {
-  inline static std::vector<ComPtr<ID3D12Resource>> g_sb_upload_buffers = {};
-
-  static void _reset_structured_buffer()
-  {
-    for (auto& buffer : g_sb_upload_buffers)
-    {
-      buffer.Reset();
-    }
-
-    g_sb_upload_buffers.clear();
-  }
-
   template <typename T>
   class StructuredBuffer
   {
@@ -45,8 +33,6 @@ namespace Engine::Graphics
 
       if (m_b_uav_bound_) { return; }
 
-      DirectCommandGuard dcg;
-
       const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
          m_buffer_.Get(),
@@ -54,7 +40,7 @@ namespace Engine::Graphics
          D3D12_RESOURCE_STATE_UNORDERED_ACCESS
         );
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
 
       m_b_uav_bound_ = true;
     }
@@ -64,8 +50,6 @@ namespace Engine::Graphics
     {
       if (!m_b_uav_bound_) { return; }
 
-      DirectCommandGuard dcg;
-
       const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
          m_buffer_.Get(),
@@ -73,7 +57,7 @@ namespace Engine::Graphics
          D3D12_RESOURCE_STATE_COMMON
         );
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &uav_transition);
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
 
       m_b_uav_bound_ = false;
     }
@@ -178,15 +162,11 @@ namespace Engine::Graphics
           &default_heap,
           D3D12_HEAP_FLAG_NONE,
           &buffer_desc,
-          D3D12_RESOURCE_STATE_COPY_DEST,
+          D3D12_RESOURCE_STATE_COMMON,
           nullptr,
           IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
          )
         );
-
-      // Use upload buffer to transfer data to the default buffer
-      // Note that resource is copied if command list executed,
-      // therefore it is not executed immediately.
 
       DX::ThrowIfFailed
         (
@@ -207,24 +187,35 @@ namespace Engine::Graphics
 
       m_write_buffer_->Unmap(0, nullptr);
 
-      {
-        DirectCommandGuard cg;
+      GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
-        const auto& end_state = CD3DX12_RESOURCE_BARRIER::Transition
+      const auto& dest_state = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_COPY_DEST
+      );
+
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &dest_state);
+
+      GetD3Device().GetCopyCommandList()->CopyResource
         (
          m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         D3D12_RESOURCE_STATE_COMMON
+         m_write_buffer_.Get()
         );
 
-         GetD3Device().GetCommandList()->CopyResource
-        (
-            m_buffer_.Get(), 
-            m_write_buffer_.Get()
-        );
+      const auto& end_state = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
 
-        GetD3Device().GetCommandList()->ResourceBarrier(1, &end_state);
-      }
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &end_state);
+
+      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+      GetD3Device().ExecuteCopyCommandList();
     }
     else
     {
@@ -287,7 +278,6 @@ namespace Engine::Graphics
 
     const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
-
     DX::ThrowIfFailed
       (
        GetD3Device().GetDevice()->CreateCommittedResource
@@ -312,8 +302,6 @@ namespace Engine::Graphics
 
     if (m_b_srv_bound_) { return; }
 
-    DirectCommandGuard dcg;
-
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
@@ -321,7 +309,7 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
       );
 
-    GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
 
     m_b_srv_bound_ = true;
   }
@@ -331,8 +319,6 @@ namespace Engine::Graphics
   {
     if (!m_b_srv_bound_) { return; }
 
-    DirectCommandGuard dcg;
-
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
@@ -340,7 +326,7 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    GetD3Device().GetCommandList()->ResourceBarrier(1, &srv_transition);
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
 
     m_b_srv_bound_ = false;
   }
@@ -395,68 +381,54 @@ namespace Engine::Graphics
 
     upload_buffer->Unmap(0, nullptr);
 
-    g_sb_upload_buffers.push_back(upload_buffer);
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
-    {
-      DirectCommandGuard cg;
+    // Even if it is set as bind, resource will be common until the execution is done.
+    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+     m_buffer_.Get(),
+     D3D12_RESOURCE_STATE_COMMON,
+     D3D12_RESOURCE_STATE_COPY_DEST
+    );
+  
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &barrier);
 
-      D3D12_RESOURCE_STATES before_state = D3D12_RESOURCE_STATE_COMMON;
-
-      if (m_b_srv_bound_)
-      {
-        before_state = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-      }
-      if (m_b_uav_bound_)
-      {
-        before_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-      }
-
-      const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+    GetD3Device().GetCopyCommandList()->CopyResource
       (
        m_buffer_.Get(),
-       before_state,
-       D3D12_RESOURCE_STATE_COPY_DEST
+       upload_buffer.Get()
       );
-    
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
 
-      GetD3Device().GetCommandList()->CopyResource
-        (
-         m_buffer_.Get(),
-         upload_buffer.Get()
-        );
+    const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+  
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
 
-      const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         before_state
-        );
-    
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &revert_barrier);
-    }
+    DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+    GetD3Device().ExecuteCopyCommandList();
   }
 
   // This will execute the command list and copy the data from the GPU to the CPU.
   template <typename T>
   void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
   {
-    D3D12_RESOURCE_STATES before_state = D3D12_RESOURCE_STATE_COMMON;
-
-    if (m_b_srv_bound_)
+    // For now, common state is the only state that can be used for copying.
+    if (m_b_srv_bound_ || m_b_uav_bound_)
     {
-      before_state = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+      throw std::logic_error("StructuredBuffer is bound as SRV or UAV, cannot get data");
     }
 
-    if (m_b_uav_bound_)
-    {
-      before_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    }
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
-       before_state,
+       D3D12_RESOURCE_STATE_COMMON,
        D3D12_RESOURCE_STATE_COPY_SOURCE
       );
 
@@ -472,12 +444,15 @@ namespace Engine::Graphics
       (
        m_buffer_.Get(),
        D3D12_RESOURCE_STATE_COPY_SOURCE,
-       before_state
+       D3D12_RESOURCE_STATE_COMMON
       );
 
     GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
 
     GetD3Device().ExecuteCopyCommandList();
+
+    // Wait until the copy is done.
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
     char* data = nullptr;
 
