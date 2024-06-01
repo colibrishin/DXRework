@@ -86,6 +86,8 @@ namespace Engine::Manager::Graphics
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
+    void WaitAndReset(const eCommandListIndex type, UINT64 buffer_idx = -1) const;
+
     void ExecuteCopyCommandList();
     void ExecuteComputeCommandList();
     void ExecuteToolkitCommandList();
