@@ -163,6 +163,8 @@ namespace Engine::Resources
 
     const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
     // -- Vertex Buffer -- //
     // Initialize vertex buffer.
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -204,7 +206,7 @@ namespace Engine::Resources
     std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
     m_vertex_buffer_upload_->Unmap(0, nullptr);
 
-    GetD3Device().GetCommandList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
+    GetD3Device().GetCopyCommandList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
     // -- Resource Barrier -- //
     // Transition from copy dest buffer to vertex buffer.
@@ -214,7 +216,7 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
 
-    GetD3Device().GetCommandList()->ResourceBarrier(1, &vtx_trans);
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &vtx_trans);
 
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
@@ -257,7 +259,7 @@ namespace Engine::Resources
     std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
     m_index_buffer_upload_->Unmap(0, nullptr);
 
-    GetD3Device().GetCommandList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
+    GetD3Device().GetCopyCommandList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
 
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -265,9 +267,9 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
       );
 
-    GetD3Device().GetCommandList()->ResourceBarrier(1, &idx_trans);
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &idx_trans);
 
-    DX::ThrowIfFailed(GetD3Device().GetCommandList()->Close());
+    GetD3Device().ExecuteCopyCommandList();
 
     m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
     m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
