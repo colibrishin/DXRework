@@ -54,8 +54,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteDirectCommandList()
   {
-    WaitForEventCompletion(m_frame_idx_);
-    Reset(COMMAND_IDX_DIRECT);
+    DX::ThrowIfFailed(GetDirectCommandList()->Close());
 
     const std::vector<ID3D12CommandList*> command_lists
     {
@@ -68,10 +67,12 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteCopyCommandList()
   {
-    WaitForEventCompletion(m_frame_idx_);
-    Reset(COMMAND_IDX_COPY);
+    DX::ThrowIfFailed(GetCopyCommandList()->Close());
 
-    const std::vector<ID3D12CommandList*> command_lists = { GetCopyCommandList() };
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetCopyCommandList()
+    };
 
     GetCopyCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
     Signal(COMMAND_PRIMITIVE_COPY);
@@ -79,10 +80,12 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteComputeCommandList()
   {
-    WaitForEventCompletion(m_frame_idx_);
-    Reset(COMMAND_IDX_COMPUTE);
+    DX::ThrowIfFailed(GetComputeCommandList()->Close());
 
-    const std::vector<ID3D12CommandList*> command_lists = { GetComputeCommandList() };
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetComputeCommandList()
+    };
 
     GetComputeCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
     Signal(COMMAND_PRIMITIVE_COMPUTE);
@@ -90,10 +93,12 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteToolkitCommandList()
   {
-    WaitForEventCompletion(m_frame_idx_);
-    Reset(COMMAND_IDX_TOOLKIT);
+    DX::ThrowIfFailed(GetToolkitCommandList()->Close());
 
-    const std::vector<ID3D12CommandList*> command_lists = { GetToolkitCommandList() };
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetToolkitCommandList()
+    };
 
     GetDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
     Signal(COMMAND_PRIMITIVE_DIRECT);
