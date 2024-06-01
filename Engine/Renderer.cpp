@@ -157,6 +157,8 @@ namespace Engine::Manager::Graphics
     const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
+    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
+
     m_instance_buffer_.SetDataDeferred(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
     material->SetTempParam
@@ -171,8 +173,6 @@ namespace Engine::Manager::Graphics
     material->PreRender(dt);
     material->Render(dt);
     GetRenderPipeline().ExecuteDirectCommandList();
-    // todo: async preparation, texture shader resource is not ready yet.
-    GetRenderPipeline().WaitForGPU();
     material->PostRender(dt);
   }
 
