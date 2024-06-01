@@ -42,9 +42,9 @@ namespace Engine::Manager::Graphics
          .Height = g_max_shadow_map_size,
          .DepthOrArraySize = g_max_shadow_cascades,
          .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-         .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+         .Flags = D3D12_RESOURCE_FLAG_NONE,
          .MipsLevel = 1,
-         .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
          .SampleDesc = {1, 0},
         }
       );
@@ -95,7 +95,7 @@ namespace Engine::Manager::Graphics
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_.SetDataDeferred(static_cast<UINT>(light_buffer.size()), light_buffer.data());
+    m_sb_light_buffer_.SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
   }
 
   void ShadowManager::PreRender(const float& dt)
@@ -138,8 +138,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetDataDeferred(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
-      m_sb_light_vps_buffer_.BindSRV();
+      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
       UINT idx = 0;
 
@@ -169,8 +168,7 @@ namespace Engine::Manager::Graphics
       // Cleanup, Geometry shader's work is done.
       GetRenderPipeline().DefaultRenderTarget();
 
-      // Geometry shader's work is done.
-      m_sb_light_vps_buffer_.UnbindSRV();
+      m_sb_light_vps_buffer_.UnbindSRVGraphicDeferred();
 
       GetRenderPipeline().SetParam<int>(0, shadow_slot);
 
@@ -211,23 +209,28 @@ namespace Engine::Manager::Graphics
       );
 
     // And bind the light view and projection matrix on to the constant buffer.
-    m_sb_light_vps_buffer_.BindSRV();
+    m_sb_light_vps_buffer_.BindSRVGraphicDeferred();
 
     // Bind the light information structured buffer that previously built.
-    m_sb_light_buffer_.BindSRV();
-    m_sb_light_buffer_.BindSRV();
+    m_sb_light_buffer_.BindSRVGraphicDeferred();
   }
 
   void ShadowManager::Render(const float& dt) {}
 
   void ShadowManager::PostRender(const float& dt)
   {
-    // Unbind the light information structured buffer from the shader.
-    m_sb_light_buffer_.UnbindSRV();
-    m_sb_light_buffer_.UnbindSRV();
+    // todo: refactoring
+    for (const auto& buffer : m_shadow_texs_ | std::views::values)
+    {
+      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         buffer.GetRawResoruce(),
+         D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+         D3D12_RESOURCE_STATE_COMMON
+        );
 
-    // And the light view and projection matrix buffer to re-evaluate.
-    m_sb_light_vps_buffer_.UnbindSRV();
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
+    }
 
     m_sb_light_buffer_.UnbindSRVGraphicDeferred();
     m_sb_light_vps_buffer_.UnbindSRVGraphicDeferred();
