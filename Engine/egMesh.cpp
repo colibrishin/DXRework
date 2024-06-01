@@ -125,14 +125,14 @@ namespace Engine::Resources
 
   void Mesh::Render(const float& dt)
   {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &m_vertex_buffer_view_);
-    GetD3Device().GetCommandList()->IASetIndexBuffer(&m_index_buffer_view_);
+    GetD3Device().GetDirectCommandList()->IASetVertexBuffers(0, 1, &m_vertex_buffer_view_);
+    GetD3Device().GetDirectCommandList()->IASetIndexBuffer(&m_index_buffer_view_);
   }
 
   void Mesh::PostRender(const float& dt)
   {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
-    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
+    GetD3Device().GetDirectCommandList()->IASetVertexBuffers(0, 0, nullptr);
+    GetD3Device().GetDirectCommandList()->IASetIndexBuffer(nullptr);
   }
 
   void Mesh::PostUpdate(const float& dt) {}
