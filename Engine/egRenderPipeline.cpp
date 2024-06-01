@@ -26,8 +26,6 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DefaultRenderTarget() const
   {
-    DirectCommandGuard dcg;
-
     const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
@@ -180,8 +178,6 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::InitializeRootSignature()
   {
-    DirectCommandGuard dcg;
-
     CD3DX12_DESCRIPTOR_RANGE1 ranges[DESCRIPTOR_SLOT_COUNT];
     ranges[DESCRIPTOR_SLOT_SAMPLER].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
     ranges[DESCRIPTOR_SLOT_CB].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
@@ -451,8 +447,6 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::InitializeHeaps()
   {
-    DirectCommandGuard dcg;
-
     constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
@@ -550,11 +544,6 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().WaitNextFrame();
 
-    DirectCommandGuard dcg;
-
-    _reset_constant_buffer();
-    _reset_structured_buffer();
-
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
@@ -584,18 +573,14 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PostRender(const float& dt)
   {
-    {
-      DirectCommandGuard dcg;
+    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_PRESENT
+      );
 
-      const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-         D3D12_RESOURCE_STATE_RENDER_TARGET,
-         D3D12_RESOURCE_STATE_PRESENT
-        );
-
-      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
-    }
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
 
     GetD3Device().ExecuteDirectCommandList();
 
@@ -628,14 +613,11 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DrawIndexedDeferred(UINT index_count)
   {
-    DirectCommandGuard dcg;
     GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
   }
 
   RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv)
   {
-    DirectCommandGuard dcg;
-
     const auto& current_rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
@@ -654,8 +636,6 @@ namespace Engine::Manager::Graphics
     const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
   )
   {
-    DirectCommandGuard dcg;
-
     CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
       (
        m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
@@ -679,14 +659,11 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
   {
-    DirectCommandGuard dcg;
     GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
   }
 
   RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
   {
-    DirectCommandGuard dcg;
-
     const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
@@ -703,7 +680,6 @@ namespace Engine::Manager::Graphics
 
   RTVDSVHandlePair RenderPipeline::SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
   {
-    DirectCommandGuard dcg;
     const auto& null_rtv = m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
 
     const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -781,13 +757,11 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count)
   {
-    DirectCommandGuard dcg;
     GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
   }
 
   void RenderPipeline::TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
   {
-    DirectCommandGuard dcg;
     GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
   }
 
@@ -798,7 +772,6 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::CopyBackBufferDeferred(ID3D12Resource* resource)
   {
-    DirectCommandGuard dcg;
     GetD3Device().GetDirectCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
   }
 
@@ -854,8 +827,6 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
-    DirectCommandGuard dcg;
-
     const auto& shader_pso = Shader->GetPipelineState();
 
     GetD3Device().GetDirectCommandList()->SetPipelineState(shader_pso);

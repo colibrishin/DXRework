@@ -52,11 +52,6 @@ namespace Engine
     bounding.Transform(tr->GetWorldMatrix());
     return bounding;
   }
-
-  DirectCommandGuard::~DirectCommandGuard()
-  {
-    DX::ThrowIfFailed(GetD3Device().GetCommandList()->Close());
-  }
 } // namespace Engine
 
 
