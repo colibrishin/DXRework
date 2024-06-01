@@ -70,7 +70,7 @@ namespace Engine::Manager::Graphics
     // The structured buffer for the chunk of light view projection matrices
     StructuredBuffer<SBs::LightVPSB> m_sb_light_vps_buffer_;
 
-    D3D11_VIEWPORT m_viewport_;
+    D3D12_VIEWPORT m_viewport_;
     Resources::Texture2D m_shadow_map_mask_;
 
     // todo: refactoring
