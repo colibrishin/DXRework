@@ -31,7 +31,8 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::RenderFinished()
   {
-    GetRenderPipeline().CopyBackBuffer(COMMAND_LIST_RENDER, m_copy_.GetRawResoruce());
-    m_copy_.Bind(COMMAND_LIST_RENDER, BIND_TYPE_SRV, RESERVED_RENDERED, 0);
+    GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
+    m_copy_.BindAs(BIND_TYPE_SRV, RESERVED_RENDERED, 0);
+    m_copy_.Render(0.f);
   }
 }

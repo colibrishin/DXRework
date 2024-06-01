@@ -851,9 +851,31 @@ namespace Engine::Manager::Graphics
 
     GetD3Device().GetCommandList(list)->ResourceBarrier(1, &copy_transition);
 
-  void RenderPipeline::CopyBackBufferDeferred(ID3D12Resource* resource)
+  void RenderPipeline::CopyBackBuffer(ID3D12Resource* resource) const
   {
-    GetD3Device().GetDirectCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_COPY_SOURCE
+      );
+
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_transition);
+
+    GetD3Device().GetCopyCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+
+    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_COPY_SOURCE,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &rtv_transition);
+
+    GetD3Device().ExecuteCopyCommandList();
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const

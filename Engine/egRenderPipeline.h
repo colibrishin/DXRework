@@ -244,7 +244,7 @@ namespace Engine::Manager::Graphics
     void             TargetDepthOnlyDeferred(const eCommandList list, const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
     static void      SetViewportDeferred(const eCommandList list, const D3D12_VIEWPORT & viewport);
 
-    void CopyBackBuffer(const eCommandList list, ID3D12Resource * resource) const;
+    void CopyBackBuffer(ID3D12Resource* resource) const;
 
     ID3D12RootSignature*  GetRootSignature() const;
 
