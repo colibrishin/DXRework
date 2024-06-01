@@ -52,7 +52,9 @@ namespace Engine::Resources
     std::string m_text_;
 
     bool                        m_lazy_reload_;
+
     std::unique_ptr<SpriteFont> m_font_;
+    DirectX::DescriptorHeap     m_heap_;
   };
 } // namespace Engine::Resources
 
