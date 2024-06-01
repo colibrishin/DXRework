@@ -22,8 +22,10 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
+    m_sprite_batch_          = std::make_unique<SpriteBatch>
+      (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
 
-    m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
     
     m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
 
@@ -51,23 +53,34 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PreRender(const float& dt) {  }
 
-  void ToolkitAPI::Render(const float& dt)
-  {
-    //FrameBegin();
-  }
+  void ToolkitAPI::Render(const float& dt) {}
 
   void ToolkitAPI::PostRender(const float& dt)
   {
-    //FrameEnd();
+    FrameBegin();
+
+    for (const auto& callback : m_sprite_batch_callbacks_)
+    {
+      callback();
+    }
+
+    FrameEnd();
+
+    m_sprite_batch_callbacks_.clear();
   }
 
   void ToolkitAPI::FixedUpdate(const float& dt) { }
 
   void ToolkitAPI::PostUpdate(const float& dt) { }
 
+  void ToolkitAPI::AppendSpriteBatch(const std::function<void()>& callback)
+  {
+    m_sprite_batch_callbacks_.push_back(callback);
+  }
+
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
-    m_primitive_batch_->Begin(GetD3Device().GetCommandList());
+    m_primitive_batch_->Begin(GetD3Device().GetDirectCommandList());
   }
 
   void ToolkitAPI::EndPrimitiveBatch() const
@@ -81,9 +94,9 @@ namespace Engine::Manager::Graphics
 
   PrimitiveBatch<VertexPositionColor>* ToolkitAPI::GetPrimitiveBatch() const { return m_primitive_batch_.get(); }
 
-  ResourceUploadBatch* ToolkitAPI::GetResourceUploadBatch() const
+  DescriptorHeap* ToolkitAPI::GetDescriptorHeap() const
   {
-    return m_resource_upload_batch_.get();
+    return m_descriptor_heap_.get();
   }
 
   void ToolkitAPI::LoadSound(FMOD::Sound** sound, const std::string& path) const
@@ -165,7 +178,7 @@ namespace Engine::Manager::Graphics
 
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetCommandList(), 
+        GetD3Device().GetToolkitCommandList(), 
         SpriteSortMode_Deferred
     );
   }
