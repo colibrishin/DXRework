@@ -73,7 +73,7 @@ namespace Engine::Resources
     bool         IsHotload() const;
 
     void BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset);
-    void Map(const std::function<void(char*)> & copy_func) const;
+    void Map(const std::function<void(char*)> & copy_func);
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
