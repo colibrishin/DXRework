@@ -232,12 +232,9 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
 
-    GetRenderPipeline().PreRender(dt);
-    GetRenderer().PreRender(dt);
-    GetShadowManager().PreRender(dt);
-
-    GetDebugger().PreRender(dt);
-    GetD3Device().PreRender(dt);
+    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
+    GetRenderer().PreRender(dt); // pre-process render information
+    GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
   }
 
   void Application::Render(const float& dt)
@@ -257,15 +254,12 @@ namespace Engine::Manager
     // Shadow resource binding
     GetShadowManager().Render(dt);
 
-    // Render commanding
+    // Render commands (opaque)
     GetRenderer().Render(dt);
-    GetDebugger().Render(dt);
 
-    // Render pass 1 (Opaque, direct execution)
+    GetDebugger().Render(dt);
     GetRenderPipeline().Render(dt);
-    // Cleanup direct command list.
     GetD3Device().Render(dt);
-    // todo: execute toolkit render, separate command list
     GetToolkitAPI().Render(dt);
   }
 
@@ -290,13 +284,15 @@ namespace Engine::Manager
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          GetD3Device().GetCommandList()
+          GetD3Device().GetDirectCommandList()
       );
     }
 
-    GetRenderPipeline().PostRender(dt);
+    GetRenderer().PostRender(dt); // post render commands
+    GetToolkitAPI().PostRender(dt); // toolkit related render commands
+    GetShadowManager().PostRender(dt); // commanding shadow resource reset
+    GetRenderPipeline().PostRender(dt); // present
     GetD3Device().PostRender(dt);
-    GetToolkitAPI().PostRender(dt);
   }
 
   void Application::PostUpdate(const float& dt)
