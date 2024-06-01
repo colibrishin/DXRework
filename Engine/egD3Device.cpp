@@ -625,6 +625,17 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  void D3Device::WaitAndReset(const eCommandListIndex type, UINT64 buffer_idx) const
+  {
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    WaitForEventCompletion(buffer_idx);
+    Reset(type, buffer_idx);
+  }
+
   void D3Device::WaitNextFrame()
   {
     // Signaling the next frame.
