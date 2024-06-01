@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egDebugger.hpp"
 
+#include <DescriptorHeap.h>
+
 #include "egGlobal.h"
 
 namespace Engine::Manager
@@ -21,27 +23,29 @@ namespace Engine::Manager
 
     if (m_render_queue.empty()) { return; }
 
-    GetToolkitAPI().BeginPrimitiveBatch();
-
     if (m_render_queue.size() > g_debug_message_max)
     {
-      while (m_render_queue.size() > g_debug_message_max) { m_render_queue.erase(m_render_queue.begin()); }
+      while (m_render_queue.size() > g_debug_message_max)
+      {
+        m_render_queue.erase(m_render_queue.begin());
+      }
     }
 
-    for (int i = 0; i < m_render_queue.size(); ++i)
+    for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
     {
-      if (m_render_queue[i].first.elapsed_time > g_debug_message_life_time)
+      if (it->first.elapsed_time > g_debug_message_life_time)
       {
-        m_render_queue.erase(m_render_queue.begin() + i);
+        it = m_render_queue.erase(it);
         continue;
       }
 
-      m_render_queue[i].second(m_render_queue[i].first, dt);
+      GetToolkitAPI().AppendSpriteBatch([this, it, dt]()
+      {
+        it->second(it->first, dt);
+      });
     }
 
     y = g_debug_y_initial;
-
-    GetToolkitAPI().EndPrimitiveBatch();
   }
 
   void Debugger::PostUpdate(const float& dt) {}
@@ -52,12 +56,23 @@ namespace Engine::Manager
 
   void Debugger::Initialize()
   {
+    auto upload_batch = DirectX::ResourceUploadBatch(GetD3Device().GetDevice());
+
+    upload_batch.Begin();
+
     m_bDebug = true;
     m_font_  = std::make_unique<SpriteFont>
       (
        GetD3Device().GetDevice(),
-       L"consolas.spritefont"
+       upload_batch,
+       L"consolas.spritefont",
+       GetToolkitAPI().GetDescriptorHeap()->GetCpuHandle(0),
+       GetToolkitAPI().GetDescriptorHeap()->GetGpuHandle(0)
       );
+
+    const auto& token = upload_batch.End(GetD3Device().GetCopyCommandQueue());
+
+    token.wait();
   }
 
   void Debugger::Log(const std::string& str)

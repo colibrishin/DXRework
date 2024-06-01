@@ -2,6 +2,7 @@
 #include "egToolkitAPI.h"
 #include "egCamera.h"
 #include "egSceneManager.hpp"
+#include <DescriptorHeap.h>
 
 namespace Engine::Manager::Graphics
 {
@@ -13,13 +14,18 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::Initialize()
   {
+    m_descriptor_heap_ = std::make_unique<DescriptorHeap>
+      (GetD3Device().GetDevice(), 1);
+
     m_states_              = std::make_unique<CommonStates>(GetD3Device().GetDevice());
     m_resource_upload_batch_ = std::make_unique<ResourceUploadBatch>(GetD3Device().GetDevice());
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
+    m_sprite_batch_          = std::make_unique<SpriteBatch>
+      (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
 
-    m_sprite_batch_    = std::make_unique<SpriteBatch>(GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
     
     m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
 
@@ -40,27 +46,41 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PreUpdate(const float& dt) {  }
 
-  void ToolkitAPI::Update(const float& dt) { m_audio_engine_->update(); }
+  void ToolkitAPI::Update(const float& dt)
+  {
+    m_audio_engine_->update();
+  }
 
   void ToolkitAPI::PreRender(const float& dt) {  }
 
-  void ToolkitAPI::Render(const float& dt)
-  {
-    //FrameBegin();
-  }
+  void ToolkitAPI::Render(const float& dt) {}
 
   void ToolkitAPI::PostRender(const float& dt)
   {
-    //FrameEnd();
+    FrameBegin();
+
+    for (const auto& callback : m_sprite_batch_callbacks_)
+    {
+      callback();
+    }
+
+    FrameEnd();
+
+    m_sprite_batch_callbacks_.clear();
   }
 
   void ToolkitAPI::FixedUpdate(const float& dt) { }
 
   void ToolkitAPI::PostUpdate(const float& dt) { }
 
+  void ToolkitAPI::AppendSpriteBatch(const std::function<void()>& callback)
+  {
+    m_sprite_batch_callbacks_.push_back(callback);
+  }
+
   void ToolkitAPI::BeginPrimitiveBatch() const
   {
-    m_primitive_batch_->Begin(GetD3Device().GetCommandList());
+    m_primitive_batch_->Begin(GetD3Device().GetDirectCommandList());
   }
 
   void ToolkitAPI::EndPrimitiveBatch() const
@@ -74,9 +94,9 @@ namespace Engine::Manager::Graphics
 
   PrimitiveBatch<VertexPositionColor>* ToolkitAPI::GetPrimitiveBatch() const { return m_primitive_batch_.get(); }
 
-  ResourceUploadBatch* ToolkitAPI::GetResourceUploadBatch() const
+  DescriptorHeap* ToolkitAPI::GetDescriptorHeap() const
   {
-    return m_resource_upload_batch_.get();
+    return m_descriptor_heap_.get();
   }
 
   void ToolkitAPI::LoadSound(FMOD::Sound** sound, const std::string& path) const
@@ -140,14 +160,45 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void ToolkitAPI::FrameBegin() const
+  void ToolkitAPI::FrameBegin()
   {
+    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
+
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
+
+    m_previous_handle_ = buffer_handle;
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+    (
+        1, 
+        buffer_handle, 
+        m_descriptor_heap_->GetCpuHandle(0),
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetCommandList(), 
+        GetD3Device().GetToolkitCommandList(), 
         SpriteSortMode_Deferred
     );
   }
 
-  void ToolkitAPI::FrameEnd() const { m_sprite_batch_->End(); }
+  void ToolkitAPI::FrameEnd() const
+  {
+    m_sprite_batch_->End();
+
+    GetD3Device().ExecuteToolkitCommandList();
+
+    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
+
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+    (
+        1, 
+        buffer_handle, 
+        m_previous_handle_,
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+  }
 } // namespace Engine::Manager::Graphics
