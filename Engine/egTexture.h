@@ -73,7 +73,7 @@ namespace Engine::Resources
     bool         IsHotload() const;
 
     void BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset);
-    void Map(const std::function<void(char*)> & copy_func) const;
+    void Map(const std::function<void(char*)> & copy_func);
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
@@ -120,6 +120,7 @@ namespace Engine::Resources
 
     // Non-serialized
     bool                             m_b_lazy_window_;
+    ComPtr<ID3D12Resource>           m_upload_buffer_;
 
     RTVDSVHandlePair                 m_previous_handles_;
 
