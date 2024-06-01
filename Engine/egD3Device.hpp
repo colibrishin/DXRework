@@ -3,6 +3,8 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <dxgidebug.h>
+
+#include "egGlobal.h"
 #include "egManager.hpp"
 
 #ifdef _DEBUG
@@ -72,22 +74,40 @@ namespace Engine::Manager::Graphics
 
     ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
-    [[nodiscard]] HANDLE                        GetSwapchainAwaiter() const;
+    [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetDirectCommandList(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList(UINT frame_idx = -1)const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetToolkitCommandList(UINT frame_idx = -1)const;
 
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList()const;
+    [[nodiscard]] ID3D12CommandQueue* GetDirectCommandQueue() const;
+    [[nodiscard]] ID3D12CommandQueue* GetCopyCommandQueue() const;
+    [[nodiscard]] ID3D12CommandQueue* GetComputeCommandQueue() const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
     void ExecuteCopyCommandList();
     void ExecuteComputeCommandList();
+    void ExecuteToolkitCommandList();
+
+    void CreateTextureFromFile(
+        const std::filesystem::path& file_path, 
+        ID3D12Resource** res, 
+        bool generate_mip) const;
     
   private:
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
     friend struct DirectCommandGuard;
+
+    inline static constexpr eCommandListType s_target_types[] =
+    {
+      COMMAND_DIRECT,
+      COMMAND_COPY,
+      COMMAND_COMPUTE,
+      COMMAND_TOOLKIT
+    };
     
     ~D3Device() override = default;
 
@@ -97,16 +117,23 @@ namespace Engine::Manager::Graphics
     void InitializeCommandAllocator();
     void InitializeFence();
 
-    void ExecuteDirectCommandList() const;
+    void ExecuteDirectCommandList();
 
     void WaitForEventCompletion(UINT64 buffer_idx) const;
-    void Signal(const UINT64 buffer_idx);
     void WaitForBackBuffer() const;
     
-    void CleanupCommandList() const;
+    void CleanupCommandList();
     void WaitNextFrame();
 
   private:
+    [[nodiscard]] ID3D12CommandAllocator* GetDirectCommandAllocator(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12CommandAllocator* GetCopyCommandAllocator(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12CommandAllocator* GetComputeCommandAllocator(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12CommandAllocator* GetToolkitCommandAllocator(UINT frame_idx = -1) const;
+
+    void Reset(const eCommandListIndex type, const UINT64 buffer_idx = -1) const;
+    void Signal(const eCommandPrimitiveType type, UINT64 buffer_idx = -1);
+
     HWND m_hwnd_ = nullptr;
 
     ComPtr<ID3D12Device2> m_device_ = nullptr;
@@ -119,21 +146,15 @@ namespace Engine::Manager::Graphics
 
     ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
 
-    ComPtr<ID3D12CommandQueue> m_direct_command_queue_  = nullptr;
-    ComPtr<ID3D12CommandQueue> m_copy_command_queue_    = nullptr;
-    ComPtr<ID3D12CommandQueue> m_compute_command_queue_ = nullptr;
-
     ComPtr<ID3D12Fence>              m_fence_       = nullptr;
     HANDLE                           m_fence_event_ = nullptr;
-    std::vector<std::atomic<UINT64>> m_fence_nonce_;
+    std::atomic<UINT64>*             m_fence_nonce_;
 
     UINT64 m_frame_idx_ = 0;
 
-    std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
-
-    ComPtr<ID3D12GraphicsCommandList1> m_direct_command_list_  = {nullptr};
-    ComPtr<ID3D12GraphicsCommandList1> m_copy_command_list_    = {nullptr};
-    ComPtr<ID3D12GraphicsCommandList1> m_compute_command_list_ = {nullptr};
+    std::array<ComPtr<ID3D12CommandQueue>, COMMAND_IDX_COUNT>                           m_command_queues_ = {};
+    std::map<UINT64, std::array<ComPtr<ID3D12CommandAllocator>, COMMAND_IDX_COUNT>>     m_command_allocators_;
+    std::map<UINT64, std::array<ComPtr<ID3D12GraphicsCommandList1>, COMMAND_IDX_COUNT>> m_command_lists_;
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
