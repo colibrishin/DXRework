@@ -16,22 +16,24 @@ namespace Engine::Graphics
     ~StructuredBuffer() = default;
 
     void            Create(UINT size, const T* initial_data, bool is_mutable = false);
-    void __fastcall SetDataDeferred(UINT size, const T* src_ptr);
+    void __fastcall SetData(UINT size, const T* src_ptr);
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
-    void BindSRVDeferred();
-    void UnbindSRVDeferred();
+    void BindSRVGraphicDeferred();
+    void UnbindSRVGraphicDeferred();
+    void BindSRVComputeDeferred();
+    void UnbindSRVComputeDeferred();
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void BindUAVDeferred()
+    void BindUAVGraphicDeferred()
     {
-      if (m_b_srv_bound_)
+      if (m_b_srv_bound_ || m_b_srv_bound_compute_)
       {
         throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
       }
 
-      if (m_b_uav_bound_) { return; }
+      if (!m_b_uav_bound_ || m_b_uav_bound_compute_) { return; }
 
       const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
@@ -46,7 +48,29 @@ namespace Engine::Graphics
     }
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void UnbindUAVDeferred()
+    void BindUAVComputeDeferred()
+    {
+      if (m_b_srv_bound_ || m_b_srv_bound_compute_)
+      {
+        throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
+      }
+
+      if (m_b_uav_bound_ || m_b_uav_bound_compute_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+
+      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_compute_ = true;
+    }
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAVGraphicDeferred()
     {
       if (!m_b_uav_bound_) { return; }
 
@@ -62,6 +86,23 @@ namespace Engine::Graphics
       m_b_uav_bound_ = false;
     }
 
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAVComputeDeferred()
+    {
+      if (!m_b_uav_bound_compute_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_compute_ = false;
+    }
+
   private:
     void InitializeSRV(UINT size);
     void InitializeUAV(UINT size);
@@ -71,6 +112,10 @@ namespace Engine::Graphics
 
     bool        m_b_srv_bound_;
     bool        m_b_uav_bound_;
+
+    bool        m_b_srv_bound_compute_;
+    bool        m_b_uav_bound_compute_;
+
     bool        m_b_mutable_;
     UINT        m_size_;
 
@@ -258,6 +303,8 @@ namespace Engine::Graphics
   StructuredBuffer<T>::StructuredBuffer()
     : m_b_srv_bound_(false),
       m_b_uav_bound_(false),
+      m_b_srv_bound_compute_(false),
+      m_b_uav_bound_compute_(false),
       m_b_mutable_(false),
       m_size_(0)
   {
@@ -287,14 +334,14 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRVDeferred()
+  void StructuredBuffer<T>::BindSRVGraphicDeferred()
   {
     if (m_b_uav_bound_)
     {
       throw std::logic_error("StructuredBuffer is bound as UAV, cannot bind as SRV");
     }
 
-    if (m_b_srv_bound_) { return; }
+    if (m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
 
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -309,9 +356,9 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRVDeferred()
+  void StructuredBuffer<T>::UnbindSRVGraphicDeferred()
   {
-    if (!m_b_srv_bound_) { return; }
+    if (!m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
 
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -342,13 +389,13 @@ namespace Engine::Graphics
     {
       InitializeWriteBuffer(size);
       std::vector<T> data(size);
-      SetDataDeferred(size, data.data());
+      SetData(size, data.data());
     }
     InitializeReadBuffer(size);
   }
 
   template <typename T>
-  void StructuredBuffer<T>::SetDataDeferred(const UINT size, const T* src_ptr)
+  void StructuredBuffer<T>::SetData(const UINT size, const T* src_ptr)
   {
     if (!m_b_mutable_) { throw std::logic_error("StructuredBuffer is defined as not mutable"); }
 
@@ -412,7 +459,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
   {
     // For now, common state is the only state that can be used for copying.
-    if (m_b_srv_bound_ || m_b_uav_bound_)
+    if (m_b_srv_bound_ || m_b_uav_bound_ || m_b_srv_bound_compute_ || m_b_uav_bound_compute_)
     {
       throw std::logic_error("StructuredBuffer is bound as SRV or UAV, cannot get data");
     }
@@ -463,5 +510,44 @@ namespace Engine::Graphics
     m_buffer_.Reset();
     m_write_buffer_.Reset();
     m_read_buffer_.Reset();
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::BindSRVComputeDeferred()
+  {
+    if (m_b_uav_bound_ || m_b_uav_bound_compute_)
+    {
+      throw std::logic_error("StructuredBuffer is bound as UAV, cannot bind as SRV");
+    }
+
+    if (m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+      );
+
+    GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_compute_ = true;
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::UnbindSRVComputeDeferred()
+  {
+    if (!m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+          D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_compute_ = false;
   }
 }
