@@ -64,6 +64,22 @@ namespace Engine::Manager::Graphics
 
     void CopyBackBuffer(ID3D12Resource * resource) const;
 
+    RTVDSVHandlePair SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv);
+    RTVDSVHandlePair SetRenderTargetDeferred(
+      const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+    );
+    void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
+    RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
+    void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
+    void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
+    void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
+
+    RTVDSVHandlePair SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
+    void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
+    static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
+
+    void CopyBackBuffer(ID3D12Resource* resource) const;
+
     ID3D12RootSignature*  GetRootSignature() const;
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPURTVHandle() const;
