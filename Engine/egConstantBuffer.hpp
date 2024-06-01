@@ -15,7 +15,7 @@ namespace Engine::Graphics
 
     void Create(const T* src_data)
     {
-      DirectCommandGuard dcg;
+      GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
       const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
       const auto& cb_desc      = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
@@ -48,21 +48,19 @@ namespace Engine::Graphics
            )
           );
 
-        g_cb_upload_buffers.push_back(upload_buffer);
-
         char* data = nullptr;
 
         DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
         std::memcpy(data, src_data, sizeof(T));
         upload_buffer->Unmap(0, nullptr);
 
-        GetD3Device().GetCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+        GetD3Device().GetCopyCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
       }
 
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
         (m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &cb_trans);
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &cb_trans);
 
       const D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc
       {
@@ -70,16 +68,20 @@ namespace Engine::Graphics
         .SizeInBytes    = m_alignment_size_
       };
 
+      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+      GetD3Device().ExecuteCopyCommandList();
+
       GetD3Device().CreateConstantBufferView(which_cb<T>::value, cbv_desc);
     }
 
     void SetData(const T* src_data)
     {
-      DirectCommandGuard dcg;
+      GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
       const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer_.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &copy_trans);
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_trans);
 
       // Use upload buffer for synchronization.
       ComPtr<ID3D12Resource> upload_buffer;
@@ -95,8 +97,6 @@ namespace Engine::Graphics
          )
         );
 
-      g_cb_upload_buffers.push_back(upload_buffer);
-
       char* data = nullptr;
 
       DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**
@@ -106,11 +106,15 @@ namespace Engine::Graphics
 
       upload_buffer->Unmap(0, nullptr);
 
-      GetD3Device().GetCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+      GetD3Device().GetCopyCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
 
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &cb_trans);
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &cb_trans);
+
+      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+      GetD3Device().ExecuteCopyCommandList();
     }
 
   private:
