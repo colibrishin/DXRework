@@ -63,6 +63,7 @@ namespace Engine::Manager::Graphics
     std::unique_ptr<GraphicsMemory>                      m_graphics_memory_       = nullptr;
 
 
+
     std::unique_ptr<PrimitiveBatch<VertexPositionColor>> m_primitive_batch_ =
       nullptr;
 

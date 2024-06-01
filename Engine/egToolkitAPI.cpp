@@ -22,13 +22,8 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
-
-    m_resource_upload_batch_->Begin();
-
     m_sprite_batch_          = std::make_unique<SpriteBatch>
       (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
-
-    m_resource_upload_batch_->End(GetD3Device().GetDirectCommandQueue());
 
     m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
     
@@ -179,7 +174,7 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::FrameBegin()
   {
-    /*const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
+    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
 
@@ -191,13 +186,11 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_descriptor_heap_->GetCpuHandle(0),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );*/
-
-    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
+    );
 
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetSubDirectCommandList(), 
+        GetD3Device().GetToolkitCommandList(), 
         SpriteSortMode_Deferred
     );
   }
@@ -206,9 +199,7 @@ namespace Engine::Manager::Graphics
   {
     m_sprite_batch_->End();
 
-    GetD3Device().ExecuteSubDirectCommandList();
-
-    /*GetD3Device().ExecuteSubDirectCommandList();
+    GetD3Device().ExecuteToolkitCommandList();
 
     const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
@@ -220,6 +211,6 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_previous_handle_,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );*/
+    );
   }
 } // namespace Engine::Manager::Graphics
