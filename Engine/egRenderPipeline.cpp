@@ -31,12 +31,12 @@ namespace Engine::Manager::Graphics
     const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
   void RenderPipeline::DefaultViewport() const
   {
-    GetD3Device().GetCommandList()->RSSetViewports(1, &m_viewport_);
+    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &m_viewport_);
   }
   
   RenderPipeline::~RenderPipeline() { }
@@ -226,7 +226,7 @@ namespace Engine::Manager::Graphics
         )
     );
 
-    GetD3Device().GetCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
   }
 
   void RenderPipeline::InitializeRenderTargets()
@@ -500,9 +500,9 @@ namespace Engine::Manager::Graphics
       m_sampler_descriptor_heap_.Get(),
     };
 
-    GetD3Device().GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+    GetD3Device().GetDirectCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
 
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable
       (
        0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
       );
@@ -513,33 +513,33 @@ namespace Engine::Manager::Graphics
       );
 
     // CBV (Graphic)
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(1, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(1, buffer_handle);
 
     // UAV (Graphic)
     buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(2, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(2, buffer_handle);
 
     // SRV (Graphic)
     buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
-    GetD3Device().GetCommandList()->SetGraphicsRootDescriptorTable(3, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(3, buffer_handle);
 
     buffer_handle = m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
 
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable
       (
        0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
       );
 
     // CBV (Compute)
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(1, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(1, buffer_handle);
 
     // UAV (Compute)
     buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(2, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(2, buffer_handle);
 
     // SRV (Compute)
     buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
-    GetD3Device().GetCommandList()->SetComputeRootDescriptorTable(3, buffer_handle);
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(3, buffer_handle);
 
     InitializeNullDescriptors();
   }
@@ -548,6 +548,8 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PreRender(const float& dt)
   {
+    GetD3Device().WaitNextFrame();
+
     DirectCommandGuard dcg;
 
     _reset_constant_buffer();
@@ -564,12 +566,12 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
 
-    GetD3Device().GetCommandList()->ResourceBarrier(1, &initial_barrier);
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &initial_barrier);
 
-    GetD3Device().GetCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    GetD3Device().GetCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    GetD3Device().GetDirectCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     FallbackPSO();
   }
@@ -592,7 +594,7 @@ namespace Engine::Manager::Graphics
          D3D12_RESOURCE_STATE_PRESENT
         );
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &present_barrier);
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
     }
 
     GetD3Device().ExecuteDirectCommandList();
@@ -620,9 +622,6 @@ namespace Engine::Manager::Graphics
     {
       GetDebugger().Log("Waiting for Swap chain had an issue.");
     }
-
-    GetD3Device().Signal(GetD3Device().GetFrameIndex());
-    GetD3Device().WaitNextFrame();
   }
 
   void RenderPipeline::PostUpdate(const float& dt) {}
@@ -630,7 +629,7 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::DrawIndexedDeferred(UINT index_count)
   {
     DirectCommandGuard dcg;
-    GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
+    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
   }
 
   RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv)
@@ -646,7 +645,7 @@ namespace Engine::Manager::Graphics
 
     const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv, false, &current_dsv);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv, false, &current_dsv);
 
     return {current_rtv_handle, current_dsv};
   }
@@ -669,7 +668,7 @@ namespace Engine::Manager::Graphics
        m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
       );
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(
         1, 
         &rtv, 
         false, 
@@ -681,7 +680,7 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
   {
     DirectCommandGuard dcg;
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
   }
 
   RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
@@ -697,7 +696,7 @@ namespace Engine::Manager::Graphics
 
     const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
 
     return {current_rtv, current_dsv};
   }
@@ -716,7 +715,7 @@ namespace Engine::Manager::Graphics
 
     const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
-    GetD3Device().GetCommandList()->OMSetRenderTargets(0, &null_rtv, false, &dsv);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, &null_rtv, false, &dsv);
 
     return {current_rtv, current_dsv};
   }
@@ -783,24 +782,24 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count)
   {
     DirectCommandGuard dcg;
-    GetD3Device().GetCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
   }
 
   void RenderPipeline::TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
   {
     DirectCommandGuard dcg;
-    GetD3Device().GetCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
   }
 
   void RenderPipeline::SetViewportDeferred(const D3D12_VIEWPORT& viewport)
   {
-    GetD3Device().GetCommandList()->RSSetViewports(1, &viewport);
+    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &viewport);
   }
 
   void RenderPipeline::CopyBackBufferDeferred(ID3D12Resource* resource)
   {
     DirectCommandGuard dcg;
-    GetD3Device().GetCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+    GetD3Device().GetDirectCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const
@@ -848,13 +847,18 @@ namespace Engine::Manager::Graphics
     return m_dsv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
   }
 
-  void                      RenderPipeline::SetPSO(const StrongShader& Shader)
+  D3D12_VIEWPORT RenderPipeline::GetViewport()
+  {
+    return m_viewport_;
+  }
+
+  void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
     DirectCommandGuard dcg;
 
     const auto& shader_pso = Shader->GetPipelineState();
 
-    GetD3Device().GetCommandList()->SetPipelineState(shader_pso);
+    GetD3Device().GetDirectCommandList()->SetPipelineState(shader_pso);
   }
 
   UINT RenderPipeline::GetBufferDescriptorSize() const
@@ -879,12 +883,6 @@ namespace Engine::Manager::Graphics
   {
     UploadConstantBuffersDeferred();
     GetD3Device().ExecuteDirectCommandList();
-  }
-
-  void RenderPipeline::WaitForGPU()
-  {
-    GetD3Device().Signal(GetD3Device().GetFrameIndex());
-    GetD3Device().WaitForEventCompletion(GetD3Device().GetFrameIndex());
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
