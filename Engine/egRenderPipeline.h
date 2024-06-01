@@ -71,6 +71,7 @@ namespace Engine::Manager::Graphics
     void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
     void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
 
+    RTVDSVHandlePair SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
     void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
     static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
 
@@ -85,6 +86,7 @@ namespace Engine::Manager::Graphics
 
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPURTVHandle(UINT index) const;
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
+    D3D12_VIEWPORT              GetViewport();
 
     static void           SetPSO(const StrongShader& Shader);
 
@@ -93,7 +95,6 @@ namespace Engine::Manager::Graphics
 
     void UploadConstantBuffersDeferred();
     void ExecuteDirectCommandList();
-    void WaitForGPU();
 
   private:
     friend class ToolkitAPI;
