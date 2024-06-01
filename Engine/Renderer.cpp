@@ -159,7 +159,7 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
 
-    m_instance_buffer_.SetDataDeferred(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
+    m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 
     material->SetTempParam
       (
