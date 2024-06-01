@@ -157,6 +157,7 @@ namespace Engine::Manager
     GetPhysicsManager().PreUpdate(dt);
     GetLerpManager().PreUpdate(dt);
     GetProjectionFrustum().PreUpdate(dt);
+
     GetRenderer().PreUpdate(dt);
     GetShadowManager().PreUpdate(dt);
     GetDebugger().PreUpdate(dt);
@@ -173,10 +174,16 @@ namespace Engine::Manager
     GetShadowManager().FixedUpdate(dt);
     GetResourceManager().FixedUpdate(dt);
 
+    // physics updates.
+    // gravity
     GetGraviton().FixedUpdate(dt);
+    // collision detection
     GetCollisionDetector().FixedUpdate(dt);
+    // constraint solver
     GetConstraintSolver().FixedUpdate(dt);
+    // apply forces
     GetPhysicsManager().FixedUpdate(dt);
+    // lerp rigidbody movements
     GetLerpManager().FixedUpdate(dt);
 
     GetProjectionFrustum().FixedUpdate(dt);
@@ -200,11 +207,12 @@ namespace Engine::Manager
     GetPhysicsManager().Update(dt);
     GetLerpManager().Update(dt);
     GetProjectionFrustum().Update(dt);
+
     GetRenderer().Update(dt);
-    GetShadowManager().Update(dt);
-    GetDebugger().Update(dt);
+    GetShadowManager().Update(dt); // update light information
+    GetDebugger().Update(dt); // update debug flag
     GetD3Device().Update(dt);
-    GetToolkitAPI().Update(dt);
+    GetToolkitAPI().Update(dt); //fmod update
   }
 
   void Application::PreRender(const float& dt)
@@ -221,13 +229,12 @@ namespace Engine::Manager
     GetPhysicsManager().PreRender(dt);
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
-
-    GetRenderPipeline().PreRender(dt);
-    GetRenderer().PreRender(dt);
-    GetShadowManager().PreRender(dt);
-
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
+
+    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
+    GetRenderer().PreRender(dt); // pre-process render information
+    GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
   }
 
   void Application::Render(const float& dt)
@@ -247,15 +254,12 @@ namespace Engine::Manager
     // Shadow resource binding
     GetShadowManager().Render(dt);
 
-    // Render commanding
+    // Render commands (opaque)
     GetRenderer().Render(dt);
-    GetDebugger().Render(dt);
 
-    // Render pass 1 (Opaque, direct execution)
+    GetDebugger().Render(dt);
     GetRenderPipeline().Render(dt);
-    // Cleanup direct command list.
     GetD3Device().Render(dt);
-    // todo: execute toolkit render, separate command list
     GetToolkitAPI().Render(dt);
   }
 
@@ -272,9 +276,7 @@ namespace Engine::Manager
     GetPhysicsManager().PostRender(dt);
     GetLerpManager().PostRender(dt);
     GetProjectionFrustum().PostRender(dt);
-    GetRenderer().PostRender(dt);
-    GetShadowManager().PostRender(dt);
-    GetDebugger().PostRender(dt);
+    GetDebugger().PostRender(dt); // gather information until render
 
     if constexpr (g_debug)
     {
@@ -282,13 +284,15 @@ namespace Engine::Manager
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          GetD3Device().GetCommandList()
+          GetD3Device().GetDirectCommandList()
       );
     }
 
-    GetRenderPipeline().PostRender(dt);
+    GetRenderer().PostRender(dt); // post render commands
+    GetToolkitAPI().PostRender(dt); // toolkit related render commands
+    GetShadowManager().PostRender(dt); // commanding shadow resource reset
+    GetRenderPipeline().PostRender(dt); // present
     GetD3Device().PostRender(dt);
-    GetToolkitAPI().PostRender(dt);
   }
 
   void Application::PostUpdate(const float& dt)
