@@ -35,16 +35,9 @@ namespace Engine::Resources
 
   void ShadowTexture::Clear() const
   {
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
-
-    const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (GetRawResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &dsv_trans);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ClearDepthStencilView(
-        m_dsv_->GetCPUDescriptorHandleForHeapStart(), 
-        D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 
+    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(
+        m_rtv_->GetCPUDescriptorHandleForHeapStart(), 
+        D3D12_CLEAR_FLAG_DEPTH, 
         1.0f, 
         0, 
         0, 

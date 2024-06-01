@@ -26,6 +26,33 @@ namespace Engine::Manager::Graphics
   {
     DX::ThrowIfFailed(GetCommandList(list)->Close());
 
+    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_COPY].Get();
+  }
+
+  ID3D12GraphicsCommandList1* D3Device::GetComputeCommandList(UINT frame_idx) const
+  {
+    if (frame_idx == -1)
+    {
+      frame_idx = m_frame_idx_;
+    }
+
+    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_COMPUTE].Get();
+  }
+
+  ID3D12GraphicsCommandList1* D3Device::GetToolkitCommandList(UINT frame_idx) const
+  {
+    if (frame_idx == -1)
+    {
+      frame_idx = m_frame_idx_;
+    }
+
+    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_TOOLKIT].Get();
+  }
+
+  void D3Device::ExecuteDirectCommandList()
+  {
+    DX::ThrowIfFailed(GetDirectCommandList()->Close());
+
     const std::vector<ID3D12CommandList*> command_lists
     {
       GetCommandList(list)
@@ -33,12 +60,43 @@ namespace Engine::Manager::Graphics
 
     GetCommandQueue(list)->ExecuteCommandLists(command_lists.size(), command_lists.data());
 
-    Signal(static_cast<eCommandTypes>(s_target_types[list]));
+  void D3Device::ExecuteCopyCommandList()
+  {
+    DX::ThrowIfFailed(GetCopyCommandList()->Close());
+
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetCopyCommandList()
+    };
+
+    GetCopyCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
+    Signal(COMMAND_PRIMITIVE_COPY);
   }
 
   ID3D12CommandQueue* D3Device::GetCommandQueue(const eCommandList list) const
   {
-    return m_command_queues_[s_target_types[list]].Get();
+    DX::ThrowIfFailed(GetComputeCommandList()->Close());
+
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetComputeCommandList()
+    };
+
+    GetComputeCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
+    Signal(COMMAND_PRIMITIVE_COMPUTE);
+  }
+
+  void D3Device::ExecuteToolkitCommandList()
+  {
+    DX::ThrowIfFailed(GetToolkitCommandList()->Close());
+
+    const std::vector<ID3D12CommandList*> command_lists
+    {
+      GetToolkitCommandList()
+    };
+
+    GetDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
+    Signal(COMMAND_PRIMITIVE_DIRECT);
   }
 
   std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> D3Device::GenerateInputDescription(
