@@ -6,18 +6,6 @@
 
 namespace Engine::Graphics
 {
-  inline static std::vector<ComPtr<ID3D12Resource>> g_cb_upload_buffers = {};
-
-  static void _reset_constant_buffer()
-  {
-    for (auto& buffer : g_cb_upload_buffers)
-    {
-      buffer.Reset();
-    }
-
-    g_cb_upload_buffers.clear();
-  }
-
   // Creates a constant buffer for only current back buffer.
   template <typename T>
   class ConstantBuffer

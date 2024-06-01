@@ -99,7 +99,6 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
-    friend struct DirectCommandGuard;
 
     inline static constexpr eCommandListType s_target_types[] =
     {

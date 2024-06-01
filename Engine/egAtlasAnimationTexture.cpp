@@ -96,8 +96,6 @@ namespace Engine::Resources
       // for matching with xml data.
       for (UINT i = 0; i < num_atlases; ++i)
       {
-        DirectCommandGuard dcg;
-
         ComPtr<ID3D12Resource> anim = m_atlases_[i]->GetRawResoruce();
         D3D12_BOX               box  = {0, 0, 0, m_atlases_[i]->GetWidth(), m_atlases_[i]->GetHeight(), 1};
 
@@ -115,7 +113,7 @@ namespace Engine::Resources
           .SubresourceIndex = 0
         };
 
-        GetD3Device().GetCommandList()->CopyTextureRegion
+        GetD3Device().GetCopyCommandList()->CopyTextureRegion
           (
            &dst,
            0,
