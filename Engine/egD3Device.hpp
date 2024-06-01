@@ -103,7 +103,6 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
-    friend class GarbageCollector;
 
     inline static constexpr eCommandListType s_target_types[] =
     {

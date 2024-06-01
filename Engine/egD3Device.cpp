@@ -93,11 +93,11 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteSubDirectCommandList()
   {
-    DX::ThrowIfFailed(GetSubDirectCommandList()->Close());
+    DX::ThrowIfFailed(GetToolkitCommandList()->Close());
 
     const std::vector<ID3D12CommandList*> command_lists
     {
-      GetSubDirectCommandList()
+      GetToolkitCommandList()
     };
 
     GetSubDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
