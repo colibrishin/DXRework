@@ -74,7 +74,7 @@ namespace Engine::Manager::Graphics
     void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
     static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
 
-    void CopyBackBufferDeferred(ID3D12Resource* resource);
+    void CopyBackBuffer(ID3D12Resource* resource) const;
 
     ID3D12RootSignature*  GetRootSignature() const;
     ID3D12DescriptorHeap* GetBufferHeap() const;
