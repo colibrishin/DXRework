@@ -28,7 +28,9 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::RenderFinished(const CommandPair& cmd) const
   {
-    GetRenderPipeline().CopyBackBuffer(cmd, m_copy_.GetRawResoruce());
+    GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
+    m_copy_.BindAs(BIND_TYPE_SRV, RESERVED_RENDERED, 0);
+    m_copy_.Render(0.f);
   }
 
   void ReflectionEvaluator::BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const
