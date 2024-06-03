@@ -1126,31 +1126,31 @@ namespace Engine::Resources
           m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[0])
+    if (m_custom_desc_[0] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), &m_rtv_desc_, m_srv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else
+    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
     {
       GetD3Device().GetDevice()->CreateRenderTargetView
         (m_res_.Get(), nullptr, m_rtv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[1])
+    if (m_custom_desc_[1] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), &m_dsv_desc_, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
-    else
+    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
     {
       GetD3Device().GetDevice()->CreateDepthStencilView(m_res_.Get(), nullptr, m_dsv_->GetCPUDescriptorHandleForHeapStart());
     }
 
-    if (m_custom_desc_[2])
+    if (m_custom_desc_[2] && m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, &m_uav_desc_, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
-    else
+    else if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
     {
       GetD3Device().GetDevice()->CreateUnorderedAccessView(m_res_.Get(), nullptr, nullptr, m_uav_->GetCPUDescriptorHandleForHeapStart());
     }
