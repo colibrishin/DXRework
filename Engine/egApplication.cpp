@@ -144,6 +144,7 @@ namespace Engine::Manager
   void Application::PreUpdate(const float& dt)
   {
     GetToolkitAPI().PreUpdate(dt);
+    GetGC().PreUpdate(dt);
 
     GetTaskScheduler().PreUpdate(dt);
     GetMouseManager().PreUpdate(dt);
