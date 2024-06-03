@@ -1,7 +1,11 @@
 #pragma once
+#include <filesystem>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 #include <boost/smart_ptr/enable_shared_from.hpp>
 
-#include "egCommon.hpp"
+#include "egMacro.h"
+#include "egType.h"
 
 namespace Engine::Abstract
 {
