@@ -6,8 +6,8 @@
 // files here that you will be updating frequently as this negates the
 // performance advantage.
 
-#ifndef PCH_H
-#define PCH_H
+#ifndef CLIENT_PCH_H
+#define CLIENT_PCH_H
 
 #define NOMINMAX
 
@@ -21,12 +21,12 @@
 #include <vector>
 #define WIN32_LEAN_AND_MEAN
 
-#include <d2d1.h>
-#include <d3d11.h>
+#include <d3d12.h>
 #include <d3dcompiler.h>
+#include <d3dx12.h>
 #include <directxmath.h>
 #include <dxcapi.h>
-#include <dxgi1_3.h>
+#include <dxgi1_5.h>
 #include <wrl/client.h>
 #include "framework.h"
 
@@ -68,4 +68,4 @@ namespace Client
   using namespace Engine;
 }
 
-#endif // PCH_H
+#endif // CLIENT_PCH_H
