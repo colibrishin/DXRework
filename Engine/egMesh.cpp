@@ -208,16 +208,6 @@ namespace Engine::Resources
 
     GetD3Device().GetCopyCommandList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
-    // -- Resource Barrier -- //
-    // Transition from copy dest buffer to vertex buffer.
-    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_vertex_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-      );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &vtx_trans);
-
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
     m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
@@ -261,19 +251,33 @@ namespace Engine::Resources
 
     GetD3Device().GetCopyCommandList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
 
+    GetD3Device().ExecuteCopyCommandList();
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_index_buffer_.Get(),
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
       );
 
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &idx_trans);
-
-    GetD3Device().ExecuteCopyCommandList();
-
     m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
     m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
     m_index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
+
+    // -- Resource Barrier -- //
+    // Transition from copy dest buffer to vertex buffer.
+    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_vertex_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+      );
+
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &vtx_trans);
+
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &idx_trans);
+
+    GetD3Device().ExecuteSubDirectCommandList();
   }
 
   void Mesh::Load_CUSTOM() {}
