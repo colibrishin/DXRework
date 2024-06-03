@@ -86,7 +86,7 @@ namespace Engine::Graphics
 
     struct LightVPSB
     {
-      SB_T(SB_TYPE_SHADOW)
+      SB_T(SB_TYPE_LIGHT_VP)
 
       Matrix  view[g_max_shadow_cascades];
       Matrix  proj[g_max_shadow_cascades];
