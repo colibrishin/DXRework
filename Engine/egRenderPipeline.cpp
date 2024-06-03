@@ -587,6 +587,11 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().WaitNextFrame();
 
+    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
+
+    SetRootSignature();
+    SetHeaps();
+
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
