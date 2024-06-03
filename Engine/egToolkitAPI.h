@@ -60,6 +60,7 @@ namespace Engine::Manager::Graphics
     std::unique_ptr<ResourceUploadBatch>                 m_resource_upload_batch_ = nullptr;
     std::unique_ptr<SpriteBatchPipelineStateDescription> m_sprite_pipeline_state_        = nullptr;
     std::unique_ptr<RenderTargetState>                   m_render_target_state_   = nullptr;
+    std::unique_ptr<GraphicsMemory>                      m_graphics_memory_       = nullptr;
 
 
     std::unique_ptr<PrimitiveBatch<VertexPositionColor>> m_primitive_batch_ =
