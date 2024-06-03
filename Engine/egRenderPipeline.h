@@ -121,6 +121,9 @@ namespace Engine::Manager::Graphics
     void SetRootSignature();
     void SetHeaps();
 
+    void SetRootSignature();
+    void SetHeaps();
+
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
