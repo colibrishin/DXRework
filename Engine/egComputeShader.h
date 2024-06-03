@@ -56,7 +56,7 @@ namespace Engine::Resources
     SERIALIZE_DECL
     ComputeShader();
 
-    ComPtr<ID3D11ComputeShader> m_cs_;
+    ComPtr<ID3DBlob> m_cs_;
 
     UINT m_thread_[3];
     UINT m_group_[3];
