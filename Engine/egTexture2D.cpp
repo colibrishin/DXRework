@@ -26,7 +26,6 @@ namespace Engine::Resources
   void Texture2D::Unload_INTERNAL()
   {
     Texture::Unload_INTERNAL();
-    m_tex_.Reset();
   }
 
   UINT Texture2D::GetDepth() const { return Texture::GetDepth(); }
