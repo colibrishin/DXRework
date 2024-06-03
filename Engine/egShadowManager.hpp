@@ -20,7 +20,6 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
-        m_scissor_rect_(),
         m_shadow_map_mask_("", {}) {}
 
     void Initialize() override;
