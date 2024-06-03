@@ -93,7 +93,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void UploadConstantBuffersDeferred();
+    void UploadConstantBuffers();
     void ExecuteDirectCommandList();
 
   private:
