@@ -30,7 +30,8 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN)
+      : m_material_buffer_() {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
@@ -51,8 +52,10 @@ namespace Engine::Manager::Graphics
       m_param_buffer_.SetParam(slot, v);
     }
 
-    // Returns a ticket that will reset to the previous param when it goes out of scope.
-    [[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param);
+    [[nodiscard]] TempParamTicket SetParam(const Graphics::ParamBase& param)
+    {
+      return { m_param_buffer_ };
+    }
 
     void DefaultRenderTarget() const;
     void DefaultViewport() const;
