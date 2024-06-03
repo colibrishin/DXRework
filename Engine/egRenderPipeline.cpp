@@ -768,7 +768,7 @@ namespace Engine::Manager::Graphics
     const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (
        m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
+       g_srv_offset + slot,
        m_buffer_descriptor_size_
       );
 
@@ -786,7 +786,7 @@ namespace Engine::Manager::Graphics
     CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (
        m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
+       g_srv_offset + slot,
        m_buffer_descriptor_size_
       );
 
@@ -809,7 +809,7 @@ namespace Engine::Manager::Graphics
     const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
       (
        m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       CB_TYPE_END + slot,
+       g_uav_offset + slot,
        m_buffer_descriptor_size_
       );
 
