@@ -78,19 +78,21 @@ namespace Engine::Resources
            .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
            .Flags = D3D12_RESOURCE_FLAG_NONE,
            .MipsLevel = 1,
-           .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
+           .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
            .SampleDesc = {1, 0}
          }
         );
     }
 
     Texture3D::loadDerived(res);
+  }
+
+  bool AtlasAnimationTexture::map(char* mapped)
+  {
+    const UINT num_atlases = static_cast<UINT>(m_atlases_.size());
 
     if (GetPath().empty())
     {
-      ComPtr<ID3D11Texture3D> tex;
-      DX::ThrowIfFailed(res.As(&tex));
-
       // Merge all the atlases into the 3D texture.
       // Keep the atlases dimensions, progress from left to right, top to bottom
       // for matching with xml data.
@@ -123,6 +125,10 @@ namespace Engine::Resources
            &box
           );
       }
+
+      return true;
     }
+
+    return false;
   }
 }
