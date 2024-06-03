@@ -10,16 +10,14 @@ namespace Client::Resource
       : Texture2D
       (
        "", {
+         .Alignment = 0,
          .Width = g_max_shadow_map_size,
          .Height = g_max_shadow_map_size,
-         .Depth = 0,
-         .ArraySize = g_max_shadow_cascades,
+         .DepthOrArraySize = g_max_shadow_cascades,
          .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-         .CPUAccessFlags = 0,
-         .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
+         .Flags =  D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
          .MipsLevel = 1,
-         .MiscFlags = 0,
-         .Usage = D3D11_USAGE_DEFAULT,
+         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
          .SampleDesc = {1, 0},
        }
       ) { }
