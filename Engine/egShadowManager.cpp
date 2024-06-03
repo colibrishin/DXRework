@@ -42,9 +42,9 @@ namespace Engine::Manager::Graphics
          .Height = g_max_shadow_map_size,
          .DepthOrArraySize = g_max_shadow_cascades,
          .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-         .Flags = D3D12_RESOURCE_FLAG_NONE,
+         .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
          .MipsLevel = 1,
-         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
+         .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
          .SampleDesc = {1, 0},
         }
       );
