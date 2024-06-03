@@ -1,5 +1,6 @@
 #pragma once
 #include "egCommon.hpp"
+#include "egDXCommon.h"
 #include "egObject.hpp"
 
 namespace Engine::Objects
