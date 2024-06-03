@@ -216,7 +216,7 @@ namespace Engine::Resources
 
     const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
 
-    const auto& idx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_vertices_.size());
+    const auto& idx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
 
     DX::ThrowIfFailed
       (
@@ -224,7 +224,7 @@ namespace Engine::Resources
        (
         &default_heap,
         D3D12_HEAP_FLAG_NONE,
-        &vtx_buffer_desc,
+        &idx_buffer_desc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(m_index_buffer_.GetAddressOf())
@@ -253,8 +253,6 @@ namespace Engine::Resources
 
     GetD3Device().ExecuteCopyCommandList();
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_index_buffer_.Get(),
@@ -272,6 +270,8 @@ namespace Engine::Resources
        m_vertex_buffer_.Get(),
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
 
     GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &vtx_trans);
 
