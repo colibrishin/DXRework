@@ -105,7 +105,7 @@ namespace Engine::Resources
         {
           // todo: distinguish tex type
           const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
-          res->GetSharedPtr<Texture>()->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, idx, SHADER_PIXEL);
+          res->GetSharedPtr<Texture>()->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
         }
 
         if (type == RES_T_SHAPE)
@@ -282,7 +282,10 @@ namespace Engine::Resources
     }
   }
 
-  void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
+  void Material::SetTempParam(TempParam&& param) noexcept
+  {
+    m_temp_param_ = std::move(param);
+  }
 
   bool Material::IsRenderDomain(eShaderDomain domain) const noexcept { return m_shaders_loaded_.contains(domain); }
 
