@@ -51,16 +51,14 @@ namespace Client::Scripts
        std::to_string(GetID()) + "ShadowDepth",
        "",
        {
+         .Alignment = 0,
          .Width = g_max_shadow_map_size,
          .Height = g_max_shadow_map_size,
-         .Depth = 0,
-         .ArraySize = 1,
+         .DepthOrArraySize = 1,
          .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
-         .CPUAccessFlags = 0,
-         .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+         .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
          .MipsLevel = 1,
-         .MiscFlags = 0,
-         .Usage = D3D11_USAGE_DEFAULT,
+         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
          .SampleDesc = {1, 0},
        }
       );
@@ -108,6 +106,8 @@ namespace Client::Scripts
 
   void ShadowIntersectionScript::PreUpdate(const float& dt)
   {
+    constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+
 	  for (auto& tex : m_shadow_texs_)
     {
       tex.Clear();
@@ -115,23 +115,35 @@ namespace Client::Scripts
 
     for (auto& tex : m_intensity_position_texs_)
     {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+      GetD3Device().GetDirectCommandList()->ClearRenderTargetView
+      (
+          tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+          clear_color,
+          0,
+          nullptr
+      );
     }
 
     for (auto& tex : m_intensity_test_texs_)
     {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+      GetD3Device().GetDirectCommandList()->ClearRenderTargetView
+      (
+          tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+          clear_color,
+          0,
+          nullptr
+      );
     }
 
     for (auto& tex : m_shadow_mask_texs_)
     {
-      constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-
-      GetD3Device().GetContext()->ClearRenderTargetView(tex.GetRTV(), clear_color);
+      GetD3Device().GetDirectCommandList()->ClearRenderTargetView
+      (
+          tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+          clear_color,
+          0,
+          nullptr
+      );
     }
   }
 
@@ -176,7 +188,7 @@ namespace Client::Scripts
 
   void ShadowIntersectionScript::PostRender(const float& dt)
   {
-    GetRenderPipeline().SetViewport(m_viewport_);
+    GetRenderPipeline().SetViewportDeferred(m_viewport_);
 
     std::vector<Graphics::SBs::LightVPSB> light_vps;
     light_vps.reserve(g_max_lights);
@@ -203,15 +215,15 @@ namespace Client::Scripts
         light_vps.push_back(light_vp);
       }
 
-      m_sb_light_vp_.SetDataDeferred(light_vps.size(), light_vps.data());
-      m_sb_light_vp_.BindSRVDeferred();
+      m_sb_light_vp_.SetData(light_vps.size(), light_vps.data());
+      m_sb_light_vp_.BindSRVGraphicDeferred();
 
       UINT idx = 0;
 
       // Draw shadow map except the object itself.
       for (const auto& light : *lights)
       {
-        m_shadow_texs_[idx].BindAs(D3D11_BIND_DEPTH_STENCIL, 0, 0, SHADER_UNKNOWN);
+        m_shadow_texs_[idx].BindAs(BIND_TYPE_RTV, 0, 0);
         m_shadow_texs_[idx].PreRender(0.f);
         m_shadow_texs_[idx].Render(0.f);
 
@@ -242,11 +254,11 @@ namespace Client::Scripts
         ID3D11RenderTargetView* previous_rtv = nullptr;
         ID3D11DepthStencilView* previous_dsv = nullptr;
 
-        GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
-
-        ComPtr<ID3D11RenderTargetView> rtv_ptr = m_shadow_mask_texs_[idx].GetRTV();
-
-        GetD3Device().GetContext()->OMSetRenderTargets(1, rtv_ptr.GetAddressOf(), m_shadow_texs_[idx].GetDSV());
+        const auto& prev_rtv = GetRenderPipeline().SetRenderTargetDeferred
+          (
+           m_shadow_mask_texs_[idx].GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+           m_shadow_texs_[idx].GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
+          );
 
         GetRenderPipeline().SetParam<int>(idx, shadow_slot);
 
@@ -264,37 +276,36 @@ namespace Client::Scripts
            }
           );
 
-        GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
+        GetRenderPipeline().SetRenderTargetDeferred(prev_rtv);
 
         idx++;
       }
 
       m_shadow_material_->PostRender(0.f);
-      m_sb_light_vp_.UnbindSRVDeferred();
+      m_sb_light_vp_.BindSRVGraphicDeferred();
 
       GetRenderPipeline().SetParam<int>(0, shadow_slot);
 
       GetRenderPipeline().DefaultViewport();
       GetRenderPipeline().DefaultRenderTarget();
 
-      std::vector<ID3D11ShaderResourceView*> shadow_srv;
+      std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> shadow_srv;
       shadow_srv.reserve(g_max_lights);
 
       for (const auto& tex : m_shadow_texs_)
       {
-        shadow_srv.push_back(tex.GetSRV());
+        shadow_srv.push_back(tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
       }
 
-      GetRenderPipeline().BindResources
+      GetRenderPipeline().SetShaderResources
         (
          RESERVED_SHADOW_MAP,
-         SHADER_PIXEL,
-         shadow_srv.data(),
-         shadow_srv.size()
+         shadow_srv.size(),
+         shadow_srv
         );
 
-      m_sb_light_vp_.BindSRVDeferred();
-      m_sb_light_vp_.BindSRVDeferred();
+      m_sb_light_vp_.BindSRVGraphicDeferred();
+      m_sb_light_vp_.BindSRVGraphicDeferred();
 
       m_intensity_test_material_->PreRender(0.f);
       m_intensity_test_material_->Render(0.f);
@@ -311,7 +322,7 @@ namespace Client::Scripts
       // then it intersects with light and shadow
       // Fill the pixel with light index (Do not use the sampler state, need raw value)
 
-      GetRenderPipeline().SetViewport(m_viewport_);
+      GetRenderPipeline().SetViewportDeferred(m_viewport_);
 
       int z_clip = 0;
 
@@ -329,19 +340,18 @@ namespace Client::Scripts
         }
       }
 
-      std::vector<ID3D11ShaderResourceView*> srv_ptr;
+      std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> srv_ptr;
 
       for (auto& tex : m_shadow_mask_texs_)
       {
-        srv_ptr.push_back(tex.GetSRV());
+        srv_ptr.push_back(tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
       }
 
-      GetRenderPipeline().BindResources
+      GetRenderPipeline().SetShaderResources
         (
          BIND_SLOT_TEXARR,
-         SHADER_PIXEL,
-         srv_ptr.data(),
-         static_cast<UINT>(srv_ptr.size())
+         static_cast<UINT>(srv_ptr.size()),
+         srv_ptr
         );
 
       for (int i = 0; i < lights->size(); ++i)
@@ -352,16 +362,33 @@ namespace Client::Scripts
         GetRenderPipeline().SetParam<Matrix>(light_vps[i].view[z_clip], custom_view_slot);
         GetRenderPipeline().SetParam<Matrix>(light_vps[i].proj[z_clip], custom_proj_slot);
 
-        ID3D11RenderTargetView* previous_rtv = nullptr;
-        ID3D11DepthStencilView* previous_dsv = nullptr;
+        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_ptr;
+        rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
+        rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
 
-        GetD3Device().GetContext()->OMGetRenderTargets(1, &previous_rtv, &previous_dsv);
+        const auto& test_transition = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_intensity_test_texs_[i].GetRawResoruce(),
+           D3D12_RESOURCE_STATE_COMMON,
+           D3D12_RESOURCE_STATE_RENDER_TARGET
+          );
 
-        std::vector<ID3D11RenderTargetView*> rtv_ptr;
-        rtv_ptr.push_back(m_intensity_test_texs_[i].GetRTV());
-        rtv_ptr.push_back(m_intensity_position_texs_[i].GetRTV());
+        const auto& position_transition = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_intensity_position_texs_[i].GetRawResoruce(),
+           D3D12_RESOURCE_STATE_COMMON,
+           D3D12_RESOURCE_STATE_RENDER_TARGET
+          );
 
-        GetD3Device().GetContext()->OMSetRenderTargets(2, rtv_ptr.data(), m_tmp_shadow_depth_->GetDSV());
+        GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &test_transition);
+        GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &position_transition);
+
+        const auto& prev_rtv = GetRenderPipeline().SetRenderTargetDeferred
+          (
+           rtv_ptr.size(),
+           rtv_ptr.data(),
+           m_tmp_shadow_depth_->GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
+          );
 
         GetRenderer().RenderPass
           (
@@ -377,26 +404,42 @@ namespace Client::Scripts
            }
           );
 
-        GetD3Device().GetContext()->ClearDepthStencilView
+        GetD3Device().GetDirectCommandList()->ClearDepthStencilView
           (
-           m_tmp_shadow_depth_->GetDSV(),
-           D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-           1.f,
-           0
+           m_intensity_test_texs_[i].GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+              D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+              1.f,
+              0,
+              0,
+              nullptr
           );
 
         GetRenderPipeline().SetParam<int>(0, target_light_slot);
         GetRenderPipeline().SetParam<int>(false, custom_vp_slot);
 
-        GetD3Device().GetContext()->OMSetRenderTargets(1, &previous_rtv, previous_dsv);
+        GetRenderPipeline().SetRenderTargetDeferred(prev_rtv);
+
+        const auto& test_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_intensity_test_texs_[i].GetRawResoruce(),
+           D3D12_RESOURCE_STATE_RENDER_TARGET,
+           D3D12_RESOURCE_STATE_COMMON
+          );
+
+        const auto& position_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_intensity_position_texs_[i].GetRawResoruce(),
+           D3D12_RESOURCE_STATE_RENDER_TARGET,
+           D3D12_RESOURCE_STATE_COMMON
+          );
+
+        GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &test_transition_back);
+
+        GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &position_transition_back);
       }
 
       m_intensity_test_material_->PostRender(0.f);
-      m_sb_light_vp_.UnbindSRVDeferred();
-      m_sb_light_vp_.UnbindSRVDeferred();
-
-      GetRenderPipeline().UnbindResources(RESERVED_SHADOW_MAP, SHADER_PIXEL, g_max_lights);
-      GetRenderPipeline().UnbindResources(BIND_SLOT_TEXARR, SHADER_PIXEL, g_max_lights);
+      m_sb_light_vp_.UnbindSRVGraphicDeferred();
 
       GetRenderPipeline().DefaultViewport();
 
@@ -446,7 +489,7 @@ namespace Client::Scripts
       std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
       empty_light_table.resize(g_max_lights);
 
-      m_sb_light_table_.SetDataDeferred(g_max_lights, empty_light_table.data());
+      m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
     }
   }
 
