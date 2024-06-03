@@ -21,7 +21,7 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->BindUAVDeferred();
+    m_light_table_ptr_->BindUAVComputeDeferred();
 
     // 512 x 512
     SetGroup({256, 1, 1});
@@ -44,7 +44,7 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->UnbindUAVDeferred();
+    m_light_table_ptr_->UnbindUAVComputeDeferred();
 
     m_intersection_texture_->PostRender(0);
     m_position_texture_->PostRender(0);
