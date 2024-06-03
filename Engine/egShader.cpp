@@ -197,6 +197,8 @@ namespace Engine::Resources
       .NumElements        = static_cast<UINT>(m_il_.size())
     };
 
+    constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
+
     m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
     m_pipeline_state_desc_.InputLayout = il;
     m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
