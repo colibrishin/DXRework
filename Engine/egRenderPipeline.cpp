@@ -549,15 +549,15 @@ namespace Engine::Manager::Graphics
       (
        GetD3Device().GetDevice()->CreateDescriptorHeap
        (
-        &sampler_heap_desc, IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
+        &buffer_heap_desc, IID_PPV_ARGS(m_buffer_descriptor_heap_.ReleaseAndGetAddressOf())
        )
       );
 
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
     {
-      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = CB_TYPE_END + BIND_SLOT_UAV_END + BIND_SLOT_END,
-      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = g_max_sampler_slots,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       .NodeMask = 0
     };
 
@@ -565,7 +565,7 @@ namespace Engine::Manager::Graphics
       (
        GetD3Device().GetDevice()->CreateDescriptorHeap
        (
-        &buffer_heap_desc, IID_PPV_ARGS(m_buffer_descriptor_heap_.ReleaseAndGetAddressOf())
+        &sampler_heap_desc, IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
        )
       );
 
