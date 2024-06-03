@@ -22,12 +22,19 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
+
+    m_resource_upload_batch_->Begin();
+
     m_sprite_batch_          = std::make_unique<SpriteBatch>
       (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+
+    m_resource_upload_batch_->End(GetD3Device().GetDirectCommandQueue());
 
     m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
     
     m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
+
+    m_graphics_memory_ = std::make_unique<GraphicsMemory>(GetD3Device().GetDevice());
 
     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
 
@@ -188,7 +195,7 @@ namespace Engine::Manager::Graphics
 
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetToolkitCommandList(), 
+        GetD3Device().GetSubDirectCommandList(), 
         SpriteSortMode_Deferred
     );
   }
@@ -197,7 +204,7 @@ namespace Engine::Manager::Graphics
   {
     m_sprite_batch_->End();
 
-    GetD3Device().ExecuteToolkitCommandList();
+    GetD3Device().ExecuteSubDirectCommandList();
 
     const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
