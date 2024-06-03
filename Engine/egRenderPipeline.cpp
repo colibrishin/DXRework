@@ -907,7 +907,7 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_size_;
   }
 
-  void RenderPipeline::UploadConstantBuffersDeferred()
+  void RenderPipeline::UploadConstantBuffers()
   {
     m_wvp_buffer_data_.SetData(&m_wvp_buffer_);
     m_transform_buffer_data_.SetData(&m_transform_buffer_);
@@ -917,7 +917,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::ExecuteDirectCommandList()
   {
-    UploadConstantBuffersDeferred();
+    UploadConstantBuffers();
     GetD3Device().ExecuteDirectCommandList();
   }
 
