@@ -42,8 +42,6 @@ namespace Engine::Resources
   private:
     SERIALIZE_DECL
     Texture2D() : Texture("", TEX_TYPE_2D, {}) {}
-
-    ComPtr<ID3D11Texture2D> m_tex_;
     
   };
 } // namespace Engine::Resources
