@@ -76,7 +76,5 @@ namespace Engine::Manager::Graphics
     D3D12_RECT     m_scissor_rect_;
 
     Resources::Texture2D m_shadow_map_mask_;
-
-    ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
   };
 } // namespace Engine::Manager::Graphics
