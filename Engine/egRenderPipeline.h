@@ -31,7 +31,8 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN)
+      : m_material_buffer_() {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
