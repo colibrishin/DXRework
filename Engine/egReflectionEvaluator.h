@@ -17,11 +17,11 @@ namespace Engine::Manager::Graphics
            .Alignment = 0,
            .Width = g_window_width,
            .Height = g_window_height,
-           .DepthOrArraySize = 0,
+           .DepthOrArraySize = 1,
            .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
            .Flags = D3D12_RESOURCE_FLAG_NONE,
            .MipsLevel = 1,
-           .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
+           .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
            .SampleDesc = { .Count = 1, .Quality = 0 }
          }
         ) {}

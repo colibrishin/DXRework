@@ -20,8 +20,7 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
-        m_shadow_map_mask_("", {}),
-        m_current_shadow_maps_{} {}
+        m_shadow_map_mask_("", {}) {}
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -72,9 +71,5 @@ namespace Engine::Manager::Graphics
 
     D3D12_VIEWPORT m_viewport_;
     Resources::Texture2D m_shadow_map_mask_;
-
-    // todo: refactoring
-    ID3D11ShaderResourceView*  m_current_shadow_maps_[g_max_lights];
-    ComPtr<ID3D11SamplerState> m_shadow_sampler_;
   };
 } // namespace Engine::Manager::Graphics
