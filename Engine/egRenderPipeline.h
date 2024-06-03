@@ -68,6 +68,9 @@ namespace Engine::Manager::Graphics
     RTVDSVHandlePair SetRenderTargetDeferred(
       const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
     );
+    RTVDSVHandlePair SetRenderTargetDeferred(
+         const UINT count, const D3D12_CPU_DESCRIPTOR_HANDLE* srv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+       );
     void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
     RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
     void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;

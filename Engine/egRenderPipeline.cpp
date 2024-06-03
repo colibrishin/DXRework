@@ -716,6 +716,30 @@ namespace Engine::Manager::Graphics
 
     GetD3Device().GetCommandQueue(COMMAND_LIST_PRE_RENDER)->ExecuteCommandLists(1, lists);
 
+  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
+    const UINT count, const D3D12_CPU_DESCRIPTOR_HANDLE* srv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+  )
+  {
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
+      (
+            m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+                GetD3Device().GetFrameIndex(),
+                m_rtv_descriptor_size_
+           );
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
+      (
+            m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
+           );
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets
+      (
+       count, srv, false, &dsv
+      );
+
+    return {current_rtv_handle, current_dsv_handle};
+  }
+
   void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
   {
     GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
