@@ -93,11 +93,11 @@ namespace Engine::Manager::Graphics
 
   void D3Device::ExecuteSubDirectCommandList()
   {
-    DX::ThrowIfFailed(GetToolkitCommandList()->Close());
+    DX::ThrowIfFailed(GetSubDirectCommandList()->Close());
 
     const std::vector<ID3D12CommandList*> command_lists
     {
-      GetToolkitCommandList()
+      GetSubDirectCommandList()
     };
 
     GetSubDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
@@ -372,7 +372,7 @@ namespace Engine::Manager::Graphics
       (
        dxgi_factory->CreateSwapChainForHwnd
        (
-        m_command_queues_[COMMAND_IDX_SUB_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
+        m_command_queues_[COMMAND_IDX_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
         nullptr,
         (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()
        )
