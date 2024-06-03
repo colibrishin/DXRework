@@ -73,7 +73,6 @@ namespace Engine::Resources
     bool         IsHotload() const;
 
     void BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset);
-    void Map(const std::function<void(char*)> & copy_func);
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
@@ -92,6 +91,8 @@ namespace Engine::Resources
     const GenericTextureDescription& GetDescription() const;
 
     virtual void loadDerived(ComPtr<ID3D12Resource>& res) = 0;
+    virtual bool map(char* mapped);
+
     void Unload_INTERNAL() override;
 
     SERIALIZE_DECL
@@ -108,6 +109,8 @@ namespace Engine::Resources
     void Load_INTERNAL() override final;
 
     void InitializeDescriptorHeaps();
+
+    void mapInternal();
 
     GenericTextureDescription        m_desc_;
     eTexType                         m_type_;
