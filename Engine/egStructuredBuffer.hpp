@@ -4,6 +4,7 @@
 
 #include "Windows.h"
 #include "egCommon.hpp"
+#include "egGarbageCollector.h"
 #include "egType.h"
 
 namespace Engine::Graphics
@@ -143,7 +144,14 @@ namespace Engine::Graphics
 
     auto srv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
 
-    srv_handle.Offset(static_cast<INT>(CB_TYPE_END + BIND_SLOT_UAV_END + which_sb<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+    if constexpr (is_client_sb<T>::value == true)
+    {
+      srv_handle.Offset(static_cast<INT>(which_client_sb<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+    }
+    else if constexpr (is_sb<T>::value == true)
+    {
+      srv_handle.Offset(static_cast<INT>(CB_TYPE_END + BIND_SLOT_UAV_END + which_sb<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+    }
 
     GetD3Device().GetDevice()->CreateShaderResourceView
      (
@@ -167,11 +175,11 @@ namespace Engine::Graphics
 
     auto uav_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
 
-    if constexpr (is_client_sb<T>::value == true)
+    if constexpr (is_client_uav_sb<T>::value == true)
     {
       uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_client_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
     }
-    else
+    else if constexpr (is_uav_sb<T>::value == true)
     {
       uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
     }
@@ -195,23 +203,28 @@ namespace Engine::Graphics
 
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
+    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+    if constexpr (is_uav_sb<T>::value == true)
+    {
+      buffer_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    }
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_COMMON,
+        nullptr,
+        IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
+       )
+      );
+
     if (initial_data != nullptr)
     {
-      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &buffer_desc,
-          D3D12_RESOURCE_STATE_COMMON,
-          nullptr,
-          IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
-         )
-        );
-
       DX::ThrowIfFailed
         (
          DirectX::CreateUploadBuffer
@@ -257,26 +270,7 @@ namespace Engine::Graphics
 
       GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &end_state);
 
-      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
-
       GetD3Device().ExecuteCopyCommandList();
-    }
-    else
-    {
-      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &buffer_desc,
-          D3D12_RESOURCE_STATE_COMMON,
-          nullptr,
-          IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
-         )
-        );
     }
   }
 
@@ -430,8 +424,6 @@ namespace Engine::Graphics
 
     upload_buffer->Unmap(0, nullptr);
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
     // Even if it is set as bind, resource will be common until the execution is done.
     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
     (
@@ -439,6 +431,8 @@ namespace Engine::Graphics
      D3D12_RESOURCE_STATE_COMMON,
      D3D12_RESOURCE_STATE_COPY_DEST
     );
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
   
     GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &barrier);
 
@@ -457,9 +451,9 @@ namespace Engine::Graphics
   
     GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
 
-    DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
-
     GetD3Device().ExecuteCopyCommandList();
+
+    GetGC().Track(upload_buffer);
   }
 
   // This will execute the command list and copy the data from the GPU to the CPU.
