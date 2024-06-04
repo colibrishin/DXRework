@@ -36,7 +36,7 @@ namespace Engine::Resources
   void ShadowTexture::Clear() const
   {
     GetD3Device().GetDirectCommandList()->ClearDepthStencilView(
-        m_rtv_->GetCPUDescriptorHandleForHeapStart(), 
+        m_dsv_->GetCPUDescriptorHandleForHeapStart(), 
         D3D12_CLEAR_FLAG_DEPTH, 
         1.0f, 
         0, 
@@ -46,22 +46,33 @@ namespace Engine::Resources
 
   void ShadowTexture::loadDerived(ComPtr<ID3D12Resource>& res)
   {
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc;
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc;
+    constexpr D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc
+    {
+      .Format = DXGI_FORMAT_D32_FLOAT,
+      .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY,
+      .Flags = D3D12_DSV_FLAG_NONE,
+      .Texture2DArray = {
+        .MipSlice = 0,
+        .FirstArraySlice = 0,
+        .ArraySize = g_max_shadow_cascades
+      }
+    };
 
-    dsv_desc.Format = DXGI_FORMAT_D32_FLOAT;
-    dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-    dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
-    dsv_desc.Texture2D.MipSlice = 0;
-    dsv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
-    dsv_desc.Texture2DArray.FirstArraySlice = 0;
-
-    srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-    srv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
-    srv_desc.Texture2DArray.FirstArraySlice = 0;
-    srv_desc.Texture2DArray.MipLevels = 1;
-    srv_desc.Texture2DArray.MostDetailedMip = 0;
+    constexpr D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc
+    {
+      .Format = DXGI_FORMAT_R32_FLOAT,
+      .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY,
+      .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+      .Texture2DArray =
+      {
+        .MostDetailedMip = 0,
+        .MipLevels = 1,
+        .FirstArraySlice = 0,
+        .ArraySize = g_max_shadow_cascades,
+        .PlaneSlice = 0,
+        .ResourceMinLODClamp = 0.f 
+      }
+    };
 
     LazySRV(srv_desc);
     LazyDSV(dsv_desc);
