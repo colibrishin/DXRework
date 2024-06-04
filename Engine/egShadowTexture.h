@@ -20,7 +20,7 @@ namespace Engine::Resources
          .Format = DXGI_FORMAT_R32_TYPELESS,
          .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
          .MipsLevel = 1,
-         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
+         .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
          .SampleDesc = {1, 0},
        }
       ) { }
