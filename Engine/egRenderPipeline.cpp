@@ -49,7 +49,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetRootSignature()
   {
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
+    GetD3Device().GetSubDirectCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
   }
 
   void RenderPipeline::SetHeaps()
@@ -60,12 +60,9 @@ namespace Engine::Manager::Graphics
       m_sampler_descriptor_heap_.Get()
     };
 
-    GetD3Device().GetDirectCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+    GetD3Device().GetSubDirectCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
 
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable
-      (DESCRIPTOR_SLOT_SAMPLER, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart());
-
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable
+    GetD3Device().GetSubDirectCommandList()->SetGraphicsRootDescriptorTable
       (DESCRIPTOR_SLOT_SAMPLER, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart());
 
     CD3DX12_GPU_DESCRIPTOR_HANDLE buffer_handle
@@ -74,18 +71,15 @@ namespace Engine::Manager::Graphics
       );
 
     // SRV
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
+    GetD3Device().GetSubDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
 
     // CBV
     buffer_handle.Offset(BIND_SLOT_END, m_buffer_descriptor_size_);
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
+    GetD3Device().GetSubDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
 
     // UAV
     buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
-    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
-    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
+    GetD3Device().GetSubDirectCommandList()->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
   }
 
   void RenderPipeline::Initialize()
@@ -587,7 +581,7 @@ namespace Engine::Manager::Graphics
   {
     GetD3Device().WaitNextFrame();
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
 
     SetRootSignature();
     SetHeaps();
@@ -603,14 +597,16 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    GetD3Device().GetSubDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &initial_barrier);
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &initial_barrier);
 
-    GetD3Device().GetDirectCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    GetD3Device().GetSubDirectCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetSubDirectCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     FallbackPSO();
+
+    GetD3Device().ExecuteSubDirectCommandList();
   }
 
   void RenderPipeline::Update(const float& dt) {}
@@ -621,6 +617,8 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PostRender(const float& dt)
   {
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
+
     const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
@@ -628,9 +626,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_PRESENT
       );
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &present_barrier);
 
-    GetD3Device().ExecuteDirectCommandList();
+    GetD3Device().ExecuteSubDirectCommandList();
 
     DXGI_PRESENT_PARAMETERS params;
     params.DirtyRectsCount = 0;
@@ -844,7 +842,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::CopyBackBuffer(ID3D12Resource* resource) const
   {
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
 
     const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -853,9 +851,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_COPY_SOURCE
       );
 
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_transition);
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &copy_transition);
 
-    GetD3Device().GetCopyCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+    GetD3Device().GetSubDirectCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
 
     const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -864,9 +862,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &rtv_transition);
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &rtv_transition);
 
-    GetD3Device().ExecuteCopyCommandList();
+    GetD3Device().ExecuteSubDirectCommandList();
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const

@@ -372,7 +372,7 @@ namespace Engine::Manager::Graphics
       (
        dxgi_factory->CreateSwapChainForHwnd
        (
-        m_command_queues_[COMMAND_IDX_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
+        m_command_queues_[COMMAND_IDX_SUB_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
         nullptr,
         (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()
        )

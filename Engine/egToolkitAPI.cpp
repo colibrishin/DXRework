@@ -179,7 +179,7 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::FrameBegin()
   {
-    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
+    /*const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
 
@@ -191,7 +191,9 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_descriptor_heap_->GetCpuHandle(0),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );
+    );*/
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
 
     m_sprite_batch_->Begin
     (
@@ -206,6 +208,8 @@ namespace Engine::Manager::Graphics
 
     GetD3Device().ExecuteSubDirectCommandList();
 
+    /*GetD3Device().ExecuteSubDirectCommandList();
+
     const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
@@ -216,6 +220,6 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_previous_handle_,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );
+    );*/
   }
 } // namespace Engine::Manager::Graphics
