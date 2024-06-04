@@ -961,7 +961,7 @@ namespace Engine::Resources
     {
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
       1,
-      D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
       0
     };
 
