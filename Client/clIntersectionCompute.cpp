@@ -21,18 +21,13 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->BindUAVComputeDeferred();
+    m_light_table_ptr_->BindUAVGraphic(COMMAND_LIST_COMPUTE);
 
     // 512 x 512
     SetGroup({256, 1, 1});
 
-    m_intersection_texture_->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
-    m_position_texture_->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
-
-    m_intersection_texture_->PreRender(0);
-    m_intersection_texture_->Render(0);
-    m_position_texture_->PreRender(0);
-    m_position_texture_->Render(0);
+    m_intersection_texture_->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_position_texture_->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
 
     GetRenderPipeline().SetParam<int>(m_target_light_, target_light_slot);
   }
@@ -44,11 +39,12 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->UnbindUAVComputeDeferred();
+    m_light_table_ptr_->UnbindUAVGraphic(COMMAND_LIST_COMPUTE);
 
-    m_intersection_texture_->PostRender(0);
-    m_position_texture_->PostRender(0);
     GetRenderPipeline().SetParam<int>(0, target_light_slot);
+
+    m_intersection_texture_->Unbind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV);
+    m_position_texture_->Unbind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV);
 
     m_light_table_ptr_ = nullptr;
     m_target_light_ = 0;
