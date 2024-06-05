@@ -456,14 +456,19 @@ namespace Engine::Graphics
     const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
     const std::wstring buffer_name = L"StructuredBuffer Write " + type_name;
 
+    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
     DX::ThrowIfFailed
       (
-       DirectX::CreateUploadBuffer
+       GetD3Device().GetDevice()->CreateCommittedResource
        (
-        GetD3Device().GetDevice(),
-        src_ptr,
-        m_size_,
-        upload_buffer.GetAddressOf()
+        &upload_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(upload_buffer.GetAddressOf())
        )
       );
 
@@ -486,10 +491,13 @@ namespace Engine::Graphics
   
     GetD3Device().GetCommandList(list)->ResourceBarrier(1, &barrier);
 
-    GetD3Device().GetCommandList(list)->CopyResource
+    GetD3Device().GetCommandList(list)->CopyBufferRegion
       (
        m_buffer_.Get(),
-       upload_buffer.Get()
+       0,
+       upload_buffer.Get(),
+       0,
+       sizeof(T) * size
       );
 
     const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
