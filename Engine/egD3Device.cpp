@@ -12,96 +12,33 @@ namespace Engine::Manager::Graphics
 {
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
 
-  ID3D12GraphicsCommandList1* D3Device::GetDirectCommandList(UINT frame_idx) const
+  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT frame_idx) const
   {
     if (frame_idx == -1)
     {
       frame_idx = m_frame_idx_;
     }
 
-    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_DIRECT].Get();
+    return m_command_lists_.at(frame_idx)[list_enum].Get();
   }
 
-  ID3D12GraphicsCommandList1* D3Device::GetCopyCommandList(UINT frame_idx) const
+  void D3Device::ExecuteCommandList(const eCommandList list) const
   {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_COPY].Get();
-  }
-
-  ID3D12GraphicsCommandList1* D3Device::GetComputeCommandList(UINT frame_idx) const
-  {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_COMPUTE].Get();
-  }
-
-  ID3D12GraphicsCommandList1* D3Device::GetSubDirectCommandList(UINT frame_idx) const
-  {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_lists_.at(m_frame_idx_)[COMMAND_IDX_SUB_DIRECT].Get();
-  }
-
-  void D3Device::ExecuteDirectCommandList()
-  {
-    DX::ThrowIfFailed(GetDirectCommandList()->Close());
+    DX::ThrowIfFailed(GetCommandList(list)->Close());
 
     const std::vector<ID3D12CommandList*> command_lists
     {
-      GetD3Device().GetDirectCommandList()
+      GetCommandList(list)
     };
 
-    GetDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
-    Signal(COMMAND_IDX_DIRECT);
+    GetCommandQueue(list)->ExecuteCommandLists(command_lists.size(), command_lists.data());
+
+    Signal(static_cast<eCommandTypes>(s_target_types[list]));
   }
 
-  void D3Device::ExecuteCopyCommandList()
+  ID3D12CommandQueue* D3Device::GetCommandQueue(const eCommandList list) const
   {
-    DX::ThrowIfFailed(GetCopyCommandList()->Close());
-
-    const std::vector<ID3D12CommandList*> command_lists
-    {
-      GetCopyCommandList()
-    };
-
-    GetCopyCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
-    Signal(COMMAND_IDX_COPY);
-  }
-
-  void D3Device::ExecuteComputeCommandList()
-  {
-    DX::ThrowIfFailed(GetComputeCommandList()->Close());
-
-    const std::vector<ID3D12CommandList*> command_lists
-    {
-      GetComputeCommandList()
-    };
-
-    GetComputeCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
-    Signal(COMMAND_IDX_COMPUTE);
-  }
-
-  void D3Device::ExecuteSubDirectCommandList()
-  {
-    DX::ThrowIfFailed(GetSubDirectCommandList()->Close());
-
-    const std::vector<ID3D12CommandList*> command_lists
-    {
-      GetSubDirectCommandList()
-    };
-
-    GetSubDirectCommandQueue()->ExecuteCommandLists(command_lists.size(), command_lists.data());
-    Signal(COMMAND_IDX_SUB_DIRECT);
+    return m_command_queues_[s_target_types[list]].Get();
   }
 
   std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> D3Device::GenerateInputDescription(
@@ -203,16 +140,9 @@ namespace Engine::Manager::Graphics
     m_device_->CreateSampler(&description, sampler_handle);
   }
 
-  void D3Device::CreateConstantBufferView(const UINT slot, const D3D12_CONSTANT_BUFFER_VIEW_DESC& description) const
+  void D3Device::BindConstantBufferView(const UINT slot, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) const
   {
-    const auto& cbv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart(),
-       g_cb_offset + slot,
-       m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
-      );
-
-    m_device_->CreateConstantBufferView(&description, cbv_handle);
+    GetRenderPipeline().GetDescriptor().SetConstantBuffer(handle, slot);
   }
 
   void D3Device::InitializeDevice()
@@ -221,6 +151,13 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12Debug> debug_interface;
     DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
     debug_interface->EnableDebugLayer();
+
+    ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
+    DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings)));
+
+    // Turn on auto-breadcrumbs and page fault reporting.
+    pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+    pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 #endif
 
     // Create factory and Searching for adapter
@@ -307,7 +244,7 @@ namespace Engine::Manager::Graphics
       },
       {
         .Type = D3D12_COMMAND_LIST_TYPE_COPY,
-        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH,
         .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
         .NodeMask = 0
       },
@@ -316,16 +253,10 @@ namespace Engine::Manager::Graphics
         .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
         .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
         .NodeMask = 0
-      },
-      {
-        .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
-        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
-        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
-        .NodeMask = 0
-      },
+      }
     };
 
-    for (int i = 0; i < COMMAND_IDX_COUNT; ++i)
+    for (int i = 0; i < COMMAND_TYPE_COUNT; ++i)
     {
       DX::ThrowIfFailed
         (
@@ -372,7 +303,10 @@ namespace Engine::Manager::Graphics
       (
        dxgi_factory->CreateSwapChainForHwnd
        (
-        m_command_queues_[COMMAND_IDX_SUB_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
+        m_command_queues_[COMMAND_TYPE_DIRECT].Get(),
+        m_hwnd_,
+        &swap_chain_desc,
+        &full_screen_desc,
         nullptr,
         (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()
        )
@@ -386,23 +320,23 @@ namespace Engine::Manager::Graphics
   {
     for (int i = 0; i < g_frame_buffer; ++i)
     {
-      for (int t = 0; t < _countof(s_target_types); ++t)
+      for (int t = 0; t < _countof(s_native_target_types); ++t)
       {
         DX::ThrowIfFailed
-        (
-          m_device_->CreateCommandAllocator
           (
-            static_cast<D3D12_COMMAND_LIST_TYPE>(s_target_types[t]),
+           m_device_->CreateCommandAllocator
+           (
+            static_cast<D3D12_COMMAND_LIST_TYPE>(s_native_target_types[t]),
             IID_PPV_ARGS(m_command_allocators_[i][t].GetAddressOf())
-          )
-        );
+           )
+          );
 
         DX::ThrowIfFailed
           (
            m_device_->CreateCommandList
            (
             0,
-            static_cast<D3D12_COMMAND_LIST_TYPE>(s_target_types[t]),
+            static_cast<D3D12_COMMAND_LIST_TYPE>(s_native_target_types[t]),
             m_command_allocators_[i][t].Get(),
             nullptr,
             IID_PPV_ARGS(m_command_lists_[i][t].GetAddressOf())
@@ -410,9 +344,9 @@ namespace Engine::Manager::Graphics
           );
 
         DX::ThrowIfFailed
-          (
-           m_command_lists_[i][t]->Close()
-          );
+        (
+            m_command_lists_[i][t]->Close()
+        );
       }
     }
   }
@@ -541,7 +475,7 @@ namespace Engine::Manager::Graphics
       );
     }
 
-    const auto& token = resource_upload_batch.End(GetSubDirectCommandQueue());
+    const auto& token = resource_upload_batch.End(GetCommandQueue(COMMAND_LIST_UPDATE));
     token.wait();
   }
 
@@ -551,30 +485,7 @@ namespace Engine::Manager::Graphics
            static_cast<float>(g_window_height);
   }
 
-  void D3Device::CleanupCommandList()
-  {
-    for (UINT64 i = 0; i < g_frame_buffer; ++i)
-    {
-      for (int t = 0; t < _countof(s_target_types); ++t)
-      {
-        DX::ThrowIfFailed(m_command_allocators_.at(i)[t].Reset());
-      }
-    }
-
-    for (int i = 0; i < _countof(s_target_types); ++i)
-    {
-      DX::ThrowIfFailed
-      (
-        m_command_lists_.at(m_frame_idx_)[i]->Reset
-        (
-          m_command_allocators_.at(m_frame_idx_)[i].Get(),
-          nullptr
-        )
-      );
-    }
-  }
-
-  void D3Device::WaitAndReset(const eCommandListIndex type, UINT64 buffer_idx) const
+  void D3Device::WaitAndReset(const eCommandList list, UINT64 buffer_idx) const
   {
     if (buffer_idx == -1)
     {
@@ -582,10 +493,10 @@ namespace Engine::Manager::Graphics
     }
 
     WaitForEventCompletion(buffer_idx);
-    Reset(type, buffer_idx);
+    Reset(list, buffer_idx);
   }
 
-  void D3Device::Wait(const eCommandListIndex type, UINT64 buffer_idx)
+  void D3Device::Wait(UINT64 buffer_idx)
   {
     if (buffer_idx == -1)
     {
@@ -597,54 +508,19 @@ namespace Engine::Manager::Graphics
 
   void D3Device::WaitNextFrame()
   {
-    // Signaling the next frame.
-    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
+    Signal(COMMAND_TYPE_DIRECT, m_frame_idx_);
 
-    Signal(COMMAND_IDX_DIRECT, m_frame_idx_);
     WaitForBackBuffer();
+
+    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
   }
 
-  ID3D12CommandAllocator* D3Device::GetDirectCommandAllocator(UINT frame_idx) const
+  ID3D12CommandAllocator* D3Device::GetCommandAllocator(const eCommandList list) const
   {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_allocators_.at(frame_idx)[COMMAND_IDX_DIRECT].Get();
+    return m_command_allocators_.at(m_frame_idx_)[list].Get();
   }
 
-  ID3D12CommandAllocator* D3Device::GetCopyCommandAllocator(UINT frame_idx) const
-  {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_allocators_.at(frame_idx)[COMMAND_IDX_COPY].Get();
-  }
-
-  ID3D12CommandAllocator* D3Device::GetComputeCommandAllocator(UINT frame_idx) const
-  {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_allocators_.at(frame_idx)[COMMAND_IDX_COMPUTE].Get();
-  }
-
-  ID3D12CommandAllocator* D3Device::GetSubDirectCommandAllocator(UINT frame_idx) const
-  {
-    if (frame_idx == -1)
-    {
-      frame_idx = m_frame_idx_;
-    }
-
-    return m_command_allocators_.at(frame_idx)[COMMAND_SUB_DIRECT].Get();
-  }
-
-  void D3Device::Reset(const eCommandListIndex type, UINT64 buffer_idx) const
+  void D3Device::Reset(const eCommandList list, UINT64 buffer_idx) const
   {
     if (buffer_idx == -1)
     {
@@ -653,65 +529,22 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed
       (
-       m_command_lists_.at(buffer_idx)[type]->Reset
+       m_command_lists_.at(buffer_idx)[list]->Reset
        (
-        m_command_allocators_.at(buffer_idx)[type].Get(),
+        m_command_allocators_.at(buffer_idx)[list].Get(),
         nullptr
        )
       );
   }
 
-  void D3Device::Signal(const eCommandListIndex type, UINT64 buffer_idx)
+  void D3Device::Signal(const eCommandTypes type, UINT64 buffer_idx) const
   {
     if (buffer_idx == -1)
     {
       buffer_idx = m_frame_idx_;
     }
 
-    switch (type)
-    {
-      case COMMAND_IDX_DIRECT:
-        DX::ThrowIfFailed
-          (
-           GetDirectCommandQueue()->Signal
-           (
-            m_fence_.Get(),
-            ++m_fence_nonce_[buffer_idx]
-           )
-          );
-        break;
-      case COMMAND_IDX_COPY:
-        DX::ThrowIfFailed
-          (
-           GetCopyCommandQueue()->Signal
-           (
-            m_fence_.Get(),
-            ++m_fence_nonce_[buffer_idx]
-           )
-          );
-        break;
-      case COMMAND_IDX_COMPUTE:
-        DX::ThrowIfFailed
-          (
-           GetComputeCommandQueue()->Signal
-           (
-            m_fence_.Get(),
-            ++m_fence_nonce_[buffer_idx]
-           )
-          );
-        break;
-      case COMMAND_IDX_SUB_DIRECT: 
-          DX::ThrowIfFailed
-          (
-           GetSubDirectCommandQueue()->Signal
-           (
-            m_fence_.Get(),
-            ++m_fence_nonce_[buffer_idx]
-           )
-          );
-        break;
-      default: break;
-    }
+    DX::ThrowIfFailed(m_command_queues_[type]->Signal(m_fence_.Get(), ++m_fence_nonce_[buffer_idx]));
   }
 
   UINT64 D3Device::GetFenceValue(UINT64 buffer_idx) const
@@ -722,25 +555,5 @@ namespace Engine::Manager::Graphics
     }
 
     return m_fence_nonce_[buffer_idx];
-  }
-
-  ID3D12CommandQueue* D3Device::GetDirectCommandQueue() const
-  {
-    return m_command_queues_[COMMAND_IDX_DIRECT].Get();
-  }
-
-  ID3D12CommandQueue* D3Device::GetCopyCommandQueue() const
-  {
-    return m_command_queues_[COMMAND_IDX_COPY].Get();
-  }
-
-  ID3D12CommandQueue* D3Device::GetComputeCommandQueue() const
-  {
-    return m_command_queues_[COMMAND_IDX_COMPUTE].Get();
-  }
-
-  ID3D12CommandQueue* D3Device::GetSubDirectCommandQueue() const
-  {
-       return m_command_queues_[COMMAND_IDX_SUB_DIRECT].Get();
   }
 } // namespace Engine::Manager::Graphics
