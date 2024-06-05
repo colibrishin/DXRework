@@ -75,10 +75,13 @@ namespace Engine::Manager::Graphics
         for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
           // Check culling.
-          RenderPass(dt, (eShaderDomain)i, false, [](const StrongObjectBase& obj)
-          {
-            return GetProjectionFrustum().CheckRender(obj);
-          });
+          RenderPass
+            (
+             dt, (eShaderDomain)i, false, COMMAND_LIST_RENDER, [](const StrongObjectBase& obj)
+             {
+               return GetProjectionFrustum().CheckRender(obj);
+             }
+            );
 
           if (i == SHADER_DOMAIN_OPAQUE)
           {
@@ -106,7 +109,11 @@ namespace Engine::Manager::Graphics
 
   void Renderer::Initialize()
   {
-    m_instance_buffer_.Create(0, nullptr, true);
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    m_instance_buffer_.Create(COMMAND_LIST_UPDATE, 0, nullptr, true);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
   }
 
   bool Renderer::Ready() const { return m_b_ready_; }
@@ -115,6 +122,7 @@ namespace Engine::Manager::Graphics
     const float                                     dt,
     eShaderDomain                                   domain,
     bool                                            shader_bypass,
+    const eCommandList                              command_list,
     const std::function<bool(const StrongObjectBase&)>& predicate
   )
   {
@@ -145,7 +153,7 @@ namespace Engine::Manager::Graphics
 
     for (const auto& [mtr, sbs] : final_mapping)
     {
-      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), sbs);
+      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), command_list, sbs);
     }
   }
 
@@ -154,6 +162,7 @@ namespace Engine::Manager::Graphics
     eShaderDomain                       domain,
     bool                                shader_bypass,
     const StrongMaterial&               material,
+    const eCommandList                  command_list,
     const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
@@ -168,11 +177,10 @@ namespace Engine::Manager::Graphics
        }
       );
 
-    material->PreRender(dt);
-    material->Render(dt);
-    GetRenderPipeline().ExecuteDirectCommandList();
-    GetD3Device().WaitAndReset(COMMAND_IDX_DIRECT);
-    material->PostRender(dt);
+    material->Draw(dt, command_list);
+
+    m_instance_buffer_.UnbindSRVGraphic(command_list);
+    GetD3Device().ExecuteCommandList(command_list);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)

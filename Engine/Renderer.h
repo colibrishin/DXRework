@@ -33,10 +33,10 @@ namespace Engine::Manager::Graphics
 
     bool Ready() const;
     void RenderPass(
-      float                                           dt,
-      eShaderDomain                                   domain,
-      bool                                            shader_bypass,
-      const std::function<bool(const StrongObjectBase&)>& predicate
+      const float        dt,
+      eShaderDomain      domain,
+      bool               shader_bypass,
+      const eCommandList command_list, const std::function<bool(const StrongObjectBase&)> & predicate
     );
 
   private:
@@ -47,7 +47,8 @@ namespace Engine::Manager::Graphics
       const float            dt,
       eShaderDomain          domain,
       bool                   shader_bypass,
-      const StrongMaterial & material, const std::vector<SBs::InstanceSB> & structured_buffers
+      const StrongMaterial & material, const eCommandList command_list, const std::vector<SBs::InstanceSB> &
+      structured_buffers
     );
 
     void preMappingModel(const StrongRenderComponent& rc);
