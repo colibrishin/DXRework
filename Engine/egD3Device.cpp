@@ -581,11 +581,18 @@ namespace Engine::Manager::Graphics
 
   void D3Device::WaitNextFrame()
   {
-    Signal(COMMAND_TYPE_DIRECT, m_frame_idx_);
+    const auto& back_buffer = m_swap_chain_->GetCurrentBackBufferIndex();
+
+    Signal(COMMAND_TYPE_DIRECT, back_buffer);
 
     WaitForBackBuffer();
 
-    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
+    m_frame_idx_ = back_buffer;
+
+    for (int i = 0; i < COMMAND_LIST_COUNT; ++i)
+    {
+      DX::ThrowIfFailed(m_command_allocators_[m_frame_idx_][i]->Reset());
+    }
   }
 
   ID3D12CommandAllocator* D3Device::GetCommandAllocator(const eCommandList list) const
