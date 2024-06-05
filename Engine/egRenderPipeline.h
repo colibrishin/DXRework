@@ -318,5 +318,7 @@ namespace Engine::Manager::Graphics
     ConstantBuffer<CBs::MaterialCB> m_material_buffer_data_{};
     ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
+    StrongShader m_fallback_shader_;
+
   };
 } // namespace Engine::Manager::Graphics

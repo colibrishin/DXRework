@@ -101,6 +101,8 @@ namespace Engine::Manager::Graphics
     InitializeRenderTargets();
     InitializeDepthStencil();
     InitializeStaticBuffers();
+
+    m_fallback_shader_ = Shader::Get("default").lock();
   }
 
   void RenderPipeline::PrecompileShaders()
@@ -218,7 +220,7 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::FallbackPSO(const eCommandList list)
   {
-    SetPSO(Shader::Get("default").lock(), list);
+    SetPSO(m_fallback_shader_, list);
   }
 
   void RenderPipeline::InitializeRootSignature()
@@ -589,20 +591,9 @@ namespace Engine::Manager::Graphics
       );
 
     const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-  
-    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_PRESENT,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
 
     GetD3Device().GetCommandList(COMMAND_LIST_RENDER)->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
 
-    GetD3Device().GetCommandList(COMMAND_LIST_RENDER)->ResourceBarrier(1, &initial_barrier);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_RENDER)->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
-    GetD3Device().GetCommandList(COMMAND_LIST_RENDER)->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     FallbackPSO(COMMAND_LIST_RENDER);
   }
@@ -624,6 +615,18 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_POST_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_POST_RENDER);
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
   void RenderPipeline::FixedUpdate(const float& dt) {}
@@ -679,6 +682,30 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_PRE_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_PRE_RENDER);
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+  
+    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_PRESENT,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ResourceBarrier(1, &initial_barrier);
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
   void RenderPipeline::DrawIndexed(const eCommandList list, UINT index_count)
