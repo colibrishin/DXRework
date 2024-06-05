@@ -39,7 +39,7 @@ namespace Engine::Manager
         continue;
       }
 
-      GetToolkitAPI().AppendSpriteBatch([this, it, dt]()
+      GetToolkitAPI().AppendPrimitiveBatch([this, it, dt]()
       {
         it->second(it->first, dt);
       });
