@@ -244,7 +244,7 @@ namespace Engine::Manager::Graphics
     void             TargetDepthOnlyDeferred(const eCommandList list, const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
     static void      SetViewportDeferred(const eCommandList list, const D3D12_VIEWPORT & viewport);
 
-    void CopyBackBuffer(ID3D12Resource* resource) const;
+    void CopyBackBuffer(const eCommandList list, ID3D12Resource * resource) const;
 
     ID3D12RootSignature*  GetRootSignature() const;
 
@@ -282,9 +282,6 @@ namespace Engine::Manager::Graphics
     void InitializeNullDescriptors();
     void InitializeHeaps();
     void InitializeStaticBuffers();
-
-    void SetRootSignature();
-    void SetHeaps();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
