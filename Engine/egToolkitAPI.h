@@ -25,6 +25,7 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
 
     void AppendSpriteBatch(const std::function<void()>& callback);
+    void AppendPrimitiveBatch(const std::function<void()>& callback);
 
     SpriteBatch*                         GetSpriteBatch() const;
     CommonStates*                        GetCommonStates() const;
@@ -47,8 +48,6 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     ~ToolkitAPI() override;
 
-    void BeginPrimitiveBatch() const;
-    void EndPrimitiveBatch() const;
     void FrameBegin();
     void FrameEnd() const;
 
@@ -59,6 +58,8 @@ namespace Engine::Manager::Graphics
     std::unique_ptr<SpriteBatch>                         m_sprite_batch_          = nullptr;
     std::unique_ptr<ResourceUploadBatch>                 m_resource_upload_batch_ = nullptr;
     std::unique_ptr<SpriteBatchPipelineStateDescription> m_sprite_pipeline_state_        = nullptr;
+    std::unique_ptr<EffectPipelineStateDescription>      m_effect_pipeline_state_        = nullptr;
+    std::unique_ptr<BasicEffect>                         m_basic_effect_          = nullptr;
     std::unique_ptr<RenderTargetState>                   m_render_target_state_   = nullptr;
     std::unique_ptr<GraphicsMemory>                      m_graphics_memory_       = nullptr;
 
@@ -67,6 +68,7 @@ namespace Engine::Manager::Graphics
       nullptr;
 
     std::vector<std::function<void()>> m_sprite_batch_callbacks_;
+    std::vector<std::function<void()>> m_primitive_batch_callbacks_;
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_previous_handle_;
 
