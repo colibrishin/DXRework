@@ -60,9 +60,8 @@ namespace Client::Scripts
 
     StrongTexture2D m_tmp_shadow_depth_;
     StrongComputeShader m_intersection_compute_;
-
-    StrongMaterial m_shadow_material_;
-    StrongMaterial m_intensity_test_material_;
+    StrongShader m_shadow_shader_;
+    StrongShader m_intensity_test_shader_;
   };
 }
 

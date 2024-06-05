@@ -17,17 +17,9 @@ namespace Client::ComputeShaders
 {
   void ParticleCompute::preDispatch()
   {
-    m_noises_[0]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 3);
-    m_noises_[1]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 4);
-    m_noises_[2]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 5);
-
-    m_noises_[0]->PreRender(0.f);
-    m_noises_[1]->PreRender(0.f);
-    m_noises_[2]->PreRender(0.f);
-
-    m_noises_[0]->Render(0.f);
-    m_noises_[1]->Render(0.f);
-    m_noises_[2]->Render(0.f);
+    m_noises_[0]->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 3);
+    m_noises_[1]->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 4);
+    m_noises_[2]->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 5);
 
     auto rng = getRandomEngine();
     const auto rng_val = rng() % random_texture_size;
