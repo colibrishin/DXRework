@@ -45,7 +45,7 @@ namespace Engine::Manager::Graphics
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
 
-    void BuildShadowMap(const float dt);
+    void BuildShadowMap(const float dt) const;
     void ClearShadowMaps();
 
     static void CreateSubfrusta(
@@ -53,7 +53,7 @@ namespace Engine::Manager::Graphics
       Subfrusta&    subfrusta
     );
 
-    StrongMaterial m_shadow_shaders_;
+    StrongShader m_shadow_shader_;
 
     // sub part of the view frustum
     Subfrusta m_subfrusta_[3];
@@ -71,5 +71,7 @@ namespace Engine::Manager::Graphics
 
     D3D12_VIEWPORT m_viewport_;
     Resources::Texture2D m_shadow_map_mask_;
+
+    ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
   };
 } // namespace Engine::Manager::Graphics
