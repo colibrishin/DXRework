@@ -463,12 +463,10 @@ namespace Engine::Graphics
      D3D12_RESOURCE_STATE_COMMON,
      D3D12_RESOURCE_STATE_COPY_DEST
     );
-
-    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
   
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &barrier);
+    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &barrier);
 
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyResource
+    GetD3Device().GetCommandList(list)->CopyResource
       (
        m_buffer_.Get(),
        0,
@@ -484,9 +482,7 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &revert_barrier);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
+    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &revert_barrier);
     
     GetGC().Track(upload_buffer);
   }
