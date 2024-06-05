@@ -16,8 +16,8 @@ namespace Engine::Graphics
     StructuredBuffer();
     ~StructuredBuffer() = default;
 
-    void            Create(UINT size, const T* initial_data, bool is_mutable = false);
-    void __fastcall SetData(UINT size, const T* src_ptr);
+    void            Create(const eCommandList list, UINT size, const T * initial_data, bool is_mutable = false);
+    void __fastcall SetData(const eCommandList list, const UINT size, const T * src_ptr);
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
@@ -395,7 +395,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::Create(UINT size, const T* initial_data, bool is_mutable)
+  void StructuredBuffer<T>::Create(const eCommandList list, UINT size, const T* initial_data, bool is_mutable)
   {
     if (size == 0)
     {
@@ -416,17 +416,17 @@ namespace Engine::Graphics
     {
       InitializeWriteBuffer(size);
       std::vector<T> data(size);
-      SetData(size, data.data());
+      SetData(list, size, data.data());
     }
     InitializeReadBuffer(size);
   }
 
   template <typename T>
-  void StructuredBuffer<T>::SetData(const UINT size, const T* src_ptr)
+  void StructuredBuffer<T>::SetData(const eCommandList list, const UINT size, const T* src_ptr)
   {
     if (!m_b_mutable_) { throw std::logic_error("StructuredBuffer is defined as not mutable"); }
 
-    if (m_size_ < size) { Create(size, nullptr, m_b_mutable_); }
+    if (m_size_ < size) { Create(list, size, nullptr, m_b_mutable_); }
 
     ComPtr<ID3D12Resource> upload_buffer;
 
@@ -461,12 +461,10 @@ namespace Engine::Graphics
      D3D12_RESOURCE_STATE_COMMON,
      D3D12_RESOURCE_STATE_COPY_DEST
     );
-
-    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
   
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &barrier);
+    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &barrier);
 
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyResource
+    GetD3Device().GetCommandList(list)->CopyResource
       (
        m_buffer_.Get(),
        upload_buffer.Get()
@@ -479,9 +477,7 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &revert_barrier);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
+    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &revert_barrier);
     
     GetGC().Track(upload_buffer);
   }
