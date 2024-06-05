@@ -28,8 +28,12 @@ namespace Engine::Manager::Graphics
   {
     m_shadow_shader_ = Resources::Shader::Get("cascade_shadow_stage1").lock();
 
-    m_sb_light_buffer_.Create(g_max_lights, nullptr, true);
-    m_sb_light_vps_buffer_.Create(g_max_lights, nullptr, true);
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    m_sb_light_buffer_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
+    m_sb_light_vps_buffer_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
 
     // Render target for shadow map mask.
     m_shadow_map_mask_ = Resources::Texture2D
@@ -63,9 +67,15 @@ namespace Engine::Manager::Graphics
     for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(); }
   }
 
-  void ShadowManager::Update(const float& dt)
+  void ShadowManager::Update(const float& dt) {}
+
+  void ShadowManager::PreRender(const float& dt)
   {
-    constexpr size_t light_slot = 0;
+    constexpr size_t shadow_slot = 1;
+
+    // # Pass 1 : depth only, building shadow map
+
+     constexpr size_t light_slot = 0;
 
     // Build light information structured buffer.
     std::vector<SBs::LightSB> light_buffer;
