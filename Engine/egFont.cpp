@@ -102,7 +102,7 @@ namespace Engine::Resources
        m_heap_.GetFirstGpuHandle()
       );
 
-    const auto& token = resource_upload_batch.End(GetD3Device().GetCopyCommandQueue());
+    const auto& token = resource_upload_batch.End(GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE));
 
     token.wait();
   }

@@ -34,7 +34,7 @@ namespace Engine::Components
       const auto& ticket = GetRenderPipeline().SetParam(m_params_);
 
       m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
-      m_sb_buffer_.BindUAVComputeDeferred();
+      m_sb_buffer_.BindUAVGraphic(COMMAND_LIST_COMPUTE);
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
@@ -43,7 +43,7 @@ namespace Engine::Components
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch();
-      m_sb_buffer_.UnbindUAVComputeDeferred();
+      m_sb_buffer_.UnbindUAVGraphic(COMMAND_LIST_COMPUTE);
       m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
     }
 
