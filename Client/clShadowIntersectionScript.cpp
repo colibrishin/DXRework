@@ -77,7 +77,9 @@ namespace Client::Scripts
       tex.Load();
     }
 
-    m_sb_light_vp_.Create(g_max_lights, nullptr, true);
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    m_sb_light_vp_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
 
     m_viewport_.Width    = g_max_shadow_map_size;
     m_viewport_.Height   = g_max_shadow_map_size;
@@ -86,7 +88,9 @@ namespace Client::Scripts
     m_viewport_.TopLeftX = 0.0f;
     m_viewport_.TopLeftY = 0.0f;
 
-    m_sb_light_table_.Create(g_max_lights, nullptr, true);
+    m_sb_light_table_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
 
     // also borrow the sampler state from shadow manager.
   }
@@ -205,7 +209,7 @@ namespace Client::Scripts
         light_vps.push_back(light_vp);
       }
 
-      m_sb_light_vp_.SetData(light_vps.size(), light_vps.data());
+      m_sb_light_vp_.SetData(COMMAND_LIST_POST_RENDER, light_vps.size(), light_vps.data());
       m_sb_light_vp_.BindSRVGraphic(COMMAND_LIST_POST_RENDER);
 
       UINT idx = 0;
@@ -473,7 +477,7 @@ namespace Client::Scripts
       std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
       empty_light_table.resize(g_max_lights);
 
-      m_sb_light_table_.SetData(g_max_lights, empty_light_table.data());
+      m_sb_light_table_.SetData(COMMAND_LIST_POST_RENDER, g_max_lights, empty_light_table.data());
       m_sb_light_table_.BindSRVGraphic(COMMAND_LIST_POST_RENDER);
     }
   }
