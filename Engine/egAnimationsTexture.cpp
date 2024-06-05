@@ -25,11 +25,13 @@ namespace Engine::Resources
 
   void AnimationsTexture::FixedUpdate(const float& dt) {}
 
-  void AnimationsTexture::PreRender(const float& dt) {}
+  void AnimationsTexture::PreRender(const float& dt)
+  {
+    Texture3D::PreRender(dt);
+  }
 
   void AnimationsTexture::Render(const float& dt)
   {
-    BindAs(BIND_TYPE_SRV, RESERVED_BONES, 0);
     Texture3D::Render(dt);
   }
 

@@ -21,13 +21,9 @@ namespace Engine::Resources
 
   void AtlasAnimationTexture::FixedUpdate(const float& dt) {}
 
-  void AtlasAnimationTexture::PreRender(const float& dt) {}
+  void AtlasAnimationTexture::PreRender(const float& dt) { Texture3D::PreRender(dt); }
 
-  void AtlasAnimationTexture::Render(const float& dt)
-  {
-    BindAs(BIND_TYPE_SRV, RESERVED_ATLAS, 0);
-    Texture3D::Render(dt);
-  }
+  void AtlasAnimationTexture::Render(const float& dt) { Texture3D::Render(dt); }
 
   void AtlasAnimationTexture::PostRender(const float& dt) { Texture3D::PostRender(dt); }
 
@@ -115,7 +111,7 @@ namespace Engine::Resources
           .SubresourceIndex = 0
         };
 
-        GetD3Device().GetCopyCommandList()->CopyTextureRegion
+        GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyTextureRegion
           (
            &dst,
            0,

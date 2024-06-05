@@ -126,11 +126,13 @@ namespace Engine::Manager
     if constexpr (g_debug)
     {
       ImGui_ImplWin32_Init(hWnd);
+
       ImGui_ImplDX12_Init
         (
-         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_B8G8R8A8_UNORM, GetRenderPipeline().GetBufferHeap(),
-         GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart(),
-         GetRenderPipeline().GetBufferHeap()->GetGPUDescriptorHandleForHeapStart()
+         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
+         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU(),
+         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetCPUDescriptorHandleForHeapStart(),
+         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetGPUDescriptorHandleForHeapStart()
         );
     }
     
@@ -233,9 +235,9 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
 
-    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
     GetRenderer().PreRender(dt); // pre-process render information
     GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
+    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
   }
 
   void Application::Render(const float& dt)
@@ -259,9 +261,9 @@ namespace Engine::Manager
     GetRenderer().Render(dt);
 
     GetDebugger().Render(dt);
+    GetToolkitAPI().Render(dt);
     GetRenderPipeline().Render(dt);
     GetD3Device().Render(dt);
-    GetToolkitAPI().Render(dt);
   }
 
   void Application::PostRender(const float& dt)
@@ -269,7 +271,6 @@ namespace Engine::Manager
     GetTaskScheduler().PostRender(dt);
     GetMouseManager().PostRender(dt);
     GetCollisionDetector().PostRender(dt);
-    GetReflectionEvaluator().PostRender(dt);
     GetSceneManager().PostRender(dt);
     GetResourceManager().PostRender(dt);
     GetGraviton().PostRender(dt);
@@ -279,19 +280,22 @@ namespace Engine::Manager
     GetProjectionFrustum().PostRender(dt);
     GetDebugger().PostRender(dt); // gather information until render
 
-    if constexpr (g_debug)
-    {
-      ImGui::Render();
-      ImGui_ImplDX12_RenderDrawData
-      (
-          ImGui::GetDrawData(),
-          GetD3Device().GetDirectCommandList()
-      );
-    }
-
     GetRenderer().PostRender(dt); // post render commands
     GetToolkitAPI().PostRender(dt); // toolkit related render commands
     GetShadowManager().PostRender(dt); // commanding shadow resource reset
+
+    if constexpr (g_debug)
+    {
+      ImGui::Render();
+
+      ImGui_ImplDX12_RenderDrawData
+      (
+          ImGui::GetDrawData(),
+          GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)
+      );
+    }
+
+    GetReflectionEvaluator().PostRender(dt);
     GetRenderPipeline().PostRender(dt); // present
     GetD3Device().PostRender(dt);
   }
@@ -301,7 +305,6 @@ namespace Engine::Manager
     GetTaskScheduler().PostUpdate(dt);
     GetMouseManager().PostUpdate(dt);
     GetCollisionDetector().PostUpdate(dt);
-    GetReflectionEvaluator().PostUpdate(dt);
     GetSceneManager().PostUpdate(dt);
     GetResourceManager().PostUpdate(dt);
     GetGraviton().PostUpdate(dt);
@@ -314,6 +317,8 @@ namespace Engine::Manager
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);
+    GetReflectionEvaluator().PostUpdate(dt);
+    GetRenderPipeline().PostUpdate(dt);
   }
 
   void Application::tickInternal()
