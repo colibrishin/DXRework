@@ -66,28 +66,6 @@ namespace Engine::Graphics
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
     void UnbindUAVGraphic(const eCommandList list)
     {
-      if (m_b_srv_bound_ || m_b_srv_bound_compute_)
-      {
-        throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
-      }
-
-      if (m_b_uav_bound_ || m_b_uav_bound_compute_) { return; }
-
-      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COMMON,
-         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-        );
-
-      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
-
-      m_b_uav_bound_compute_ = true;
-    }
-
-    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void UnbindUAVGraphicDeferred()
-    {
       if (!m_b_uav_bound_) { return; }
 
       const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -456,9 +434,6 @@ namespace Engine::Graphics
     const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
     const std::wstring buffer_name = L"StructuredBuffer Write " + type_name;
 
-    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
     DX::ThrowIfFailed
       (
        GetD3Device().GetDevice()->CreateCommittedResource
@@ -488,10 +463,12 @@ namespace Engine::Graphics
      D3D12_RESOURCE_STATE_COMMON,
      D3D12_RESOURCE_STATE_COPY_DEST
     );
-  
-    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &barrier);
 
-    GetD3Device().GetCommandList(list)->CopyBufferRegion
+    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
+  
+    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &barrier);
+
+    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyResource
       (
        m_buffer_.Get(),
        0,
@@ -507,7 +484,9 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    GetD3Device().GetCommandList(list)->ResourceBarrier(1, &revert_barrier);
+    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->ResourceBarrier(1, &revert_barrier);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
     
     GetGC().Track(upload_buffer);
   }

@@ -171,8 +171,6 @@ namespace Engine::Graphics
       GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &cb_trans);
 
       GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
-
-      GetGC().Track(upload_buffer);
     }
 
     void Bind()

@@ -107,6 +107,14 @@ namespace Engine::Manager::Graphics
     m_sb_light_buffer_.SetData(COMMAND_LIST_PRE_RENDER, static_cast<UINT>(light_buffer.size()), light_buffer.data());
     m_sb_light_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
 
+  void ShadowManager::PreRender(const float& dt)
+  {
+    constexpr size_t shadow_slot = 1;
+
+    // # Pass 1 : depth only, building shadow map
+
+    m_sb_light_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
+
     // Clear all shadow map data.
     ClearShadowMaps();
     // Set the viewport to the size of the shadow map.
@@ -140,7 +148,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(COMMAND_LIST_PRE_RENDER, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
       m_sb_light_vps_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
 
       UINT idx = 0;

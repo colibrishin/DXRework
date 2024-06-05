@@ -71,5 +71,7 @@ namespace Engine::Manager::Graphics
 
     D3D12_VIEWPORT m_viewport_;
     Resources::Texture2D m_shadow_map_mask_;
+
+    ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
   };
 } // namespace Engine::Manager::Graphics
