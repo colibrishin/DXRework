@@ -138,7 +138,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_vps_buffer_.SetData(COMMAND_LIST_PRE_RENDER, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
       m_sb_light_vps_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
 
       UINT idx = 0;
