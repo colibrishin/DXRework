@@ -85,11 +85,11 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
 
     // CBV
-    buffer_handle.Offset(BIND_SLOT_END, m_buffer_descriptor_size_);
+    buffer_handle.Offset(g_cb_offset, m_buffer_descriptor_size_);
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
 
     // UAV
-    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    buffer_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
   }
 
@@ -101,7 +101,6 @@ namespace Engine::Manager::Graphics
     InitializeRenderTargets();
     InitializeDepthStencil();
     InitializeStaticBuffers();
-
     m_fallback_shader_ = Shader::Get("default").lock();
   }
 
@@ -581,6 +580,7 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_RENDER);
+    UploadConstantBuffers();
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -615,6 +615,7 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_POST_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_POST_RENDER);
+    UploadConstantBuffers();
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -682,6 +683,7 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_PRE_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_PRE_RENDER);
+    UploadConstantBuffers();
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE

@@ -45,14 +45,19 @@ namespace Engine::Graphics
       {
         ComPtr<ID3D12Resource> upload_buffer;
 
+        const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
+
         DX::ThrowIfFailed
           (
-           DirectX::CreateUploadBuffer
+           GetD3Device().GetDevice()->CreateCommittedResource
            (
-            GetD3Device().GetDevice(),
-            src_data,
-            1,
-            upload_buffer.GetAddressOf()
+            &upload_heap,
+            D3D12_HEAP_FLAG_NONE,
+            &buffer_desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(upload_buffer.GetAddressOf())
            )
           );
 
@@ -123,14 +128,19 @@ namespace Engine::Graphics
       // Use upload buffer for synchronization.
       ComPtr<ID3D12Resource> upload_buffer;
 
+      const auto&            upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+      const auto&            buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
+
       DX::ThrowIfFailed
         (
-         DirectX::CreateUploadBuffer
+         GetD3Device().GetDevice()->CreateCommittedResource
          (
-          GetD3Device().GetDevice(),
-          src_data,
-          1,
-          upload_buffer.GetAddressOf()
+          &upload_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(upload_buffer.GetAddressOf())
          )
         );
 
@@ -161,6 +171,8 @@ namespace Engine::Graphics
       GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &cb_trans);
 
       GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+
+      GetGC().Track(upload_buffer);
     }
 
     void Bind()
