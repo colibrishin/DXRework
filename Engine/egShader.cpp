@@ -248,15 +248,9 @@ namespace Engine::Resources
 
   void Shader::OnDeserialized() {}
 
-  void Shader::Render(const float& dt)
-  {
-    // todo: override PSO
-  }
+  void Shader::Render(const float& dt) {}
 
-  void Shader::PostRender(const float& dt)
-  {
-    // todo: revert back to default PSO
-  }
+  void Shader::PostRender(const float& dt) {}
 
   void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology) { m_topology_ = topology; }
 

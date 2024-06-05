@@ -28,8 +28,7 @@ namespace Engine::Resources
 {
   Shape::Shape(const std::filesystem::path& path)
     : Resource(path, RES_T_SHAPE),
-      m_bounding_box_({}),
-      m_instance_count_(1) {}
+      m_bounding_box_({}) {}
 
   void Shape::PreUpdate(const float& dt) {}
 
@@ -41,7 +40,7 @@ namespace Engine::Resources
 
   void Shape::Render(const float& dt)
   {
-    if (m_animations_)
+    /*if (m_animations_)
     {
       m_animations_->Render(dt);
     }
@@ -50,20 +49,12 @@ namespace Engine::Resources
     {
       mesh->PreRender(dt);
       mesh->Render(dt);
-      GetRenderPipeline().DrawIndexedInstancedDeferred(mesh->GetIndexCount(), m_instance_count_);
+      GetRenderPipeline().DrawIndexedInstancedDeferred(TODO, mesh->GetIndexCount(), m_instance_count_);
       mesh->PostRender(dt);
-    }
+    }*/
   }
 
-  void Shape::PostRender(const float& dt)
-  {
-    if (m_animations_)
-    {
-      m_animations_->PostRender(dt);
-    }
-
-    m_instance_count_ = 1;
-  }
+  void Shape::PostRender(const float& dt) {}
 
   void Shape::PostUpdate(const float& dt) {}
 
@@ -137,8 +128,6 @@ namespace Engine::Resources
   const std::vector<std::string>& Shape::GetAnimationCatalog() const { return m_animation_catalog_; }
 
   const std::map<UINT, BoundingOrientedBox>& Shape::GetBoneBoundingBoxes() const { return m_bone_bounding_boxes_; }
-
-  void Shape::SetInstanceCount(const UINT instance_count) { m_instance_count_ = instance_count; }
 
   void Shape::UpdateVertices()
   {
@@ -515,6 +504,5 @@ namespace Engine::Resources
 
   Shape::Shape()
     : Resource("", RES_T_SHAPE),
-      m_bounding_box_({}),
-      m_instance_count_(1) {}
+      m_bounding_box_({}) {}
 }
