@@ -434,6 +434,9 @@ namespace Engine::Graphics
     const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
     const std::wstring buffer_name = L"StructuredBuffer Write " + type_name;
 
+    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
     DX::ThrowIfFailed
       (
        GetD3Device().GetDevice()->CreateCommittedResource
@@ -466,7 +469,7 @@ namespace Engine::Graphics
   
     GetD3Device().GetCommandList(list)->ResourceBarrier(1, &barrier);
 
-    GetD3Device().GetCommandList(list)->CopyResource
+    GetD3Device().GetCommandList(list)->CopyBufferRegion
       (
        m_buffer_.Get(),
        0,

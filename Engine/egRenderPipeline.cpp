@@ -88,11 +88,11 @@ namespace Engine::Manager::Graphics
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_SRV, buffer_handle);
 
     // CBV
-    buffer_handle.Offset(BIND_SLOT_END, m_buffer_descriptor_size_);
+    buffer_handle.Offset(g_cb_offset, m_buffer_descriptor_size_);
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_CB, buffer_handle);
 
     // UAV
-    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    buffer_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
     GetD3Device().GetCommandList(list)->SetGraphicsRootDescriptorTable(DESCRIPTOR_SLOT_UAV, buffer_handle);
   }
 
@@ -596,6 +596,7 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_RENDER);
+    UploadConstantBuffers();
 
     constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
     const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -641,6 +642,19 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_POST_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_POST_RENDER);
+    UploadConstantBuffers();
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
   void RenderPipeline::FixedUpdate(const float& dt) {}
@@ -698,6 +712,31 @@ namespace Engine::Manager::Graphics
 
     SetRootSignature(COMMAND_LIST_PRE_RENDER);
     SetDescriptor(m_descriptor_, COMMAND_LIST_PRE_RENDER);
+    UploadConstantBuffers();
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+  
+    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_PRESENT,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ResourceBarrier(1, &initial_barrier);
+
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
   void RenderPipeline::DrawIndexed(const eCommandList list, UINT index_count)
