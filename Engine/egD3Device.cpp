@@ -151,13 +151,6 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12Debug> debug_interface;
     DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
     debug_interface->EnableDebugLayer();
-
-    ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
-    DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings)));
-
-    // Turn on auto-breadcrumbs and page fault reporting.
-    pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-    pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 #endif
 
     // Create factory and Searching for adapter
