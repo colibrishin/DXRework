@@ -29,8 +29,10 @@ namespace Engine::Resources
     UINT                    GetIndexCount() const;
     const VertexCollection& GetVertexCollection() const;
 
-    void OnDeserialized() override;
-    void OnSerialized() override;
+    void                     OnDeserialized() override;
+    void                     OnSerialized() override;
+    D3D12_VERTEX_BUFFER_VIEW GetVertexView() const;
+    D3D12_INDEX_BUFFER_VIEW GetIndexView() const;
 
     RESOURCE_SELF_INFER_GETTER(Mesh)
 
