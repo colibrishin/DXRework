@@ -58,21 +58,21 @@ namespace Engine::Resources
     void OnSerialized() override;
 
     eResourceType GetResourceType() const override;
-
-    eTexBindSlots GetSlot() const;
-    UINT          GetSlotOffset() const;
     eTexType      GetPrimitiveTextureType() const;
 
     ID3D12DescriptorHeap* GetSRVDescriptor() const;
     ID3D12DescriptorHeap* GetRTVDescriptor() const;
     ID3D12DescriptorHeap* GetDSVDescriptor() const;
     ID3D12DescriptorHeap* GetUAVDescriptor() const;
+    ID3D12Resource*       GetRawResoruce() const;
 
-    ID3D12Resource* GetRawResoruce() const;
+    bool IsHotload() const;
 
-    bool         IsHotload() const;
-
-    void BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset);
+    void Bind(const eCommandList list, const eBindType type, const UINT slot, const UINT offset) const;
+    void Bind(const eCommandList list, const Texture& dsv) const;
+    
+    void Unbind(const eCommandList list, const eBindType type) const;
+    void Unbind(const eCommandList list, const Texture& dsv) const;
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
@@ -92,6 +92,8 @@ namespace Engine::Resources
 
     virtual void loadDerived(ComPtr<ID3D12Resource>& res) = 0;
     virtual bool map(char* mapped);
+
+    [[nodiscard]] ID3D12Resource* GetRawResource() const;
 
     void Unload_INTERNAL() override;
 
@@ -126,10 +128,6 @@ namespace Engine::Resources
     ComPtr<ID3D12Resource>           m_upload_buffer_;
 
     RTVDSVHandlePair                 m_previous_handles_;
-
-    eBindType                        m_bound_type_;
-    eTexBindSlots                    m_bound_slot_;
-    UINT                             m_bound_slot_offset_;
 
   };
 } // namespace Engine::Resources

@@ -111,7 +111,7 @@ namespace Engine::Resources
           .SubresourceIndex = 0
         };
 
-        GetD3Device().GetCopyCommandList()->CopyTextureRegion
+        GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyTextureRegion
           (
            &dst,
            0,
