@@ -37,7 +37,7 @@ namespace Engine::Components
     {
       const auto& ticket = GetRenderPipeline().SetParam(m_params_);
 
-      m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      m_sb_buffer_.SetData(COMMAND_LIST_COMPUTE, static_cast<UINT>(m_instances_.size()), m_instances_.data());
       m_sb_buffer_.BindUAVGraphic(COMMAND_LIST_COMPUTE);
 
       const auto thread      = m_cs_->GetThread();
