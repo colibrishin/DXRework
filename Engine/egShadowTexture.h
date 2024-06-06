@@ -45,7 +45,7 @@ namespace Engine::Resources
     UINT GetHeight() const override;
     UINT GetWidth() const override;
 
-    void Clear() const;
+    void Clear(ID3D12GraphicsCommandList1 * cmd) const;
 
   protected:
     void loadDerived(ComPtr<ID3D12Resource>& res) override;
