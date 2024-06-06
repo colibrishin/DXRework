@@ -14,9 +14,9 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  void ComputeShader::Dispatch()
+  void ComputeShader::Dispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
-    preDispatch();
+    preDispatch(list, heap);
 
     if (std::accumulate(m_group_, m_group_ + 3, 0) == 0)
     {
@@ -42,17 +42,13 @@ namespace Engine::Resources
       return;
     }
 
-    GetD3Device().WaitAndReset(COMMAND_LIST_COMPUTE);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE)->SetPipelineState(m_pipeline_state_.Get());
-
-    GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE)->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
-
-    postDispatch();
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_COMPUTE);
-
     GetD3Device().Wait();
+
+    list->SetPipelineState(m_pipeline_state_.Get());
+
+    list->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
+
+    postDispatch(list, heap);
 
     std::fill_n(m_group_, 3, 1);
   }
@@ -65,7 +61,8 @@ namespace Engine::Resources
     : Shader
     (
      name, path, SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
-     D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+     D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER,
+     DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
     )
   {
     SetPath(path);
