@@ -54,7 +54,9 @@ namespace Engine
   struct CommandAwaiter;
   struct CommandPair;
   struct DescriptorHandler;
-  struct DescriptorPtr;
+  struct DescriptorPtrImpl;
+
+  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
 
   namespace Objects
   {
