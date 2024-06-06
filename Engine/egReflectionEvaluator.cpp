@@ -29,13 +29,11 @@ namespace Engine::Manager::Graphics
   void ReflectionEvaluator::RenderFinished(const CommandPair& cmd) const
   {
     GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
-    m_copy_.BindAs(BIND_TYPE_SRV, RESERVED_RENDERED, 0);
-    m_copy_.Render(0.f);
   }
 
   void ReflectionEvaluator::BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const
   {
-    m_copy_.Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
+    m_copy_.Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_RENDERED, 0);
   }
 
   void ReflectionEvaluator::UnbindReflectionMap(const CommandPair& cmd) const

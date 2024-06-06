@@ -40,6 +40,9 @@ namespace Engine::Manager::Graphics
     void BindReflectionMap(const CommandPair & cmd, const DescriptorPtr & heap) const;
     void UnbindReflectionMap(const CommandPair& cmd) const;
 
+    void BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const;
+    void UnbindReflectionMap(const CommandPair& cmd) const;
+
   private:
     friend struct SingletonDeleter;
     ~ReflectionEvaluator() override = default;
