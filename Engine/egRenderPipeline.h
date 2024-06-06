@@ -51,6 +51,7 @@ namespace Engine::Manager::Graphics
     void SetParam(const T& v, const size_t slot)
     {
       m_param_buffer_.SetParam(slot, v);
+      m_param_buffer_data_.SetData(&m_param_buffer_);
     }
 
     [[nodiscard]] TempParamTicket SetParam(const Graphics::ParamBase& param)
@@ -100,7 +101,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void UploadConstantBuffers(const DescriptorPtr & heap);
+    void BindConstantBuffers(const DescriptorPtr & heap);
 
     void FallbackPSO(ID3D12GraphicsCommandList1* list);
 

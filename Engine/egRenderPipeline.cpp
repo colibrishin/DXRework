@@ -17,11 +17,13 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
   {
     m_transform_buffer_ = matrix;
+    m_transform_buffer_data_.SetData(&matrix);
   }
 
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
     m_wvp_buffer_ = matrix;
+    m_wvp_buffer_data_.SetData(&matrix);
   }
 
   void RenderPipeline::DefaultRenderTarget(ID3D12GraphicsCommandList1* list) const
@@ -913,13 +915,8 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_size_;
   }
 
-  void RenderPipeline::UploadConstantBuffers(const DescriptorPtr& heap)
+  void RenderPipeline::BindConstantBuffers(const DescriptorPtr& heap)
   {
-    m_wvp_buffer_data_.SetData(&m_wvp_buffer_);
-    m_transform_buffer_data_.SetData(&m_transform_buffer_);
-    m_material_buffer_data_.SetData(&m_material_buffer_);
-    m_param_buffer_data_.SetData(&m_param_buffer_);
-
     m_wvp_buffer_data_.Bind(heap);
     m_transform_buffer_data_.Bind(heap);
     m_material_buffer_data_.Bind(heap);
@@ -929,5 +926,6 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
     m_material_buffer_ = material_buffer;
+    m_material_buffer_data_.SetData(&material_buffer);
   }
 } // namespace Engine::Manager::Graphics
