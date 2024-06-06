@@ -28,12 +28,11 @@ namespace Engine::Manager::Graphics
   {
     m_shadow_shader_ = Resources::Shader::Get("cascade_shadow_stage1").lock();
 
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+    m_sb_light_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightSB>>();
+    m_sb_light_vps_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightVPSB>>();
 
-    m_sb_light_buffer_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
-    m_sb_light_vps_buffer_.Create(COMMAND_LIST_UPDATE, g_max_lights, nullptr, true);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    m_sb_light_buffer_->Create(g_max_lights, nullptr);
+    m_sb_light_vps_buffer_->Create(g_max_lights, nullptr);
 
     // Render target for shadow map mask.
     m_shadow_map_mask_ = Resources::Texture2D
@@ -44,7 +43,7 @@ namespace Engine::Manager::Graphics
          .Width = g_max_shadow_map_size,
          .Height = g_max_shadow_map_size,
          .DepthOrArraySize = g_max_shadow_cascades,
-         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+         .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
          .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
          .MipsLevel = 1,
          .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
@@ -63,8 +62,6 @@ namespace Engine::Manager::Graphics
   {
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
-
-    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(); }
   }
 
   void ShadowManager::Update(const float& dt) {}
@@ -104,27 +101,10 @@ namespace Engine::Manager::Graphics
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_.SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
-  }
-
-  void ShadowManager::PreRender(const float& dt)
-  {
-    constexpr size_t shadow_slot = 1;
-
-    // # Pass 1 : depth only, building shadow map
-
-    m_sb_light_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
-
-    // Clear all shadow map data.
-    ClearShadowMaps();
-    // Set the viewport to the size of the shadow map.
-    GetRenderPipeline().SetViewportDeferred(COMMAND_LIST_PRE_RENDER, m_viewport_);
+    m_sb_light_buffer_->SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
 
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
-      // bind the shadow map shaders.
-      GetRenderPipeline().SetPSO(m_shadow_shader_, COMMAND_LIST_PRE_RENDER);
-
       // Build light view and projection matrix in frustum.
       std::vector<SBs::LightVPSB> current_light_vp;
 
@@ -148,102 +128,30 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_.SetData(COMMAND_LIST_PRE_RENDER, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
-      m_sb_light_vps_buffer_.BindSRVGraphic(COMMAND_LIST_PRE_RENDER);
+      m_sb_light_vps_buffer_->SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
       UINT idx = 0;
-
-      
 
       for (const auto& ptr_light : m_lights_ | std::views::values)
       {
         if (const auto light = ptr_light.lock())
         {
-          // todo: refactoring
-          // It only needs to render the depth of the object from the light's point of view.
-          // Swap the depth stencil to the each light's shadow map.
-
-          m_shadow_map_mask_.Bind(COMMAND_LIST_PRE_RENDER, m_shadow_texs_[light->GetLocalID()]);
-
           // Notify the index of the shadow map to the shader.
           GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
           // Render the depth of the object from the light's point of view.
-          BuildShadowMap(dt);
-
-          m_shadow_map_mask_.Unbind(COMMAND_LIST_PRE_RENDER, m_shadow_texs_[light->GetLocalID()]);
+          BuildShadowMap(dt, light);
         }
       }
 
-      // Cleanup, Geometry shader's work is done.
-      GetRenderPipeline().DefaultRenderTarget(COMMAND_LIST_PRE_RENDER);
-
-      m_sb_light_vps_buffer_.UnbindSRVGraphic(COMMAND_LIST_PRE_RENDER);
-
       GetRenderPipeline().SetParam<int>(0, shadow_slot);
-
-      // Unload the shadow map shaders.
-      GetRenderPipeline().FallbackPSO(COMMAND_LIST_PRE_RENDER);
     }
-
-    // Reverts the viewport to the size of the screen, render target, and the depth stencil state.
-    GetRenderPipeline().DefaultViewport(COMMAND_LIST_PRE_RENDER);
-    GetRenderPipeline().DefaultRenderTarget(COMMAND_LIST_PRE_RENDER);
   }
 
-  void ShadowManager::Render(const float& dt)
-  {
-    // Pass #2 : Render scene with shadow map
-    // post-processing for serialization and binding
-    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> current_shadow_maps;
-
-    for (const auto& buffer : m_shadow_texs_ | std::views::values)
-    {
-      // todo: refactoring
-      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         buffer.GetRawResoruce(),
-         D3D12_RESOURCE_STATE_COMMON,
-         D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
-        );
-
-      GetD3Device().GetCommandList(COMMAND_LIST_RENDER)->ResourceBarrier(1, &srv_transition);
-
-      current_shadow_maps.emplace_back(buffer.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    // todo: refactoring.
-    // Bind the shadow map resource previously rendered to the pixel shader.
-    GetRenderPipeline().GetDescriptor().SetShaderResources
-      (
-       RESERVED_SHADOW_MAP,
-       static_cast<UINT>(current_shadow_maps.size()),
-       current_shadow_maps
-      );
-
-    // And bind the light view and projection matrix on to the constant buffer.
-    m_sb_light_vps_buffer_.BindSRVGraphic(COMMAND_LIST_RENDER);
-
-    // Bind the light information structured buffer that previously built.
-    m_sb_light_buffer_.BindSRVGraphic(COMMAND_LIST_RENDER);
-  }
+  void ShadowManager::Render(const float& dt) {}
 
   void ShadowManager::PostRender(const float& dt)
   {
-    // todo: refactoring
-    for (const auto& buffer : m_shadow_texs_ | std::views::values)
-    {
-      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         buffer.GetRawResoruce(),
-         D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
-         D3D12_RESOURCE_STATE_COMMON
-        );
-
-      GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)->ResourceBarrier(1, &srv_transition);
-    }
-
-    m_sb_light_buffer_.UnbindSRVGraphic(COMMAND_LIST_POST_RENDER);
-    m_sb_light_vps_buffer_.UnbindSRVGraphic(COMMAND_LIST_POST_RENDER);
+    ClearShadowMaps();
   }
 
   void ShadowManager::FixedUpdate(const float& dt) {}
@@ -258,18 +166,44 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(const float dt) const
+  void ShadowManager::BuildShadowMap(const float dt, const StrongLight& light) const
   {
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
-       COMMAND_LIST_PRE_RENDER, [this](const StrongObjectBase& obj)
+       [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
          return true;
+       },
+       [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
+       {
+         // Set viewport to the shadow map size.
+         cmd.GetList()->RSSetViewports(1, &m_viewport_);
+
+         cmd.GetList()->RSSetScissorRects(1, &m_scissor_rect_);
+
+         // Bind the shadow map shader.
+         cmd.GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
+
+         // It only needs to render the depth of the object from the light's point of view.
+         // Swap the depth stencil to the each light's shadow map.
+         const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
+         m_shadow_map_mask_.Bind(cmd, heap, dsv);
+
+         GetRenderPipeline().UploadConstantBuffers(heap);
+
+         heap.SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
+
+         cmd.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
        }
+       , [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
+       {
+         const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
+         m_shadow_map_mask_.Unbind(cmd, dsv);
+       }, {m_sb_light_buffer_, m_sb_light_vps_buffer_}
       );
   }
 
@@ -397,6 +331,42 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  void ShadowManager::BindShadowMaps(const CommandPair& cmd, const DescriptorPtr& heap) const
+  {
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> current_shadow_maps;
+
+    for (const auto& buffer : m_shadow_texs_ | std::views::values)
+    {
+      // todo: refactoring
+      const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         buffer.GetRawResoruce(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+        );
+
+      cmd.GetList()->ResourceBarrier(1, &srv_transition);
+
+      current_shadow_maps.emplace_back(buffer.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
+    }
+
+    // Bind the shadow map resource previously rendered to the pixel shader.
+    heap.SetShaderResources
+      (
+       RESERVED_SHADOW_MAP,
+       static_cast<UINT>(current_shadow_maps.size()),
+       current_shadow_maps
+      );
+  }
+
+  void ShadowManager::UnbindShadowMaps(const CommandPair& cmd) const
+  {
+    for (const auto& buffer : m_shadow_texs_ | std::views::values)
+    {
+      buffer.Unbind(cmd, BIND_TYPE_SRV);
+    }
+  }
+
   void ShadowManager::RegisterLight(const WeakLight& light)
   {
     if (const auto locked = light.lock())
@@ -446,12 +416,10 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed(GetD3Device().GetDevice()->CreateDescriptorHeap(&sampler_heap_desc, IID_PPV_ARGS(m_sampler_heap_.GetAddressOf())));
 
-    GetD3Device().CreateSampler
+    GetD3Device().GetDevice()->CreateSampler
       (
-       sampler_desc, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
+       &sampler_desc, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
       );
-
-    GetRenderPipeline().GetDescriptor().SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
   }
 
   void ShadowManager::InitializeViewport()
@@ -462,13 +430,49 @@ namespace Engine::Manager::Graphics
     m_viewport_.MaxDepth = 1.f;
     m_viewport_.TopLeftX = 0.f;
     m_viewport_.TopLeftY = 0.f;
+
+    m_scissor_rect_.left   = 0;
+    m_scissor_rect_.top    = 0;
+    m_scissor_rect_.right  = g_max_shadow_map_size;
+    m_scissor_rect_.bottom = g_max_shadow_map_size;
   }
 
   void ShadowManager::ClearShadowMaps()
   {
-    for (const auto& buffer : m_shadow_texs_ | std::views::values)
-    {
-      buffer.Clear();
-    }
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
+    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(cmd); }
+
+    constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
+
+    const auto& command_to_rtv = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_shadow_map_mask_.GetRawResoruce(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    const auto& rtv_to_common = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_shadow_map_mask_.GetRawResoruce(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    cmd->ResourceBarrier(1, &command_to_rtv);
+
+    cmd->ClearRenderTargetView
+      (
+       m_shadow_map_mask_.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+       clear_color,
+       0,
+       nullptr
+      );
+
+    cmd->ResourceBarrier(1, &rtv_to_common);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
   }
 } // namespace Engine::Manager::Graphics
