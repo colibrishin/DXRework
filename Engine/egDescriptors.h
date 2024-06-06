@@ -68,7 +68,7 @@ namespace Engine
     DescriptorHandler();
 
     DescriptorPtr Acquire();
-    void                           Release(const DescriptorPtrImpl& handles);
+    void          Release(const DescriptorPtrImpl& handles);
 
     [[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap() const { return m_main_descriptor_heap_.Get(); }
     [[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap() const { return m_main_sampler_descriptor_heap_.Get(); }
