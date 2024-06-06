@@ -77,10 +77,34 @@ namespace Engine::Manager::Graphics
           // Check culling.
           RenderPass
             (
-             dt, (eShaderDomain)i, false, COMMAND_LIST_RENDER, [](const StrongObjectBase& obj)
+             dt, (eShaderDomain)i, false, [](const StrongObjectBase& obj)
              {
                return GetProjectionFrustum().CheckRender(obj);
-             }
+             }, [i](const CommandPair& cmd, const DescriptorPtr& heap)
+             {
+               GetRenderPipeline().DefaultRenderTarget(cmd.GetList());
+               GetRenderPipeline().DefaultViewport(cmd.GetList());
+               GetRenderPipeline().DefaultScissorRect(cmd.GetList());
+
+               GetRenderPipeline().UploadConstantBuffers(heap);
+
+               GetShadowManager().BindShadowMaps(cmd, heap);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().BindReflectionMap(cmd, heap);
+               }
+
+             }, [i](const CommandPair& cmd, const DescriptorPtr& heap)
+             {
+               GetShadowManager().UnbindShadowMaps(cmd);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().UnbindReflectionMap(cmd);
+               }
+             },
+             m_additional_structured_buffers_
             );
 
           if (i == SHADER_DOMAIN_OPAQUE)
@@ -107,23 +131,27 @@ namespace Engine::Manager::Graphics
 
   void Renderer::PostUpdate(const float& dt) {}
 
-  void Renderer::Initialize()
+  void Renderer::Initialize() {}
+
+  void Renderer::AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase>& sb_ptr)
   {
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
-
-    m_instance_buffer_.Create(COMMAND_LIST_UPDATE, 0, nullptr, true);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    if (const auto sb = sb_ptr.lock())
+    {
+      m_additional_structured_buffers_.push_back(sb);
+    }
   }
 
   bool Renderer::Ready() const { return m_b_ready_; }
 
-  void Renderer::RenderPass(
-    const float                                     dt,
-    eShaderDomain                                   domain,
-    bool                                            shader_bypass,
-    const eCommandList                              command_list,
-    const std::function<bool(const StrongObjectBase&)>& predicate
+  void Renderer::RenderPass
+  (
+    const float                                                          dt,
+    eShaderDomain                                                        domain,
+    bool                                                                 shader_bypass,
+    const std::function<bool(const StrongObjectBase&)>&                  predicate,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
+    const std::vector<Weak<StructuredBufferBase>>&                       additional_structured_buffers = {}
   )
   {
     if (!Ready())
@@ -151,24 +179,68 @@ namespace Engine::Manager::Graphics
       }
     }
 
+    GetD3Device().Flush();
+
+    std::vector<CommandPair> command_pairs;
+    std::vector<DescriptorPtr> heaps;
+
     for (const auto& [mtr, sbs] : final_mapping)
     {
-      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), command_list, sbs);
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        GetD3Device().Flush();
+        heaps.clear();
+      }
+
+      const auto& cmd  = GetD3Device().AcquireCommandPair(L"Renderer Material Pass");
+      const auto& heap = GetRenderPipeline().AcquireHeapSlot();
+
+      command_pairs.emplace_back(cmd);
+      heaps.emplace_back(heap);
+
+      cmd.SoftReset();
+
+      for (const auto& sb_ptr : additional_structured_buffers)
+      {
+        if (const auto& sb = sb_ptr.lock())
+        {
+          sb->BindSRVGraphic(cmd, heap);
+        }
+      }
+
+      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), initial_setup, post_setup, cmd, heap, sbs);
+
+      for (const auto& sb : additional_structured_buffers)
+      {
+        if (const auto& sb_ptr = sb.lock())
+        {
+          sb_ptr->UnbindSRVGraphic(cmd);
+        }
+      }
     }
+
+    GetD3Device().Flush();
+
+    m_tmp_instance_buffers_.clear();
   }
 
   void Renderer::renderPassImpl(
-    const float                         dt,
-    eShaderDomain                       domain,
-    bool                                shader_bypass,
-    const StrongMaterial&               material,
-    const eCommandList                  command_list,
-    const std::vector<SBs::InstanceSB>& structured_buffers
+    const float                                                          dt,
+    eShaderDomain                                                        domain,
+    bool                                                                 shader_bypass,
+    const StrongMaterial&                                                material,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
+    const CommandPair&                                                   cmd,
+    const DescriptorPtr&                                                 heap,
+    const std::vector<SBs::InstanceSB>&                                  structured_buffers
   )
   {
-    GetD3Device().WaitAndReset(command_list);
-    m_instance_buffer_.SetData(command_list, static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
-    m_instance_buffer_.BindSRVGraphic(command_list);
+    initial_setup(cmd, heap);
+
+    m_tmp_instance_buffers_.push_back({});
+    m_tmp_instance_buffers_.back().Create(structured_buffers.size(), structured_buffers.data());
+    m_tmp_instance_buffers_.back().BindSRVGraphic(cmd, heap);
 
     material->SetTempParam
       (
@@ -179,10 +251,9 @@ namespace Engine::Manager::Graphics
        }
       );
 
-    material->Draw(dt, command_list);
+    material->Draw(dt, cmd, heap);
 
-    m_instance_buffer_.UnbindSRVGraphic(command_list);
-    GetD3Device().ExecuteCommandList(command_list);
+    post_setup(cmd, heap);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
