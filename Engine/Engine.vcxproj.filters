@@ -550,6 +550,12 @@
     <ClInclude Include="egGarbageCollector.h">
       <Filter>Singleton\Graphics\GarbageCollector</Filter>
     </ClInclude>
+    <ClInclude Include="egDescriptors.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egCommands.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -778,6 +784,12 @@
     </ClCompile>
     <ClCompile Include="egGarbageCollector.cpp">
       <Filter>Singleton\Graphics\GarbageCollector</Filter>
+    </ClCompile>
+    <ClCompile Include="egDescriptors.cpp">
+      <Filter>Common\DX</Filter>
+    </ClCompile>
+    <ClCompile Include="egCommands.cpp">
+      <Filter>Common\DX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
