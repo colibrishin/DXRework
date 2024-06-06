@@ -132,9 +132,9 @@ namespace Engine::Manager
       ImGui_ImplDX12_Init
         (
          GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU(),
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetCPUDescriptorHandleForHeapStart(),
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetGPUDescriptorHandleForHeapStart()
+         m_imgui_descriptor_->GetMainDescriptorHeap(),
+         m_imgui_descriptor_->GetCPUHandle(),
+         m_imgui_descriptor_->GetGPUHandle()
         );
     }
     
@@ -290,10 +290,39 @@ namespace Engine::Manager
     {
       ImGui::Render();
 
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        GetD3Device().Flush();
+      }
+
+      auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
+
+      D3D12_CPU_DESCRIPTOR_HANDLE rtv[]
+      {
+        GetRenderPipeline().GetCPURTVHandle()
+      };
+
+      D3D12_CPU_DESCRIPTOR_HANDLE dsv[]
+      {
+        GetRenderPipeline().GetCPUDSVHandle()
+      };
+
+      cmd.SoftReset();
+
+      cmd.GetList()->OMSetRenderTargets
+      (
+          1,
+          rtv,
+          false,
+          dsv
+      );
+
+      m_imgui_descriptor_->BindGraphic(cmd);
+
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)
+          cmd.GetList()
       );
 
       const auto& waiter = cmd.Execute();
