@@ -31,12 +31,16 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
     void Initialize() override;
 
+    void AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase> & sb_ptr);
+
     bool Ready() const;
     void RenderPass(
-      const float        dt,
-      eShaderDomain      domain,
-      bool               shader_bypass,
-      const eCommandList command_list, const std::function<bool(const StrongObjectBase&)> & predicate
+      const float                                       dt,
+      eShaderDomain                                     domain,
+      bool                                              shader_bypass,
+      const std::function<bool(const StrongObjectBase&)> &predicate, const std::function<void(const CommandPair&,
+        const DescriptorPtr&)> &initial_setup, const std::function<void(const CommandPair&, const DescriptorPtr&)> &
+      post_setup, const std::vector<Weak<StructuredBufferBase>> &additional_structured_buffers
     );
 
   private:
@@ -44,11 +48,13 @@ namespace Engine::Manager::Graphics
     ~Renderer() override = default;
 
     void renderPassImpl(
-      const float            dt,
-      eShaderDomain          domain,
-      bool                   shader_bypass,
-      const StrongMaterial & material, const eCommandList command_list, const std::vector<SBs::InstanceSB> &
-      structured_buffers
+      const float         dt,
+      eShaderDomain       domain,
+      bool                shader_bypass,
+      const StrongMaterial &material, const std::function<void(const CommandPair&, const DescriptorPtr&)> &
+      initial_setup, const std::function<void(const CommandPair&, const DescriptorPtr&)> &post_setup, const
+      CommandPair
+      & cmd, const DescriptorPtr & heap, const std::vector<SBs::InstanceSB> & structured_buffers
     );
 
     void preMappingModel(const StrongRenderComponent& rc);
@@ -56,7 +62,8 @@ namespace Engine::Manager::Graphics
 
     bool m_b_ready_;
 
-    StructuredBuffer<SBs::InstanceSB> m_instance_buffer_;
+    std::vector<Weak<StructuredBufferBase>> m_additional_structured_buffers_;
+    std::vector<StructuredBuffer<SBs::InstanceSB>> m_tmp_instance_buffers_;
     RenderMap<CandidatePair> m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }
