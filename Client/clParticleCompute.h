@@ -15,8 +15,8 @@ namespace Client::ComputeShaders
   protected:
     SERIALIZE_DECL
 
-    void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) override;
-    void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) override;
+    void preDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
+    void postDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
     void loadDerived() override;
     void unloadDerived() override;
 

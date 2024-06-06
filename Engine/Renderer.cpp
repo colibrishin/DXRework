@@ -86,8 +86,6 @@ namespace Engine::Manager::Graphics
                GetRenderPipeline().DefaultViewport(cmd.GetList());
                GetRenderPipeline().DefaultScissorRect(cmd.GetList());
 
-               GetRenderPipeline().UploadConstantBuffers(heap);
-
                GetShadowManager().BindShadowMaps(cmd, heap);
 
                if (i > SHADER_DOMAIN_OPAQUE)
@@ -193,10 +191,11 @@ namespace Engine::Manager::Graphics
       }
 
       const auto& cmd  = GetD3Device().AcquireCommandPair(L"Renderer Material Pass");
-      const auto& heap = GetRenderPipeline().AcquireHeapSlot();
 
       command_pairs.emplace_back(cmd);
-      heaps.emplace_back(heap);
+      heaps.emplace_back(GetRenderPipeline().AcquireHeapSlot());
+
+      const auto& heap = heaps.back(); 
 
       cmd.SoftReset();
 
@@ -232,7 +231,7 @@ namespace Engine::Manager::Graphics
     const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
     const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
     const CommandPair&                                                   cmd,
-    const DescriptorPtr&                                                 heap,
+    const DescriptorPtr&                                heap,
     const std::vector<SBs::InstanceSB>&                                  structured_buffers
   )
   {

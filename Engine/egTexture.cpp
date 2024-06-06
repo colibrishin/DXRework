@@ -128,13 +128,13 @@ namespace Engine::Resources
     case BIND_TYPE_SRV: 
       {
         cmd->ResourceBarrier(1, &srv_trans);
-        heap.SetShaderResource(m_srv_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
+        heap->SetShaderResource(m_srv_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
         break;
       }
     case BIND_TYPE_UAV:
       {
         cmd->ResourceBarrier(1, &uav_trans);
-        heap.SetUnorderedAccess(m_uav_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
+        heap->SetUnorderedAccess(m_uav_->GetCPUDescriptorHandleForHeapStart(), slot + offset);
         break;
       }
     case BIND_TYPE_RTV:
@@ -187,7 +187,7 @@ namespace Engine::Resources
     }
   }
 
-  void Texture::Bind(const CommandPair& cmd, const DescriptorPtr& heap, const Texture& dsv) const
+  void Texture::Bind(const CommandPair& cmd, const Texture& dsv) const
   {
     const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -778,7 +778,8 @@ namespace Engine::Resources
 
   void Texture::Load_INTERNAL()
   {
-    if ((m_desc_.Flags & D3D11_BIND_DEPTH_STENCIL) && (m_desc_.Flags & D3D11_BIND_UNORDERED_ACCESS))
+    if ((m_desc_.Flags & D3D11_BIND_DEPTH_STENCIL) && 
+        (m_desc_.Flags & D3D11_BIND_UNORDERED_ACCESS))
     {
       throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
     }
@@ -793,6 +794,21 @@ namespace Engine::Resources
          m_res_.ReleaseAndGetAddressOf(),
          false
         );
+
+      GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+      const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_res_.Get(),
+         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &common_transition);
+
+      GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+
+      GetD3Device().Wait();
 
       const D3D12_RESOURCE_DESC desc = m_res_->GetDesc();
 

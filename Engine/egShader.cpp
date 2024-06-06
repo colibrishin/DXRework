@@ -116,7 +116,7 @@ namespace Engine::Resources
       {
         .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
         .NumDescriptors = 1,
-        .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+        .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
         .NodeMask       = 0
       };
 
@@ -292,6 +292,11 @@ namespace Engine::Resources
   D3D_PRIMITIVE_TOPOLOGY Shader::GetTopology() const
   {
     return m_topology_;
+  }
+
+  D3D12_CPU_DESCRIPTOR_HANDLE Shader::GetShaderHeap() const
+  {
+    return m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
   }
 
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
