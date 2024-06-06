@@ -14,37 +14,37 @@ namespace Client::ComputeShaders
 
   void IntersectionCompute::OnImGui(const StrongParticleRenderer& pr) {}
 
-  void IntersectionCompute::preDispatch()
+  void IntersectionCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
     if (m_light_table_ptr_ == nullptr)
     {
       return;
     }
 
-    m_light_table_ptr_->BindUAVGraphic(COMMAND_LIST_COMPUTE);
+    m_light_table_ptr_->BindUAVGraphic(list, heap);
 
     // 512 x 512
     SetGroup({256, 1, 1});
 
-    m_intersection_texture_->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
-    m_position_texture_->Bind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
+    m_intersection_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_position_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
 
     GetRenderPipeline().SetParam<int>(m_target_light_, target_light_slot);
   }
 
-  void IntersectionCompute::postDispatch()
+  void IntersectionCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
     if (m_light_table_ptr_ == nullptr)
     {
       return;
     }
 
-    m_light_table_ptr_->UnbindUAVGraphic(COMMAND_LIST_COMPUTE);
+    m_light_table_ptr_->UnbindUAVGraphic(list);
 
     GetRenderPipeline().SetParam<int>(0, target_light_slot);
 
-    m_intersection_texture_->Unbind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV);
-    m_position_texture_->Unbind(COMMAND_LIST_COMPUTE, BIND_TYPE_SRV);
+    m_intersection_texture_->Unbind(list, BIND_TYPE_SRV);
+    m_position_texture_->Unbind(list, BIND_TYPE_SRV);
 
     m_light_table_ptr_ = nullptr;
     m_target_light_ = 0;
