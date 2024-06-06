@@ -37,8 +37,9 @@ namespace Engine::Resources
 
     eShaderDomain GetDomain() const;
 
-    [[nodiscard]] ID3D12PipelineState* GetPipelineState() const;
-    [[nodiscard]] D3D_PRIMITIVE_TOPOLOGY GetTopology() const;
+    [[nodiscard]] ID3D12PipelineState*         GetPipelineState() const;
+    [[nodiscard]] D3D_PRIMITIVE_TOPOLOGY       GetTopology() const;
+    [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE  GetShaderHeap() const;
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
