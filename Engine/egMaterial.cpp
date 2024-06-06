@@ -294,6 +294,11 @@ namespace Engine::Resources
         cmd.GetList()->IASetIndexBuffer(&idx_view);
         cmd.GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
       }
+
+      if (const auto& anim = shape->GetAnimations().lock())
+      {
+        anim->Unbind(cmd, BIND_TYPE_SRV);
+      }
     }
 
     if (m_resources_loaded_.contains(RES_T_TEX))
