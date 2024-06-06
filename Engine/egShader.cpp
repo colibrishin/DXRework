@@ -10,7 +10,8 @@ SERIALIZE_IMPL
     _ARTAG(_BSTSUPER(Resource))
     _ARTAG(m_domain_) _ARTAG(m_depth_flag_) _ARTAG(m_depth_test_) _ARTAG(m_depth_func_)
     _ARTAG(m_smp_filter_) _ARTAG(m_smp_address_) _ARTAG(m_smp_func_)
-    _ARTAG(m_cull_mode_) _ARTAG(m_fill_mode_) _ARTAG(m_topology_)
+    _ARTAG(m_cull_mode_) _ARTAG(m_fill_mode_) _ARTAG(m_topology_) _ARTAG(m_topology_type_)
+    _ARTAG(m_rtv_format_) _ARTAG(m_dsv_format_)
 )
 
 namespace Engine::Resources
@@ -151,7 +152,7 @@ namespace Engine::Resources
     bd.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
     bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-    GetD3Device().CreateSampler(sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
+    GetD3Device().GetDevice()->CreateSampler(&sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
     m_il_elements_.reserve(m_il_.size());
 
@@ -183,7 +184,7 @@ namespace Engine::Resources
     else { m_pipeline_state_desc_.DS = empty_shader; }
 
     m_pipeline_state_desc_.SampleDesc = {1, 0};
-    m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_;
+    m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_type_;
     m_pipeline_state_desc_.RasterizerState = rd;
     m_pipeline_state_desc_.DepthStencilState = dsd;
     m_pipeline_state_desc_.SampleMask = UINT_MAX;
@@ -191,6 +192,9 @@ namespace Engine::Resources
     m_pipeline_state_desc_.NodeMask = 0;
     m_pipeline_state_desc_.CachedPSO = {};
     m_pipeline_state_desc_.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+    m_pipeline_state_desc_.DSVFormat = m_dsv_format_;
+    m_pipeline_state_desc_.NumRenderTargets = 1; // todo: multiple render target
+    m_pipeline_state_desc_.RTVFormats[0] = m_rtv_format_;
 
     DX::ThrowIfFailed
       (
@@ -203,8 +207,10 @@ namespace Engine::Resources
   }
 
   Shader::Shader(
-    const EntityName& name, const std::filesystem::path& path, const eShaderDomain      domain,
-    const UINT        depth, const UINT                  rasterizer, const D3D12_FILTER filter, const UINT sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
+    const EntityName&      name, const std::filesystem::path& path, const eShaderDomain domain,
+    const UINT             depth, const UINT rasterizer, const D3D12_FILTER filter, const UINT sampler,
+    DXGI_FORMAT        rtv_format, DXGI_FORMAT            dsv_format,
+    D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
   )
     : Resource(path, RES_T_SHADER),
       m_domain_(domain),
@@ -216,7 +222,10 @@ namespace Engine::Resources
       m_smp_func_(static_cast<D3D12_COMPARISON_FUNC>(std::log2(sampler >> 3))),
       m_cull_mode_(static_cast<D3D12_CULL_MODE>((rasterizer & 2) + 1)),
       m_fill_mode_(static_cast<D3D12_FILL_MODE>((rasterizer >> 2) + 1)),
-      m_topology_(topology)
+      m_rtv_format_(rtv_format),
+      m_dsv_format_(dsv_format),
+      m_topology_(topology),
+      m_topology_type_(topology_type)
   {
     SetName(name);
   }
@@ -252,7 +261,11 @@ namespace Engine::Resources
 
   void Shader::PostRender(const float& dt) {}
 
-  void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology) { m_topology_ = topology; }
+  void Shader::SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type)
+  {
+    m_topology_ = topology;
+    m_topology_type_ = type;
+  }
 
   eShaderDomain Shader::GetDomain() const { return m_domain_; }
 
@@ -261,20 +274,27 @@ namespace Engine::Resources
     return m_pipeline_state_.Get();
   }
 
+  D3D_PRIMITIVE_TOPOLOGY Shader::GetTopology() const
+  {
+    return m_topology_;
+  }
+
   boost::weak_ptr<Shader> Shader::Get(const std::string& name)
   {
     return Manager::ResourceManager::GetInstance().GetResource<Shader>(name);
   }
 
   boost::shared_ptr<Shader> Shader::Create(
-    const std::string& name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
-    const UINT         rasterizer, const D3D12_FILTER     filter, const UINT        sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
+    const std::string&     name, const std::filesystem::path&      path, const eShaderDomain domain, const UINT depth,
+    const UINT             rasterizer, const D3D12_FILTER          filter, const UINT        sampler,
+    const DXGI_FORMAT      rtv_format, const DXGI_FORMAT           dsv_format,
+    D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
   )
   {
     if (const auto              pcheck = GetResourceManager().GetResourceByRawPath<Shader>
       (path).lock(); const auto ncheck = GetResourceManager().GetResource<Shader>(name).lock()) { return ncheck; }
 
-    const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler, topology);
+    const auto obj = boost::make_shared<Shader>(name, path, domain, depth, rasterizer, filter, sampler, rtv_format, dsv_format, topology, topology_type);
     GetResourceManager().AddResource(name, obj);
     return obj;
   }
@@ -317,5 +337,8 @@ namespace Engine::Resources
       m_smp_func_(),
       m_cull_mode_(),
       m_fill_mode_(),
-      m_topology_(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE) { }
+      m_rtv_format_(DXGI_FORMAT_R8G8B8A8_UNORM),
+      m_dsv_format_(DXGI_FORMAT_D24_UNORM_S8_UINT),
+      m_topology_(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST),
+      m_topology_type_(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE) { }
 } // namespace Engine::Graphic

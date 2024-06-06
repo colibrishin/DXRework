@@ -16,7 +16,10 @@ namespace Engine::Resources
       const EntityName&  name, const std::filesystem::path& path,
       eShaderDomain      domain, eShaderDepths              depth,
       eShaderRasterizers rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
-      D3D12_PRIMITIVE_TOPOLOGY_TYPE topology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+      DXGI_FORMAT        rtv_format = DXGI_FORMAT_R8G8B8A8_UNORM, 
+      DXGI_FORMAT            dsv_format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+      D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
     );
     ~Shader() override = default;
 
@@ -30,11 +33,12 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
-    void SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology);
+    void SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type);
 
     eShaderDomain GetDomain() const;
 
     [[nodiscard]] ID3D12PipelineState* GetPipelineState() const;
+    [[nodiscard]] D3D_PRIMITIVE_TOPOLOGY GetTopology() const;
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
@@ -44,7 +48,11 @@ namespace Engine::Resources
       const UINT                   depth,
       const UINT                   rasterizer,
       const D3D12_FILTER           filter,
-      const UINT                   sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
+      const UINT                   sampler,
+      const DXGI_FORMAT        rtv_format, 
+      const DXGI_FORMAT            dsv_format,
+      const D3D_PRIMITIVE_TOPOLOGY topology, 
+      const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
     );
 
   protected:
@@ -82,7 +90,10 @@ namespace Engine::Resources
     D3D12_CULL_MODE            m_cull_mode_;
     D3D12_FILL_MODE            m_fill_mode_;
 
-    D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_;
+    DXGI_FORMAT                                                   m_rtv_format_;
+    DXGI_FORMAT                                                   m_dsv_format_;
+    D3D_PRIMITIVE_TOPOLOGY                                        m_topology_;
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_type_;
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> m_il_;
     std::vector<D3D12_INPUT_ELEMENT_DESC>                         m_il_elements_;
 
