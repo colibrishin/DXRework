@@ -104,6 +104,8 @@ namespace Engine::Manager::Graphics
                GetShadowManager().BindShadowMaps(c, h);
                GetShadowManager().BindShadowSampler(h);
 
+               GetShadowManager().BindShadowMaps(cmd, heap);
+
                if (i > SHADER_DOMAIN_OPAQUE)
                {
                  GetReflectionEvaluator().BindReflectionMap(c, h);
@@ -206,11 +208,14 @@ namespace Engine::Manager::Graphics
     {
       m_tmp_descriptor_heaps_.emplace_back(GetRenderPipeline().AcquireHeapSlot());
 
-      const auto& heap = m_tmp_descriptor_heaps_.back();
+      const auto& cmd  = GetD3Device().AcquireCommandPair(L"Renderer Material Pass");
 
-      initial_setup(cmd, heap);
+      command_pairs.emplace_back(cmd);
+      heaps.emplace_back(GetRenderPipeline().AcquireHeapSlot());
 
-      heap->BindGraphic(cmd);
+      const auto& heap = heaps.back(); 
+
+      cmd.SoftReset();
 
       for (const auto& sb_ptr : additional_structured_buffers)
       {
@@ -235,13 +240,15 @@ namespace Engine::Manager::Graphics
   }
 
   void Renderer::renderPassImpl(
-    const float                          dt,
-    eShaderDomain                        domain,
-    bool                                 shader_bypass,
-    const StrongMaterial &               material,
-    const CommandPair &                  cmd,
-    const DescriptorPtr &                heap,
-    const std::vector<SBs::InstanceSB> & structured_buffers
+    const float                                                          dt,
+    eShaderDomain                                                        domain,
+    bool                                                                 shader_bypass,
+    const StrongMaterial&                                                material,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
+    const CommandPair&                                                   cmd,
+    const DescriptorPtr&                                heap,
+    const std::vector<SBs::InstanceSB>&                                  structured_buffers
   )
   {
     m_tmp_instance_buffers_.push_back({});

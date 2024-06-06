@@ -291,6 +291,18 @@ namespace Engine::Manager
     {
       ImGui::Render();
 
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        GetD3Device().Flush();
+      }
+
+      auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
+
+      cmd.SoftReset();
+      GetRenderPipeline().DefaultRenderTarget(cmd.GetList());
+
+      m_imgui_descriptor_->BindGraphic(cmd);
+
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
