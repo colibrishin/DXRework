@@ -588,6 +588,28 @@ namespace Engine::Resources
         .Flags = m_desc_.Flags
       };
 
+      D3D12_CLEAR_VALUE clear_value = {};
+
+      if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+      {
+        clear_value.Format = m_custom_desc_[0] ? m_rtv_desc_.Format : m_desc_.Format;
+        clear_value.Color[0] = 0.0f;
+        clear_value.Color[1] = 0.0f;
+        clear_value.Color[2] = 0.0f;
+        clear_value.Color[3] = 1.0f;
+      }
+
+      if (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+      {
+        clear_value.Format = m_custom_desc_[1] ? m_dsv_desc_.Format : m_desc_.Format;
+        clear_value.DepthStencil.Depth = 1.0f;
+        clear_value.DepthStencil.Stencil = 0;
+      }
+
+      const D3D12_CLEAR_VALUE* cv_ptr = (
+                                          m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) || 
+                                        (m_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? &clear_value : nullptr;
+
       DX::ThrowIfFailed
         (
          GetD3Device().GetDevice()->CreateCommittedResource
@@ -596,7 +618,7 @@ namespace Engine::Resources
           D3D12_HEAP_FLAG_NONE,
           &desc,
           D3D12_RESOURCE_STATE_COMMON,
-          nullptr,
+          cv_ptr,
           IID_PPV_ARGS(m_res_.GetAddressOf())
          )
         );
