@@ -271,7 +271,7 @@ namespace Engine::Resources
     }
 
     GetRenderPipeline().SetMaterial(m_material_cb_);
-    GetRenderPipeline().UploadConstantBuffers(heap);
+    GetRenderPipeline().BindConstantBuffers(heap);
 
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
     {

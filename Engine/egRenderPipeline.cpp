@@ -912,10 +912,12 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_size_;
   }
 
-  void RenderPipeline::BindConstantBuffers(const CommandPair& cmd, const DescriptorPtr & heap)
+  void RenderPipeline::BindConstantBuffers(const DescriptorPtr& heap)
   {
-    m_wvp_buffer_data_.Bind(cmd, heap);
-    m_param_buffer_data_.Bind(cmd, heap);
+    m_wvp_buffer_data_.Bind(heap);
+    m_transform_buffer_data_.Bind(heap);
+    m_material_buffer_data_.Bind(heap);
+    m_param_buffer_data_.Bind(heap);
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
