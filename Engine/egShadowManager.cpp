@@ -204,7 +204,7 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
          m_shadow_map_mask_.Bind(cmd, dsv);
 
-         GetRenderPipeline().BindConstantBuffers(h);
+         GetRenderPipeline().BindConstantBuffers(heap);
 
          heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 

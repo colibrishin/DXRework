@@ -190,8 +190,15 @@ namespace Engine::Graphics
            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
           );
 
-    void Bind(const DescriptorPtr& heap)
-    {
+        cmd->ResourceBarrier(1, &cb_trans);
+
+        GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+
+        GetGC().Track(upload_buffer);
+
+        m_b_dirty_ = false;
+      }
+
       heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }
 
