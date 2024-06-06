@@ -38,7 +38,6 @@ namespace Engine::Manager::Graphics
     static void EvalShadowVP(const WeakCamera & ptr_cam, const Vector3 & light_dir, SBs::LightVPSB & buffer);
 
     void BindShadowMaps(const CommandPair & cmd, const DescriptorPtr & heap) const;
-    void BindShadowSampler(const DescriptorPtr& heap) const;
     void UnbindShadowMaps(const CommandPair& cmd) const;
 
   private:

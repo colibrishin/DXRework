@@ -189,11 +189,8 @@ namespace Engine::Graphics
         cmd.GetList()->ResourceBarrier(1, &cb_trans);
 
 
-        GetGC().Track(upload_buffer);
-
-        m_b_dirty_ = false;
-      }
-
+    void Bind(const DescriptorPtr& heap)
+    {
       heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }
 

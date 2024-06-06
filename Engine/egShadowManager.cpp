@@ -209,14 +209,15 @@ namespace Engine::Manager::Graphics
          // It only needs to render the depth of the object from the light's point of view.
          // Swap the depth stencil to the each light's shadow map.
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
-         m_shadow_map_mask_.Bind(c, dsv);
-         sb.BindSRVGraphic(c, h);
+         m_shadow_map_mask_.Bind(cmd, dsv);
 
          h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
-         c.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
-       },
-       [this, light, &sb](const CommandPair& c, const DescriptorPtr& h)
+         heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
+
+         cmd.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
+       }
+       , [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
        {
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
