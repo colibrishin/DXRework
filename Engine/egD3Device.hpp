@@ -6,6 +6,7 @@
 
 #include "egGlobal.h"
 #include "egManager.hpp"
+#include "egCommands.h"
 
 #ifdef _DEBUG
 #include "dxgidebug.h"
@@ -26,11 +27,6 @@ namespace Engine::Manager::Graphics
     {SHADER_VERTEX, "vs_5_0"}, {SHADER_PIXEL, "ps_5_0"},
     {SHADER_GEOMETRY, "gs_5_0"}, {SHADER_COMPUTE, "cs_5_0"},
     {SHADER_HULL, "hs_5_0"}, {SHADER_DOMAIN, "ds_5_0"}
-  };
-
-  class FrameContext
-  {
-    
   };
 
   class D3Device final : public Abstract::Singleton<D3Device, HWND>
@@ -60,11 +56,6 @@ namespace Engine::Manager::Graphics
     std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
       ID3DBlob* blob
     );
-    void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& sampler_handle) const;
-
-    void BindConstantBufferView(
-      const UINT slot, const D3D12_CPU_DESCRIPTOR_HANDLE & handle
-    ) const;
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
@@ -80,35 +71,44 @@ namespace Engine::Manager::Graphics
     ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
     [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1) const;
-    void                                      ExecuteCommandList(const eCommandList list) const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1);
 
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const eCommandList list) const;
+    ID3D12CommandQueue*               GetCommandQueue(eCommandTypes type) const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
-    void WaitAndReset(const eCommandList list, UINT64 buffer_idx = -1) const;
-    void Wait(UINT64 buffer_idx = -1);
+    [[nodiscard]] CommandPair& AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx = -1);
+    bool                       IsCommandPairAvailable(UINT64 buffer_idx = -1) const;
+    void                       Flush();
+
+    void WaitAndReset(const eCommandList list, UINT64 buffer_idx = -1);
+    void Wait(UINT64 buffer_idx = -1) const;
+    void Signal(const eCommandTypes type, UINT64 buffer_idx = -1) const;
 
     void CreateTextureFromFile(
         const std::filesystem::path& file_path, 
         ID3D12Resource** res, 
         bool generate_mip) const;
+
+    void ExecuteCommandList(const eCommandList list) const;
     
   private:
     friend struct SingletonDeleter;
+    friend struct Engine::CommandPair;
+    friend struct Engine::CommandAwaiter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
     friend class GarbageCollector;
 
-    inline static constexpr eCommandListType s_native_target_types[] =
+    inline static constexpr eCommandNativeType s_native_target_types[] =
     {
-      COMMAND_DIRECT,
-      COMMAND_DIRECT,
-      COMMAND_DIRECT,
-      COMMAND_DIRECT,
-      COMMAND_COPY,
-      COMMAND_COMPUTE
+      COMMAND_NATIVE_DIRECT,
+      COMMAND_NATIVE_DIRECT,
+      COMMAND_NATIVE_DIRECT,
+      COMMAND_NATIVE_DIRECT,
+      COMMAND_NATIVE_COPY,
+      COMMAND_NATIVE_COMPUTE
     };
 
     inline static constexpr eCommandTypes s_target_types[] =
@@ -135,10 +135,6 @@ namespace Engine::Manager::Graphics
     void WaitNextFrame();
 
   private:
-    [[nodiscard]] ID3D12CommandAllocator* GetCommandAllocator(const eCommandList list) const;
-
-    void   Reset(const eCommandList list, UINT64 buffer_idx = -1) const;
-    void   Signal(const eCommandTypes type, UINT64 buffer_idx = -1) const;
     UINT64 GetFenceValue(UINT64 buffer_idx = -1) const;
 
     HWND m_hwnd_ = nullptr;
@@ -157,11 +153,12 @@ namespace Engine::Manager::Graphics
     HANDLE                           m_fence_event_ = nullptr;
     std::atomic<UINT64>*             m_fence_nonce_;
 
+    std::atomic<UINT64>              m_command_ids_ = 0;
     UINT64 m_frame_idx_ = 0;
 
-    std::map<FrameIndex, std::array<ComPtr<ID3D12GraphicsCommandList1>, COMMAND_LIST_COUNT>> m_command_lists_ = {};
-    std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT>     m_command_queues_     = {};
-    std::map<FrameIndex, std::array<ComPtr<ID3D12CommandAllocator>, _countof(s_native_target_types)>> m_command_allocators_ = {};
+    std::map<FrameIndex, std::vector<CommandPair>>             m_command_pairs_           = {};
+    std::vector<CommandPair>                                   m_command_pairs_generated_ = {};
+    std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_          = {};
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
