@@ -180,7 +180,7 @@ namespace Engine::Graphics
 
     void Bind(const DescriptorPtr& heap)
     {
-      heap.SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
+      heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }
 
   private:

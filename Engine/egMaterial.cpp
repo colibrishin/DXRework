@@ -218,12 +218,13 @@ namespace Engine::Resources
 
   void Material::Draw(const float& dt, const CommandPair& cmd, const DescriptorPtr& heap)
   {
-    heap.BindGraphic(cmd);
+    heap->BindGraphic(cmd);
 
     if (!m_temp_param_.bypassShader)
     {
       cmd.GetList()->SetPipelineState(m_shaders_loaded_[m_temp_param_.domain]->GetPipelineState());
       cmd.GetList()->IASetPrimitiveTopology(m_shaders_loaded_[m_temp_param_.domain]->GetTopology());
+      heap->SetSampler(m_shaders_loaded_[m_temp_param_.domain]->GetShaderHeap(), SAMPLER_TEXTURE);
     }
 
     if (!m_resources_loaded_.contains(RES_T_SHAPE))
@@ -242,8 +243,6 @@ namespace Engine::Resources
     {
       m_material_cb_.flags.atlas = 1;
     }
-
-    GetRenderPipeline().SetMaterial(m_material_cb_);
 
     for (const auto& [type, resources] : m_resources_loaded_)
     {
@@ -273,6 +272,9 @@ namespace Engine::Resources
       }
     }
 
+    GetRenderPipeline().SetMaterial(m_material_cb_);
+    GetRenderPipeline().UploadConstantBuffers(heap);
+
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
     {
       const auto& shape = s->GetSharedPtr<Shape>();
@@ -291,6 +293,16 @@ namespace Engine::Resources
         cmd.GetList()->IASetVertexBuffers(0, 1, &vtx_view);
         cmd.GetList()->IASetIndexBuffer(&idx_view);
         cmd.GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
+      }
+    }
+
+    if (m_resources_loaded_.contains(RES_T_TEX))
+    {
+      std::fill_n(m_material_cb_.flags.tex, m_resources_loaded_[RES_T_TEX].size(), 0);
+
+      for (const auto& tex : m_resources_loaded_[RES_T_TEX])
+      {
+        tex->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
       }
     }
   }

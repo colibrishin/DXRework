@@ -19,7 +19,7 @@ namespace Engine::Graphics
     virtual void BindSRVGraphic(const CommandPair& cmd, const DescriptorPtr& heap) = 0;
     virtual void UnbindSRVGraphic(const CommandPair& cmd) const = 0;
 
-    virtual void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr & heap) = 0;
+    virtual void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr& heap) = 0;
     virtual void UnbindUAVGraphic(const CommandPair& cmd) const = 0;
 
     virtual void BindSRVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) = 0;
@@ -54,7 +54,7 @@ namespace Engine::Graphics
     void BindSRVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) override;
     void UnbindSRVGraphic(ID3D12GraphicsCommandList* cmd) const override;
 
-    void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr & heap) override;
+    void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr& heap) override;
     void UnbindUAVGraphic(const CommandPair& cmd) const override;
 
     void BindUAVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) override;
@@ -315,7 +315,7 @@ namespace Engine::Graphics
 
     if constexpr (is_client_sb<T>::value == true)
     {
-      heap.SetShaderResource
+      heap->SetShaderResource
         (
          m_srv_heap_->GetCPUDescriptorHandleForHeapStart(),
          which_client_sb<T>::value
@@ -323,7 +323,7 @@ namespace Engine::Graphics
     }
     else if constexpr (is_sb<T>::value == true)
     {
-      heap.SetShaderResource
+      heap->SetShaderResource
         (
          m_srv_heap_->GetCPUDescriptorHandleForHeapStart(),
          which_sb<T>::value
@@ -398,7 +398,7 @@ namespace Engine::Graphics
 
     if constexpr (is_client_uav_sb<T>::value == true)
     {
-      heap.SetUnorderedAccess
+      heap->SetUnorderedAccess
         (
          m_uav_heap_->GetCPUDescriptorHandleForHeapStart(),
          which_client_sb_uav<T>::value
@@ -406,7 +406,7 @@ namespace Engine::Graphics
     }
     else if constexpr (is_uav_sb<T>::value == true)
     {
-      heap.SetUnorderedAccess
+      heap->SetUnorderedAccess
         (
          m_uav_heap_->GetCPUDescriptorHandleForHeapStart(),
          which_sb_uav<T>::value

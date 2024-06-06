@@ -68,9 +68,11 @@ namespace Engine::Resources
 
     bool IsHotload() const;
 
-    void Bind(const CommandPair& cmd, const DescriptorPtr& heap, const eBindType type, const UINT slot, const UINT offset) const;
-    void Bind(ID3D12GraphicsCommandList1 *cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const UINT offset) const;
-    void Bind(const CommandPair& cmd, const DescriptorPtr& heap, const Texture& dsv) const;
+    void Bind(const CommandPair &cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const UINT
+              offset) const;
+    void Bind(ID3D12GraphicsCommandList1 *cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const
+              UINT offset) const;
+    void Bind(const CommandPair & cmd, const Texture & dsv) const;
 
     void Unbind(const CommandPair& cmd, const eBindType type) const;
     void Unbind(ID3D12GraphicsCommandList1 *cmd, const eBindType type) const;

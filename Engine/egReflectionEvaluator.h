@@ -37,7 +37,7 @@ namespace Engine::Manager::Graphics
 
     void RenderFinished();
 
-    void BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const;
+    void BindReflectionMap(const CommandPair & cmd, const DescriptorPtr & heap) const;
     void UnbindReflectionMap(const CommandPair& cmd) const;
 
   private:
