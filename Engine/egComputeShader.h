@@ -11,9 +11,9 @@ namespace Engine::Resources
   public:
     virtual ~ComputeShader() override = default;
 
-    void SetGroup(const std::array<UINT, 3>& group);
+    void                SetGroup(const std::array<UINT, 3>& group);
     std::array<UINT, 3> GetThread() const;
-    void Dispatch();
+    void                Dispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap);
 
     template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
     static boost::weak_ptr<T> Create()
@@ -34,8 +34,8 @@ namespace Engine::Resources
     static Graphics::ParamBase& getParam(const StrongParticleRenderer& pr);
     static InstanceParticles& getInstances(const StrongParticleRenderer& pr);
 
-    virtual void preDispatch() = 0;
-    virtual void postDispatch() = 0;
+    virtual void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) = 0;
+    virtual void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) = 0;
 
     virtual void loadDerived() = 0;
     virtual void unloadDerived() = 0;
