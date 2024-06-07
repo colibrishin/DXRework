@@ -9,13 +9,8 @@ namespace Engine::Manager::Graphics
   class Renderer : public Abstract::Singleton<Renderer>
   {
   private:
-    using CandidatePair = std::pair<StrongObjectBase, std::vector<SBs::InstanceSB>>;
-
-    template <typename T>
-    using MaterialMap = std::map<StrongMaterial, std::vector<T>>;
-
-    template <typename T>
-    using RenderMap = std::map<eRenderComponentType, MaterialMap<T>>;
+    using CandidateTuple = std::tuple<WeakObjectBase, WeakMaterial, tbb::concurrent_vector<SBs::InstanceSB>>;
+    using RenderMap = tbb::concurrent_hash_map<eRenderComponentType, tbb::concurrent_vector<CandidateTuple>>;
 
   public:
     explicit Renderer(SINGLETON_LOCK_TOKEN)
@@ -38,9 +33,9 @@ namespace Engine::Manager::Graphics
       const float dt,
       eShaderDomain domain,
       bool shader_bypass,
-      const std::function<bool(const StrongObjectBase&)> &predicate, const std::function<void(const CommandPair&,
-        const DescriptorPtr&)> &initial_setup, const std::function<void(const CommandPair&, const
-        DescriptorPtr&)> &post_setup, const std::vector<Weak<StructuredBufferBase>> &
+      const CommandPair &cmd, const std::function<bool(const StrongObjectBase&)> &predicate, const std::function<void(
+        const CommandPair&, const DescriptorPtr&)> &initial_setup, const std::function<void(const CommandPair&,
+        const DescriptorPtr&)> &post_setup, const std::vector<Weak<StructuredBufferBase>> &
       additional_structured_buffers
     );
 
@@ -49,13 +44,11 @@ namespace Engine::Manager::Graphics
     ~Renderer() override = default;
 
     void renderPassImpl(
-      const float dt,
-      eShaderDomain domain,
-      bool shader_bypass,
-      const StrongMaterial &material, const std::function<void(const CommandPair&, const std::unique_ptr<DescriptorPtrImpl
-        >&)> &initial_setup, const std::function<void(const CommandPair&, const DescriptorPtr&)> &
-      post_setup, const CommandPair
-      & cmd, const DescriptorPtr & heap, const std::vector<SBs::InstanceSB> & structured_buffers
+      const float            dt,
+      eShaderDomain          domain,
+      bool                   shader_bypass,
+      const StrongMaterial & material, const CommandPair
+      &                      cmd, const DescriptorPtr & heap, const std::vector<SBs::InstanceSB> & structured_buffers
     );
 
     void preMappingModel(const StrongRenderComponent& rc);
@@ -64,7 +57,9 @@ namespace Engine::Manager::Graphics
     bool m_b_ready_;
 
     std::vector<Weak<StructuredBufferBase>> m_additional_structured_buffers_;
-    std::vector<StructuredBuffer<SBs::InstanceSB>> m_tmp_instance_buffers_;
-    RenderMap<CandidatePair> m_render_candidates_[SHADER_DOMAIN_MAX];
+    tbb::concurrent_vector<StructuredBuffer<SBs::InstanceSB>> m_tmp_instance_buffers_;
+    tbb::concurrent_vector<DescriptorPtr> m_tmp_descriptor_heaps_;
+
+    RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }
