@@ -212,7 +212,7 @@ namespace Engine::Resources
     std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
     m_vertex_buffer_upload_->Unmap(0, nullptr);
 
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
+   cmd->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
