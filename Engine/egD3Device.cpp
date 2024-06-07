@@ -344,10 +344,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::WaitForBackBuffer() const
   {
-    // Buffer for next frame.
-    const auto& back_buffer_idx = m_swap_chain_->GetCurrentBackBufferIndex();
-
-    WaitForEventCompletion(back_buffer_idx);
+    WaitForEventCompletion(m_frame_idx_);
   }
 
   void D3Device::PreUpdate(const float& dt) {}
@@ -513,13 +510,15 @@ namespace Engine::Manager::Graphics
 
   void D3Device::WaitNextFrame()
   {
-    const auto& back_buffer = m_swap_chain_->GetCurrentBackBufferIndex();
+    const auto fence_value = m_fence_nonce_[m_frame_idx_].load();
 
-    Signal(COMMAND_TYPE_DIRECT, back_buffer);
+    DX::ThrowIfFailed(m_command_queues_[COMMAND_TYPE_DIRECT]->Signal(m_fence_.Get(), fence_value));
+
+    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
     WaitForBackBuffer();
 
-    m_frame_idx_ = back_buffer;
+    m_fence_nonce_[m_frame_idx_] = fence_value + 1;
 
     for (int i = 0; i < COMMAND_LIST_COUNT; ++i)
     {
