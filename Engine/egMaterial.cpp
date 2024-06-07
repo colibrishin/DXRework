@@ -271,9 +271,9 @@ namespace Engine::Resources
     }
 
     // todo: Multiple same update for material
-    m_material_sb_data_.SetData(1, &m_material_sb_);
+    m_material_sb_data_.SetData(cmd.GetList(), 1, &m_material_sb_);
     m_material_sb_data_.BindSRVGraphic(cmd, heap);
-    GetRenderPipeline().BindConstantBuffers(heap);
+    GetRenderPipeline().BindConstantBuffers(cmd, heap);
 
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
     {
