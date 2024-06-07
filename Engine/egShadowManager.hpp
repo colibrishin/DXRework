@@ -20,6 +20,7 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
+        m_scissor_rect_(),
         m_shadow_map_mask_("", {}) {}
 
     void Initialize() override;
@@ -38,6 +39,7 @@ namespace Engine::Manager::Graphics
     static void EvalShadowVP(const WeakCamera & ptr_cam, const Vector3 & light_dir, SBs::LightVPSB & buffer);
 
     void BindShadowMaps(const CommandPair & cmd, const DescriptorPtr & heap) const;
+    void BindShadowSampler(const DescriptorPtr& heap) const;
     void UnbindShadowMaps(const CommandPair& cmd) const;
 
   private:
