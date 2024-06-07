@@ -14,34 +14,28 @@ namespace Engine::Manager::Graphics
 {
   using namespace Engine::Resources;
 
-  void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
-  {
-    m_transform_buffer_ = matrix;
-    m_transform_buffer_data_.SetData(&matrix);
-  }
-
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
     m_wvp_buffer_ = matrix;
     m_wvp_buffer_data_.SetData(&matrix);
   }
 
-  void RenderPipeline::DefaultRenderTarget(ID3D12GraphicsCommandList1* list) const
+  void RenderPipeline::DefaultRenderTarget(const CommandPair& cmd) const
   {
     const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
     const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
 
-    list->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    cmd.GetList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
-  void RenderPipeline::DefaultViewport(ID3D12GraphicsCommandList1* list) const
+  void RenderPipeline::DefaultViewport(const CommandPair& cmd) const
   {
-    list->RSSetViewports(1, &m_viewport_);
+    cmd.GetList()->RSSetViewports(1, &m_viewport_);
   }
 
-  void RenderPipeline::DefaultScissorRect(ID3D12GraphicsCommandList1* list) const
+  void RenderPipeline::DefaultScissorRect(const CommandPair& cmd) const
   {
-    list->RSSetScissorRects(1, &m_scissor_rect_);
+    cmd.GetList()->RSSetScissorRects(1, &m_scissor_rect_);
   }
 
   RenderPipeline::~RenderPipeline() { }
@@ -49,8 +43,6 @@ namespace Engine::Manager::Graphics
   void RenderPipeline::InitializeStaticBuffers()
   {
     m_wvp_buffer_data_.Create(nullptr);
-    m_transform_buffer_data_.Create(nullptr);
-    m_material_buffer_data_.Create(nullptr);
     m_param_buffer_data_.Create(nullptr);
   }
 
@@ -243,11 +235,6 @@ namespace Engine::Manager::Graphics
        DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT,
        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
-  }
-
-  void RenderPipeline::FallbackPSO(ID3D12GraphicsCommandList1* list)
-  {
-    list->SetPipelineState(m_fallback_shader_->GetPipelineState());
   }
 
   void RenderPipeline::InitializeRootSignature()
@@ -644,6 +631,15 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PostRender(const float& dt)
   {
+    if (!GetD3Device().IsCommandPairAvailable())
+    {
+      throw std::runtime_error("Command Pair is not available.");
+    }
+
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Finalize Render");
+
+    cmd.SoftReset();
+
     const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
@@ -651,9 +647,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_PRESENT
       );
 
-    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
+    cmd.GetList()->ResourceBarrier(1, &present_barrier);
 
-    GetD3Device().ExecuteDirectCommandList();
+    GetD3Device().Flush();
 
     DXGI_PRESENT_PARAMETERS params;
     params.DirtyRectsCount = 0;
@@ -688,7 +684,12 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::PostUpdate(const float& dt)
   {
-    const auto& current_rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Cleanup");
+
+    cmd.SoftReset();
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
        GetD3Device().GetFrameIndex(),
@@ -704,7 +705,7 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->ResourceBarrier(1, &initial_barrier);
+    cmd.GetList()->ResourceBarrier(1, &initial_barrier);
 
     D3D12_CLEAR_VALUE rtv_cv 
     {
@@ -723,61 +724,12 @@ namespace Engine::Manager::Graphics
        m_rtv_descriptor_size_
       );
 
-    DX::ThrowIfFailed(GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)->Close());
-
-    ID3D12CommandList* lists[] = {GetD3Device().GetCommandList(COMMAND_LIST_PRE_RENDER)};
-
-    GetD3Device().GetCommandQueue(COMMAND_LIST_PRE_RENDER)->ExecuteCommandLists(1, lists);
-
-  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
-    const UINT count, const D3D12_CPU_DESCRIPTOR_HANDLE* srv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
-  )
-  {
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
-      (
-            m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-                GetD3Device().GetFrameIndex(),
-                m_rtv_descriptor_size_
-           );
-
-    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
-      (
-            m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
-           );
-
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets
-      (
-       count, srv, false, &dsv
-      );
-
-    return {current_rtv_handle, current_dsv_handle};
+    cmd.GetList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    cmd.GetList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
   }
 
-  void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
+  void RenderPipeline::CopyBackBuffer(const CommandPair& cmd, ID3D12Resource* resource) const
   {
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
-  }
-
-  RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
-  {
-    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (
-       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-       GetD3Device().GetFrameIndex(),
-       m_rtv_descriptor_size_
-      );
-
-    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
-
-    GetD3Device().GetCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
-
-    return {current_rtv, current_dsv};
-  }
-
-  RTVDSVHandlePair RenderPipeline::SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
-  {
-    const auto& null_rtv = m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
-
     const auto& dst_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
        resource,
@@ -806,51 +758,11 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_RENDER_TARGET
       );
 
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &copy_transition);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &dst_transition);
-
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
-
-    GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &rtv_transition);
-
-  void RenderPipeline::DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count)
-  {
-    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
-  }
-
-  void RenderPipeline::TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
-  {
-    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
-  }
-
-    ID3D12CommandList* lists[] = {GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)};
-
-  void RenderPipeline::CopyBackBuffer(ID3D12Resource* resource) const
-  {
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
-
-    const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_RENDER_TARGET,
-       D3D12_RESOURCE_STATE_COPY_SOURCE
-      );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_transition);
-
-    GetD3Device().GetCopyCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
-
-    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
-       D3D12_RESOURCE_STATE_COPY_SOURCE,
-       D3D12_RESOURCE_STATE_RENDER_TARGET
-      );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &rtv_transition);
-
-    GetD3Device().ExecuteCopyCommandList();
+    cmd.GetList()->ResourceBarrier(1, &copy_transition);
+    cmd.GetList()->ResourceBarrier(1, &dst_transition);
+    cmd.GetList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+    cmd.GetList()->ResourceBarrier(1, &rtv_transition);
+    cmd.GetList()->ResourceBarrier(1, &dst_transition_back);
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const
@@ -895,14 +807,25 @@ namespace Engine::Manager::Graphics
 
   D3D12_RECT RenderPipeline::GetScissorRect() const
   {
+    return m_scissor_rect_;
+  }
+
+  void RenderPipeline::SetPSO(const CommandPair& cmd, const StrongShader& Shader)
+  {
     const auto& shader_pso = Shader->GetPipelineState();
 
-    GetD3Device().GetCommandList(list)->SetPipelineState(shader_pso);
+    cmd.GetList()->SetPipelineState(shader_pso);
   }
 
   DescriptorPtr RenderPipeline::AcquireHeapSlot()
   {
+    std::lock_guard<std::mutex> lock(m_descriptor_mutex_);
     return m_descriptor_handler_.Acquire();
+  }
+
+  bool RenderPipeline::IsHeapAvailable() const
+  {
+    return m_descriptor_handler_.IsAvailable();
   }
 
   UINT RenderPipeline::GetBufferDescriptorSize() const
@@ -915,17 +838,9 @@ namespace Engine::Manager::Graphics
     return m_sampler_descriptor_size_;
   }
 
-  void RenderPipeline::BindConstantBuffers(const DescriptorPtr& heap)
+  void RenderPipeline::BindConstantBuffers(const DescriptorPtr & heap)
   {
     m_wvp_buffer_data_.Bind(heap);
-    m_transform_buffer_data_.Bind(heap);
-    m_material_buffer_data_.Bind(heap);
     m_param_buffer_data_.Bind(heap);
-  }
-
-  void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
-  {
-    m_material_buffer_ = material_buffer;
-    m_material_buffer_data_.SetData(&material_buffer);
   }
 } // namespace Engine::Manager::Graphics
