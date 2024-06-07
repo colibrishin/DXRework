@@ -271,14 +271,6 @@ namespace Engine::Components
     return world;
   }
 
-  void Transform::Bind(Transform& transform)
-  {
-    transform.m_transform_buffer_.world = transform.GetWorldMatrix().Transpose();
-    GetRenderPipeline().SetWorldMatrix(transform.m_transform_buffer_);
-  }
-
-  void Transform::Unbind() { GetRenderPipeline().SetWorldMatrix({}); }
-
   Transform::Transform()
     : Component(COM_T_TRANSFORM, {}),
       m_b_s_absolute_(true),
