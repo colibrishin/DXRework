@@ -31,8 +31,7 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN)
-      : m_material_buffer_() {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
@@ -43,9 +42,7 @@ namespace Engine::Manager::Graphics
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void SetWorldMatrix(const CBs::TransformCB& matrix);
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-    void SetMaterial(const CBs::MaterialCB& material_buffer);
 
     template <typename T>
     void SetParam(const T& v, const size_t slot)
@@ -59,11 +56,11 @@ namespace Engine::Manager::Graphics
       return { m_param_buffer_ };
     }
 
-    void DefaultRenderTarget(ID3D12GraphicsCommandList1 * list) const;
-    void DefaultViewport(ID3D12GraphicsCommandList1 * list) const;
-    void DefaultScissorRect(ID3D12GraphicsCommandList1 * list) const;
+    void DefaultRenderTarget(const CommandPair & cmd) const;
+    void DefaultViewport(const CommandPair & cmd) const;
+    void DefaultScissorRect(const CommandPair & cmd) const;
 
-    void CopyBackBuffer(ID3D12Resource * resource) const;
+    void CopyBackBuffer(const CommandPair & cmd, ID3D12Resource * resource) const;
 
     ID3D12RootSignature*  GetRootSignature() const;
 
@@ -75,16 +72,15 @@ namespace Engine::Manager::Graphics
     D3D12_VIEWPORT              GetViewport() const;
     D3D12_RECT                  GetScissorRect() const;
 
-    static void SetPSO(const StrongShader& Shader, const eCommandList list);
+    static void SetPSO(const CommandPair & cmd, const StrongShader & Shader);
 
     [[nodiscard]] DescriptorPtr AcquireHeapSlot();
+    [[nodiscard]] bool          IsHeapAvailable() const;
 
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
     void BindConstantBuffers(const DescriptorPtr & heap);
-
-    void FallbackPSO(ID3D12GraphicsCommandList1* list);
 
   private:
     friend class ToolkitAPI;
@@ -112,6 +108,7 @@ namespace Engine::Manager::Graphics
 
     ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
+    std::mutex m_descriptor_mutex_;
     DescriptorHandler m_descriptor_handler_;
 
     ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
@@ -128,13 +125,9 @@ namespace Engine::Manager::Graphics
     D3D12_RECT    m_scissor_rect_{};
 
     CBs::PerspectiveCB m_wvp_buffer_;
-    CBs::TransformCB   m_transform_buffer_;
-    CBs::MaterialCB    m_material_buffer_;
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
-    ConstantBuffer<CBs::TransformCB> m_transform_buffer_data_{};
-    ConstantBuffer<CBs::MaterialCB> m_material_buffer_data_{};
     ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
     StrongShader m_fallback_shader_;
