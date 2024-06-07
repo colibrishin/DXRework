@@ -38,6 +38,6 @@ namespace Engine::Manager::Graphics
 
   void GarbageCollector::Track(const ComPtr<ID3D12Resource>& resource)
   {
-    m_track_objects_.emplace_back(GetD3Device().GetFenceValue(), resource);
+    m_track_objects_.emplace_back(GetD3Device().GetFenceValue() + 1, resource);
   }
 }
