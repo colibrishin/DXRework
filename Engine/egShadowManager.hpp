@@ -20,6 +20,7 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
+        m_scissor_rect_(),
         m_shadow_map_mask_("", {}) {}
 
     void Initialize() override;
@@ -38,6 +39,7 @@ namespace Engine::Manager::Graphics
     static void EvalShadowVP(const WeakCamera & ptr_cam, const Vector3 & light_dir, SBs::LightVPSB & buffer);
 
     void BindShadowMaps(const CommandPair & cmd, const DescriptorPtr & heap) const;
+    void BindShadowSampler(const DescriptorPtr& heap) const;
     void UnbindShadowMaps(const CommandPair& cmd) const;
 
   private:
@@ -48,8 +50,8 @@ namespace Engine::Manager::Graphics
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
 
-    void BuildShadowMap(const float dt, const StrongLight & light) const;
-    void ClearShadowMaps();
+    void BuildShadowMap(const float dt, const CommandPair & cmd, const StrongLight & light, const UINT light_idx);
+    void ClearShadowMaps(const CommandPair & cmd);
 
     static void CreateSubfrusta(
       const Matrix& projection, float start, float end,
@@ -71,6 +73,8 @@ namespace Engine::Manager::Graphics
     Strong<StructuredBuffer<SBs::LightSB>> m_sb_light_buffer_{};
     // The structured buffer for the chunk of light view projection matrices
     Strong<StructuredBuffer<SBs::LightVPSB>> m_sb_light_vps_buffer_;
+
+    std::vector<StructuredBuffer<SBs::LocalParamSB>> m_local_param_buffers_;
 
     D3D12_VIEWPORT m_viewport_;
     D3D12_RECT     m_scissor_rect_;
