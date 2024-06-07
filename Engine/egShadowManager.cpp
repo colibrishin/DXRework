@@ -182,7 +182,7 @@ namespace Engine::Manager::Graphics
     SBs::LocalParamSB local_param{};
     local_param.SetParam(0, static_cast<int>(light_idx));
     StructuredBuffer<SBs::LocalParamSB> sb;
-    sb.Create(cmd.GetList(), 1, &local_param);
+    sb.SetData(1, &local_param);
     m_local_param_buffers_.emplace_back(sb);
 
     GetRenderer().RenderPass
@@ -209,15 +209,16 @@ namespace Engine::Manager::Graphics
          // It only needs to render the depth of the object from the light's point of view.
          // Swap the depth stencil to the each light's shadow map.
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
-         m_shadow_map_mask_.Bind(cmd, dsv);
+         m_shadow_map_mask_.Bind(c, dsv);
+         sb.BindSRVGraphic(c, h);
 
-         GetRenderPipeline().BindConstantBuffers(heap);
+         GetRenderPipeline().BindConstantBuffers(h);
 
-         heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
+         h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
-         cmd.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
-       }
-       , [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
+         c.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
+       },
+       [this, light, &sb](const CommandPair& c, const DescriptorPtr& h)
        {
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
