@@ -80,8 +80,15 @@ namespace Client::Scripts
     m_sb_light_vp_ = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LightVPSB>>();
     m_sb_light_table_ = boost::make_shared<Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB>>();
 
-    m_sb_light_vp_->Create(g_max_lights, nullptr);
-    m_sb_light_table_->Create(g_max_lights, nullptr);
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    m_sb_light_vp_->Create(cmd, g_max_lights, nullptr);
+    m_sb_light_table_->Create(cmd, g_max_lights, nullptr);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    GetD3Device().Wait();
 
     m_viewport_.Width    = g_max_shadow_map_size;
     m_viewport_.Height   = g_max_shadow_map_size;

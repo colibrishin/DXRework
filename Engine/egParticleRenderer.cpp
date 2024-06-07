@@ -23,7 +23,11 @@ namespace Engine::Components
 
   void ParticleRenderer::Initialize()
   {
-    m_sb_buffer_.Create(1, nullptr);
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+    m_sb_buffer_.Create(cmd, 1, nullptr);
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    GetD3Device().Wait();
     SetCount(1);
   }
 
@@ -41,7 +45,7 @@ namespace Engine::Components
       cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
       cmd->SetPipelineState(m_cs_->GetPipelineState());
 
-      m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      m_sb_buffer_.SetData(cmd, static_cast<UINT>(m_instances_.size()), m_instances_.data());
       m_sb_buffer_.BindUAVGraphic(cmd, heap);
 
       const auto thread      = m_cs_->GetThread();

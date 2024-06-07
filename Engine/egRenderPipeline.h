@@ -1,11 +1,8 @@
 #pragma once
 #include <BufferHelpers.h>
-#include <filesystem>
 
 #include "egCommon.hpp"
 #include "egConstantBuffer.hpp"
-#include "egD3Device.hpp"
-#include "egDXCommon.h"
 #include "egDescriptors.h"
 
 namespace Engine::Manager::Graphics
@@ -100,7 +97,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void BindConstantBuffers(const DescriptorPtr & heap);
+    void BindConstantBuffers(const CommandPair & cmd, const DescriptorPtr & heap);
 
   private:
     friend class ToolkitAPI;
