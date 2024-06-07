@@ -137,6 +137,12 @@ namespace Engine::Resources
     sd.MipLODBias     = 0.0f;
     sd.MaxAnisotropy  = 1;
     sd.ComparisonFunc = m_smp_func_;
+    sd.BorderColor[0] = 0.0f;
+    sd.BorderColor[1] = 0.0f;
+    sd.BorderColor[2] = 0.0f;
+    sd.BorderColor[3] = 0.0f;
+    sd.MinLOD         = 0.0f;
+    sd.MaxLOD         = D3D12_FLOAT32_MAX;
 
     D3D12_BLEND_DESC bd;
     bd.AlphaToCoverageEnable = SHADER_DOMAIN_TRANSPARENT ? true : false;
