@@ -23,14 +23,6 @@ namespace Engine::Manager
 
     if (m_render_queue.empty()) { return; }
 
-    if (m_render_queue.size() > g_debug_message_max)
-    {
-      while (m_render_queue.size() > g_debug_message_max)
-      {
-        m_render_queue.erase(m_render_queue.begin());
-      }
-    }
-
     for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
     {
       if (it->first.elapsed_time > g_debug_message_life_time)
@@ -184,6 +176,11 @@ namespace Engine::Manager
   )
   {
     if (!m_bDebug) { return; }
+
+    if (m_render_queue.size() >= g_debug_message_max)
+    {
+      m_render_queue.pop_front();
+    }
 
     m_render_queue.emplace_back(msg, func);
   }
