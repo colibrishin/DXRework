@@ -1,14 +1,12 @@
 #pragma once
 #include "Client.h"
 #include "clIntensityPositionTexture.h"
-#include "egGlobal.h"
-#include "egObject.hpp"
-#include "egScript.h"
-#include "egShadowTexture.h"
-#include "egStructuredBuffer.hpp"
 #include "clIntensityTexture.h"
 #include "clIntersectionCompute.h"
 #include "clShadowMaskTexture.h"
+#include "egScript.h"
+#include "egShadowTexture.h"
+#include "egStructuredBuffer.hpp"
 
 namespace Client::Scripts
 {
