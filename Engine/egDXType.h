@@ -48,9 +48,9 @@ namespace Engine::Graphics
       ar & bone;
     }
 
-    OffsetT<int> tex[g_max_slot_per_texture];
-    OffsetT<int> texArr[g_max_slot_per_texture];
-    OffsetT<int> texCube[g_max_slot_per_texture];
+    OffsetT<int> tex[g_param_buffer_slot_size];
+    OffsetT<int> texArr[g_param_buffer_slot_size];
+    OffsetT<int> texCube[g_param_buffer_slot_size];
     OffsetT<int> bone;
     OffsetT<int> atlas;
   };
