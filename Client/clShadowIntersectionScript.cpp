@@ -5,8 +5,8 @@
 #include <egMaterial.h>
 #include <egRenderPipeline.h>
 #include <egSceneManager.hpp>
-#include <egTransform.h>
 #include <egShader.hpp>
+#include <egTransform.h>
 
 #include "egCamera.h"
 #include "egMouseManager.h"
