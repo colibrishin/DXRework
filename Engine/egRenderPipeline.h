@@ -97,7 +97,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void BindConstantBuffers(const DescriptorPtr & heap);
+    void BindConstantBuffers(const CommandPair & cmd, const DescriptorPtr & heap);
 
   private:
     friend class ToolkitAPI;

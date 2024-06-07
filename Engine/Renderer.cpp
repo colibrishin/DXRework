@@ -244,9 +244,10 @@ namespace Engine::Manager::Graphics
     const std::vector<SBs::InstanceSB> & structured_buffers
   )
   {
-    m_tmp_instance_buffers_.push_back({});
-    m_tmp_instance_buffers_.back().Create(structured_buffers.size(), structured_buffers.data());
-    m_tmp_instance_buffers_.back().BindSRVGraphic(cmd, heap);
+    StructuredBuffer<SBs::InstanceSB> instance_buffer;
+    instance_buffer.Create(cmd.GetList(), structured_buffers.size(), structured_buffers.data());
+    instance_buffer.BindSRVGraphic(cmd, heap);
+    m_tmp_instance_buffers_.emplace_back(instance_buffer);
 
     material->SetTempParam
       (

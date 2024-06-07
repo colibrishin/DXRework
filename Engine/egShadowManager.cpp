@@ -182,7 +182,7 @@ namespace Engine::Manager::Graphics
     SBs::LocalParamSB local_param{};
     local_param.SetParam(0, static_cast<int>(light_idx));
     StructuredBuffer<SBs::LocalParamSB> sb;
-    sb.SetData(1, &local_param);
+    sb.Create(cmd.GetList(), 1, &local_param);
     m_local_param_buffers_.emplace_back(sb);
 
     GetRenderer().RenderPass
@@ -211,8 +211,6 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
          m_shadow_map_mask_.Bind(c, dsv);
          sb.BindSRVGraphic(c, h);
-
-         GetRenderPipeline().BindConstantBuffers(h);
 
          h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
