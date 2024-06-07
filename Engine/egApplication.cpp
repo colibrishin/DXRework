@@ -293,13 +293,13 @@ namespace Engine::Manager
 
       if (!GetD3Device().IsCommandPairAvailable())
       {
-        GetD3Device().Flush();
+        throw std::runtime_error("Command Pair is not available for ImGui Rendering");
       }
 
       auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
 
       cmd.SoftReset();
-      GetRenderPipeline().DefaultRenderTarget(cmd.GetList());
+      GetRenderPipeline().DefaultRenderTarget(cmd);
 
       m_imgui_descriptor_->BindGraphic(cmd);
 
@@ -311,7 +311,7 @@ namespace Engine::Manager
     }
 
     GetReflectionEvaluator().PostRender(dt);
-    GetRenderPipeline().PostRender(dt); // present
+    GetRenderPipeline().PostRender(dt); // Wrap up command lists, present
     GetD3Device().PostRender(dt);
   }
 
