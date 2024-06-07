@@ -296,7 +296,7 @@ namespace Engine::Manager
         throw std::runtime_error("Command Pair is not available for ImGui Rendering");
       }
 
-      auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
+      const auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
 
       cmd.SoftReset();
       GetRenderPipeline().DefaultRenderTarget(cmd);
