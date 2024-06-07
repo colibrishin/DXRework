@@ -104,6 +104,9 @@ namespace Engine
     {
       struct InstanceSB;
       struct InstanceParticleSB;
+      struct LocalParamSB;
+      struct InstanceModelSB;
+      struct MaterialSB;
     } // namespace SBs
   } // namespace Graphic
 

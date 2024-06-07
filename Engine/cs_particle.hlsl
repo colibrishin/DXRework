@@ -9,9 +9,9 @@
 #define PARAM_SCALING_MIN g_fParam[0].w
 #define PARAM_SCALING_MAX g_fParam[1].x
 
-#define RANDOM_TEX0 tex03
-#define RANDOM_TEX1 tex04
-#define RANDOM_TEX2 tex05
+#define RANDOM_TEX0 tex00
+#define RANDOM_TEX1 tex01
+#define RANDOM_TEX2 tex02
 
 groupshared int global_lock = 0;
 

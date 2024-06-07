@@ -8,7 +8,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float shadowFactor[MAX_NUM_LIGHTS];
   GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
 
-  if (g_repeatMaterial.x == true)
+  if (bufMaterial[0].repeatMaterial.x == true)
   {
     const float2 scaleWiseTex = input.tex * input.scale.xy;
     const float2 repeatTex    = frac(scaleWiseTex);
