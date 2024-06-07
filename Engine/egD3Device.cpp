@@ -129,11 +129,12 @@ namespace Engine::Manager::Graphics
 
   void D3Device::InitializeDevice()
   {
-#ifdef _DEBUG
-    ComPtr<ID3D12Debug> debug_interface;
-    DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
-    debug_interface->EnableDebugLayer();
-#endif
+    if constexpr (g_debug)
+    {
+      ComPtr<ID3D12Debug> debug_interface;
+      DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
+      debug_interface->EnableDebugLayer();
+    }
 
     // Create factory and Searching for adapter
     ComPtr<IDXGIFactory4> dxgi_factory;
@@ -174,34 +175,35 @@ namespace Engine::Manager::Graphics
       adapter_idx++;
     }
 
-#ifdef _DEBUG
-    ComPtr<ID3D12InfoQueue> info_queue;
-    if (SUCCEEDED(m_device_.As(&info_queue)))
+    if constexpr (g_debug)
     {
-       DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
-       DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));
-
-      D3D12_MESSAGE_SEVERITY severities[] =
+      ComPtr<ID3D12InfoQueue> info_queue;
+      if (SUCCEEDED(m_device_.As(&info_queue)))
       {
-        D3D12_MESSAGE_SEVERITY_INFO
-      };
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));
 
-      D3D12_MESSAGE_ID deny_ids[] =
-      {
-        D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
-        D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
-        D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE
-      };
+        D3D12_MESSAGE_SEVERITY severities[] =
+        {
+          D3D12_MESSAGE_SEVERITY_INFO
+        };
 
-      D3D12_INFO_QUEUE_FILTER filter = {};
-      filter.DenyList.NumSeverities = _countof(severities);
-      filter.DenyList.pSeverityList = severities;
-      filter.DenyList.NumIDs = _countof(deny_ids);
-      filter.DenyList.pIDList = deny_ids;
+        D3D12_MESSAGE_ID deny_ids[] =
+        {
+          D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+          D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
+          D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE
+        };
 
-      DX::ThrowIfFailed(info_queue->PushStorageFilter(&filter));
+        D3D12_INFO_QUEUE_FILTER filter = {};
+        filter.DenyList.NumSeverities  = _countof(severities);
+        filter.DenyList.pSeverityList  = severities;
+        filter.DenyList.NumIDs         = _countof(deny_ids);
+        filter.DenyList.pIDList        = deny_ids;
+
+        DX::ThrowIfFailed(info_queue->PushStorageFilter(&filter));
+      }
     }
-#endif
 
     if (!adapter)
     {
