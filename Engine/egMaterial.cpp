@@ -234,12 +234,12 @@ namespace Engine::Resources
 
     if (m_resources_loaded_.contains(RES_T_BONE_ANIM))
     {
-      m_material_cb_.flags.bone = 1;
+      m_material_sb_.flags.bone = 1;
     }
 
     if (m_resources_loaded_.contains(RES_T_ATLAS_ANIM))
     {
-      m_material_cb_.flags.atlas = 1;
+      m_material_sb_.flags.atlas = 1;
     }
 
     for (const auto& [type, resources] : m_resources_loaded_)
@@ -249,7 +249,7 @@ namespace Engine::Resources
       if (type == RES_T_ATLAS_ANIM)
       {
         const auto& anim = resources.front()->GetSharedPtr<AnimationsTexture>();
-        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_ATLAS, 0);
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
         continue;
       }
 
@@ -265,12 +265,14 @@ namespace Engine::Resources
 
           tex->Bind(cmd, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
 
-          m_material_cb_.flags.tex[idx] = 1;
+          m_material_sb_.flags.tex[idx] = 1;
         }
       }
     }
 
-    GetRenderPipeline().SetMaterial(m_material_cb_);
+    // todo: Multiple same update for material
+    m_material_sb_data_.SetData(1, &m_material_sb_);
+    m_material_sb_data_.BindSRVGraphic(cmd, heap);
     GetRenderPipeline().BindConstantBuffers(heap);
 
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
@@ -279,7 +281,7 @@ namespace Engine::Resources
 
       if (const auto& anim = shape->GetAnimations().lock())
       {
-        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_BONES, 0);
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_BONES, 0);
       }
 
       for (const auto& mesh: shape->GetMeshes())
@@ -301,13 +303,15 @@ namespace Engine::Resources
 
     if (m_resources_loaded_.contains(RES_T_TEX))
     {
-      std::fill_n(m_material_cb_.flags.tex, m_resources_loaded_[RES_T_TEX].size(), 0);
+      std::fill_n(m_material_sb_.flags.tex, m_resources_loaded_[RES_T_TEX].size(), 0);
 
       for (const auto& tex : m_resources_loaded_[RES_T_TEX])
       {
         tex->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
       }
     }
+
+    m_material_sb_data_.UnbindSRVGraphic(cmd);
   }
 
   Material::Material()
