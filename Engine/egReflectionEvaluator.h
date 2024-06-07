@@ -35,7 +35,7 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
     void Initialize() override;
 
-    void RenderFinished();
+    void RenderFinished(const CommandPair & cmd) const;
 
     void BindReflectionMap(const CommandPair & cmd, const DescriptorPtr & heap) const;
     void UnbindReflectionMap(const CommandPair& cmd) const;
