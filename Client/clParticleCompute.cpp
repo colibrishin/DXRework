@@ -17,9 +17,9 @@ namespace Client::ComputeShaders
 {
   void ParticleCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
-    m_noises_[0]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 3);
-    m_noises_[1]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 4);
-    m_noises_[2]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 5);
+    m_noises_[0]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_noises_[1]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
+    m_noises_[2]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 2);
 
     auto rng = getRandomEngine();
     const auto rng_val = rng() % random_texture_size;
