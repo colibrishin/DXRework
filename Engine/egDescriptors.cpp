@@ -250,7 +250,7 @@ namespace Engine
     constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = g_max_engine_texture_slots * g_max_concurrent_command_lists,
+      .NumDescriptors = g_total_engine_slots * g_max_concurrent_command_lists,
       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       .NodeMask = 0
     };
@@ -294,7 +294,7 @@ namespace Engine
         const auto& buffer_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
           (
            m_main_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-           i * g_max_engine_texture_slots,
+           i * g_total_engine_slots,
            m_buffer_size_
           );
 
@@ -313,7 +313,7 @@ namespace Engine
            CD3DX12_GPU_DESCRIPTOR_HANDLE
            (
             m_main_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-            i * g_max_engine_texture_slots,
+            i * g_total_engine_slots,
             m_buffer_size_
            ),
            sampler_handle,
@@ -335,5 +335,18 @@ namespace Engine
   void DescriptorHandler::Release(const DescriptorPtrImpl& handles)
   {
     m_used_slots_[handles.m_offset_].store(false);
+  }
+
+  bool DescriptorHandler::IsAvailable() const
+  {
+    for (const auto& slot : m_used_slots_)
+    {
+      if (!slot.load())
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
