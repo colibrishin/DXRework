@@ -44,11 +44,12 @@ namespace Engine::Manager::Graphics
        CommonStates::Opaque,
        CommonStates::DepthDefault,
        CommonStates::CullNone,
-       *m_render_target_state_.get());
+       *m_render_target_state_.get(),
+       D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
 
     m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice(), EffectFlags::VertexColor, *m_effect_pipeline_state_.get());
 
-    m_basic_effect_->SetProjection(XMMatrixOrthographicOffCenterLH(0, g_window_width, g_window_height, 0, 0, 1));
+    m_basic_effect_->SetProjection(GetD3Device().GetProjectionMatrix());
 
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
@@ -63,7 +64,9 @@ namespace Engine::Manager::Graphics
 
   }
 
-  void ToolkitAPI::PreUpdate(const float& dt) {  }
+  void ToolkitAPI::PreUpdate(const float& dt)
+  {
+  }
 
   void ToolkitAPI::Update(const float& dt)
   {
@@ -76,13 +79,24 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PostRender(const float& dt)
   {
-    /*m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
+    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
+
+    ID3D12DescriptorHeap* heaps[] = { m_descriptor_heap_->Heap(), m_states_->Heap() };
+
+    const auto& s_cmd = GetD3Device().AcquireCommandPair(L"Toolkit Sprite Render");
+
+    s_cmd.SoftReset();
 
     m_sprite_batch_->Begin
     (
-        GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER), 
+        s_cmd.GetList(), 
         SpriteSortMode_Deferred
     );
+
+    GetRenderPipeline().DefaultRenderTarget(s_cmd);
+    GetRenderPipeline().DefaultScissorRect(s_cmd);
+    GetRenderPipeline().DefaultViewport(s_cmd);
+    s_cmd.GetList()->SetDescriptorHeaps(2, heaps);
 
     for (const auto& callback : m_sprite_batch_callbacks_)
     {
@@ -91,20 +105,31 @@ namespace Engine::Manager::Graphics
 
     m_sprite_batch_->End();
 
-    m_basic_effect_->Apply(GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER));
+    const auto& p_cmd = GetD3Device().AcquireCommandPair(L"Toolkit Primitive Render");
 
-    m_primitive_batch_->Begin(GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER));
+    p_cmd.SoftReset();
+
+    m_basic_effect_->Apply(p_cmd.GetList());
+
+    GetRenderPipeline().DefaultRenderTarget(p_cmd);
+    GetRenderPipeline().DefaultScissorRect(p_cmd);
+    GetRenderPipeline().DefaultViewport(p_cmd);
+    p_cmd.GetList()->SetDescriptorHeaps(2, heaps);
+
+    m_primitive_batch_->Begin(p_cmd.GetList());
 
     for (const auto& callback : m_primitive_batch_callbacks_)
     {
       callback();
     }
 
-    m_primitive_batch_->End();*/
+    m_primitive_batch_->End();
 
     m_sprite_batch_callbacks_.clear();
 
     m_primitive_batch_callbacks_.clear();
+
+    m_graphics_memory_->Commit(GetD3Device().GetCommandQueue(COMMAND_TYPE_DIRECT));
   }
 
   void ToolkitAPI::FixedUpdate(const float& dt) { }
