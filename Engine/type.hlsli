@@ -77,7 +77,22 @@ struct PixelInputType
   uint  instanceId : SV_InstanceID;
 };
 
-struct InstanceElement
+struct MaterialElement
+{
+  BindFlag bindFlag : BINDFLAG;
+
+  float specularPower : SPECULARPOWER;
+  float reflectionTranslation : REFTRANSLATION;
+  float reflectionScale : REFSCALE;
+  float refractionScale : REFRACTSCALE;
+
+  float4 overrideColor : OVERRIDECOLOR;
+  float4 specularColor : SPECULARCOLOR;
+  float4 clipPlane : CLIPPLANE;
+  int4 repeatMaterial : REPEATMATERIAL;
+};
+
+struct ParamElement
 {
   float4  fParam[MAX_PARAM_TYPE_SLOTS];
   int4    iParam[MAX_PARAM_TYPE_SLOTS];
