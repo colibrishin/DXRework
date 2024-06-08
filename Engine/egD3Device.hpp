@@ -130,7 +130,6 @@ namespace Engine::Manager::Graphics
     void InitializeFence();
 
     void WaitForEventCompletion(UINT64 buffer_idx) const;
-    void WaitForBackBuffer() const;
     
     void WaitNextFrame();
 
