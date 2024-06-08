@@ -10,20 +10,22 @@ namespace Engine
   {
     const auto& fence       = GetD3Device().m_fence_;
     const auto& idx         = GetD3Device().m_frame_idx_;
-    const auto& fence_event = GetD3Device().m_fence_event_;
 
     if (fence->GetCompletedValue() < m_fence_value_)
     {
+      const auto& handle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
       DX::ThrowIfFailed
         (
          fence->SetEventOnCompletion
          (
           m_fence_value_,
-          fence_event
+          handle
          )
         );
 
-      WaitForSingleObject(fence_event, INFINITE);
+      WaitForSingleObject(handle, INFINITE);
+      CloseHandle(handle);
     }
   }
 
@@ -90,20 +92,22 @@ namespace Engine
   {
     const auto& fence       = GetD3Device().m_fence_;
     const auto& idx         = GetD3Device().m_frame_idx_;
-    const auto& fence_event = GetD3Device().m_fence_event_;
 
     if (fence->GetCompletedValue() < m_latest_fence_value_)
     {
+      const auto& handle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
       DX::ThrowIfFailed
         (
          fence->SetEventOnCompletion
          (
           m_latest_fence_value_,
-          fence_event
+          handle
          )
         );
 
-      WaitForSingleObject(fence_event, INFINITE);
+      WaitForSingleObject(handle, INFINITE);
+      CloseHandle(handle);
     }
 
     DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
@@ -156,14 +160,15 @@ namespace Engine
 
     GetD3Device().GetCommandQueue(base_type)->ExecuteCommandLists(count, lists.data());
 
-    const auto& signal_value = Signal(base_type);
+    UINT last_signal = 0;
 
     for (UINT i = 0; i < count; ++i)
     {
-      pair[i].m_latest_fence_value_ = signal_value;
+      pair[i].m_latest_fence_value_ = pair[i].Signal(base_type);
+      last_signal = pair[i].m_latest_fence_value_;
     }
 
-    return CommandAwaiter(signal_value);
+    return CommandAwaiter(last_signal);
   }
 
   CommandAwaiter CommandPair::Execute()
