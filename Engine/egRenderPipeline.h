@@ -30,7 +30,8 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN)
+      : m_material_buffer_() {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
@@ -51,8 +52,10 @@ namespace Engine::Manager::Graphics
       m_param_buffer_.SetParam(slot, v);
     }
 
-    // Returns a ticket that will reset to the previous param when it goes out of scope.
-    [[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param);
+    [[nodiscard]] TempParamTicket SetParam(const Graphics::ParamBase& param)
+    {
+      return { m_param_buffer_ };
+    }
 
     void DefaultRenderTarget() const;
     void DefaultViewport() const;
@@ -64,6 +67,9 @@ namespace Engine::Manager::Graphics
     RTVDSVHandlePair SetRenderTargetDeferred(
       const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
     );
+    RTVDSVHandlePair SetRenderTargetDeferred(
+         const UINT count, const D3D12_CPU_DESCRIPTOR_HANDLE* srv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
+       );
     void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
     RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
     void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
@@ -92,7 +98,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void UploadConstantBuffersDeferred();
+    void UploadConstantBuffers();
     void ExecuteDirectCommandList();
 
   private:
@@ -110,6 +116,9 @@ namespace Engine::Manager::Graphics
     void InitializeNullDescriptors();
     void InitializeHeaps();
     void InitializeStaticBuffers();
+
+    void SetRootSignature();
+    void SetHeaps();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;

@@ -140,6 +140,16 @@ namespace Engine::Resources
     D3D12_BLEND_DESC bd;
     bd.AlphaToCoverageEnable = SHADER_DOMAIN_TRANSPARENT ? true : false;
     bd.IndependentBlendEnable = false;
+    bd.RenderTarget[0].BlendEnable           = SHADER_DOMAIN_TRANSPARENT ? true : false;
+    bd.RenderTarget[0].LogicOpEnable         = false;
+    bd.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
+    bd.RenderTarget[0].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
+    bd.RenderTarget[0].BlendOp               = D3D12_BLEND_OP_ADD;
+    bd.RenderTarget[0].SrcBlendAlpha         = D3D12_BLEND_ONE;
+    bd.RenderTarget[0].DestBlendAlpha        = D3D12_BLEND_ZERO;
+    bd.RenderTarget[0].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+    bd.RenderTarget[0].LogicOp               = D3D12_LOGIC_OP_NOOP;
+    bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     GetD3Device().CreateSampler(sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
 
@@ -156,13 +166,22 @@ namespace Engine::Resources
       .NumElements        = static_cast<UINT>(m_il_.size())
     };
 
+    constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
+
     m_pipeline_state_desc_.pRootSignature = GetRenderPipeline().GetRootSignature();
     m_pipeline_state_desc_.InputLayout = il;
     m_pipeline_state_desc_.VS = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
     m_pipeline_state_desc_.PS = {m_ps_blob_->GetBufferPointer(), m_ps_blob_->GetBufferSize()};
-    m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()};
-    m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()};
-    m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()};
+
+    if (m_gs_blob_) { m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()}; }
+    else { m_pipeline_state_desc_.GS = empty_shader; }
+
+    if (m_hs_blob_) { m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()}; }
+    else { m_pipeline_state_desc_.HS = empty_shader; }
+
+    if (m_ds_blob_) { m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()}; }
+    else { m_pipeline_state_desc_.DS = empty_shader; }
+
     m_pipeline_state_desc_.SampleDesc = {1, 0};
     m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_;
     m_pipeline_state_desc_.RasterizerState = rd;

@@ -21,13 +21,13 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->BindUAVDeferred();
+    m_light_table_ptr_->BindUAVComputeDeferred();
 
     // 512 x 512
     SetGroup({256, 1, 1});
 
-    m_intersection_texture_->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 0, SHADER_COMPUTE);
-    m_position_texture_->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 1, SHADER_COMPUTE);
+    m_intersection_texture_->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_position_texture_->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
 
     m_intersection_texture_->PreRender(0);
     m_intersection_texture_->Render(0);
@@ -44,7 +44,7 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->UnbindUAVDeferred();
+    m_light_table_ptr_->UnbindUAVComputeDeferred();
 
     m_intersection_texture_->PostRender(0);
     m_position_texture_->PostRender(0);
