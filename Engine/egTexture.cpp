@@ -65,8 +65,10 @@ namespace Engine::Resources
     GetD3Device().GetCommandList(list)->ResourceBarrier(1, &dsv_transition);
   }
 
-  void Texture::Unbind(const CommandPair& cmd, const Texture& dsv) const
+  void Texture::Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const
   {
+    const auto& cmd = w_cmd.lock();
+
     const auto& rtv_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_res_.Get(),
@@ -81,13 +83,13 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    cmd.GetList()->ResourceBarrier(1, &rtv_transition_back);
-    cmd.GetList()->ResourceBarrier(1, &dsv_transition_back);
+    cmd->GetList()->ResourceBarrier(1, &rtv_transition_back);
+    cmd->GetList()->ResourceBarrier(1, &dsv_transition_back);
   }
 
-  void Texture::Bind(const CommandPair& cmd, const DescriptorPtr& heap, const eBindType type, const UINT slot, const UINT offset) const
+  void Texture::Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const UINT offset) const
   {
-    Bind(cmd.GetList(), heap, type, slot, offset);
+    Bind(w_cmd.lock()->GetList(), heap, type, slot, offset);
   }
 
   void Texture::Bind(
@@ -187,8 +189,10 @@ namespace Engine::Resources
     }
   }
 
-  void Texture::Bind(const CommandPair& cmd, const Texture& dsv) const
+  void Texture::Bind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const
   {
+    const auto& cmd = w_cmd.lock();
+
     const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_res_.Get(),
@@ -203,10 +207,6 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_DEPTH_WRITE
       );
 
-    cmd.GetList()->ResourceBarrier(1, &rtv_trans);
-
-    cmd.GetList()->ResourceBarrier(1, &dsv_trans);
-
     const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
     {
       m_rtv_->GetCPUDescriptorHandleForHeapStart()
@@ -217,7 +217,9 @@ namespace Engine::Resources
       dsv.GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
     };
 
-    cmd.GetList()->OMSetRenderTargets
+    cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+    cmd->GetList()->ResourceBarrier(1, &dsv_trans);
+    cmd->GetList()->OMSetRenderTargets
       (
        1,
        rtv_handle,
@@ -226,9 +228,9 @@ namespace Engine::Resources
       );
   }
 
-  void Texture::Unbind(const CommandPair& cmd, const eBindType type) const
+  void Texture::Unbind(const Weak<CommandPair>& cmd, const eBindType type) const
   {
-    Unbind(cmd.GetList(), type);
+    Unbind(cmd.lock()->GetList(), type);
   }
 
   void Texture::Unbind(ID3D12GraphicsCommandList1* cmd, const eBindType type) const
@@ -327,11 +329,7 @@ namespace Engine::Resources
       return;
     }
 
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_COPY);
-
-    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
-
-    cmd->ResourceBarrier(1, &dest_transition);
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Texture Mapping").lock();
 
     const auto dst = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
     auto src = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
@@ -343,7 +341,9 @@ namespace Engine::Resources
     src.PlacedFootprint.Footprint.Height = m_desc_.Height;
     src.PlacedFootprint.Footprint.Format = m_desc_.Format;
 
-    cmd->CopyTextureRegion
+    cmd->SoftReset();
+    cmd->GetList()->ResourceBarrier(1, &dest_transition);
+    cmd->GetList()->CopyTextureRegion
       (
        &dst,
        0, 0, 0,
@@ -351,11 +351,8 @@ namespace Engine::Resources
        nullptr
       );
 
-    cmd->ResourceBarrier(1, &dst_transition_back);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
-
-    GetD3Device().Wait(COMMAND_TYPE_COPY);
+    cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
+    cmd->FlagReady();
   }
 
   Texture::Texture()
@@ -525,7 +522,7 @@ namespace Engine::Resources
          false
         );
 
-      GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"Texture Uploading").lock();
 
       const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
@@ -534,11 +531,9 @@ namespace Engine::Resources
          D3D12_RESOURCE_STATE_COMMON
         );
 
-      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &common_transition);
-
-      GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
-
-      GetD3Device().Wait();
+      cmd->SoftReset();
+      cmd->GetList()->ResourceBarrier(1, &common_transition);
+      cmd->FlagReady();
 
       const D3D12_RESOURCE_DESC desc = m_res_->GetDesc();
 
