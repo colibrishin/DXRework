@@ -60,8 +60,10 @@ namespace Engine::Resources
     IndexCollection  m_indices_;
     BoundingBox      m_bounding_box_;
 
-    ComPtr<ID3D11Buffer> m_vertex_buffer_;
-    ComPtr<ID3D11Buffer> m_index_buffer_;
+    ComPtr<ID3D12Resource>  m_vertex_buffer_;
+    ComPtr<ID3D12Resource>  m_index_buffer_;
+    D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_;
+    D3D12_INDEX_BUFFER_VIEW m_index_buffer_view_;
   };
 } // namespace Engine::Resources
 

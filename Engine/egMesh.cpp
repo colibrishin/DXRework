@@ -123,8 +123,8 @@ namespace Engine::Resources
 
   void Mesh::Render(const float& dt)
   {
-    GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_.Get());
-    GetRenderPipeline().BindIndexBuffer(m_index_buffer_.Get());
+    GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_view_);
+    GetRenderPipeline().BindIndexBuffer(m_index_buffer_view_);
   }
 
   void Mesh::PostRender(const float& dt)
@@ -155,19 +155,47 @@ namespace Engine::Resources
        sizeof(Vector3)
       );
 
-    GetD3Device().CreateBuffer<VertexElement>
+    std::string generic_name = GetName();
+
+    const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
+
+    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
-       D3D11_BIND_VERTEX_BUFFER,
-       static_cast<UINT>(m_vertices_.size()),
-       m_vertex_buffer_.GetAddressOf(),
-       m_vertices_.data()
+       m_vertex_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
 
-    GetD3Device().CreateBuffer<UINT>
+    GetD3Device().CreateBuffer1D<VertexElement>
       (
-       D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_.size()),
-       m_index_buffer_.GetAddressOf(), m_indices_.data()
+       m_vertex_buffer_.GetAddressOf(), m_vertices_.data(),
+       sizeof(VertexElement) * m_vertices_.size(),
+       vtx_trans,
+       vertex_name
       );
+
+    m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
+    m_vertex_buffer_view_.SizeInBytes = sizeof(VertexElement) * m_vertices_.size();
+    m_vertex_buffer_view_.StrideInBytes = sizeof(VertexElement);
+
+    const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
+
+    const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_index_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
+      );
+
+    GetD3Device().CreateBuffer1D<UINT>
+      (
+       m_index_buffer_.GetAddressOf(), m_indices_.data(),
+       sizeof(UINT) * m_indices_.size(),
+       idx_trans,
+       index_name
+      );
+
+    m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
+    m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
+    m_index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
   }
 
   void Mesh::Load_CUSTOM() {}

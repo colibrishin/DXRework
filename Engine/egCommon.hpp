@@ -1,7 +1,6 @@
 #pragma once
 #include <boost/smart_ptr/weak_ptr.hpp>
 
-#include "egDXCommon.h"
 #include "egEnums.h"
 #include "egSerialization.hpp"
 #include "egType.h"
@@ -99,28 +98,28 @@ namespace Engine
     };
   }
 
-  inline static bool __vectorcall FloatCompare(const float a, const float b)
+ static bool __vectorcall FloatCompare(const float a, const float b)
   {
     return std::fabs(a - b) <
            g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
   }
 
-  inline static bool __vectorcall Vector3Compare(const Vector3& lhs, const Vector3& rhs)
+ static bool __vectorcall Vector3Compare(const Vector3& lhs, const Vector3& rhs)
   {
     return FloatCompare(lhs.x, rhs.x) && FloatCompare(lhs.y, rhs.y) && FloatCompare(lhs.z, rhs.z);
   }
 
-  inline static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
+ static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
   {
     return {lhs.x + value, lhs.y + value, lhs.z + value};
   }
 
-  inline static bool __vectorcall VectorElementInRange(const Vector3& lhs, const float value)
+ static bool __vectorcall VectorElementInRange(const Vector3& lhs, const float value)
   {
     return std::max(std::max(lhs.x, lhs.y), lhs.z) < value;
   }
 
-  inline static Vector3 __vectorcall XMTensorCross(const XMFLOAT3X3& lhs, const Vector3& rhs)
+ static Vector3 __vectorcall XMTensorCross(const XMFLOAT3X3& lhs, const Vector3& rhs)
   {
     return {
       lhs._11 * rhs.x + lhs._12 * rhs.y + lhs._13 * rhs.z,
@@ -128,6 +127,16 @@ namespace Engine
       lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
     };
   }
+
+  struct CommandGuard
+  {
+    ~CommandGuard();
+  };
+
+  struct ForceCommandExecutionGuard
+  {
+    ~ForceCommandExecutionGuard();
+  };
 } // namespace Engine
 
 namespace DX

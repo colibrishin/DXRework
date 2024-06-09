@@ -83,10 +83,10 @@ namespace Engine::Manager::Graphics
     void SetNoneCullState() const;
     void SetFrontCullState() const;
 
-    void BindVertexBuffer(ID3D11Buffer* buffer);
-    void BindIndexBuffer(ID3D11Buffer* buffer);
-    void UnbindVertexBuffer();
-    void UnbindIndexBuffer();
+    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
+    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
+    static void UnbindVertexBuffer();
+    static void UnbindIndexBuffer();
 
     void BindResource(
       UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
@@ -106,12 +106,8 @@ namespace Engine::Manager::Graphics
     void TargetDepthOnly(ID3D11DepthStencilView* view);
     void SetViewport(const D3D11_VIEWPORT& viewport);
 
-    void DefaultRenderTarget() const;
-    void DefaultViewport() const;
-    void ResetShaders();
-    void DefaultDepthStencilState() const;
-    void DefaultRasterizerState() const;
-    void DefaultSamplerState() const;
+    ID3D12RootSignature* GetRootSignature() const;
+    void SetPSO(const StrongShader& Shader);
 
   private:
     friend class ToolkitAPI;
@@ -121,26 +117,21 @@ namespace Engine::Manager::Graphics
     ~RenderPipeline() override;
 
     void PrecompileShaders();
-    void InitializeSamplers();
+    void InitializeDefaultPSO();
+    void InitializeRootSignature();
 
-    template <typename T>
-    void BindConstantBuffer(const ConstantBuffer<T>& buffer, eShaderType target) const
-    {
-      GetD3Device().BindConstantBuffer(buffer, which_cb<T>::value, target);
-    }
+    ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
+    ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
+    D3D12_VIEWPORT m_viewport_{};
+    D3D12_RECT    m_scissor_rect_{};
+    
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
     ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
     ConstantBuffer<CBs::MaterialCB>    m_material_buffer_data_{};
     ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_{};
-
-    std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
-
-    ComPtr<ID3D11BlendState>        m_blend_state_         = nullptr;
-    ComPtr<ID3D11RasterizerState>   m_rasterizer_state_    = nullptr;
-    ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
 
     std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
   };

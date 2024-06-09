@@ -1,9 +1,8 @@
 #pragma once
 #include <d2d1.h>
-#include <d3dcompiler.h>
+#include <d3d12.h>
+#include <dxgi1_5.h>
 #include <dxgidebug.h>
-#include <filesystem>
-#include "egCommon.hpp"
 #include "egManager.hpp"
 
 #ifdef _DEBUG
@@ -16,208 +15,8 @@ namespace Engine::Manager::Graphics
   using Microsoft::WRL::ComPtr;
   using namespace Engine::Graphics;
 
-  const std::map<eShaderType, std::function<void(ID3D11DeviceContext*, ID3D11ShaderResourceView**, UINT, UINT)>>
-  g_shader_rs_bind_map =
-  {
+  const std::map<GUID, eShaderType, GUIDComparer> g_shader_enum_type_map =
     {
-      SHADER_VERTEX,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->VSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    },
-    {
-      SHADER_PIXEL,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->PSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    },
-    {
-      SHADER_GEOMETRY,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->GSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    },
-    {
-      SHADER_COMPUTE,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->CSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    },
-    {
-      SHADER_HULL,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->HSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    },
-    {
-      SHADER_DOMAIN,
-      [](
-      ID3D11DeviceContext*       context,
-      ID3D11ShaderResourceView** buffer, UINT start_slot, UINT num_buffers
-    )
-      {
-        context->DSSetShaderResources(start_slot, num_buffers, buffer);
-      }
-    }
-  };
-
-  const std::map<
-    eShaderType, std::function<void(
-      ID3D11Device*, ID3D11DeviceContext*,
-      ID3D11Buffer*, UINT, UINT
-    )>>
-  g_shader_cb_bind_map = {
-    {
-      SHADER_VERTEX,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->VSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    },
-    {
-      SHADER_PIXEL,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->PSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    },
-    {
-      SHADER_GEOMETRY,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->GSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    },
-    {
-      SHADER_COMPUTE,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->CSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    },
-    {
-      SHADER_HULL,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->HSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    },
-    {
-      SHADER_DOMAIN,
-      [](
-      ID3D11Device* device, ID3D11DeviceContext* context,
-      ID3D11Buffer* buffer, UINT                 start_slot, UINT num_buffers
-    )
-      {
-        context->DSSetConstantBuffers(start_slot, num_buffers, &buffer);
-      }
-    }
-  };
-
-  const std::unordered_map<eShaderType,
-                           std::function<void(
-                             ID3D11DeviceContext*,
-                             ID3D11SamplerState*, UINT, UINT
-                           )>>
-  g_shader_sampler_bind_map = {
-    {
-      SHADER_VERTEX,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->VSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    },
-    {
-      SHADER_PIXEL,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->PSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    },
-    {
-      SHADER_GEOMETRY,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->GSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    },
-    {
-      SHADER_COMPUTE,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->CSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    },
-    {
-      SHADER_HULL,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->HSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    },
-    {
-      SHADER_DOMAIN,
-      [](
-      ID3D11DeviceContext* context, ID3D11SamplerState* sampler,
-      UINT                 start_slot, UINT             num_samplers
-    )
-      {
-        context->DSSetSamplers(start_slot, num_samplers, &sampler);
-      }
-    }
-  };
-
-  const std::map<GUID, eShaderType, GUIDComparer> g_shader_enum_type_map = {
     {__uuidof(ID3D11VertexShader), SHADER_VERTEX},
     {__uuidof(ID3D11PixelShader), SHADER_PIXEL},
     {__uuidof(ID3D11GeometryShader), SHADER_GEOMETRY},
@@ -260,78 +59,16 @@ namespace Engine::Manager::Graphics
     }
 
     static float GetAspectRatio();
-    void         UpdateRenderTarget();
-    void         UpdateViewport();
-
-    template <typename T>
-    void CreateBuffer(D3D11_BIND_FLAG flag, UINT size, ID3D11Buffer** buffer)
-    {
-      D3D11_BUFFER_DESC desc{};
-
-      desc.Usage               = D3D11_USAGE_DYNAMIC;
-      desc.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
-      desc.BindFlags           = flag;
-      desc.ByteWidth           = size * sizeof(T);
-      desc.MiscFlags           = 0;
-      desc.StructureByteStride = 0;
-
-      DX::ThrowIfFailed(m_device_->CreateBuffer(&desc, nullptr, buffer));
-    }
-
-    template <typename T>
-    void CreateBuffer(
-      D3D11_BIND_FLAG flag, UINT size, ID3D11Buffer** buffer,
-      void*           initial_data
-    )
-    {
-      D3D11_BUFFER_DESC desc{};
-
-      desc.Usage               = D3D11_USAGE_IMMUTABLE;
-      desc.CPUAccessFlags      = 0;
-      desc.BindFlags           = flag;
-      desc.ByteWidth           = size * sizeof(T);
-      desc.MiscFlags           = 0;
-      desc.StructureByteStride = 0;
-
-      D3D11_SUBRESOURCE_DATA data{};
-      data.pSysMem = initial_data;
-
-      DX::ThrowIfFailed(m_device_->CreateBuffer(&desc, &data, buffer));
-    }
-
-    void CreateTextureFromFile(
-      const std::filesystem::path & path,
-      UINT                          bind_flag,
-      ID3D11Resource **             texture, ID3D11ShaderResourceView ** shader_resource_view
-    ) const;
-
-    void CreateTexture2D(
-      const D3D11_TEXTURE2D_DESC& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11Texture2D** texture,
-      ID3D11ShaderResourceView**  view
-    ) const;
-
-    void CreateDepthStencil(
-      const D3D11_TEXTURE2D_DESC& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsv, ID3D11Texture2D** texture,
-      ID3D11DepthStencilView**    view
-    ) const;
-
-    void CreateDepthStencilState(
-      const D3D11_DEPTH_STENCIL_DESC& desc, ID3D11DepthStencilState** depth_stencil_state
-    ) const;
+    void         UpdateRenderTarget() const;
 
     void CreateShaderResourceView(
-      ID3D11Resource* resource, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11ShaderResourceView** view
+      ID3D12Resource * resource, const D3D12_SHADER_RESOURCE_VIEW_DESC & srv, ID3D11ShaderResourceView ** view
     ) const;
 
-    void CreateSampler(
-      const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState** state
-    ) const;
-
-    void CreateRasterizerState(const D3D11_RASTERIZER_DESC& rd, ID3D11RasterizerState** id_3d11_rasterizer_state) const;
-
-    std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> GenerateInputDescription(
+    std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
       ID3DBlob* blob
     );
+    void CreateSampler(const D3D12_SAMPLER_DESC& description, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) const;
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
@@ -342,75 +79,149 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
 
     const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
+    const Matrix& GetOrthogonalMatrix() const { return m_ortho_matrix_; }
 
-    const Matrix& GetOrthogonalMatrix() const { return s_ortho_matrix_; }
+    ID3D12Device* GetDevice() const { return m_device_.Get(); }
+    
+    void __fastcall CopySwapchain(ID3D12Resource* buffer, ID3D12GraphicsCommandList1* command_list) const;
 
-    ID3D11Device* GetDevice() const { return m_device_.Get(); }
+    [[nodiscard]] HANDLE                            GetSwapchainAwaiter() const;
+    [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetRTVHandle() const;
+    [[nodiscard]] CD3DX12_CPU_DESCRIPTOR_HANDLE     GetDSVHandle() const;
+    [[nodiscard]] D3D12_FEATURE_DATA_ROOT_SIGNATURE GetRootSignatureFeature() const;
 
-    ID3D11DeviceContext* GetContext() const { return m_context_.Get(); }
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList() const;
+  
+    void WaitForUploadCompletion();
+    void ForceExecuteCommandList() const;
 
-    void CopySwapchain(ID3D11ShaderResourceView* buffer);
+    template <typename T>
+    void CreateBuffer
+    (
+      ID3D12Resource** buffer,
+      const UINT64 size,
+      const D3D12_HEAP_TYPE heap_type = D3D12_HEAP_TYPE_DEFAULT,
+      const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
+      const std::wstring& name = L""
+    ) const
+    {
+      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(heap_type);
+      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
-    HANDLE GetSwapchainAwaiter() const;
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &default_prop,
+          D3D12_HEAP_FLAG_NONE,
+          &resource_desc,
+          state,
+          nullptr,
+          IID_PPV_ARGS(buffer)
+         )
+        );
 
+      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
+    }
+    
+    template <typename T>
+    void CreateBuffer1D
+    (
+      ID3D12Resource** buffer,
+      const void* data,
+      const UINT64 size,
+      const D3D12_RESOURCE_BARRIER& barrier,
+      const std::wstring& name = L""
+      ) const
+    {
+      const auto& default_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+      const auto& resource_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &default_prop,
+          D3D12_HEAP_FLAG_NONE,
+          &resource_desc,
+          D3D12_RESOURCE_STATE_COPY_DEST,
+          nullptr,
+          IID_PPV_ARGS(buffer)
+         )
+        );
+
+      DX::ThrowIfFailed((*buffer)->SetName(name.c_str()));
+
+      ComPtr<ID3D12Resource> upload_buffer;
+      const auto& upload_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &upload_prop,
+          D3D12_HEAP_FLAG_NONE,
+          &resource_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(upload_buffer.GetAddressOf())
+         )
+        );
+
+      const D3D12_SUBRESOURCE_DATA data_desc
+      {
+        .pData = data,
+        .RowPitch = sizeof(T) * size,
+        .SlicePitch = sizeof(T) * size
+      };
+
+      UpdateSubresources
+      (
+        m_command_list_.Get(),
+        *buffer,
+        upload_buffer.Get(),
+        0,
+        0,
+        1,
+        &data_desc
+      );
+
+      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
+      DX::ThrowIfFailed(m_command_list_->Close());
+      GetD3Device().ForceExecuteCommandList();
+      GetD3Device().WaitForUploadCompletion();
+    }
+    
   private:
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
+    friend struct CommandGuard;
+    friend struct ForceCommandExecutionGuard;
+    
     ~D3Device() override = default;
 
     D3Device() = default;
+    
+    static void UpdateBuffer(UINT64 size, const void* src, ID3D12Resource* dst);
 
-    void UpdateBuffer(UINT size, const void* data, ID3D11Buffer* buffer) const;
-
-    template <typename T>
-    void CreateConstantBuffer(ConstantBuffer<T>& buffer) { buffer.Create(m_device_.Get()); }
-
-    template <typename T>
-    void BindConstantBuffer(
-      const ConstantBuffer<T>& buffer, eCBType type,
-      eShaderType              target_shader
-    ) const
-    {
-      g_shader_cb_bind_map.at(target_shader)
-        (
-         m_device_.Get(), m_context_.Get(),
-         buffer.GetBuffer(), type, 1
-        );
-    }
-
-    void CreateTexture2D(
-      const D3D11_TEXTURE2D_DESC& desc,
-      ID3D11Texture2D**           texture
-    ) const;
-
-    void BindSampler(
-      ID3D11SamplerState* sampler, eShaderType target_shader,
-      eSampler            sampler_type
-    ) const;
-
-    void CreateBlendState(ID3D11BlendState** blend_state) const;
-    void CreateDepthStencilState(ID3D11DepthStencilState** depth_stencil_state) const;
-    void CreateRasterizer(
-      ID3D11RasterizerState** state,
-      D3D11_FILL_MODE         fill_mode
-    ) const;
-
-  private:
     void InitializeDevice();
     void InitializeRenderTargetView();
+    void InitializeCommandAllocator();
+    void InitializeFence();
     void InitializeD2D();
     void InitializeDepthStencil();
-
+    
+    void WaitForPreviousFrame();
+    void WaitForSingleCompletion();
+    
     void FrameBegin();
     void Present() const;
 
   private:
     HWND m_hwnd_ = nullptr;
 
-    ComPtr<ID3D11Device1>        m_device_  = nullptr;
-    ComPtr<ID3D11DeviceContext1> m_context_ = nullptr;
-
+    ComPtr<ID3D12Device>        m_device_  = nullptr;
     ComPtr<IDXGISurface1>     m_surface_                = nullptr;
     ComPtr<ID2D1RenderTarget> m_d2d_render_target_view_ = nullptr;
 
@@ -420,14 +231,29 @@ namespace Engine::Manager::Graphics
 
     DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
-    ComPtr<IDXGISwapChain2>        m_swap_chain_         = nullptr;
-    ComPtr<ID3D11RenderTargetView> s_render_target_view_ = nullptr;
-    ComPtr<ID3D11DepthStencilView> s_depth_stencil_view_ = nullptr;
+    ComPtr<IDXGISwapChain4>      m_swap_chain_      = nullptr;
+    ComPtr<ID3D12CommandQueue>   m_command_queue_   = nullptr;
+    
+    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_ = nullptr;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_ = nullptr;
+    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_ = nullptr;
 
+    std::vector<ComPtr<ID3D12Fence>> m_fences_       = {nullptr,};
+    HANDLE                           m_fence_event_  = nullptr;
+    std::vector<UINT64>              m_fences_nonce_ = {0,};
+
+    UINT64                                      m_frame_idx_         = 0;
+    UINT64                                      m_rtv_desc_size_     = 0;
+    std::vector<ComPtr<ID3D12Resource>>         m_render_targets_    = {nullptr,};
+
+    std::vector<ComPtr<ID3D12CommandAllocator>> m_command_allocator_ = {nullptr,};
+    // todo: multi pipeline?
+    ComPtr<ID3D12GraphicsCommandList1> m_command_list_ = {nullptr, };
+    
     D3D11_VIEWPORT s_viewport_{};
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
-    Matrix   s_ortho_matrix_      = {};
+    Matrix   m_ortho_matrix_      = {};
   };
 } // namespace Engine::Manager::Graphics
