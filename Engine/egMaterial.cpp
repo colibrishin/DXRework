@@ -214,14 +214,16 @@ namespace Engine::Resources
     std::iter_swap(texs.begin() + slot, it);
   }
 
-  void Material::Draw(const float& dt, const CommandPair& cmd, const DescriptorPtr& heap)
+  void Material::Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap)
   {
+    const auto& cmd = w_cmd.lock();
+
     heap->BindGraphic(cmd);
 
     if (!m_temp_param_.bypassShader)
     {
-      cmd.GetList()->SetPipelineState(m_shaders_loaded_[m_temp_param_.domain]->GetPipelineState());
-      cmd.GetList()->IASetPrimitiveTopology(m_shaders_loaded_[m_temp_param_.domain]->GetTopology());
+      cmd->GetList()->SetPipelineState(m_shaders_loaded_[m_temp_param_.domain]->GetPipelineState());
+      cmd->GetList()->IASetPrimitiveTopology(m_shaders_loaded_[m_temp_param_.domain]->GetTopology());
       heap->SetSampler(m_shaders_loaded_[m_temp_param_.domain]->GetShaderHeap(), SAMPLER_TEXTURE);
     }
 
@@ -271,8 +273,9 @@ namespace Engine::Resources
     }
 
     // todo: Multiple same update for material
-    m_material_sb_data_.SetData(cmd.GetList(), 1, &m_material_sb_);
-    m_material_sb_data_.BindSRVGraphic(cmd, heap);
+    m_material_sb_data_.SetData(cmd->GetList(), 1, &m_material_sb_);
+    m_material_sb_data_.TransitionToSRV(cmd->GetList());
+    m_material_sb_data_.CopySRVHeap(heap);
     GetRenderPipeline().BindConstantBuffers(cmd, heap);
 
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
@@ -290,9 +293,9 @@ namespace Engine::Resources
         const auto& vtx_view = mesh->GetVertexView();
         const auto& idx_view = mesh->GetIndexView();
 
-        cmd.GetList()->IASetVertexBuffers(0, 1, &vtx_view);
-        cmd.GetList()->IASetIndexBuffer(&idx_view);
-        cmd.GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
+        cmd->GetList()->IASetVertexBuffers(0, 1, &vtx_view);
+        cmd->GetList()->IASetIndexBuffer(&idx_view);
+        cmd->GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
       }
 
       if (const auto& anim = shape->GetAnimations().lock())
@@ -311,7 +314,7 @@ namespace Engine::Resources
       }
     }
 
-    m_material_sb_data_.UnbindSRVGraphic(cmd);
+    m_material_sb_data_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
   }
 
   Material::Material()
