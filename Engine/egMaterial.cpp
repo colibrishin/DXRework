@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egMaterial.h"
 
+#include "egAnimationsTexture.h"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
@@ -44,99 +45,11 @@ namespace Engine::Resources
 
   void Material::FixedUpdate(const float& dt) {}
 
-  void Material::PreRender(const float& dt)
-  {
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->PreRender(dt);
-    }
+  void Material::PreRender(const float& dt) {}
 
-    m_material_cb_.flags = {};
+  void Material::Render(const float& dt) {}
 
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM)
-      {
-        m_material_cb_.flags.bone = 1;
-        continue;
-      }
-
-      if (type == RES_T_ATLAS_ANIM)
-      {
-        m_material_cb_.flags.atlas = 1;
-        continue;
-      }
-
-      for (auto it = resources.begin(); it != resources.end(); ++it)
-      {
-        const auto res = *it;
-
-        if (type == RES_T_TEX)
-        {
-          const UINT idx                = static_cast<UINT>(std::distance(resources.begin(), it));
-          m_material_cb_.flags.tex[idx] = 1;
-        }
-
-        res->PreRender(dt);
-      }
-    }
-
-    GetRenderPipeline().SetMaterial(m_material_cb_);
-  }
-
-  void Material::Render(const float& dt)
-  {
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->Render(dt);
-    }
-
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_ANIM) { continue; }
-
-      for (auto it = resources.begin(); it != resources.end(); ++it)
-      {
-        const auto res = *it;
-
-        if (type == RES_T_TEX)
-        {
-          // todo: distinguish tex type
-          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
-          res->GetSharedPtr<Texture>()->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
-        }
-
-        if (type == RES_T_SHAPE)
-        {
-          res->GetSharedPtr<Shape>()->SetInstanceCount(m_temp_param_.instanceCount);
-        }
-
-        res->Render(dt);
-      }
-    }
-  }
-
-  void Material::PostRender(const float& dt)
-  {
-    GetRenderPipeline().SetMaterial({});
-
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->PostRender(dt);
-    }
-
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_TEX) { continue; }
-
-      for (const auto& res : resources) { res->PostRender(dt); }
-    }
-
-    m_temp_param_ = {};
-  }
+  void Material::PostRender(const float& dt) {}
 
   void Material::OnSerialized()
   {
@@ -300,6 +213,96 @@ namespace Engine::Resources
     if (const UINT idx = static_cast<UINT>(std::distance(texs.begin(), it)); idx == slot) { return; }
 
     std::iter_swap(texs.begin() + slot, it);
+  }
+
+  void Material::Draw(const float& dt, const eCommandList list)
+  {
+    if (!m_temp_param_.bypassShader)
+    {
+      GetRenderPipeline().SetPSO(m_shaders_loaded_[m_temp_param_.domain], list);
+    }
+
+    if (!m_resources_loaded_.contains(RES_T_SHAPE))
+    {
+      return;
+    }
+
+    const auto& instance_count = m_temp_param_.instanceCount;
+
+    if (m_resources_loaded_.contains(RES_T_BONE_ANIM))
+    {
+      m_material_cb_.flags.bone = 1;
+    }
+
+    if (m_resources_loaded_.contains(RES_T_ATLAS_ANIM))
+    {
+      m_material_cb_.flags.atlas = 1;
+    }
+
+    GetRenderPipeline().SetMaterial(m_material_cb_);
+
+    for (const auto& [type, resources] : m_resources_loaded_)
+    {
+      if (type == RES_T_SHAPE) { continue; }
+
+      if (type == RES_T_ATLAS_ANIM)
+      {
+        const auto& anim = resources.front()->GetSharedPtr<AnimationsTexture>();
+        anim->Bind(list, BIND_TYPE_SRV, RESERVED_ATLAS, 0);
+        continue;
+      }
+
+      for (auto it = resources.begin(); it != resources.end(); ++it)
+      {
+        const auto res = *it;
+
+        if (type == RES_T_TEX)
+        {
+          // todo: distinguish tex type
+          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
+          const auto& tex = res->GetSharedPtr<Texture>();
+
+          tex->Bind(list, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
+
+          m_material_cb_.flags.tex[idx] = 1;
+        }
+
+        res->Render(dt);
+      }
+    }
+
+    for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
+    {
+      const auto& shape = s->GetSharedPtr<Shape>();
+
+      if (const auto& anim = shape->GetAnimations().lock())
+      {
+        anim->Bind(list, BIND_TYPE_SRV, RESERVED_BONES, 0);
+      }
+
+      for (const auto& mesh: shape->GetMeshes())
+      {
+        const auto& idx_count = mesh->GetIndexCount();
+        const auto& vtx_view = mesh->GetVertexView();
+        const auto& idx_view = mesh->GetIndexView();
+
+        GetD3Device().GetCommandList(list)->IASetVertexBuffers(0, 1, &vtx_view);
+        GetD3Device().GetCommandList(list)->IASetIndexBuffer(&idx_view);
+
+        GetRenderPipeline().DrawIndexedInstancedDeferred(list, idx_count, instance_count);
+      }
+
+      if (const auto& anim = shape->GetAnimations().lock())
+      {
+        anim->Unbind(list, BIND_TYPE_SRV);
+      }
+    }
+
+    for (const auto& t : m_resources_loaded_[RES_T_TEX])
+    {
+      const auto& tex = t->GetSharedPtr<Texture>();
+      tex->Unbind(list, BIND_TYPE_SRV);
+    }
   }
 
   Material::Material()

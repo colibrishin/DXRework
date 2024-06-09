@@ -7,11 +7,8 @@ namespace Engine::Abstract
   class Renderable : public Entity
   {
   public:
-    // Prepare for rendering.
     virtual void PreRender(const float& dt) = 0;
-    // Run shader setup, texture and draw call.
     virtual void Render(const float& dt) = 0;
-    // Run before the present call.
     virtual void PostRender(const float& dt) = 0;
 
   protected:
@@ -19,6 +16,7 @@ namespace Engine::Abstract
 
   private:
     SERIALIZE_DECL
+
   };
 } // namespace Engine::Abstract
 

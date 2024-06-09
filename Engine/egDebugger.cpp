@@ -39,7 +39,7 @@ namespace Engine::Manager
         continue;
       }
 
-      GetToolkitAPI().AppendSpriteBatch([this, it, dt]()
+      GetToolkitAPI().AppendPrimitiveBatch([this, it, dt]()
       {
         it->second(it->first, dt);
       });
@@ -70,7 +70,7 @@ namespace Engine::Manager
        GetToolkitAPI().GetDescriptorHeap()->GetGpuHandle(0)
       );
 
-    const auto& token = upload_batch.End(GetD3Device().GetSubDirectCommandQueue());
+    const auto& token = upload_batch.End(GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE));
 
     token.wait();
   }

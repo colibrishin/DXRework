@@ -121,19 +121,21 @@ namespace Engine::Resources
 
   void Mesh::OnSerialized() {}
 
+  D3D12_VERTEX_BUFFER_VIEW Mesh::GetVertexView() const
+  {
+    return m_vertex_buffer_view_;
+  }
+
+  D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexView() const
+  {
+    return m_index_buffer_view_;
+  }
+
   void Mesh::Initialize() {}
 
-  void Mesh::Render(const float& dt)
-  {
-    GetD3Device().GetDirectCommandList()->IASetVertexBuffers(0, 1, &m_vertex_buffer_view_);
-    GetD3Device().GetDirectCommandList()->IASetIndexBuffer(&m_index_buffer_view_);
-  }
+  void Mesh::Render(const float& dt) {}
 
-  void Mesh::PostRender(const float& dt)
-  {
-    GetD3Device().GetDirectCommandList()->IASetVertexBuffers(0, 0, nullptr);
-    GetD3Device().GetDirectCommandList()->IASetIndexBuffer(nullptr);
-  }
+  void Mesh::PostRender(const float& dt) {}
 
   void Mesh::PostUpdate(const float& dt) {}
 
@@ -163,7 +165,7 @@ namespace Engine::Resources
 
     const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
 
     // -- Vertex Buffer -- //
     // Initialize vertex buffer.
@@ -206,7 +208,7 @@ namespace Engine::Resources
     std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
     m_vertex_buffer_upload_->Unmap(0, nullptr);
 
-    GetD3Device().GetCopyCommandList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
+    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
@@ -249,9 +251,9 @@ namespace Engine::Resources
     std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
     m_index_buffer_upload_->Unmap(0, nullptr);
 
-    GetD3Device().GetCopyCommandList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
+    GetD3Device().GetCommandList(COMMAND_LIST_COPY)->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
 
-    GetD3Device().ExecuteCopyCommandList();
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
 
     GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
