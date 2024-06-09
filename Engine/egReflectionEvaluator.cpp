@@ -26,18 +26,18 @@ namespace Engine::Manager::Graphics
     m_copy_.Load();
   }
 
-  void ReflectionEvaluator::RenderFinished(const CommandPair& cmd) const
+  void ReflectionEvaluator::RenderFinished(const Weak<CommandPair>& w_cmd) const
   {
-    GetRenderPipeline().CopyBackBuffer(cmd, m_copy_.GetRawResoruce());
+    GetRenderPipeline().CopyBackBuffer(w_cmd, m_copy_.GetRawResoruce());
   }
 
-  void ReflectionEvaluator::BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const
+  void ReflectionEvaluator::BindReflectionMap(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const
   {
-    m_copy_.Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
+    m_copy_.Bind(w_cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
   }
 
-  void ReflectionEvaluator::UnbindReflectionMap(const CommandPair& cmd) const
+  void ReflectionEvaluator::UnbindReflectionMap(const Weak<CommandPair>& w_cmd) const
   {
-    m_copy_.Unbind(cmd, BIND_TYPE_SRV);
+    m_copy_.Unbind(w_cmd, BIND_TYPE_SRV);
   }
 }

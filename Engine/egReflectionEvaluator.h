@@ -35,10 +35,10 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
     void Initialize() override;
 
-    void RenderFinished(const CommandPair & cmd) const;
+    void RenderFinished(const Weak<CommandPair>& w_cmd) const;
 
-    void BindReflectionMap(const CommandPair & cmd, const DescriptorPtr & heap) const;
-    void UnbindReflectionMap(const CommandPair& cmd) const;
+    void BindReflectionMap(const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap) const;
+    void UnbindReflectionMap(const Weak<CommandPair> & w_cmd) const;
 
   private:
     friend struct SingletonDeleter;
