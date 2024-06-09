@@ -109,7 +109,5 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 
   output.instanceId = instanceId;
 
-  output.instanceId = instanceId;
-
   return output;
 }

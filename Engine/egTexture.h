@@ -79,14 +79,6 @@ namespace Engine::Resources
     void Unbind(const eCommandList list, const Texture& dsv) const;
     void Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
 
-    template <typename T>
-    ComPtr<T> As() const
-    {
-      ComPtr<T> ret;
-      DX::ThrowIfFailed(m_res_.As(&ret));
-      return ret;
-    }
-
     RESOURCE_SELF_INFER_GETTER(Texture)
 
   protected:
