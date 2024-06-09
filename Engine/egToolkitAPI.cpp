@@ -38,6 +38,16 @@ namespace Engine::Manager::Graphics
 
     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
 
+    m_resource_upload_batch_->End(GetD3Device().GetDirectCommandQueue());
+
+    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
+    
+    m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
+
+    m_graphics_memory_ = std::make_unique<GraphicsMemory>(GetD3Device().GetDevice());
+
+    m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
+
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
     FMOD::DX::ThrowIfFailed(m_audio_engine_->init(32, FMOD_INIT_NORMAL, nullptr));
@@ -169,7 +179,7 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::FrameBegin()
   {
-    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
+    /*const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
 
@@ -181,7 +191,9 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_descriptor_heap_->GetCpuHandle(0),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );
+    );*/
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
 
     m_sprite_batch_->Begin
     (
@@ -196,6 +208,8 @@ namespace Engine::Manager::Graphics
 
     GetD3Device().ExecuteSubDirectCommandList();
 
+    /*GetD3Device().ExecuteSubDirectCommandList();
+
     const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
@@ -206,6 +220,6 @@ namespace Engine::Manager::Graphics
         buffer_handle, 
         m_previous_handle_,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );
+    );*/
   }
 } // namespace Engine::Manager::Graphics

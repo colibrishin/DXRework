@@ -372,7 +372,7 @@ namespace Engine::Manager::Graphics
       (
        dxgi_factory->CreateSwapChainForHwnd
        (
-        m_command_queues_[COMMAND_IDX_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
+        m_command_queues_[COMMAND_IDX_SUB_DIRECT].Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
         nullptr,
         (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()
        )
@@ -471,7 +471,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::Render(const float& dt) {}
 
-  ID3D12CommandAllocator* D3Device::GetComputeCommandAllocator(UINT frame_idx) const
+  ID3D12CommandAllocator* D3Device::GetCopyCommandAllocator(UINT frame_idx) const
   {
     if (frame_idx == -1)
     {
@@ -480,15 +480,26 @@ namespace Engine::Manager::Graphics
 
   void D3Device::PostRender(const float& dt) {}
 
-  ID3D12CommandAllocator* D3Device::GetToolkitCommandAllocator(UINT frame_idx) const
+  ID3D12CommandAllocator* D3Device::GetComputeCommandAllocator(UINT frame_idx) const
   {
     if (frame_idx == -1)
     {
       frame_idx = m_frame_idx_;
     }
 
-    return m_command_allocators_.at(frame_idx)[COMMAND_IDX_TOOLKIT].Get();
+    return m_command_allocators_.at(frame_idx)[COMMAND_IDX_COMPUTE].Get();
   }
+
+  ID3D12CommandAllocator* D3Device::GetSubDirectCommandAllocator(UINT frame_idx) const
+  {
+    if (frame_idx == -1)
+    {
+      frame_idx = m_frame_idx_;
+    }
+
+    InitializeDevice();
+    InitializeCommandAllocator();
+    InitializeFence();
 
   void D3Device::Reset(const eCommandListIndex type, UINT64 buffer_idx) const
   {
@@ -497,11 +508,7 @@ namespace Engine::Manager::Graphics
       buffer_idx = m_frame_idx_;
     }
 
-    InitializeDevice();
-    InitializeCommandAllocator();
-    InitializeFence();
-
-    m_projection_matrix_ = XMMatrixPerspectiveFovLH
+    DX::ThrowIfFailed
       (
        m_command_lists_.at(buffer_idx)[type]->Reset
        (
@@ -573,7 +580,7 @@ namespace Engine::Manager::Graphics
 
     switch (type)
     {
-      case COMMAND_PRIMITIVE_DIRECT:
+      case COMMAND_IDX_DIRECT:
         DX::ThrowIfFailed
           (
            GetDirectCommandQueue()->Signal
@@ -583,7 +590,7 @@ namespace Engine::Manager::Graphics
            )
           );
         break;
-      case COMMAND_PRIMITIVE_COPY:
+      case COMMAND_IDX_COPY:
         DX::ThrowIfFailed
           (
            GetCopyCommandQueue()->Signal
@@ -593,7 +600,7 @@ namespace Engine::Manager::Graphics
            )
           );
         break;
-      case COMMAND_PRIMITIVE_COMPUTE:
+      case COMMAND_IDX_COMPUTE:
         DX::ThrowIfFailed
           (
            GetComputeCommandQueue()->Signal
@@ -603,8 +610,17 @@ namespace Engine::Manager::Graphics
            )
           );
         break;
-      default:
+      case COMMAND_IDX_SUB_DIRECT: 
+          DX::ThrowIfFailed
+          (
+           GetSubDirectCommandQueue()->Signal
+           (
+            m_fence_.Get(),
+            ++m_fence_nonce_[buffer_idx]
+           )
+          );
         break;
+      default: break;
     }
   }
 

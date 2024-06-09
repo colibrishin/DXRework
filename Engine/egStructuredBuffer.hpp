@@ -411,7 +411,7 @@ namespace Engine::Graphics
        (
         GetD3Device().GetDevice(),
         src_ptr,
-        size,
+        m_size_,
         upload_buffer.GetAddressOf()
        )
       );
@@ -424,7 +424,6 @@ namespace Engine::Graphics
 
     upload_buffer->Unmap(0, nullptr);
 
-    // Even if it is set as bind, resource will be common until the execution is done.
     const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
     (
      m_buffer_.Get(),
@@ -442,18 +441,25 @@ namespace Engine::Graphics
        upload_buffer.Get()
       );
 
+    GetD3Device().ExecuteCopyCommandList();
+
+    GetD3Device().Wait(COMMAND_IDX_COPY);
+
     const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
        D3D12_RESOURCE_STATE_COPY_DEST,
        D3D12_RESOURCE_STATE_COMMON
       );
-  
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
-
-    GetD3Device().ExecuteCopyCommandList();
-
+    
     GetGC().Track(upload_buffer);
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
+  
+    GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &revert_barrier);
+
+    GetD3Device().ExecuteSubDirectCommandList();
+
   }
 
   // This will execute the command list and copy the data from the GPU to the CPU.

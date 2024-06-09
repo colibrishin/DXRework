@@ -62,11 +62,9 @@ namespace Engine::Resources
     m_bound_slot_offset_ = slot_offset;
   }
 
-  void Texture::Map(const std::function<void(char*)>& copy_func)
+  void Texture::mapInternal()
   {
     const auto& total_size = m_desc_.Width * m_desc_.Height * m_desc_.DepthOrArraySize;
-
-    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
 
     const auto& dest_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -74,8 +72,6 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COMMON,
        D3D12_RESOURCE_STATE_COPY_DEST
       );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &dest_transition);
 
     DX::ThrowIfFailed
     (
@@ -94,22 +90,36 @@ namespace Engine::Resources
     DX::ThrowIfFailed(
         m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped)));
 
-    copy_func(mapped);
+    const bool map_flag = map(mapped);
 
     m_upload_buffer_->Unmap(0, nullptr);
 
-    GetD3Device().GetCopyCommandList()->CopyResource(m_res_.Get(), m_upload_buffer_.Get());
+    if (!map_flag)
+    {
+      return;
+    }
 
-    const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &dest_transition);
+
+    auto dst = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
+    auto src = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    src.PlacedFootprint = {0, {m_desc_.Format, m_desc_.Width, m_desc_.Height, m_desc_.DepthOrArraySize}};
+    src.PlacedFootprint.Footprint.RowPitch = m_desc_.Width * DirectX::BitsPerPixel(m_desc_.Format) / 8;
+    src.PlacedFootprint.Footprint.Depth = m_desc_.DepthOrArraySize;
+    src.PlacedFootprint.Footprint.Width = m_desc_.Width;
+    src.PlacedFootprint.Footprint.Height = m_desc_.Height;
+    src.PlacedFootprint.Footprint.Format = m_desc_.Format;
+
+    GetD3Device().GetCopyCommandList()->CopyTextureRegion
       (
-       m_res_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST,
-       D3D12_RESOURCE_STATE_COMMON
+       &dst,
+       0, 0, 0,
+       &src,
+       nullptr
       );
-
-    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &common_transition);
-
-    DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
 
     GetD3Device().ExecuteCopyCommandList();
   }
@@ -285,6 +295,21 @@ namespace Engine::Resources
           m_uav_->GetCPUDescriptorHandleForHeapStart(), 
           m_bound_slot_ + m_bound_slot_offset_);
     }
+    else if (m_bound_type_ == BIND_TYPE_UAV)
+    {
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+      );
+
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
+
+      GetRenderPipeline().SetUnorderedAccess(
+          m_uav_->GetCPUDescriptorHandleForHeapStart(), 
+          m_bound_slot_ + m_bound_slot_offset_);
+    }
   }
 
   void Texture::PostRender(const float& dt)
@@ -350,7 +375,7 @@ namespace Engine::Resources
     {
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
       1,
-      D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
       0
     };
 
@@ -413,6 +438,8 @@ namespace Engine::Resources
     {
       throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
     }
+
+    loadDerived(m_res_);
 
     if (!GetPath().empty())
     {
@@ -501,11 +528,10 @@ namespace Engine::Resources
         );
     }
 
-    loadDerived(m_res_);
+    mapInternal();
 
     InitializeDescriptorHeaps();
 
-    // todo: lazy initialization is not necessary now.
     if (m_custom_desc_[3])
     {
       GetD3Device().GetDevice()->CreateShaderResourceView(
@@ -551,6 +577,11 @@ namespace Engine::Resources
     }
 
     m_b_lazy_window_ = false;
+  }
+
+  bool Texture::map(char* mapped)
+  {
+    return false;
   }
 
   void Texture::Unload_INTERNAL()
