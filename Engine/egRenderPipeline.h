@@ -53,11 +53,13 @@ namespace Engine::Manager::Graphics
       return { m_param_buffer_ };
     }
 
-    void DefaultRenderTarget(const CommandPair & cmd) const;
-    void DefaultViewport(const CommandPair & cmd) const;
-    void DefaultScissorRect(const CommandPair & cmd) const;
+    void DefaultRenderTarget(const Weak<CommandPair> & w_cmd) const;
+    void DefaultViewport(const Weak<CommandPair> & w_cmd) const;
+    void DefaultScissorRect(const Weak<CommandPair> & w_cmd) const;
+    void DefaultHeaps(const Weak<CommandPair> & w_cmd) const;
+    void DefaultRootSignature(const Weak<CommandPair> & w_cmd) const;
 
-    void CopyBackBuffer(const CommandPair & cmd, ID3D12Resource * resource) const;
+    void CopyBackBuffer(const Weak<CommandPair> & w_cmd, ID3D12Resource * resource) const;
 
     ID3D12RootSignature*  GetRootSignature() const;
 
@@ -77,7 +79,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void BindConstantBuffers(const CommandPair & cmd, const DescriptorPtr & heap);
+    void BindConstantBuffers(const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap);
 
   private:
     friend class ToolkitAPI;
