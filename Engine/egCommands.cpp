@@ -50,6 +50,9 @@ namespace Engine
 
   void CommandPair::HardReset()
   {
+    std::lock_guard<std::mutex> el(m_execute_mutex_);
+    std::lock_guard<std::mutex> rl(m_ready_mutex_);
+
     DX::ThrowIfFailed(m_allocator_->Reset());
     DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
     DX::ThrowIfFailed(m_list_->Close());
@@ -60,6 +63,8 @@ namespace Engine
 
   void CommandPair::SoftReset()
   {
+    std::lock_guard<std::mutex> el(m_execute_mutex_);
+    std::lock_guard<std::mutex> rl(m_ready_mutex_);
     DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 
     m_b_executed_ = false;
@@ -112,6 +117,14 @@ namespace Engine
 
   void CommandPair::Execute()
   {
+    {
+      std::lock_guard<std::mutex> rl(m_ready_mutex_);
+      if (!m_b_ready_)
+      {
+        throw std::exception("CommandPair::Execute() called before command is ready.");
+      }
+    }
+
     std::lock_guard<std::mutex> lock(m_execute_mutex_);
 
     DX::ThrowIfFailed(m_list_->Close());
