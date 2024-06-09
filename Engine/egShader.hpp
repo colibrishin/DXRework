@@ -1,4 +1,5 @@
 #pragma once
+#include <d3d11.h>
 #include <filesystem>
 #include "egCommon.hpp"
 #include "egEntity.hpp"
@@ -14,8 +15,11 @@ namespace Engine::Resources
     Shader(
       const EntityName&  name, const std::filesystem::path& path,
       eShaderDomain      domain, eShaderDepths              depth,
-      eShaderRasterizers rasterizer, D3D11_FILTER           sampler_filter, eShaderSamplers sampler,
-      D3D11_PRIMITIVE_TOPOLOGY topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+      eShaderRasterizers rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
+      DXGI_FORMAT        rtv_format = DXGI_FORMAT_R8G8B8A8_UNORM, 
+      DXGI_FORMAT            dsv_format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+      D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
     );
     ~Shader() override = default;
 
@@ -29,19 +33,27 @@ namespace Engine::Resources
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
 
-    void SetTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
+    void SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type);
 
     eShaderDomain GetDomain() const;
 
+    [[nodiscard]] ID3D12PipelineState*         GetPipelineState() const;
+    [[nodiscard]] D3D_PRIMITIVE_TOPOLOGY       GetTopology() const;
+    [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE  GetShaderHeap() const;
+
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
-      const std::string &           name,
-      const std::filesystem::path & path,
-      const eShaderDomain           domain,
-      const UINT                    depth,
-      const UINT                    rasterizer,
-      const D3D11_FILTER            filter,
-      const UINT                    sampler, D3D11_PRIMITIVE_TOPOLOGY topology
+      const std::string&           name,
+      const std::filesystem::path& path,
+      const eShaderDomain          domain,
+      const UINT                   depth,
+      const UINT                   rasterizer,
+      const D3D12_FILTER           filter,
+      const UINT                   sampler,
+      const DXGI_FORMAT        rtv_format, 
+      const DXGI_FORMAT            dsv_format,
+      const D3D_PRIMITIVE_TOPOLOGY topology, 
+      const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
     );
 
   protected:
@@ -61,32 +73,38 @@ namespace Engine::Resources
       {SHADER_DOMAIN, "ds_main", "ds_5_0"}
     };
 
+    ComPtr<ID3D12PipelineState> m_pipeline_state_;
+
   private:
     Shader();
     SERIALIZE_DECL
 
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC  m_pipeline_state_desc_;
+    
     eShaderDomain              m_domain_;
     bool                       m_depth_flag_;
-    D3D11_DEPTH_WRITE_MASK     m_depth_test_;
-    D3D11_COMPARISON_FUNC      m_depth_func_;
-    D3D11_FILTER               m_smp_filter_;
-    D3D11_TEXTURE_ADDRESS_MODE m_smp_address_;
-    D3D11_COMPARISON_FUNC      m_smp_func_;
-    D3D11_CULL_MODE            m_cull_mode_;
-    D3D11_FILL_MODE            m_fill_mode_;
+    D3D12_DEPTH_WRITE_MASK     m_depth_test_;
+    D3D12_COMPARISON_FUNC      m_depth_func_;
+    D3D12_FILTER               m_smp_filter_;
+    D3D12_TEXTURE_ADDRESS_MODE m_smp_address_;
+    D3D12_COMPARISON_FUNC      m_smp_func_;
+    D3D12_CULL_MODE            m_cull_mode_;
+    D3D12_FILL_MODE            m_fill_mode_;
 
-    D3D11_PRIMITIVE_TOPOLOGY  m_topology_;
-    ComPtr<ID3D11InputLayout> m_il_;
+    DXGI_FORMAT                                                   m_rtv_format_;
+    DXGI_FORMAT                                                   m_dsv_format_;
+    D3D_PRIMITIVE_TOPOLOGY                                        m_topology_;
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_type_;
+    std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> m_il_;
+    std::vector<D3D12_INPUT_ELEMENT_DESC>                         m_il_elements_;
 
-    ComPtr<ID3D11VertexShader>   m_vs_;
-    ComPtr<ID3D11PixelShader>    m_ps_;
-    ComPtr<ID3D11GeometryShader> m_gs_;
-    ComPtr<ID3D11HullShader>     m_hs_;
-    ComPtr<ID3D11DomainShader>   m_ds_;
+    ComPtr<ID3DBlob>            m_vs_blob_;
+    ComPtr<ID3DBlob>            m_ps_blob_;
+    ComPtr<ID3DBlob>            m_gs_blob_;
+    ComPtr<ID3DBlob>            m_hs_blob_;
+    ComPtr<ID3DBlob>            m_ds_blob_;
 
-    ComPtr<ID3D11DepthStencilState> m_dss_;
-    ComPtr<ID3D11RasterizerState>   m_rs_;
-    ComPtr<ID3D11SamplerState>      m_ss_;
+    ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
   };
 } // namespace Engine::Graphic
 

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egMaterial.h"
 
+#include "egAnimationsTexture.h"
+#include "egCommands.h"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
@@ -13,7 +15,7 @@ SERIALIZE_IMPL
 (
  Engine::Resources::Material,
  _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_material_cb_)
+ _ARTAG(m_material_sb_)
  _ARTAG(m_shader_paths_)
  _ARTAG(m_resource_paths_)
 )
@@ -22,17 +24,17 @@ namespace Engine::Resources
 {
   Material::Material(const std::filesystem::path& path)
     : Resource(path, RES_T_MTR),
-      m_material_cb_(),
+      m_material_sb_(),
       m_b_edit_dialog_(false),
       m_b_wait_for_choices_(false)
   {
-    m_material_cb_.specularPower         = 100.0f;
-    m_material_cb_.specularColor         = DirectX::Colors::White;
-    m_material_cb_.reflectionScale       = 0.15f;
-    m_material_cb_.refractionScale       = 0.15f;
-    m_material_cb_.clipPlane             = Vector4::Zero;
-    m_material_cb_.reflectionTranslation = 0.5f;
-    m_material_cb_.repeatTexture         = false;
+    m_material_sb_.specularPower         = 100.0f;
+    m_material_sb_.specularColor         = DirectX::Colors::White;
+    m_material_sb_.reflectionScale       = 0.15f;
+    m_material_sb_.refractionScale       = 0.15f;
+    m_material_sb_.clipPlane             = Vector4::Zero;
+    m_material_sb_.reflectionTranslation = 0.5f;
+    m_material_sb_.repeatTexture         = false;
   }
 
 
@@ -44,99 +46,11 @@ namespace Engine::Resources
 
   void Material::FixedUpdate(const float& dt) {}
 
-  void Material::PreRender(const float& dt)
-  {
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->PreRender(dt);
-    }
+  void Material::PreRender(const float& dt) {}
 
-    m_material_cb_.flags = {};
+  void Material::Render(const float& dt) {}
 
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM)
-      {
-        m_material_cb_.flags.bone = 1;
-        continue;
-      }
-
-      if (type == RES_T_ATLAS_ANIM)
-      {
-        m_material_cb_.flags.atlas = 1;
-        continue;
-      }
-
-      for (auto it = resources.begin(); it != resources.end(); ++it)
-      {
-        const auto res = *it;
-
-        if (type == RES_T_TEX)
-        {
-          const UINT idx                = static_cast<UINT>(std::distance(resources.begin(), it));
-          m_material_cb_.flags.tex[idx] = 1;
-        }
-
-        res->PreRender(dt);
-      }
-    }
-
-    GetRenderPipeline().SetMaterial(m_material_cb_);
-  }
-
-  void Material::Render(const float& dt)
-  {
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->Render(dt);
-    }
-
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_ANIM) { continue; }
-
-      for (auto it = resources.begin(); it != resources.end(); ++it)
-      {
-        const auto res = *it;
-
-        if (type == RES_T_TEX)
-        {
-          // todo: distinguish tex type
-          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
-          res->GetSharedPtr<Texture>()->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, idx, SHADER_PIXEL);
-        }
-
-        if (type == RES_T_SHAPE)
-        {
-          res->GetSharedPtr<Shape>()->SetInstanceCount(m_temp_param_.instanceCount);
-        }
-
-        res->Render(dt);
-      }
-    }
-  }
-
-  void Material::PostRender(const float& dt)
-  {
-    GetRenderPipeline().SetMaterial({});
-
-    if (!m_temp_param_.bypassShader)
-    {
-      m_shaders_loaded_[m_temp_param_.domain]->PostRender(dt);
-    }
-
-    for (const auto& [type, resources] : m_resources_loaded_)
-    {
-      // No need to render the all animation.
-      if (type == RES_T_BONE_ANIM || type == RES_T_ATLAS_TEX) { continue; }
-
-      for (const auto& res : resources) { res->PostRender(dt); }
-    }
-
-    m_temp_param_ = {};
-  }
+  void Material::PostRender(const float& dt) {}
 
   void Material::OnSerialized()
   {
@@ -170,16 +84,16 @@ namespace Engine::Resources
     Resource::OnImGui();
 
     // Material properties
-    FloatAligned("Specular Power", m_material_cb_.specularPower);
-    FloatAligned("Reflection Scale", m_material_cb_.reflectionScale);
-    FloatAligned("Refraction Scale", m_material_cb_.refractionScale);
-    FloatAligned("Reflection Translation", m_material_cb_.reflectionTranslation);
+    FloatAligned("Specular Power", m_material_sb_.specularPower);
+    FloatAligned("Reflection Scale", m_material_sb_.reflectionScale);
+    FloatAligned("Refraction Scale", m_material_sb_.refractionScale);
+    FloatAligned("Reflection Translation", m_material_sb_.reflectionTranslation);
 
-    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_cb_.overrideColor);
-    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_cb_.specularColor);
-    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_cb_.clipPlane));
+    ImGuiColorEditable("Override Color", GetID(), "override_color", m_material_sb_.overrideColor);
+    ImGuiColorEditable("Specular Color", GetID(), "specular_color", m_material_sb_.specularColor);
+    ImGuiVector3Editable("Clip plane", GetID(), "clip_plane", reinterpret_cast<Vector3&>(m_material_sb_.clipPlane));
 
-    CheckboxAligned("Repeat Texture", reinterpret_cast<bool&>(m_material_cb_.repeatTexture.value));
+    CheckboxAligned("Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture.value));
 
     if (ImGui::Button("Edit Resources")) { m_b_edit_dialog_ = true; }
 
@@ -282,11 +196,12 @@ namespace Engine::Resources
     }
   }
 
-  void Material::SetTempParam(TempParam&& param) noexcept { m_temp_param_ = std::move(param); }
+  void Material::SetTempParam(TempParam&& param) noexcept
+  {
+    m_temp_param_ = std::move(param);
+  }
 
   bool Material::IsRenderDomain(eShaderDomain domain) const noexcept { return m_shaders_loaded_.contains(domain); }
-
-  void Material::SetProperties(CBs::MaterialCB&& material_cb) noexcept { m_material_cb_ = std::move(material_cb); }
 
   void Material::SetTextureSlot(const std::string& name, const UINT slot)
   {
@@ -299,9 +214,112 @@ namespace Engine::Resources
     std::iter_swap(texs.begin() + slot, it);
   }
 
+  void Material::Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap)
+  {
+    const auto& cmd = w_cmd.lock();
+
+    heap->BindGraphic(cmd);
+
+    if (!m_temp_param_.bypassShader)
+    {
+      cmd->GetList()->SetPipelineState(m_shaders_loaded_[m_temp_param_.domain]->GetPipelineState());
+      cmd->GetList()->IASetPrimitiveTopology(m_shaders_loaded_[m_temp_param_.domain]->GetTopology());
+      heap->SetSampler(m_shaders_loaded_[m_temp_param_.domain]->GetShaderHeap(), SAMPLER_TEXTURE);
+    }
+
+    if (!m_resources_loaded_.contains(RES_T_SHAPE))
+    {
+      return;
+    }
+
+    const auto& instance_count = m_temp_param_.instanceCount;
+
+    if (m_resources_loaded_.contains(RES_T_BONE_ANIM))
+    {
+      m_material_sb_.flags.bone = 1;
+    }
+
+    if (m_resources_loaded_.contains(RES_T_ATLAS_ANIM))
+    {
+      m_material_sb_.flags.atlas = 1;
+    }
+
+    for (const auto& [type, resources] : m_resources_loaded_)
+    {
+      if (type == RES_T_SHAPE) { continue; }
+
+      if (type == RES_T_ATLAS_ANIM)
+      {
+        const auto& anim = resources.front()->GetSharedPtr<AnimationsTexture>();
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
+        continue;
+      }
+
+      for (auto it = resources.begin(); it != resources.end(); ++it)
+      {
+        const auto res = *it;
+
+        if (type == RES_T_TEX)
+        {
+          // todo: distinguish tex type
+          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
+          const auto& tex = res->GetSharedPtr<Texture>();
+
+          tex->Bind(cmd, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
+
+          m_material_sb_.flags.tex[idx] = 1;
+        }
+      }
+    }
+
+    // todo: Multiple same update for material
+    m_material_sb_data_.SetData(cmd->GetList(), 1, &m_material_sb_);
+    m_material_sb_data_.TransitionToSRV(cmd->GetList());
+    m_material_sb_data_.CopySRVHeap(heap);
+    GetRenderPipeline().BindConstantBuffers(cmd, heap);
+
+    for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
+    {
+      const auto& shape = s->GetSharedPtr<Shape>();
+
+      if (const auto& anim = shape->GetAnimations().lock())
+      {
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_BONES, 0);
+      }
+
+      for (const auto& mesh: shape->GetMeshes())
+      {
+        const auto& idx_count = mesh->GetIndexCount();
+        const auto& vtx_view = mesh->GetVertexView();
+        const auto& idx_view = mesh->GetIndexView();
+
+        cmd->GetList()->IASetVertexBuffers(0, 1, &vtx_view);
+        cmd->GetList()->IASetIndexBuffer(&idx_view);
+        cmd->GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
+      }
+
+      if (const auto& anim = shape->GetAnimations().lock())
+      {
+        anim->Unbind(cmd, BIND_TYPE_SRV);
+      }
+    }
+
+    if (m_resources_loaded_.contains(RES_T_TEX))
+    {
+      std::fill_n(m_material_sb_.flags.tex, m_resources_loaded_[RES_T_TEX].size(), 0);
+
+      for (const auto& tex : m_resources_loaded_[RES_T_TEX])
+      {
+        tex->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
+      }
+    }
+
+    m_material_sb_data_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+  }
+
   Material::Material()
     : Resource("", RES_T_MTR),
-      m_material_cb_(),
+      m_material_sb_(),
       m_b_edit_dialog_(false),
       m_b_wait_for_choices_(false) {}
 

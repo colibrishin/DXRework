@@ -15,19 +15,11 @@ SERIALIZE_IMPL
 
 namespace Client::ComputeShaders
 {
-  void ParticleCompute::preDispatch()
+  void ParticleCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
-    m_noises_[0]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 3, SHADER_COMPUTE);
-    m_noises_[1]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 4, SHADER_COMPUTE);
-    m_noises_[2]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 5, SHADER_COMPUTE);
-
-    m_noises_[0]->PreRender(0.f);
-    m_noises_[1]->PreRender(0.f);
-    m_noises_[2]->PreRender(0.f);
-
-    m_noises_[0]->Render(0.f);
-    m_noises_[1]->Render(0.f);
-    m_noises_[2]->Render(0.f);
+    m_noises_[0]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_noises_[1]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
+    m_noises_[2]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 2);
 
     auto rng = getRandomEngine();
     const auto rng_val = rng() % random_texture_size;
@@ -35,11 +27,11 @@ namespace Client::ComputeShaders
     GetRenderPipeline().SetParam((int)rng_val, random_value_slot);
   }
 
-  void ParticleCompute::postDispatch()
+  void ParticleCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
-    m_noises_[0]->PostRender(0.f);
-    m_noises_[1]->PostRender(0.f);
-    m_noises_[2]->PostRender(0.f);
+    m_noises_[0]->Unbind(list, BIND_TYPE_SRV);
+    m_noises_[1]->Unbind(list, BIND_TYPE_SRV);
+    m_noises_[2]->Unbind(list, BIND_TYPE_SRV);
 
     auto rng = getRandomEngine();
     std::ranges::shuffle(m_noises_, rng);

@@ -17,7 +17,8 @@ namespace Engine::Resources
     : Resource(path, RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
-      m_lazy_reload_(false) {}
+      m_lazy_reload_(false),
+      m_heap_(GetD3Device().GetDevice(), 1) {}
 
   void Font::Initialize() {}
 
@@ -39,11 +40,17 @@ namespace Engine::Resources
 
   void Font::Render(const float& dt)
   {
-    m_font_->DrawString
+    GetToolkitAPI().AppendSpriteBatch
       (
-       GetToolkitAPI().GetSpriteBatch(), m_text_.c_str(),
-       m_position_, m_color_, m_rotation_radian_, Vector2::Zero,
-       m_scale_
+       [this]()
+       {
+         m_font_->DrawString
+           (
+            GetToolkitAPI().GetSpriteBatch(), m_text_.c_str(),
+            m_position_, m_color_, m_rotation_radian_, Vector2::Zero,
+            m_scale_
+           );
+       }
       );
   }
 
@@ -77,14 +84,26 @@ namespace Engine::Resources
     : Resource("", RES_T_FONT),
       m_rotation_radian_(0),
       m_scale_(1),
-      m_lazy_reload_(false) {}
+      m_lazy_reload_(false),
+      m_heap_(GetD3Device().GetDevice(), 1) {}
 
   void Font::Load_INTERNAL()
   {
+    DirectX::ResourceUploadBatch resource_upload_batch(GetD3Device().GetDevice());
+
+    resource_upload_batch.Begin();
+
     m_font_ = std::make_unique<SpriteFont>
       (
        GetD3Device().GetDevice(),
-       GetPath().c_str()
+       resource_upload_batch,
+       GetPath().c_str(),
+       m_heap_.GetFirstCpuHandle(),
+       m_heap_.GetFirstGpuHandle()
       );
+
+    const auto& token = resource_upload_batch.End(GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE));
+
+    token.wait();
   }
 } // namespace Engine::Resources

@@ -171,13 +171,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_RTV& x,
+    Archive&           ar, D3D12_TEX1D_RTV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_ARRAY_RTV& x,
+    Archive&           ar, D3D12_TEX1D_ARRAY_RTV& x,
     const unsigned int version
   )
   {
@@ -188,13 +188,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_RTV& x,
+    Archive&           ar, D3D12_TEX2D_RTV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_ARRAY_RTV& x,
+    Archive&           ar, D3D12_TEX2D_ARRAY_RTV& x,
     const unsigned int version
   )
   {
@@ -205,13 +205,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_RTV& x,
+    Archive&           ar, D3D12_TEX2DMS_RTV& x,
     const unsigned int version
   ) { ar & x.UnusedField_NothingToDefine; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_ARRAY_RTV& x,
+    Archive&           ar, D3D12_TEX2DMS_ARRAY_RTV& x,
     const unsigned int version
   )
   {
@@ -221,7 +221,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX3D_RTV& x,
+    Archive&           ar, D3D12_TEX3D_RTV& x,
     const unsigned int version
   )
   {
@@ -232,13 +232,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_DSV& x,
+    Archive&           ar, D3D12_TEX1D_DSV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_ARRAY_DSV& x,
+    Archive&           ar, D3D12_TEX1D_ARRAY_DSV& x,
     const unsigned int version
   )
   {
@@ -249,13 +249,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_DSV& x,
+    Archive&           ar, D3D12_TEX2D_DSV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_ARRAY_DSV& x,
+    Archive&           ar, D3D12_TEX2D_ARRAY_DSV& x,
     const unsigned int version
   )
   {
@@ -266,13 +266,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_DSV& x,
+    Archive&           ar, D3D12_TEX2DMS_DSV& x,
     const unsigned int version
   ) { ar & x.UnusedField_NothingToDefine; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_ARRAY_DSV& x,
+    Archive&           ar, D3D12_TEX2DMS_ARRAY_DSV& x,
     const unsigned int version
   )
   {
@@ -282,7 +282,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_SRV& x,
+    Archive&           ar, D3D12_TEX1D_SRV& x,
     const unsigned int version
   )
   {
@@ -292,29 +292,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_ARRAY_SRV& x,
-    const unsigned int version
-  )
-  {
-    ar & x.MostDetailedMip;
-    ar & x.MipLevels;
-    ar & x.FirstArraySlice;
-    ar & x.ArraySize;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, D3D11_TEX2D_SRV& x,
-    const unsigned int version
-  )
-  {
-    ar & x.MostDetailedMip;
-    ar & x.MipLevels;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, D3D11_TEX2D_ARRAY_SRV& x,
+    Archive&           ar, D3D12_TEX1D_ARRAY_SRV& x,
     const unsigned int version
   )
   {
@@ -326,13 +304,35 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_SRV& x,
+    Archive&           ar, D3D12_TEX2D_SRV& x,
+    const unsigned int version
+  )
+  {
+    ar & x.MostDetailedMip;
+    ar & x.MipLevels;
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, D3D12_TEX2D_ARRAY_SRV& x,
+    const unsigned int version
+  )
+  {
+    ar & x.MostDetailedMip;
+    ar & x.MipLevels;
+    ar & x.FirstArraySlice;
+    ar & x.ArraySize;
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, D3D12_TEX2DMS_SRV& x,
     const unsigned int version
   ) { ar & x.UnusedField_NothingToDefine; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2DMS_ARRAY_SRV& x,
+    Archive&           ar, D3D12_TEX2DMS_ARRAY_SRV& x,
     const unsigned int version
   )
   {
@@ -342,7 +342,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX3D_SRV& x,
+    Archive&           ar, D3D12_TEX3D_SRV& x,
     const unsigned int version
   )
   {
@@ -352,7 +352,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEXCUBE_SRV& x,
+    Archive&           ar, D3D12_TEXCUBE_SRV& x,
     const unsigned int version
   )
   {
@@ -362,7 +362,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEXCUBE_ARRAY_SRV& x,
+    Archive&           ar, D3D12_TEXCUBE_ARRAY_SRV& x,
     const unsigned int version
   )
   {
@@ -374,13 +374,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_UAV& x,
+    Archive&           ar, D3D12_TEX1D_UAV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX1D_ARRAY_UAV& x,
+    Archive&           ar, D3D12_TEX1D_ARRAY_UAV& x,
     const unsigned int version
   )
   {
@@ -391,13 +391,13 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_UAV& x,
+    Archive&           ar, D3D12_TEX2D_UAV& x,
     const unsigned int version
   ) { ar & x.MipSlice; }
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX2D_ARRAY_UAV& x,
+    Archive&           ar, D3D12_TEX2D_ARRAY_UAV& x,
     const unsigned int version
   )
   {
@@ -408,7 +408,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_TEX3D_UAV& x,
+    Archive&           ar, D3D12_TEX3D_UAV& x,
     const unsigned int version
   )
   {
@@ -419,17 +419,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_BUFFER_RTV& x,
-    const unsigned int version
-  )
-  {
-    ar & x.ElementOffset;
-    ar & x.ElementWidth;
-  }
-
-  template <class Archive>
-  void serialize(
-    Archive&           ar, D3D11_BUFFER_SRV& x,
+    Archive&           ar, D3D12_BUFFER_RTV& x,
     const unsigned int version
   )
   {
@@ -439,7 +429,17 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_BUFFER_UAV& x,
+    Archive&           ar, D3D12_BUFFER_SRV& x,
+    const unsigned int version
+  )
+  {
+    ar & x.FirstElement;
+    ar & x.NumElements;
+  }
+
+  template <class Archive>
+  void serialize(
+    Archive&           ar, D3D12_BUFFER_UAV& x,
     const unsigned int version
   )
   {
@@ -450,7 +450,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_RENDER_TARGET_VIEW_DESC& x,
+    Archive&           ar, D3D12_RENDER_TARGET_VIEW_DESC& x,
     const unsigned int version
   )
   {
@@ -467,7 +467,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_DEPTH_STENCIL_VIEW_DESC& x,
+    Archive&           ar, D3D12_DEPTH_STENCIL_VIEW_DESC& x,
     const unsigned int version
   )
   {
@@ -481,7 +481,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_UNORDERED_ACCESS_VIEW_DESC& x,
+    Archive&           ar, D3D12_UNORDERED_ACCESS_VIEW_DESC& x,
     const unsigned int version
   )
   {
@@ -496,7 +496,7 @@ namespace boost::serialization
 
   template <class Archive>
   void serialize(
-    Archive&           ar, D3D11_SHADER_RESOURCE_VIEW_DESC& x,
+    Archive&           ar, D3D12_SHADER_RESOURCE_VIEW_DESC& x,
     const unsigned int version
   )
   {

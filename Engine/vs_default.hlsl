@@ -18,7 +18,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 #define INST_NO_ANIM   iParam[0].z
 #define INST_WORLD     mParam[0]
 
-  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
+  if (bufMaterial[0].bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
   {
     matrix animation_transform;
 
@@ -105,7 +105,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
   output.refraction = mul(output.position, vpw);
 
   output.clipSpacePosZ = output.position.z;
-  output.clipPlane     = dot(mul(input.position, world), g_clipPlane);
+  output.clipPlane     = dot(mul(input.position, world), bufMaterial[instanceId].clipPlane);
 
   output.instanceId = instanceId;
 

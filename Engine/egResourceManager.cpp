@@ -281,6 +281,8 @@ namespace Engine::Manager
           "PointList", "LineList", "LineStrip", "TriangleList", "TriangleStrip", "LineListAdj", "LineStripAdj", "TriangleListAdj", "TriangleStripAdj", "PatchList"
         };
 
+        static const char* topology_types[] = {"Undefined", "Point", "Line", "Triangle", "Patch"};
+
         int sel_domain          = 0;
         int sel_depth           = 0;
         int sel_depth_func      = 0;
@@ -316,9 +318,12 @@ namespace Engine::Manager
                (eShaderDomain)(sel_domain),
                (UINT)(sel_depth | sel_depth_func >> 2),
                (UINT)(sel_cull | sel_fill >> 3),
-               (D3D11_FILTER)(sel_filter),
+               (D3D12_FILTER)(sel_filter),
                (UINT)(sel_sampler_address | sel_sampler_func >> 5),
-               (D3D11_PRIMITIVE_TOPOLOGY)(sel_topology + 1)
+               DXGI_FORMAT_R8G8B8A8_UNORM, // todo: add a way to select this
+               DXGI_FORMAT_D24_UNORM_S8_UINT,
+               (D3D_PRIMITIVE_TOPOLOGY)(sel_topology + 1),
+               (D3D12_PRIMITIVE_TOPOLOGY_TYPE)(sel_topology + 1)
               );
 
             m_b_imgui_load_shader_dialog_ = false;

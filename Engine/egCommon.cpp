@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "egCommon.hpp"
 #include "egBaseCollider.hpp"
 #include "egLayer.h"
 #include "egObject.hpp"

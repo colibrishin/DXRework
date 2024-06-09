@@ -13,12 +13,10 @@ namespace Engine
   constexpr int  g_max_reflect_refract_map_size = 512;
   constexpr UINT g_max_frame_latency_second     = 1;
   constexpr UINT g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
-  constexpr UINT g_max_slot_per_texture         = 8;
-  constexpr UINT g_max_slot_per_uav             = 2;
-  constexpr UINT g_reserved_struct_buffer_slot  = 32;
-  constexpr UINT g_reserved_bind_slot           = 48;
   constexpr UINT g_uav_slot_limit               = 8;
-  constexpr UINT g_reserved_uav_slot            = 6;
+  constexpr UINT g_structured_buffer_start      = 64;
+  constexpr UINT g_max_concurrent_command_lists = 100;
+  constexpr UINT g_param_buffer_slot_size       = 8;
 
   // Physics Constants
   constexpr float   g_epsilon                             = 0.001f;

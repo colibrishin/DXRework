@@ -14,41 +14,38 @@ namespace Client::ComputeShaders
 
   void IntersectionCompute::OnImGui(const StrongParticleRenderer& pr) {}
 
-  void IntersectionCompute::preDispatch()
+  void IntersectionCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
     if (m_light_table_ptr_ == nullptr)
     {
       return;
     }
 
-    m_light_table_ptr_->BindUAV();
+    m_light_table_ptr_->CopyUAVHeap(heap);
+    m_light_table_ptr_->TransitionToUAV(list);
 
     // 512 x 512
     SetGroup({256, 1, 1});
 
-    m_intersection_texture_->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 0, SHADER_COMPUTE);
-    m_position_texture_->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 1, SHADER_COMPUTE);
-
-    m_intersection_texture_->PreRender(0);
-    m_intersection_texture_->Render(0);
-    m_position_texture_->PreRender(0);
-    m_position_texture_->Render(0);
+    m_intersection_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
+    m_position_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
 
     GetRenderPipeline().SetParam<int>(m_target_light_, target_light_slot);
   }
 
-  void IntersectionCompute::postDispatch()
+  void IntersectionCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
     if (m_light_table_ptr_ == nullptr)
     {
       return;
     }
 
-    m_light_table_ptr_->UnbindUAV();
+    m_light_table_ptr_->TransitionCommon(list, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-    m_intersection_texture_->PostRender(0);
-    m_position_texture_->PostRender(0);
     GetRenderPipeline().SetParam<int>(0, target_light_slot);
+
+    m_intersection_texture_->Unbind(list, BIND_TYPE_SRV);
+    m_position_texture_->Unbind(list, BIND_TYPE_SRV);
 
     m_light_table_ptr_ = nullptr;
     m_target_light_ = 0;

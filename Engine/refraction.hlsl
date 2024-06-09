@@ -14,8 +14,8 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float4 normalMap = tex00.Sample(PSSampler, input.tex);
   float3 normal    = (normalMap.xyz * 2.0f) - 1.0f;
 
-  reflectTex += normal.xy * g_reflectionScale;
-  refractTex += normal.xy * g_refractionScale;
+  reflectTex += normal.xy * bufMaterial[0].reflectionScale;
+  refractTex += normal.xy * bufMaterial[0].refractionScale;
 
   const float4 reflectColor = texRendered.Sample(PSSampler, reflectTex);
   const float4 refractColor = texRendered.Sample(PSSampler, refractTex);

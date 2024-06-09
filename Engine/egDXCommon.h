@@ -86,7 +86,7 @@ namespace Engine::Graphics
 
     struct LightVPSB
     {
-      SB_T(SB_TYPE_SHADOW)
+      SB_T(SB_TYPE_LIGHT_VP)
 
       Matrix  view[g_max_shadow_cascades];
       Matrix  proj[g_max_shadow_cascades];
@@ -105,6 +105,11 @@ namespace Engine::Graphics
       {
         ar & boost::serialization::base_object<ParamBase>(*this);
       }
+    };
+
+    struct LocalParamSB : public ParamBase
+    {
+      SB_T(SB_TYPE_LOCAL_PARAM)
     };
 
     struct InstanceModelSB : public InstanceSB
@@ -155,36 +160,11 @@ namespace Engine::Graphics
 
       bool& GetActive() { return reinterpret_cast<bool&>(GetParam<int>(0)); }
     };
-  }
 
-
-  namespace CBs
-  {
-    // Constant buffers
-    struct PerspectiveCB
+    struct MaterialSB
     {
-      CB_T(CB_TYPE_WVP)
+      SB_T(SB_TYPE_MATERIAL)
 
-      Matrix world;
-      Matrix view;
-      Matrix projection;
-
-      Matrix invView;
-      Matrix invProj;
-
-      Matrix reflectView;
-    };
-
-    struct TransformCB
-    {
-      CB_T(CB_TYPE_TRANSFORM)
-
-      Matrix world;
-    };
-
-    struct MaterialCB
-    {
-      CB_T(CB_TYPE_MATERIAL)
       friend class boost::serialization::access;
 
       template <class Archive>
@@ -212,6 +192,25 @@ namespace Engine::Graphics
       Vector4      clipPlane;
       OffsetT<int> repeatTexture;
     };
+  }
+
+
+  namespace CBs
+  {
+    // Constant buffers
+    struct PerspectiveCB
+    {
+      CB_T(CB_TYPE_WVP)
+
+      Matrix world;
+      Matrix view;
+      Matrix projection;
+
+      Matrix invView;
+      Matrix invProj;
+
+      Matrix reflectView;
+    };
 
     struct ParamCB : public ParamBase
     {
@@ -223,4 +222,6 @@ namespace Engine::Graphics
 
 BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceSB)
 BOOST_CLASS_EXPORT_KEY(Engine::Graphics::ParamBase)
-BOOST_CLASS_EXPORT_KEY(Engine::Graphics::CBs::MaterialCB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceModelSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceParticleSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::MaterialSB)

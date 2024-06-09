@@ -1,14 +1,12 @@
 #pragma once
 #include "Client.h"
 #include "clIntensityPositionTexture.h"
-#include "egGlobal.h"
-#include "egObject.hpp"
-#include "egScript.h"
-#include "egShadowTexture.h"
-#include "egStructuredBuffer.hpp"
 #include "clIntensityTexture.h"
 #include "clIntersectionCompute.h"
 #include "clShadowMaskTexture.h"
+#include "egScript.h"
+#include "egShadowTexture.h"
+#include "egStructuredBuffer.hpp"
 
 namespace Client::Scripts
 {
@@ -43,12 +41,14 @@ namespace Client::Scripts
 
     ShadowIntersectionScript();
 
-    D3D11_VIEWPORT m_viewport_;
+    ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
+
+    D3D12_VIEWPORT m_viewport_;
 
     std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
 
-    Graphics::StructuredBuffer<Graphics::SBs::LightVPSB> m_sb_light_vp_;
-    Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB> m_sb_light_table_;
+    Strong<Graphics::StructuredBuffer<Graphics::SBs::LightVPSB>> m_sb_light_vp_;
+    Strong<Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB>> m_sb_light_table_;
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
     Client::Resource::ShadowMaskTexture m_shadow_mask_texs_[g_max_lights];
@@ -58,9 +58,8 @@ namespace Client::Scripts
 
     StrongTexture2D m_tmp_shadow_depth_;
     StrongComputeShader m_intersection_compute_;
-
-    StrongMaterial m_shadow_material_;
-    StrongMaterial m_intensity_test_material_;
+    StrongShader m_shadow_shader_;
+    StrongShader m_intensity_test_shader_;
   };
 }
 

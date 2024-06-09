@@ -61,6 +61,6 @@ namespace Engine::Manager
 
     std::unique_ptr<SpriteFont> m_font_;
 
-    std::vector<DebugPair> m_render_queue;
+    std::deque<DebugPair> m_render_queue;
   };
 } // namespace Engine::Manager

@@ -1,10 +1,9 @@
 #pragma once
 #include <BufferHelpers.h>
-#include <filesystem>
 
 #include "egCommon.hpp"
-#include "egD3Device.hpp"
-#include "egDXCommon.h"
+#include "egConstantBuffer.hpp"
+#include "egDescriptors.h"
 
 namespace Engine::Manager::Graphics
 {
@@ -15,29 +14,17 @@ namespace Engine::Manager::Graphics
   private:
     struct TempParamTicket
     {
-      TempParamTicket(const ParamBase& previousParam)
+      TempParamTicket(const CBs::ParamCB& previousParam)
         : previousParam(previousParam) {}
 
       ~TempParamTicket()
       {
-        reinterpret_cast<ParamBase&>(GetRenderPipeline().m_param_buffer_) = previousParam;
-        GetRenderPipeline().m_param_buffer_data_.SetData
-          (
-           GetD3Device().GetContext(), GetRenderPipeline().m_param_buffer_
-          );
-        GetRenderPipeline().BindConstantBuffer
-          (
-           GetRenderPipeline().m_param_buffer_data_, SHADER_VERTEX
-          );
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_PIXEL);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_GEOMETRY);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_COMPUTE);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_HULL);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_DOMAIN);
+        GetRenderPipeline().m_param_buffer_ = previousParam;
+        GetRenderPipeline().m_param_buffer_data_.SetData(&previousParam);
       }
 
     private:
-      const ParamBase previousParam;
+      const CBs::ParamCB previousParam;
     };
 
   public:
@@ -52,66 +39,47 @@ namespace Engine::Manager::Graphics
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void SetWorldMatrix(const CBs::TransformCB& matrix);
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-    void SetMaterial(const CBs::MaterialCB& material_buffer);
 
     template <typename T>
     void SetParam(const T& v, const size_t slot)
     {
       m_param_buffer_.SetParam(slot, v);
-      m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
-
-      BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
+      m_param_buffer_data_.SetData(&m_param_buffer_);
     }
 
-    // Returns a ticket that will reset to the previous param when it goes out of scope.
-    [[nodiscard]] RenderPipeline::TempParamTicket&& SetParam(const ParamBase& param);
+    [[nodiscard]] TempParamTicket SetParam(const Graphics::ParamBase& param)
+    {
+      return { m_param_buffer_ };
+    }
 
-    void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
-    void SetDepthStencilState(ID3D11DepthStencilState* state);
-    void SetRasterizerState(ID3D11RasterizerState* state);
-    void SetSamplerState(ID3D11SamplerState* sampler);
+    void DefaultRenderTarget(const Weak<CommandPair> & w_cmd) const;
+    void DefaultViewport(const Weak<CommandPair> & w_cmd) const;
+    void DefaultScissorRect(const Weak<CommandPair> & w_cmd) const;
+    void DefaultHeaps(const Weak<CommandPair> & w_cmd) const;
+    void DefaultRootSignature(const Weak<CommandPair> & w_cmd) const;
 
-    void SetWireframeState() const;
-    void SetFillState() const;
-    void SetNoneCullState() const;
-    void SetFrontCullState() const;
+    void CopyBackBuffer(const Weak<CommandPair> & w_cmd, ID3D12Resource * resource) const;
 
-    void BindVertexBuffer(ID3D11Buffer* buffer);
-    void BindIndexBuffer(ID3D11Buffer* buffer);
-    void UnbindVertexBuffer();
-    void UnbindIndexBuffer();
+    ID3D12RootSignature*  GetRootSignature() const;
 
-    void BindResource(
-      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
-    );
-    void BindResources(
-      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** textures, UINT size
-    );
-    void BindResources(UINT slot, eShaderType shader_type, ID3D11UnorderedAccessView** textures, UINT size);
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPURTVHandle() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDSVHandle() const;
 
-    void UnbindResource(UINT slot, eShaderType type);
-    void UnbindResources(UINT slot, eShaderType type, UINT size);
-    void UnbindUAVResource(UINT slot);
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPURTVHandle() const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
+    D3D12_VIEWPORT              GetViewport() const;
+    D3D12_RECT                  GetScissorRect() const;
 
-    void DrawIndexed(UINT index_count);
-    void DrawIndexedInstanced(UINT index_count, UINT instance_count);
+    static void SetPSO(const CommandPair & cmd, const StrongShader & Shader);
 
-    void TargetDepthOnly(ID3D11DepthStencilView* view);
-    void SetViewport(const D3D11_VIEWPORT& viewport);
+    [[nodiscard]] DescriptorPtr AcquireHeapSlot();
+    [[nodiscard]] bool          IsHeapAvailable() const;
 
-    void DefaultRenderTarget() const;
-    void DefaultViewport() const;
-    void ResetShaders();
-    void DefaultDepthStencilState() const;
-    void DefaultRasterizerState() const;
-    void DefaultSamplerState() const;
+    UINT GetBufferDescriptorSize() const;
+    UINT GetSamplerDescriptorSize() const;
+
+    void BindConstantBuffers(const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap);
 
   private:
     friend class ToolkitAPI;
@@ -121,27 +89,47 @@ namespace Engine::Manager::Graphics
     ~RenderPipeline() override;
 
     void PrecompileShaders();
-    void InitializeSamplers();
+    void InitializeRootSignature();
+    void InitializeRenderTargets();
+    void InitializeDepthStencil();
+    void InitializeNullDescriptors();
+    void InitializeHeaps();
+    void InitializeStaticBuffers();
+    void InitializeViewport();
 
-    template <typename T>
-    void BindConstantBuffer(const ConstantBuffer<T>& buffer, eShaderType target) const
-    {
-      GetD3Device().BindConstantBuffer(buffer, which_cb<T>::value, target);
-    }
+    ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
+    ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
+    UINT m_rtv_descriptor_size_ = 0;
+    UINT m_dsv_descriptor_size_ = 0;
+    UINT m_buffer_descriptor_size_ = 0;
+    UINT m_sampler_descriptor_size_ = 0;
+
+    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
+    std::mutex m_descriptor_mutex_;
+    DescriptorHandler m_descriptor_handler_;
+
+    ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_cbv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
+
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
+    ComPtr<ID3D12Resource> m_depth_stencil_;
+
+    D3D12_VIEWPORT m_viewport_{};
+    D3D12_RECT    m_scissor_rect_{};
+
+    CBs::PerspectiveCB m_wvp_buffer_;
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
-    ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
-    ConstantBuffer<CBs::MaterialCB>    m_material_buffer_data_{};
-    ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_{};
+    ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
-    std::map<eSampler, ID3D11SamplerState*> m_sampler_state_{};
+    StrongShader m_fallback_shader_;
 
-    ComPtr<ID3D11BlendState>        m_blend_state_         = nullptr;
-    ComPtr<ID3D11RasterizerState>   m_rasterizer_state_    = nullptr;
-    ComPtr<ID3D11DepthStencilState> m_depth_stencil_state_ = nullptr;
-
-    std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
   };
 } // namespace Engine::Manager::Graphics

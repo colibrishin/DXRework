@@ -12,7 +12,7 @@
 #define NOMINMAX
 
 #include "imgui.h"
-#include "imgui_impl_dx11.h"
+#include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 
 // add headers that you want to pre-compile here
@@ -78,18 +78,17 @@
 #include "VertexTypes.h"
 #include "WICTextureLoader.h"
 
-#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-#include <d2d1.h>
-#include <d3d11.h>
+#include <d3d12.h>
 #include <d3dcompiler.h>
+#include <d3dx12.h>
 #include <directxmath.h>
 #include <dxcapi.h>
-#include <dxgi1_3.h>
+#include <dxgi1_5.h>
 
 #include <fmod.hpp>
 #include <fmod_common.h>

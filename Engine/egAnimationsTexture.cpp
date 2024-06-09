@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egAnimationsTexture.h"
 
+#include <DirectXTex.h>
+
 #include "egBoneAnimation.h"
 
 SERIALIZE_IMPL
@@ -23,11 +25,13 @@ namespace Engine::Resources
 
   void AnimationsTexture::FixedUpdate(const float& dt) {}
 
-  void AnimationsTexture::PreRender(const float& dt) {}
+  void AnimationsTexture::PreRender(const float& dt)
+  {
+    Texture3D::PreRender(dt);
+  }
 
   void AnimationsTexture::Render(const float& dt)
   {
-    BindAs(D3D11_BIND_SHADER_RESOURCE, RESERVED_BONES, 0, SHADER_VERTEX);
     Texture3D::Render(dt);
   }
 
@@ -49,46 +53,49 @@ namespace Engine::Resources
 
   eResourceType AnimationsTexture::GetResourceType() const { return RES_T_ANIMS_TEX; }
 
-  void AnimationsTexture::loadDerived(ComPtr<ID3D11Resource>& res)
+  void AnimationsTexture::loadDerived(ComPtr<ID3D12Resource>& res)
   {
     LazyDescription(preEvaluateAnimations(m_animations_, m_evaluated_animations_));
 
     Texture3D::loadDerived(res);
+  }
 
-    Map
-      (
-       [&](const D3D11_MAPPED_SUBRESOURCE& mapped)
-       {
-         // Note: Doing dynamic allocation with large data mapping causes a memory race.
-         const auto row                  = mapped.RowPitch;
-         const auto slice                = mapped.DepthPitch;
-         const auto total_texel_in_bytes =
-           GetHeight() * mapped.RowPitch +
-           GetDepth() * mapped.DepthPitch;
+  bool AnimationsTexture::map(char* mapped)
+  {
+    Texture3D::map(mapped);
 
-         auto* data = static_cast<float*>(mapped.pData);
+    // Note: Doing dynamic allocation with large data mapping causes a memory race.
+    const D3D12_RESOURCE_DESC          desc            = GetRawResoruce()->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT place_footprint = {};
 
-         for (UINT i = 0; i < GetDepth(); ++i)
-         {
-           const UINT d = slice / sizeof(float) * i;
+    size_t row_pitch;
+    size_t slice_pitch;
 
-           for (UINT j = 0; j < GetHeight(); ++j)
-           {
-             const UINT h = row / sizeof(float) * j;
-             if (j >= m_evaluated_animations_[i].size()) break;
+    DirectX::ComputePitch(DXGI_FORMAT_R32G32B32A32_FLOAT, desc.Width, desc.Height, row_pitch, slice_pitch);
 
-             for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
-             {
-               if (k >= m_evaluated_animations_[i][j].size()) break;
+    auto* data = reinterpret_cast<float*>(mapped);
 
-               const auto& mat = m_evaluated_animations_[i][j][k];
+    for (UINT i = 0; i < GetDepth(); ++i)
+    {
+      const UINT d = slice_pitch / sizeof(float) * i;
 
-               std::memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
-             }
-           }
-         }
-       }
-      );
+      for (UINT j = 0; j < GetHeight(); ++j)
+      {
+        const UINT h = row_pitch / sizeof(float) * j;
+        if (j >= m_evaluated_animations_[i].size()) break;
+
+        for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
+        {
+          if (k >= m_evaluated_animations_[i][j].size()) break;
+
+          const auto& mat = m_evaluated_animations_[i][j][k];
+
+          std::memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
+        }
+      }
+    }
+
+    return true;
   }
 
   Texture::GenericTextureDescription AnimationsTexture::preEvaluateAnimations(const std::vector<StrongBoneAnimation>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated)
@@ -118,17 +125,15 @@ namespace Engine::Resources
 
     return
     {
-        .Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
-        .Height = frame_count,
-        .Depth = anim_count,
-        .ArraySize = 1,
-        .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
-        .CPUAccessFlags = D3D10_CPU_ACCESS_WRITE,
-        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-        .MipsLevel = 1,
-        .MiscFlags = 0,
-        .Usage = D3D11_USAGE_DYNAMIC,
-        .SampleDesc = { .Count = 1, .Quality = 0}
+      .Alignment = 0,
+      .Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
+      .Height = frame_count,
+      .DepthOrArraySize = static_cast<UINT16>(anim_count),
+      .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+      .Flags = D3D12_RESOURCE_FLAG_NONE,
+      .MipsLevel = 1,
+      .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+      .SampleDesc = { .Count = 1, .Quality = 0}
       };
   }
 }

@@ -3,6 +3,7 @@
 
 #include "egGlobal.h"
 #include "egManagerHelper.hpp"
+#include "imgui_impl_dx12.h"
 
 namespace Engine::Manager
 {
@@ -23,12 +24,11 @@ namespace Engine::Manager
 
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
-      m_previous_keyboard_state_()
+      m_previous_keyboard_state_(),
+      m_previous_mouse_state_(),
+      m_imgui_descriptor_()
   {
-    if (s_instantiated_)
-    {
-      throw std::runtime_error("Application is already instantiated");
-    }
+    if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
     s_instantiated_ = true;
     std::set_terminate(SIGTERM);
@@ -77,7 +77,7 @@ namespace Engine::Manager
   {
     if (g_debug)
     {
-      ImGui_ImplDX11_Shutdown();
+      ImGui_ImplDX12_Shutdown();
       ImGui_ImplWin32_Shutdown();
       ImGui::DestroyContext();
     }
@@ -124,10 +124,19 @@ namespace Engine::Manager
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
 
+    m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
+
     if constexpr (g_debug)
     {
       ImGui_ImplWin32_Init(hWnd);
-      ImGui_ImplDX11_Init(GetD3Device().GetDevice(), GetD3Device().GetContext());
+
+      ImGui_ImplDX12_Init
+        (
+         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
+         m_imgui_descriptor_->GetMainDescriptorHeap(),
+         m_imgui_descriptor_->GetCPUHandle(),
+         m_imgui_descriptor_->GetGPUHandle()
+        );
     }
     
   }
@@ -139,6 +148,9 @@ namespace Engine::Manager
 
   void Application::PreUpdate(const float& dt)
   {
+    GetToolkitAPI().PreUpdate(dt);
+    GetGC().PreUpdate(dt);
+
     GetTaskScheduler().PreUpdate(dt);
     GetMouseManager().PreUpdate(dt);
     GetCollisionDetector().PreUpdate(dt);
@@ -151,11 +163,12 @@ namespace Engine::Manager
     GetPhysicsManager().PreUpdate(dt);
     GetLerpManager().PreUpdate(dt);
     GetProjectionFrustum().PreUpdate(dt);
+
     GetRenderer().PreUpdate(dt);
     GetShadowManager().PreUpdate(dt);
     GetDebugger().PreUpdate(dt);
     GetD3Device().PreUpdate(dt);
-    GetToolkitAPI().PreUpdate(dt);
+    GetRenderPipeline().PreUpdate(dt);
   }
 
   void Application::FixedUpdate(const float& dt)
@@ -167,10 +180,16 @@ namespace Engine::Manager
     GetShadowManager().FixedUpdate(dt);
     GetResourceManager().FixedUpdate(dt);
 
+    // physics updates.
+    // gravity
     GetGraviton().FixedUpdate(dt);
+    // collision detection
     GetCollisionDetector().FixedUpdate(dt);
+    // constraint solver
     GetConstraintSolver().FixedUpdate(dt);
+    // apply forces
     GetPhysicsManager().FixedUpdate(dt);
+    // lerp rigidbody movements
     GetLerpManager().FixedUpdate(dt);
 
     GetProjectionFrustum().FixedUpdate(dt);
@@ -194,11 +213,12 @@ namespace Engine::Manager
     GetPhysicsManager().Update(dt);
     GetLerpManager().Update(dt);
     GetProjectionFrustum().Update(dt);
+
     GetRenderer().Update(dt);
-    GetShadowManager().Update(dt);
-    GetDebugger().Update(dt);
+    GetShadowManager().Update(dt); // update light information
+    GetDebugger().Update(dt); // update debug flag
     GetD3Device().Update(dt);
-    GetToolkitAPI().Update(dt);
+    GetToolkitAPI().Update(dt); //fmod update
   }
 
   void Application::PreRender(const float& dt)
@@ -215,12 +235,12 @@ namespace Engine::Manager
     GetPhysicsManager().PreRender(dt);
     GetLerpManager().PreRender(dt);
     GetProjectionFrustum().PreRender(dt);
-
-    GetD3Device().PreRender(dt);
-    GetRenderPipeline().PreRender(dt);
-    GetRenderer().PreRender(dt);
-    GetShadowManager().PreRender(dt);
     GetDebugger().PreRender(dt);
+    GetD3Device().PreRender(dt);
+
+    GetRenderer().PreRender(dt); // pre-process render information
+    GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
+    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
   }
 
   void Application::Render(const float& dt)
@@ -237,12 +257,16 @@ namespace Engine::Manager
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
 
-    GetToolkitAPI().Render(dt);
-    GetD3Device().Render(dt);
-    GetRenderPipeline().Render(dt);
-    GetRenderer().Render(dt);
+    // Shadow resource binding
     GetShadowManager().Render(dt);
+
+    // Render commands (opaque)
+    GetRenderer().Render(dt);
+
     GetDebugger().Render(dt);
+    GetToolkitAPI().Render(dt);
+    GetRenderPipeline().Render(dt);
+    GetD3Device().Render(dt);
   }
 
   void Application::PostRender(const float& dt)
@@ -250,7 +274,6 @@ namespace Engine::Manager
     GetTaskScheduler().PostRender(dt);
     GetMouseManager().PostRender(dt);
     GetCollisionDetector().PostRender(dt);
-    GetReflectionEvaluator().PostRender(dt);
     GetSceneManager().PostRender(dt);
     GetResourceManager().PostRender(dt);
     GetGraviton().PostRender(dt);
@@ -258,17 +281,41 @@ namespace Engine::Manager
     GetPhysicsManager().PostRender(dt);
     GetLerpManager().PostRender(dt);
     GetProjectionFrustum().PostRender(dt);
+    GetDebugger().PostRender(dt); // gather information until render
+
     GetRenderer().PostRender(dt);
+    GetToolkitAPI().PostRender(dt); // toolkit related render commands
     GetShadowManager().PostRender(dt);
-    GetDebugger().PostRender(dt);
 
     if constexpr (g_debug)
     {
       ImGui::Render();
-      ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        throw std::runtime_error("Command Pair is not available for ImGui Rendering");
+      }
+
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering").lock();
+
+      cmd->SoftReset();
+      GetRenderPipeline().DefaultRenderTarget(cmd);
+      GetRenderPipeline().DefaultScissorRect(cmd);
+      GetRenderPipeline().DefaultViewport(cmd);
+      
+      m_imgui_descriptor_->BindGraphic(cmd);
+
+      ImGui_ImplDX12_RenderDrawData
+      (
+          ImGui::GetDrawData(),
+          cmd->GetList()
+      );
+
+      cmd->FlagReady();
     }
 
-    GetToolkitAPI().PostRender(dt);
+    GetReflectionEvaluator().PostRender(dt);
+    GetRenderPipeline().PostRender(dt); // Wrap up command lists, present
     GetD3Device().PostRender(dt);
   }
 
@@ -277,7 +324,6 @@ namespace Engine::Manager
     GetTaskScheduler().PostUpdate(dt);
     GetMouseManager().PostUpdate(dt);
     GetCollisionDetector().PostUpdate(dt);
-    GetReflectionEvaluator().PostUpdate(dt);
     GetSceneManager().PostUpdate(dt);
     GetResourceManager().PostUpdate(dt);
     GetGraviton().PostUpdate(dt);
@@ -290,6 +336,8 @@ namespace Engine::Manager
     GetDebugger().PostUpdate(dt);
     GetD3Device().PostUpdate(dt);
     GetToolkitAPI().PostUpdate(dt);
+    GetReflectionEvaluator().PostUpdate(dt);
+    GetRenderPipeline().PostUpdate(dt);
   }
 
   void Application::tickInternal()
@@ -301,7 +349,7 @@ namespace Engine::Manager
 
     if constexpr (g_debug)
     {
-      ImGui_ImplDX11_NewFrame();
+      ImGui_ImplDX12_NewFrame();
       ImGui_ImplWin32_NewFrame();
       ImGui::NewFrame();
     }

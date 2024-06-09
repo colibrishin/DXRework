@@ -20,8 +20,8 @@ namespace Engine::Manager::Graphics
     explicit ShadowManager(SINGLETON_LOCK_TOKEN)
       : Singleton<ShadowManager>(),
         m_viewport_(),
-        m_shadow_map_mask_("", {}),
-        m_current_shadow_maps_{} {}
+        m_scissor_rect_(),
+        m_shadow_map_mask_("", {}) {}
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -38,6 +38,10 @@ namespace Engine::Manager::Graphics
 
     static void EvalShadowVP(const WeakCamera & ptr_cam, const Vector3 & light_dir, SBs::LightVPSB & buffer);
 
+    void BindShadowMaps(const Weak<CommandPair> & cmd, const DescriptorPtr & heap) const;
+    void BindShadowSampler(const DescriptorPtr& heap) const;
+    void UnbindShadowMaps(const Weak<CommandPair> & w_cmd) const;
+
   private:
     friend struct SingletonDeleter;
     ~ShadowManager() override;
@@ -46,15 +50,15 @@ namespace Engine::Manager::Graphics
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
 
-    void BuildShadowMap(const float dt);
-    void ClearShadowMaps();
+    void BuildShadowMap(const float dt, const Weak<CommandPair> &w_cmd, const StrongLight &light, const UINT light_idx);
+    void ClearShadowMaps(const Weak<CommandPair> & w_cmd);
 
     static void CreateSubfrusta(
       const Matrix& projection, float start, float end,
       Subfrusta&    subfrusta
     );
 
-    StrongMaterial m_shadow_shaders_;
+    StrongShader m_shadow_shader_;
 
     // sub part of the view frustum
     Subfrusta m_subfrusta_[3];
@@ -66,15 +70,17 @@ namespace Engine::Manager::Graphics
     std::map<LocalActorID, Resources::ShadowTexture> m_shadow_texs_;
 
     // light structured buffer
-    StructuredBuffer<SBs::LightSB> m_sb_light_buffer_{};
+    Strong<StructuredBuffer<SBs::LightSB>> m_sb_light_buffer_{};
     // The structured buffer for the chunk of light view projection matrices
-    StructuredBuffer<SBs::LightVPSB> m_sb_light_vps_buffer_;
+    Strong<StructuredBuffer<SBs::LightVPSB>> m_sb_light_vps_buffer_;
 
-    D3D11_VIEWPORT m_viewport_;
+    std::vector<Strong<StructuredBuffer<SBs::LocalParamSB>>> m_local_param_buffers_;
+
+    D3D12_VIEWPORT m_viewport_;
+    D3D12_RECT     m_scissor_rect_;
+
     Resources::Texture2D m_shadow_map_mask_;
 
-    // todo: refactoring
-    ID3D11ShaderResourceView*  m_current_shadow_maps_[g_max_lights];
-    ComPtr<ID3D11SamplerState> m_shadow_sampler_;
+    ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
   };
 } // namespace Engine::Manager::Graphics

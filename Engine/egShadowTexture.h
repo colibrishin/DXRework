@@ -13,17 +13,15 @@ namespace Engine::Resources
       (
        "",
        {
+         .Alignment = 0,
          .Width = g_max_shadow_map_size,
          .Height = g_max_shadow_map_size,
-         .Depth = 0,
-         .ArraySize = g_max_shadow_cascades,
+         .DepthOrArraySize = g_max_shadow_cascades,
          .Format = DXGI_FORMAT_R32_TYPELESS,
-         .CPUAccessFlags = 0,
-         .BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL,
+         .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
          .MipsLevel = 1,
-         .MiscFlags = 0,
-         .Usage = D3D11_USAGE_DEFAULT,
-         .SampleDesc = {.Count = 1, .Quality = 0}
+         .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+         .SampleDesc = {1, 0},
        }
       ) { }
 
@@ -43,14 +41,14 @@ namespace Engine::Resources
     void          OnImGui() override;
     eResourceType GetResourceType() const override;
 
-    UINT GetArraySize() const override;
+    UINT GetDepth() const override;
     UINT GetHeight() const override;
     UINT GetWidth() const override;
 
-    void Clear() const;
+    void Clear(ID3D12GraphicsCommandList1 * cmd) const;
 
   protected:
-    void loadDerived(ComPtr<ID3D11Resource>& res) override;
+    void loadDerived(ComPtr<ID3D12Resource>& res) override;
     void Unload_INTERNAL() override;
     
   };

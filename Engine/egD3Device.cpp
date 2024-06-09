@@ -2,50 +2,42 @@
 
 #include "egD3Device.hpp"
 
+#include "egCommands.h"
 #include "egDebugger.hpp"
 #include "egGlobal.h"
 #include "egShader.hpp"
+#include "egStructuredBuffer.hpp"
 #include "egToolkitAPI.h"
 
 namespace Engine::Manager::Graphics
 {
-  void D3Device::CopySwapchain(ID3D11ShaderResourceView* buffer)
-  {
-    ComPtr<ID3D11Buffer> swapchain_texture;
-    ComPtr<ID3D11Buffer> buffer_texture;
-
-    buffer->GetResource(reinterpret_cast<ID3D11Resource**>(buffer_texture.GetAddressOf()));
-    m_swap_chain_->GetBuffer
-      (
-       0, __uuidof(ID3D11Texture2D),
-       (void**)swapchain_texture.GetAddressOf()
-      );
-
-    m_context_->CopyResource(buffer_texture.Get(), swapchain_texture.Get());
-  }
-
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
 
-  void D3Device::UpdateBuffer(
-    UINT          size, const void* data,
-    ID3D11Buffer* buffer
-  ) const
+  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT frame_idx) const
   {
-    D3D11_MAPPED_SUBRESOURCE mapped_resource{};
+    if (frame_idx == -1)
+    {
+      frame_idx = m_frame_idx_;
+    }
 
-    DX::ThrowIfFailed
-      (
-       m_context_->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource)
-      );
-    memcpy(mapped_resource.pData, data, size);
-    m_context_->Unmap(buffer, 0);
+    return m_command_pairs_.at(frame_idx)[list_enum]->GetList();
   }
 
-  std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> D3Device::GenerateInputDescription(
+  ID3D12CommandQueue* D3Device::GetCommandQueue(const eCommandList list) const
+  {
+    return m_command_queues_[s_target_types[list]].Get();
+  }
+
+  ID3D12CommandQueue* D3Device::GetCommandQueue(const eCommandTypes type) const
+  {
+    return m_command_queues_[type].Get();
+  }
+
+  std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> D3Device::GenerateInputDescription(
     ID3DBlob* blob
   )
   {
-    ComPtr<ID3D11ShaderReflection> reflection = nullptr;
+    ComPtr<ID3D12ShaderReflection> reflection = nullptr;
 
     DX::ThrowIfFailed(D3DReflect
       (
@@ -54,17 +46,17 @@ namespace Engine::Manager::Graphics
        reinterpret_cast<void**>(reflection.GetAddressOf())
       ));
 
-    std::pair<std::vector<D3D11_INPUT_ELEMENT_DESC>, std::vector<std::string>> input_descs_with_name;
+    std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> input_descs_with_name;
 
-    D3D11_SHADER_DESC desc{};
+    D3D12_SHADER_DESC desc{};
     DX::ThrowIfFailed(reflection->GetDesc(&desc));
 
     UINT byteOffset = 0;
 
     for (UINT i = 0; i < desc.InputParameters; ++i)
     {
-      D3D11_SIGNATURE_PARAMETER_DESC param_desc;
-      D3D11_INPUT_ELEMENT_DESC       input_desc{};
+      D3D12_SIGNATURE_PARAMETER_DESC param_desc;
+      D3D12_INPUT_ELEMENT_DESC       input_desc{};
       DX::ThrowIfFailed(reflection->GetInputParameterDesc(i, &param_desc));
 
       std::string name_buffer(param_desc.SemanticName);
@@ -73,7 +65,7 @@ namespace Engine::Manager::Graphics
       input_desc.SemanticIndex        = param_desc.SemanticIndex;
       input_desc.InputSlot            = 0;
       input_desc.AlignedByteOffset    = byteOffset;
-      input_desc.InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
+      input_desc.InputSlotClass       = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
       input_desc.InstanceDataStepRate = 0;
 
       // determine DXGI format
@@ -124,188 +116,145 @@ namespace Engine::Manager::Graphics
         byteOffset += 16;
       }
 
-      input_descs_with_name.first.emplace_back(input_desc);
-      input_descs_with_name.second.emplace_back(std::move(name_buffer));
+      input_descs_with_name.emplace_back(input_desc, name_buffer);
     }
 
-    for (auto& dsc : input_descs_with_name.first)
+    for (auto& dsc : input_descs_with_name)
     {
-      dsc.SemanticName = input_descs_with_name.second.at(&dsc - &input_descs_with_name.first[0]).c_str();
+      dsc.first.SemanticName = dsc.second.c_str();
     }
 
     return input_descs_with_name;
   }
 
-  void D3Device::BindSampler(
-    ID3D11SamplerState* sampler,
-    eShaderType         target_shader,
-    eSampler            sampler_type
-  ) const
+  D3Device::~D3Device()
   {
-    g_shader_sampler_bind_map.at(target_shader)
-      (
-       m_context_.Get(), sampler, static_cast<UINT>(sampler_type), 1
-      );
-  }
+    m_command_consumer_running_ = false;
+    m_command_consumer_.join();
 
-  void D3Device::CreateSampler(
-    const D3D11_SAMPLER_DESC& desc,
-    ID3D11SamplerState**      state
-  ) const { m_device_->CreateSamplerState(&desc, state); }
-
-  void D3Device::CreateRasterizerState(
-    const D3D11_RASTERIZER_DESC& rd, ID3D11RasterizerState** id_3d11_rasterizer_state
-  ) const { DX::ThrowIfFailed(m_device_->CreateRasterizerState(&rd, id_3d11_rasterizer_state)); }
-
-  void D3Device::CreateTexture2D(
-    const D3D11_TEXTURE2D_DESC& desc,
-    ID3D11Texture2D**           texture
-  ) const { DX::ThrowIfFailed(m_device_->CreateTexture2D(&desc, nullptr, texture)); }
-
-  void D3Device::CreateBlendState(ID3D11BlendState** blend_state) const
-  {
-    D3D11_BLEND_DESC desc{};
-    desc.RenderTarget[0].BlendEnable           = true;
-    desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
-    desc.RenderTarget[0].DestBlend             = D3D11_BLEND_INV_SRC_ALPHA;
-    desc.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
-    desc.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
-    desc.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
-    desc.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_MAX;
-    desc.RenderTarget[0].RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
-
-    m_device_->CreateBlendState(&desc, blend_state);
-  }
-
-  void D3Device::CreateDepthStencilState(
-    ID3D11DepthStencilState** depth_stencil_state
-  ) const
-  {
-    D3D11_DEPTH_STENCIL_DESC depth_stencil_state_desc{};
-
-    depth_stencil_state_desc.DepthEnable    = true;
-    depth_stencil_state_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depth_stencil_state_desc.DepthFunc      = D3D11_COMPARISON_LESS_EQUAL;
-
-    depth_stencil_state_desc.StencilEnable    = true;
-    depth_stencil_state_desc.StencilReadMask  = 0xFF;
-    depth_stencil_state_desc.StencilWriteMask = 0xFF;
-
-    // Stencil operations if pixel is front-facing.
-    depth_stencil_state_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-    depth_stencil_state_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    depth_stencil_state_desc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-    depth_stencil_state_desc.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-
-    // Stencil operations if pixel is back-facing.
-    depth_stencil_state_desc.BackFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-    depth_stencil_state_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-    depth_stencil_state_desc.BackFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-    depth_stencil_state_desc.BackFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateDepthStencilState
-       (
-        &depth_stencil_state_desc, depth_stencil_state
-       )
-      );
-
-    m_context_->OMSetDepthStencilState(*depth_stencil_state, 1);
+    CloseHandle(m_fence_event_);
+    delete[] m_fence_nonce_;
   }
 
   void D3Device::InitializeDevice()
   {
-    constexpr D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
+    if constexpr (g_debug)
+    {
+      ComPtr<ID3D12Debug> debug_interface;
+      DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
+      debug_interface->EnableDebugLayer();
+    }
 
-    UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    // Create factory and Searching for adapter
+    ComPtr<IDXGIFactory4> dxgi_factory;
+
+    UINT dxgi_factory_flags = 0;
+#ifdef _DEBUG
+    dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
+
+    DX::ThrowIfFailed(CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
+
+    ComPtr<IDXGIAdapter1> adapter;
+    int adapter_idx = 0;
+
+    while (dxgi_factory->EnumAdapters1(adapter_idx, &adapter) != DXGI_ERROR_NOT_FOUND)
+    {
+      DXGI_ADAPTER_DESC1 desc;
+      adapter->GetDesc1(&desc);
+
+      if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+      {
+        adapter_idx++;
+        continue;
+      }
+
+      if (SUCCEEDED
+          (
+           D3D12CreateDevice
+           (
+            adapter.Get(), D3D_FEATURE_LEVEL_11_0,
+            IID_PPV_ARGS(m_device_.GetAddressOf()) // this macro replaced with uuidof and address.
+           )
+          ))
+      {
+        break;
+      }
+
+      adapter_idx++;
+    }
 
     if constexpr (g_debug)
     {
-      creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-    }
-
-    ComPtr<ID3D11Device>        tmp_dev;
-    ComPtr<ID3D11DeviceContext> tmp_ctx;
-
-    DX::ThrowIfFailed
-      (
-       D3D11CreateDevice
-       (
-        nullptr, D3D_DRIVER_TYPE_HARDWARE,
-        nullptr, creationFlags, &feature_level, 1,
-        D3D11_SDK_VERSION, tmp_dev.GetAddressOf(),
-        nullptr, tmp_ctx.GetAddressOf()
-       )
-      );
-
-    DX::ThrowIfFailed
-      (
-       tmp_dev->QueryInterface(IID_PPV_ARGS(m_device_.GetAddressOf()))
-      );
-    DX::ThrowIfFailed
-      (
-       tmp_ctx->QueryInterface(IID_PPV_ARGS(m_context_.GetAddressOf()))
-      );
-
-    ComPtr<IDXGIFactory3> factory;
-    ComPtr<IDXGIAdapter>  adapter;
-    ComPtr<IDXGIDevice1>  dxgi_device;
-
-    DX::ThrowIfFailed
-      (
-       tmp_dev->QueryInterface(IID_PPV_ARGS(dxgi_device.GetAddressOf()))
-      );
-    DX::ThrowIfFailed(dxgi_device->GetAdapter(&adapter));
-
-    DX::ThrowIfFailed(adapter->GetParent(IID_PPV_ARGS(factory.GetAddressOf())));
-
-    DXGI_ADAPTER_DESC adapter_desc;
-    DX::ThrowIfFailed(adapter->GetDesc(&adapter_desc));
-
-    s_video_card_memory_ =
-      static_cast<UINT>(adapter_desc.DedicatedVideoMemory / 1024 / 1024);
-
-    ComPtr<IDXGIOutput> monitor;
-    UINT                mode_count = 0;
-
-    DX::ThrowIfFailed(factory->EnumAdapters(0, &adapter));
-    DX::ThrowIfFailed(adapter->EnumOutputs(0, &monitor));
-    DX::ThrowIfFailed
-      (
-       monitor->GetDisplayModeList
-       (
-        DXGI_FORMAT_R8G8B8A8_UNORM,
-        DXGI_ENUM_MODES_INTERLACED,
-        &mode_count, nullptr
-       )
-      );
-
-    auto display_mode_list =
-      std::unique_ptr<DXGI_MODE_DESC>(new DXGI_MODE_DESC[mode_count]);
-
-    DX::ThrowIfFailed
-      (
-       monitor->GetDisplayModeList
-       (
-        DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED,
-        &mode_count,
-        display_mode_list.get()
-       )
-      );
-
-    for (UINT i = 0; i < mode_count; ++i)
-    {
-      if (display_mode_list.get()[i].Width == g_window_width &&
-          display_mode_list.get()[i].Height == g_window_height)
+      ComPtr<ID3D12InfoQueue> info_queue;
+      if (SUCCEEDED(m_device_.As(&info_queue)))
       {
-        s_refresh_rate_numerator_ =
-          display_mode_list.get()[i].RefreshRate.Numerator;
-        s_refresh_rate_denominator_ =
-          display_mode_list.get()[i].RefreshRate.Denominator;
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));
+
+        D3D12_MESSAGE_SEVERITY severities[] =
+        {
+          D3D12_MESSAGE_SEVERITY_INFO
+        };
+
+        D3D12_MESSAGE_ID deny_ids[] =
+        {
+          D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+          D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
+          D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE
+        };
+
+        D3D12_INFO_QUEUE_FILTER filter = {};
+        filter.DenyList.NumSeverities  = _countof(severities);
+        filter.DenyList.pSeverityList  = severities;
+        filter.DenyList.NumIDs         = _countof(deny_ids);
+        filter.DenyList.pIDList        = deny_ids;
+
+        DX::ThrowIfFailed(info_queue->PushStorageFilter(&filter));
       }
     }
 
+    if (!adapter)
+    {
+      throw std::runtime_error("Failed to find a suitable adapter.");
+    }
+
+    // If an acceptable adapter is found, create a device and a command queue.
+    constexpr D3D12_COMMAND_QUEUE_DESC queue_descs[]
+    {
+      {
+        .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
+        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+        .NodeMask = 0
+      },
+      {
+        .Type = D3D12_COMMAND_LIST_TYPE_COPY,
+        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+        .NodeMask = 0
+      },
+      {
+        .Type = D3D12_COMMAND_LIST_TYPE_COMPUTE,
+        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+        .NodeMask = 0
+      }
+    };
+
+    for (int i = 0; i < COMMAND_TYPE_COUNT; ++i)
+    {
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommandQueue
+         (
+          &queue_descs[i],
+          IID_PPV_ARGS(m_command_queues_[i].GetAddressOf())
+         )
+        );
+    }
+
+    // Create swap chain
     DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
 
     swap_chain_desc.BufferCount        = 2;
@@ -338,255 +287,96 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed
       (
-       factory->CreateSwapChainForHwnd
+       dxgi_factory->CreateSwapChainForHwnd
        (
-        m_device_.Get(), m_hwnd_, &swap_chain_desc, &full_screen_desc,
+        m_command_queues_[COMMAND_TYPE_DIRECT].Get(),
+        m_hwnd_,
+        &swap_chain_desc,
+        &full_screen_desc,
         nullptr,
         (IDXGISwapChain1**)m_swap_chain_.GetAddressOf()
        )
       );
 
-    m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second);
+    DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second));
+    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
   }
 
-  void D3Device::InitializeRenderTargetView()
+  void D3Device::InitializeCommandAllocator()
   {
-    ComPtr<ID3D11Texture2D> back_buffer;
-
-    DX::ThrowIfFailed
-      (
-       m_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &back_buffer)
-      );
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateRenderTargetView
-       (
-        back_buffer.Get(), nullptr,
-        s_render_target_view_.ReleaseAndGetAddressOf()
-       )
-      );
-  }
-
-  void D3Device::InitializeD2D()
-  {
-    ComPtr<ID2D1Factory> d2d_factory;
-    DX::ThrowIfFailed
-      (
-       D2D1CreateFactory
-       (
-        D2D1_FACTORY_TYPE_SINGLE_THREADED,
-        d2d_factory.GetAddressOf()
-       )
-      );
-
-    const float dpiX =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSX));
-    const float dpiY =
-      static_cast<float>(GetDeviceCaps(GetDC(m_hwnd_), LOGPIXELSY));
-
-    const D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties
-      (
-       D2D1_RENDER_TARGET_TYPE_DEFAULT,
-       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-       dpiX, dpiY
-      );
-
-    d2d_factory->CreateDxgiSurfaceRenderTarget
-      (
-       m_surface_.Get(), &props, m_d2d_render_target_view_.GetAddressOf()
-      );
-  }
-
-  void D3Device::InitializeDepthStencil()
-  {
-    ComPtr<ID3D11Texture2D> depth_stencil_buffer;
-    D3D11_TEXTURE2D_DESC    depth_stencil_desc{};
-
-    depth_stencil_desc.Width              = g_window_width;
-    depth_stencil_desc.Height             = g_window_height;
-    depth_stencil_desc.MipLevels          = 1;
-    depth_stencil_desc.ArraySize          = 1;
-    depth_stencil_desc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depth_stencil_desc.SampleDesc.Count   = 1;
-    depth_stencil_desc.SampleDesc.Quality = 0;
-    depth_stencil_desc.Usage              = D3D11_USAGE_DEFAULT;
-    depth_stencil_desc.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
-    depth_stencil_desc.CPUAccessFlags     = 0;
-    depth_stencil_desc.MiscFlags          = 0;
-
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateTexture2D
-       (
-        &depth_stencil_desc, nullptr,
-        depth_stencil_buffer.ReleaseAndGetAddressOf()
-       )
-      );
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
-
-    depth_stencil_view_desc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depth_stencil_view_desc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
-    depth_stencil_view_desc.Texture2D.MipSlice = 0;
-
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateDepthStencilView
-       (
-        depth_stencil_buffer.Get(), &depth_stencil_view_desc,
-        s_depth_stencil_view_.ReleaseAndGetAddressOf()
-       )
-      );
-
-    m_context_->OMSetRenderTargets
-      (
-       1, s_render_target_view_.GetAddressOf(),
-       s_depth_stencil_view_.Get()
-      );
-  }
-
-  void D3Device::CreateRasterizer(
-    ID3D11RasterizerState** state,
-    D3D11_FILL_MODE         fill_mode
-  ) const
-  {
-    D3D11_RASTERIZER_DESC rasterizer_desc{};
-
-    rasterizer_desc.AntialiasedLineEnable = false;
-    rasterizer_desc.CullMode              = D3D11_CULL_BACK;
-    rasterizer_desc.DepthBias             = fill_mode == D3D11_FILL_WIREFRAME ? -1000 : 0;
-    rasterizer_desc.DepthBiasClamp        =
-      fill_mode == D3D11_FILL_WIREFRAME ? 0.0001f : 0.0f;
-    rasterizer_desc.DepthClipEnable       = true;
-    rasterizer_desc.FillMode              = fill_mode;
-    rasterizer_desc.FrontCounterClockwise = false;
-    rasterizer_desc.MultisampleEnable     = false;
-    rasterizer_desc.ScissorEnable         = false;
-    rasterizer_desc.SlopeScaledDepthBias  =
-      fill_mode == D3D11_FILL_WIREFRAME ? 0.01f : 0.0f;
-
-    DX::ThrowIfFailed(m_device_->CreateRasterizerState(&rasterizer_desc, state));
-    m_context_->RSSetState(*state);
-  }
-
-  void D3Device::UpdateRenderTarget()
-  {
-    m_context_->OMSetRenderTargets
-      (
-       1, s_render_target_view_.GetAddressOf(),
-       s_depth_stencil_view_.Get()
-      );
-  }
-
-  void D3Device::UpdateViewport()
-  {
-    s_viewport_ = {
-      0.f,
-      0.f,
-      static_cast<float>(g_window_width),
-      static_cast<float>(g_window_height),
-      0.f,
-      1.f
-    };
-
-    m_context_->RSSetViewports(1, &s_viewport_);
-  }
-
-  void D3Device::CreateTextureFromFile(
-    const std::filesystem::path& path, UINT bind_flag, ID3D11Resource** texture,
-    ID3D11ShaderResourceView**   shader_resource_view
-  ) const
-  {
-    if (path.extension() == ".dds")
+    for (int i = 0; i < g_frame_buffer; ++i)
     {
-      DX::ThrowIfFailed
-      (
-       CreateDDSTextureFromFileEx
-       (
-        m_device_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT,
-        bind_flag,
-        0,
-        0, DDS_LOADER_DEFAULT, texture,
-        shader_resource_view
-       )
-      );
+      for (int t = 0; t < _countof(s_target_types); ++t)
+      {
+        m_command_pairs_[i].emplace_back(boost::make_shared<CommandPair>(s_target_types[t], ++m_command_ids_, m_frame_idx_, L""));
+      }
     }
-    else
+  }
+
+  void D3Device::InitializeFence()
+  {
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateFence
+       (
+        0, D3D12_FENCE_FLAG_NONE,
+        IID_PPV_ARGS(m_fence_.GetAddressOf())
+       )
+      );
+
+    m_fence_nonce_ = new std::atomic<UINT64>[g_frame_buffer]{0, };
+
+    m_fence_event_ = CreateEvent(nullptr, false, false, nullptr);
+
+    if (m_fence_event_ == nullptr)
+    {
+      DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+    }
+  }
+
+  void D3Device::InitializeConsumer()
+  {
+    m_command_consumer_running_ = true;
+    m_command_consumer_ = std::thread(&D3Device::ConsumeCommands, this);
+    m_command_consumer_.detach();
+  }
+
+  void D3Device::WaitForEventCompletion(const UINT64 buffer_idx) const
+  {
+    if (m_fence_->GetCompletedValue() < m_fence_nonce_[buffer_idx])
     {
       DX::ThrowIfFailed
+      (
+        m_fence_->SetEventOnCompletion
         (
-         CreateWICTextureFromFileEx
-         (
-          m_device_.Get(), m_context_.Get(), path.c_str(), 0, D3D11_USAGE_DEFAULT, bind_flag,
-          0, 0,
-          WIC_LOADER_DEFAULT, texture, shader_resource_view
-         )
-        );
+          m_fence_nonce_[buffer_idx],
+          m_fence_event_
+        )
+      );
+
+      WaitForSingleObject(m_fence_event_, INFINITE);
     }
-    
   }
 
-  void D3Device::CreateTexture2D(
-    const D3D11_TEXTURE2D_DESC& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11Texture2D** texture,
-    ID3D11ShaderResourceView**  view
-  ) const
+  void D3Device::WaitForCommandsCompletion()
   {
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateTexture2D(&desc, nullptr, texture)
-      );
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateShaderResourceView(*texture, &srv, view)
-      );
-  }
-
-  void D3Device::CreateDepthStencil(
-    const D3D11_TEXTURE2D_DESC& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& dsv, ID3D11Texture2D** texture,
-    ID3D11DepthStencilView**    view
-  ) const
-  {
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateTexture2D(&desc, nullptr, texture)
-      );
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateDepthStencilView(*texture, &dsv, view)
-      );
-  }
-
-  void D3Device::CreateDepthStencilState(
-    const D3D11_DEPTH_STENCIL_DESC& desc, ID3D11DepthStencilState** depth_stencil_state
-  ) const
-  {
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateDepthStencilState(&desc, depth_stencil_state)
-      );
-  }
-
-  void D3Device::CreateShaderResourceView(
-    ID3D11Resource* resource, const D3D11_SHADER_RESOURCE_VIEW_DESC& srv, ID3D11ShaderResourceView** view
-  ) const
-  {
-    DX::ThrowIfFailed
-      (
-       m_device_->CreateShaderResourceView(resource, &srv, view)
-      );
+    while (m_command_pairs_count_.load())
+    {
+      m_command_pairs_count_.notify_all();
+    }
   }
 
   void D3Device::PreUpdate(const float& dt) {}
 
   void D3Device::Update(const float& dt) {}
 
-  void D3Device::PreRender(const float& dt) { FrameBegin(); }
+  void D3Device::PreRender(const float& dt) {}
 
   void D3Device::Render(const float& dt) {}
 
   void D3Device::FixedUpdate(const float& dt) {}
 
-  void D3Device::PostRender(const float& dt) { Present(); }
+  void D3Device::PostRender(const float& dt) {}
 
   void D3Device::PostUpdate(const float& dt) {}
 
@@ -595,21 +385,68 @@ namespace Engine::Manager::Graphics
     m_hwnd_ = hwnd;
 
     InitializeDevice();
-    InitializeRenderTargetView();
-    InitializeDepthStencil();
-    UpdateViewport();
+    InitializeCommandAllocator();
+    InitializeFence();
+    InitializeConsumer();
 
     m_projection_matrix_ = XMMatrixPerspectiveFovLH
       (
        g_fov, GetAspectRatio(),
        g_screen_near, g_screen_far
       );
-    s_ortho_matrix_ = XMMatrixOrthographicLH
+    m_ortho_matrix_ = XMMatrixOrthographicLH
       (
-       static_cast<float>(g_window_width),
-       static_cast<float>(g_window_height),
+       g_window_width,
+       g_window_height,
        g_screen_near, g_screen_far
       );
+  }
+
+  void D3Device::CreateTextureFromFile(
+      const std::filesystem::path& file_path,
+      ID3D12Resource** res,
+      bool generate_mip = false) const
+  {
+    if (!std::filesystem::exists(file_path))
+    {
+      throw std::runtime_error("File not found.");
+    }
+
+    ResourceUploadBatch resource_upload_batch(m_device_.Get());
+
+    resource_upload_batch.Begin();
+
+    if (file_path.extension() == ".dds")
+    {
+      DX::ThrowIfFailed
+      (
+       DirectX::CreateDDSTextureFromFile
+       (
+        m_device_.Get(),
+        resource_upload_batch,
+        file_path.c_str(),
+        res,
+        generate_mip
+       )
+      );
+    }
+    else
+    {
+      DX::ThrowIfFailed
+      (
+       DirectX::CreateWICTextureFromFile
+       (
+        m_device_.Get(),
+        resource_upload_batch,
+        file_path.c_str(),
+        res,
+        generate_mip
+       )
+      );
+    }
+
+    const auto& token = resource_upload_batch.End(GetCommandQueue(COMMAND_LIST_UPDATE));
+    token.wait();
   }
 
   float D3Device::GetAspectRatio()
@@ -618,43 +455,122 @@ namespace Engine::Manager::Graphics
            static_cast<float>(g_window_height);
   }
 
-  void D3Device::FrameBegin()
+  Weak<CommandPair> D3Device::AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx)
   {
-    if (WaitForSingleObjectEx
-        (
-         GetSwapchainAwaiter(), g_max_frame_latency_ms,
-         true
-        ) != WAIT_OBJECT_0) { GetDebugger().Log("Waiting for Swap chain had an issue."); }
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
 
-    constexpr float color[4] = {0.f, 0.f, 0.f, 1.f};
+    std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
+    const UINT64                           next = ++m_command_ids_;
 
-    m_context_->ClearRenderTargetView(s_render_target_view_.Get(), color);
-    m_context_->ClearDepthStencilView
-      (
-       s_depth_stencil_view_.Get(),
-       D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-       1.f, 0
-      );
+    m_command_pairs_generated_[next] = boost::make_shared<CommandPair>(COMMAND_TYPE_DIRECT, m_command_ids_, buffer_idx, debug_name);
+    m_command_pairs_count_.fetch_add(1);
 
-    m_context_->OMSetRenderTargets
-      (
-       1, s_render_target_view_.GetAddressOf(),
-       s_depth_stencil_view_.Get()
-      );
+    return m_command_pairs_generated_[next];
   }
 
-  void D3Device::Present() const
+  bool D3Device::IsCommandPairAvailable(UINT64 buffer_idx) const
   {
-    DXGI_PRESENT_PARAMETERS params{};
-    params.DirtyRectsCount = 0;
-    params.pDirtyRects     = nullptr;
-    params.pScrollRect     = nullptr;
-    params.pScrollOffset   = nullptr;
+    return m_command_pairs_count_.load() < g_max_concurrent_command_lists;
+  }
 
-    m_swap_chain_->Present1
-      (
-       g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-       &params
-      );
+  void      D3Device::WaitAndReset(const eCommandList list, UINT64 buffer_idx) const
+  {
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    WaitForEventCompletion(buffer_idx);
+
+    const auto& list_pair = m_command_pairs_.at(buffer_idx)[list];
+
+    list_pair->SoftReset();
+  }
+
+  void D3Device::Wait(UINT64 buffer_idx) const
+  {
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    WaitForEventCompletion(buffer_idx);
+  }
+
+  void D3Device::WaitNextFrame()
+  {
+    const auto& next_idx = m_swap_chain_->GetCurrentBackBufferIndex();
+
+    m_fence_nonce_[next_idx] = GetFenceValue(m_frame_idx_);
+
+    Signal(COMMAND_TYPE_DIRECT, next_idx);
+
+    WaitForEventCompletion(next_idx);
+
+    m_frame_idx_ = next_idx;
+
+    for (int i = 0; i < COMMAND_LIST_COUNT; ++i)
+    {
+      m_command_pairs_[m_frame_idx_][i]->HardReset();
+    }
+  }
+
+  void D3Device::ConsumeCommands()
+  {
+    while (m_command_consumer_running_)
+    {
+      if (m_command_pairs_count_ == 0)
+      {
+        continue;
+      }
+
+      const auto& current = m_command_pairs_count_.load();
+      m_command_pairs_count_.wait(current + 1);
+
+      std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
+
+      const auto& it = m_command_pairs_generated_.begin();
+
+      if (it == m_command_pairs_generated_.end())
+      {
+        continue;
+      }
+
+      if (it->second->IsExecuted())
+      {
+        m_command_pairs_generated_.erase(it->first);
+        m_command_pairs_count_.fetch_sub(1);
+      }
+
+      if (it->second->IsReady())
+      {
+        it->second->Execute();
+        m_command_pairs_generated_.erase(it->first);
+        m_command_pairs_count_.fetch_sub(1);
+      }
+    }
+  }
+
+  void D3Device::Signal(const eCommandTypes type, UINT64 buffer_idx) const
+  {
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    DX::ThrowIfFailed(m_command_queues_[type]->Signal(m_fence_.Get(), ++m_fence_nonce_[buffer_idx]));
+  }
+
+  UINT64 D3Device::GetFenceValue(UINT64 buffer_idx) const
+  {
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    return m_fence_nonce_[buffer_idx];
   }
 } // namespace Engine::Manager::Graphics
