@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egAnimationsTexture.h"
 
+#include <DirectXTex.h>
+
 #include "egBoneAnimation.h"
 
 SERIALIZE_IMPL
@@ -54,48 +56,44 @@ namespace Engine::Resources
     LazyDescription(preEvaluateAnimations(m_animations_, m_evaluated_animations_));
 
     Texture3D::loadDerived(res);
-    
-    Map
-      (
-       [&](char* mapped)
-       {
-         // Note: Doing dynamic allocation with large data mapping causes a memory race.
-         const D3D12_RESOURCE_DESC desc = res->GetDesc();
-         D3D12_PLACED_SUBRESOURCE_FOOTPRINT place_footprint = {};
+  }
 
-         UINT row = 0;
-         UINT64 row_size = 0;
-         UINT64 total_texel_in_bytes = 0;
+  bool AnimationsTexture::map(char* mapped)
+  {
+    Texture3D::map(mapped);
 
-         GetD3Device().GetDevice()->GetCopyableFootprints
-           (&desc, 0, 1, 0, &place_footprint, &row, &row_size, &total_texel_in_bytes);
+    // Note: Doing dynamic allocation with large data mapping causes a memory race.
+    const D3D12_RESOURCE_DESC          desc            = GetRawResoruce()->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT place_footprint = {};
 
-         const auto row_pitch            = place_footprint.Footprint.RowPitch;
-         const auto slice_pitch          = row_pitch * GetHeight();
-         
-         auto* data = reinterpret_cast<float*>(mapped);
+    size_t row_pitch;
+    size_t slice_pitch;
 
-         for (UINT i = 0; i < GetDepth(); ++i)
-         {
-           const UINT d = slice_pitch / sizeof(float) * i;
+    DirectX::ComputePitch(DXGI_FORMAT_R32G32B32A32_FLOAT, desc.Width, desc.Height, row_pitch, slice_pitch);
 
-           for (UINT j = 0; j < GetHeight(); ++j)
-           {
-             const UINT h = row_pitch / sizeof(float) * j;
-             if (j >= m_evaluated_animations_[i].size()) break;
+    auto* data = reinterpret_cast<float*>(mapped);
 
-             for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
-             {
-               if (k >= m_evaluated_animations_[i][j].size()) break;
+    for (UINT i = 0; i < GetDepth(); ++i)
+    {
+      const UINT d = slice_pitch / sizeof(float) * i;
 
-               const auto& mat = m_evaluated_animations_[i][j][k];
+      for (UINT j = 0; j < GetHeight(); ++j)
+      {
+        const UINT h = row_pitch / sizeof(float) * j;
+        if (j >= m_evaluated_animations_[i].size()) break;
 
-               std::memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
-             }
-           }
-         }
-       }
-      );
+        for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
+        {
+          if (k >= m_evaluated_animations_[i][j].size()) break;
+
+          const auto& mat = m_evaluated_animations_[i][j][k];
+
+          std::memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
+        }
+      }
+    }
+
+    return true;
   }
 
   Texture::GenericTextureDescription AnimationsTexture::preEvaluateAnimations(const std::vector<StrongBoneAnimation>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated)
@@ -132,7 +130,7 @@ namespace Engine::Resources
       .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
       .Flags = D3D12_RESOURCE_FLAG_NONE,
       .MipsLevel = 1,
-      .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+      .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
       .SampleDesc = { .Count = 1, .Quality = 0}
       };
   }
