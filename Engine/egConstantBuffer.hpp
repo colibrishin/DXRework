@@ -17,8 +17,9 @@ namespace Engine::Graphics
 
     void Create(const T* src_data)
     {
-      GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
-      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"ConstantBuffer Initialization").lock();
+
+      cmd->SoftReset();
 
       const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
       const auto& cb_desc      = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
@@ -42,39 +43,35 @@ namespace Engine::Graphics
 
       DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
 
+      const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &upload_heap,
+          D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_upload_buffer_.GetAddressOf())
+         )
+        );
+
+      const std::wstring upload_buffer_name = type_name + L" Constant Buffer Upload Buffer";
+
+      DX::ThrowIfFailed(m_upload_buffer_->SetName(upload_buffer_name.c_str()));
+
       if (src_data != nullptr)
       {
-        ComPtr<ID3D12Resource> upload_buffer;
-
-        const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
-
-        DX::ThrowIfFailed
-          (
-           GetD3Device().GetDevice()->CreateCommittedResource
-           (
-            &upload_heap,
-            D3D12_HEAP_FLAG_NONE,
-            &buffer_desc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(upload_buffer.GetAddressOf())
-           )
-          );
-
-        const std::wstring upload_buffer_name = type_name + L" Constant Buffer Upload Buffer";
-
-        DX::ThrowIfFailed(upload_buffer->SetName(upload_buffer_name.c_str()));
-
         char* data = nullptr;
 
-        DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
         std::memcpy(data, src_data, sizeof(T));
-        upload_buffer->Unmap(0, nullptr);
+        m_upload_buffer_->Unmap(0, nullptr);
 
-        cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
-
-        GetGC().Track(upload_buffer);
+        cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
       }
 
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
@@ -84,7 +81,7 @@ namespace Engine::Graphics
          D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
         );
 
-      cmd->ResourceBarrier(1, &cb_trans);
+      cmd->GetList()->ResourceBarrier(1, &cb_trans);
 
       const D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc
       {
@@ -92,7 +89,7 @@ namespace Engine::Graphics
         .SizeInBytes    = m_alignment_size_
       };
 
-      GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+      cmd->FlagReady();
 
       constexpr D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_desc
       {
@@ -131,10 +128,12 @@ namespace Engine::Graphics
       return m_data_;
     }
 
-    void Bind(const CommandPair& cmd, const DescriptorPtr& heap)
+    void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap)
     {
       if (m_b_dirty_)
       {
+        const auto& cmd = w_cmd.lock();
+
         const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition
           (
            m_buffer_.Get(),
@@ -142,42 +141,13 @@ namespace Engine::Graphics
            D3D12_RESOURCE_STATE_COPY_DEST
           );
 
-        cmd.GetList()->ResourceBarrier(1, &copy_trans);
-
-        // Use upload buffer for synchronization.
-        ComPtr<ID3D12Resource> upload_buffer;
-
-        const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
-
-        DX::ThrowIfFailed
-          (
-           GetD3Device().GetDevice()->CreateCommittedResource
-           (
-            &upload_heap,
-            D3D12_HEAP_FLAG_NONE,
-            &buffer_desc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(upload_buffer.GetAddressOf())
-           )
-          );
-
-        const auto         gen_type_name      = std::string(typeid(T).name());
-        const auto         type_name          = std::wstring(gen_type_name.begin(), gen_type_name.end());
-        const std::wstring upload_buffer_name = type_name + L" Constant Buffer Upload Buffer";
-
-        DX::ThrowIfFailed(upload_buffer->SetName(upload_buffer_name.c_str()));
-
         char* data = nullptr;
 
-        DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
         std::memcpy(data, &m_data_, sizeof(T));
 
-        upload_buffer->Unmap(0, nullptr);
-
-        cmd.GetList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+        m_upload_buffer_->Unmap(0, nullptr);
 
         const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
           (
@@ -186,10 +156,9 @@ namespace Engine::Graphics
            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
           );
 
-        cmd.GetList()->ResourceBarrier(1, &cb_trans);
-
-
-        GetGC().Track(upload_buffer);
+        cmd->GetList()->ResourceBarrier(1, &copy_trans);
+        cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+        cmd->GetList()->ResourceBarrier(1, &cb_trans);
 
         m_b_dirty_ = false;
       }
@@ -201,6 +170,7 @@ namespace Engine::Graphics
     T                            m_data_;
     bool                         m_b_dirty_;
     ComPtr<ID3D12DescriptorHeap> m_cpu_cbv_heap_;
+    ComPtr<ID3D12Resource>       m_upload_buffer_;
     ComPtr<ID3D12Resource>       m_buffer_;
     UINT                         m_alignment_size_;
 
