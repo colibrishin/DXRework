@@ -78,18 +78,19 @@
 #include "VertexTypes.h"
 #include "WICTextureLoader.h"
 
-#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 #include <d2d1.h>
-#include <d3d11.h>
+#include <d3d12.h>
+#include "../DX-Headers/include/directx/d3dx12.h"
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <dxcapi.h>
-#include <dxgi1_3.h>
+#include <dxgi1_5.h>
 
 #include <fmod.hpp>
 #include <fmod_common.h>

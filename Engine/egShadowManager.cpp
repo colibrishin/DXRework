@@ -141,7 +141,7 @@ namespace Engine::Manager::Graphics
       if (current_light_vp.empty()) { return; }
 
       m_sb_light_vps_buffer_.SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
-      m_sb_light_vps_buffer_.BindSRV(SHADER_GEOMETRY);
+      m_sb_light_vps_buffer_.BindSRV();
 
       ComPtr<ID3D11RenderTargetView> prev_rtv = nullptr;
       ComPtr<ID3D11DepthStencilView> prev_dsv = nullptr;
@@ -172,7 +172,7 @@ namespace Engine::Manager::Graphics
       GetD3Device().GetContext()->OMSetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.Get());
 
       // Geometry shader's work is done.
-      m_sb_light_vps_buffer_.UnbindSRV(SHADER_GEOMETRY);
+      m_sb_light_vps_buffer_.UnbindSRV();
 
       GetRenderPipeline().SetParam<int>(0, shadow_slot);
 
@@ -203,11 +203,11 @@ namespace Engine::Manager::Graphics
        static_cast<UINT>(current_shadow_maps.size())
       );
     // And bind the light view and projection matrix on to the constant buffer.
-    m_sb_light_vps_buffer_.BindSRV(SHADER_PIXEL);
+    m_sb_light_vps_buffer_.BindSRV();
 
     // Bind the light information structured buffer that previously built.
-    m_sb_light_buffer_.BindSRV(SHADER_PIXEL);
-    m_sb_light_buffer_.BindSRV(SHADER_VERTEX);
+    m_sb_light_buffer_.BindSRV();
+    m_sb_light_buffer_.BindSRV();
   }
 
   void ShadowManager::Render(const float& dt) {}
@@ -215,11 +215,11 @@ namespace Engine::Manager::Graphics
   void ShadowManager::PostRender(const float& dt)
   {
     // Unbind the light information structured buffer from the shader.
-    m_sb_light_buffer_.UnbindSRV(SHADER_VERTEX);
-    m_sb_light_buffer_.UnbindSRV(SHADER_PIXEL);
+    m_sb_light_buffer_.UnbindSRV();
+    m_sb_light_buffer_.UnbindSRV();
 
     // And the light view and projection matrix buffer to re-evaluate.
-    m_sb_light_vps_buffer_.UnbindSRV(SHADER_PIXEL);
+    m_sb_light_vps_buffer_.UnbindSRV();
 
     GetRenderPipeline().UnbindResources
       (

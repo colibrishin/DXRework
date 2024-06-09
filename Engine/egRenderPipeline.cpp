@@ -101,38 +101,24 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void RenderPipeline::BindVertexBuffer(ID3D11Buffer* buffer)
+  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
   {
-    constexpr UINT stride = sizeof(VertexElement);
-    constexpr UINT offset = 0;
-    GetD3Device().GetContext()->IASetVertexBuffers
-      (
-       0, 1, &buffer, &stride,
-       &offset
-      );
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
   }
 
-  void RenderPipeline::BindIndexBuffer(ID3D11Buffer* buffer)
+  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
   {
-    GetD3Device().GetContext()->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, 0);
+    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
   }
 
   void RenderPipeline::UnbindVertexBuffer()
   {
-    constexpr UINT stride      = 0;
-    constexpr UINT offset      = 0;
-    ID3D11Buffer*  null_buffer = nullptr;
-    GetD3Device().GetContext()->IASetVertexBuffers
-      (
-       0, 1, &null_buffer, &stride,
-       &offset
-      );
+    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
   }
 
   void RenderPipeline::UnbindIndexBuffer()
   {
-    ID3D11Buffer* null_buffer = nullptr;
-    GetD3Device().GetContext()->IASetIndexBuffer(null_buffer, DXGI_FORMAT_R32_UINT, 0);
+    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
   }
 
   void RenderPipeline::BindResource(
@@ -151,15 +137,8 @@ namespace Engine::Manager::Graphics
     GetD3Device().CreateConstantBuffer(m_param_buffer_data_);
 
     PrecompileShaders();
-    InitializeSamplers();
-
-    GetD3Device().CreateBlendState(m_blend_state_.GetAddressOf());
-    GetD3Device().CreateRasterizer
-      (
-       m_rasterizer_state_.GetAddressOf(),
-       D3D11_FILL_SOLID
-      );
-    GetD3Device().CreateDepthStencilState(m_depth_stencil_state_.GetAddressOf());
+    InitializeRootSignature();
+    InitializeDefaultPSO();
   }
 
   void RenderPipeline::PrecompileShaders()
@@ -169,7 +148,7 @@ namespace Engine::Manager::Graphics
        "default", "./default.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -178,7 +157,7 @@ namespace Engine::Manager::Graphics
        "color", "./color.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -187,7 +166,7 @@ namespace Engine::Manager::Graphics
        "skybox", "./skybox.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -197,7 +176,7 @@ namespace Engine::Manager::Graphics
        SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -206,7 +185,7 @@ namespace Engine::Manager::Graphics
        "normal", "./normal.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -215,7 +194,7 @@ namespace Engine::Manager::Graphics
        "refraction", "./refraction.hlsl", SHADER_DOMAIN_POST_PROCESS,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -224,7 +203,7 @@ namespace Engine::Manager::Graphics
        "specular_tex", "./specular_tex.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -233,7 +212,7 @@ namespace Engine::Manager::Graphics
        "specular", "./specular.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -242,7 +221,7 @@ namespace Engine::Manager::Graphics
        "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -251,7 +230,7 @@ namespace Engine::Manager::Graphics
        "billboard", "./billboard.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
       );
 
@@ -260,7 +239,7 @@ namespace Engine::Manager::Graphics
        "intensity_test", "./intensity_test.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_POINT,
+       D3D12_FILTER_MIN_MAG_MIP_POINT,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
 
@@ -269,21 +248,61 @@ namespace Engine::Manager::Graphics
        "atlas", "./atlas.hlsl", SHADER_DOMAIN_OPAQUE,
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-       D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+       D3D12_FILTER_MIN_MAG_MIP_LINEAR,
        SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
       );
   }
 
-  void RenderPipeline::InitializeSamplers()
+  void RenderPipeline::InitializeDefaultPSO()
   {
-    const auto sampler = GetToolkitAPI().GetCommonStates()->LinearWrap();
+    
+  }
 
-    m_sampler_state_[SAMPLER_TEXTURE] = sampler;
-    GetD3Device().BindSampler
+  void RenderPipeline::InitializeRootSignature()
+  {
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
+    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+
+    CD3DX12_ROOT_PARAMETER1 root_parameters[3];
+    root_parameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
+
+    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[2];
+    static_sampler_desc[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+    static_sampler_desc[1].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT);
+
+    const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC root_signature_desc
+    (
+      _countof(root_parameters),
+      root_parameters,
+      _countof(static_sampler_desc),
+      static_sampler_desc
+    );
+
+    ComPtr<ID3DBlob> signature_blob = nullptr;
+    DX::ThrowIfFailed
       (
-       m_sampler_state_[SAMPLER_TEXTURE], SHADER_PIXEL,
-       SAMPLER_TEXTURE
+       D3D12SerializeVersionedRootSignature
+       (
+        &root_signature_desc, signature_blob.GetAddressOf(), nullptr
+       )
       );
+
+    DX::ThrowIfFailed
+    (
+      GetD3Device().GetDevice()->CreateRootSignature
+      (
+        0,
+        signature_blob->GetBufferPointer(),
+        signature_blob->GetBufferSize(),
+        IID_PPV_ARGS(m_root_signature_.ReleaseAndGetAddressOf())
+        )
+    );
   }
 
   void RenderPipeline::PreUpdate(const float& dt)
@@ -383,6 +402,25 @@ namespace Engine::Manager::Graphics
       (
        m_sampler_state_.at(SAMPLER_TEXTURE), SHADER_PIXEL,
        SAMPLER_TEXTURE
+      );
+  }
+
+  ID3D12RootSignature* RenderPipeline::GetRootSignature() const
+  {
+    return m_root_signature_.Get();
+  }
+
+  void RenderPipeline::SetPSO(const StrongShader& Shader)
+  {
+    const auto& shader_description = Shader->GetPipelineStateDesc();
+    
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateGraphicsPipelineState
+       (
+        &shader_description,
+        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
+       )
       );
   }
 
