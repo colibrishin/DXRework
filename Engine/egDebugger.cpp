@@ -23,6 +23,11 @@ namespace Engine::Manager
 
     if (m_render_queue.empty()) { return; }
 
+    while (m_render_queue.size() > g_debug_message_max)
+    {
+      m_render_queue.pop_front();
+    }
+
     for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
     {
       if (it->first.elapsed_time > g_debug_message_life_time)
@@ -30,7 +35,10 @@ namespace Engine::Manager
         it = m_render_queue.erase(it);
         continue;
       }
+    }
 
+    for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
+    {
       GetToolkitAPI().AppendPrimitiveBatch([this, it, dt]()
       {
         it->second(it->first, dt);
@@ -177,7 +185,7 @@ namespace Engine::Manager
   {
     if (!m_bDebug) { return; }
 
-    if (m_render_queue.size() >= g_debug_message_max)
+    if (m_render_queue.size() > g_debug_message_max)
     {
       m_render_queue.pop_front();
     }
