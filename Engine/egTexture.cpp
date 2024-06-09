@@ -358,6 +358,177 @@ namespace Engine::Resources
     GetD3Device().Wait(COMMAND_TYPE_COPY);
   }
 
+  void Texture::Bind(const CommandPair& cmd, const Texture& dsv) const
+  {
+    const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       dsv.GetRawResource(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_DEPTH_WRITE
+      );
+
+    cmd.GetList()->ResourceBarrier(1, &rtv_trans);
+
+    cmd.GetList()->ResourceBarrier(1, &dsv_trans);
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
+    {
+      m_rtv_->GetCPUDescriptorHandleForHeapStart()
+    };
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
+    {
+      dsv.GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
+    };
+
+    cmd.GetList()->OMSetRenderTargets
+      (
+       1,
+       rtv_handle,
+       false,
+       dsv_handle
+      );
+  }
+
+  void Texture::Unbind(const CommandPair& cmd, const eBindType type) const
+  {
+    Unbind(cmd.GetList(), type);
+  }
+
+  void Texture::Unbind(ID3D12GraphicsCommandList1* cmd, const eBindType type) const
+  {
+    const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_DEPTH_WRITE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    switch (type)
+    {
+    case BIND_TYPE_UAV: 
+        cmd->ResourceBarrier(1, &uav_trans);
+        break;
+    case BIND_TYPE_SRV:
+        cmd->ResourceBarrier(1, &srv_trans);
+        break;
+    case BIND_TYPE_RTV:
+        cmd->ResourceBarrier(1, &rtv_trans);
+        break;
+    case BIND_TYPE_DSV:
+    case BIND_TYPE_DSV_ONLY:
+        cmd->ResourceBarrier(1, &dsv_trans);
+      break;
+    case BIND_TYPE_SAMPLER: break;
+    case BIND_TYPE_CB: break;
+    case BIND_TYPE_COUNT: break;
+    default: ;
+    }
+  }
+
+  void Texture::mapInternal()
+  {
+    const auto& total_size = m_desc_.Width * m_desc_.Height * m_desc_.DepthOrArraySize;
+
+    const auto& dest_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_COPY_DEST
+      );
+
+    DX::ThrowIfFailed
+    (
+        DirectX::CreateUploadBuffer
+        (
+            GetD3Device().GetDevice(),
+            nullptr,
+            total_size,
+            DirectX::BitsPerPixel(m_desc_.Format) / 8,
+            m_upload_buffer_.GetAddressOf()
+        )
+    );
+
+    const auto& dst_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    char* mapped = nullptr;
+
+    DX::ThrowIfFailed(
+        m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped)));
+
+    const bool map_flag = map(mapped);
+
+    m_upload_buffer_->Unmap(0, nullptr);
+
+    if (!map_flag)
+    {
+      return;
+    }
+
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_COPY);
+
+    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
+
+    cmd->ResourceBarrier(1, &dest_transition);
+
+    const auto dst = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
+    auto src = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    src.PlacedFootprint = {0, {m_desc_.Format, m_desc_.Width, m_desc_.Height, m_desc_.DepthOrArraySize}};
+    src.PlacedFootprint.Footprint.RowPitch = m_desc_.Width * DirectX::BitsPerPixel(m_desc_.Format) / 8;
+    src.PlacedFootprint.Footprint.Depth = m_desc_.DepthOrArraySize;
+    src.PlacedFootprint.Footprint.Width = m_desc_.Width;
+    src.PlacedFootprint.Footprint.Height = m_desc_.Height;
+    src.PlacedFootprint.Footprint.Format = m_desc_.Format;
+
+    cmd->CopyTextureRegion
+      (
+       &dst,
+       0, 0, 0,
+       &src,
+       nullptr
+      );
+
+    cmd->ResourceBarrier(1, &dst_transition_back);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
+
+    GetD3Device().Wait(COMMAND_TYPE_COPY);
+  }
+
   void Texture::Bind(const CommandPair& cmd, const DescriptorPtr& heap, const Texture& dsv) const
   {
     const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition

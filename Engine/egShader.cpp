@@ -137,6 +137,12 @@ namespace Engine::Resources
     sd.MipLODBias     = 0.0f;
     sd.MaxAnisotropy  = 1;
     sd.ComparisonFunc = m_smp_func_;
+    sd.BorderColor[0] = 0.0f;
+    sd.BorderColor[1] = 0.0f;
+    sd.BorderColor[2] = 0.0f;
+    sd.BorderColor[3] = 0.0f;
+    sd.MinLOD         = 0.0f;
+    sd.MaxLOD         = D3D12_FLOAT32_MAX;
 
     D3D12_BLEND_DESC bd;
     bd.AlphaToCoverageEnable = SHADER_DOMAIN_TRANSPARENT ? true : false;
@@ -153,6 +159,21 @@ namespace Engine::Resources
     bd.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     GetD3Device().GetDevice()->CreateSampler(&sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    m_il_elements_.reserve(m_il_.size());
+
+    for (const auto& element : m_il_ | std::views::keys)
+    {
+      m_il_elements_.push_back(element);
+    }
+
+    const D3D12_INPUT_LAYOUT_DESC il
+    {
+      .pInputElementDescs = m_il_elements_.data(),
+      .NumElements        = static_cast<UINT>(m_il_.size())
+    };
+
+    constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
 
     m_il_elements_.reserve(m_il_.size());
 

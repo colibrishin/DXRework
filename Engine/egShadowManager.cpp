@@ -31,8 +31,15 @@ namespace Engine::Manager::Graphics
     m_sb_light_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightSB>>();
     m_sb_light_vps_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightVPSB>>();
 
-    m_sb_light_buffer_->Create(g_max_lights, nullptr);
-    m_sb_light_vps_buffer_->Create(g_max_lights, nullptr);
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
+    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+    m_sb_light_buffer_->Create(cmd, g_max_lights, nullptr);
+    m_sb_light_vps_buffer_->Create(cmd, g_max_lights, nullptr);
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    GetD3Device().Wait();
 
     // Render target for shadow map mask.
     m_shadow_map_mask_ = Resources::Texture2D
@@ -43,7 +50,7 @@ namespace Engine::Manager::Graphics
          .Width = g_max_shadow_map_size,
          .Height = g_max_shadow_map_size,
          .DepthOrArraySize = g_max_shadow_cascades,
-         .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
          .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
          .MipsLevel = 1,
          .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
@@ -111,7 +118,7 @@ namespace Engine::Manager::Graphics
     // If there is no light, it does not need to be updated.
     if (light_buffer.empty()) { return; }
 
-    m_sb_light_buffer_->SetData(static_cast<UINT>(light_buffer.size()), light_buffer.data());
+    m_sb_light_buffer_->SetData(cmd.GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
 
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
@@ -138,7 +145,7 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_->SetData(static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_vps_buffer_->SetData(cmd.GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
       UINT idx = 0;
 
@@ -175,7 +182,7 @@ namespace Engine::Manager::Graphics
     SBs::LocalParamSB local_param{};
     local_param.SetParam(0, static_cast<int>(light_idx));
     StructuredBuffer<SBs::LocalParamSB> sb;
-    sb.SetData(1, &local_param);
+    sb.Create(cmd.GetList(), 1, &local_param);
     m_local_param_buffers_.emplace_back(sb);
 
     GetRenderer().RenderPass
@@ -204,8 +211,6 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
          m_shadow_map_mask_.Bind(c, dsv);
          sb.BindSRVGraphic(c, h);
-
-         GetRenderPipeline().BindConstantBuffers(h);
 
          h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 

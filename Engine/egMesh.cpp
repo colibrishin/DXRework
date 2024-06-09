@@ -171,6 +171,8 @@ namespace Engine::Resources
 
     const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
 
+    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
     // -- Vertex Buffer -- //
     // Initialize vertex buffer.
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);

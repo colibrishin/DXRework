@@ -1,11 +1,8 @@
 #pragma once
 #include <BufferHelpers.h>
-#include <filesystem>
 
 #include "egCommon.hpp"
 #include "egConstantBuffer.hpp"
-#include "egD3Device.hpp"
-#include "egDXCommon.h"
 #include "egDescriptors.h"
 
 namespace Engine::Manager::Graphics
@@ -31,7 +28,8 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN)
+      : m_material_buffer_() {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
@@ -99,7 +97,7 @@ namespace Engine::Manager::Graphics
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
 
-    void BindConstantBuffers(const DescriptorPtr & heap);
+    void BindConstantBuffers(const CommandPair & cmd, const DescriptorPtr & heap);
 
   private:
     friend class ToolkitAPI;
@@ -116,6 +114,9 @@ namespace Engine::Manager::Graphics
     void InitializeHeaps();
     void InitializeStaticBuffers();
     void InitializeViewport();
+
+    void SetRootSignature();
+    void SetHeaps();
 
     void SetRootSignature();
     void SetHeaps();
