@@ -283,6 +283,9 @@ namespace Engine
   extern Manager::Graphics::Renderer&            GetRenderer();
   extern Manager::Graphics::GarbageCollector&    GetGC();
 
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
+  using FrameIndex = UINT64;
+
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
 

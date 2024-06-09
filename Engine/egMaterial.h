@@ -81,6 +81,8 @@ namespace Engine::Resources
 
     void SetTextureSlot(const std::string& name, UINT slot);
 
+    void Draw(const float & dt, const eCommandList list);
+
     RESOURCE_SELF_INFER_GETTER(Material)
     RESOURCE_SELF_INFER_CREATE(Material)
 

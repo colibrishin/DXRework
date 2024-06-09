@@ -22,13 +22,10 @@ namespace Engine::Manager::Graphics
     m_render_target_state_ = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
     m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
-
-    m_resource_upload_batch_->Begin();
-
     m_sprite_batch_          = std::make_unique<SpriteBatch>
       (GetD3Device().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
 
-    m_resource_upload_batch_->End(GetD3Device().GetDirectCommandQueue());
+    m_resource_upload_batch_->End(GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE));
 
     m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
     
@@ -38,15 +35,17 @@ namespace Engine::Manager::Graphics
 
     m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
 
-    m_resource_upload_batch_->End(GetD3Device().GetDirectCommandQueue());
+    m_effect_pipeline_state_ = std::make_unique<EffectPipelineStateDescription>
+      (
+       &VertexPositionColor::InputLayout,
+       CommonStates::Opaque,
+       CommonStates::DepthDefault,
+       CommonStates::CullNone,
+       *m_render_target_state_.get());
 
-    m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
-    
-    m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(GetD3Device().GetDevice());
+    m_basic_effect_ = std::make_unique<BasicEffect>(GetD3Device().GetDevice(), EffectFlags::VertexColor, *m_effect_pipeline_state_.get());
 
-    m_graphics_memory_ = std::make_unique<GraphicsMemory>(GetD3Device().GetDevice());
-
-    m_geometric_primitive_ = GeometricPrimitive::CreateTeapot();
+    m_basic_effect_->SetProjection(XMMatrixOrthographicOffCenterLH(0, g_window_width, g_window_height, 0, 0, 1));
 
     FMOD::DX::ThrowIfFailed(System_Create(&m_audio_engine_));
 
@@ -74,16 +73,35 @@ namespace Engine::Manager::Graphics
 
   void ToolkitAPI::PostRender(const float& dt)
   {
-    FrameBegin();
+    /*m_sprite_batch_->SetViewport(GetRenderPipeline().GetViewport());
+
+    m_sprite_batch_->Begin
+    (
+        GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER), 
+        SpriteSortMode_Deferred
+    );
 
     for (const auto& callback : m_sprite_batch_callbacks_)
     {
       callback();
     }
 
-    FrameEnd();
+    m_sprite_batch_->End();
+
+    m_basic_effect_->Apply(GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER));
+
+    m_primitive_batch_->Begin(GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER));
+
+    for (const auto& callback : m_primitive_batch_callbacks_)
+    {
+      callback();
+    }
+
+    m_primitive_batch_->End();*/
 
     m_sprite_batch_callbacks_.clear();
+
+    m_primitive_batch_callbacks_.clear();
   }
 
   void ToolkitAPI::FixedUpdate(const float& dt) { }
@@ -95,14 +113,9 @@ namespace Engine::Manager::Graphics
     m_sprite_batch_callbacks_.push_back(callback);
   }
 
-  void ToolkitAPI::BeginPrimitiveBatch() const
+  void ToolkitAPI::AppendPrimitiveBatch(const std::function<void()>& callback)
   {
-    m_primitive_batch_->Begin(GetD3Device().GetDirectCommandList());
-  }
-
-  void ToolkitAPI::EndPrimitiveBatch() const
-  {
-    m_primitive_batch_->End();
+    m_primitive_batch_callbacks_.push_back(callback);
   }
 
   SpriteBatch* ToolkitAPI::GetSpriteBatch() const { return m_sprite_batch_.get(); }
@@ -192,22 +205,10 @@ namespace Engine::Manager::Graphics
         m_descriptor_heap_->GetCpuHandle(0),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
     );*/
-
-    GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
-
-    m_sprite_batch_->Begin
-    (
-        GetD3Device().GetSubDirectCommandList(), 
-        SpriteSortMode_Deferred
-    );
   }
 
   void ToolkitAPI::FrameEnd() const
   {
-    m_sprite_batch_->End();
-
-    GetD3Device().ExecuteSubDirectCommandList();
-
     /*GetD3Device().ExecuteSubDirectCommandList();
 
     const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();

@@ -17,21 +17,21 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::PostRender(const float& dt)
   {
-    m_copy_.PostRender(0.f);
+    m_copy_.Unbind(COMMAND_LIST_POST_RENDER, BIND_TYPE_SRV);
   }
 
   void ReflectionEvaluator::PostUpdate(const float& dt) {}
 
   void ReflectionEvaluator::Initialize()
   {
-    m_copy_.Load();
+    m_copy_.SetName("ReflectionEvaluator");
     m_copy_.Initialize();
+    m_copy_.Load();
   }
 
   void ReflectionEvaluator::RenderFinished()
   {
-    GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
-    m_copy_.BindAs(BIND_TYPE_SRV, RESERVED_RENDERED, 0);
-    m_copy_.Render(0.f);
+    GetRenderPipeline().CopyBackBuffer(COMMAND_LIST_RENDER, m_copy_.GetRawResoruce());
+    m_copy_.Bind(COMMAND_LIST_RENDER, BIND_TYPE_SRV, RESERVED_RENDERED, 0);
   }
 }

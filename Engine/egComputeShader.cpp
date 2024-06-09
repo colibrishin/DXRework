@@ -42,17 +42,17 @@ namespace Engine::Resources
       return;
     }
 
-    GetD3Device().WaitAndReset(COMMAND_IDX_COMPUTE);
+    GetD3Device().WaitAndReset(COMMAND_LIST_COMPUTE);
 
-    GetD3Device().GetComputeCommandList()->SetPipelineState(m_pipeline_state_.Get());
+    GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE)->SetPipelineState(m_pipeline_state_.Get());
 
-    GetD3Device().GetComputeCommandList()->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
-
-    GetD3Device().ExecuteComputeCommandList();
-
-    GetD3Device().Wait(COMMAND_IDX_COMPUTE);
+    GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE)->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
 
     postDispatch();
+
+    GetD3Device().ExecuteCommandList(COMMAND_LIST_COMPUTE);
+
+    GetD3Device().Wait();
 
     std::fill_n(m_group_, 3, 1);
   }
