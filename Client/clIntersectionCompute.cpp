@@ -21,7 +21,8 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->BindUAVGraphic(list, heap);
+    m_light_table_ptr_->CopyUAVHeap(heap);
+    m_light_table_ptr_->TransitionToUAV(list);
 
     // 512 x 512
     SetGroup({256, 1, 1});
@@ -39,7 +40,7 @@ namespace Client::ComputeShaders
       return;
     }
 
-    m_light_table_ptr_->UnbindUAVGraphic(list);
+    m_light_table_ptr_->TransitionCommon(list, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     GetRenderPipeline().SetParam<int>(0, target_light_slot);
 
