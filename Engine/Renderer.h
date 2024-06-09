@@ -2,6 +2,7 @@
 #include "egManager.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Manager::Graphics
 {
@@ -36,7 +37,7 @@ namespace Engine::Manager::Graphics
       eShaderDomain                                   domain,
       bool                                            shader_bypass,
       const std::function<bool(const StrongObjectBase&)>& predicate
-    ) const;
+    );
 
   private:
     friend struct SingletonDeleter;
@@ -47,13 +48,14 @@ namespace Engine::Manager::Graphics
       eShaderDomain          domain,
       bool                   shader_bypass,
       const StrongMaterial & material, const std::vector<SBs::InstanceSB> & structured_buffers
-    ) const;
+    );
 
     void preMappingModel(const StrongRenderComponent& rc);
     void preMappingParticle(const StrongRenderComponent& rc);
 
     bool m_b_ready_;
 
+    StructuredBuffer<SBs::InstanceSB> m_instance_buffer_;
     RenderMap<CandidatePair> m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }

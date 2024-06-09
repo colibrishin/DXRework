@@ -13,17 +13,15 @@ namespace Engine::Resources
 
     struct GenericTextureDescription
     {
-      UINT        Width = 0;
-      UINT        Height = 0;
-      UINT        Depth = 0;
-      UINT        ArraySize = 0;
-      DXGI_FORMAT Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-      UINT        CPUAccessFlags = 0;
-      UINT        BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS);
-      UINT        MipsLevel = 1;
-      UINT        MiscFlags = 0;
-      D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
-      DXGI_SAMPLE_DESC SampleDesc = {.Count = 1, .Quality = 0};
+      UINT                 Alignment        = 0;
+      UINT                 Width            = 0;
+      UINT                 Height           = 0;
+      UINT16               DepthOrArraySize = 0;
+      DXGI_FORMAT          Format           = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      D3D12_RESOURCE_FLAGS Flags            = D3D12_RESOURCE_FLAG_NONE;
+      UINT16               MipsLevel        = 1;
+      D3D12_TEXTURE_LAYOUT Layout           = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
+      DXGI_SAMPLE_DESC     SampleDesc       = {.Count = 1, .Quality = 0};
 
     private:
       friend class boost::serialization::access;
@@ -31,16 +29,14 @@ namespace Engine::Resources
       template <class Archive>
       void serialize(Archive& ar, const unsigned int version)
       {
+        ar & Alignment;
         ar & Width;
         ar & Height;
-        ar & Depth;
-        ar & ArraySize;
+        ar & DepthOrArraySize;
         ar & Format;
-        ar & CPUAccessFlags;
-        ar & BindFlags;
+        ar & Flags;
         ar & MipsLevel;
-        ar & MiscFlags;
-        ar & Usage;
+        ar & Layout;
         ar & SampleDesc;
       }
     };
@@ -65,26 +61,19 @@ namespace Engine::Resources
 
     eTexBindSlots GetSlot() const;
     UINT          GetSlotOffset() const;
-    eShaderType   GetBoundShader() const;
     eTexType      GetPrimitiveTextureType() const;
 
-    ID3D11ShaderResourceView*  GetSRV() const;
-    ID3D11RenderTargetView*    GetRTV() const;
-    ID3D11DepthStencilView*    GetDSV() const;
-    ID3D11UnorderedAccessView* GetUAV() const;
+    ID3D12DescriptorHeap* GetSRVDescriptor() const;
+    ID3D12DescriptorHeap* GetRTVDescriptor() const;
+    ID3D12DescriptorHeap* GetDSVDescriptor() const;
+    ID3D12DescriptorHeap* GetUAVDescriptor() const;
+
+    ID3D12Resource* GetRawResoruce() const;
 
     bool         IsHotload() const;
 
-    void BindAs(const D3D11_BIND_FLAG bind, const eTexBindSlots slot, const UINT slot_offset, const eShaderType shader);
-    void Map(const std::function<void(const D3D11_MAPPED_SUBRESOURCE&)> & copy_func) const;
-
-    template <typename T>
-    ComPtr<T> As() const
-    {
-      ComPtr<T> ret;
-      DX::ThrowIfFailed(m_res_.As(&ret));
-      return ret;
-    }
+    void BindAs(const eBindType type, const eTexBindSlots slot, const UINT slot_offset);
+    void Map(const std::function<void(char*)> & copy_func);
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
@@ -93,52 +82,51 @@ namespace Engine::Resources
     virtual UINT GetWidth() const;
     virtual UINT GetHeight() const;
     virtual UINT GetDepth() const;
-    virtual UINT GetArraySize() const;
 
     void LazyDescription(const GenericTextureDescription & desc);
-    void LazyRTV(const D3D11_RENDER_TARGET_VIEW_DESC & desc);
-    void LazyDSV(const D3D11_DEPTH_STENCIL_VIEW_DESC & desc);
-    void LazyUAV(const D3D11_UNORDERED_ACCESS_VIEW_DESC & desc);
-    void LazySRV(const D3D11_SHADER_RESOURCE_VIEW_DESC & desc);
+    void LazyRTV(const D3D12_RENDER_TARGET_VIEW_DESC & desc);
+    void LazyDSV(const D3D12_DEPTH_STENCIL_VIEW_DESC & desc);
+    void LazyUAV(const D3D12_UNORDERED_ACCESS_VIEW_DESC & desc);
+    void LazySRV(const D3D12_SHADER_RESOURCE_VIEW_DESC & desc);
 
     const GenericTextureDescription& GetDescription() const;
 
-    virtual void loadDerived(ComPtr<ID3D11Resource>& res) = 0;
+    virtual void loadDerived(ComPtr<ID3D12Resource>& res) = 0;
     void Unload_INTERNAL() override;
 
     SERIALIZE_DECL
     // Non-serialized
-    ComPtr<ID3D11Resource>            m_res_;
+    ComPtr<ID3D12Resource> m_res_;
 
-    ComPtr<ID3D11ShaderResourceView>  m_srv_;
-    ComPtr<ID3D11RenderTargetView>    m_rtv_;
-    ComPtr<ID3D11DepthStencilView>    m_dsv_;
-    ComPtr<ID3D11UnorderedAccessView> m_uav_;
+    ComPtr<ID3D12DescriptorHeap> m_srv_;
+    ComPtr<ID3D12DescriptorHeap> m_rtv_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_;
+    ComPtr<ID3D12DescriptorHeap> m_uav_;
 
   private:
     Texture();
     void Load_INTERNAL() override final;
 
-    inline static ComPtr<ID3D11RenderTargetView> s_previous_rtv = nullptr;
-    inline static ComPtr<ID3D11DepthStencilView> s_previous_dsv = nullptr;
-
+    void InitializeDescriptorHeaps();
 
     GenericTextureDescription        m_desc_;
     eTexType                         m_type_;
 
     bool                             m_custom_desc_[4];
-    D3D11_RENDER_TARGET_VIEW_DESC    m_rtv_desc_{};
-    D3D11_DEPTH_STENCIL_VIEW_DESC    m_dsv_desc_{};
-    D3D11_UNORDERED_ACCESS_VIEW_DESC m_uav_desc_{};
-    D3D11_SHADER_RESOURCE_VIEW_DESC  m_srv_desc_{};
+    D3D12_RENDER_TARGET_VIEW_DESC    m_rtv_desc_{};
+    D3D12_DEPTH_STENCIL_VIEW_DESC    m_dsv_desc_{};
+    D3D12_UNORDERED_ACCESS_VIEW_DESC m_uav_desc_{};
+    D3D12_SHADER_RESOURCE_VIEW_DESC  m_srv_desc_{};
 
     // Non-serialized
     bool                             m_b_lazy_window_;
+    ComPtr<ID3D12Resource>           m_upload_buffer_;
 
-    D3D11_BIND_FLAG                  m_bind_to_;
+    RTVDSVHandlePair                 m_previous_handles_;
+
+    eBindType                        m_bound_type_;
     eTexBindSlots                    m_bound_slot_;
     UINT                             m_bound_slot_offset_;
-    eShaderType                      m_bound_shader_;
 
   };
 } // namespace Engine::Resources

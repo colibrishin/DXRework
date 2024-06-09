@@ -14,16 +14,14 @@ namespace Engine::Manager::Graphics
         m_copy_
         (
          "", {
+           .Alignment = 0,
            .Width = g_window_width,
            .Height = g_window_height,
-           .Depth = 0,
-           .ArraySize = 1,
+           .DepthOrArraySize = 0,
            .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-           .CPUAccessFlags = 0,
-           .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+           .Flags = D3D12_RESOURCE_FLAG_NONE,
            .MipsLevel = 1,
-           .MiscFlags = 0,
-           .Usage = D3D11_USAGE_DEFAULT,
+           .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
            .SampleDesc = { .Count = 1, .Quality = 0 }
          }
         ) {}

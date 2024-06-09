@@ -50,7 +50,7 @@ namespace Engine::Resources
     {
       mesh->PreRender(dt);
       mesh->Render(dt);
-      GetRenderPipeline().DrawIndexedInstanced(mesh->GetIndexCount(), m_instance_count_);
+      GetRenderPipeline().DrawIndexedInstancedDeferred(mesh->GetIndexCount(), m_instance_count_);
       mesh->PostRender(dt);
     }
   }

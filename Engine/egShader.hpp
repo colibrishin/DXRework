@@ -1,4 +1,5 @@
 #pragma once
+#include <d3d11.h>
 #include <filesystem>
 #include "egCommon.hpp"
 #include "egEntity.hpp"
@@ -33,17 +34,17 @@ namespace Engine::Resources
 
     eShaderDomain GetDomain() const;
 
-    [[nodiscard]] D3D12_GRAPHICS_PIPELINE_STATE_DESC GetPipelineStateDesc() const;
+    [[nodiscard]] ID3D12PipelineState* GetPipelineState() const;
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
-      const std::string &           name,
-      const std::filesystem::path & path,
-      const eShaderDomain           domain,
-      const UINT                    depth,
-      const UINT                    rasterizer,
-      const D3D12_FILTER            filter,
-      const UINT                    sampler, D3D11_PRIMITIVE_TOPOLOGY topology
+      const std::string&           name,
+      const std::filesystem::path& path,
+      const eShaderDomain          domain,
+      const UINT                   depth,
+      const UINT                   rasterizer,
+      const D3D12_FILTER           filter,
+      const UINT                   sampler, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology
     );
 
   protected:
@@ -63,6 +64,8 @@ namespace Engine::Resources
       {SHADER_DOMAIN, "ds_main", "ds_5_0"}
     };
 
+    ComPtr<ID3D12PipelineState> m_pipeline_state_;
+
   private:
     Shader();
     SERIALIZE_DECL
@@ -79,14 +82,15 @@ namespace Engine::Resources
     D3D12_CULL_MODE            m_cull_mode_;
     D3D12_FILL_MODE            m_fill_mode_;
 
-    D3D12_PRIMITIVE_TOPOLOGY_TYPE  m_topology_;
-    std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>>  m_il_;
-    
-    ComPtr<ID3DBlob>          m_vs_blob_;
-    ComPtr<ID3DBlob>          m_ps_blob_;
-    ComPtr<ID3DBlob>          m_gs_blob_;
-    ComPtr<ID3DBlob>          m_hs_blob_;
-    ComPtr<ID3DBlob>          m_ds_blob_;
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_;
+    std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> m_il_;
+    std::vector<D3D12_INPUT_ELEMENT_DESC>                         m_il_elements_;
+
+    ComPtr<ID3DBlob>            m_vs_blob_;
+    ComPtr<ID3DBlob>            m_ps_blob_;
+    ComPtr<ID3DBlob>            m_gs_blob_;
+    ComPtr<ID3DBlob>            m_hs_blob_;
+    ComPtr<ID3DBlob>            m_ds_blob_;
 
     ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
   };

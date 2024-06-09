@@ -1,5 +1,7 @@
 #pragma once
 #include <CommonStates.h>
+#include <DescriptorHeap.h>
+#include <ResourceUploadBatch.h>
 #include <SpriteBatch.h>
 
 #include <fmod_studio.hpp>
@@ -11,7 +13,7 @@ namespace Engine::Manager::Graphics
   class ToolkitAPI final : public Abstract::Singleton<ToolkitAPI>
   {
   public:
-    ToolkitAPI(SINGLETON_LOCK_TOKEN) {}
+    explicit ToolkitAPI(SINGLETON_LOCK_TOKEN) {}
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -22,12 +24,12 @@ namespace Engine::Manager::Graphics
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void BeginPrimitiveBatch() const;
-    void EndPrimitiveBatch() const;
+    void AppendSpriteBatch(const std::function<void()>& callback);
 
     SpriteBatch*                         GetSpriteBatch() const;
     CommonStates*                        GetCommonStates() const;
     PrimitiveBatch<VertexPositionColor>* GetPrimitiveBatch() const;
+    DescriptorHeap*                      GetDescriptorHeap() const;
 
     void LoadSound(FMOD::Sound** sound, const std::string& path) const;
     void PlaySound(
@@ -45,17 +47,27 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     ~ToolkitAPI() override;
 
-    void FrameBegin() const;
+    void BeginPrimitiveBatch() const;
+    void EndPrimitiveBatch() const;
+    void FrameBegin();
     void FrameEnd() const;
 
-    std::unique_ptr<CommonStates>       m_states_              = nullptr;
-    std::unique_ptr<GeometricPrimitive> m_geometric_primitive_ = nullptr;
-    std::unique_ptr<SpriteBatch>        m_sprite_batch_        = nullptr;
+    std::unique_ptr<DescriptorHeap> m_descriptor_heap_ = nullptr;
+
+    std::unique_ptr<CommonStates>                        m_states_                = nullptr;
+    std::unique_ptr<GeometricPrimitive>                  m_geometric_primitive_   = nullptr;
+    std::unique_ptr<SpriteBatch>                         m_sprite_batch_          = nullptr;
+    std::unique_ptr<ResourceUploadBatch>                 m_resource_upload_batch_ = nullptr;
+    std::unique_ptr<SpriteBatchPipelineStateDescription> m_sprite_pipeline_state_        = nullptr;
+    std::unique_ptr<RenderTargetState>                   m_render_target_state_   = nullptr;
+
 
     std::unique_ptr<PrimitiveBatch<VertexPositionColor>> m_primitive_batch_ =
       nullptr;
-    std::unique_ptr<BasicEffect> m_basic_effect_       = nullptr;
-    ComPtr<ID3D11InputLayout>    m_debug_input_layout_ = nullptr;
+
+    std::vector<std::function<void()>> m_sprite_batch_callbacks_;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE m_previous_handle_;
 
     FMOD::System*         m_audio_engine_         = nullptr;
     FMOD::ChannelGroup*   m_master_channel_group_ = nullptr;

@@ -15,39 +15,13 @@ namespace Engine::Resources
 
   UINT Texture3D::GetDepth() const { return Texture::GetDepth(); }
 
-  void Texture3D::loadDerived(ComPtr<ID3D11Resource>& res)
+  void Texture3D::loadDerived(ComPtr<ID3D12Resource>& res)
   {
     const auto& gd = GetDescription();
 
-    if (GetPath().empty() && !(gd.Width + gd.Height + gd.Depth))
+    if (GetPath().empty() && !(gd.Width + gd.Height + gd.DepthOrArraySize))
     {
       throw std::logic_error("Hotloading texture should be define in width, height, depth");
-    }
-
-    if (gd.ArraySize > 1) { throw std::logic_error("3D Texture cannot be array"); }
-
-    if (!GetPath().empty())
-    {
-      res.As<ID3D11Texture3D>(&m_tex_);
-    }
-    else
-    {
-      const D3D11_TEXTURE3D_DESC desc
-      {
-        .Width = gd.Width,
-        .Height = gd.Height,
-        .Depth = gd.Depth,
-        .MipLevels = gd.MipsLevel,
-        .Format = gd.Format,
-        .Usage = gd.Usage,
-        .BindFlags = gd.BindFlags,
-        .CPUAccessFlags = gd.CPUAccessFlags,
-        .MiscFlags = gd.MiscFlags
-      };
-
-      GetD3Device().GetDevice()->CreateTexture3D(&desc, nullptr, m_tex_.ReleaseAndGetAddressOf());
-
-      m_tex_.As<ID3D11Resource>(&res);
     }
   }
 
@@ -56,6 +30,4 @@ namespace Engine::Resources
     Texture::Unload_INTERNAL();
     m_tex_.Reset();
   }
-
-  UINT Texture3D::GetArraySize() const { return Texture::GetArraySize(); }
 }
