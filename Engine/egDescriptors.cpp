@@ -147,11 +147,11 @@ namespace Engine
       );
   }
 
-  void DescriptorPtrImpl::BindGraphic(const CommandPair& cmd) const
+  void DescriptorPtrImpl::BindGraphic(const Weak<CommandPair>& w_cmd) const
   {
-    const auto& command_list = cmd.GetList();
-
-    const auto& type = cmd.GetType();
+    const auto& cmd = w_cmd.lock();
+    const auto& command_list = cmd->GetList();
+    const auto& type = cmd->GetType();
 
     if (type == COMMAND_TYPE_DIRECT)
     {
