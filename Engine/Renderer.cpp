@@ -26,7 +26,6 @@ namespace Engine::Manager::Graphics
       );
 
     m_tmp_descriptor_heaps_.clear();
-    m_tmp_instance_buffers_.clear();
     m_b_ready_ = false;
   }
 
@@ -63,14 +62,18 @@ namespace Engine::Manager::Graphics
          if (!tr) { return; }
          if (!tr->GetActive()) { return; }
 
-         switch (rc->GetRenderType())
+         // Early culling check.
+         if (GetProjectionFrustum().CheckRender(obj))
          {
-         case RENDER_COM_T_MODEL: preMappingModel(rc);
-           break;
-         case RENDER_COM_T_PARTICLE: preMappingParticle(rc);
-           break;
-         case RENDER_COM_T_UNK:
-         default: break;
+           switch (rc->GetRenderType())
+           {
+           case RENDER_COM_T_MODEL: preMappingModel(rc);
+             break;
+           case RENDER_COM_T_PARTICLE: preMappingParticle(rc);
+             break;
+           case RENDER_COM_T_UNK:
+           default: break;
+           }
          }
        }
       );
@@ -84,19 +87,16 @@ namespace Engine::Manager::Graphics
     {
       if (const auto cam = scene->GetMainCamera().lock())
       {
-        const auto& cmd = GetD3Device().AcquireCommandPair(L"Main Rendering");
+        const auto& cmd = GetD3Device().AcquireCommandPair(L"Main Rendering").lock();
 
-        cmd.SoftReset();
+        cmd->SoftReset();
 
         for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
           // Check culling.
           RenderPass
             (
-             dt, (eShaderDomain)i, false, cmd, [](const StrongObjectBase& obj)
-             {
-               return GetProjectionFrustum().CheckRender(obj);
-             }, [i](const CommandPair& c, const DescriptorPtr& h)
+             dt, (eShaderDomain)i, false, cmd, {}, [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
              {
                GetRenderPipeline().DefaultRenderTarget(c);
                GetRenderPipeline().DefaultViewport(c);
@@ -110,7 +110,7 @@ namespace Engine::Manager::Graphics
                }
 
              },
-             [i](const CommandPair& c, const DescriptorPtr& h)
+             [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
              {
                GetShadowManager().UnbindShadowMaps(c);
 
@@ -128,6 +128,8 @@ namespace Engine::Manager::Graphics
             GetReflectionEvaluator().RenderFinished(cmd);
           }
         }
+
+        cmd->FlagReady();
       }
     }
   }
@@ -150,14 +152,14 @@ namespace Engine::Manager::Graphics
 
   void Renderer::RenderPass
   (
-    const float                                                          dt,
-    eShaderDomain                                                        domain,
-    bool                                                                 shader_bypass,
-    const CommandPair&                                                   cmd,
-    const std::function<bool(const StrongObjectBase&)>&                  predicate,
-    const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
-    const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
-    const std::vector<Weak<StructuredBufferBase>>&                       additional_structured_buffers = {}
+    const float                                                                dt,
+    eShaderDomain                                                              domain,
+    bool                                                                       shader_bypass,
+    const Weak<CommandPair>&                                                   w_cmd,
+    const std::function<bool(const StrongObjectBase&)>&                        predicate,
+    const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& post_setup,
+    const std::vector<Weak<StructuredBufferBase>>&                             additional_structured_buffers = {}
   )
   {
     if (!Ready())
@@ -197,10 +199,22 @@ namespace Engine::Manager::Graphics
       throw std::runtime_error("Descriptor heap is not available!");
     }
 
-    if (!GetD3Device().IsCommandPairAvailable())
+    const auto& cmd = w_cmd.lock();
+
+    for (const auto& sb_ptr : additional_structured_buffers)
     {
-      throw std::runtime_error("Command pair is not available!");
+      if (const auto& sb = sb_ptr.lock())
+      {
+        sb->TransitionToSRV(cmd->GetList());
+      }
     }
+
+    if (m_tmp_instance_buffers_.size() < final_mapping.size())
+    {
+      m_tmp_instance_buffers_.resize(final_mapping.size());
+    }
+
+    UINT64 idx = 0;
 
     for (const auto& [mtr, sbs] : final_mapping)
     {
@@ -210,44 +224,47 @@ namespace Engine::Manager::Graphics
 
       initial_setup(cmd, heap);
 
-      heap->BindGraphic(cmd);
-
       for (const auto& sb_ptr : additional_structured_buffers)
       {
         if (const auto& sb = sb_ptr.lock())
         {
-          sb->BindSRVGraphic(cmd, heap);
+          sb->CopySRVHeap(heap);
         }
       }
 
-      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), cmd, heap, sbs);
+      heap->BindGraphic(cmd);
 
-      for (const auto& sb : additional_structured_buffers)
-      {
-        if (const auto& sb_ptr = sb.lock())
-        {
-          sb_ptr->UnbindSRVGraphic(cmd);
-        }
-      }
+      renderPassImpl(dt, idx, domain, shader_bypass, mtr.lock(), cmd, heap, sbs);
 
       post_setup(cmd, heap);
+
+      idx++;
+    }
+
+    for (const auto& sb_ptr : additional_structured_buffers)
+    {
+      if (const auto& sb = sb_ptr.lock())
+      {
+        sb->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+      }
     }
   }
 
   void Renderer::renderPassImpl(
-    const float                          dt,
-    eShaderDomain                        domain,
-    bool                                 shader_bypass,
-    const StrongMaterial &               material,
-    const CommandPair &                  cmd,
-    const DescriptorPtr &                heap,
-    const std::vector<SBs::InstanceSB> & structured_buffers
+    const float                         dt,
+    const UINT64                        idx,
+    eShaderDomain                       domain,
+    bool                                shader_bypass,
+    const StrongMaterial&               material,
+    const Weak<CommandPair>&            w_cmd,
+    const DescriptorPtr&                heap,
+    const std::vector<SBs::InstanceSB>& structured_buffers
   )
   {
-    StructuredBuffer<SBs::InstanceSB> instance_buffer;
-    instance_buffer.Create(cmd.GetList(), structured_buffers.size(), structured_buffers.data());
-    instance_buffer.BindSRVGraphic(cmd, heap);
-    m_tmp_instance_buffers_.emplace_back(instance_buffer);
+    const auto& cmd = w_cmd.lock();
+    m_tmp_instance_buffers_[idx].SetData(cmd->GetList(), structured_buffers.size(), structured_buffers.data());
+    m_tmp_instance_buffers_[idx].TransitionToSRV(cmd->GetList());
+    m_tmp_instance_buffers_[idx].CopySRVHeap(heap);
 
     material->SetTempParam
       (
