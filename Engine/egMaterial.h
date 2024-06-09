@@ -2,6 +2,7 @@
 #include "egDXCommon.h"
 #include "egDebugger.hpp"
 #include "egResourceManager.hpp"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Resources
 {
@@ -44,8 +45,6 @@ namespace Engine::Resources
       SetResource(search.lock());
     }
 
-    void SetProperties(Graphics::CBs::MaterialCB&& material_cb) noexcept;
-
     template <typename T>
     [[nodiscard]] auto GetResources() const
     {
@@ -81,6 +80,8 @@ namespace Engine::Resources
 
     void SetTextureSlot(const std::string& name, UINT slot);
 
+    void Draw(const float & dt, const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap);
+
     RESOURCE_SELF_INFER_GETTER(Material)
     RESOURCE_SELF_INFER_CREATE(Material)
 
@@ -94,7 +95,8 @@ namespace Engine::Resources
 
     void SetResource(const StrongResource& resource);
 
-    Graphics::CBs::MaterialCB m_material_cb_;
+    Graphics::SBs::MaterialSB m_material_sb_;
+    Graphics::StructuredBuffer<Graphics::SBs::MaterialSB> m_material_sb_data_;
 
     std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
     std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;

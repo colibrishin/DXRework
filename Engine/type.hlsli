@@ -57,7 +57,7 @@ struct VertexInputType
 struct PixelInputType
 {
   float4 position : SV_Position;
-  float4 world_position : POSITION0;
+  float4 worldPosition : POSITION0;
   float4 color : COLOR0;
   float2 tex : TEXCOORD0;
 
@@ -67,6 +67,7 @@ struct PixelInputType
 
   float4 reflection : POSITION1;
   float4 refraction : POSITION2;
+  float3 scale : POSITION3;
 
   float3 viewDirection : TEXCOORD2;
   float3 lightDelta[MAX_NUM_LIGHTS] : TEXCOORD3;
@@ -76,7 +77,22 @@ struct PixelInputType
   uint  instanceId : SV_InstanceID;
 };
 
-struct InstanceElement
+struct MaterialElement
+{
+  BindFlag bindFlag : BINDFLAG;
+
+  float specularPower : SPECULARPOWER;
+  float reflectionTranslation : REFTRANSLATION;
+  float reflectionScale : REFSCALE;
+  float refractionScale : REFRACTSCALE;
+
+  float4 overrideColor : OVERRIDECOLOR;
+  float4 specularColor : SPECULARCOLOR;
+  float4 clipPlane : CLIPPLANE;
+  int4 repeatMaterial : REPEATMATERIAL;
+};
+
+struct ParamElement
 {
   float4  fParam[MAX_PARAM_TYPE_SLOTS];
   int4    iParam[MAX_PARAM_TYPE_SLOTS];

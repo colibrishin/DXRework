@@ -536,7 +536,7 @@ namespace Engine
 
               result.push_back(v);
 
-              if (result.size() == count)
+              if (count != 0 && result.size() == count)
               {
                 break;
               }

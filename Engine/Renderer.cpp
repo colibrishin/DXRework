@@ -17,7 +17,17 @@
 
 namespace Engine::Manager::Graphics
 {
-  void Renderer::PreUpdate(const float& dt) {}
+  void Renderer::PreUpdate(const float& dt)
+  {
+    std::for_each
+      (
+       m_render_candidates_, m_render_candidates_ + SHADER_DOMAIN_MAX,
+       [](auto& target_set) { target_set.clear(); }
+      );
+
+    m_tmp_descriptor_heaps_.clear();
+    m_b_ready_ = false;
+  }
 
   void Renderer::Update(const float& dt) {}
 
@@ -29,39 +39,44 @@ namespace Engine::Manager::Graphics
     const auto& scene = GetSceneManager().GetActiveScene().lock();
     const auto& rcs = scene->GetCachedComponents<Components::Base::RenderComponent>();
 
-    for (const auto& ptr_rc : rcs)
-    {
-      // pointer sanity check
-      if (ptr_rc.expired()) { continue; }
-      const auto rc = ptr_rc.lock()->GetSharedPtr<Components::Base::RenderComponent>();
+    tbb::parallel_for_each
+      (
+       rcs.begin(), rcs.end(), [this](const WeakComponent& ptr_rc)
+       {
+         // pointer sanity check
+         if (ptr_rc.expired()) { return; }
+         const auto rc = ptr_rc.lock()->GetSharedPtr<Components::Base::RenderComponent>();
 
-      // owner object sanity check
-      const auto obj = rc->GetOwner().lock();
-      if (!obj) { continue; }
-      if (!obj->GetActive()) { continue; }
+         // owner object sanity check
+         const auto obj = rc->GetOwner().lock();
+         if (!obj) { return; }
+         if (!obj->GetActive()) { return; }
 
-      // material sanity check
-      const auto ptr_mtr = rc->GetMaterial();
-      if (ptr_mtr.expired()) { continue; }
-      const auto mtr = ptr_mtr.lock();
+         // material sanity check
+         const auto ptr_mtr = rc->GetMaterial();
+         if (ptr_mtr.expired()) { return; }
+         const auto mtr = ptr_mtr.lock();
 
-      // transform check, continue if it is disabled. (undefined behaviour)
-      const auto tr = obj->GetComponent<Components::Transform>().lock();
-      if (!tr) { continue; }
-      if (!tr->GetActive()) { continue; }
+         // transform check, continue if it is disabled. (undefined behaviour)
+         const auto tr = obj->GetComponent<Components::Transform>().lock();
+         if (!tr) { return; }
+         if (!tr->GetActive()) { return; }
 
-      switch (rc->GetRenderType())
-      {
-      case RENDER_COM_T_MODEL:
-          preMappingModel(rc);
-          break;
-      case RENDER_COM_T_PARTICLE:
-          preMappingParticle(rc);
-          break;
-      case RENDER_COM_T_UNK:
-      default: break;
-      }
-    }
+         // Early culling check.
+         if (GetProjectionFrustum().CheckRender(obj))
+         {
+           switch (rc->GetRenderType())
+           {
+           case RENDER_COM_T_MODEL: preMappingModel(rc);
+             break;
+           case RENDER_COM_T_PARTICLE: preMappingParticle(rc);
+             break;
+           case RENDER_COM_T_UNK:
+           default: break;
+           }
+         }
+       }
+      );
 
     m_b_ready_ = true;
   }
@@ -72,48 +87,80 @@ namespace Engine::Manager::Graphics
     {
       if (const auto cam = scene->GetMainCamera().lock())
       {
+        const auto& cmd = GetD3Device().AcquireCommandPair(L"Main Rendering").lock();
+
+        cmd->SoftReset();
+
         for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
           // Check culling.
-          RenderPass(dt, (eShaderDomain)i, false, [](const StrongObjectBase& obj)
-          {
-            return GetProjectionFrustum().CheckRender(obj);
-          });
+          RenderPass
+            (
+             dt, (eShaderDomain)i, false, cmd, {}, [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
+             {
+               GetRenderPipeline().DefaultRenderTarget(c);
+               GetRenderPipeline().DefaultViewport(c);
+               GetRenderPipeline().DefaultScissorRect(c);
+               GetShadowManager().BindShadowMaps(c, h);
+               GetShadowManager().BindShadowSampler(h);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().BindReflectionMap(c, h);
+               }
+
+             },
+             [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
+             {
+               GetShadowManager().UnbindShadowMaps(c);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().UnbindReflectionMap(c);
+               }
+             }, m_additional_structured_buffers_
+            );
 
           if (i == SHADER_DOMAIN_OPAQUE)
           {
             // Notify reflection evaluator that rendering is finished so that it
             // can copy the rendered scene to the copy texture.
-            GetReflectionEvaluator().RenderFinished();
+            GetReflectionEvaluator().RenderFinished(cmd);
           }
         }
+
+        cmd->FlagReady();
       }
     }
   }
 
-  void Renderer::PostRender(const float& dt)
-  {
-    std::for_each
-      (
-       m_render_candidates_, m_render_candidates_ + SHADER_DOMAIN_MAX,
-       [](auto& target_set) { target_set.clear(); }
-      );
-
-    m_b_ready_ = false;
-  }
+  void Renderer::PostRender(const float& dt) {}
 
   void Renderer::PostUpdate(const float& dt) {}
 
   void Renderer::Initialize() {}
 
+  void Renderer::AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase>& sb_ptr)
+  {
+    if (const auto sb = sb_ptr.lock())
+    {
+      m_additional_structured_buffers_.push_back(sb);
+    }
+  }
+
   bool Renderer::Ready() const { return m_b_ready_; }
 
-  void Renderer::RenderPass(
-    const float                                     dt,
-    eShaderDomain                                   domain,
-    bool                                            shader_bypass,
-    const std::function<bool(const StrongObjectBase&)>& predicate
-  ) const
+  void Renderer::RenderPass
+  (
+    const float                                                                dt,
+    eShaderDomain                                                              domain,
+    bool                                                                       shader_bypass,
+    const Weak<CommandPair>&                                                   w_cmd,
+    const std::function<bool(const StrongObjectBase&)>&                        predicate,
+    const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& post_setup,
+    const std::vector<Weak<StructuredBufferBase>>&                             additional_structured_buffers = {}
+  )
   {
     if (!Ready())
     {
@@ -124,41 +171,100 @@ namespace Engine::Manager::Graphics
     if (m_render_candidates_[domain].empty()) { return; }
 
     const auto& target_set = m_render_candidates_[domain];
-    std::map<WeakMaterial, std::vector<SBs::InstanceSB>> final_mapping;
+    tbb::concurrent_hash_map<WeakMaterial, std::vector<SBs::InstanceSB>> final_mapping;
 
     for (const auto& mtr_m : target_set | std::views::values)
     {
-      for (const auto& [mtr, obj_v] : mtr_m)
+      tbb::parallel_for_each
+        (
+         mtr_m.begin(), mtr_m.end(), [&](const CandidateTuple& tuple)
+         {
+           if (!predicate || predicate(std::get<0>(tuple).lock()))
+           {
+             decltype(final_mapping)::accessor acc;
+
+             if (!final_mapping.find(acc, std::get<1>(tuple)))
+             {
+               final_mapping.insert(acc, std::get<1>(tuple));
+             }
+
+             acc->second.insert(acc->second.end(), std::get<2>(tuple).begin(), std::get<2>(tuple).end());
+           }
+         }
+        );
+    }
+
+    if (!GetRenderPipeline().IsHeapAvailable())
+    {
+      throw std::runtime_error("Descriptor heap is not available!");
+    }
+
+    const auto& cmd = w_cmd.lock();
+
+    for (const auto& sb_ptr : additional_structured_buffers)
+    {
+      if (const auto& sb = sb_ptr.lock())
       {
-        for (const auto& [obj, sbs] : obj_v)
-        {
-          if (predicate && predicate(obj))
-          {
-            final_mapping[mtr].insert(final_mapping[mtr].end(), sbs.begin(), sbs.end());
-          }
-        }
+        sb->TransitionToSRV(cmd->GetList());
       }
     }
 
+    if (m_tmp_instance_buffers_.size() < final_mapping.size())
+    {
+      m_tmp_instance_buffers_.resize(final_mapping.size());
+    }
+
+    UINT64 idx = 0;
+
     for (const auto& [mtr, sbs] : final_mapping)
     {
-      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), sbs);
+      m_tmp_descriptor_heaps_.emplace_back(GetRenderPipeline().AcquireHeapSlot());
+
+      const auto& heap = m_tmp_descriptor_heaps_.back();
+
+      initial_setup(cmd, heap);
+
+      for (const auto& sb_ptr : additional_structured_buffers)
+      {
+        if (const auto& sb = sb_ptr.lock())
+        {
+          sb->CopySRVHeap(heap);
+        }
+      }
+
+      heap->BindGraphic(cmd);
+
+      renderPassImpl(dt, idx, domain, shader_bypass, mtr.lock(), cmd, heap, sbs);
+
+      post_setup(cmd, heap);
+
+      idx++;
+    }
+
+    for (const auto& sb_ptr : additional_structured_buffers)
+    {
+      if (const auto& sb = sb_ptr.lock())
+      {
+        sb->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+      }
     }
   }
 
   void Renderer::renderPassImpl(
     const float                         dt,
+    const UINT64                        idx,
     eShaderDomain                       domain,
     bool                                shader_bypass,
     const StrongMaterial&               material,
+    const Weak<CommandPair>&            w_cmd,
+    const DescriptorPtr&                heap,
     const std::vector<SBs::InstanceSB>& structured_buffers
-  ) const
+  )
   {
-    StructuredBuffer<SBs::InstanceSB> sb;
-    sb.Create(static_cast<UINT>(structured_buffers.size()), structured_buffers.data(), false);
-    sb.BindSRV(SHADER_VERTEX);
-    sb.BindSRV(SHADER_GEOMETRY);
-    sb.BindSRV(SHADER_PIXEL);
+    const auto& cmd = w_cmd.lock();
+    m_tmp_instance_buffers_[idx].SetData(cmd->GetList(), structured_buffers.size(), structured_buffers.data());
+    m_tmp_instance_buffers_[idx].TransitionToSRV(cmd->GetList());
+    m_tmp_instance_buffers_[idx].CopySRVHeap(heap);
 
     material->SetTempParam
       (
@@ -169,13 +275,9 @@ namespace Engine::Manager::Graphics
        }
       );
 
-    material->PreRender(dt);
-    material->Render(dt);
-    material->PostRender(dt);
+    material->Draw(dt, cmd, heap);
 
-    sb.UnbindSRV(SHADER_VERTEX);
-    sb.UnbindSRV(SHADER_GEOMETRY);
-    sb.UnbindSRV(SHADER_PIXEL);
+    m_tmp_instance_buffers_[idx].TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
@@ -228,7 +330,14 @@ namespace Engine::Manager::Graphics
 
       if (mtr->IsRenderDomain(domain))
       {
-        auto& target_set = m_render_candidates_[domain][RENDER_COM_T_MODEL][mtr];
+        auto& domain_map = m_render_candidates_[domain];
+
+        RenderMap::accessor acc;
+
+        if (!domain_map.find(acc, RENDER_COM_T_MODEL))
+        {
+          domain_map.insert(acc, RENDER_COM_T_MODEL);
+        }
 
         SBs::InstanceModelSB sb{};
         sb.SetWorld(tr->GetWorldMatrix().Transpose());
@@ -242,7 +351,7 @@ namespace Engine::Manager::Graphics
         sb.SetAtlasH(atlas_h);
 
         // todo: stacking structured buffer data might be get large easily.
-        target_set.push_back({obj, {std::move(sb)}});
+        acc->second.push_back(std::make_tuple(obj, mtr, tbb::concurrent_vector<SBs::InstanceSB>{std::move(sb)}));
       }
     }
   }
@@ -264,8 +373,20 @@ namespace Engine::Manager::Graphics
 
       if (mtr->IsRenderDomain(domain))
       {
-        auto& target_set = m_render_candidates_[domain][RENDER_COM_T_PARTICLE][mtr];
         auto particles = pr->GetParticles();
+
+        if (particles.empty()) { continue; }
+
+        auto& domain_map = m_render_candidates_[domain];
+
+        RenderMap::accessor acc;
+
+        if (domain_map.find(acc, RENDER_COM_T_PARTICLE))
+        {
+          domain_map.insert(acc, RENDER_COM_T_PARTICLE);
+        }
+
+        tbb::concurrent_vector<SBs::InstanceSB> mp_particles(particles.begin(), particles.end());
 
         if (pr->IsFollowOwner())
         {
@@ -277,9 +398,7 @@ namespace Engine::Manager::Graphics
           }
         }
 
-        if (particles.empty()) { continue; }
-
-        target_set.push_back({obj, particles});
+        acc->second.push_back(std::make_tuple(obj, mtr, mp_particles));
       }
     }
   }

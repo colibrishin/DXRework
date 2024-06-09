@@ -34,8 +34,6 @@ namespace Engine::Resources
     const std::vector<std::string>&            GetAnimationCatalog() const;
     const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
-    void SetInstanceCount(UINT instance_count);
-
     template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
     void Add(const boost::weak_ptr<T>& res)
     {
@@ -99,7 +97,6 @@ namespace Engine::Resources
     StrongAnimsTexture             m_animations_;
 
     std::vector<VertexElement>     m_cached_vertices_;
-    UINT                           m_instance_count_;
   };
 }
 

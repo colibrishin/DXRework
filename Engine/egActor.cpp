@@ -18,8 +18,7 @@ namespace Engine::Abstract
   {
     m_assigned_scene_ = other.m_assigned_scene_;
     m_layer_          = other.m_layer_;
-    // Do not copy the previous local id
-    m_local_id_       = g_invalid_id;
+    m_local_id_       = other.m_local_id_;
   }
 
   eLayerType Actor::GetLayer() const { return m_layer_; }

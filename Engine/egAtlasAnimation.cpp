@@ -65,7 +65,7 @@ namespace Engine::Resources
       for (size_t i = 0; i < frame_count; ++i)
       {
         const auto& [X, Y, Width, Height, Duration] = m_primitive_.GetFrame(i);
-        ImGui::Text("Frame %d: %lld, %lld, %lld, %lld, %f", i, X, Y, Width, Height, Duration);
+        ImGui::Text("Frame %lld: %u, %u, %u, %u, %f", i, X, Y, Width, Height, Duration);
       }
 
       ImGui::EndListBox();

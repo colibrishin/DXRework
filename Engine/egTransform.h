@@ -62,9 +62,6 @@ namespace Engine::Components
     Matrix GetLocalMatrix() const;
     Matrix GetWorldMatrix() const;
 
-    static void __fastcall Bind(Transform& transform);
-    static void            Unbind();
-
   protected:
     Transform();
 
@@ -90,9 +87,6 @@ namespace Engine::Components
     Quaternion m_animation_rotation_;
     Vector3    m_animation_scale_;
     Matrix     m_animation_matrix_;
-
-    // Non-serialized
-    Graphics::CBs::TransformCB m_transform_buffer_;
   };
 } // namespace Engine::Component
 

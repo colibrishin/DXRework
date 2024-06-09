@@ -54,6 +54,14 @@ namespace Client::Scripts
   {
     Script::Initialize();
     MoveCameraToChild();
+
+    const auto& owner = GetOwner().lock();
+    if (!owner) { return; }
+
+    const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
+    if (!rb) { return; }
+
+    rb->SetFrictionCoefficient(0.1);
   }
 
   void FezPlayerScript::PreUpdate(const float& dt) {}
@@ -139,7 +147,33 @@ namespace Client::Scripts
 
   void FezPlayerScript::PostRender(const float& dt) {}
 
-  void FezPlayerScript::OnImGui()
+  Vector3 FezPlayerScript::GetForward() const
+  {
+    return Vector3::Transform(g_forward, s_cw_rotations[m_rotation_count_]);
+  }
+
+  bool FezPlayerScript::IsVisible(const WeakTransform& otr) const
+  {
+    if (const auto& locked = otr.lock())
+    {
+      const auto& owner = GetOwner().lock();
+      if (!owner) { return false; }
+
+      const auto& tr = owner->GetComponent<Components::Transform>().lock();
+      if (!tr) { return false; }
+
+      const auto& pos = locked->GetWorldPosition();
+      const auto& forward = GetForward();
+      const auto& obj_forward = locked->Forward();
+      const auto& dot = forward.Dot(obj_forward);
+
+      return !FloatCompare(dot, -1.f);
+    }
+
+    return false;
+  }
+
+  void  FezPlayerScript::OnImGui()
   {
     Script::OnImGui();
     constexpr const char* states[]
@@ -191,7 +225,7 @@ namespace Client::Scripts
     {
       if (const auto& scene = owner->GetScene().lock())
       {
-        scene->ChangeLayer(LAYER_DEFAULT, owner->GetID());
+        scene->ChangeLayer(LAYER_PLAYER, owner->GetID());
       }
     }
   }
@@ -264,19 +298,25 @@ namespace Client::Scripts
     if (!owner->GetActive() || !tr->GetActive() || !rb->GetActive() || !cam->GetActive()) { return; }
 
     const auto& right = tr->Right();
-    constexpr float speed = 1.f;
+    constexpr float speed = 10.f;
     bool moving = false;
 
     // todo: speed limit
     if (GetApplication().IsKeyPressed(Keyboard::D))
     {
-      rb->AddT1Force(right * speed);
-      moving = true;
+      if (rb->GetT0LinearVelocity().x <= speed)
+      {
+        rb->AddT1Force(right * speed);
+        moving = true;
+      }
     }
     if (GetApplication().IsKeyPressed(Keyboard::A))
     {
-      rb->AddT1Force(-right * speed);
-      moving = true;
+      if (rb->GetT0LinearVelocity().x >= -speed)
+      {
+        rb->AddT1Force(-right * speed);
+        moving = true;
+      }
     }
 
     if (moving && 

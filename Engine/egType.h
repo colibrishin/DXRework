@@ -33,7 +33,6 @@ namespace Engine
   using DirectX::SpriteFont;
   using DirectX::VertexPositionColor;
   using DirectX::BasicEffect;
-  using DirectX::ConstantBuffer;
 
   using DirectX::BoundingBox;
   using DirectX::BoundingFrustum;
@@ -51,6 +50,12 @@ namespace Engine
   using DirectX::XMFLOAT2;
   using DirectX::XMFLOAT3X3;
   using DirectX::XMVECTORF32;
+
+  struct CommandPair;
+  struct DescriptorHandler;
+  struct DescriptorPtrImpl;
+
+  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
 
   namespace Objects
   {
@@ -98,6 +103,9 @@ namespace Engine
     {
       struct InstanceSB;
       struct InstanceParticleSB;
+      struct LocalParamSB;
+      struct InstanceModelSB;
+      struct MaterialSB;
     } // namespace SBs
   } // namespace Graphic
 
@@ -144,6 +152,7 @@ namespace Engine
       class ShadowManager;
       class ReflectionEvaluator;
       class Renderer;
+      class GarbageCollector;
     } // namespace Graphics
 
     namespace Physics
@@ -241,8 +250,8 @@ namespace Engine
   using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
   using VertexCollection = std::vector<Graphics::VertexElement>;
   using IndexCollection = std::vector<UINT>;
-  using VertexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
-  using IndexBufferCollection = std::vector<ComPtr<ID3D11Buffer>>;
+  using VertexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
+  using IndexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
   using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
   // Concurrent type definitions
@@ -281,6 +290,10 @@ namespace Engine
   extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
   extern Manager::Graphics::ShadowManager&       GetShadowManager();
   extern Manager::Graphics::Renderer&            GetRenderer();
+  extern Manager::Graphics::GarbageCollector&    GetGC();
+
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
+  using FrameIndex = UINT64;
 
   // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
   template <typename WrapT>
@@ -377,6 +390,11 @@ namespace Engine
   template <typename T>
   struct is_client_uav_sb<T, void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
 
+  template <typename T, typename = void>
+  struct is_sb : std::false_type {};
+  template <typename T>
+  struct is_sb<T, void_t<decltype(T::sbtype == true)>> : std::true_type {};
+  
   template <typename T, typename = void>
   struct is_client_sb : std::false_type {};
   template <typename T>

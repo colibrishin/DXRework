@@ -249,16 +249,6 @@ namespace Client::Scripts
       if (!LockWeak(owner->GetScene(), scene)) { return; }
       if (!LockWeak(scene->GetMainActor(), player)) { return; }
 
-      for (const auto& id : m_cube_ids_)
-      {
-        if (const auto& cube = owner->GetChild(id).lock())
-        {
-          scene->RemoveGameObject(cube->GetID(), cube->GetLayer());
-        }
-      }
-
-      m_cube_ids_.clear();
-
       StrongCamera camera;
       if (!LockWeak(scene->GetMainCamera(), camera)) { return; }
 
@@ -276,6 +266,24 @@ namespace Client::Scripts
 
       const int rotation_offset = player_script->GetRotationOffset();
 
+      for (const auto& id : m_cube_ids_)
+      {
+        if (const auto& cube = owner->GetChild(id).lock())
+        {
+          scene->RemoveGameObject(cube->GetID(), cube->GetLayer());
+        }
+      }
+
+      m_cube_ids_.clear();
+
+      if (m_cube_type_ != CUBE_TYPE_NORMAL)
+      {
+        if (!player_script->IsVisible(tr))
+        {
+          return;
+        }
+      }
+      
       const float x_count = half_scale.x / x_step;
       const float y_count = half_scale.y / y_step;
       const float z_count = half_scale.z / z_step;

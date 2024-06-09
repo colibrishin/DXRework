@@ -23,7 +23,10 @@ namespace Engine::Components
 
   void ParticleRenderer::Initialize()
   {
-    m_sb_buffer_.Create(1, nullptr, true);
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer Init").lock();
+    m_sb_buffer_.Create(cmd->GetList(), 1, nullptr);
+    cmd->FlagReady();
+
     SetCount(1);
   }
 
@@ -33,8 +36,17 @@ namespace Engine::Components
     {
       const auto& ticket = GetRenderPipeline().SetParam(m_params_);
 
-      m_sb_buffer_.SetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
-      m_sb_buffer_.BindUAV();
+      GetD3Device().WaitAndReset(COMMAND_LIST_COMPUTE);
+
+      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE);
+      const auto& heap = GetRenderPipeline().AcquireHeapSlot();
+
+      cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
+      cmd->SetPipelineState(m_cs_->GetPipelineState());
+
+      m_sb_buffer_.SetData(cmd, static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      m_sb_buffer_.TransitionToUAV(cmd);
+      m_sb_buffer_.CopyUAVHeap(heap);
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
@@ -42,8 +54,23 @@ namespace Engine::Components
       const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
-      m_cs_->Dispatch();
-      m_sb_buffer_.UnbindUAV();
+      m_cs_->Dispatch(cmd, heap);
+
+      m_sb_buffer_.TransitionCommon(cmd, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+      DX::ThrowIfFailed(cmd->Close());
+
+      ID3D12CommandList* cmd_list[]
+      {
+        cmd
+      };
+
+      GetD3Device().GetCommandQueue(COMMAND_TYPE_COMPUTE)->ExecuteCommandLists(1, cmd_list);
+
+      GetD3Device().Signal(COMMAND_TYPE_COMPUTE);
+
+      GetD3Device().Wait();
+      
       m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
     }
 

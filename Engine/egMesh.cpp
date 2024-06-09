@@ -19,7 +19,9 @@ namespace Engine::Resources
   Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)
     : Resource("", RES_T_MESH),
       m_vertices_(shape),
-      m_indices_(indices) {}
+      m_indices_(indices),
+      m_vertex_buffer_view_(),
+      m_index_buffer_view_() {}
 
   void __vectorcall Mesh::GenerateTangentBinormal(
     const Vector3& v0, const Vector3&  v1,
@@ -119,26 +121,30 @@ namespace Engine::Resources
 
   void Mesh::OnSerialized() {}
 
+  D3D12_VERTEX_BUFFER_VIEW Mesh::GetVertexView() const
+  {
+    return m_vertex_buffer_view_;
+  }
+
+  D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexView() const
+  {
+    return m_index_buffer_view_;
+  }
+
   void Mesh::Initialize() {}
 
-  void Mesh::Render(const float& dt)
-  {
-    GetRenderPipeline().BindVertexBuffer(m_vertex_buffer_.Get());
-    GetRenderPipeline().BindIndexBuffer(m_index_buffer_.Get());
-  }
+  void Mesh::Render(const float& dt) {}
 
-  void Mesh::PostRender(const float& dt)
-  {
-    GetRenderPipeline().UnbindVertexBuffer();
-    GetRenderPipeline().UnbindIndexBuffer();
-  }
+  void Mesh::PostRender(const float& dt) {}
 
   void Mesh::PostUpdate(const float& dt) {}
 
   BoundingBox Mesh::GetBoundingBox() const { return m_bounding_box_; }
 
   Mesh::Mesh()
-    : Resource("", RES_T_MESH) {}
+    : Resource("", RES_T_MESH),
+      m_vertex_buffer_view_(),
+      m_index_buffer_view_() {}
 
   void Mesh::Load_INTERNAL()
   {
@@ -155,19 +161,123 @@ namespace Engine::Resources
        sizeof(Vector3)
       );
 
-    GetD3Device().CreateBuffer<VertexElement>
+    std::string generic_name = GetName();
+
+    const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
+
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Mesh Load Command Pair").lock();
+
+    cmd->SoftReset();
+
+    // -- Vertex Buffer -- //
+    // Initialize vertex buffer.
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    const auto& vtx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(VertexElement) * m_vertices_.size());
+
+    DX::ThrowIfFailed
       (
-       D3D11_BIND_VERTEX_BUFFER,
-       static_cast<UINT>(m_vertices_.size()),
-       m_vertex_buffer_.GetAddressOf(),
-       m_vertices_.data()
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &vtx_buffer_desc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(m_vertex_buffer_.GetAddressOf())
+       )
       );
 
-    GetD3Device().CreateBuffer<UINT>
+    DX::ThrowIfFailed(m_vertex_buffer_->SetName(vertex_name.c_str()));
+
+    // -- Upload Buffer -- //
+    // Create the upload heap.
+    DX::ThrowIfFailed
+    (
+        DirectX::CreateUploadBuffer
+        (
+            GetD3Device().GetDevice(),
+            m_vertices_.data(),
+            m_vertices_.size(),
+            m_vertex_buffer_upload_.GetAddressOf()
+        )
+    );
+
+    // -- Upload Data -- //
+    // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
+    char* data = nullptr;
+
+    DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+    std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
+    m_vertex_buffer_upload_->Unmap(0, nullptr);
+
+    cmd->GetList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
+
+    // -- Vertex Buffer View -- //
+    // Initialize vertex buffer view.
+    m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
+    m_vertex_buffer_view_.SizeInBytes = sizeof(VertexElement) * m_vertices_.size();
+    m_vertex_buffer_view_.StrideInBytes = sizeof(VertexElement);
+
+    const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
+
+    const auto& idx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
+
+    DX::ThrowIfFailed
       (
-       D3D11_BIND_INDEX_BUFFER, static_cast<UINT>(m_indices_.size()),
-       m_index_buffer_.GetAddressOf(), m_indices_.data()
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &idx_buffer_desc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(m_index_buffer_.GetAddressOf())
+       )
       );
+
+    DX::ThrowIfFailed(m_index_buffer_->SetName(vertex_name.c_str()));
+
+    // Create the upload heap.
+    DX::ThrowIfFailed
+    (
+        DirectX::CreateUploadBuffer
+        (
+            GetD3Device().GetDevice(),
+            m_indices_.data(),
+            m_indices_.size(),
+            m_index_buffer_upload_.GetAddressOf()
+        )
+    );
+
+    DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+    std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
+    m_index_buffer_upload_->Unmap(0, nullptr);
+
+    cmd->GetList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
+
+    const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_index_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
+      );
+
+    m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
+    m_index_buffer_view_.SizeInBytes = sizeof(UINT) * m_indices_.size();
+    m_index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
+
+    // -- Resource Barrier -- //
+    // Transition from copy dest buffer to vertex buffer.
+    const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_vertex_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+      );
+
+    cmd->GetList()->ResourceBarrier(1, &vtx_trans);
+
+    cmd->GetList()->ResourceBarrier(1, &idx_trans);
+
+    cmd->FlagReady();
   }
 
   void Mesh::Load_CUSTOM() {}
@@ -176,5 +286,7 @@ namespace Engine::Resources
   {
     m_vertex_buffer_->Release();
     m_index_buffer_->Release();
+    m_vertex_buffer_upload_->Release();
+    m_index_buffer_upload_->Release();
   }
 } // namespace Engine::Resources

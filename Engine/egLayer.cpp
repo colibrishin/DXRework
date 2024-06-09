@@ -145,11 +145,38 @@ namespace Engine
     }
   }
 
-  WeakObjectBase Layer::GetGameObject(GlobalEntityID id) const
+  WeakObjectBase Layer::FindGameObject(GlobalEntityID id) const
   {
-    ConcurrentWeakObjGlobalMap::const_accessor obj;
+    ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-    if (m_weak_objects_cache_.find(obj, id)) { return obj->second; }
+    if (m_weak_objects_cache_.find(acc, id)) { return acc->second; }
+
+    if (const auto& it = std::ranges::find_if(
+        m_objects_, 
+        [id](const auto& obj)
+    {
+      return obj->GetID() == id;
+    }); 
+        it != m_objects_.end())
+    {
+      return *it;
+    }
+
+    return {};
+  }
+
+  WeakObjectBase Layer::FindGameObjectByLocalID(const LocalActorID id) const
+  {
+    if (const auto& it = std::ranges::find_if(
+        m_objects_, 
+        [id](const auto& obj)
+    {
+      return obj->GetLocalID() == id;
+    }); 
+        it != m_objects_.end())
+    {
+      return *it;
+    }
 
     return {};
   }

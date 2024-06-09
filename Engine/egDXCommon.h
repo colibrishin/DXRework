@@ -86,7 +86,7 @@ namespace Engine::Graphics
 
     struct LightVPSB
     {
-      SB_T(SB_TYPE_SHADOW)
+      SB_T(SB_TYPE_LIGHT_VP)
 
       Matrix  view[g_max_shadow_cascades];
       Matrix  proj[g_max_shadow_cascades];
@@ -105,6 +105,11 @@ namespace Engine::Graphics
       {
         ar & boost::serialization::base_object<ParamBase>(*this);
       }
+    };
+
+    struct LocalParamSB : public ParamBase
+    {
+      SB_T(SB_TYPE_LOCAL_PARAM)
     };
 
     struct InstanceModelSB : public InstanceSB
@@ -127,6 +132,7 @@ namespace Engine::Graphics
       void SetAtlasY(const UINT y) { SetParam(4, (int)y); }
       void SetAtlasW(const UINT w) { SetParam(5, (int)w); }
       void SetAtlasH(const UINT h) { SetParam(6, (int)h); }
+      void SetRepeat(const bool repeat) { SetParam(7, (int)repeat); }
 
       void SetWorld(const Matrix& world) { SetParam(0, world); }
     };
@@ -154,6 +160,38 @@ namespace Engine::Graphics
 
       bool& GetActive() { return reinterpret_cast<bool&>(GetParam<int>(0)); }
     };
+
+    struct MaterialSB
+    {
+      SB_T(SB_TYPE_MATERIAL)
+
+      friend class boost::serialization::access;
+
+      template <class Archive>
+      void serialize(Archive& ar, const unsigned int file_version)
+      {
+        ar & flags;
+        ar & specularPower;
+        ar & reflectionTranslation;
+        ar & reflectionScale;
+        ar & refractionScale;
+        ar & overrideColor;
+        ar & specularColor;
+        ar & clipPlane;
+      }
+
+      MaterialBindFlag flags;
+
+      float specularPower;
+      float reflectionTranslation;
+      float reflectionScale;
+      float refractionScale;
+
+      Color        overrideColor;
+      Color        specularColor;
+      Vector4      clipPlane;
+      OffsetT<int> repeatTexture;
+    };
   }
 
 
@@ -174,43 +212,6 @@ namespace Engine::Graphics
       Matrix reflectView;
     };
 
-    struct TransformCB
-    {
-      CB_T(CB_TYPE_TRANSFORM)
-
-      Matrix world;
-    };
-
-    struct MaterialCB
-    {
-      CB_T(CB_TYPE_MATERIAL)
-      friend class boost::serialization::access;
-
-      template <class Archive>
-      void serialize(Archive& ar, const unsigned int file_version)
-      {
-        ar & flags;
-        ar & specular_power;
-        ar & reflection_translation;
-        ar & reflection_scale;
-        ar & refraction_scale;
-        ar & override_color;
-        ar & specular_color;
-        ar & clip_plane;
-      }
-
-      MaterialBindFlag flags;
-
-      float specular_power;
-      float reflection_translation;
-      float reflection_scale;
-      float refraction_scale;
-
-      Color   override_color;
-      Color   specular_color;
-      Vector4 clip_plane;
-    };
-
     struct ParamCB : public ParamBase
     {
       CB_T(CB_TYPE_PARAM)
@@ -221,4 +222,6 @@ namespace Engine::Graphics
 
 BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceSB)
 BOOST_CLASS_EXPORT_KEY(Engine::Graphics::ParamBase)
-BOOST_CLASS_EXPORT_KEY(Engine::Graphics::CBs::MaterialCB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceModelSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::InstanceParticleSB)
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::SBs::MaterialSB)

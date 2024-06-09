@@ -14,9 +14,9 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  void ComputeShader::Dispatch()
+  void ComputeShader::Dispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
   {
-    preDispatch();
+    preDispatch(list, heap);
 
     if (std::accumulate(m_group_, m_group_ + 3, 0) == 0)
     {
@@ -42,12 +42,13 @@ namespace Engine::Resources
       return;
     }
 
-    GetD3Device().GetContext()->CSSetShader(m_cs_.Get(), nullptr, 0);
-    GetD3Device().GetContext()->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
+    GetD3Device().Wait();
 
-    postDispatch();
+    list->SetPipelineState(m_pipeline_state_.Get());
 
-    GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
+    list->Dispatch(m_group_[0], m_group_[1], m_group_[2]);
+
+    postDispatch(list, heap);
 
     std::fill_n(m_group_, 3, 1);
   }
@@ -60,7 +61,8 @@ namespace Engine::Resources
     : Shader
     (
      name, path, SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
-     D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+     D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER,
+     DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
     )
   {
     SetPath(path);
@@ -110,7 +112,6 @@ namespace Engine::Resources
 
   void ComputeShader::Load_INTERNAL()
   {
-    ComPtr<ID3DBlob> blob;
     ComPtr<ID3DBlob> error;
     UINT             flag = 0;
 
@@ -125,7 +126,7 @@ namespace Engine::Resources
       (
        GetPath().c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
        entry.c_str(), version.c_str(), flag, 0,
-       &blob, &error
+       &m_cs_, &error
       );
 
     if (error)
@@ -140,10 +141,26 @@ namespace Engine::Resources
       throw std::exception("ComputeShader::Load_INTERNAL() : Failed to compile shader.");
     }
 
-    GetD3Device().GetDevice()->CreateComputeShader
+    CD3DX12_PIPELINE_STATE_STREAM_CS cs_stream
+    {
+      CD3DX12_SHADER_BYTECODE(m_cs_.Get())
+    };
+
+    const D3D12_COMPUTE_PIPELINE_STATE_DESC desc
+    {
+      GetRenderPipeline().GetRootSignature(),
+      cs_stream,
+      0,
+      D3D12_CACHED_PIPELINE_STATE{nullptr, 0},
+      D3D12_PIPELINE_STATE_FLAGS::D3D12_PIPELINE_STATE_FLAG_NONE
+    };
+
+    DX::ThrowIfFailed
       (
-       blob->GetBufferPointer(), blob->GetBufferSize(),
-       nullptr, m_cs_.ReleaseAndGetAddressOf()
+       GetD3Device().GetDevice()->CreateComputePipelineState
+       (
+        &desc, IID_PPV_ARGS(m_pipeline_state_.GetAddressOf())
+       )
       );
 
     loadDerived();
@@ -159,7 +176,7 @@ namespace Engine::Resources
     : Shader
       (
        "", "", SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
-       D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+       D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
       ),
       m_thread_{1,},
       m_group_{1,} {}

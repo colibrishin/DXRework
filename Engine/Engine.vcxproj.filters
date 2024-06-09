@@ -269,6 +269,12 @@
     <Filter Include="Resource\Textures\AtlasAnimationTexture">
       <UniqueIdentifier>{caf7854b-c5b8-4838-8e3e-50c7a0e2dfaa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Low-level\ConstantBuffer">
+      <UniqueIdentifier>{db6845a7-9ef8-41c5-bbcd-3f52e2fd2760}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Singleton\Graphics\GarbageCollector">
+      <UniqueIdentifier>{f76ac2b5-1390-4855-8aa0-e707739425ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -538,6 +544,18 @@
     <ClInclude Include="egDebugConstant.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="egConstantBuffer.hpp">
+      <Filter>Low-level\ConstantBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="egGarbageCollector.h">
+      <Filter>Singleton\Graphics\GarbageCollector</Filter>
+    </ClInclude>
+    <ClInclude Include="egDescriptors.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egCommands.h">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -763,6 +781,15 @@
     </ClCompile>
     <ClCompile Include="egAtlasAnimationTexture.cpp">
       <Filter>Resource\Textures\AtlasAnimationTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="egGarbageCollector.cpp">
+      <Filter>Singleton\Graphics\GarbageCollector</Filter>
+    </ClCompile>
+    <ClCompile Include="egDescriptors.cpp">
+      <Filter>Common\DX</Filter>
+    </ClCompile>
+    <ClCompile Include="egCommands.cpp">
+      <Filter>Common\DX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

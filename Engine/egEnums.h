@@ -26,48 +26,95 @@ namespace Engine::Resources
 
 namespace Engine
 {
+  enum eCommandList
+  {
+    COMMAND_LIST_PRE_RENDER,
+    COMMAND_LIST_RENDER,
+    COMMAND_LIST_POST_RENDER,
+    COMMAND_LIST_UPDATE,
+    COMMAND_LIST_COPY,
+    COMMAND_LIST_COMPUTE,
+    COMMAND_LIST_COUNT
+  };
+
+  enum eCommandTypes
+  {
+    COMMAND_TYPE_DIRECT = 0,
+    COMMAND_TYPE_COPY,
+    COMMAND_TYPE_COMPUTE,
+    COMMAND_TYPE_COUNT
+  };
+
+  enum eCommandNativeType
+  {
+    COMMAND_NATIVE_DIRECT = D3D12_COMMAND_LIST_TYPE_DIRECT,
+    COMMAND_NATIVE_COPY = D3D12_COMMAND_LIST_TYPE_COPY,
+    COMMAND_NATIVE_COMPUTE = D3D12_COMMAND_LIST_TYPE_COMPUTE
+  };
+
+  enum eDescriptorSlot
+  {
+    DESCRIPTOR_SLOT_SRV,
+    DESCRIPTOR_SLOT_CB,
+    DESCRIPTOR_SLOT_UAV,
+    DESCRIPTOR_SLOT_SAMPLER,
+    DESCRIPTOR_SLOT_COUNT
+  };
+
+  enum eBindType
+  {
+    BIND_TYPE_SAMPLER = 0,
+    BIND_TYPE_CB,
+    BIND_TYPE_UAV,
+    BIND_TYPE_SRV,
+    BIND_TYPE_RTV,
+    BIND_TYPE_DSV,
+    BIND_TYPE_DSV_ONLY,
+    BIND_TYPE_COUNT
+  };
+
   enum eTexBindSlot
   {
     BIND_SLOT_TEX     = 0,
-    BIND_SLOT_TEXARR  = BIND_SLOT_TEX + g_max_slot_per_texture,
-    BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + g_max_slot_per_texture,
-    BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + g_max_slot_per_texture,
-    BIND_SLOT_END
+    BIND_SLOT_TEXARR  = BIND_SLOT_TEX + 4,
+    BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + 2,
+    BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + 2,
+    BIND_SLOT_END     = BIND_SLOT_TEX1D + 2,
   };
-
-  static_assert(BIND_SLOT_END < g_reserved_struct_buffer_slot);
-  static_assert(BIND_SLOT_END < 128);
 
   enum eSBType
   {
-    SB_TYPE_LIGHT = g_reserved_struct_buffer_slot,
-    SB_TYPE_SHADOW,
+    SB_TYPE_LIGHT = BIND_SLOT_END,
+    SB_TYPE_LIGHT_VP,
     SB_TYPE_INSTANCE,
-    SB_TYPE_MAX
+    SB_TYPE_LOCAL_PARAM,
+    SB_TYPE_MATERIAL,
+    SB_TYPE_END
   };
-
-  static_assert(SB_TYPE_MAX < g_reserved_bind_slot);
-  static_assert(SB_TYPE_MAX < 128);
 
   enum eReservedTexBindSlot
   {
-    RESERVED_RENDERED = g_reserved_bind_slot,
-    RESERVED_BONES,
-    RESERVED_ATLAS,
-
-    // Texture Array
-    RESERVED_SHADOW_MAP,
-    RESERVED_END,
+    RESERVED_TEX_RENDERED = SB_TYPE_END,
+    RESERVED_TEX_BONES,
+    RESERVED_TEX_ATLAS,
+    RESERVED_TEX_SHADOW_MAP,
+    RESERVED_TEX_END = RESERVED_TEX_SHADOW_MAP + g_max_lights,
   };
-
-  static_assert(RESERVED_END < 128);
 
   enum eTexUAVBindSlot
   {
     BIND_SLOT_UAV_TEX_1D = 0,
-    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + g_max_slot_per_uav,
-    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + 2,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + 2,
     BIND_SLOT_UAV_END,
+  };
+    
+  enum eSBUAVType
+  {
+    SB_TYPE_UAV_INSTANCE = BIND_SLOT_UAV_END,
+    SB_TYPE_UAV_RESERVED_1,
+    SB_TYPE_UAV_RESERVED_2,
+    SB_TYPE_UAV_END,
   };
 
   static_assert(BIND_SLOT_UAV_END < 8);
@@ -75,24 +122,29 @@ namespace Engine
   enum eCBType
   {
     CB_TYPE_WVP = 0,
-    CB_TYPE_TRANSFORM,
-    CB_TYPE_MATERIAL,
     CB_TYPE_PARAM,
-  };
-
-  enum eClientSBType : UINT;
-  enum eClientSBUAVType : UINT;
-
-  enum eSBUAVType
-  {
-    SB_TYPE_UAV_INSTANCE = g_reserved_uav_slot,
+    CB_TYPE_END,
   };
 
   enum eSampler
   {
     SAMPLER_TEXTURE = 0,
     SAMPLER_SHADOW,
+    SAMPLER_END,
   };
+
+  enum eClientSBType : UINT;
+  enum eClientSBUAVType : UINT;
+
+  constexpr UINT g_max_engine_texture_slots = RESERVED_TEX_END;
+  constexpr UINT g_max_cb_slots = CB_TYPE_END;
+  constexpr UINT g_max_uav_slots = SB_TYPE_UAV_END;
+  constexpr UINT g_max_sampler_slots = SAMPLER_END;
+  constexpr UINT g_total_engine_slots = g_max_engine_texture_slots + g_max_cb_slots + g_max_uav_slots;
+
+  constexpr UINT g_srv_offset = 0;
+  constexpr UINT g_cb_offset = g_max_engine_texture_slots;
+  constexpr UINT g_uav_offset = g_cb_offset + g_max_cb_slots;
 
   enum eObserverState
   {

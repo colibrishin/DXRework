@@ -4,9 +4,6 @@
 #include "egResource.h"
 #include "egResourceManager.hpp"
 
-struct ID3D11Buffer;
-template class Microsoft::WRL::ComPtr<ID3D11Buffer>;
-
 namespace Engine::Resources
 {
   using namespace Engine::Graphics;
@@ -32,8 +29,10 @@ namespace Engine::Resources
     UINT                    GetIndexCount() const;
     const VertexCollection& GetVertexCollection() const;
 
-    void OnDeserialized() override;
-    void OnSerialized() override;
+    void                     OnDeserialized() override;
+    void                     OnSerialized() override;
+    D3D12_VERTEX_BUFFER_VIEW GetVertexView() const;
+    D3D12_INDEX_BUFFER_VIEW GetIndexView() const;
 
     RESOURCE_SELF_INFER_GETTER(Mesh)
 
@@ -60,8 +59,14 @@ namespace Engine::Resources
     IndexCollection  m_indices_;
     BoundingBox      m_bounding_box_;
 
-    ComPtr<ID3D11Buffer> m_vertex_buffer_;
-    ComPtr<ID3D11Buffer> m_index_buffer_;
+    ComPtr<ID3D12Resource>  m_vertex_buffer_;
+    ComPtr<ID3D12Resource>  m_index_buffer_;
+
+    ComPtr<ID3D12Resource> m_vertex_buffer_upload_;
+    ComPtr<ID3D12Resource> m_index_buffer_upload_;
+
+    D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_;
+    D3D12_INDEX_BUFFER_VIEW m_index_buffer_view_;
   };
 } // namespace Engine::Resources
 

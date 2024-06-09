@@ -88,8 +88,8 @@ PixelIntensityOutput ps_main(PixelInputType input)
   bool  intersection = false;
   int   availability = 0;
 
-  GetShadowFactor(input.world_position, input.clipSpacePosZ, shadowFactor);
-  GetMaskFactor(input.world_position, input.clipSpacePosZ, maskFactor);
+  GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
+  GetMaskFactor(input.worldPosition, input.clipSpacePosZ, maskFactor);
 
   [unroll]
   for (int i = 0; i < MAX_NUM_LIGHTS; ++i)
@@ -118,7 +118,7 @@ PixelIntensityOutput ps_main(PixelInputType input)
   {
     PixelIntensityOutput output;
     output.availability  = uint4(availability, 0, 0, 1);
-    output.worldPosition = input.world_position;
+    output.worldPosition = input.worldPosition;
     return output;
   }
   else

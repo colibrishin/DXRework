@@ -49,7 +49,9 @@ namespace Client::Scripts
 
     eCharacterState GetState() const { return m_state_; }
     eCharacterState GetPrevState() const { return m_prev_state_; }
-    UINT GetRotationOffset() const { return m_rotation_count_; }
+    Vector3         GetForward() const;
+    UINT            GetRotationOffset() const { return m_rotation_count_; }
+    bool            IsVisible(const WeakTransform& otr) const;
 
     void OnImGui() override;
 
