@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "egCommon.hpp"
+#include "egConstantBuffer.hpp"
 #include "egD3Device.hpp"
 #include "egDXCommon.h"
 
@@ -15,29 +16,17 @@ namespace Engine::Manager::Graphics
   private:
     struct TempParamTicket
     {
-      TempParamTicket(const ParamBase& previousParam)
+      TempParamTicket(const CBs::ParamCB& previousParam)
         : previousParam(previousParam) {}
 
       ~TempParamTicket()
       {
-        reinterpret_cast<ParamBase&>(GetRenderPipeline().m_param_buffer_) = previousParam;
-        GetRenderPipeline().m_param_buffer_data_.SetData
-          (
-           GetD3Device().GetContext(), GetRenderPipeline().m_param_buffer_
-          );
-        GetRenderPipeline().BindConstantBuffer
-          (
-           GetRenderPipeline().m_param_buffer_data_, SHADER_VERTEX
-          );
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_PIXEL);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_GEOMETRY);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_COMPUTE);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_HULL);
-        GetRenderPipeline().BindConstantBuffer(GetRenderPipeline().m_param_buffer_data_, SHADER_DOMAIN);
+        GetRenderPipeline().m_param_buffer_ = previousParam;
+        GetRenderPipeline().m_param_buffer_data_.SetData(&previousParam);
       }
 
     private:
-      const ParamBase previousParam;
+      const CBs::ParamCB previousParam;
     };
 
   public:
@@ -60,54 +49,51 @@ namespace Engine::Manager::Graphics
     void SetParam(const T& v, const size_t slot)
     {
       m_param_buffer_.SetParam(slot, v);
-      m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
-
-      BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
-      BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
     }
 
     // Returns a ticket that will reset to the previous param when it goes out of scope.
-    [[nodiscard]] RenderPipeline::TempParamTicket&& SetParam(const ParamBase& param);
+    [[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param);
 
-    void SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology);
-    void SetDepthStencilState(ID3D11DepthStencilState* state);
-    void SetRasterizerState(ID3D11RasterizerState* state);
-    void SetSamplerState(ID3D11SamplerState* sampler);
+    void DefaultRenderTarget() const;
+    void DefaultViewport() const;
 
-    void SetWireframeState() const;
-    void SetFillState() const;
-    void SetNoneCullState() const;
-    void SetFrontCullState() const;
+    void        DrawIndexedDeferred(UINT index_count);
+    static void DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count);
 
-    static void BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view);
-    static void BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view);
-    static void UnbindVertexBuffer();
-    static void UnbindIndexBuffer();
-
-    void BindResource(
-      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** texture
+    RTVDSVHandlePair SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv);
+    RTVDSVHandlePair SetRenderTargetDeferred(
+      const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
     );
-    void BindResources(
-      UINT slot, eShaderType shader_type, ID3D11ShaderResourceView** textures, UINT size
-    );
-    void BindResources(UINT slot, eShaderType shader_type, ID3D11UnorderedAccessView** textures, UINT size);
+    void             SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const;
+    RTVDSVHandlePair SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
+    void             SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
+    void             SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data);
+    void             SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
 
-    void UnbindResource(UINT slot, eShaderType type);
-    void UnbindResources(UINT slot, eShaderType type, UINT size);
-    void UnbindUAVResource(UINT slot);
+    RTVDSVHandlePair SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const;
+    void        TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE * dsv_handle);
+    static void SetViewportDeferred(const D3D12_VIEWPORT& viewport);
 
-    void DrawIndexed(UINT index_count);
-    void DrawIndexedInstanced(UINT index_count, UINT instance_count);
+    void CopyBackBuffer(ID3D12Resource* resource) const;
 
-    void TargetDepthOnly(ID3D11DepthStencilView* view);
-    void SetViewport(const D3D11_VIEWPORT& viewport);
+    ID3D12RootSignature*  GetRootSignature() const;
+    ID3D12DescriptorHeap* GetBufferHeap() const;
+    ID3D12DescriptorHeap* GetSamplerHeap() const;
 
-    ID3D12RootSignature* GetRootSignature() const;
-    void SetPSO(const StrongShader& Shader);
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPURTVHandle(UINT index) const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDSVHandle() const;
+
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPURTVHandle(UINT index) const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
+    D3D12_VIEWPORT              GetViewport();
+
+    static void           SetPSO(const StrongShader& Shader);
+
+    UINT GetBufferDescriptorSize() const;
+    UINT GetSamplerDescriptorSize() const;
+
+    void UploadConstantBuffersDeferred();
+    void ExecuteDirectCommandList();
 
   private:
     friend class ToolkitAPI;
@@ -117,22 +103,49 @@ namespace Engine::Manager::Graphics
     ~RenderPipeline() override;
 
     void PrecompileShaders();
-    void InitializeDefaultPSO();
+    void FallbackPSO();
     void InitializeRootSignature();
+    void InitializeRenderTargets();
+    void InitializeDepthStencil();
+    void InitializeNullDescriptors();
+    void InitializeHeaps();
+    void InitializeStaticBuffers();
 
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
+    UINT m_rtv_descriptor_size_ = 0;
+    UINT m_dsv_descriptor_size_ = 0;
+    UINT m_buffer_descriptor_size_ = 0;
+    UINT m_sampler_descriptor_size_ = 0;
+
+    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_buffer_descriptor_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
+
+    ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_cbv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
+
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
+    ComPtr<ID3D12Resource> m_depth_stencil_;
+
     D3D12_VIEWPORT m_viewport_{};
     D3D12_RECT    m_scissor_rect_{};
-    
+
+    CBs::PerspectiveCB m_wvp_buffer_;
+    CBs::TransformCB   m_transform_buffer_;
+    CBs::MaterialCB    m_material_buffer_;
     CBs::ParamCB       m_param_buffer_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
-    ConstantBuffer<CBs::TransformCB>   m_transform_buffer_data_{};
-    ConstantBuffer<CBs::MaterialCB>    m_material_buffer_data_{};
-    ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_{};
+    ConstantBuffer<CBs::TransformCB> m_transform_buffer_data_{};
+    ConstantBuffer<CBs::MaterialCB> m_material_buffer_data_{};
+    ConstantBuffer<CBs::ParamCB> m_param_buffer_data_{};
 
-    std::vector<D3D11_INPUT_ELEMENT_DESC> m_input_element_desc_;
   };
 } // namespace Engine::Manager::Graphics

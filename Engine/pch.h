@@ -12,7 +12,7 @@
 #define NOMINMAX
 
 #include "imgui.h"
-#include "imgui_impl_dx11.h"
+#include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 
 // add headers that you want to pre-compile here
@@ -86,8 +86,8 @@
 
 #include <d2d1.h>
 #include <d3d12.h>
-#include "../DX-Headers/include/directx/d3dx12.h"
 #include <d3dcompiler.h>
+#include <d3dx12.h>
 #include <directxmath.h>
 #include <dxcapi.h>
 #include <dxgi1_5.h>

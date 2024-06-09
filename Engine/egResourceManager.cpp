@@ -316,9 +316,9 @@ namespace Engine::Manager
                (eShaderDomain)(sel_domain),
                (UINT)(sel_depth | sel_depth_func >> 2),
                (UINT)(sel_cull | sel_fill >> 3),
-               (D3D11_FILTER)(sel_filter),
+               (D3D12_FILTER)(sel_filter),
                (UINT)(sel_sampler_address | sel_sampler_func >> 5),
-               (D3D11_PRIMITIVE_TOPOLOGY)(sel_topology + 1)
+               (D3D12_PRIMITIVE_TOPOLOGY_TYPE)(sel_topology + 1)
               );
 
             m_b_imgui_load_shader_dialog_ = false;

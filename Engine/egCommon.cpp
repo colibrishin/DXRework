@@ -52,23 +52,6 @@ namespace Engine
     bounding.Transform(tr->GetWorldMatrix());
     return bounding;
   }
-
-  CommandGuard::~CommandGuard()
-  {
-    DX::ThrowIfFailed(GetD3Device().GetCommandList()->Close());
-  }
-
-  ForceCommandExecutionGuard::~ForceCommandExecutionGuard()
-  {
-    const std::vector<ID3D12CommandList*> command_lists = 
-    {
-      GetD3Device().GetCommandList()
-    };
-    
-    DX::ThrowIfFailed(GetD3Device().GetCommandList()->Close());
-    GetD3Device().ForceExecuteCommandList();
-    GetD3Device().WaitForSingleCompletion();
-  }
 } // namespace Engine
 
 

@@ -3,6 +3,7 @@
 
 #include <filesystem>
 
+#include "egConstantBuffer.hpp"
 #include "egD3Device.hpp"
 #include "egManagerHelper.hpp"
 #include "egShader.hpp"
@@ -15,130 +16,46 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::SetWorldMatrix(const CBs::TransformCB& matrix)
   {
-    m_transform_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-    BindConstantBuffer(m_transform_buffer_data_, SHADER_VERTEX);
+    m_transform_buffer_ = matrix;
   }
 
   void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
   {
-    m_wvp_buffer_data_.SetData(GetD3Device().GetContext(), matrix);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_PIXEL);
-    BindConstantBuffer(m_wvp_buffer_data_, SHADER_GEOMETRY);
-  }
-
-  RenderPipeline::TempParamTicket&& RenderPipeline::SetParam(const ParamBase& param)
-  {
-    TempParamTicket ticket(m_param_buffer_); // RAII
-
-    reinterpret_cast<ParamBase&>(m_param_buffer_) = param;
-    m_param_buffer_data_.SetData(GetD3Device().GetContext(), m_param_buffer_);
-
-    BindConstantBuffer(m_param_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_PIXEL);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_GEOMETRY);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_COMPUTE);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_HULL);
-    BindConstantBuffer(m_param_buffer_data_, SHADER_DOMAIN);
-
-    return std::move(ticket);
-  }
-
-  void RenderPipeline::SetTopology(const D3D11_PRIMITIVE_TOPOLOGY& topology)
-  {
-    GetD3Device().GetContext()->IASetPrimitiveTopology(topology);
-  }
-
-  void RenderPipeline::SetDepthStencilState(ID3D11DepthStencilState* state)
-  {
-    GetD3Device().GetContext()->OMSetDepthStencilState(state, 0);
-  }
-
-  void RenderPipeline::SetRasterizerState(ID3D11RasterizerState* state)
-  {
-    GetD3Device().GetContext()->RSSetState(state);
-  }
-
-  void RenderPipeline::SetSamplerState(ID3D11SamplerState* sampler)
-  {
-    GetD3Device().BindSampler(sampler, SHADER_PIXEL, SAMPLER_TEXTURE);
+    m_wvp_buffer_ = matrix;
   }
 
   void RenderPipeline::DefaultRenderTarget() const
   {
-    GetD3Device().GetContext()->OMSetDepthStencilState
-      (
-       m_depth_stencil_state_.Get(), 0
-      );
-    GetD3Device().UpdateRenderTarget();
+    const auto& rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+    const auto& dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
   }
 
-  void RenderPipeline::DefaultViewport() const { GetD3Device().UpdateViewport(); }
-
-  void RenderPipeline::SetWireframeState() const
+  void RenderPipeline::DefaultViewport() const
   {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->Wireframe()
-      );
+    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &m_viewport_);
   }
+  
+  RenderPipeline::~RenderPipeline() { }
 
-  void RenderPipeline::SetFillState() const { GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get()); }
-
-  void RenderPipeline::SetNoneCullState() const
+  void RenderPipeline::InitializeStaticBuffers()
   {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->CullNone()
-      );
+    m_wvp_buffer_data_.Create(nullptr);
+    m_transform_buffer_data_.Create(nullptr);
+    m_material_buffer_data_.Create(nullptr);
+    m_param_buffer_data_.Create(nullptr);
   }
-
-  void RenderPipeline::SetFrontCullState() const
-  {
-    GetD3Device().GetContext()->RSSetState
-      (
-       GetToolkitAPI().GetCommonStates()->CullClockwise()
-      );
-  }
-
-  void RenderPipeline::BindVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW& view)
-  {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 1, &view);
-  }
-
-  void RenderPipeline::BindIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& view)
-  {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(&view);
-  }
-
-  void RenderPipeline::UnbindVertexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetVertexBuffers(0, 0, nullptr);
-  }
-
-  void RenderPipeline::UnbindIndexBuffer()
-  {
-    GetD3Device().GetCommandList()->IASetIndexBuffer(nullptr);
-  }
-
-  void RenderPipeline::BindResource(
-    UINT                       slot,
-    eShaderType                shader_type,
-    ID3D11ShaderResourceView** texture
-  ) { g_shader_rs_bind_map.at(shader_type)(GetD3Device().GetContext(), texture, slot, 1); }
-
-  RenderPipeline::~RenderPipeline() { ResetShaders(); }
 
   void RenderPipeline::Initialize()
   {
-    GetD3Device().CreateConstantBuffer(m_wvp_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_transform_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_material_buffer_data_);
-    GetD3Device().CreateConstantBuffer(m_param_buffer_data_);
-
     PrecompileShaders();
     InitializeRootSignature();
-    InitializeDefaultPSO();
+    InitializeRenderTargets();
+    InitializeDepthStencil();
+    FallbackPSO();
+    InitializeHeaps();
+    InitializeStaticBuffers();
   }
 
   void RenderPipeline::PrecompileShaders()
@@ -149,7 +66,8 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS,
+       D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -158,7 +76,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -167,7 +85,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -177,7 +95,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -186,7 +104,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -195,7 +113,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -204,7 +122,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -213,7 +131,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -222,7 +140,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     const auto billboard = Shader::Create
@@ -231,7 +149,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_NONE | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT
       );
 
     Shader::Create
@@ -240,7 +158,7 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_POINT,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_NEVER, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
 
     Shader::Create
@@ -249,38 +167,38 @@ namespace Engine::Manager::Graphics
        SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
        SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
        D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+       SHADER_SAMPLER_WRAP | SHADER_SAMPLER_ALWAYS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
       );
   }
 
-  void RenderPipeline::InitializeDefaultPSO()
+  void RenderPipeline::FallbackPSO()
   {
-    
+    SetPSO(Shader::Get("default").lock());
   }
 
   void RenderPipeline::InitializeRootSignature()
   {
-    CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
-    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
-    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[DESCRIPTOR_SLOT_COUNT];
+    ranges[DESCRIPTOR_SLOT_SAMPLER].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);
+    ranges[DESCRIPTOR_SLOT_CB].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CB_TYPE_END, 0);
+    ranges[DESCRIPTOR_SLOT_UAV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, BIND_SLOT_UAV_END, 0);
+    ranges[DESCRIPTOR_SLOT_SRV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, BIND_SLOT_END, 0);
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[3];
-    root_parameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-    root_parameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
-    root_parameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
+    CD3DX12_ROOT_PARAMETER1 root_parameters[DESCRIPTOR_SLOT_COUNT];
+    root_parameters[DESCRIPTOR_SLOT_SAMPLER].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[DESCRIPTOR_SLOT_CB].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+    root_parameters[DESCRIPTOR_SLOT_UAV].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+    root_parameters[DESCRIPTOR_SLOT_SRV].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_ALL);
 
-    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[2];
-    static_sampler_desc[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
-    static_sampler_desc[1].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT);
+    CD3DX12_STATIC_SAMPLER_DESC static_sampler_desc[STATIC_SAMPLER_SLOT_COUNT];
+    static_sampler_desc[STATIC_SAMPLER_SLOT_LINEAR].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+    static_sampler_desc[STATIC_SAMPLER_SLOT_SHADOW].Init(1, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR);
 
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC root_signature_desc
     (
-      _countof(root_parameters),
+      DESCRIPTOR_SLOT_COUNT,
       root_parameters,
-      _countof(static_sampler_desc),
+      STATIC_SAMPLER_SLOT_COUNT,
       static_sampler_desc
     );
 
@@ -303,24 +221,349 @@ namespace Engine::Manager::Graphics
         IID_PPV_ARGS(m_root_signature_.ReleaseAndGetAddressOf())
         )
     );
+
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootSignature(m_root_signature_.Get());
   }
 
-  void RenderPipeline::PreUpdate(const float& dt)
+  void RenderPipeline::InitializeRenderTargets()
   {
-    // ** overriding DirectXTK common state
-    GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get());
-    GetD3Device().GetContext()->OMSetBlendState
+    m_render_targets_.resize(g_frame_buffer);
+
+    const D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+      .NumDescriptors = g_frame_buffer,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
       (
-       m_blend_state_.Get(), nullptr,
-       0xFFFFFFFF
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &rtv_heap_desc, IID_PPV_ARGS(m_rtv_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
       );
-    GetD3Device().GetContext()->OMSetDepthStencilState
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    constexpr D3D12_RENDER_TARGET_VIEW_DESC rtv_desc
+    {
+      .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+      .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+      .Texture2D = { 0, 0 }
+    };
+
+    for (UINT i = 0; i < g_frame_buffer; ++i)
+    {
+      DX::ThrowIfFailed
+        (
+         GetD3Device().m_swap_chain_->GetBuffer
+         (
+          i, IID_PPV_ARGS(m_render_targets_[i].ReleaseAndGetAddressOf())
+         )
+        );
+
+      GetD3Device().GetDevice()->CreateRenderTargetView
+        (
+         m_render_targets_[i].Get(), &rtv_desc, rtv_handle
+        );
+
+      rtv_handle.Offset(1, m_rtv_descriptor_size_);
+    }
+  }
+
+  void RenderPipeline::InitializeDepthStencil()
+  {
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    const auto& depth_desc   = CD3DX12_RESOURCE_DESC::Tex2D
       (
-       m_depth_stencil_state_.Get(), 1
+       DXGI_FORMAT_D24_UNORM_S8_UINT,
+       g_window_width,
+       g_window_height,
+       1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+      );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC descriptor_heap_desc
+    {
+       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+       .NumDescriptors = 1,
+       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+       .NodeMask = 0
+     };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &descriptor_heap_desc, IID_PPV_ARGS(m_dsv_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    constexpr D3D12_CLEAR_VALUE clear_value
+    {
+      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      .DepthStencil = { 1.0f, 0 }
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &depth_desc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clear_value,
+        IID_PPV_ARGS(m_depth_stencil_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateDepthStencilView
+      (
+       m_depth_stencil_.Get(), nullptr, m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
       );
   }
 
-  void RenderPipeline::PreRender(const float& dt) {}
+  void RenderPipeline::InitializeNullDescriptors()
+  {
+    // Dummy (null) descriptor
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_buffer_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_sampler_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_rtv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC null_dsv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_cbv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_srv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_buffer_heap_desc,
+        IID_PPV_ARGS(m_null_uav_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateConstantBufferView
+      (
+       nullptr, m_null_cbv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateShaderResourceView
+      (
+       nullptr, nullptr, m_null_srv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateUnorderedAccessView
+      (
+       nullptr, nullptr, nullptr, m_null_uav_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_sampler_heap_desc,
+        IID_PPV_ARGS(m_null_sampler_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_rtv_heap_desc,
+        IID_PPV_ARGS(m_null_rtv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &null_dsv_heap_desc,
+        IID_PPV_ARGS(m_null_dsv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateSampler
+      (
+       nullptr, m_null_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateRenderTargetView
+      (
+       nullptr, nullptr, m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDevice()->CreateDepthStencilView
+      (
+       nullptr, nullptr, m_null_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+  }
+
+  void RenderPipeline::InitializeHeaps()
+  {
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = STATIC_SAMPLER_SLOT_COUNT,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &sampler_heap_desc, IID_PPV_ARGS(m_sampler_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = CB_TYPE_END + BIND_SLOT_UAV_END + BIND_SLOT_END,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &buffer_heap_desc, IID_PPV_ARGS(m_buffer_descriptor_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    m_buffer_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    m_rtv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    m_dsv_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    m_sampler_descriptor_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    
+    ID3D12DescriptorHeap* heaps[]
+    {
+      m_buffer_descriptor_heap_.Get(),
+      m_sampler_descriptor_heap_.Get(),
+    };
+
+    GetD3Device().GetDirectCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE buffer_handle
+      (
+       m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    // CBV (Graphic)
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(1, buffer_handle);
+
+    // UAV (Graphic)
+    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(2, buffer_handle);
+
+    // SRV (Graphic)
+    buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
+    GetD3Device().GetDirectCommandList()->SetGraphicsRootDescriptorTable(3, buffer_handle);
+
+    buffer_handle = m_buffer_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable
+      (
+       0, m_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart()
+      );
+
+    // CBV (Compute)
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(1, buffer_handle);
+
+    // UAV (Compute)
+    buffer_handle.Offset(CB_TYPE_END, m_buffer_descriptor_size_);
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(2, buffer_handle);
+
+    // SRV (Compute)
+    buffer_handle.Offset(BIND_SLOT_UAV_END, m_buffer_descriptor_size_);
+    GetD3Device().GetDirectCommandList()->SetComputeRootDescriptorTable(3, buffer_handle);
+
+    InitializeNullDescriptors();
+  }
+
+  void RenderPipeline::PreUpdate(const float& dt) {}
+
+  void RenderPipeline::PreRender(const float& dt)
+  {
+    GetD3Device().WaitNextFrame();
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&      rtv_handle = m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+    const auto&      dsv_handle = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+  
+    const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_PRESENT,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &initial_barrier);
+
+    GetD3Device().GetDirectCommandList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+    FallbackPSO();
+  }
 
   void RenderPipeline::Update(const float& dt) {}
 
@@ -328,81 +571,230 @@ namespace Engine::Manager::Graphics
 
   void RenderPipeline::FixedUpdate(const float& dt) {}
 
-  void RenderPipeline::PostRender(const float& dt) {}
+  void RenderPipeline::PostRender(const float& dt)
+  {
+    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_PRESENT
+      );
+
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &present_barrier);
+
+    GetD3Device().ExecuteDirectCommandList();
+
+    DXGI_PRESENT_PARAMETERS params;
+    params.DirtyRectsCount = 0;
+    params.pDirtyRects     = nullptr;
+    params.pScrollRect     = nullptr;
+    params.pScrollOffset   = nullptr;
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().m_swap_chain_->Present1
+       (
+        g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
+        &params
+       )
+      );
+
+    if (WaitForSingleObjectEx
+        (
+         GetD3Device().GetSwapchainAwaiter(), g_max_frame_latency_ms,
+         true
+        ) != WAIT_OBJECT_0)
+    {
+      GetDebugger().Log("Waiting for Swap chain had an issue.");
+    }
+  }
 
   void RenderPipeline::PostUpdate(const float& dt) {}
 
-  void RenderPipeline::DrawIndexed(UINT index_count) { GetD3Device().GetContext()->DrawIndexed(index_count, 0, 0); }
-
-  void RenderPipeline::DrawIndexedInstanced(UINT index_count, UINT instance_count)
+  void RenderPipeline::DrawIndexedDeferred(UINT index_count)
   {
-    GetD3Device().GetContext()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
   }
 
-  void RenderPipeline::TargetDepthOnly(ID3D11DepthStencilView* view)
+  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv)
   {
-    ID3D11RenderTargetView* pnullView = nullptr;
-    GetD3Device().GetContext()->OMSetRenderTargets(1, &pnullView, view);
+    const auto& current_rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv, false, &current_dsv);
+
+    return {current_rtv_handle, current_dsv};
   }
 
-  void RenderPipeline::SetViewport(const D3D11_VIEWPORT& viewport)
-  {
-    GetD3Device().GetContext()->RSSetViewports(1, &viewport);
-  }
-
-  void RenderPipeline::BindResources(
-    UINT        slot,
-    eShaderType shader_type, ID3D11ShaderResourceView** textures, UINT size
+  RTVDSVHandlePair RenderPipeline::SetRenderTargetDeferred(
+    const D3D12_CPU_DESCRIPTOR_HANDLE& rtv, const D3D12_CPU_DESCRIPTOR_HANDLE& dsv
   )
   {
-    g_shader_rs_bind_map.at(shader_type)
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_rtv_handle
       (
-       GetD3Device().GetContext(), textures,
-       slot, size
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE current_dsv_handle
+      (
+       m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(
+        1, 
+        &rtv, 
+        false, 
+        &dsv);
+
+    return {current_rtv_handle, current_dsv_handle};
+  }
+
+  void RenderPipeline::SetRenderTargetDeferred(const RTVDSVHandlePair& rtv_dsv_pair) const
+  {
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &rtv_dsv_pair.first, false, &rtv_dsv_pair.second);
+  }
+
+  RTVDSVHandlePair RenderPipeline::SetDepthStencilDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
+  {
+    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(1, &current_rtv, false, &dsv);
+
+    return {current_rtv, current_dsv};
+  }
+
+  RTVDSVHandlePair RenderPipeline::SetDepthStencilOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv) const
+  {
+    const auto& null_rtv = m_null_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    const auto& current_rtv = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       GetD3Device().GetFrameIndex(),
+       m_rtv_descriptor_size_
+      );
+
+    const auto& current_dsv = m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, &null_rtv, false, &dsv);
+
+    return {current_rtv, current_dsv};
+  }
+
+  void RenderPipeline::SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const
+  {
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
+      (
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
+       m_buffer_descriptor_size_
+      );
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+      (
+       1,
+       heap_handle,
+       srv_handle,
+       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
       );
   }
 
-  void RenderPipeline::BindResources(
-    UINT        slot,
-    eShaderType shader_type, ID3D11UnorderedAccessView** textures, UINT size
-  )
+  void RenderPipeline::SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data)
   {
-    if (shader_type == SHADER_COMPUTE)
+    CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
+      (
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + BIND_SLOT_UAV_END + slot,
+       m_buffer_descriptor_size_
+      );
+
+    for (INT i = 0; i < count; ++i)
     {
-      GetD3Device().GetContext()->CSSetUnorderedAccessViews
+      const auto& current_handle = heap_handle.Offset(1, m_buffer_descriptor_size_);
+
+      GetD3Device().GetDevice()->CopyDescriptorsSimple
         (
-         slot, size, textures, nullptr
+         1,
+         current_handle,
+         data[i],
+         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
         );
     }
   }
 
-  void RenderPipeline::ResetShaders()
+  void RenderPipeline::SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const
   {
-    GetD3Device().GetContext()->VSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->PSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->GSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->CSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->HSSetShader(nullptr, nullptr, 0);
-    GetD3Device().GetContext()->DSSetShader(nullptr, nullptr, 0);
-  }
-
-  void RenderPipeline::DefaultDepthStencilState() const
-  {
-    GetD3Device().GetContext()->OMSetDepthStencilState
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
       (
-       m_depth_stencil_state_.Get(), 0
+       m_buffer_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       CB_TYPE_END + slot,
+       m_buffer_descriptor_size_
+      );
+
+    GetD3Device().GetDevice()->CopyDescriptorsSimple
+      (
+       1,
+       uav_handle,
+       uav,
+       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
       );
   }
 
-  void RenderPipeline::DefaultRasterizerState() const { GetD3Device().GetContext()->RSSetState(m_rasterizer_state_.Get()); }
-
-  void RenderPipeline::DefaultSamplerState() const
+  void RenderPipeline::DrawIndexedInstancedDeferred(UINT index_count, UINT instance_count)
   {
-    GetD3Device().BindSampler
+    GetD3Device().GetDirectCommandList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+  }
+
+  void RenderPipeline::TargetDepthOnlyDeferred(const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle)
+  {
+    GetD3Device().GetDirectCommandList()->OMSetRenderTargets(0, nullptr, false, dsv_handle);
+  }
+
+  void RenderPipeline::SetViewportDeferred(const D3D12_VIEWPORT& viewport)
+  {
+    GetD3Device().GetDirectCommandList()->RSSetViewports(1, &viewport);
+  }
+
+  void RenderPipeline::CopyBackBuffer(ID3D12Resource* resource) const
+  {
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
-       m_sampler_state_.at(SAMPLER_TEXTURE), SHADER_PIXEL,
-       SAMPLER_TEXTURE
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_COPY_SOURCE
       );
+
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &copy_transition);
+
+    GetD3Device().GetCopyCommandList()->CopyResource(resource, m_render_targets_[GetD3Device().GetFrameIndex()].Get());
+
+    const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+       D3D12_RESOURCE_STATE_COPY_SOURCE,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &rtv_transition);
+
+    GetD3Device().ExecuteCopyCommandList();
   }
 
   ID3D12RootSignature* RenderPipeline::GetRootSignature() const
@@ -410,55 +802,84 @@ namespace Engine::Manager::Graphics
     return m_root_signature_.Get();
   }
 
+  ID3D12DescriptorHeap* RenderPipeline::GetBufferHeap() const
+  {
+    return m_buffer_descriptor_heap_.Get();
+  }
+
+  ID3D12DescriptorHeap* RenderPipeline::GetSamplerHeap() const
+  {
+    return m_sampler_descriptor_heap_.Get();
+  }
+
+  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPURTVHandle(UINT index) const
+  {
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+       index,
+       m_rtv_descriptor_size_
+      );
+  }
+
+  D3D12_CPU_DESCRIPTOR_HANDLE RenderPipeline::GetCPUDSVHandle() const
+  {
+    return m_dsv_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+  }
+
+  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPURTVHandle(UINT index) const
+  {
+    return CD3DX12_GPU_DESCRIPTOR_HANDLE
+      (
+       m_rtv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
+       index,
+       m_rtv_descriptor_size_
+      );
+  }
+
+  D3D12_GPU_DESCRIPTOR_HANDLE RenderPipeline::GetGPUDSVHandle() const
+  {
+    return m_dsv_descriptor_heap_->GetGPUDescriptorHandleForHeapStart();
+  }
+
+  D3D12_VIEWPORT RenderPipeline::GetViewport()
+  {
+    return m_viewport_;
+  }
+
   void RenderPipeline::SetPSO(const StrongShader& Shader)
   {
-    const auto& shader_description = Shader->GetPipelineStateDesc();
-    
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateGraphicsPipelineState
-       (
-        &shader_description,
-        IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
-       )
-      );
+    const auto& shader_pso = Shader->GetPipelineState();
+
+    GetD3Device().GetDirectCommandList()->SetPipelineState(shader_pso);
+  }
+
+  UINT RenderPipeline::GetBufferDescriptorSize() const
+  {
+    return m_buffer_descriptor_size_;
+  }
+
+  UINT RenderPipeline::GetSamplerDescriptorSize() const
+  {
+    return m_sampler_descriptor_size_;
+  }
+
+  void RenderPipeline::UploadConstantBuffersDeferred()
+  {
+    m_wvp_buffer_data_.SetData(&m_wvp_buffer_);
+    m_transform_buffer_data_.SetData(&m_transform_buffer_);
+    m_material_buffer_data_.SetData(&m_material_buffer_);
+    m_param_buffer_data_.SetData(&m_param_buffer_);
+  }
+
+  void RenderPipeline::ExecuteDirectCommandList()
+  {
+    UploadConstantBuffersDeferred();
+    GetD3Device().ExecuteDirectCommandList();
   }
 
   void RenderPipeline::SetMaterial(const CBs::MaterialCB& material_buffer)
   {
-    m_material_buffer_data_.SetData
-      (
-       GetD3Device().GetContext(),
-       material_buffer
-      );
-    BindConstantBuffer(m_material_buffer_data_, SHADER_VERTEX);
-    BindConstantBuffer(m_material_buffer_data_, SHADER_PIXEL);
-  }
-
-  void RenderPipeline::UnbindResource(UINT slot, eShaderType type)
-  {
-    ComPtr<ID3D11ShaderResourceView> null_view = nullptr;
-    g_shader_rs_bind_map.at(type)
-      (
-       GetD3Device().GetContext(), null_view.GetAddressOf(),
-       slot, 1
-      );
-  }
-
-  void RenderPipeline::UnbindResources(UINT slot, eShaderType type, UINT size)
-  {
-    std::vector<ID3D11ShaderResourceView*> null_views(size, nullptr);
-
-    g_shader_rs_bind_map.at(type)
-      (
-       GetD3Device().GetContext(), null_views.data(),
-       slot, size
-      );
-  }
-
-  void RenderPipeline::UnbindUAVResource(UINT slot)
-  {
-    ComPtr<ID3D11UnorderedAccessView> null_views(nullptr);
-    GetD3Device().GetContext()->CSSetUnorderedAccessViews(slot, 1, null_views.GetAddressOf(), nullptr);
+    m_material_buffer_ = material_buffer;
   }
 } // namespace Engine::Manager::Graphics

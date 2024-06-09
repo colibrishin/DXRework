@@ -30,8 +30,8 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::RenderFinished()
   {
-    GetD3Device().CopySwapchain(m_copy_.GetSRV());
-    m_copy_.BindAs(D3D11_BIND_SHADER_RESOURCE, RESERVED_RENDERED, 0, SHADER_PIXEL);
+    GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
+    m_copy_.BindAs(BIND_TYPE_SRV, RESERVED_RENDERED, 0);
     m_copy_.Render(0.f);
   }
 }

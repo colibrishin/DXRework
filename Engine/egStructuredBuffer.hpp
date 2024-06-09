@@ -1,5 +1,9 @@
 #pragma once
+#include <BufferHelpers.h>
+#include <d3dx12.h>
+
 #include "Windows.h"
+#include "egCommon.hpp"
 #include "egType.h"
 
 namespace Engine::Graphics
@@ -14,87 +18,89 @@ namespace Engine::Graphics
     void            Create(UINT size, const T* initial_data, bool is_mutable = false);
     void __fastcall SetData(UINT size, const T* src_ptr);
     void __fastcall GetData(UINT size, T* dst_ptr);
-    void            BindSRV();
-    void            UnbindSRV();
     void            Clear();
 
+    void BindSRVGraphicDeferred();
+    void UnbindSRVGraphicDeferred();
+    void BindSRVComputeDeferred();
+    void UnbindSRVComputeDeferred();
+
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void BindUAV()
+    void BindUAVGraphicDeferred()
     {
-      static_assert(is_uav_sb<T>::value == true, "It is not defined in UAV structured buffer");
-
-      if (m_b_srv_bound_) { throw std::logic_error("StructuredBuffer is already bound as SRV"); }
-
+      if (m_b_srv_bound_ || m_b_srv_bound_compute_)
       {
-        CommandGuard cg;
-        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
-                (
-                 m_buffer_.Get(),
-                 D3D12_RESOURCE_STATE_COMMON,
-                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-                );
-      
-        if constexpr (is_client_uav_sb<T>::value == true)
-        {
-          GetD3Device().GetCommandList()->SetComputeRootUnorderedAccessView
-            (
-             which_client_sb_uav<T>::value,
-             m_uav_description_heap_->GetCPUDescriptorHandleForHeapStart()
-            );
-
-        }
-        if constexpr (!is_client_uav_sb<T>::value && is_uav_sb<T>::value)
-        {
-          GetD3Device().GetCommandList()->SetComputeRootUnorderedAccessView
-            (
-             which_sb_uav<T>::value,
-             m_uav_description_heap_->GetCPUDescriptorHandleForHeapStart()
-            );
-        }
-
-        GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
+        throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
       }
-      
+
+      if (!m_b_uav_bound_ || m_b_uav_bound_compute_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
+
       m_b_uav_bound_ = true;
     }
 
     template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
-    void UnbindUAV()
+    void BindUAVComputeDeferred()
     {
-      static_assert(is_uav_sb<T>::value == true, "It is not defined in UAV structured buffer");
-
+      if (m_b_srv_bound_ || m_b_srv_bound_compute_)
       {
-        CommandGuard cg;
+        throw std::logic_error("StructuredBuffer is bound as SRV, cannot bind as UAV");
+      }
 
-        const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      if (m_b_uav_bound_ || m_b_uav_bound_compute_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+
+      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_compute_ = true;
+    }
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAVGraphicDeferred()
+    {
+      if (!m_b_uav_bound_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
          m_buffer_.Get(),
          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
          D3D12_RESOURCE_STATE_COMMON
         );
 
-        if constexpr (is_client_uav_sb<T>::value == true)
-        {
-          GetD3Device().GetCommandList()->SetComputeRootUnorderedAccessView
-            (
-             which_client_sb_uav<T>::value,
-              0
-            );
-
-        }
-        if constexpr (!is_client_uav_sb<T>::value && is_uav_sb<T>::value)
-        {
-          GetD3Device().GetCommandList()->SetComputeRootUnorderedAccessView
-            (
-             which_sb_uav<T>::value,
-             0
-            );
-        }
-
-        GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
-      }
+      GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &uav_transition);
 
       m_b_uav_bound_ = false;
+    }
+
+    template <typename U = T, typename std::enable_if_t<is_uav_sb<U>::value, bool> = true>
+    void UnbindUAVComputeDeferred()
+    {
+      if (!m_b_uav_bound_compute_) { return; }
+
+      const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_buffer_.Get(),
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &uav_transition);
+
+      m_b_uav_bound_compute_ = false;
     }
 
   private:
@@ -106,14 +112,14 @@ namespace Engine::Graphics
 
     bool        m_b_srv_bound_;
     bool        m_b_uav_bound_;
+
+    bool        m_b_srv_bound_compute_;
+    bool        m_b_uav_bound_compute_;
+
     bool        m_b_mutable_;
     UINT        m_size_;
 
     ComPtr<ID3D12Resource> m_buffer_;
-    
-    ComPtr<ID3D12DescriptorHeap> m_srv_description_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_uav_description_heap_;
-
     ComPtr<ID3D12Resource> m_write_buffer_;
     ComPtr<ID3D12Resource> m_read_buffer_;
   };
@@ -121,23 +127,6 @@ namespace Engine::Graphics
   template <typename T>
   void StructuredBuffer<T>::InitializeSRV(const UINT size)
   {
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
-    {
-      .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = 1,
-      .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask       = 0
-    };
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &heap_desc,
-        IID_PPV_ARGS(m_srv_description_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-    
     const D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc
     {
       .Format = DXGI_FORMAT_UNKNOWN,
@@ -152,47 +141,45 @@ namespace Engine::Graphics
       }
     };
 
+    auto srv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
+
+    srv_handle.Offset(static_cast<INT>(CB_TYPE_END + BIND_SLOT_UAV_END + which_sb<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+
     GetD3Device().GetDevice()->CreateShaderResourceView
      (
        m_buffer_.Get(),
        &srv_desc,
-       m_srv_description_heap_->GetCPUDescriptorHandleForHeapStart()
+       srv_handle
      );
   }
 
   template <typename T>
   void StructuredBuffer<T>::InitializeUAV(UINT size)
   {
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
-    {
-      .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = 1,
-      .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-      .NodeMask       = 0
-    };
-    
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateDescriptorHeap
-       (
-        &heap_desc,
-        IID_PPV_ARGS(m_uav_description_heap_.ReleaseAndGetAddressOf())
-       )
-      );
-    
     D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc;
     uav_desc.Format              = DXGI_FORMAT_UNKNOWN;
     uav_desc.ViewDimension       = D3D12_UAV_DIMENSION_BUFFER;
     uav_desc.Buffer.FirstElement = 0;
     uav_desc.Buffer.NumElements  = size;
 
+    auto uav_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(GetRenderPipeline().GetBufferHeap()->GetCPUDescriptorHandleForHeapStart());
+
+    if constexpr (is_client_sb<T>::value == true)
+    {
+      uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_client_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+    }
+    else
+    {
+      uav_handle.Offset(static_cast<INT>(CB_TYPE_END + which_sb_uav<T>::value), GetRenderPipeline().GetBufferDescriptorSize());
+    }
+
     GetD3Device().GetDevice()->CreateUnorderedAccessView
-     (
+      (
        m_buffer_.Get(),
        nullptr,
        &uav_desc,
-       m_uav_description_heap_->GetCPUDescriptorHandleForHeapStart()
-     );
+       uav_handle
+      );
   }
 
   template <typename T>
@@ -202,44 +189,122 @@ namespace Engine::Graphics
     {
       throw std::runtime_error("StructuredBuffer size need to be dividable by 16");
     }
-    
+
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
     if (initial_data != nullptr)
     {
-      const auto& end_state = CD3DX12_RESOURCE_BARRIER::Transition
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_COMMON,
+          nullptr,
+          IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         DirectX::CreateUploadBuffer
+         (
+          GetD3Device().GetDevice(),
+          initial_data,
+          size,
+          m_write_buffer_.GetAddressOf()
+         )
+        );
+
+      char* data = nullptr;
+
+      DX::ThrowIfFailed(m_write_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+      std::memcpy(data, initial_data, sizeof(T) * size);
+
+      m_write_buffer_->Unmap(0, nullptr);
+
+      GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+      const auto& dest_state = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_COPY_DEST
+      );
+
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &dest_state);
+
+      GetD3Device().GetCopyCommandList()->CopyResource
         (
          m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         D3D12_RESOURCE_STATE_COMMON
+         m_write_buffer_.Get()
         );
-      
-      GetD3Device().CreateBuffer1D<T>
+
+      const auto& end_state = CD3DX12_RESOURCE_BARRIER::Transition
       (
-        m_buffer_.GetAddressOf(),
-        initial_data,
-        size,
-        end_state
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
       );
+
+      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &end_state);
+
+      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+      GetD3Device().ExecuteCopyCommandList();
     }
     else
     {
-      GetD3Device().CreateBuffer<T>(m_buffer_.GetAddressOf(), size);
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_COMMON,
+          nullptr,
+          IID_PPV_ARGS(m_buffer_.ReleaseAndGetAddressOf())
+         )
+        );
     }
   }
 
   template <typename T>
   void StructuredBuffer<T>::InitializeWriteBuffer(const UINT size)
   {
-    GetD3Device().CreateBuffer<T>(
-      m_write_buffer_.GetAddressOf(),
-      size,
-      D3D12_HEAP_TYPE_UPLOAD,
-      D3D12_RESOURCE_STATE_GENERIC_READ);
+    if (m_write_buffer_ != nullptr) { return; }
+
+    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &upload_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(m_write_buffer_.ReleaseAndGetAddressOf())
+       )
+      );
   }
 
   template <typename T>
   StructuredBuffer<T>::StructuredBuffer()
     : m_b_srv_bound_(false),
       m_b_uav_bound_(false),
+      m_b_srv_bound_compute_(false),
+      m_b_uav_bound_compute_(false),
       m_b_mutable_(false),
       m_size_(0)
   {
@@ -250,11 +315,61 @@ namespace Engine::Graphics
   template <typename T>
   void StructuredBuffer<T>::InitializeReadBuffer(const UINT size)
   {
-    GetD3Device().CreateBuffer<T>(
-      m_read_buffer_.ReleaseAndGetAddressOf(),
-      size,
-      D3D12_HEAP_TYPE_READBACK,
-      D3D12_RESOURCE_STATE_COPY_DEST);
+    const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &readback_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(m_read_buffer_.ReleaseAndGetAddressOf())
+       )
+      );
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::BindSRVGraphicDeferred()
+  {
+    if (m_b_uav_bound_)
+    {
+      throw std::logic_error("StructuredBuffer is bound as UAV, cannot bind as SRV");
+    }
+
+    if (m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+      );
+
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_ = true;
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::UnbindSRVGraphicDeferred()
+  {
+    if (!m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    GetD3Device().GetDirectCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_ = false;
   }
 
   template <typename T>
@@ -286,121 +401,107 @@ namespace Engine::Graphics
 
     if (m_size_ < size) { Create(size, nullptr, m_b_mutable_); }
 
+    ComPtr<ID3D12Resource> upload_buffer;
+
+    DX::ThrowIfFailed
+      (
+       DirectX::CreateUploadBuffer
+       (
+        GetD3Device().GetDevice(),
+        src_ptr,
+        size,
+        upload_buffer.GetAddressOf()
+       )
+      );
+
+    char* data = nullptr;
+
+    DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+    std::memcpy(data, src_ptr, sizeof(T) * size);
+
+    upload_buffer->Unmap(0, nullptr);
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    // Even if it is set as bind, resource will be common until the execution is done.
+    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+    (
+     m_buffer_.Get(),
+     D3D12_RESOURCE_STATE_COMMON,
+     D3D12_RESOURCE_STATE_COPY_DEST
+    );
+  
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &barrier);
+
+    GetD3Device().GetCopyCommandList()->CopyResource
+      (
+       m_buffer_.Get(),
+       upload_buffer.Get()
+      );
+
+    const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+  
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
+
+    DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
+
+    GetD3Device().ExecuteCopyCommandList();
+  }
+
+  // This will execute the command list and copy the data from the GPU to the CPU.
+  template <typename T>
+  void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
+  {
+    // For now, common state is the only state that can be used for copying.
+    if (m_b_srv_bound_ || m_b_uav_bound_ || m_b_srv_bound_compute_ || m_b_uav_bound_compute_)
     {
-      ForceCommandExecutionGuard fcg;
-      const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      throw std::logic_error("StructuredBuffer is bound as SRV or UAV, cannot get data");
+    }
+
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
        D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_COPY_DEST
+       D3D12_RESOURCE_STATE_COPY_SOURCE
       );
-    
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
 
-      const D3D12_SUBRESOURCE_DATA data_desc
-      {
-        .pData = src_ptr,
-        .RowPitch = sizeof(T) * size,
-        .SlicePitch = sizeof(T) * size
-      };
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &barrier);
 
-      UpdateSubresources
+    GetD3Device().GetCopyCommandList()->CopyResource
       (
-        GetD3Device().GetCommandList(),
-        m_buffer_.Get(),
-        m_write_buffer_.Get(),
-        0,
-        0,
-        1,
-        &data_desc
+       m_read_buffer_.Get(),
+       m_buffer_.Get()
       );
 
-      const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         D3D12_RESOURCE_STATE_COMMON
-        );
-    
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &revert_barrier);
-    }
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::GetData(UINT size, T* dst_ptr)
-  {
-    {
-      ForceCommandExecutionGuard fcg;
-      GetD3Device().GetCommandList()->CopyResource(m_read_buffer_.Get(), m_buffer_.Get());
-    }
-    constexpr D3D12_RANGE range = { 0, 0 };
-
-    UINT8* map_ptr = nullptr;
-    DX::ThrowIfFailed(m_buffer_->Map(0, &range, reinterpret_cast<void**>(&map_ptr)));
-    std::memcpy(dst_ptr, map_ptr, sizeof(T) * size);
-    m_buffer_->Unmap(0, nullptr);
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::BindSRV()
-  {
-    if (m_b_uav_bound_) { throw std::logic_error("StructuredBuffer is already bound as UAV"); }
-
-    {
-      CommandGuard cg;
-      
-      const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+    const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
-      );
-
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
-
-      if constexpr (is_client_sb<T>::value == true)
-      {
-        GetD3Device().GetCommandList()->SetGraphicsRootShaderResourceView
-          (which_client_sb<T>::value, m_buffer_->GetGPUVirtualAddress());
-      }
-      else
-      {
-        GetD3Device().GetCommandList()->SetGraphicsRootShaderResourceView
-          (which_sb<T>::value, m_buffer_->GetGPUVirtualAddress());
-      }
-    }
-    
-    m_b_srv_bound_ = true;
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::UnbindSRV()
-  {
-    {
-      CommandGuard cg;
-
-      const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+       D3D12_RESOURCE_STATE_COPY_SOURCE,
        D3D12_RESOURCE_STATE_COMMON
       );
 
-      GetD3Device().GetCommandList()->ResourceBarrier(1, &barrier);
-    
-      if constexpr (is_client_sb<T>::value == true)
-      {
-        GetD3Device().GetCommandList()->SetGraphicsRootShaderResourceView(
-          which_client_sb<T>::value, 0);
-      }
-      else
-      {
-        GetD3Device().GetCommandList()->SetGraphicsRootShaderResourceView(
-          which_sb<T>::value, 0);
-      }
-    }
-    
-    m_b_srv_bound_ = false;
+    GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &revert_barrier);
+
+    GetD3Device().ExecuteCopyCommandList();
+
+    // Wait until the copy is done.
+    GetD3Device().WaitAndReset(COMMAND_IDX_COPY);
+
+    char* data = nullptr;
+
+    DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+    std::memcpy(dst_ptr, data, sizeof(T) * size);
+
+    m_read_buffer_->Unmap(0, nullptr);
   }
 
   template <typename T>
@@ -409,5 +510,44 @@ namespace Engine::Graphics
     m_buffer_.Reset();
     m_write_buffer_.Reset();
     m_read_buffer_.Reset();
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::BindSRVComputeDeferred()
+  {
+    if (m_b_uav_bound_ || m_b_uav_bound_compute_)
+    {
+      throw std::logic_error("StructuredBuffer is bound as UAV, cannot bind as SRV");
+    }
+
+    if (m_b_srv_bound_ || m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+      );
+
+    GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_compute_ = true;
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::UnbindSRVComputeDeferred()
+  {
+    if (!m_b_srv_bound_compute_) { return; }
+
+    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+          D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    GetD3Device().GetComputeCommandList()->ResourceBarrier(1, &srv_transition);
+
+    m_b_srv_bound_compute_ = false;
   }
 }

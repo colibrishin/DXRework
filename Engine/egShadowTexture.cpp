@@ -27,7 +27,7 @@ namespace Engine::Resources
 
   eResourceType ShadowTexture::GetResourceType() const { return RES_T_SHADOW_TEX; }
 
-  UINT ShadowTexture::GetArraySize() const { return Texture2D::GetArraySize(); }
+  UINT ShadowTexture::GetDepth() const { return Texture2D::GetDepth(); }
 
   UINT ShadowTexture::GetHeight() const { return Texture2D::GetHeight(); }
 
@@ -35,23 +35,29 @@ namespace Engine::Resources
 
   void ShadowTexture::Clear() const
   {
-    GetD3Device().GetContext()->ClearDepthStencilView(m_dsv_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+    GetD3Device().GetDirectCommandList()->ClearDepthStencilView(
+        m_rtv_->GetCPUDescriptorHandleForHeapStart(), 
+        D3D12_CLEAR_FLAG_DEPTH, 
+        1.0f, 
+        0, 
+        0, 
+        nullptr);
   }
 
-  void ShadowTexture::loadDerived(ComPtr<ID3D11Resource>& res)
+  void ShadowTexture::loadDerived(ComPtr<ID3D12Resource>& res)
   {
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc;
-    D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc;
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc;
 
     dsv_desc.Format = DXGI_FORMAT_D32_FLOAT;
-    dsv_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
-    dsv_desc.Flags = 0;
+    dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+    dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
     dsv_desc.Texture2D.MipSlice = 0;
     dsv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
     dsv_desc.Texture2DArray.FirstArraySlice = 0;
 
     srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
-    srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
     srv_desc.Texture2DArray.ArraySize = g_max_shadow_cascades;
     srv_desc.Texture2DArray.FirstArraySlice = 0;
     srv_desc.Texture2DArray.MipLevels = 1;
