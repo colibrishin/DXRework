@@ -2,6 +2,7 @@
 #include "egMaterial.h"
 
 #include "egAnimationsTexture.h"
+#include "egCommands.h"
 #include "egDXCommon.h"
 #include "egDXType.h"
 #include "egImGuiHeler.hpp"
@@ -215,11 +216,15 @@ namespace Engine::Resources
     std::iter_swap(texs.begin() + slot, it);
   }
 
-  void Material::Draw(const float& dt, const eCommandList list)
+  void Material::Draw(const float& dt, const CommandPair& cmd, const DescriptorPtr& heap)
   {
+    heap->BindGraphic(cmd);
+
     if (!m_temp_param_.bypassShader)
     {
-      GetRenderPipeline().SetPSO(m_shaders_loaded_[m_temp_param_.domain], list);
+      cmd.GetList()->SetPipelineState(m_shaders_loaded_[m_temp_param_.domain]->GetPipelineState());
+      cmd.GetList()->IASetPrimitiveTopology(m_shaders_loaded_[m_temp_param_.domain]->GetTopology());
+      heap->SetSampler(m_shaders_loaded_[m_temp_param_.domain]->GetShaderHeap(), SAMPLER_TEXTURE);
     }
 
     if (!m_resources_loaded_.contains(RES_T_SHAPE))
@@ -239,8 +244,6 @@ namespace Engine::Resources
       m_material_cb_.flags.atlas = 1;
     }
 
-    GetRenderPipeline().SetMaterial(m_material_cb_);
-
     for (const auto& [type, resources] : m_resources_loaded_)
     {
       if (type == RES_T_SHAPE) { continue; }
@@ -248,7 +251,7 @@ namespace Engine::Resources
       if (type == RES_T_ATLAS_ANIM)
       {
         const auto& anim = resources.front()->GetSharedPtr<AnimationsTexture>();
-        anim->Bind(list, BIND_TYPE_SRV, RESERVED_ATLAS, 0);
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_ATLAS, 0);
         continue;
       }
 
@@ -262,14 +265,15 @@ namespace Engine::Resources
           const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
           const auto& tex = res->GetSharedPtr<Texture>();
 
-          tex->Bind(list, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
+          tex->Bind(cmd, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
 
           m_material_cb_.flags.tex[idx] = 1;
         }
-
-        res->Render(dt);
       }
     }
+
+    GetRenderPipeline().SetMaterial(m_material_cb_);
+    GetRenderPipeline().BindConstantBuffers(heap);
 
     for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
     {
@@ -277,7 +281,7 @@ namespace Engine::Resources
 
       if (const auto& anim = shape->GetAnimations().lock())
       {
-        anim->Bind(list, BIND_TYPE_SRV, RESERVED_BONES, 0);
+        anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_BONES, 0);
       }
 
       for (const auto& mesh: shape->GetMeshes())
@@ -286,22 +290,25 @@ namespace Engine::Resources
         const auto& vtx_view = mesh->GetVertexView();
         const auto& idx_view = mesh->GetIndexView();
 
-        GetD3Device().GetCommandList(list)->IASetVertexBuffers(0, 1, &vtx_view);
-        GetD3Device().GetCommandList(list)->IASetIndexBuffer(&idx_view);
-
-        GetRenderPipeline().DrawIndexedInstancedDeferred(list, idx_count, instance_count);
+        cmd.GetList()->IASetVertexBuffers(0, 1, &vtx_view);
+        cmd.GetList()->IASetIndexBuffer(&idx_view);
+        cmd.GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
       }
 
       if (const auto& anim = shape->GetAnimations().lock())
       {
-        anim->Unbind(list, BIND_TYPE_SRV);
+        anim->Unbind(cmd, BIND_TYPE_SRV);
       }
     }
 
-    for (const auto& t : m_resources_loaded_[RES_T_TEX])
+    if (m_resources_loaded_.contains(RES_T_TEX))
     {
-      const auto& tex = t->GetSharedPtr<Texture>();
-      tex->Unbind(list, BIND_TYPE_SRV);
+      std::fill_n(m_material_cb_.flags.tex, m_resources_loaded_[RES_T_TEX].size(), 0);
+
+      for (const auto& tex : m_resources_loaded_[RES_T_TEX])
+      {
+        tex->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
+      }
     }
   }
 

@@ -28,9 +28,11 @@
     <ClInclude Include="egBoneAnimation.h" />
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
+    <ClInclude Include="egCommands.h" />
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
+    <ClInclude Include="egDescriptors.h" />
     <ClInclude Include="egGarbageCollector.h" />
     <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egObject.hpp" />
@@ -128,6 +130,7 @@
     <ClCompile Include="egBaseCollider.cpp" />
     <ClCompile Include="egCollision.cpp" />
     <ClCompile Include="egCollisionDetector.cpp" />
+    <ClCompile Include="egCommands.cpp" />
     <ClCompile Include="egCommon.cpp" />
     <ClCompile Include="egComponent.cpp" />
     <ClCompile Include="egComputeShader.cpp" />
@@ -135,6 +138,7 @@
     <ClCompile Include="egCubeMesh.cpp" />
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
+    <ClCompile Include="egDescriptors.cpp" />
     <ClCompile Include="egGarbageCollector.cpp" />
     <ClCompile Include="egGraviton.cpp" />
     <ClCompile Include="egObject.cpp" />

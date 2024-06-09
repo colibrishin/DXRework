@@ -51,6 +51,13 @@ namespace Engine
   using DirectX::XMFLOAT3X3;
   using DirectX::XMVECTORF32;
 
+  struct CommandAwaiter;
+  struct CommandPair;
+  struct DescriptorHandler;
+  struct DescriptorPtrImpl;
+
+  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
+
   namespace Objects
   {
     class Light;

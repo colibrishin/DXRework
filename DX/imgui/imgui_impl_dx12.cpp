@@ -350,8 +350,9 @@ static void ImGui_ImplDX12_CreateFontsTexture()
         D3D12_RANGE range = { 0, uploadSize };
         hr = uploadBuffer->Map(0, &range, &mapped);
         IM_ASSERT(SUCCEEDED(hr));
-        for (int y = 0; y < height; y++)
-            memcpy((void*) ((uintptr_t) mapped + y * uploadPitch), pixels + y * width * 4, width * 4);
+        for (uint64_t y = 0; y < height; y++)
+            memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(mapped) + y * uploadPitch),
+                   pixels + y * width * 4, static_cast<size_t>(width) * 4);
         uploadBuffer->Unmap(0, &range);
 
         D3D12_TEXTURE_COPY_LOCATION srcLocation = {};

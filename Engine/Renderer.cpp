@@ -80,7 +80,29 @@ namespace Engine::Manager::Graphics
              dt, (eShaderDomain)i, false, COMMAND_LIST_RENDER, [](const StrongObjectBase& obj)
              {
                return GetProjectionFrustum().CheckRender(obj);
-             }
+             }, [i](const CommandPair& cmd, const DescriptorPtr& heap)
+             {
+               GetRenderPipeline().DefaultRenderTarget(cmd.GetList());
+               GetRenderPipeline().DefaultViewport(cmd.GetList());
+               GetRenderPipeline().DefaultScissorRect(cmd.GetList());
+
+               GetShadowManager().BindShadowMaps(cmd, heap);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().BindReflectionMap(cmd, heap);
+               }
+
+             }, [i](const CommandPair& cmd, const DescriptorPtr& heap)
+             {
+               GetShadowManager().UnbindShadowMaps(cmd);
+
+               if (i > SHADER_DOMAIN_OPAQUE)
+               {
+                 GetReflectionEvaluator().UnbindReflectionMap(cmd);
+               }
+             },
+             m_additional_structured_buffers_
             );
 
           if (i == SHADER_DOMAIN_OPAQUE)
@@ -153,17 +175,51 @@ namespace Engine::Manager::Graphics
 
     for (const auto& [mtr, sbs] : final_mapping)
     {
-      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), command_list, sbs);
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        GetD3Device().Flush();
+        heaps.clear();
+      }
+
+      const auto& cmd  = GetD3Device().AcquireCommandPair(L"Renderer Material Pass");
+
+      command_pairs.emplace_back(cmd);
+      heaps.emplace_back(GetRenderPipeline().AcquireHeapSlot());
+
+      const auto& heap = heaps.back(); 
+
+      cmd.SoftReset();
+
+      for (const auto& sb_ptr : additional_structured_buffers)
+      {
+        if (const auto& sb = sb_ptr.lock())
+        {
+          sb->BindSRVGraphic(cmd, heap);
+        }
+      }
+
+      renderPassImpl(dt, domain, shader_bypass, mtr.lock(), initial_setup, post_setup, cmd, heap, sbs);
+
+      for (const auto& sb : additional_structured_buffers)
+      {
+        if (const auto& sb_ptr = sb.lock())
+        {
+          sb_ptr->UnbindSRVGraphic(cmd);
+        }
+      }
     }
   }
 
   void Renderer::renderPassImpl(
-    const float                         dt,
-    eShaderDomain                       domain,
-    bool                                shader_bypass,
-    const StrongMaterial&               material,
-    const eCommandList                  command_list,
-    const std::vector<SBs::InstanceSB>& structured_buffers
+    const float                                                          dt,
+    eShaderDomain                                                        domain,
+    bool                                                                 shader_bypass,
+    const StrongMaterial&                                                material,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& initial_setup,
+    const std::function<void(const CommandPair&, const DescriptorPtr&)>& post_setup,
+    const CommandPair&                                                   cmd,
+    const DescriptorPtr&                                heap,
+    const std::vector<SBs::InstanceSB>&                                  structured_buffers
   )
   {
     m_instance_buffer_.SetData(static_cast<UINT>(structured_buffers.size()), structured_buffers.data());

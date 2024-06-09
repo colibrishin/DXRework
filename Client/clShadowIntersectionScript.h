@@ -49,8 +49,8 @@ namespace Client::Scripts
 
     std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
 
-    Graphics::StructuredBuffer<Graphics::SBs::LightVPSB> m_sb_light_vp_;
-    Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB> m_sb_light_table_;
+    Strong<Graphics::StructuredBuffer<Graphics::SBs::LightVPSB>> m_sb_light_vp_;
+    Strong<Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB>> m_sb_light_table_;
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
     Client::Resource::ShadowMaskTexture m_shadow_mask_texs_[g_max_lights];

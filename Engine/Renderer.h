@@ -33,10 +33,13 @@ namespace Engine::Manager::Graphics
 
     bool Ready() const;
     void RenderPass(
-      const float        dt,
-      eShaderDomain      domain,
-      bool               shader_bypass,
-      const eCommandList command_list, const std::function<bool(const StrongObjectBase&)> & predicate
+      const float dt,
+      eShaderDomain domain,
+      bool shader_bypass,
+      const std::function<bool(const StrongObjectBase&)> &predicate, const std::function<void(const CommandPair&,
+        const DescriptorPtr&)> &initial_setup, const std::function<void(const CommandPair&, const
+        DescriptorPtr&)> &post_setup, const std::vector<Weak<StructuredBufferBase>> &
+      additional_structured_buffers
     );
 
   private:
@@ -44,11 +47,13 @@ namespace Engine::Manager::Graphics
     ~Renderer() override = default;
 
     void renderPassImpl(
-      const float            dt,
-      eShaderDomain          domain,
-      bool                   shader_bypass,
-      const StrongMaterial & material, const eCommandList command_list, const std::vector<SBs::InstanceSB> &
-      structured_buffers
+      const float dt,
+      eShaderDomain domain,
+      bool shader_bypass,
+      const StrongMaterial &material, const std::function<void(const CommandPair&, const std::unique_ptr<DescriptorPtrImpl
+        >&)> &initial_setup, const std::function<void(const CommandPair&, const DescriptorPtr&)> &
+      post_setup, const CommandPair
+      & cmd, const DescriptorPtr & heap, const std::vector<SBs::InstanceSB> & structured_buffers
     );
 
     void preMappingModel(const StrongRenderComponent& rc);

@@ -25,7 +25,8 @@ namespace Engine::Manager
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_previous_keyboard_state_(),
-      m_previous_mouse_state_()
+      m_previous_mouse_state_(),
+      m_imgui_descriptor_()
   {
     if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
@@ -123,6 +124,8 @@ namespace Engine::Manager
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
 
+    m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
+
     if constexpr (g_debug)
     {
       ImGui_ImplWin32_Init(hWnd);
@@ -130,9 +133,9 @@ namespace Engine::Manager
       ImGui_ImplDX12_Init
         (
          GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU(),
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetCPUDescriptorHandleForHeapStart(),
-         GetRenderPipeline().GetDescriptor().GetBufferHeapGPU()->GetGPUDescriptorHandleForHeapStart()
+         m_imgui_descriptor_->GetMainDescriptorHeap(),
+         m_imgui_descriptor_->GetCPUHandle(),
+         m_imgui_descriptor_->GetGPUHandle()
         );
     }
     
@@ -288,11 +291,26 @@ namespace Engine::Manager
     {
       ImGui::Render();
 
+      if (!GetD3Device().IsCommandPairAvailable())
+      {
+        GetD3Device().Flush();
+      }
+
+      auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
+
+      cmd.SoftReset();
+      GetRenderPipeline().DefaultRenderTarget(cmd.GetList());
+
+      m_imgui_descriptor_->BindGraphic(cmd);
+
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          GetD3Device().GetCommandList(COMMAND_LIST_POST_RENDER)
+          cmd.GetList()
       );
+
+      const auto& waiter = cmd.Execute();
+      waiter.Wait();
     }
 
     GetReflectionEvaluator().PostRender(dt);
