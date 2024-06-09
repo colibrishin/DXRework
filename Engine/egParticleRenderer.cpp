@@ -23,11 +23,10 @@ namespace Engine::Components
 
   void ParticleRenderer::Initialize()
   {
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
-    m_sb_buffer_.Create(cmd, 1, nullptr);
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
-    GetD3Device().Wait();
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer Init").lock();
+    m_sb_buffer_.Create(cmd->GetList(), 1, nullptr);
+    cmd->FlagReady();
+
     SetCount(1);
   }
 
@@ -46,7 +45,8 @@ namespace Engine::Components
       cmd->SetPipelineState(m_cs_->GetPipelineState());
 
       m_sb_buffer_.SetData(cmd, static_cast<UINT>(m_instances_.size()), m_instances_.data());
-      m_sb_buffer_.BindUAVGraphic(cmd, heap);
+      m_sb_buffer_.TransitionToUAV(cmd);
+      m_sb_buffer_.CopyUAVHeap(heap);
 
       const auto thread      = m_cs_->GetThread();
       const auto flatten     = thread[0] * thread[1] * thread[2];
@@ -56,7 +56,7 @@ namespace Engine::Components
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
       m_cs_->Dispatch(cmd, heap);
 
-      m_sb_buffer_.UnbindUAVGraphic(cmd);
+      m_sb_buffer_.TransitionCommon(cmd, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
       DX::ThrowIfFailed(cmd->Close());
 
