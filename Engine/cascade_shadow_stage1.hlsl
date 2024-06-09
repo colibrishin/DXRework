@@ -9,6 +9,7 @@ struct PixelShadowInputType
 struct GeometryShadowInputType
 {
   float4 position : SV_Position;
+  uint   instanceId : SV_InstanceID;
 };
 
 GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
@@ -23,7 +24,7 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 #define INST_NO_ANIM   iParam[0].z
 #define INST_WORLD     mParam[0]
 
-  if (g_bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
+  if (bufMaterial[0].bindFlag.boneFlag.x && !bufInstance[instanceId].INST_NO_ANIM)
   {
     matrix animation_transform;
 
@@ -53,6 +54,7 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 #undef INST_WORLD
 
   output.position = mul(output.position, world);
+  output.instanceId = instanceId;
 
   return output;
 }
@@ -70,7 +72,7 @@ void gs_main(
 
     for (int j = 0; j < TRIANGLE_MACRO; ++j)
     {
-#define TARGET_SHADOW_PARAM g_iParam[0].y
+#define TARGET_SHADOW_PARAM bufLocalParam[0].iParam[0].x
       element.position =
         mul
         (

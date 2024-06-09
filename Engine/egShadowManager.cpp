@@ -56,6 +56,9 @@ namespace Engine::Manager::Graphics
 
     InitializeViewport();
     InitializeProcessor();
+
+    GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_buffer_);
+    GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_vps_buffer_);
   }
 
   void ShadowManager::PreUpdate(const float& dt)
@@ -69,10 +72,17 @@ namespace Engine::Manager::Graphics
   void ShadowManager::PreRender(const float& dt)
   {
     constexpr size_t shadow_slot = 1;
+    constexpr size_t light_slot = 0;
 
     // # Pass 1 : depth only, building shadow map
 
-     constexpr size_t light_slot = 0;
+    m_local_param_buffers_.clear();
+
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Rendering");
+
+    cmd.SoftReset();
+
+    ClearShadowMaps(cmd);
 
     // Build light information structured buffer.
     std::vector<SBs::LightSB> light_buffer;
@@ -136,23 +146,16 @@ namespace Engine::Manager::Graphics
       {
         if (const auto light = ptr_light.lock())
         {
-          // Notify the index of the shadow map to the shader.
-          GetRenderPipeline().SetParam<int>(idx++, shadow_slot);
           // Render the depth of the object from the light's point of view.
-          BuildShadowMap(dt, light);
+          BuildShadowMap(dt, cmd, light, idx++);
         }
       }
-
-      GetRenderPipeline().SetParam<int>(0, shadow_slot);
     }
   }
 
   void ShadowManager::Render(const float& dt) {}
 
-  void ShadowManager::PostRender(const float& dt)
-  {
-    ClearShadowMaps();
-  }
+  void ShadowManager::PostRender(const float& dt) {}
 
   void ShadowManager::FixedUpdate(const float& dt) {}
 
@@ -166,43 +169,55 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(const float dt, const StrongLight& light) const
+  void ShadowManager::BuildShadowMap(const float dt, const CommandPair& cmd, const StrongLight & light, const UINT light_idx)
   {
+    // Notify the light index to the shader.
+    SBs::LocalParamSB local_param{};
+    local_param.SetParam(0, static_cast<int>(light_idx));
+    StructuredBuffer<SBs::LocalParamSB> sb;
+    sb.SetData(1, &local_param);
+    m_local_param_buffers_.emplace_back(sb);
+
     GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
+       cmd,
        [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
          return true;
-       },
-       [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
+       }
+       , [this, light, light_idx, &sb](const CommandPair& c, const DescriptorPtr& h)
        {
          // Set viewport to the shadow map size.
-         cmd.GetList()->RSSetViewports(1, &m_viewport_);
+         c.GetList()->RSSetViewports(1, &m_viewport_);
 
-         cmd.GetList()->RSSetScissorRects(1, &m_scissor_rect_);
+         c.GetList()->RSSetScissorRects(1, &m_scissor_rect_);
 
          // Bind the shadow map shader.
-         cmd.GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
+         c.GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
 
          // It only needs to render the depth of the object from the light's point of view.
          // Swap the depth stencil to the each light's shadow map.
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
-         m_shadow_map_mask_.Bind(cmd, dsv);
+         m_shadow_map_mask_.Bind(c, dsv);
+         sb.BindSRVGraphic(c, h);
 
-         GetRenderPipeline().BindConstantBuffers(heap);
+         GetRenderPipeline().BindConstantBuffers(h);
 
-         heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
+         h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
-         cmd.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
-       }
-       , [this, light](const CommandPair& cmd, const DescriptorPtr& heap)
+         c.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
+       },
+       [this, light, &sb](const CommandPair& c, const DescriptorPtr& h)
        {
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
-         m_shadow_map_mask_.Unbind(cmd, dsv);
+
+         m_shadow_map_mask_.Unbind(c, dsv);
+
+         sb.UnbindSRVGraphic(c);
        }, {m_sb_light_buffer_, m_sb_light_vps_buffer_}
       );
   }
@@ -353,10 +368,15 @@ namespace Engine::Manager::Graphics
     // Bind the shadow map resource previously rendered to the pixel shader.
     heap->SetShaderResources
       (
-       RESERVED_SHADOW_MAP,
+       RESERVED_TEX_SHADOW_MAP,
        static_cast<UINT>(current_shadow_maps.size()),
        current_shadow_maps
       );
+  }
+
+  void ShadowManager::BindShadowSampler(const DescriptorPtr& heap) const
+  {
+    heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
   }
 
   void ShadowManager::UnbindShadowMaps(const CommandPair& cmd) const
@@ -437,13 +457,9 @@ namespace Engine::Manager::Graphics
     m_scissor_rect_.bottom = g_max_shadow_map_size;
   }
 
-  void ShadowManager::ClearShadowMaps()
+  void ShadowManager::ClearShadowMaps(const CommandPair& cmd)
   {
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
-
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
-
-    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(cmd); }
+    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(cmd.GetList()); }
 
     constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
 
@@ -461,9 +477,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    cmd->ResourceBarrier(1, &command_to_rtv);
+    cmd.GetList()->ResourceBarrier(1, &command_to_rtv);
 
-    cmd->ClearRenderTargetView
+    cmd.GetList()->ClearRenderTargetView
       (
        m_shadow_map_mask_.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
        clear_color,
@@ -471,8 +487,6 @@ namespace Engine::Manager::Graphics
        nullptr
       );
 
-    cmd->ResourceBarrier(1, &rtv_to_common);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    cmd.GetList()->ResourceBarrier(1, &rtv_to_common);
   }
 } // namespace Engine::Manager::Graphics

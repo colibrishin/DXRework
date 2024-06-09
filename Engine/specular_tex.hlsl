@@ -8,7 +8,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
   float shadowFactor[MAX_NUM_LIGHTS];
   GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
 
-  if (g_repeatMaterial.x == true)
+  if (bufMaterial[0].repeatMaterial.x == true)
   {
     const float2 scaleWiseTex = input.tex * input.scale.xy;
     const float2 repeatTex    = frac(scaleWiseTex);
@@ -47,7 +47,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
        2.0f * lightIntensity[i] * input.normal - light_dir
       );
     specular[i] =
-      pow(saturate(dot(reflection[i], input.viewDirection)), g_specularPower);
+      pow(saturate(dot(reflection[i], input.viewDirection)), bufMaterial[0].specularPower);
 
     if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
     {
