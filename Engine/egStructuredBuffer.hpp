@@ -16,22 +16,18 @@ namespace Engine::Graphics
   public:
     virtual ~StructuredBufferBase() = default;
 
-    virtual void BindSRVGraphic(const CommandPair& cmd, const DescriptorPtr& heap) = 0;
-    virtual void UnbindSRVGraphic(const CommandPair& cmd) const = 0;
+    virtual void TransitionToSRV(ID3D12GraphicsCommandList1* cmd) = 0;
+    virtual void TransitionToUAV(ID3D12GraphicsCommandList1* cmd) = 0;
+    virtual void TransitionCommon(ID3D12GraphicsCommandList1 * cmd, const D3D12_RESOURCE_STATES before) = 0;
 
-    virtual void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr& heap) = 0;
-    virtual void UnbindUAVGraphic(const CommandPair& cmd) const = 0;
-
-    virtual void BindSRVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) = 0;
-    virtual void UnbindSRVGraphic(ID3D12GraphicsCommandList* cmd) const = 0;
-
-    virtual void BindUAVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) = 0;
-    virtual void UnbindUAVGraphic(ID3D12GraphicsCommandList* cmd) const = 0;
+    virtual void CopySRVHeap(const DescriptorPtr& heap) = 0;
+    virtual void CopyUAVHeap(const DescriptorPtr& heap) = 0;
 
   protected:
     ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
     ComPtr<ID3D12DescriptorHeap> m_uav_heap_;
 
+    ComPtr<ID3D12Resource> m_upload_buffer_;
     ComPtr<ID3D12Resource> m_buffer_;
 
   };
@@ -48,22 +44,18 @@ namespace Engine::Graphics
     void __fastcall GetData(UINT size, T* dst_ptr);
     void            Clear();
 
-    void BindSRVGraphic(const CommandPair& cmd, const DescriptorPtr& heap) override;
-    void UnbindSRVGraphic(const CommandPair& cmd) const override;
+    void TransitionToSRV(ID3D12GraphicsCommandList1* cmd) override;
+    void TransitionToUAV(ID3D12GraphicsCommandList1* cmd) override;
+    void TransitionCommon(ID3D12GraphicsCommandList1 * cmd, const D3D12_RESOURCE_STATES before) override;
 
-    void BindSRVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) override;
-    void UnbindSRVGraphic(ID3D12GraphicsCommandList* cmd) const override;
-
-    void BindUAVGraphic(const CommandPair & cmd, const DescriptorPtr& heap) override;
-    void UnbindUAVGraphic(const CommandPair& cmd) const override;
-
-    void BindUAVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap) override;
-    void UnbindUAVGraphic(ID3D12GraphicsCommandList* cmd) const override;
+    void CopySRVHeap(const DescriptorPtr& heap) override;
+    void CopyUAVHeap(const DescriptorPtr& heap) override;
 
   private:
     void InitializeSRV(UINT size);
     void InitializeUAV(UINT size);
-    void InitializeMainBuffer(ID3D12GraphicsCommandList1 * cmd, UINT size, const T * initial_data);
+    void InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size);
+    void InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data);
 
     UINT m_size_;
   };
@@ -149,7 +141,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
+  void StructuredBuffer<T>::InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size)
   {
     if ((sizeof(T) * size) % 16 != 0)
     {
@@ -173,7 +165,7 @@ namespace Engine::Graphics
        GetD3Device().GetDevice()->CreateCommittedResource
        (
         &default_heap,
-        D3D12_HEAP_FLAG_NONE,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &buffer_desc,
         D3D12_RESOURCE_STATE_COMMON,
         nullptr,
@@ -182,38 +174,49 @@ namespace Engine::Graphics
       );
 
     DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
+  {
+    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &upload_heap,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_COMMON,
+        nullptr,
+        IID_PPV_ARGS(m_upload_buffer_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    const std::string  gen_type_name = typeid(T).name();
+    const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
+    const std::wstring buffer_name = L"StructuredBuffer " + type_name;
+
+    const std::wstring write_buffer_name = L"StructuredBuffer Write " + type_name;
+
+    DX::ThrowIfFailed(m_upload_buffer_->SetName(write_buffer_name.c_str()));
 
     if (initial_data != nullptr)
     {
-      ComPtr<ID3D12Resource> upload_buffer;
-
-      DX::ThrowIfFailed
-        (
-         DirectX::CreateUploadBuffer
-         (
-          GetD3Device().GetDevice(),
-          initial_data,
-          size,
-          upload_buffer.ReleaseAndGetAddressOf()
-         )
-        );
-
-      const std::wstring write_buffer_name = L"StructuredBuffer Write " + type_name;
-
-      DX::ThrowIfFailed(upload_buffer->SetName(write_buffer_name.c_str()));
-
       char* data = nullptr;
 
-      DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
       std::memcpy(data, initial_data, sizeof(T) * size);
 
-      upload_buffer->Unmap(0, nullptr);
+      m_upload_buffer_->Unmap(0, nullptr);
 
       cmd->CopyResource
         (
          m_buffer_.Get(),
-         upload_buffer.Get()
+         m_upload_buffer_.Get()
         );
 
       const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -224,8 +227,6 @@ namespace Engine::Graphics
         );
 
       cmd->ResourceBarrier(1, &common_transition);
-
-      GetGC().Track(upload_buffer);
     }
   }
 
@@ -238,19 +239,123 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRVGraphic(const CommandPair& cmd, const DescriptorPtr& heap)
+  void StructuredBuffer<T>::Create(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
   {
-    BindSRVGraphic(cmd.GetList(), heap);
+    if (size == 0)
+    {
+      size = 1;
+    }
+
+    m_size_ = size;
+
+    InitializeMainBuffer(cmd, size);
+    InitializeSRV(size);
+    if constexpr (is_uav_sb<T>::value == true)
+    {
+      InitializeUAV(size);
+    }
+    InitializeUploadBuffer(cmd, size, initial_data);
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRVGraphic(const CommandPair& cmd) const
+  void StructuredBuffer<T>::SetData(ID3D12GraphicsCommandList1* cmd, const UINT size, const T* src_ptr)
   {
-    UnbindSRVGraphic(cmd.GetList());
+    if (m_size_ < size)
+    {
+      Create(cmd, size, src_ptr);
+      return;
+    }
+
+    char* data = nullptr;
+
+    DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+    std::memcpy(data, src_ptr, sizeof(T) * size);
+
+    m_upload_buffer_->Unmap(0, nullptr);
+
+    cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+
+    const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    cmd->ResourceBarrier(1, &common_transition);
+  }
+
+  // This will execute the command list and copy the data from the GPU to the CPU.
+  template <typename T>
+  void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
+  {
+    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
+
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"StructuredBuffer Get").lock();
+
+    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_COPY_SOURCE
+      );
+
+    ComPtr<ID3D12Resource> read_buffer_;
+
+    const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &readback_heap,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+        &buffer_desc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(read_buffer_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    cmd->GetList()->ResourceBarrier(1, &barrier);
+
+    cmd->GetList()->CopyResource
+      (
+       read_buffer_.Get(),
+       m_buffer_.Get()
+      );
+
+    const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_SOURCE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    cmd->GetList()->ResourceBarrier(1, &revert_barrier);
+
+    // todo: gc of executed command list
+    cmd->Execute();
+
+    char* data = nullptr;
+
+    DX::ThrowIfFailed(read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+    std::memcpy(dst_ptr, data, sizeof(T) * size);
+
+    read_buffer_->Unmap(0, nullptr);
   }
 
   template <typename T>
-  void StructuredBuffer<T>::BindSRVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap)
+  void StructuredBuffer<T>::Clear()
+  {
+    m_buffer_.Reset();
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::TransitionToSRV(ID3D12GraphicsCommandList1* cmd)
   {
     const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -260,7 +365,37 @@ namespace Engine::Graphics
       );
 
     cmd->ResourceBarrier(1, &srv_transition);
+  }
 
+  template <typename T>
+  void StructuredBuffer<T>::TransitionToUAV(ID3D12GraphicsCommandList1* cmd)
+  {
+    const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+      );
+
+    cmd->ResourceBarrier(1, &uav_transition);
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::TransitionCommon(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES before)
+  {
+    const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_buffer_.Get(),
+       before,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    cmd->ResourceBarrier(1, &common_transition);
+  }
+
+  template <typename T>
+  void StructuredBuffer<T>::CopySRVHeap(const DescriptorPtr& heap)
+  {
     if constexpr (is_client_sb<T>::value == true)
     {
       heap->SetShaderResource
@@ -280,30 +415,8 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::UnbindSRVGraphic(ID3D12GraphicsCommandList* cmd) const
+  void StructuredBuffer<T>::CopyUAVHeap(const DescriptorPtr& heap)
   {
-    const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    cmd->ResourceBarrier(1, &srv_transition);
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::BindUAVGraphic(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& heap)
-  {
-    const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-      );
-
-    cmd->ResourceBarrier(1, &uav_transition);
-
     if constexpr (is_client_uav_sb<T>::value == true)
     {
       heap->SetUnorderedAccess
@@ -320,167 +433,5 @@ namespace Engine::Graphics
          which_sb_uav<T>::value
         );
     }
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::UnbindUAVGraphic(ID3D12GraphicsCommandList* cmd) const
-  {
-    const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-            m_buffer_.Get(),
-                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                D3D12_RESOURCE_STATE_COMMON
-           );
-
-    cmd->ResourceBarrier(1, &uav_transition);
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::BindUAVGraphic(const CommandPair& cmd, const DescriptorPtr& heap)
-  {
-    BindUAVGraphic(cmd.GetList(), heap);
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::UnbindUAVGraphic(const CommandPair& cmd) const
-  {
-    UnbindUAVGraphic(cmd.GetList());
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::Create(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
-  {
-    if (size == 0)
-    {
-      size = 1;
-    }
-
-    m_size_ = size;
-
-    InitializeMainBuffer(cmd, size, initial_data);
-    InitializeSRV(size);
-    if constexpr (is_uav_sb<T>::value == true)
-    {
-      InitializeUAV(size);
-    }
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::SetData(ID3D12GraphicsCommandList1* cmd, const UINT size, const T* src_ptr)
-  {
-    if (m_size_ < size)
-    {
-      Create(cmd, size, nullptr);
-      return;
-    }
-
-    ComPtr<ID3D12Resource> upload_buffer;
-
-    const auto& heap_upload = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * m_size_);
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &heap_upload,
-        D3D12_HEAP_FLAG_NONE,
-        &buffer_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(upload_buffer.ReleaseAndGetAddressOf())
-       )
-      );
-
-    char* data = nullptr;
-
-    DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-
-    std::memcpy(data, src_ptr, sizeof(T) * size);
-
-    upload_buffer->Unmap(0, nullptr);
-
-    cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
-
-    const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    cmd->ResourceBarrier(1, &common_transition);
-
-    GetGC().Track(upload_buffer);
-  }
-
-  // This will execute the command list and copy the data from the GPU to the CPU.
-  template <typename T>
-  void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
-  {
-    GetD3Device().WaitAndReset(COMMAND_LIST_COPY);
-
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_COPY);
-
-    const auto& barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COMMON,
-       D3D12_RESOURCE_STATE_COPY_SOURCE
-      );
-
-    ComPtr<ID3D12Resource> read_buffer_;
-
-    const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &readback_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &buffer_desc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(read_buffer_.ReleaseAndGetAddressOf())
-       )
-      );
-
-    cmd->ResourceBarrier(1, &barrier);
-
-    cmd->CopyResource
-      (
-       read_buffer_.Get(),
-       m_buffer_.Get()
-      );
-
-    const auto& revert_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-      (
-       m_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_SOURCE,
-       D3D12_RESOURCE_STATE_COMMON
-      );
-
-    cmd->ResourceBarrier(1, &revert_barrier);
-
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_COPY);
-
-    // Wait until the copy is done.
-    GetD3Device().Wait(COMMAND_LIST_COPY);
-
-    char* data = nullptr;
-
-    DX::ThrowIfFailed(read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-
-    std::memcpy(dst_ptr, data, sizeof(T) * size);
-
-    read_buffer_->Unmap(0, nullptr);
-  }
-
-  template <typename T>
-  void StructuredBuffer<T>::Clear()
-  {
-    m_buffer_.Reset();
   }
 }
