@@ -43,7 +43,9 @@ namespace Client::Scripts
 
     ShadowIntersectionScript();
 
-    D3D11_VIEWPORT m_viewport_;
+    ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
+
+    D3D12_VIEWPORT m_viewport_;
 
     std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
 

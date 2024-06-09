@@ -4,9 +4,6 @@
 #include "egResource.h"
 #include "egResourceManager.hpp"
 
-struct ID3D11Buffer;
-template class Microsoft::WRL::ComPtr<ID3D11Buffer>;
-
 namespace Engine::Resources
 {
   using namespace Engine::Graphics;

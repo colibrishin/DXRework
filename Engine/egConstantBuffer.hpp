@@ -1,6 +1,7 @@
 #pragma once
 #include <d3dx12.h>
 
+#include "egGarbageCollector.h"
 #include "egGlobal.h"
 #include "egRenderPipeline.h"
 
@@ -55,10 +56,12 @@ namespace Engine::Graphics
         upload_buffer->Unmap(0, nullptr);
 
         GetD3Device().GetCopyCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+
+        GetGC().Track(upload_buffer);
       }
 
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
-        (m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        (m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
 
       GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &cb_trans);
 
@@ -68,11 +71,10 @@ namespace Engine::Graphics
         .SizeInBytes    = m_alignment_size_
       };
 
-      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
-
       GetD3Device().ExecuteCopyCommandList();
 
       GetD3Device().CreateConstantBufferView(which_cb<T>::value, cbv_desc);
+
     }
 
     void SetData(const T* src_data)
@@ -108,17 +110,18 @@ namespace Engine::Graphics
 
       GetD3Device().GetCopyCommandList()->CopyResource(m_buffer_.Get(), upload_buffer.Get());
 
+      GetD3Device().ExecuteCopyCommandList();
+
+      GetD3Device().WaitAndReset(COMMAND_IDX_SUB_DIRECT);
+
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-      GetD3Device().GetCopyCommandList()->ResourceBarrier(1, &cb_trans);
+      GetD3Device().GetSubDirectCommandList()->ResourceBarrier(1, &cb_trans);
 
-      DX::ThrowIfFailed(GetD3Device().GetCopyCommandList()->Close());
-
-      GetD3Device().ExecuteCopyCommandList();
+      GetD3Device().ExecuteSubDirectCommandList();
     }
 
   private:
-
     ComPtr<ID3D12Resource> m_buffer_;
     UINT m_alignment_size_;
 
@@ -129,6 +132,6 @@ namespace Engine::Graphics
   {
     static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
 
-    m_alignment_size_ = (sizeof(T) + 255) & ~255; 
+    m_alignment_size_ = (sizeof(T) + 255) & ~255;
   }
 }

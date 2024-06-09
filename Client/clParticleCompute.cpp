@@ -17,9 +17,9 @@ namespace Client::ComputeShaders
 {
   void ParticleCompute::preDispatch()
   {
-    m_noises_[0]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 3, SHADER_COMPUTE);
-    m_noises_[1]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 4, SHADER_COMPUTE);
-    m_noises_[2]->BindAs(D3D11_BIND_SHADER_RESOURCE, BIND_SLOT_TEX, 5, SHADER_COMPUTE);
+    m_noises_[0]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 3);
+    m_noises_[1]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 4);
+    m_noises_[2]->BindAs(BIND_TYPE_SRV, BIND_SLOT_TEX, 5);
 
     m_noises_[0]->PreRender(0.f);
     m_noises_[1]->PreRender(0.f);

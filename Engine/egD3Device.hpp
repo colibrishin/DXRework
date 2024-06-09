@@ -78,19 +78,21 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] ID3D12GraphicsCommandList1* GetDirectCommandList(UINT frame_idx = -1) const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCopyCommandList(UINT frame_idx = -1) const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetComputeCommandList(UINT frame_idx = -1)const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetToolkitCommandList(UINT frame_idx = -1)const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetSubDirectCommandList(UINT frame_idx = -1)const;
 
     [[nodiscard]] ID3D12CommandQueue* GetDirectCommandQueue() const;
     [[nodiscard]] ID3D12CommandQueue* GetCopyCommandQueue() const;
     [[nodiscard]] ID3D12CommandQueue* GetComputeCommandQueue() const;
+    [[nodiscard]] ID3D12CommandQueue* GetSubDirectCommandQueue() const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
     void WaitAndReset(const eCommandListIndex type, UINT64 buffer_idx = -1) const;
+    void Wait(const eCommandListIndex type, UINT64 buffer_idx = -1);
 
     void ExecuteCopyCommandList();
     void ExecuteComputeCommandList();
-    void ExecuteToolkitCommandList();
+    void ExecuteSubDirectCommandList();
 
     void CreateTextureFromFile(
         const std::filesystem::path& file_path, 
@@ -101,13 +103,14 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
+    friend class GarbageCollector;
 
     inline static constexpr eCommandListType s_target_types[] =
     {
       COMMAND_DIRECT,
       COMMAND_COPY,
       COMMAND_COMPUTE,
-      COMMAND_TOOLKIT
+      COMMAND_SUB_DIRECT
     };
     
     ~D3Device() override = default;
@@ -130,10 +133,11 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] ID3D12CommandAllocator* GetDirectCommandAllocator(UINT frame_idx = -1) const;
     [[nodiscard]] ID3D12CommandAllocator* GetCopyCommandAllocator(UINT frame_idx = -1) const;
     [[nodiscard]] ID3D12CommandAllocator* GetComputeCommandAllocator(UINT frame_idx = -1) const;
-    [[nodiscard]] ID3D12CommandAllocator* GetToolkitCommandAllocator(UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12CommandAllocator* GetSubDirectCommandAllocator(UINT frame_idx = -1) const;
 
     void Reset(const eCommandListIndex type, const UINT64 buffer_idx = -1) const;
-    void Signal(const eCommandPrimitiveType type, UINT64 buffer_idx = -1);
+    void Signal(const eCommandListIndex type, UINT64 buffer_idx = -1);
+    UINT64 GetFenceValue(UINT64 buffer_idx = -1) const;
 
     HWND m_hwnd_ = nullptr;
 
