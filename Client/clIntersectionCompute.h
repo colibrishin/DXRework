@@ -44,8 +44,8 @@ namespace Client::ComputeShaders
 
 
   protected:
-    void preDispatch() override;
-    void postDispatch() override;
+    void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) override;
+    void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) override;
     void loadDerived() override;
     void unloadDerived() override;
 

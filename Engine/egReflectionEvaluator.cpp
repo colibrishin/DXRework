@@ -15,10 +15,7 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::Render(const float& dt) {}
 
-  void ReflectionEvaluator::PostRender(const float& dt)
-  {
-    m_copy_.Unbind(COMMAND_LIST_POST_RENDER, BIND_TYPE_SRV);
-  }
+  void ReflectionEvaluator::PostRender(const float& dt) {}
 
   void ReflectionEvaluator::PostUpdate(const float& dt) {}
 
@@ -31,7 +28,16 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::RenderFinished()
   {
-    GetRenderPipeline().CopyBackBuffer(COMMAND_LIST_RENDER, m_copy_.GetRawResoruce());
-    m_copy_.Bind(COMMAND_LIST_RENDER, BIND_TYPE_SRV, RESERVED_RENDERED, 0);
+    GetRenderPipeline().CopyBackBuffer(m_copy_.GetRawResoruce());
+  }
+
+  void ReflectionEvaluator::BindReflectionMap(const CommandPair& cmd, const DescriptorPtr& heap) const
+  {
+    m_copy_.Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_RENDERED, 0);
+  }
+
+  void ReflectionEvaluator::UnbindReflectionMap(const CommandPair& cmd) const
+  {
+    m_copy_.Unbind(cmd, BIND_TYPE_SRV);
   }
 }

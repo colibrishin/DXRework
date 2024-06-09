@@ -1,10 +1,10 @@
 #pragma once
 #include <d3dx12.h>
 
+#include "egD3Device.hpp"
+#include "egDescriptors.h"
 #include "egGarbageCollector.h"
 #include "egGlobal.h"
-#include "egRenderPipeline.h"
-#include "egRenderPipeline.h"
 
 namespace Engine::Graphics
 {
@@ -18,6 +18,7 @@ namespace Engine::Graphics
     void Create(const T* src_data)
     {
       GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
 
       const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
       const auto& cb_desc      = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
@@ -71,7 +72,7 @@ namespace Engine::Graphics
         std::memcpy(data, src_data, sizeof(T));
         upload_buffer->Unmap(0, nullptr);
 
-        GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+        cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
 
         GetGC().Track(upload_buffer);
       }
@@ -83,7 +84,7 @@ namespace Engine::Graphics
          D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
         );
 
-      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &cb_trans);
+      cmd->ResourceBarrier(1, &cb_trans);
 
       const D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc
       {
@@ -118,12 +119,14 @@ namespace Engine::Graphics
     {
       GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
 
+      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
       const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition(
           m_buffer_.Get(), 
           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, 
           D3D12_RESOURCE_STATE_COPY_DEST);
 
-      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &copy_trans);
+      cmd->ResourceBarrier(1, &copy_trans);
 
       // Use upload buffer for synchronization.
       ComPtr<ID3D12Resource> upload_buffer;
@@ -159,7 +162,7 @@ namespace Engine::Graphics
 
       upload_buffer->Unmap(0, nullptr);
 
-      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+      cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
 
       const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
         (
@@ -168,16 +171,16 @@ namespace Engine::Graphics
          D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
         );
 
-      GetD3Device().GetCommandList(COMMAND_LIST_UPDATE)->ResourceBarrier(1, &cb_trans);
+      cmd->ResourceBarrier(1, &cb_trans);
 
       GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
 
       GetGC().Track(upload_buffer);
     }
 
-    void Bind()
+    void Bind(const DescriptorPtr& heap)
     {
-      GetD3Device().BindConstantBufferView(which_cb<T>::value, m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart());
+      heap.SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }
 
   private:

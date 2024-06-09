@@ -19,6 +19,7 @@ namespace Engine
   constexpr UINT g_uav_slot_limit               = 8;
   constexpr UINT g_reserved_uav_slot            = 6;
   constexpr UINT g_structured_buffer_start      = 64;
+  constexpr UINT g_max_concurrent_command_lists = 10;
 
   // Physics Constants
   constexpr float   g_epsilon                             = 0.001f;

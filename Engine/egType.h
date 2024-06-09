@@ -51,6 +51,11 @@ namespace Engine
   using DirectX::XMFLOAT3X3;
   using DirectX::XMVECTORF32;
 
+  struct CommandAwaiter;
+  struct CommandPair;
+  struct DescriptorHandler;
+  struct DescriptorPtr;
+
   namespace Objects
   {
     class Light;
@@ -285,6 +290,9 @@ namespace Engine
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
   using FrameIndex = UINT64;
+
+
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
 
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
