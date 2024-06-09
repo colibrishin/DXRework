@@ -13,14 +13,14 @@ namespace Engine::Manager::Graphics
 {
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
 
-  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT frame_idx)
+  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT frame_idx) const
   {
     if (frame_idx == -1)
     {
       frame_idx = m_frame_idx_;
     }
 
-    return m_command_pairs_.at(frame_idx)[list_enum].GetList();
+    return m_command_pairs_.at(frame_idx)[list_enum]->GetList();
   }
 
   ID3D12CommandQueue* D3Device::GetCommandQueue(const eCommandList list) const
@@ -125,6 +125,15 @@ namespace Engine::Manager::Graphics
     }
 
     return input_descs_with_name;
+  }
+
+  D3Device::~D3Device()
+  {
+    m_command_consumer_running_ = false;
+    m_command_consumer_.join();
+
+    CloseHandle(m_fence_event_);
+    delete[] m_fence_nonce_;
   }
 
   void D3Device::InitializeDevice()
@@ -299,7 +308,7 @@ namespace Engine::Manager::Graphics
     {
       for (int t = 0; t < _countof(s_target_types); ++t)
       {
-        m_command_pairs_[i].push_back(CommandPair(s_target_types[t], ++m_command_ids_));
+        m_command_pairs_[i].emplace_back(boost::make_shared<CommandPair>(s_target_types[t], ++m_command_ids_, m_frame_idx_, L""));
       }
     }
   }
@@ -325,6 +334,13 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  void D3Device::InitializeConsumer()
+  {
+    m_command_consumer_running_ = true;
+    m_command_consumer_ = std::thread(&D3Device::ConsumeCommands, this);
+    m_command_consumer_.detach();
+  }
+
   void D3Device::WaitForEventCompletion(const UINT64 buffer_idx) const
   {
     if (m_fence_->GetCompletedValue() < m_fence_nonce_[buffer_idx])
@@ -342,6 +358,14 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  void D3Device::WaitForCommandsCompletion()
+  {
+    while (m_command_pairs_count_.load())
+    {
+      m_command_pairs_count_.notify_all();
+    }
+  }
+
   void D3Device::PreUpdate(const float& dt) {}
 
   void D3Device::Update(const float& dt) {}
@@ -352,13 +376,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::FixedUpdate(const float& dt) {}
 
-  void D3Device::PostRender(const float& dt)
-  {
-    std::erase_if(m_command_pairs_generated_, [this](const CommandPair& pair)
-    {
-      return pair.GetLatestFenceValue() < m_fence_->GetCompletedValue();
-    });
-  }
+  void D3Device::PostRender(const float& dt) {}
 
   void D3Device::PostUpdate(const float& dt) {}
 
@@ -369,6 +387,7 @@ namespace Engine::Manager::Graphics
     InitializeDevice();
     InitializeCommandAllocator();
     InitializeFence();
+    InitializeConsumer();
 
     m_projection_matrix_ = XMMatrixPerspectiveFovLH
       (
@@ -430,56 +449,34 @@ namespace Engine::Manager::Graphics
     token.wait();
   }
 
-  void D3Device::ExecuteCommandList(const eCommandList list) const
-  {
-    DX::ThrowIfFailed(GetD3Device().GetCommandList(list)->Close());
-
-    ID3D12CommandList* lists[] = {GetD3Device().GetCommandList(list)};
-
-    GetD3Device().GetCommandQueue(list)->ExecuteCommandLists(1, lists);
-
-    GetD3Device().Signal(s_target_types[list]);
-  }
-
   float D3Device::GetAspectRatio()
   {
     return static_cast<float>(g_window_width) /
            static_cast<float>(g_window_height);
   }
 
-  CommandPair& D3Device::AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx)
+  Weak<CommandPair> D3Device::AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx)
   {
-    m_command_pairs_generated_.emplace_back(COMMAND_TYPE_DIRECT, ++m_command_ids_, debug_name);
-    return m_command_pairs_generated_.back();
+    if (buffer_idx == -1)
+    {
+      buffer_idx = m_frame_idx_;
+    }
+
+    std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
+    const UINT64                           next = ++m_command_ids_;
+
+    m_command_pairs_generated_[next] = boost::make_shared<CommandPair>(COMMAND_TYPE_DIRECT, m_command_ids_, buffer_idx, debug_name);
+    m_command_pairs_count_.fetch_add(1);
+
+    return m_command_pairs_generated_[next];
   }
 
   bool D3Device::IsCommandPairAvailable(UINT64 buffer_idx) const
   {
-    return m_command_pairs_generated_.size() < g_max_concurrent_command_lists;
+    return m_command_pairs_count_.load() < g_max_concurrent_command_lists;
   }
 
-  void D3Device::Flush()
-  {
-    if (m_command_pairs_generated_.empty())
-    {
-      return;
-    }
-
-    const auto& waiter = CommandPair::Execute(
-        m_command_pairs_generated_.data(), 
-        m_command_pairs_generated_.size());
-
-    waiter.Wait();
-
-    for (auto& pair : m_command_pairs_generated_)
-    {
-      pair.HardReset();
-    }
-
-    m_command_pairs_generated_.clear();
-  }
-
-  void      D3Device::WaitAndReset(const eCommandList list, UINT64 buffer_idx)
+  void      D3Device::WaitAndReset(const eCommandList list, UINT64 buffer_idx) const
   {
     if (buffer_idx == -1)
     {
@@ -488,9 +485,9 @@ namespace Engine::Manager::Graphics
 
     WaitForEventCompletion(buffer_idx);
 
-    auto& list_pair = m_command_pairs_.at(buffer_idx)[list];
+    const auto& list_pair = m_command_pairs_.at(buffer_idx)[list];
 
-    list_pair.SoftReset();
+    list_pair->SoftReset();
   }
 
   void D3Device::Wait(UINT64 buffer_idx) const
@@ -505,15 +502,55 @@ namespace Engine::Manager::Graphics
 
   void D3Device::WaitNextFrame()
   {
-    m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
+    const auto& next_idx = m_swap_chain_->GetCurrentBackBufferIndex();
 
-    DX::ThrowIfFailed(m_command_queues_[COMMAND_TYPE_DIRECT]->Signal(m_fence_.Get(), ++m_fence_nonce_[m_frame_idx_]));
+    m_fence_nonce_[next_idx] = GetFenceValue(m_frame_idx_);
 
-    WaitForEventCompletion(m_frame_idx_);
+    Signal(COMMAND_TYPE_DIRECT, next_idx);
+
+    WaitForEventCompletion(next_idx);
+
+    m_frame_idx_ = next_idx;
 
     for (int i = 0; i < COMMAND_LIST_COUNT; ++i)
     {
-      m_command_pairs_.at(m_frame_idx_)[i].HardReset();
+      m_command_pairs_[m_frame_idx_][i]->HardReset();
+    }
+  }
+
+  void D3Device::ConsumeCommands()
+  {
+    while (m_command_consumer_running_)
+    {
+      if (m_command_pairs_count_ == 0)
+      {
+        continue;
+      }
+
+      const auto& current = m_command_pairs_count_.load();
+      m_command_pairs_count_.wait(current + 1);
+
+      std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
+
+      const auto& it = m_command_pairs_generated_.begin();
+
+      if (it == m_command_pairs_generated_.end())
+      {
+        continue;
+      }
+
+      if (it->second->IsExecuted())
+      {
+        m_command_pairs_generated_.erase(it->first);
+        m_command_pairs_count_.fetch_sub(1);
+      }
+
+      if (it->second->IsReady())
+      {
+        it->second->Execute();
+        m_command_pairs_generated_.erase(it->first);
+        m_command_pairs_count_.fetch_sub(1);
+      }
     }
   }
 
