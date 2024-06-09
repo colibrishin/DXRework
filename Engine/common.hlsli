@@ -11,54 +11,34 @@
 SamplerState           PSSampler : register(s0);
 SamplerComparisonState PSShadowSampler : register(s1);
 
-RWTexture1D<float4>      uav00 : register(u0);
-RWTexture1D<float4>      uav01 : register(u1);
-RWTexture2D<float4>      uav02 : register(u2);
-RWTexture2D<float4>      uav03 : register(u3);
-RWTexture2DArray<float4> uavArr00 : register(u4);
-RWTexture2DArray<float4> uavArr01 : register(u5);
-RWStructuredBuffer<InstanceElement> uavInstance : register(u6);
+RWTexture1D<float4>              uav00 : register(u0);
+RWTexture1D<float4>              uav01 : register(u1);
+RWTexture2D<float4>              uav02 : register(u2);
+RWTexture2D<float4>              uav03 : register(u3);
+RWTexture2DArray<float4>         uavArr00 : register(u4);
+RWTexture2DArray<float4>         uavArr01 : register(u5);
+RWStructuredBuffer<ParamElement> uavInstance : register(u6);
 
-Texture2D      tex00 : register(t0);
-Texture2D      tex01 : register(t1);
-Texture2D      tex02 : register(t2);
-Texture2D      tex03 : register(t3);
-Texture2D      tex04 : register(t4);
-Texture2D      tex05 : register(t5);
-Texture2D      tex06 : register(t6);
-Texture2D      tex07 : register(t7);
-Texture2DArray texArr00 : register(t8);
-Texture2DArray texArr01 : register(t9);
-Texture2DArray texArr02 : register(t10);
-Texture2DArray texArr03 : register(t11);
-Texture2DArray texArr04 : register(t12);
-Texture2DArray texArr05 : register(t13);
-Texture2DArray texArr06 : register(t14);
-Texture2DArray texArr07 : register(t15);
-TextureCube    texCube00 : register(t16);
-TextureCube    texCube01 : register(t17);
-TextureCube    texCube02 : register(t18);
-TextureCube    texCube03 : register(t19);
-TextureCube    texCube04 : register(t20);
-TextureCube    texCube05 : register(t21);
-TextureCube    texCube06 : register(t22);
-TextureCube    texCube07 : register(t23);
-Texture1D      tex1d00 : register(t24);
-Texture1D      tex1d01 : register(t25);
-Texture1D      tex1d02 : register(t26);
-Texture1D      tex1d03 : register(t27);
-Texture1D      tex1d04 : register(t28);
-Texture1D      tex1d05 : register(t29);
-Texture1D      tex1d06 : register(t30);
-Texture1D      tex1d07 : register(t31);
-Texture2D      texRendered : register(t32);
-Texture3D      texAnimations : register(t33);
-Texture3D      texAtlases : register(t34);
-Texture2DArray texShadowMap[MAX_NUM_LIGHTS] : register(t35);
+Texture2D                              tex00 : register(t0);
+Texture2D                              tex01 : register(t1);
+Texture2D                              tex02 : register(t2);
+Texture2D                              tex03 : register(t3);
+Texture2DArray                         texArr00 : register(t4);
+Texture2DArray                         texArr01 : register(t5);
+TextureCube                            texCube00 : register(t6);
+TextureCube                            texCube01 : register(t7);
+Texture1D                              tex1d00 : register(t8);
+Texture1D                              tex1d01 : register(t9);
 
-StructuredBuffer<LightElement>         bufLight : register(t64);
-StructuredBuffer<CascadeShadowElement> bufLightVP : register(t65);
-StructuredBuffer<InstanceElement>      bufInstance : register(t66);
+StructuredBuffer<LightElement>         bufLight : register(t10);
+StructuredBuffer<CascadeShadowElement> bufLightVP : register(t11);
+StructuredBuffer<ParamElement>         bufInstance : register(t12);
+StructuredBuffer<ParamElement>         bufLocalParam : register(t13);
+StructuredBuffer<MaterialElement>      bufMaterial : register(t14);
+Texture2D                              texRendered : register(t15);
+Texture3D                              texAnimations : register(t16);
+Texture3D                              texAtlases : register(t17);
+Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t18);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -74,33 +54,13 @@ cbuffer PerspectiveBuffer : register(b0)
   matrix g_camReflectView;
 };
 
-cbuffer TransformBuffer : register(b1)
-{
-  matrix g_world;
-};
-
-cbuffer MaterialBuffer : register(b2)
-{
-  BindFlag g_bindFlag : BINDFLAG;
-
-  float g_specularPower : SPECULARPOWER;
-  float g_reflectionTranslation : REFTRANSLATION;
-  float g_reflectionScale : REFSCALE;
-  float g_refractionScale : REFRACTSCALE;
-
-  float4 g_overrideColor : OVERRIDECOLOR;
-  float4 g_specularColor : SPECULARCOLOR;
-  float4 g_clipPlane : CLIPPLANE;
-  int4   g_repeatMaterial : REPEATMATERIAL;
-}
-
-cbuffer ParamBuffer : register(b3)
+cbuffer ParamBuffer : register(b1)
 {
   float4 g_fParam[MAX_PARAM_TYPE_SLOTS];
   int4   g_iParam[MAX_PARAM_TYPE_SLOTS];
   float4 g_vParam[MAX_PARAM_TYPE_SLOTS];
   matrix g_mParam[MAX_PARAM_TYPE_SLOTS];
-}
+};
 
 float GetShadowFactorImpl(
   int    lightIndex, int cascadeIndex,

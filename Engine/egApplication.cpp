@@ -25,7 +25,8 @@ namespace Engine::Manager
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_previous_keyboard_state_(),
-      m_previous_mouse_state_()
+      m_previous_mouse_state_(),
+      m_imgui_descriptor_()
   {
     if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
@@ -123,7 +124,7 @@ namespace Engine::Manager
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
 
-    m_imgui_descriptor_ = std::make_unique<DescriptorPtr>(GetRenderPipeline().AcquireHeapSlot());
+    m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
 
     if constexpr (g_debug)
     {
@@ -292,30 +293,13 @@ namespace Engine::Manager
 
       if (!GetD3Device().IsCommandPairAvailable())
       {
-        GetD3Device().Flush();
+        throw std::runtime_error("Command Pair is not available for ImGui Rendering");
       }
 
       auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
 
-      D3D12_CPU_DESCRIPTOR_HANDLE rtv[]
-      {
-        GetRenderPipeline().GetCPURTVHandle()
-      };
-
-      D3D12_CPU_DESCRIPTOR_HANDLE dsv[]
-      {
-        GetRenderPipeline().GetCPUDSVHandle()
-      };
-
       cmd.SoftReset();
-
-      cmd.GetList()->OMSetRenderTargets
-      (
-          1,
-          rtv,
-          false,
-          dsv
-      );
+      GetRenderPipeline().DefaultRenderTarget(cmd);
 
       m_imgui_descriptor_->BindGraphic(cmd);
 
@@ -324,13 +308,10 @@ namespace Engine::Manager
           ImGui::GetDrawData(),
           cmd.GetList()
       );
-
-      const auto& waiter = cmd.Execute();
-      waiter.Wait();
     }
 
     GetReflectionEvaluator().PostRender(dt);
-    GetRenderPipeline().PostRender(dt); // present
+    GetRenderPipeline().PostRender(dt); // Wrap up command lists, present
     GetD3Device().PostRender(dt);
   }
 

@@ -113,85 +113,107 @@ namespace Engine::Graphics
          m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart()
         );
 
+      m_b_dirty_ = false;
     }
 
     void SetData(const T* src_data)
     {
-      GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+      if (src_data != nullptr)
+      {
+        m_data_ = *src_data;
+      }
 
-      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+      m_b_dirty_ = true;
+    }
 
-      const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition(
-          m_buffer_.Get(), 
-          D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, 
-          D3D12_RESOURCE_STATE_COPY_DEST);
-
-      cmd->ResourceBarrier(1, &copy_trans);
-
-      // Use upload buffer for synchronization.
-      ComPtr<ID3D12Resource> upload_buffer;
-
-      const auto&            upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-      const auto&            buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &upload_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &buffer_desc,
-          D3D12_RESOURCE_STATE_GENERIC_READ,
-          nullptr,
-          IID_PPV_ARGS(upload_buffer.GetAddressOf())
-         )
-        );
-
-      const auto         gen_type_name = std::string(typeid(T).name());
-      const auto         type_name     = std::wstring(gen_type_name.begin(), gen_type_name.end());
-      const std::wstring upload_buffer_name = type_name + L" Constant Buffer Upload Buffer";
-
-      DX::ThrowIfFailed(upload_buffer->SetName(upload_buffer_name.c_str()));
-
-      char* data = nullptr;
-
-      DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**
-      >(&data)));
-
-      std::memcpy(data, src_data, sizeof(T));
-
-      upload_buffer->Unmap(0, nullptr);
-
-      cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
-
-      const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-        );
-
-      cmd->ResourceBarrier(1, &cb_trans);
-
-      GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
-
-      GetGC().Track(upload_buffer);
+    T GetData() const
+    {
+      return m_data_;
     }
 
     void Bind(const DescriptorPtr& heap)
     {
-      heap.SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
+      if (m_b_dirty_)
+      {
+        GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+
+        const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+
+        const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_buffer_.Get(),
+           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+           D3D12_RESOURCE_STATE_COPY_DEST
+          );
+
+        cmd->ResourceBarrier(1, &copy_trans);
+
+        // Use upload buffer for synchronization.
+        ComPtr<ID3D12Resource> upload_buffer;
+
+        const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_size_);
+
+        DX::ThrowIfFailed
+          (
+           GetD3Device().GetDevice()->CreateCommittedResource
+           (
+            &upload_heap,
+            D3D12_HEAP_FLAG_NONE,
+            &buffer_desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(upload_buffer.GetAddressOf())
+           )
+          );
+
+        const auto         gen_type_name      = std::string(typeid(T).name());
+        const auto         type_name          = std::wstring(gen_type_name.begin(), gen_type_name.end());
+        const std::wstring upload_buffer_name = type_name + L" Constant Buffer Upload Buffer";
+
+        DX::ThrowIfFailed(upload_buffer->SetName(upload_buffer_name.c_str()));
+
+        char* data = nullptr;
+
+        DX::ThrowIfFailed(upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+        std::memcpy(data, &m_data_, sizeof(T));
+
+        upload_buffer->Unmap(0, nullptr);
+
+        cmd->CopyResource(m_buffer_.Get(), upload_buffer.Get());
+
+        const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
+          (
+           m_buffer_.Get(),
+           D3D12_RESOURCE_STATE_COPY_DEST,
+           D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+          );
+
+        cmd->ResourceBarrier(1, &cb_trans);
+
+        GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+
+        GetGC().Track(upload_buffer);
+
+        m_b_dirty_ = false;
+      }
+
+      heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }
 
   private:
+    T                            m_data_;
+    bool                         m_b_dirty_;
     ComPtr<ID3D12DescriptorHeap> m_cpu_cbv_heap_;
-    ComPtr<ID3D12Resource> m_buffer_;
-    UINT m_alignment_size_;
+    ComPtr<ID3D12Resource>       m_buffer_;
+    UINT                         m_alignment_size_;
 
   };
 
   template <typename T>
   ConstantBuffer<T>::ConstantBuffer()
+    : m_b_dirty_(false)
   {
     static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
 

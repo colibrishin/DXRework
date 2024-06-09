@@ -76,35 +76,45 @@ namespace Engine
   enum eTexBindSlot
   {
     BIND_SLOT_TEX     = 0,
-    BIND_SLOT_TEXARR  = BIND_SLOT_TEX + g_max_slot_per_texture,
-    BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + g_max_slot_per_texture,
-    BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + g_max_slot_per_texture,
-    BIND_SLOT_END     = BIND_SLOT_TEX1D + g_max_slot_per_texture,
-  };
-
-  enum eReservedTexBindSlot
-  {
-    RESERVED_RENDERED = BIND_SLOT_END,
-    RESERVED_BONES,
-    RESERVED_ATLAS,
-    RESERVED_SHADOW_MAP,
-    RESERVED_END = RESERVED_SHADOW_MAP + g_max_lights,
+    BIND_SLOT_TEXARR  = BIND_SLOT_TEX + 4,
+    BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + 2,
+    BIND_SLOT_TEX1D   = BIND_SLOT_TEXCUBE + 2,
+    BIND_SLOT_END     = BIND_SLOT_TEX1D + 2,
   };
 
   enum eSBType
   {
-    SB_TYPE_LIGHT = g_structured_buffer_start,
+    SB_TYPE_LIGHT = BIND_SLOT_END,
     SB_TYPE_LIGHT_VP,
     SB_TYPE_INSTANCE,
-    SB_TYPE_MAX
+    SB_TYPE_LOCAL_PARAM,
+    SB_TYPE_MATERIAL,
+    SB_TYPE_END
+  };
+
+  enum eReservedTexBindSlot
+  {
+    RESERVED_TEX_RENDERED = SB_TYPE_END,
+    RESERVED_TEX_BONES,
+    RESERVED_TEX_ATLAS,
+    RESERVED_TEX_SHADOW_MAP,
+    RESERVED_TEX_END = RESERVED_TEX_SHADOW_MAP + g_max_lights,
   };
 
   enum eTexUAVBindSlot
   {
     BIND_SLOT_UAV_TEX_1D = 0,
-    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + g_max_slot_per_uav,
-    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + g_max_slot_per_uav,
+    BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + 2,
+    BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + 2,
     BIND_SLOT_UAV_END,
+  };
+
+  enum eSBUAVType
+  {
+    SB_TYPE_UAV_INSTANCE = BIND_SLOT_UAV_END,
+    SB_TYPE_UAV_RESERVED_1,
+    SB_TYPE_UAV_RESERVED_2,
+    SB_TYPE_UAV_END,
   };
 
   static_assert(BIND_SLOT_UAV_END < 8);
@@ -112,8 +122,6 @@ namespace Engine
   enum eCBType
   {
     CB_TYPE_WVP = 0,
-    CB_TYPE_TRANSFORM,
-    CB_TYPE_MATERIAL,
     CB_TYPE_PARAM,
     CB_TYPE_END,
   };
@@ -128,13 +136,7 @@ namespace Engine
   enum eClientSBType : UINT;
   enum eClientSBUAVType : UINT;
 
-  enum eSBUAVType
-  {
-    SB_TYPE_UAV_INSTANCE = g_reserved_uav_slot,
-    SB_TYPE_UAV_END,
-  };
-
-  constexpr UINT g_max_engine_texture_slots = SB_TYPE_MAX;
+  constexpr UINT g_max_engine_texture_slots = RESERVED_TEX_END;
   constexpr UINT g_max_cb_slots = CB_TYPE_END;
   constexpr UINT g_max_uav_slots = SB_TYPE_UAV_END;
   constexpr UINT g_max_sampler_slots = SAMPLER_END;

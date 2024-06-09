@@ -80,7 +80,7 @@ namespace Engine::Manager
     std::unique_ptr<DX::StepTimer> m_timer;
 
     // ImGui Graphics
-    std::unique_ptr<DescriptorPtr> m_imgui_descriptor_;
+    DescriptorPtr m_imgui_descriptor_;
 
     // Check for Sigterm registration
     inline static bool s_instantiated_ = false;

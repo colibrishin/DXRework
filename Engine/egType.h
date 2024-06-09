@@ -54,7 +54,9 @@ namespace Engine
   struct CommandAwaiter;
   struct CommandPair;
   struct DescriptorHandler;
-  struct DescriptorPtr;
+  struct DescriptorPtrImpl;
+
+  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
 
   namespace Objects
   {
@@ -102,6 +104,9 @@ namespace Engine
     {
       struct InstanceSB;
       struct InstanceParticleSB;
+      struct LocalParamSB;
+      struct InstanceModelSB;
+      struct MaterialSB;
     } // namespace SBs
   } // namespace Graphic
 
@@ -290,6 +295,9 @@ namespace Engine
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
   using FrameIndex = UINT64;
+
+
+  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
 
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
