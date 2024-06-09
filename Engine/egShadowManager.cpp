@@ -31,15 +31,14 @@ namespace Engine::Manager::Graphics
     m_sb_light_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightSB>>();
     m_sb_light_vps_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightVPSB>>();
 
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Manager Initialization").lock();
 
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+    cmd->SoftReset();
 
-    m_sb_light_buffer_->Create(cmd, g_max_lights, nullptr);
-    m_sb_light_vps_buffer_->Create(cmd, g_max_lights, nullptr);
+    m_sb_light_buffer_->Create(cmd->GetList(), g_max_lights, nullptr);
+    m_sb_light_vps_buffer_->Create(cmd->GetList(), g_max_lights, nullptr);
 
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
-    GetD3Device().Wait();
+    cmd->FlagReady();
 
     // Render target for shadow map mask.
     m_shadow_map_mask_ = Resources::Texture2D
@@ -72,6 +71,16 @@ namespace Engine::Manager::Graphics
   {
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
+
+    m_local_param_buffers_.resize(m_lights_.size());
+
+    for (auto& buffer : m_local_param_buffers_)
+    {
+      if (!buffer)
+      {
+        buffer = boost::make_shared<StructuredBuffer<SBs::LocalParamSB>>();
+      }
+    }
   }
 
   void ShadowManager::Update(const float& dt) {}
@@ -82,14 +91,6 @@ namespace Engine::Manager::Graphics
     constexpr size_t light_slot = 0;
 
     // # Pass 1 : depth only, building shadow map
-
-    m_local_param_buffers_.clear();
-
-    const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Rendering");
-
-    cmd.SoftReset();
-
-    ClearShadowMaps(cmd);
 
     // Build light information structured buffer.
     std::vector<SBs::LightSB> light_buffer;
@@ -116,9 +117,10 @@ namespace Engine::Manager::Graphics
     GetRenderPipeline().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
 
     // If there is no light, it does not need to be updated.
-    if (light_buffer.empty()) { return; }
-
-    m_sb_light_buffer_->SetData(cmd.GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
+    if (light_buffer.empty())
+    {
+      return;
+    }
 
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
@@ -145,7 +147,14 @@ namespace Engine::Manager::Graphics
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
 
-      m_sb_light_vps_buffer_->SetData(cmd.GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Rendering").lock();
+
+      cmd->SoftReset();
+
+      ClearShadowMaps(cmd);
+
+      m_sb_light_buffer_->SetData(cmd->GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
+      m_sb_light_vps_buffer_->SetData(cmd->GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
       UINT idx = 0;
 
@@ -157,6 +166,8 @@ namespace Engine::Manager::Graphics
           BuildShadowMap(dt, cmd, light, idx++);
         }
       }
+
+      cmd->FlagReady();
     }
   }
 
@@ -176,14 +187,14 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(const float dt, const CommandPair& cmd, const StrongLight & light, const UINT light_idx)
+  void ShadowManager::BuildShadowMap(const float dt, const Weak<CommandPair>& w_cmd, const StrongLight & light, const UINT light_idx)
   {
+    const auto& cmd = w_cmd.lock();
+
     // Notify the light index to the shader.
     SBs::LocalParamSB local_param{};
     local_param.SetParam(0, static_cast<int>(light_idx));
-    StructuredBuffer<SBs::LocalParamSB> sb;
-    sb.Create(cmd.GetList(), 1, &local_param);
-    m_local_param_buffers_.emplace_back(sb);
+    m_local_param_buffers_[light_idx]->SetData(cmd->GetList(), 1, &local_param);
 
     GetRenderer().RenderPass
       (
@@ -196,34 +207,33 @@ namespace Engine::Manager::Graphics
 
          return true;
        }
-       , [this, light, light_idx, &sb](const CommandPair& c, const DescriptorPtr& h)
+       , [this, light, light_idx](const Weak<CommandPair>& wc, const DescriptorPtr& h)
        {
-         // Set viewport to the shadow map size.
-         c.GetList()->RSSetViewports(1, &m_viewport_);
+         const auto& c = wc.lock();
 
-         c.GetList()->RSSetScissorRects(1, &m_scissor_rect_);
+         // Set viewport to the shadow map size.
+         c->GetList()->RSSetViewports(1, &m_viewport_);
+
+         c->GetList()->RSSetScissorRects(1, &m_scissor_rect_);
 
          // Bind the shadow map shader.
-         c.GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
+         c->GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
 
          // It only needs to render the depth of the object from the light's point of view.
          // Swap the depth stencil to the each light's shadow map.
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
          m_shadow_map_mask_.Bind(c, dsv);
-         sb.BindSRVGraphic(c, h);
 
          h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
-         c.GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
+         c->GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
        },
-       [this, light, &sb](const CommandPair& c, const DescriptorPtr& h)
+       [this, light](const Weak<CommandPair>& c, const DescriptorPtr& h)
        {
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
          m_shadow_map_mask_.Unbind(c, dsv);
-
-         sb.UnbindSRVGraphic(c);
-       }, {m_sb_light_buffer_, m_sb_light_vps_buffer_}
+       }, {m_sb_light_buffer_, m_sb_light_vps_buffer_, m_local_param_buffers_[light_idx]}
       );
   }
 
@@ -351,8 +361,9 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  void ShadowManager::BindShadowMaps(const CommandPair& cmd, const DescriptorPtr& heap) const
+  void ShadowManager::BindShadowMaps(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const
   {
+    const auto& cmd = w_cmd.lock();
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> current_shadow_maps;
 
     for (const auto& buffer : m_shadow_texs_ | std::views::values)
@@ -365,7 +376,7 @@ namespace Engine::Manager::Graphics
          D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
         );
 
-      cmd.GetList()->ResourceBarrier(1, &srv_transition);
+      cmd->GetList()->ResourceBarrier(1, &srv_transition);
 
       current_shadow_maps.emplace_back(buffer.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
     }
@@ -384,8 +395,10 @@ namespace Engine::Manager::Graphics
     heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
   }
 
-  void ShadowManager::UnbindShadowMaps(const CommandPair& cmd) const
+  void ShadowManager::UnbindShadowMaps(const Weak<CommandPair>& w_cmd) const
   {
+    const auto& cmd = w_cmd.lock();
+
     for (const auto& buffer : m_shadow_texs_ | std::views::values)
     {
       buffer.Unbind(cmd, BIND_TYPE_SRV);
@@ -462,9 +475,11 @@ namespace Engine::Manager::Graphics
     m_scissor_rect_.bottom = g_max_shadow_map_size;
   }
 
-  void ShadowManager::ClearShadowMaps(const CommandPair& cmd)
+  void ShadowManager::ClearShadowMaps(const Weak<CommandPair>& w_cmd)
   {
-    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(cmd.GetList()); }
+    const auto& cmd = w_cmd.lock();
+
+    for (auto& tex : m_shadow_texs_ | std::views::values) { tex.Clear(cmd->GetList()); }
 
     constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
 
@@ -482,9 +497,9 @@ namespace Engine::Manager::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    cmd.GetList()->ResourceBarrier(1, &command_to_rtv);
+    cmd->GetList()->ResourceBarrier(1, &command_to_rtv);
 
-    cmd.GetList()->ClearRenderTargetView
+    cmd->GetList()->ClearRenderTargetView
       (
        m_shadow_map_mask_.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
        clear_color,
@@ -492,6 +507,6 @@ namespace Engine::Manager::Graphics
        nullptr
       );
 
-    cmd.GetList()->ResourceBarrier(1, &rtv_to_common);
+    cmd->GetList()->ResourceBarrier(1, &rtv_to_common);
   }
 } // namespace Engine::Manager::Graphics
