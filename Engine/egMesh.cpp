@@ -165,9 +165,9 @@ namespace Engine::Resources
 
     const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Mesh Load Command Pair").lock();
 
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+    cmd->SoftReset();
 
     const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
 
@@ -216,7 +216,7 @@ namespace Engine::Resources
     std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
     m_vertex_buffer_upload_->Unmap(0, nullptr);
 
-   cmd->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
+    cmd->GetList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
@@ -259,7 +259,7 @@ namespace Engine::Resources
     std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
     m_index_buffer_upload_->Unmap(0, nullptr);
 
-    cmd->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
+    cmd->GetList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
 
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -279,11 +279,11 @@ namespace Engine::Resources
        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
 
-    cmd->ResourceBarrier(1, &vtx_trans);
+    cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 
-    cmd->ResourceBarrier(1, &idx_trans);
+    cmd->GetList()->ResourceBarrier(1, &idx_trans);
 
-    GetD3Device().ExecuteCommandList(COMMAND_LIST_UPDATE);
+    cmd->FlagReady();
   }
 
   void Mesh::Load_CUSTOM() {}
