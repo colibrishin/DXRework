@@ -71,18 +71,19 @@ namespace Engine::Manager::Graphics
     ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
     [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1);
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1) const;
 
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const eCommandList list) const;
     ID3D12CommandQueue*               GetCommandQueue(eCommandTypes type) const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
-    [[nodiscard]] CommandPair& AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx = -1);
-    bool                       IsCommandPairAvailable(UINT64 buffer_idx = -1) const;
-    void                       Flush();
+    [[nodiscard]] Weak<CommandPair> AcquireCommandPair(
+      const std::wstring& debug_name, UINT64 buffer_idx = -1
+    );
+    bool                      IsCommandPairAvailable(UINT64 buffer_idx = -1) const;
 
-    void WaitAndReset(const eCommandList list, UINT64 buffer_idx = -1);
+    void WaitAndReset(const eCommandList list, UINT64 buffer_idx = -1) const;
     void Wait(UINT64 buffer_idx = -1) const;
     void Signal(const eCommandTypes type, UINT64 buffer_idx = -1) const;
 
@@ -91,12 +92,9 @@ namespace Engine::Manager::Graphics
         ID3D12Resource** res, 
         bool generate_mip) const;
 
-    void ExecuteCommandList(const eCommandList list) const;
-    
   private:
     friend struct SingletonDeleter;
     friend struct Engine::CommandPair;
-    friend struct Engine::CommandAwaiter;
     friend class RenderPipeline;
     friend class ToolkitAPI;
 
@@ -120,19 +118,21 @@ namespace Engine::Manager::Graphics
       COMMAND_TYPE_COMPUTE
     };
     
-    ~D3Device() override = default;
+    ~D3Device() override;
 
     D3Device() = default;
 
     void InitializeDevice();
     void InitializeCommandAllocator();
     void InitializeFence();
+    void InitializeConsumer();
+
 
     void WaitForEventCompletion(UINT64 buffer_idx) const;
-    
+    void WaitForCommandsCompletion();
     void WaitNextFrame();
+    void ConsumeCommands();
 
-  private:
     UINT64 GetFenceValue(UINT64 buffer_idx = -1) const;
 
     HWND m_hwnd_ = nullptr;
@@ -154,9 +154,18 @@ namespace Engine::Manager::Graphics
     std::atomic<UINT64>              m_command_ids_ = 0;
     UINT64 m_frame_idx_ = 0;
 
-    std::map<FrameIndex, std::vector<CommandPair>>             m_command_pairs_           = {};
-    std::vector<CommandPair>                                   m_command_pairs_generated_ = {};
-    std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_          = {};
+    std::map<FrameIndex, std::vector<Strong<CommandPair>>>     m_command_pairs_;
+    std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_;
+
+    std::mutex                            m_command_pairs_mutex_;
+    std::map<UINT64, Strong<CommandPair>> m_command_pairs_generated_;
+    std::atomic<UINT64>                   m_command_pairs_count_ = 0;
+
+    std::thread                  m_command_consumer_;
+    std::atomic<bool>            m_command_consumer_running_ = false;
+
+    std::mutex                   m_command_producer_mutex_;
+    std::condition_variable      m_command_producer_cv_;
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
