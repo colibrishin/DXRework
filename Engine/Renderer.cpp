@@ -276,6 +276,8 @@ namespace Engine::Manager::Graphics
       );
 
     material->Draw(dt, cmd, heap);
+
+    m_tmp_instance_buffers_[idx].TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
   }
 
   void Renderer::preMappingModel(const StrongRenderComponent& rc)
