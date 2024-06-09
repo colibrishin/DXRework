@@ -156,6 +156,11 @@ namespace Engine::Manager::Graphics
       m_sb_light_buffer_->SetData(cmd->GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
       m_sb_light_vps_buffer_->SetData(cmd->GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
+      ComPtr<ID3D11RenderTargetView> prev_rtv = nullptr;
+      ComPtr<ID3D11DepthStencilView> prev_dsv = nullptr;
+
+      GetD3Device().GetContext()->OMGetRenderTargets(1, prev_rtv.GetAddressOf(), prev_dsv.GetAddressOf());
+
       UINT idx = 0;
 
       for (const auto& ptr_light : m_lights_ | std::views::values)

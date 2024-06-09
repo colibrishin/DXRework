@@ -108,7 +108,7 @@ namespace Engine
     BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + 2,
     BIND_SLOT_UAV_END,
   };
-
+    
   enum eSBUAVType
   {
     SB_TYPE_UAV_INSTANCE = BIND_SLOT_UAV_END,

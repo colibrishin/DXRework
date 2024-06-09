@@ -283,7 +283,7 @@ namespace Client::Scripts
           return;
         }
       }
-
+      
       const float x_count = half_scale.x / x_step;
       const float y_count = half_scale.y / y_step;
       const float z_count = half_scale.z / z_step;

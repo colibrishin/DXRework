@@ -48,6 +48,7 @@ namespace Engine::Resources
   eResourceType AtlasAnimationTexture::GetResourceType() const { return RES_T_ATLAS_TEX; }
 
   void AtlasAnimationTexture::loadDerived(ComPtr<ID3D12Resource>& res)
+
   {
     const UINT num_atlases = static_cast<UINT>(m_atlases_.size());
 

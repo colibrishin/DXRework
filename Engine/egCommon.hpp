@@ -104,6 +104,7 @@ namespace Engine
            g_epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
   }
 
+
  static bool __vectorcall Vector3Compare(const Vector3& lhs, const Vector3& rhs)
   {
     return FloatCompare(lhs.x, rhs.x) && FloatCompare(lhs.y, rhs.y) && FloatCompare(lhs.z, rhs.z);

@@ -290,7 +290,7 @@ namespace Engine::Manager
     if constexpr (g_debug)
     {
       ImGui::Render();
-
+      
       if (!GetD3Device().IsCommandPairAvailable())
       {
         throw std::runtime_error("Command Pair is not available for ImGui Rendering");

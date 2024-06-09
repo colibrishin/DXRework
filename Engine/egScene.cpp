@@ -242,6 +242,11 @@ namespace Engine
               m_main_actor_ = locked;
             }
 
+            if (locked->GetLocalID() == m_main_actor_local_id_)
+            {
+              m_main_actor_ = locked;
+            }
+
             for (const auto& comp : locked->GetAllComponents())
             {
               if (const auto locked_comp = comp.lock())
@@ -282,6 +287,30 @@ namespace Engine
         DisableControllers();
         AddObserver();
       }
+    }
+  }
+
+  void Scene::ChangeLayer(const eLayerType to, const GlobalEntityID id)
+  {
+    if (const auto& obj = FindGameObject(id).lock())
+    {
+      if (obj->GetLayer() == to) return;
+
+      GetTaskScheduler().AddTask
+        (
+         TASK_CHANGE_LAYER,
+         {GetSharedPtr<Scene>(), obj->GetSharedPtr<Abstract::ObjectBase>(),to},
+         [this](const std::vector<std::any>& args, const float)
+         {
+           const auto scene = std::any_cast<StrongScene>(args[0]);
+           const auto obj   = std::any_cast<StrongObjectBase>(args[1]);
+           const auto layer = std::any_cast<eLayerType>(args[2]);
+
+           (*scene)[obj->GetLayer()]->RemoveGameObject(obj->GetID());
+           (*scene)[layer]->AddGameObject(obj);
+           obj->SetLayer(layer);
+         }
+        );
     }
   }
 
