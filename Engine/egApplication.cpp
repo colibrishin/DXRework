@@ -283,9 +283,9 @@ namespace Engine::Manager
     GetProjectionFrustum().PostRender(dt);
     GetDebugger().PostRender(dt); // gather information until render
 
-    GetRenderer().PostRender(dt); // post render commands
+    GetRenderer().PostRender(dt);
     GetToolkitAPI().PostRender(dt); // toolkit related render commands
-    GetShadowManager().PostRender(dt); // commanding shadow resource reset
+    GetShadowManager().PostRender(dt);
 
     if constexpr (g_debug)
     {
@@ -296,18 +296,22 @@ namespace Engine::Manager
         throw std::runtime_error("Command Pair is not available for ImGui Rendering");
       }
 
-      const auto cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering");
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering").lock();
 
-      cmd.SoftReset();
+      cmd->SoftReset();
       GetRenderPipeline().DefaultRenderTarget(cmd);
-
+      GetRenderPipeline().DefaultScissorRect(cmd);
+      GetRenderPipeline().DefaultViewport(cmd);
+      
       m_imgui_descriptor_->BindGraphic(cmd);
 
       ImGui_ImplDX12_RenderDrawData
       (
           ImGui::GetDrawData(),
-          cmd.GetList()
+          cmd->GetList()
       );
+
+      cmd->FlagReady();
     }
 
     GetReflectionEvaluator().PostRender(dt);
