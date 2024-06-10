@@ -71,7 +71,7 @@ namespace Engine::Manager::Graphics
     D3D12_VIEWPORT              GetViewport() const;
     D3D12_RECT                  GetScissorRect() const;
 
-    static void SetPSO(const CommandPair & cmd, const StrongShader & Shader);
+    static void SetPSO(const Weak<CommandPair> & w_cmd, const StrongShader & Shader);
 
     [[nodiscard]] DescriptorPtr AcquireHeapSlot();
     [[nodiscard]] bool          IsHeapAvailable() const;

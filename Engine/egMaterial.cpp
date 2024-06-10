@@ -214,9 +214,10 @@ namespace Engine::Resources
     std::iter_swap(texs.begin() + slot, it);
   }
 
-  void Material::Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap)
+  void Material::Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap)
   {
     const auto& cmd = w_cmd.lock();
+    const auto& heap = w_heap.lock();
 
     heap->BindGraphic(cmd);
 
