@@ -55,7 +55,8 @@ namespace Engine
   struct DescriptorHandler;
   struct DescriptorPtrImpl;
 
-  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
+  using StrongDescriptorPtr = boost::shared_ptr<DescriptorPtrImpl>;
+  using DescriptorPtr = boost::weak_ptr<DescriptorPtrImpl>;
 
   namespace Objects
   {
