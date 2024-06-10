@@ -65,6 +65,8 @@ namespace Engine::Manager::Graphics
 
     GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_buffer_);
     GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_vps_buffer_);
+
+    m_local_param_buffers_.resize(g_max_lights);
   }
 
   void ShadowManager::PreUpdate(const float& dt)
@@ -81,6 +83,13 @@ namespace Engine::Manager::Graphics
         buffer = boost::make_shared<StructuredBuffer<SBs::LocalParamSB>>();
       }
     }
+
+    for (const auto& heap : m_shadow_descriptor_heap_)
+    {
+      heap->Release();
+    }
+
+    m_shadow_descriptor_heap_.clear();
   }
 
   void ShadowManager::Update(const float& dt) {}
@@ -158,12 +167,16 @@ namespace Engine::Manager::Graphics
 
       UINT idx = 0;
 
+      UINT64 container_it = 0;
+
+      m_shadow_instance_buffer_.resize(GetRenderer().GetInstanceCount() * m_lights_.size());
+
       for (const auto& ptr_light : m_lights_ | std::views::values)
       {
         if (const auto light = ptr_light.lock())
         {
           // Render the depth of the object from the light's point of view.
-          BuildShadowMap(dt, cmd, light, idx++);
+          container_it = BuildShadowMap(dt, container_it, cmd, light, idx++);
         }
       }
 
@@ -187,7 +200,7 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  void ShadowManager::BuildShadowMap(const float dt, const Weak<CommandPair>& w_cmd, const StrongLight & light, const UINT light_idx)
+  UINT64 ShadowManager::BuildShadowMap(const float dt, const UINT64 container_idx, const Weak<CommandPair>& w_cmd, const StrongLight & light, const UINT light_idx)
   {
     const auto& cmd = w_cmd.lock();
 
@@ -196,26 +209,26 @@ namespace Engine::Manager::Graphics
     local_param.SetParam(0, static_cast<int>(light_idx));
     m_local_param_buffers_[light_idx]->SetData(cmd->GetList(), 1, &local_param);
 
-    GetRenderer().RenderPass
+    return GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
        cmd,
-       [this](const StrongObjectBase& obj)
+       container_idx, 
+          m_shadow_descriptor_heap_,
+       m_shadow_instance_buffer_, // todo: Instance data can be reused if it is re-rendering case?
+          [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
          return true;
-       }
-       , [this, light, light_idx](const Weak<CommandPair>& wc, const DescriptorPtr& h)
+       }, [this, light, light_idx](const Weak<CommandPair>& wc, const DescriptorPtr& wh)
        {
          const auto& c = wc.lock();
 
          // Set viewport to the shadow map size.
          c->GetList()->RSSetViewports(1, &m_viewport_);
-
          c->GetList()->RSSetScissorRects(1, &m_scissor_rect_);
-
          // Bind the shadow map shader.
          c->GetList()->SetPipelineState(m_shadow_shader_->GetPipelineState());
 
@@ -224,11 +237,12 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
          m_shadow_map_mask_.Bind(c, dsv);
 
+         const auto& h = wh.lock();
+
          h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
 
          c->GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
-       },
-       [this, light](const Weak<CommandPair>& c, const DescriptorPtr& h)
+       }, [this, light](const Weak<CommandPair>& c, const DescriptorPtr& h)
        {
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
@@ -361,9 +375,10 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  void ShadowManager::BindShadowMaps(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const
+  void ShadowManager::BindShadowMaps(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap) const
   {
     const auto& cmd = w_cmd.lock();
+    const auto& heap = w_heap.lock();
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> current_shadow_maps;
 
     for (const auto& buffer : m_shadow_texs_ | std::views::values)
@@ -390,8 +405,9 @@ namespace Engine::Manager::Graphics
       );
   }
 
-  void ShadowManager::BindShadowSampler(const DescriptorPtr& heap) const
+  void ShadowManager::BindShadowSampler(const DescriptorPtr& w_heap) const
   {
+    const auto& heap = w_heap.lock();
     heap->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
   }
 

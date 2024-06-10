@@ -24,6 +24,6 @@ namespace Engine::Manager::Graphics
     ~ImGuiManager() override;
 
     // ImGui Graphics
-    DescriptorPtr m_imgui_descriptor_;
+    StrongDescriptorPtr m_imgui_descriptor_;
   };
 } // namespace Engine::Manager::Graphics

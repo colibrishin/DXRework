@@ -28,27 +28,37 @@ namespace Engine::Manager::Graphics
 
     void AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase> & sb_ptr);
 
-    bool Ready() const;
-    void RenderPass(
-      const float dt,
-      eShaderDomain domain,
-      bool shader_bypass,
-      const Weak<CommandPair> &cmd, const std::function<bool(const StrongObjectBase&)> &predicate, const std::function
-      <void(const Weak<CommandPair>&, const DescriptorPtr&)> &initial_setup, const std::function<void(const Weak<
-        CommandPair>&, const DescriptorPtr&)> &post_setup, const std::vector<Weak<StructuredBufferBase>> &
-      additional_structured_buffers
+    bool   Ready() const;
+    UINT64 RenderPass(
+      const float                                    dt,
+      const eShaderDomain                            domain,
+      bool                                           shader_bypass,
+      const Weak<CommandPair>&                       w_cmd,
+      const UINT64                                   begin_idx,
+      DescriptorContainer&                           descriptor_heap_container,
+      InstanceBufferContainer&                       instance_buffer_container,
+      const ObjectPredication&                       predicate,
+      const CommandDescriptorLambda&                 initial_setup,
+      const CommandDescriptorLambda&                 post_setup,
+      const std::vector<Weak<StructuredBufferBase>>& additional_structured_buffers
     );
+
+    UINT64 GetInstanceCount() const;
 
   private:
     friend struct SingletonDeleter;
     ~Renderer() override = default;
 
     void renderPassImpl(
-      const float   dt,
-      const UINT64  idx,
-      eShaderDomain domain,
-      bool          shader_bypass, const StrongMaterial & material, const Weak<CommandPair>
-      &             w_cmd, const DescriptorPtr &          heap, const std::vector<SBs::InstanceSB> & structured_buffers
+      const float                         dt,
+      const UINT64                        idx,
+      eShaderDomain                       domain,
+      bool                                shader_bypass,
+      InstanceBufferContainer&            instance_buffers,
+      const StrongMaterial&               material,
+      const Weak<CommandPair>&            w_cmd,
+      const DescriptorPtr&                heap,
+      const std::vector<SBs::InstanceSB>& structured_buffers
     );
 
     void preMappingModel(const StrongRenderComponent& rc);
@@ -58,7 +68,10 @@ namespace Engine::Manager::Graphics
 
     std::vector<Weak<StructuredBufferBase>> m_additional_structured_buffers_;
     tbb::concurrent_vector<StructuredBuffer<SBs::InstanceSB>> m_tmp_instance_buffers_;
-    tbb::concurrent_vector<DescriptorPtr> m_tmp_descriptor_heaps_;
+    tbb::concurrent_vector<StrongDescriptorPtr> m_tmp_descriptor_heaps_;
+
+    std::atomic<UINT64> m_instance_count_;
+    std::atomic<UINT64> m_current_instance_;
 
     RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
   };

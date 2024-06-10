@@ -55,7 +55,8 @@ namespace Engine
   struct DescriptorHandler;
   struct DescriptorPtrImpl;
 
-  using DescriptorPtr = std::unique_ptr<DescriptorPtrImpl>;
+  using StrongDescriptorPtr = boost::shared_ptr<DescriptorPtrImpl>;
+  using DescriptorPtr = boost::weak_ptr<DescriptorPtrImpl>;
 
   namespace Objects
   {
@@ -292,8 +293,12 @@ namespace Engine
   extern Manager::Graphics::Renderer&            GetRenderer();
   extern Manager::Graphics::ImGuiManager&        GetImGuiManager();
 
-  using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
   using FrameIndex = UINT64;
+
+  using DescriptorContainer = tbb::concurrent_vector<StrongDescriptorPtr>;
+  using InstanceBufferContainer = tbb::concurrent_vector<Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>>;
+  using ObjectPredication = std::function<bool(const StrongObjectBase&)>;
+  using CommandDescriptorLambda = std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>;
 
   // Unwrapping template type (e.g., std::shared_ptr<T> -> T)
   template <typename WrapT>

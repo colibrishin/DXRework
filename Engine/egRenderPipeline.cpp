@@ -765,11 +765,12 @@ namespace Engine::Manager::Graphics
     return m_scissor_rect_;
   }
 
-  void RenderPipeline::SetPSO(const CommandPair& cmd, const StrongShader& Shader)
+  void RenderPipeline::SetPSO(const Weak<CommandPair>& w_cmd, const StrongShader& Shader)
   {
+    const auto& cmd = w_cmd.lock();
     const auto& shader_pso = Shader->GetPipelineState();
 
-    cmd.GetList()->SetPipelineState(shader_pso);
+    cmd->GetList()->SetPipelineState(shader_pso);
   }
 
   DescriptorPtr RenderPipeline::AcquireHeapSlot()
