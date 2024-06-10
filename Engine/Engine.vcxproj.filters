@@ -272,7 +272,7 @@
     <Filter Include="Low-level\ConstantBuffer">
       <UniqueIdentifier>{db6845a7-9ef8-41c5-bbcd-3f52e2fd2760}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Singleton\Graphics\GarbageCollector">
+    <Filter Include="Singleton\Graphics\ImGuiManager">
       <UniqueIdentifier>{f76ac2b5-1390-4855-8aa0-e707739425ec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -547,8 +547,8 @@
     <ClInclude Include="egConstantBuffer.hpp">
       <Filter>Low-level\ConstantBuffer</Filter>
     </ClInclude>
-    <ClInclude Include="egGarbageCollector.h">
-      <Filter>Singleton\Graphics\GarbageCollector</Filter>
+    <ClInclude Include="egImGuiManager.h">
+      <Filter>Singleton\Graphics\ImGuiManager</Filter>
     </ClInclude>
     <ClInclude Include="egDescriptors.h">
       <Filter>Common\DX</Filter>
@@ -782,8 +782,8 @@
     <ClCompile Include="egAtlasAnimationTexture.cpp">
       <Filter>Resource\Textures\AtlasAnimationTexture</Filter>
     </ClCompile>
-    <ClCompile Include="egGarbageCollector.cpp">
-      <Filter>Singleton\Graphics\GarbageCollector</Filter>
+    <ClCompile Include="egImGuiManager.cpp">
+      <Filter>Singleton\Graphics\ImGuiManager</Filter>
     </ClCompile>
     <ClCompile Include="egDescriptors.cpp">
       <Filter>Common\DX</Filter>

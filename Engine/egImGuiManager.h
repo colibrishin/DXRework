@@ -3,12 +3,12 @@
 
 namespace Engine::Manager::Graphics
 {
-  class GarbageCollector final : public Abstract::Singleton<GarbageCollector>
+  class ImGuiManager final : public Abstract::Singleton<ImGuiManager, HWND>
   {
   public:
-    explicit GarbageCollector(SINGLETON_LOCK_TOKEN) {}
+    explicit ImGuiManager(SINGLETON_LOCK_TOKEN) {}
 
-    void Initialize() override;
+    void Initialize(HWND hwnd) override;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void PreRender(const float& dt) override;
@@ -17,12 +17,13 @@ namespace Engine::Manager::Graphics
     void FixedUpdate(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
-    void Track(const ComPtr<ID3D12Resource>& resource);
+    void NewFrame() const;
 
   private:
     friend struct SingletonDeleter;
-    ~GarbageCollector() override = default;
+    ~ImGuiManager() override;
 
-    std::vector<std::pair<UINT64, ComPtr<ID3D12Resource>>> m_track_objects_;
+    // ImGui Graphics
+    DescriptorPtr m_imgui_descriptor_;
   };
 } // namespace Engine::Manager::Graphics

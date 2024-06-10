@@ -25,8 +25,7 @@ namespace Engine::Manager
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_previous_keyboard_state_(),
-      m_previous_mouse_state_(),
-      m_imgui_descriptor_()
+      m_previous_mouse_state_()
   {
     if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
@@ -75,14 +74,7 @@ namespace Engine::Manager
 
   Application::~Application()
   {
-    if (g_debug)
-    {
-      ImGui_ImplDX12_Shutdown();
-      ImGui_ImplWin32_Shutdown();
-      ImGui::DestroyContext();
-    }
-    
-    Graphics::D3Device::DEBUG_MEMORY();
+    SIGTERM();
   }
 
   void Application::Initialize(HWND hWnd)
@@ -93,52 +85,25 @@ namespace Engine::Manager
     m_timer = std::make_unique<DX::StepTimer>();
     UpdateWindowSize(hWnd);
 
-    if constexpr (g_debug)
-    {
-      IMGUI_CHECKVERSION();
-      ImGui::CreateContext();
-      ImGuiIO& io = ImGui::GetIO();
-      io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-      io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-    }
-
-    GetD3Device().Initialize(hWnd);
-    GetToolkitAPI().Initialize();
-    GetRenderPipeline().Initialize();
-
     GetResourceManager().Initialize();
     GetSceneManager().Initialize();
-    GetDebugger().Initialize();
     GetTaskScheduler().Initialize();
-    GetShadowManager().Initialize();
     GetMouseManager().Initialize();
     GetProjectionFrustum().Initialize();
-    GetRenderer().Initialize();
-    GetShadowManager().Initialize();
-    GetReflectionEvaluator().Initialize();
     GetCollisionDetector().Initialize();
     GetLerpManager().Initialize();
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
 
-    m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
-
-    if constexpr (g_debug)
-    {
-      ImGui_ImplWin32_Init(hWnd);
-
-      ImGui_ImplDX12_Init
-        (
-         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
-         m_imgui_descriptor_->GetMainDescriptorHeap(),
-         m_imgui_descriptor_->GetCPUHandle(),
-         m_imgui_descriptor_->GetGPUHandle()
-        );
-    }
-    
+    GetD3Device().Initialize(hWnd);
+    GetRenderPipeline().Initialize();
+    GetToolkitAPI().Initialize();
+    GetShadowManager().Initialize();
+    GetReflectionEvaluator().Initialize();
+    GetImGuiManager().Initialize(hWnd);
+    GetDebugger().Initialize();
+    GetRenderer().Initialize();
   }
 
   void Application::Tick()
@@ -149,8 +114,6 @@ namespace Engine::Manager
   void Application::PreUpdate(const float& dt)
   {
     GetToolkitAPI().PreUpdate(dt);
-    GetGC().PreUpdate(dt);
-
     GetTaskScheduler().PreUpdate(dt);
     GetMouseManager().PreUpdate(dt);
     GetCollisionDetector().PreUpdate(dt);
@@ -287,32 +250,7 @@ namespace Engine::Manager
     GetToolkitAPI().PostRender(dt); // toolkit related render commands
     GetShadowManager().PostRender(dt);
 
-    if constexpr (g_debug)
-    {
-      ImGui::Render();
-      
-      if (!GetD3Device().IsCommandPairAvailable())
-      {
-        throw std::runtime_error("Command Pair is not available for ImGui Rendering");
-      }
-
-      const auto& cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering").lock();
-
-      cmd->SoftReset();
-      GetRenderPipeline().DefaultRenderTarget(cmd);
-      GetRenderPipeline().DefaultScissorRect(cmd);
-      GetRenderPipeline().DefaultViewport(cmd);
-      
-      m_imgui_descriptor_->BindGraphic(cmd);
-
-      ImGui_ImplDX12_RenderDrawData
-      (
-          ImGui::GetDrawData(),
-          cmd->GetList()
-      );
-
-      cmd->FlagReady();
-    }
+    GetImGuiManager().PostRender(dt);
 
     GetReflectionEvaluator().PostRender(dt);
     GetRenderPipeline().PostRender(dt); // Wrap up command lists, present
@@ -347,12 +285,7 @@ namespace Engine::Manager
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
     const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
 
-    if constexpr (g_debug)
-    {
-      ImGui_ImplDX12_NewFrame();
-      ImGui_ImplWin32_NewFrame();
-      ImGui::NewFrame();
-    }
+    GetImGuiManager().NewFrame();
 
     PreUpdate(dt);
     Update(dt);
@@ -376,23 +309,28 @@ namespace Engine::Manager
 
   void Application::SIGTERM()
   {
-    GetTaskScheduler().Destroy();
-    GetMouseManager().Destroy();
-    GetCollisionDetector().Destroy();
-    GetReflectionEvaluator().Destroy();
-    GetSceneManager().Destroy();
-    GetResourceManager().Destroy();
-    GetGraviton().Destroy();
-    GetConstraintSolver().Destroy();
-    GetPhysicsManager().Destroy();
-    GetLerpManager().Destroy();
-    GetProjectionFrustum().Destroy();
-    GetRenderer().Destroy();
-    GetShadowManager().Destroy();
-    GetDebugger().Destroy();
-    GetD3Device().Destroy();
-    GetToolkitAPI().Destroy();
-    GetApplication().Destroy();
+    TaskScheduler::Destroy();
+    MouseManager::Destroy();
+    Physics::CollisionDetector::Destroy();
+    SceneManager::Destroy();
+    ResourceManager::Destroy();
+    Physics::Graviton::Destroy();
+    Physics::ConstraintSolver::Destroy();
+    Physics::PhysicsManager::Destroy();
+    Physics::LerpManager::Destroy();
+    ProjectionFrustum::Destroy();
+
+    Graphics::ImGuiManager::Destroy();
+    Graphics::ReflectionEvaluator::Destroy();
+    Graphics::Renderer::Destroy();
+    Graphics::ShadowManager::Destroy();
+    Debugger::Destroy();
+    Graphics::ToolkitAPI::Destroy();
+    Graphics::ImGuiManager::Destroy();
+    Graphics::RenderPipeline::Destroy();
+    Graphics::D3Device::Destroy();
+
+    Graphics::D3Device::DEBUG_MEMORY();
   }
 
   LRESULT Application::MessageHandler(
