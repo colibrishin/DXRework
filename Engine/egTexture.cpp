@@ -87,16 +87,82 @@ namespace Engine::Resources
     cmd->GetList()->ResourceBarrier(1, &dsv_transition_back);
   }
 
-  void Texture::Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const UINT offset) const
+  void Texture::Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as)
   {
-    Bind(w_cmd.lock()->GetList(), heap, type, slot, offset);
+    if (as == D3D12_RESOURCE_STATE_RENDER_TARGET)
+    {
+      constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
+
+      const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRawResoruce(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+
+      const auto& transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRawResoruce(),
+         D3D12_RESOURCE_STATE_RENDER_TARGET,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      cmd->ResourceBarrier(1, &transition);
+
+      cmd->ClearRenderTargetView
+        (
+         GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+         clear_color,
+         0,
+         nullptr
+        );
+
+      cmd->ResourceBarrier(1, &transition_back);
+    }
+    else if (as == D3D12_RESOURCE_STATE_DEPTH_WRITE)
+    {
+      const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRawResoruce(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_DEPTH_WRITE
+        );
+
+      const auto& transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRawResoruce(),
+         D3D12_RESOURCE_STATE_DEPTH_WRITE,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      cmd->ResourceBarrier(1, &transition);
+
+      cmd->ClearDepthStencilView
+        (
+         GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+         D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+         1.f,
+         0,
+         0,
+         nullptr
+        );
+
+      cmd->ResourceBarrier(1, &transition_back);
+    }
+  }
+
+  void Texture::Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap, const eBindType type, const UINT slot, const UINT offset) const
+  {
+    Bind(w_cmd.lock()->GetList(), w_heap, type, slot, offset);
   }
 
   void Texture::Bind(
-    ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& heap, const eBindType type, const UINT slot,
+    ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& w_heap, const eBindType type, const UINT slot,
     const UINT offset
   ) const
   {
+    const auto& heap = w_heap.lock();
+
     const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_res_.Get(),

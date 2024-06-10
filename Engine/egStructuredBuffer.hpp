@@ -393,8 +393,10 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::CopySRVHeap(const DescriptorPtr& heap)
+  void StructuredBuffer<T>::CopySRVHeap(const DescriptorPtr& w_heap)
   {
+    const auto& heap = w_heap.lock();
+
     if constexpr (is_client_sb<T>::value == true)
     {
       heap->SetShaderResource
@@ -414,8 +416,10 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::CopyUAVHeap(const DescriptorPtr& heap)
+  void StructuredBuffer<T>::CopyUAVHeap(const DescriptorPtr& w_heap)
   {
+    const auto& heap = w_heap.lock();
+
     if constexpr (is_client_uav_sb<T>::value == true)
     {
       heap->SetUnorderedAccess

@@ -79,6 +79,8 @@ namespace Engine::Resources
     void Unbind(const eCommandList list, const Texture& dsv) const;
     void Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
 
+    void Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as);
+
     RESOURCE_SELF_INFER_GETTER(Texture)
 
   protected:
@@ -131,8 +133,6 @@ namespace Engine::Resources
     // Non-serialized
     bool                             m_b_lazy_window_;
     ComPtr<ID3D12Resource>           m_upload_buffer_;
-
-    RTVDSVHandlePair                 m_previous_handles_;
 
   };
 } // namespace Engine::Resources

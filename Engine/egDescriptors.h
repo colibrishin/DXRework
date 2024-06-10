@@ -18,6 +18,7 @@ namespace Engine
     ~DescriptorPtrImpl();
 
     [[nodiscard]] bool IsValid() const { return m_offset_ != -1; }
+    void Release() const;
 
     [[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap() const;
 
@@ -65,7 +66,8 @@ namespace Engine
   struct DescriptorHandler final
   {
   public:
-    DescriptorHandler();
+    void UpdateHeaps(UINT size);
+    DescriptorHandler(const UINT size);
 
     DescriptorPtr Acquire();
     void          Release(const DescriptorPtrImpl& handles);
@@ -75,7 +77,9 @@ namespace Engine
     [[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap() const { return m_main_sampler_descriptor_heap_.Get(); }
 
   private:
-    std::array<std::atomic<bool>, g_max_concurrent_command_lists> m_used_slots_;
+    UINT m_size_;
+    std::vector<bool> m_used_slots_;
+    std::vector<Strong<DescriptorPtrImpl>> m_descriptors_;
 
     ComPtr<ID3D12DescriptorHeap> m_main_descriptor_heap_;
     ComPtr<ID3D12DescriptorHeap> m_main_sampler_descriptor_heap_;

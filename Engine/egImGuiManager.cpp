@@ -7,7 +7,7 @@ namespace Engine::Manager::Graphics
   {
     if constexpr (g_debug)
     {
-      m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
+      m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot().lock();
 
       IMGUI_CHECKVERSION();
       ImGui::CreateContext();

@@ -50,8 +50,9 @@ namespace Engine::Manager::Graphics
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
 
-    void BuildShadowMap(const float dt, const Weak<CommandPair> &w_cmd, const StrongLight &light, const UINT light_idx);
-    void ClearShadowMaps(const Weak<CommandPair> & w_cmd);
+    UINT64 BuildShadowMap(const float dt, const UINT64 container_idx, const Weak<CommandPair> &w_cmd, const StrongLight &light, const UINT
+                          light_idx);
+    void   ClearShadowMaps(const Weak<CommandPair> & w_cmd);
 
     static void CreateSubfrusta(
       const Matrix& projection, float start, float end,
@@ -78,6 +79,9 @@ namespace Engine::Manager::Graphics
 
     D3D12_VIEWPORT m_viewport_;
     D3D12_RECT     m_scissor_rect_;
+
+    DescriptorContainer     m_shadow_descriptor_heap_;
+    InstanceBufferContainer m_shadow_instance_buffer_;
 
     Resources::Texture2D m_shadow_map_mask_;
 

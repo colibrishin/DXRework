@@ -127,7 +127,7 @@ namespace Engine::Graphics
       return m_data_;
     }
 
-    void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap)
+    void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap)
     {
       if (m_b_dirty_)
       {
@@ -161,6 +161,8 @@ namespace Engine::Graphics
 
         m_b_dirty_ = false;
       }
+
+      const auto& heap = w_heap.lock();
 
       heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
     }

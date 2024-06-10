@@ -44,6 +44,11 @@ namespace Engine
 
   DescriptorPtrImpl::~DescriptorPtrImpl()
   {
+    Release();
+  }
+
+  void DescriptorPtrImpl::Release() const
+  {
     if (m_handler_ != nullptr)
     {
       m_handler_->Release(*this);
@@ -55,7 +60,8 @@ namespace Engine
     return m_handler_->GetMainDescriptorHeap();
   }
 
-  void                DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const {
+  void DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const
+  {
     const auto& handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        m_cpu_sampler_handle_,
@@ -245,20 +251,22 @@ namespace Engine
     }
   }
 
-  DescriptorHandler::DescriptorHandler()
+  void DescriptorHandler::UpdateHeaps(const UINT size)
   {
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
+    m_size_ = size;
+
+    const D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = g_total_engine_slots * g_max_concurrent_command_lists,
+      .NumDescriptors = g_total_engine_slots * m_size_,
       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       .NodeMask = 0
     };
 
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc_sampler
+    const D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc_sampler
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-      .NumDescriptors = g_max_sampler_slots * g_max_concurrent_command_lists,
+      .NumDescriptors = g_max_sampler_slots * m_size_,
       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
       .NodeMask = 0
     };
@@ -281,15 +289,61 @@ namespace Engine
        )
       );
 
+    m_used_slots_.resize(m_size_, false);
+    m_descriptors_.resize(m_size_);
+
+    for (UINT i = 0; i < m_size_; ++i)
+    {
+      if (m_descriptors_[i] != nullptr)
+      {
+        m_descriptors_[i]->m_cpu_handle_ = CD3DX12_CPU_DESCRIPTOR_HANDLE
+          (
+           m_main_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+           i * g_total_engine_slots,
+           m_buffer_size_
+          );
+
+        m_descriptors_[i]->m_gpu_handle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE
+          (
+           m_main_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
+           i * g_total_engine_slots,
+           m_buffer_size_
+          );
+
+        m_descriptors_[i]->m_cpu_sampler_handle_ = CD3DX12_CPU_DESCRIPTOR_HANDLE
+          (
+           m_main_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+           i * g_max_sampler_slots,
+           m_sampler_size_
+          );
+
+        m_descriptors_[i]->m_gpu_sampler_handle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE
+          (
+           m_main_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
+           i * g_max_sampler_slots,
+           m_sampler_size_
+          );
+      }
+      else
+      {
+        m_used_slots_[i] = false;
+        m_descriptors_[i] = nullptr;
+      }
+    }
+  }
+
+  DescriptorHandler::DescriptorHandler(const UINT size)
+  {
+    UpdateHeaps(size);
     m_buffer_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_sampler_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
   }
 
   DescriptorPtr DescriptorHandler::Acquire()
   {
-    for (UINT i = 0; i < g_max_concurrent_command_lists; ++i)
+    for (UINT i = 0; i < m_size_; ++i)
     {
-      if (!m_used_slots_[i].exchange(true))
+      if (!m_used_slots_[i])
       {
         const auto& buffer_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
           (
@@ -305,7 +359,7 @@ namespace Engine
            m_sampler_size_
           );
 
-        return DescriptorPtr(new DescriptorPtrImpl
+        m_descriptors_[i] = StrongDescriptorPtr(new DescriptorPtrImpl
           (
            this,
            i,
@@ -326,22 +380,31 @@ namespace Engine
            m_buffer_size_,
            m_sampler_size_
           ));
+
+        m_used_slots_[i] = true;
+
+        return m_descriptors_[i];
       }
     }
 
-    return {};
+    GetD3Device().WaitForCommandsCompletion();
+    UpdateHeaps(m_size_ * 2);
+    m_size_ *= 2;
+
+    return Acquire();
   }
 
   void DescriptorHandler::Release(const DescriptorPtrImpl& handles)
   {
-    m_used_slots_[handles.m_offset_].store(false);
+    m_used_slots_[handles.m_offset_] = false;
+    m_descriptors_[handles.m_offset_] = nullptr;
   }
 
   bool DescriptorHandler::IsAvailable() const
   {
     for (const auto& slot : m_used_slots_)
     {
-      if (!slot.load())
+      if (!slot)
       {
         return true;
       }
