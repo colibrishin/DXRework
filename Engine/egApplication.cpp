@@ -25,8 +25,7 @@ namespace Engine::Manager
   Application::Application(SINGLETON_LOCK_TOKEN)
     : Singleton(),
       m_previous_keyboard_state_(),
-      m_previous_mouse_state_(),
-      m_imgui_descriptor_()
+      m_previous_mouse_state_()
   {
     if (s_instantiated_) { throw std::runtime_error("Application is already instantiated"); }
 
@@ -93,17 +92,6 @@ namespace Engine::Manager
     m_timer = std::make_unique<DX::StepTimer>();
     UpdateWindowSize(hWnd);
 
-    if constexpr (g_debug)
-    {
-      IMGUI_CHECKVERSION();
-      ImGui::CreateContext();
-      ImGuiIO& io = ImGui::GetIO();
-      io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-      io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-    }
-
     GetD3Device().Initialize(hWnd);
     GetToolkitAPI().Initialize();
     GetRenderPipeline().Initialize();
@@ -123,22 +111,7 @@ namespace Engine::Manager
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
-
-    m_imgui_descriptor_ = GetRenderPipeline().AcquireHeapSlot();
-
-    if constexpr (g_debug)
-    {
-      ImGui_ImplWin32_Init(hWnd);
-
-      ImGui_ImplDX12_Init
-        (
-         GetD3Device().GetDevice(), g_frame_buffer, DXGI_FORMAT_R8G8B8A8_UNORM,
-         m_imgui_descriptor_->GetMainDescriptorHeap(),
-         m_imgui_descriptor_->GetCPUHandle(),
-         m_imgui_descriptor_->GetGPUHandle()
-        );
-    }
-    
+    GetImGuiManager().Initialize(hWnd);
   }
 
   void Application::Tick()
@@ -149,8 +122,6 @@ namespace Engine::Manager
   void Application::PreUpdate(const float& dt)
   {
     GetToolkitAPI().PreUpdate(dt);
-    GetGC().PreUpdate(dt);
-
     GetTaskScheduler().PreUpdate(dt);
     GetMouseManager().PreUpdate(dt);
     GetCollisionDetector().PreUpdate(dt);
@@ -287,32 +258,7 @@ namespace Engine::Manager
     GetToolkitAPI().PostRender(dt); // toolkit related render commands
     GetShadowManager().PostRender(dt);
 
-    if constexpr (g_debug)
-    {
-      ImGui::Render();
-      
-      if (!GetD3Device().IsCommandPairAvailable())
-      {
-        throw std::runtime_error("Command Pair is not available for ImGui Rendering");
-      }
-
-      const auto& cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering").lock();
-
-      cmd->SoftReset();
-      GetRenderPipeline().DefaultRenderTarget(cmd);
-      GetRenderPipeline().DefaultScissorRect(cmd);
-      GetRenderPipeline().DefaultViewport(cmd);
-      
-      m_imgui_descriptor_->BindGraphic(cmd);
-
-      ImGui_ImplDX12_RenderDrawData
-      (
-          ImGui::GetDrawData(),
-          cmd->GetList()
-      );
-
-      cmd->FlagReady();
-    }
+    GetImGuiManager().PostRender(dt);
 
     GetReflectionEvaluator().PostRender(dt);
     GetRenderPipeline().PostRender(dt); // Wrap up command lists, present
@@ -347,12 +293,7 @@ namespace Engine::Manager
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
     const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
 
-    if constexpr (g_debug)
-    {
-      ImGui_ImplDX12_NewFrame();
-      ImGui_ImplWin32_NewFrame();
-      ImGui::NewFrame();
-    }
+    GetImGuiManager().NewFrame();
 
     PreUpdate(dt);
     Update(dt);

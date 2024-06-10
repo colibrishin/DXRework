@@ -152,7 +152,7 @@ namespace Engine
       class ShadowManager;
       class ReflectionEvaluator;
       class Renderer;
-      class GarbageCollector;
+      class ImGuiManager;
     } // namespace Graphics
 
     namespace Physics
@@ -290,7 +290,7 @@ namespace Engine
   extern Manager::Graphics::ReflectionEvaluator& GetReflectionEvaluator();
   extern Manager::Graphics::ShadowManager&       GetShadowManager();
   extern Manager::Graphics::Renderer&            GetRenderer();
-  extern Manager::Graphics::GarbageCollector&    GetGC();
+  extern Manager::Graphics::ImGuiManager&        GetImGuiManager();
 
   using RTVDSVHandlePair = std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_CPU_DESCRIPTOR_HANDLE>;
   using FrameIndex = UINT64;
