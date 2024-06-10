@@ -129,6 +129,7 @@ namespace Engine::Manager::Graphics
 
   D3Device::~D3Device()
   {
+    WaitForCommandsCompletion();
     m_command_consumer_running_ = false;
     CloseHandle(m_fence_event_);
     delete[] m_fence_nonce_;
