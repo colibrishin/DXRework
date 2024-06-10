@@ -95,6 +95,7 @@ namespace Engine::Manager::Graphics
   private:
     friend struct SingletonDeleter;
     friend struct Engine::CommandPair;
+    friend struct Engine::DescriptorHandler;
     friend class RenderPipeline;
     friend class ToolkitAPI;
     friend class GarbageCollector;
@@ -127,7 +128,6 @@ namespace Engine::Manager::Graphics
     void InitializeCommandAllocator();
     void InitializeFence();
     void InitializeConsumer();
-
 
     void WaitForEventCompletion(UINT64 buffer_idx) const;
     void WaitForCommandsCompletion();
