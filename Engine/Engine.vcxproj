@@ -33,7 +33,7 @@
     <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
     <ClInclude Include="egDescriptors.h" />
-    <ClInclude Include="egGarbageCollector.h" />
+    <ClInclude Include="egImGuiManager.h" />
     <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egParticleRenderer.h" />
@@ -139,7 +139,7 @@
     <ClCompile Include="egD3Device.cpp" />
     <ClCompile Include="egDebugger.cpp" />
     <ClCompile Include="egDescriptors.cpp" />
-    <ClCompile Include="egGarbageCollector.cpp" />
+    <ClCompile Include="egImGuiManager.cpp" />
     <ClCompile Include="egGraviton.cpp" />
     <ClCompile Include="egObject.cpp" />
     <ClCompile Include="egParticleRenderer.cpp" />
