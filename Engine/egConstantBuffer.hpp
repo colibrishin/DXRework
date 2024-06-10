@@ -3,7 +3,6 @@
 
 #include "egD3Device.hpp"
 #include "egDescriptors.h"
-#include "egGarbageCollector.h"
 #include "egGlobal.h"
 
 namespace Engine::Graphics

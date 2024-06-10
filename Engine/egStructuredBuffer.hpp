@@ -6,7 +6,6 @@
 #include "egCommands.h"
 #include "egCommon.hpp"
 #include "egDescriptors.h"
-#include "egGarbageCollector.h"
 #include "egType.h"
 
 namespace Engine::Graphics
