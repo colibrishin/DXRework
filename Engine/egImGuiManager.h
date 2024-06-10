@@ -21,7 +21,7 @@ namespace Engine::Manager::Graphics
 
   private:
     friend struct SingletonDeleter;
-    ~ImGuiManager() override = default;
+    ~ImGuiManager() override;
 
     // ImGui Graphics
     DescriptorPtr m_imgui_descriptor_;

@@ -74,14 +74,7 @@ namespace Engine::Manager
 
   Application::~Application()
   {
-    if (g_debug)
-    {
-      ImGui_ImplDX12_Shutdown();
-      ImGui_ImplWin32_Shutdown();
-      ImGui::DestroyContext();
-    }
-    
-    Graphics::D3Device::DEBUG_MEMORY();
+    SIGTERM();
   }
 
   void Application::Initialize(HWND hWnd)
@@ -92,26 +85,25 @@ namespace Engine::Manager
     m_timer = std::make_unique<DX::StepTimer>();
     UpdateWindowSize(hWnd);
 
-    GetD3Device().Initialize(hWnd);
-    GetToolkitAPI().Initialize();
-    GetRenderPipeline().Initialize();
-
     GetResourceManager().Initialize();
     GetSceneManager().Initialize();
-    GetDebugger().Initialize();
     GetTaskScheduler().Initialize();
-    GetShadowManager().Initialize();
     GetMouseManager().Initialize();
     GetProjectionFrustum().Initialize();
-    GetRenderer().Initialize();
-    GetShadowManager().Initialize();
-    GetReflectionEvaluator().Initialize();
     GetCollisionDetector().Initialize();
     GetLerpManager().Initialize();
     GetPhysicsManager().Initialize();
     GetConstraintSolver().Initialize();
     GetGraviton().Initialize();
+
+    GetD3Device().Initialize(hWnd);
+    GetRenderPipeline().Initialize();
+    GetToolkitAPI().Initialize();
+    GetShadowManager().Initialize();
+    GetReflectionEvaluator().Initialize();
     GetImGuiManager().Initialize(hWnd);
+    GetDebugger().Initialize();
+    GetRenderer().Initialize();
   }
 
   void Application::Tick()
@@ -317,23 +309,28 @@ namespace Engine::Manager
 
   void Application::SIGTERM()
   {
-    GetTaskScheduler().Destroy();
-    GetMouseManager().Destroy();
-    GetCollisionDetector().Destroy();
-    GetReflectionEvaluator().Destroy();
-    GetSceneManager().Destroy();
-    GetResourceManager().Destroy();
-    GetGraviton().Destroy();
-    GetConstraintSolver().Destroy();
-    GetPhysicsManager().Destroy();
-    GetLerpManager().Destroy();
-    GetProjectionFrustum().Destroy();
-    GetRenderer().Destroy();
-    GetShadowManager().Destroy();
-    GetDebugger().Destroy();
-    GetD3Device().Destroy();
-    GetToolkitAPI().Destroy();
-    GetApplication().Destroy();
+    TaskScheduler::Destroy();
+    MouseManager::Destroy();
+    Physics::CollisionDetector::Destroy();
+    SceneManager::Destroy();
+    ResourceManager::Destroy();
+    Physics::Graviton::Destroy();
+    Physics::ConstraintSolver::Destroy();
+    Physics::PhysicsManager::Destroy();
+    Physics::LerpManager::Destroy();
+    ProjectionFrustum::Destroy();
+
+    Graphics::ImGuiManager::Destroy();
+    Graphics::ReflectionEvaluator::Destroy();
+    Graphics::Renderer::Destroy();
+    Graphics::ShadowManager::Destroy();
+    Debugger::Destroy();
+    Graphics::ToolkitAPI::Destroy();
+    Graphics::ImGuiManager::Destroy();
+    Graphics::RenderPipeline::Destroy();
+    Graphics::D3Device::Destroy();
+
+    Graphics::D3Device::DEBUG_MEMORY();
   }
 
   LRESULT Application::MessageHandler(

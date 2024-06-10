@@ -78,5 +78,15 @@ namespace Engine::Manager::Graphics
     }
   }
 
+  ImGuiManager::~ImGuiManager()
+  {
+    if constexpr (g_debug)
+    {
+      ImGui_ImplDX12_Shutdown();
+      ImGui_ImplWin32_Shutdown();
+      ImGui::DestroyContext();
+    }
+  }
+
   void ImGuiManager::Update(const float& dt) {}
 }
