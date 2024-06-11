@@ -24,28 +24,29 @@ namespace Engine::Components
   void ParticleRenderer::Initialize()
   {
     const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer Init").lock();
+    cmd->SoftReset();
+    m_local_param_buffer_.Create(cmd->GetList(), 1, nullptr);
     m_sb_buffer_.Create(cmd->GetList(), 1, nullptr);
     cmd->FlagReady();
 
     SetCount(1);
+    SetSize(1.f);
   }
 
   void ParticleRenderer::Update(const float& dt)
   {
     if (m_cs_ && GetMaterial().lock())
     {
-      const auto& ticket = GetRenderPipeline().SetParam(m_params_);
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer").lock();
+      const auto& heap = GetRenderPipeline().AcquireHeapSlot().lock();
 
-      GetD3Device().WaitAndReset(COMMAND_LIST_COMPUTE);
+      cmd->SoftReset();
 
-      const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_COMPUTE);
-      const auto& heap = GetRenderPipeline().AcquireHeapSlot();
+      cmd->GetList()->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
+      cmd->GetList()->SetPipelineState(m_cs_->GetPipelineState());
 
-      cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
-      cmd->SetPipelineState(m_cs_->GetPipelineState());
-
-      m_sb_buffer_.SetData(cmd, static_cast<UINT>(m_instances_.size()), m_instances_.data());
-      m_sb_buffer_.TransitionToUAV(cmd);
+      m_sb_buffer_.SetData(cmd->GetList(), static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      m_sb_buffer_.TransitionToUAV(cmd->GetList());
       m_sb_buffer_.CopyUAVHeap(heap);
 
       const auto thread      = m_cs_->GetThread();
@@ -119,9 +120,9 @@ namespace Engine::Components
 
     if (ImGui::Button("Set Count"))
     {
-      if (m_params_.GetParam<UINT>(size_slot) != m_instances_.size())
+      if (m_params_.GetParam<UINT>(particle_count_slot) != m_instances_.size())
       {
-        SetCount(m_params_.GetParam<UINT>(size_slot));
+        SetCount(m_params_.GetParam<UINT>(particle_count_slot));
       }
     }
 
@@ -157,11 +158,8 @@ namespace Engine::Components
   void ParticleRenderer::SetCount(const size_t count)
   {
     // Expand and apply the world matrix of the owner to each instance.
-    for (int i = 0; i < count; ++i)
-    {
-      Graphics::SBs::InstanceParticleSB sb;
-      m_instances_.push_back(sb);
-    }
+    m_instances_.resize(count);
+    m_params_.SetParam(particle_count_slot, static_cast<int>(count));
   }
 
   void ParticleRenderer::SetDuration(const float duration)
@@ -176,7 +174,7 @@ namespace Engine::Components
 
   void ParticleRenderer::SetSize(const float size)
   {
-    m_params_.SetParam(size, size_slot);
+    m_params_.SetParam(size_slot, size);
   }
 
   bool ParticleRenderer::IsFollowOwner() const { return m_b_follow_owner_; }
