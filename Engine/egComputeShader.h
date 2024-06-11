@@ -1,8 +1,9 @@
 #pragma once
-#include "egMacro.h"
-#include "egShader.hpp"
-#include "egResourceManager.hpp"
 #include "egDXCommon.h"
+#include "egMacro.h"
+#include "egResourceManager.hpp"
+#include "egShader.hpp"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Resources
 {
@@ -13,7 +14,10 @@ namespace Engine::Resources
 
     void                SetGroup(const std::array<UINT, 3>& group);
     std::array<UINT, 3> GetThread() const;
-    void                Dispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap);
+    void                Dispatch(
+      ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param,
+      Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
+    );
 
     template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
     static boost::weak_ptr<T> Create()
@@ -34,8 +38,8 @@ namespace Engine::Resources
     static Graphics::ParamBase& getParam(const StrongParticleRenderer& pr);
     static InstanceParticles& getInstances(const StrongParticleRenderer& pr);
 
-    virtual void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) = 0;
-    virtual void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap) = 0;
+    virtual void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) = 0;
+    virtual void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) = 0;
 
     virtual void loadDerived() = 0;
     virtual void unloadDerived() = 0;
