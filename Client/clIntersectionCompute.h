@@ -5,6 +5,7 @@
 #include "Client.h"
 #include "clIntensityPositionTexture.h"
 #include "clIntensityTexture.h"
+#include "egDXCommon.h"
 #include "egStructuredBuffer.hpp"
 
 namespace Client::ComputeShaders
@@ -37,20 +38,19 @@ namespace Client::ComputeShaders
 
     void OnImGui(const StrongParticleRenderer& pr) override;
 
-    void SetLightTable(Graphics::StructuredBuffer<LightTableSB>* light_table_ptr) { m_light_table_ptr_ = light_table_ptr; }
+    void SetLightTable(const Weak<Graphics::StructuredBuffer<LightTableSB>>& light_table_ptr) { m_light_table_ptr_ = light_table_ptr; }
     void SetIntersectionTexture(Client::Resource::IntensityTexture& texs) { m_intersection_texture_ = &texs; }
     void SetPositionTexture(Client::Resource::IntensityPositionTexture& texs) { m_position_texture_ = &texs; }
     void SetTargetLight(const UINT target_light) { m_target_light_ = target_light; }
 
-
   protected:
-    void preDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
-    void postDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
+    void preDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap, Graphics::SBs::LocalParamSB& param) override;
+    void postDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap, Graphics::SBs::LocalParamSB& param) override;
     void loadDerived() override;
     void unloadDerived() override;
 
   private:
-    Graphics::StructuredBuffer<LightTableSB>* m_light_table_ptr_;
+    Weak<Graphics::StructuredBuffer<LightTableSB>> m_light_table_ptr_;
     Client::Resource::IntensityTexture* m_intersection_texture_;
     Client::Resource::IntensityPositionTexture* m_position_texture_;
     UINT m_target_light_;
