@@ -59,9 +59,7 @@ void GetMaskFactor(
   [unroll]
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
-#define PARAM_LIGHT_COUNT g_iParam[0].x
-    if (i > PARAM_LIGHT_COUNT) { break; }
-#undef PARAM_LIGHT_COUNT
+    if (i > PARAM_NUM_LIGHT) { break; }
 
     [unroll]
     for (j = 0; j < MAX_NUM_CASCADES; ++j)
