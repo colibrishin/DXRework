@@ -66,7 +66,7 @@ namespace Engine::Resources
     (
      name, path, SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
      D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER,
-     DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
+     &g_default_rtv_format, 1, DXGI_FORMAT_D24_UNORM_S8_UINT
     )
   {
     SetPath(path);
@@ -180,7 +180,8 @@ namespace Engine::Resources
     : Shader
       (
        "", "", SHADER_DOMAIN_OPAQUE, 0, SHADER_RASTERIZER_CULL_NONE,
-       D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER
+       D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER,
+       &g_default_rtv_format, 1
       ),
       m_thread_{1,},
       m_group_{1,} {}
