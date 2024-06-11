@@ -542,6 +542,7 @@ namespace Engine::Manager::Graphics
       {
         m_command_pairs_generated_.erase(it->first);
         m_command_pairs_count_.fetch_sub(1);
+        continue;
       }
 
       if (it->second->IsReady())

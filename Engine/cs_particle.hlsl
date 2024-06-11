@@ -1,13 +1,15 @@
 #include "common.hlsli"
 
-#define PARAM_NUM_PARTICLE g_iParam[0].x
-#define PARAM_SCALING      g_iParam[0].y
-#define RANDOM_NUMBER g_iParam[0].z
+#define PARAM_NUM_PARTICLE bufLocalParam[0].iParam[0].x
+#define PARAM_SCALING      bufLocalParam[0].iParam[0].y
+#define RANDOM_NUMBER      bufLocalParam[0].iParam[0].z
 
-#define PARAM_DURATION g_fParam[0].y
-#define PARAM_DT g_fParam[0].z
-#define PARAM_SCALING_MIN g_fParam[0].w
-#define PARAM_SCALING_MAX g_fParam[1].x
+#define PARAM_DURATION     bufLocalParam[0].fParam[0].x
+#define PARAM_SIZE         bufLocalParam[0].fParam[0].y
+#define PARAM_DT           bufLocalParam[0].fParam[0].z
+#define PARAM_SCALING_MIN  bufLocalParam[0].fParam[0].w
+#define PARAM_SCALING_MAX  bufLocalParam[0].fParam[1].x
+
 
 #define RANDOM_TEX0 tex00
 #define RANDOM_TEX1 tex01

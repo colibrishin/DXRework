@@ -3,7 +3,8 @@
 
 #define EMPTY_DEPTH 1.f
 
-Texture2DArray maskTex[MAX_NUM_LIGHTS] : register(t8);
+// overriding the default definition of common.hlsli
+Texture2DArray maskTex[MAX_NUM_LIGHTS] : register(t2);
 
 struct PixelIntensityOutput
 {

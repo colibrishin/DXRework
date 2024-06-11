@@ -87,7 +87,52 @@ namespace Engine::Resources
     cmd->GetList()->ResourceBarrier(1, &dsv_transition_back);
   }
 
-  void Texture::Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as)
+  void Texture::Unbind(const Weak<CommandPair>& w_cmd, Texture** rtvs, const UINT count, const Texture& dsv)
+  {
+    const auto& cmd = w_cmd.lock();
+
+    std::vector<D3D12_RESOURCE_BARRIER> transitions;
+    transitions.reserve(count + 1);
+
+    for (int i = 0; i < count; ++i)
+    {
+      const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         rtvs[i]->GetRawResource(),
+         D3D12_RESOURCE_STATE_RENDER_TARGET,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      transitions.push_back(rtv_transition);
+    }
+
+    const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       dsv.GetRawResource(),
+       D3D12_RESOURCE_STATE_DEPTH_WRITE,
+       D3D12_RESOURCE_STATE_COMMON
+      );
+
+    transitions.push_back(dsv_transition);
+
+    cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+  }
+
+  void Texture::ManualTransition(
+    ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES before, const D3D12_RESOURCE_STATES after
+  ) const
+  {
+    const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_res_.Get(),
+       before,
+       after
+      );
+
+    cmd->ResourceBarrier(1, &transition);
+  }
+
+  void Texture::Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as) const
   {
     if (as == D3D12_RESOURCE_STATE_RENDER_TARGET)
     {
@@ -289,6 +334,52 @@ namespace Engine::Resources
       (
        1,
        rtv_handle,
+       false,
+       dsv_handle
+      );
+  }
+
+  void Texture::Bind(const Weak<CommandPair>& w_cmd, Texture** rtvs, const UINT count, const Texture& dsv)
+  {
+    const auto& cmd = w_cmd.lock();
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handle;
+    std::vector<D3D12_RESOURCE_BARRIER> transitions;
+
+    rtv_handle.reserve(count);
+
+    for (int i = 0; i < count; ++i)
+    {
+      const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         rtvs[i]->GetRawResource(),
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+
+      rtv_handle.push_back(rtvs[i]->GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
+      transitions.push_back(rtv_trans);
+    }
+
+    const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       dsv.GetRawResource(),
+       D3D12_RESOURCE_STATE_COMMON,
+       D3D12_RESOURCE_STATE_DEPTH_WRITE
+      );
+
+    transitions.push_back(dsv_trans);
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
+    {
+      dsv.GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
+    };
+    
+    cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+
+    cmd->GetList()->OMSetRenderTargets
+      (
+       count,
+       rtv_handle.data(),
        false,
        dsv_handle
       );
