@@ -295,7 +295,7 @@ namespace Client::Scripts
     constexpr size_t custom_proj_slot  = 2;
 
     const auto& cmd = w_cmd.lock();
-
+    
     // Prepare the shadow depth texture as shader resource
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> shadow_dsv_srv;
     shadow_dsv_srv.reserve(g_max_lights);
@@ -432,7 +432,6 @@ namespace Client::Scripts
     {
       m_compute_local_param_.resize(lights->size());
     }
-
     for (int i = 0; i < lights->size(); ++i)
     {
       const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
