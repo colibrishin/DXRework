@@ -13,12 +13,13 @@ namespace Engine::Resources
     RESOURCE_T(RES_T_SHADER)
 
     Shader(
-      const EntityName&  name, const std::filesystem::path& path,
-      eShaderDomain      domain, eShaderDepths              depth,
-      eShaderRasterizers rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
-      DXGI_FORMAT        rtv_format = DXGI_FORMAT_R8G8B8A8_UNORM, 
-      DXGI_FORMAT            dsv_format = DXGI_FORMAT_D24_UNORM_S8_UINT,
-      D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+      const EntityName&             name, const std::filesystem::path& path,
+      eShaderDomain                 domain, eShaderDepths              depth,
+      eShaderRasterizers            rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
+      const DXGI_FORMAT*            rtv_format,
+      const UINT                    rtv_count     = 1,
+      DXGI_FORMAT                   dsv_format    = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      D3D_PRIMITIVE_TOPOLOGY        topology      = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
       D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
     );
     ~Shader() override = default;
@@ -43,16 +44,17 @@ namespace Engine::Resources
 
     static boost::weak_ptr<Shader>   Get(const std::string& name);
     static boost::shared_ptr<Shader> Create(
-      const std::string&           name,
-      const std::filesystem::path& path,
-      const eShaderDomain          domain,
-      const UINT                   depth,
-      const UINT                   rasterizer,
-      const D3D12_FILTER           filter,
-      const UINT                   sampler,
-      const DXGI_FORMAT        rtv_format, 
-      const DXGI_FORMAT            dsv_format,
-      const D3D_PRIMITIVE_TOPOLOGY topology, 
+      const std::string&                  name,
+      const std::filesystem::path&        path,
+      const eShaderDomain                 domain,
+      const UINT                          depth,
+      const UINT                          rasterizer,
+      const D3D12_FILTER                  filter,
+      const UINT                          sampler,
+      const DXGI_FORMAT*                  rtv_format,
+      const UINT                          rtv_count,
+      const DXGI_FORMAT                   dsv_format,
+      const D3D_PRIMITIVE_TOPOLOGY        topology,
       const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
     );
 
@@ -91,7 +93,7 @@ namespace Engine::Resources
     D3D12_CULL_MODE            m_cull_mode_;
     D3D12_FILL_MODE            m_fill_mode_;
 
-    DXGI_FORMAT                                                   m_rtv_format_;
+    std::vector<DXGI_FORMAT>                                      m_rtv_formats_;
     DXGI_FORMAT                                                   m_dsv_format_;
     D3D_PRIMITIVE_TOPOLOGY                                        m_topology_;
     D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_type_;
