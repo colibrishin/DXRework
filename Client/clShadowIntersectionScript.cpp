@@ -33,22 +33,32 @@ namespace Client::Scripts
       m_intersection_compute_ = new_cs;
     }
 
-    m_tmp_shadow_depth_ = Engine::Resources::Texture2D::Create
-      (
-       std::to_string(GetID()) + "ShadowDepth",
-       "",
-       {
-         .Alignment = 0,
-         .Width = g_max_shadow_map_size,
-         .Height = g_max_shadow_map_size,
-         .DepthOrArraySize = 1,
-         .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
-         .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-         .MipsLevel = 1,
-         .Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE,
-         .SampleDesc = {1, 0},
-       }
-      );
+    m_tmp_shadow_depth_ = Resources::Texture2D::Create
+    (
+        "tmp_shadow_depth",
+        "",
+        {
+          .Alignment = 0,
+          .Width = g_max_shadow_map_size,
+          .Height = g_max_shadow_map_size,
+          .DepthOrArraySize = 1,
+          .Format = DXGI_FORMAT_D32_FLOAT,
+          .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+          .MipsLevel = 1,
+          .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+          .SampleDesc = {1,0}
+        }
+    );
+
+    constexpr D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc
+    {
+      .Format = DXGI_FORMAT_R32_FLOAT,
+      .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+      .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+      .Texture2D = {0, 1, 0, 0}
+    };
+
+    m_tmp_shadow_depth_->LazySRV(srv_desc);
 
     m_tmp_shadow_depth_->Initialize();
     m_tmp_shadow_depth_->Load();
@@ -107,7 +117,15 @@ namespace Client::Scripts
 
   void ShadowIntersectionScript::PreUpdate(const float& dt)
   {
-    
+    for (const auto& heap : m_shadow_heaps_)
+    {
+      heap->Release();
+    }
+
+    m_shadow_third_pass_heap_->Release();
+
+    m_shadow_heaps_.clear();
+    m_shadow_third_pass_heap_.reset();
   }
 
   void ShadowIntersectionScript::Update(const float& dt)
@@ -150,11 +168,15 @@ namespace Client::Scripts
   void ShadowIntersectionScript::Render(const float& dt) {}
 
   void ShadowIntersectionScript::FirstPass(
-      const float&                    dt, const boost::shared_ptr<CommandPair>& cmd, 
-      const size_t                    shadow_slot, 
-      const boost::shared_ptr<Layer>& lights, 
-      UINT&                           instance_idx)
+    const float&             dt,
+    const Weak<CommandPair>& w_cmd,
+    const size_t             shadow_slot,
+    const StrongLayer&       lights,
+    UINT&                    instance_idx
+  )
   {
+    const auto& cmd = w_cmd.lock();
+
     UINT light_idx = 0;
 
     // First Pass: Shadow Map (With object and without object)
@@ -199,7 +221,7 @@ namespace Client::Scripts
            const auto& c = wc.lock();
 
            m_shadow_texs_[light_idx].Unbind(c, BIND_TYPE_DSV_ONLY);
-         }, { m_local_params_[light_idx] }
+         }, { m_local_params_[light_idx], GetShadowManager().GetLightVPBuffer() }
         );
 
       ++light_idx;
@@ -247,7 +269,7 @@ namespace Client::Scripts
            const auto& c = wc.lock();
 
            m_shadow_mask_texs_[light_idx].Unbind(c, m_shadow_texs_[light_idx]);
-         }, {m_local_params_[lights->size() + light_idx]});
+         }, {m_local_params_[lights->size() + light_idx], GetShadowManager().GetLightVPBuffer() });
 
       light_idx++;
     }
@@ -255,10 +277,10 @@ namespace Client::Scripts
 
   void ShadowIntersectionScript::SecondPass(
       const float& dt, 
-      const boost::shared_ptr<CommandPair>& cmd, 
+      const Weak<CommandPair>& w_cmd, 
       const std::vector<Graphics::SBs::LightVPSB>& light_vps, 
-      const boost::shared_ptr<Scene>& scene, 
-      const boost::shared_ptr<Layer>& lights, 
+      const StrongScene& scene, 
+      const StrongLayer& lights, 
       UINT& instance_idx)
   {
     // Second Pass: Intensity test
@@ -272,6 +294,8 @@ namespace Client::Scripts
     constexpr size_t custom_view_slot  = 1;
     constexpr size_t custom_proj_slot  = 2;
 
+    const auto& cmd = w_cmd.lock();
+    
     // Prepare the shadow depth texture as shader resource
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> shadow_dsv_srv;
     shadow_dsv_srv.reserve(g_max_lights);
@@ -279,7 +303,7 @@ namespace Client::Scripts
     for (const auto& tex : m_shadow_texs_)
     {
       tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-      shadow_dsv_srv.push_back(tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
+      shadow_dsv_srv.push_back(tex.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Prepare the shadow mask texture (RTV result) as shader resource
@@ -288,7 +312,7 @@ namespace Client::Scripts
     for (auto& tex : m_shadow_mask_texs_)
     {
       tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-      shadow_rtv_srv.push_back(tex.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart());
+      shadow_rtv_srv.push_back(tex.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Find the nearest clip space for z value.
@@ -311,7 +335,6 @@ namespace Client::Scripts
     for (int i = 0; i < lights->size(); ++i)
     {
       Graphics::SBs::LocalParamSB local_param{};
-      local_param.SetParam<int>(target_light_slot, i);
       local_param.SetParam<int>(custom_vp_slot, true);
       local_param.SetParam<Matrix>(custom_view_slot, light_vps[i].view[z_clip]);
       local_param.SetParam<Matrix>(custom_proj_slot, light_vps[i].proj[z_clip]);
@@ -339,6 +362,8 @@ namespace Client::Scripts
            c->GetList()->SetPipelineState(m_intensity_test_shader_->GetPipelineState());
            c->GetList()->IASetPrimitiveTopology(m_intensity_test_shader_->GetTopology());
 
+           GetShadowManager().BindShadowSampler(h);
+
            Resources::Texture* rtvs[]
            {
              &m_intensity_test_texs_[i],
@@ -349,14 +374,14 @@ namespace Client::Scripts
 
            h->SetShaderResources
              (
-              RESERVED_TEX_SHADOW_MAP,
+              BIND_SLOT_TEX + 2,
               shadow_rtv_srv.size(),
               shadow_rtv_srv
              );
 
            h->SetShaderResources
              (
-              BIND_SLOT_TEX + 2,
+              RESERVED_TEX_SHADOW_MAP,
               static_cast<UINT>(shadow_dsv_srv.size()),
               shadow_dsv_srv
              );
@@ -373,30 +398,40 @@ namespace Client::Scripts
 
            Resources::Texture::Unbind(c, rtvs, 2, *m_tmp_shadow_depth_);
          },
-         { m_local_params_[(lights->size() * 2) + i] }
+         {
+           m_local_params_[(lights->size() * 2) + i],
+           GetShadowManager().GetLightBuffer(),
+           GetShadowManager().GetLightVPBuffer()
+         }
         );
 
       m_tmp_shadow_depth_->Clear(cmd->GetList(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
-    }
 
-    for (auto& tex : m_shadow_texs_)
-    {
-      tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
-    }
+      for (const auto& tex : m_shadow_texs_)
+      {
+        tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+      }
 
-    for (auto& tex : m_intensity_position_texs_)
-    {
-      tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+      for (auto& tex : m_shadow_mask_texs_)
+      {
+        tex.ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+      }
     }
   }
 
-  void ShadowIntersectionScript::ThirdPass(const boost::shared_ptr<CommandPair>& cmd, const boost::shared_ptr<Layer>& lights)
+  void ShadowIntersectionScript::ThirdPass(const Weak<CommandPair>& w_cmd, const StrongLayer& lights)
   {
     // Third Pass: Intersection Compute
     // By compute shader, For each pixel if it has light index, which is non-zero,
     // then this object shadow intersects with designated light.
+    const auto& cmd = w_cmd.lock();
+
     m_shadow_third_pass_heap_ = GetRenderPipeline().AcquireHeapSlot().lock();
 
+    if (m_compute_local_param_.size() < lights->size())
+    {
+      m_compute_local_param_.resize(lights->size());
+    }
     for (int i = 0; i < lights->size(); ++i)
     {
       const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
@@ -406,7 +441,7 @@ namespace Client::Scripts
       cast->SetLightTable(m_sb_light_table_);
       cast->SetTargetLight(i);
       Graphics::SBs::LocalParamSB empty_param{};
-      cast->Dispatch(cmd->GetList(), m_shadow_third_pass_heap_, empty_param, m_compute_local_param_);
+      cast->Dispatch(cmd->GetList(), m_shadow_third_pass_heap_, empty_param, m_compute_local_param_[i]);
     }
 
     // Force to wait for the whole passes to finish.
@@ -468,19 +503,26 @@ namespace Client::Scripts
       tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     }
 
-    std::vector<Graphics::SBs::LightVPSB> light_vps;
-    light_vps.reserve(g_max_lights);
-
     // Build shadow map of this object for each light.
     if (const auto& scene = GetOwner().lock()->GetScene().lock())
     {
-      constexpr size_t shadow_slot = 1;
-      const auto       lights      = (*scene)[LAYER_LIGHT];
+      std::vector<Graphics::SBs::LightVPSB> light_vps;
+      constexpr size_t                      shadow_slot = 1;
+      const auto                            lights      = (*scene)[LAYER_LIGHT];
+
+      // Pre-allocate the light table
+      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
+      if (empty_light_table.size() < lights->size())
+      {
+        empty_light_table.resize(lights->size());
+      }
+
+      // Cleanup the light table
+      m_sb_light_table_->SetData(cmd->GetList(), lights->size(), empty_light_table.data());
 
       UINT             instance_idx = 0;
-      constexpr size_t render_pass  = 2;
+      constexpr size_t render_pass  = 3;
 
-      // Rendering pass = 2
       if (const auto required_instance = GetRenderer().GetInstanceCount() * lights->size() * render_pass; 
           m_instance_buffers_.size() < required_instance)
       {
@@ -489,22 +531,26 @@ namespace Client::Scripts
 
       if (const auto required_heaps = lights->size() * render_pass; m_shadow_heaps_.size() < required_heaps)
       {
-        m_local_params_.resize(lights->size());
+        m_local_params_.resize(required_heaps);
 
         for (auto& local_param : m_local_params_)
         {
-          local_param = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>();
+          if (!local_param)
+          {
+            local_param = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>();
+          }
         }
       }
+
+      GetShadowManager().GetLightVP(scene, light_vps);
 
       FirstPass(dt, cmd, shadow_slot, lights, instance_idx);
       SecondPass(dt, cmd, light_vps, scene, lights, instance_idx);
       ThirdPass(cmd, lights);
-
-      // Cleanup table for next frame.
-      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> empty_light_table;
-      empty_light_table.resize(lights->size());
-      m_sb_light_table_->SetData(cmd->GetList(), g_max_lights, empty_light_table.data());
+    }
+    else
+    {
+      cmd->FlagReady();
     }
   }
 

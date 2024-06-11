@@ -307,6 +307,8 @@ namespace Engine::Manager
         ImGui::Combo("Topology", &sel_topology, topologies, IM_ARRAYSIZE(topologies));
         
 
+        constexpr DXGI_FORMAT default_format = DXGI_FORMAT_R8G8B8A8_UNORM; // todo: add a way to select this
+
         if (ImGui::Button("Load"))
         {
           try
@@ -320,7 +322,8 @@ namespace Engine::Manager
                (UINT)(sel_cull | sel_fill >> 3),
                (D3D12_FILTER)(sel_filter),
                (UINT)(sel_sampler_address | sel_sampler_func >> 5),
-               DXGI_FORMAT_R8G8B8A8_UNORM, // todo: add a way to select this
+               &default_format, // todo: add a way to select this
+               1,
                DXGI_FORMAT_D24_UNORM_S8_UINT,
                (D3D_PRIMITIVE_TOPOLOGY)(sel_topology + 1),
                (D3D12_PRIMITIVE_TOPOLOGY_TYPE)(sel_topology + 1)

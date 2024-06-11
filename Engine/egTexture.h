@@ -81,6 +81,11 @@ namespace Engine::Resources
     void        Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
     static void Unbind(const Weak<CommandPair> & w_cmd, Texture ** rtvs, const UINT count, const Texture & dsv);
 
+    void LazyDescription(const GenericTextureDescription& desc);
+    void LazyRTV(const D3D12_RENDER_TARGET_VIEW_DESC& desc);
+    void LazyDSV(const D3D12_DEPTH_STENCIL_VIEW_DESC& desc);
+    void LazyUAV(const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc);
+    void LazySRV(const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
 
     void ManualTransition(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES before, const D3D12_RESOURCE_STATES after) const;
 
@@ -93,12 +98,6 @@ namespace Engine::Resources
     virtual UINT GetWidth() const;
     virtual UINT GetHeight() const;
     virtual UINT GetDepth() const;
-
-    void LazyDescription(const GenericTextureDescription & desc);
-    void LazyRTV(const D3D12_RENDER_TARGET_VIEW_DESC & desc);
-    void LazyDSV(const D3D12_DEPTH_STENCIL_VIEW_DESC & desc);
-    void LazyUAV(const D3D12_UNORDERED_ACCESS_VIEW_DESC & desc);
-    void LazySRV(const D3D12_SHADER_RESOURCE_VIEW_DESC & desc);
 
     const GenericTextureDescription& GetDescription() const;
 

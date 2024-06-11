@@ -94,6 +94,26 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::Update(const float& dt) {}
 
+  void ShadowManager::GetLightVP(const boost::shared_ptr<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
+  {
+    for (const auto& ptr_light : m_lights_ | std::views::values)
+    {
+      if (const auto light = ptr_light.lock())
+      {
+        const auto tr = light->GetComponent<Components::Transform>().lock();
+
+        // Get the light direction from the light's position.
+        Vector3 light_dir;
+        (tr->GetWorldPosition()).Normalize(light_dir);
+
+        SBs::LightVPSB light_vp{};
+        // Get the light's view and projection matrix in g_max_shadow_cascades parts.
+        EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
+        current_light_vp.emplace_back(light_vp);
+      }
+    }
+  }
+
   void ShadowManager::PreRender(const float& dt)
   {
     constexpr size_t shadow_slot = 1;
@@ -133,25 +153,8 @@ namespace Engine::Manager::Graphics
 
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
-      // Build light view and projection matrix in frustum.
       std::vector<SBs::LightVPSB> current_light_vp;
-
-      for (const auto& ptr_light : m_lights_ | std::views::values)
-      {
-        if (const auto light = ptr_light.lock())
-        {
-          const auto tr = light->GetComponent<Components::Transform>().lock();
-
-          // Get the light direction from the light's position.
-          Vector3 light_dir;
-          (tr->GetWorldPosition()).Normalize(light_dir);
-
-          SBs::LightVPSB light_vp{};
-          // Get the light's view and projection matrix in g_max_shadow_cascades parts.
-          EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
-          current_light_vp.emplace_back(light_vp);
-        }
-      }
+      GetLightVP(scene, current_light_vp);
 
       // Also, if there is no light, it does not need to be updated.
       if (current_light_vp.empty()) { return; }
@@ -419,6 +422,16 @@ namespace Engine::Manager::Graphics
     {
       buffer.Unbind(cmd, BIND_TYPE_SRV);
     }
+  }
+
+  Weak<StructuredBuffer<SBs::LightSB>> ShadowManager::GetLightBuffer() const
+  {
+    return m_sb_light_buffer_;
+  }
+
+  Weak<StructuredBuffer<SBs::LightVPSB>> ShadowManager::GetLightVPBuffer() const
+  {
+    return m_sb_light_vps_buffer_;
   }
 
   void ShadowManager::RegisterLight(const WeakLight& light)

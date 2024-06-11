@@ -26,6 +26,7 @@ namespace Engine::Manager::Graphics
     void Initialize() override;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
+    void GetLightVP(const boost::shared_ptr<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp);
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void PostRender(const float& dt) override;
@@ -41,6 +42,9 @@ namespace Engine::Manager::Graphics
     void BindShadowMaps(const Weak<CommandPair> & cmd, const DescriptorPtr & heap) const;
     void BindShadowSampler(const DescriptorPtr& heap) const;
     void UnbindShadowMaps(const Weak<CommandPair> & w_cmd) const;
+
+    Weak<StructuredBuffer<SBs::LightSB>> GetLightBuffer() const;
+    Weak<StructuredBuffer<SBs::LightVPSB>> GetLightVPBuffer() const;
 
   private:
     friend struct SingletonDeleter;

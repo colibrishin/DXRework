@@ -16,7 +16,7 @@ RWStructuredBuffer<LightTable> g_lightTable : register(u7);
 [numthreads(32, 32, 1)]
 void cs_main(uint3 tId : SV_DispatchThreadID)
 {
-#define PARAM_TARGET_LIGHT g_iParam[0].y
+#define PARAM_LOCAL_PARAM_TARGET_LIGHT bufLocalParam[0].iParam[0].y
   // designated pixel (512 x 512, if shadow map size is not modified)
 
   // ~250,000 pixels
@@ -42,21 +42,21 @@ void cs_main(uint3 tId : SV_DispatchThreadID)
   {
     if (texel.x & (1 << j))
     {
-      g_lightTable[PARAM_TARGET_LIGHT].table[j].x = 1;
+      g_lightTable[PARAM_LOCAL_PARAM_TARGET_LIGHT].table[j].x = 1;
 
       const float4 position = positionTex00.Load
         (
          int3(texel_pos, 0)
         );
 
-      if (length(position) < length(g_lightTable[PARAM_TARGET_LIGHT].min[j]))
+      if (length(position) < length(g_lightTable[PARAM_LOCAL_PARAM_TARGET_LIGHT].min[j]))
       {
-        g_lightTable[PARAM_TARGET_LIGHT].min[j] = position;
+        g_lightTable[PARAM_LOCAL_PARAM_TARGET_LIGHT].min[j] = position;
       }
 
-      if (length(position) > length(g_lightTable[PARAM_TARGET_LIGHT].max[j]))
+      if (length(position) > length(g_lightTable[PARAM_LOCAL_PARAM_TARGET_LIGHT].max[j]))
       {
-        g_lightTable[PARAM_TARGET_LIGHT].max[j] = position;
+        g_lightTable[PARAM_LOCAL_PARAM_TARGET_LIGHT].max[j] = position;
       }
     }
   }
