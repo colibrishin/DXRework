@@ -55,24 +55,15 @@ namespace Engine::Components
       const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
 
       m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
-      m_cs_->Dispatch(cmd, heap);
+      m_cs_->Dispatch(cmd->GetList(), heap, m_params_, m_local_param_buffer_);
 
-      m_sb_buffer_.TransitionCommon(cmd, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+      m_sb_buffer_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-      DX::ThrowIfFailed(cmd->Close());
-
-      ID3D12CommandList* cmd_list[]
-      {
-        cmd
-      };
-
-      GetD3Device().GetCommandQueue(COMMAND_TYPE_COMPUTE)->ExecuteCommandLists(1, cmd_list);
-
-      GetD3Device().Signal(COMMAND_TYPE_COMPUTE);
-
-      GetD3Device().Wait();
+      cmd->Execute();
       
       m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+
+      heap->Release();
     }
 
     // Remove inactive particles.
