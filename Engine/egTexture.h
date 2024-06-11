@@ -72,14 +72,19 @@ namespace Engine::Resources
               offset) const;
     void Bind(ID3D12GraphicsCommandList1 *cmd, const DescriptorPtr &heap, const eBindType type, const UINT slot, const
               UINT offset) const;
-    void Bind(const Weak<CommandPair>& cmd, const Texture & dsv) const;
+    void        Bind(const Weak<CommandPair>& cmd, const Texture & dsv) const;
+    static void Bind(const Weak<CommandPair> & w_cmd, Texture ** rtvs, const UINT count, const Texture & dsv);
 
-    void Unbind(const Weak<CommandPair>& cmd, const eBindType type) const;
-    void Unbind(ID3D12GraphicsCommandList1 *cmd, const eBindType type) const;
-    void Unbind(const eCommandList list, const Texture& dsv) const;
-    void Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
+    void        Unbind(const Weak<CommandPair>& cmd, const eBindType type) const;
+    void        Unbind(ID3D12GraphicsCommandList1 * cmd, const eBindType type) const;
+    void        Unbind(const eCommandList list, const Texture& dsv) const;
+    void        Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
+    static void Unbind(const Weak<CommandPair> & w_cmd, Texture ** rtvs, const UINT count, const Texture & dsv);
 
-    void Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as);
+
+    void ManualTransition(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES before, const D3D12_RESOURCE_STATES after) const;
+
+    void Clear(ID3D12GraphicsCommandList1* cmd, const D3D12_RESOURCE_STATES as) const;
 
     RESOURCE_SELF_INFER_GETTER(Texture)
 
