@@ -28,6 +28,16 @@ namespace Client::Scripts
     void FixedUpdate(const float& dt) override; 
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
+    void FirstPass(
+      const float & dt, const boost::shared_ptr<CommandPair> & cmd, const size_t shadow_slot, const boost::shared_ptr<
+      Layer> &      lights,
+      UINT &        instance_idx
+    );
+    void SecondPass(
+      const float&                    dt, const boost::shared_ptr<CommandPair>& cmd, const std::vector<Graphics::SBs::LightVPSB>& light_vps,
+      const boost::shared_ptr<Scene>& scene, const boost::shared_ptr<Layer>&    lights, UINT&                                     instance_idx
+    );
+    void ThirdPass(const boost::shared_ptr<CommandPair>& cmd, const boost::shared_ptr<Layer>& lights);
     void PostRender(const float& dt) override;
 
   protected:
@@ -42,12 +52,13 @@ namespace Client::Scripts
     ShadowIntersectionScript();
 
     ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_multiple_dsv_heap_;
 
     D3D12_VIEWPORT m_viewport_;
+    D3D12_RECT m_scissor_rect_;
 
     std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
 
-    Strong<Graphics::StructuredBuffer<Graphics::SBs::LightVPSB>> m_sb_light_vp_;
     Strong<Graphics::StructuredBuffer<ComputeShaders::IntersectionCompute::LightTableSB>> m_sb_light_table_;
 
     Engine::Resources::ShadowTexture m_shadow_texs_[g_max_lights];
@@ -55,6 +66,13 @@ namespace Client::Scripts
 
     Client::Resource::IntensityTexture m_intensity_test_texs_[g_max_lights];
     Client::Resource::IntensityPositionTexture m_intensity_position_texs_[g_max_lights];
+
+    DescriptorContainer m_shadow_heaps_;
+    StrongDescriptorPtr m_shadow_third_pass_heap_;
+
+    InstanceBufferContainer m_instance_buffers_;
+    std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_local_params_;
+    Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB> m_compute_local_param_;
 
     StrongTexture2D m_tmp_shadow_depth_;
     StrongComputeShader m_intersection_compute_;
