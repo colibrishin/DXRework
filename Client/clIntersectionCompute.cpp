@@ -32,7 +32,7 @@ namespace Client::ComputeShaders
     m_intersection_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
     m_position_texture_->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
 
-    param.SetParam(target_light_slot, m_target_light_);
+    param.SetParam(target_light_slot, static_cast<int>(m_target_light_));
   }
 
   void IntersectionCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param)
