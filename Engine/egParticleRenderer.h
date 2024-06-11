@@ -9,11 +9,11 @@ namespace Engine::Components
   {
   public:
     // int
-    constexpr static size_t particle_count_slot = 1;
+    constexpr static size_t particle_count_slot = 0;
 
     // float
-    constexpr static size_t duration_slot       = 2;
-    constexpr static size_t size_slot           = 3;
+    constexpr static size_t duration_slot       = 0;
+    constexpr static size_t size_slot           = 1;
 
     RENDER_COM_T(RENDER_COM_T_PARTICLE)
 
@@ -47,7 +47,8 @@ namespace Engine::Components
 
     bool  m_b_follow_owner_;
 
-    Graphics::ParamBase                                           m_params_;
+    Graphics::SBs::LocalParamSB                                   m_params_;
+    Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>       m_local_param_buffer_;
     Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
     InstanceParticles                                             m_instances_;
 
