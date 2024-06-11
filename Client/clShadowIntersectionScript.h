@@ -25,19 +25,25 @@ namespace Client::Scripts
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
     void PostUpdate(const float& dt) override;
-    void FixedUpdate(const float& dt) override; 
+    void FixedUpdate(const float& dt) override;
     void PreRender(const float& dt) override;
     void Render(const float& dt) override;
     void FirstPass(
-      const float & dt, const boost::shared_ptr<CommandPair> & cmd, const size_t shadow_slot, const boost::shared_ptr<
-      Layer> &      lights,
-      UINT &        instance_idx
+      const float& dt, 
+      const Weak<CommandPair>& cmd, 
+      const size_t shadow_slot, 
+      const StrongLayer& lights,
+      UINT&        instance_idx
     );
     void SecondPass(
-      const float&                    dt, const boost::shared_ptr<CommandPair>& cmd, const std::vector<Graphics::SBs::LightVPSB>& light_vps,
-      const boost::shared_ptr<Scene>& scene, const boost::shared_ptr<Layer>&    lights, UINT&                                     instance_idx
+      const float&                                 dt,
+      const Weak<CommandPair>&                     cmd,
+      const std::vector<Graphics::SBs::LightVPSB>& light_vps,
+      const StrongScene&                           scene, 
+      const StrongLayer& lights, 
+      UINT& instance_idx
     );
-    void ThirdPass(const boost::shared_ptr<CommandPair>& cmd, const boost::shared_ptr<Layer>& lights);
+    void ThirdPass(const Weak<CommandPair>& cmd, const StrongLayer& lights);
     void PostRender(const float& dt) override;
 
   protected:
@@ -72,7 +78,7 @@ namespace Client::Scripts
 
     InstanceBufferContainer m_instance_buffers_;
     std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_local_params_;
-    Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB> m_compute_local_param_;
+    std::vector<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>> m_compute_local_param_;
 
     StrongTexture2D m_tmp_shadow_depth_;
     StrongComputeShader m_intersection_compute_;

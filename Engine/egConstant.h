@@ -6,17 +6,19 @@ namespace Engine
   using DirectX::SimpleMath::Vector3;
 
   // Graphic Constants
-  constexpr int  g_max_lights                   = 8;
-  constexpr int  g_max_shadow_cascades          = 3;
-  constexpr int  g_max_bone_count               = 4;
-  constexpr int  g_max_shadow_map_size          = 512;
-  constexpr int  g_max_reflect_refract_map_size = 512;
-  constexpr UINT g_max_frame_latency_second     = 1;
-  constexpr UINT g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
-  constexpr UINT g_uav_slot_limit               = 8;
-  constexpr UINT g_structured_buffer_start      = 64;
-  constexpr UINT g_max_concurrent_command_lists = 100;
-  constexpr UINT g_param_buffer_slot_size       = 8;
+  constexpr int         g_max_lights                   = 8;
+  constexpr int         g_max_shadow_cascades          = 3;
+  constexpr int         g_max_bone_count               = 4;
+  constexpr int         g_max_shadow_map_size          = 512;
+  constexpr int         g_max_reflect_refract_map_size = 512;
+  constexpr UINT        g_max_frame_latency_second     = 1;
+  constexpr UINT        g_max_frame_latency_ms         = g_max_frame_latency_second * 1000;
+  constexpr UINT        g_uav_slot_limit               = 8;
+  constexpr UINT        g_structured_buffer_start      = 64;
+  constexpr UINT        g_max_concurrent_command_lists = 100;
+  constexpr UINT        g_param_buffer_slot_size       = 8;
+  constexpr DXGI_FORMAT g_default_rtv_format           = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 
   // Physics Constants
   constexpr float   g_epsilon                             = 0.001f;
