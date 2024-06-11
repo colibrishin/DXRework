@@ -15,7 +15,7 @@ SERIALIZE_IMPL
 
 namespace Client::ComputeShaders
 {
-  void ParticleCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
+  void ParticleCompute::preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param)
   {
     m_noises_[0]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 0);
     m_noises_[1]->Bind(list, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, 1);
@@ -24,10 +24,10 @@ namespace Client::ComputeShaders
     auto rng = getRandomEngine();
     const auto rng_val = rng() % random_texture_size;
 
-    GetRenderPipeline().SetParam((int)rng_val, random_value_slot);
+    param.SetParam(random_value_slot, (int)rng_val);
   }
 
-  void ParticleCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap)
+  void ParticleCompute::postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param)
   {
     m_noises_[0]->Unbind(list, BIND_TYPE_SRV);
     m_noises_[1]->Unbind(list, BIND_TYPE_SRV);

@@ -15,8 +15,8 @@ namespace Client::ComputeShaders
   protected:
     SERIALIZE_DECL
 
-    void preDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
-    void postDispatch(ID3D12GraphicsCommandList1 * list, const DescriptorPtr & heap) override;
+    void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) override;
+    void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) override;
     void loadDerived() override;
     void unloadDerived() override;
 
@@ -29,13 +29,13 @@ namespace Client::ComputeShaders
 
   private:
     // int
-    constexpr static size_t scaling_active_slot = 2;
-    constexpr static size_t random_value_slot = 3;
+    constexpr static size_t scaling_active_slot = 1;
+    constexpr static size_t random_value_slot = 2;
 
     // float
-    constexpr static size_t dt_slot             = 3;
-    constexpr static size_t scaling_min_slot    = 4;
-    constexpr static size_t scaling_max_slot    = 5;
+    constexpr static size_t dt_slot             = 2;
+    constexpr static size_t scaling_min_slot    = 3;
+    constexpr static size_t scaling_max_slot    = 4;
 
     std::mt19937_64 getRandomEngine() const;
 

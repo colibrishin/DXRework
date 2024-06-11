@@ -421,7 +421,7 @@ namespace Engine::Manager::Graphics
 
         RenderMap::accessor acc;
 
-        if (domain_map.find(acc, RENDER_COM_T_PARTICLE))
+        if (!domain_map.find(acc, RENDER_COM_T_PARTICLE))
         {
           domain_map.insert(acc, RENDER_COM_T_PARTICLE);
         }
