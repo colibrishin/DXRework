@@ -39,10 +39,23 @@ namespace Engine::Manager
 
     for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
     {
-      GetToolkitAPI().AppendPrimitiveBatch([this, it, dt]()
+      switch (it->first.redirection)
       {
-        it->second(it->first, dt);
-      });
+      case TOOLKIT_RENDER_PRIMITIVE: 
+          GetToolkitAPI().AppendPrimitiveBatch([this, it, dt]()
+          {
+            it->second(it->first, dt);
+          });
+        break;
+      case TOOLKIT_RENDER_SPRITE: 
+          GetToolkitAPI().AppendSpriteBatch([this, it, dt]()
+          {
+            it->second(it->first, dt);
+          });
+          break;
+      case TOOLKIT_RENDER_UNKNOWN:
+      default: ;
+      }
     }
 
     y = g_debug_y_initial;
@@ -79,7 +92,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{str}, [&](Message& msg, const float& dt)
+       Message{str, TOOLKIT_RENDER_SPRITE}, [&](Message& msg, const float& dt)
        {
          m_font_->DrawString
            (
@@ -102,7 +115,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [start, end, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [start, end, color](Message& msg, const float& dt)
        {
          DX::DrawRay(GetToolkitAPI().GetPrimitiveBatch(), start, end, false, color);
          msg.elapsed_time += dt;
@@ -114,7 +127,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [ray, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [ray, color](Message& msg, const float& dt)
        {
          DX::DrawRay
            (
@@ -130,7 +143,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [frustum, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [frustum, color](Message& msg, const float& dt)
        {
          DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), frustum, color);
          msg.elapsed_time += 2.f;
@@ -142,7 +155,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [sphere, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [sphere, color](Message& msg, const float& dt)
        {
          DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), sphere, color);
          msg.elapsed_time += 2.f;
@@ -154,7 +167,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [obb, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [obb, color](Message& msg, const float& dt)
        {
          DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), obb, color);
          msg.elapsed_time += 2.f;
@@ -166,7 +179,7 @@ namespace Engine::Manager
   {
     Push
       (
-       Message{}, [bb, color](Message& msg, const float& dt)
+       Message{"", TOOLKIT_RENDER_PRIMITIVE}, [bb, color](Message& msg, const float& dt)
        {
          DX::Draw(GetToolkitAPI().GetPrimitiveBatch(), bb, color);
          msg.elapsed_time += 2.f;

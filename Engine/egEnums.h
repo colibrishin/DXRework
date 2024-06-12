@@ -133,6 +133,13 @@ namespace Engine
     SAMPLER_END,
   };
 
+  enum eToolkitRenderType
+  {
+    TOOLKIT_RENDER_UNKNOWN = 0,
+    TOOLKIT_RENDER_PRIMITIVE = 1,
+    TOOLKIT_RENDER_SPRITE,
+  };
+
   enum eClientSBType : UINT;
   enum eClientSBUAVType : UINT;
 

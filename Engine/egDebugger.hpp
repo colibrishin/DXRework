@@ -44,8 +44,9 @@ namespace Engine::Manager
 
     struct Message
     {
-      std::string log;
-      float       elapsed_time;
+      std::string        log;
+      eToolkitRenderType redirection;
+      float              elapsed_time;
     };
 
     using DebugPair = std::pair<Message, std::function<void(Message&, float)>>;
