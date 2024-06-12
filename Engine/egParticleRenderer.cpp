@@ -155,7 +155,7 @@ namespace Engine::Components
 
   void ParticleRenderer::SetDuration(const float duration)
   {
-    m_params_.SetParam(duration, duration_slot);
+    m_params_.SetParam(duration_slot, duration);
 
     for (auto& instance : m_instances_)
     {
