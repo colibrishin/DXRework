@@ -5,7 +5,8 @@ namespace Engine
 {
   DescriptorPtrImpl::DescriptorPtrImpl()
     : m_handler_(nullptr),
-      m_offset_(0),
+      m_offset_(-1),
+      m_heap_queue_offset_(-1),
       m_cpu_handle_(),
       m_gpu_handle_(),
       m_cpu_sampler_handle_(),
@@ -17,6 +18,7 @@ namespace Engine
   {
     m_handler_                 = std::move(other.m_handler_);
     m_offset_                  = std::move(other.m_offset_);
+    m_heap_queue_offset_       = std::move(other.m_heap_queue_offset_);
     m_cpu_handle_              = std::move(other.m_cpu_handle_);
     m_gpu_handle_              = std::move(other.m_gpu_handle_);
     m_cpu_sampler_handle_      = std::move(other.m_cpu_sampler_handle_);
@@ -31,6 +33,7 @@ namespace Engine
     {
       m_handler_                 = std::move(other.m_handler_);
       m_offset_                  = std::move(other.m_offset_);
+      m_heap_queue_offset_       = std::move(other.m_heap_queue_offset_);
       m_cpu_handle_              = std::move(other.m_cpu_handle_);
       m_gpu_handle_              = std::move(other.m_gpu_handle_);
       m_cpu_sampler_handle_      = std::move(other.m_cpu_sampler_handle_);
@@ -47,9 +50,14 @@ namespace Engine
     Release();
   }
 
+  bool DescriptorPtrImpl::IsValid() const
+  {
+    return m_offset_ != -1 && m_heap_queue_offset_ != -1;
+  }
+
   void DescriptorPtrImpl::Release() const
   {
-    if (m_handler_ != nullptr)
+    if (IsValid() && m_handler_ != nullptr)
     {
       m_handler_->Release(*this);
     }
@@ -57,11 +65,21 @@ namespace Engine
 
   ID3D12DescriptorHeap* DescriptorPtrImpl::GetMainDescriptorHeap() const
   {
-    return m_handler_->GetMainDescriptorHeap();
+    if (!IsValid())
+    {
+      return nullptr;
+    }
+
+    return m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_);
   }
 
   void DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const
   {
+    if (!IsValid())
+    {
+      return;
+    }
+
     const auto& handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        m_cpu_sampler_handle_,
@@ -78,7 +96,13 @@ namespace Engine
       );
   }
 
-  void DescriptorPtrImpl::SetConstantBuffer(const D3D12_CPU_DESCRIPTOR_HANDLE& cbv, const UINT slot) const {
+  void DescriptorPtrImpl::SetConstantBuffer(const D3D12_CPU_DESCRIPTOR_HANDLE& cbv, const UINT slot) const
+  {
+    if (!IsValid())
+    {
+      return;
+    }
+
     const CD3DX12_CPU_DESCRIPTOR_HANDLE cbv_handle
       (
        m_cpu_handle_,
@@ -95,7 +119,13 @@ namespace Engine
       );
   }
 
-  void DescriptorPtrImpl::SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const {
+  void DescriptorPtrImpl::SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const
+  {
+    if (!IsValid())
+    {
+      return;
+    }
+
     const CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (
        m_cpu_handle_,
@@ -114,7 +144,13 @@ namespace Engine
 
   void DescriptorPtrImpl::SetShaderResources(
     UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data
-  ) const {
+  ) const
+  {
+    if (!IsValid())
+    {
+      return;
+    }
+
     CD3DX12_CPU_DESCRIPTOR_HANDLE heap_handle
       (
        m_cpu_handle_,
@@ -136,7 +172,13 @@ namespace Engine
     }
   }
 
-  void DescriptorPtrImpl::SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const {
+  void DescriptorPtrImpl::SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const
+  {
+    if (!IsValid())
+    {
+      return;
+    }
+
     const CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle
       (
        m_cpu_handle_,
@@ -155,6 +197,11 @@ namespace Engine
 
   void DescriptorPtrImpl::BindGraphic(const Weak<CommandPair>& w_cmd) const
   {
+    if (!IsValid())
+    {
+      return;
+    }
+
     const auto& cmd = w_cmd.lock();
     const auto& command_list = cmd->GetList();
     const auto& type = cmd->GetType();
@@ -165,8 +212,8 @@ namespace Engine
 
       ID3D12DescriptorHeap* heaps[]
       {
-        m_handler_->GetMainDescriptorHeap(),
-        m_handler_->GetMainSamplerDescriptorHeap()
+        m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
+        m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
       };
 
       command_list->SetDescriptorHeaps(2, heaps);
@@ -210,8 +257,8 @@ namespace Engine
 
       ID3D12DescriptorHeap* heaps[]
       {
-        m_handler_->GetMainDescriptorHeap(),
-        m_handler_->GetMainSamplerDescriptorHeap()
+        m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
+        m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
       };
 
       command_list->SetDescriptorHeaps(2, heaps);
@@ -251,10 +298,8 @@ namespace Engine
     }
   }
 
-  void DescriptorHandler::UpdateHeaps(const UINT size)
+  void DescriptorHandler::AppendNewHeaps()
   {
-    m_size_ = size;
-
     const D3D12_DESCRIPTOR_HEAP_DESC buffer_heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -271,12 +316,15 @@ namespace Engine
       .NodeMask = 0
     };
 
+    ComPtr<ID3D12DescriptorHeap> buffer_heap;
+    ComPtr<ID3D12DescriptorHeap> sampler_heap;
+
     DX::ThrowIfFailed
       (
        GetD3Device().GetDevice()->CreateDescriptorHeap
        (
         &buffer_heap_desc,
-        IID_PPV_ARGS(m_main_descriptor_heap_.GetAddressOf())
+        IID_PPV_ARGS(buffer_heap.GetAddressOf())
        )
       );
 
@@ -285,131 +333,125 @@ namespace Engine
        GetD3Device().GetDevice()->CreateDescriptorHeap
        (
         &buffer_heap_desc_sampler,
-        IID_PPV_ARGS(m_main_sampler_descriptor_heap_.GetAddressOf())
+        IID_PPV_ARGS(sampler_heap.GetAddressOf())
        )
       );
 
-    m_used_slots_.resize(m_size_, false);
-    m_descriptors_.resize(m_size_);
+    m_main_descriptor_heap_.emplace_back(buffer_heap);
+    m_main_sampler_descriptor_heap_.emplace_back(sampler_heap);
 
-    for (UINT i = 0; i < m_size_; ++i)
-    {
-      if (m_descriptors_[i] != nullptr)
-      {
-        m_descriptors_[i]->m_cpu_handle_ = CD3DX12_CPU_DESCRIPTOR_HANDLE
-          (
-           m_main_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-           i * g_total_engine_slots,
-           m_buffer_size_
-          );
+    m_used_slots_.push_back({});
+    m_descriptors_.push_back({});
+    m_heap_alloc_counter_.push_back(0);
 
-        m_descriptors_[i]->m_gpu_handle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE
-          (
-           m_main_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-           i * g_total_engine_slots,
-           m_buffer_size_
-          );
-
-        m_descriptors_[i]->m_cpu_sampler_handle_ = CD3DX12_CPU_DESCRIPTOR_HANDLE
-          (
-           m_main_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
-           i * g_max_sampler_slots,
-           m_sampler_size_
-          );
-
-        m_descriptors_[i]->m_gpu_sampler_handle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE
-          (
-           m_main_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-           i * g_max_sampler_slots,
-           m_sampler_size_
-          );
-      }
-      else
-      {
-        m_used_slots_[i] = false;
-        m_descriptors_[i] = nullptr;
-      }
-    }
+    m_used_slots_.back().resize(m_size_, false);
+    m_descriptors_.back().resize(m_size_);
   }
 
   DescriptorHandler::DescriptorHandler(const UINT size)
   {
-    UpdateHeaps(size);
+    m_size_ = size;
+    AppendNewHeaps();
     m_buffer_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_sampler_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
   }
 
   DescriptorPtr DescriptorHandler::Acquire()
   {
+    UINT64 queue_offset = 0;
+
+    for (int i = 0; i < m_heap_alloc_counter_.size(); ++i)
+    {
+      if (m_heap_alloc_counter_[i] < m_size_)
+      {
+        break;
+      }
+
+      ++queue_offset;
+    }
+
+    if (queue_offset >= m_heap_alloc_counter_.size())
+    {
+      OutputDebugStringA("WARNING: DescriptorHandler No available slots. Appending new heaps.\n");
+      AppendNewHeaps();
+    }
+
     for (UINT i = 0; i < m_size_; ++i)
     {
-      if (!m_used_slots_[i])
+      if (!m_used_slots_[queue_offset][i])
       {
         const auto& buffer_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
           (
-           m_main_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+           m_main_descriptor_heap_[queue_offset]->GetCPUDescriptorHandleForHeapStart(),
            i * g_total_engine_slots,
            m_buffer_size_
           );
 
         const auto& sampler_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
           (
-           m_main_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart(),
+           m_main_sampler_descriptor_heap_[queue_offset]->GetCPUDescriptorHandleForHeapStart(),
            i * g_max_sampler_slots,
            m_sampler_size_
           );
 
-        m_descriptors_[i] = StrongDescriptorPtr(new DescriptorPtrImpl
+        m_descriptors_[queue_offset][i] = StrongDescriptorPtr
           (
-           this,
-           i,
-           buffer_handle,
-           CD3DX12_GPU_DESCRIPTOR_HANDLE
+           new DescriptorPtrImpl
            (
-            m_main_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-            i * g_total_engine_slots,
-            m_buffer_size_
-           ),
-           sampler_handle,
-           CD3DX12_GPU_DESCRIPTOR_HANDLE
-           (
-            m_main_sampler_descriptor_heap_->GetGPUDescriptorHandleForHeapStart(),
-            i * g_max_sampler_slots,
+            this,
+            queue_offset,
+            i,
+            buffer_handle,
+            CD3DX12_GPU_DESCRIPTOR_HANDLE
+            (
+             m_main_descriptor_heap_[queue_offset]->GetGPUDescriptorHandleForHeapStart(),
+             i * g_total_engine_slots,
+             m_buffer_size_
+            ),
+            sampler_handle,
+            CD3DX12_GPU_DESCRIPTOR_HANDLE
+            (
+             m_main_sampler_descriptor_heap_[queue_offset]->GetGPUDescriptorHandleForHeapStart(),
+             i * g_max_sampler_slots,
+             m_sampler_size_
+            ),
+            m_buffer_size_,
             m_sampler_size_
-           ),
-           m_buffer_size_,
-           m_sampler_size_
-          ));
+           )
+          );
 
-        m_used_slots_[i] = true;
+        m_used_slots_[queue_offset][i] = true;
+        ++m_heap_alloc_counter_[queue_offset];
 
-        return m_descriptors_[i];
+        return m_descriptors_[queue_offset][i];
       }
     }
 
-    GetD3Device().WaitForCommandsCompletion();
-    UpdateHeaps(m_size_ * 2);
-    m_size_ *= 2;
-
-    return Acquire();
+    throw std::runtime_error("DescriptorHandler No available slots.");
   }
 
   void DescriptorHandler::Release(const DescriptorPtrImpl& handles)
   {
-    m_used_slots_[handles.m_offset_] = false;
-    m_descriptors_[handles.m_offset_] = nullptr;
+    m_used_slots_[handles.m_heap_queue_offset_][handles.m_offset_] = false;
+
+    // Dispose the handle.
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_offset_ = -1;
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_heap_queue_offset_ = -1;
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_cpu_handle_ = {};
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_gpu_handle_ = {};
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_cpu_sampler_handle_ = {};
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_gpu_sampler_handle_ = {};
+
+    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_].reset();
   }
 
-  bool DescriptorHandler::IsAvailable() const
+  ID3D12DescriptorHeap* DescriptorHandler::GetMainDescriptorHeap(const UINT64 offset) const
   {
-    for (const auto& slot : m_used_slots_)
-    {
-      if (!slot)
-      {
-        return true;
-      }
-    }
+    return m_main_descriptor_heap_[offset].Get();
+  }
 
-    return false;
+  ID3D12DescriptorHeap* DescriptorHandler::GetMainSamplerDescriptorHeap(const UINT64 offset) const
+  {
+    return m_main_sampler_descriptor_heap_[offset].Get();
   }
 }

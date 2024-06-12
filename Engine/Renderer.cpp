@@ -225,11 +225,6 @@ namespace Engine::Manager::Graphics
         );
     }
 
-    if (!GetRenderPipeline().IsHeapAvailable())
-    {
-      throw std::runtime_error("Descriptor heap is not available!");
-    }
-
     const auto& cmd = w_cmd.lock();
 
     for (const auto& sb_ptr : additional_structured_buffers)

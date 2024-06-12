@@ -58,7 +58,6 @@ namespace Engine::Manager::Graphics
     void DefaultRenderTarget(const Weak<CommandPair> & w_cmd) const;
     void DefaultViewport(const Weak<CommandPair> & w_cmd) const;
     void DefaultScissorRect(const Weak<CommandPair> & w_cmd) const;
-    void DefaultHeaps(const Weak<CommandPair> & w_cmd) const;
     void DefaultRootSignature(const Weak<CommandPair> & w_cmd) const;
 
     void CopyBackBuffer(const Weak<CommandPair> & w_cmd, ID3D12Resource * resource) const;
@@ -76,7 +75,6 @@ namespace Engine::Manager::Graphics
     static void SetPSO(const Weak<CommandPair> & w_cmd, const StrongShader & Shader);
 
     [[nodiscard]] DescriptorPtr AcquireHeapSlot();
-    [[nodiscard]] bool          IsHeapAvailable() const;
 
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;

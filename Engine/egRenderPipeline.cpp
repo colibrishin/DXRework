@@ -47,18 +47,6 @@ namespace Engine::Manager::Graphics
     cmd->GetList()->RSSetScissorRects(1, &m_scissor_rect_);
   }
 
-  void RenderPipeline::DefaultHeaps(const Weak<CommandPair>& w_cmd) const
-  {
-    const auto& cmd = w_cmd.lock();
-    ID3D12DescriptorHeap* heaps[] =
-    {
-      m_descriptor_handler_.GetMainDescriptorHeap(),
-      m_descriptor_handler_.GetMainSamplerDescriptorHeap()
-    };
-
-    cmd->GetList()->SetDescriptorHeaps(2, heaps);
-  }
-
   void RenderPipeline::DefaultRootSignature(const Weak<CommandPair>& w_cmd) const
   {
     const auto& cmd = w_cmd.lock();
@@ -783,11 +771,6 @@ namespace Engine::Manager::Graphics
   {
     std::lock_guard<std::mutex> lock(m_descriptor_mutex_);
     return m_descriptor_handler_.Acquire();
-  }
-
-  bool RenderPipeline::IsHeapAvailable() const
-  {
-    return m_descriptor_handler_.IsAvailable();
   }
 
   UINT RenderPipeline::GetBufferDescriptorSize() const
