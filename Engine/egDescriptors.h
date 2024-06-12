@@ -36,13 +36,15 @@ namespace Engine
     friend struct DescriptorHandler;
 
     explicit DescriptorPtrImpl(
-      DescriptorHandler*                 handler, const UINT64 heap_queue_offset, const INT64 offset,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& cpu_handle, const D3D12_GPU_DESCRIPTOR_HANDLE& gpu_handle,
+      DescriptorHandler*                 handler, const UINT64                                  heap_queue_offset,
+      const INT64                        segment_offset, const INT64                            element_offset,
+      const D3D12_CPU_DESCRIPTOR_HANDLE& cpu_handle, const D3D12_GPU_DESCRIPTOR_HANDLE&         gpu_handle,
       const D3D12_CPU_DESCRIPTOR_HANDLE& cpu_sampler_handle, const D3D12_GPU_DESCRIPTOR_HANDLE& gpu_sampler_handle,
       const UINT                         buffer_descriptor_size, const UINT                     sampler_descriptor_size
     )
       : m_handler_(handler),
-        m_offset_(offset),
+        m_segment_offset_(segment_offset),
+        m_element_offset_(element_offset),
         m_heap_queue_offset_(heap_queue_offset),
         m_cpu_handle_(cpu_handle),
         m_gpu_handle_(gpu_handle),
@@ -52,7 +54,8 @@ namespace Engine
         m_sampler_descriptor_size_(sampler_descriptor_size) {}
 
     DescriptorHandler* m_handler_;
-    INT64              m_offset_;
+    INT64              m_segment_offset_;
+    INT64              m_element_offset_;
     UINT64             m_heap_queue_offset_;
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_cpu_handle_;
@@ -68,7 +71,7 @@ namespace Engine
   struct DescriptorHandler final
   {
   public:
-    DescriptorHandler(const UINT size);
+    DescriptorHandler();
 
     DescriptorPtr Acquire();
     void          Release(const DescriptorPtrImpl& handles);
@@ -79,9 +82,11 @@ namespace Engine
   private:
     void AppendNewHeaps();
 
+    inline static constexpr size_t s_element_size = std::numeric_limits<unsigned int>::digits;
+    inline static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
+
     UINT                                               m_size_;
-    std::deque<std::vector<bool>>                      m_used_slots_;
-    std::deque<UINT64>                                 m_heap_alloc_counter_;
+    std::deque<__m256i>                                m_used_slots_;
     std::deque<std::vector<Strong<DescriptorPtrImpl>>> m_descriptors_;
 
     std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_;

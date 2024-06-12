@@ -28,9 +28,7 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) :
-        m_descriptor_handler_(g_max_concurrent_command_lists)
-    {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
