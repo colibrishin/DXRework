@@ -112,7 +112,8 @@ namespace Engine
 
  static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
   {
-    return {lhs.x + value, lhs.y + value, lhs.z + value};
+    const __m128 v = _mm_set_ps(lhs.x, lhs.y, lhs.z, 0.f);
+    return _mm_add_ps(v, _mm_set1_ps(value));
   }
 
  static bool __vectorcall VectorElementInRange(const Vector3& lhs, const float value)
@@ -122,11 +123,23 @@ namespace Engine
 
  static Vector3 __vectorcall XMTensorCross(const XMFLOAT3X3& lhs, const Vector3& rhs)
   {
-    return {
-      lhs._11 * rhs.x + lhs._12 * rhs.y + lhs._13 * rhs.z,
-      lhs._21 * rhs.x + lhs._22 * rhs.y + lhs._23 * rhs.z,
-      lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
+    const __m128 v = _mm_set_ps(rhs.x, rhs.y, rhs.z, 0.f);
+    __m128 mr0 = _mm_set_ps(lhs._11, lhs._12, lhs._13, 0.f);
+    __m128 mr1 = _mm_set_ps(lhs._21, lhs._22, lhs._23, 0.f);
+    __m128 mr2 = _mm_set_ps(lhs._31, lhs._32, lhs._33, 0.f);
+
+    mr0 = _mm_mul_ps(v, mr0);
+    mr1 = _mm_mul_ps(v, mr1);
+    mr2 = _mm_mul_ps(v, mr2);
+
+    const Vector3 result = 
+    {
+      _mm_hadd_ps(mr0, mr0).m128_f32[1],
+      _mm_hadd_ps(mr1, mr1).m128_f32[1],
+      _mm_hadd_ps(mr2, mr2).m128_f32[1]
     };
+
+    return result;
   }
 } // namespace Engine
 
