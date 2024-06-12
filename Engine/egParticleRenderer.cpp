@@ -59,9 +59,10 @@ namespace Engine::Components
 
       m_sb_buffer_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-      cmd->Execute();
-      
-      m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      cmd->FlagReady([this]()
+      {
+        m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      });
 
       heap->Release();
     }
