@@ -443,69 +443,37 @@ namespace Client::Scripts
       Graphics::SBs::LocalParamSB empty_param{};
       cast->Dispatch(cmd->GetList(), m_shadow_third_pass_heap_, empty_param, m_compute_local_param_[i]);
     }
-
-    // Force to wait for the whole passes to finish.
-    cmd->Execute();
-
-    std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
-    light_table.resize(lights->size());
-    m_sb_light_table_->GetData(lights->size(), light_table.data());
-
-    // Build bounding box data from result of compute shader.
-    for (int i = 0; i < lights->size(); ++i)
-    {
-      for (int j = 0; j < lights->size(); ++j)
-      {
-        if (light_table[i].lightTable[j].value > 0)
-        {
-          const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
-          const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
-
-          const auto average = Vector3::Lerp(wp_min, wp_max , 0.5f);
-
-          GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
-
-          BoundingBox bbox;
-          BoundingBox::CreateFromPoints(
-                                        bbox, 
-                                        wp_min, 
-                                        wp_max);
-
-          m_shadow_bbox_.emplace(std::make_pair(i, j), bbox);
-        }
-      }
-    }
   }
 
   void ShadowIntersectionScript::PostRender(const float& dt)
   {
-    const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Intersection Update").lock();
-
-    cmd->SoftReset();
-
-	  for (auto& tex : m_shadow_texs_)
-    {
-      tex.Clear(cmd->GetList());
-    }
-
-    for (auto& tex : m_intensity_position_texs_)
-    {
-      tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-    }
-
-    for (auto& tex : m_intensity_test_texs_)
-    {
-      tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-    }
-
-    for (auto& tex : m_shadow_mask_texs_)
-    {
-      tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-    }
-
     // Build shadow map of this object for each light.
     if (const auto& scene = GetOwner().lock()->GetScene().lock())
     {
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Intersection Update").lock();
+
+      cmd->SoftReset();
+
+      for (auto& tex : m_shadow_texs_)
+      {
+        tex.Clear(cmd->GetList());
+      }
+
+      for (auto& tex : m_intensity_position_texs_)
+      {
+        tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+      }
+
+      for (auto& tex : m_intensity_test_texs_)
+      {
+        tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+      }
+
+      for (auto& tex : m_shadow_mask_texs_)
+      {
+        tex.Clear(cmd->GetList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+      }
+
       std::vector<Graphics::SBs::LightVPSB> light_vps;
       constexpr size_t                      shadow_slot = 1;
       const auto                            lights      = (*scene)[LAYER_LIGHT];
@@ -547,10 +515,43 @@ namespace Client::Scripts
       FirstPass(dt, cmd, shadow_slot, lights, instance_idx);
       SecondPass(dt, cmd, light_vps, scene, lights, instance_idx);
       ThirdPass(cmd, lights);
-    }
-    else
-    {
-      cmd->FlagReady();
+
+      cmd->FlagReady
+      (
+       [this, lights]()
+       {
+         std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
+         light_table.resize(lights->size());
+         m_sb_light_table_->GetData(lights->size(), light_table.data());
+
+         // Build bounding box data from result of compute shader.
+         for (int i = 0; i < lights->size(); ++i)
+         {
+           for (int j = 0; j < lights->size(); ++j)
+           {
+             if (light_table[i].lightTable[j].value > 0)
+             {
+               const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
+               const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
+
+               const auto average = Vector3::Lerp(wp_min, wp_max, 0.5f);
+
+               GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
+
+               BoundingBox bbox;
+               BoundingBox::CreateFromPoints
+                 (
+                  bbox,
+                  wp_min,
+                  wp_max
+                 );
+
+               m_shadow_bbox_.emplace(std::make_pair(i, j), bbox);
+             }
+           }
+         }
+       }
+      );
     }
   }
 

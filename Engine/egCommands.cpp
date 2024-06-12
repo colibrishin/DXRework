@@ -71,10 +71,16 @@ namespace Engine
     m_b_ready_ = false;
   }
 
-  void CommandPair::FlagReady()
+  void CommandPair::FlagReady(const std::function<void()>& post_execution)
   {
     std::lock_guard<std::mutex> lock(m_ready_mutex_);
     m_b_ready_ = true;
+
+    if (post_execution)
+    {
+      m_post_execute_function_ = post_execution;
+    }
+
     GetD3Device().m_command_producer_cv_.notify_all();
   }
 
@@ -143,6 +149,11 @@ namespace Engine
 
       WaitForSingleObject(handle, INFINITE);
       CloseHandle(handle);
+    }
+
+    if (m_post_execute_function_)
+    {
+      m_post_execute_function_();
     }
 
     m_b_ready_ = false;

@@ -7,15 +7,18 @@ namespace Engine
   {
   public:
     explicit CommandPair(
-      eCommandTypes                             type, UINT64 ID, UINT64 buffer_idx, const std::wstring& debug_name);
+      eCommandTypes type, UINT64 ID, UINT64 buffer_idx, const std::wstring& debug_name
+    );
 
-    CommandPair(const CommandPair& other) = delete;
+    CommandPair(const CommandPair& other)            = delete;
     CommandPair& operator=(const CommandPair& other) = delete;
 
     void HardReset();
     void SoftReset();
 
-    void               FlagReady();
+    // post_execution is called after the command list is executed.
+    // thread-safety of post_execution inside values should be guaranteed by the caller.
+    void               FlagReady(const std::function<void()>& post_execution = {});
     [[nodiscard]] bool IsReady();
     [[nodiscard]] bool IsExecuted();
 
@@ -38,6 +41,7 @@ namespace Engine
     UINT64                             m_buffer_idx_;
     std::wstring                       m_debug_name_;
     std::atomic<UINT64>                m_latest_fence_value_;
+    std::function<void()>              m_post_execute_function_;
 
     bool                               m_b_executed_;
     bool                               m_b_ready_;

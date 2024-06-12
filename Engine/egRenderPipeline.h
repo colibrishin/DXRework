@@ -28,9 +28,7 @@ namespace Engine::Manager::Graphics
     };
 
   public:
-    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) :
-        m_descriptor_handler_(g_max_concurrent_command_lists)
-    {}
+    explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
     void Initialize() override;
     void PreRender(const float& dt) override;
@@ -58,7 +56,6 @@ namespace Engine::Manager::Graphics
     void DefaultRenderTarget(const Weak<CommandPair> & w_cmd) const;
     void DefaultViewport(const Weak<CommandPair> & w_cmd) const;
     void DefaultScissorRect(const Weak<CommandPair> & w_cmd) const;
-    void DefaultHeaps(const Weak<CommandPair> & w_cmd) const;
     void DefaultRootSignature(const Weak<CommandPair> & w_cmd) const;
 
     void CopyBackBuffer(const Weak<CommandPair> & w_cmd, ID3D12Resource * resource) const;
@@ -76,7 +73,6 @@ namespace Engine::Manager::Graphics
     static void SetPSO(const Weak<CommandPair> & w_cmd, const StrongShader & Shader);
 
     [[nodiscard]] DescriptorPtr AcquireHeapSlot();
-    [[nodiscard]] bool          IsHeapAvailable() const;
 
     UINT GetBufferDescriptorSize() const;
     UINT GetSamplerDescriptorSize() const;
