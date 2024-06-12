@@ -106,6 +106,12 @@ namespace Engine::Manager::Graphics
         Vector3 light_dir;
         (tr->GetWorldPosition()).Normalize(light_dir);
 
+        if (light_dir == Vector3::Zero)
+        {
+          current_light_vp.push_back({});
+          continue;
+        }
+
         SBs::LightVPSB light_vp{};
         // Get the light's view and projection matrix in g_max_shadow_cascades parts.
         EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
