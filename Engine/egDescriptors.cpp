@@ -435,14 +435,18 @@ namespace Engine
     m_used_slots_[handles.m_heap_queue_offset_][handles.m_offset_] = false;
 
     // Dispose the handle.
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_offset_ = -1;
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_heap_queue_offset_ = -1;
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_cpu_handle_ = {};
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_gpu_handle_ = {};
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_cpu_sampler_handle_ = {};
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_]->m_gpu_sampler_handle_ = {};
+    const auto prev_queue_offset = handles.m_heap_queue_offset_;
+    const auto prev_offset = handles.m_offset_;
 
-    m_descriptors_[handles.m_heap_queue_offset_][handles.m_offset_].reset();
+    m_descriptors_[prev_queue_offset][prev_offset]->m_cpu_handle_ = {};
+    m_descriptors_[prev_queue_offset][prev_offset]->m_gpu_handle_ = {};
+    m_descriptors_[prev_queue_offset][prev_offset]->m_cpu_sampler_handle_ = {};
+    m_descriptors_[prev_queue_offset][prev_offset]->m_gpu_sampler_handle_ = {};
+    m_descriptors_[prev_queue_offset][prev_offset]->m_offset_ = -1;
+    m_descriptors_[prev_queue_offset][prev_offset]->m_heap_queue_offset_ = -1;
+
+    m_descriptors_[prev_queue_offset][prev_offset].reset();
+    --m_heap_alloc_counter_[prev_queue_offset];
   }
 
   ID3D12DescriptorHeap* DescriptorHandler::GetMainDescriptorHeap(const UINT64 offset) const
