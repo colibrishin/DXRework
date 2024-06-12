@@ -20,8 +20,11 @@ namespace Engine::Physics { namespace GJK
       float                       max = -FLT_MAX;
       Vector3                     result;
       static std::vector<Vector3> out_stream;
-      out_stream.clear();
-      out_stream.resize(points.size());
+
+      if (out_stream.size() < points.size()) 
+      {
+        out_stream.resize(points.size());
+      }
 
       XMVector3TransformCoordStream
         (
@@ -31,14 +34,14 @@ namespace Engine::Physics { namespace GJK
          points.size(), world
         );
 
-      for (const auto& point : out_stream)
+      for (int i = 0; i < points.size(); ++i)
       {
-        const float dist = point.Dot(dir);
+        const float dist = out_stream[i].Dot(dir);
 
         if (dist > max)
         {
           max    = dist;
-          result = point;
+          result = out_stream[i];
         }
       }
 
