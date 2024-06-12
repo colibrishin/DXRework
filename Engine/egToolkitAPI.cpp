@@ -113,6 +113,15 @@ namespace Engine::Manager::Graphics
 
     m_basic_effect_->Apply(p_cmd->GetList());
 
+    if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+    {
+      if (const auto& cam = scene->GetMainCamera().lock())
+      {
+        m_basic_effect_->SetView(cam->GetViewMatrix());
+        m_basic_effect_->SetProjection(cam->GetProjectionMatrix());
+      }
+    }
+
     GetRenderPipeline().DefaultRenderTarget(p_cmd);
     GetRenderPipeline().DefaultScissorRect(p_cmd);
     GetRenderPipeline().DefaultViewport(p_cmd);
