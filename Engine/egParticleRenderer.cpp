@@ -21,6 +21,27 @@ namespace Engine::Components
     : RenderComponent(RENDER_COM_T_PARTICLE, owner),
       m_b_follow_owner_(true) {}
 
+  ParticleRenderer::ParticleRenderer(const ParticleRenderer& other) : RenderComponent(other)
+  {
+    m_cs_               = other.m_cs_;
+    m_cs_meta_path_str_ = other.m_cs_meta_path_str_;
+    m_instances_        = other.m_instances_;
+    m_b_follow_owner_   = other.m_b_follow_owner_;
+  }
+
+  ParticleRenderer& ParticleRenderer::operator=(const ParticleRenderer& other)
+  {
+    if (this != &other)
+    {
+      RenderComponent::operator=(other);
+      m_cs_               = other.m_cs_;
+      m_cs_meta_path_str_ = other.m_cs_meta_path_str_;
+      m_instances_        = other.m_instances_;
+      m_b_follow_owner_   = other.m_b_follow_owner_;
+    }
+    return *this;
+  }
+
   void ParticleRenderer::Initialize()
   {
     const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer Init").lock();
@@ -59,18 +80,23 @@ namespace Engine::Components
 
       m_sb_buffer_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-      cmd->Execute();
-      
-      m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+      cmd->FlagReady
+        (
+         [this]()
+         {
+           std::lock_guard<std::mutex> lock(m_instances_mutex_);
+           m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
+
+           // Remove inactive particles.
+           for (auto it = m_instances_.begin(); it != m_instances_.end();)
+           {
+             if (!it->GetActive()) { it = m_instances_.erase(it); }
+             else { ++it; }
+           }
+         }
+        );
 
       heap->Release();
-    }
-
-    // Remove inactive particles.
-    for (auto it = m_instances_.begin(); it != m_instances_.end();)
-    {
-      if (!it->GetActive()) { it = m_instances_.erase(it); }
-      else { ++it; }
     }
   }
 
@@ -139,15 +165,17 @@ namespace Engine::Components
     }
   }
 
-  const std::vector<Graphics::SBs::InstanceSB>& ParticleRenderer::GetParticles() const
+  std::vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
   {
-    return reinterpret_cast<const std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
+    std::lock_guard<std::mutex> lock(m_instances_mutex_);
+    return reinterpret_cast<std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
   }
 
   void ParticleRenderer::SetFollowOwner(const bool follow) { m_b_follow_owner_ = follow; }
 
   void ParticleRenderer::SetCount(const size_t count)
   {
+    std::lock_guard<std::mutex> lock(m_instances_mutex_);
     // Expand and apply the world matrix of the owner to each instance.
     m_instances_.resize(count);
     m_params_.SetParam(particle_count_slot, static_cast<int>(count));
@@ -155,6 +183,7 @@ namespace Engine::Components
 
   void ParticleRenderer::SetDuration(const float duration)
   {
+    std::lock_guard<std::mutex> lock(m_instances_mutex_);
     m_params_.SetParam(duration_slot, duration);
 
     for (auto& instance : m_instances_)
