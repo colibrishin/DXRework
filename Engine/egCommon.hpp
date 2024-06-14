@@ -65,6 +65,47 @@ namespace Engine
     bool collision;
   };
 
+  static bool check_avx()
+  {
+    static bool use_avx = std::__isa_available >= std::_Stl_isa_available_avx2;
+    return use_avx;
+  }
+
+
+  static void _mm256_memcpy_Impl(void* dst, const void* src, const size_t size)
+  {
+    // 32 bytes size block copy
+    const size_t count = size / sizeof(__m256);
+    // remaining bytes if size is not multiple of 32
+    const size_t remain = size % sizeof(__m256);
+
+    const auto p_dst = static_cast<__m256i*>(dst);
+    const auto p_src = static_cast<const __m256i*>(src);
+
+    for (size_t i = 0; i < count; ++i)
+    {
+      _mm256_store_si256(p_dst + i, *(p_src + i));
+    }
+
+    // If remaining bytes exist, fallback to default memcpy
+    if (remain)
+    {
+      std::memcpy(p_dst + count, p_src + count, remain);
+    }
+  }
+
+  static void _mm256_memcpy(void* dst, const void* src, const size_t size)
+  {
+    if (check_avx())
+    {
+      _mm256_memcpy_Impl(dst, src, size);
+    }
+    else
+    {
+      std::memcpy(dst, src, size);
+    }
+  }
+
   // todo: Using this function would remove the const qualifier from the object.
   template <typename T>
   inline static bool __vectorcall LockWeak(const boost::weak_ptr<T>& weak, boost::shared_ptr<T>& strong)
