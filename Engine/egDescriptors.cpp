@@ -365,45 +365,84 @@ namespace Engine
     UINT64 element_offset = 0;
     bool found = false;
 
-    static const __m256i all_mask = _mm256_set1_epi32(0xFFFFFFFF);
-
-    for (int i = 0; i < m_used_slots_.size(); ++i)
+    if (check_avx())
     {
-      // Bitwise AND + NOT
-      // If NOT + zero operand then carry flag is set
-      // AND => 1 => NOT => CF = false (which means, all of bits are set)
-      // AND => 0 => NOT => CF = true (which means, all of bits are not set)
-      if (!_mm256_testc_si256(m_used_slots_[i], all_mask))
+      static const __m256i all_mask = _mm256_set1_epi32(0xFFFFFFFF);
+
+      for (int i = 0; i < m_used_slots_.size(); ++i)
       {
-        queue_offset = i;
-
-        for (int j = 0; j < s_segment_size; ++j)
+        // Bitwise AND + NOT
+        // If NOT + zero operand then carry flag is set
+        // AND => 1 => NOT => CF = false (which means, all of bits are set)
+        // AND => 0 => NOT => CF = true (which means, all of bits are not set)
+        if (!_mm256_testc_si256(m_used_slots_[i], all_mask))
         {
-          const auto& segment_bits = m_used_slots_[i].m256i_u32[j];
+          queue_offset = i;
 
-          // Not available if all bits are set.
-          if (segment_bits == 0xFFFFFFFF)
+          for (int j = 0; j < s_segment_size; ++j)
           {
-            continue;
+            const auto& segment_bits = m_used_slots_[i].m256i_u32[j];
+
+            // Not available if all bits are set.
+            if (segment_bits == 0xFFFFFFFF) { continue; }
+
+            segment_offset = j;
+            // Trailing zero (first available slot, negates segment bits for using zero)
+            element_offset = _tzcnt_u32(~segment_bits);
+
+            found = true;
+            break;
           }
+        }
 
-          segment_offset = j;
-          // Trailing zero (first available slot, negates segment bits for using zero)
-          element_offset = _tzcnt_u32(~segment_bits);
-
-          found = true;
+        if (found)
+        {
           break;
         }
-      }
 
-      if (found)
-      {
-        break;
+        ++queue_offset;
       }
-
-      ++queue_offset;
     }
+    else
+    {
+      // SSE2 fallback
+      static const __m128i all_mask = _mm_set1_epi32(0xFFFFFFFF);
 
+      for (int i = 0; i < m_used_slots_.size(); ++i)
+      {
+        for (int j = 0; j < sizeof(__m256i) / sizeof(__m128); ++j)
+        {
+          const auto& mask = _mm_cmpeq_epi32(reinterpret_cast<__m128i&>(m_used_slots_[i]), all_mask);
+
+          for (int k = 0; k < sizeof(__m128i) / sizeof(UINT32); ++k)
+          {
+            if (mask.m128i_u32[k] == 0xFFFFFFFF)
+            {
+              continue;
+            }
+
+            segment_offset = (j + 1) * k;
+            element_offset = _tzcnt_u32(~m_used_slots_[(j + 1) / 2].m256i_u32[segment_offset]);
+
+            found = true;
+            break;
+          }
+
+          if (found)
+          {
+            break;
+          }
+        }
+
+        if (found)
+        {
+          break;
+        }
+
+        ++queue_offset;
+      }
+    }
+    
     if (queue_offset >= m_used_slots_.size())
     {
       OutputDebugStringA("WARNING: DescriptorHandler No available slots. Appending new heaps.\n");
