@@ -521,11 +521,6 @@ namespace Engine::Manager::Graphics
   {
     while (m_command_consumer_running_)
     {
-      if (m_command_pairs_count_ == 0)
-      {
-        continue;
-      }
-
       const auto& current = m_command_pairs_count_.load();
       m_command_pairs_count_.wait(current + 1);
 

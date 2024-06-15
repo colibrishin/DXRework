@@ -207,7 +207,7 @@ namespace Engine::Resources
     char* data = nullptr;
 
     DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    std::memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
+    _mm256_memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
     m_vertex_buffer_upload_->Unmap(0, nullptr);
 
     cmd->GetList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
@@ -250,7 +250,7 @@ namespace Engine::Resources
     );
 
     DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    std::memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
+    _mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
     m_index_buffer_upload_->Unmap(0, nullptr);
 
     cmd->GetList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());

@@ -210,7 +210,7 @@ namespace Engine::Graphics
 
       DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-      std::memcpy(data, initial_data, sizeof(T) * size);
+      _mm256_memcpy(data, initial_data, sizeof(T) * size);
 
       m_upload_buffer_->Unmap(0, nullptr);
 
@@ -292,7 +292,7 @@ namespace Engine::Graphics
 
     DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    std::memcpy(data, src_ptr, sizeof(T) * size);
+    _mm256_memcpy(data, src_ptr, sizeof(T) * size);
 
     m_upload_buffer_->Unmap(0, nullptr);
 
@@ -350,7 +350,7 @@ namespace Engine::Graphics
 
     DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    std::memcpy(dst_ptr, data, sizeof(T) * size);
+    _mm256_memcpy(dst_ptr, data, sizeof(T) * size);
 
     m_read_buffer_->Unmap(0, nullptr);
   }

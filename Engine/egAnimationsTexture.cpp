@@ -90,7 +90,7 @@ namespace Engine::Resources
 
           const auto& mat = m_evaluated_animations_[i][j][k];
 
-          std::memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
+          _mm256_memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
         }
       }
     }
