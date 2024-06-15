@@ -422,7 +422,7 @@ namespace Engine
             }
 
             segment_offset = (j + 1) * k;
-            element_offset = _tzcnt_u32(~m_used_slots_[(j + 1) / 2].m256i_u32[segment_offset]);
+            element_offset = _tzcnt_u32(~m_used_slots_[i].m256i_u32[segment_offset]);
 
             found = true;
             break;
