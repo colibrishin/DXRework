@@ -46,6 +46,11 @@ namespace Engine
     DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
 
     DX::ThrowIfFailed(m_list_->Close());
+
+    if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
+    {
+      m_list4_ = nullptr;
+    }
   }
 
   void CommandPair::HardReset()
@@ -99,6 +104,11 @@ namespace Engine
   ID3D12GraphicsCommandList1* CommandPair::GetList() const
   {
     return m_list_.Get();
+  }
+
+  ID3D12GraphicsCommandList4* CommandPair::GetList4() const
+  {
+    return m_list4_.Get();
   }
 
   eCommandTypes CommandPair::GetType() const

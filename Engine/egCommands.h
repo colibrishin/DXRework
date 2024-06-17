@@ -23,6 +23,7 @@ namespace Engine
     [[nodiscard]] bool IsExecuted();
 
     [[nodiscard]] ID3D12GraphicsCommandList1* GetList() const;
+    [[nodiscard]] ID3D12GraphicsCommandList4* GetList4() const;
     [[nodiscard]] eCommandTypes               GetType() const;
     [[nodiscard]] UINT64                      GetLatestFenceValue() const;
     [[nodiscard]] UINT64                      GetBufferIndex() const;
@@ -51,5 +52,6 @@ namespace Engine
     eCommandTypes                      m_type_;
     ComPtr<ID3D12CommandAllocator>     m_allocator_;
     ComPtr<ID3D12GraphicsCommandList1> m_list_;
+    ComPtr<ID3D12GraphicsCommandList4> m_list4_;
   };
 }
