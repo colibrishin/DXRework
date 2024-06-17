@@ -35,11 +35,10 @@ StructuredBuffer<CascadeShadowElement> bufLightVP : register(t11);
 StructuredBuffer<ParamElement>         bufInstance : register(t12);
 StructuredBuffer<ParamElement>         bufLocalParam : register(t13);
 StructuredBuffer<MaterialElement>      bufMaterial : register(t14);
-RaytracingAccelerationStructure        bufTLAS : register(t15);
-Texture2D                              texRendered : register(t16);
-Texture3D                              texAnimations : register(t17);
-Texture3D                              texAtlases : register(t18);
-Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t19);
+Texture2D                              texRendered : register(t15);
+Texture3D                              texAnimations : register(t16);
+Texture3D                              texAtlases : register(t17);
+Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t18);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
