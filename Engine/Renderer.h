@@ -47,6 +47,7 @@ namespace Engine::Manager::Graphics
 
   private:
     friend struct SingletonDeleter;
+    friend class RayTracer;
     ~Renderer() override = default;
 
     void renderPassImpl(
