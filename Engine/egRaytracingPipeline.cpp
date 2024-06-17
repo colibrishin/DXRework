@@ -120,25 +120,91 @@ namespace Engine::Manager::Graphics
        m_output_uav_heap_->GetCPUDescriptorHandleForHeapStart()
       );
 
-    m_raytracing_heap_->SetUnorderedAccess(m_output_uav_heap_->GetCPUDescriptorHandleForHeapStart(), 0);
+    m_device_->CopyDescriptorsSimple
+      (
+       1,
+       m_raytracing_buffer_heap_->GetCPUDescriptorHandleForHeapStart(), // todo: UAV slot == 0
+       m_output_uav_heap_->GetCPUDescriptorHandleForHeapStart(),
+       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+      );
   }
 
   void RaytracingPipeline::BuildTLAS(
-    ID3D12GraphicsCommandList5*           cmd,
-    const std::vector<AccelStructBuffer>& blases,
-    const std::vector<SBs::InstanceSB>&   instances
+    ID3D12GraphicsCommandList4*                              cmd,
+    const std::map<WeakModel, std::vector<SBs::InstanceSB>>& instances
   )
   {
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+    VertexCollection vertices;
+    IndexCollection indices;
+
+    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
+
+    UINT64 shape_idx = 0;
+
+    for (const auto& [w_shape, instances] : instances)
+    {
+      if (const auto& shape = w_shape.lock())
+      {
+        UINT64 instance_idx = 0;
+
+        for (const auto& mesh : shape->GetMeshes())
+        {
+          D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
+          instance_desc.InstanceID                          = shape_idx;
+          instance_desc.InstanceContributionToHitGroupIndex = 0;
+          instance_desc.InstanceMask                        = 1;
+          instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
+
+          const auto& world_matrix = instances[instance_idx].GetParam<Matrix>(0);
+          _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
+
+          instance_descs.push_back(instance_desc);
+          instance_idx++;
+        }
+      }
+
+      shape_idx++;
+    }
+
+    if (m_tlas_.instanceDescSize < instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC))
+    {
+      m_tlas_.instanceDescSize = instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+
+      const auto& upload_heap         = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+      const auto& instance_descs_size = CD3DX12_RESOURCE_DESC::Buffer
+        (sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instance_descs.size());
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &upload_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &instance_descs_size,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_tlas_.instanceDesc.ReleaseAndGetAddressOf())
+         )
+        );
+    }
+
+    char* data = nullptr;
+    DX::ThrowIfFailed(m_tlas_.instanceDesc->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+    _mm256_memcpy(data, instance_descs.data(), instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
+    m_tlas_.instanceDesc->Unmap(0, nullptr);
+
     constexpr D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS build_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tl_inputs;
     tl_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-    tl_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    tl_inputs.NumDescs = instances.size();
+    tl_inputs.NumDescs = instance_descs.size();
     tl_inputs.Flags = build_flags;
+    tl_inputs.InstanceDescs = m_tlas_.instanceDesc->GetGPUVirtualAddress();
+    tl_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO tlas_prebuild_info = {};
-
     m_device_->GetRaytracingAccelerationStructurePrebuildInfo(&tl_inputs, &tlas_prebuild_info);
 
     if (tlas_prebuild_info.ResultDataMaxSizeInBytes == 0)
@@ -146,83 +212,53 @@ namespace Engine::Manager::Graphics
       throw std::runtime_error("Top level acceleration structure prebuild info returned a size of 0.");
     }
 
-    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    const auto& res_desc = CD3DX12_RESOURCE_DESC::Buffer(
-        tlas_prebuild_info.ResultDataMaxSizeInBytes, 
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-    DX::ThrowIfFailed
-    (
-     m_device_->CreateCommittedResource
-     (
-      &default_heap,
-      D3D12_HEAP_FLAG_NONE,
-      &res_desc,
-      D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-      nullptr,
-      IID_PPV_ARGS(m_tlas_.result.ReleaseAndGetAddressOf())
-     )
-    );
-
-    const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
-      (
-       tlas_prebuild_info.ScratchDataSizeInBytes,
-       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &default_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &scratch_buffer_desc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        nullptr,
-        IID_PPV_ARGS(m_tlas_.scratch.GetAddressOf())
-       )
-      );
-
-    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
-    instance_descs.reserve(instances.size());
-
-    for (int i = 0; i < instances.size(); ++i)
+    if (m_tlas_.resultSize < tlas_prebuild_info.ResultDataMaxSizeInBytes)
     {
-      const auto& instance = instances[i];
-      const auto& blas = blases[i];
+      m_tlas_.resultSize = tlas_prebuild_info.ResultDataMaxSizeInBytes;
+      
+      const auto& res_desc     = CD3DX12_RESOURCE_DESC::Buffer
+        (
+         tlas_prebuild_info.ResultDataMaxSizeInBytes,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
 
-      D3D12_RAYTRACING_INSTANCE_DESC instance_desc = {};
-      instance_desc.InstanceID = i;
-      instance_desc.InstanceContributionToHitGroupIndex = i; // todo: hitgroup index
-      instance_desc.InstanceMask = 1;
-      instance_desc.AccelerationStructure = blas.result->GetGPUVirtualAddress();
-
-      const auto& world_matrix = instance.GetParam<Matrix>(0);
-      _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
-
-      instance_descs.push_back(instance_desc);
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &res_desc,
+          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+          nullptr,
+          IID_PPV_ARGS(m_tlas_.result.ReleaseAndGetAddressOf())
+         )
+        );
     }
 
-    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& instance_descs_size = CD3DX12_RESOURCE_DESC::Buffer(sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instance_descs.size());
+    if (m_tlas_.scratchSize < tlas_prebuild_info.ScratchDataSizeInBytes)
+    {
+      m_tlas_.scratchSize = tlas_prebuild_info.ScratchDataSizeInBytes;
 
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &upload_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &instance_descs_size,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(m_tlas_.instanceDesc.ReleaseAndGetAddressOf())
-       )
-      );
+      const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+        (
+         tlas_prebuild_info.ScratchDataSizeInBytes,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
 
-    char* data = nullptr;
-    DX::ThrowIfFailed(m_tlas_.instanceDesc->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    _mm256_memcpy(data, instance_descs.data(), instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
-    m_tlas_.instanceDesc->Unmap(0, nullptr);
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &scratch_buffer_desc,
+          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+          nullptr,
+          IID_PPV_ARGS(m_tlas_.scratch.GetAddressOf())
+         )
+        );
+    }
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 

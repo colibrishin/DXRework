@@ -48,6 +48,8 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12GraphicsCommandList4> m_command_list_;
 
     ComPtr<ID3D12PipelineState> m_pipeline_state_;
+    ComPtr<ID3D12DescriptorHeap> m_raytracing_buffer_heap_;
+    ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_;
 
     ComPtr<ID3D12Resource> m_output_buffer_;
 
