@@ -15,6 +15,10 @@ namespace Engine::Graphics
     ComPtr<ID3D12Resource> scratch; // scratch memory for acceleration structure
     ComPtr<ID3D12Resource> result; // acceleration structure
     ComPtr<ID3D12Resource> instanceDesc; // matrices of instances
+
+    UINT64 scratchSize = 0;
+    UINT64 resultSize = 0;
+    UINT64 instanceDescSize = 0;
   };
 
   struct primitiveVector4
@@ -287,6 +291,14 @@ namespace Engine::Graphics
     struct ParamCB : public ParamBase
     {
       CB_T(CB_TYPE_PARAM)
+    };
+
+    struct ViewportCB
+    {
+      CB_T(CB_TYPE_VIEWPORT)
+
+
+      Vector2 resolution;
     };
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);

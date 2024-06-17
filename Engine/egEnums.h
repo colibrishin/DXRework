@@ -136,6 +136,7 @@ namespace Engine
   {
     CB_TYPE_WVP = 0,
     CB_TYPE_PARAM,
+    CB_TYPE_VIEWPORT,
     CB_TYPE_END,
   };
 
