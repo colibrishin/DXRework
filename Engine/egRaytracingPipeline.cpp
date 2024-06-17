@@ -1,9 +1,20 @@
 #include "pch.h"
 #include "egRaytracingPipeline.hpp"
 
+#include "egShape.h"
+
 namespace Engine::Manager::Graphics
 {
-  void RaytracingPipeline::Initialize() {}
+  void RaytracingPipeline::Initialize()
+  {
+    InitializeInterface();
+    InitializeViewport();
+    InitializeSignature();
+    InitializeDescriptorHeaps();
+    //InitializeRaytracingPSO();
+    PrecompileShaders();
+    InitializeOutputBuffer();
+  }
 
   void RaytracingPipeline::PreRender(const float& dt) {}
 
@@ -33,42 +44,173 @@ namespace Engine::Manager::Graphics
     DX::ThrowIfFailed(GetD3Device().GetDevice()->QueryInterface(IID_PPV_ARGS(m_device_.GetAddressOf())));
   }
 
-  void RaytracingPipeline::InitializeDescriptorHeaps()
+  void RaytracingPipeline::InitializeSignature()
   {
-    m_raytracing_heap_ = GetRenderPipeline().AcquireHeapSlot().lock();
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0); // Output buffer
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0); // Acceleration structure, vertex buffer, index buffer, texture, normal map
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // Scene buffer
+    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // Sampler
+
+    CD3DX12_ROOT_PARAMETER1 root_params[4];
+    root_params[0].InitAsDescriptorTable(1, &ranges[0]); // Output buffer
+    root_params[1].InitAsDescriptorTable(1, &ranges[1]); // Vertex buffer
+    root_params[2].InitAsConstantBufferView(0); // Scene buffer
+    root_params[3].InitAsDescriptorTable(1, &ranges[2]); // Sampler
+
+    const auto& global_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
+      (
+       _countof(root_params),
+       root_params,
+       0,
+       nullptr,
+       D3D12_ROOT_SIGNATURE_FLAG_NONE
+      );
+
+    {
+      ComPtr<ID3DBlob> signature;
+      ComPtr<ID3DBlob> error;
+
+      DX::ThrowIfFailed
+        (
+         D3D12SerializeVersionedRootSignature
+         (
+          &global_root_sign_desc,
+          signature.ReleaseAndGetAddressOf(),
+          error.ReleaseAndGetAddressOf()
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateRootSignature
+         (
+          0,
+          signature->GetBufferPointer(),
+          signature->GetBufferSize(),
+          IID_PPV_ARGS(m_raytracing_global_signature_.ReleaseAndGetAddressOf())
+         )
+        );
+    }
+
+    CD3DX12_DESCRIPTOR_RANGE1 local_ranges[2];
+    local_ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, RAYTRACING_TEX_SLOT_COUNT, 0);
+    local_ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+
+    CD3DX12_ROOT_PARAMETER1 local_root_params[2];
+    local_root_params[0].InitAsDescriptorTable(1, &local_ranges[0]); // SRV
+    local_root_params[1].InitAsConstantBufferView(0); // Material CBV
+
+    const auto& local_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
+      (
+       _countof(local_root_params),
+       local_root_params,
+       0,
+       nullptr,
+       D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE
+      );
+
+    {
+      ComPtr<ID3DBlob> signature;
+      ComPtr<ID3DBlob> error;
+
+      DX::ThrowIfFailed
+        (
+         D3D12SerializeVersionedRootSignature
+         (
+          &local_root_sign_desc,
+          signature.ReleaseAndGetAddressOf(),
+          error.ReleaseAndGetAddressOf()
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateRootSignature
+         (
+          0,
+          signature->GetBufferPointer(),
+          signature->GetBufferSize(),
+          IID_PPV_ARGS(m_raytracing_local_signature_.ReleaseAndGetAddressOf())
+         )
+        );
+    }
   }
 
-  void RaytracingPipeline::InitializeRaytracingPSO()
+  void RaytracingPipeline::InitializeDescriptorHeaps()
   {
-    CD3DX12_STATE_OBJECT_DESC raytracing_pipeline_desc(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
-
-    const auto& lib = raytracing_pipeline_desc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-    D3D12_SHADER_BYTECODE lib_dxil = CD3DX12_SHADER_BYTECODE(); //todo: raytracing shader
-    lib->SetDXILLibrary(&lib_dxil);
-
-    lib->DefineExport(g_raytracing_gen_entrypoint);
-    lib->DefineExport(g_raytracing_closest_hit_entrypoint);
-    lib->DefineExport(g_raytracing_miss_entrypoint);
-
-    const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-    hitgroup->SetClosestHitShaderImport(g_raytracing_closest_hit_entrypoint);
-    hitgroup->SetHitGroupExport(g_raytracing_hitgroup_name);
-    hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
-
-    const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    shader_config->Config(sizeof(Color), sizeof(Vector2));
-
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
     {
-      const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-      global_root_sign->SetRootSignature(GetRenderPipeline().GetRootSignature());
-    }
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+      .NumDescriptors = 7,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+    };
 
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateDescriptorHeap
+       (
+        &heap_desc,
+        IID_PPV_ARGS(m_raytracing_buffer_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
     {
-      const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-      pipeline_config->Config(1);
-    }
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+      .NumDescriptors = 1,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+    };
 
-    DX::ThrowIfFailed(m_device_->CreateStateObject(raytracing_pipeline_desc, IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())));
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateDescriptorHeap
+       (
+        &sampler_heap_desc,
+        IID_PPV_ARGS(m_raytracing_sampler_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    m_buffer_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_sampler_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+  }
+
+  //void RaytracingPipeline::InitializeRaytracingPSO()
+  //{
+  //  CD3DX12_STATE_OBJECT_DESC raytracing_pipeline_desc(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
+
+  //  const auto& lib = raytracing_pipeline_desc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+  //  D3D12_SHADER_BYTECODE lib_dxil = CD3DX12_SHADER_BYTECODE(); //todo: raytracing shader
+  //  lib->SetDXILLibrary(&lib_dxil);
+
+  //  lib->DefineExport(g_raytracing_gen_entrypoint);
+  //  lib->DefineExport(g_raytracing_closest_hit_entrypoint);
+  //  lib->DefineExport(g_raytracing_miss_entrypoint);
+
+  //  const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+  //  hitgroup->SetClosestHitShaderImport(g_raytracing_closest_hit_entrypoint);
+  //  hitgroup->SetHitGroupExport(g_raytracing_hitgroup_name);
+  //  hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
+  //  const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+  //  shader_config->Config(sizeof(Color), sizeof(Vector2)); // uv
+
+  //  {
+  //    const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+  //    global_root_sign->SetRootSignature(GetRenderPipeline().GetRootSignature());
+  //  }
+  //  
+  //  {
+  //    const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+  //    pipeline_config->Config(1);
+  //  }
+
+  //  DX::ThrowIfFailed(m_device_->CreateStateObject(raytracing_pipeline_desc, IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())));
+  //}
+
+  void RaytracingPipeline::PrecompileShaders()
+  {
+    // todo: raytracing shader
   }
 
   void RaytracingPipeline::InitializeOutputBuffer()
