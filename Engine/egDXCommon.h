@@ -295,7 +295,7 @@ namespace Engine::Graphics
 
     struct ViewportCB
     {
-      CB_T(CB_TYPE_VIEWPORT)
+      RT_CB_T(RAYTRACING_CB_VIEWPORT)
 
 
       Vector2 resolution;
