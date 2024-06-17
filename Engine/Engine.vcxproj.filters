@@ -556,6 +556,9 @@
     <ClInclude Include="egCommands.h">
       <Filter>Common\DX</Filter>
     </ClInclude>
+    <ClInclude Include="egRaytracingPipeline.hpp">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -790,6 +793,9 @@
     </ClCompile>
     <ClCompile Include="egCommands.cpp">
       <Filter>Common\DX</Filter>
+    </ClCompile>
+    <ClCompile Include="egRaytracingPipeline.cpp">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
