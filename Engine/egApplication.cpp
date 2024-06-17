@@ -98,6 +98,7 @@ namespace Engine::Manager
 
     GetD3Device().Initialize(hWnd);
     GetRenderPipeline().Initialize();
+    GetRaytracingPipeline().Initialize();
     GetToolkitAPI().Initialize();
     GetShadowManager().Initialize();
     GetReflectionEvaluator().Initialize();

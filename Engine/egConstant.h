@@ -19,6 +19,11 @@ namespace Engine
   constexpr UINT        g_param_buffer_slot_size       = 8;
   constexpr DXGI_FORMAT g_default_rtv_format           = DXGI_FORMAT_R8G8B8A8_UNORM;
 
+  // Raytracing Constants
+  constexpr wchar_t g_raytracing_gen_entrypoint[] = L"raygen_main";
+  constexpr wchar_t g_raytracing_miss_entrypoint[] = L"miss_main";
+  constexpr wchar_t g_raytracing_closest_hit_entrypoint[] = L"closest_hit_main";
+  constexpr wchar_t g_raytracing_hitgroup_name[] = L"hitgroup";
 
   // Physics Constants
   constexpr float   g_epsilon                             = 0.001f;

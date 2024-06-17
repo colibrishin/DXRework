@@ -26,6 +26,19 @@ namespace Engine::Resources
 
 namespace Engine
 {
+  enum eRaytracingGlobalParameter
+  {
+    RAYTRACING_GLOBAL_OUTPUT = 0,
+    RAYTRACING_GLOBAL_ACCELERATION,
+    RAYTRACING_GLOBAL_COUNT
+  };
+
+  enum eRaytracingLocalParameter
+  {
+    RAYTRACING_LOCAL_VIEWPORT = 0,
+    RAYTRACING_LOCAL_COUNT
+  };
+
   enum eCommandList
   {
     COMMAND_LIST_PRE_RENDER,

@@ -10,6 +10,13 @@
 
 namespace Engine::Graphics
 {
+  struct AccelStructBuffer
+  {
+    ComPtr<ID3D12Resource> scratch; // scratch memory for acceleration structure
+    ComPtr<ID3D12Resource> result; // acceleration structure
+    ComPtr<ID3D12Resource> instanceDesc; // matrices of instances
+  };
+
   struct primitiveVector4
   {
     __m128 v;
