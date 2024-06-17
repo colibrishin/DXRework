@@ -66,12 +66,13 @@ namespace Engine
   };
 
   enum eDescriptorSlot
+  enum eRasterizerSlot
   {
-    DESCRIPTOR_SLOT_SRV,
-    DESCRIPTOR_SLOT_CB,
-    DESCRIPTOR_SLOT_UAV,
-    DESCRIPTOR_SLOT_SAMPLER,
-    DESCRIPTOR_SLOT_COUNT
+    RASTERIZER_SLOT_SRV,
+    RASTERIZER_SLOT_CB,
+    RASTERIZER_SLOT_UAV,
+    RASTERIZER_SLOT_SAMPLER,
+    RASTERIZER_SLOT_COUNT
   };
 
   enum eBindType

@@ -223,13 +223,13 @@ namespace Engine
 
       command_list->SetGraphicsRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_SAMPLER,
+         RASTERIZER_SLOT_SAMPLER,
          m_gpu_sampler_handle_
         );
 
       command_list->SetGraphicsRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_SRV,
+         RASTERIZER_SLOT_SRV,
          m_gpu_handle_
         );
 
@@ -242,7 +242,7 @@ namespace Engine
 
       command_list->SetGraphicsRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_CB,
+         RASTERIZER_SLOT_CB,
          cb_handle
         );
 
@@ -250,7 +250,7 @@ namespace Engine
 
       command_list->SetGraphicsRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_UAV,
+         RASTERIZER_SLOT_UAV,
          cb_handle
         );
     }
@@ -268,13 +268,13 @@ namespace Engine
 
       command_list->SetComputeRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_SAMPLER,
+         RASTERIZER_SLOT_SAMPLER,
          m_gpu_sampler_handle_
         );
 
       command_list->SetComputeRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_SRV,
+         RASTERIZER_SLOT_SRV,
          m_gpu_handle_
         );
 
@@ -287,7 +287,7 @@ namespace Engine
 
       command_list->SetComputeRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_CB,
+         RASTERIZER_SLOT_CB,
          cb_handle
         );
 
@@ -295,7 +295,7 @@ namespace Engine
 
       command_list->SetComputeRootDescriptorTable
         (
-         DESCRIPTOR_SLOT_UAV,
+         RASTERIZER_SLOT_UAV,
          cb_handle
         );
     }
