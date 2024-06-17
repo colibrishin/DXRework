@@ -19,26 +19,27 @@ RWTexture2DArray<float4>         uavArr00 : register(u4);
 RWTexture2DArray<float4>         uavArr01 : register(u5);
 RWStructuredBuffer<ParamElement> uavInstance : register(u6);
 
-Texture2D                              tex00 : register(t0);
-Texture2D                              tex01 : register(t1);
-Texture2D                              tex02 : register(t2);
-Texture2D                              tex03 : register(t3);
-Texture2DArray                         texArr00 : register(t4);
-Texture2DArray                         texArr01 : register(t5);
-TextureCube                            texCube00 : register(t6);
-TextureCube                            texCube01 : register(t7);
-Texture1D                              tex1d00 : register(t8);
-Texture1D                              tex1d01 : register(t9);
+Texture2D      tex00 : register(t0);
+Texture2D      tex01 : register(t1);
+Texture2D      tex02 : register(t2);
+Texture2D      tex03 : register(t3);
+Texture2DArray texArr00 : register(t4);
+Texture2DArray texArr01 : register(t5);
+TextureCube    texCube00 : register(t6);
+TextureCube    texCube01 : register(t7);
+Texture1D      tex1d00 : register(t8);
+Texture1D      tex1d01 : register(t9);
 
 StructuredBuffer<LightElement>         bufLight : register(t10);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t11);
 StructuredBuffer<ParamElement>         bufInstance : register(t12);
 StructuredBuffer<ParamElement>         bufLocalParam : register(t13);
 StructuredBuffer<MaterialElement>      bufMaterial : register(t14);
-Texture2D                              texRendered : register(t15);
-Texture3D                              texAnimations : register(t16);
-Texture3D                              texAtlases : register(t17);
-Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t18);
+RaytracingAccelerationStructure        bufTLAS : register(t15);
+Texture2D                              texRendered : register(t16);
+Texture3D                              texAnimations : register(t17);
+Texture3D                              texAtlases : register(t18);
+Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t19);
 
 static const float4 g_ambientColor = float4(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -61,6 +62,11 @@ cbuffer ParamBuffer : register(b1)
   float4 g_vParam[MAX_PARAM_TYPE_SLOTS];
   matrix g_mParam[MAX_PARAM_TYPE_SLOTS];
 };
+
+cbuffer ViewportBuffer : register(b2)
+{
+  float2 g_viewResolution;
+}
 
 float GetShadowFactorImpl(
   int    lightIndex, int cascadeIndex,
