@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egMesh.h"
 #include <execution>
+#include "egManagerHelper.hpp"
 
 SERIALIZE_IMPL
 (
@@ -131,6 +132,11 @@ namespace Engine::Resources
     return m_index_buffer_view_;
   }
 
+  const AccelStructBuffer& Mesh::GetBLAS() const
+  {
+    return m_blas_;
+  }
+
   void Mesh::Initialize() {}
 
   void Mesh::Render(const float& dt) {}
@@ -239,15 +245,15 @@ namespace Engine::Resources
 
     // Create the upload heap.
     DX::ThrowIfFailed
-    (
-        DirectX::CreateUploadBuffer
-        (
-            GetD3Device().GetDevice(),
-            m_indices_.data(),
-            m_indices_.size(),
-            m_index_buffer_upload_.GetAddressOf()
-        )
-    );
+      (
+       DirectX::CreateUploadBuffer
+       (
+        GetD3Device().GetDevice(),
+        m_indices_.data(),
+        m_indices_.size(),
+        m_index_buffer_upload_.GetAddressOf()
+       )
+      );
 
     DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
     _mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
@@ -276,6 +282,89 @@ namespace Engine::Resources
     cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 
     cmd->GetList()->ResourceBarrier(1, &idx_trans);
+
+    // todo: animation deformation
+    D3D12_RAYTRACING_GEOMETRY_DESC geo_desc{};
+    geo_desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+    geo_desc.Triangles =
+    {
+      .Transform3x4 = 0,
+      .IndexFormat = DXGI_FORMAT_R16_UINT,
+      .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+      .IndexCount = GetIndexCount(),
+      .VertexCount = static_cast<UINT>(m_vertices_.size()),
+      .IndexBuffer = m_index_buffer_->GetGPUVirtualAddress(),
+      .VertexBuffer = { m_vertex_buffer_->GetGPUVirtualAddress(), sizeof(VertexElement) }
+    };
+    geo_desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS blas_inputs{};
+    blas_inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    blas_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    blas_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    blas_inputs.pGeometryDescs = &geo_desc;
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blas_prebuild_info{};
+    GetRaytracingPipeline().GetDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&blas_inputs, &blas_prebuild_info);
+
+    if (blas_prebuild_info.ResultDataMaxSizeInBytes == 0)
+    {
+      throw std::runtime_error("Bottom level acceleration structure prebuild info returned a size of 0.");
+    }
+
+    const auto& bl_desc = CD3DX12_RESOURCE_DESC::Buffer
+      (
+       blas_prebuild_info.ResultDataMaxSizeInBytes,
+       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &bl_desc,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+        nullptr,
+        IID_PPV_ARGS(m_blas_.result.GetAddressOf())
+       )
+      );
+
+    const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+      (
+       blas_prebuild_info.ScratchDataSizeInBytes,
+       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+      );
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &scratch_buffer_desc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(m_blas_.scratch.GetAddressOf())
+       )
+      );
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
+
+    blas_desc.DestAccelerationStructureData    = m_blas_.result->GetGPUVirtualAddress();
+    blas_desc.Inputs                           = blas_inputs;
+    blas_desc.ScratchAccelerationStructureData = m_blas_.scratch->GetGPUVirtualAddress();
+
+    cmd->GetList4()->BuildRaytracingAccelerationStructure
+      (
+       &blas_desc,
+       0,
+       nullptr
+      );
+
+    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_blas_.result.Get());
+    cmd->GetList()->ResourceBarrier(1, &uav_barrier);
 
     cmd->FlagReady();
   }

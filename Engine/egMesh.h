@@ -32,7 +32,9 @@ namespace Engine::Resources
     void                     OnDeserialized() override;
     void                     OnSerialized() override;
     D3D12_VERTEX_BUFFER_VIEW GetVertexView() const;
-    D3D12_INDEX_BUFFER_VIEW GetIndexView() const;
+    D3D12_INDEX_BUFFER_VIEW  GetIndexView() const;
+
+    const AccelStructBuffer& GetBLAS() const;
 
     RESOURCE_SELF_INFER_GETTER(Mesh)
 
@@ -67,6 +69,8 @@ namespace Engine::Resources
 
     D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_;
     D3D12_INDEX_BUFFER_VIEW m_index_buffer_view_;
+
+    AccelStructBuffer m_blas_;
   };
 } // namespace Engine::Resources
 
