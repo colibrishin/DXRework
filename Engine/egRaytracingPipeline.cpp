@@ -49,13 +49,13 @@ namespace Engine::Manager::Graphics
     CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0); // Output buffer
     ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0); // Acceleration structure, vertex buffer, index buffer, texture, normal map
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // Scene buffer
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // Viewport buffer
     ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // Sampler
 
     CD3DX12_ROOT_PARAMETER1 root_params[4];
     root_params[0].InitAsDescriptorTable(1, &ranges[0]); // Output buffer
     root_params[1].InitAsDescriptorTable(1, &ranges[1]); // Vertex buffer
-    root_params[2].InitAsConstantBufferView(0); // Scene buffer
+    root_params[2].InitAsConstantBufferView(0); // Viewport buffer
     root_params[3].InitAsDescriptorTable(1, &ranges[2]); // Sampler
 
     const auto& global_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC

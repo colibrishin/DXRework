@@ -26,17 +26,31 @@ namespace Engine::Resources
 
 namespace Engine
 {
-  enum eRaytracingGlobalParameter
+  enum eRaytracingSBType
   {
-    RAYTRACING_GLOBAL_OUTPUT = 0,
-    RAYTRACING_GLOBAL_ACCELERATION,
-    RAYTRACING_GLOBAL_COUNT
+    SB_TYPE_RAYTRACING_TLAS,
+    SB_TYPE_RAYTRACING_VERTEX,
+    SB_TYPE_RAYTRACING_INDEX,
+    SB_TYPE_RAYTRACING_END
   };
 
-  enum eRaytracingLocalParameter
+  enum eRaytracingTexSlot
   {
-    RAYTRACING_LOCAL_VIEWPORT = 0,
-    RAYTRACING_LOCAL_COUNT
+    RAYTRACING_TEX_SLOT_TEXTURE = 3,
+    RAYTRACING_TEX_SLOT_NORMAL,
+    RAYTRACING_TEX_SLOT_COUNT //todo: add more slots
+  };
+
+  enum eRaytracingCBType
+  {
+    RAYTRACING_CB_VIEWPORT = 0,
+    RAYTRACING_CB_COUNT
+  };
+
+  enum eRaytracingCBLocalType
+  {
+    RAYTRACING_CB_LOCAL_MATERIAL = 0,
+    RAYTRACING_CB_LOCAL_COUNT
   };
 
   enum eCommandList
@@ -65,7 +79,6 @@ namespace Engine
     COMMAND_NATIVE_COMPUTE = D3D12_COMMAND_LIST_TYPE_COMPUTE
   };
 
-  enum eDescriptorSlot
   enum eRasterizerSlot
   {
     RASTERIZER_SLOT_SRV,
@@ -137,7 +150,6 @@ namespace Engine
   {
     CB_TYPE_WVP = 0,
     CB_TYPE_PARAM,
-    CB_TYPE_VIEWPORT,
     CB_TYPE_END,
   };
 
