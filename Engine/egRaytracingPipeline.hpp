@@ -41,7 +41,7 @@ namespace Engine::Manager::Graphics
     void InitializeInterface();
     void InitializeSignature();
     void InitializeDescriptorHeaps();
-    //void InitializeRaytracingPSO();
+    void InitializeRaytracingPSOTMP();
     void PrecompileShaders();
     void InitializeOutputBuffer();
 
