@@ -50,6 +50,7 @@ cbuffer PerspectiveBuffer : register(b0)
 
   matrix g_camInvView;
   matrix g_camInvProj;
+  matrix g_camInvVP;
 
   matrix g_camReflectView;
 };
