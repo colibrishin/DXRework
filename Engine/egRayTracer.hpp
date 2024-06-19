@@ -36,5 +36,6 @@ namespace Engine::Manager::Graphics
     ~RayTracer() override = default;
 
     std::atomic<bool> m_built_;
+    std::vector<Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>> m_tmp_instances_;
   };
 }

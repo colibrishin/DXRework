@@ -56,8 +56,10 @@ namespace Engine::Manager::Graphics
   {
     if (const auto& scene = GetSceneManager().GetActiveScene().lock())
     {
+      UINT32 total_item_count = 0;
+
       // Scrap the BLAS.
-      std::map<WeakModel, std::vector<SBs::InstanceSB>> target_instances;
+      std::map<WeakMaterial, std::vector<SBs::InstanceSB>> target_instances;
 
       // todo: opaque only.
       for (const auto& candidates : GetRenderer().m_render_candidates_[0] | std::views::values)
@@ -70,15 +72,18 @@ namespace Engine::Manager::Graphics
 
           if (predicate && !predicate(obj)) { continue; }
 
-          if (const auto& shape = mtr->GetResource<Resources::Shape>(0).lock())
-          {
-            target_instances[shape].insert(target_instances[shape].end(), instances.begin(), instances.end());
-          }
+          target_instances[mtr].insert(target_instances[mtr].end(), instances.begin(), instances.end());
+          total_item_count += instances.size();
         }
       }
 
+      if (total_item_count > m_tmp_instances_.size())
+      {
+        m_tmp_instances_.resize(total_item_count);
+      }
+
       // Build the TLAS based on the target instances.
-      GetRaytracingPipeline().BuildTLAS(cmd, target_instances);
+      GetRaytracingPipeline().BuildTLAS(cmd, target_instances, m_tmp_instances_);
     }
   }
 }
