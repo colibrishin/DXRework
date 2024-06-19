@@ -214,6 +214,39 @@ namespace Engine::Resources
     std::iter_swap(texs.begin() + slot, it);
   }
 
+  void Material::UpdateMaterialSB(ID3D12GraphicsCommandList1* cmd)
+  {
+    if (m_resources_loaded_.contains(RES_T_BONE_ANIM))
+    {
+      m_material_sb_.flags.bone = 1;
+    }
+
+    if (m_resources_loaded_.contains(RES_T_ATLAS_ANIM))
+    {
+      m_material_sb_.flags.atlas = 1;
+    }
+
+    for (const auto& [type, resources] : m_resources_loaded_)
+    {
+      if (type == RES_T_SHAPE) { continue; }
+
+      for (auto it = resources.begin(); it != resources.end(); ++it)
+      {
+        const auto res = *it;
+
+        if (type == RES_T_TEX)
+        {
+          // todo: distinguish tex type
+          const UINT idx = static_cast<UINT>(std::distance(resources.begin(), it));
+          m_material_sb_.flags.tex[idx] = 1;
+        }
+      }
+    }
+
+    // todo: Multiple same update for material
+    m_material_sb_data_.SetData(cmd, 1, &m_material_sb_);
+  }
+
   void Material::Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap)
   {
     const auto& cmd = w_cmd.lock();
@@ -316,6 +349,11 @@ namespace Engine::Resources
     }
 
     m_material_sb_data_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+  }
+
+  Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& Material::GetMaterialSBBuffer()
+  {
+    return m_material_sb_data_;
   }
 
   Material::Material()
