@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "egRaytracingPipeline.hpp"
 #include <dxcapi.h>
+
+#include "egManagerHelper.hpp"
 #include "egShape.h"
 
 namespace Engine::Manager::Graphics
@@ -11,7 +13,10 @@ namespace Engine::Manager::Graphics
     InitializeViewport();
     InitializeSignature();
     InitializeDescriptorHeaps();
+
     InitializeRaytracingPSOTMP();
+    InitializeShaderTable();
+
     PrecompileShaders();
     InitializeOutputBuffer();
   }
@@ -22,7 +27,94 @@ namespace Engine::Manager::Graphics
 
   void RaytracingPipeline::Update(const float& dt) {}
 
-  void RaytracingPipeline::Render(const float& dt) {}
+  void RaytracingPipeline::Render(const float& dt)
+  {
+    if (g_raytracing)
+    {
+      GetRayTracer().WaitForBuild();
+
+      const auto& cmd = GetD3Device().AcquireCommandPair(L"Raytracing Rendering").lock();
+
+      cmd->SoftReset();
+
+      DefaultRootSignature(cmd->GetList4());
+      cmd->GetList4()->SetPipelineState1(m_raytracing_state_object_.Get());
+      cmd->GetList4()->RSSetViewports(1, &m_viewport_);
+      cmd->GetList4()->RSSetScissorRects(1, &m_scissor_rect_);
+
+      DefaultDescriptorHeap(cmd->GetList4());
+      m_wvp_buffer_.Bind(cmd, {});
+      cmd->GetList()->SetComputeRootConstantBufferView(4, m_wvp_buffer_.GetGPUAddress());
+      BindTLAS(cmd->GetList4());
+
+      const D3D12_DISPATCH_RAYS_DESC dispatch_desc
+      {
+        .RayGenerationShaderRecord = {
+          m_raygen_shader_table_->GetGPUVirtualAddress(),
+          sizeof(ShaderRecord)
+        },
+        .MissShaderTable = {
+          .StartAddress = m_miss_shader_table_->GetGPUVirtualAddress(),
+          .SizeInBytes = sizeof(ShaderRecord),
+          .StrideInBytes = sizeof(ShaderRecord)
+        },
+        .HitGroupTable = {
+          .StartAddress = m_closest_hit_shader_table_->GetGPUVirtualAddress(),
+          .SizeInBytes = sizeof(ShaderRecord),
+          .StrideInBytes = sizeof(ShaderRecord)
+        },
+        .CallableShaderTable = {},
+        .Width = g_window_width,
+        .Height = g_window_height,
+        .Depth = 1
+      };
+
+      cmd->GetList4()->DispatchRays(&dispatch_desc);
+
+      const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_output_buffer_.Get(),
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+         D3D12_RESOURCE_STATE_COPY_SOURCE
+        );
+
+      const auto& dst_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         D3D12_RESOURCE_STATE_RENDER_TARGET,
+         D3D12_RESOURCE_STATE_COPY_DEST
+        );
+
+      cmd->GetList4()->ResourceBarrier(1, &copy_barrier);
+      cmd->GetList4()->ResourceBarrier(1, &dst_barrier);
+
+      cmd->GetList4()->CopyResource
+        (
+         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         m_output_buffer_.Get()
+        );
+
+      const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_output_buffer_.Get(),
+         D3D12_RESOURCE_STATE_COPY_SOURCE,
+         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+
+      const auto& rtv_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         D3D12_RESOURCE_STATE_COPY_DEST,
+         D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+
+      cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
+      cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
+
+      cmd->FlagReady();
+    }
+
+  }
 
   void RaytracingPipeline::FixedUpdate(const float& dt) {}
 
@@ -36,7 +128,23 @@ namespace Engine::Manager::Graphics
 
   void RaytracingPipeline::InitializeViewport()
   {
-    m_viewport_ = {-1, -1, 1, 1,};
+    m_viewport_ = 
+    {
+      .TopLeftX = 0.0f,
+      .TopLeftY = 0.0f,
+      .Width = static_cast<float>(g_window_width),
+      .Height = static_cast<float>(g_window_height),
+      .MinDepth = 0.0f,
+      .MaxDepth = 1.0f
+    };
+
+    m_scissor_rect_ =
+    {
+      .left = 0,
+      .top = 0,
+      .right = static_cast<LONG>(g_window_width),
+      .bottom = static_cast<LONG>(g_window_height)
+    };
   }
 
   void RaytracingPipeline::InitializeInterface()
@@ -48,15 +156,17 @@ namespace Engine::Manager::Graphics
   {
     CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0); // Output buffer
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0); // Acceleration structure, vertex buffer, index buffer, texture, normal map
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // Viewport buffer
+    //ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1); // vertex buffer, index buffer
+    //ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // WVP buffer
     ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // Sampler
 
-    CD3DX12_ROOT_PARAMETER1 root_params[4];
+    CD3DX12_ROOT_PARAMETER1 root_params[6];
     root_params[0].InitAsDescriptorTable(1, &ranges[0]); // Output buffer
-    root_params[1].InitAsDescriptorTable(1, &ranges[1]); // Vertex buffer
-    root_params[2].InitAsConstantBufferView(0); // Viewport buffer
-    root_params[3].InitAsDescriptorTable(1, &ranges[3]); // Sampler
+    root_params[1].InitAsShaderResourceView(0); // Acceleration structure
+    root_params[2].InitAsShaderResourceView(1); // vertex buffer
+    root_params[3].InitAsShaderResourceView(2); // index buffer
+    root_params[4].InitAsConstantBufferView(0); // WVP buffer
+    root_params[5].InitAsDescriptorTable(1, &ranges[3]); // Sampler
 
     const auto& global_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
       (
@@ -80,6 +190,11 @@ namespace Engine::Manager::Graphics
           error.ReleaseAndGetAddressOf()
          )
         );
+
+      if (error)
+      {
+        OutputDebugStringA(static_cast<const char*>(error->GetBufferPointer()));
+      }
 
       DX::ThrowIfFailed
         (
@@ -142,7 +257,7 @@ namespace Engine::Manager::Graphics
     constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
     {
       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-      .NumDescriptors = 7,
+      .NumDescriptors = 2,
       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
     };
 
@@ -173,6 +288,8 @@ namespace Engine::Manager::Graphics
 
     m_buffer_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_sampler_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    m_wvp_buffer_.Create(nullptr);
   }
 
   void RaytracingPipeline::InitializeRaytracingPSOTMP()
@@ -195,7 +312,7 @@ namespace Engine::Manager::Graphics
     ComPtr<IDxcCompilerArgs> args;
     ComPtr<IDxcUtils> utils;
     DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(utils.ReleaseAndGetAddressOf())));
-    utils->BuildArguments(L"raytracing.hlsl", L"", L"lib_6_3", nullptr, 0, nullptr, 0, args.GetAddressOf());
+    utils->BuildArguments(L"raytracing.hlsl", nullptr, L"lib_6_3", nullptr, 0, nullptr, 0, args.GetAddressOf());
 
     // Include handler for includes.
     ComPtr<IDxcIncludeHandler> include_handler;
@@ -242,23 +359,27 @@ namespace Engine::Manager::Graphics
     {
       blob->GetBufferPointer(),
       blob->GetBufferSize()
-    }; //todo: raytracing shader
+    };
+
     lib->SetDXILLibrary(&lib_dxil);
 
     // Add RayGen, Miss, and Hit groups
-    lib->DefineExport(g_raytracing_gen_entrypoint);
-    //lib->DefineExport(g_raytracing_closest_hit_entrypoint);
-    //lib->DefineExport(g_raytracing_miss_entrypoint);
+    const wchar_t* export_names[] = 
+    {
+      g_raytracing_gen_entrypoint,
+      g_raytracing_closest_hit_entrypoint, g_raytracing_miss_entrypoint
+    };
+    lib->DefineExports(export_names);
 
     // Hit group
-    //const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-    //hitgroup->SetClosestHitShaderImport(g_raytracing_closest_hit_entrypoint);
-    //hitgroup->SetHitGroupExport(g_raytracing_hitgroup_name);
-    //hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+    const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitgroup->SetClosestHitShaderImport(g_raytracing_closest_hit_entrypoint);
+    hitgroup->SetHitGroupExport(g_raytracing_hitgroup_name);
+    hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
 
     // Shader payload and attribute size
     const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    shader_config->Config(sizeof(Color), sizeof(Vector2)); // uv
+    shader_config->Config(sizeof(Color), sizeof(Vector2)); // barycentrics
 
     // global root signature
     const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -275,6 +396,102 @@ namespace Engine::Manager::Graphics
        m_device_->CreateStateObject
        (raytracing_pipeline_desc, IID_PPV_ARGS(m_raytracing_state_object_.ReleaseAndGetAddressOf()))
       );
+
+    DX::ThrowIfFailed
+      (
+       m_raytracing_state_object_->QueryInterface
+       (IID_PPV_ARGS(m_raytracing_state_object_properties_.ReleaseAndGetAddressOf()))
+      );
+  }
+
+  void RaytracingPipeline::InitializeShaderTable()
+  {
+    ShaderRecord empty_record{};
+
+    const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+      (
+       Align(sizeof(ShaderRecord), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT),
+       D3D12_RESOURCE_FLAG_NONE
+      );
+
+    {
+      _mm256_memcpy
+       (
+        empty_record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
+        (g_raytracing_gen_entrypoint), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES
+       );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &upload_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_raygen_shader_table_.ReleaseAndGetAddressOf())
+         )
+        );
+
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_raygen_shader_table_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, &empty_record, sizeof(ShaderRecord));
+      m_raygen_shader_table_->Unmap(0, nullptr);
+    }
+
+    {
+      _mm256_memcpy
+        (
+         empty_record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
+         (g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES
+        );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &upload_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_closest_hit_shader_table_.ReleaseAndGetAddressOf())
+         )
+        );
+
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_closest_hit_shader_table_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, &empty_record, sizeof(ShaderRecord));
+      m_closest_hit_shader_table_->Unmap(0, nullptr);
+    }
+
+    {
+      _mm256_memcpy
+        (
+         empty_record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
+         (g_raytracing_miss_entrypoint), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES
+        );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &upload_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_miss_shader_table_.ReleaseAndGetAddressOf())
+         )
+        );
+
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_miss_shader_table_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, &empty_record, sizeof(ShaderRecord));
+      m_miss_shader_table_->Unmap(0, nullptr);
+    }
   }
 
   void RaytracingPipeline::PrecompileShaders()
@@ -284,7 +501,11 @@ namespace Engine::Manager::Graphics
 
   void RaytracingPipeline::InitializeOutputBuffer()
   {
-    const auto& res_desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_B8G8R8A8_UNORM, g_window_width, g_window_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    const auto& res_desc = CD3DX12_RESOURCE_DESC::Tex2D
+      (
+       DXGI_FORMAT_R8G8B8A8_UNORM, g_window_width, g_window_height, 1, 1, 1, 0,
+       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+      );
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
     DX::ThrowIfFailed
@@ -318,7 +539,7 @@ namespace Engine::Manager::Graphics
 
     constexpr D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc
     {
-      .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
       .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
       .Texture2D = {0, 0}
     };
@@ -352,7 +573,7 @@ namespace Engine::Manager::Graphics
 
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
 
-    UINT64 shape_idx = 0;
+    UINT64 total_idx = 0;
 
     for (const auto& [w_shape, instances] : instances)
     {
@@ -362,8 +583,13 @@ namespace Engine::Manager::Graphics
 
         for (const auto& mesh : shape->GetMeshes())
         {
+          if (mesh->GetBLAS().empty)
+          {
+            continue;
+          }
+
           D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
-          instance_desc.InstanceID                          = shape_idx;
+          instance_desc.InstanceID                          = total_idx;
           instance_desc.InstanceContributionToHitGroupIndex = 0;
           instance_desc.InstanceMask                        = 1;
           instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
@@ -373,19 +599,20 @@ namespace Engine::Manager::Graphics
 
           instance_descs.push_back(instance_desc);
           instance_idx++;
+          total_idx++;
         }
       }
-
-      shape_idx++;
     }
 
-    if (m_tlas_.instanceDescSize < instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC))
-    {
-      m_tlas_.instanceDescSize = instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+    const auto& instance_descs_size = Align(instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT);
 
-      const auto& upload_heap         = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-      const auto& instance_descs_size = CD3DX12_RESOURCE_DESC::Buffer
-        (sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instance_descs.size());
+    if (m_tlas_.instanceDescSize < instance_descs_size)
+    {
+      m_tlas_.instanceDescSize = instance_descs_size;
+
+      const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+        (instance_descs_size);
 
       DX::ThrowIfFailed
         (
@@ -393,7 +620,7 @@ namespace Engine::Manager::Graphics
          (
           &upload_heap,
           D3D12_HEAP_FLAG_NONE,
-          &instance_descs_size,
+          &buffer_desc,
           D3D12_RESOURCE_STATE_GENERIC_READ,
           nullptr,
           IID_PPV_ARGS(m_tlas_.instanceDesc.ReleaseAndGetAddressOf())
@@ -401,18 +628,21 @@ namespace Engine::Manager::Graphics
         );
     }
 
-    char* data = nullptr;
-    DX::ThrowIfFailed(m_tlas_.instanceDesc->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    _mm256_memcpy(data, instance_descs.data(), instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
-    m_tlas_.instanceDesc->Unmap(0, nullptr);
+    if (m_tlas_.instanceDescSize > 0)
+    {
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_tlas_.instanceDesc->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, instance_descs.data(), instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
+      m_tlas_.instanceDesc->Unmap(0, nullptr);
+    }
 
     constexpr D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS build_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tl_inputs;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tl_inputs{};
     tl_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
     tl_inputs.NumDescs = instance_descs.size();
     tl_inputs.Flags = build_flags;
-    tl_inputs.InstanceDescs = m_tlas_.instanceDesc->GetGPUVirtualAddress();
+    tl_inputs.InstanceDescs = m_tlas_.instanceDesc ? m_tlas_.instanceDesc->GetGPUVirtualAddress() : 0;
     tl_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO tlas_prebuild_info = {};
@@ -423,13 +653,16 @@ namespace Engine::Manager::Graphics
       throw std::runtime_error("Top level acceleration structure prebuild info returned a size of 0.");
     }
 
-    if (m_tlas_.resultSize < tlas_prebuild_info.ResultDataMaxSizeInBytes)
+    const auto& result_size = Align(tlas_prebuild_info.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+    const auto& scratch_size = Align(tlas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+
+    if (m_tlas_.resultSize < result_size)
     {
-      m_tlas_.resultSize = tlas_prebuild_info.ResultDataMaxSizeInBytes;
+      m_tlas_.resultSize = result_size;
       
       const auto& res_desc     = CD3DX12_RESOURCE_DESC::Buffer
         (
-         tlas_prebuild_info.ResultDataMaxSizeInBytes,
+         result_size,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
 
@@ -447,13 +680,13 @@ namespace Engine::Manager::Graphics
         );
     }
 
-    if (m_tlas_.scratchSize < tlas_prebuild_info.ScratchDataSizeInBytes)
+    if (m_tlas_.scratchSize < scratch_size)
     {
-      m_tlas_.scratchSize = tlas_prebuild_info.ScratchDataSizeInBytes;
+      m_tlas_.scratchSize = scratch_size;
 
       const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
         (
-         tlas_prebuild_info.ScratchDataSizeInBytes,
+         scratch_size,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
 
@@ -481,5 +714,35 @@ namespace Engine::Manager::Graphics
 
     const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_tlas_.result.Get());
     cmd->ResourceBarrier(1, &uav_barrier);
+
+    m_tlas_.empty = false;
+  }
+
+  void RaytracingPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
+  {
+    m_wvp_buffer_.SetData(&matrix);
+  }
+
+  void RaytracingPipeline::DefaultRootSignature(ID3D12GraphicsCommandList1* cmd) const
+  {
+    cmd->SetComputeRootSignature(m_raytracing_global_signature_.Get());
+  }
+
+  void RaytracingPipeline::DefaultDescriptorHeap(ID3D12GraphicsCommandList1* cmd) const
+  {
+    ID3D12DescriptorHeap* heaps[] = 
+    {
+      m_raytracing_buffer_heap_.Get(),
+      m_raytracing_sampler_heap_.Get()
+    };
+
+    cmd->SetDescriptorHeaps(2, heaps);
+
+    cmd->SetComputeRootDescriptorTable(0, m_raytracing_buffer_heap_->GetGPUDescriptorHandleForHeapStart());
+  }
+
+  void RaytracingPipeline::BindTLAS(ID3D12GraphicsCommandList1* cmd) const
+  {
+    cmd->SetComputeRootShaderResourceView(1, m_tlas_.result->GetGPUVirtualAddress());
   }
 }
