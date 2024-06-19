@@ -4,6 +4,7 @@
 #include "egCommon.hpp"
 #include "egConstantBuffer.hpp"
 #include "egDescriptors.h"
+#include "egStructuredBuffer.hpp"
 
 namespace Engine::Manager::Graphics
 {
@@ -14,8 +15,19 @@ namespace Engine::Manager::Graphics
   private:
     struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) ShaderRecord
     {
-      byte                        shaderId[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-      //D3D12_GPU_DESCRIPTOR_HANDLE localRootParameters;
+      byte shaderId[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+    };
+
+    struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) HitShaderRecord : public ShaderRecord
+    {
+      D3D12_GPU_VIRTUAL_ADDRESS materialSB;
+      D3D12_GPU_VIRTUAL_ADDRESS instanceSB;
+
+      D3D12_GPU_VIRTUAL_ADDRESS vertices;
+      D3D12_GPU_VIRTUAL_ADDRESS indices;
+
+      D3D12_GPU_VIRTUAL_ADDRESS texture;
+      D3D12_GPU_VIRTUAL_ADDRESS normal;
     };
 
   public:
@@ -31,8 +43,9 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
 
     void BuildTLAS(
-      ID3D12GraphicsCommandList4 *                              cmd,
-      const std::map<WeakModel, std::vector<SBs::InstanceSB>> & instances
+      ID3D12GraphicsCommandList4 *                                 cmd,
+      const std::map<WeakMaterial, std::vector<SBs::InstanceSB>> & instances, std::vector<Graphics::StructuredBuffer<
+      SBs::InstanceSB>> &                                          instance_sb
     );
 
     void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
@@ -61,11 +74,13 @@ namespace Engine::Manager::Graphics
     void PrecompileShaders();
     void InitializeOutputBuffer();
 
+    void UpdateHitShaderRecords();
+
     ComPtr<ID3D12Device5> m_device_;
     ComPtr<ID3D12GraphicsCommandList4> m_command_list_;
 
     ComPtr<ID3D12RootSignature>  m_raytracing_global_signature_;
-    ComPtr<ID3D12RootSignature>  m_raytracing_local_signature_;
+    ComPtr<ID3D12RootSignature>  m_raytracing_hit_local_signature_;
 
     ComPtr<ID3D12DescriptorHeap> m_raytracing_buffer_heap_;
     ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_;
@@ -75,7 +90,13 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12StateObjectProperties> m_raytracing_state_object_properties_;
     ComPtr<ID3D12Resource>              m_raygen_shader_table_;
     ComPtr<ID3D12Resource>              m_closest_hit_shader_table_;
+    UINT64                              m_closest_hit_shader_table_size_ = 0;
     ComPtr<ID3D12Resource>              m_miss_shader_table_;
+
+    std::vector<HitShaderRecord>       m_hit_shader_records_;
+
+    std::vector<StructuredBufferBase*> m_used_buffers_;
+    std::vector<WeakTexture>           m_used_textures_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_;
 

@@ -37,6 +37,19 @@ namespace Engine::Manager::Graphics
 
       cmd->SoftReset();
 
+      for (const auto& buffer : m_used_buffers_)
+      {
+        buffer->TransitionToSRV(cmd->GetList());
+      }
+
+      for (const auto& w_tex : m_used_textures_)
+      {
+        if (const auto& tex = w_tex.lock())
+        {
+          tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+        }
+      }
+
       DefaultRootSignature(cmd->GetList4());
       cmd->GetList4()->SetPipelineState1(m_raytracing_state_object_.Get());
       cmd->GetList4()->RSSetViewports(1, &m_viewport_);
@@ -60,8 +73,8 @@ namespace Engine::Manager::Graphics
         },
         .HitGroupTable = {
           .StartAddress = m_closest_hit_shader_table_->GetGPUVirtualAddress(),
-          .SizeInBytes = sizeof(ShaderRecord),
-          .StrideInBytes = sizeof(ShaderRecord)
+          .SizeInBytes = m_closest_hit_shader_table_size_,
+          .StrideInBytes = sizeof(HitShaderRecord)
         },
         .CallableShaderTable = {},
         .Width = g_window_width,
@@ -111,9 +124,24 @@ namespace Engine::Manager::Graphics
       cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
       cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
 
-      cmd->FlagReady();
-    }
+      for (const auto& buffer : m_used_buffers_)
+      {
+        buffer->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+      }
 
+      for (const auto& w_tex : m_used_textures_)
+      {
+        if (const auto& tex = w_tex.lock())
+        {
+          tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+        }
+      }
+
+      cmd->FlagReady();
+
+      m_used_buffers_.clear();
+      m_used_textures_.clear();
+    }
   }
 
   void RaytracingPipeline::FixedUpdate(const float& dt) {}
@@ -208,18 +236,19 @@ namespace Engine::Manager::Graphics
         );
     }
 
-    CD3DX12_DESCRIPTOR_RANGE1 local_ranges[2];
-    local_ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, RAYTRACING_TEX_SLOT_COUNT, 0);
-    local_ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-
-    CD3DX12_ROOT_PARAMETER1 local_root_params[2];
-    local_root_params[0].InitAsDescriptorTable(1, &local_ranges[0]); // SRV
-    local_root_params[1].InitAsConstantBufferView(0); // Material CBV
-
+    // use the register space 1 for avoiding the conflict with the global root signature
+    CD3DX12_ROOT_PARAMETER1 hit_local_param[6];
+    hit_local_param[0].InitAsShaderResourceView(0, 1); // material buffer
+    hit_local_param[1].InitAsShaderResourceView(1, 1); // instance buffer
+    hit_local_param[2].InitAsShaderResourceView(2, 1); // vertex buffer
+    hit_local_param[3].InitAsShaderResourceView(3, 1); // index buffer
+    hit_local_param[4].InitAsShaderResourceView(4, 1); // texture
+    hit_local_param[5].InitAsShaderResourceView(5, 1); // normal
+    
     const auto& local_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
       (
-       _countof(local_root_params),
-       local_root_params,
+       _countof(hit_local_param),
+       hit_local_param,
        0,
        nullptr,
        D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE
@@ -246,7 +275,7 @@ namespace Engine::Manager::Graphics
           0,
           signature->GetBufferPointer(),
           signature->GetBufferSize(),
-          IID_PPV_ARGS(m_raytracing_local_signature_.ReleaseAndGetAddressOf())
+          IID_PPV_ARGS(m_raytracing_hit_local_signature_.ReleaseAndGetAddressOf())
          )
         );
     }
@@ -367,7 +396,8 @@ namespace Engine::Manager::Graphics
     const wchar_t* export_names[] = 
     {
       g_raytracing_gen_entrypoint,
-      g_raytracing_closest_hit_entrypoint, g_raytracing_miss_entrypoint
+      g_raytracing_closest_hit_entrypoint,
+      g_raytracing_miss_entrypoint
     };
     lib->DefineExports(export_names);
 
@@ -385,7 +415,12 @@ namespace Engine::Manager::Graphics
     const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
     global_root_sign->SetRootSignature(m_raytracing_global_signature_.Get());
 
-    // todo: local root signature
+    const auto& local_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+    local_root_sign->SetRootSignature(m_raytracing_hit_local_signature_.Get());
+
+    const auto& local_root_export = raytracing_pipeline_desc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+    local_root_export->SetSubobjectToAssociate(*local_root_sign);
+    local_root_export->AddExport(g_raytracing_hitgroup_name);
 
     // Pipeline config, Recursion depth
     const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
@@ -442,9 +477,17 @@ namespace Engine::Manager::Graphics
     }
 
     {
+      HitShaderRecord empty_hit_record{};
+
+      const auto& hit_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+      (
+       Align(sizeof(HitShaderRecord), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT),
+       D3D12_RESOURCE_FLAG_NONE
+      );
+
       _mm256_memcpy
         (
-         empty_record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
+         empty_hit_record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
          (g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES
         );
 
@@ -454,7 +497,7 @@ namespace Engine::Manager::Graphics
          (
           &upload_heap,
           D3D12_HEAP_FLAG_NONE,
-          &buffer_desc,
+          &hit_buffer_desc,
           D3D12_RESOURCE_STATE_GENERIC_READ,
           nullptr,
           IID_PPV_ARGS(m_closest_hit_shader_table_.ReleaseAndGetAddressOf())
@@ -463,8 +506,10 @@ namespace Engine::Manager::Graphics
 
       char* data = nullptr;
       DX::ThrowIfFailed(m_closest_hit_shader_table_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-      _mm256_memcpy(data, &empty_record, sizeof(ShaderRecord));
+      _mm256_memcpy(data, &empty_hit_record, sizeof(HitShaderRecord));
       m_closest_hit_shader_table_->Unmap(0, nullptr);
+
+      m_closest_hit_shader_table_size_ = Align(sizeof(HitShaderRecord), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
     }
 
     {
@@ -561,46 +606,136 @@ namespace Engine::Manager::Graphics
       );
   }
 
+  void RaytracingPipeline::UpdateHitShaderRecords()
+  {
+    if (m_hit_shader_records_.empty())
+    {
+      return;
+    }
+
+    const auto& new_size = Align(m_hit_shader_records_.size() * sizeof(HitShaderRecord), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
+
+    if (new_size > m_closest_hit_shader_table_size_)
+    {
+      const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+        (
+         new_size,
+         D3D12_RESOURCE_FLAG_NONE
+        );
+
+      DX::ThrowIfFailed
+        (
+         m_device_->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &buffer_desc,
+          D3D12_RESOURCE_STATE_GENERIC_READ,
+          nullptr,
+          IID_PPV_ARGS(m_closest_hit_shader_table_.ReleaseAndGetAddressOf())
+         )
+        );
+
+      m_closest_hit_shader_table_size_ = new_size;
+    }
+
+    char* data = nullptr;
+    DX::ThrowIfFailed(m_closest_hit_shader_table_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+    _mm256_memcpy(data, m_hit_shader_records_.data(), m_hit_shader_records_.size() * sizeof(HitShaderRecord));
+    m_closest_hit_shader_table_->Unmap(0, nullptr);
+
+    m_hit_shader_records_.clear();
+  }
+
   void RaytracingPipeline::BuildTLAS(
-    ID3D12GraphicsCommandList4*                              cmd,
-    const std::map<WeakModel, std::vector<SBs::InstanceSB>>& instances
+    ID3D12GraphicsCommandList4*                                 cmd,
+    const std::map<WeakMaterial, std::vector<SBs::InstanceSB>>& instances,
+    std::vector<Graphics::StructuredBuffer<SBs::InstanceSB>>&   instance_sb
   )
   {
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-    VertexCollection vertices;
-    IndexCollection indices;
-
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
 
-    UINT64 total_idx = 0;
+    UINT64 shape_idx = 0;
 
-    for (const auto& [w_shape, instances] : instances)
+    for (const auto& [w_mtr, instances] : instances)
     {
-      if (const auto& shape = w_shape.lock())
+      if (const StrongMaterial& mtr = w_mtr.lock())
       {
-        UINT64 instance_idx = 0;
+        mtr->UpdateMaterialSB(cmd);
+        Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& material_sb = mtr->GetMaterialSBBuffer();
+        const StrongModel&               shape       = mtr->GetResource<Resources::Shape>(0).lock();
 
-        for (const auto& mesh : shape->GetMeshes())
+        if (shape == nullptr)
         {
-          if (mesh->GetBLAS().empty)
-          {
-            continue;
-          }
-
-          D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
-          instance_desc.InstanceID                          = total_idx;
-          instance_desc.InstanceContributionToHitGroupIndex = 0;
-          instance_desc.InstanceMask                        = 1;
-          instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
-
-          const auto& world_matrix = instances[instance_idx].GetParam<Matrix>(0);
-          _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
-
-          instance_descs.push_back(instance_desc);
-          instance_idx++;
-          total_idx++;
+          continue;
         }
+
+        m_used_buffers_.push_back(&material_sb);
+
+        D3D12_GPU_VIRTUAL_ADDRESS tex_addr = 0;
+        D3D12_GPU_VIRTUAL_ADDRESS norm_addr = 0;
+
+        if (const StrongTexture& tex = mtr->GetResource<Resources::Texture>(0).lock())
+        {
+          tex_addr = tex->GetRawResoruce()->GetGPUVirtualAddress();
+          m_used_textures_.push_back(tex);
+        }
+
+        if (const StrongTexture& norm = mtr->GetResource<Resources::Texture>(1).lock())
+        {
+          norm_addr = norm->GetRawResoruce()->GetGPUVirtualAddress();
+          m_used_textures_.push_back(norm);
+        }
+
+        // todo: used SBs should be transit to the SRV before the Dispatch.
+        instance_sb[shape_idx].SetData(cmd, instances.size(), instances.data());
+
+        m_used_buffers_.push_back(&instance_sb[shape_idx]);
+
+        // [shape0[instance0[meshes..], instance1[meshes..], ...], shape1...]
+
+        for (int i = 0; i < instances.size(); ++i)
+        {
+          for (const StrongMesh& mesh : shape->GetMeshes())
+          {
+            if (mesh->GetBLAS().empty)
+            {
+              continue; // Billboards and other non-triangle meshes
+            }
+
+            const auto& mesh_sb = mesh->GetVertexStructuredBuffer();
+
+            D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
+            instance_desc.InstanceID                          = i;
+            instance_desc.InstanceContributionToHitGroupIndex = 0;
+            instance_desc.InstanceMask                        = 1;
+            instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
+
+            HitShaderRecord record
+            {
+              .materialSB = material_sb.GetGPUAddress(),
+              .instanceSB = instance_sb[shape_idx].GetGPUAddress(),
+              .vertices = mesh_sb.GetGPUAddress(),
+              .indices = mesh->GetIndexBuffer()->GetGPUVirtualAddress(),
+              .texture = tex_addr,
+              .normal = norm_addr
+            };
+
+            _mm256_memcpy(record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier(g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+
+            // todo: animation deformation should be applied at some point.
+            const auto& world_matrix = instances[i].GetParam<Matrix>(0);
+            _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
+
+            instance_descs.push_back(instance_desc);
+            m_hit_shader_records_.push_back(record);
+          }
+        }
+
+        shape_idx++;
       }
     }
 
@@ -714,6 +849,8 @@ namespace Engine::Manager::Graphics
 
     const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_tlas_.result.Get());
     cmd->ResourceBarrier(1, &uav_barrier);
+
+    UpdateHitShaderRecords();
 
     m_tlas_.empty = false;
   }
