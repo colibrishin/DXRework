@@ -82,6 +82,8 @@ namespace Engine::Manager::Graphics
   private:
     friend class ToolkitAPI;
     friend class D3Device;
+    friend class RaytracingPipeline;
+
     friend struct SingletonDeleter;
     RenderPipeline() = default;
     ~RenderPipeline() override;
