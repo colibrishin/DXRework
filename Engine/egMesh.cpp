@@ -158,12 +158,12 @@ namespace Engine::Resources
 
     UpdateTangentBinormal();
 
-    std::vector<Vector3> vertices;
-    for (const auto& vertex : m_vertices_) { vertices.push_back(vertex.position); }
+    std::vector<Vector3> pure_vertices;
+    for (const auto& vertex : m_vertices_) { pure_vertices.push_back(vertex.position); }
 
     BoundingBox::CreateFromPoints
       (
-       m_bounding_box_, m_vertices_.size(), vertices.data(),
+       m_bounding_box_, m_vertices_.size(), pure_vertices.data(),
        sizeof(Vector3)
       );
 
@@ -210,11 +210,12 @@ namespace Engine::Resources
 
     // -- Upload Data -- //
     // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
-    char* data = nullptr;
-
-    DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    _mm256_memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
-    m_vertex_buffer_upload_->Unmap(0, nullptr);
+    {
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
+      m_vertex_buffer_upload_->Unmap(0, nullptr);
+    }
 
     cmd->GetList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
 
@@ -255,16 +256,20 @@ namespace Engine::Resources
        )
       );
 
-    DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-    _mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
-    m_index_buffer_upload_->Unmap(0, nullptr);
-
+    {
+      char* data = nullptr;
+      DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+      _mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
+      m_index_buffer_upload_->Unmap(0, nullptr);
+    }
+    
     cmd->GetList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
 
     const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_index_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER
+       D3D12_RESOURCE_STATE_COPY_DEST, 
+          D3D12_RESOURCE_STATE_INDEX_BUFFER
       );
 
     m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
@@ -276,95 +281,197 @@ namespace Engine::Resources
     const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_vertex_buffer_.Get(),
-       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
       );
 
     cmd->GetList()->ResourceBarrier(1, &vtx_trans);
-
     cmd->GetList()->ResourceBarrier(1, &idx_trans);
 
-    // todo: animation deformation
-    D3D12_RAYTRACING_GEOMETRY_DESC geo_desc{};
-    geo_desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-    geo_desc.Triangles =
+    if (pure_vertices.size() % 3 == 0)
     {
-      .Transform3x4 = 0,
-      .IndexFormat = DXGI_FORMAT_R16_UINT,
-      .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
-      .IndexCount = GetIndexCount(),
-      .VertexCount = static_cast<UINT>(m_vertices_.size()),
-      .IndexBuffer = m_index_buffer_->GetGPUVirtualAddress(),
-      .VertexBuffer = { m_vertex_buffer_->GetGPUVirtualAddress(), sizeof(VertexElement) }
-    };
-    geo_desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+      const auto& vtx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vector3) * pure_vertices.size());
+      const auto& idx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
 
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS blas_inputs{};
-    blas_inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-    blas_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-    blas_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    blas_inputs.pGeometryDescs = &geo_desc;
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &vtx_pure_buffer_desc,
+          D3D12_RESOURCE_STATE_COPY_DEST,
+          nullptr,
+          IID_PPV_ARGS(m_raytracing_vertex_buffer_.GetAddressOf())
+         )
+        );
 
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blas_prebuild_info{};
-    GetRaytracingPipeline().GetDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&blas_inputs, &blas_prebuild_info);
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &idx_pure_buffer_desc,
+          D3D12_RESOURCE_STATE_COPY_DEST,
+          nullptr,
+          IID_PPV_ARGS(m_raytracing_index_buffer_.GetAddressOf())
+         )
+        );
 
-    if (blas_prebuild_info.ResultDataMaxSizeInBytes == 0)
-    {
-      throw std::runtime_error("Bottom level acceleration structure prebuild info returned a size of 0.");
+      DX::ThrowIfFailed
+        (
+         DirectX::CreateUploadBuffer
+         (
+          GetD3Device().GetDevice(),
+          pure_vertices.data(),
+          pure_vertices.size(),
+          m_raytracing_vertex_buffer_upload_.GetAddressOf()
+         )
+        );
+
+      DX::ThrowIfFailed
+        (
+         DirectX::CreateUploadBuffer
+         (
+          GetD3Device().GetDevice(),
+          m_indices_.data(),
+          m_indices_.size(),
+          m_raytracing_index_buffer_upload_.GetAddressOf()
+         )
+        );
+
+      {
+        char* data = nullptr;
+        DX::ThrowIfFailed(m_raytracing_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        _mm256_memcpy(data, pure_vertices.data(), sizeof(Vector3) * pure_vertices.size());
+        m_raytracing_vertex_buffer_upload_->Unmap(0, nullptr);
+      }
+
+      {
+        char* data = nullptr;
+        DX::ThrowIfFailed(m_raytracing_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        _mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
+        m_raytracing_index_buffer_upload_->Unmap(0, nullptr);
+      }
+
+      cmd->GetList()->CopyResource(m_raytracing_vertex_buffer_.Get(), m_raytracing_vertex_buffer_upload_.Get());
+      cmd->GetList()->CopyResource(m_raytracing_index_buffer_.Get(), m_raytracing_index_buffer_upload_.Get());
+
+      const auto& vtx_pure_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_raytracing_vertex_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+      );
+
+      const auto& idx_pure_trans = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_raytracing_index_buffer_.Get(),
+       D3D12_RESOURCE_STATE_INDEX_BUFFER,
+       D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+      );
+
+      cmd->GetList()->ResourceBarrier(1, &idx_pure_trans);
+      cmd->GetList()->ResourceBarrier(1, &vtx_pure_trans);
+
+      // todo: animation deformation
+      D3D12_RAYTRACING_GEOMETRY_DESC geo_desc{};
+      geo_desc.Type      = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+      geo_desc.Triangles =
+      {
+        .Transform3x4 = 0,
+        .IndexFormat = DXGI_FORMAT_R32_UINT,
+        .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+        .IndexCount = GetIndexCount(),
+        .VertexCount = static_cast<UINT>(m_vertices_.size()),
+        .IndexBuffer = m_raytracing_index_buffer_->GetGPUVirtualAddress(),
+        .VertexBuffer = {m_raytracing_vertex_buffer_->GetGPUVirtualAddress(), sizeof(Vector3)}
+      };
+      geo_desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+      D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS blas_inputs{};
+      blas_inputs.Flags          = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+      blas_inputs.Type           = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+      blas_inputs.DescsLayout    = D3D12_ELEMENTS_LAYOUT_ARRAY;
+      blas_inputs.NumDescs       = 1;
+      blas_inputs.pGeometryDescs = &geo_desc;
+
+      D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blas_prebuild_info{};
+      GetRaytracingPipeline().GetDevice()->GetRaytracingAccelerationStructurePrebuildInfo
+        (&blas_inputs, &blas_prebuild_info);
+
+      if (blas_prebuild_info.ResultDataMaxSizeInBytes == 0)
+      {
+        throw std::runtime_error("Bottom level acceleration structure prebuild info returned a size of 0.");
+      }
+
+      const auto& result_size = Align
+        (blas_prebuild_info.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+
+      const auto& scratch_size = Align
+        (blas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+
+      const auto& bl_desc = CD3DX12_RESOURCE_DESC::Buffer
+        (
+         result_size,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &bl_desc,
+          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+          nullptr,
+          IID_PPV_ARGS(m_blas_.result.GetAddressOf())
+         )
+        );
+
+      const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
+        (
+         scratch_size,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
+
+      DX::ThrowIfFailed
+        (
+         GetD3Device().GetDevice()->CreateCommittedResource
+         (
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &scratch_buffer_desc,
+          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+          nullptr,
+          IID_PPV_ARGS(m_blas_.scratch.GetAddressOf())
+         )
+        );
+
+      D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
+
+      blas_desc.DestAccelerationStructureData    = m_blas_.result->GetGPUVirtualAddress();
+      blas_desc.Inputs                           = blas_inputs;
+      blas_desc.ScratchAccelerationStructureData = m_blas_.scratch->GetGPUVirtualAddress();
+
+      cmd->GetList4()->BuildRaytracingAccelerationStructure
+        (
+         &blas_desc,
+         0,
+         nullptr
+        );
+
+      const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_blas_.result.Get());
+      cmd->GetList()->ResourceBarrier(1, &uav_barrier);
+
+      m_blas_.empty = false;
     }
-
-    const auto& bl_desc = CD3DX12_RESOURCE_DESC::Buffer
-      (
-       blas_prebuild_info.ResultDataMaxSizeInBytes,
-       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &default_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &bl_desc,
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        nullptr,
-        IID_PPV_ARGS(m_blas_.result.GetAddressOf())
-       )
-      );
-
-    const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
-      (
-       blas_prebuild_info.ScratchDataSizeInBytes,
-       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-      );
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetDevice()->CreateCommittedResource
-       (
-        &default_heap,
-        D3D12_HEAP_FLAG_NONE,
-        &scratch_buffer_desc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        nullptr,
-        IID_PPV_ARGS(m_blas_.scratch.GetAddressOf())
-       )
-      );
-
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
-
-    blas_desc.DestAccelerationStructureData    = m_blas_.result->GetGPUVirtualAddress();
-    blas_desc.Inputs                           = blas_inputs;
-    blas_desc.ScratchAccelerationStructureData = m_blas_.scratch->GetGPUVirtualAddress();
-
-    cmd->GetList4()->BuildRaytracingAccelerationStructure
-      (
-       &blas_desc,
-       0,
-       nullptr
-      );
-
-    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_blas_.result.Get());
-    cmd->GetList()->ResourceBarrier(1, &uav_barrier);
+    else
+    {
+      m_blas_.empty = true;
+    }
 
     cmd->FlagReady();
   }
@@ -377,5 +484,11 @@ namespace Engine::Resources
     m_index_buffer_->Release();
     m_vertex_buffer_upload_->Release();
     m_index_buffer_upload_->Release();
+    m_blas_.result->Release();
+    m_blas_.scratch->Release();
+    m_blas_.instanceDesc->Release();
+    m_blas_.scratchSize = 0;
+    m_blas_.resultSize = 0;
+    m_blas_.instanceDescSize = 0;
   }
 } // namespace Engine::Resources
