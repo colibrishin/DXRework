@@ -203,7 +203,16 @@ namespace Engine::Manager
     GetD3Device().PreRender(dt);
 
     GetRenderer().PreRender(dt); // pre-process render information
-    GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
+
+    if (g_raytracing)
+    {
+      GetRayTracer().PreRender(dt);
+    }
+    else
+    {
+      GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
+    }
+    
     GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
   }
 
@@ -221,11 +230,20 @@ namespace Engine::Manager
     GetLerpManager().Render(dt);
     GetProjectionFrustum().Render(dt);
 
-    // Shadow resource binding
-    GetShadowManager().Render(dt);
+    if (g_raytracing)
+    {
+      GetRayTracer().Render(dt);
 
-    // Render commands (opaque)
-    GetRenderer().Render(dt);
+      GetRaytracingPipeline().Render(dt);
+    }
+    else
+    {
+      // Shadow resource binding
+      GetShadowManager().Render(dt);
+
+      // Render commands (opaque)
+      GetRenderer().Render(dt);
+    }
 
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
