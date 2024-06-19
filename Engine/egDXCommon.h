@@ -19,6 +19,8 @@ namespace Engine::Graphics
     UINT64 scratchSize = 0;
     UINT64 resultSize = 0;
     UINT64 instanceDescSize = 0;
+
+    bool empty = true;
   };
 
   struct primitiveVector4
