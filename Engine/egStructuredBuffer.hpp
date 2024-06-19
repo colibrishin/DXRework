@@ -50,6 +50,7 @@ namespace Engine::Graphics
 
     void CopySRVHeap(const DescriptorPtr& heap) const override;
     void CopyUAVHeap(const DescriptorPtr& heap) const override;
+    D3D12_GPU_VIRTUAL_ADDRESS  GetGPUAddress() const;
 
   private:
     void InitializeSRV(UINT size);
@@ -58,7 +59,8 @@ namespace Engine::Graphics
     void InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data);
     void InitializeReadBuffer(UINT size);
 
-    UINT m_size_;
+    UINT   m_size_;
+    UINT   m_aligned_t_size_;
   };
 
   template <typename T>
@@ -90,7 +92,7 @@ namespace Engine::Graphics
       {
         .FirstElement = 0,
         .NumElements = size,
-        .StructureByteStride = sizeof(T),
+        .StructureByteStride = m_aligned_t_size_,
         .Flags = D3D12_BUFFER_SRV_FLAG_NONE
       }
     };
@@ -128,7 +130,7 @@ namespace Engine::Graphics
     uav_desc.ViewDimension       = D3D12_UAV_DIMENSION_BUFFER;
     uav_desc.Buffer.FirstElement = 0;
     uav_desc.Buffer.NumElements  = size;
-    uav_desc.Buffer.StructureByteStride = sizeof(T);
+    uav_desc.Buffer.StructureByteStride = m_aligned_t_size_;
     uav_desc.Buffer.CounterOffsetInBytes = 0;
     uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
@@ -144,13 +146,8 @@ namespace Engine::Graphics
   template <typename T>
   void StructuredBuffer<T>::InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size)
   {
-    if ((sizeof(T) * size) % 16 != 0)
-    {
-      throw std::runtime_error("StructuredBuffer size need to be dividable by 16");
-    }
-
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
 
     if constexpr (is_uav_sb<T>::value == true)
     {
@@ -181,7 +178,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
   {
     const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
 
     DX::ThrowIfFailed
       (
@@ -235,7 +232,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeReadBuffer(UINT size)
   {
     const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
 
     DX::ThrowIfFailed
       (
@@ -256,7 +253,7 @@ namespace Engine::Graphics
     : m_size_(0)
   {
     static_assert(sizeof(T) <= 2048, "StructuredBuffer struct T size is too big");
-    static_assert(sizeof(T) % sizeof(Vector4) == 0, "StructuredBuffer struct T size need to be dividable by 16");
+    m_aligned_t_size_ = Engine::Align(sizeof(T), 16);
   }
 
   template <typename T>
@@ -444,5 +441,11 @@ namespace Engine::Graphics
          which_sb_uav<T>::value
         );
     }
+  }
+
+  template <typename T>
+  D3D12_GPU_VIRTUAL_ADDRESS StructuredBuffer<T>::GetGPUAddress() const
+  {
+    return m_buffer_->GetGPUVirtualAddress();
   }
 }
