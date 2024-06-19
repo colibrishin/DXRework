@@ -137,6 +137,16 @@ namespace Engine::Resources
     return m_blas_;
   }
 
+  const StructuredBuffer<VertexElement>& Mesh::GetVertexStructuredBuffer() const
+  {
+    return m_vertex_buffer_structured_;
+  }
+
+  ID3D12Resource* Mesh::GetIndexBuffer() const
+  {
+    return m_index_buffer_.Get();
+  }
+
   void Mesh::Initialize() {}
 
   void Mesh::Render(const float& dt) {}
@@ -174,6 +184,12 @@ namespace Engine::Resources
     const auto& cmd = GetD3Device().AcquireCommandPair(L"Mesh Load Command Pair").lock();
 
     cmd->SoftReset();
+
+    // -- Structured Buffer -- //
+    // structured buffer for the raytracing pipeline.
+    m_vertex_buffer_structured_.SetData(cmd->GetList(), m_vertices_.size(), m_vertices_.data());
+    // Since vertices are not going to be modified, we can transition to SRV and keep it.
+    m_vertex_buffer_structured_.TransitionToSRV(cmd->GetList());
 
     // -- Vertex Buffer -- //
     // Initialize vertex buffer.
@@ -242,7 +258,7 @@ namespace Engine::Resources
        )
       );
 
-    DX::ThrowIfFailed(m_index_buffer_->SetName(vertex_name.c_str()));
+    DX::ThrowIfFailed(m_index_buffer_->SetName(index_name.c_str()));
 
     // Create the upload heap.
     DX::ThrowIfFailed
@@ -368,7 +384,7 @@ namespace Engine::Resources
       const auto& idx_pure_trans = CD3DX12_RESOURCE_BARRIER::Transition
       (
        m_raytracing_index_buffer_.Get(),
-       D3D12_RESOURCE_STATE_INDEX_BUFFER,
+       D3D12_RESOURCE_STATE_COPY_DEST,
        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
       );
 
