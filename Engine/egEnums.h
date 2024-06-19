@@ -36,7 +36,7 @@ namespace Engine
 
   enum eRaytracingTexSlot
   {
-    RAYTRACING_TEX_SLOT_TEXTURE = 3,
+    RAYTRACING_TEX_SLOT_TEXTURE = 0,
     RAYTRACING_TEX_SLOT_NORMAL,
     RAYTRACING_TEX_SLOT_COUNT //todo: add more slots
   };
