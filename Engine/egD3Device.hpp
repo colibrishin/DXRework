@@ -37,18 +37,34 @@ namespace Engine::Manager::Graphics
 
     void Initialize(HWND hWnd) override;
 
+    static void DEBUG_DEVICE_REMOVED(ID3D12Device* device)
+    {
+      if constexpr (g_debug_device_removal)
+      {
+        ComPtr<ID3D12DeviceRemovedExtendedData> dred;
+        DX::ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&dred)));
+
+        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT dred_breadcrumbs;
+        D3D12_DRED_PAGE_FAULT_OUTPUT       dred_page_fault;
+        DX::ThrowIfFailed(dred->GetAutoBreadcrumbsOutput(&dred_breadcrumbs));
+        DX::ThrowIfFailed(dred->GetPageFaultAllocationOutput(&dred_page_fault));
+        __debugbreak();
+      }
+    }
+
     static void DEBUG_MEMORY()
     {
-#ifdef _DEBUG
-      HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
-      auto    DXGIGetDebugInterfaceFunc =
-        reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
-          GetProcAddress(hModule, "DXGIGetDebugInterface"));
+      if constexpr (g_debug)
+      {
+        HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
+        auto    DXGIGetDebugInterfaceFunc =
+          reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
+            GetProcAddress(hModule, "DXGIGetDebugInterface"));
 
-      IDXGIDebug* pDXGIDebug;
-      DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-      pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
-#endif
+        IDXGIDebug* pDXGIDebug;
+        DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
+        pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
+      }
     }
 
     static float GetAspectRatio();

@@ -77,11 +77,8 @@ namespace WinAPI
     ShowCursor(false);
 
 
-    if constexpr (Engine::g_debug)
-    {
-      // Show mouse cursor for debugging.
-      ShowCursor(true);
-    }
+    // Show mouse cursor for debugging.
+    ShowCursor(true);
 
     return hwnd;
   }

@@ -137,20 +137,35 @@ namespace Engine::Manager::Graphics
 
   void D3Device::InitializeDevice()
   {
-    if constexpr (g_debug)
+    if (g_debug)
     {
       ComPtr<ID3D12Debug> debug_interface;
+      ComPtr<ID3D12Debug1> debug_interface1;
       DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
+      DX::ThrowIfFailed(debug_interface->QueryInterface(IID_PPV_ARGS(debug_interface1.GetAddressOf())));
       debug_interface->EnableDebugLayer();
+      debug_interface1->SetEnableGPUBasedValidation(true);
+    }
+
+    if constexpr (g_debug_device_removal)
+    {
+      ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dred_settings;
+      DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&dred_settings)));
+
+      // Turn on auto-breadcrumbs and page fault reporting.
+      dred_settings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+      dred_settings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
     }
 
     // Create factory and Searching for adapter
     ComPtr<IDXGIFactory4> dxgi_factory;
 
     UINT dxgi_factory_flags = 0;
-#ifdef _DEBUG
-    dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
-#endif
+
+    if constexpr (g_debug)
+    {
+      dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
+    }
 
     DX::ThrowIfFailed(CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
@@ -181,36 +196,6 @@ namespace Engine::Manager::Graphics
       }
 
       adapter_idx++;
-    }
-
-    if constexpr (g_debug)
-    {
-      ComPtr<ID3D12InfoQueue> info_queue;
-      if (SUCCEEDED(m_device_.As(&info_queue)))
-      {
-        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
-        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));
-
-        D3D12_MESSAGE_SEVERITY severities[] =
-        {
-          D3D12_MESSAGE_SEVERITY_INFO
-        };
-
-        D3D12_MESSAGE_ID deny_ids[] =
-        {
-          D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
-          D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
-          D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE
-        };
-
-        D3D12_INFO_QUEUE_FILTER filter = {};
-        filter.DenyList.NumSeverities  = _countof(severities);
-        filter.DenyList.pSeverityList  = severities;
-        filter.DenyList.NumIDs         = _countof(deny_ids);
-        filter.DenyList.pIDList        = deny_ids;
-
-        DX::ThrowIfFailed(info_queue->PushStorageFilter(&filter));
-      }
     }
 
     if (!adapter)
@@ -299,6 +284,36 @@ namespace Engine::Manager::Graphics
 
     DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second));
     m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
+
+    if constexpr (g_debug)
+    {
+      ComPtr<ID3D12InfoQueue> info_queue;
+      if (SUCCEEDED(m_device_.As(&info_queue)))
+      {
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
+        DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));
+
+        D3D12_MESSAGE_SEVERITY severities[] =
+        {
+          D3D12_MESSAGE_SEVERITY_INFO
+        };
+
+        D3D12_MESSAGE_ID deny_ids[] =
+        {
+          D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+          D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
+          D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE
+        };
+
+        D3D12_INFO_QUEUE_FILTER filter = {};
+        filter.DenyList.NumSeverities  = _countof(severities);
+        filter.DenyList.pSeverityList  = severities;
+        filter.DenyList.NumIDs         = _countof(deny_ids);
+        filter.DenyList.pIDList        = deny_ids;
+
+        DX::ThrowIfFailed(info_queue->PushStorageFilter(&filter));
+      }
+    }
   }
 
   void D3Device::InitializeCommandAllocator()

@@ -23,10 +23,7 @@ LRESULT CALLBACK WndProc(
   LPARAM lparam
 )
 {
-  if constexpr (Engine::g_debug)
-  {
-    if (ImGui_ImplWin32_WndProcHandler(hwnd, umessage, wparam, lparam)) { return true; }
-  }
+  if (ImGui_ImplWin32_WndProcHandler(hwnd, umessage, wparam, lparam)) { return true; }
 
   switch (umessage)
   {
