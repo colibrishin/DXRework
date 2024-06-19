@@ -20,9 +20,23 @@ namespace Engine::Manager::Graphics
   void RayTracer::PreRender(const float& dt)
   {
     // Reuse the renderer candidates;
+    m_built_ = false;
   }
 
-  void RayTracer::Render(const float& dt) {}
+  void RayTracer::Render(const float& dt)
+  {
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Pre-processing TLAS").lock();
+
+    cmd->SoftReset();
+
+    RenderPass(cmd->GetList4(), nullptr);
+
+    cmd->FlagReady([this]()
+    {
+      m_built_ = true;
+      m_built_.notify_all();
+    });
+  }
 
   void RayTracer::PostRender(const float& dt) {}
 
@@ -65,14 +79,6 @@ namespace Engine::Manager::Graphics
 
       // Build the TLAS based on the target instances.
       GetRaytracingPipeline().BuildTLAS(cmd, target_instances);
-
-      cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
-
-      // set root signature
-      // set descriptor heaps
-      // bind the pipeline state object => shader required
-      // bind the tlas
-      
     }
   }
 }

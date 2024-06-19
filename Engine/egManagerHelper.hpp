@@ -10,6 +10,7 @@
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
 #include "egProjectionFrustum.h"
+#include "egRayTracer.hpp"
 #include "egRaytracingPipeline.hpp"
 #include "egReflectionEvaluator.h"
 #include "egRenderPipeline.h"
@@ -81,4 +82,6 @@ namespace Engine
   {
     return Manager::Graphics::RaytracingPipeline::GetInstance();
   }
+
+  inline Manager::Graphics::RayTracer& GetRayTracer() { return Manager::Graphics::RayTracer::GetInstance(); }
 } // namespace Engine

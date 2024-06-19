@@ -24,10 +24,17 @@ namespace Engine::Manager::Graphics
     bool   Ready() const;
     UINT64 GetInstanceCount() const;
 
+    void WaitForBuild() const
+    {
+      m_built_.wait(true);
+    }
+
     void RenderPass(ID3D12GraphicsCommandList4* cmd, const std::function<bool(const StrongObjectBase&)>& predicate);
 
   private:
     friend struct SingletonDeleter;
     ~RayTracer() override = default;
+
+    std::atomic<bool> m_built_;
   };
 }
