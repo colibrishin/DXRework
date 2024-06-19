@@ -262,7 +262,7 @@ namespace Engine::Manager::Graphics
 
     // global root signature
     const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-    global_root_sign->SetRootSignature(GetRenderPipeline().GetRootSignature());
+    global_root_sign->SetRootSignature(m_raytracing_global_signature_.Get());
 
     // todo: local root signature
 
