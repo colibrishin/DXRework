@@ -44,6 +44,12 @@ void raygen_main()
   g_output[dispatchRaysIndex.xy] = payload.colorAndDist;
 }
 
+StructuredBuffer<MaterialElement> l_material : register(t0, space1);
+StructuredBuffer<ParamElement> l_param : register(t1, space1);
+StructuredBuffer<VertexInputType> l_vertex : register(t2, space1);
+ByteAddressBuffer l_index : register(t3, space1);
+Texture2D l_texture : register(t4, space1);
+Texture2D l_normal : register(t5, space1);
 
 [shader("closesthit")]
 void closest_hit_main(inout Payload payload, Attributes attr)
