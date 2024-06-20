@@ -152,9 +152,12 @@ void closest_hit_main(inout Payload payload, Attributes attr)
     float2 ddx_uv = mul(baryX, uvMat) - baryUV;
     float2 ddy_uv = mul(baryY, uvMat) - baryUV;
 
+  if (l_material[0].bindFlag.texFlag[0].x)
     // Sampling the texture with the gradient changes.
     baryColor.rgb = l_texture.SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv).rgb;
   }
+  {
+  if (l_material[0].bindFlag.texFlag[1].x)
 
   float lightIntensity[MAX_NUM_LIGHTS];
   float4 colorArray[MAX_NUM_LIGHTS];
@@ -179,7 +182,14 @@ void closest_hit_main(inout Payload payload, Attributes attr)
     colorSum.b += colorArray[i].b;
   }
 
-  float4 finalColor = saturate(colorSum) * baryColor;
+  float4 lightColor = saturate(colorSum);
+
+  if (l_material[0].bindFlag.texFlag[1].x)
+  {
+    lightColor *= saturate(normalColorSum);
+  }
+
+  float4 finalColor = lightColor * baryColor;
 
   payload.colorAndDist.xyz = finalColor.xyz;
   payload.colorAndDist.w = RayTCurrent();
