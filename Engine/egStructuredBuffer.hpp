@@ -147,7 +147,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size)
   {
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
+    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
 
     if constexpr (is_uav_sb<T>::value == true)
     {
@@ -178,7 +178,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
   {
     const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
 
     DX::ThrowIfFailed
       (
@@ -232,7 +232,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeReadBuffer(UINT size)
   {
     const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_aligned_t_size_ * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
 
     DX::ThrowIfFailed
       (
