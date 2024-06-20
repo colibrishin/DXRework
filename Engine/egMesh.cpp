@@ -308,7 +308,7 @@ namespace Engine::Resources
     {
       const auto& vtx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vector3) * pure_vertices.size());
       const auto& idx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
-
+      
       DX::ThrowIfFailed
         (
          GetD3Device().GetDevice()->CreateCommittedResource
@@ -500,9 +500,36 @@ namespace Engine::Resources
     m_index_buffer_->Release();
     m_vertex_buffer_upload_->Release();
     m_index_buffer_upload_->Release();
-    m_blas_.result->Release();
-    m_blas_.scratch->Release();
-    m_blas_.instanceDesc->Release();
+
+    if (m_blas_.result)
+    {
+      m_blas_.result->Release();
+    }
+    if (m_blas_.scratch)
+    {
+      m_blas_.scratch->Release();
+    }
+    if (m_raytracing_vertex_buffer_)
+    {
+      m_raytracing_vertex_buffer_->Release();
+    }
+    if (m_raytracing_index_buffer_)
+    {
+      m_raytracing_index_buffer_->Release();
+    }
+    if (m_raytracing_vertex_buffer_upload_)
+    {
+      m_raytracing_vertex_buffer_upload_->Release();
+    }
+    if (m_raytracing_index_buffer_upload_)
+    {
+      m_raytracing_index_buffer_upload_->Release();
+    }
+    if (m_blas_.instanceDesc)
+    {
+      m_blas_.instanceDesc->Release();
+    }
+    
     m_blas_.scratchSize = 0;
     m_blas_.resultSize = 0;
     m_blas_.instanceDescSize = 0;
