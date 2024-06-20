@@ -440,6 +440,22 @@ namespace Engine::Manager::Graphics
        m_raytracing_state_object_->QueryInterface
        (IID_PPV_ARGS(m_raytracing_state_object_properties_.ReleaseAndGetAddressOf()))
       );
+
+    constexpr D3D12_SAMPLER_DESC sampler
+    {
+      .Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+      .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+      .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+      .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+      .MipLODBias = 0,
+      .MaxAnisotropy = 0,
+      .ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL,
+      .BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
+      .MinLOD = 0,
+      .MaxLOD = D3D12_FLOAT32_MAX
+    };
+
+    m_device_->CreateSampler(&sampler, m_raytracing_sampler_heap_->GetCPUDescriptorHandleForHeapStart());
   }
 
   void RaytracingPipeline::InitializeShaderTable()
@@ -916,6 +932,7 @@ namespace Engine::Manager::Graphics
     cmd->SetDescriptorHeaps(2, heaps);
 
     cmd->SetComputeRootDescriptorTable(0, m_raytracing_buffer_heap_->GetGPUDescriptorHandleForHeapStart());
+    cmd->SetComputeRootDescriptorTable(5, m_raytracing_sampler_heap_->GetGPUDescriptorHandleForHeapStart());
   }
 
   void RaytracingPipeline::BindTLAS(ID3D12GraphicsCommandList1* cmd) const
