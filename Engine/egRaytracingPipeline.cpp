@@ -139,6 +139,7 @@ namespace Engine::Manager::Graphics
 
       m_used_buffers_.clear();
       m_used_textures_.clear();
+      m_tmp_textures_heaps_.clear(); // reuse it
     }
   }
 
@@ -234,25 +235,29 @@ namespace Engine::Manager::Graphics
         );
     }
 
-    // use the register space 1 for avoiding the conflict with the global root signature
-    CD3DX12_ROOT_PARAMETER1 hit_local_param[6];
-    hit_local_param[0].InitAsShaderResourceView(0, 1); // material buffer
-    hit_local_param[1].InitAsShaderResourceView(1, 1); // instance buffer
-    hit_local_param[2].InitAsShaderResourceView(2, 1); // vertex buffer
-    hit_local_param[3].InitAsShaderResourceView(3, 1); // index buffer
-    hit_local_param[4].InitAsShaderResourceView(4, 1); // texture
-    hit_local_param[5].InitAsShaderResourceView(5, 1); // normal
-    
-    const auto& local_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
-      (
-       _countof(hit_local_param),
-       hit_local_param,
-       0,
-       nullptr,
-       D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE
-      );
-
     {
+      // use the register space 1 for avoiding the conflict with the global root signature
+      CD3DX12_DESCRIPTOR_RANGE1 hit_local_ranges;
+      hit_local_ranges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 5, 1);
+
+      CD3DX12_ROOT_PARAMETER1 hit_local_param[6];
+      hit_local_param[0].InitAsShaderResourceView(0, 1); // light buffer
+      hit_local_param[1].InitAsShaderResourceView(1, 1); // material buffer
+      hit_local_param[2].InitAsShaderResourceView(2, 1); // instance buffer
+      hit_local_param[3].InitAsShaderResourceView(3, 1); // vertex buffer
+      hit_local_param[4].InitAsShaderResourceView(4, 1); // index buffer
+      hit_local_param[5].InitAsDescriptorTable(1, &hit_local_ranges); // texture, normal
+
+      const auto& local_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
+        (
+         _countof(hit_local_param),
+         hit_local_param,
+         0,
+         nullptr,
+         D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE
+        );
+
+
       ComPtr<ID3DBlob> signature;
       ComPtr<ID3DBlob> error;
 
@@ -676,15 +681,52 @@ namespace Engine::Manager::Graphics
         D3D12_GPU_VIRTUAL_ADDRESS tex_addr = 0;
         D3D12_GPU_VIRTUAL_ADDRESS norm_addr = 0;
 
+        constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
+        {
+          .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+          .NumDescriptors = 2,
+          .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+        };
+
+        DX::ThrowIfFailed
+          (
+           GetD3Device().GetDevice()->CreateDescriptorHeap
+           (
+            &heap_desc,
+            IID_PPV_ARGS(m_tmp_textures_heaps_.emplace_back().ReleaseAndGetAddressOf())
+           )
+          );
+
         if (const StrongTexture& tex = mtr->GetResource<Resources::Texture>(0).lock())
         {
-          tex_addr = tex->GetRawResoruce()->GetGPUVirtualAddress();
+          m_device_->CopyDescriptorsSimple
+            (
+             1,
+             m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
+             tex->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+            );
+
           m_used_textures_.push_back(tex);
         }
 
         if (const StrongTexture& norm = mtr->GetResource<Resources::Texture>(1).lock())
         {
-          norm_addr = norm->GetRawResoruce()->GetGPUVirtualAddress();
+          CD3DX12_CPU_DESCRIPTOR_HANDLE handle
+            (
+             m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
+             1,
+             m_buffer_descriptor_size_
+            );
+
+          m_device_->CopyDescriptorsSimple
+            (
+             1,
+             handle,
+             norm->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+            );
+
           m_used_textures_.push_back(norm);
         }
 
@@ -718,7 +760,7 @@ namespace Engine::Manager::Graphics
               .instanceSB = instance_sb[shape_idx].GetGPUAddress(),
               .vertices = mesh_sb.GetGPUAddress(),
               .indices = mesh->GetIndexBuffer()->GetGPUVirtualAddress(),
-              .texture = tex_addr,
+              .textures = m_tmp_textures_heaps_.back()->GetGPUDescriptorHandleForHeapStart(),
               .normal = norm_addr
             };
 
