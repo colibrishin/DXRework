@@ -105,6 +105,7 @@ namespace Engine::Manager
     GetImGuiManager().Initialize(hWnd);
     GetDebugger().Initialize();
     GetRenderer().Initialize();
+    GetRayTracer().Initialize();
   }
 
   void Application::Tick()

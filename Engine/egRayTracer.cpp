@@ -5,6 +5,7 @@
 #include "egAnimator.h"
 #include "egAtlasAnimation.h"
 #include "egBoneAnimation.h"
+#include "egLight.h"
 #include "egParticleRenderer.h"
 #include "egRaytracingPipeline.hpp"
 #include "egSceneManager.hpp"
@@ -21,6 +22,32 @@ namespace Engine::Manager::Graphics
   {
     // Reuse the renderer candidates;
     m_built_ = false;
+
+    m_light_buffers_.clear();
+
+    if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+    {
+      const auto& lights = (*scene)[LAYER_LIGHT];
+
+      for (const auto& w_obj : lights->GetGameObjects())
+      {
+        if (const auto locked = w_obj.lock())
+        {
+          const auto& light = locked->GetSharedPtr<Objects::Light>();
+          const auto  tr    = locked->GetComponent<Components::Transform>().lock();
+
+          const auto world = tr->GetWorldMatrix();
+
+          m_light_buffers_.emplace_back
+            (
+             tr->GetWorldMatrix().Transpose(),
+             light->GetColor(),
+             light->GetType(),
+             light->GetRange()
+            );
+        }
+      }
+    }
   }
 
   void RayTracer::Render(const float& dt)
@@ -29,24 +56,36 @@ namespace Engine::Manager::Graphics
 
     cmd->SoftReset();
 
+    m_light_buffer_data_.SetData(cmd->GetList4(), m_light_buffers_.size(), m_light_buffers_.data());
+
     RenderPass(cmd->GetList4(), nullptr);
 
-    cmd->FlagReady([this]()
-    {
-      m_built_ = true;
-      m_built_.notify_all();
-    });
+    cmd->Execute();
   }
 
   void RayTracer::PostRender(const float& dt) {}
 
   void RayTracer::PostUpdate(const float& dt) {}
 
-  void RayTracer::Initialize() {}
+  void RayTracer::Initialize()
+  {
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"RayTracer Initialization").lock();
+
+    cmd->SoftReset();
+
+    m_light_buffer_data_.Create(cmd->GetList(), 1, {});
+
+    cmd->FlagReady();
+  }
 
   bool   RayTracer::Ready() const { return GetRenderer().Ready(); }
 
   UINT64 RayTracer::GetInstanceCount() const { return GetRenderer().GetInstanceCount(); }
+
+  const Graphics::StructuredBuffer<Graphics::SBs::LightSB>& RayTracer::GetLightSB() const
+  {
+    return m_light_buffer_data_;
+  }
 
   void RayTracer::RenderPass
   (

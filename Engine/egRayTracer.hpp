@@ -24,6 +24,8 @@ namespace Engine::Manager::Graphics
     bool   Ready() const;
     UINT64 GetInstanceCount() const;
 
+    const Graphics::StructuredBuffer<Graphics::SBs::LightSB>& GetLightSB() const;
+
     void WaitForBuild() const
     {
       m_built_.wait(true);
@@ -36,6 +38,9 @@ namespace Engine::Manager::Graphics
     ~RayTracer() override = default;
 
     std::atomic<bool> m_built_;
+
+    std::vector<SBs::LightSB> m_light_buffers_;
+    StructuredBuffer<SBs::LightSB> m_light_buffer_data_;
     std::vector<Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>> m_tmp_instances_;
   };
 }

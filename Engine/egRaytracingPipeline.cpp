@@ -31,8 +31,6 @@ namespace Engine::Manager::Graphics
   {
     if (g_raytracing)
     {
-      GetRayTracer().WaitForBuild();
-
       const auto& cmd = GetD3Device().AcquireCommandPair(L"Raytracing Rendering").lock();
 
       cmd->SoftReset();
