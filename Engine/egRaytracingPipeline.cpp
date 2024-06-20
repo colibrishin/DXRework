@@ -48,6 +48,8 @@ namespace Engine::Manager::Graphics
         }
       }
 
+      GetRayTracer().GetLightSB().TransitionToSRV(cmd->GetList());
+
       DefaultRootSignature(cmd->GetList4());
       cmd->GetList4()->SetPipelineState1(m_raytracing_state_object_.Get());
       cmd->GetList4()->RSSetViewports(1, &m_viewport_);
@@ -134,6 +136,8 @@ namespace Engine::Manager::Graphics
           tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
         }
       }
+
+      GetRayTracer().GetLightSB().TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
       cmd->FlagReady();
 
@@ -772,12 +776,12 @@ namespace Engine::Manager::Graphics
 
             HitShaderRecord record
             {
+              .lightSB = GetRayTracer().GetLightSB().GetGPUAddress(),
               .materialSB = material_sb.GetGPUAddress(),
               .instanceSB = instance_sb[shape_idx].GetGPUAddress(),
               .vertices = mesh_sb.GetGPUAddress(),
               .indices = mesh->GetIndexBuffer()->GetGPUVirtualAddress(),
               .textures = m_tmp_textures_heaps_.back()->GetGPUDescriptorHandleForHeapStart(),
-              .normal = norm_addr
             };
 
             _mm256_memcpy(record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier(g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);

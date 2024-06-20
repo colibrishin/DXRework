@@ -20,14 +20,14 @@ namespace Engine::Manager::Graphics
 
     struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) HitShaderRecord : public ShaderRecord
     {
+      D3D12_GPU_VIRTUAL_ADDRESS lightSB;
       D3D12_GPU_VIRTUAL_ADDRESS materialSB;
       D3D12_GPU_VIRTUAL_ADDRESS instanceSB;
 
       D3D12_GPU_VIRTUAL_ADDRESS vertices;
       D3D12_GPU_VIRTUAL_ADDRESS indices;
 
-      D3D12_GPU_VIRTUAL_ADDRESS texture;
-      D3D12_GPU_VIRTUAL_ADDRESS normal;
+      D3D12_GPU_DESCRIPTOR_HANDLE textures;
     };
 
   public:
@@ -86,14 +86,14 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_;
 
     // Shader parts
-    ComPtr<ID3D12StateObject>           m_raytracing_state_object_;
-    ComPtr<ID3D12StateObjectProperties> m_raytracing_state_object_properties_;
-    ComPtr<ID3D12Resource>              m_raygen_shader_table_;
-    ComPtr<ID3D12Resource>              m_closest_hit_shader_table_;
-    UINT64                              m_closest_hit_shader_table_size_ = 0;
-    ComPtr<ID3D12Resource>              m_miss_shader_table_;
-
-    std::vector<HitShaderRecord>       m_hit_shader_records_;
+    ComPtr<ID3D12StateObject>                 m_raytracing_state_object_;
+    ComPtr<ID3D12StateObjectProperties>       m_raytracing_state_object_properties_;
+    ComPtr<ID3D12Resource>                    m_raygen_shader_table_;
+    ComPtr<ID3D12Resource>                    m_closest_hit_shader_table_;
+    UINT64                                    m_closest_hit_shader_table_size_ = 0;
+    ComPtr<ID3D12Resource>                    m_miss_shader_table_;
+    std::vector<HitShaderRecord>              m_hit_shader_records_;
+    std::vector<ComPtr<ID3D12DescriptorHeap>> m_tmp_textures_heaps_;
 
     std::vector<StructuredBufferBase*> m_used_buffers_;
     std::vector<WeakTexture>           m_used_textures_;
