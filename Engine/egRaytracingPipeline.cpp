@@ -40,12 +40,9 @@ namespace Engine::Manager::Graphics
         buffer->TransitionToSRV(cmd->GetList());
       }
 
-      for (const auto& w_tex : m_used_textures_)
+      for (const auto& tex : m_used_textures_)
       {
-        if (const auto& tex = w_tex.lock())
-        {
-          tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-        }
+        tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
       }
 
       GetRayTracer().GetLightSB().TransitionToSRV(cmd->GetList());
@@ -59,7 +56,7 @@ namespace Engine::Manager::Graphics
       m_wvp_buffer_.Bind(cmd, {});
       cmd->GetList()->SetComputeRootConstantBufferView(4, m_wvp_buffer_.GetGPUAddress());
       BindTLAS(cmd->GetList4());
-
+      
       const D3D12_DISPATCH_RAYS_DESC dispatch_desc
       {
         .RayGenerationShaderRecord = {
@@ -129,12 +126,9 @@ namespace Engine::Manager::Graphics
         buffer->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
       }
 
-      for (const auto& w_tex : m_used_textures_)
+      for (const auto& tex : m_used_textures_)
       {
-        if (const auto& tex = w_tex.lock())
-        {
-          tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
-        }
+        tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
       }
 
       GetRayTracer().GetLightSB().TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
@@ -447,7 +441,7 @@ namespace Engine::Manager::Graphics
 
     constexpr D3D12_SAMPLER_DESC sampler
     {
-      .Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+      .Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
       .AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
       .AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
       .AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -679,86 +673,71 @@ namespace Engine::Manager::Graphics
   {
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
-
-    UINT64 shape_idx = 0;
+    std::vector<D3D12_RAYTRACING_INSTANCE_DESC>             instance_descs;
+    std::map<std::pair<StrongMesh, StrongMaterial>, UINT64> mesh_map;
+    
+    UINT64 mesh_idx = 0;
 
     for (const auto& [w_mtr, instances] : instances)
     {
       if (const StrongMaterial& mtr = w_mtr.lock())
       {
-        mtr->UpdateMaterialSB(cmd);
-        Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& material_sb = mtr->GetMaterialSBBuffer();
-        const StrongModel&               shape       = mtr->GetResource<Resources::Shape>(0).lock();
-
-        if (shape == nullptr)
+        if (const StrongModel& shape = mtr->GetResource<Resources::Shape>(0).lock())
         {
-          continue;
-        }
+          mtr->UpdateMaterialSB(cmd);
+          Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& material_sb = mtr->GetMaterialSBBuffer();
 
-        m_used_buffers_.push_back(&material_sb);
+          m_used_buffers_.push_back(&material_sb);
 
-        D3D12_GPU_VIRTUAL_ADDRESS tex_addr = 0;
-        D3D12_GPU_VIRTUAL_ADDRESS norm_addr = 0;
+          constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
+          {
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+            .NumDescriptors = 2,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+          };
 
-        constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
-        {
-          .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-          .NumDescriptors = 2,
-          .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
-        };
-
-        DX::ThrowIfFailed
-          (
-           GetD3Device().GetDevice()->CreateDescriptorHeap
-           (
-            &heap_desc,
-            IID_PPV_ARGS(m_tmp_textures_heaps_.emplace_back().ReleaseAndGetAddressOf())
-           )
-          );
-
-        if (const StrongTexture& tex = mtr->GetResource<Resources::Texture>(0).lock())
-        {
-          m_device_->CopyDescriptorsSimple
+          DX::ThrowIfFailed
             (
-             1,
-             m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
-             tex->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
-             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+             GetD3Device().GetDevice()->CreateDescriptorHeap
+             (
+              &heap_desc,
+              IID_PPV_ARGS(m_tmp_textures_heaps_.emplace_back().ReleaseAndGetAddressOf())
+             )
             );
 
-          m_used_textures_.push_back(tex);
-        }
+          if (const StrongTexture& tex = mtr->GetResource<Resources::Texture>(0).lock())
+          {
+            m_device_->CopyDescriptorsSimple
+              (
+               1,
+               m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
+               tex->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+               D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+              );
 
-        if (const StrongTexture& norm = mtr->GetResource<Resources::Texture>(1).lock())
-        {
-          CD3DX12_CPU_DESCRIPTOR_HANDLE handle
-            (
-             m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
-             1,
-             m_buffer_descriptor_size_
-            );
+            m_used_textures_.insert(tex);
+          }
 
-          m_device_->CopyDescriptorsSimple
-            (
-             1,
-             handle,
-             norm->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
-             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-            );
+          if (const StrongTexture& norm = mtr->GetResource<Resources::Texture>(1).lock())
+          {
+            CD3DX12_CPU_DESCRIPTOR_HANDLE handle
+              (
+               m_tmp_textures_heaps_.back()->GetCPUDescriptorHandleForHeapStart(),
+               1,
+               m_buffer_descriptor_size_
+              );
 
-          m_used_textures_.push_back(norm);
-        }
+            m_device_->CopyDescriptorsSimple
+              (
+               1,
+               handle,
+               norm->GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
+               D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+              );
 
-        // todo: used SBs should be transit to the SRV before the Dispatch.
-        instance_sb[shape_idx].SetData(cmd, instances.size(), instances.data());
+            m_used_textures_.insert(norm);
+          }
 
-        m_used_buffers_.push_back(&instance_sb[shape_idx]);
-
-        // [shape0[instance0[meshes..], instance1[meshes..], ...], shape1...]
-
-        for (int i = 0; i < instances.size(); ++i)
-        {
           for (const StrongMesh& mesh : shape->GetMeshes())
           {
             if (mesh->GetBLAS().empty)
@@ -766,36 +745,57 @@ namespace Engine::Manager::Graphics
               continue; // Billboards and other non-triangle meshes
             }
 
-            const auto& mesh_sb = mesh->GetVertexStructuredBuffer();
+            mesh_map[{mesh, mtr}] = mesh_idx;
 
-            D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
-            instance_desc.InstanceID                          = i;
-            instance_desc.InstanceContributionToHitGroupIndex = 0;
-            instance_desc.InstanceMask                        = 1;
-            instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
+            instance_sb[mesh_idx].SetData(cmd, instances.size(), instances.data());
 
+            m_used_buffers_.push_back(&instance_sb[mesh_idx]);
+
+            // Add hit group per mesh
             HitShaderRecord record
             {
               .lightSB = GetRayTracer().GetLightSB().GetGPUAddress(),
               .materialSB = material_sb.GetGPUAddress(),
-              .instanceSB = instance_sb[shape_idx].GetGPUAddress(),
-              .vertices = mesh_sb.GetGPUAddress(),
+              .instanceSB = instance_sb[mesh_idx].GetGPUAddress(),
+              .vertices = mesh->GetVertexStructuredBuffer().GetGPUAddress(),
               .indices = mesh->GetIndexBuffer()->GetGPUVirtualAddress(),
               .textures = m_tmp_textures_heaps_.back()->GetGPUDescriptorHandleForHeapStart(),
             };
 
-            _mm256_memcpy(record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier(g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+            _mm256_memcpy
+              (
+               record.shaderId, m_raytracing_state_object_properties_->GetShaderIdentifier
+               (g_raytracing_hitgroup_name), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES
+              );
 
-            // todo: animation deformation should be applied at some point.
-            const auto& world_matrix = instances[i].GetParam<Matrix>(0);
-            _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
-
-            instance_descs.push_back(instance_desc);
             m_hit_shader_records_.push_back(record);
+            mesh_idx++;
+          }
+
+          for (int i = 0; i < instances.size(); ++i)
+          {
+            for (const StrongMesh& mesh : shape->GetMeshes())
+            {
+              if (mesh->GetBLAS().empty)
+              {
+                continue; // Billboards and other non-triangle meshes
+              }
+
+              D3D12_RAYTRACING_INSTANCE_DESC instance_desc      = {};
+              instance_desc.InstanceID                          = i;
+              instance_desc.InstanceContributionToHitGroupIndex = mesh_map[{mesh, mtr}];
+              instance_desc.InstanceMask                        = 1;
+              instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
+              instance_desc.Flags                               = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+
+              // todo: animation deformation should be applied at some point.
+              const auto& world_matrix = instances[i].GetParam<Matrix>(0);
+              _mm256_memcpy(instance_desc.Transform, &world_matrix, sizeof(instance_desc.Transform));
+
+              instance_descs.push_back(instance_desc);
+            }
           }
         }
-
-        shape_idx++;
       }
     }
 

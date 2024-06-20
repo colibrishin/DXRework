@@ -30,6 +30,7 @@ namespace Engine::Manager::Graphics
       D3D12_GPU_DESCRIPTOR_HANDLE textures;
     };
 
+
   public:
     explicit RaytracingPipeline(SINGLETON_LOCK_TOKEN) {}
 
@@ -96,7 +97,7 @@ namespace Engine::Manager::Graphics
     std::vector<ComPtr<ID3D12DescriptorHeap>> m_tmp_textures_heaps_;
 
     std::vector<StructuredBufferBase*> m_used_buffers_;
-    std::vector<WeakTexture>           m_used_textures_;
+    std::set<StrongTexture>           m_used_textures_;
 
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_;
 
