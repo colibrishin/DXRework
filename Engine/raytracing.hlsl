@@ -102,6 +102,14 @@ void closest_hit_main(inout Payload payload, Attributes attr)
                             v_vertex[1].normal * barycentrics.y +
                             v_vertex[2].normal * barycentrics.z;
 
+  const float3 baryTangent = v_vertex[0].tangent * barycentrics.x +
+                             v_vertex[1].tangent * barycentrics.y +
+                             v_vertex[2].tangent * barycentrics.z;
+
+  const float3 baryBinormal = v_vertex[0].binormal * barycentrics.x +
+                              v_vertex[1].binormal * barycentrics.y +
+                              v_vertex[2].binormal * barycentrics.z;
+
   float4 baryColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
   // Barycentric interpolation of coloring
   baryColor = v_vertex[0].color * barycentrics.x +
@@ -119,47 +127,65 @@ void closest_hit_main(inout Payload payload, Attributes attr)
   // World position of the hit
   const float3 hitPos = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 
-  if (l_material[instanceId].bindFlag.texFlag[0].x)
-  {
-    // https://wickedengine.net/2022/05/derivatives-in-compute-shader/comment-page-1/
-    // https://github.com/microsoft/DirectX-Graphics-Samples/blob/35f6060f2e1884c9807a965a265fa5c6b0326995/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L200-L231
-    //
-    // Compute the derivatives of the UV coordinates.
+  // https://wickedengine.net/2022/05/derivatives-in-compute-shader/comment-page-1/
+  // https://github.com/microsoft/DirectX-Graphics-Samples/blob/35f6060f2e1884c9807a965a265fa5c6b0326995/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/DiffuseHitShaderLib.hlsl#L200-L231
+  //
+  // Compute the derivatives of the UV coordinates.
 
-    // A plane with given vertices
-    float3 nonbary_normal = normalize(cross(
-        v_vertex[2].position - v_vertex[0].position,
-        v_vertex[1].position - v_vertex[0].position));
+  // A plane with given vertices
+  float3 nonbary_normal = normalize
+    (
+     cross
+     (
+      v_vertex[2].position - v_vertex[0].position,
+      v_vertex[1].position - v_vertex[0].position
+     )
+    );
 
-    // Prepare rays for ddx(right) and ddy(down).
-    const uint2 right = DispatchRaysIndex().xy + uint2(1, 0);
-    const uint2 down = DispatchRaysIndex().xy + uint2(0, 1);
+  // Prepare rays for ddx(right) and ddy(down).
+  const uint2 right = DispatchRaysIndex().xy + uint2(1, 0);
+  const uint2 down  = DispatchRaysIndex().xy + uint2(0, 1);
 
-    float3 ddxOrigin, ddxDir, ddyOrigin, ddyDir;
-    GenerateCameraRay(right, ddxOrigin, ddxDir);
-    GenerateCameraRay(down, ddyOrigin, ddyDir);
+  float3 ddxOrigin, ddxDir, ddyOrigin, ddyDir;
+  GenerateCameraRay(right, ddxOrigin, ddxDir);
+  GenerateCameraRay(down, ddyOrigin, ddyDir);
 
-    // Test the intersection of the plane with the rays
-    float3 xOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddxOrigin, ddxDir);
-    float3 yOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddyOrigin, ddyDir);
+  // Test the intersection of the plane with the rays
+  float3 xOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddxOrigin, ddxDir);
+  float3 yOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddyOrigin, ddyDir);
 
-    // Compute the barycentric coordinates of the intersection points
-    float3 baryX = BarycentricCoordinates(xOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
-    float3 baryY = BarycentricCoordinates(yOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
+  // Compute the barycentric coordinates of the intersection points
+  float3 baryX = BarycentricCoordinates(xOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
+  float3 baryY = BarycentricCoordinates(yOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
 
-    // Compute the UV derivatives
-    float3x2 uvMat = float3x2(v_vertex[0].tex, v_vertex[1].tex, v_vertex[2].tex);
-    float2 ddx_uv = mul(baryX, uvMat) - baryUV;
-    float2 ddy_uv = mul(baryY, uvMat) - baryUV;
+  // Compute the UV derivatives
+  float3x2 uvMat  = float3x2(v_vertex[0].tex, v_vertex[1].tex, v_vertex[2].tex);
+  float2   ddx_uv = mul(baryX, uvMat) - baryUV;
+  float2   ddy_uv = mul(baryY, uvMat) - baryUV;
 
   if (l_material[0].bindFlag.texFlag[0].x)
+  {
     // Sampling the texture with the gradient changes.
     baryColor.rgb = l_texture.SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv).rgb;
   }
-  {
+
+  float3 bumpNormal = float3(0.f, 0.f, 0.f);
+
   if (l_material[0].bindFlag.texFlag[1].x)
+  {
+    float4 normalMap = l_normal.SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv);
+    normalMap = (normalMap * 2.0f) - 1.0f;
+
+    bumpNormal = (normalMap.x * baryTangent) +
+                 (normalMap.y * baryBinormal) +
+                 (normalMap.z * baryNormal);
+    bumpNormal = normalize(bumpNormal);
+  }
 
   float lightIntensity[MAX_NUM_LIGHTS];
+  float normalLightIntensity[MAX_NUM_LIGHTS];
+
+  float4 normalColorArray[MAX_NUM_LIGHTS];
   float4 colorArray[MAX_NUM_LIGHTS];
 
   int i = 0;
@@ -170,10 +196,21 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
     const float3 lightDir = normalize(lightPos - hitPos);
     lightIntensity[i] = saturate(dot(baryNormal, lightDir));
+    normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
+
+    normalColorArray[i] = l_light[i].color * normalLightIntensity[i];
     colorArray[i] = l_light[i].color * lightIntensity[i];
   }
 
   float4 colorSum = g_ambientColor;
+  float4 normalColorSum = g_ambientColor;
+
+  for (i = 0; i < MAX_NUM_LIGHTS; ++i)
+  {
+    normalColorSum.r += normalColorArray[i].r;
+    normalColorSum.g += normalColorArray[i].g;
+    normalColorSum.b += normalColorArray[i].b;
+  }
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
