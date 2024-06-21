@@ -562,6 +562,9 @@
     <ClInclude Include="egRayTracer.hpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="egCommonRenderer.h">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -801,6 +804,9 @@
       <Filter>Singleton\Graphics\RenderPipeline</Filter>
     </ClCompile>
     <ClCompile Include="egRayTracer.cpp">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egCommonRenderer.cpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

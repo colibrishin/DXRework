@@ -30,6 +30,7 @@
     <ClInclude Include="egAnimator.h" />
     <ClInclude Include="egBone.h" />
     <ClInclude Include="egCommands.h" />
+    <ClInclude Include="egCommonRenderer.h" />
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
@@ -135,6 +136,7 @@
     <ClCompile Include="egCollisionDetector.cpp" />
     <ClCompile Include="egCommands.cpp" />
     <ClCompile Include="egCommon.cpp" />
+    <ClCompile Include="egCommonRenderer.cpp" />
     <ClCompile Include="egComponent.cpp" />
     <ClCompile Include="egComputeShader.cpp" />
     <ClCompile Include="egConstraintSolver.cpp" />
