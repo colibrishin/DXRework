@@ -112,7 +112,11 @@ namespace Engine::Manager::Graphics
           if (predicate && !predicate(obj)) { continue; }
 
           target_instances[mtr].insert(target_instances[mtr].end(), instances.begin(), instances.end());
-          total_item_count += instances.size();
+
+          if (const auto& shape = mtr->GetResource<Resources::Shape>(0).lock())
+          {
+            total_item_count += shape->GetMeshes().size();
+          }
         }
       }
 
