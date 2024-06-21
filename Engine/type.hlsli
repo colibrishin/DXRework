@@ -100,4 +100,10 @@ struct ParamElement
   matrix mParam[MAX_PARAM_TYPE_SLOTS];
 };
 
+struct Attributes
+{
+  float2 barycentrics;
+};
+
+
 #endif // __TYPE_HLSLI__

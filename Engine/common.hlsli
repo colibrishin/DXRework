@@ -4,6 +4,7 @@
 #define TRIANGLE_MACRO 3
 #define LIGHT_TYPE_DIRECTIONAL 1
 #define LIGHT_TYPE_SPOT 2
+#define FLT_MAX 3.402823466e+38
 
 #include "type.hlsli"
 #include "utility.hlsli"
