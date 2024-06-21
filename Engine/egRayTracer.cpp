@@ -51,6 +51,9 @@ namespace Engine::Manager::Graphics
             );
         }
       }
+
+      // Notify the number of lights to the shader.
+      GetRaytracingPipeline().SetParam<int>(static_cast<UINT>(m_light_buffers_.size()), 0);
     }
   }
 
