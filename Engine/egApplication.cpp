@@ -203,18 +203,17 @@ namespace Engine::Manager
     GetDebugger().PreRender(dt);
     GetD3Device().PreRender(dt);
 
-    GetRenderer().PreRender(dt); // pre-process render information
-
     if (g_raytracing)
     {
-      GetRayTracer().PreRender(dt);
+      GetRayTracer().PreRender(dt); // pre-process render information
+      GetRaytracingPipeline().PreRender(dt); // clean up rtv, dsv, etc.
     }
     else
     {
+      GetRenderer().PreRender(dt); // pre-process render information
       GetShadowManager().PreRender(dt); // shadow resource command, executing shadow pass, set shadow resources.
+      GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
     }
-    
-    GetRenderPipeline().PreRender(dt); // clean up rtv, dsv, etc.
   }
 
   void Application::Render(const float& dt)
@@ -244,11 +243,11 @@ namespace Engine::Manager
 
       // Render commands (opaque)
       GetRenderer().Render(dt);
+      GetRenderPipeline().Render(dt);
     }
 
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
-    GetRenderPipeline().Render(dt);
     GetD3Device().Render(dt);
   }
 
@@ -343,11 +342,13 @@ namespace Engine::Manager
     Graphics::ImGuiManager::Destroy();
     Graphics::ReflectionEvaluator::Destroy();
     Graphics::Renderer::Destroy();
+    Graphics::RayTracer::Destroy();
     Graphics::ShadowManager::Destroy();
     Debugger::Destroy();
     Graphics::ToolkitAPI::Destroy();
     Graphics::ImGuiManager::Destroy();
     Graphics::RenderPipeline::Destroy();
+    Graphics::RaytracingPipeline::Destroy();
     Graphics::D3Device::Destroy();
 
     Graphics::D3Device::DEBUG_MEMORY();
