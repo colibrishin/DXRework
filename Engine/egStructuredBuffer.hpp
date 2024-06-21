@@ -253,7 +253,7 @@ namespace Engine::Graphics
     : m_size_(0)
   {
     static_assert(sizeof(T) <= 2048, "StructuredBuffer struct T size is too big");
-    m_aligned_t_size_ = Engine::Align(sizeof(T), 16);
+    m_aligned_t_size_ = static_cast<UINT>(Engine::Align(sizeof(T), 16));
   }
 
   template <typename T>
