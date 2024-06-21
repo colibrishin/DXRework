@@ -7,11 +7,7 @@ RaytracingAccelerationStructure g_tlas : register(t0);
 struct Payload
 {
   float4 colorAndDist;
-};
-
-struct Attributes
-{
-  float2 barycentrics;
+  bool   isShadow;
 };
 
 void GenerateCameraRay(uint2 index, out float3 origin, out float3 direction)
@@ -63,10 +59,11 @@ void raygen_main()
   ray.TMax = 1000.0f;
 
   Payload payload;
+  payload.isShadow = false;
 
   TraceRay(g_tlas, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
-  g_output[dispatchRaysIndex.xy] = payload.colorAndDist;
+  g_output[dispatchRaysIndex.xy] = float4(payload.colorAndDist.rgb, 1.f);
 }
 
 StructuredBuffer<LightElement>    l_light : register(t0, space1);
@@ -80,6 +77,12 @@ Texture2D                         l_normal : register(t6, space1);
 [shader("closesthit")]
 void closest_hit_main(inout Payload payload, Attributes attr)
 {
+  if (payload.isShadow)
+  {
+    payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, RayTCurrent());
+    return;
+  }
+
   // todo: too much stride
   const uint p_index = PrimitiveIndex() * 4 * 3; // which primitive are we intersecting
 
@@ -188,9 +191,16 @@ void closest_hit_main(inout Payload payload, Attributes attr)
   float4 normalColorArray[MAX_NUM_LIGHTS];
   float4 colorArray[MAX_NUM_LIGHTS];
 
+  float shadow = 0.f;
+
   int i = 0;
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
+    if (i >= g_iParam[0].x)
+    {
+      break;
+    }
+
     float4 lightPos = GetTranslation(l_light[i].world);
     lightPos.xyz /= lightPos.w;
 
@@ -200,6 +210,25 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
     normalColorArray[i] = l_light[i].color * normalLightIntensity[i];
     colorArray[i] = l_light[i].color * lightIntensity[i];
+
+    {
+      RayDesc shadowRay;
+      shadowRay.Origin    = hitPos;
+      shadowRay.Direction = lightDir;
+      shadowRay.TMin      = 0.001f;
+      shadowRay.TMax      = FLT_MAX;
+
+      Payload shadowPayload;
+      payload.isShadow     = true;
+      payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, FLT_MAX);
+
+      TraceRay(g_tlas, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 0, 0, 0, shadowRay, shadowPayload);
+
+      if (shadowPayload.colorAndDist.w < FLT_MAX)
+      {
+        shadow = 1.f * lightIntensity[i];
+      }
+    }
   }
 
   float4 colorSum = g_ambientColor;
@@ -207,6 +236,11 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
+    if (i >= g_iParam[0].x)
+    {
+      break;
+    }
+
     normalColorSum.r += normalColorArray[i].r;
     normalColorSum.g += normalColorArray[i].g;
     normalColorSum.b += normalColorArray[i].b;
@@ -214,12 +248,17 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
+    if (i >= g_iParam[0].x)
+    {
+      break;
+    }
+
     colorSum.r += colorArray[i].r;
     colorSum.g += colorArray[i].g;
     colorSum.b += colorArray[i].b;
   }
 
-  float4 lightColor = saturate(colorSum);
+  float4 lightColor = saturate((1.f - shadow) * colorSum);
 
   if (l_material[0].bindFlag.texFlag[1].x)
   {
@@ -235,5 +274,5 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 [shader("miss")]
 void miss_main(inout Payload payload)
 {
-  payload.colorAndDist = float4(g_ambientColor.xyz, 1.0f);
+  payload.colorAndDist = float4(g_ambientColor.xyz, RayTCurrent());
 }
