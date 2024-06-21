@@ -203,7 +203,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
   }
 
   float4 colorSum = g_ambientColor;
-  float4 normalColorSum = g_ambientColor;
+  float4 normalColorSum = float4(0.f, 0.f, 0.f, 0.f);
 
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
