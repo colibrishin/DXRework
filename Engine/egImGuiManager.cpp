@@ -43,7 +43,7 @@ namespace Engine::Manager::Graphics
     const auto& cmd = GetD3Device().AcquireCommandPair(L"ImGui Rendering").lock();
 
     cmd->SoftReset();
-    GetRenderPipeline().DefaultRenderTarget(cmd);
+    GetD3Device().DefaultRenderTarget(cmd);
     GetRenderPipeline().DefaultScissorRect(cmd);
     GetRenderPipeline().DefaultViewport(cmd);
     

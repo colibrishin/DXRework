@@ -28,7 +28,7 @@ namespace Engine::Manager::Graphics
 
   void ReflectionEvaluator::RenderFinished(const Weak<CommandPair>& w_cmd) const
   {
-    GetRenderPipeline().CopyBackBuffer(w_cmd, m_copy_.GetRawResoruce());
+    GetD3Device().CopyBackBuffer(w_cmd, m_copy_.GetRawResoruce());
   }
 
   void ReflectionEvaluator::BindReflectionMap(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const
