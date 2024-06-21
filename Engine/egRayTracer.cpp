@@ -14,19 +14,23 @@
 
 namespace Engine::Manager::Graphics
 {
-  void RayTracer::PreUpdate(const float& dt) {}
+  void RayTracer::PreUpdate(const float& dt)
+  {
+    m_b_ready_ = false;
+  }
+
   void RayTracer::Update(const float& dt) {}
+
   void RayTracer::FixedUpdate(const float& dt) {}
 
   void RayTracer::PreRender(const float& dt)
   {
-    // Reuse the renderer candidates;
-    m_built_ = false;
-
     m_light_buffers_.clear();
 
     if (const auto& scene = GetSceneManager().GetActiveScene().lock())
     {
+      BuildRenderMap(scene, m_render_candidates_, m_instance_counts_);
+
       const auto& lights = (*scene)[LAYER_LIGHT];
 
       for (const auto& w_obj : lights->GetGameObjects())
@@ -61,6 +65,8 @@ namespace Engine::Manager::Graphics
     RenderPass(cmd->GetList4(), nullptr);
 
     cmd->Execute();
+
+    m_b_ready_ = true;
   }
 
   void RayTracer::PostRender(const float& dt) {}
@@ -78,9 +84,9 @@ namespace Engine::Manager::Graphics
     cmd->FlagReady();
   }
 
-  bool   RayTracer::Ready() const { return GetRenderer().Ready(); }
+  bool   RayTracer::Ready() const { return m_b_ready_; }
 
-  UINT64 RayTracer::GetInstanceCount() const { return GetRenderer().GetInstanceCount(); }
+  UINT64 RayTracer::GetInstanceCount() const { return m_instance_counts_; }
 
   const Graphics::StructuredBuffer<Graphics::SBs::LightSB>& RayTracer::GetLightSB() const
   {
@@ -101,7 +107,7 @@ namespace Engine::Manager::Graphics
       std::map<WeakMaterial, std::vector<SBs::InstanceSB>> target_instances;
 
       // todo: opaque only.
-      for (const auto& candidates : GetRenderer().m_render_candidates_[0] | std::views::values)
+      for (const auto& candidates : m_render_candidates_[0] | std::views::values)
       {
         for (const auto& candidate : candidates)
         {

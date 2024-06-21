@@ -1,4 +1,5 @@
 #pragma once
+#include "egCommonRenderer.h"
 #include "egManager.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
@@ -28,7 +29,7 @@ namespace Engine::Manager::Graphics
 
     void WaitForBuild() const
     {
-      m_built_.wait(true);
+      m_b_built_.wait(true);
     }
 
     void RenderPass(ID3D12GraphicsCommandList4* cmd, const std::function<bool(const StrongObjectBase&)>& predicate);
@@ -37,10 +38,14 @@ namespace Engine::Manager::Graphics
     friend struct SingletonDeleter;
     ~RayTracer() override = default;
 
-    std::atomic<bool> m_built_;
+    std::atomic<bool> m_b_ready_;
+    std::atomic<bool> m_b_built_;
 
     std::vector<SBs::LightSB> m_light_buffers_;
     StructuredBuffer<SBs::LightSB> m_light_buffer_data_;
     std::vector<Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>> m_tmp_instances_;
+
+    std::atomic<UINT64> m_instance_counts_;
+    RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }

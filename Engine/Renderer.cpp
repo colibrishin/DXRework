@@ -19,16 +19,11 @@ namespace Engine::Manager::Graphics
 {
   void Renderer::PreUpdate(const float& dt)
   {
-    std::for_each
-      (
-       m_render_candidates_, m_render_candidates_ + SHADER_DOMAIN_MAX,
-       [](auto& target_set) { target_set.clear(); }
-      );
-
     for (const auto& heap : m_tmp_descriptor_heaps_)
     {
       heap->Release();
     }
+
     m_tmp_descriptor_heaps_.clear();
     m_b_ready_ = false;
   }
@@ -41,44 +36,7 @@ namespace Engine::Manager::Graphics
   {
     // Pre-processing, Mapping the materials to the model renderers.
     const auto& scene = GetSceneManager().GetActiveScene().lock();
-    const auto& rcs = scene->GetCachedComponents<Components::Base::RenderComponent>();
-
-    m_instance_count_ = 0;
-
-    tbb::parallel_for_each
-      (
-       rcs.begin(), rcs.end(), [this](const WeakComponent& ptr_rc)
-       {
-         // pointer sanity check
-         if (ptr_rc.expired()) { return; }
-         const auto rc = ptr_rc.lock()->GetSharedPtr<Components::Base::RenderComponent>();
-
-         // owner object sanity check
-         const auto obj = rc->GetOwner().lock();
-         if (!obj) { return; }
-         if (!obj->GetActive()) { return; }
-
-         // material sanity check
-         const auto ptr_mtr = rc->GetMaterial();
-         if (ptr_mtr.expired()) { return; }
-         const auto mtr = ptr_mtr.lock();
-
-         // transform check, continue if it is disabled. (undefined behaviour)
-         const auto tr = obj->GetComponent<Components::Transform>().lock();
-         if (!tr) { return; }
-         if (!tr->GetActive()) { return; }
-
-         switch (rc->GetRenderType())
-         {
-         case RENDER_COM_T_MODEL: preMappingModel(rc);
-           break;
-         case RENDER_COM_T_PARTICLE: preMappingParticle(rc);
-           break;
-         case RENDER_COM_T_UNK:
-         default: break;
-         }
-       }
-      );
+    BuildRenderMap(scene, m_render_candidates_, m_instance_count_);
 
     if (m_tmp_instance_buffers_.size() < m_instance_count_)
     {
@@ -113,7 +71,7 @@ namespace Engine::Manager::Graphics
                return GetProjectionFrustum().CheckRender(obj);
              }, [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
              {
-               GetRenderPipeline().DefaultRenderTarget(c);
+               GetD3Device().DefaultRenderTarget(c);
                GetRenderPipeline().DefaultViewport(c);
                GetRenderPipeline().DefaultScissorRect(c);
                GetShadowManager().BindShadowMaps(c, h);
@@ -312,130 +270,5 @@ namespace Engine::Manager::Graphics
     material->Draw(dt, cmd, heap);
 
     instance_buffers[idx].TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-  }
-
-  void Renderer::preMappingModel(const StrongRenderComponent& rc)
-  {
-    // get model renderer, continue if it is disabled
-    const auto mr = rc->GetSharedPtr<Components::ModelRenderer>();
-    if (!mr->GetActive()) { return; }
-
-    const auto obj = rc->GetOwner().lock();
-    const auto mtr = rc->GetMaterial().lock();
-    const auto tr = obj->GetComponent<Components::Transform>().lock();
-
-    // animator parameters
-    float anim_frame    = 0.0f;
-    UINT  anim_idx      = 0;
-    UINT  anim_duration = 0;
-    bool  no_anim       = false;
-    UINT  atlas_x       = 0;
-    UINT  atlas_y       = 0;
-    UINT  atlas_w       = 0;
-    UINT  atlas_h       = 0;
-
-    if (const auto atr = obj->GetComponent<Components::Animator>().lock())
-    {
-      anim_frame = atr->GetFrame();
-      anim_idx   = atr->GetAnimation();
-      no_anim    = !atr->GetActive();
-
-      if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
-      {
-        anim_duration = bone_anim->GetDuration();
-      }
-
-      if (const auto atlas_anim = mtr->GetResource<Resources::AtlasAnimation>(anim_idx).lock())
-      {
-        AtlasAnimationPrimitive::AtlasFramePrimitive atlas_frame;
-        atlas_anim->GetFrame(anim_frame, atlas_frame);
-
-        atlas_x                 = atlas_frame.X;
-        atlas_y                 = atlas_frame.Y;
-        atlas_w                 = atlas_frame.Width;
-        atlas_h                 = atlas_frame.Height;
-      }
-    }
-
-    // Pre-mapping by the material.
-    for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
-    {
-      const auto domain = static_cast<eShaderDomain>(i);
-
-      if (mtr->IsRenderDomain(domain))
-      {
-        auto& domain_map = m_render_candidates_[domain];
-
-        RenderMap::accessor acc;
-
-        if (!domain_map.find(acc, RENDER_COM_T_MODEL))
-        {
-          domain_map.insert(acc, RENDER_COM_T_MODEL);
-        }
-
-        SBs::InstanceModelSB sb{};
-        sb.SetWorld(tr->GetWorldMatrix().Transpose());
-        sb.SetFrame(anim_frame);
-        sb.SetAnimDuration(anim_duration);
-        sb.SetAnimIndex(anim_idx);
-        sb.SetNoAnim(no_anim);
-        sb.SetAtlasX(atlas_x);
-        sb.SetAtlasY(atlas_y);
-        sb.SetAtlasW(atlas_w);
-        sb.SetAtlasH(atlas_h);
-
-        // todo: stacking structured buffer data might be get large easily.
-        acc->second.push_back(std::make_tuple(obj, mtr, tbb::concurrent_vector<SBs::InstanceSB>{std::move(sb)}));
-        m_instance_count_.fetch_add(1);
-      }
-    }
-  }
-
-  void Renderer::preMappingParticle(const StrongRenderComponent& rc)
-  {
-    // get model renderer, continue if it is disabled
-    const auto pr = rc->GetSharedPtr<Components::ParticleRenderer>();
-    if (!pr->GetActive()) { return; }
-
-    const auto obj = rc->GetOwner().lock();
-    const auto mtr = rc->GetMaterial().lock();
-    const auto tr = obj->GetComponent<Components::Transform>().lock();
-
-    // Pre-mapping by the material.
-    for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
-    {
-      const auto domain = static_cast<eShaderDomain>(i);
-
-      if (mtr->IsRenderDomain(domain))
-      {
-        auto particles = pr->GetParticles();
-
-        if (particles.empty()) { continue; }
-
-        auto& domain_map = m_render_candidates_[domain];
-
-        RenderMap::accessor acc;
-
-        if (!domain_map.find(acc, RENDER_COM_T_PARTICLE))
-        {
-          domain_map.insert(acc, RENDER_COM_T_PARTICLE);
-        }
-
-        tbb::concurrent_vector<SBs::InstanceSB> mp_particles(particles.begin(), particles.end());
-
-        if (pr->IsFollowOwner())
-        {
-          for (auto& particle : particles)
-          {
-            Matrix mat = particle.GetParam<Matrix>(0);
-            mat = tr->GetWorldMatrix().Transpose() * mat;
-            particle.SetParam(0, mat);
-          }
-        }
-
-        acc->second.push_back(std::make_tuple(obj, mtr, mp_particles));
-        m_instance_count_.fetch_add(particles.size());
-      }
-    }
   }
 }
