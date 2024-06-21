@@ -36,6 +36,7 @@ namespace Engine::Manager::Graphics
       : Singleton() {}
 
     void Initialize(HWND hWnd) override;
+    ID3D12Resource*  GetRenderTarget(UINT64 frame_idx);
 
     static void DEBUG_DEVICE_REMOVED(ID3D12Device* device)
     {
@@ -84,13 +85,13 @@ namespace Engine::Manager::Graphics
     const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
     const Matrix& GetOrthogonalMatrix() const { return m_ortho_matrix_; }
 
-    ID3D12Device* GetDevice() const { return m_device_.Get(); }
+    [[nodiscard]] ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
     [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1) const;
 
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const eCommandList list) const;
-    ID3D12CommandQueue*               GetCommandQueue(eCommandTypes type) const;
+    [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(eCommandTypes type) const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
@@ -107,6 +108,14 @@ namespace Engine::Manager::Graphics
         const std::filesystem::path& file_path, 
         ID3D12Resource** res, 
         bool generate_mip) const;
+
+    void DefaultRenderTarget(const Weak<CommandPair>& w_cmd) const;
+    void CopyBackBuffer(const Weak<CommandPair>& w_cmd, ID3D12Resource* resource) const;
+    void ClearRenderTarget(bool barrier = true);
+
+    [[nodiscard]] ID3D12DescriptorHeap* GetRTVHeap() const;
+    [[nodiscard]] ID3D12DescriptorHeap* GetDSVHeap() const;
+    [[nodiscard]] UINT                  GetRTVHeapSize() const;
 
   private:
     friend struct SingletonDeleter;
@@ -163,6 +172,14 @@ namespace Engine::Manager::Graphics
     DXGI_ADAPTER_DESC s_video_card_desc_ = {};
 
     ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
+
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
+    ComPtr<ID3D12DescriptorHeap>        m_rtv_heap_;
+    UINT                                m_rtv_heap_size_;
+
+    ComPtr<ID3D12Resource>       m_depth_stencil_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_heap_;
+    
 
     ComPtr<ID3D12Fence>              m_fence_       = nullptr;
     HANDLE                           m_fence_event_ = nullptr;

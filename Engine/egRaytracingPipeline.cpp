@@ -21,7 +21,10 @@ namespace Engine::Manager::Graphics
     InitializeOutputBuffer();
   }
 
-  void RaytracingPipeline::PreRender(const float& dt) {}
+  void RaytracingPipeline::PreRender(const float& dt)
+  {
+    GetD3Device().ClearRenderTarget();
+  }
 
   void RaytracingPipeline::PreUpdate(const float& dt) {}
 
@@ -90,7 +93,7 @@ namespace Engine::Manager::Graphics
 
       const auto& dst_barrier = CD3DX12_RESOURCE_BARRIER::Transition
         (
-         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
          D3D12_RESOURCE_STATE_RENDER_TARGET,
          D3D12_RESOURCE_STATE_COPY_DEST
         );
@@ -100,7 +103,7 @@ namespace Engine::Manager::Graphics
 
       cmd->GetList4()->CopyResource
         (
-         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
          m_output_buffer_.Get()
         );
 
@@ -113,7 +116,7 @@ namespace Engine::Manager::Graphics
 
       const auto& rtv_barrier = CD3DX12_RESOURCE_BARRIER::Transition
         (
-         GetRenderPipeline().m_render_targets_[GetD3Device().GetFrameIndex()].Get(),
+         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
          D3D12_RESOURCE_STATE_COPY_DEST,
          D3D12_RESOURCE_STATE_RENDER_TARGET
         );

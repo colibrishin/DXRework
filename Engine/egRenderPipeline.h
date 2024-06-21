@@ -53,20 +53,12 @@ namespace Engine::Manager::Graphics
       return { m_param_buffer_ };
     }
 
-    void DefaultRenderTarget(const Weak<CommandPair> & w_cmd) const;
     void DefaultViewport(const Weak<CommandPair> & w_cmd) const;
     void DefaultScissorRect(const Weak<CommandPair> & w_cmd) const;
     void DefaultRootSignature(const Weak<CommandPair> & w_cmd) const;
 
-    void CopyBackBuffer(const Weak<CommandPair> & w_cmd, ID3D12Resource * resource) const;
-
     ID3D12RootSignature*  GetRootSignature() const;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPURTVHandle() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDSVHandle() const;
-
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPURTVHandle() const;
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDSVHandle() const;
+    
     D3D12_VIEWPORT              GetViewport() const;
     D3D12_RECT                  GetScissorRect() const;
 
@@ -82,7 +74,6 @@ namespace Engine::Manager::Graphics
   private:
     friend class ToolkitAPI;
     friend class D3Device;
-    friend class RaytracingPipeline;
 
     friend struct SingletonDeleter;
     RenderPipeline() = default;
@@ -90,8 +81,6 @@ namespace Engine::Manager::Graphics
 
     void PrecompileShaders();
     void InitializeRootSignature();
-    void InitializeRenderTargets();
-    void InitializeDepthStencil();
     void InitializeNullDescriptors();
     void InitializeHeaps();
     void InitializeStaticBuffers();
@@ -100,13 +89,9 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
     ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
 
-    UINT m_rtv_descriptor_size_ = 0;
-    UINT m_dsv_descriptor_size_ = 0;
     UINT m_buffer_descriptor_size_ = 0;
     UINT m_sampler_descriptor_size_ = 0;
 
-    ComPtr<ID3D12DescriptorHeap> m_rtv_descriptor_heap_;
-    ComPtr<ID3D12DescriptorHeap> m_dsv_descriptor_heap_;
     std::mutex m_descriptor_mutex_;
     DescriptorHandler m_descriptor_handler_;
 
@@ -116,10 +101,7 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
     ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
     ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
-
-    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
-    ComPtr<ID3D12Resource> m_depth_stencil_;
-
+    
     D3D12_VIEWPORT m_viewport_{};
     D3D12_RECT    m_scissor_rect_{};
 

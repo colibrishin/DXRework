@@ -144,7 +144,6 @@ namespace Engine::Manager::Graphics
       DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
       DX::ThrowIfFailed(debug_interface->QueryInterface(IID_PPV_ARGS(debug_interface1.GetAddressOf())));
       debug_interface->EnableDebugLayer();
-      debug_interface1->SetEnableGPUBasedValidation(true);
     }
 
     if constexpr (g_debug_device_removal)
@@ -285,6 +284,119 @@ namespace Engine::Manager::Graphics
     DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second));
     m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
+    m_render_targets_.resize(g_frame_buffer);
+
+    for (int i = 0; i < g_frame_buffer; ++i)
+    {
+      DX::ThrowIfFailed
+        (
+         m_swap_chain_->GetBuffer
+         (
+          i,
+          IID_PPV_ARGS(m_render_targets_[i].GetAddressOf())
+         )
+        );
+    }
+
+    const D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc
+    {
+      .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+      .NumDescriptors = g_frame_buffer,
+      .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+      .NodeMask = 0
+    };
+
+    DX::ThrowIfFailed
+      (
+       m_device_->CreateDescriptorHeap
+       (
+        &rtv_heap_desc,
+        IID_PPV_ARGS(m_rtv_heap_.GetAddressOf())
+       )
+      );
+
+    m_rtv_heap_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_rtv_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    constexpr D3D12_RENDER_TARGET_VIEW_DESC rtv_desc
+    {
+      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+      .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+      .Texture2D = {0, 0}
+    };
+
+    for (int i = 0; i < g_frame_buffer; ++i)
+    {
+      DX::ThrowIfFailed
+        (
+         GetD3Device().m_swap_chain_->GetBuffer
+         (
+          i, IID_PPV_ARGS(m_render_targets_[i].ReleaseAndGetAddressOf())
+         )
+        );
+
+      const std::wstring name = L"Render Target " + std::to_wstring(i);
+
+      DX::ThrowIfFailed(m_render_targets_[i]->SetName(name.c_str()));
+
+      GetD3Device().GetDevice()->CreateRenderTargetView
+        (
+         m_render_targets_[i].Get(), &rtv_desc, rtv_handle
+        );
+
+      rtv_handle.Offset(1, m_rtv_heap_size_);
+    }
+
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    const auto& depth_desc   = CD3DX12_RESOURCE_DESC::Tex2D
+      (
+       DXGI_FORMAT_D24_UNORM_S8_UINT,
+       g_window_width,
+       g_window_height,
+       1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+      );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC descriptor_heap_desc
+    {
+       .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+       .NumDescriptors = 1,
+       .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+       .NodeMask = 0
+     };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateDescriptorHeap
+       (
+        &descriptor_heap_desc, IID_PPV_ARGS(m_dsv_heap_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    constexpr D3D12_CLEAR_VALUE clear_value
+    {
+      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      .DepthStencil = { 1.0f, 0 }
+    };
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetDevice()->CreateCommittedResource
+       (
+        &default_heap,
+        D3D12_HEAP_FLAG_NONE,
+        &depth_desc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clear_value,
+        IID_PPV_ARGS(m_depth_stencil_.ReleaseAndGetAddressOf())
+       )
+      );
+
+    GetD3Device().GetDevice()->CreateDepthStencilView
+      (
+       m_depth_stencil_.Get(), nullptr, m_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
+      );
+
     if constexpr (g_debug)
     {
       ComPtr<ID3D12InfoQueue> info_queue;
@@ -390,7 +502,49 @@ namespace Engine::Manager::Graphics
 
   void D3Device::FixedUpdate(const float& dt) {}
 
-  void D3Device::PostRender(const float& dt) {}
+  void D3Device::PostRender(const float& dt)
+  {
+    const auto& cmd = AcquireCommandPair(L"Finalize Render").lock();
+
+    const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       GetRenderTarget(m_frame_idx_),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_PRESENT
+      );
+
+    cmd->SoftReset();
+    cmd->GetList()->ResourceBarrier(1, &present_barrier);
+    cmd->FlagReady();
+
+    WaitForCommandsCompletion();
+
+    DXGI_PRESENT_PARAMETERS params;
+    params.DirtyRectsCount = 0;
+    params.pDirtyRects     = nullptr;
+    params.pScrollRect     = nullptr;
+    params.pScrollOffset   = nullptr;
+
+    DX::ThrowIfFailed
+      (
+       m_swap_chain_->Present1
+       (
+        g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
+        &params
+       )
+      );
+
+    if (WaitForSingleObjectEx
+        (
+         GetSwapchainAwaiter(), g_max_frame_latency_ms,
+         true
+        ) != WAIT_OBJECT_0)
+    {
+      GetDebugger().Log("Waiting for Swap chain had an issue.");
+    }
+
+    WaitNextFrame();
+  }
 
   void D3Device::PostUpdate(const float& dt) {}
 
@@ -414,6 +568,11 @@ namespace Engine::Manager::Graphics
        g_window_height,
        g_screen_near, g_screen_far
       );
+  }
+
+  ID3D12Resource* D3Device::GetRenderTarget(UINT64 frame_idx)
+  {
+    return m_render_targets_[frame_idx].Get();
   }
 
   void D3Device::CreateTextureFromFile(
@@ -461,6 +620,112 @@ namespace Engine::Manager::Graphics
 
     const auto& token = resource_upload_batch.End(GetCommandQueue(COMMAND_LIST_UPDATE));
     token.wait();
+  }
+
+  void D3Device::DefaultRenderTarget(const Weak<CommandPair>& w_cmd) const
+  {
+    if (const auto& cmd = w_cmd.lock())
+    {
+      const auto& rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (
+         m_rtv_heap_->GetCPUDescriptorHandleForHeapStart(),
+         m_frame_idx_,
+         m_rtv_heap_size_
+        );
+
+      const auto& dsv_handle = m_dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+      cmd->GetList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+    }
+  }
+
+  void D3Device::CopyBackBuffer(const Weak<CommandPair>& w_cmd, ID3D12Resource* resource) const
+  {
+    if (const auto& cmd = w_cmd.lock())
+    {
+      const auto& dst_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         resource,
+         D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_COPY_DEST
+        );
+
+      const auto& dst_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         resource,
+         D3D12_RESOURCE_STATE_COPY_DEST,
+         D3D12_RESOURCE_STATE_COMMON
+        );
+
+      const auto& copy_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_render_targets_[m_frame_idx_].Get(),
+         D3D12_RESOURCE_STATE_RENDER_TARGET,
+         D3D12_RESOURCE_STATE_COPY_SOURCE
+        );
+
+      const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         m_render_targets_[m_frame_idx_].Get(),
+         D3D12_RESOURCE_STATE_COPY_SOURCE,
+         D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+
+      cmd->GetList()->ResourceBarrier(1, &copy_transition);
+      cmd->GetList()->ResourceBarrier(1, &dst_transition);
+      cmd->GetList()->CopyResource(resource, m_render_targets_[m_frame_idx_].Get());
+      cmd->GetList()->ResourceBarrier(1, &rtv_transition);
+      cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
+    }
+  }
+
+  void D3Device::ClearRenderTarget(bool barrier)
+  {
+    const auto& cmd = AcquireCommandPair(L"Cleanup").lock();
+
+    cmd->SoftReset();
+
+    constexpr float color[4]   = {0.f, 0.f, 0.f, 1.f};
+    const auto&     rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (
+       GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
+       GetFrameIndex(),
+       GetRTVHeapSize()
+      );
+
+    const auto& dsv_handle =GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+
+    if (barrier)
+    {
+      const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+        (
+         GetRenderTarget(GetFrameIndex()),
+         D3D12_RESOURCE_STATE_PRESENT,
+         D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+
+      cmd->GetList()->ResourceBarrier(1, &initial_barrier);
+    }
+
+    cmd->GetList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
+    cmd->GetList()->ClearDepthStencilView
+      (dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    cmd->FlagReady();
+  }
+
+  ID3D12DescriptorHeap* D3Device::GetRTVHeap() const
+  {
+    return m_rtv_heap_.Get();
+  }
+
+  ID3D12DescriptorHeap* D3Device::GetDSVHeap() const
+  {
+    return m_dsv_heap_.Get();
+  }
+
+  UINT D3Device::GetRTVHeapSize() const
+  {
+    return m_rtv_heap_size_;
   }
 
   float D3Device::GetAspectRatio()
