@@ -43,6 +43,13 @@ namespace Engine::Manager::Graphics
     void PostRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
 
+    template <typename T>
+    void SetParam(const T& v, const size_t slot)
+    {
+      m_param_buffer_.SetParam(slot, v);
+      m_param_buffer_data_.SetData(&m_param_buffer_);
+    }
+
     void BuildTLAS(
       ID3D12GraphicsCommandList4 *                                 cmd,
       const std::map<WeakMaterial, std::vector<SBs::InstanceSB>> & instances, std::vector<Graphics::StructuredBuffer<
@@ -99,7 +106,10 @@ namespace Engine::Manager::Graphics
     std::vector<StructuredBufferBase*> m_used_buffers_;
     std::set<StrongTexture>           m_used_textures_;
 
+    CBs::ParamCB                       m_param_buffer_;
+
     ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_;
+    ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_;
 
     ComPtr<ID3D12Resource> m_output_buffer_;
     ComPtr<ID3D12DescriptorHeap> m_output_uav_heap_;

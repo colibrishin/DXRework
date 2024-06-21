@@ -57,7 +57,10 @@ namespace Engine::Manager::Graphics
 
       DefaultDescriptorHeap(cmd->GetList4());
       m_wvp_buffer_.Bind(cmd, {});
+      m_param_buffer_data_.Bind(cmd, {});
+
       cmd->GetList()->SetComputeRootConstantBufferView(4, m_wvp_buffer_.GetGPUAddress());
+      cmd->GetList()->SetComputeRootConstantBufferView(5, m_param_buffer_data_.GetGPUAddress());
       BindTLAS(cmd->GetList4());
       
       const D3D12_DISPATCH_RAYS_DESC dispatch_desc
@@ -188,13 +191,14 @@ namespace Engine::Manager::Graphics
     //ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // WVP buffer
     ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // Sampler
 
-    CD3DX12_ROOT_PARAMETER1 root_params[6];
+    CD3DX12_ROOT_PARAMETER1 root_params[7];
     root_params[0].InitAsDescriptorTable(1, &ranges[0]); // Output buffer
     root_params[1].InitAsShaderResourceView(0); // Acceleration structure
     root_params[2].InitAsShaderResourceView(1); // vertex buffer
     root_params[3].InitAsShaderResourceView(2); // index buffer
     root_params[4].InitAsConstantBufferView(0); // WVP buffer
-    root_params[5].InitAsDescriptorTable(1, &ranges[3]); // Sampler
+    root_params[5].InitAsConstantBufferView(1); // Param buffer
+    root_params[6].InitAsDescriptorTable(1, &ranges[3]); // Sampler
 
     const auto& global_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC
       (
@@ -242,7 +246,7 @@ namespace Engine::Manager::Graphics
       hit_local_ranges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 5, 1);
 
       CD3DX12_ROOT_PARAMETER1 hit_local_param[6];
-      hit_local_param[0].InitAsShaderResourceView(0, 1); // light buffer
+      hit_local_param[0].InitAsShaderResourceView(0, 1); // light buffer todo: move to global
       hit_local_param[1].InitAsShaderResourceView(1, 1); // material buffer
       hit_local_param[2].InitAsShaderResourceView(2, 1); // instance buffer
       hit_local_param[3].InitAsShaderResourceView(3, 1); // vertex buffer
@@ -323,6 +327,7 @@ namespace Engine::Manager::Graphics
     m_sampler_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
     m_wvp_buffer_.Create(nullptr);
+    m_param_buffer_data_.Create(nullptr);
   }
 
   void RaytracingPipeline::InitializeRaytracingPSOTMP()
@@ -413,7 +418,7 @@ namespace Engine::Manager::Graphics
 
     // Shader payload and attribute size
     const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    shader_config->Config(sizeof(Color), sizeof(Vector2)); // barycentrics
+    shader_config->Config(sizeof(float[5]), sizeof(Vector2)); // barycentrics
 
     // global root signature
     const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -428,7 +433,7 @@ namespace Engine::Manager::Graphics
 
     // Pipeline config, Recursion depth
     const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-    pipeline_config->Config(1);
+    pipeline_config->Config(1 + 8); // Default recursion + shadow rays (light counts)
 
     DX::ThrowIfFailed
       (
@@ -939,7 +944,7 @@ namespace Engine::Manager::Graphics
     cmd->SetDescriptorHeaps(2, heaps);
 
     cmd->SetComputeRootDescriptorTable(0, m_raytracing_buffer_heap_->GetGPUDescriptorHandleForHeapStart());
-    cmd->SetComputeRootDescriptorTable(5, m_raytracing_sampler_heap_->GetGPUDescriptorHandleForHeapStart());
+    cmd->SetComputeRootDescriptorTable(6, m_raytracing_sampler_heap_->GetGPUDescriptorHandleForHeapStart());
   }
 
   void RaytracingPipeline::BindTLAS(ID3D12GraphicsCommandList1* cmd) const
