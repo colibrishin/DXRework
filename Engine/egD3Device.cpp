@@ -488,7 +488,8 @@ namespace Engine::Manager::Graphics
   {
     while (m_command_pairs_count_.load())
     {
-      m_command_pairs_count_.notify_all();
+      m_command_pairs_queued_.store(true);
+      m_command_pairs_queued_.notify_all();
     }
   }
 
@@ -801,8 +802,7 @@ namespace Engine::Manager::Graphics
   {
     while (m_command_consumer_running_)
     {
-      const auto& current = m_command_pairs_count_.load();
-      m_command_pairs_count_.wait(current + 1);
+      m_command_pairs_queued_.wait(false);
 
       std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
 
@@ -826,6 +826,8 @@ namespace Engine::Manager::Graphics
         m_command_pairs_generated_.erase(it->first);
         m_command_pairs_count_.fetch_sub(1);
       }
+
+      m_command_pairs_queued_.store(false);
     }
   }
 

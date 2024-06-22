@@ -193,13 +193,13 @@ namespace Engine::Manager::Graphics
 
     std::mutex                            m_command_pairs_mutex_;
     std::map<UINT64, Strong<CommandPair>> m_command_pairs_generated_;
-    std::atomic<UINT64>                   m_command_pairs_count_ = 0;
+    std::atomic<UINT64>                   m_command_pairs_count_;
+    std::atomic<bool>                     m_command_pairs_queued_;
 
     std::thread                  m_command_consumer_;
     std::atomic<bool>            m_command_consumer_running_ = false;
 
     std::mutex                   m_command_producer_mutex_;
-    std::condition_variable      m_command_producer_cv_;
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};
