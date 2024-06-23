@@ -160,6 +160,7 @@ namespace Engine::Graphics
       Color  color;
       OffsetT<int> type;
       OffsetT<float> range;
+      OffsetT<float> radius;
     };
 
     struct LightVPSB

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egLight.h"
 #include "egCamera.h"
+#include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
 
 SERIALIZE_IMPL
@@ -16,6 +17,7 @@ namespace Engine::Objects
 
   Light::Light()
     : ObjectBase(DEF_OBJ_T_LIGHT),
+      m_radius_(0.5f),
       m_range_(10.f),
       m_type_(LIGHT_T_DIRECTIONAL) {}
 
@@ -90,6 +92,8 @@ namespace Engine::Objects
       ImGui::Text("Color");
       ImGui::SameLine();
       ImGui::ColorEdit4("##Color", &m_color_.x);
+
+      FloatAligned("Radius", m_radius_);
 
       if (m_type_ != LIGHT_T_DIRECTIONAL)
       {

@@ -27,6 +27,7 @@ struct LightElement
   float4 color : LIGHTCOLOR;
   int4 type : LIGHTTYPE;
   float4 range : LIGHTRANGE;
+  float4 radius : LIGHTRADIUS;
 };
 
 struct BoneTransformElement

@@ -34,11 +34,13 @@ namespace Engine::Objects
     Color GetColor() const { return m_color_; }
     eLightType GetType() const { return m_type_; }
     float GetRange() const { return m_range_; }
+    float GetRadius() const { return m_radius_; }
 
   private:
     SERIALIZE_DECL
     OBJ_CLONE_DECL
 
+    float m_radius_;
     float m_range_;
     eLightType m_type_;
     Color m_color_;

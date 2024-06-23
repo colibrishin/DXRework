@@ -47,7 +47,8 @@ namespace Engine::Manager::Graphics
              tr->GetWorldMatrix().Transpose(),
              light->GetColor(),
              light->GetType(),
-             light->GetRange()
+             light->GetRange(),
+             light->GetRadius()
             );
         }
       }
