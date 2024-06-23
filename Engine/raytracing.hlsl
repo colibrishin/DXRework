@@ -218,9 +218,9 @@ void closest_hit_main(inout Payload payload, Attributes attr)
       shadowRay.TMin      = 0.001f;
       shadowRay.TMax      = FLT_MAX;
 
-      Payload shadowPayload;
-      payload.isShadow     = true;
-      payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, FLT_MAX);
+      Payload shadowPayload{};
+      shadowPayload.isShadow = true;
+      shadowPayload.colorAndDist = float4(0.0f, 0.0f, 0.0f, 1.f);
 
       TraceRay(g_tlas, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 0, 0, 0, shadowRay, shadowPayload);
 
