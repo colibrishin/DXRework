@@ -77,12 +77,6 @@ Texture2D                         l_normal : register(t6, space1);
 [shader("closesthit")]
 void closest_hit_main(inout Payload payload, Attributes attr)
 {
-  if (payload.isShadow)
-  {
-    payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, RayTCurrent());
-    return;
-  }
-
   // todo: too much stride
   const uint p_index = PrimitiveIndex() * 4 * 3; // which primitive are we intersecting
 
@@ -222,11 +216,24 @@ void closest_hit_main(inout Payload payload, Attributes attr)
       shadowPayload.isShadow = true;
       shadowPayload.colorAndDist = float4(0.0f, 0.0f, 0.0f, 1.f);
 
-      TraceRay(g_tlas, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 0, 0, 0, shadowRay, shadowPayload);
+      TraceRay
+        (
+         g_tlas,
+         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | // First hit
+         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | // Skip closest hit
+         RAY_FLAG_CULL_BACK_FACING_TRIANGLES | // Cull back facing triangles
+         RAY_FLAG_FORCE_OPAQUE, // Also skip the hit shader, we want to know if the ray misses
+         0xFF,
+         0,
+         0,
+         0,
+         shadowRay,
+         shadowPayload
+        );
 
-      if (shadowPayload.colorAndDist.w < FLT_MAX)
+      if (shadowPayload.colorAndDist.w == 1.f)
       {
-        shadow = 1.f * lightIntensity[i];
+        shadow += 1.f * lightIntensity[i];
       }
     }
   }
@@ -274,5 +281,11 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 [shader("miss")]
 void miss_main(inout Payload payload)
 {
+  if (payload.isShadow)
+  {
+    payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    return;
+  }
+
   payload.colorAndDist = float4(g_ambientColor.xyz, RayTCurrent());
 }
