@@ -46,6 +46,12 @@ float3 BarycentricCoordinates(float3 pt, float3 v0, float3 v1, float3 v2)
     return float3(u, v, w);
 }
 
+float4 CalculateSpecular(in float3 hitPosition, in float lightDir, in float3 normal, in float specularPower)
+{
+  const float3 reflected = normalize(reflect(lightDir, normal));
+  return pow(saturate(dot(reflected, normalize(-WorldRayDirection()))), specularPower);
+}
+
 [shader("raygeneration")]
 void raygen_main()
 {
@@ -170,7 +176,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
   if (l_material[0].bindFlag.texFlag[1].x)
   {
-    float4 normalMap = l_normal.SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv);
+    float3 normalMap = l_normal.SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv).rgb;
     normalMap = (normalMap * 2.0f) - 1.0f;
 
     bumpNormal = (normalMap.x * baryTangent) +
@@ -185,6 +191,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
   float4 normalColorArray[MAX_NUM_LIGHTS];
   float4 colorArray[MAX_NUM_LIGHTS];
 
+  float4 specularColor = float4(0.f, 0.f, 0.f, 0.f);
+
   float shadow = 0.f;
 
   int i = 0;
@@ -198,12 +206,18 @@ void closest_hit_main(inout Payload payload, Attributes attr)
     float4 lightPos = GetTranslation(l_light[i].world);
     lightPos.xyz /= lightPos.w;
 
-    const float3 lightDir = normalize(lightPos - hitPos);
+    const float3 lightDir = normalize(lightPos.xyz - hitPos);
     lightIntensity[i] = saturate(dot(baryNormal, lightDir));
-    normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
 
-    normalColorArray[i] = l_light[i].color * normalLightIntensity[i];
-    colorArray[i] = l_light[i].color * lightIntensity[i];
+    const float sphere = 4.f * PI * l_light[i].radius.x * l_light[i].radius.x;
+
+    if (l_material[0].bindFlag.texFlag[1].x)
+    {
+      normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
+      normalColorArray[i] = l_light[i].color * normalLightIntensity[i] / sphere;
+    }
+
+    colorArray[i] = l_light[i].color * lightIntensity[i] / sphere;
 
     {
       RayDesc shadowRay;
@@ -235,8 +249,16 @@ void closest_hit_main(inout Payload payload, Attributes attr)
       {
         shadow += 1.f * lightIntensity[i];
       }
+
+      if (l_material[0].specularPower > 0.f && shadowPayload.colorAndDist.w == 0.f)
+      {
+        const float4 specular = CalculateSpecular(hitPos, lightDir, baryNormal, l_material[0].specularPower);
+        specularColor += specular * l_material[0].specularColor;
+      }
     }
   }
+
+  shadow = saturate(shadow);
 
   float4 colorSum = g_ambientColor;
   float4 normalColorSum = float4(0.f, 0.f, 0.f, 0.f);
@@ -265,14 +287,19 @@ void closest_hit_main(inout Payload payload, Attributes attr)
     colorSum.b += colorArray[i].b;
   }
 
-  float4 lightColor = saturate((1.f - shadow) * colorSum);
+  float4 lightColor = saturate(colorSum);
 
   if (l_material[0].bindFlag.texFlag[1].x)
   {
-    lightColor *= saturate(normalColorSum);
+    lightColor += saturate(normalColorSum);
   }
 
-  float4 finalColor = lightColor * baryColor;
+  if (l_material[0].specularPower > 0.f)
+  {
+    lightColor += saturate(specularColor);
+  }
+
+  float4 finalColor = (1.f - shadow) * saturate(lightColor) * baryColor;
 
   payload.colorAndDist.xyz = finalColor.xyz;
   payload.colorAndDist.w = RayTCurrent();
