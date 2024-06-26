@@ -93,6 +93,7 @@ namespace Engine::Manager::Graphics
 
         if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
         {
+          // Drop the fractional part and interpolate the frame in shader.
           anim_duration = bone_anim->GetDuration();
         }
 
