@@ -37,4 +37,5 @@ namespace Client::Scripts
   };
 }
 
+REGISTER_TYPE(Engine::Script, Client::Scripts::HpTextScript)
 BOOST_CLASS_EXPORT_KEY(Client::Scripts::HpTextScript)

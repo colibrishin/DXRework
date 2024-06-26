@@ -7,7 +7,7 @@ namespace Engine
   class Script : public Abstract::Renderable
   {
   public:
-    virtual  ~Script() = default;
+    ~Script() override = default;
     explicit Script(eScriptType type, const WeakObjectBase& owner);
 
     virtual void       SetActive(bool active);

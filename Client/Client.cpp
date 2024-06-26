@@ -35,6 +35,8 @@
 #include "egTexture.h"
 #include "egTexture2D.h"
 
+#include <boost/mpl/for_each.hpp>
+
 // TODO: This is an example of a library function
 namespace Client
 {
@@ -208,14 +210,10 @@ namespace Client
   {
     Manager::Application::GetInstance().Initialize(hwnd);
 
-    Script::Register<Scripts::HitboxScript>();
-    Script::Register<Scripts::PlayerScript>();
-    Script::Register<Scripts::HpTextScript>();
-    Script::Register<Scripts::ShadowIntersectionScript>();
-    Script::Register<Scripts::RifleScript>();
-    Script::Register<Scripts::PlayerHitboxScript>();
-    Script::Register<Scripts::FezPlayerScript>();
-    Script::Register<Scripts::CubifyScript>();
+    boost::mpl::for_each<GET_TYPES(Engine::Script), boost::type<boost::mpl::_>>([]<typename T>(boost::type<T>)
+    {
+      Engine::Script::Register<T>();
+    });
 
     Resources::ComputeShader::Create<ComputeShaders::ParticleCompute>();
 

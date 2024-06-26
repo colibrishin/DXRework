@@ -134,4 +134,5 @@ namespace Client::Scripts
   };
 } // namespace Client::Scripts
 
+REGISTER_TYPE(Engine::Script, Client::Scripts::FezPlayerScript)
 BOOST_CLASS_EXPORT_KEY(Client::Scripts::FezPlayerScript)

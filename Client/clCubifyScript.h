@@ -70,4 +70,5 @@ namespace Client::Scripts
   };
 }
 
+REGISTER_TYPE(Engine::Script, Client::Scripts::CubifyScript)
 BOOST_CLASS_EXPORT_KEY(Client::Scripts::CubifyScript)
