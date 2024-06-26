@@ -396,7 +396,7 @@ namespace Engine::Abstract
   {
     if (m_components_.contains(type))
     {
-      const auto comp = m_components_[type];
+      const auto& comp = m_components_[type];
 
       removeComponentImpl(type, comp);
     }
@@ -637,7 +637,7 @@ namespace Engine::Abstract
           {
             if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
             {
-              const auto dropped = *static_cast<WeakObjectBase*>(payload->Data);
+              const auto& dropped = *static_cast<WeakObjectBase*>(payload->Data);
               if (const auto child = dropped.lock()) { AddChild(dropped); }
             }
 
