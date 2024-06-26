@@ -57,7 +57,14 @@ namespace Engine::Components::Base
   void RenderComponent::OnImGui()
   {
     Component::OnImGui();
-    TextDisabled("Material", m_mtr_meta_path_str_);
+    std::string format;
+
+    if (m_material_)
+    {
+      format = std::format("{} ({})", m_material_->GetName(), m_mtr_meta_path_str_);
+    }
+
+    TextDisabled("Material", format.c_str());
     if (ImGui::BeginDragDropTarget())
     {
       if (const auto payload = ImGui::AcceptDragDropPayload("RESOURCE"))
