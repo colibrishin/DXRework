@@ -71,7 +71,7 @@ namespace Engine::Resources
     size_t row_pitch;
     size_t slice_pitch;
 
-    DirectX::ComputePitch(DXGI_FORMAT_R32G32B32A32_FLOAT, desc.Width, desc.Height, row_pitch, slice_pitch);
+    DX::ThrowIfFailed(DirectX::ComputePitch(DXGI_FORMAT_R32G32B32A32_FLOAT, desc.Width, desc.Height, row_pitch, slice_pitch));
 
     auto* data = reinterpret_cast<float*>(mapped);
 
