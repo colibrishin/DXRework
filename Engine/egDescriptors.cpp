@@ -450,8 +450,8 @@ namespace Engine
     }
 
     const auto& idx                      = segment_offset * s_element_size + element_offset;
-    const auto& buffer_heap_side_offset  = g_total_engine_slots * idx;
-    const auto& sampler_heap_side_offset = g_max_sampler_slots * idx;
+    const auto& buffer_heap_side_offset  = static_cast<UINT>(g_total_engine_slots * idx);
+    const auto& sampler_heap_side_offset = static_cast<UINT>(g_max_sampler_slots * idx);
 
     const auto& buffer_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (

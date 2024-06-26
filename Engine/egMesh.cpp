@@ -187,7 +187,11 @@ namespace Engine::Resources
 
     // -- Structured Buffer -- //
     // structured buffer for the raytracing pipeline.
-    m_vertex_buffer_structured_.SetData(cmd->GetList(), m_vertices_.size(), m_vertices_.data());
+    m_vertex_buffer_structured_.SetData(
+        cmd->GetList(), 
+        static_cast<UINT>(m_vertices_.size()), 
+        m_vertices_.data());
+
     // Since vertices are not going to be modified, we can transition to SRV and keep it.
     m_vertex_buffer_structured_.TransitionToSRV(cmd->GetList());
 
@@ -238,7 +242,7 @@ namespace Engine::Resources
     // -- Vertex Buffer View -- //
     // Initialize vertex buffer view.
     m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
-    m_vertex_buffer_view_.SizeInBytes = sizeof(VertexElement) * m_vertices_.size();
+    m_vertex_buffer_view_.SizeInBytes = sizeof(VertexElement) * static_cast<UINT>(m_vertices_.size());
     m_vertex_buffer_view_.StrideInBytes = sizeof(VertexElement);
 
     const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";

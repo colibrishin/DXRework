@@ -13,7 +13,7 @@ namespace Engine::Resources
 
     struct GenericTextureDescription
     {
-      UINT                 Alignment        = 0;
+      UINT64               Alignment        = 0;
       UINT                 Width            = 0;
       UINT                 Height           = 0;
       UINT16               DepthOrArraySize = 0;
