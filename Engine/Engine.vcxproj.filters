@@ -556,6 +556,15 @@
     <ClInclude Include="egCommands.h">
       <Filter>Common\DX</Filter>
     </ClInclude>
+    <ClInclude Include="egRaytracingPipeline.hpp">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="egRayTracer.hpp">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="egCommonRenderer.h">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -791,6 +800,15 @@
     <ClCompile Include="egCommands.cpp">
       <Filter>Common\DX</Filter>
     </ClCompile>
+    <ClCompile Include="egRaytracingPipeline.cpp">
+      <Filter>Singleton\Graphics\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="egRayTracer.cpp">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egCommonRenderer.cpp">
+      <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="consolas.spritefont">
@@ -839,6 +857,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="atlas.hlsl">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="raytracing.hlsl">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

@@ -11,4 +11,5 @@ namespace Engine
   inline std::atomic<float> g_screen_near   = 1.f;
   inline std::atomic<float> g_screen_far    = 100.0f;
   inline std::atomic<UINT>  g_frame_buffer  = 2;
+  inline std::atomic<bool>  g_raytracing    = false;
 }

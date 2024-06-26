@@ -93,6 +93,7 @@ namespace Engine::Objects
       m_wvp_buffer_.projection = m_projection_matrix_.Transpose();
       m_wvp_buffer_.invView    = invView.Transpose();
       m_wvp_buffer_.invProj    = invProj.Transpose();
+      m_wvp_buffer_.invVP      = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, m_view_matrix_ * m_projection_matrix_));
 
       // do the same with 180 degree rotation
 
@@ -116,7 +117,15 @@ namespace Engine::Objects
 
       m_wvp_buffer_.reflectView = m_wvp_buffer_.reflectView.Transpose();
 
-      GetRenderPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
+      // todo: only main camera should do this behaviour.
+      if (g_raytracing)
+      {
+        GetRaytracingPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
+      }
+      else
+      {
+        GetRenderPipeline().SetPerspectiveMatrix(m_wvp_buffer_);
+      }
 
       Vector3 velocity = Vector3::Zero;
 

@@ -27,6 +27,7 @@ struct LightElement
   float4 color : LIGHTCOLOR;
   int4 type : LIGHTTYPE;
   float4 range : LIGHTRANGE;
+  float4 radius : LIGHTRADIUS;
 };
 
 struct BoneTransformElement
@@ -99,5 +100,11 @@ struct ParamElement
   float4 vParam[MAX_PARAM_TYPE_SLOTS];
   matrix mParam[MAX_PARAM_TYPE_SLOTS];
 };
+
+struct Attributes
+{
+  float2 barycentrics;
+};
+
 
 #endif // __TYPE_HLSLI__

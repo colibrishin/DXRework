@@ -4,6 +4,8 @@
 #define TRIANGLE_MACRO 3
 #define LIGHT_TYPE_DIRECTIONAL 1
 #define LIGHT_TYPE_SPOT 2
+#define FLT_MAX 3.402823466e+38
+#define PI 3.14159265359f
 
 #include "type.hlsli"
 #include "utility.hlsli"
@@ -19,16 +21,16 @@ RWTexture2DArray<float4>         uavArr00 : register(u4);
 RWTexture2DArray<float4>         uavArr01 : register(u5);
 RWStructuredBuffer<ParamElement> uavInstance : register(u6);
 
-Texture2D                              tex00 : register(t0);
-Texture2D                              tex01 : register(t1);
-Texture2D                              tex02 : register(t2);
-Texture2D                              tex03 : register(t3);
-Texture2DArray                         texArr00 : register(t4);
-Texture2DArray                         texArr01 : register(t5);
-TextureCube                            texCube00 : register(t6);
-TextureCube                            texCube01 : register(t7);
-Texture1D                              tex1d00 : register(t8);
-Texture1D                              tex1d01 : register(t9);
+Texture2D      tex00 : register(t0);
+Texture2D      tex01 : register(t1);
+Texture2D      tex02 : register(t2);
+Texture2D      tex03 : register(t3);
+Texture2DArray texArr00 : register(t4);
+Texture2DArray texArr01 : register(t5);
+TextureCube    texCube00 : register(t6);
+TextureCube    texCube01 : register(t7);
+Texture1D      tex1d00 : register(t8);
+Texture1D      tex1d01 : register(t9);
 
 StructuredBuffer<LightElement>         bufLight : register(t10);
 StructuredBuffer<CascadeShadowElement> bufLightVP : register(t11);
@@ -50,6 +52,7 @@ cbuffer PerspectiveBuffer : register(b0)
 
   matrix g_camInvView;
   matrix g_camInvProj;
+  matrix g_camInvVP;
 
   matrix g_camReflectView;
 };
@@ -61,6 +64,11 @@ cbuffer ParamBuffer : register(b1)
   float4 g_vParam[MAX_PARAM_TYPE_SLOTS];
   matrix g_mParam[MAX_PARAM_TYPE_SLOTS];
 };
+
+cbuffer ViewportBuffer : register(b2)
+{
+  float2 g_viewResolution;
+}
 
 float GetShadowFactorImpl(
   int    lightIndex, int cascadeIndex,

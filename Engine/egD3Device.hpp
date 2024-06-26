@@ -36,19 +36,36 @@ namespace Engine::Manager::Graphics
       : Singleton() {}
 
     void Initialize(HWND hWnd) override;
+    ID3D12Resource*  GetRenderTarget(UINT64 frame_idx);
+
+    static void DEBUG_DEVICE_REMOVED(ID3D12Device* device)
+    {
+      if constexpr (g_debug_device_removal)
+      {
+        ComPtr<ID3D12DeviceRemovedExtendedData> dred;
+        DX::ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&dred)));
+
+        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT dred_breadcrumbs;
+        D3D12_DRED_PAGE_FAULT_OUTPUT       dred_page_fault;
+        DX::ThrowIfFailed(dred->GetAutoBreadcrumbsOutput(&dred_breadcrumbs));
+        DX::ThrowIfFailed(dred->GetPageFaultAllocationOutput(&dred_page_fault));
+        __debugbreak();
+      }
+    }
 
     static void DEBUG_MEMORY()
     {
-#ifdef _DEBUG
-      HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
-      auto    DXGIGetDebugInterfaceFunc =
-        reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
-          GetProcAddress(hModule, "DXGIGetDebugInterface"));
+      if constexpr (g_debug)
+      {
+        HMODULE hModule                   = GetModuleHandleW(L"dxgidebug.dll");
+        auto    DXGIGetDebugInterfaceFunc =
+          reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
+            GetProcAddress(hModule, "DXGIGetDebugInterface"));
 
-      IDXGIDebug* pDXGIDebug;
-      DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-      pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
-#endif
+        IDXGIDebug* pDXGIDebug;
+        DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
+        pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
+      }
     }
 
     static float GetAspectRatio();
@@ -68,13 +85,13 @@ namespace Engine::Manager::Graphics
     const Matrix& GetProjectionMatrix() const { return m_projection_matrix_; }
     const Matrix& GetOrthogonalMatrix() const { return m_ortho_matrix_; }
 
-    ID3D12Device* GetDevice() const { return m_device_.Get(); }
+    [[nodiscard]] ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
     [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
     [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1) const;
 
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const eCommandList list) const;
-    ID3D12CommandQueue*               GetCommandQueue(eCommandTypes type) const;
+    [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(eCommandTypes type) const;
 
     [[nodiscard]] UINT64 GetFrameIndex() const { return m_frame_idx_; }
 
@@ -91,6 +108,14 @@ namespace Engine::Manager::Graphics
         const std::filesystem::path& file_path, 
         ID3D12Resource** res, 
         bool generate_mip) const;
+
+    void DefaultRenderTarget(const Weak<CommandPair>& w_cmd) const;
+    void CopyBackBuffer(const Weak<CommandPair>& w_cmd, ID3D12Resource* resource) const;
+    void ClearRenderTarget(bool barrier = true);
+
+    [[nodiscard]] ID3D12DescriptorHeap* GetRTVHeap() const;
+    [[nodiscard]] ID3D12DescriptorHeap* GetDSVHeap() const;
+    [[nodiscard]] UINT                  GetRTVHeapSize() const;
 
   private:
     friend struct SingletonDeleter;
@@ -148,6 +173,14 @@ namespace Engine::Manager::Graphics
 
     ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
 
+    std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
+    ComPtr<ID3D12DescriptorHeap>        m_rtv_heap_;
+    UINT                                m_rtv_heap_size_;
+
+    ComPtr<ID3D12Resource>       m_depth_stencil_;
+    ComPtr<ID3D12DescriptorHeap> m_dsv_heap_;
+    
+
     ComPtr<ID3D12Fence>              m_fence_       = nullptr;
     HANDLE                           m_fence_event_ = nullptr;
     std::atomic<UINT64>*             m_fence_nonce_;
@@ -160,13 +193,13 @@ namespace Engine::Manager::Graphics
 
     std::mutex                            m_command_pairs_mutex_;
     std::map<UINT64, Strong<CommandPair>> m_command_pairs_generated_;
-    std::atomic<UINT64>                   m_command_pairs_count_ = 0;
+    std::atomic<UINT64>                   m_command_pairs_count_;
+    std::atomic<bool>                     m_command_pairs_queued_;
 
     std::thread                  m_command_consumer_;
     std::atomic<bool>            m_command_consumer_running_ = false;
 
     std::mutex                   m_command_producer_mutex_;
-    std::condition_variable      m_command_producer_cv_;
 
     XMMATRIX s_world_matrix_      = {};
     Matrix   m_projection_matrix_ = {};

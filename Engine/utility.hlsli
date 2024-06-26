@@ -121,12 +121,12 @@ quaternion SLerp(quaternion v0, quaternion v1, float t)
     d  = -d;
   }
 
-  clamp(d, -1, 1); // Robustness: Stay within domain of acos()
+  d = clamp(d, -1, 1); // Robustness: Stay within domain of acos()
   float theta_0 = acos(d); // theta_0 = angle between input vectors
   float theta   = theta_0 * t; // theta = angle between v0 and result 
 
   float4 v2 = v1 - v0 * d;
-  normalize(v2); // { v0, v2 } is now an orthonormal basis
+  v2 = normalize(v2); // { v0, v2 } is now an orthonormal basis
 
   return v0 * cos(theta) + v2 * sin(theta);
 }

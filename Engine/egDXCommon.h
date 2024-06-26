@@ -10,6 +10,19 @@
 
 namespace Engine::Graphics
 {
+  struct AccelStructBuffer
+  {
+    ComPtr<ID3D12Resource> scratch; // scratch memory for acceleration structure
+    ComPtr<ID3D12Resource> result; // acceleration structure
+    ComPtr<ID3D12Resource> instanceDesc; // matrices of instances
+
+    UINT64 scratchSize = 0;
+    UINT64 resultSize = 0;
+    UINT64 instanceDescSize = 0;
+
+    bool empty = true;
+  };
+
   struct primitiveVector4
   {
     __m128 v;
@@ -147,6 +160,7 @@ namespace Engine::Graphics
       Color  color;
       OffsetT<int> type;
       OffsetT<float> range;
+      OffsetT<float> radius;
     };
 
     struct LightVPSB
@@ -273,6 +287,7 @@ namespace Engine::Graphics
 
       Matrix invView;
       Matrix invProj;
+      Matrix invVP;
 
       Matrix reflectView;
     };
@@ -280,6 +295,14 @@ namespace Engine::Graphics
     struct ParamCB : public ParamBase
     {
       CB_T(CB_TYPE_PARAM)
+    };
+
+    struct ViewportCB
+    {
+      RT_CB_T(RAYTRACING_CB_VIEWPORT)
+
+
+      Vector2 resolution;
     };
 
     static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);

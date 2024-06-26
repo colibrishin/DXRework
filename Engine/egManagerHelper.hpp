@@ -10,6 +10,8 @@
 #include "egMouseManager.h"
 #include "egPhysicsManager.h"
 #include "egProjectionFrustum.h"
+#include "egRayTracer.hpp"
+#include "egRaytracingPipeline.hpp"
 #include "egReflectionEvaluator.h"
 #include "egRenderPipeline.h"
 #include "egResourceManager.hpp"
@@ -75,4 +77,11 @@ namespace Engine
   inline Manager::Physics::Graviton& GetGraviton() { return Manager::Physics::Graviton::GetInstance(); }
 
   inline Manager::Graphics::ImGuiManager& GetImGuiManager() { return Manager::Graphics::ImGuiManager::GetInstance(); }
+
+  inline Manager::Graphics::RaytracingPipeline& GetRaytracingPipeline()
+  {
+    return Manager::Graphics::RaytracingPipeline::GetInstance();
+  }
+
+  inline Manager::Graphics::RayTracer& GetRayTracer() { return Manager::Graphics::RayTracer::GetInstance(); }
 } // namespace Engine

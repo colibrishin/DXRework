@@ -147,6 +147,8 @@ namespace Engine
 
   namespace Manager { namespace Graphics
     {
+      class RaytracingPipeline;
+      class Raytracer;
       class ToolkitAPI;
       class RenderPipeline;
       class D3Device;
@@ -292,6 +294,8 @@ namespace Engine
   extern Manager::Graphics::ShadowManager&       GetShadowManager();
   extern Manager::Graphics::Renderer&            GetRenderer();
   extern Manager::Graphics::ImGuiManager&        GetImGuiManager();
+  extern Manager::Graphics::RaytracingPipeline&  GetRaytracingPipeline();
+  extern Manager::Graphics::Raytracer&           GetRaytracer();
 
   using FrameIndex = UINT64;
 

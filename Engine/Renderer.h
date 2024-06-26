@@ -1,4 +1,5 @@
 #pragma once
+#include "egCommonRenderer.h"
 #include "egManager.hpp"
 #include "egMaterial.h"
 #include "egModelRenderer.h"
@@ -8,10 +9,6 @@ namespace Engine::Manager::Graphics
 {
   class Renderer : public Abstract::Singleton<Renderer>
   {
-  private:
-    using CandidateTuple = std::tuple<WeakObjectBase, WeakMaterial, tbb::concurrent_vector<SBs::InstanceSB>>;
-    using RenderMap = tbb::concurrent_hash_map<eRenderComponentType, tbb::concurrent_vector<CandidateTuple>>;
-
   public:
     explicit Renderer(SINGLETON_LOCK_TOKEN)
       : Singleton(),
@@ -47,6 +44,7 @@ namespace Engine::Manager::Graphics
 
   private:
     friend struct SingletonDeleter;
+    friend class RayTracer;
     ~Renderer() override = default;
 
     void renderPassImpl(
@@ -60,9 +58,6 @@ namespace Engine::Manager::Graphics
       const DescriptorPtr&                heap,
       const std::vector<SBs::InstanceSB>& structured_buffers
     );
-
-    void preMappingModel(const StrongRenderComponent& rc);
-    void preMappingParticle(const StrongRenderComponent& rc);
 
     bool m_b_ready_;
 

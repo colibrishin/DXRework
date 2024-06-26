@@ -48,6 +48,9 @@
 #define OBJECT_T(enum_val) static constexpr eDefObjectType dotype = enum_val;
 // Static constant buffer type, this should be added to every constant buffer
 #define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;
+// Static raytracing constant buffer type, this should be added to every constant buffer
+#define RT_CB_T(enum_val) static constexpr eRaytracingCBType cbtype = enum_val;
+
 
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;

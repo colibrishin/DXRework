@@ -93,7 +93,7 @@ namespace Engine::Manager::Graphics
         SpriteSortMode_Deferred
     );
 
-    GetRenderPipeline().DefaultRenderTarget(s_cmd);
+    GetD3Device().DefaultRenderTarget(s_cmd);
     GetRenderPipeline().DefaultScissorRect(s_cmd);
     GetRenderPipeline().DefaultViewport(s_cmd);
     s_cmd->GetList()->SetDescriptorHeaps(2, heaps);
@@ -122,7 +122,7 @@ namespace Engine::Manager::Graphics
       }
     }
 
-    GetRenderPipeline().DefaultRenderTarget(p_cmd);
+    GetD3Device().DefaultRenderTarget(p_cmd);
     GetRenderPipeline().DefaultScissorRect(p_cmd);
     GetRenderPipeline().DefaultViewport(p_cmd);
     p_cmd->GetList()->SetDescriptorHeaps(2, heaps);

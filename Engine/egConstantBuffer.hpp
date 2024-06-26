@@ -164,13 +164,29 @@ namespace Engine::Graphics
 
       const auto& heap = w_heap.lock();
 
+      if (heap == nullptr)
+      {
+        return;
+      }
+
       heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), which_cb<T>::value);
+    }
+
+    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const
+    {
+      return m_buffer_->GetGPUVirtualAddress();
+    }
+
+    [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const
+    {
+     return m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(); 
     }
 
   private:
     T                            m_data_;
     bool                         m_b_dirty_;
     ComPtr<ID3D12DescriptorHeap> m_cpu_cbv_heap_;
+
     ComPtr<ID3D12Resource>       m_upload_buffer_;
     ComPtr<ID3D12Resource>       m_buffer_;
     UINT                         m_alignment_size_;

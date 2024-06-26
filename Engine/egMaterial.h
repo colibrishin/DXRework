@@ -82,6 +82,9 @@ namespace Engine::Resources
 
     void Draw(const float & dt, const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap);
 
+    Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& GetMaterialSBBuffer();
+    void UpdateMaterialSB(ID3D12GraphicsCommandList1* cmd);
+
     RESOURCE_SELF_INFER_GETTER(Material)
     RESOURCE_SELF_INFER_CREATE(Material)
 
