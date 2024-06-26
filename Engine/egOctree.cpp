@@ -297,17 +297,11 @@ namespace Engine
           }
         }
 
-        if (node_value.size() <= 1 && node->ActiveChildren() == 0)
-        {
-          stack.pop();
-          continue; // Leaf node
-        }
-
-        if (g_debug) 
+        if constexpr (g_debug)
         {
           GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
         }
-        
+
         stack.pop();
         continue;
       }
@@ -383,7 +377,13 @@ namespace Engine
           }
         }
 
-        for (int i = 0; i < octant_count; ++i) { if (node_children[i]) { stack.push(node_children[i].get()); } }
+        for (int i = 0; i < octant_count; ++i)
+        {
+          if (node_children[i])
+          {
+            stack.push(node_children[i].get());
+          }
+        }
 
         visited[node] = true;
       }
