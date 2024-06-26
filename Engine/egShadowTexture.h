@@ -41,9 +41,9 @@ namespace Engine::Resources
     void          OnImGui() override;
     eResourceType GetResourceType() const override;
 
-    UINT GetDepth() const override;
-    UINT GetHeight() const override;
-    UINT GetWidth() const override;
+    UINT   GetDepth() const override;
+    UINT   GetHeight() const override;
+    UINT64 GetWidth() const override;
 
     void Clear(ID3D12GraphicsCommandList1 * cmd) const;
 

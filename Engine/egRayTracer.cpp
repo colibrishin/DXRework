@@ -64,7 +64,7 @@ namespace Engine::Manager::Graphics
 
     cmd->SoftReset();
 
-    m_light_buffer_data_.SetData(cmd->GetList4(), m_light_buffers_.size(), m_light_buffers_.data());
+    m_light_buffer_data_.SetData(cmd->GetList4(), static_cast<UINT>(m_light_buffers_.size()), m_light_buffers_.data());
 
     RenderPass(cmd->GetList4(), nullptr);
 
@@ -105,7 +105,7 @@ namespace Engine::Manager::Graphics
   {
     if (const auto& scene = GetSceneManager().GetActiveScene().lock())
     {
-      UINT32 total_item_count = 0;
+      UINT64 total_item_count = 0;
 
       // Scrap the BLAS.
       std::map<WeakMaterial, std::vector<SBs::InstanceSB>> target_instances;

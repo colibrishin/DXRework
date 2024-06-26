@@ -203,9 +203,9 @@ namespace Engine::Resources
     m_pipeline_state_desc_.CachedPSO = {};
     m_pipeline_state_desc_.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
     m_pipeline_state_desc_.DSVFormat = m_dsv_format_;
-    m_pipeline_state_desc_.NumRenderTargets = m_rtv_formats_.size();
+    m_pipeline_state_desc_.NumRenderTargets = static_cast<UINT>(m_rtv_formats_.size());
 
-    for (int i = 0; i < m_rtv_formats_.size(); ++i)
+    for (size_t i = 0; i < m_rtv_formats_.size(); ++i)
     {
       m_pipeline_state_desc_.RTVFormats[i] = m_rtv_formats_[i];
     }
@@ -242,7 +242,7 @@ namespace Engine::Resources
   {
     SetName(name);
 
-    for (int i = 0; i < rtv_count; ++i)
+    for (UINT i = 0; i < rtv_count; ++i)
     {
       m_rtv_formats_.push_back(rtv_format[i]);
     }

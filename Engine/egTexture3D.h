@@ -12,9 +12,9 @@ namespace Engine::Resources
       : Texture(path, TEX_TYPE_3D, description) {}
     ~Texture3D() override = default;
 
-    UINT GetWidth() const override final;
-    UINT GetHeight() const override final;
-    UINT GetDepth() const override final;
+    UINT64 GetWidth() const override final;
+    UINT   GetHeight() const override final;
+    UINT   GetDepth() const override final;
 
   protected:
     void loadDerived(ComPtr<ID3D12Resource>& res) override;

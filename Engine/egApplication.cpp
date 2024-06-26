@@ -302,7 +302,14 @@ namespace Engine::Manager
     static float elapsed = 0.f;
 
     if (m_keyboard->GetState().Escape) { PostQuitMessage(0); }
-    const auto dt = static_cast<float>(m_timer->GetElapsedSeconds());
+
+    float dt = static_cast<float>(m_timer->GetElapsedSeconds());
+
+    if (g_paused)
+    {
+      elapsed = 0.f;
+      dt = 0.f;
+    }
 
     GetImGuiManager().NewFrame();
 

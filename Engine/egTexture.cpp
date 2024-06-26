@@ -94,7 +94,7 @@ namespace Engine::Resources
     std::vector<D3D12_RESOURCE_BARRIER> transitions;
     transitions.reserve(count + 1);
 
-    for (int i = 0; i < count; ++i)
+    for (UINT i = 0; i < count; ++i)
     {
       const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
         (
@@ -115,7 +115,7 @@ namespace Engine::Resources
 
     transitions.push_back(dsv_transition);
 
-    cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+    cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
   }
 
   void Texture::ManualTransition(
@@ -347,7 +347,7 @@ namespace Engine::Resources
 
     rtv_handle.reserve(count);
 
-    for (int i = 0; i < count; ++i)
+    for (UINT i = 0; i < count; ++i)
     {
       const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
         (
@@ -374,7 +374,7 @@ namespace Engine::Resources
       dsv.GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
     };
     
-    cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+    cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
 
     cmd->GetList()->OMSetRenderTargets
       (
@@ -491,10 +491,16 @@ namespace Engine::Resources
     const auto dst = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
     auto src = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
     src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    src.PlacedFootprint = {0, {m_desc_.Format, m_desc_.Width, m_desc_.Height, m_desc_.DepthOrArraySize}};
-    src.PlacedFootprint.Footprint.RowPitch = m_desc_.Width * DirectX::BitsPerPixel(m_desc_.Format) / 8;
+    src.PlacedFootprint = {0, {m_desc_.Format, static_cast<UINT>(m_desc_.Width), m_desc_.Height, m_desc_.DepthOrArraySize}}; // UINT64 width, UINT placed foot print?
+
+    size_t row_pitch;
+    size_t slice_pitch;
+
+    DX::ThrowIfFailed(DirectX::ComputePitch(m_desc_.Format, m_desc_.Width, m_desc_.Height, row_pitch, slice_pitch));
+
+    src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(row_pitch);
     src.PlacedFootprint.Footprint.Depth = m_desc_.DepthOrArraySize;
-    src.PlacedFootprint.Footprint.Width = m_desc_.Width;
+    src.PlacedFootprint.Footprint.Width = static_cast<UINT>(m_desc_.Width);
     src.PlacedFootprint.Footprint.Height = m_desc_.Height;
     src.PlacedFootprint.Footprint.Format = m_desc_.Format;
 
@@ -519,7 +525,7 @@ namespace Engine::Resources
       m_custom_desc_{false},
       m_b_lazy_window_(true) {}
 
-  UINT Texture::GetWidth() const { return m_desc_.Width; }
+  UINT64 Texture::GetWidth() const { return m_desc_.Width; }
 
   UINT Texture::GetHeight() const { return m_desc_.Height; }
 

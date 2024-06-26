@@ -396,7 +396,7 @@ namespace Engine::Abstract
   {
     if (m_components_.contains(type))
     {
-      const auto comp = m_components_[type];
+      const auto& comp = m_components_[type];
 
       removeComponentImpl(type, comp);
     }
@@ -611,7 +611,9 @@ namespace Engine::Abstract
 
       if (m_imgui_children_open_)
       {
-        if (ImGui::Begin("Children", &m_imgui_children_open_, ImGuiWindowFlags_AlwaysAutoResize))
+        const auto& unique_child_box = "Children of " + GetName() + "###" + std::to_string(GetID()) + "children";
+
+        if (ImGui::Begin(unique_child_box.c_str(), &m_imgui_children_open_, ImGuiWindowFlags_AlwaysAutoResize))
         {
           if (ImGui::BeginListBox("Children List"))
           {
@@ -635,7 +637,7 @@ namespace Engine::Abstract
           {
             if (const auto payload = ImGui::AcceptDragDropPayload("OBJECT"))
             {
-              const auto dropped = *static_cast<WeakObjectBase*>(payload->Data);
+              const auto& dropped = *static_cast<WeakObjectBase*>(payload->Data);
               if (const auto child = dropped.lock()) { AddChild(dropped); }
             }
 
@@ -648,7 +650,9 @@ namespace Engine::Abstract
 
       if (m_imgui_components_open_)
       {
-        if (ImGui::Begin("Add Components", &m_imgui_components_open_, ImGuiChildFlags_AlwaysAutoResize))
+        const auto& unique_id_component = "Add Components to " + GetName() + "###" + std::to_string(GetID()) + "component";
+
+        if (ImGui::Begin(unique_id_component.c_str(), &m_imgui_components_open_, ImGuiChildFlags_AlwaysAutoResize))
         {
           if (ImGui::Button("Transform"))
           {

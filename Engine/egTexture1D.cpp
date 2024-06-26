@@ -13,7 +13,7 @@ namespace Engine::Resources
 
   void Texture1D::OnImGui() { Texture::OnImGui(); }
 
-  UINT Texture1D::GetWidth() const { return Texture::GetWidth(); }
+  UINT64 Texture1D::GetWidth() const { return Texture::GetWidth(); }
 
   void Texture1D::loadDerived(ComPtr<ID3D12Resource>& res)
   {

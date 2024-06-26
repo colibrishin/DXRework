@@ -15,7 +15,7 @@ namespace Engine::Resources
     void          OnDeserialized() override;
     void          OnImGui() override;
 
-    UINT GetWidth() const override final;
+    UINT64 GetWidth() const override final;
 
   protected:
     void loadDerived(ComPtr<ID3D12Resource>& res) override;
