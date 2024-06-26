@@ -409,25 +409,25 @@ namespace Engine
   {
     if (!component->GetOwner().lock()) { return; }
 
-    if (ConcurrentWeakObjGlobalMap::const_accessor acc; 
-        m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
-    {
-      if (ConcurrentWeakComRootMap::accessor comp_acc; 
-          m_cached_components_.find(comp_acc, type))
-      {
-        if (ConcurrentWeakComMap::const_accessor comp_map_acc; 
-            comp_acc->second.find(comp_map_acc, component->GetID()))
-        {
-          return;
-        }
+    ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-        comp_acc->second.emplace(component->GetID(), component);
-      }
-      else
-      {
-        m_cached_components_.insert(comp_acc, type);
-        comp_acc->second.emplace(component->GetID(), component);
-      }
+    if (!m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+    {
+      return;
+    }
+
+    ConcurrentWeakComRootMap::accessor comp_acc;
+
+    if (!m_cached_components_.find(comp_acc, type))
+    {
+      m_cached_components_.insert(comp_acc, type);
+    }
+
+    ConcurrentWeakComMap::const_accessor comp_map_acc;
+
+    if (!comp_acc->second.find(comp_map_acc, component->GetID()))
+    {
+      comp_acc->second.emplace(component->GetID(), component);
 
       if (type == COM_T_TRANSFORM)
       {
