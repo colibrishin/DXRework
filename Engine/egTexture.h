@@ -13,8 +13,8 @@ namespace Engine::Resources
 
     struct GenericTextureDescription
     {
-      UINT                 Alignment        = 0;
-      UINT                 Width            = 0;
+      UINT64               Alignment        = 0;
+      UINT64               Width            = 0;
       UINT                 Height           = 0;
       UINT16               DepthOrArraySize = 0;
       DXGI_FORMAT          Format           = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -95,9 +95,9 @@ namespace Engine::Resources
 
   protected:
     // Derived class should hide these by their own case.
-    virtual UINT GetWidth() const;
-    virtual UINT GetHeight() const;
-    virtual UINT GetDepth() const;
+    virtual UINT64 GetWidth() const;
+    virtual UINT   GetHeight() const;
+    virtual UINT   GetDepth() const;
 
     const GenericTextureDescription& GetDescription() const;
 

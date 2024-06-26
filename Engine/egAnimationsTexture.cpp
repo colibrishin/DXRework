@@ -75,16 +75,16 @@ namespace Engine::Resources
 
     auto* data = reinterpret_cast<float*>(mapped);
 
-    for (UINT i = 0; i < GetDepth(); ++i)
+    for (UINT64 i = 0; i < GetDepth(); ++i)
     {
-      const UINT d = slice_pitch / sizeof(float) * i;
+      const UINT64 d = slice_pitch / sizeof(float) * i;
 
-      for (UINT j = 0; j < GetHeight(); ++j)
+      for (UINT64 j = 0; j < GetHeight(); ++j)
       {
-        const UINT h = row_pitch / sizeof(float) * j;
+        const UINT64 h = row_pitch / sizeof(float) * j;
         if (j >= m_evaluated_animations_[i].size()) break;
 
-        for (UINT k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
+        for (UINT64 k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
         {
           if (k >= m_evaluated_animations_[i][j].size()) break;
 

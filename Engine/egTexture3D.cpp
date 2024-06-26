@@ -9,7 +9,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  UINT Texture3D::GetWidth() const { return Texture::GetWidth(); }
+  UINT64 Texture3D::GetWidth() const { return Texture::GetWidth(); }
 
   UINT Texture3D::GetHeight() const { return Texture::GetHeight(); }
 

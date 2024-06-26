@@ -13,7 +13,7 @@ namespace Engine::Manager::Graphics
 {
   HANDLE D3Device::GetSwapchainAwaiter() const { return m_swap_chain_->GetFrameLatencyWaitableObject(); }
 
-  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT frame_idx) const
+  ID3D12GraphicsCommandList1* D3Device::GetCommandList(const eCommandList list_enum, UINT64 frame_idx) const
   {
     if (frame_idx == -1)
     {
@@ -286,7 +286,7 @@ namespace Engine::Manager::Graphics
 
     m_render_targets_.resize(g_frame_buffer);
 
-    for (int i = 0; i < g_frame_buffer; ++i)
+    for (UINT i = 0; i < g_frame_buffer; ++i)
     {
       DX::ThrowIfFailed
         (
@@ -326,7 +326,7 @@ namespace Engine::Manager::Graphics
       .Texture2D = {0, 0}
     };
 
-    for (int i = 0; i < g_frame_buffer; ++i)
+    for (UINT i = 0; i < g_frame_buffer; ++i)
     {
       DX::ThrowIfFailed
         (
@@ -430,7 +430,7 @@ namespace Engine::Manager::Graphics
 
   void D3Device::InitializeCommandAllocator()
   {
-    for (int i = 0; i < g_frame_buffer; ++i)
+    for (UINT i = 0; i < g_frame_buffer; ++i)
     {
       for (int t = 0; t < _countof(s_target_types); ++t)
       {
@@ -565,8 +565,8 @@ namespace Engine::Manager::Graphics
       );
     m_ortho_matrix_ = XMMatrixOrthographicLH
       (
-       g_window_width,
-       g_window_height,
+       static_cast<float>(g_window_width),
+       static_cast<float>(g_window_height),
        g_screen_near, g_screen_far
       );
   }
@@ -630,7 +630,7 @@ namespace Engine::Manager::Graphics
       const auto& rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
         (
          m_rtv_heap_->GetCPUDescriptorHandleForHeapStart(),
-         m_frame_idx_,
+         static_cast<UINT>(m_frame_idx_),
          m_rtv_heap_size_
         );
 
@@ -690,7 +690,7 @@ namespace Engine::Manager::Graphics
     const auto&     rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (
        GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
-       GetFrameIndex(),
+       static_cast<UINT>(GetFrameIndex()),
        GetRTVHeapSize()
       );
 

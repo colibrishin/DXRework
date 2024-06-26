@@ -88,7 +88,7 @@ namespace Engine::Manager::Graphics
     [[nodiscard]] ID3D12Device* GetDevice() const { return m_device_.Get(); }
 
     [[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
-    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT frame_idx = -1) const;
+    [[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(const eCommandList list_enum, UINT64 frame_idx = -1) const;
 
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const eCommandList list) const;
     [[nodiscard]] ID3D12CommandQueue* GetCommandQueue(eCommandTypes type) const;

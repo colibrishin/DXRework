@@ -31,7 +31,7 @@ namespace Engine::Resources
 
   UINT ShadowTexture::GetHeight() const { return Texture2D::GetHeight(); }
 
-  UINT ShadowTexture::GetWidth() const { return Texture2D::GetWidth(); }
+  UINT64 ShadowTexture::GetWidth() const { return Texture2D::GetWidth(); }
 
   void ShadowTexture::Clear(ID3D12GraphicsCommandList1* cmd) const
   {

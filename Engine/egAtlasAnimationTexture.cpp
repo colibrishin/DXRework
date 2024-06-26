@@ -54,7 +54,8 @@ namespace Engine::Resources
     // Build the atlas from textures if no path is provided. (assuming that this has not been serialized before)
     if (GetPath().empty())
     {
-      UINT width = 0, height = 0;
+      UINT64 width = 0;
+      UINT height = 0;
 
       // Find the largest atlas to set the 3D texture dimensions.
       for (UINT i = 0; i < num_atlases; ++i)
@@ -95,7 +96,7 @@ namespace Engine::Resources
       for (UINT i = 0; i < num_atlases; ++i)
       {
         ComPtr<ID3D12Resource> anim = m_atlases_[i]->GetRawResoruce();
-        D3D12_BOX               box  = {0, 0, 0, m_atlases_[i]->GetWidth(), m_atlases_[i]->GetHeight(), 1};
+        D3D12_BOX              box  = {0, 0, 0, static_cast<UINT>(m_atlases_[i]->GetWidth()), m_atlases_[i]->GetHeight(), 1};
 
         D3D12_TEXTURE_COPY_LOCATION dst
         {

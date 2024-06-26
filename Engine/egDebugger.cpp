@@ -38,7 +38,7 @@ namespace Engine::Manager
 
             if (GetApplication().HasScrollChanged(value))
             {
-              cam->GetComponent<Components::Transform>().lock()->Translate(Vector3::Up * -value);
+              cam->GetComponent<Components::Transform>().lock()->Translate(Vector3::Up * -static_cast<float>(value));
             }
 
             if (GetApplication().IsKeyPressed(Keyboard::W))
@@ -148,7 +148,7 @@ namespace Engine::Manager
           g_camera_lock = !g_camera_lock;
         }
 
-        ImGui::DragFloat("Camera speed", &g_camera_speed, 0.1, 0, 1);
+        ImGui::DragFloat("Camera speed", &g_camera_speed, 0.1f, 0.f, 1.f);
 
         ImGui::End();
       }

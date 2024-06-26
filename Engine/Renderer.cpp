@@ -254,7 +254,7 @@ namespace Engine::Manager::Graphics
   )
   {
     const auto& cmd = w_cmd.lock();
-    instance_buffers[idx].SetData(cmd->GetList(), structured_buffers.size(), structured_buffers.data());
+    instance_buffers[idx].SetData(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
     instance_buffers[idx].TransitionToSRV(cmd->GetList());
     instance_buffers[idx].CopySRVHeap(heap);
 

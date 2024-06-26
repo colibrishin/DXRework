@@ -755,7 +755,7 @@ namespace Engine::Manager::Graphics
 
             mesh_map[{mesh, mtr}] = mesh_idx;
 
-            instance_sb[mesh_idx].SetData(cmd, instances.size(), instances.data());
+            instance_sb[mesh_idx].SetData(cmd, static_cast<UINT>(instances.size()), instances.data());
 
             m_used_buffers_.push_back(&instance_sb[mesh_idx]);
 
@@ -843,7 +843,7 @@ namespace Engine::Manager::Graphics
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tl_inputs{};
     tl_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-    tl_inputs.NumDescs = instance_descs.size();
+    tl_inputs.NumDescs = static_cast<UINT>(instance_descs.size());
     tl_inputs.Flags = build_flags;
     tl_inputs.InstanceDescs = m_tlas_.instanceDesc ? m_tlas_.instanceDesc->GetGPUVirtualAddress() : 0;
     tl_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
