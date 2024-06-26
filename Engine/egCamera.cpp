@@ -39,16 +39,6 @@ namespace Engine::Objects
   {
     ObjectBase::PreRender(dt);
 
-    if constexpr (g_debug)
-    {
-      int value = 0;
-
-      if (GetApplication().HasScrollChanged(value))
-      {
-        GetComponent<Components::Transform>().lock()->Translate(g_forward * -value);
-      }
-    }
-
     if (const auto transform = GetComponent<Components::Transform>().lock())
     {
       const auto position = transform->GetWorldPosition();

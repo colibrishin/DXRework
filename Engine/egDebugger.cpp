@@ -3,15 +3,65 @@
 
 #include <DescriptorHeap.h>
 
+#include "egCamera.h"
 #include "egGlobal.h"
+#include "egSceneManager.hpp"
+#include "egTransform.h"
 
 namespace Engine::Manager
 {
-  void Debugger::Render(const float& dt) {}
+  void Debugger::Render(const float& dt)
+  {
+    OnImGui();
+  }
 
   void Debugger::PreUpdate(const float& dt) {}
 
-  void Debugger::Update(const float& dt) { if (GetApplication().GetCurrentKeyState().Scroll) { m_bDebug = !m_bDebug; } }
+  void Debugger::Update(const float& dt)
+  {
+    if constexpr (g_debug)
+    {
+      if (GetApplication().GetCurrentKeyState().Scroll)
+      {
+        m_bDebug = !m_bDebug;
+      }
+
+      if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+      {
+        if (const auto& cam = scene->GetMainCamera().lock())
+        {
+          // There could be multiple camera objects in the scene.
+          // todo: change main camera
+          if (!g_camera_lock)
+          {
+            int value = 0;
+
+            if (GetApplication().HasScrollChanged(value))
+            {
+              cam->GetComponent<Components::Transform>().lock()->Translate(Vector3::Up * -value);
+            }
+
+            if (GetApplication().IsKeyPressed(Keyboard::W))
+            {
+              cam->GetComponent<Components::Transform>().lock()->Translate(-g_forward * g_camera_speed);
+            }
+            if (GetApplication().IsKeyPressed(Keyboard::S))
+            {
+              cam->GetComponent<Components::Transform>().lock()->Translate(g_forward* g_camera_speed);
+            }
+            if (GetApplication().IsKeyPressed(Keyboard::A))
+            {
+              cam->GetComponent<Components::Transform>().lock()->Translate(Vector3::Left* g_camera_speed);
+            }
+            if (GetApplication().IsKeyPressed(Keyboard::D))
+            {
+              cam->GetComponent<Components::Transform>().lock()->Translate(Vector3::Right* g_camera_speed);
+            }
+          }
+        }
+      }
+    }
+  }
 
   void Debugger::PreRender(const float& dt) {}
 
@@ -28,12 +78,15 @@ namespace Engine::Manager
       m_render_queue.pop_front();
     }
 
-    for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
+    for (auto it = m_render_queue.begin(); it != m_render_queue.end();)
     {
       if (it->first.elapsed_time > g_debug_message_life_time)
       {
         it = m_render_queue.erase(it);
-        continue;
+      }
+      else
+      {
+        ++it;
       }
     }
 
@@ -62,6 +115,45 @@ namespace Engine::Manager
   }
 
   void Debugger::PostUpdate(const float& dt) {}
+
+  void Debugger::OnImGui()
+  {
+    if constexpr (g_debug)
+    {
+      if (ImGui::Begin("Debugger"))
+      {
+        if (ImGui::Button("Clear"))
+        {
+          m_render_queue.clear();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Toggle"))
+        {
+          m_bDebug = !m_bDebug;
+        }
+
+        static auto pause_button_string  = "Pause";
+        static auto resume_button_string = "Resume";
+        if (ImGui::Button(g_paused ? resume_button_string : pause_button_string))
+        {
+          g_paused = !g_paused;
+        }
+
+        static auto free_camera_button = "Free Camera";
+        static auto lock_camera_button = "Lock Camera";
+        ImGui::SameLine();
+        if (ImGui::Button(g_camera_lock ? free_camera_button : lock_camera_button))
+        {
+          g_camera_lock = !g_camera_lock;
+        }
+
+        ImGui::DragFloat("Camera speed", &g_camera_speed, 0.1, 0, 1);
+
+        ImGui::End();
+      }
+    }
+  }
 
   Debugger::Debugger(SINGLETON_LOCK_TOKEN)
     : Singleton(),
