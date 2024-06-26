@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/mpl/push_back.hpp>
+#include <boost/mpl/size.hpp>
+#include <boost/mpl/vector.hpp>
+
 // Need to be included before boost only in the header, requires a default
 // constructor
 #define SERIALIZE_DECL                                                         \
@@ -120,3 +124,21 @@
 
 // Debugging macro
 #define HELPME __nop();
+
+// Compile time type registration
+constexpr size_t g_max_registered_types = 32;
+
+template <size_t N>
+struct Rank : Rank<N - 1> {};
+
+template <>
+struct Rank<0> {};
+
+// Tag is a type that is used to identify the type list
+template <class Tag>
+boost::mpl::vector<> GetTypes(Tag*, Rank<0>) { return {}; }
+
+#define GET_TYPES(Tag) decltype(GetTypes(static_cast<Tag*>(nullptr), Rank<g_max_registered_types>()))::type
+#define REGISTER_TYPE(Tag, Type) \
+  inline boost::mpl::push_back<GET_TYPES(Tag), Type>::type GetTypes(Tag*, Rank<boost::mpl::size<GET_TYPES(Tag)>::value + 1>) \
+    { return {}; }
