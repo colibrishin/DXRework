@@ -47,10 +47,7 @@ namespace Engine::Manager::Graphics
   private:
     friend struct SingletonDeleter;
     ~ToolkitAPI() override;
-
-    void FrameBegin();
-    void FrameEnd() const;
-
+    
     std::unique_ptr<DescriptorHeap> m_descriptor_heap_ = nullptr;
 
     std::unique_ptr<CommonStates>                        m_states_                = nullptr;

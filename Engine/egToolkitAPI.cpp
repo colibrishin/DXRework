@@ -230,38 +230,4 @@ namespace Engine::Manager::Graphics
        )
       );
   }
-
-  void ToolkitAPI::FrameBegin()
-  {
-    /*const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
-
-    const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
-
-    m_previous_handle_ = buffer_handle;
-
-    GetD3Device().GetDevice()->CopyDescriptorsSimple
-    (
-        1, 
-        buffer_handle, 
-        m_descriptor_heap_->GetCpuHandle(0),
-        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );*/
-  }
-
-  void ToolkitAPI::FrameEnd() const
-  {
-    /*GetD3Device().ExecuteSubDirectCommandList();
-
-    const auto& buffer_heap = GetRenderPipeline().GetBufferHeap();
-
-    const CD3DX12_CPU_DESCRIPTOR_HANDLE buffer_handle(buffer_heap->GetCPUDescriptorHandleForHeapStart());
-
-    GetD3Device().GetDevice()->CopyDescriptorsSimple
-    (
-        1, 
-        buffer_handle, 
-        m_previous_handle_,
-        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-    );*/
-  }
 } // namespace Engine::Manager::Graphics
