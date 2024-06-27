@@ -24,6 +24,12 @@ namespace Engine::Abstract
 
   void Component::SetActive(bool active) { m_b_active_ = active; }
 
+  void Component::Initialize()
+  {
+    Entity::Initialize();
+    SetName(GetPrettyTypeName());
+  }
+
   void Component::PostUpdate(const float& dt) { m_b_ticked_ = true; }
 
   void Component::OnDeserialized()

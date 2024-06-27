@@ -44,6 +44,8 @@ namespace Engine::Components
 
   void ParticleRenderer::Initialize()
   {
+    RenderComponent::Initialize();
+
     const auto& cmd = GetD3Device().AcquireCommandPair(L"Particle Renderer Init").lock();
     cmd->SoftReset();
     m_local_param_buffer_.Create(cmd->GetList(), 1, nullptr);

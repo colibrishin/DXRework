@@ -55,6 +55,7 @@ namespace Engine::Components
     bool IsFixed() const;
     bool IsGrounded() const;
     bool GetNoAngular() const;
+    bool GetLerp() const;
 
     void Initialize() override;
     void PreUpdate(const float& dt) override;
@@ -77,6 +78,7 @@ namespace Engine::Components
     bool m_b_no_angular_;
     bool m_bGravityOverride;
     bool m_bFixed;
+    bool m_b_lerp_;
 
     float m_friction_mu_;
 
