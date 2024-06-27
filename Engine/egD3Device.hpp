@@ -206,3 +206,5 @@ namespace Engine::Manager::Graphics
     Matrix   m_ortho_matrix_      = {};
   };
 } // namespace Engine::Manager::Graphics
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::D3Device)

@@ -47,3 +47,5 @@ namespace Engine::Manager::Graphics
     Resources::Texture2D m_copy_; 
   };
 }
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::ReflectionEvaluator)

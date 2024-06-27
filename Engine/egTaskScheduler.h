@@ -48,3 +48,5 @@ namespace Engine::Manager
     std::map<eTaskType, std::queue<TaskValue>> m_tasks_;
   };
 } // namespace Engine::Manager
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::TaskScheduler)

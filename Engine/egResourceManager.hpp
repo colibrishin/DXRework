@@ -237,3 +237,5 @@ namespace Engine::Manager
     
   };
 } // namespace Engine::Manager
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::ResourceManager)

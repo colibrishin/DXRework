@@ -51,3 +51,6 @@ namespace Engine::Manager::Physics
     concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
   };
 } // namespace Engine::Manager
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Physics::CollisionDetector)

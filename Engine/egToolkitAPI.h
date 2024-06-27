@@ -74,3 +74,6 @@ namespace Engine::Manager::Graphics
     FMOD::ChannelControl* m_channel_control_      = nullptr;
   };
 } // namespace Engine::Manager::Graphics
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::ToolkitAPI)

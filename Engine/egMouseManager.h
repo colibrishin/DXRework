@@ -34,3 +34,6 @@ namespace Engine::Manager
     Vector2 m_current_mouse_position_;
   };
 } // namespace Engine::Manager
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::MouseManager)

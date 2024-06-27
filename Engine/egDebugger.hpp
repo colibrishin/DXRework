@@ -66,3 +66,5 @@ namespace Engine::Manager
     std::deque<DebugPair> m_render_queue;
   };
 } // namespace Engine::Manager
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Debugger)

@@ -92,3 +92,6 @@ namespace Engine::Manager::Graphics
     ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
   };
 } // namespace Engine::Manager::Graphics
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::ShadowManager)

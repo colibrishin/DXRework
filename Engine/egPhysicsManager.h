@@ -26,3 +26,6 @@ namespace Engine::Manager::Physics
     static void UpdateObject(Components::Rigidbody* rb, const float& dt);
   };
 } // namespace Engine::Manager::Physics
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Physics::PhysicsManager)
