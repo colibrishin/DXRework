@@ -12,8 +12,6 @@ namespace Engine::Meshes
 
   void CubeMesh::Update(const float& dt) {}
 
-  void CubeMesh::PreRender(const float& dt) {}
-
   void CubeMesh::Load_CUSTOM()
   {
     GeometricPrimitive::VertexCollection vertices;

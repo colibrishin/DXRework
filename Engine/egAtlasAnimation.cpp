@@ -21,12 +21,6 @@ namespace Engine::Resources
 
   void AtlasAnimation::FixedUpdate(const float& dt) { BaseAnimation::FixedUpdate(dt); }
 
-  void AtlasAnimation::PreRender(const float& dt) { BaseAnimation::PreRender(dt); }
-
-  void AtlasAnimation::Render(const float& dt) { BaseAnimation::Render(dt); }
-
-  void AtlasAnimation::PostRender(const float& dt) { BaseAnimation::PostRender(dt); }
-
   void AtlasAnimation::PostUpdate(const float& dt) { BaseAnimation::PostUpdate(dt); }
 
   void AtlasAnimation::OnDeserialized() { BaseAnimation::OnDeserialized(); }

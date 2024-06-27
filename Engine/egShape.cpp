@@ -36,26 +36,6 @@ namespace Engine::Resources
 
   void Shape::FixedUpdate(const float& dt) {}
 
-  void Shape::PreRender(const float& dt) {}
-
-  void Shape::Render(const float& dt)
-  {
-    /*if (m_animations_)
-    {
-      m_animations_->Render(dt);
-    }
-    
-    for (const auto& mesh : m_meshes_)
-    {
-      mesh->PreRender(dt);
-      mesh->Render(dt);
-      GetRenderPipeline().DrawIndexedInstancedDeferred(TODO, mesh->GetIndexCount(), m_instance_count_);
-      mesh->PostRender(dt);
-    }*/
-  }
-
-  void Shape::PostRender(const float& dt) {}
-
   void Shape::PostUpdate(const float& dt) {}
 
   void Shape::OnSerialized()

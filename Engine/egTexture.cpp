@@ -595,12 +595,6 @@ namespace Engine::Resources
 
   void Texture::Update(const float& dt) {}
 
-  void Texture::PreRender(const float& dt) {}
-
-  void Texture::Render(const float& dt) {}
-
-  void Texture::PostRender(const float& dt) {}
-
   void Texture::PostUpdate(const float& dt) {}
 
   void Texture::InitializeDescriptorHeaps()

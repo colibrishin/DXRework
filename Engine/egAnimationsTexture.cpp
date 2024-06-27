@@ -25,18 +25,6 @@ namespace Engine::Resources
 
   void AnimationsTexture::FixedUpdate(const float& dt) {}
 
-  void AnimationsTexture::PreRender(const float& dt)
-  {
-    Texture3D::PreRender(dt);
-  }
-
-  void AnimationsTexture::Render(const float& dt)
-  {
-    Texture3D::Render(dt);
-  }
-
-  void AnimationsTexture::PostRender(const float& dt) { Texture3D::PostRender(dt); }
-
   void AnimationsTexture::PostUpdate(const float& dt) {}
 
   void AnimationsTexture::OnSerialized()

@@ -49,12 +49,6 @@ namespace Engine::Resources
 
   void Prefab::FixedUpdate(const float& dt) {}
 
-  void Prefab::PreRender(const float& dt) {}
-
-  void Prefab::Render(const float& dt) {}
-
-  void Prefab::PostRender(const float& dt) {}
-
   void Prefab::OnDeserialized()
   {
     Resource::OnDeserialized();

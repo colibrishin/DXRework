@@ -258,8 +258,6 @@ namespace Engine::Resources
 
   void Shader::PostUpdate(const float& dt) {}
 
-  void Shader::PreRender(const float& dt) {}
-
   void Shader::Unload_INTERNAL()
   {
     m_vs_blob_.Reset();
@@ -274,10 +272,6 @@ namespace Engine::Resources
   }
 
   void Shader::OnDeserialized() {}
-
-  void Shader::Render(const float& dt) {}
-
-  void Shader::PostRender(const float& dt) {}
 
   void Shader::SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type)
   {

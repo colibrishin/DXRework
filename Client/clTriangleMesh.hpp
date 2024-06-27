@@ -15,8 +15,6 @@ namespace Client::Meshes
     void Initialize() override;
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
-    void PreRender(const float& dt) override;
-    void Render(const float& dt) override;
 
     void Load_CUSTOM() override;
     void FixedUpdate(const float& dt) override;
@@ -30,10 +28,6 @@ namespace Client::Meshes
   inline void TriangleMesh::PreUpdate(const float& dt) { Mesh::PreUpdate(dt); }
 
   inline void TriangleMesh::Update(const float& dt) { Mesh::Update(dt); }
-
-  inline void TriangleMesh::PreRender(const float& dt) { Mesh::PreRender(dt); }
-
-  inline void TriangleMesh::Render(const float& dt) { Mesh::Render(dt); }
 
   inline void TriangleMesh::Load_CUSTOM()
   {

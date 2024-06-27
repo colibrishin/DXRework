@@ -12,7 +12,6 @@ namespace Engine::Meshes
 
     void PreUpdate(const float& dt) override;
     void Update(const float& dt) override;
-    void PreRender(const float& dt) override;
     void PostUpdate(const float& dt) override;
     void Load_CUSTOM() override;
     void Initialize() override;
