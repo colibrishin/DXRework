@@ -42,4 +42,5 @@ namespace Client::Scripts
   };
 } // namespace Client::Scripts
 
+REGISTER_TYPE(Engine::Script, Client::Scripts::PlayerHitboxScript)
 BOOST_CLASS_EXPORT_KEY(Client::Scripts::PlayerHitboxScript)
