@@ -21,12 +21,6 @@ namespace Engine::Resources
 
   void AtlasAnimationTexture::FixedUpdate(const float& dt) {}
 
-  void AtlasAnimationTexture::PreRender(const float& dt) { Texture3D::PreRender(dt); }
-
-  void AtlasAnimationTexture::Render(const float& dt) { Texture3D::Render(dt); }
-
-  void AtlasAnimationTexture::PostRender(const float& dt) { Texture3D::PostRender(dt); }
-
   void AtlasAnimationTexture::PostUpdate(const float& dt) {}
 
   void AtlasAnimationTexture::OnSerialized()

@@ -90,7 +90,7 @@ namespace Engine::Objects
     m_font_->SetScale(m_scale_);
 
     ObjectBase::Render(dt);
-    m_font_->Render(dt);
+    m_font_->Update(dt);
 
     m_font_->SetText("");
     m_font_->SetPosition({0.0f, 0.0f});

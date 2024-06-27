@@ -10,5 +10,5 @@ namespace Engine
   constexpr bool   g_debug_observer          = false;
   constexpr bool   g_debug                   = true;
   constexpr bool   g_debug_device_removal    = false;
-  constexpr bool   g_editor                  = false;
+  constexpr bool   g_editor                  = true;
 }

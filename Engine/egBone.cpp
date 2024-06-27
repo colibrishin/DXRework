@@ -66,12 +66,6 @@ namespace Engine::Resources
 
   void Bone::FixedUpdate(const float& dt) {}
 
-  void Bone::PreRender(const float& dt) {}
-
-  void Bone::Render(const float& dt) {}
-
-  void Bone::PostRender(const float& dt) {}
-
   void Bone::PostUpdate(const float& dt) {}
 
   void Bone::OnSerialized() {}

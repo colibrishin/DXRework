@@ -7,15 +7,9 @@ namespace Engine::Resources
 
   void ShadowTexture::Initialize() { Texture2D::Initialize(); }
 
-  void ShadowTexture::PostRender(const float& dt) { Texture2D::PostRender(dt); }
-
   void ShadowTexture::PostUpdate(const float& dt) { Texture2D::PostUpdate(dt); }
 
-  void ShadowTexture::PreRender(const float& dt) { Texture2D::PreRender(dt); }
-
   void ShadowTexture::PreUpdate(const float& dt) { Texture2D::PreUpdate(dt); }
-
-  void ShadowTexture::Render(const float& dt) { Texture2D::Render(dt); }
 
   void ShadowTexture::Update(const float& dt) { Texture2D::Update(dt); }
 

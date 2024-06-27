@@ -30,12 +30,6 @@ namespace Engine::Resources
 
   void BoneAnimation::FixedUpdate(const float& dt) {}
 
-  void BoneAnimation::PreRender(const float& dt) {}
-
-  void BoneAnimation::Render(const float& dt) {}
-
-  void BoneAnimation::PostRender(const float& dt) {}
-
   void BoneAnimation::PostUpdate(const float& dt) {}
 
   void BoneAnimation::OnSerialized()

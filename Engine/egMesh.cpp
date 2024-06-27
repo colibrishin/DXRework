@@ -116,8 +116,6 @@ namespace Engine::Resources
 
   void Mesh::FixedUpdate(const float& dt) {}
 
-  void Mesh::PreRender(const float& dt) {}
-
   void Mesh::OnDeserialized() { Resource::OnDeserialized(); }
 
   void Mesh::OnSerialized() {}
@@ -148,10 +146,6 @@ namespace Engine::Resources
   }
 
   void Mesh::Initialize() {}
-
-  void Mesh::Render(const float& dt) {}
-
-  void Mesh::PostRender(const float& dt) {}
 
   void Mesh::PostUpdate(const float& dt) {}
 

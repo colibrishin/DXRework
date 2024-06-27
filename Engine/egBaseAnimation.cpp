@@ -26,12 +26,6 @@ namespace Engine::Resources
 
   void BaseAnimation::FixedUpdate(const float& dt) {}
 
-  void BaseAnimation::PreRender(const float& dt) {}
-
-  void BaseAnimation::Render(const float& dt) {}
-
-  void BaseAnimation::PostRender(const float& dt) {}
-
   void BaseAnimation::PostUpdate(const float& dt) {}
 
   void BaseAnimation::OnDeserialized() { Resource::OnDeserialized(); }

@@ -12,8 +12,6 @@ namespace Engine::Meshes
 
   void PointMesh::Update(const float& dt) {}
 
-  void PointMesh::PreRender(const float& dt) {}
-
   void PointMesh::Load_CUSTOM()
   {
     m_vertices_.push_back(

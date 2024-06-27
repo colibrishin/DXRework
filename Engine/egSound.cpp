@@ -41,12 +41,6 @@ namespace Engine::Resources
 
   void Sound::FixedUpdate(const float& dt) {}
 
-  void Sound::PreRender(const float& dt) {}
-
-  void Sound::Render(const float& dt) {}
-
-  void Sound::PostRender(const float& dt) {}
-
   void Sound::PostUpdate(const float& dt) {}
 
   void Sound::Play_INTERNAL(const WeakObjectBase& origin)

@@ -37,7 +37,6 @@ namespace Engine::Resources
     m_material_sb_.repeatTexture         = false;
   }
 
-
   void Material::PreUpdate(const float& dt) {}
 
   void Material::Update(const float& dt) {}
@@ -45,12 +44,6 @@ namespace Engine::Resources
   void Material::PostUpdate(const float& dt) {}
 
   void Material::FixedUpdate(const float& dt) {}
-
-  void Material::PreRender(const float& dt) {}
-
-  void Material::Render(const float& dt) {}
-
-  void Material::PostRender(const float& dt) {}
 
   void Material::OnSerialized()
   {

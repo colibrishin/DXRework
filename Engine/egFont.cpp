@@ -22,13 +22,7 @@ namespace Engine::Resources
 
   void Font::Initialize() {}
 
-  void Font::PreUpdate(const float& dt) {}
-
-  void Font::Update(const float& dt) {}
-
-  void Font::PreRender(const float& dt) { }
-
-  void Font::PostUpdate(const float& dt)
+  void Font::PreUpdate(const float& dt)
   {
     if (m_lazy_reload_)
     {
@@ -38,7 +32,7 @@ namespace Engine::Resources
     }
   }
 
-  void Font::Render(const float& dt)
+  void Font::Update(const float& dt)
   {
     GetToolkitAPI().AppendSpriteBatch
       (
@@ -54,9 +48,9 @@ namespace Engine::Resources
       );
   }
 
-  void Font::FixedUpdate(const float& dt) {}
+  void Font::PostUpdate(const float& dt) {}
 
-  void Font::PostRender(const float& dt) {}
+  void Font::FixedUpdate(const float& dt) {}
 
   void Font::SetText(const std::string& text) { m_text_ = text; }
 
