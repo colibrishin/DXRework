@@ -15,15 +15,23 @@ namespace Engine::Manager
     Graphics::ShadowManager::GetInstance().Reset();
     m_active_scene_ = it;
 
-    if (!it.lock()->IsInitialized()) { m_active_scene_.lock()->Initialize(); }
-
-    for (const auto& light :
-         m_active_scene_.lock()->GetGameObjects(LAYER_LIGHT))
+    if (const auto& scene = m_active_scene_.lock())
     {
-      Graphics::ShadowManager::GetInstance().RegisterLight
-        (
-         light.lock()->GetSharedPtr<Objects::Light>()
-        );
+      if (!it.lock()->IsInitialized())
+      {
+        scene->Initialize();
+      }
+
+      for (const auto& light :
+           scene->GetGameObjects(LAYER_LIGHT))
+      {
+        Graphics::ShadowManager::GetInstance().RegisterLight
+          (
+           light.lock()->GetSharedPtr<Objects::Light>()
+          );
+      }
+
+      g_raytracing = scene->m_b_scene_raytracing_;
     }
   }
 

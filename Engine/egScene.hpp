@@ -308,6 +308,7 @@ namespace Engine
     void synchronize(const WeakScene& ptr_scene);
 
     bool m_b_scene_imgui_open_;
+    bool m_b_scene_raytracing_;
 
     LocalActorID             m_main_camera_local_id_;
     LocalActorID             m_main_actor_local_id_;

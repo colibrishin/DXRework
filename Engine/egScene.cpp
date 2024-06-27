@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "egScene.hpp"
 #include "egCamera.h"
+#include "egImGuiHeler.hpp"
 #include "egLight.h"
 #include "egManagerHelper.hpp"
 #include "egObserver.h"
@@ -9,6 +10,7 @@ SERIALIZE_IMPL
 (
  Engine::Scene,
  _ARTAG(_BSTSUPER(Renderable))
+ _ARTAG(m_b_scene_raytracing_)
  _ARTAG(m_main_camera_local_id_)
  _ARTAG(m_main_actor_local_id_)
  _ARTAG(m_layers)
@@ -497,6 +499,7 @@ namespace Engine
 
   Scene::Scene()
     : m_b_scene_imgui_open_(false),
+      m_b_scene_raytracing_(false),
       m_main_camera_local_id_(g_invalid_id),
       m_main_actor_local_id_(g_invalid_id),
       m_object_position_tree_() {}
@@ -699,6 +702,22 @@ namespace Engine
     if (ImGui::Begin(name.c_str()), &m_b_scene_imgui_open_)
     {
       Renderable::OnImGui();
+
+      if (ImGui::Checkbox("Raytracing", &m_b_scene_raytracing_))
+      {
+        GetTaskScheduler().AddTask
+          (
+           TASK_TOGGLE_RASTER,
+           {GetSharedPtr<Scene>(), m_b_scene_raytracing_},
+           [](const std::vector<std::any>& params, const float)
+           {
+             const auto& scene = std::any_cast<StrongScene>(params[0]);
+             const auto& b_raytracing = std::any_cast<bool>(params[1]);
+
+             g_raytracing = b_raytracing;
+           }
+          );
+      }
 
       if (ImGui::BeginListBox(list_name.c_str(), {-1, -1}))
       {
