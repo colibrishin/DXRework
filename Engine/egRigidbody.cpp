@@ -42,6 +42,7 @@ namespace Engine::Components
       m_b_no_angular_(false),
       m_bGravityOverride(false),
       m_bFixed(false),
+      m_b_lerp_(true),
       m_friction_mu_(0.0f) {}
 
   Rigidbody::Rigidbody(const Rigidbody& other)
@@ -51,6 +52,7 @@ namespace Engine::Components
     m_b_no_angular_     = other.m_b_no_angular_;
     m_bGravityOverride  = other.m_bGravityOverride;
     m_bFixed            = other.m_bFixed;
+    m_b_lerp_           = other.m_b_lerp_;
     m_friction_mu_      = other.m_friction_mu_;
     m_linear_velocity   = other.m_linear_velocity;
     m_angular_velocity  = other.m_angular_velocity;
@@ -133,6 +135,11 @@ namespace Engine::Components
 
   bool Rigidbody::GetNoAngular() const { return m_b_no_angular_; }
 
+  bool Rigidbody::GetLerp() const
+  {
+    return m_b_lerp_;
+  }
+
   void Rigidbody::Reset()
   {
     m_bGrounded = false;
@@ -183,6 +190,9 @@ namespace Engine::Components
     CheckboxAligned("Grounded", m_bGrounded);
     CheckboxAligned("Gravity Override", m_bGravityOverride);
     CheckboxAligned("Fixed", m_bFixed);
+    CheckboxAligned("No Angular", m_b_no_angular_);
+    CheckboxAligned("Lerp", m_b_lerp_);
+
     ImGui::DragFloat("Rigidbody Friction", &m_friction_mu_, 0.01f, 0, 1);
 
     ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity);
@@ -202,5 +212,6 @@ namespace Engine::Components
       m_b_no_angular_(false),
       m_bGravityOverride(false),
       m_bFixed(false),
+      m_b_lerp_(true),
       m_friction_mu_(0) {}
 } // namespace Engine::Component
