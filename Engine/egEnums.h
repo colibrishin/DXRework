@@ -188,6 +188,8 @@ namespace Engine
   enum eTaskType
   {
     TASK_NONE = 0,
+    TASK_TOGGLE_RASTER,
+
     TASK_CHANGE_LAYER,
     TASK_ADD_OBJ,
     TASK_ADD_CHILD,
