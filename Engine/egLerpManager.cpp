@@ -40,6 +40,11 @@ namespace Engine::Manager::Physics
   {
     if (const auto scene = GetSceneManager().GetActiveScene().lock())
     {
+      if (g_paused)
+      {
+        return;
+      }
+
       const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
       for (const auto& rb : rbs)
@@ -48,6 +53,7 @@ namespace Engine::Manager::Physics
         {
           if (!rigidbody->GetActive()) { continue; }
           if (rigidbody->GetSharedPtr<Components::Rigidbody>()->IsFixed()) { continue; }
+          if (!rigidbody->GetSharedPtr<Components::Rigidbody>()->GetLerp()) { continue; }
 
           const auto t0 = rigidbody->GetOwner().lock()->GetComponent<Components::Transform>().lock();
           const auto t1 = rigidbody->GetSharedPtr<Components::Rigidbody>()->GetT1();
