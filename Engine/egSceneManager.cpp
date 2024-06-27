@@ -71,23 +71,61 @@ namespace Engine::Manager
     SetActive("UntitledScene");
   }
 
-  void SceneManager::Update(const float& dt) { m_active_scene_.lock()->Update(dt); }
+  void SceneManager::Update(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->Update(dt);
+    }
+  }
 
-  void SceneManager::PreUpdate(const float& dt) { m_active_scene_.lock()->PreUpdate(dt); }
+  void SceneManager::PreUpdate(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->PreUpdate(dt);
+    }
+  }
 
-  void SceneManager::PreRender(const float& dt) { m_active_scene_.lock()->PreRender(dt); }
+  void SceneManager::PreRender(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->PreRender(dt);
+    }
+  }
 
-  void SceneManager::PostUpdate(const float& dt) { m_active_scene_.lock()->PostUpdate(dt); }
+  void SceneManager::PostUpdate(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->PostUpdate(dt);
+    }
+  }
 
   void SceneManager::Render(const float& dt)
   {
-    m_active_scene_.lock()->Render(dt);
-    this->OnImGui();
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->Render(dt);
+    }
   }
 
-  void SceneManager::FixedUpdate(const float& dt) { m_active_scene_.lock()->FixedUpdate(dt); }
+  void SceneManager::FixedUpdate(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->FixedUpdate(dt);
+    }
+  }
 
-  void SceneManager::PostRender(const float& dt) { m_active_scene_.lock()->PostRender(dt); }
+  void SceneManager::PostRender(const float& dt)
+  {
+    if (const auto& scene = m_active_scene_.lock())
+    {
+      scene->PostRender(dt);
+    }
+  }
 
   void SceneManager::OnImGui()
   {

@@ -49,3 +49,5 @@ namespace Engine::Manager::Graphics
     RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
   };
 }
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::RayTracer)

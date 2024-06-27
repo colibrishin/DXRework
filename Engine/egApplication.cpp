@@ -246,6 +246,7 @@ namespace Engine::Manager
       GetRenderPipeline().Render(dt);
     }
 
+    GetImGuiManager().Render(dt);
     GetDebugger().Render(dt);
     GetToolkitAPI().Render(dt);
     GetD3Device().Render(dt);

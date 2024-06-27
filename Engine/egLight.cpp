@@ -60,7 +60,7 @@ namespace Engine::Objects
   {
     ObjectBase::Render(dt);
 
-    if (g_debug)
+    if constexpr (g_debug)
     {
       const auto tr = GetComponent<Components::Transform>().lock();
 

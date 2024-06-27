@@ -38,10 +38,7 @@ namespace Engine::Manager::Physics
 
   void CollisionDetector::PreRender(const float& dt) {}
 
-  void CollisionDetector::Render(const float& dt)
-  {
-    OnImGui();
-  }
+  void CollisionDetector::Render(const float& dt) {}
 
   void CollisionDetector::PostRender(const float& dt) {}
 

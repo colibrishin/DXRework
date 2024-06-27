@@ -27,7 +27,7 @@ namespace Engine::Manager
 
   void ResourceManager::PostUpdate(const float& dt) {}
 
-  void ResourceManager::Render(const float& dt) { this->OnImGui(); }
+  void ResourceManager::Render(const float& dt) {}
 
   void ResourceManager::PostRender(const float& dt) {}
 
