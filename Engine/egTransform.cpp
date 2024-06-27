@@ -230,6 +230,19 @@ namespace Engine::Components
       ZeroToEpsilon(m_scale_);
     }
 
+    Vector3 euler = m_rotation_.ToEuler();
+    euler         = Vector3
+    {
+      DirectX::XMConvertToDegrees(euler.x),
+      DirectX::XMConvertToDegrees(euler.y),
+      DirectX::XMConvertToDegrees(euler.z)
+    };
+
+    if (ImGuiVector3Editable("Rotation", GetID(), "rotation", euler, 0.1f, 0.1f))
+    {
+      m_rotation_ = Quaternion::CreateFromYawPitchRoll(DirectX::XMConvertToRadians(euler.y), DirectX::XMConvertToRadians(euler.x), DirectX::XMConvertToRadians(euler.z));
+    }
+
     CheckboxAligned("Size Absolute", m_b_s_absolute_);
     CheckboxAligned("Rotate Absolute", m_b_r_absolute_);
     ImGui::Unindent(2);
