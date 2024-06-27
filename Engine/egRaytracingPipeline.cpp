@@ -32,119 +32,113 @@ namespace Engine::Manager::Graphics
 
   void RaytracingPipeline::Render(const float& dt)
   {
-    if (g_raytracing)
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Raytracing Rendering").lock();
+
+    cmd->SoftReset();
+
+    for (const auto& buffer : m_used_buffers_) { buffer->TransitionToSRV(cmd->GetList()); }
+
+    for (const auto& tex : m_used_textures_)
     {
-      const auto& cmd = GetD3Device().AcquireCommandPair(L"Raytracing Rendering").lock();
-
-      cmd->SoftReset();
-
-      for (const auto& buffer : m_used_buffers_)
-      {
-        buffer->TransitionToSRV(cmd->GetList());
-      }
-
-      for (const auto& tex : m_used_textures_)
-      {
-        tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-      }
-
-      GetRayTracer().GetLightSB().TransitionToSRV(cmd->GetList());
-
-      DefaultRootSignature(cmd->GetList4());
-      cmd->GetList4()->SetPipelineState1(m_raytracing_state_object_.Get());
-      cmd->GetList4()->RSSetViewports(1, &m_viewport_);
-      cmd->GetList4()->RSSetScissorRects(1, &m_scissor_rect_);
-
-      DefaultDescriptorHeap(cmd->GetList4());
-      m_wvp_buffer_.Bind(cmd, {});
-      m_param_buffer_data_.Bind(cmd, {});
-
-      cmd->GetList()->SetComputeRootConstantBufferView(4, m_wvp_buffer_.GetGPUAddress());
-      cmd->GetList()->SetComputeRootConstantBufferView(5, m_param_buffer_data_.GetGPUAddress());
-      BindTLAS(cmd->GetList4());
-      
-      const D3D12_DISPATCH_RAYS_DESC dispatch_desc
-      {
-        .RayGenerationShaderRecord = {
-          m_raygen_shader_table_->GetGPUVirtualAddress(),
-          sizeof(ShaderRecord)
-        },
-        .MissShaderTable = {
-          .StartAddress = m_miss_shader_table_->GetGPUVirtualAddress(),
-          .SizeInBytes = sizeof(ShaderRecord),
-          .StrideInBytes = sizeof(ShaderRecord)
-        },
-        .HitGroupTable = {
-          .StartAddress = m_closest_hit_shader_table_->GetGPUVirtualAddress(),
-          .SizeInBytes = m_closest_hit_shader_table_size_,
-          .StrideInBytes = sizeof(HitShaderRecord)
-        },
-        .CallableShaderTable = {},
-        .Width = g_window_width,
-        .Height = g_window_height,
-        .Depth = 1
-      };
-
-      cmd->GetList4()->DispatchRays(&dispatch_desc);
-
-      const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_output_buffer_.Get(),
-         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-         D3D12_RESOURCE_STATE_COPY_SOURCE
-        );
-
-      const auto& dst_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
-         D3D12_RESOURCE_STATE_RENDER_TARGET,
-         D3D12_RESOURCE_STATE_COPY_DEST
-        );
-
-      cmd->GetList4()->ResourceBarrier(1, &copy_barrier);
-      cmd->GetList4()->ResourceBarrier(1, &dst_barrier);
-
-      cmd->GetList4()->CopyResource
-        (
-         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
-         m_output_buffer_.Get()
-        );
-
-      const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         m_output_buffer_.Get(),
-         D3D12_RESOURCE_STATE_COPY_SOURCE,
-         D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-        );
-
-      const auto& rtv_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-        (
-         GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
-         D3D12_RESOURCE_STATE_COPY_DEST,
-         D3D12_RESOURCE_STATE_RENDER_TARGET
-        );
-
-      cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
-      cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
-
-      for (const auto& buffer : m_used_buffers_)
-      {
-        buffer->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-      }
-
-      for (const auto& tex : m_used_textures_)
-      {
-        tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
-      }
-
-      GetRayTracer().GetLightSB().TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-
-      cmd->FlagReady();
-
-      m_used_buffers_.clear();
-      m_used_textures_.clear();
-      m_tmp_textures_heaps_.clear(); // reuse it
+      tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     }
+
+    GetRayTracer().GetLightSB().TransitionToSRV(cmd->GetList());
+
+    DefaultRootSignature(cmd->GetList4());
+    cmd->GetList4()->SetPipelineState1(m_raytracing_state_object_.Get());
+    cmd->GetList4()->RSSetViewports(1, &m_viewport_);
+    cmd->GetList4()->RSSetScissorRects(1, &m_scissor_rect_);
+
+    DefaultDescriptorHeap(cmd->GetList4());
+    m_wvp_buffer_.Bind(cmd, {});
+    m_param_buffer_data_.Bind(cmd, {});
+
+    cmd->GetList()->SetComputeRootConstantBufferView(4, m_wvp_buffer_.GetGPUAddress());
+    cmd->GetList()->SetComputeRootConstantBufferView(5, m_param_buffer_data_.GetGPUAddress());
+    BindTLAS(cmd->GetList4());
+
+    const D3D12_DISPATCH_RAYS_DESC dispatch_desc
+    {
+      .RayGenerationShaderRecord = {
+        m_raygen_shader_table_->GetGPUVirtualAddress(),
+        sizeof(ShaderRecord)
+      },
+      .MissShaderTable = {
+        .StartAddress = m_miss_shader_table_->GetGPUVirtualAddress(),
+        .SizeInBytes = sizeof(ShaderRecord),
+        .StrideInBytes = sizeof(ShaderRecord)
+      },
+      .HitGroupTable = {
+        .StartAddress = m_closest_hit_shader_table_->GetGPUVirtualAddress(),
+        .SizeInBytes = m_closest_hit_shader_table_size_,
+        .StrideInBytes = sizeof(HitShaderRecord)
+      },
+      .CallableShaderTable = {},
+      .Width = g_window_width,
+      .Height = g_window_height,
+      .Depth = 1
+    };
+
+    cmd->GetList4()->DispatchRays(&dispatch_desc);
+
+    const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_output_buffer_.Get(),
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+       D3D12_RESOURCE_STATE_COPY_SOURCE
+      );
+
+    const auto& dst_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
+       D3D12_RESOURCE_STATE_RENDER_TARGET,
+       D3D12_RESOURCE_STATE_COPY_DEST
+      );
+
+    cmd->GetList4()->ResourceBarrier(1, &copy_barrier);
+    cmd->GetList4()->ResourceBarrier(1, &dst_barrier);
+
+    cmd->GetList4()->CopyResource
+      (
+       GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
+       m_output_buffer_.Get()
+      );
+
+    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       m_output_buffer_.Get(),
+       D3D12_RESOURCE_STATE_COPY_SOURCE,
+       D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+      );
+
+    const auto& rtv_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+      (
+       GetD3Device().GetRenderTarget(GetD3Device().GetFrameIndex()),
+       D3D12_RESOURCE_STATE_COPY_DEST,
+       D3D12_RESOURCE_STATE_RENDER_TARGET
+      );
+
+    cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
+    cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
+
+    for (const auto& buffer : m_used_buffers_)
+    {
+      buffer->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+    }
+
+    for (const auto& tex : m_used_textures_)
+    {
+      tex->ManualTransition(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+    }
+
+    GetRayTracer().GetLightSB().TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+
+    cmd->FlagReady();
+
+    m_used_buffers_.clear();
+    m_used_textures_.clear();
+    m_tmp_textures_heaps_.clear(); // reuse it
   }
 
   void RaytracingPipeline::FixedUpdate(const float& dt) {}
