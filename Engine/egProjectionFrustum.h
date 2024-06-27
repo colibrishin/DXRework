@@ -32,3 +32,5 @@ namespace Engine::Manager
     BoundingSphere  m_sphere;
   };
 } // namespace Engine::Manager
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::ProjectionFrustum)

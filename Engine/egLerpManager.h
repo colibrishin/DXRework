@@ -28,3 +28,6 @@ namespace Engine::Manager::Physics
     float m_elapsed_time_;
   };
 } // namespace Engine::Manager::Physics
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Physics::LerpManager);

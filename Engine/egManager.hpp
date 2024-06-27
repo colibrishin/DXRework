@@ -45,6 +45,7 @@ namespace Engine::Abstract
 
     virtual void OnSerialized() override final {}
     virtual void OnDeserialized() override final {}
+    void OnImGui() override {}
 
   protected:
     Singleton() { static_assert(SingletonChecker::base, "Singleton must be derived from Singleton<T>"); }

@@ -31,3 +31,6 @@ namespace Engine::Manager::Physics
     std::set<std::pair<GlobalEntityID, GlobalEntityID>> m_collision_resolved_set_;
   };
 } // namespace Engine::Manager::Physics
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Physics::ConstraintSolver)

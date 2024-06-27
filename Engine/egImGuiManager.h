@@ -27,3 +27,5 @@ namespace Engine::Manager::Graphics
     StrongDescriptorPtr m_imgui_descriptor_;
   };
 } // namespace Engine::Manager::Graphics
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::Graphics::ImGuiManager)

@@ -10,10 +10,7 @@
 
 namespace Engine::Manager
 {
-  void Debugger::Render(const float& dt)
-  {
-    OnImGui();
-  }
+  void Debugger::Render(const float& dt) {}
 
   void Debugger::PreUpdate(const float& dt) {}
 

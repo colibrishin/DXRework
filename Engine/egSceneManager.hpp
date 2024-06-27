@@ -123,3 +123,6 @@ namespace Engine::Manager
     std::vector<StrongScene> m_scenes_;
   };
 } // namespace Engine::Manager
+
+
+REGISTER_TYPE(Engine::Manager::Application, Engine::Manager::SceneManager)
