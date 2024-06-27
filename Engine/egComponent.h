@@ -17,6 +17,7 @@ namespace Engine::Abstract
     bool             GetActive() const;
 
     virtual void SetActive(bool active);
+    void Initialize() override;
     void PostUpdate(const float& dt) override;
 
     void OnDeserialized() override;
