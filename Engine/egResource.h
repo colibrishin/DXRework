@@ -4,7 +4,7 @@
 
 namespace Engine::Abstract
 {
-  class Resource : public Renderable
+  class Resource : public Entity
   {
   public:
     using type = Resource;
@@ -17,8 +17,8 @@ namespace Engine::Abstract
 
     bool IsLoaded() const;
 
-    const std::filesystem::path& GetPath() const;
-    virtual eResourceType        GetResourceType() const;
+    const std::filesystem::path&        GetPath() const;
+    [[nodiscard]] virtual eResourceType GetResourceType() const;
 
     void SetPath(const std::filesystem::path& path);
 

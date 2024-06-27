@@ -8,7 +8,7 @@
 SERIALIZE_IMPL
 (
  Engine::Abstract::Resource,
- _ARTAG(_BSTSUPER(Renderable)) 
+ _ARTAG(_BSTSUPER(Entity)) 
  _ARTAG(m_bLoaded_)
  _ARTAG(m_path_str_)
  _ARTAG(m_type_)
@@ -39,7 +39,7 @@ namespace Engine::Abstract
   void Resource::OnImGui()
   {
     ImGui::BulletText(GetTypeName().c_str());
-    Renderable::OnImGui();
+    Entity::OnImGui();
     ImGui::Indent(2);
     ImGui::Checkbox("Loaded", &m_bLoaded_);
     TextDisabled("Resource Path", m_path_str_);
@@ -57,7 +57,7 @@ namespace Engine::Abstract
 
   void Resource::OnDeserialized()
   {
-    Renderable::OnDeserialized();
+    Entity::OnDeserialized();
     m_bLoaded_ = false;
     m_path_    = m_path_str_;
   }
