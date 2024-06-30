@@ -30,7 +30,12 @@ namespace Engine
     void SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, const UINT slot) const;
     void SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data) const;
     void SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, const UINT slot) const;
+
     void BindGraphic(const Weak<CommandPair> & w_cmd) const;
+    void BindGraphic(ID3D12GraphicsCommandList1* cmd) const;
+
+    void BindCompute(const Weak<CommandPair>& w_cmd) const;
+    void BindCompute(ID3D12GraphicsCommandList1* cmd) const;
 
   private:
     friend struct DescriptorHandler;
