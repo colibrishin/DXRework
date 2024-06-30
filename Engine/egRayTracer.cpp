@@ -68,7 +68,7 @@ namespace Engine::Manager::Graphics
 
     RenderPass(cmd->GetList4(), nullptr);
 
-    cmd->Execute();
+    cmd->Execute(true);
 
     m_b_ready_ = true;
   }
