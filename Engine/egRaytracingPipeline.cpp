@@ -373,10 +373,16 @@ namespace Engine::Manager::Graphics
     ComPtr<IDxcBlob> blob;
     DX::ThrowIfFailed(result->GetResult(blob.GetAddressOf()));
 
-    ComPtr<IDxcBlobEncoding> errors;
-    if (SUCCEEDED(result->GetErrorBuffer(errors.ReleaseAndGetAddressOf())))
+    HRESULT shader_result;
+    DX::ThrowIfFailed(result->GetStatus(&shader_result));
+
+    if (FAILED(shader_result))
     {
-      OutputDebugStringA(static_cast<const char*>(errors->GetBufferPointer()));
+      ComPtr<IDxcBlobEncoding> errors;
+      if (SUCCEEDED(result->GetErrorBuffer(errors.ReleaseAndGetAddressOf())))
+      {
+        OutputDebugStringA(static_cast<const char*>(errors->GetBufferPointer()));
+      }
     }
 
     const auto blob_pointer = blob->GetBufferPointer();
