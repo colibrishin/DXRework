@@ -516,42 +516,38 @@ namespace Client::Scripts
       SecondPass(dt, cmd, light_vps, scene, lights, instance_idx);
       ThirdPass(cmd, lights);
 
-      cmd->FlagReady
-      (
-       [this, lights]()
-       {
-         std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
-         light_table.resize(lights->size());
-         m_sb_light_table_->GetData(lights->size(), light_table.data());
+      cmd->Execute(true);
 
-         // Build bounding box data from result of compute shader.
-         for (int i = 0; i < lights->size(); ++i)
-         {
-           for (int j = 0; j < lights->size(); ++j)
-           {
-             if (light_table[i].lightTable[j].value > 0)
-             {
-               const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
-               const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
+      std::vector<ComputeShaders::IntersectionCompute::LightTableSB> light_table;
+      light_table.resize(lights->size());
+      m_sb_light_table_->GetData(lights->size(), light_table.data());
 
-               const auto average = Vector3::Lerp(wp_min, wp_max, 0.5f);
+      // Build bounding box data from result of compute shader.
+      for (int i = 0; i < lights->size(); ++i)
+      {
+        for (int j = 0; j < lights->size(); ++j)
+        {
+          if (light_table[i].lightTable[j].value > 0)
+          {
+            const auto wp_min = Vector3(light_table[i].min[j]) / light_table[i].min[j].w;
+            const auto wp_max = Vector3(light_table[i].max[j]) / light_table[i].max[j].w;
 
-               GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
+            const auto average = Vector3::Lerp(wp_min, wp_max, 0.5f);
 
-               BoundingBox bbox;
-               BoundingBox::CreateFromPoints
-                 (
-                  bbox,
-                  wp_min,
-                  wp_max
-                 );
+            GetDebugger().Draw(BoundingSphere(average, 0.1f), Colors::YellowGreen);
 
-               m_shadow_bbox_.emplace(std::make_pair(i, j), bbox);
-             }
-           }
-         }
-       }
-      );
+            BoundingBox bbox;
+            BoundingBox::CreateFromPoints
+              (
+               bbox,
+               wp_min,
+               wp_max
+              );
+
+            m_shadow_bbox_.emplace(std::make_pair(i, j), bbox);
+          }
+        }
+      }
     }
   }
 
