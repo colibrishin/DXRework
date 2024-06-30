@@ -15,7 +15,7 @@ namespace Engine::Resources
     void                SetGroup(const std::array<UINT, 3>& group);
     std::array<UINT, 3> GetThread() const;
     void                Dispatch(
-      ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param,
+      ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, Graphics::SBs::LocalParamSB& param,
       Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
     );
 
