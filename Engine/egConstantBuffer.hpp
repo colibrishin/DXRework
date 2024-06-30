@@ -129,10 +129,16 @@ namespace Engine::Graphics
 
     void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap)
     {
+      if (const auto& cmd = w_cmd.lock())
+      {
+        Bind(cmd->GetList(), w_heap);
+      }
+    }
+
+    void Bind(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& w_heap)
+    {
       if (m_b_dirty_)
       {
-        const auto& cmd = w_cmd.lock();
-
         const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition
           (
            m_buffer_.Get(),
@@ -155,9 +161,9 @@ namespace Engine::Graphics
            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
           );
 
-        cmd->GetList()->ResourceBarrier(1, &copy_trans);
-        cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
-        cmd->GetList()->ResourceBarrier(1, &cb_trans);
+        cmd->ResourceBarrier(1, &copy_trans);
+        cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+        cmd->ResourceBarrier(1, &cb_trans);
 
         m_b_dirty_ = false;
       }
