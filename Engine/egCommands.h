@@ -29,7 +29,7 @@ namespace Engine
     [[nodiscard]] UINT64                      GetBufferIndex() const;
     [[nodiscard]] UINT64                      GetID() const;
 
-    void Execute();
+    void Execute(bool lock_consuming);
 
   private:
     friend class Engine::Manager::Graphics::D3Device;
@@ -37,6 +37,7 @@ namespace Engine
     CommandPair() = default;
 
     [[nodiscard]] UINT64 Signal(const eCommandTypes type) const;
+    void ExecuteImpl();
 
     UINT64                             m_command_id_;
     UINT64                             m_buffer_idx_;
