@@ -511,4 +511,10 @@ namespace Engine::Manager::Graphics
     m_wvp_buffer_data_.Bind(cmd, heap);
     m_param_buffer_data_.Bind(cmd, heap);
   }
+
+  void RenderPipeline::BindConstantBuffers(ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& heap)
+  {
+    m_wvp_buffer_data_.Bind(cmd, heap);
+    m_param_buffer_data_.Bind(cmd, heap);
+  }
 } // namespace Engine::Manager::Graphics
