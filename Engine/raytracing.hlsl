@@ -46,7 +46,7 @@ float3 BarycentricCoordinates(float3 pt, float3 v0, float3 v1, float3 v2)
     return float3(u, v, w);
 }
 
-float4 CalculateSpecular(in float3 hitPosition, in float lightDir, in float3 normal, in float specularPower)
+float4 CalculateSpecular(in float3 hitPosition, in float3 lightDir, in float3 normal, in float specularPower)
 {
   const float3 reflected = normalize(reflect(lightDir, normal));
   return pow(saturate(dot(reflected, normalize(-WorldRayDirection()))), specularPower);
@@ -226,9 +226,11 @@ void closest_hit_main(inout Payload payload, Attributes attr)
       shadowRay.TMin      = 0.001f;
       shadowRay.TMax      = FLT_MAX;
 
-      Payload shadowPayload{};
-      shadowPayload.isShadow = true;
-      shadowPayload.colorAndDist = float4(0.0f, 0.0f, 0.0f, 1.f);
+      Payload shadowPayload = 
+      {
+        0.f, 0.f, 0.f, 0.f,
+        true
+      };
 
       TraceRay
         (
