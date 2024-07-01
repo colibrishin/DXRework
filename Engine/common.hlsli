@@ -177,7 +177,7 @@ void GetShadowFactor(
   [unroll] for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
 #define PARAM_LIGHT_COUNT g_iParam[0].x
-    if (i > PARAM_LIGHT_COUNT) { break; }
+    if (i >= PARAM_LIGHT_COUNT) { break; }
 #undef PARAM_LIGHT_COUNT
 
     [unroll] for (j = 0; j < MAX_NUM_CASCADES; ++j)
