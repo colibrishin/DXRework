@@ -61,6 +61,7 @@ namespace Engine::Manager::Graphics
     void DefaultRootSignature(ID3D12GraphicsCommandList1* cmd) const;
     void DefaultDescriptorHeap(ID3D12GraphicsCommandList1* cmd) const;
     void BindTLAS(ID3D12GraphicsCommandList1* cmd) const;
+    ID3D12RootSignature* GetGlobalSignature() const;
 
     ID3D12Device5* GetDevice() const;
 

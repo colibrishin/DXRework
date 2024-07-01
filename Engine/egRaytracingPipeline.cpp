@@ -951,4 +951,9 @@ namespace Engine::Manager::Graphics
   {
     cmd->SetComputeRootShaderResourceView(1, m_tlas_.result->GetGPUVirtualAddress());
   }
+
+  ID3D12RootSignature* RaytracingPipeline::GetGlobalSignature() const
+  {
+    return m_raytracing_global_signature_.Get();
+  }
 }
