@@ -12,25 +12,6 @@ namespace Engine::Manager::Graphics
 
   class RaytracingPipeline final : public Abstract::Singleton<RaytracingPipeline>
   {
-  private:
-    struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) ShaderRecord
-    {
-      byte shaderId[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-    };
-
-    struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) HitShaderRecord : public ShaderRecord
-    {
-      D3D12_GPU_VIRTUAL_ADDRESS lightSB;
-      D3D12_GPU_VIRTUAL_ADDRESS materialSB;
-      D3D12_GPU_VIRTUAL_ADDRESS instanceSB;
-
-      D3D12_GPU_VIRTUAL_ADDRESS vertices;
-      D3D12_GPU_VIRTUAL_ADDRESS indices;
-
-      D3D12_GPU_DESCRIPTOR_HANDLE textures;
-    };
-
-
   public:
     explicit RaytracingPipeline(SINGLETON_LOCK_TOKEN) {}
 
