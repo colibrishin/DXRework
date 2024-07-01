@@ -274,6 +274,7 @@ namespace Engine
   using eShaderDepths = UINT;
   using eShaderSamplers = UINT;
   using eTexBindSlots = UINT;
+  using eRTExports = UINT;
 
   // Manager Forward Declaration
   extern Manager::ResourceManager&               GetResourceManager();

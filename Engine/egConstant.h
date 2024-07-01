@@ -21,8 +21,11 @@ namespace Engine
 
   // Raytracing Constants
   constexpr wchar_t g_raytracing_gen_entrypoint[] = L"raygen_main";
-  constexpr wchar_t g_raytracing_miss_entrypoint[] = L"miss_main";
   constexpr wchar_t g_raytracing_closest_hit_entrypoint[] = L"closest_hit_main";
+  constexpr wchar_t g_raytracing_any_hit_entrypoint[] = L"any_hit_main";
+  constexpr wchar_t g_raytracing_intersection_entrypoint[] = L"intersection_main";
+  constexpr wchar_t g_raytracing_miss_entrypoint[] = L"miss_main";
+
   constexpr wchar_t g_raytracing_hitgroup_name[] = L"hitgroup";
 
   // Physics Constants
