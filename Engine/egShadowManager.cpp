@@ -122,7 +122,6 @@ namespace Engine::Manager::Graphics
 
   void ShadowManager::PreRender(const float& dt)
   {
-    constexpr size_t shadow_slot = 1;
     constexpr size_t light_slot = 0;
 
     // # Pass 1 : depth only, building shadow map
@@ -256,7 +255,7 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
          m_shadow_map_mask_.Unbind(c, dsv);
-       }, {m_sb_light_buffer_, m_sb_light_vps_buffer_, m_local_param_buffers_[light_idx]}
+       }, {m_sb_light_vps_buffer_, m_local_param_buffers_[light_idx]}
       );
   }
 

@@ -16,7 +16,7 @@ RWStructuredBuffer<LightTable> g_lightTable : register(u7);
 [numthreads(32, 32, 1)]
 void cs_main(uint3 tId : SV_DispatchThreadID)
 {
-#define PARAM_LOCAL_PARAM_TARGET_LIGHT bufLocalParam[0].iParam[0].y
+#define PARAM_LOCAL_PARAM_TARGET_LIGHT bufLocalParam[0].iParam[0].x
   // designated pixel (512 x 512, if shadow map size is not modified)
 
   // ~250,000 pixels

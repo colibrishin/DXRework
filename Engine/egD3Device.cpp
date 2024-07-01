@@ -822,7 +822,7 @@ namespace Engine::Manager::Graphics
 
       if (it->second->IsReady())
       {
-        it->second->Execute();
+        it->second->Execute(false);
         m_command_pairs_generated_.erase(it->first);
         m_command_pairs_count_.fetch_sub(1);
       }

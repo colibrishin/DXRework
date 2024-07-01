@@ -13,7 +13,7 @@ namespace Client::ComputeShaders
   class IntersectionCompute final : public Engine::Resources::ComputeShader
   {
   public:
-    constexpr static size_t target_light_slot = 1;
+    constexpr static size_t target_light_slot = 0;
 
     IntersectionCompute();
 

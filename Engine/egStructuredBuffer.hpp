@@ -207,7 +207,10 @@ namespace Engine::Graphics
 
       DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-      _mm256_memcpy(data, initial_data, sizeof(T) * size);
+      for (size_t i = 0; i < size; ++i)
+      {
+        _mm256_memcpy(data + (m_aligned_t_size_ * i), initial_data + i, sizeof(T));
+      }
 
       m_upload_buffer_->Unmap(0, nullptr);
 
@@ -229,7 +232,7 @@ namespace Engine::Graphics
   }
 
   template <typename T>
-  void StructuredBuffer<T>::InitializeReadBuffer(UINT size)
+  void StructuredBuffer<T>::InitializeReadBuffer(const UINT size)
   {
     const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
     const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
@@ -241,7 +244,7 @@ namespace Engine::Graphics
         &readback_heap,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &buffer_desc,
-        D3D12_RESOURCE_STATE_COMMON,
+        D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(m_read_buffer_.ReleaseAndGetAddressOf())
        )
@@ -289,7 +292,10 @@ namespace Engine::Graphics
 
     DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    _mm256_memcpy(data, src_ptr, sizeof(T) * size);
+    for (size_t i = 0; i < size; ++i)
+    {
+      _mm256_memcpy(data + (m_aligned_t_size_ * i), src_ptr + i, sizeof(T));
+    }
 
     m_upload_buffer_->Unmap(0, nullptr);
 
@@ -309,9 +315,9 @@ namespace Engine::Graphics
   template <typename T>
   void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
   {
-    GetD3Device().WaitAndReset(COMMAND_LIST_UPDATE);
+    const auto& cmd = GetD3Device().AcquireCommandPair(L"Structured Buffer Copy").lock();
 
-    const auto& cmd = GetD3Device().GetCommandList(COMMAND_LIST_UPDATE);
+    cmd->SoftReset();
 
     const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
       (
@@ -327,27 +333,24 @@ namespace Engine::Graphics
        D3D12_RESOURCE_STATE_COMMON
       );
 
-    cmd->ResourceBarrier(1, &copy_barrier);
-    cmd->CopyResource
+    cmd->GetList()->ResourceBarrier(1, &copy_barrier);
+    cmd->GetList()->CopyResource
       (
        m_read_buffer_.Get(),
        m_buffer_.Get()
       );
-    cmd->ResourceBarrier(1, &revert_barrier);
+    cmd->GetList()->ResourceBarrier(1, &revert_barrier);
 
-    DX::ThrowIfFailed(cmd->Close());
-
-    ID3D12CommandList* lists[] = { cmd };
-
-    GetD3Device().GetCommandQueue(COMMAND_LIST_UPDATE)->ExecuteCommandLists(1, lists);
-
-    GetD3Device().Wait();
+    cmd->Execute(true);
 
     char* data = nullptr;
 
     DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    _mm256_memcpy(dst_ptr, data, sizeof(T) * size);
+    for (size_t i = 0; i < size; ++i)
+    {
+      _mm256_memcpy(dst_ptr + i, data + (m_aligned_t_size_ * i), sizeof(T));
+    }
 
     m_read_buffer_->Unmap(0, nullptr);
   }

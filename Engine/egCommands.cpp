@@ -132,10 +132,46 @@ namespace Engine
     return m_command_id_;
   }
 
-  void CommandPair::Execute()
+  void CommandPair::Execute(const bool lock_consuming)
   {
     std::lock_guard<std::mutex> el(m_execute_mutex_);
     std::lock_guard<std::mutex> rl(m_ready_mutex_);
+
+    if (lock_consuming)
+    {
+      std::lock_guard<std::mutex> ql(GetD3Device().m_command_pairs_mutex_);
+      ExecuteImpl();
+    }
+    else
+    {
+      ExecuteImpl();
+    }
+  }
+
+  UINT64 CommandPair::Signal(const eCommandTypes type) const
+  {
+    if (m_allocator_ == nullptr || m_list_ == nullptr)
+    {
+      return -1;
+    }
+
+    const auto&  fence = GetD3Device().m_fence_;
+    auto&        nonce = GetD3Device().m_fence_nonce_[m_buffer_idx_];
+
+    DX::ThrowIfFailed
+      (
+       GetD3Device().GetCommandQueue(type)->Signal(fence.Get(), ++nonce)
+      );
+
+    return nonce;
+  }
+
+  void CommandPair::ExecuteImpl()
+  {
+    if (m_b_executed_)
+    {
+      return;
+    }
 
     DX::ThrowIfFailed(m_list_->Close());
 
@@ -169,23 +205,5 @@ namespace Engine
 
     m_b_ready_ = false;
     m_b_executed_ = true;
-  }
-
-  UINT64 CommandPair::Signal(const eCommandTypes type) const
-  {
-    if (m_allocator_ == nullptr || m_list_ == nullptr)
-    {
-      return -1;
-    }
-
-    const auto&  fence = GetD3Device().m_fence_;
-    auto&        nonce = GetD3Device().m_fence_nonce_[m_buffer_idx_];
-
-    DX::ThrowIfFailed
-      (
-       GetD3Device().GetCommandQueue(type)->Signal(fence.Get(), ++nonce)
-      );
-
-    return nonce;
   }
 }

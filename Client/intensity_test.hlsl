@@ -4,7 +4,7 @@
 #define EMPTY_DEPTH 1.f
 
 // overriding the default definition of common.hlsli
-Texture2DArray maskTex[MAX_NUM_LIGHTS] : register(t2);
+Texture2DArray maskTex[MAX_NUM_LIGHTS] : register(t0);
 
 struct PixelIntensityOutput
 {
@@ -59,7 +59,7 @@ void GetMaskFactor(
   [unroll]
   for (i = 0; i < MAX_NUM_LIGHTS; ++i)
   {
-    if (i > PARAM_NUM_LIGHT) { break; }
+    if (i >= PARAM_NUM_LIGHT) { break; }
 
     [unroll]
     for (j = 0; j < MAX_NUM_CASCADES; ++j)
@@ -99,7 +99,7 @@ PixelIntensityOutput ps_main(PixelInputType input)
     float intensity = saturate(dot(input.normal, lightDir));
     intensity *= saturate(1.0f - (dist / bufLight[i].range.x));
 
-    if (i > PARAM_NUM_LIGHT) { break; }
+    if (i >= PARAM_NUM_LIGHT) { break; }
 
     if (bufLight[i].type.x != LIGHT_TYPE_SPOT) { continue; }
 

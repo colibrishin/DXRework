@@ -200,105 +200,120 @@ namespace Engine
 
   void DescriptorPtrImpl::BindGraphic(const Weak<CommandPair>& w_cmd) const
   {
+    if (const auto& cmd = w_cmd.lock())
+    {
+      BindGraphic(cmd->GetList());
+    }
+  }
+
+  void DescriptorPtrImpl::BindGraphic(ID3D12GraphicsCommandList1* cmd) const
+  {
     if (!IsValid())
     {
       return;
     }
 
-    const auto& cmd = w_cmd.lock();
-    const auto& command_list = cmd->GetList();
-    const auto& type = cmd->GetType();
+    cmd->SetGraphicsRootSignature(GetRenderPipeline().GetRootSignature());
 
-    if (type == COMMAND_TYPE_DIRECT)
+    ID3D12DescriptorHeap* heaps[]
     {
-      command_list->SetGraphicsRootSignature(GetRenderPipeline().GetRootSignature());
+      m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
+      m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
+    };
 
-      ID3D12DescriptorHeap* heaps[]
-      {
-        m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
-        m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
-      };
+    cmd->SetDescriptorHeaps(2, heaps);
 
-      command_list->SetDescriptorHeaps(2, heaps);
+    cmd->SetGraphicsRootDescriptorTable
+      (
+       RASTERIZER_SLOT_SAMPLER,
+       m_gpu_sampler_handle_
+      );
 
-      command_list->SetGraphicsRootDescriptorTable
-        (
-         RASTERIZER_SLOT_SAMPLER,
-         m_gpu_sampler_handle_
-        );
+    cmd->SetGraphicsRootDescriptorTable
+      (
+       RASTERIZER_SLOT_SRV,
+       m_gpu_handle_
+      );
 
-      command_list->SetGraphicsRootDescriptorTable
-        (
-         RASTERIZER_SLOT_SRV,
-         m_gpu_handle_
-        );
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cb_handle
+      (
+       m_gpu_handle_,
+       g_cb_offset,
+       m_buffer_descriptor_size_
+      );
 
-      CD3DX12_GPU_DESCRIPTOR_HANDLE cb_handle
-        (
-         m_gpu_handle_,
-         g_cb_offset,
-         m_buffer_descriptor_size_
-        );
+    cmd->SetGraphicsRootDescriptorTable
+      (
+       RASTERIZER_SLOT_CB,
+       cb_handle
+      );
 
-      command_list->SetGraphicsRootDescriptorTable
-        (
-         RASTERIZER_SLOT_CB,
-         cb_handle
-        );
+    cb_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
 
-      cb_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
+    cmd->SetGraphicsRootDescriptorTable
+      (
+       RASTERIZER_SLOT_UAV,
+       cb_handle
+      );
+  }
 
-      command_list->SetGraphicsRootDescriptorTable
-        (
-         RASTERIZER_SLOT_UAV,
-         cb_handle
-        );
-    }
-    else if (type == COMMAND_TYPE_COMPUTE)
+  void DescriptorPtrImpl::BindCompute(const Weak<CommandPair>& w_cmd) const
+  {
+    if (const auto& cmd = w_cmd.lock())
     {
-      command_list->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
-
-      ID3D12DescriptorHeap* heaps[]
-      {
-        m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
-        m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
-      };
-
-      command_list->SetDescriptorHeaps(2, heaps);
-
-      command_list->SetComputeRootDescriptorTable
-        (
-         RASTERIZER_SLOT_SAMPLER,
-         m_gpu_sampler_handle_
-        );
-
-      command_list->SetComputeRootDescriptorTable
-        (
-         RASTERIZER_SLOT_SRV,
-         m_gpu_handle_
-        );
-
-      CD3DX12_GPU_DESCRIPTOR_HANDLE cb_handle
-        (
-         m_gpu_handle_,
-         g_cb_offset,
-         m_buffer_descriptor_size_
-        );
-
-      command_list->SetComputeRootDescriptorTable
-        (
-         RASTERIZER_SLOT_CB,
-         cb_handle
-        );
-
-      cb_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
-
-      command_list->SetComputeRootDescriptorTable
-        (
-         RASTERIZER_SLOT_UAV,
-         cb_handle
-        );
+      BindCompute(cmd->GetList());
     }
+  }
+
+  void DescriptorPtrImpl::BindCompute(ID3D12GraphicsCommandList1* cmd) const
+  {
+    if (!IsValid())
+    {
+      return;
+    }
+
+    cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
+
+    ID3D12DescriptorHeap* heaps[]
+    {
+      m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_),
+      m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_)
+    };
+
+    cmd->SetDescriptorHeaps(2, heaps);
+
+    cmd->SetComputeRootDescriptorTable
+      (
+       RASTERIZER_SLOT_SAMPLER,
+       m_gpu_sampler_handle_
+      );
+
+    cmd->SetComputeRootDescriptorTable
+      (
+       RASTERIZER_SLOT_SRV,
+       m_gpu_handle_
+      );
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cb_handle
+      (
+       m_gpu_handle_,
+       g_cb_offset,
+       m_buffer_descriptor_size_
+      );
+
+    cmd->SetComputeRootDescriptorTable
+      (
+       RASTERIZER_SLOT_CB,
+       cb_handle
+      );
+
+    cb_handle.Offset(g_uav_offset - g_cb_offset, m_buffer_descriptor_size_);
+
+    cmd->SetComputeRootDescriptorTable
+      (
+       RASTERIZER_SLOT_UAV,
+       cb_handle
+      );
   }
 
   void DescriptorHandler::AppendNewHeaps()

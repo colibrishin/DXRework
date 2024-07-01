@@ -70,6 +70,7 @@ namespace Engine::Manager::Graphics
     UINT GetSamplerDescriptorSize() const;
 
     void BindConstantBuffers(const Weak<CommandPair> & w_cmd, const DescriptorPtr & heap);
+    void BindConstantBuffers(ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& heap);
 
   private:
     friend class ToolkitAPI;

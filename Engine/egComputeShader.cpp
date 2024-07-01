@@ -14,14 +14,21 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  void ComputeShader::Dispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, SBs::LocalParamSB& param,   StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer)
+  void ComputeShader::Dispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, SBs::LocalParamSB& param,  StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer)
   {
-    preDispatch(list, heap, param);
+    preDispatch(list, w_heap, param);
 
     list->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
     buffer.SetData(list, 1, &param);
     buffer.TransitionToSRV(list);
-    buffer.CopySRVHeap(heap);
+    buffer.CopySRVHeap(w_heap);
+
+    GetRenderPipeline().BindConstantBuffers(list, w_heap);
+
+    if (const auto& heap = w_heap.lock())
+    {
+      heap->BindCompute(list);
+    }
 
     if (std::accumulate(m_group_, m_group_ + 3, 0) == 0)
     {
@@ -53,7 +60,7 @@ namespace Engine::Resources
 
     buffer.TransitionCommon(list, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
-    postDispatch(list, heap, param);
+    postDispatch(list, w_heap, param);
 
     std::fill_n(m_group_, 3, 1);
   }
