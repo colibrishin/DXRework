@@ -10,6 +10,32 @@
 
 namespace Engine::Graphics
 {
+  struct RTShaderDefinition
+  {
+    eExportName          exportingType;
+    std::wstring         hitGroupName;
+    D3D12_HIT_GROUP_TYPE hitGroupPrimitive;
+  };
+
+  struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) ShaderRecord
+  {
+    byte shaderId[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+  };
+
+  struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) MissShaderRecord : public ShaderRecord { };
+
+  struct __declspec(align(D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT)) HitShaderRecord : public ShaderRecord
+  {
+    D3D12_GPU_VIRTUAL_ADDRESS lightSB;
+    D3D12_GPU_VIRTUAL_ADDRESS materialSB;
+    D3D12_GPU_VIRTUAL_ADDRESS instanceSB;
+
+    D3D12_GPU_VIRTUAL_ADDRESS vertices;
+    D3D12_GPU_VIRTUAL_ADDRESS indices;
+
+    D3D12_GPU_DESCRIPTOR_HANDLE textures;
+  };
+
   struct AccelStructBuffer
   {
     ComPtr<ID3D12Resource> scratch; // scratch memory for acceleration structure

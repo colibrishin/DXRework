@@ -275,6 +275,9 @@
     <Filter Include="Singleton\Graphics\ImGuiManager">
       <UniqueIdentifier>{f76ac2b5-1390-4855-8aa0-e707739425ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\RaytracingShader">
+      <UniqueIdentifier>{d31129c5-0f5a-45e3-85e9-ca98593e7bb8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
@@ -565,6 +568,10 @@
     <ClInclude Include="egCommonRenderer.h">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="egRaytracingShader.hpp">
+      <Filter>Resource\RaytracingShader</Filter>
+    </ClInclude>
+    <ClInclude Include="egRaytracingShaderHelper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -808,6 +815,9 @@
     </ClCompile>
     <ClCompile Include="egCommonRenderer.cpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="egRaytracingShader.cpp">
+      <Filter>Resource\RaytracingShader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

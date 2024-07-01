@@ -4,6 +4,7 @@
 
 namespace Engine::Resources
 {
+  class RaytracingShader;
   class Prefab;
   class Mesh;
   class Shape;
@@ -167,6 +168,15 @@ namespace Engine
     TOOLKIT_RENDER_SPRITE,
   };
 
+  enum eExportName
+  {
+    EXPORT_NAME_RAYGEN = 1,
+    EXPORT_NAME_CLOSEST_HIT = 1 << 2,
+    EXPORT_NAME_ANY_HIT = 1 << 3,
+    EXPORT_NAME_INTERSECTION = 1 << 4,
+    EXPORT_NAME_MISS = 1 << 5
+  };
+
   enum eClientSBType : UINT;
   enum eClientSBUAVType : UINT;
 
@@ -318,6 +328,7 @@ namespace Engine
     RES_T_PREFAB,
     RES_T_ATLAS_TEX,
     RES_T_ATLAS_ANIM,
+    RES_T_RAYTRACING_SHADER,
     RES_T_MAX,
   };
 
@@ -339,7 +350,8 @@ namespace Engine
      "Shadow Texture",
      "Prefab",
      "Atlas Texture",
-     "Atlas Animation"
+     "Atlas Animation",
+     "Raytracing Shader"
    };
 
   using LoadableResourceTypes = boost::mpl::vector<
@@ -360,7 +372,8 @@ namespace Engine
     Resources::Shape,
     Resources::Prefab,
     Resources::AtlasAnimationTexture,
-    Resources::AtlasAnimation>;
+    Resources::AtlasAnimation,
+    Resources::RaytracingShader>;
 
   static_assert(ARRAYSIZE(g_resource_type_str) == RES_T_MAX);
 
