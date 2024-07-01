@@ -77,8 +77,11 @@ namespace Client::Scripts
     StrongDescriptorPtr m_shadow_third_pass_heap_;
 
     InstanceBufferContainer m_instance_buffers_;
-    std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_local_params_;
-    std::vector<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>> m_compute_local_param_;
+
+    std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_first_other_pass_local_params_;
+    std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_first_self_pass_local_params_;
+    std::vector<Strong<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>> m_second_pass_local_params_;
+    std::vector<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>> m_third_compute_local_param_;
 
     StrongTexture2D m_tmp_shadow_depth_;
     StrongComputeShader m_intersection_compute_;
