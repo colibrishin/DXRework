@@ -343,11 +343,9 @@ namespace Engine::Graphics
 
     cmd->Execute(true);
 
-    const D3D12_RANGE read_range {0, m_aligned_t_size_ * size};
-
     char* data = nullptr;
 
-    DX::ThrowIfFailed(m_read_buffer_->Map(0, &read_range, reinterpret_cast<void**>(&data)));
+    DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
     for (size_t i = 0; i < size; ++i)
     {
