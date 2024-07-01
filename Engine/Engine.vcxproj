@@ -43,6 +43,8 @@
     <ClInclude Include="egPrefab.h" />
     <ClInclude Include="egRayTracer.hpp" />
     <ClInclude Include="egRaytracingPipeline.hpp" />
+    <ClInclude Include="egRaytracingShader.hpp" />
+    <ClInclude Include="egRaytracingShaderHelper.hpp" />
     <ClInclude Include="egRenderComponent.h" />
     <ClInclude Include="egShadowTexture.h" />
     <ClInclude Include="egGenericBounding.hpp" />
@@ -152,6 +154,7 @@
     <ClCompile Include="egPrefab.cpp" />
     <ClCompile Include="egRayTracer.cpp" />
     <ClCompile Include="egRaytracingPipeline.cpp" />
+    <ClCompile Include="egRaytracingShader.cpp" />
     <ClCompile Include="egRenderComponent.cpp" />
     <ClCompile Include="egShadowTexture.cpp" />
     <ClCompile Include="egElastic.cpp" />
