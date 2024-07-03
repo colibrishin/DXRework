@@ -793,7 +793,7 @@ namespace Engine::Manager::Graphics
               instance_desc.InstanceID                          = i;
               instance_desc.InstanceContributionToHitGroupIndex = mesh_map[{mesh, mtr}];
               instance_desc.InstanceMask                        = 1;
-              instance_desc.AccelerationStructure               = mesh->GetBLAS().result->GetGPUVirtualAddress();
+              instance_desc.AccelerationStructure               = mesh->GetBLAS().resultPool.GetGPUAddress();
               instance_desc.Flags                               = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 
               // todo: animation deformation should be applied at some point.
@@ -807,37 +807,7 @@ namespace Engine::Manager::Graphics
       }
     }
 
-    const auto& instance_descs_size = Align(instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT);
-
-    if (m_tlas_.instanceDescSize < instance_descs_size)
-    {
-      m_tlas_.instanceDescSize = instance_descs_size;
-
-      const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
-        (instance_descs_size);
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &upload_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &buffer_desc,
-          D3D12_RESOURCE_STATE_GENERIC_READ,
-          nullptr,
-          IID_PPV_ARGS(m_tlas_.instanceDesc.ReleaseAndGetAddressOf())
-         )
-        );
-    }
-
-    if (m_tlas_.instanceDescSize > 0)
-    {
-      char* data = nullptr;
-      DX::ThrowIfFailed(m_tlas_.instanceDesc->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-      _mm256_memcpy(data, instance_descs.data(), instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
-      m_tlas_.instanceDesc->Unmap(0, nullptr);
-    }
+    m_tlas_.instanceDescPool.Update(instance_descs.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instance_descs.size());
 
     constexpr D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS build_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
@@ -845,7 +815,7 @@ namespace Engine::Manager::Graphics
     tl_inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
     tl_inputs.NumDescs = static_cast<UINT>(instance_descs.size());
     tl_inputs.Flags = build_flags;
-    tl_inputs.InstanceDescs = m_tlas_.instanceDesc ? m_tlas_.instanceDesc->GetGPUVirtualAddress() : 0;
+    tl_inputs.InstanceDescs = m_tlas_.instanceDescPool.GetGPUAddress();
     tl_inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO tlas_prebuild_info = {};
@@ -859,63 +829,18 @@ namespace Engine::Manager::Graphics
     const auto& result_size = Align(tlas_prebuild_info.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
     const auto& scratch_size = Align(tlas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
-    if (m_tlas_.resultSize < result_size)
-    {
-      m_tlas_.resultSize = result_size;
-      
-      const auto& res_desc     = CD3DX12_RESOURCE_DESC::Buffer
-        (
-         result_size,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-        );
-
-      DX::ThrowIfFailed
-        (
-         m_device_->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &res_desc,
-          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-          nullptr,
-          IID_PPV_ARGS(m_tlas_.result.ReleaseAndGetAddressOf())
-         )
-        );
-    }
-
-    if (m_tlas_.scratchSize < scratch_size)
-    {
-      m_tlas_.scratchSize = scratch_size;
-
-      const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
-        (
-         scratch_size,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-        );
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &scratch_buffer_desc,
-          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-          nullptr,
-          IID_PPV_ARGS(m_tlas_.scratch.GetAddressOf())
-         )
-        );
-    }
+    m_tlas_.resultPool.Update(nullptr, result_size, 1);
+    m_tlas_.scratchPool.Update(nullptr, scratch_size, 1);
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 
     build_desc.Inputs = tl_inputs;
-    build_desc.DestAccelerationStructureData = m_tlas_.result->GetGPUVirtualAddress();
-    build_desc.ScratchAccelerationStructureData = m_tlas_.scratch->GetGPUVirtualAddress();
+    build_desc.DestAccelerationStructureData = m_tlas_.resultPool.GetGPUAddress();
+    build_desc.ScratchAccelerationStructureData = m_tlas_.scratchPool.GetGPUAddress();
 
     cmd->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
-    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_tlas_.result.Get());
+    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_tlas_.resultPool.GetResource());
     cmd->ResourceBarrier(1, &uav_barrier);
 
     UpdateHitShaderRecords();
@@ -949,6 +874,6 @@ namespace Engine::Manager::Graphics
 
   void RaytracingPipeline::BindTLAS(ID3D12GraphicsCommandList1* cmd) const
   {
-    cmd->SetComputeRootShaderResourceView(1, m_tlas_.result->GetGPUVirtualAddress());
+    cmd->SetComputeRootShaderResourceView(1, m_tlas_.resultPool.GetGPUAddress());
   }
 }
