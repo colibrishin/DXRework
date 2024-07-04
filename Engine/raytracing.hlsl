@@ -228,7 +228,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
       Payload shadowPayload = 
       {
-        0.f, 0.f, 0.f, 0.f,
+        0.f, 0.f, 0.f, 1.f,
         true
       };
 

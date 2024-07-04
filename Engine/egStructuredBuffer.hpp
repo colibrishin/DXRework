@@ -60,7 +60,6 @@ namespace Engine::Graphics
     void InitializeReadBuffer(UINT size);
 
     UINT   m_size_;
-    UINT   m_aligned_t_size_;
   };
 
   template <typename T>
@@ -92,7 +91,7 @@ namespace Engine::Graphics
       {
         .FirstElement = 0,
         .NumElements = size,
-        .StructureByteStride = m_aligned_t_size_,
+        .StructureByteStride = sizeof(T),
         .Flags = D3D12_BUFFER_SRV_FLAG_NONE
       }
     };
@@ -130,7 +129,7 @@ namespace Engine::Graphics
     uav_desc.ViewDimension       = D3D12_UAV_DIMENSION_BUFFER;
     uav_desc.Buffer.FirstElement = 0;
     uav_desc.Buffer.NumElements  = size;
-    uav_desc.Buffer.StructureByteStride = m_aligned_t_size_;
+    uav_desc.Buffer.StructureByteStride = sizeof(T);
     uav_desc.Buffer.CounterOffsetInBytes = 0;
     uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
@@ -147,7 +146,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeMainBuffer(ID3D12GraphicsCommandList1* cmd, UINT size)
   {
     const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
+    auto buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
     if constexpr (is_uav_sb<T>::value == true)
     {
@@ -178,7 +177,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeUploadBuffer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data)
   {
     const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
     DX::ThrowIfFailed
       (
@@ -207,10 +206,7 @@ namespace Engine::Graphics
 
       DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-      for (size_t i = 0; i < size; ++i)
-      {
-        _mm256_memcpy(data + (m_aligned_t_size_ * i), initial_data + i, sizeof(T));
-      }
+      _mm256_memcpy(data, initial_data, sizeof(T) * size);
 
       m_upload_buffer_->Unmap(0, nullptr);
 
@@ -235,7 +231,7 @@ namespace Engine::Graphics
   void StructuredBuffer<T>::InitializeReadBuffer(const UINT size)
   {
     const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(m_aligned_t_size_) * size);
+    const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
 
     DX::ThrowIfFailed
       (
@@ -256,7 +252,6 @@ namespace Engine::Graphics
     : m_size_(0)
   {
     static_assert(sizeof(T) <= 2048, "StructuredBuffer struct T size is too big");
-    m_aligned_t_size_ = static_cast<UINT>(Engine::Align(sizeof(T), 16));
   }
 
   template <typename T>
@@ -292,10 +287,7 @@ namespace Engine::Graphics
 
     DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    for (size_t i = 0; i < size; ++i)
-    {
-      _mm256_memcpy(data + (m_aligned_t_size_ * i), src_ptr + i, sizeof(T));
-    }
+    _mm256_memcpy(data, src_ptr, sizeof(T) * size);
 
     m_upload_buffer_->Unmap(0, nullptr);
 
@@ -347,10 +339,7 @@ namespace Engine::Graphics
 
     DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-    for (size_t i = 0; i < size; ++i)
-    {
-      _mm256_memcpy(dst_ptr + i, data + (m_aligned_t_size_ * i), sizeof(T));
-    }
+    _mm256_memcpy(dst_ptr, data, sizeof(T) * size);
 
     m_read_buffer_->Unmap(0, nullptr);
   }
