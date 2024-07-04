@@ -493,8 +493,8 @@ namespace Client::Scripts
       constexpr size_t render_pass  = 3;
 
       m_instance_buffers_.resize(GetRenderer().GetInstanceCount() * (lights->size() * render_pass) + 1);
-      m_first_other_pass_local_params_.resize(lights->size());
-      m_first_self_pass_local_params_.resize(lights->size());
+      m_first_other_pass_local_params_.resize(GetRenderer().GetInstanceCount() * (lights->size() * render_pass) + 1);
+      m_first_self_pass_local_params_.resize(GetRenderer().GetInstanceCount() * (lights->size() * render_pass) + 1);
       m_second_pass_local_params_.resize(lights->size());
       m_third_compute_local_param_.resize(lights->size());
 
