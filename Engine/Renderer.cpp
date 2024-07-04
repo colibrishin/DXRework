@@ -38,11 +38,8 @@ namespace Engine::Manager::Graphics
     const auto& scene = GetSceneManager().GetActiveScene().lock();
     BuildRenderMap(scene, m_render_candidates_, m_instance_count_);
 
-    if (m_tmp_instance_buffers_.size() < m_instance_count_)
-    {
-      m_tmp_instance_buffers_.resize(m_instance_count_);
-    }
-
+    m_tmp_instance_buffers_.reset();
+    m_tmp_instance_buffers_.resize(m_instance_count_);
     m_b_ready_ = true;
   }
 
@@ -56,15 +53,12 @@ namespace Engine::Manager::Graphics
 
         cmd->SoftReset();
 
-        m_current_instance_ = 0;
-
         for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
         {
           // Check culling.
-          m_current_instance_ = RenderPass
+          RenderPass
             (
              dt, (eShaderDomain)i, false, cmd,
-             m_current_instance_,
              m_tmp_descriptor_heaps_,
              m_tmp_instance_buffers_, [](const WeakObjectBase& obj)
              {
@@ -108,11 +102,11 @@ namespace Engine::Manager::Graphics
 
   void Renderer::Initialize() {}
 
-  void Renderer::AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase>& sb_ptr)
+  void Renderer::AppendAdditionalStructuredBuffer(StructuredBufferBase* sb_ptr)
   {
-    if (const auto sb = sb_ptr.lock())
+    if (sb_ptr)
     {
-      m_additional_structured_buffers_.push_back(sb);
+      m_additional_structured_buffers_.push_back(sb_ptr);
     }
   }
 
@@ -124,39 +118,36 @@ namespace Engine::Manager::Graphics
    * \param domain Shader Domain.
    * \param shader_bypass not use the material shader if flagged
    * \param w_cmd Weak command pair pointer.
-   * \param begin_idx start index of container iteration for storing instance data.
    * \param descriptor_heap_container heap containers for the each instance, will be pushed back.
-   * \param instance_buffer_container instance container for the each instance, will be used index wise to optimize by not creating an instance buffer over and over again.
+   * \param instance_buffer_memory_pool instance container for the each instance, will be used index wise to optimize by not creating an instance buffer over and over again.
    * \param predicate filter any object if it is not satisfied.
    * \param initial_setup Initial setup for command list.
    * \param post_setup Post setup for command list.
    * \param additional_structured_buffers structured buffer to bind.
-   * \return Returns the last index of the container.
    */
-  UINT64 Renderer::RenderPass
+  void Renderer::RenderPass
   (
     const float                                                                dt,
     const eShaderDomain                                                        domain,
     bool                                                                       shader_bypass,
     const Weak<CommandPair>&                                                   w_cmd,
-    const UINT64                                                               begin_idx,
     tbb::concurrent_vector<StrongDescriptorPtr>&                               descriptor_heap_container,
-    tbb::concurrent_vector<StructuredBuffer<SBs::InstanceSB>>&                 instance_buffer_container,
+    StructuredBufferMemoryPool<SBs::InstanceSB>&                               instance_buffer_memory_pool,
     const std::function<bool(const StrongObjectBase&)>&                        predicate,
     const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& initial_setup,
     const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& post_setup,
-    const std::vector<Weak<StructuredBufferBase>>&                             additional_structured_buffers = {}
+    const std::vector<StructuredBufferBase*>&                                  additional_structured_buffers = {}
   )
   {
     if (!Ready())
     {
       GetDebugger().Log("Renderer is not ready for rendering!");
-      return begin_idx;
+      return;
     }
 
     if (m_render_candidates_[domain].empty())
     {
-      return begin_idx;
+      return;
     }
 
     const auto& target_set = m_render_candidates_[domain];
@@ -187,13 +178,11 @@ namespace Engine::Manager::Graphics
 
     for (const auto& sb_ptr : additional_structured_buffers)
     {
-      if (const auto& sb = sb_ptr.lock())
+      if (sb_ptr)
       {
-        sb->TransitionToSRV(cmd->GetList());
+        sb_ptr->TransitionToSRV(cmd->GetList());
       }
     }
-
-    UINT64 idx = begin_idx;
 
     for (const auto& [mtr, sbs] : final_mapping)
     {
@@ -205,30 +194,30 @@ namespace Engine::Manager::Graphics
 
       for (const auto& sb_ptr : additional_structured_buffers)
       {
-        if (const auto& sb = sb_ptr.lock())
+        if (sb_ptr)
         {
-          sb->CopySRVHeap(heap);
+          sb_ptr->CopySRVHeap(heap);
         }
       }
 
       heap->BindGraphic(cmd);
 
-      renderPassImpl(dt, idx, domain, shader_bypass, instance_buffer_container, mtr.lock(), cmd, heap, sbs);
+      auto& instance = instance_buffer_memory_pool.get();
+
+      renderPassImpl(dt, domain, shader_bypass, instance, mtr.lock(), cmd, heap, sbs);
 
       post_setup(cmd, heap);
 
-      ++idx;
+      instance_buffer_memory_pool.advance();
     }
 
     for (const auto& sb_ptr : additional_structured_buffers)
     {
-      if (const auto& sb = sb_ptr.lock())
+      if (sb_ptr)
       {
-        sb->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+        sb_ptr->TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
       }
     }
-
-    return idx;
   }
 
   UINT64 Renderer::GetInstanceCount() const
@@ -243,10 +232,9 @@ namespace Engine::Manager::Graphics
 
   void Renderer::renderPassImpl(
     const float                                                dt,
-    const UINT64                                               idx,
     eShaderDomain                                              domain,
     bool                                                       shader_bypass,
-    tbb::concurrent_vector<StructuredBuffer<SBs::InstanceSB>>& instance_buffers,
+    StructuredBuffer<SBs::InstanceSB>&                         instance_buffer,
     const StrongMaterial&                                      material,
     const Weak<CommandPair>&                                   w_cmd,
     const DescriptorPtr&                                       heap,
@@ -254,9 +242,10 @@ namespace Engine::Manager::Graphics
   )
   {
     const auto& cmd = w_cmd.lock();
-    instance_buffers[idx].SetData(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
-    instance_buffers[idx].TransitionToSRV(cmd->GetList());
-    instance_buffers[idx].CopySRVHeap(heap);
+
+    instance_buffer.SetData(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
+    instance_buffer.TransitionToSRV(cmd->GetList());
+    instance_buffer.CopySRVHeap(heap);
 
     material->SetTempParam
       (
@@ -269,6 +258,6 @@ namespace Engine::Manager::Graphics
 
     material->Draw(dt, cmd, heap);
 
-    instance_buffers[idx].TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+    instance_buffer.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
   }
 }

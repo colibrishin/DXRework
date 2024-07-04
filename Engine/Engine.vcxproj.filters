@@ -565,6 +565,12 @@
     <ClInclude Include="egCommonRenderer.h">
       <Filter>Singleton\Graphics\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="egGraphicMemoryPool.hpp">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
+    <ClInclude Include="egAccelStructure.hpp">
+      <Filter>Common\DX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

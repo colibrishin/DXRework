@@ -1,4 +1,5 @@
 #pragma once
+#include "egAccelStructure.hpp"
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 #include "egResource.h"

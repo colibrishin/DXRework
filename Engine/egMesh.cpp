@@ -426,49 +426,14 @@ namespace Engine::Resources
       const auto& scratch_size = Align
         (blas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
-      const auto& bl_desc = CD3DX12_RESOURCE_DESC::Buffer
-        (
-         result_size,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-        );
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &bl_desc,
-          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-          nullptr,
-          IID_PPV_ARGS(m_blas_.result.GetAddressOf())
-         )
-        );
-
-      const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer
-        (
-         scratch_size,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-        );
-
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &default_heap,
-          D3D12_HEAP_FLAG_NONE,
-          &scratch_buffer_desc,
-          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-          nullptr,
-          IID_PPV_ARGS(m_blas_.scratch.GetAddressOf())
-         )
-        );
-
+      m_blas_.resultPool.Update(nullptr, result_size, 1);
+      m_blas_.scratchPool.Update(nullptr, scratch_size, 1);
+      
       D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
 
-      blas_desc.DestAccelerationStructureData    = m_blas_.result->GetGPUVirtualAddress();
+      blas_desc.DestAccelerationStructureData    = m_blas_.resultPool.GetGPUAddress();
       blas_desc.Inputs                           = blas_inputs;
-      blas_desc.ScratchAccelerationStructureData = m_blas_.scratch->GetGPUVirtualAddress();
+      blas_desc.ScratchAccelerationStructureData = m_blas_.scratchPool.GetGPUAddress();
 
       cmd->GetList4()->BuildRaytracingAccelerationStructure
         (
@@ -477,7 +442,7 @@ namespace Engine::Resources
          nullptr
         );
 
-      const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_blas_.result.Get());
+      const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_blas_.resultPool.GetResource());
       cmd->GetList()->ResourceBarrier(1, &uav_barrier);
 
       m_blas_.empty = false;
@@ -499,13 +464,13 @@ namespace Engine::Resources
     m_vertex_buffer_upload_->Release();
     m_index_buffer_upload_->Release();
 
-    if (m_blas_.result)
+    if (m_blas_.resultPool.GetResource())
     {
-      m_blas_.result->Release();
+      m_blas_.resultPool.Release();
     }
-    if (m_blas_.scratch)
+    if (m_blas_.scratchPool.GetResource())
     {
-      m_blas_.scratch->Release();
+      m_blas_.scratchPool.Release();
     }
     if (m_raytracing_vertex_buffer_)
     {
@@ -523,13 +488,9 @@ namespace Engine::Resources
     {
       m_raytracing_index_buffer_upload_->Release();
     }
-    if (m_blas_.instanceDesc)
+    if (m_blas_.instanceDescPool.GetResource())
     {
-      m_blas_.instanceDesc->Release();
+      m_blas_.instanceDescPool.Release();
     }
-    
-    m_blas_.scratchSize = 0;
-    m_blas_.resultSize = 0;
-    m_blas_.instanceDescSize = 0;
   }
 } // namespace Engine::Resources

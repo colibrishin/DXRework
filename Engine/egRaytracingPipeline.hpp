@@ -1,9 +1,11 @@
 #pragma once
 #include <BufferHelpers.h>
 
+#include "egAccelStructure.hpp"
 #include "egCommon.hpp"
 #include "egConstantBuffer.hpp"
 #include "egDescriptors.h"
+#include "egGraphicMemoryPool.hpp"
 #include "egStructuredBuffer.hpp"
 
 namespace Engine::Manager::Graphics

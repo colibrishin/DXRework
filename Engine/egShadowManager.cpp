@@ -27,16 +27,13 @@ namespace Engine::Manager::Graphics
   void ShadowManager::Initialize()
   {
     m_shadow_shader_ = Resources::Shader::Get("cascade_shadow_stage1").lock();
-
-    m_sb_light_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightSB>>();
-    m_sb_light_vps_buffer_ = boost::make_shared<StructuredBuffer<SBs::LightVPSB>>();
-
+    
     const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Manager Initialization").lock();
 
     cmd->SoftReset();
 
-    m_sb_light_buffer_->Create(cmd->GetList(), g_max_lights, nullptr);
-    m_sb_light_vps_buffer_->Create(cmd->GetList(), g_max_lights, nullptr);
+    m_sb_light_buffer_.Create(cmd->GetList(), g_max_lights, nullptr);
+    m_sb_light_vps_buffer_.Create(cmd->GetList(), g_max_lights, nullptr);
 
     cmd->FlagReady();
 
@@ -63,8 +60,8 @@ namespace Engine::Manager::Graphics
     InitializeViewport();
     InitializeProcessor();
 
-    GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_buffer_);
-    GetRenderer().AppendAdditionalStructuredBuffer(m_sb_light_vps_buffer_);
+    GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_buffer_);
+    GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_vps_buffer_);
 
     m_local_param_buffers_.resize(g_max_lights);
   }
@@ -74,15 +71,8 @@ namespace Engine::Manager::Graphics
     // Remove the expired lights just in case.
     std::erase_if(m_lights_, [](const auto& kv) { return kv.second.expired(); });
 
+    m_local_param_buffers_.reset();
     m_local_param_buffers_.resize(m_lights_.size());
-
-    for (auto& buffer : m_local_param_buffers_)
-    {
-      if (!buffer)
-      {
-        buffer = boost::make_shared<StructuredBuffer<SBs::LocalParamSB>>();
-      }
-    }
 
     for (const auto& heap : m_shadow_descriptor_heap_)
     {
@@ -170,13 +160,12 @@ namespace Engine::Manager::Graphics
 
       ClearShadowMaps(cmd);
 
-      m_sb_light_buffer_->SetData(cmd->GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
-      m_sb_light_vps_buffer_->SetData(cmd->GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+      m_sb_light_buffer_.SetData(cmd->GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
+      m_sb_light_vps_buffer_.SetData(cmd->GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
       UINT idx = 0;
 
-      UINT64 container_it = 0;
-
+      m_shadow_instance_buffer_.reset();
       m_shadow_instance_buffer_.resize(GetRenderer().GetInstanceCount() * m_lights_.size());
 
       for (const auto& ptr_light : m_lights_ | std::views::values)
@@ -184,7 +173,7 @@ namespace Engine::Manager::Graphics
         if (const auto light = ptr_light.lock())
         {
           // Render the depth of the object from the light's point of view.
-          container_it = BuildShadowMap(dt, container_it, cmd, light, idx++);
+          BuildShadowMap(dt, cmd, light, idx++);
         }
       }
 
@@ -208,29 +197,30 @@ namespace Engine::Manager::Graphics
     for (auto& subfrusta : m_subfrusta_) { subfrusta = {}; }
   }
 
-  UINT64 ShadowManager::BuildShadowMap(const float dt, const UINT64 container_idx, const Weak<CommandPair>& w_cmd, const StrongLight & light, const UINT light_idx)
+  void ShadowManager::BuildShadowMap(const float dt, const Weak<CommandPair>& w_cmd, const StrongLight & light, const UINT light_idx)
   {
     const auto& cmd = w_cmd.lock();
 
     // Notify the light index to the shader.
     SBs::LocalParamSB local_param{};
     local_param.SetParam(0, static_cast<int>(light_idx));
-    m_local_param_buffers_[light_idx]->SetData(cmd->GetList(), 1, &local_param);
+    auto& local_param_mem = m_local_param_buffers_.get();
+    local_param_mem.SetData(cmd->GetList(), 1, &local_param);
 
-    return GetRenderer().RenderPass
+    GetRenderer().RenderPass
       (
        dt, SHADER_DOMAIN_OPAQUE, true,
        cmd,
-       container_idx, 
-          m_shadow_descriptor_heap_,
-       m_shadow_instance_buffer_, // todo: Instance data can be reused if it is re-rendering case?
-          [this](const StrongObjectBase& obj)
+       m_shadow_descriptor_heap_, 
+       m_shadow_instance_buffer_,
+       [this](const StrongObjectBase& obj)
        {
          if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
              obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
          return true;
-       }, [this, light, light_idx](const Weak<CommandPair>& wc, const DescriptorPtr& wh)
+       }, // todo: Instance data can be reused if it is re-rendering case?
+       [this, light, light_idx](const Weak<CommandPair>& wc, const DescriptorPtr& wh)
        {
          const auto& c = wc.lock();
 
@@ -255,8 +245,10 @@ namespace Engine::Manager::Graphics
          const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
 
          m_shadow_map_mask_.Unbind(c, dsv);
-       }, {m_sb_light_vps_buffer_, m_local_param_buffers_[light_idx]}
+       }, {&m_sb_light_vps_buffer_, &local_param_mem}
       );
+
+    m_local_param_buffers_.advance();
   }
 
   void ShadowManager::CreateSubfrusta(
@@ -429,14 +421,14 @@ namespace Engine::Manager::Graphics
     }
   }
 
-  Weak<StructuredBuffer<SBs::LightSB>> ShadowManager::GetLightBuffer() const
+  StructuredBuffer<SBs::LightSB>* ShadowManager::GetLightBuffer()
   {
-    return m_sb_light_buffer_;
+    return &m_sb_light_buffer_;
   }
 
-  Weak<StructuredBuffer<SBs::LightVPSB>> ShadowManager::GetLightVPBuffer() const
+  StructuredBuffer<SBs::LightVPSB>* ShadowManager::GetLightVPBuffer()
   {
-    return m_sb_light_vps_buffer_;
+    return &m_sb_light_vps_buffer_;
   }
 
   void ShadowManager::RegisterLight(const WeakLight& light)

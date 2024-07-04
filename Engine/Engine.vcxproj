@@ -22,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DebugDraw.h" />
+    <ClInclude Include="egAccelStructure.hpp" />
     <ClInclude Include="egActor.h" />
     <ClInclude Include="egAtlasAnimation.h" />
     <ClInclude Include="egAtlasAnimationTexture.h" />
@@ -37,6 +38,7 @@
     <ClInclude Include="egDescriptors.h" />
     <ClInclude Include="egImGuiManager.h" />
     <ClInclude Include="egGraviton.h" />
+    <ClInclude Include="egGraphicMemoryPool.hpp" />
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egParticleRenderer.h" />
     <ClInclude Include="egPointMesh.h" />
