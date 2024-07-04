@@ -171,8 +171,7 @@ namespace Client::Scripts
     const float&             dt,
     const Weak<CommandPair>& w_cmd,
     const size_t             shadow_slot,
-    const StrongLayer&       lights,
-    UINT&                    instance_idx
+    const StrongLayer&       lights
   )
   {
     const auto& cmd = w_cmd.lock();
@@ -183,24 +182,22 @@ namespace Client::Scripts
     {
       Graphics::SBs::LocalParamSB local_param{};
       local_param.SetParam<int>(shadow_slot, i);
-      m_first_other_pass_local_params_[i]->SetData(cmd->GetList(), 1, &local_param);
+      auto& local_param_mem = m_first_other_pass_local_params_.get();
+      local_param_mem.SetData(cmd->GetList(), 1, &local_param);
+      m_first_other_pass_local_params_.advance();
 
-      instance_idx = GetRenderer().RenderPass
+      GetRenderer().RenderPass
         (
          dt, SHADER_DOMAIN_OPAQUE, true,
          cmd,
-         instance_idx,
          m_shadow_heaps_,
          m_instance_buffers_,
          [this](const StrongObjectBase& obj)
          {
-           if (obj->GetID() == GetOwner().lock()->GetID())
-           {
-             return false;
-           }
+           if (obj->GetID() == GetOwner().lock()->GetID()) { return false; }
 
            if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
-             obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
+               obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
            return true;
          }, [this, i](const Weak<CommandPair>& wc, const DescriptorPtr& heap)
@@ -216,15 +213,15 @@ namespace Client::Scripts
            m_shadow_texs_[i].Bind(c, heap, BIND_TYPE_DSV_ONLY, 0, 0);
 
            GetShadowManager().BindShadowSampler(heap);
-
          }, [this, i](const Weak<CommandPair>& wc, const DescriptorPtr& heap)
          {
            const auto& c = wc.lock();
 
            m_shadow_texs_[i].Unbind(c, BIND_TYPE_DSV_ONLY);
          }, {
-           m_first_other_pass_local_params_[i],
-           GetShadowManager().GetLightVPBuffer() }
+           &local_param_mem,
+           GetShadowManager().GetLightVPBuffer()
+         }
         );
     }
 
@@ -233,13 +230,14 @@ namespace Client::Scripts
     {
       Graphics::SBs::LocalParamSB local_param{};
       local_param.SetParam<int>(shadow_slot, i);
-      m_first_self_pass_local_params_[i]->SetData(cmd->GetList(), 1, &local_param);
+      auto& local_param_mem = m_first_other_pass_local_params_.get();
+      local_param_mem.SetData(cmd->GetList(), 1, &local_param);
+      m_first_self_pass_local_params_.advance();
 
-      instance_idx = GetRenderer().RenderPass
+      GetRenderer().RenderPass
         (
          dt, SHADER_DOMAIN_OPAQUE, true,
          cmd,
-         instance_idx,
          m_shadow_heaps_,
          m_instance_buffers_,
          [this](const StrongObjectBase& obj)
@@ -250,7 +248,7 @@ namespace Client::Scripts
            }
 
            if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() == LAYER_ENVIRONMENT ||
-             obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
+               obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX) { return false; }
 
            return true;
          }, [this, i](const Weak<CommandPair>& wc, const DescriptorPtr& h)
@@ -272,7 +270,7 @@ namespace Client::Scripts
 
            m_shadow_mask_texs_[i].Unbind(c, m_shadow_texs_[i]);
          }, {
-           m_first_self_pass_local_params_[i],
+           &local_param_mem,
            GetShadowManager().GetLightVPBuffer()
          });
     }
@@ -283,8 +281,7 @@ namespace Client::Scripts
       const Weak<CommandPair>& w_cmd, 
       const std::vector<Graphics::SBs::LightVPSB>& light_vps, 
       const StrongScene& scene, 
-      const StrongLayer& lights, 
-      UINT& instance_idx)
+      const StrongLayer& lights)
   {
     // Second Pass: Intensity test
     // In light VP Render objects,
@@ -342,13 +339,14 @@ namespace Client::Scripts
       local_param.SetParam<int>(custom_vp_slot, true);
       local_param.SetParam<Matrix>(custom_view_slot, light_vps[i].view[z_clip]);
       local_param.SetParam<Matrix>(custom_proj_slot, light_vps[i].proj[z_clip]);
-      m_second_pass_local_params_[i]->SetData(cmd->GetList(), 1, &local_param);
+      auto& local_param_mem = m_second_pass_local_params_.get();
+      local_param_mem.SetData(cmd->GetList(), 1, &local_param);
+      m_second_pass_local_params_.advance();
 
-      instance_idx = GetRenderer().RenderPass
+      GetRenderer().RenderPass
         (
          dt, SHADER_DOMAIN_OPAQUE, true,
          cmd,
-         instance_idx,
          m_shadow_heaps_,
          m_instance_buffers_,
          [this](const StrongObjectBase& obj)
@@ -405,7 +403,7 @@ namespace Client::Scripts
            Resources::Texture::Unbind(c, rtvs, 2, *m_tmp_shadow_depth_);
          },
          {
-           m_second_pass_local_params_[i],
+           &local_param_mem,
            GetShadowManager().GetLightBuffer(),
            GetShadowManager().GetLightVPBuffer()
          }
@@ -434,21 +432,18 @@ namespace Client::Scripts
 
     m_shadow_third_pass_heap_ = GetRenderPipeline().AcquireHeapSlot().lock();
 
-    if (m_third_compute_local_param_.size() < lights->size())
-    {
-      m_third_compute_local_param_.resize(lights->size());
-    }
-
     for (int i = 0; i < lights->size(); ++i)
     {
       const auto& cast = m_intersection_compute_->GetSharedPtr<ComputeShaders::IntersectionCompute>();
+      auto& local_param_mem = m_third_compute_local_param_.get();
+      m_third_compute_local_param_.advance();
 
       cast->SetIntersectionTexture(m_intensity_test_texs_[i]);
       cast->SetPositionTexture(m_intensity_position_texs_[i]);
       cast->SetLightTable(m_sb_light_table_);
       cast->SetTargetLight(i);
       Graphics::SBs::LocalParamSB empty_param{};
-      cast->Dispatch(cmd->GetList(), m_shadow_third_pass_heap_, empty_param, m_third_compute_local_param_[i]);
+      cast->Dispatch(cmd->GetList(), m_shadow_third_pass_heap_, empty_param, local_param_mem);
     }
   }
 
@@ -495,35 +490,24 @@ namespace Client::Scripts
       // Cleanup the light table
       m_sb_light_table_->SetData(cmd->GetList(), lights->size(), empty_light_table.data());
 
-      UINT             instance_idx = 0;
       constexpr size_t render_pass  = 3;
 
-      if (const auto required_instance = GetRenderer().GetInstanceCount() * (lights->size() * render_pass) + 1; 
-          m_instance_buffers_.size() < required_instance)
-      {
-        m_instance_buffers_.resize(required_instance);
-      }
+      m_instance_buffers_.resize(GetRenderer().GetInstanceCount() * (lights->size() * render_pass) + 1);
+      m_first_other_pass_local_params_.resize(lights->size());
+      m_first_self_pass_local_params_.resize(lights->size());
+      m_second_pass_local_params_.resize(lights->size());
+      m_third_compute_local_param_.resize(lights->size());
 
-      if (lights->size() > m_first_other_pass_local_params_.size())
-      {
-        m_first_other_pass_local_params_.resize(lights->size());
-        m_first_self_pass_local_params_.resize(lights->size());
-        m_second_pass_local_params_.resize(lights->size());
-
-        for (int i = 0; i < lights->size(); ++i)
-        {
-          m_first_other_pass_local_params_[i] = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>();
-          m_first_self_pass_local_params_[i] = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>();
-          m_second_pass_local_params_[i] = boost::make_shared<Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>>();
-        }
-
-        m_third_compute_local_param_.resize(lights->size());
-      }
+      m_instance_buffers_.reset();
+      m_first_other_pass_local_params_.reset();
+      m_first_self_pass_local_params_.reset();
+      m_second_pass_local_params_.reset();
+      m_third_compute_local_param_.reset();
 
       GetShadowManager().GetLightVP(scene, light_vps);
 
-      FirstPass(dt, cmd, shadow_slot, lights, instance_idx);
-      SecondPass(dt, cmd, light_vps, scene, lights, instance_idx);
+      FirstPass(dt, cmd, shadow_slot, lights);
+      SecondPass(dt, cmd, light_vps, scene, lights);
       ThirdPass(cmd, lights);
 
       cmd->Execute(true);

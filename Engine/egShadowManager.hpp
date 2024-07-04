@@ -43,8 +43,8 @@ namespace Engine::Manager::Graphics
     void BindShadowSampler(const DescriptorPtr& heap) const;
     void UnbindShadowMaps(const Weak<CommandPair> & w_cmd) const;
 
-    Weak<StructuredBuffer<SBs::LightSB>> GetLightBuffer() const;
-    Weak<StructuredBuffer<SBs::LightVPSB>> GetLightVPBuffer() const;
+    StructuredBuffer<SBs::LightSB>*   GetLightBuffer();
+    StructuredBuffer<SBs::LightVPSB>* GetLightVPBuffer();
 
   private:
     friend struct SingletonDeleter;
@@ -54,8 +54,10 @@ namespace Engine::Manager::Graphics
     void InitializeProcessor();
     void InitializeShadowBuffer(const LocalActorID id);
 
-    UINT64 BuildShadowMap(const float dt, const UINT64 container_idx, const Weak<CommandPair> &w_cmd, const StrongLight &light, const UINT
-                          light_idx);
+    void BuildShadowMap(
+      const float dt, const Weak<CommandPair> & w_cmd, const StrongLight & light, const UINT
+      light_idx
+    );
     void   ClearShadowMaps(const Weak<CommandPair> & w_cmd);
 
     static void CreateSubfrusta(
@@ -75,17 +77,19 @@ namespace Engine::Manager::Graphics
     std::map<LocalActorID, Resources::ShadowTexture> m_shadow_texs_;
 
     // light structured buffer
-    Strong<StructuredBuffer<SBs::LightSB>> m_sb_light_buffer_{};
+    StructuredBuffer<SBs::LightSB> m_sb_light_buffer_{};
     // The structured buffer for the chunk of light view projection matrices
-    Strong<StructuredBuffer<SBs::LightVPSB>> m_sb_light_vps_buffer_;
+    StructuredBuffer<SBs::LightVPSB> m_sb_light_vps_buffer_;
 
-    std::vector<Strong<StructuredBuffer<SBs::LocalParamSB>>> m_local_param_buffers_;
+    
 
     D3D12_VIEWPORT m_viewport_;
     D3D12_RECT     m_scissor_rect_;
 
-    DescriptorContainer     m_shadow_descriptor_heap_;
-    InstanceBufferContainer m_shadow_instance_buffer_;
+    DescriptorContainer                         m_shadow_descriptor_heap_;
+
+    StructuredBufferMemoryPool<SBs::InstanceSB> m_shadow_instance_buffer_;
+    StructuredBufferMemoryPool<SBs::LocalParamSB> m_local_param_buffers_;
 
     Resources::Texture2D m_shadow_map_mask_;
 

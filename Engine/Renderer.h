@@ -4,6 +4,7 @@
 #include "egMaterial.h"
 #include "egModelRenderer.h"
 #include "egStructuredBuffer.hpp"
+#include "egGraphicMemoryPool.hpp"
 
 namespace Engine::Manager::Graphics
 {
@@ -23,21 +24,20 @@ namespace Engine::Manager::Graphics
     void PostUpdate(const float& dt) override;
     void Initialize() override;
 
-    void AppendAdditionalStructuredBuffer(const Weak<StructuredBufferBase> & sb_ptr);
+    void AppendAdditionalStructuredBuffer(StructuredBufferBase * sb_ptr);
 
-    bool   Ready() const;
-    UINT64 RenderPass(
-      const float                                    dt,
-      const eShaderDomain                            domain,
-      bool                                           shader_bypass,
-      const Weak<CommandPair>&                       w_cmd,
-      const UINT64                                   begin_idx,
-      DescriptorContainer&                           descriptor_heap_container,
-      InstanceBufferContainer&                       instance_buffer_container,
-      const ObjectPredication&                       predicate,
-      const CommandDescriptorLambda&                 initial_setup,
-      const CommandDescriptorLambda&                 post_setup,
-      const std::vector<Weak<StructuredBufferBase>>& additional_structured_buffers
+    bool Ready() const;
+    void RenderPass(
+      const float                                   dt,
+      const eShaderDomain                           domain,
+      bool                                          shader_bypass,
+      const Weak<CommandPair> &                     w_cmd,
+      DescriptorContainer &                         descriptor_heap_container,
+      StructuredBufferMemoryPool<SBs::InstanceSB>&  instance_buffer_memory_pool,
+      const ObjectPredication &                     predicate,
+      const CommandDescriptorLambda &               initial_setup,
+      const CommandDescriptorLambda &               post_setup, const std::vector<StructuredBufferBase*> &
+      additional_structured_buffers
     );
 
     UINT64 GetInstanceCount() const;
@@ -49,20 +49,18 @@ namespace Engine::Manager::Graphics
 
     void renderPassImpl(
       const float                         dt,
-      const UINT64                        idx,
       eShaderDomain                       domain,
       bool                                shader_bypass,
-      InstanceBufferContainer&            instance_buffers,
-      const StrongMaterial&               material,
-      const Weak<CommandPair>&            w_cmd,
-      const DescriptorPtr&                heap,
-      const std::vector<SBs::InstanceSB>& structured_buffers
+      StructuredBuffer<SBs::InstanceSB> & instance_buffer,
+      const StrongMaterial &              material,
+      const Weak<CommandPair> &           w_cmd,
+      const DescriptorPtr &               heap, const std::vector<SBs::InstanceSB> & structured_buffers
     );
 
     bool m_b_ready_;
 
-    std::vector<Weak<StructuredBufferBase>> m_additional_structured_buffers_;
-    tbb::concurrent_vector<StructuredBuffer<SBs::InstanceSB>> m_tmp_instance_buffers_;
+    std::vector<StructuredBufferBase*>          m_additional_structured_buffers_;
+    StructuredBufferMemoryPool<SBs::InstanceSB> m_tmp_instance_buffers_;
     tbb::concurrent_vector<StrongDescriptorPtr> m_tmp_descriptor_heaps_;
 
     std::atomic<UINT64> m_instance_count_;
