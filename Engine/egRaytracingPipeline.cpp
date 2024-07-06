@@ -418,7 +418,7 @@ namespace Engine::Manager::Graphics
 
     // Shader payload and attribute size
     const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    shader_config->Config(sizeof(float[5]), sizeof(Vector2)); // barycentrics
+    shader_config->Config(sizeof(float[6]), sizeof(Vector2)); // barycentrics
 
     // global root signature
     const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -433,7 +433,7 @@ namespace Engine::Manager::Graphics
 
     // Pipeline config, Recursion depth
     const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-    pipeline_config->Config(1 + g_max_lights); // Default recursion + shadow rays (light counts)
+    pipeline_config->Config(1 + (2 * g_max_lights)); // Default recursion + shadow rays (light counts)
 
     DX::ThrowIfFailed
       (

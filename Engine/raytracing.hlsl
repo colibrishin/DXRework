@@ -8,6 +8,7 @@ struct Payload
 {
   float4 colorAndDist;
   bool   isShadow;
+  bool isReflect;
 };
 
 void GenerateCameraRay(uint2 index, out float3 origin, out float3 direction)
@@ -66,6 +67,7 @@ void raygen_main()
 
   Payload payload;
   payload.isShadow = false;
+  payload.isReflect = false;
 
   TraceRay(g_tlas, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
@@ -229,7 +231,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
       Payload shadowPayload = 
       {
         0.f, 0.f, 0.f, 1.f,
-        true
+        true,
+        false
       };
 
       TraceRay
@@ -302,6 +305,39 @@ void closest_hit_main(inout Payload payload, Attributes attr)
   }
 
   float4 finalColor = (1.f - shadow) * saturate(lightColor) * baryColor;
+
+  if (l_material[0].reflectionScale > 0.f && !payload.isReflect)
+  {
+    float4 reflectionColor = float4(0.f, 0.f, 0.f, 1.f);
+
+    RayDesc reflectionRay;
+    reflectionRay.Origin    = hitPos;
+    reflectionRay.Direction = reflect(WorldRayDirection(), baryNormal);
+    reflectionRay.TMin      = 0.001f;
+    reflectionRay.TMax      = 1000.f;
+
+    Payload reflectionPayload =
+    {
+      0.f, 0.f, 0.f, 1000.f,
+      false,
+      true
+    };
+
+    TraceRay
+      (
+       g_tlas,
+       RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH,
+       0xff,
+       0,
+       0,
+       0,
+       reflectionRay,
+       reflectionPayload
+      );
+
+    reflectionColor.xyz = reflectionPayload.colorAndDist.xyz;
+    finalColor = float4(finalColor.xyz + (l_material[0].reflectionScale * reflectionColor), 1.f);
+  }
 
   payload.colorAndDist.xyz = finalColor.xyz;
   payload.colorAndDist.w = RayTCurrent();
