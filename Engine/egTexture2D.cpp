@@ -9,24 +9,33 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  UINT64 Texture2D::GetWidth() const { return Texture::GetWidth(); }
+	UINT64 Texture2D::GetWidth() const
+	{
+		return Texture::GetWidth();
+	}
 
-  UINT Texture2D::GetHeight() const { return Texture::GetHeight(); }
+	UINT Texture2D::GetHeight() const
+	{
+		return Texture::GetHeight();
+	}
 
-  void Texture2D::loadDerived(ComPtr<ID3D12Resource>& res)
-  {
-    const auto& gd = GetDescription();
+	void Texture2D::loadDerived(ComPtr<ID3D12Resource>& res)
+	{
+		const auto& gd = GetDescription();
 
-    if (GetPath().empty() && !(gd.Width + gd.Height))
-    {
-      throw std::logic_error("Hotloading texture should be define in width, height");
-    }
-  }
+		if (GetPath().empty() && !(gd.Width + gd.Height))
+		{
+			throw std::logic_error("Hotloading texture should be define in width, height");
+		}
+	}
 
-  void Texture2D::Unload_INTERNAL()
-  {
-    Texture::Unload_INTERNAL();
-  }
+	void Texture2D::Unload_INTERNAL()
+	{
+		Texture::Unload_INTERNAL();
+	}
 
-  UINT Texture2D::GetDepth() const { return Texture::GetDepth(); }
+	UINT Texture2D::GetDepth() const
+	{
+		return Texture::GetDepth();
+	}
 }

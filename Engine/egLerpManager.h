@@ -3,30 +3,30 @@
 
 namespace Engine::Manager::Physics
 {
-  class LerpManager : public Abstract::Singleton<LerpManager>
-  {
-  public:
-    LerpManager(SINGLETON_LOCK_TOKEN);
+	class LerpManager : public Abstract::Singleton<LerpManager>
+	{
+	public:
+		LerpManager(SINGLETON_LOCK_TOKEN);
 
-    void Initialize() override;
-    void Update(const float& dt) override;
+		void Initialize() override;
+		void Update(const float& dt) override;
 
-    void Reset();
-    void PreUpdate(const float& dt) override;
-    void PreRender(const float& dt) override;
-    void Render(const float& dt) override;
-    void PostRender(const float& dt) override;
-    void FixedUpdate(const float& dt) override;
-    void PostUpdate(const float& dt) override;
+		void Reset();
+		void PreUpdate(const float& dt) override;
+		void PreRender(const float& dt) override;
+		void Render(const float& dt) override;
+		void PostRender(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
+		void PostUpdate(const float& dt) override;
 
-    float GetLerpFactor() const;
+		float GetLerpFactor() const;
 
-  private:
-    friend struct SingletonDeleter;
-    ~LerpManager() override = default;
+	private:
+		friend struct SingletonDeleter;
+		~LerpManager() override = default;
 
-    float m_elapsed_time_;
-  };
+		float m_elapsed_time_;
+	};
 } // namespace Engine::Manager::Physics
 
 

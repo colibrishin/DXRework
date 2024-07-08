@@ -9,28 +9,49 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-  void Texture1D::OnDeserialized() { Texture::OnDeserialized(); }
+	void Texture1D::OnDeserialized()
+	{
+		Texture::OnDeserialized();
+	}
 
-  void Texture1D::OnImGui() { Texture::OnImGui(); }
+	void Texture1D::OnImGui()
+	{
+		Texture::OnImGui();
+	}
 
-  UINT64 Texture1D::GetWidth() const { return Texture::GetWidth(); }
+	UINT64 Texture1D::GetWidth() const
+	{
+		return Texture::GetWidth();
+	}
 
-  void Texture1D::loadDerived(ComPtr<ID3D12Resource>& res)
-  {
-    const auto& gd = GetDescription();
+	void Texture1D::loadDerived(ComPtr<ID3D12Resource>& res)
+	{
+		const auto& gd = GetDescription();
 
-    if (gd.Height || gd.DepthOrArraySize) { throw std::logic_error("1D Texture cannot have neither height nor depth"); }
+		if (gd.Height || gd.DepthOrArraySize)
+		{
+			throw std::logic_error("1D Texture cannot have neither height nor depth");
+		}
 
-    if (GetPath().empty() && !(gd.Width)) { throw std::logic_error("Hotloading texture should be define in width"); }
-  }
+		if (GetPath().empty() && !(gd.Width))
+		{
+			throw std::logic_error("Hotloading texture should be define in width");
+		}
+	}
 
-  void Texture1D::Unload_INTERNAL()
-  {
-    Texture::Unload_INTERNAL();
-    m_tex_.Reset();
-  }
+	void Texture1D::Unload_INTERNAL()
+	{
+		Texture::Unload_INTERNAL();
+		m_tex_.Reset();
+	}
 
-  UINT Texture1D::GetHeight() const { return Texture::GetHeight(); }
+	UINT Texture1D::GetHeight() const
+	{
+		return Texture::GetHeight();
+	}
 
-  UINT Texture1D::GetDepth() const { return Texture::GetDepth(); }
+	UINT Texture1D::GetDepth() const
+	{
+		return Texture::GetDepth();
+	}
 }

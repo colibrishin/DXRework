@@ -136,7 +136,10 @@ struct Rank<0> {};
 
 // Tag is a type that is used to identify the type list
 template <class Tag>
-boost::mpl::vector<> GetTypes(Tag*, Rank<0>) { return {}; }
+boost::mpl::vector<> GetTypes(Tag*, Rank<0>)
+{
+	return {};
+}
 
 #define GET_TYPES(Tag) decltype(GetTypes(static_cast<Tag*>(nullptr), Rank<g_max_registered_types>()))::type
 #define REGISTER_TYPE(Tag, Type) \

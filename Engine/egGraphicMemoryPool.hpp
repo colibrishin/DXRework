@@ -5,217 +5,214 @@
 
 namespace Engine::Graphics
 {
-  class StructuredBufferBase;
+	class StructuredBufferBase;
 
-  template <typename SBType, typename SLock = std::enable_if<std::is_base_of_v<StructuredBufferBase, SBType>>>
-  class StructuredBufferMemoryPool
-  {
-  public:
-    StructuredBufferMemoryPool()
-      : m_allocated_size_(0),
-        m_used_size_(0),
-        m_read_offset_(0) { }
+	template <typename SBType, typename SLock = std::enable_if<std::is_base_of_v<StructuredBufferBase, SBType>>>
+	class StructuredBufferMemoryPool
+	{
+	public:
+		StructuredBufferMemoryPool()
+			: m_allocated_size_(0),
+			  m_used_size_(0),
+			  m_read_offset_(0) { }
 
-    ~StructuredBufferMemoryPool()
-    {
-    }
+		~StructuredBufferMemoryPool() { }
 
-    void resize(const size_t size)
-    {
-      Update(nullptr, size);
-    }
+		void resize(const size_t size)
+		{
+			Update(nullptr, size);
+		}
 
-    auto& get()
-    {
-      return GetBaseResource()[m_read_offset_];
-    }
+		auto& get()
+		{
+			return GetBaseResource()[m_read_offset_];
+		}
 
-    void advance()
-    {
-      ++m_read_offset_;
-    }
+		void advance()
+		{
+			++m_read_offset_;
+		}
 
-    void reset()
-    {
-      m_used_size_ = 0;
-      m_read_offset_ = 0;
-    }
+		void reset()
+		{
+			m_used_size_   = 0;
+			m_read_offset_ = 0;
+		}
 
-    void Update(const SBType* src_data, size_t count)
-    {
-      if (count == 0)
-      {
-        count = 1;
-      }
+		void Update(const SBType* src_data, size_t count)
+		{
+			if (count == 0)
+			{
+				count = 1;
+			}
 
-      UpdateSizeIfNeeded(count);
+			UpdateSizeIfNeeded(count);
 
-      if (!src_data)
-      {
-        return;
-      }
+			if (!src_data)
+			{
+				return;
+			}
 
-      Copy(src_data, 0, count);
-      m_used_size_ = count;
-    }
+			Copy(src_data, 0, count);
+			m_used_size_ = count;
+		}
 
-    void UpdatePartial(const SBType* src_data, const size_t offset, size_t count)
-    {
-      if (count == 0)
-      {
-        return;
-      }
+		void UpdatePartial(const SBType* src_data, const size_t offset, size_t count)
+		{
+			if (count == 0)
+			{
+				return;
+			}
 
-      UpdateSizeIfNeeded(count);
+			UpdateSizeIfNeeded(count);
 
-      if (!src_data)
-      {
-        return;
-      }
+			if (!src_data)
+			{
+				return;
+			}
 
-      Copy(src_data, offset, count);
-      m_used_size_ += count;
-    }
+			Copy(src_data, offset, count);
+			m_used_size_ += count;
+		}
 
-    [[nodiscard]] auto& GetBaseResource()
-    {
-      return m_resource_;
-    }
+		[[nodiscard]] auto& GetBaseResource()
+		{
+			return m_resource_;
+		}
 
-    [[nodiscard]] const auto& GetBaseResource() const
-    {
-      return m_resource_;
-    }
+		[[nodiscard]] const auto& GetBaseResource() const
+		{
+			return m_resource_;
+		}
 
-  private:
-    std::vector<Graphics::StructuredBuffer<SBType>> m_resource_;
-    size_t m_allocated_size_;
-	  size_t m_used_size_;
-    size_t m_read_offset_;
-    
-    void UpdateSizeIfNeeded(const size_t count)
-    {
-      if (m_allocated_size_ < count)
-      {
-        const auto& delta = count - m_resource_.size();
-        size_t end_it = m_resource_.size();
-        m_resource_.resize(count);
+	private:
+		std::vector<StructuredBuffer<SBType>> m_resource_;
+		size_t                                m_allocated_size_;
+		size_t                                m_used_size_;
+		size_t                                m_read_offset_;
 
-        const auto& cmd = GetD3Device().AcquireCommandPair(L"Allocation").lock();
+		void UpdateSizeIfNeeded(const size_t count)
+		{
+			if (m_allocated_size_ < count)
+			{
+				const auto& delta  = count - m_resource_.size();
+				size_t      end_it = m_resource_.size();
+				m_resource_.resize(count);
 
-        cmd->SoftReset();
+				const auto& cmd = GetD3Device().AcquireCommandPair(L"Allocation").lock();
 
-        for (; end_it < count; ++end_it)
-        {
-          m_resource_[end_it].SetData(cmd->GetList(), 1, nullptr);
-        }
+				cmd->SoftReset();
 
-        cmd->FlagReady();
+				for (; end_it < count; ++end_it)
+				{
+					m_resource_[end_it].SetData(cmd->GetList(), 1, nullptr);
+				}
 
-        m_allocated_size_ = count;
-      }
-    }
+				cmd->FlagReady();
 
-    void Copy(const SBType* src_data, const size_t offset, const size_t count)
-    {
-      if (m_resource_.size() < count)
-      {
-        throw std::logic_error("Memory pool is not allocated enough size");
-      }
+				m_allocated_size_ = count;
+			}
+		}
 
-      const auto& cmd = GetD3Device().AcquireCommandPair(L"Update").lock();
+		void Copy(const SBType* src_data, const size_t offset, const size_t count)
+		{
+			if (m_resource_.size() < count)
+			{
+				throw std::logic_error("Memory pool is not allocated enough size");
+			}
 
-      for (size_t i = offset; i < count; ++i)
-      {
-        m_resource_[i].SetData(cmd->GetList(), 1, src_data);
-      }
-    }
-  };
+			const auto& cmd = GetD3Device().AcquireCommandPair(L"Update").lock();
 
-  template <size_t Alignment, D3D12_HEAP_TYPE HeapProperty, D3D12_RESOURCE_FLAGS ResourceFlags, D3D12_RESOURCE_STATES ResourceState>
-  class GraphicMemoryPool
-  {
-  public:
-    GraphicMemoryPool()
-      : m_allocated_size_(0),
-        m_used_size_(0) { }
+			for (size_t i = offset; i < count; ++i)
+			{
+				m_resource_[i].SetData(cmd->GetList(), 1, src_data);
+			}
+		}
+	};
 
-    ~GraphicMemoryPool()
-    {
-    }
+	template <size_t Alignment, D3D12_HEAP_TYPE HeapProperty, D3D12_RESOURCE_FLAGS ResourceFlags, D3D12_RESOURCE_STATES
+	          ResourceState>
+	class GraphicMemoryPool
+	{
+	public:
+		GraphicMemoryPool()
+			: m_allocated_size_(0),
+			  m_used_size_(0) { }
 
-    void Update(const void* src_data, const size_t type_size, size_t count)
-    {
-      if (count == 0)
-      {
-        count = 1;
-      }
+		~GraphicMemoryPool() { }
 
-      if (m_allocated_size_ < count)
-      {
-        InitializeBuffer(m_resource_, type_size, count);
-        m_allocated_size_ = count;
-      }
+		void Update(const void* src_data, const size_t type_size, size_t count)
+		{
+			if (count == 0)
+			{
+				count = 1;
+			}
 
-      if (!src_data)
-      {
-        return;
-      }
+			if (m_allocated_size_ < count)
+			{
+				InitializeBuffer(m_resource_, type_size, count);
+				m_allocated_size_ = count;
+			}
 
-      char*      data          = nullptr;
-      const auto src_char_cast = static_cast<const char*>(src_data);
+			if (!src_data)
+			{
+				return;
+			}
 
-      DX::ThrowIfFailed(m_resource_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-      for (size_t i = 0; i < count; ++i)
-      {
-        _mm256_memcpy(data + (i * Align(type_size, Alignment)), src_char_cast + (i * type_size), type_size);
-      }
-      m_resource_->Unmap(0, nullptr);
-      m_used_size_ = count;
-    }
+			char*      data          = nullptr;
+			const auto src_char_cast = static_cast<const char*>(src_data);
 
-    void Release()
-    {
-      m_resource_.Reset();
-    }
+			DX::ThrowIfFailed(m_resource_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+			for (size_t i = 0; i < count; ++i)
+			{
+				_mm256_memcpy(data + (i * Align(type_size, Alignment)), src_char_cast + (i * type_size), type_size);
+			}
+			m_resource_->Unmap(0, nullptr);
+			m_used_size_ = count;
+		}
 
-    [[nodiscard]] ID3D12Resource** GetAddressOf()
-    {
-      return m_resource_.GetAddressOf();
-    }
+		void Release()
+		{
+			m_resource_.Reset();
+		}
 
-    [[nodiscard]] ID3D12Resource* GetResource() const
-    {
-      return m_resource_.Get();
-    }
+		[[nodiscard]] ID3D12Resource** GetAddressOf()
+		{
+			return m_resource_.GetAddressOf();
+		}
 
-    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const
-    {
-      return GetResource()->GetGPUVirtualAddress();
-    }
+		[[nodiscard]] ID3D12Resource* GetResource() const
+		{
+			return m_resource_.Get();
+		}
 
-  private:
-    static void InitializeBuffer(ComPtr<ID3D12Resource>& resource, const size_t type_size, const size_t count)
-    {
-      const auto& heap_desc   = CD3DX12_HEAP_PROPERTIES(HeapProperty);
-      const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(Align(count * type_size, Alignment), ResourceFlags);
+		[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const
+		{
+			return GetResource()->GetGPUVirtualAddress();
+		}
 
-      DX::ThrowIfFailed
-        (
-         GetD3Device().GetDevice()->CreateCommittedResource
-         (
-          &heap_desc,
-          D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-          &buffer_desc,
-          ResourceState,
-          nullptr,
-          IID_PPV_ARGS(resource.GetAddressOf())
-         )
-        );
-    }
+	private:
+		static void InitializeBuffer(ComPtr<ID3D12Resource>& resource, const size_t type_size, const size_t count)
+		{
+			const auto& heap_desc   = CD3DX12_HEAP_PROPERTIES(HeapProperty);
+			const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(Align(count * type_size, Alignment), ResourceFlags);
 
-    ComPtr<ID3D12Resource> m_resource_;
-    size_t m_allocated_size_;
-    size_t m_used_size_;
-  };
+			DX::ThrowIfFailed
+					(
+					 GetD3Device().GetDevice()->CreateCommittedResource
+					 (
+					  &heap_desc,
+					  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+					  &buffer_desc,
+					  ResourceState,
+					  nullptr,
+					  IID_PPV_ARGS(resource.GetAddressOf())
+					 )
+					);
+		}
+
+		ComPtr<ID3D12Resource> m_resource_;
+		size_t                 m_allocated_size_;
+		size_t                 m_used_size_;
+	};
 }
