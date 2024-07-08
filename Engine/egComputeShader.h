@@ -7,62 +7,66 @@
 
 namespace Engine::Resources
 {
-  class ComputeShader : public Shader
-  {
-  public:
-    virtual ~ComputeShader() override = default;
+	class ComputeShader : public Shader
+	{
+	public:
+		~ComputeShader() override = default;
 
-    void                SetGroup(const std::array<UINT, 3>& group);
-    std::array<UINT, 3> GetThread() const;
-    void                Dispatch(
-      ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, Graphics::SBs::LocalParamSB& param,
-      Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
-    );
+		void                SetGroup(const std::array<UINT, 3>& group);
+		std::array<UINT, 3> GetThread() const;
+		void Dispatch(
+			ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, Graphics::SBs::LocalParamSB& param,
+			Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
+		);
 
-    template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
-    static boost::weak_ptr<T> Create()
-    {
-      const auto& v = boost::make_shared<T>();
-      v->Initialize();
-      v->Load();
-      GetResourceManager().AddResource(v);
-      return v;
-    }
+		template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
+		static boost::weak_ptr<T> Create()
+		{
+			const auto& v = boost::make_shared<T>();
+			v->Initialize();
+			v->Load();
+			GetResourceManager().AddResource(v);
+			return v;
+		}
 
-    virtual void OnImGui(const StrongParticleRenderer& pr) = 0;
+		virtual void OnImGui(const StrongParticleRenderer& pr) = 0;
 
-    RESOURCE_SELF_INFER_GETTER(ComputeShader)
+		RESOURCE_SELF_INFER_GETTER(ComputeShader)
+
 	protected:
-    ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
+		ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
 
-    static Graphics::ParamBase& getParam(const StrongParticleRenderer& pr);
-    static InstanceParticles& getInstances(const StrongParticleRenderer& pr);
+		static Graphics::ParamBase& getParam(const StrongParticleRenderer& pr);
+		static InstanceParticles&   getInstances(const StrongParticleRenderer& pr);
 
-    virtual void preDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) = 0;
-    virtual void postDispatch(ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param) = 0;
+		virtual void preDispatch(
+			ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param
+		) = 0;
+		virtual void postDispatch(
+			ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param
+		) = 0;
 
-    virtual void loadDerived() = 0;
-    virtual void unloadDerived() = 0;
+		virtual void loadDerived() = 0;
+		virtual void unloadDerived() = 0;
 
-  private:
-    void PostUpdate(const float& dt) override;
-    void PreUpdate(const float& dt) override;
-    void FixedUpdate(const float& dt) override;
-    void Update(const float& dt) override;
-    void Initialize() override;
+	private:
+		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float& dt) override;
+		void FixedUpdate(const float& dt) override;
+		void Update(const float& dt) override;
+		void Initialize() override;
 
-    void Load_INTERNAL() override final;
-    void Unload_INTERNAL() override final;
+		void Load_INTERNAL() final;
+		void Unload_INTERNAL() final;
 
-    SERIALIZE_DECL
-    ComputeShader();
+		SERIALIZE_DECL
+		ComputeShader();
 
-    ComPtr<ID3DBlob> m_cs_;
+		ComPtr<ID3DBlob> m_cs_;
 
-    UINT m_thread_[3];
-    UINT m_group_[3];
-
-  };
+		UINT m_thread_[3];
+		UINT m_group_[3];
+	};
 } // namespace Engine::Resources
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::ComputeShader)

@@ -9,13 +9,11 @@ SERIALIZE_IMPL
 
 namespace Engine
 {
-  Object::Object()
-    : Abstract::ObjectBase()
-  {
-  }
+	Object::Object()
+		: ObjectBase() { }
 
-  StrongObjectBase Object::cloneImpl() const
-  {
-    return boost::make_shared<Object>(*this);
-  }
+	StrongObjectBase Object::cloneImpl() const
+	{
+		return boost::make_shared<Object>(*this);
+	}
 }

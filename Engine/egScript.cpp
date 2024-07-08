@@ -8,29 +8,32 @@ SERIALIZE_IMPL
 )
 
 Engine::Script::Script(eScriptType type, const WeakObjectBase& owner)
-  : m_type_(type),
-    m_b_active_(true)
+	: m_type_(type),
+	  m_b_active_(true)
 {
-  if (const auto obj = owner.lock())
-  {
-    m_owner_ = obj;
-  }
+	if (const auto obj = owner.lock())
+	{
+		m_owner_ = obj;
+	}
 }
 
-void Engine::Script::SetActive(const bool active) { m_b_active_ = active; }
+void Engine::Script::SetActive(const bool active)
+{
+	m_b_active_ = active;
+}
 
 Engine::StrongScript Engine::Script::Clone(const WeakObjectBase& owner) const
 {
-  auto clone = cloneImpl();
-  clone->SetOwner(owner);
-  return clone;
+	auto clone = cloneImpl();
+	clone->SetOwner(owner);
+	return clone;
 }
 
 Engine::Script::Script()
-  : m_type_(),
-    m_b_active_(true) {}
+	: m_type_(),
+	  m_b_active_(true) {}
 
 void Engine::Script::SetOwner(const WeakObjectBase& owner)
 {
-  m_owner_ = owner;
+	m_owner_ = owner;
 }

@@ -17,72 +17,105 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
-  COMP_CLONE_IMPL(ObserverController)
+	COMP_CLONE_IMPL(ObserverController)
 
-  ObserverController::ObserverController(const WeakObjectBase& owner)
-    : StateController(owner) {}
+	ObserverController::ObserverController(const WeakObjectBase& owner)
+		: StateController(owner) {}
 
-  void ObserverController::Initialize() { StateController::Initialize(); }
+	void ObserverController::Initialize()
+	{
+		StateController::Initialize();
+	}
 
-  void ObserverController::PreUpdate(const float& dt) { StateController::PreUpdate(dt); }
+	void ObserverController::PreUpdate(const float& dt)
+	{
+		StateController::PreUpdate(dt);
+	}
 
-  void ObserverController::Update(const float& dt)
-  {
-    Mouse(dt);
-    Move(dt);
-  }
+	void ObserverController::Update(const float& dt)
+	{
+		Mouse(dt);
+		Move(dt);
+	}
 
-  void ObserverController::FixedUpdate(const float& dt) {}
+	void ObserverController::FixedUpdate(const float& dt) {}
 
-  void ObserverController::PostUpdate(const float& dt) { StateController::PostUpdate(dt); }
+	void ObserverController::PostUpdate(const float& dt)
+	{
+		StateController::PostUpdate(dt);
+	}
 
-  void ObserverController::OnSerialized() {}
+	void ObserverController::OnSerialized() {}
 
-  void ObserverController::OnDeserialized() { StateController::OnDeserialized(); }
+	void ObserverController::OnDeserialized()
+	{
+		StateController::OnDeserialized();
+	}
 
-  void ObserverController::OnImGui() { StateController::OnImGui(); }
+	void ObserverController::OnImGui()
+	{
+		StateController::OnImGui();
+	}
 
-  ObserverController::ObserverController()
-    : StateController({}) {}
+	ObserverController::ObserverController()
+		: StateController({}) {}
 
-  void ObserverController::Mouse(const float& dt)
-  {
-    const auto mouse = GetApplication().GetMouseState();
+	void ObserverController::Mouse(const float& dt)
+	{
+		const auto mouse = GetApplication().GetMouseState();
 
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) { return; }
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
+		{
+			return;
+		}
 
-    if (mouse.leftButton)
-    {
-      const auto tr        = GetOwner().lock()->GetComponent<Transform>().lock();
-      const auto mouse_rot = GetMouseManager().GetMouseRotation();
-      tr->SetLocalRotation(mouse_rot);
-    }
-  }
+		if (mouse.leftButton)
+		{
+			const auto tr        = GetOwner().lock()->GetComponent<Transform>().lock();
+			const auto mouse_rot = GetMouseManager().GetMouseRotation();
+			tr->SetLocalRotation(mouse_rot);
+		}
+	}
 
-  void ObserverController::Move(const float& dt)
-  {
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) { return; }
+	void ObserverController::Move(const float& dt)
+	{
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
+		{
+			return;
+		}
 
-    const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
+		const auto tr = GetOwner().lock()->GetComponent<Transform>().lock();
 
-    const float speed   = 2.0f * dt;
-    const auto  forward = GetOwner().lock()->GetComponent<Transform>().lock()->Forward();
-    const auto  ortho   =
-      Vector3::Transform
-      (
-       forward, Matrix::CreateRotationY
-       (
-        -DirectX::XMConvertToRadians(90.0f)
-       )
-      ) *
-      speed;
+		const float speed   = 2.0f * dt;
+		const auto  forward = GetOwner().lock()->GetComponent<Transform>().lock()->Forward();
+		const auto  ortho   =
+				Vector3::Transform
+				(
+				 forward, Matrix::CreateRotationY
+				 (
+				  -DirectX::XMConvertToRadians(90.0f)
+				 )
+				) *
+				speed;
 
-    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::W)) { tr->Translate(forward * speed); }
+		if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::W))
+		{
+			tr->Translate(forward * speed);
+		}
 
-    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::A)) { tr->Translate(ortho); }
+		if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::A))
+		{
+			tr->Translate(ortho);
+		}
 
-    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::S)) { tr->Translate(-forward * speed); }
+		if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::S))
+		{
+			tr->Translate(-forward * speed);
+		}
 
-    if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::D)) { tr->Translate(-ortho); }
-  }
+		if (GetApplication().GetCurrentKeyState().IsKeyDown(Keyboard::D))
+		{
+			tr->Translate(-ortho);
+		}
+	}
 } // namespace Engine::Component

@@ -3,87 +3,87 @@
 
 float4 ps_main(PixelInputType input) : SV_TARGET
 {
-  int i = 0;
+	int i = 0;
 
-  float shadowFactor[MAX_NUM_LIGHTS];
-  GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
+	float shadowFactor[MAX_NUM_LIGHTS];
+	GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
 
-  if (bufMaterial[0].repeatMaterial.x == true)
-  {
-    const float2 scaleWiseTex = input.tex * input.scale.xy;
-    const float2 repeatTex    = frac(scaleWiseTex);
-    input.tex = repeatTex;
-  }
+	if (bufMaterial[0].repeatMaterial.x == true)
+	{
+		const float2 scaleWiseTex = input.tex * input.scale.xy;
+		const float2 repeatTex    = frac(scaleWiseTex);
+		input.tex                 = repeatTex;
+	}
 
-  const float4 textureColor = tex00.Sample(PSSampler, input.tex);
-  float        normalLightIntensity[MAX_NUM_LIGHTS];
-  float        textureLightIntensity[MAX_NUM_LIGHTS];
+	const float4 textureColor = tex00.Sample(PSSampler, input.tex);
+	float        normalLightIntensity[MAX_NUM_LIGHTS];
+	float        textureLightIntensity[MAX_NUM_LIGHTS];
 
-  float4 normalColorArray[MAX_NUM_LIGHTS];
-  float4 textureColorArray[MAX_NUM_LIGHTS];
+	float4 normalColorArray[MAX_NUM_LIGHTS];
+	float4 textureColorArray[MAX_NUM_LIGHTS];
 
-  float4 normalMap = tex01.Sample(PSSampler, input.tex);
+	float4 normalMap = tex01.Sample(PSSampler, input.tex);
 
-  normalMap = (normalMap * 2.0f) - 1.0f;
+	normalMap = (normalMap * 2.0f) - 1.0f;
 
-  float3 bumpNormal = (normalMap.x * input.tangent) +
-                      (normalMap.y * input.binormal) +
-                      (normalMap.z * input.normal);
-  bumpNormal = normalize(bumpNormal);
+	float3 bumpNormal = (normalMap.x * input.tangent) +
+	                    (normalMap.y * input.binormal) +
+	                    (normalMap.z * input.normal);
+	bumpNormal = normalize(bumpNormal);
 
-  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
-  {
-    const float dist = length(input.lightDelta[i]);
+	for (i = 0; i < PARAM_NUM_LIGHT; ++i)
+	{
+		const float dist = length(input.lightDelta[i]);
 
-    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
-    {
-      if (dist > bufLight[i].range.x)
-      {
-        normalLightIntensity[i]  = LerpShadow(shadowFactor[i]) * g_ambientColor;
-        textureLightIntensity[i] = LerpShadow(shadowFactor[i]) * g_ambientColor;
-        continue;
-      }
-    }
+		if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+		{
+			if (dist > bufLight[i].range.x)
+			{
+				normalLightIntensity[i]  = LerpShadow(shadowFactor[i]) * g_ambientColor;
+				textureLightIntensity[i] = LerpShadow(shadowFactor[i]) * g_ambientColor;
+				continue;
+			}
+		}
 
-    const float3 light_dir = normalize(input.lightDelta[i]);
+		const float3 light_dir = normalize(input.lightDelta[i]);
 
-    normalLightIntensity[i] =
-      saturate(dot(bumpNormal, light_dir));
-    textureLightIntensity[i] =
-      saturate(dot(input.normal, light_dir));
+		normalLightIntensity[i] =
+				saturate(dot(bumpNormal, light_dir));
+		textureLightIntensity[i] =
+				saturate(dot(input.normal, light_dir));
 
-    const float4 shadow = LerpShadow(shadowFactor[i]);
+		const float4 shadow = LerpShadow(shadowFactor[i]);
 
-    normalColorArray[i]  = shadow * bufLight[i].color * normalLightIntensity[i];
-    textureColorArray[i] = shadow * bufLight[i].color * textureLightIntensity[i];
+		normalColorArray[i]  = shadow * bufLight[i].color * normalLightIntensity[i];
+		textureColorArray[i] = shadow * bufLight[i].color * textureLightIntensity[i];
 
-    if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
-    {
-      normalColorArray[i] *= saturate(1.0f - (dist / bufLight[i].range.x));
-      textureColorArray[i] *= saturate(1.0f - (dist / bufLight[i].range.x));
-    }
-  }
+		if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
+		{
+			normalColorArray[i] *= saturate(1.0f - (dist / bufLight[i].range.x));
+			textureColorArray[i] *= saturate(1.0f - (dist / bufLight[i].range.x));
+		}
+	}
 
-  float4 normalLightColor = g_ambientColor;
+	float4 normalLightColor = g_ambientColor;
 
-  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
-  {
-    normalLightColor.r += normalColorArray[i].r;
-    normalLightColor.g += normalColorArray[i].g;
-    normalLightColor.b += normalColorArray[i].b;
-  }
+	for (i = 0; i < PARAM_NUM_LIGHT; ++i)
+	{
+		normalLightColor.r += normalColorArray[i].r;
+		normalLightColor.g += normalColorArray[i].g;
+		normalLightColor.b += normalColorArray[i].b;
+	}
 
-  float4 textureLightColor = g_ambientColor;
+	float4 textureLightColor = g_ambientColor;
 
-  for (i = 0; i < PARAM_NUM_LIGHT; ++i)
-  {
-    textureLightColor.r += textureColorArray[i].r;
-    textureLightColor.g += textureColorArray[i].g;
-    textureLightColor.b += textureColorArray[i].b;
-  }
+	for (i = 0; i < PARAM_NUM_LIGHT; ++i)
+	{
+		textureLightColor.r += textureColorArray[i].r;
+		textureLightColor.g += textureColorArray[i].g;
+		textureLightColor.b += textureColorArray[i].b;
+	}
 
-  float4 color =
-    saturate(textureLightColor) * saturate(normalLightColor) * textureColor;
+	float4 color =
+			saturate(textureLightColor) * saturate(normalLightColor) * textureColor;
 
-  return color;
+	return color;
 }

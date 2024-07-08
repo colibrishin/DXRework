@@ -14,24 +14,27 @@ SERIALIZE_IMPL
 
 namespace Engine::Components
 {
-  COMP_CLONE_IMPL(ModelRenderer)
+	COMP_CLONE_IMPL(ModelRenderer)
 
-  ModelRenderer::ModelRenderer(const WeakObjectBase& owner)
-    : RenderComponent(RENDER_COM_T_MODEL, owner) {}
+	ModelRenderer::ModelRenderer(const WeakObjectBase& owner)
+		: RenderComponent(RENDER_COM_T_MODEL, owner) {}
 
-  void ModelRenderer::PreUpdate(const float& dt) {}
+	void ModelRenderer::PreUpdate(const float& dt) {}
 
-  void ModelRenderer::Update(const float& dt) {}
+	void ModelRenderer::Update(const float& dt) {}
 
-  void ModelRenderer::FixedUpdate(const float& dt) {}
+	void ModelRenderer::FixedUpdate(const float& dt) {}
 
-  void ModelRenderer::PostUpdate(const float& dt) { Component::PostUpdate(dt); }
+	void ModelRenderer::PostUpdate(const float& dt)
+	{
+		Component::PostUpdate(dt);
+	}
 
-  void ModelRenderer::OnImGui()
-  {
-    RenderComponent::OnImGui();
-  }
+	void ModelRenderer::OnImGui()
+	{
+		RenderComponent::OnImGui();
+	}
 
-  ModelRenderer::ModelRenderer()
-    : RenderComponent(RENDER_COM_T_MODEL, {}) {}
+	ModelRenderer::ModelRenderer()
+		: RenderComponent(RENDER_COM_T_MODEL, {}) {}
 }

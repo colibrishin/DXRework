@@ -3,9 +3,9 @@
 
 float4 ps_main(PixelInputType input) : SV_TARGET
 {
-  const float4 textureColor = tex00.Sample(PSSampler, input.tex);
+	const float4 textureColor = tex00.Sample(PSSampler, input.tex);
 
-  float4 color = textureColor;
+	float4 color = textureColor;
 
-  return color;
+	return color;
 }

@@ -3,37 +3,46 @@
 
 namespace Engine::Components
 {
-  class StateController : public Abstract::Component
-  {
-  public:
-    COMPONENT_T(COM_T_STATE)
+	class StateController : public Abstract::Component
+	{
+	public:
+		COMPONENT_T(COM_T_STATE)
 
-    explicit StateController(const WeakObjectBase& owner);
+		explicit StateController(const WeakObjectBase& owner);
 
-    template <typename Enum>
-    Enum GetState() const { return static_cast<Enum>(m_state_); }
+		template <typename Enum>
+		Enum GetState() const
+		{
+			return static_cast<Enum>(m_state_);
+		}
 
-    template <typename Enum>
-    Enum GetPreviousState() const { return static_cast<Enum>(m_previous_state_); }
+		template <typename Enum>
+		Enum GetPreviousState() const
+		{
+			return static_cast<Enum>(m_previous_state_);
+		}
 
-    bool HasStateChanged() const;
+		bool HasStateChanged() const;
 
-    void Initialize() override;
-    void PreUpdate(const float& dt) override;
+		void Initialize() override;
+		void PreUpdate(const float& dt) override;
 
-    void OnDeserialized() override;
-    void OnImGui() override;
+		void OnDeserialized() override;
+		void OnImGui() override;
 
-  protected:
-    template <typename Enum>
-    void SetState(Enum state) { m_state_ = static_cast<Enum>(state); }
+	protected:
+		template <typename Enum>
+		void SetState(Enum state)
+		{
+			m_state_ = static_cast<Enum>(state);
+		}
 
-  private:
-    SERIALIZE_DECL
+	private:
+		SERIALIZE_DECL
 
-    int m_state_;
-    int m_previous_state_;
-  };
+		int m_state_;
+		int m_previous_state_;
+	};
 } // namespace Engine::Abstract
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Components::StateController)

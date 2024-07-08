@@ -65,7 +65,7 @@ using namespace DirectX;
 
 namespace Client
 {
-  using namespace Engine;
+	using namespace Engine;
 }
 
 #endif // CLIENT_PCH_H

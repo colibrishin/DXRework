@@ -11,185 +11,243 @@ SERIALIZE_IMPL
 
 namespace Engine
 {
-  Layer::Layer(eLayerType type)
-    : m_layer_type_(type) { }
+	Layer::Layer(eLayerType type)
+		: m_layer_type_(type) { }
 
-  void Layer::Initialize() {}
+	void Layer::Initialize() {}
 
-  void Layer::PreUpdate(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::PreUpdate(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->PreUpdate(dt);
-    }
-  }
+			object->PreUpdate(dt);
+		}
+	}
 
-  void Layer::Update(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::Update(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->Update(dt);
-    }
-  }
+			object->Update(dt);
+		}
+	}
 
-  void Layer::PreRender(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::PreRender(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->PreRender(dt);
-    }
-  }
+			object->PreRender(dt);
+		}
+	}
 
-  void Layer::Render(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::Render(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->Render(dt);
-    }
-  }
+			object->Render(dt);
+		}
+	}
 
-  void Layer::PostRender(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::PostRender(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->PostRender(dt);
-    }
-  }
+			object->PostRender(dt);
+		}
+	}
 
-  void Layer::FixedUpdate(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::FixedUpdate(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->FixedUpdate(dt);
-    }
-  }
+			object->FixedUpdate(dt);
+		}
+	}
 
-  void Layer::PostUpdate(const float& dt)
-  {
-    for (const auto& object : m_objects_)
-    {
-      if (!object->GetActive()) { continue; }
+	void Layer::PostUpdate(const float& dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			if (!object->GetActive())
+			{
+				continue;
+			}
 
-      if (object->GetParent().lock()) { continue; }
+			if (object->GetParent().lock())
+			{
+				continue;
+			}
 
-      object->PostUpdate(dt);
-    }
-  }
+			object->PostUpdate(dt);
+		}
+	}
 
-  void Layer::OnSerialized()
-  {
-    for (const auto& object : m_objects_)
-    {
-      object->OnSerialized();
-    }
-  }
+	void Layer::OnSerialized()
+	{
+		for (const auto& object : m_objects_)
+		{
+			object->OnSerialized();
+		}
+	}
 
-  void Layer::OnDeserialized()
-  {
-    Renderable::OnDeserialized();
+	void Layer::OnDeserialized()
+	{
+		Renderable::OnDeserialized();
 
-    // rebuild cache
-    for (const auto& object : m_objects_)
-    {
-      object->OnDeserialized();
-      m_weak_objects_cache_.insert({object->GetID(), object});
-    }
-  }
+		// rebuild cache
+		for (const auto& object : m_objects_)
+		{
+			object->OnDeserialized();
+			m_weak_objects_cache_.insert({object->GetID(), object});
+		}
+	}
 
-  void Layer::AddGameObject(const StrongObjectBase& obj)
-  {
-    if (m_objects_.contains(obj)) { return; }
+	void Layer::AddGameObject(const StrongObjectBase& obj)
+	{
+		if (m_objects_.contains(obj))
+		{
+			return;
+		}
 
-    m_objects_.insert(obj);
-    m_weak_objects_cache_.insert({obj->GetID(), obj});
-  }
+		m_objects_.insert(obj);
+		m_weak_objects_cache_.insert({obj->GetID(), obj});
+	}
 
-  void Layer::RemoveGameObject(GlobalEntityID id)
-  {
-    WeakObjectBase obj;
+	void Layer::RemoveGameObject(GlobalEntityID id)
+	{
+		WeakObjectBase obj;
 
-    {
-      ConcurrentWeakObjGlobalMap::const_accessor acc;
+		{
+			ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-      if (m_weak_objects_cache_.find(acc, id)) { obj = acc->second; }
-    }
+			if (m_weak_objects_cache_.find(acc, id))
+			{
+				obj = acc->second;
+			}
+		}
 
-    if (const auto locked = obj.lock())
-    {
-      m_objects_.erase(locked);
-      m_weak_objects_cache_.erase(id);
-    }
-  }
+		if (const auto locked = obj.lock())
+		{
+			m_objects_.erase(locked);
+			m_weak_objects_cache_.erase(id);
+		}
+	}
 
-  WeakObjectBase Layer::FindGameObject(GlobalEntityID id) const
-  {
-    ConcurrentWeakObjGlobalMap::const_accessor acc;
+	WeakObjectBase Layer::FindGameObject(GlobalEntityID id) const
+	{
+		ConcurrentWeakObjGlobalMap::const_accessor acc;
 
-    if (m_weak_objects_cache_.find(acc, id)) { return acc->second; }
+		if (m_weak_objects_cache_.find(acc, id))
+		{
+			return acc->second;
+		}
 
-    if (const auto& it = std::ranges::find_if(
-        m_objects_, 
-        [id](const auto& obj)
-    {
-      return obj->GetID() == id;
-    }); 
-        it != m_objects_.end())
-    {
-      return *it;
-    }
+		if (const auto& it = std::ranges::find_if
+					(
+					 m_objects_,
+					 [id](const auto& obj)
+					 {
+						 return obj->GetID() == id;
+					 }
+					);
+			it != m_objects_.end())
+		{
+			return *it;
+		}
 
-    return {};
-  }
+		return {};
+	}
 
-  WeakObjectBase Layer::FindGameObjectByLocalID(const LocalActorID id) const
-  {
-    if (const auto& it = std::ranges::find_if(
-        m_objects_, 
-        [id](const auto& obj)
-    {
-      return obj->GetLocalID() == id;
-    }); 
-        it != m_objects_.end())
-    {
-      return *it;
-    }
+	WeakObjectBase Layer::FindGameObjectByLocalID(const LocalActorID id) const
+	{
+		if (const auto& it = std::ranges::find_if
+					(
+					 m_objects_,
+					 [id](const auto& obj)
+					 {
+						 return obj->GetLocalID() == id;
+					 }
+					);
+			it != m_objects_.end())
+		{
+			return *it;
+		}
 
-    return {};
-  }
+		return {};
+	}
 
-  ConcurrentWeakObjVec Layer::GetGameObjects() const
-  {
-    ConcurrentWeakObjVec result;
+	ConcurrentWeakObjVec Layer::GetGameObjects() const
+	{
+		ConcurrentWeakObjVec result;
 
-    for (const auto& obj : m_weak_objects_cache_ | std::views::values) { result.push_back(obj); }
+		for (const auto& obj : m_weak_objects_cache_ | std::views::values)
+		{
+			result.push_back(obj);
+		}
 
-    return result;
-  }
+		return result;
+	}
 
-  Layer::Layer()
-    : m_layer_type_(LAYER_NONE) {}
+	Layer::Layer()
+		: m_layer_type_(LAYER_NONE) {}
 } // namespace Engine
