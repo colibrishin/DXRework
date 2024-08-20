@@ -67,7 +67,7 @@ namespace Engine::Resources
 
 		DX::ThrowIfFailed
 				(
-				 DirectX::ComputePitch(DXGI_FORMAT_R32G32B32A32_FLOAT, desc.Width, desc.Height, row_pitch, slice_pitch)
+				 DirectX::ComputePitch(desc.Format, desc.Width, desc.Height, row_pitch, slice_pitch)
 				);
 
 		auto* data = reinterpret_cast<float*>(mapped);
