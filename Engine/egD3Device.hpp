@@ -169,7 +169,7 @@ namespace Engine::Manager::Graphics
 		void InitializeConsumer();
 
 		void WaitForEventCompletion(UINT64 buffer_idx) const;
-		void WaitForCommandsCompletion();
+		void WaitForCommandsCompletion() const;
 		void WaitNextFrame();
 		void ConsumeCommands();
 
@@ -205,10 +205,9 @@ namespace Engine::Manager::Graphics
 		std::map<FrameIndex, std::vector<Strong<CommandPair>>>     m_command_pairs_;
 		std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_;
 
-		std::mutex                            m_command_pairs_mutex_;
-		std::map<UINT64, Strong<CommandPair>> m_command_pairs_generated_;
-		std::atomic<UINT64>                   m_command_pairs_count_;
-		std::atomic<bool>                     m_command_pairs_queued_;
+		std::mutex                      m_command_pairs_mutex_;
+		pool_queue<Strong<CommandPair>> m_command_pairs_generated_;
+		std::atomic<UINT64>             m_command_pairs_count_;
 
 		std::thread       m_command_consumer_;
 		std::atomic<bool> m_command_consumer_running_ = false;

@@ -87,8 +87,7 @@ namespace Engine
 			m_post_execute_function_ = post_execution;
 		}
 
-		GetD3Device().m_command_pairs_queued_.store(true);
-		GetD3Device().m_command_pairs_queued_.notify_all();
+		GetD3Device().m_command_pairs_count_.notify_all();
 	}
 
 	bool CommandPair::IsReady()

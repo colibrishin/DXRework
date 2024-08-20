@@ -517,12 +517,18 @@ namespace Engine::Manager::Graphics
 		}
 	}
 
-	void D3Device::WaitForCommandsCompletion()
+	void D3Device::WaitForCommandsCompletion() const
 	{
-		while (m_command_pairs_count_.load())
+		while (true)
 		{
-			m_command_pairs_queued_.store(true);
-			m_command_pairs_queued_.notify_all();
+			const UINT64 count = m_command_pairs_count_.load();
+
+			if (count == 0)
+			{
+				break;
+			}
+
+			m_command_pairs_count_.wait(count);
 		}
 	}
 
@@ -779,11 +785,10 @@ namespace Engine::Manager::Graphics
 		std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
 		const UINT64                next = ++m_command_ids_;
 
-		m_command_pairs_generated_[next] = boost::make_shared<CommandPair>
-				(COMMAND_TYPE_DIRECT, m_command_ids_, buffer_idx, debug_name);
+		m_command_pairs_generated_.push(std::move(boost::allocate_shared<CommandPair>(s_command_pair_pool, COMMAND_TYPE_DIRECT, m_command_ids_, buffer_idx, debug_name)));
 		m_command_pairs_count_.fetch_add(1);
 
-		return m_command_pairs_generated_[next];
+		return m_command_pairs_generated_.back();
 	}
 
 	bool D3Device::IsCommandPairAvailable(UINT64 buffer_idx) const
@@ -837,32 +842,34 @@ namespace Engine::Manager::Graphics
 	{
 		while (m_command_consumer_running_)
 		{
-			m_command_pairs_queued_.wait(false);
-
-			std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
-
-			const auto& it = m_command_pairs_generated_.begin();
-
-			if (it == m_command_pairs_generated_.end())
+			if (const UINT64 count = m_command_pairs_count_.load())
 			{
-				continue;
-			}
+				std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
 
-			if (it->second->IsExecuted())
+				if (m_command_pairs_generated_.empty())
+				{
+					continue;
+				}
+
+				if (const auto& queued = m_command_pairs_generated_.front();
+					queued->IsExecuted())
+				{
+					m_command_pairs_count_.fetch_sub(1);
+					m_command_pairs_generated_.pop();
+					m_command_pairs_count_.notify_all();
+				}
+				else if (queued->IsReady())
+				{
+					queued->Execute(false);
+					m_command_pairs_count_.fetch_sub(1);
+					m_command_pairs_generated_.pop();
+					m_command_pairs_count_.notify_all();
+				}
+			}
+			else
 			{
-				m_command_pairs_generated_.erase(it->first);
-				m_command_pairs_count_.fetch_sub(1);
-				continue;
+				m_command_pairs_count_.wait(count);
 			}
-
-			if (it->second->IsReady())
-			{
-				it->second->Execute(false);
-				m_command_pairs_generated_.erase(it->first);
-				m_command_pairs_count_.fetch_sub(1);
-			}
-
-			m_command_pairs_queued_.store(false);
 		}
 	}
 
