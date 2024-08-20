@@ -160,11 +160,6 @@ namespace Engine
 		};
 	}
 
-	static UINT64 Align(UINT64 size, UINT64 alignment)
-	{
-		return (size + alignment - 1) & ~(alignment - 1);
-	}
-
 	static bool __vectorcall FloatCompare(const float a, const float b)
 	{
 		return std::fabs(a - b) <
