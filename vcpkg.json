@@ -4,6 +4,7 @@
         "tinyobjloader",
         "boost-smart-ptr",
         "boost-serialization",
+        "boost-pool",
         "assimp"
     ]
 }
