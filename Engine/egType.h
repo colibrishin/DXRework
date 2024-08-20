@@ -6,6 +6,7 @@
 #include <memory>
 #include <type_traits>
 #include <boost/smart_ptr/weak_ptr.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include <oneapi/tbb.h>
 
 #include "egEnums.h"
@@ -423,4 +424,42 @@ namespace Engine
 			return memcmp(&Left, &Right, sizeof(Right)) < 0;
 		}
 	};
+
+	constexpr UINT64 Align(UINT64 size, UINT64 alignment)
+	{
+		return (size + alignment - 1) & ~(alignment - 1);
+	}
+
+	constexpr size_t g_default_pool_size = 16;
+	constexpr size_t g_pool_size_alignment = 32;
+
+	template <typename KeyType, typename ValueType>
+	struct aligned_pair_size
+	{
+		constexpr unsigned operator()() const
+		{
+			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_pool_size_alignment));
+		}
+	};
+
+	template <typename KeyType, typename ValueType>
+	using aligned_fast_pool_allocator = boost::fast_pool_allocator<std::pair<const KeyType, ValueType>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, aligned_pair_size<KeyType, ValueType>{}()>;
+
+	template <typename ValueType>
+	using aligned_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType) * g_default_pool_size, g_pool_size_alignment)>;
+
+	template <typename ValueType>
+	using aligned_pool_allocator_single = boost::pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType) * g_default_pool_size, g_pool_size_alignment)>;
+
+	template <typename KeyType>
+	using fast_pool_set = std::set<KeyType, std::less<KeyType>, aligned_fast_pool_allocator_single<KeyType>>;
+
+	template <typename KeyType, typename ValueType>
+	using fast_pool_unordered_map = std::unordered_map<KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+
+	template <typename KeyType, typename ValueType>
+	using fast_pool_map = std::map<KeyType, ValueType, std::less<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+
+	template <typename ValueType>
+	using pool_queue = std::queue<ValueType, std::deque<ValueType, aligned_pool_allocator_single<ValueType>>>;
 } // namespace Engine
