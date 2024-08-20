@@ -163,6 +163,8 @@ namespace Engine::Manager::Graphics
 		m_command_consumer_running_ = false;
 		CloseHandle(m_fence_event_);
 		delete[] m_fence_nonce_;
+
+		s_command_pair_pool.~pool_allocator();
 	}
 
 	void D3Device::InitializeDevice()

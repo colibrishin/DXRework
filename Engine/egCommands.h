@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/pool/pool_alloc.hpp>
 #include <wrl/client.h>
 
 namespace Engine
@@ -55,4 +56,8 @@ namespace Engine
 		ComPtr<ID3D12GraphicsCommandList1> m_list_;
 		ComPtr<ID3D12GraphicsCommandList4> m_list4_;
 	};
+
+	using CommandPairPool = boost::pool_allocator<CommandPair>;
+
+	inline static CommandPairPool s_command_pair_pool{};
 }
