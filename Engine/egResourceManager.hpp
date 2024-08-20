@@ -3,6 +3,8 @@
 #include <boost/type.hpp>
 #include <boost/mpl/find.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/pool/pool.hpp>
+#include <boost/pool/pool_alloc.hpp>
 
 #include "egCommon.hpp"
 #include "egManager.hpp"
@@ -246,9 +248,9 @@ namespace Engine::Manager
 		bool m_b_imgui_load_atlas_dialog_      = false;
 		bool m_b_imgui_multiple_choice_dialog_ = false;
 
-		std::map<eResourceType, std::set<StrongResource>> m_resources_;
-		std::map<LocalResourceID, WeakResource>           m_resource_cache_;
-		std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
+		std::map<eResourceType, std::set<StrongResource, std::less<StrongResource>, boost::fast_pool_allocator<StrongResource, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, sizeof(StrongResource) * 32>>> m_resources_;
+		std::map<LocalResourceID, WeakResource, std::less<LocalResourceID>, boost::fast_pool_allocator<std::pair<const LocalResourceID, WeakResource>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, sizeof(LocalResourceID) * 32>> m_resource_cache_;
+		std::map<LocalResourceID, GlobalEntityID, std::less<LocalResourceID>, boost::fast_pool_allocator<std::pair<const LocalResourceID, GlobalEntityID>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, sizeof(LocalResourceID) * 32>> m_resource_ids_;
 	};
 } // namespace Engine::Manager
 
