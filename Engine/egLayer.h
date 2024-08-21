@@ -69,8 +69,8 @@ namespace Engine
 
 		SERIALIZE_DECL
 
-		eLayerType                 m_layer_type_;
-		std::set<StrongObjectBase> m_objects_;
+		eLayerType						m_layer_type_;
+		fast_pool_set<StrongObjectBase> m_objects_;
 
 		// Non-serialized
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
