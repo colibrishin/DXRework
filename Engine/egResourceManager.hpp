@@ -3,6 +3,8 @@
 #include <boost/type.hpp>
 #include <boost/mpl/find.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/pool/pool.hpp>
+#include <boost/pool/pool_alloc.hpp>
 
 #include "egCommon.hpp"
 #include "egManager.hpp"
@@ -246,9 +248,9 @@ namespace Engine::Manager
 		bool m_b_imgui_load_atlas_dialog_      = false;
 		bool m_b_imgui_multiple_choice_dialog_ = false;
 
-		std::map<eResourceType, std::set<StrongResource>> m_resources_;
-		std::map<LocalResourceID, WeakResource>           m_resource_cache_;
-		std::map<LocalResourceID, GlobalEntityID>         m_resource_ids_;
+		fast_pool_unordered_map<eResourceType, fast_pool_set<StrongResource>> m_resources_;
+		fast_pool_unordered_map<LocalResourceID, WeakResource> m_resource_cache_;
+		fast_pool_unordered_map<LocalResourceID, GlobalEntityID> m_resource_ids_;
 	};
 } // namespace Engine::Manager
 

@@ -25,6 +25,11 @@ namespace Engine::Manager::Graphics
 
 	void RayTracer::PreRender(const float& dt)
 	{
+		if (!GetRaytracingPipeline().IsRaytracingSupported())
+		{
+			return;
+		}
+
 		m_light_buffers_.clear();
 
 		if (const auto& scene = GetSceneManager().GetActiveScene().lock())
@@ -60,6 +65,11 @@ namespace Engine::Manager::Graphics
 
 	void RayTracer::Render(const float& dt)
 	{
+		if (!GetRaytracingPipeline().IsRaytracingSupported())
+		{
+			return;
+		}
+
 		const auto& cmd = GetD3Device().AcquireCommandPair(L"Pre-processing TLAS").lock();
 
 		cmd->SoftReset();
@@ -79,6 +89,11 @@ namespace Engine::Manager::Graphics
 
 	void RayTracer::Initialize()
 	{
+		if (!GetRaytracingPipeline().IsRaytracingSupported())
+		{
+			return;
+		}
+
 		const auto& cmd = GetD3Device().AcquireCommandPair(L"RayTracer Initialization").lock();
 
 		cmd->SoftReset();
@@ -109,6 +124,11 @@ namespace Engine::Manager::Graphics
 		const std::function<bool(const StrongObjectBase&)>& predicate
 	)
 	{
+		if (!GetRaytracingPipeline().IsRaytracingSupported())
+		{
+			return;
+		}
+
 		if (const auto& scene = GetSceneManager().GetActiveScene().lock())
 		{
 			UINT64 total_item_count = 0;

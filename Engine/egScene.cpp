@@ -771,6 +771,29 @@ namespace Engine
 
 		m_object_position_tree_.Update();
 
+		if (m_b_scene_raytracing_ && !g_raytracing)
+		{
+			if (!GetRaytracingPipeline().IsRaytracingSupported())
+			{
+				m_b_scene_raytracing_ = false;
+			}
+			else
+			{
+				GetTaskScheduler().AddTask
+				(
+					TASK_TOGGLE_RASTER,
+					{ GetSharedPtr<Scene>(), m_b_scene_raytracing_ },
+					[](const std::vector<std::any>& params, const float)
+					{
+						const auto& scene = std::any_cast<StrongScene>(params[0]);
+						const auto& b_raytracing = std::any_cast<bool>(params[1]);
+
+						g_raytracing = b_raytracing;
+					}
+				);
+			}
+		}
+
 		AddObserver();
 	}
 
@@ -785,18 +808,25 @@ namespace Engine
 
 			if (ImGui::Checkbox("Raytracing", &m_b_scene_raytracing_))
 			{
-				GetTaskScheduler().AddTask
-						(
-						 TASK_TOGGLE_RASTER,
-						 {GetSharedPtr<Scene>(), m_b_scene_raytracing_},
-						 [](const std::vector<std::any>& params, const float)
-						 {
-							 const auto& scene        = std::any_cast<StrongScene>(params[0]);
-							 const auto& b_raytracing = std::any_cast<bool>(params[1]);
+				if (!GetRaytracingPipeline().IsRaytracingSupported())
+				{
+					m_b_scene_raytracing_ = false;
+				}
+				else
+				{
+					GetTaskScheduler().AddTask
+					(
+						TASK_TOGGLE_RASTER,
+						{ GetSharedPtr<Scene>(), m_b_scene_raytracing_ },
+						[](const std::vector<std::any>& params, const float)
+						{
+							const auto& scene = std::any_cast<StrongScene>(params[0]);
+							const auto& b_raytracing = std::any_cast<bool>(params[1]);
 
-							 g_raytracing = b_raytracing;
-						 }
-						);
+							g_raytracing = b_raytracing;
+						}
+					);
+				}
 			}
 
 			if (ImGui::BeginListBox(list_name.c_str(), {-1, -1}))

@@ -7,22 +7,43 @@
 
 namespace Engine::Manager::Graphics
 {
+	void RaytracingPipeline::CheckRaytracingSupport()
+	{
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+		DX::ThrowIfFailed(GetD3Device().GetDevice()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
+		                                                &options5, sizeof(options5)));
+		if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
+		{
+			m_b_support_ = false;
+		}
+	}
+
 	void RaytracingPipeline::Initialize()
 	{
-		InitializeInterface();
-		InitializeViewport();
-		InitializeSignature();
-		InitializeDescriptorHeaps();
+		CheckRaytracingSupport();
 
-		InitializeRaytracingPSOTMP();
-		InitializeShaderTable();
+		if (m_b_support_)
+		{
+			InitializeInterface();
+			InitializeViewport();
+			InitializeSignature();
+			InitializeDescriptorHeaps();
 
-		PrecompileShaders();
-		InitializeOutputBuffer();
+			InitializeRaytracingPSOTMP();
+			InitializeShaderTable();
+
+			PrecompileShaders();
+			InitializeOutputBuffer();
+		}
 	}
 
 	void RaytracingPipeline::PreRender(const float& dt)
 	{
+		if (!m_b_support_)
+		{
+			return;
+		}
+
 		GetD3Device().ClearRenderTarget();
 	}
 
@@ -32,6 +53,11 @@ namespace Engine::Manager::Graphics
 
 	void RaytracingPipeline::Render(const float& dt)
 	{
+		if (!m_b_support_)
+		{
+			return;
+		}
+
 		const auto& cmd = GetD3Device().AcquireCommandPair(L"Raytracing Rendering").lock();
 
 		cmd->SoftReset();
@@ -155,6 +181,11 @@ namespace Engine::Manager::Graphics
 	ID3D12Device5* RaytracingPipeline::GetDevice() const
 	{
 		return m_device_.Get();
+	}
+
+	bool RaytracingPipeline::IsRaytracingSupported() const
+	{
+		return m_b_support_;
 	}
 
 	RaytracingPipeline::~RaytracingPipeline() {}

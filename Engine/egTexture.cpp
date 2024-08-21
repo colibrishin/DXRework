@@ -467,7 +467,47 @@ namespace Engine::Resources
 
 	void Texture::mapInternal()
 	{
-		const auto& total_size = m_desc_.Width * m_desc_.Height * m_desc_.DepthOrArraySize;
+		const auto& desc = GetDescription();
+
+		D3D12_RESOURCE_DIMENSION dim;
+
+		switch (m_type_)
+		{
+		case TEX_TYPE_1D:
+			dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+			break;
+		case TEX_TYPE_2D:
+			dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+			break;
+		case TEX_TYPE_3D:
+			dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+			break;
+		default:
+			throw std::runtime_error("Unknown texture type");
+		}
+
+		const D3D12_RESOURCE_DESC native_desc
+		{
+			.Dimension = dim,
+			.Alignment = m_desc_.Alignment,
+			.Width = m_desc_.Width,
+			.Height = m_desc_.Height,
+			.DepthOrArraySize = m_desc_.DepthOrArraySize,
+			.MipLevels = m_desc_.MipsLevel,
+			.Format = m_desc_.Format,
+			.SampleDesc = m_desc_.SampleDesc,
+			.Layout = m_desc_.Layout,
+			.Flags = m_desc_.Flags
+		};
+
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+		UINT rows;
+		UINT64 total_bytes;
+
+		GetD3Device().GetDevice()->GetCopyableFootprints(&native_desc, 0, 1, 0, &footprint, &rows, nullptr, &total_bytes);
+
+		const auto& pixel_in_bytes = DirectX::BitsPerPixel(desc.Format) / 8;
+		const auto& total_size = total_bytes / pixel_in_bytes;
 
 		const auto& dest_transition = CD3DX12_RESOURCE_BARRIER::Transition
 				(
@@ -483,7 +523,7 @@ namespace Engine::Resources
 				  GetD3Device().GetDevice(),
 				  nullptr,
 				  total_size,
-				  DirectX::BitsPerPixel(m_desc_.Format) / 8,
+				  pixel_in_bytes,
 				  m_upload_buffer_.GetAddressOf()
 				 )
 				);
@@ -520,12 +560,7 @@ namespace Engine::Resources
 			0, {m_desc_.Format, static_cast<UINT>(m_desc_.Width), m_desc_.Height, m_desc_.DepthOrArraySize}
 		}; // UINT64 width, UINT placed foot print?
 
-		size_t row_pitch;
-		size_t slice_pitch;
-
-		DX::ThrowIfFailed(DirectX::ComputePitch(m_desc_.Format, m_desc_.Width, m_desc_.Height, row_pitch, slice_pitch));
-
-		src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(row_pitch);
+		src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(footprint.Footprint.RowPitch);
 		src.PlacedFootprint.Footprint.Depth    = m_desc_.DepthOrArraySize;
 		src.PlacedFootprint.Footprint.Width    = static_cast<UINT>(m_desc_.Width);
 		src.PlacedFootprint.Footprint.Height   = m_desc_.Height;

@@ -45,7 +45,6 @@ namespace Engine
 				);
 
 		DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
-
 		DX::ThrowIfFailed(m_list_->Close());
 
 		if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
@@ -87,8 +86,7 @@ namespace Engine
 			m_post_execute_function_ = post_execution;
 		}
 
-		GetD3Device().m_command_pairs_queued_.store(true);
-		GetD3Device().m_command_pairs_queued_.notify_all();
+		GetD3Device().m_command_pairs_count_.notify_all();
 	}
 
 	bool CommandPair::IsReady()

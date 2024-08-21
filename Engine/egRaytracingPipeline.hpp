@@ -65,6 +65,8 @@ namespace Engine::Manager::Graphics
 
 		ID3D12Device5* GetDevice() const;
 
+		bool IsRaytracingSupported() const;
+
 	private:
 		friend class ToolkitAPI;
 		friend class D3Device;
@@ -72,6 +74,7 @@ namespace Engine::Manager::Graphics
 		RaytracingPipeline() = default;
 		~RaytracingPipeline() override;
 
+		void CheckRaytracingSupport();
 		void InitializeViewport();
 		void InitializeInterface();
 		void InitializeSignature();
@@ -84,6 +87,8 @@ namespace Engine::Manager::Graphics
 		void InitializeOutputBuffer();
 
 		void UpdateHitShaderRecords();
+
+		bool m_b_support_;
 
 		ComPtr<ID3D12Device5>              m_device_;
 		ComPtr<ID3D12GraphicsCommandList4> m_command_list_;

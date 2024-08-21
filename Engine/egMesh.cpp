@@ -319,7 +319,7 @@ namespace Engine::Resources
 		cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 		cmd->GetList()->ResourceBarrier(1, &idx_trans);
 
-		if (pure_vertices.size() % 3 == 0)
+		if (GetRaytracingPipeline().IsRaytracingSupported() && pure_vertices.size() % 3 == 0)
 		{
 			const auto& vtx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vector3) * pure_vertices.size());
 			const auto& idx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
