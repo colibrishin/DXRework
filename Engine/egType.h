@@ -175,6 +175,44 @@ namespace Engine
 		class TaskScheduler;
 	} // namespace Manager
 
+	constexpr UINT64 Align(UINT64 size, UINT64 alignment)
+	{
+		return (size + alignment - 1) & ~(alignment - 1);
+	}
+
+	constexpr size_t g_default_pool_size = 16;
+	constexpr size_t g_pool_size_alignment = std::hardware_destructive_interference_size;
+
+	template <typename KeyType, typename ValueType>
+	struct aligned_pair_size
+	{
+		constexpr unsigned operator()() const
+		{
+			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_pool_size_alignment));
+		}
+	};
+
+	template <typename KeyType, typename ValueType>
+	using aligned_fast_pool_allocator = boost::fast_pool_allocator < std::pair<const KeyType, ValueType>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, aligned_pair_size<KeyType, ValueType>{}() > ;
+
+	template <typename ValueType>
+	using aligned_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType)* g_default_pool_size, g_pool_size_alignment)>;
+
+	template <typename ValueType>
+	using aligned_pool_allocator_single = boost::pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType)* g_default_pool_size, g_pool_size_alignment)>;
+
+	template <typename KeyType>
+	using fast_pool_set = std::set<KeyType, std::less<KeyType>, aligned_fast_pool_allocator_single<KeyType>>;
+
+	template <typename KeyType, typename ValueType>
+	using fast_pool_unordered_map = std::unordered_map<KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+
+	template <typename KeyType, typename ValueType>
+	using fast_pool_map = std::map<KeyType, ValueType, std::less<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+
+	template <typename ValueType>
+	using pool_queue = std::queue<ValueType, std::deque<ValueType, aligned_pool_allocator_single<ValueType>>>;
+
 	// Weak pointer type definitions
 	using WeakObjectBase = boost::weak_ptr<Abstract::ObjectBase>;
 	using WeakComponent = boost::weak_ptr<Abstract::Component>;
@@ -256,17 +294,19 @@ namespace Engine
 	using IndexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
 	using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
+	template <typename KeyType, typename ValueType>
+	using concurrent_fast_pool_map = concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+
 	// Concurrent type definitions
-	using ConcurrentWeakObjGlobalMap = concurrent_hash_map<GlobalEntityID, WeakObjectBase>;
-	using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase>;
-	using ConcurrentLocalGlobalIDMap = concurrent_hash_map<LocalActorID, GlobalEntityID>;
-	using ConcurrentWeakComVec = concurrent_vector<WeakComponent>;
-	using ConcurrentWeakComMap = concurrent_hash_map<GlobalEntityID, WeakComponent>;
-	using ConcurrentWeakScpVec = concurrent_vector<WeakScript>;
-	using ConcurrentWeakScpMap = concurrent_hash_map<GlobalEntityID, WeakScript>;
-	using ConcurrentWeakComRootMap = concurrent_hash_map<eComponentType, ConcurrentWeakComMap>;
-	using ConcurrentWeakScpRootMap = concurrent_hash_map<eScriptType, ConcurrentWeakScpMap>;
-	using ConcurrentVector3Vec = concurrent_vector<Vector3>;
+	using ConcurrentWeakObjGlobalMap = concurrent_fast_pool_map<GlobalEntityID, WeakObjectBase>;
+	using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase, aligned_pool_allocator_single<WeakObjectBase>>;
+	using ConcurrentLocalGlobalIDMap = concurrent_fast_pool_map<LocalActorID, GlobalEntityID>;
+	using ConcurrentWeakComVec = concurrent_vector<WeakComponent, aligned_fast_pool_allocator_single<WeakComponent>>;
+	using ConcurrentWeakComMap = concurrent_fast_pool_map<GlobalEntityID, WeakComponent>;
+	using ConcurrentWeakScpVec = concurrent_vector<WeakScript, aligned_pool_allocator_single<WeakScript>>;
+	using ConcurrentWeakScpMap = concurrent_fast_pool_map<GlobalEntityID, WeakScript>;
+	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<eComponentType, ConcurrentWeakComMap>;
+	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<eScriptType, ConcurrentWeakScpMap>;
 
 	// Bitwise Enums
 	using eShaderRasterizers = UINT;
@@ -424,42 +464,4 @@ namespace Engine
 			return memcmp(&Left, &Right, sizeof(Right)) < 0;
 		}
 	};
-
-	constexpr UINT64 Align(UINT64 size, UINT64 alignment)
-	{
-		return (size + alignment - 1) & ~(alignment - 1);
-	}
-
-	constexpr size_t g_default_pool_size = 16;
-	constexpr size_t g_pool_size_alignment = 32;
-
-	template <typename KeyType, typename ValueType>
-	struct aligned_pair_size
-	{
-		constexpr unsigned operator()() const
-		{
-			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_pool_size_alignment));
-		}
-	};
-
-	template <typename KeyType, typename ValueType>
-	using aligned_fast_pool_allocator = boost::fast_pool_allocator<std::pair<const KeyType, ValueType>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, aligned_pair_size<KeyType, ValueType>{}()>;
-
-	template <typename ValueType>
-	using aligned_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType) * g_default_pool_size, g_pool_size_alignment)>;
-
-	template <typename ValueType>
-	using aligned_pool_allocator_single = boost::pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType) * g_default_pool_size, g_pool_size_alignment)>;
-
-	template <typename KeyType>
-	using fast_pool_set = std::set<KeyType, std::less<KeyType>, aligned_fast_pool_allocator_single<KeyType>>;
-
-	template <typename KeyType, typename ValueType>
-	using fast_pool_unordered_map = std::unordered_map<KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
-
-	template <typename KeyType, typename ValueType>
-	using fast_pool_map = std::map<KeyType, ValueType, std::less<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
-
-	template <typename ValueType>
-	using pool_queue = std::queue<ValueType, std::deque<ValueType, aligned_pool_allocator_single<ValueType>>>;
 } // namespace Engine
