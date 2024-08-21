@@ -206,7 +206,7 @@ namespace Engine::Manager::Graphics
 		std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_;
 
 		std::mutex                      m_command_pairs_mutex_;
-		pool_queue<Strong<CommandPair>> m_command_pairs_generated_;
+		pool_queue<Weak<CommandPair>>   m_command_pairs_generated_;
 		std::atomic<UINT64>             m_command_pairs_count_;
 
 		std::thread       m_command_consumer_;

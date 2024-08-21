@@ -163,8 +163,6 @@ namespace Engine::Manager::Graphics
 		m_command_consumer_running_ = false;
 		CloseHandle(m_fence_event_);
 		delete[] m_fence_nonce_;
-
-		s_command_pair_pool.~pool_allocator();
 	}
 
 	void D3Device::InitializeDevice()
@@ -785,7 +783,7 @@ namespace Engine::Manager::Graphics
 		std::lock_guard<std::mutex> lock(m_command_pairs_mutex_);
 		const UINT64                next = ++m_command_ids_;
 
-		m_command_pairs_generated_.push(std::move(boost::allocate_shared<CommandPair>(s_command_pair_pool, COMMAND_TYPE_DIRECT, m_command_ids_, buffer_idx, debug_name)));
+		m_command_pairs_generated_.push(s_command_pair_pool.allocate(COMMAND_TYPE_DIRECT, next, buffer_idx, debug_name));
 		m_command_pairs_count_.fetch_add(1);
 
 		return m_command_pairs_generated_.back();
@@ -851,18 +849,20 @@ namespace Engine::Manager::Graphics
 					continue;
 				}
 
-				if (const auto& queued = m_command_pairs_generated_.front();
-					queued->IsExecuted())
+				if (const auto& queued = m_command_pairs_generated_.front().lock();
+					queued && queued->IsExecuted())
 				{
 					m_command_pairs_count_.fetch_sub(1);
 					m_command_pairs_generated_.pop();
+					s_command_pair_pool.deallocate(queued);
 					m_command_pairs_count_.notify_all();
 				}
-				else if (queued->IsReady())
+				else if (queued && queued->IsReady())
 				{
 					queued->Execute(false);
 					m_command_pairs_count_.fetch_sub(1);
 					m_command_pairs_generated_.pop();
+					s_command_pair_pool.deallocate(queued);
 					m_command_pairs_count_.notify_all();
 				}
 			}

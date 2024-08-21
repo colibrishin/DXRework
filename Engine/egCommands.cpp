@@ -45,7 +45,6 @@ namespace Engine
 				);
 
 		DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
-
 		DX::ThrowIfFailed(m_list_->Close());
 
 		if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
