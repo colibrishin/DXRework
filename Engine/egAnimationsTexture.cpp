@@ -58,17 +58,12 @@ namespace Engine::Resources
 	{
 		Texture3D::map(mapped);
 
-		// Note: Doing dynamic allocation with large data mapping causes a memory race.
 		const D3D12_RESOURCE_DESC          desc            = GetRawResoruce()->GetDesc();
-		D3D12_PLACED_SUBRESOURCE_FOOTPRINT place_footprint = {};
 
-		size_t row_pitch;
-		size_t slice_pitch;
-
-		DX::ThrowIfFailed
-				(
-				 DirectX::ComputePitch(desc.Format, desc.Width, desc.Height, row_pitch, slice_pitch)
-				);
+		// Align(Width * format bytes, 256) = Row pitch
+		size_t row_pitch = Align(GetWidth() * (DirectX::BitsPerPixel(desc.Format) / 8), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		// RowPitch * Height = Slice pitch
+		size_t slice_pitch = Align(GetHeight() * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 
 		auto* data = reinterpret_cast<float*>(mapped);
 
