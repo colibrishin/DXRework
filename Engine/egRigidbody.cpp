@@ -34,6 +34,8 @@ namespace Engine::Components
 		{
 			GetOwner().lock()->AddComponent<Collider>();
 		}
+
+		Synchronize();
 	}
 
 	Rigidbody::Rigidbody(const WeakObjectBase& object)
@@ -260,10 +262,7 @@ namespace Engine::Components
 		Component::PostUpdate(dt);
 	}
 
-	void Rigidbody::FixedUpdate(const float& dt)
-	{
-		Synchronize();
-	}
+	void Rigidbody::FixedUpdate(const float& dt) {}
 
 	void Rigidbody::OnSerialized() {}
 
