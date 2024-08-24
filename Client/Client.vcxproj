@@ -177,6 +177,10 @@ XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
       <Command>MKDIR -P "$(SolutionDir)Metadata\"
 XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -206,6 +210,9 @@ XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
       <Command>MKDIR -P "$(SolutionDir)Metadata\"
 XCOPY "$(SolutionDir)Metadata\" "$(TargetDir)" /S /E /Y</Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="clCubifyScript.h" />
