@@ -3,21 +3,22 @@
 
 #include "egImGuiHeler.hpp"
 #include "egManagerHelper.hpp"
+#include "egRigidbody.h"
 
 SERIALIZE_IMPL
 (
- Engine::Components::Transform,
- _ARTAG(_BSTSUPER(Component))
- _ARTAG(m_b_s_absolute_)
- _ARTAG(m_b_r_absolute_)
- _ARTAG(m_previous_position_)
- _ARTAG(m_position_)
- _ARTAG(m_rotation_)
- _ARTAG(m_scale_)
- _ARTAG(m_animation_position_)
- _ARTAG(m_animation_rotation_)
- _ARTAG(m_animation_scale_)
- _ARTAG(m_animation_matrix_)
+	Engine::Components::Transform,
+	_ARTAG(_BSTSUPER(Component))
+	_ARTAG(m_b_s_absolute_)
+	_ARTAG(m_b_r_absolute_)
+	_ARTAG(m_previous_position_)
+	_ARTAG(m_position_)
+	_ARTAG(m_rotation_)
+	_ARTAG(m_scale_)
+	_ARTAG(m_animation_position_)
+	_ARTAG(m_animation_rotation_)
+	_ARTAG(m_animation_scale_)
+	_ARTAG(m_animation_matrix_)
 )
 
 namespace Engine::Components
@@ -277,8 +278,52 @@ namespace Engine::Components
 	{
 		Component::OnImGui();
 		ImGui::Indent(2);
-		ImGuiVector3Editable("Previous Position", GetID(), "previous_position", m_previous_position_);
-		ImGuiVector3Editable("Position", GetID(), "position", m_position_);
+		if (ImGuiVector3Editable("Previous Position", GetID(), "previous_position", m_previous_position_))
+		{
+			GetTaskScheduler().AddTask(
+				TASK_TF_UPDATE,
+				{ m_previous_position_, GetSharedPtr<Transform>() },
+				[](const std::vector<std::any>& params, const float)
+				{
+					const Vector3 position = std::any_cast<Vector3>(params[0]);
+					const boost::shared_ptr<Transform> transform = std::any_cast<boost::shared_ptr<Transform>>(params[1]);
+
+					transform->m_previous_position_ = position;
+
+					if (const Strong<Abstract::ObjectBase>& owner = transform->GetOwner().lock())
+					{
+						if (const Strong<Rigidbody> rb = owner->GetComponent<Rigidbody>().lock())
+						{
+							rb->Synchronize();
+						}
+					}
+				}
+			);
+		}
+
+		if (ImGuiVector3Editable("Position", GetID(), "position", m_position_))
+		{
+			GetTaskScheduler().AddTask(
+				TASK_TF_UPDATE,
+				{ m_position_, GetSharedPtr<Transform>() },
+				[](const std::vector<std::any>& params, const float)
+				{
+					const Vector3 position = std::any_cast<Vector3>(params[0]);
+					const boost::shared_ptr<Transform> transform = std::any_cast<boost::shared_ptr<Transform>>(params[1]);
+
+					transform->m_position_ = position;
+
+					if (const Strong<Abstract::ObjectBase>& owner = transform->GetOwner().lock())
+					{
+						if (const Strong<Rigidbody> rb = owner->GetComponent<Rigidbody>().lock())
+						{
+							rb->Synchronize();
+						}
+					}
+				}
+			);
+		}
+
 		if (ImGuiVector3Editable("Scale", GetID(), "scale", m_scale_, 0.1f, 0.1f))
 		{
 			ZeroToEpsilon(m_scale_);

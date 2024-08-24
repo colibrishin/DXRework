@@ -29,7 +29,7 @@ namespace Engine
 	constexpr float   g_epsilon                             = 0.001f;
 	constexpr float   g_epsilon_squared                     = g_epsilon * g_epsilon;
 	constexpr float   g_gravity_acc                         = 9.81f;
-	constexpr float   g_fixed_update_interval               = 1.f / 128.f;
+	constexpr float   g_fixed_update_interval               = 1.f / 32.f;
 	constexpr Vector3 g_gravity_vec                         = Vector3(0.0f, -g_gravity_acc, 0.0f);
 	constexpr float   g_restitution_coefficient             = 0.66f;
 	constexpr float   g_drag_coefficient                    = 0.25f;

@@ -156,13 +156,6 @@ namespace Engine::Manager
 
 	void Application::FixedUpdate(const float& dt)
 	{
-		GetTaskScheduler().FixedUpdate(dt);
-		GetMouseManager().FixedUpdate(dt);
-		GetReflectionEvaluator().FixedUpdate(dt);
-		GetSceneManager().FixedUpdate(dt);
-		GetShadowManager().FixedUpdate(dt);
-		GetResourceManager().FixedUpdate(dt);
-
 		// physics updates.
 		// gravity
 		GetGraviton().FixedUpdate(dt);
@@ -174,6 +167,13 @@ namespace Engine::Manager
 		GetPhysicsManager().FixedUpdate(dt);
 		// lerp rigidbody movements
 		GetLerpManager().FixedUpdate(dt);
+
+		GetTaskScheduler().FixedUpdate(dt);
+		GetMouseManager().FixedUpdate(dt);
+		GetReflectionEvaluator().FixedUpdate(dt);
+		GetSceneManager().FixedUpdate(dt);
+		GetShadowManager().FixedUpdate(dt);
+		GetResourceManager().FixedUpdate(dt);
 
 		GetProjectionFrustum().FixedUpdate(dt);
 		GetRenderer().FixedUpdate(dt);
@@ -335,15 +335,15 @@ namespace Engine::Manager
 
 		GetImGuiManager().NewFrame();
 
+		while (elapsed >= g_fixed_update_interval)
+		{
+			FixedUpdate(g_fixed_update_interval);
+			elapsed -= g_fixed_update_interval;
+		}
+		
 		PreUpdate(dt);
 		Update(dt);
 		PostUpdate(dt);
-
-		if (elapsed >= g_fixed_update_interval)
-		{
-			FixedUpdate(elapsed);
-			elapsed = std::fmod(elapsed, g_fixed_update_interval);
-		}
 
 		PreRender(dt);
 		Render(dt);
