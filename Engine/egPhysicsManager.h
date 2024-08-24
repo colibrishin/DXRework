@@ -1,6 +1,13 @@
 #pragma once
 #include "egManager.hpp"
 
+#ifdef PHYSX_ENABLED
+namespace physx
+{
+	class PxFoundation;
+}
+#endif
+
 namespace Engine::Manager::Physics
 {
 	class PhysicsManager : public Abstract::Singleton<PhysicsManager>
@@ -24,6 +31,11 @@ namespace Engine::Manager::Physics
 
 		static void EpsilonGuard(Vector3& lvel);
 		static void UpdateObject(Components::Rigidbody* rb, const float& dt);
+
+#ifdef PHYSX_ENABLED
+		physx::PxFoundation* m_physx_foundation_;
+#endif
+
 	};
 } // namespace Engine::Manager::Physics
 

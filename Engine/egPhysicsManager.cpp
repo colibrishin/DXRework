@@ -12,9 +12,44 @@
 #include "egSceneManager.hpp"
 #include "egTransform.h"
 
+#ifdef PHYSX_ENABLED
+#include <PxPhysicsAPI.h>
+#pragma comment(lib, "LowLevel_static_64.lib")
+#pragma comment(lib, "LowLevelAABB_static_64.lib")
+#pragma comment(lib, "LowLevelDynamics_static_64.lib")
+#pragma comment(lib, "PhysX_64.lib")
+#pragma comment(lib, "PhysXCharacterKinematic_static_64.lib")
+#pragma comment(lib, "PhysXCommon_64.lib")
+#pragma comment(lib, "PhysXCooking_64.lib")
+#pragma comment(lib, "PhysXExtensions_static_64.lib")
+#pragma comment(lib, "PhysXFoundation_64.lib")
+#pragma comment(lib, "PhysXPvdSDK_static_64.lib")
+#pragma comment(lib, "PhysXTask_static_64.lib")
+#pragma comment(lib, "PhysXVehicle_static_64.lib")
+#pragma comment(lib, "PhysXVehicle2_static_64.lib")
+#pragma comment(lib, "SceneQuery_static_64.lib")
+#pragma comment(lib, "SimulationController_static_64.lib")
+#endif
+
 namespace Engine::Manager::Physics
 {
-	void PhysicsManager::Initialize() {}
+	void PhysicsManager::Initialize()
+	{
+#ifdef PHYSX_ENABLED
+		if (!m_physx_foundation_)
+		{
+			static physx::PxDefaultErrorCallback s_error_callback;
+			static physx::PxDefaultAllocator s_allocator;
+
+			m_physx_foundation_ = PxCreateFoundation(PX_PHYSICS_VERSION, s_allocator, s_error_callback);
+
+			if (!m_physx_foundation_)
+			{
+				throw std::exception("Unable to initialize physx!");
+			}
+		}
+#endif
+	}
 
 	void PhysicsManager::PreUpdate(const float& dt) {}
 

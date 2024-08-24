@@ -9,6 +9,13 @@
 #include "egScript.h"
 #include "egTaskScheduler.h"
 
+#ifdef PHYSX_ENABLED
+namespace physx
+{
+	class PxScene;
+}
+#endif
+
 namespace Engine
 {
 	class Scene : public Abstract::Renderable
@@ -346,6 +353,10 @@ namespace Engine
 		ConcurrentWeakComRootMap   m_cached_components_;
 		ConcurrentWeakScpRootMap   m_cached_scripts_;
 		Octree                     m_object_position_tree_;
+
+#ifdef PHYSX_ENABLED
+		physx::PxScene*	m_physics_scene_;
+#endif
 	};
 } // namespace Engine
 

@@ -37,6 +37,7 @@ namespace Engine
 	constexpr size_t  g_epa_max_iteration                   = 64;
 	constexpr size_t  g_speculation_bisection_max_iteration = 64;
 	constexpr bool    g_speculation_enabled                 = true;
+#define PHYSX_ENABLED
 
 	// Misc
 	constexpr LONG_PTR g_invalid_id   = -1;
