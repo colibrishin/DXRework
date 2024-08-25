@@ -14,6 +14,7 @@
 
 #ifdef PHYSX_ENABLED
 #include <PxPhysicsAPI.h>
+#include <cooking/PxCooking.h>
 #pragma comment(lib, "LowLevel_static_64.lib")
 #pragma comment(lib, "LowLevelAABB_static_64.lib")
 #pragma comment(lib, "LowLevelDynamics_static_64.lib")
@@ -36,16 +37,48 @@ namespace Engine::Manager::Physics
 	void PhysicsManager::Initialize()
 	{
 #ifdef PHYSX_ENABLED
-		if (!m_physx_foundation_)
+		if (!m_px_foundation_)
 		{
 			static physx::PxDefaultErrorCallback s_error_callback;
 			static physx::PxDefaultAllocator s_allocator;
 
-			m_physx_foundation_ = PxCreateFoundation(PX_PHYSICS_VERSION, s_allocator, s_error_callback);
+			m_px_foundation_ = PxCreateFoundation(PX_PHYSICS_VERSION, s_allocator, s_error_callback);
 
-			if (!m_physx_foundation_)
+			if (!m_px_foundation_)
 			{
-				throw std::exception("Unable to initialize physx!");
+				throw std::exception("Unable to initialize physx foundation!");
+			}
+
+			if constexpr (g_debug)
+			{
+				m_px_pvd_ = physx::PxCreatePvd(*m_px_foundation_);
+				physx::PxPvdTransport* transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
+				m_px_pvd_->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
+			}
+
+			m_px_ = PxCreatePhysics(PX_PHYSICS_VERSION, *m_px_foundation_, physx::PxTolerancesScale(), g_debug, m_px_pvd_);
+
+			if (!m_px_)
+			{
+				throw std::exception("Unable to initialize physx physics!");
+			}
+
+			const physx::PxCudaContextManagerDesc context_desc{};
+			m_context_manager_ = PxCreateCudaContextManager(
+				*m_px_foundation_, 
+				context_desc,
+				PxGetProfilerCallback());
+
+			if (!m_context_manager_)
+			{
+				throw std::exception("Unable to initialize cuda context!");
+			}
+
+			m_px_cpu_dispatcher_ = physx::PxDefaultCpuDispatcherCreate(std::thread::hardware_concurrency());
+
+			if (!m_px_cpu_dispatcher_)
+			{
+				throw std::exception("Unable to initialize cpu dispatcher for physx!");
 			}
 		}
 #endif
@@ -78,6 +111,26 @@ namespace Engine::Manager::Physics
 	}
 
 	void PhysicsManager::PostUpdate(const float& dt) {}
+
+	PhysicsManager::~PhysicsManager()
+	{
+#ifdef PHYSX_ENABLED
+		if (m_px_pvd_)
+		{
+			m_px_pvd_->release();
+		}
+
+		if (m_px_)
+		{
+			m_px_->release();
+		}
+
+		if (m_px_foundation_)
+		{
+			m_px_foundation_->release();
+		}
+#endif
+	}
 
 	void PhysicsManager::EpsilonGuard(Vector3& lvel)
 	{
