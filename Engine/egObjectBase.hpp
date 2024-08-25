@@ -2,9 +2,12 @@
 #include "egActor.h"
 #include "egCommon.hpp"
 #include "egComponent.h"
+#include "egDelegate.hpp"
 #include "egResource.h"
 #include "egScene.hpp"
 #include "egScript.h"
+
+DEFINE_DELEGATE(OnComponentAdded, Engine::Weak<Engine::Abstract::Component>)
 
 namespace Engine::Abstract
 {
@@ -12,6 +15,8 @@ namespace Engine::Abstract
 	class ObjectBase : public Actor
 	{
 	public:
+		DelegateOnComponentAdded onComponentAdded;
+
 		~ObjectBase() override = default;
 
 		void PreUpdate(const float& dt) override;
@@ -46,6 +51,8 @@ namespace Engine::Abstract
 
 			addComponentImpl(component, type);
 			addComponentToSceneCache<T>(component);
+
+			onComponentAdded.Broadcast(component);
 
 			return component;
 		}
