@@ -1,5 +1,13 @@
 #include "pch.h"
 #include "egBaseCollider.hpp"
+
+#ifdef PHYSX_ENABLED
+#include <PxPhysics.h>
+#include <PxRigidStatic.h>
+#include <PxMaterial.h>
+#include <PxScene.h>
+#endif
+
 #include <imgui_stdlib.h>
 #include "egCollision.h"
 #include "egCubeMesh.h"
@@ -57,21 +65,52 @@ namespace Engine::Components
 	void Collider::Initialize()
 	{
 		Component::Initialize();
+		const auto& owner = GetOwner().lock();
+
+		if (owner && !owner->GetComponent<Transform>().lock())
+		{
+			const auto _ = owner->AddComponent<Transform>().lock();
+		}
 
 		InitializeStockVertices();
 
-		const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
-		m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+#ifdef PHYSX_ENABLED
+		// todo: move friction value from rb to collider
+		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1, 0.1, g_restitution_coefficient);
+#endif
 
-		if (m_type_ == BOUNDING_TYPE_BOX)
+		// todo/refactor: listening owner event
+		if (owner)
 		{
-			GenerateInertiaCube();
+			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
+			{
+				if (const auto& material = rc->GetMaterial().lock())
+				{
+					if (const auto& shape = material->GetResource<Resources::Shape>(0).lock())
+					{
+						SetShape(shape);
+					}
+				}
+			}
 		}
 		else
-			if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
+			m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+
+			if (m_type_ == BOUNDING_TYPE_BOX)
+			{
+				GenerateInertiaCube();
+			}
+			else if (m_type_ == BOUNDING_TYPE_SPHERE)
 			{
 				GenerateInertiaSphere();
 			}
+
+#ifdef PHYSX_ENABLED
+			UpdatePhysXShape();
+#endif
+		}
 
 		UpdateInertiaTensor();
 	}
@@ -115,11 +154,10 @@ namespace Engine::Components
 		{
 			GenerateInertiaCube();
 		}
-		else
-			if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				GenerateInertiaSphere();
-			}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
 
 		UpdateInertiaTensor();
 	}
@@ -137,11 +175,10 @@ namespace Engine::Components
 		{
 			GenerateInertiaCube();
 		}
-		else
-			if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				GenerateInertiaSphere();
-			}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
 
 		UpdateInertiaTensor();
 	}
@@ -156,6 +193,9 @@ namespace Engine::Components
 			BoundingOrientedBox obb;
 			BoundingOrientedBox::CreateFromBoundingBox(obb, locked->GetBoundingBox());
 			SetBoundingBox(obb);
+#ifdef PHYSX_ENABLED
+			UpdatePhysXShape();
+#endif
 		}
 	}
 
@@ -311,11 +351,10 @@ namespace Engine::Components
 		{
 			GenerateInertiaCube();
 		}
-		else
-			if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				GenerateInertiaSphere();
-			}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
+		}
 
 		UpdateInertiaTensor();
 	}
@@ -345,11 +384,10 @@ namespace Engine::Components
 		{
 			rotation = GetBounding<BoundingOrientedBox>().Orientation;
 		}
-		else
-			if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				rotation = Quaternion::Identity;
-			}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			rotation = Quaternion::Identity;
+		}
 
 		Quaternion conjugate;
 
@@ -372,6 +410,13 @@ namespace Engine::Components
 		  m_inertia_tensor_(),
 		  m_local_matrix_(Matrix::Identity) { }
 
+	Collider::~Collider()
+	{
+#ifdef PHYSX_ENABLED
+		CleanupPhysX();
+#endif
+	}
+
 	void Collider::GenerateInertiaCube()
 	{
 		const Vector3 dim                = Vector3(GetBounding<BoundingOrientedBox>().Extents) * 2.f;
@@ -392,6 +437,102 @@ namespace Engine::Components
 
 		m_inverse_inertia_ = Vector3(i, i, i);
 	}
+
+#ifdef PHYSX_ENABLED
+	void Collider::UpdatePhysXShape()
+	{
+		// todo: listen owner shape changes.
+
+		const auto& scene = GetSceneManager().GetActiveScene().lock();
+
+		// cleanup
+		if (m_px_rb_static_)
+		{
+			if (scene)
+			{
+				scene->GetPhysXScene()->removeActor(*m_px_rb_static_);
+			}
+
+			if (m_px_rb_static_)
+			{
+				m_px_rb_static_->release();
+				m_px_rb_static_ = nullptr;
+			}
+
+			for (auto& meshes : m_px_meshes_)
+			{
+				meshes->release();
+				meshes = nullptr;
+			}
+
+			m_px_meshes_.clear();
+		}
+
+		if (const auto& owner = GetOwner().lock())
+		{
+			const Strong<Transform>& transform = owner->GetComponent<Transform>().lock();
+
+			const Vector3& position = transform->GetWorldPosition();
+			const Quaternion& rotation = transform->GetWorldRotation();
+
+			const physx::PxTransform px_transform(
+				reinterpret_cast<const physx::PxVec3&>(position),
+				reinterpret_cast<const physx::PxQuat&>(rotation));
+
+			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidStatic(px_transform);
+		}
+
+		if (!m_px_rb_static_)
+		{
+			throw std::exception("Missing owner or transform component!");
+			return;
+		}
+
+		if (scene)
+		{
+			scene->GetPhysXScene()->addActor(*m_px_rb_static_);
+		}
+
+		// assemble shape
+		if (const auto& shape = m_shape_.lock())
+		{
+			for (const auto& mesh : shape->GetMeshes())
+			{
+				physx::PxShape* new_shape = GetPhysicsManager().GetPhysX()->createShape(*mesh->GetPhysXGeometry(), *m_px_material_);
+
+				_ASSERT(m_px_rb_static_->attachShape(*new_shape));
+				m_px_meshes_.push_back(new_shape);
+			}
+		}
+		else
+		{
+			// todo: stock vertices.
+		}
+	}
+
+	void Collider::CleanupPhysX()
+	{
+		if (m_px_rb_static_)
+		{
+			m_px_rb_static_->release();
+			m_px_rb_static_ = nullptr;
+		}
+
+		if (m_px_material_)
+		{
+			m_px_material_->release();
+			m_px_material_ = nullptr;
+		}
+
+		for (auto& meshes : m_px_meshes_)
+		{
+			meshes->release();
+			meshes = nullptr;
+		}
+
+		m_px_meshes_.clear();
+	}
+#endif
 
 	void Collider::PreUpdate(const float& dt)
 	{

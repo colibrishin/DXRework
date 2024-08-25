@@ -5,6 +5,15 @@
 #include "egHelper.hpp"
 #include "egTransform.h"
 
+#ifdef PHYSX_ENABLED
+namespace physx
+{
+	class PxRigidStatic;
+	class PxMaterial;
+	class PxShape;
+}
+#endif
+
 namespace Engine::Components
 {
 	using namespace DirectX;
@@ -15,7 +24,7 @@ namespace Engine::Components
 		COMPONENT_T(COM_T_COLLIDER)
 
 		Collider(const WeakObjectBase& owner);
-		~Collider() override = default;
+		~Collider() override;
 
 		void FromMatrix(const Matrix& mat);
 
@@ -138,6 +147,16 @@ namespace Engine::Components
 		Matrix     m_local_matrix_;
 
 		WeakModel m_shape_;
+
+#ifdef PHYSX_ENABLED
+	private:
+		void UpdatePhysXShape();
+		void CleanupPhysX();
+
+		physx::PxMaterial* m_px_material_;
+		physx::PxRigidStatic* m_px_rb_static_;
+		std::vector<physx::PxShape*> m_px_meshes_;
+#endif
 	};
 } // namespace Engine::Component
 
