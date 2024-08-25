@@ -78,8 +78,9 @@ namespace Engine::Components
 		// todo: move friction value from rb to collider
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1, 0.1, g_restitution_coefficient);
 #endif
+		
+		owner->onComponentAdded.Listen(this, &Collider::UpdateByOwner);
 
-		// todo/refactor: listening owner event
 		if (owner)
 		{
 			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
@@ -436,6 +437,27 @@ namespace Engine::Components
 		const float i      = 2.5f * GetInverseMass() / (radius * radius);
 
 		m_inverse_inertia_ = Vector3(i, i, i);
+	}
+
+	void Collider::UpdateByOwner(Weak<Component> component)
+	{
+		if (const auto& locked = component.lock())
+		{
+			if (locked->GetComponentType() == RENDER_COM_T_MODEL ||
+				locked->GetComponentType() == RENDER_COM_T_PARTICLE)
+			{
+				const Strong<Base::RenderComponent> render_component = locked->GetSharedPtr<Base::RenderComponent>();
+
+				if (const auto& material = render_component->GetMaterial().lock())
+				{
+					if (const Strong<Resources::Shape> shape = material->GetResource<Resources::Shape>(0).lock())
+					{
+						SetShape(shape);
+					}
+				}
+
+			}
+		}
 	}
 
 #ifdef PHYSX_ENABLED

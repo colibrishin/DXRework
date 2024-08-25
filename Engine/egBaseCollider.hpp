@@ -125,6 +125,7 @@ namespace Engine::Components
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
+		void UpdateByOwner(Weak<Component> component);
 
 		eBoundingType m_type_;
 		std::string   m_shape_meta_path_str_;
