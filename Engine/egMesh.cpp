@@ -1,6 +1,17 @@
 #include "pch.h"
 #include "egMesh.h"
+
 #include <execution>
+
+#ifdef PHYSX_ENABLED
+#include <PxPhysics.h>
+#include <cooking/PxCooking.h>
+#include <extensions/PxTriangleMeshExt.h>
+#include <geometry/PxTriangleMeshGeometry.h>
+#endif
+
+#include <extensions/PxDefaultStreams.h>
+
 #include "egManagerHelper.hpp"
 
 SERIALIZE_IMPL
@@ -29,6 +40,23 @@ namespace Engine::Resources
 		  m_indices_(indices),
 		  m_vertex_buffer_view_(),
 		  m_index_buffer_view_() {}
+
+	Mesh::~Mesh()
+	{
+#ifdef PHYSX_ENABLED
+		if (m_px_geometry_)
+		{
+			delete m_px_geometry_;
+			m_px_geometry_ = nullptr;
+		}
+
+		if (m_px_mesh_)
+		{
+			m_px_mesh_->release();
+			m_px_mesh_ = nullptr;
+		}
+#endif
+	}
 
 	void __vectorcall Mesh::GenerateTangentBinormal(
 		const Vector3& v0, const Vector3&  v1,
@@ -115,6 +143,13 @@ namespace Engine::Resources
 				 }
 				);
 	}
+
+#ifdef PHYSX_ENABLED
+	physx::PxTriangleMeshGeometry* Mesh::GetPhysXGeometry() const
+	{
+		return m_px_geometry_;
+	}
+#endif
 
 	void Mesh::PreUpdate(const float& dt) {}
 
@@ -472,6 +507,36 @@ namespace Engine::Resources
 		}
 
 		cmd->FlagReady();
+
+#ifdef PHYSX_ENABLED
+		physx::PxTriangleMeshDesc mesh_desc;
+		mesh_desc.points.count = m_vertices_.size();
+		mesh_desc.points.data = m_vertices_.data();
+		mesh_desc.points.stride = sizeof(VertexElement);
+
+		mesh_desc.triangles.count = m_indices_.size() / 3;
+		mesh_desc.triangles.stride = 3 * sizeof(UINT);
+		mesh_desc.triangles.data = m_indices_.data();
+
+		physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+
+		physx::PxTriangleMeshCookingResult::Enum result;
+		physx::PxDefaultMemoryOutputStream out_stream;
+
+		if (PxCookTriangleMesh(cooking_params, mesh_desc, out_stream, &result))
+		{
+			physx::PxDefaultMemoryInputData input_steam(
+				out_stream.getData(), 
+				out_stream.getSize());
+
+			m_px_mesh_ = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
+			m_px_geometry_ = new physx::PxTriangleMeshGeometry(m_px_mesh_);
+		}
+		else
+		{
+			OutputDebugStringW(L"Failed to cook as triangle mesh by physx!");
+		}
+#endif
 	}
 
 	void Mesh::Load_CUSTOM() {}
@@ -511,5 +576,19 @@ namespace Engine::Resources
 		{
 			m_blas_.instanceDescPool.Release();
 		}
+
+#ifdef PHYSX_ENABLED
+		if (m_px_geometry_)
+		{
+			delete m_px_geometry_;
+			m_px_geometry_ = nullptr;
+		}
+
+		if (m_px_mesh_)
+		{
+			m_px_mesh_->release();
+			m_px_mesh_ = nullptr;
+		}
+#endif
 	}
 } // namespace Engine::Resources
