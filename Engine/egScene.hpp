@@ -23,7 +23,7 @@ namespace Engine
 	public:
 		Scene();
 		Scene(const Scene& other) = default;
-		~Scene() override         = default;
+		~Scene() override;
 
 		void DisableControllers();
 		void AddObserver();
@@ -355,6 +355,11 @@ namespace Engine
 		Octree                     m_object_position_tree_;
 
 #ifdef PHYSX_ENABLED
+	public:
+		physx::PxScene* GetPhysXScene() const;
+		void CleanupPhysX();
+
+	private:
 		physx::PxScene*	m_physics_scene_;
 #endif
 	};

@@ -1,5 +1,14 @@
 #include "pch.h"
 #include "egScene.hpp"
+
+#ifdef PHYSX_ENABLED
+#include <PxPhysics.h>
+#include <PxSceneDesc.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
+#endif
+
+#include <PxScene.h>
+
 #include "egCamera.h"
 #include "egImGuiHeler.hpp"
 #include "egLight.h"
@@ -54,6 +63,23 @@ namespace Engine
 					 scene->initializeFinalize();
 				 }
 				);
+#ifdef PHYSX_ENABLED
+		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+		scene_desc.gravity = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
+		scene_desc.filterShader = physx::PxDefaultSimulationFilterShader;
+		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
+		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
+
+		if (g_speculation_enabled)
+		{
+			scene_desc.flags |= physx::PxSceneFlag::eENABLE_CCD;
+		}
+
+		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
+
+		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
+#endif
 	}
 
 	void Scene::AssignLocalIDToObject(const StrongObjectBase& obj)
@@ -209,6 +235,9 @@ namespace Engine
 	{
 		if (const auto scene = ptr_scene.lock())
 		{
+#ifdef PHYSX_ENABLED
+			CleanupPhysX();
+#endif
 			for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
 			{
 				if (const auto locked = light.lock())
@@ -306,6 +335,22 @@ namespace Engine
 			}
 		}
 	}
+
+#ifdef PHYSX_ENABLED
+	physx::PxScene* Scene::GetPhysXScene() const
+	{
+		return m_physics_scene_;
+	}
+
+	void Scene::CleanupPhysX()
+	{
+		if (m_physics_scene_)
+		{
+			m_physics_scene_->release();
+			m_physics_scene_ = nullptr;
+		}
+	}
+#endif
 
 	void Scene::ChangeLayer(const eLayerType to, const GlobalEntityID id)
 	{
@@ -913,6 +958,13 @@ namespace Engine
 	WeakObjectBase Scene::GetMainActor() const
 	{
 		return m_main_actor_;
+	}
+
+	Scene::~Scene()
+	{
+#ifdef PHYSX_ENABLED
+		CleanupPhysX();
+#endif
 	}
 
 	void Scene::DisableControllers()
