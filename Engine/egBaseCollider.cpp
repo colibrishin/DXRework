@@ -335,7 +335,48 @@ namespace Engine::Components
 		  m_inertia_tensor_(),
 		  m_local_matrix_(Matrix::Identity) {}
 
-	void Collider::FixedUpdate(const float& dt) {}
+	void Collider::FixedUpdate(const float& dt)
+	{
+#ifdef PHYSX_ENABLED
+		if (const auto& owner = GetOwner().lock())
+		{
+			if (const auto& tr = owner->GetComponent<Transform>().lock())
+			{
+				Matrix new_world = GetWorldMatrix();
+				Vector3 position;
+				Quaternion quaternion;
+				Vector3 scale;
+
+				new_world.Decompose(scale, quaternion, position);
+
+				if (m_previous_scale_ != scale)
+				{
+					UpdatePhysXShape(true);
+					return;
+				}
+
+				const physx::PxTransform px_transform
+				{
+					reinterpret_cast<const physx::PxVec3&>(position),
+					reinterpret_cast<const physx::PxQuat&>(quaternion)
+				};
+
+				// casting sanity check
+				if constexpr (g_debug)
+				{
+					const physx::PxVec3 px_pos = { position.x, position.y, position.z };
+					const physx::PxQuat px_rot = { quaternion.x, quaternion.y, quaternion.z, quaternion.w };
+
+					_ASSERT(px_transform.p == px_pos);
+					_ASSERT(px_transform.q == px_rot);
+				}
+
+				m_px_rb_static_->setGlobalPose(px_transform);
+				m_previous_world_matrix_ = new_world;
+			}
+		}
+#endif
+	}
 
 	void Collider::OnSerialized()
 	{
@@ -476,7 +517,7 @@ namespace Engine::Components
 	}
 
 #ifdef PHYSX_ENABLED
-	void Collider::UpdatePhysXShape()
+	void Collider::UpdatePhysXShape(bool use_scale)
 	{
 		const auto& scene = GetSceneManager().GetActiveScene().lock();
 
@@ -505,43 +546,70 @@ namespace Engine::Components
 
 		if (const auto& owner = GetOwner().lock())
 		{
-			const Strong<Transform>& transform = owner->GetComponent<Transform>().lock();
+			Matrix world = GetWorldMatrix();
 
-			const Vector3& position = transform->GetWorldPosition();
-			const Quaternion& rotation = transform->GetWorldRotation();
+			Vector3 position, scale;
+			Quaternion rotation;
+			world.Decompose(scale, rotation, position);
 
 			const physx::PxTransform px_transform(
 				reinterpret_cast<const physx::PxVec3&>(position),
 				reinterpret_cast<const physx::PxQuat&>(rotation));
 
 			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidStatic(px_transform);
+
+			if (scene)
+			{
+				scene->GetPhysXScene()->addActor(*m_px_rb_static_);
+			}
+
+			// assemble shape
+			if (const auto& shape = m_shape_.lock())
+			{
+				for (const auto& mesh : shape->GetMeshes())
+				{
+					physx::PxTriangleMeshGeometry geo;
+
+					if (use_scale)
+					{
+						physx::PxMeshScale px_scale(reinterpret_cast<const physx::PxVec3&>(scale));
+
+						if constexpr (g_debug)
+						{
+							physx::PxVec3 px_scale_vec{ scale.x, scale.y, scale.z };
+							_ASSERT(px_scale_vec == px_scale.scale);
+						}
+						
+						geo = physx::PxTriangleMeshGeometry
+						{
+							mesh->GetPhysXMesh(),
+							px_scale
+						};
+					}
+					else
+					{
+						geo = *mesh->GetPhysXGeometry();
+					}
+
+					physx::PxShape* new_shape = GetPhysicsManager().GetPhysX()->createShape(geo, *m_px_material_);
+
+					_ASSERT(m_px_rb_static_->attachShape(*new_shape));
+					m_px_meshes_.push_back(new_shape);
+				}
+
+				m_previous_world_matrix_ = world;
+				m_previous_scale_ = scale;
+			}
+			else
+			{
+				// todo: stock vertices.
+			}
 		}
 
 		if (!m_px_rb_static_)
 		{
 			throw std::exception("Missing owner or transform component!");
 			return;
-		}
-
-		if (scene)
-		{
-			scene->GetPhysXScene()->addActor(*m_px_rb_static_);
-		}
-
-		// assemble shape
-		if (const auto& shape = m_shape_.lock())
-		{
-			for (const auto& mesh : shape->GetMeshes())
-			{
-				physx::PxShape* new_shape = GetPhysicsManager().GetPhysX()->createShape(*mesh->GetPhysXGeometry(), *m_px_material_);
-
-				_ASSERT(m_px_rb_static_->attachShape(*new_shape));
-				m_px_meshes_.push_back(new_shape);
-			}
-		}
-		else
-		{
-			// todo: stock vertices.
 		}
 	}
 

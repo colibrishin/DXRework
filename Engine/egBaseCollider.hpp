@@ -159,8 +159,11 @@ namespace Engine::Components
 
 #ifdef PHYSX_ENABLED
 	private:
-		void UpdatePhysXShape();
+		void UpdatePhysXShape(bool use_scale = false);
 		void CleanupPhysX();
+
+		Matrix m_previous_world_matrix_;
+		Vector3 m_previous_scale_;
 
 		physx::PxMaterial* m_px_material_;
 		physx::PxRigidStatic* m_px_rb_static_;
