@@ -7,25 +7,25 @@ struct Delegate
 {
 public:
 	using address_type = LONG_PTR;
-	using hash_type = uint64_t;
-	using bucket_type = std::pair<address_type, hash_type>;
+
+	using this_ptr_type = address_type;
+	using func_ptr_type = address_type;
+
+	using bucket_type = std::pair<this_ptr_type, func_ptr_type>;
 	using function_type = std::function<void(Args...)>;
 
 	template <typename T>
 	void Listen(T* this_pointer, void(T::*function)(Args...))
 	{
-		size_t hash = typeid(function).hash_code();
 		function_type func = mem_bind(this_pointer, function);
 
 		// todo: garbage collection
-		m_listener_.emplace(bucket_type{reinterpret_cast<address_type>(this_pointer), hash}, func);
+		m_listener_.emplace(bucket_type{reinterpret_cast<address_type>(this_pointer), reinterpret_cast<address_type>(&function) }, func);
 	}
 
 	void Listen(void(*function)(Args...))
 	{
-		size_t hash = typeid(function).hash_code();
-
-		m_listener_.emplace(bucket_type{ reinterpret_cast<address_type>(nullptr), hash }, function);
+		m_listener_.emplace(bucket_type{ reinterpret_cast<address_type>(nullptr), reinterpret_cast<address_type>(&function) }, function);
 	}
 
 	void Broadcast(Args&&... args)
@@ -39,7 +39,7 @@ public:
 	template <typename T>
 	void Remove(T* this_pointer, void(T::*function)(Args...))
 	{
-		const bucket_type key{ this_pointer, typeid(function).hash_code() };
+		const bucket_type key{ reinterpret_cast<address_type>(this_pointer), reinterpret_cast<address_type>(&function) };
 
 		if (m_listener_.contains(key))
 		{
@@ -49,7 +49,7 @@ public:
 
 	void Remove(void(*function)(Args...))
 	{
-		const bucket_type key{ reinterpret_cast<address_type>(nullptr), typeid(function).hash_code() };
+		const bucket_type key{ reinterpret_cast<address_type>(nullptr), reinterpret_cast<address_type>(&function) };
 
 		if (m_listener_.contains(key))
 		{
