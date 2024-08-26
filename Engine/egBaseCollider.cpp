@@ -83,6 +83,25 @@ namespace Engine::Components
 
 		if (owner)
 		{
+			const auto& useStock = [this]()
+				{
+					const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
+					m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+
+					if (m_type_ == BOUNDING_TYPE_BOX)
+					{
+						GenerateInertiaCube();
+					}
+					else if (m_type_ == BOUNDING_TYPE_SPHERE)
+					{
+						GenerateInertiaSphere();
+					}
+
+#ifdef PHYSX_ENABLED
+					UpdatePhysXShape();
+#endif
+				};
+
 			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
 			{
 				rc->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
@@ -94,25 +113,15 @@ namespace Engine::Components
 						SetShape(shape);
 					}
 				}
+				else
+				{
+					useStock();
+				}
 			}
-		}
-		else
-		{
-			const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
-			m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
-
-			if (m_type_ == BOUNDING_TYPE_BOX)
+			else
 			{
-				GenerateInertiaCube();
+				useStock();
 			}
-			else if (m_type_ == BOUNDING_TYPE_SPHERE)
-			{
-				GenerateInertiaSphere();
-			}
-
-#ifdef PHYSX_ENABLED
-			UpdatePhysXShape();
-#endif
 		}
 
 		UpdateInertiaTensor();
@@ -469,8 +478,6 @@ namespace Engine::Components
 #ifdef PHYSX_ENABLED
 	void Collider::UpdatePhysXShape()
 	{
-		// todo: listen owner shape changes.
-
 		const auto& scene = GetSceneManager().GetActiveScene().lock();
 
 		// cleanup
