@@ -137,7 +137,7 @@ namespace Engine::Manager::Physics
 
 			if (!rb_other->IsFixed())
 			{
-				rt0->SetWorldPosition(pos + rhs_weight_pen);
+				rt0->SetWorldPosition(other_pos + rhs_weight_pen);
 				rb_other->AddLinearImpulse(rlimp);
 				rb_other->AddAngularImpulse(raimp);
 				rb_other->Synchronize();
