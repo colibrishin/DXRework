@@ -35,6 +35,7 @@
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
+    <ClInclude Include="egDelegate.hpp" />
     <ClInclude Include="egDescriptors.h" />
     <ClInclude Include="egImGuiManager.h" />
     <ClInclude Include="egGraviton.h" />
