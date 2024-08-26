@@ -156,6 +156,10 @@ namespace Engine::Manager
 
 	void Application::FixedUpdate(const float& dt)
 	{
+		GetTaskScheduler().FixedUpdate(dt);
+		// collider or world update
+		GetSceneManager().FixedUpdate(dt);
+
 		// physics updates.
 		// gravity
 		GetGraviton().FixedUpdate(dt);
@@ -168,10 +172,8 @@ namespace Engine::Manager
 		// lerp rigidbody movements
 		GetLerpManager().FixedUpdate(dt);
 
-		GetTaskScheduler().FixedUpdate(dt);
 		GetMouseManager().FixedUpdate(dt);
 		GetReflectionEvaluator().FixedUpdate(dt);
-		GetSceneManager().FixedUpdate(dt);
 		GetShadowManager().FixedUpdate(dt);
 		GetResourceManager().FixedUpdate(dt);
 
