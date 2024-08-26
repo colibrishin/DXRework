@@ -102,18 +102,9 @@ namespace Engine::Manager::Physics
 			{
 				return;
 			}
+			
 
-			// Gets the vector from center to collision point.
-			const auto lbnd = cl->GetBounding();
-			const auto rbnd = cl_other->GetBounding();
-
-			float distance = 0;
-			if (!lbnd.TestRay(rbnd, lhs_normal, distance))
-			{
-				return;
-			}
-
-			Vector3 collision_point = pos + (lhs_normal * distance);
+			Vector3 collision_point = pos + (lhs_normal * lhs_pen);
 			Vector3 lhs_weight_pen;
 			Vector3 rhs_weight_pen;
 
