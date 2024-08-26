@@ -73,7 +73,8 @@ namespace Engine
 
 	static bool check_avx()
 	{
-		static bool use_avx = std::__isa_available >= std::_Stl_isa_available_avx2;
+		constexpr size_t minimum_avx_requirements = 6; // == std::_Stl_isa_available_avx2
+		static bool use_avx = std::__isa_available >= minimum_avx_requirements;
 		return use_avx;
 	}
 
