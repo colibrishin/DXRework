@@ -439,23 +439,28 @@ namespace Engine::Components
 		m_inverse_inertia_ = Vector3(i, i, i);
 	}
 
+	void Collider::VerifyMaterial(boost::weak_ptr<Resources::Material> weak_material)
+	{
+		if (const auto& material = weak_material.lock())
+		{
+			if (const Strong<Resources::Shape> shape = material->GetResource<Resources::Shape>(0).lock())
+			{
+				SetShape(shape);
+			}
+		}
+	}
+
 	void Collider::UpdateByOwner(Weak<Component> component)
 	{
 		if (const auto& locked = component.lock())
 		{
-			if (locked->GetComponentType() == RENDER_COM_T_MODEL ||
-				locked->GetComponentType() == RENDER_COM_T_PARTICLE)
+			if (locked->GetComponentType() == COM_T_RENDERER)
 			{
 				const Strong<Base::RenderComponent> render_component = locked->GetSharedPtr<Base::RenderComponent>();
 
-				if (const auto& material = render_component->GetMaterial().lock())
-				{
-					if (const Strong<Resources::Shape> shape = material->GetResource<Resources::Shape>(0).lock())
-					{
-						SetShape(shape);
-					}
-				}
+				render_component->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
 
+				VerifyMaterial(render_component->GetMaterial());
 			}
 		}
 	}

@@ -1,5 +1,8 @@
 #pragma once
 #include "egComponent.h"
+#include "egDelegate.hpp"
+
+DEFINE_DELEGATE(OnMaterialChange, Engine::Weak<Engine::Resources::Material>)
 
 namespace Engine::Components::Base
 {
@@ -7,6 +10,8 @@ namespace Engine::Components::Base
 	{
 	public:
 		COMPONENT_T(COM_T_RENDERER)
+
+		DelegateOnMaterialChange onMaterialChange;
 
 		explicit RenderComponent(eRenderComponentType type, const WeakObjectBase& owner)
 			: Component(COM_T_RENDERER, owner),

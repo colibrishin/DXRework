@@ -125,6 +125,7 @@ namespace Engine::Components
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
+		void VerifyMaterial(boost::weak_ptr<Resources::Material> weak);
 		void UpdateByOwner(Weak<Component> component);
 
 		eBoundingType m_type_;
