@@ -287,6 +287,9 @@ namespace Engine::Manager::Physics
 					// Initial Collision
 					m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
 					m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
+
+					lcl->onCollisionEnter.Broadcast(rcl);
+					rcl->onCollisionEnter.Broadcast(lcl);
 				}
 
 				const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
@@ -298,8 +301,6 @@ namespace Engine::Manager::Physics
 				}
 
 				// Or continuous collision
-				lhs->DispatchComponentEvent(rcl);
-				rhs->DispatchComponentEvent(lcl);
 				lcl->AddCollidedObject(rhs->GetID());
 				rcl->AddCollidedObject(lhs->GetID());
 			}
@@ -312,8 +313,8 @@ namespace Engine::Manager::Physics
 					m_collision_map_[lhs->GetID()].erase(rhs->GetID());
 					m_collision_map_[rhs->GetID()].erase(lhs->GetID());
 
-					lhs->DispatchComponentEvent(rcl);
-					rhs->DispatchComponentEvent(lcl);
+					lcl->onCollisionEnd.Broadcast(rcl);
+					rcl->onCollisionEnd.Broadcast(lcl);
 					lcl->RemoveCollidedObject(rhs->GetID());
 					rcl->RemoveCollidedObject(lhs->GetID());
 				}
@@ -443,12 +444,15 @@ namespace Engine::Manager::Physics
 					m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
 					m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
 
+					lcl->onCollisionEnter.Broadcast(rcl);
+					rcl->onCollisionEnter.Broadcast(lcl);
+
 					m_collision_produce_queue_.push_back({lhs, rhs, true, true});
 				}
 
 				// Or continuous collision
-				lhs->DispatchComponentEvent(rcl);
-				rhs->DispatchComponentEvent(lcl);
+				lcl->onCollisionEnd.Broadcast(rcl);
+				rcl->onCollisionEnd.Broadcast(lcl);
 				lcl->AddCollidedObject(rhs->GetID());
 				rcl->AddCollidedObject(lhs->GetID());
 			}
@@ -480,8 +484,8 @@ namespace Engine::Manager::Physics
 						m_collision_map_[rhs->GetID()].erase(lhs.lock()->GetID());
 						m_collision_map_[lhs.lock()->GetID()].erase(rhs->GetID());
 
-						lhs.lock()->DispatchComponentEvent(rcl);
-						rhs->DispatchComponentEvent(lcl);
+						lcl->onCollisionEnd.Broadcast(rcl);
+						rcl->onCollisionEnd.Broadcast(lcl);
 					}
 				}
 			}

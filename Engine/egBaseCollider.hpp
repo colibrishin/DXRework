@@ -3,6 +3,7 @@
 #include "egComponent.h"
 #include "egGenericBounding.hpp"
 #include "egHelper.hpp"
+#include "egDelegate.hpp"
 #include "egTransform.h"
 
 #ifdef PHYSX_ENABLED
@@ -14,6 +15,9 @@ namespace physx
 }
 #endif
 
+DEFINE_DELEGATE(OnCollisionEnter, Engine::Weak<Engine::Components::Collider>);
+DEFINE_DELEGATE(OnCollisionEnd, Engine::Weak<Engine::Components::Collider>);
+
 namespace Engine::Components
 {
 	using namespace DirectX;
@@ -21,7 +25,10 @@ namespace Engine::Components
 	class Collider final : public Abstract::Component
 	{
 	public:
-		COMPONENT_T(COM_T_COLLIDER)
+		COMPONENT_T(COM_T_COLLIDER);
+
+		DelegateOnCollisionEnter onCollisionEnter;
+		DelegateOnCollisionEnd onCollisionEnd;
 
 		Collider(const WeakObjectBase& owner);
 		~Collider() override;

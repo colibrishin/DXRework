@@ -2,10 +2,8 @@
 
 #include "egAnimator.h"
 #include "egBaseCollider.hpp"
-#include "egCollision.h"
 #include "egComponent.h"
 #include "egManagerHelper.hpp"
-#include "egMesh.h"
 #include "egModelRenderer.h"
 #include "egObject.hpp"
 #include "egParticleRenderer.h"
@@ -29,57 +27,6 @@ SERIALIZE_IMPL
 
 namespace Engine::Abstract
 {
-	template void ObjectBase::DispatchComponentEvent(const StrongCollider& other);
-
-	template <typename T, typename Lock>
-	void ObjectBase::DispatchComponentEvent(const boost::shared_ptr<T>& other)
-	{
-		if constexpr (std::is_base_of_v<Component, T>)
-		{
-			if constexpr (std::is_same_v<Components::Collider, T>)
-			{
-				const auto rhs_owner = other->GetOwner().lock();
-
-				const auto collision_check = GetCollisionDetector().IsCollided
-				                             (
-				                              GetID(), rhs_owner->GetID()
-				                             ) || GetCollisionDetector().IsCollided
-				                             (
-				                              rhs_owner->GetID(), GetID()
-				                             );
-				const auto collision_frame = GetCollisionDetector().IsCollidedInFrame
-				                             (
-				                              GetID(), rhs_owner->GetID()
-				                             ) || GetCollisionDetector().IsCollidedInFrame
-				                             (
-				                              rhs_owner->GetID(), GetID()
-				                             );
-
-				if (collision_frame)
-				{
-					GetDebugger().Log
-							(
-							 "Collision detected between " + GetName() + " and " + rhs_owner->GetName()
-							);
-
-					OnCollisionEnter(other);
-				}
-				else if (collision_check && !collision_frame)
-				{
-					OnCollisionContinue(other);
-				}
-				else if (!collision_check && !collision_frame)
-				{
-					GetDebugger().Log
-							(
-							 "Collision exit between " + GetName() + " and " + rhs_owner->GetName()
-							);
-					OnCollisionExit(other);
-				}
-			}
-		}
-	}
-
 	void ObjectBase::SetActive(bool active)
 	{
 		m_active_ = active;
