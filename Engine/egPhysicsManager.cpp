@@ -115,19 +115,25 @@ namespace Engine::Manager::Physics
 	PhysicsManager::~PhysicsManager()
 	{
 #ifdef PHYSX_ENABLED
-		if (m_px_pvd_)
-		{
-			m_px_pvd_->release();
-		}
-
 		if (m_px_)
 		{
 			m_px_->release();
+			m_px_ = nullptr;
+		}
+
+		if (g_debug)
+		{
+			if (m_px_pvd_)
+			{
+				m_px_pvd_->release();
+				m_px_pvd_ = nullptr;
+			}
 		}
 
 		if (m_px_foundation_)
 		{
 			m_px_foundation_->release();
+			m_px_foundation_ = nullptr;
 		}
 #endif
 	}
