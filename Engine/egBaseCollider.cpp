@@ -85,6 +85,8 @@ namespace Engine::Components
 		{
 			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
 			{
+				rc->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
+
 				if (const auto& material = rc->GetMaterial().lock())
 				{
 					if (const auto& shape = material->GetResource<Resources::Shape>(0).lock())
@@ -459,7 +461,6 @@ namespace Engine::Components
 				const Strong<Base::RenderComponent> render_component = locked->GetSharedPtr<Base::RenderComponent>();
 
 				render_component->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
-
 				VerifyMaterial(render_component->GetMaterial());
 			}
 		}
