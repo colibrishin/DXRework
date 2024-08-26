@@ -149,6 +149,11 @@ namespace Engine::Resources
 	{
 		return m_px_geometry_;
 	}
+
+	physx::PxTriangleMesh* Mesh::GetPhysXMesh() const
+	{
+		return m_px_mesh_;
+	}
 #endif
 
 	void Mesh::PreUpdate(const float& dt) {}

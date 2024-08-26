@@ -91,6 +91,7 @@ namespace Engine::Resources
 #ifdef PHYSX_ENABLED
 	public:
 		physx::PxTriangleMeshGeometry* GetPhysXGeometry() const;
+		physx::PxTriangleMesh* GetPhysXMesh() const;
 
 	protected:
 		physx::PxTriangleMesh* m_px_mesh_;
