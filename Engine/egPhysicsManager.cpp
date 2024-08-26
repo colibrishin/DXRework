@@ -193,7 +193,7 @@ namespace Engine::Manager::Physics
 				(
 				 rvel, rb->GetT0Torque(), dt
 				),
-				0.0f
+				1.0f
 			} * orientation;
 
 			orientation.Normalize();
