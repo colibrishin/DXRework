@@ -557,6 +557,7 @@ namespace Engine::Components
 				reinterpret_cast<const physx::PxQuat&>(rotation));
 
 			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidStatic(px_transform);
+			m_px_rb_static_->userData = this;
 
 			if (scene)
 			{
