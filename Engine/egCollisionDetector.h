@@ -5,6 +5,14 @@
 #include "egCommon.hpp"
 #include "egManager.hpp"
 
+namespace Engine
+{
+	namespace Physics
+	{
+		class PhysXSimulationCallback;
+	}
+}
+
 namespace Engine::Manager::Physics
 {
 	class CollisionDetector : public Abstract::Singleton<CollisionDetector>
@@ -35,7 +43,7 @@ namespace Engine::Manager::Physics
 
 	private:
 		friend struct SingletonDeleter;
-		~CollisionDetector() override = default;
+		~CollisionDetector() override;
 
 		void TestCollision(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs);
 		void TestSpeculation(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs, float dt);
@@ -49,6 +57,15 @@ namespace Engine::Manager::Physics
 
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_collision_map_;
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
+
+#ifdef PHYSX_ENABLED
+	public:
+		Engine::Physics::PhysXSimulationCallback& GetPhysXCallback() const;
+
+	private:
+		friend class Engine::Physics::PhysXSimulationCallback;
+		Engine::Physics::PhysXSimulationCallback* m_px_callback_;
+#endif
 	};
 } // namespace Engine::Manager
 
