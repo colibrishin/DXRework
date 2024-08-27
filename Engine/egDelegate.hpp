@@ -28,7 +28,7 @@ public:
 		m_listener_.emplace(bucket_type{ reinterpret_cast<address_type>(nullptr), reinterpret_cast<address_type>(&function) }, function);
 	}
 
-	void Broadcast(Args&&... args)
+	void Broadcast(Args... args)
 	{
 		for (const function_type& func : m_listener_ | std::views::values)
 		{
