@@ -121,16 +121,16 @@ namespace Engine::Manager::Physics
 			if (!rb->IsFixed())
 			{
 				lt0->SetWorldPosition(pos + lhs_weight_pen);
-				rb->AddLinearImpulse(llimp);
-				rb->AddAngularImpulse(laimp);
+				rb->SetT0LinearVelocity(llimp);
+				rb->SetT0AngularVelocity(laimp);
 				rb->Synchronize();
 			}
 
 			if (!rb_other->IsFixed())
 			{
 				rt0->SetWorldPosition(other_pos + rhs_weight_pen);
-				rb_other->AddLinearImpulse(rlimp);
-				rb_other->AddAngularImpulse(raimp);
+				rb_other->SetT0LinearVelocity(rlimp);
+				rb_other->SetT0AngularVelocity(raimp);
 				rb_other->Synchronize();
 			}
 		}
