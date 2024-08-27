@@ -14,15 +14,16 @@
 #include "egLight.h"
 #include "egManagerHelper.hpp"
 #include "egObserver.h"
+#include "PhysXSimulationCallback.h"
 
 SERIALIZE_IMPL
 (
- Engine::Scene,
- _ARTAG(_BSTSUPER(Renderable))
- _ARTAG(m_b_scene_raytracing_)
- _ARTAG(m_main_camera_local_id_)
- _ARTAG(m_main_actor_local_id_)
- _ARTAG(m_layers)
+	Engine::Scene,
+	_ARTAG(_BSTSUPER(Renderable))
+	_ARTAG(m_b_scene_raytracing_)
+	_ARTAG(m_main_camera_local_id_)
+	_ARTAG(m_main_actor_local_id_)
+	_ARTAG(m_layers)
 )
 
 namespace Engine
@@ -63,6 +64,7 @@ namespace Engine
 					 scene->initializeFinalize();
 				 }
 				);
+
 #ifdef PHYSX_ENABLED
 		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
 		scene_desc.gravity = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
@@ -70,8 +72,9 @@ namespace Engine
 		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
 		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
 		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
+		scene_desc.simulationEventCallback = &GetCollisionDetector().GetPhysXCallback();
 
-		if (g_speculation_enabled)
+		if constexpr (g_speculation_enabled)
 		{
 			scene_desc.flags |= physx::PxSceneFlag::eENABLE_CCD;
 		}
@@ -79,6 +82,7 @@ namespace Engine
 		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
 
 		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
+		m_physics_scene_->userData = this;
 #endif
 	}
 
@@ -625,6 +629,11 @@ namespace Engine
 		{
 			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
+
+#ifdef PHYSX_ENABLED
+		m_physics_scene_->simulate(dt);
+		m_physics_scene_->fetchResults(true);
+#endif
 	}
 
 	void Scene::PostRender(const float& dt)
