@@ -10,6 +10,7 @@
 #ifdef PHYSX_ENABLED
 namespace physx
 {
+	class PxSDFDesc;
 	class PxTriangleMeshGeometry;
 	class PxTriangleMesh;
 }
@@ -94,6 +95,7 @@ namespace Engine::Resources
 		physx::PxTriangleMesh* GetPhysXMesh() const;
 
 	protected:
+		physx::PxSDFDesc* m_px_sdf_;
 		physx::PxTriangleMesh* m_px_mesh_;
 		physx::PxTriangleMeshGeometry* m_px_geometry_;
 #endif

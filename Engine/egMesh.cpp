@@ -55,6 +55,12 @@ namespace Engine::Resources
 			m_px_mesh_->release();
 			m_px_mesh_ = nullptr;
 		}
+
+		if (m_px_sdf_)
+		{
+			delete m_px_sdf_;
+			m_px_sdf_ = nullptr;
+		}
 #endif
 	}
 
@@ -523,6 +529,12 @@ namespace Engine::Resources
 		mesh_desc.triangles.stride = 3 * sizeof(UINT);
 		mesh_desc.triangles.data = m_indices_.data();
 
+		// todo: prebuild
+		m_px_sdf_ = new physx::PxSDFDesc;
+		m_px_sdf_->spacing = 0.125f;
+
+		mesh_desc.sdfDesc = m_px_sdf_;
+
 		physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
 
 		physx::PxTriangleMeshCookingResult::Enum result;
@@ -536,6 +548,8 @@ namespace Engine::Resources
 
 			m_px_mesh_ = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
 			m_px_geometry_ = new physx::PxTriangleMeshGeometry(m_px_mesh_);
+
+			// todo: serialize sdf information after cooking
 		}
 		else
 		{
@@ -593,6 +607,12 @@ namespace Engine::Resources
 		{
 			m_px_mesh_->release();
 			m_px_mesh_ = nullptr;
+		}
+
+		if (m_px_sdf_)
+		{
+			delete m_px_sdf_;
+			m_px_sdf_ = nullptr;
 		}
 #endif
 	}
