@@ -13,6 +13,11 @@
 
 #include <imgui_stdlib.h>
 
+#include <cooking/PxCooking.h>
+#include <cooking/PxTriangleMeshDesc.h>
+
+#include <extensions/PxDefaultStreams.h>
+
 #include "egCollision.h"
 #include "egCubeMesh.h"
 #include "egD3Device.hpp"
@@ -46,11 +51,11 @@ namespace Engine::Components
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
-			return m_cube_stock_;
+			return s_cube_stock_;
 		}
 		if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
-			return m_sphere_stock_;
+			return s_sphere_stock_;
 		}
 
 		return {};
@@ -89,8 +94,8 @@ namespace Engine::Components
 		{
 			const auto& useStock = [this]()
 				{
-					const auto vtx_ptr = reinterpret_cast<Vector3*>(m_cube_stock_.data());
-					m_boundings_.CreateFromPoints<BoundingBox>(m_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+					const auto vtx_ptr = reinterpret_cast<Vector3*>(s_cube_stock_.data());
+					m_boundings_.CreateFromPoints<BoundingBox>(s_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
 
 					if (m_type_ == BOUNDING_TYPE_BOX)
 					{
@@ -136,24 +141,83 @@ namespace Engine::Components
 		GeometricPrimitive::IndexCollection  index;
 		GeometricPrimitive::VertexCollection vertex;
 
-		if (m_cube_stock_.empty())
+		if (s_cube_stock_.empty())
 		{
 			GeometricPrimitive::CreateCube(vertex, index, 1.f, false);
 
 			for (const auto& v : vertex)
 			{
-				m_cube_stock_.push_back({v.position});
+				s_cube_stock_.push_back({v.position});
+			}
+
+			for (const auto& i : index)
+			{
+				s_cube_stock_indices_.push_back(i);
 			}
 		}
-		if (m_sphere_stock_.empty())
+		if (s_sphere_stock_.empty())
 		{
 			GeometricPrimitive::CreateSphere(vertex, index, 1.f, 16, false);
 
 			for (const auto& v : vertex)
 			{
-				m_sphere_stock_.push_back({v.position});
+				s_sphere_stock_.push_back({v.position});
+			}
+
+			for (const auto& i : index)
+			{
+				s_sphere_stock_indices_.push_back(i);
 			}
 		}
+
+#ifdef PHYSX_ENABLED
+		const auto& cookMesh = [](const std::vector<Graphics::VertexElement>& vertices, const std::vector<UINT>& indices, physx::PxSDFDesc** built_sdf, physx::PxTriangleMesh** built_shape)
+		{
+			physx::PxTriangleMeshDesc mesh_desc;
+			mesh_desc.points.count = vertices.size();
+			mesh_desc.points.data = vertices.data();
+			mesh_desc.points.stride = sizeof(Graphics::VertexElement);
+
+			mesh_desc.triangles.count = indices.size() / 3;
+			mesh_desc.triangles.stride = 3 * sizeof(UINT);
+			mesh_desc.triangles.data = indices.data();
+
+			// todo: prebuild
+			*built_sdf = new physx::PxSDFDesc;
+			(*built_sdf)->spacing = 0.125f;
+
+			mesh_desc.sdfDesc = *built_sdf;
+
+			physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+
+			physx::PxTriangleMeshCookingResult::Enum result;
+			physx::PxDefaultMemoryOutputStream out_stream;
+
+			if (PxCookTriangleMesh(cooking_params, mesh_desc, out_stream, &result))
+			{
+				physx::PxDefaultMemoryInputData input_steam(
+					out_stream.getData(), 
+					out_stream.getSize());
+
+				(*built_shape) = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
+				
+				// todo: serialize sdf information after cooking
+			}
+			else
+			{
+				OutputDebugStringW(L"Failed to cook as stock collider triangle mesh by physx!");
+			}
+		};
+
+		if (!s_px_cube_stock_)
+		{
+			cookMesh(s_cube_stock_, s_cube_stock_indices_, &s_px_cube_sdf_, &s_px_cube_stock_);
+		}
+		if (!s_px_sphere_stock_)
+		{
+			cookMesh(s_sphere_stock_, s_sphere_stock_indices_, &s_px_sphere_sdf, &s_px_sphere_stock_);
+		}
+#endif
 	}
 
 	void Collider::FromMatrix(const Matrix& mat)
@@ -355,7 +419,7 @@ namespace Engine::Components
 
 				if (m_previous_scale_ != scale)
 				{
-					UpdatePhysXShape(true);
+					UpdatePhysXShape();
 					return;
 				}
 
@@ -521,7 +585,7 @@ namespace Engine::Components
 	}
 
 #ifdef PHYSX_ENABLED
-	void Collider::UpdatePhysXShape(bool use_scale)
+	void Collider::UpdatePhysXShape()
 	{
 		const auto& scene = GetSceneManager().GetActiveScene().lock();
 
@@ -555,57 +619,54 @@ namespace Engine::Components
 			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidDynamic(px_transform);
 			//m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
 			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_GYROSCOPIC_FORCES, true);
-			//m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_SPECULATIVE_CCD, true);
+
+			if constexpr (g_speculation_enabled)
+			{
+				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, true);
+			}
 
 			// assemble shape
 			if (const auto& shape = m_shape_.lock())
 			{
 				for (const auto& mesh : shape->GetMeshes())
 				{
-					physx::PxTriangleMeshGeometry geo;
+					physx::PxTriangleMeshGeometry geo(mesh->GetPhysXMesh());
+					geo.scale = reinterpret_cast<const physx::PxVec3&>(scale);
 
-					if (use_scale)
+					if constexpr (g_debug)
 					{
-						physx::PxMeshScale px_scale(reinterpret_cast<const physx::PxVec3&>(scale));
-
-						if constexpr (g_debug)
-						{
-							physx::PxVec3 px_scale_vec{ scale.x, scale.y, scale.z };
-							_ASSERT(px_scale_vec == px_scale.scale);
-						}
-						
-						geo = physx::PxTriangleMeshGeometry
-						{
-							mesh->GetPhysXMesh(),
-							px_scale
-						};
-					}
-					else
-					{
-						geo = *mesh->GetPhysXGeometry();
+						const physx::PxVec3 px_scale = reinterpret_cast<const physx::PxVec3&>(scale);
+						physx::PxVec3 px_scale_vec{ scale.x, scale.y, scale.z };
+						_ASSERT(px_scale_vec == px_scale);
 					}
 
 					physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
 
 					// all ok for shape filtering
 					physx::PxFilterData filter_data;
-					filter_data.word0 = owner->GetLayer();
+					filter_data.word0 = to_bitmask<physx::PxU32>(owner->GetLayer());
 					filter_data.word1 = std::numeric_limits<unsigned long long>::max();
 					new_shape->setSimulationFilterData(filter_data);
 				}
-
-				m_previous_world_matrix_ = world;
-				m_previous_scale_ = scale;
 			}
 			else
 			{
-				// todo: stock vertices.
+				physx::PxTriangleMeshGeometry geo(m_type_ == BOUNDING_TYPE_BOX ? s_px_cube_stock_ : s_px_sphere_stock_);
+				geo.scale = reinterpret_cast<const physx::PxVec3&>(scale);
+
+				physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
+
+				// all ok for shape filtering
+				physx::PxFilterData filter_data;
+				filter_data.word0 = to_bitmask<physx::PxU32>(owner->GetLayer());
+				filter_data.word1 = std::numeric_limits<unsigned long long>::max();
+				new_shape->setSimulationFilterData(filter_data);
 			}
 
 			// https://codebrowser.dev/qt6/qtquick3dphysics/src/3rdparty/PhysX/source/physxextensions/src/ExtDefaultSimulationFilterShader.cpp.html
 			// due to the sequence of setting group, add shape first then update the actor group and, groups mask
 			physx::PxGroupsMask groups;
-			std::memset(&groups.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t)*4);
+			std::memset(&groups.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
 			physx::PxSetGroupsMask(*m_px_rb_static_, groups);
 			physx::PxSetGroup(*m_px_rb_static_, owner->GetLayer());
 			m_px_rb_static_->userData = this;
@@ -614,6 +675,9 @@ namespace Engine::Components
 			{
 				scene->GetPhysXScene()->addActor(*m_px_rb_static_);
 			}
+
+			m_previous_world_matrix_ = world;
+			m_previous_scale_ = scale;
 		}
 
 		if (!m_px_rb_static_)

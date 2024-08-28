@@ -143,8 +143,10 @@ namespace Engine::Components
 		float m_mass_;
 
 		// Non-serialized
-		inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
-		inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
+		inline static std::vector<Graphics::VertexElement> s_cube_stock_   = {};
+		inline static std::vector<Graphics::VertexElement> s_sphere_stock_ = {};
+		inline static std::vector<UINT> s_cube_stock_indices_ = {};
+		inline static std::vector<UINT> s_sphere_stock_indices_ = {};
 
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
@@ -159,11 +161,17 @@ namespace Engine::Components
 
 #ifdef PHYSX_ENABLED
 	private:
-		void UpdatePhysXShape(bool use_scale = false);
+		void UpdatePhysXShape();
 		void CleanupPhysX();
 
 		Matrix m_previous_world_matrix_;
 		Vector3 m_previous_scale_;
+
+		inline static physx::PxTriangleMesh* s_px_cube_stock_ = nullptr;
+		inline static physx::PxTriangleMesh* s_px_sphere_stock_ = nullptr;
+
+		inline static physx::PxSDFDesc* s_px_cube_sdf_ = nullptr;
+		inline static physx::PxSDFDesc* s_px_sphere_sdf = nullptr;
 
 		physx::PxMaterial* m_px_material_;
 		physx::PxRigidDynamic* m_px_rb_static_;
