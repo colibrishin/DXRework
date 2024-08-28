@@ -5,6 +5,7 @@
 
 namespace Engine::Physics
 {
+/*
 	class PhysXSimulationCallback : public physx::PxSimulationEventCallback
 	{
 	public:
@@ -17,6 +18,28 @@ namespace Engine::Physics
 		void onAdvance(const physx::PxRigidBody* const* bodyBuffer, const physx::PxTransform* poseBuffer,
 			const physx::PxU32 count) override;
 	};
+*/
+
+	class PhysXSimulationFilterCallback : public physx::PxSimulationFilterCallback
+	{
+	public:
+		physx::PxFilterFlags pairFound(
+			physx::PxU64 pairID, physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
+			const physx::PxActor* a0, const physx::PxShape* s0, physx::PxFilterObjectAttributes attributes1,
+			physx::PxFilterData filterData1, const physx::PxActor* a1, const physx::PxShape* s1,
+			physx::PxPairFlags& pairFlags
+		) override;
+		void pairLost(
+			physx::PxU64 pairID, physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
+			physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1, bool objectRemoved
+		) override;
+		bool statusChange(
+			physx::PxU64& pairID, physx::PxPairFlags& pairFlags, physx::PxFilterFlags& filterFlags
+		) override;
+
+	private:
+		fast_pool_unordered_map<physx::PxU64, std::pair<const physx::PxActor*, const physx::PxActor*>> m_pair_map_{};
+	};
 
 	physx::PxFilterFlags SimulationFilterShader(
 		physx::PxFilterObjectAttributes        attributes0,
@@ -27,6 +50,6 @@ namespace Engine::Physics
 		const void*                     constantBlock,
 		physx::PxU32                    constantBlockSize);
 
-	inline PhysXSimulationCallback g_simulation_callback;
+	inline PhysXSimulationFilterCallback g_filter_callback;
 }
 #endif
