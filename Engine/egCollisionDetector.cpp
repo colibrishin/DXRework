@@ -152,6 +152,11 @@ namespace Engine::Manager::Physics
 					stack.pop();
 				}
 			}
+			
+#ifdef PHYSX_ENABLED
+			scene->GetPhysXScene()->collide(dt);
+			scene->GetPhysXScene()->fetchCollision(true);
+#endif
 		}
 
 		for (const auto& [lhs, rhs_set] : m_frame_collision_map_)

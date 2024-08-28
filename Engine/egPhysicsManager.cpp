@@ -98,6 +98,10 @@ namespace Engine::Manager::Physics
 	{
 		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
+#ifdef PHYSX_ENABLED
+			scene->GetPhysXScene()->advance();
+			scene->GetPhysXScene()->fetchResults(true);
+#endif
 			const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
 			for (const auto rb : rbs)

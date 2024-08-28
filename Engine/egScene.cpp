@@ -629,11 +629,6 @@ namespace Engine
 		{
 			m_layers[static_cast<eLayerType>(i)]->FixedUpdate(dt);
 		}
-
-#ifdef PHYSX_ENABLED
-		m_physics_scene_->simulate(dt);
-		m_physics_scene_->fetchResults(true);
-#endif
 	}
 
 	void Scene::PostRender(const float& dt)
