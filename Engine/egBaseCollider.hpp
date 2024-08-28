@@ -9,7 +9,7 @@
 #ifdef PHYSX_ENABLED
 namespace physx
 {
-	class PxRigidStatic;
+	class PxRigidDynamic;
 	class PxMaterial;
 	class PxShape;
 }
@@ -166,7 +166,7 @@ namespace Engine::Components
 		Vector3 m_previous_scale_;
 
 		physx::PxMaterial* m_px_material_;
-		physx::PxRigidStatic* m_px_rb_static_;
+		physx::PxRigidDynamic* m_px_rb_static_;
 		std::vector<physx::PxShape*> m_px_meshes_;
 #endif
 	};

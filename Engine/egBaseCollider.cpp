@@ -2,13 +2,17 @@
 #include "egBaseCollider.hpp"
 
 #ifdef PHYSX_ENABLED
-#include <PxPhysics.h>
-#include <PxRigidStatic.h>
 #include <PxMaterial.h>
+#include <PxPhysics.h>
+#include <PxRigidDynamic.h>
+#include <PxRigidStatic.h>
 #include <PxScene.h>
+#include <extensions/PxRigidActorExt.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 
 #include <imgui_stdlib.h>
+
 #include "egCollision.h"
 #include "egCubeMesh.h"
 #include "egD3Device.hpp"
@@ -534,14 +538,6 @@ namespace Engine::Components
 				m_px_rb_static_->release();
 				m_px_rb_static_ = nullptr;
 			}
-
-			for (auto& meshes : m_px_meshes_)
-			{
-				meshes->release();
-				meshes = nullptr;
-			}
-
-			m_px_meshes_.clear();
 		}
 
 		if (const auto& owner = GetOwner().lock())
@@ -556,13 +552,10 @@ namespace Engine::Components
 				reinterpret_cast<const physx::PxVec3&>(position),
 				reinterpret_cast<const physx::PxQuat&>(rotation));
 
-			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidStatic(px_transform);
-			m_px_rb_static_->userData = this;
-
-			if (scene)
-			{
-				scene->GetPhysXScene()->addActor(*m_px_rb_static_);
-			}
+			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidDynamic(px_transform);
+			//m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
+			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_GYROSCOPIC_FORCES, true);
+			//m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_SPECULATIVE_CCD, true);
 
 			// assemble shape
 			if (const auto& shape = m_shape_.lock())
@@ -592,10 +585,13 @@ namespace Engine::Components
 						geo = *mesh->GetPhysXGeometry();
 					}
 
-					physx::PxShape* new_shape = GetPhysicsManager().GetPhysX()->createShape(geo, *m_px_material_);
+					physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
 
-					_ASSERT(m_px_rb_static_->attachShape(*new_shape));
-					m_px_meshes_.push_back(new_shape);
+					// all ok for shape filtering
+					physx::PxFilterData filter_data;
+					filter_data.word0 = owner->GetLayer();
+					filter_data.word1 = std::numeric_limits<unsigned long long>::max();
+					new_shape->setSimulationFilterData(filter_data);
 				}
 
 				m_previous_world_matrix_ = world;
@@ -604,6 +600,19 @@ namespace Engine::Components
 			else
 			{
 				// todo: stock vertices.
+			}
+
+			// https://codebrowser.dev/qt6/qtquick3dphysics/src/3rdparty/PhysX/source/physxextensions/src/ExtDefaultSimulationFilterShader.cpp.html
+			// due to the sequence of setting group, add shape first then update the actor group and, groups mask
+			physx::PxGroupsMask groups;
+			std::memset(&groups.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t)*4);
+			physx::PxSetGroupsMask(*m_px_rb_static_, groups);
+			physx::PxSetGroup(*m_px_rb_static_, owner->GetLayer());
+			m_px_rb_static_->userData = this;
+
+			if (scene)
+			{
+				scene->GetPhysXScene()->addActor(*m_px_rb_static_);
 			}
 		}
 
@@ -626,12 +635,6 @@ namespace Engine::Components
 		{
 			m_px_material_->release();
 			m_px_material_ = nullptr;
-		}
-
-		for (auto& meshes : m_px_meshes_)
-		{
-			meshes->release();
-			meshes = nullptr;
 		}
 
 		m_px_meshes_.clear();
