@@ -625,6 +625,18 @@ namespace Engine::Components
 				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, true);
 			}
 
+			const auto& setupShape = [](const StrongObjectBase& in_owner, physx::PxShape* px_shape)
+			{
+				// todo: all ok for shape filtering
+				physx::PxFilterData filter_data;
+				filter_data.word0 = to_bitmask<physx::PxU32>(in_owner->GetLayer());
+				filter_data.word1 = std::numeric_limits<unsigned long long>::max();
+
+				px_shape->setSimulationFilterData(filter_data);
+				px_shape->setContactOffset(0.01f);
+				px_shape->setRestOffset(0.2f);
+			};
+
 			// assemble shape
 			if (const auto& shape = m_shape_.lock())
 			{
@@ -641,12 +653,7 @@ namespace Engine::Components
 					}
 
 					physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
-
-					// all ok for shape filtering
-					physx::PxFilterData filter_data;
-					filter_data.word0 = to_bitmask<physx::PxU32>(owner->GetLayer());
-					filter_data.word1 = std::numeric_limits<unsigned long long>::max();
-					new_shape->setSimulationFilterData(filter_data);
+					setupShape(owner, new_shape);
 				}
 			}
 			else
@@ -655,19 +662,17 @@ namespace Engine::Components
 				geo.scale = reinterpret_cast<const physx::PxVec3&>(scale);
 
 				physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
-
-				// all ok for shape filtering
-				physx::PxFilterData filter_data;
-				filter_data.word0 = to_bitmask<physx::PxU32>(owner->GetLayer());
-				filter_data.word1 = std::numeric_limits<unsigned long long>::max();
-				new_shape->setSimulationFilterData(filter_data);
+				setupShape(owner, new_shape);
 			}
 
 			// https://codebrowser.dev/qt6/qtquick3dphysics/src/3rdparty/PhysX/source/physxextensions/src/ExtDefaultSimulationFilterShader.cpp.html
 			// due to the sequence of setting group, add shape first then update the actor group and, groups mask
+
+			// todo: utilize group mask.
 			physx::PxGroupsMask groups;
 			std::memset(&groups.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
 			physx::PxSetGroupsMask(*m_px_rb_static_, groups);
+
 			physx::PxSetGroup(*m_px_rb_static_, owner->GetLayer());
 			m_px_rb_static_->userData = this;
 
