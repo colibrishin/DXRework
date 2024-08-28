@@ -5,12 +5,11 @@
 #ifdef PHYSX_ENABLED
 #include <PxScene.h>
 #include "PhysXSimulationCallback.h"
+#include <PxRigidActor.h>
+#include <PxShape.h>
 #endif
 
 #include "egCollisionDetector.h"
-
-#include <PxRigidActor.h>
-#include <PxShape.h>
 
 #include "egBaseCollider.hpp"
 #include "egCollision.h"
@@ -41,10 +40,6 @@ namespace Engine::Manager::Physics
 				}
 			}
 		}
-
-#ifdef PHYSX_ENABLED
-		m_px_callback_ = new Engine::Physics::PhysXSimulationCallback;
-#endif 
 	}
 
 	void CollisionDetector::Update(const float& dt) {}
@@ -512,11 +507,6 @@ namespace Engine::Manager::Physics
 		}
 	}
 
-	Engine::Physics::PhysXSimulationCallback& CollisionDetector::GetPhysXCallback() const
-	{
-		return *m_px_callback_;
-	}
-
 	void CollisionDetector::SetCollisionLayer(
 		const eLayerType a,
 		const eLayerType b
@@ -565,9 +555,6 @@ namespace Engine::Manager::Physics
 
 	CollisionDetector::~CollisionDetector()
 	{
-#ifdef PHYSX_ENABLED
-		delete m_px_callback_;
-#endif
 	}
 
 	bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const

@@ -59,12 +59,8 @@ namespace Engine::Manager::Physics
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
 
 #ifdef PHYSX_ENABLED
-	public:
-		Engine::Physics::PhysXSimulationCallback& GetPhysXCallback() const;
-
 	private:
 		friend class Engine::Physics::PhysXSimulationCallback;
-		Engine::Physics::PhysXSimulationCallback* m_px_callback_;
 #endif
 	};
 } // namespace Engine::Manager
