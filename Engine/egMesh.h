@@ -97,7 +97,6 @@ namespace Engine::Resources
 	protected:
 		physx::PxSDFDesc* m_px_sdf_;
 		physx::PxTriangleMesh* m_px_mesh_;
-		physx::PxTriangleMeshGeometry* m_px_geometry_;
 #endif
 	};
 } // namespace Engine::Resources

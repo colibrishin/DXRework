@@ -44,12 +44,6 @@ namespace Engine::Resources
 	Mesh::~Mesh()
 	{
 #ifdef PHYSX_ENABLED
-		if (m_px_geometry_)
-		{
-			delete m_px_geometry_;
-			m_px_geometry_ = nullptr;
-		}
-
 		if (m_px_mesh_)
 		{
 			m_px_mesh_->release();
@@ -151,11 +145,6 @@ namespace Engine::Resources
 	}
 
 #ifdef PHYSX_ENABLED
-	physx::PxTriangleMeshGeometry* Mesh::GetPhysXGeometry() const
-	{
-		return m_px_geometry_;
-	}
-
 	physx::PxTriangleMesh* Mesh::GetPhysXMesh() const
 	{
 		return m_px_mesh_;
@@ -547,7 +536,6 @@ namespace Engine::Resources
 				out_stream.getSize());
 
 			m_px_mesh_ = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
-			m_px_geometry_ = new physx::PxTriangleMeshGeometry(m_px_mesh_);
 
 			// todo: serialize sdf information after cooking
 		}
@@ -597,12 +585,6 @@ namespace Engine::Resources
 		}
 
 #ifdef PHYSX_ENABLED
-		if (m_px_geometry_)
-		{
-			delete m_px_geometry_;
-			m_px_geometry_ = nullptr;
-		}
-
 		if (m_px_mesh_)
 		{
 			m_px_mesh_->release();
