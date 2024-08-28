@@ -1,4 +1,5 @@
 #include "pch.h"
+#ifdef PHYSX_ENABLED
 
 #include <PxScene.h>
 
@@ -6,7 +7,7 @@
 
 #include "egPhysicsManager.h"
 #include "egSceneManager.hpp"
-#ifdef PHYSX_ENABLED
+
 #include "PhysXSimulationCallback.h"
 
 #include <PxRigidActor.h>
@@ -17,6 +18,8 @@
 
 namespace Engine::Physics
 {
+	PhysXSimulationFilterCallback g_filter_callback;
+
 /*
 	void PhysXSimulationCallback::onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count)
 	{
@@ -61,7 +64,6 @@ namespace Engine::Physics
 	)
 	{
 		// this can be defined as static if collision detector is guaranteed not to be destroyed.
-		auto& frame_collision = GetCollisionDetector().m_frame_collision_map_;
 		auto& collision_map = GetCollisionDetector().m_collision_map_;
 
 		if (pairFlags & physx::PxPairFlag::eNOTIFY_TOUCH_FOUND)
@@ -72,8 +74,8 @@ namespace Engine::Physics
 			if (!collision_map.contains(lhs->GetID()) ||
 				!collision_map.at(lhs->GetID()).contains(rhs->GetID()))
 			{
-				frame_collision[lhs->GetID()].insert(rhs->GetID());
-				frame_collision[rhs->GetID()].insert(lhs->GetID());
+				collision_map[lhs->GetID()].insert(rhs->GetID());
+				collision_map[rhs->GetID()].insert(lhs->GetID());
 
 				lhs->onCollisionEnter.Broadcast(rhs->GetSharedPtr<Components::Collider>());
 				rhs->onCollisionEnter.Broadcast(lhs->GetSharedPtr<Components::Collider>());
@@ -115,8 +117,8 @@ namespace Engine::Physics
 		if (collision_map.contains(lhs->GetID()) ||
 			collision_map.at(lhs->GetID()).contains(rhs->GetID()))
 		{
-			frame_collision[lhs->GetID()].erase(rhs->GetID());
-			frame_collision[rhs->GetID()].erase(lhs->GetID());
+			collision_map[lhs->GetID()].erase(rhs->GetID());
+			collision_map[rhs->GetID()].erase(lhs->GetID());
 
 			lhs->onCollisionEnd.Broadcast(rhs->GetSharedPtr<Components::Collider>());
 			rhs->onCollisionEnd.Broadcast(lhs->GetSharedPtr<Components::Collider>());

@@ -50,6 +50,6 @@ namespace Engine::Physics
 		const void*                     constantBlock,
 		physx::PxU32                    constantBlockSize);
 
-	inline PhysXSimulationFilterCallback g_filter_callback;
+	extern PhysXSimulationFilterCallback g_filter_callback;
 }
 #endif
