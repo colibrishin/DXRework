@@ -71,8 +71,11 @@ namespace Engine
 		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
 		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
 		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_BODY_ACCELERATIONS;
 		scene_desc.filterShader = Engine::Physics::SimulationFilterShader;
-		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
+		scene_desc.filterCallback = &Engine::Physics::g_filter_callback;
+		scene_desc.kineKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
+		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
 
 		if constexpr (g_speculation_enabled)
 		{
@@ -91,13 +94,16 @@ namespace Engine
 			}
 		}
 
+		/*
+		 * for the note using PxDefaultSimulationFilterShader
 		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback
 		physx::PxGroupsMask all_ok;
 		std::memset(&all_ok.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
 		physx::PxSetFilterConstants(all_ok, all_ok);
 		physx::PxSetFilterBool(true);
 		physx::PxSetFilterOps(physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND);
-
+		*/
+		
 		m_physics_scene_->userData = this;
 #endif
 	}
