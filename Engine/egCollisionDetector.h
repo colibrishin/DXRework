@@ -9,7 +9,7 @@ namespace Engine
 {
 	namespace Physics
 	{
-		class PhysXSimulationCallback;
+		class PhysXSimulationFilterCallback;
 	}
 }
 
@@ -60,7 +60,7 @@ namespace Engine::Manager::Physics
 
 #ifdef PHYSX_ENABLED
 	private:
-		friend class Engine::Physics::PhysXSimulationCallback;
+		friend class Engine::Physics::PhysXSimulationFilterCallback;
 #endif
 	};
 } // namespace Engine::Manager
