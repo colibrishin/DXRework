@@ -86,14 +86,6 @@ namespace Engine
 
 		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
 
-		for (int i = 0; i < LAYER_MAX; ++i)
-		{
-			for (int j = 0; j < LAYER_MAX; ++j)
-			{
-				physx::PxSetGroupCollisionFlag(i, j, true);
-			}
-		}
-
 		/*
 		 * for the note using PxDefaultSimulationFilterShader
 		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback

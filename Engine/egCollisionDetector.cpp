@@ -7,6 +7,7 @@
 #include "PhysXSimulationCallback.h"
 #include <PxRigidActor.h>
 #include <PxShape.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 
 #include "egCollisionDetector.h"
@@ -40,6 +41,17 @@ namespace Engine::Manager::Physics
 				}
 			}
 		}
+
+#ifdef PHYSX_ENABLED
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			for (int j = 0; j < LAYER_MAX; ++j)
+			{
+				physx::PxSetGroupCollisionFlag(i, j, i == j);
+			}
+		}
+#endif
+
 	}
 
 	void CollisionDetector::Update(const float& dt) {}
@@ -56,6 +68,10 @@ namespace Engine::Manager::Physics
 	{
 		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
+#ifdef PHYSX_ENABLED
+			scene->GetPhysXScene()->collide(dt);
+			scene->GetPhysXScene()->fetchCollision(true);
+#else
 			const auto& tree = scene->GetObjectTree();
 
 			std::stack<const Octree*> stack;
@@ -147,13 +163,10 @@ namespace Engine::Manager::Physics
 					stack.pop();
 				}
 			}
-			
-#ifdef PHYSX_ENABLED
-			scene->GetPhysXScene()->collide(dt);
-			scene->GetPhysXScene()->fetchCollision(true);
 #endif
 		}
 
+#if !defined(PHYSX_ENABLED)
 		for (const auto& [lhs, rhs_set] : m_frame_collision_map_)
 		{
 			m_collision_map_[lhs].insert(rhs_set.begin(), rhs_set.end());
@@ -165,6 +178,7 @@ namespace Engine::Manager::Physics
 		}
 
 		m_frame_collision_map_.clear();
+#endif
 
 		// Remove empty set.
 		for (auto it = m_collision_map_.begin(); it != m_collision_map_.end();)
@@ -514,12 +528,22 @@ namespace Engine::Manager::Physics
 	{
 		m_layer_mask_[a][b] = true;
 		m_layer_mask_[b][a] = true;
+
+#ifdef PHYSX_ENABLED
+		physx::PxSetGroupCollisionFlag(a, b, true);
+		physx::PxSetGroupCollisionFlag(b, a, true);
+#endif
 	}
 
 	void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
 	{
 		m_layer_mask_[layer][layer2] = false;
 		m_layer_mask_[layer2][layer] = false;
+
+#ifdef PHYSX_ENABLED
+		physx::PxSetGroupCollisionFlag(layer, layer2, false);
+		physx::PxSetGroupCollisionFlag(layer2, layer, false);
+#endif
 	}
 
 	bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
