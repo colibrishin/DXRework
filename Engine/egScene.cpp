@@ -68,11 +68,11 @@ namespace Engine
 #ifdef PHYSX_ENABLED
 		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
 		scene_desc.gravity = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
-		scene_desc.filterShader = physx::PxDefaultSimulationFilterShader;
 		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
 		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
 		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
-		scene_desc.simulationEventCallback = &GetCollisionDetector().GetPhysXCallback();
+		scene_desc.filterShader = Engine::Physics::SimulationFilterShader;
+		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
 
 		if constexpr (g_speculation_enabled)
 		{
@@ -82,6 +82,22 @@ namespace Engine
 		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
 
 		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
+
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			for (int j = 0; j < LAYER_MAX; ++j)
+			{
+				physx::PxSetGroupCollisionFlag(i, j, true);
+			}
+		}
+
+		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback
+		physx::PxGroupsMask all_ok;
+		std::memset(&all_ok.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
+		physx::PxSetFilterConstants(all_ok, all_ok);
+		physx::PxSetFilterBool(true);
+		physx::PxSetFilterOps(physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND);
+
 		m_physics_scene_->userData = this;
 #endif
 	}

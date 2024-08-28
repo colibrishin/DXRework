@@ -1,4 +1,6 @@
 #include "pch.h"
+
+#include <extensions/PxDefaultSimulationFilterShader.h>
 #ifdef PHYSX_ENABLED
 #include "PhysXSimulationCallback.h"
 
@@ -12,14 +14,17 @@ namespace Engine::Physics
 {
 	void PhysXSimulationCallback::onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count)
 	{
+		HELPME
 	}
 
 	void PhysXSimulationCallback::onWake(physx::PxActor** actors, physx::PxU32 count)
 	{
+		HELPME
 	}
 
 	void PhysXSimulationCallback::onSleep(physx::PxActor** actors, physx::PxU32 count)
 	{
+		HELPME
 	}
 
 	void PhysXSimulationCallback::onContact(const physx::PxContactPairHeader& pairHeader,
@@ -30,22 +35,25 @@ namespace Engine::Physics
 
 		for (int i = 0; i < nbPairs; ++i)
 		{
-			physx::PxShape* const* shapes = pairs[i].shapes;
-
-			const physx::PxRigidActor* px_lhs = shapes[0]->getActor();
-			const physx::PxRigidActor* px_rhs = shapes[1]->getActor();
-
-			const auto& lhs = static_cast<Components::Collider*>(px_lhs->userData);
-			const auto& rhs = static_cast<Components::Collider*>(px_rhs->userData);
-
-			if (!collision_map.contains(lhs->GetID()) ||
-				!collision_map.at(lhs->GetID()).contains(rhs->GetID()))
+			if (pairs[i].events & physx::PxPairFlag::eNOTIFY_TOUCH_FOUND)
 			{
-				frame_collision[lhs->GetID()].insert(rhs->GetID());
-				frame_collision[rhs->GetID()].insert(lhs->GetID());
+				physx::PxShape* const* shapes = pairs[i].shapes;
 
-				lhs->onCollisionEnter.Broadcast(rhs->GetSharedPtr<Components::Collider>());
-				rhs->onCollisionEnter.Broadcast(lhs->GetSharedPtr<Components::Collider>());
+				const physx::PxRigidActor* px_lhs = shapes[0]->getActor();
+				const physx::PxRigidActor* px_rhs = shapes[1]->getActor();
+
+				const auto& lhs = static_cast<Components::Collider*>(px_lhs->userData);
+				const auto& rhs = static_cast<Components::Collider*>(px_rhs->userData);
+
+				if (!collision_map.contains(lhs->GetID()) ||
+					!collision_map.at(lhs->GetID()).contains(rhs->GetID()))
+				{
+					frame_collision[lhs->GetID()].insert(rhs->GetID());
+					frame_collision[rhs->GetID()].insert(lhs->GetID());
+
+					lhs->onCollisionEnter.Broadcast(rhs->GetSharedPtr<Components::Collider>());
+					rhs->onCollisionEnter.Broadcast(lhs->GetSharedPtr<Components::Collider>());
+				}
 			}
 		}
 
@@ -81,11 +89,38 @@ namespace Engine::Physics
 
 	void PhysXSimulationCallback::onTrigger(physx::PxTriggerPair* pairs, physx::PxU32 count)
 	{
+		HELPME
 	}
 
 	void PhysXSimulationCallback::onAdvance(const physx::PxRigidBody* const* bodyBuffer,
 		const physx::PxTransform* poseBuffer, const physx::PxU32 count)
 	{
+		HELPME
+	}
+
+	physx::PxFilterFlags SimulationFilterShader(
+		physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
+		physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1, physx::PxPairFlags& pairFlags,
+		const void*                     constantBlock, physx::PxU32      constantBlockSize
+	)
+	{
+		PX_UNUSED(constantBlock);
+		PX_UNUSED(constantBlockSize);
+		// let triggers through
+        if(physx::PxFilterObjectIsTrigger(attributes0) || physx::PxFilterObjectIsTrigger(attributes1))
+        {
+                pairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT;
+                return physx::PxFilterFlag::eDEFAULT;
+        }
+        // generate contacts for all that were not filtered above
+        pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
+
+        // trigger the contact callback for pairs (A,B) where
+        // the filtermask of A contains the ID of B and vice versa.
+        if((filterData0.word0 & filterData1.word1) && (filterData1.word0 & filterData0.word1))
+                pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+
+        return physx::PxFilterFlag::eDEFAULT;
 	}
 }
 #endif
