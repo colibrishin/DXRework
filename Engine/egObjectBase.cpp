@@ -376,6 +376,8 @@ namespace Engine::Abstract
 
 	void ObjectBase::removeComponentImpl(const eComponentType type, const StrongComponent& comp)
 	{
+		onComponentRemoved.Broadcast(comp);
+
 		GetTaskScheduler().AddTask
 				(
 				 TASK_REM_COMPONENT,

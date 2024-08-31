@@ -86,6 +86,7 @@ namespace Engine::Components
 #ifdef PHYSX_ENABLED
 		// todo: move friction value from rb to collider
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1, 0.1, g_restitution_coefficient);
+		owner->onComponentRemoved.Listen(this, &Collider::ResetRigidbody);
 #endif
 		
 		owner->onComponentAdded.Listen(this, &Collider::UpdateByOwner);
@@ -677,6 +678,9 @@ namespace Engine::Components
 			physx::PxSetGroup(*m_px_rb_static_, owner->GetLayer());
 			m_px_rb_static_->userData = this;
 
+			m_px_rb_static_->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
+			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
+
 			if (scene)
 			{
 				scene->GetPhysXScene()->addActor(*m_px_rb_static_);
@@ -708,6 +712,24 @@ namespace Engine::Components
 		}
 
 		m_px_meshes_.clear();
+	}
+
+	physx::PxRigidDynamic* Collider::GetPhysXRigidbody() const
+	{
+		return m_px_rb_static_;
+	}
+
+	void Collider::ResetRigidbody(Weak<Component> component)
+	{
+		if (const StrongComponent& locked = component.lock())
+		{
+			if (locked->GetComponentType() == COM_T_RIDIGBODY)
+			{
+				m_px_rb_static_->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
+				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
+				m_px_rb_static_->setRigidDynamicLockFlags({});
+			}
+		}
 	}
 #endif
 

@@ -167,6 +167,7 @@ namespace Engine::Components
 		void CleanupPhysX();
 
 		physx::PxRigidDynamic* GetPhysXRigidbody() const;
+		void ResetRigidbody(Weak<Component> component);
 
 		Matrix m_previous_world_matrix_;
 		Vector3 m_previous_scale_;

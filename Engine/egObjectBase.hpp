@@ -8,6 +8,7 @@
 #include "egScript.h"
 
 DEFINE_DELEGATE(OnComponentAdded, Engine::Weak<Engine::Abstract::Component>)
+DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstract::Component>)
 
 namespace Engine::Abstract
 {
@@ -16,6 +17,7 @@ namespace Engine::Abstract
 	{
 	public:
 		DelegateOnComponentAdded onComponentAdded;
+		DelegateOnComponentRemoved onComponentRemoved;
 
 		~ObjectBase() override = default;
 
