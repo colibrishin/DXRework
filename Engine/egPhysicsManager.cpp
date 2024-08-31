@@ -101,7 +101,8 @@ namespace Engine::Manager::Physics
 #ifdef PHYSX_ENABLED
 			scene->GetPhysXScene()->advance();
 			scene->GetPhysXScene()->fetchResults(true);
-#endif
+			UpdateFromPhysX();
+#else
 			const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
 
 			for (const auto rb : rbs)
@@ -111,6 +112,7 @@ namespace Engine::Manager::Physics
 					UpdateObject(locked->GetSharedPtr<Components::Rigidbody>().get(), dt);
 				}
 			}
+#endif
 		}
 	}
 
@@ -217,4 +219,52 @@ namespace Engine::Manager::Physics
 
 		rb->SetLinearFriction(lfrc);
 	}
+
+#ifdef PHYSX_ENABLED
+	void PhysicsManager::UpdateFromPhysX()
+	{
+		if (const auto& scene = GetSceneManager().GetActiveScene().lock())
+		{
+			const physx::PxScene* px_scene = scene->GetPhysXScene();
+			_ASSERT(px_scene);
+
+			std::vector<physx::PxActor*> px_actors;
+
+			const size_t px_dynamic_actor_count = px_scene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
+			px_actors.resize(px_dynamic_actor_count);
+
+			px_scene->getActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC, px_actors.data(), px_dynamic_actor_count);
+
+			for (const physx::PxActor* const& actor : px_actors)
+			{
+				const auto px_dynamic = actor->is<physx::PxRigidDynamic>();
+				_ASSERT(px_dynamic);
+
+				const auto& internal_collider = static_cast<Components::Collider*>(px_dynamic->userData);
+
+				if (const StrongObjectBase& owner = internal_collider->GetOwner().lock())
+				{
+					const StrongTransform& internal_transform = owner->GetComponent<Components::Transform>().lock();
+					_ASSERT(internal_transform);
+
+					const physx::PxTransform& position = px_dynamic->getGlobalPose();
+					internal_transform->SetWorldPosition(reinterpret_cast<const Vector3&>(position.p));
+					internal_transform->SetWorldRotation(reinterpret_cast<const Quaternion&>(position.q));
+
+					if (const StrongRigidbody& internal_rigidbody = owner->GetComponent<Components::Rigidbody>().lock())
+					{
+						const physx::PxVec3& linear_velocity = px_dynamic->getLinearVelocity();
+						const physx::PxVec3& angular_velocity = px_dynamic->getAngularVelocity();
+
+						internal_rigidbody->m_linear_velocity = reinterpret_cast<const Vector3&>(linear_velocity);
+						internal_rigidbody->m_angular_velocity = reinterpret_cast<const Vector3&>(angular_velocity);
+
+						internal_rigidbody->Reset();
+						internal_rigidbody->Synchronize();
+					}
+				}
+			}
+		}
+	}
+#endif
 } // namespace Engine::Manager::Physics

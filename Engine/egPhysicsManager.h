@@ -46,6 +46,8 @@ namespace Engine::Manager::Physics
 		physx::PxCudaContextManager* m_context_manager_;
 		physx::PxCpuDispatcher* m_px_cpu_dispatcher_;
 
+		static void  UpdateFromPhysX();
+
 	public:
 		[[nodiscard]] physx::PxPhysics* GetPhysX() const
 		{
