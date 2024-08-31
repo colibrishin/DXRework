@@ -5,7 +5,6 @@
 
 namespace Engine::Physics
 {
-/*
 	class PhysXSimulationCallback : public physx::PxSimulationEventCallback
 	{
 	public:
@@ -18,7 +17,6 @@ namespace Engine::Physics
 		void onAdvance(const physx::PxRigidBody* const* bodyBuffer, const physx::PxTransform* poseBuffer,
 			const physx::PxU32 count) override;
 	};
-*/
 
 	class PhysXSimulationFilterCallback : public physx::PxSimulationFilterCallback
 	{
@@ -51,5 +49,6 @@ namespace Engine::Physics
 		physx::PxU32                    constantBlockSize);
 
 	extern PhysXSimulationFilterCallback g_filter_callback;
+	extern PhysXSimulationCallback g_simulation_callback;
 }
 #endif

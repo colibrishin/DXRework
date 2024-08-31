@@ -19,8 +19,8 @@
 namespace Engine::Physics
 {
 	PhysXSimulationFilterCallback g_filter_callback;
+	PhysXSimulationCallback g_simulation_callback;
 
-/*
 	void PhysXSimulationCallback::onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count)
 	{
 	}
@@ -48,7 +48,6 @@ namespace Engine::Physics
 		const physx::PxTransform* poseBuffer, const physx::PxU32 count)
 	{
 	}
-*/
 
 	physx::PxFilterFlags PhysXSimulationFilterCallback::pairFound(
 		physx::PxU64 pairID, 
