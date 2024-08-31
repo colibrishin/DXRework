@@ -63,9 +63,12 @@ namespace Engine
 		ImGui::InputText(_labelPrefix(label.c_str()).c_str(), &text);
 	}
 
-	inline static void CheckboxAligned(const std::string& label, bool& flag)
+	inline static void CheckboxAligned(const std::string& label, bool& flag, const std::function<void(const bool)>& if_true_call = {})
 	{
-		ImGui::Checkbox(_labelPrefix(label.c_str()).c_str(), &flag);
+		if (ImGui::Checkbox(_labelPrefix(label.c_str()).c_str(), &flag) && if_true_call)
+		{
+			if_true_call(flag);
+		}
 	}
 
 	inline static void UINTAligned(const std::string& label, UINT& value)
@@ -113,7 +116,8 @@ namespace Engine
 		Vector3&             v,
 		const float          drag_step = 0.1f,
 		const float          min_value = 0,
-		const float          max_value = 0
+		const float          max_value = 0,
+		const std::function<void(const Vector3&)>& if_true_call = {}
 	)
 	{
 		const auto  unique_id = std::to_string(id) + var_name;
@@ -129,6 +133,11 @@ namespace Engine
 
 		changed = ImGui::DragFloat3("##vector", &v.x, drag_step, min_value, max_value);
 		ImGui::PopID();
+
+		if (changed && if_true_call)
+		{
+			if_true_call(v);
+		}
 
 		return changed;
 	}
