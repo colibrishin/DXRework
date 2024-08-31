@@ -161,8 +161,12 @@ namespace Engine::Components
 
 #ifdef PHYSX_ENABLED
 	private:
+		friend class Rigidbody;
+
 		void UpdatePhysXShape();
 		void CleanupPhysX();
+
+		physx::PxRigidDynamic* GetPhysXRigidbody() const;
 
 		Matrix m_previous_world_matrix_;
 		Vector3 m_previous_scale_;
