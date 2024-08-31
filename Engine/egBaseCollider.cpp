@@ -189,6 +189,7 @@ namespace Engine::Components
 			mesh_desc.sdfDesc = *built_sdf;
 
 			physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+			cooking_params.buildGPUData = true;
 
 			physx::PxTriangleMeshCookingResult::Enum result;
 			physx::PxDefaultMemoryOutputStream out_stream;
