@@ -217,6 +217,18 @@ namespace Engine
 			lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
 		};
 	}
+
+	template <size_t... Indices, typename T, typename... Args>
+	auto mem_bind_impl(T* this_pointer, void(T::*function)(Args...))
+	{
+		return std::bind(function, this_pointer, std::_Ph<Indices>{}...);
+	}
+
+	template <typename T, typename... Args>
+	auto mem_bind(T* this_pointer, void(T::*function)(Args...))
+	{
+		return mem_bind_impl<sizeof...(Args)>(this_pointer, function);
+	}
 } // namespace Engine
 
 namespace DX

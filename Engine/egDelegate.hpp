@@ -17,7 +17,7 @@ public:
 	template <typename T>
 	void Listen(T* this_pointer, void(T::*function)(Args...))
 	{
-		function_type func = mem_bind(this_pointer, function);
+		function_type func = Engine::mem_bind(this_pointer, function);
 
 		// todo: garbage collection
 		m_listener_.emplace(bucket_type{reinterpret_cast<address_type>(this_pointer), reinterpret_cast<address_type>(&function) }, func);
@@ -58,18 +58,6 @@ public:
 	}
 
 private:
-	template <size_t... Indices, typename T>
-	auto mem_bind_impl(T* this_pointer, void(T::*function)(Args...))
-	{
-		return std::bind(function, this_pointer, std::_Ph<Indices>{}...);
-	}
-
-	template <typename T>
-	auto mem_bind(T* this_pointer, void(T::*function)(Args...))
-	{
-		return mem_bind_impl<sizeof...(Args)>(this_pointer, function);
-	}
-
 	std::map<bucket_type, function_type> m_listener_{};
 
 };
