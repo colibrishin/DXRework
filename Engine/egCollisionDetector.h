@@ -5,6 +5,7 @@
 #include "egCommon.hpp"
 #include "egManager.hpp"
 
+#ifdef PHYSX_ENABLED
 namespace Engine
 {
 	namespace Physics
@@ -12,6 +13,7 @@ namespace Engine
 		class PhysXSimulationFilterCallback;
 	}
 }
+#endif
 
 namespace Engine::Manager::Physics
 {

@@ -26,6 +26,8 @@ namespace Engine::Manager::Physics
 
 	void ConstraintSolver::FixedUpdate(const float& dt)
 	{
+#ifdef PHYSX_ENABLED
+#else
 		auto& infos = GetCollisionDetector().GetCollisionInfo();
 
 		static tbb::affinity_partitioner ap;
@@ -44,6 +46,7 @@ namespace Engine::Manager::Physics
 
 		infos.clear();
 		m_collision_resolved_set_.clear();
+#endif
 	}
 
 	void ConstraintSolver::PostUpdate(const float& dt) {}
