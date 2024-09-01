@@ -450,8 +450,7 @@ namespace Engine::Components
 	{
 		Component::OnImGui();
 		ImGui::Indent(2);
-
-		ImGui::InputInt("Collider Type", reinterpret_cast<int*>(&m_type_));
+		ImGui::Combo("Collider Type", reinterpret_cast<int*>(&m_type_), s_stock_shape_names, IM_ARRAYSIZE(s_stock_shape_names));
 
 		ImGui::InputFloat("Collider Mass", &m_mass_);
 

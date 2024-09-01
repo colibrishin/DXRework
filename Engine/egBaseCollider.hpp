@@ -147,6 +147,11 @@ namespace Engine::Components
 		inline static std::vector<Graphics::VertexElement> s_sphere_stock_ = {};
 		inline static std::vector<UINT> s_cube_stock_indices_ = {};
 		inline static std::vector<UINT> s_sphere_stock_indices_ = {};
+		static constexpr const char* s_stock_shape_names[] = 
+		{
+			"Cube",
+			"Sphere",
+		};
 
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
