@@ -462,7 +462,7 @@ namespace Engine
 			return acc->second;
 		}
 
-		std::find_if
+		const auto& it = std::find_if
 				(
 				 m_layers.begin(), m_layers.end(),
 				 [id, &acc](const auto& layer)
@@ -470,6 +470,11 @@ namespace Engine
 					 return layer->FindGameObject(id).lock();
 				 }
 				);
+
+		if (it != m_layers.end())
+		{
+			return (*it)->FindGameObject(id);
+		}
 
 		return {};
 	}
