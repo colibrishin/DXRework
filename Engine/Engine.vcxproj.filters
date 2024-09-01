@@ -577,6 +577,7 @@
     <ClInclude Include="PhysXSimulationCallback.h">
       <Filter>Singleton\Physics\CollisionDetector</Filter>
     </ClInclude>
+    <ClInclude Include="egPhysxHelper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
