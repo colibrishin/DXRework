@@ -509,41 +509,8 @@ namespace Engine::Resources
 		cmd->FlagReady();
 
 #ifdef PHYSX_ENABLED
-		physx::PxTriangleMeshDesc mesh_desc;
-		mesh_desc.points.count = m_vertices_.size();
-		mesh_desc.points.data = m_vertices_.data();
-		mesh_desc.points.stride = sizeof(VertexElement);
-
-		mesh_desc.triangles.count = m_indices_.size() / 3;
-		mesh_desc.triangles.stride = 3 * sizeof(UINT);
-		mesh_desc.triangles.data = m_indices_.data();
-
-		// todo: prebuild
 		m_px_sdf_ = new physx::PxSDFDesc;
-		m_px_sdf_->spacing = 0.125f;
-
-		mesh_desc.sdfDesc = m_px_sdf_;
-
-		physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
-		cooking_params.buildGPUData = true;
-
-		physx::PxTriangleMeshCookingResult::Enum result;
-		physx::PxDefaultMemoryOutputStream out_stream;
-
-		if (PxCookTriangleMesh(cooking_params, mesh_desc, out_stream, &result))
-		{
-			physx::PxDefaultMemoryInputData input_steam(
-				out_stream.getData(), 
-				out_stream.getSize());
-
-			m_px_mesh_ = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
-
-			// todo: serialize sdf information after cooking
-		}
-		else
-		{
-			OutputDebugStringW(L"Failed to cook as triangle mesh by physx!");
-		}
+		CookMesh(m_vertices_, m_indices_, &m_px_mesh_, &m_px_sdf_);
 #endif
 	}
 

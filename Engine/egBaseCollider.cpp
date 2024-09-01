@@ -172,52 +172,16 @@ namespace Engine::Components
 		}
 
 #ifdef PHYSX_ENABLED
-		const auto& cookMesh = [](const std::vector<Graphics::VertexElement>& vertices, const std::vector<UINT>& indices, physx::PxSDFDesc** built_sdf, physx::PxTriangleMesh** built_shape)
-		{
-			physx::PxTriangleMeshDesc mesh_desc;
-			mesh_desc.points.count = vertices.size();
-			mesh_desc.points.data = vertices.data();
-			mesh_desc.points.stride = sizeof(Graphics::VertexElement);
-
-			mesh_desc.triangles.count = indices.size() / 3;
-			mesh_desc.triangles.stride = 3 * sizeof(UINT);
-			mesh_desc.triangles.data = indices.data();
-
-			// todo: prebuild
-			*built_sdf = new physx::PxSDFDesc;
-			(*built_sdf)->spacing = 0.125f;
-
-			mesh_desc.sdfDesc = *built_sdf;
-
-			physx::PxCookingParams cooking_params(GetPhysicsManager().GetPhysX()->getTolerancesScale());
-			cooking_params.buildGPUData = true;
-
-			physx::PxTriangleMeshCookingResult::Enum result;
-			physx::PxDefaultMemoryOutputStream out_stream;
-
-			if (PxCookTriangleMesh(cooking_params, mesh_desc, out_stream, &result))
-			{
-				physx::PxDefaultMemoryInputData input_steam(
-					out_stream.getData(), 
-					out_stream.getSize());
-
-				(*built_shape) = GetPhysicsManager().GetPhysX()->createTriangleMesh(input_steam);
-				
-				// todo: serialize sdf information after cooking
-			}
-			else
-			{
-				OutputDebugStringW(L"Failed to cook as stock collider triangle mesh by physx!");
-			}
-		};
 
 		if (!s_px_cube_stock_)
 		{
-			cookMesh(s_cube_stock_, s_cube_stock_indices_, &s_px_cube_sdf_, &s_px_cube_stock_);
+			s_px_cube_sdf_ = new physx::PxSDFDesc;
+			CookMesh(s_cube_stock_, s_cube_stock_indices_, &s_px_cube_stock_, &s_px_cube_sdf_);
 		}
 		if (!s_px_sphere_stock_)
 		{
-			cookMesh(s_sphere_stock_, s_sphere_stock_indices_, &s_px_sphere_sdf, &s_px_sphere_stock_);
+			s_px_sphere_sdf = new physx::PxSDFDesc;
+			CookMesh(s_sphere_stock_, s_sphere_stock_indices_, &s_px_sphere_stock_, &s_px_sphere_sdf);
 		}
 #endif
 	}
