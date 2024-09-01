@@ -224,8 +224,20 @@ namespace Engine
 		return std::bind(function, this_pointer, std::_Ph<Indices>{}...);
 	}
 
+	template <size_t... Indices, typename T, typename... Args>
+	auto mem_bind_impl(T* this_pointer, void(T::*function)(Args...) const)
+	{
+		return std::bind(function, this_pointer, std::_Ph<Indices>{}...);
+	}
+
 	template <typename T, typename... Args>
 	auto mem_bind(T* this_pointer, void(T::*function)(Args...))
+	{
+		return mem_bind_impl<sizeof...(Args)>(this_pointer, function);
+	}
+
+	template <typename T, typename... Args>
+	auto mem_bind(T* this_pointer, void(T::*function)(Args...) const)
 	{
 		return mem_bind_impl<sizeof...(Args)>(this_pointer, function);
 	}
