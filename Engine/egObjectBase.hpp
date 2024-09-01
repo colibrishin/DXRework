@@ -119,7 +119,7 @@ namespace Engine::Abstract
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
 		void RemoveComponent()
 		{
-			removeComponentFromSceneCache<T>(m_components_[which_component<T>::value]);
+			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[which_component<T>::value]));
 			removeComponent(which_component<T>::value);
 		}
 
