@@ -44,6 +44,12 @@ namespace Engine::Components
 		SetNoAngular(false);
 
 		Synchronize();
+
+		// todo/refactor: component dependency
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			owner->onComponentRemoved.Listen(GetSharedPtr<Rigidbody>(), &Rigidbody::CheckColliderDependency);
+		}
 	}
 
 	Rigidbody::Rigidbody(const WeakObjectBase& object)
@@ -384,6 +390,20 @@ namespace Engine::Components
 		  m_bFixed(false),
 		  m_b_lerp_(true),
 		  m_friction_mu_(0) {}
+
+	void Rigidbody::CheckColliderDependency(Weak<Component> component) const
+	{
+		if (const StrongComponent& locked = component.lock())
+		{
+			if (locked->GetComponentType() == COM_T_COLLIDER)
+			{
+				if (const StrongObjectBase& owner = GetOwner().lock())
+				{
+					owner->RemoveComponent<Rigidbody>();
+				}
+			}
+		}
+	}
 
 	void Rigidbody::SetT1Force(const Vector3& force)
 	{

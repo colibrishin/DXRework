@@ -72,6 +72,8 @@ namespace Engine::Components
 	protected:
 		Rigidbody();
 
+		void CheckColliderDependency(Weak<Component> component) const;
+
 #ifdef PHYSX_ENABLED
 		friend class Engine::Manager::Physics::PhysicsManager;
 #endif
