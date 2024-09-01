@@ -134,6 +134,7 @@ namespace Engine::Components
 		void GenerateInertiaSphere();
 		void VerifyMaterial(boost::weak_ptr<Resources::Material> weak);
 		void UpdateByOwner(Weak<Component> component);
+		void ResetToStockObject(Weak<Component> component);
 
 		eBoundingType m_type_;
 		std::string   m_shape_meta_path_str_;

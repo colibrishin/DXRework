@@ -9,14 +9,12 @@
 #include <PxScene.h>
 #include <extensions/PxRigidActorExt.h>
 #include <extensions/PxDefaultSimulationFilterShader.h>
+#include <cooking/PxCooking.h>
+#include <cooking/PxTriangleMeshDesc.h>
+#include <extensions/PxDefaultStreams.h>
 #endif
 
 #include <imgui_stdlib.h>
-
-#include <cooking/PxCooking.h>
-#include <cooking/PxTriangleMeshDesc.h>
-
-#include <extensions/PxDefaultStreams.h>
 
 #include "egCollision.h"
 #include "egCubeMesh.h"
@@ -91,10 +89,11 @@ namespace Engine::Components
 #ifdef PHYSX_ENABLED
 		// todo: move friction value from rb to collider
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1f, 0.1f, g_restitution_coefficient);
-		owner->onComponentRemoved.Listen(this, &Collider::ResetRigidbody);
+		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetRigidbody);
 #endif
-		
-		owner->onComponentAdded.Listen(this, &Collider::UpdateByOwner);
+
+		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetToStockObject);
+		owner->onComponentAdded.Listen(GetSharedPtr<Collider>(), &Collider::UpdateByOwner);
 
 		if (owner)
 		{
@@ -119,7 +118,7 @@ namespace Engine::Components
 
 			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
 			{
-				rc->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
+				rc->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
 
 				if (const auto& material = rc->GetMaterial().lock())
 				{
@@ -244,10 +243,18 @@ namespace Engine::Components
 			BoundingOrientedBox obb;
 			BoundingOrientedBox::CreateFromBoundingBox(obb, locked->GetBoundingBox());
 			SetBoundingBox(obb);
-#ifdef PHYSX_ENABLED
-			UpdatePhysXShape();
-#endif
 		}
+		else
+		{
+			// Assuming model has been reset.
+			m_shape_meta_path_ = "";
+			m_shape_ = {};
+			SetBoundingBox({});
+		}
+
+#ifdef PHYSX_ENABLED
+		UpdatePhysXShape();
+#endif
 	}
 
 	bool Collider::Intersects(const StrongCollider& lhs, const StrongCollider& rhs, const Vector3& dir)
@@ -548,7 +555,7 @@ namespace Engine::Components
 			{
 				const Strong<Base::RenderComponent> render_component = locked->GetSharedPtr<Base::RenderComponent>();
 
-				render_component->onMaterialChange.Listen(this, &Collider::VerifyMaterial);
+				render_component->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
 				VerifyMaterial(render_component->GetMaterial());
 			}
 		}
@@ -700,6 +707,18 @@ namespace Engine::Components
 		}
 	}
 #endif
+
+	void Collider::ResetToStockObject(Weak<Component> component)
+	{
+		if (const StrongComponent& locked = component.lock())
+		{
+			if (locked->GetComponentType() == COM_T_RENDERER)
+			{
+				// reset registered shape from render component and update shape information
+				SetShape({});
+			}
+		}
+	}
 
 	void Collider::PreUpdate(const float& dt)
 	{
