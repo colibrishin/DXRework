@@ -49,7 +49,12 @@ namespace Engine::Resources
 
 	void AtlasAnimationTexture::loadDerived(ComPtr<ID3D12Resource>& res)
 	{
-		const UINT num_atlases = m_atlases_.size();
+		if (m_atlases_.size() > std::numeric_limits<UINT16>::max())
+		{
+			OutputDebugStringW(L"Warning: atlas textures are given more than limit 65535\n");
+		}
+
+		const UINT16 num_atlases = static_cast<UINT16>(m_atlases_.size());
 
 		// Build the atlas from textures if no path is provided. (assuming that this has not been serialized before)
 		if (GetPath().empty())
@@ -58,7 +63,7 @@ namespace Engine::Resources
 			UINT   height = 0;
 
 			// Find the largest atlas to set the 3D texture dimensions.
-			for (UINT i = 0; i < num_atlases; ++i)
+			for (UINT16 i = 0; i < num_atlases; ++i)
 			{
 				m_atlases_[i]->Load();
 				width  = std::max(width, m_atlases_[i]->GetWidth());
@@ -71,7 +76,7 @@ namespace Engine::Resources
 						 .Alignment = 0,
 						 .Width = width,
 						 .Height = height,
-						 .DepthOrArraySize = static_cast<UINT16>(num_atlases),
+						 .DepthOrArraySize = num_atlases,
 						 .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
 						 .Flags = D3D12_RESOURCE_FLAG_NONE,
 						 .MipsLevel = 1,
@@ -86,14 +91,15 @@ namespace Engine::Resources
 
 	bool AtlasAnimationTexture::map(char* mapped)
 	{
-		const UINT num_atlases = m_atlases_.size();
+		// See DepthOrArraySize for type.
+		const UINT16 num_atlases = static_cast<UINT16>(m_atlases_.size());
 
 		if (GetPath().empty())
 		{
 			// Merge all the atlases into the 3D texture.
 			// Keep the atlases dimensions, progress from left to right, top to bottom
 			// for matching with xml data.
-			for (UINT i = 0; i < num_atlases; ++i)
+			for (UINT16 i = 0; i < num_atlases; ++i)
 			{
 				ComPtr<ID3D12Resource> anim = m_atlases_[i]->GetRawResoruce();
 				D3D12_BOX box = {0, 0, 0, static_cast<UINT>(m_atlases_[i]->GetWidth()), m_atlases_[i]->GetHeight(), 1};

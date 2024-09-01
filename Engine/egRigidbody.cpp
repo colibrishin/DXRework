@@ -365,13 +365,13 @@ namespace Engine::Components
 
 		ImGui::DragFloat("Rigidbody Friction", &m_friction_mu_, 0.01f, 0, 1);
 
-		ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity, 0.1, 0, 0, mem_bind(this, &Rigidbody::SetT0LinearVelocity));
-		ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_velocity, 0.1, 0, 0, mem_bind(this, &Rigidbody::SetT0AngularVelocity));
+		ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT0LinearVelocity));
+		ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_velocity, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT0AngularVelocity));
 		ImGuiVector3Editable("Linear Friction", GetID(), "linear_friction", m_linear_friction_);
 		ImGuiVector3Editable("Angular Friction", GetID(), "angular_friction", m_angular_friction_);
 		ImGuiVector3Editable("Drag Force", GetID(), "drag_force", m_drag_force_);
-		ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_t1_force_, 0.1, 0, 0, mem_bind(this, &Rigidbody::SetT1Force));
-		ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_t1_torque_, 0.1, 0, 0, mem_bind(this, &Rigidbody::SetT1Torque));
+		ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_t1_force_, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT1Force));
+		ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_t1_torque_, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT1Torque));
 
 		ImGui::Unindent(2);
 	}

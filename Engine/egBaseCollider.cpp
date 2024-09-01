@@ -85,7 +85,7 @@ namespace Engine::Components
 
 #ifdef PHYSX_ENABLED
 		// todo: move friction value from rb to collider
-		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1, 0.1, g_restitution_coefficient);
+		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1f, 0.1f, g_restitution_coefficient);
 		owner->onComponentRemoved.Listen(this, &Collider::ResetRigidbody);
 #endif
 		
@@ -595,7 +595,7 @@ namespace Engine::Components
 				// todo: all ok for shape filtering
 				physx::PxFilterData filter_data;
 				filter_data.word0 = to_bitmask<physx::PxU32>(in_owner->GetLayer());
-				filter_data.word1 = std::numeric_limits<unsigned long long>::max();
+				filter_data.word1 = std::numeric_limits<uint32_t>::max();
 
 				px_shape->setSimulationFilterData(filter_data);
 				px_shape->setContactOffset(0.01f);

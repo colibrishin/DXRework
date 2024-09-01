@@ -38,7 +38,7 @@ namespace Engine::Manager
 
 	float Application::GetDeltaTime() const
 	{
-		return m_timer->GetElapsedSeconds();
+		return static_cast<float>(m_timer->GetElapsedSeconds());
 	}
 
 	uint32_t Application::GetFPS() const
@@ -327,7 +327,7 @@ namespace Engine::Manager
 			PostQuitMessage(0);
 		}
 
-		float dt = m_timer->GetElapsedSeconds();
+		float dt = GetDeltaTime();
 
 		if (g_paused)
 		{

@@ -168,9 +168,11 @@ namespace Engine::Manager::Graphics
 			cmd->SoftReset();
 
 			ClearShadowMaps(cmd);
-
-			m_sb_light_buffer_.SetData(cmd->GetList(), light_buffer.size(), light_buffer.data());
-			m_sb_light_vps_buffer_.SetData(cmd->GetList(), current_light_vp.size(), current_light_vp.data());
+			
+			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
+			CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
+			m_sb_light_buffer_.SetData(cmd->GetList(), static_cast<UINT>(light_buffer.size()), light_buffer.data());
+			m_sb_light_vps_buffer_.SetData(cmd->GetList(), static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
 			UINT idx = 0;
 
@@ -415,10 +417,11 @@ namespace Engine::Manager::Graphics
 		}
 
 		// Bind the shadow map resource previously rendered to the pixel shader.
+		CheckSize<UINT>(current_shadow_maps.size(), L"Warning: Shadow map size is too big!");
 		heap->SetShaderResources
 				(
 				 RESERVED_TEX_SHADOW_MAP,
-				 current_shadow_maps.size(),
+				 static_cast<UINT>(current_shadow_maps.size()),
 				 current_shadow_maps
 				);
 	}

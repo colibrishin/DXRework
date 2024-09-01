@@ -247,7 +247,8 @@ namespace Engine::Manager::Graphics
 	{
 		const auto& cmd = w_cmd.lock();
 
-		instance_buffer.SetData(cmd->GetList(), structured_buffers.size(), structured_buffers.data());
+		CheckSize<UINT>(structured_buffers.size(), L"Warning: Renderer will take a lot of amount of instance buffers!");
+		instance_buffer.SetData(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 		instance_buffer.TransitionToSRV(cmd->GetList());
 		instance_buffer.CopySRVHeap(heap);
 

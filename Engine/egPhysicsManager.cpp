@@ -230,7 +230,7 @@ namespace Engine::Manager::Physics
 
 			std::vector<physx::PxActor*> px_actors;
 
-			const size_t px_dynamic_actor_count = px_scene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
+			const physx::PxU32 px_dynamic_actor_count = px_scene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
 			px_actors.resize(px_dynamic_actor_count);
 
 			px_scene->getActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC, px_actors.data(), px_dynamic_actor_count);

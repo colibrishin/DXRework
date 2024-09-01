@@ -133,7 +133,8 @@ namespace Engine::Resources
 
 		transitions.push_back(dsv_transition);
 
-		cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+		CheckSize<UINT>(transitions.size(), L"Warning: Unbind texture transition will take a large amount!");
+		cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
 	}
 
 	void Texture::ManualTransition(
@@ -394,7 +395,8 @@ namespace Engine::Resources
 			dsv.GetDSVDescriptor()->GetCPUDescriptorHandleForHeapStart()
 		};
 
-		cmd->GetList()->ResourceBarrier(transitions.size(), transitions.data());
+		CheckSize<UINT>(transitions.size(), L"Warning: Bind texture transition will take a large amount!");
+		cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
 
 		cmd->GetList()->OMSetRenderTargets
 				(

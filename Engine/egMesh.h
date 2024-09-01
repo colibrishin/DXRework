@@ -35,7 +35,7 @@ namespace Engine::Resources
 
 		BoundingBox GetBoundingBox() const;
 
-		UINT                    GetIndexCount() const;
+		size_t                  GetIndexCount() const;
 		const VertexCollection& GetVertexCollection() const;
 
 		void                     OnDeserialized() override;

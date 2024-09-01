@@ -79,7 +79,7 @@ namespace Engine::Resources
 
 		static int selected = 0;
 
-		ImGui::Combo("Layer", &selected, g_layer_type_str, std::size(g_layer_type_str));
+		ImGui::Combo("Layer", &selected, g_layer_type_str, static_cast<int>(std::size(g_layer_type_str)));
 
 		if (ImGui::Button("Extract"))
 		{

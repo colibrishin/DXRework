@@ -27,7 +27,7 @@ namespace Engine::Resources
 		[[nodiscard]] const BonePrimitive* GetBone(const std::string& name);
 		[[nodiscard]] bool                 Contains(const std::string& name) const;
 		[[nodiscard]] const BonePrimitive* GetBoneParent(UINT idx) const;
-		UINT                               GetBoneCount() const;
+		size_t                             GetBoneCount() const;
 
 		RESOURCE_SELF_INFER_GETTER(Bone)
 

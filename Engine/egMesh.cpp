@@ -13,6 +13,7 @@
 #include <extensions/PxDefaultStreams.h>
 
 #include "egManagerHelper.hpp"
+#include "egPhysxHelper.hpp"
 
 SERIALIZE_IMPL
 (
@@ -24,7 +25,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-	UINT Mesh::GetIndexCount() const
+	size_t Mesh::GetIndexCount() const
 	{
 		return m_indices_.size();
 	}
@@ -231,10 +232,11 @@ namespace Engine::Resources
 
 		// -- Structured Buffer -- //
 		// structured buffer for the raytracing pipeline.
+		CheckSize<UINT>(m_vertices_.size(), L"Warning: Vertices are too many to upload!");
 		m_vertex_buffer_structured_.SetData
 				(
 				 cmd->GetList(),
-				 m_vertices_.size(),
+				 static_cast<UINT>(m_vertices_.size()),
 				 m_vertices_.data()
 				);
 
@@ -444,12 +446,15 @@ namespace Engine::Resources
 			// todo: animation deformation
 			D3D12_RAYTRACING_GEOMETRY_DESC geo_desc{};
 			geo_desc.Type      = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+
+			CheckSize<UINT>(GetIndexCount(), L"Warning: Index count is too large for building raytracing acceleration structure!");
+
 			geo_desc.Triangles =
 			{
 				.Transform3x4 = 0,
 				.IndexFormat = DXGI_FORMAT_R32_UINT,
 				.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
-				.IndexCount = GetIndexCount(),
+				.IndexCount = static_cast<UINT>(GetIndexCount()),
 				.VertexCount = static_cast<UINT>(m_vertices_.size()),
 				.IndexBuffer = m_raytracing_index_buffer_->GetGPUVirtualAddress(),
 				.VertexBuffer = {m_raytracing_vertex_buffer_->GetGPUVirtualAddress(), sizeof(Vector3)}
