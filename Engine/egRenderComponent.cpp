@@ -36,7 +36,7 @@ namespace Engine::Components::Base
 
 	const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept
 	{
-		return m_mtr_meta_path_str_;
+		return m_mtr_meta_path_;
 	}
 
 	eRenderComponentType RenderComponent::GetType() const noexcept
