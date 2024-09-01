@@ -229,6 +229,18 @@ namespace Engine
 	{
 		return mem_bind_impl<sizeof...(Args)>(this_pointer, function);
 	}
+
+	template <typename T, typename U>
+	void CheckSize(const U compare_value, const std::wstring_view out_string)
+	{
+		if constexpr (g_debug)
+		{
+			if (compare_value > std::numeric_limits<T>::max() || compare_value < std::numeric_limits<T>::min())
+			{
+				OutputDebugStringW(out_string.data());
+			}
+		}
+	}
 } // namespace Engine
 
 namespace DX
