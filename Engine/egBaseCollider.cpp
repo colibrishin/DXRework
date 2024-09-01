@@ -29,6 +29,7 @@
 #include "egTransform.h"
 
 #include "egManagerHelper.hpp"
+#include "egPhysxHelper.hpp"
 
 SERIALIZE_IMPL
 (
@@ -49,16 +50,20 @@ namespace Engine::Components
 			return model->GetVertices();
 		}
 
-		if (m_type_ == BOUNDING_TYPE_BOX)
+		switch (m_type_)
 		{
+		case BOUNDING_TYPE_BOX:
 			return s_cube_stock_;
-		}
-		if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
+			break;
+		case BOUNDING_TYPE_SPHERE:
 			return s_sphere_stock_;
+			break;
+		default: 
+			break;
 		}
 
-		return {};
+		// Unknown cases
+		throw std::logic_error("Unknown type of collider vertices");
 	}
 
 	Matrix Collider::GetWorldMatrix() const
