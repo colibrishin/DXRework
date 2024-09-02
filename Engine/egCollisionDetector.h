@@ -61,6 +61,9 @@ namespace Engine::Manager::Physics
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
 
 #ifdef PHYSX_ENABLED
+	public:
+		uint32_t GetLayerFilter(const eLayerType layer) const;
+
 	private:
 		friend class Engine::Physics::PhysXSimulationFilterCallback;
 #endif

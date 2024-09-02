@@ -607,11 +607,9 @@ namespace Engine::Components
 				// todo: all ok for shape filtering
 				physx::PxFilterData filter_data;
 				filter_data.word0 = to_bitmask<physx::PxU32>(in_owner->GetLayer());
-				filter_data.word1 = std::numeric_limits<uint32_t>::max();
+				filter_data.word1 = GetCollisionDetector().GetLayerFilter(in_owner->GetLayer());
 
 				px_shape->setSimulationFilterData(filter_data);
-				px_shape->setContactOffset(0.01f);
-				px_shape->setRestOffset(0.2f);
 			};
 
 			// assemble shape

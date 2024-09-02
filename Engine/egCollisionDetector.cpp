@@ -521,6 +521,23 @@ namespace Engine::Manager::Physics
 		}
 	}
 
+#ifdef PHYSX_ENABLED
+	uint32_t CollisionDetector::GetLayerFilter(const eLayerType layer) const
+	{
+		uint32_t filter = 0;
+
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			if (m_layer_mask_[layer][i])
+			{
+				filter += 1 << i;
+			}
+		}
+
+		return filter;
+	}
+#endif
+
 	void CollisionDetector::SetCollisionLayer(
 		const eLayerType a,
 		const eLayerType b
