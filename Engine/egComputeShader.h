@@ -1,6 +1,7 @@
 #pragma once
 #include "egDXCommon.h"
 #include "egMacro.h"
+#include "egParticleRenderer.h"
 #include "egResourceManager.hpp"
 #include "egShader.hpp"
 #include "egStructuredBuffer.hpp"

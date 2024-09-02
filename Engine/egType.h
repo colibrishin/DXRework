@@ -312,7 +312,6 @@ namespace Engine
 	using IndexCollection = std::vector<UINT>;
 	using VertexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
 	using IndexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
-	using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
 	template <typename KeyType, typename ValueType>
 	using concurrent_fast_pool_map = concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, u_fast_pool_allocator<KeyType, ValueType>>;

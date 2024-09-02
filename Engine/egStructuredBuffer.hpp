@@ -40,6 +40,7 @@ namespace Engine::Graphics
 
 		void            Create(ID3D12GraphicsCommandList1* cmd, UINT size, const T* initial_data);
 		void __fastcall SetData(ID3D12GraphicsCommandList1* cmd, UINT size, const T* src_ptr);
+		void            SetDataContainer(ID3D12GraphicsCommandList1* cmd, UINT size, const T* const* src_ptr);
 		void __fastcall GetData(UINT size, T* dst_ptr);
 		void            Clear();
 
@@ -287,6 +288,37 @@ namespace Engine::Graphics
 		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
 		_mm256_memcpy(data, src_ptr, sizeof(T) * size);
+
+		m_upload_buffer_->Unmap(0, nullptr);
+
+		cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+
+		const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 m_buffer_.Get(),
+				 D3D12_RESOURCE_STATE_COPY_DEST,
+				 D3D12_RESOURCE_STATE_COMMON
+				);
+
+		cmd->ResourceBarrier(1, &common_transition);
+	}
+
+	template <typename T>
+	void StructuredBuffer<T>::SetDataContainer(ID3D12GraphicsCommandList1* cmd, const UINT size, const T* const* src_ptr)
+	{
+		if (m_size_ < size)
+		{
+			Create(cmd, size, nullptr);
+		}
+
+		char* data = nullptr;
+
+		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+		for (UINT i = 0; i < size; ++i)
+		{
+			_mm256_memcpy(data + (i * sizeof(T)), *(src_ptr + i), sizeof(T));	
+		}
 
 		m_upload_buffer_->Unmap(0, nullptr);
 

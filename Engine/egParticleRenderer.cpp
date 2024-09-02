@@ -177,10 +177,10 @@ namespace Engine::Components
 		}
 	}
 
-	std::vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
+	aligned_vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
 	{
 		std::lock_guard<std::mutex> lock(m_instances_mutex_);
-		return reinterpret_cast<std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
+		return reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(m_instances_);
 	}
 
 	void ParticleRenderer::SetFollowOwner(const bool follow)

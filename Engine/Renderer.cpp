@@ -154,7 +154,7 @@ namespace Engine::Manager::Graphics
 		}
 
 		const auto&                                                     target_set = m_render_candidates_[domain];
-		concurrent_hash_map<WeakMaterial, std::vector<SBs::InstanceSB>> final_mapping;
+		concurrent_hash_map<WeakMaterial, aligned_vector<const SBs::InstanceSB*>> final_mapping;
 
 		for (const auto& mtr_m : target_set | std::views::values)
 		{
@@ -171,8 +171,10 @@ namespace Engine::Manager::Graphics
 								 final_mapping.insert(acc, std::get<1>(tuple));
 							 }
 
-							 acc->second.insert
-									 (acc->second.end(), std::get<2>(tuple).begin(), std::get<2>(tuple).end());
+							 for (const SBs::InstanceSB& instance : std::get<2>(tuple))
+							 {
+								 acc->second.push_back(&instance);
+							 }
 						 }
 					 }
 					);
@@ -242,13 +244,13 @@ namespace Engine::Manager::Graphics
 		const StrongMaterial&               material,
 		const Weak<CommandPair>&            w_cmd,
 		const DescriptorPtr&                heap,
-		const std::vector<SBs::InstanceSB>& structured_buffers
+		const aligned_vector<const SBs::InstanceSB*>& structured_buffers
 	)
 	{
 		const auto& cmd = w_cmd.lock();
 
 		CheckSize<UINT>(structured_buffers.size(), L"Warning: Renderer will take a lot of amount of instance buffers!");
-		instance_buffer.SetData(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
+		instance_buffer.SetDataContainer(cmd->GetList(), static_cast<UINT>(structured_buffers.size()), structured_buffers.data());
 		instance_buffer.TransitionToSRV(cmd->GetList());
 		instance_buffer.CopySRVHeap(heap);
 
