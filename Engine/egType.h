@@ -447,6 +447,18 @@ namespace Engine
 		using type = void;
 	};
 
+	template <typename Find, typename... Where>
+	struct find_pack
+	{
+		using type = std::bool_constant<(std::is_same_v<Find, Where> || ...)>;
+	};
+
+	template <template <typename> typename Wrapper, typename... Where>
+	struct find_pack_wrapper
+	{
+		using type = std::bool_constant<(std::is_same_v<Wrapper<void>, get_wrapper<Where>> || ...)>;
+	};
+
 	template <typename... T>
 	using void_t = typename void_stub<T...>::type;
 

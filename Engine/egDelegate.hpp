@@ -46,8 +46,7 @@ public:
 		m_listener_.emplace(bucket_type{ {}, reinterpret_cast<address_type>(&function) }, function);
 	}
 
-	// Should move the object for the case where weak or shared pointer move ctor
-	void Broadcast(Args&&... args)
+	void Broadcast(Args... args)
 	{
 		for (typename decltype(m_listener_)::iterator it = m_listener_.begin(); it != m_listener_.end();)
 		{
@@ -61,8 +60,7 @@ public:
 
 			if (weak_valid || static_func)
 			{
-				// will not forward (if forward weak or shared pointer, args value will be destroyed)
-				value(args...);
+				value(std::forward<Args>(args)...);
 				++it;
 			}
 			else
