@@ -217,7 +217,14 @@ namespace Engine::Manager::Physics
 								const std::string label = std::format("##{}{}", i, j);
 								if (ImGui::Checkbox(label.c_str(), &m_layer_mask_[i][j]))
 								{
-									m_layer_mask_[j][i] = m_layer_mask_[i][j];
+									if (m_layer_mask_[i][j])
+									{
+										SetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j));
+									}
+									else
+									{
+										UnsetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j));
+									}
 								}
 							}
 						}
@@ -550,6 +557,8 @@ namespace Engine::Manager::Physics
 		physx::PxSetGroupCollisionFlag(a, b, true);
 		physx::PxSetGroupCollisionFlag(b, a, true);
 #endif
+
+		onLayerMaskChange.Broadcast(a, b);
 	}
 
 	void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
@@ -561,6 +570,8 @@ namespace Engine::Manager::Physics
 		physx::PxSetGroupCollisionFlag(layer, layer2, false);
 		physx::PxSetGroupCollisionFlag(layer2, layer, false);
 #endif
+
+		onLayerMaskChange.Broadcast(layer, layer2);
 	}
 
 	bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)

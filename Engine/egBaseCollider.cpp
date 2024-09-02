@@ -90,6 +90,7 @@ namespace Engine::Components
 		// todo: move friction value from rb to collider
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1f, 0.1f, g_restitution_coefficient);
 		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetRigidbody);
+		GetCollisionDetector().onLayerMaskChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 #endif
 
 		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetToStockObject);
@@ -579,6 +580,8 @@ namespace Engine::Components
 				m_px_rb_static_->release();
 				m_px_rb_static_ = nullptr;
 			}
+
+			m_px_meshes_.clear();
 		}
 
 		if (const auto& owner = GetOwner().lock())
@@ -602,16 +605,6 @@ namespace Engine::Components
 				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, true);
 			}
 
-			const auto& setupShape = [](const StrongObjectBase& in_owner, physx::PxShape* px_shape)
-			{
-				// todo: all ok for shape filtering
-				physx::PxFilterData filter_data;
-				filter_data.word0 = to_bitmask<physx::PxU32>(in_owner->GetLayer());
-				filter_data.word1 = GetCollisionDetector().GetLayerFilter(in_owner->GetLayer());
-
-				px_shape->setSimulationFilterData(filter_data);
-			};
-
 			// assemble shape
 			if (const auto& shape = m_shape_.lock())
 			{
@@ -628,7 +621,7 @@ namespace Engine::Components
 					}
 
 					physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
-					setupShape(owner, new_shape);
+					m_px_meshes_.push_back(new_shape);
 				}
 			}
 			else
@@ -637,8 +630,10 @@ namespace Engine::Components
 				geo.scale = reinterpret_cast<const physx::PxVec3&>(scale);
 
 				physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
-				setupShape(owner, new_shape);
+				m_px_meshes_.push_back(new_shape);
 			}
+
+			UpdateShapeFilter(owner->GetLayer(), {});
 
 			// https://codebrowser.dev/qt6/qtquick3dphysics/src/3rdparty/PhysX/source/physxextensions/src/ExtDefaultSimulationFilterShader.cpp.html
 			// due to the sequence of setting group, add shape first then update the actor group and, groups mask
@@ -685,6 +680,26 @@ namespace Engine::Components
 		}
 
 		m_px_meshes_.clear();
+	}
+
+	void Collider::UpdateShapeFilter(const eLayerType left, const eLayerType right) const
+	{
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (left != owner->GetLayer() && right != owner->GetLayer())
+			{
+				return;
+			}
+
+			physx::PxFilterData filter_data;
+			filter_data.word0 = to_bitmask<physx::PxU32>(owner->GetLayer());
+			filter_data.word1 = GetCollisionDetector().GetLayerFilter(owner->GetLayer());
+
+			for (physx::PxShape* const& shape : m_px_meshes_)
+			{
+				shape->setSimulationFilterData(filter_data);
+			}
+		}
 	}
 
 	physx::PxRigidDynamic* Collider::GetPhysXRigidbody() const

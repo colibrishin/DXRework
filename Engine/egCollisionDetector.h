@@ -5,6 +5,8 @@
 #include "egCommon.hpp"
 #include "egManager.hpp"
 
+DEFINE_DELEGATE(OnLayerMaskChange, const Engine::eLayerType, const Engine::eLayerType);
+
 #ifdef PHYSX_ENABLED
 namespace Engine
 {
@@ -20,6 +22,8 @@ namespace Engine::Manager::Physics
 	class CollisionDetector : public Abstract::Singleton<CollisionDetector>
 	{
 	public:
+		DelegateOnLayerMaskChange onLayerMaskChange;
+
 		explicit CollisionDetector(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;

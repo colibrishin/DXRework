@@ -171,8 +171,9 @@ namespace Engine::Components
 
 		void UpdatePhysXShape();
 		void CleanupPhysX();
+		void UpdateShapeFilter(const eLayerType left, const eLayerType right) const;
 
-		physx::PxRigidDynamic* GetPhysXRigidbody() const;
+		[[nodiscard]] physx::PxRigidDynamic* GetPhysXRigidbody() const;
 		void ResetRigidbody(Weak<Component> component);
 
 		Matrix m_previous_world_matrix_;
