@@ -46,9 +46,12 @@ namespace Engine::Resources
 				m_bounding_box_.Center  = Vector3::Zero;
 				m_bounding_box_.Extents = Vector3::Zero;
 
+				
 				for (const auto& mesh : m_meshes_)
 				{
-					BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, mesh->GetBoundingBox());
+					const BoundingOrientedBox& obb = mesh->GetBoundingBox();
+
+					BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
 				}
 
 				m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());

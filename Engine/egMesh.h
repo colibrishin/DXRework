@@ -33,7 +33,7 @@ namespace Engine::Resources
 		void Update(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		BoundingBox GetBoundingBox() const;
+		BoundingOrientedBox GetBoundingBox() const;
 
 		size_t                  GetIndexCount() const;
 		const VertexCollection& GetVertexCollection() const;
@@ -70,7 +70,7 @@ namespace Engine::Resources
 	protected:
 		VertexCollection m_vertices_;
 		IndexCollection  m_indices_;
-		BoundingBox      m_bounding_box_;
+		BoundingOrientedBox m_bounding_box_;
 
 		ComPtr<ID3D12Resource> m_vertex_buffer_;
 		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_;
