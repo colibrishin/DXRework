@@ -52,6 +52,7 @@ namespace Engine::Abstract
 	void Actor::SetLayer(eLayerType layer)
 	{
 		m_layer_ = layer;
+		onLayerChange.Broadcast(layer);
 	}
 
 	void Actor::SetScene(const WeakScene& scene)

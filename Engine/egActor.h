@@ -1,12 +1,17 @@
 #pragma once
 #include "egCommon.hpp"
 #include "egRenderable.h"
+#include "egDelegate.hpp"
+
+DEFINE_DELEGATE(OnLayerChange, const Engine::eLayerType);
 
 namespace Engine::Abstract
 {
 	class Actor : public Renderable
 	{
 	public:
+		DelegateOnLayerChange onLayerChange;
+
 		~Actor() override = default;
 
 		Actor(const Actor& other);
