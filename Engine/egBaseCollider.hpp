@@ -171,6 +171,7 @@ namespace Engine::Components
 
 		void UpdatePhysXShape();
 		void CleanupPhysX();
+		void UpdateShapeFilter(eLayerType other) const;
 		void UpdateShapeFilter(const eLayerType left, const eLayerType right) const;
 
 		[[nodiscard]] physx::PxRigidDynamic* GetPhysXRigidbody() const;

@@ -91,6 +91,7 @@ namespace Engine::Components
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1f, 0.1f, g_restitution_coefficient);
 		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetRigidbody);
 		GetCollisionDetector().onLayerMaskChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
+		owner->onLayerChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 #endif
 
 		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetToStockObject);
@@ -680,6 +681,11 @@ namespace Engine::Components
 		}
 
 		m_px_meshes_.clear();
+	}
+
+	void Collider::UpdateShapeFilter(const eLayerType other) const
+	{
+		UpdateShapeFilter(other, {});
 	}
 
 	void Collider::UpdateShapeFilter(const eLayerType left, const eLayerType right) const
