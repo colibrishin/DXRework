@@ -36,7 +36,7 @@ namespace Engine::Physics
 		) override;
 
 	private:
-		fast_pool_unordered_map<physx::PxU64, std::pair<const physx::PxActor*, const physx::PxActor*>> m_pair_map_{};
+		fast_pool_unordered_map<physx::PxU64, std::pair<Components::Collider*, Components::Collider*>> m_pair_map_{};
 	};
 
 	physx::PxFilterFlags SimulationFilterShader(

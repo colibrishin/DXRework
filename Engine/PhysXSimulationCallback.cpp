@@ -67,8 +67,8 @@ namespace Engine::Physics
 
 		if (pairFlags & physx::PxPairFlag::eNOTIFY_TOUCH_FOUND)
 		{
-			const auto& lhs = static_cast<Components::Collider*>(a0->userData);
-			const auto& rhs = static_cast<Components::Collider*>(a1->userData);
+			const auto lhs = static_cast<Components::Collider*>(a0->userData);
+			const auto rhs = static_cast<Components::Collider*>(a1->userData);
 
 			if (!collision_map.contains(lhs->GetID()) ||
 				!collision_map.at(lhs->GetID()).contains(rhs->GetID()))
@@ -85,12 +85,20 @@ namespace Engine::Physics
 
 			if (!m_pair_map_.contains(pairID))
 			{
-				m_pair_map_[pairID] = {a0, a1};
+				const std::pair<Components::Collider*, Components::Collider*> pair = { lhs, rhs };
+				m_pair_map_[pairID] = pair;
 			}
+
+			return physx::PxFilterFlag::eDEFAULT;
 		}
 
-		// notify again for the pairLost
-		return physx::PxFilterFlag::eNOTIFY;
+		if (pairFlags & physx::PxPairFlag::eNOTIFY_TOUCH_LOST)
+		{
+			// notify again for the pairLost
+			return physx::PxFilterFlag::eNOTIFY;
+		}
+
+		return physx::PxFilterFlag::eKILL;
 	}
 
 	void PhysXSimulationFilterCallback::pairLost(
@@ -106,12 +114,15 @@ namespace Engine::Physics
 		auto& frame_collision = GetCollisionDetector().m_frame_collision_map_;
 		auto& collision_map = GetCollisionDetector().m_collision_map_;
 
-		_ASSERT(m_pair_map_.contains(pairID));
+		if (!m_pair_map_.contains(pairID))
+		{
+			return;
+		}
 
 		const auto& collision_pair = m_pair_map_[pairID];
 
-		const auto& lhs = static_cast<Components::Collider*>(collision_pair.first->userData);
-		const auto& rhs = static_cast<Components::Collider*>(collision_pair.second->userData);
+		Components::Collider* const& lhs = collision_pair.first;
+		Components::Collider* const& rhs = collision_pair.second;
 
 		if (collision_map.contains(lhs->GetID()) ||
 			collision_map.at(lhs->GetID()).contains(rhs->GetID()))
@@ -126,7 +137,10 @@ namespace Engine::Physics
 			rhs->RemoveCollidedObject(lhs->GetID());
 		}
 
-		m_pair_map_.erase(pairID);
+		if (m_pair_map_.contains(pairID))
+		{
+			m_pair_map_.erase(pairID);
+		}
 
 		return;
 	}
