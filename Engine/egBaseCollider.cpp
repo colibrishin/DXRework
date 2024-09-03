@@ -598,21 +598,16 @@ namespace Engine::Components
 				reinterpret_cast<const physx::PxQuat&>(rotation));
 
 			m_px_rb_static_ = GetPhysicsManager().GetPhysX()->createRigidDynamic(px_transform);
-			//m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
-			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_GYROSCOPIC_FORCES, true);
-
-			if constexpr (g_speculation_enabled)
-			{
-				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, true);
-			}
 
 			// assemble shape
 			if (const auto& shape = m_shape_.lock())
 			{
 				for (const auto& mesh : shape->GetMeshes())
 				{
+					const BoundingOrientedBox& bb = mesh->GetBoundingBox();
+
 					physx::PxTriangleMeshGeometry geo(mesh->GetPhysXMesh());
-					geo.scale = reinterpret_cast<const physx::PxVec3&>(scale);
+					geo.scale = reinterpret_cast<const physx::PxVec3&>(bb.Extents);
 
 					if constexpr (g_debug)
 					{
@@ -622,6 +617,7 @@ namespace Engine::Components
 					}
 
 					physx::PxShape* new_shape = physx::PxRigidActorExt::createExclusiveShape(*m_px_rb_static_, geo, *m_px_material_);
+
 					m_px_meshes_.push_back(new_shape);
 				}
 			}
@@ -649,6 +645,7 @@ namespace Engine::Components
 
 			m_px_rb_static_->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
 			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
+			m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, false);
 
 			if (scene)
 			{
@@ -722,6 +719,11 @@ namespace Engine::Components
 				m_px_rb_static_->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
 				m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
 				m_px_rb_static_->setRigidDynamicLockFlags({});
+
+				if constexpr (g_speculation_enabled)
+				{
+					m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, false);
+				}
 			}
 		}
 	}
