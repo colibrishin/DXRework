@@ -244,15 +244,16 @@ namespace Engine::Manager::Physics
 
 				if (const StrongObjectBase& owner = internal_collider->GetOwner().lock())
 				{
-					const StrongTransform& internal_transform = owner->GetComponent<Components::Transform>().lock();
-					_ASSERT(internal_transform);
-
-					const physx::PxTransform& position = px_dynamic->getGlobalPose();
-					internal_transform->SetWorldPosition(reinterpret_cast<const Vector3&>(position.p));
-					internal_transform->SetWorldRotation(reinterpret_cast<const Quaternion&>(position.q));
-
-					if (const StrongRigidbody& internal_rigidbody = owner->GetComponent<Components::Rigidbody>().lock())
+					if (const StrongRigidbody& internal_rigidbody = owner->GetComponent<Components::Rigidbody>().lock();
+						internal_rigidbody && !internal_rigidbody->IsFixed())
 					{
+						const StrongTransform& internal_transform = owner->GetComponent<Components::Transform>().lock();
+						_ASSERT(internal_transform);
+
+						const physx::PxTransform& position = px_dynamic->getGlobalPose();
+						internal_transform->SetWorldPosition(reinterpret_cast<const Vector3&>(position.p));
+						internal_transform->SetWorldRotation(reinterpret_cast<const Quaternion&>(position.q));
+
 						const physx::PxVec3& linear_velocity = px_dynamic->getLinearVelocity();
 						const physx::PxVec3& angular_velocity = px_dynamic->getAngularVelocity();
 
