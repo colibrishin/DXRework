@@ -194,7 +194,7 @@ namespace Engine::Resources
 
 	void Mesh::PostUpdate(const float& dt) {}
 
-	BoundingBox Mesh::GetBoundingBox() const
+	BoundingOrientedBox Mesh::GetBoundingBox() const
 	{
 		return m_bounding_box_;
 	}
@@ -216,7 +216,7 @@ namespace Engine::Resources
 			pure_vertices.push_back(vertex.position);
 		}
 
-		BoundingBox::CreateFromPoints
+		BoundingOrientedBox::CreateFromPoints
 				(
 				 m_bounding_box_, m_vertices_.size(), pure_vertices.data(),
 				 sizeof(Vector3)
