@@ -43,6 +43,19 @@ namespace Engine::Components
 		SetFixed(false);
 		SetNoAngular(false);
 
+#ifdef PHYSX_ENABLED
+		if constexpr (g_speculation_enabled)
+		{
+			if (const StrongObjectBase& owner = GetOwner().lock())
+			{
+				if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+				{
+					collider->m_px_rb_static_->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, true);
+				}
+			}
+		}
+#endif
+
 		Synchronize();
 
 		// todo/refactor: component dependency
