@@ -236,9 +236,6 @@
     <Filter Include="Resource\Textures\ShadowTexture">
       <UniqueIdentifier>{92bb950e-d982-46f6-a4b0-686462d2cbd2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Base\RenderComponent">
-      <UniqueIdentifier>{475dc8d6-d4a2-45a6-85d9-5d8f994ff875}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Component\Renderer">
       <UniqueIdentifier>{7dc510c8-6f26-4d7b-a4f3-df5bfd6e0001}</UniqueIdentifier>
     </Filter>
@@ -274,6 +271,9 @@
     </Filter>
     <Filter Include="Singleton\Graphics\ImGuiManager">
       <UniqueIdentifier>{f76ac2b5-1390-4855-8aa0-e707739425ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\RenderComponent">
+      <UniqueIdentifier>{475dc8d6-d4a2-45a6-85d9-5d8f994ff875}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -571,6 +571,13 @@
     <ClInclude Include="egAccelStructure.hpp">
       <Filter>Common\DX</Filter>
     </ClInclude>
+    <ClInclude Include="egDelegate.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysXSimulationCallback.h">
+      <Filter>Singleton\Physics\CollisionDetector</Filter>
+    </ClInclude>
+    <ClInclude Include="egPhysxHelper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -814,6 +821,9 @@
     </ClCompile>
     <ClCompile Include="egCommonRenderer.cpp">
       <Filter>Singleton\Graphics\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysXSimulationCallback.cpp">
+      <Filter>Singleton\Physics\CollisionDetector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

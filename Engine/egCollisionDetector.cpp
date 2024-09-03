@@ -1,6 +1,17 @@
 #include "pch.h"
 
 #include "egCollisionDetector.h"
+
+#ifdef PHYSX_ENABLED
+#include <PxScene.h>
+#include "PhysXSimulationCallback.h"
+#include <PxRigidActor.h>
+#include <PxShape.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
+#endif
+
+#include "egCollisionDetector.h"
+
 #include "egBaseCollider.hpp"
 #include "egCollision.h"
 #include "egElastic.h"
@@ -30,6 +41,17 @@ namespace Engine::Manager::Physics
 				}
 			}
 		}
+
+#ifdef PHYSX_ENABLED
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			for (int j = 0; j < LAYER_MAX; ++j)
+			{
+				physx::PxSetGroupCollisionFlag(i, j, i == j);
+			}
+		}
+#endif
+
 	}
 
 	void CollisionDetector::Update(const float& dt) {}
@@ -46,6 +68,10 @@ namespace Engine::Manager::Physics
 	{
 		if (const auto scene = GetSceneManager().GetActiveScene().lock())
 		{
+#ifdef PHYSX_ENABLED
+			scene->GetPhysXScene()->collide(dt);
+			scene->GetPhysXScene()->fetchCollision(true);
+#else
 			const auto& tree = scene->GetObjectTree();
 
 			std::stack<const Octree*> stack;
@@ -137,8 +163,10 @@ namespace Engine::Manager::Physics
 					stack.pop();
 				}
 			}
+#endif
 		}
 
+#if !defined(PHYSX_ENABLED)
 		for (const auto& [lhs, rhs_set] : m_frame_collision_map_)
 		{
 			m_collision_map_[lhs].insert(rhs_set.begin(), rhs_set.end());
@@ -150,6 +178,7 @@ namespace Engine::Manager::Physics
 		}
 
 		m_frame_collision_map_.clear();
+#endif
 
 		// Remove empty set.
 		for (auto it = m_collision_map_.begin(); it != m_collision_map_.end();)
@@ -188,7 +217,14 @@ namespace Engine::Manager::Physics
 								const std::string label = std::format("##{}{}", i, j);
 								if (ImGui::Checkbox(label.c_str(), &m_layer_mask_[i][j]))
 								{
-									m_layer_mask_[j][i] = m_layer_mask_[i][j];
+									if (m_layer_mask_[i][j])
+									{
+										SetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j));
+									}
+									else
+									{
+										UnsetCollisionLayer(static_cast<eLayerType>(i), static_cast<eLayerType>(j));
+									}
 								}
 							}
 						}
@@ -287,6 +323,9 @@ namespace Engine::Manager::Physics
 					// Initial Collision
 					m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
 					m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
+
+					lcl->onCollisionEnter.Broadcast(rcl);
+					rcl->onCollisionEnter.Broadcast(lcl);
 				}
 
 				const auto lrb = lhs->GetComponent<Components::Rigidbody>().lock();
@@ -298,8 +337,6 @@ namespace Engine::Manager::Physics
 				}
 
 				// Or continuous collision
-				lhs->DispatchComponentEvent(rcl);
-				rhs->DispatchComponentEvent(lcl);
 				lcl->AddCollidedObject(rhs->GetID());
 				rcl->AddCollidedObject(lhs->GetID());
 			}
@@ -312,8 +349,8 @@ namespace Engine::Manager::Physics
 					m_collision_map_[lhs->GetID()].erase(rhs->GetID());
 					m_collision_map_[rhs->GetID()].erase(lhs->GetID());
 
-					lhs->DispatchComponentEvent(rcl);
-					rhs->DispatchComponentEvent(lcl);
+					lcl->onCollisionEnd.Broadcast(rcl);
+					rcl->onCollisionEnd.Broadcast(lcl);
 					lcl->RemoveCollidedObject(rhs->GetID());
 					rcl->RemoveCollidedObject(lhs->GetID());
 				}
@@ -443,12 +480,15 @@ namespace Engine::Manager::Physics
 					m_frame_collision_map_[lhs->GetID()].insert(rhs->GetID());
 					m_frame_collision_map_[rhs->GetID()].insert(lhs->GetID());
 
+					lcl->onCollisionEnter.Broadcast(rcl);
+					rcl->onCollisionEnter.Broadcast(lcl);
+
 					m_collision_produce_queue_.push_back({lhs, rhs, true, true});
 				}
 
 				// Or continuous collision
-				lhs->DispatchComponentEvent(rcl);
-				rhs->DispatchComponentEvent(lcl);
+				lcl->onCollisionEnd.Broadcast(rcl);
+				rcl->onCollisionEnd.Broadcast(lcl);
 				lcl->AddCollidedObject(rhs->GetID());
 				rcl->AddCollidedObject(lhs->GetID());
 			}
@@ -480,13 +520,30 @@ namespace Engine::Manager::Physics
 						m_collision_map_[rhs->GetID()].erase(lhs.lock()->GetID());
 						m_collision_map_[lhs.lock()->GetID()].erase(rhs->GetID());
 
-						lhs.lock()->DispatchComponentEvent(rcl);
-						rhs->DispatchComponentEvent(lcl);
+						lcl->onCollisionEnd.Broadcast(rcl);
+						rcl->onCollisionEnd.Broadcast(lcl);
 					}
 				}
 			}
 		}
 	}
+
+#ifdef PHYSX_ENABLED
+	uint32_t CollisionDetector::GetLayerFilter(const eLayerType layer) const
+	{
+		uint32_t filter = 0;
+
+		for (int i = 0; i < LAYER_MAX; ++i)
+		{
+			if (m_layer_mask_[layer][i])
+			{
+				filter += 1 << i;
+			}
+		}
+
+		return filter;
+	}
+#endif
 
 	void CollisionDetector::SetCollisionLayer(
 		const eLayerType a,
@@ -495,12 +552,26 @@ namespace Engine::Manager::Physics
 	{
 		m_layer_mask_[a][b] = true;
 		m_layer_mask_[b][a] = true;
+
+#ifdef PHYSX_ENABLED
+		physx::PxSetGroupCollisionFlag(a, b, true);
+		physx::PxSetGroupCollisionFlag(b, a, true);
+#endif
+
+		onLayerMaskChange.Broadcast(a, b);
 	}
 
 	void CollisionDetector::UnsetCollisionLayer(eLayerType layer, eLayerType layer2)
 	{
 		m_layer_mask_[layer][layer2] = false;
 		m_layer_mask_[layer2][layer] = false;
+
+#ifdef PHYSX_ENABLED
+		physx::PxSetGroupCollisionFlag(layer, layer2, false);
+		physx::PxSetGroupCollisionFlag(layer2, layer, false);
+#endif
+
+		onLayerMaskChange.Broadcast(layer, layer2);
 	}
 
 	bool CollisionDetector::IsCollisionLayer(eLayerType layer1, eLayerType layer2)
@@ -532,6 +603,10 @@ namespace Engine::Manager::Physics
 	concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
 	{
 		return m_collision_produce_queue_;
+	}
+
+	CollisionDetector::~CollisionDetector()
+	{
 	}
 
 	bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const

@@ -5,6 +5,7 @@
         "boost-smart-ptr",
         "boost-serialization",
         "boost-pool",
+        "boost-align",
         "assimp"
     ]
 }

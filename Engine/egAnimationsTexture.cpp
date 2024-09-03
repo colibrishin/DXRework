@@ -100,7 +100,7 @@ namespace Engine::Resources
 		const std::vector<StrongBoneAnimation>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated
 	)
 	{
-		const UINT anim_count  = anims.size();
+		const UINT anim_count  = static_cast<UINT>(anims.size());
 		UINT       frame_count = 0;
 		UINT       bone_count  = 0;
 

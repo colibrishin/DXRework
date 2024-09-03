@@ -1,3 +1,6 @@
 [submodule "DX/pugixml"]
 	path = DX/pugixml
 	url = https://github.com/zeux/pugixml
+[submodule "DX/PhysX"]
+	path = DX/PhysX
+	url = https://github.com/NVIDIA-Omniverse/PhysX.git

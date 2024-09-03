@@ -35,12 +35,14 @@
     <ClInclude Include="egComputeShader.h" />
     <ClInclude Include="egConstantBuffer.hpp" />
     <ClInclude Include="egDebugConstant.h" />
+    <ClInclude Include="egDelegate.hpp" />
     <ClInclude Include="egDescriptors.h" />
     <ClInclude Include="egImGuiManager.h" />
     <ClInclude Include="egGraviton.h" />
     <ClInclude Include="egGraphicMemoryPool.hpp" />
     <ClInclude Include="egObject.hpp" />
     <ClInclude Include="egParticleRenderer.h" />
+    <ClInclude Include="egPhysxHelper.hpp" />
     <ClInclude Include="egPointMesh.h" />
     <ClInclude Include="egPrefab.h" />
     <ClInclude Include="egRayTracer.hpp" />
@@ -119,6 +121,7 @@
     <ClInclude Include="egType.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PhysXSimulationCallback.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="StepTimer.hpp" />
   </ItemGroup>
@@ -206,6 +209,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PhysXSimulationCallback.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <CopyFileToFolders Include="cascade_shadow_stage1.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -443,6 +447,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -450,6 +455,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -475,8 +481,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
-    <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
@@ -485,12 +491,14 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
-    <IncludePath>$(SolutionDir)fmod\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)fmod\lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
   </PropertyGroup>
@@ -499,6 +507,8 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <CopyLocalProjectReference>true</CopyLocalProjectReference>
     <CopyLocalDebugSymbols>false</CopyLocalDebugSymbols>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <VcpkgTriplet>x86-windows</VcpkgTriplet>
@@ -525,7 +535,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PhysX\physx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -535,7 +545,7 @@
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <FxCompile>
@@ -544,6 +554,35 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>@echo off
+
+SET ARCH=$(PlatformTargetAsMSBuildArchitecture)
+SET BUILD=$(Configuration)
+SET INTERMEDIATE=
+SET TARGET=
+
+IF %ARCH% == x64 (
+SET INTERMEDIATE=win.x86_64.vc143.md
+) else (
+SET INTERMEDIATE=win.x86.vc143.md
+)
+
+IF %BUILD% == Debug (
+SET TARGET=debug
+) else (
+SET TARGET=release
+)
+
+ECHO Copy from $(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%
+
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.lib" "$(OutDir)" /c /i /y
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.dll" "$(OutDir)" /c /i /y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -558,6 +597,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)PhysX\physx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -575,6 +615,35 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>@echo off
+
+SET ARCH=$(PlatformTargetAsMSBuildArchitecture)
+SET BUILD=$(Configuration)
+SET INTERMEDIATE=
+SET TARGET=
+
+IF %ARCH% == x64 (
+SET INTERMEDIATE=win.x86_64.vc143.md
+) else (
+SET INTERMEDIATE=win.x86.vc143.md
+)
+
+IF %BUILD% == Debug (
+SET TARGET=debug
+) else (
+SET TARGET=release
+)
+
+ECHO Copy from $(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%
+
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.lib" "$(OutDir)" /c /i /y
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.dll" "$(OutDir)" /c /i /y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -586,7 +655,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)fmod\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PhysX\physx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -596,8 +665,9 @@
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)fmod\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)PhysX\physx\bin\win.x86_64.vc143.md\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -605,6 +675,35 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>@echo off
+
+SET ARCH=$(PlatformTargetAsMSBuildArchitecture)
+SET BUILD=$(Configuration)
+SET INTERMEDIATE=
+SET TARGET=
+
+IF %ARCH% == x64 (
+SET INTERMEDIATE=win.x86_64.vc143.md
+) else (
+SET INTERMEDIATE=win.x86.vc143.md
+)
+
+IF %BUILD% == Debug (
+SET TARGET=debug
+) else (
+SET TARGET=release
+)
+
+ECHO Copy from $(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%
+
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.lib" "$(OutDir)" /c /i /y
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.dll" "$(OutDir)" /c /i /y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -619,6 +718,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)PhysX\physx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -629,6 +729,8 @@
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)PhysX\physx\bin\win.x86_64.vc143.md\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -636,6 +738,35 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>@echo off
+
+SET ARCH=$(PlatformTargetAsMSBuildArchitecture)
+SET BUILD=$(Configuration)
+SET INTERMEDIATE=
+SET TARGET=
+
+IF %ARCH% == x64 (
+SET INTERMEDIATE=win.x86_64.vc143.md
+) else (
+SET INTERMEDIATE=win.x86.vc143.md
+)
+
+IF %BUILD% == Debug (
+SET TARGET=debug
+) else (
+SET TARGET=release
+)
+
+ECHO Copy from $(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%
+
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.lib" "$(OutDir)" /c /i /y
+XCOPY "$(SolutionDir)PhysX\physx\bin\%INTERMEDIATE%\%TARGET%\*.dll" "$(OutDir)" /c /i /y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

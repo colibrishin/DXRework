@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "egRigidbody.h"
 
+#ifdef PHYSX_ENABLED
+#include <PxRigidDynamic.h>
+#endif
+
 #include "egBaseCollider.hpp"
 #include "egImGuiHeler.hpp"
 #include "egObject.hpp"
@@ -35,7 +39,17 @@ namespace Engine::Components
 			GetOwner().lock()->AddComponent<Collider>();
 		}
 
+		SetGravityOverride(false);
+		SetFixed(false);
+		SetNoAngular(false);
+
 		Synchronize();
+
+		// todo/refactor: component dependency
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			owner->onComponentRemoved.Listen(GetSharedPtr<Rigidbody>(), &Rigidbody::CheckColliderDependency);
+		}
 	}
 
 	Rigidbody::Rigidbody(const WeakObjectBase& object)
@@ -76,6 +90,16 @@ namespace Engine::Components
 	void Rigidbody::SetGravityOverride(bool gravity)
 	{
 		m_bGravityOverride = gravity;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, !gravity);
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::SetGrounded(bool grounded)
@@ -91,11 +115,32 @@ namespace Engine::Components
 	void Rigidbody::SetFixed(bool fixed)
 	{
 		m_bFixed = fixed;
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, fixed);
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::SetNoAngular(bool no_angular)
 	{
 		m_b_no_angular_ = no_angular;
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setRigidDynamicLockFlags(
+					physx::PxRigidDynamicLockFlag::eLOCK_ANGULAR_X | 
+					physx::PxRigidDynamicLockFlag::eLOCK_ANGULAR_Y | 
+					physx::PxRigidDynamicLockFlag::eLOCK_ANGULAR_Z);
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::Synchronize()
@@ -106,11 +151,33 @@ namespace Engine::Components
 	void Rigidbody::SetT0LinearVelocity(const Vector3& v)
 	{
 		m_linear_velocity = v;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setLinearVelocity(
+					reinterpret_cast<const physx::PxVec3&>(m_linear_velocity));
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::SetT0AngularVelocity(const Vector3& v)
 	{
 		m_angular_velocity = v;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setLinearVelocity(
+					reinterpret_cast<const physx::PxVec3&>(m_angular_velocity));
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::AddLinearImpulse(const Vector3& f)
@@ -151,11 +218,31 @@ namespace Engine::Components
 	void Rigidbody::AddT1Force(const Vector3& force)
 	{
 		m_t1_force_ += force;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->addForce(reinterpret_cast<const physx::PxVec3&>(force));
+			}
+		}
+#endif
 	}
 
 	void Rigidbody::AddT1Torque(const Vector3& torque)
 	{
 		m_t1_torque_ += torque;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->addTorque(reinterpret_cast<const physx::PxVec3&>(torque));
+			}
+		}
+#endif
 	}
 
 	float Rigidbody::GetFrictionCoefficient() const
@@ -277,20 +364,20 @@ namespace Engine::Components
 
 		ImGui::Indent(2);
 		CheckboxAligned("Grounded", m_bGrounded);
-		CheckboxAligned("Gravity Override", m_bGravityOverride);
-		CheckboxAligned("Fixed", m_bFixed);
-		CheckboxAligned("No Angular", m_b_no_angular_);
+		CheckboxAligned("Gravity Override", m_bGravityOverride, mem_bind(this, &Rigidbody::SetGravityOverride));
+		CheckboxAligned("Fixed", m_bFixed, mem_bind(this, &Rigidbody::SetFixed));
+		CheckboxAligned("No Angular", m_b_no_angular_, mem_bind(this, &Rigidbody::SetNoAngular));
 		CheckboxAligned("Lerp", m_b_lerp_);
 
 		ImGui::DragFloat("Rigidbody Friction", &m_friction_mu_, 0.01f, 0, 1);
 
-		ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity);
-		ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_velocity);
+		ImGuiVector3Editable("Linear Momentum", GetID(), "linear_momentum", m_linear_velocity, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT0LinearVelocity));
+		ImGuiVector3Editable("Angular Momentum", GetID(), "angular_momentum", m_angular_velocity, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT0AngularVelocity));
 		ImGuiVector3Editable("Linear Friction", GetID(), "linear_friction", m_linear_friction_);
 		ImGuiVector3Editable("Angular Friction", GetID(), "angular_friction", m_angular_friction_);
 		ImGuiVector3Editable("Drag Force", GetID(), "drag_force", m_drag_force_);
-		ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_t1_force_);
-		ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_t1_torque_);
+		ImGuiVector3Editable("Rigidbody Force", GetID(), "force", m_t1_force_, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT1Force));
+		ImGuiVector3Editable("Rigidbody Torque", GetID(), "torque", m_t1_torque_, 0.1f, 0, 0, mem_bind(this, &Rigidbody::SetT1Torque));
 
 		ImGui::Unindent(2);
 	}
@@ -303,4 +390,48 @@ namespace Engine::Components
 		  m_bFixed(false),
 		  m_b_lerp_(true),
 		  m_friction_mu_(0) {}
+
+	void Rigidbody::CheckColliderDependency(Weak<Component> component) const
+	{
+		if (const StrongComponent& locked = component.lock())
+		{
+			if (locked->GetComponentType() == COM_T_COLLIDER)
+			{
+				if (const StrongObjectBase& owner = GetOwner().lock())
+				{
+					owner->RemoveComponent<Rigidbody>();
+				}
+			}
+		}
+	}
+
+	void Rigidbody::SetT1Force(const Vector3& force)
+	{
+		m_t1_force_ = force;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setForceAndTorque(reinterpret_cast<const physx::PxVec3&>(force), reinterpret_cast<const physx::PxVec3&>(m_t1_torque_));
+			}
+		}
+#endif
+	}
+
+	void Rigidbody::SetT1Torque(const Vector3& torque)
+	{
+		m_t1_torque_ = torque;
+
+#ifdef PHYSX_ENABLED
+		if (const StrongObjectBase& owner = GetOwner().lock())
+		{
+			if (const StrongCollider& collider = owner->GetComponent<Collider>().lock())
+			{
+				collider->GetPhysXRigidbody()->setForceAndTorque(reinterpret_cast<const physx::PxVec3&>(m_t1_force_), reinterpret_cast<const physx::PxVec3&>(torque));
+			}
+		}
+#endif
+	}
 } // namespace Engine::Component

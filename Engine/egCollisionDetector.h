@@ -5,11 +5,25 @@
 #include "egCommon.hpp"
 #include "egManager.hpp"
 
+DEFINE_DELEGATE(OnLayerMaskChange, const Engine::eLayerType, const Engine::eLayerType);
+
+#ifdef PHYSX_ENABLED
+namespace Engine
+{
+	namespace Physics
+	{
+		class PhysXSimulationFilterCallback;
+	}
+}
+#endif
+
 namespace Engine::Manager::Physics
 {
 	class CollisionDetector : public Abstract::Singleton<CollisionDetector>
 	{
 	public:
+		DelegateOnLayerMaskChange onLayerMaskChange;
+
 		explicit CollisionDetector(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
@@ -35,7 +49,7 @@ namespace Engine::Manager::Physics
 
 	private:
 		friend struct SingletonDeleter;
-		~CollisionDetector() override = default;
+		~CollisionDetector() override;
 
 		void TestCollision(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs);
 		void TestSpeculation(const WeakObjectBase& p_lhs, const WeakObjectBase& p_rhs, float dt);
@@ -49,6 +63,14 @@ namespace Engine::Manager::Physics
 
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_collision_map_;
 		concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
+
+#ifdef PHYSX_ENABLED
+	public:
+		uint32_t GetLayerFilter(const eLayerType layer) const;
+
+	private:
+		friend class Engine::Physics::PhysXSimulationFilterCallback;
+#endif
 	};
 } // namespace Engine::Manager
 

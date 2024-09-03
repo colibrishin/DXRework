@@ -59,7 +59,9 @@ namespace Engine::Manager::Graphics
 			}
 
 			// Notify the number of lights to the shader.
-			GetRaytracingPipeline().SetParam<int>(m_light_buffers_.size(), 0);
+
+			CheckSize<UINT>(m_light_buffers_.size(), L"Warning: Light buffer size is too large in raytracer!");
+			GetRaytracingPipeline().SetParam<UINT>(static_cast<UINT>(m_light_buffers_.size()), 0);
 		}
 	}
 
@@ -74,7 +76,8 @@ namespace Engine::Manager::Graphics
 
 		cmd->SoftReset();
 
-		m_light_buffer_data_.SetData(cmd->GetList4(), m_light_buffers_.size(), m_light_buffers_.data());
+		CheckSize<UINT>(m_light_buffers_.size(), L"Warning: Light buffer size is too large in raytracer!");
+		m_light_buffer_data_.SetData(cmd->GetList4(), static_cast<INT>(m_light_buffers_.size()), m_light_buffers_.data());
 
 		RenderPass(cmd->GetList4(), nullptr);
 

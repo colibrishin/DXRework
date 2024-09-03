@@ -124,7 +124,7 @@ namespace Engine::Manager::Graphics
 				if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
 				{
 					// Drop the fractional part and interpolate the frame in shader.
-					anim_duration = bone_anim->GetDuration();
+					anim_duration = static_cast<UINT>(bone_anim->GetDuration());
 				}
 
 				if (const auto atlas_anim = mtr->GetResource<Resources::AtlasAnimation>(anim_idx).lock())
@@ -167,8 +167,7 @@ namespace Engine::Manager::Graphics
 					sb.SetAtlasH(atlas_h);
 
 					// todo: stacking structured buffer data might be get large easily.
-					acc->second.push_back
-							(std::make_tuple(obj, mtr, tbb::concurrent_vector<SBs::InstanceSB>{std::move(sb)}));
+					acc->second.push_back(std::make_tuple(obj, mtr, aligned_vector<SBs::InstanceSB>{sb}));
 					instance_count.fetch_add(1);
 				}
 			}
@@ -214,8 +213,6 @@ namespace Engine::Manager::Graphics
 						domain_map.insert(acc, RENDER_COM_T_PARTICLE);
 					}
 
-					concurrent_vector<SBs::InstanceSB> mp_particles(particles.begin(), particles.end());
-
 					if (pr->IsFollowOwner())
 					{
 						for (auto& particle : particles)
@@ -226,7 +223,7 @@ namespace Engine::Manager::Graphics
 						}
 					}
 
-					acc->second.push_back(std::make_tuple(obj, mtr, mp_particles));
+					acc->second.push_back(std::make_tuple(obj, mtr, particles));
 					instance_count.fetch_add(particles.size());
 				}
 			}

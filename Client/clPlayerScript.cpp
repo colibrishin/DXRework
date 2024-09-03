@@ -287,7 +287,7 @@ namespace Client::Scripts
 									}
 									else
 									{
-										rhs->DispatchComponentEvent(lcl);
+										rcl->onCollisionEnter.Broadcast(lcl);
 									}
 								}
 							}

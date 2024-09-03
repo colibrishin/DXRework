@@ -164,12 +164,16 @@ namespace Engine
 
 	void Layer::AddGameObject(const StrongObjectBase& obj)
 	{
-		if (m_objects_.contains(obj))
 		{
-			return;
+			decltype(m_weak_objects_cache_)::const_accessor it;
+
+			if (m_weak_objects_cache_.find(it, obj->GetID()))
+			{
+				return;
+			}
 		}
 
-		m_objects_.insert(obj);
+		m_objects_.push_back(obj);
 		m_weak_objects_cache_.insert({obj->GetID(), obj});
 	}
 
@@ -188,7 +192,11 @@ namespace Engine
 
 		if (const auto locked = obj.lock())
 		{
-			m_objects_.erase(locked);
+			std::erase_if(m_objects_, [&locked](const StrongObjectBase& value)
+				{
+					return value == locked;
+				});
+
 			m_weak_objects_cache_.erase(id);
 		}
 	}

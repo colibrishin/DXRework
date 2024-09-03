@@ -4,6 +4,7 @@
 #include "egEnums.h"
 #include "egSerialization.hpp"
 #include "egType.h"
+#include <utility>
 
 #undef max
 #undef min
@@ -73,7 +74,8 @@ namespace Engine
 
 	static bool check_avx()
 	{
-		static bool use_avx = std::__isa_available >= std::_Stl_isa_available_avx2;
+		constexpr size_t minimum_avx_requirements = 6; // == std::_Stl_isa_available_avx2
+		static bool use_avx = std::__isa_available >= minimum_avx_requirements;
 		return use_avx;
 	}
 
@@ -215,6 +217,50 @@ namespace Engine
 			lhs._21 * rhs.x + lhs._22 * rhs.y + lhs._23 * rhs.z,
 			lhs._31 * rhs.x + lhs._32 * rhs.y + lhs._33 * rhs.z
 		};
+	}
+
+	template <size_t... Indices> struct indices {};
+
+	template <size_t N, size_t... Following>
+	struct build_indices : build_indices<N -1, N-1, Following...> {};
+
+	template <size_t... Indices>
+	struct build_indices<0, Indices...> : indices<Indices...> {};
+
+	template <size_t... Indices, typename T, typename... Args>
+	auto mem_bind_impl(indices<Indices...>, T* this_pointer, void(T::*function)(Args...))
+	{
+		return std::bind(function, this_pointer, std::_Ph<Indices + 1>{}...);
+	}
+
+	template <size_t... Indices, typename T, typename... Args>
+	auto mem_bind_impl(indices<Indices...>, const T* this_pointer, void(T::*function)(Args...) const)
+	{
+		return std::bind(function, this_pointer, std::_Ph<Indices + 1>{}...);
+	}
+
+	template <typename T, typename... Args>
+	auto mem_bind(T* this_pointer, void(T::*function)(Args...))
+	{
+		return mem_bind_impl(build_indices<sizeof...(Args)>{}, this_pointer, function);
+	}
+
+	template <typename T, typename... Args>
+	auto mem_bind(T* this_pointer, void(T::*function)(Args...) const)
+	{
+		return mem_bind_impl(build_indices<sizeof...(Args)>{}, this_pointer, function);
+	}
+
+	template <typename T, typename U>
+	void CheckSize(const U compare_value, const std::wstring_view out_string)
+	{
+		if constexpr (g_debug)
+		{
+			if (compare_value > std::numeric_limits<T>::max() || compare_value < std::numeric_limits<T>::min())
+			{
+				OutputDebugStringW(out_string.data());
+			}
+		}
 	}
 } // namespace Engine
 

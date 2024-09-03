@@ -356,7 +356,8 @@ namespace Engine::Resources
 
 				cmd->GetList()->IASetVertexBuffers(0, 1, &vtx_view);
 				cmd->GetList()->IASetIndexBuffer(&idx_view);
-				cmd->GetList()->DrawIndexedInstanced(idx_count, instance_count, 0, 0, 0);
+				CheckSize<UINT>(idx_count, L"Warning: DrawIndexedInstance will takes large size of indices!");
+				cmd->GetList()->DrawIndexedInstanced(static_cast<UINT>(idx_count), instance_count, 0, 0, 0);
 			}
 
 			if (const auto& anim = shape->GetAnimations().lock())

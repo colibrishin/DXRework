@@ -125,7 +125,7 @@ namespace Engine::Resources
 		return m_bones_index_wise_[parent_idx];
 	}
 
-	UINT Bone::GetBoneCount() const
+	size_t Bone::GetBoneCount() const
 	{
 		return m_bones_index_wise_.size();
 	}

@@ -48,13 +48,13 @@ namespace Engine::Manager::Graphics
 		~Renderer() override = default;
 
 		void renderPassImpl(
-			float                              dt,
-			eShaderDomain                      domain,
-			bool                               shader_bypass,
-			StructuredBuffer<SBs::InstanceSB>& instance_buffer,
-			const StrongMaterial&              material,
-			const Weak<CommandPair>&           w_cmd,
-			const DescriptorPtr&               heap, const std::vector<SBs::InstanceSB>& structured_buffers
+			const float                         dt,
+			eShaderDomain                       domain,
+			bool                                shader_bypass,
+			StructuredBuffer<SBs::InstanceSB> & instance_buffer,
+			const StrongMaterial &              material,
+			const Weak<CommandPair> &           w_cmd,
+			const DescriptorPtr &               heap, const aligned_vector<const SBs::InstanceSB*> & structured_buffers
 		);
 
 		bool m_b_ready_;

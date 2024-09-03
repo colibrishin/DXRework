@@ -1,10 +1,20 @@
 #pragma once
+
 #include "egAccelStructure.hpp"
 #include "egCommon.hpp"
 #include "egDXCommon.h"
 #include "egResource.h"
 #include "egResourceManager.hpp"
 #include "egStructuredBuffer.hpp"
+
+#ifdef PHYSX_ENABLED
+namespace physx
+{
+	class PxSDFDesc;
+	class PxTriangleMeshGeometry;
+	class PxTriangleMesh;
+}
+#endif
 
 namespace Engine::Resources
 {
@@ -16,7 +26,7 @@ namespace Engine::Resources
 		RESOURCE_T(RES_T_MESH)
 
 		Mesh(const VertexCollection& shape, const IndexCollection& indices);
-		~Mesh() override = default;
+		~Mesh() override;
 		void Initialize() override;
 		void PostUpdate(const float& dt) override;
 		void PreUpdate(const float& dt) override;
@@ -25,7 +35,7 @@ namespace Engine::Resources
 
 		BoundingBox GetBoundingBox() const;
 
-		UINT                    GetIndexCount() const;
+		size_t                  GetIndexCount() const;
 		const VertexCollection& GetVertexCollection() const;
 
 		void                     OnDeserialized() override;
@@ -78,6 +88,16 @@ namespace Engine::Resources
 		D3D12_INDEX_BUFFER_VIEW  m_index_buffer_view_;
 
 		AccelStructBuffer m_blas_;
+
+#ifdef PHYSX_ENABLED
+	public:
+		physx::PxTriangleMeshGeometry* GetPhysXGeometry() const;
+		physx::PxTriangleMesh* GetPhysXMesh() const;
+
+	protected:
+		physx::PxSDFDesc* m_px_sdf_;
+		physx::PxTriangleMesh* m_px_mesh_;
+#endif
 	};
 } // namespace Engine::Resources
 

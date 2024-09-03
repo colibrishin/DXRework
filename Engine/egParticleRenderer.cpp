@@ -69,14 +69,16 @@ namespace Engine::Components
 			cmd->GetList()->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
 			cmd->GetList()->SetPipelineState(m_cs_->GetPipelineState());
 
-			m_sb_buffer_.SetData(cmd->GetList(), m_instances_.size(), m_instances_.data());
+			CheckSize<UINT>(m_instances_.size(), L"Warning: Particle instance size is too much for structured buffer!");
+
+			m_sb_buffer_.SetData(cmd->GetList(), static_cast<UINT>(m_instances_.size()), m_instances_.data());
 			m_sb_buffer_.TransitionToUAV(cmd->GetList());
 			m_sb_buffer_.CopyUAVHeap(heap);
 
 			const auto thread      = m_cs_->GetThread();
 			const auto flatten     = thread[0] * thread[1] * thread[2];
-			const UINT group_count = m_instances_.size() / flatten;
-			const UINT remainder   = m_instances_.size() % flatten;
+			const UINT group_count = static_cast<UINT>(m_instances_.size() / flatten);
+			const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
 
 			m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
 			m_cs_->Dispatch(cmd->GetList(), heap, m_params_, m_local_param_buffer_);
@@ -88,7 +90,8 @@ namespace Engine::Components
 					 [this]()
 					 {
 						 std::lock_guard<std::mutex> lock(m_instances_mutex_);
-						 m_sb_buffer_.GetData(m_instances_.size(), m_instances_.data());
+						 CheckSize<UINT>(m_instances_.size(), L"Warning: Instance size for particle renderer is too large!");
+						 m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
 
 						 // Remove inactive particles.
 						 for (auto it = m_instances_.begin(); it != m_instances_.end();)
@@ -174,10 +177,10 @@ namespace Engine::Components
 		}
 	}
 
-	std::vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
+	aligned_vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
 	{
 		std::lock_guard<std::mutex> lock(m_instances_mutex_);
-		return reinterpret_cast<std::vector<Graphics::SBs::InstanceSB>&>(m_instances_);
+		return reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(m_instances_);
 	}
 
 	void ParticleRenderer::SetFollowOwner(const bool follow)

@@ -230,6 +230,12 @@ namespace Engine
 		LAYER_MAX,
 	};
 
+	template <typename T>
+	constexpr T to_bitmask(const T value)
+	{
+		return 1 << value;
+	}
+
 	enum eShaderType
 	{
 		SHADER_VERTEX = 0,

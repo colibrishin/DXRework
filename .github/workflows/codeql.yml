@@ -87,7 +87,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -113,6 +113,18 @@ jobs:
       working-directory: ${{env.SOLUTION_FILE_PATH}}
       run: vcpkg integrate install
 
+    - name: Copy PhysX preset
+      working-directory: ${{env.SOLUTION_FILE_PATH}}
+      run: Copy-Item -Path "vc17win64.xml" -Destination "PhysX/physx/buildtools/presets/public" -Force
+
+    - name: Generate project file for PhysX
+      working-directory: ${{env.SOLUTION_FILE_PATH}}/PhysX/physx
+      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
+
+    - name: Build PhysX
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}/PhysX/physx/compiler/vc17win64/PhysXSDK.sln
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
@@ -120,6 +132,6 @@ jobs:
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"

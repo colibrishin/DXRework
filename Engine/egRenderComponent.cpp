@@ -20,6 +20,7 @@ namespace Engine::Components::Base
 		{
 			m_material_      = mtr;
 			m_mtr_meta_path_ = mtr->GetMetadataPath();
+			onMaterialChange.Broadcast(mtr);
 		}
 	}
 
@@ -35,7 +36,7 @@ namespace Engine::Components::Base
 
 	const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept
 	{
-		return m_mtr_meta_path_str_;
+		return m_mtr_meta_path_;
 	}
 
 	eRenderComponentType RenderComponent::GetType() const noexcept
@@ -86,8 +87,7 @@ namespace Engine::Components::Base
 				if (const auto mtr = boost::dynamic_pointer_cast<Resources::Material>(res))
 				{
 					mtr->Load();
-					m_material_          = mtr;
-					m_mtr_meta_path_str_ = mtr->GetMetadataPath().string();
+					SetMaterial(mtr);
 				}
 			}
 		}

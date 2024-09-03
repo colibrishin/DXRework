@@ -38,7 +38,7 @@ namespace Engine::Manager
 
 	float Application::GetDeltaTime() const
 	{
-		return m_timer->GetElapsedSeconds();
+		return static_cast<float>(m_timer->GetElapsedSeconds());
 	}
 
 	uint32_t Application::GetFPS() const
@@ -156,6 +156,10 @@ namespace Engine::Manager
 
 	void Application::FixedUpdate(const float& dt)
 	{
+		GetTaskScheduler().FixedUpdate(dt);
+		// collider or world update
+		GetSceneManager().FixedUpdate(dt);
+
 		// physics updates.
 		// gravity
 		GetGraviton().FixedUpdate(dt);
@@ -168,10 +172,8 @@ namespace Engine::Manager
 		// lerp rigidbody movements
 		GetLerpManager().FixedUpdate(dt);
 
-		GetTaskScheduler().FixedUpdate(dt);
 		GetMouseManager().FixedUpdate(dt);
 		GetReflectionEvaluator().FixedUpdate(dt);
-		GetSceneManager().FixedUpdate(dt);
 		GetShadowManager().FixedUpdate(dt);
 		GetResourceManager().FixedUpdate(dt);
 
@@ -325,7 +327,7 @@ namespace Engine::Manager
 			PostQuitMessage(0);
 		}
 
-		float dt = m_timer->GetElapsedSeconds();
+		float dt = GetDeltaTime();
 
 		if (g_paused)
 		{

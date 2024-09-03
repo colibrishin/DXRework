@@ -2,9 +2,13 @@
 #include "egActor.h"
 #include "egCommon.hpp"
 #include "egComponent.h"
+#include "egDelegate.hpp"
 #include "egResource.h"
 #include "egScene.hpp"
 #include "egScript.h"
+
+DEFINE_DELEGATE(OnComponentAdded, Engine::Weak<Engine::Abstract::Component>)
+DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstract::Component>)
 
 namespace Engine::Abstract
 {
@@ -12,6 +16,9 @@ namespace Engine::Abstract
 	class ObjectBase : public Actor
 	{
 	public:
+		DelegateOnComponentAdded onComponentAdded;
+		DelegateOnComponentRemoved onComponentRemoved;
+
 		~ObjectBase() override = default;
 
 		void PreUpdate(const float& dt) override;
@@ -46,6 +53,8 @@ namespace Engine::Abstract
 
 			addComponentImpl(component, type);
 			addComponentToSceneCache<T>(component);
+
+			onComponentAdded.Broadcast(component);
 
 			return component;
 		}
@@ -110,12 +119,9 @@ namespace Engine::Abstract
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
 		void RemoveComponent()
 		{
-			removeComponentFromSceneCache<T>(m_components_[which_component<T>::value]);
+			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[which_component<T>::value]));
 			removeComponent(which_component<T>::value);
 		}
-
-		template <typename T, typename Lock = std::enable_if_t<std::is_base_of_v<Component, T>>>
-		void DispatchComponentEvent(const boost::shared_ptr<T>& other);
 
 		void SetActive(bool active);
 		void SetCulled(bool culled);

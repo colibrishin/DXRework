@@ -70,7 +70,7 @@ namespace Engine
 		SERIALIZE_DECL
 
 		eLayerType						m_layer_type_;
-		fast_pool_set<StrongObjectBase> m_objects_;
+		aligned_vector<StrongObjectBase> m_objects_;
 
 		// Non-serialized
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;

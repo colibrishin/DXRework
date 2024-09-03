@@ -78,12 +78,6 @@
 #include "VertexTypes.h"
 #include "WICTextureLoader.h"
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "dxcompiler.lib")
-
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <d3dx12.h>
@@ -93,8 +87,6 @@
 
 #include <fmod.hpp>
 #include <fmod_common.h>
-
-#pragma comment(lib, "fmod_vc.lib")
 
 #include "egActor.h"
 #include "egCollision.h"

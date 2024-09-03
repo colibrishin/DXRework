@@ -4,6 +4,8 @@
 #include "egCamera.h"
 #include "egSceneManager.hpp"
 
+#pragma comment(lib, "fmod_vc.lib")
+
 namespace Engine::Manager::Graphics
 {
 	ToolkitAPI::~ToolkitAPI()

@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <boost/pool/pool_alloc.hpp>
+#include <boost/align/align.hpp>
+#include <boost/align/aligned_allocator.hpp>
 #include <oneapi/tbb.h>
 
 #include "egEnums.h"
@@ -180,38 +182,56 @@ namespace Engine
 		return (size + alignment - 1) & ~(alignment - 1);
 	}
 
+	consteval size_t nearest_pow_two(size_t value)
+	{
+		size_t result = 1;
+
+		while (value > result)
+		{
+			result = result << 1;
+		}
+
+		return result;
+	}
+
 	constexpr size_t g_default_pool_size = 16;
-	constexpr size_t g_pool_size_alignment = std::hardware_destructive_interference_size;
+	constexpr size_t g_cache_alignment = 16;
 
 	template <typename KeyType, typename ValueType>
 	struct aligned_pair_size
 	{
 		constexpr unsigned operator()() const
 		{
-			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_pool_size_alignment));
+			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_cache_alignment));
 		}
 	};
 
 	template <typename KeyType, typename ValueType>
-	using aligned_fast_pool_allocator = boost::fast_pool_allocator < std::pair<const KeyType, ValueType>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, aligned_pair_size<KeyType, ValueType>{}() > ;
+	using u_fast_pool_allocator = boost::fast_pool_allocator<std::pair<const KeyType, ValueType>> ;
 
 	template <typename ValueType>
-	using aligned_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType)* g_default_pool_size, g_pool_size_alignment)>;
+	using u_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType>;
 
 	template <typename ValueType>
-	using aligned_pool_allocator_single = boost::pool_allocator<ValueType, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, Align(sizeof(ValueType)* g_default_pool_size, g_pool_size_alignment)>;
+	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, nearest_pow_two(sizeof(ValueType))>;
+
+	template <typename ValueType>
+	using u_pool_allocator_single = boost::pool_allocator<ValueType>;
 
 	template <typename KeyType>
-	using fast_pool_set = std::set<KeyType, std::less<KeyType>, aligned_fast_pool_allocator_single<KeyType>>;
+	using fast_pool_set = std::set<KeyType, std::less<KeyType>, u_fast_pool_allocator_single<KeyType>>;
 
 	template <typename KeyType, typename ValueType>
-	using fast_pool_unordered_map = std::unordered_map<KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+	using fast_pool_unordered_map = std::unordered_map<KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>, u_fast_pool_allocator<KeyType, ValueType>>;
 
 	template <typename KeyType, typename ValueType>
-	using fast_pool_map = std::map<KeyType, ValueType, std::less<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+	using fast_pool_map = std::map<KeyType, ValueType, std::less<KeyType>, u_fast_pool_allocator<KeyType, ValueType>>;
 
 	template <typename ValueType>
-	using pool_queue = std::queue<ValueType, std::deque<ValueType, aligned_pool_allocator_single<ValueType>>>;
+	using pool_queue = std::queue<ValueType, std::deque<ValueType, u_pool_allocator_single<ValueType>>>;
+
+	template <typename ValueType>
+	using aligned_vector = std::vector<ValueType, u_align_allocator<ValueType>>;
 
 	// Weak pointer type definitions
 	using WeakObjectBase = boost::weak_ptr<Abstract::ObjectBase>;
@@ -292,18 +312,20 @@ namespace Engine
 	using IndexCollection = std::vector<UINT>;
 	using VertexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
 	using IndexBufferCollection = std::vector<ComPtr<ID3D12Resource>>;
-	using InstanceParticles = std::vector<Graphics::SBs::InstanceParticleSB>;
 
 	template <typename KeyType, typename ValueType>
-	using concurrent_fast_pool_map = concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, aligned_fast_pool_allocator<KeyType, ValueType>>;
+	using concurrent_fast_pool_map = concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, u_fast_pool_allocator<KeyType, ValueType>>;
+
+	template <typename ValueType>
+	using concurrent_aligned_vector = concurrent_vector<ValueType, u_align_allocator<ValueType>>;
 
 	// Concurrent type definitions
 	using ConcurrentWeakObjGlobalMap = concurrent_fast_pool_map<GlobalEntityID, WeakObjectBase>;
-	using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase, aligned_pool_allocator_single<WeakObjectBase>>;
+	using ConcurrentWeakObjVec = concurrent_vector<WeakObjectBase, u_pool_allocator_single<WeakObjectBase>>;
 	using ConcurrentLocalGlobalIDMap = concurrent_fast_pool_map<LocalActorID, GlobalEntityID>;
-	using ConcurrentWeakComVec = concurrent_vector<WeakComponent, aligned_fast_pool_allocator_single<WeakComponent>>;
+	using ConcurrentWeakComVec = concurrent_vector<WeakComponent, u_fast_pool_allocator_single<WeakComponent>>;
 	using ConcurrentWeakComMap = concurrent_fast_pool_map<GlobalEntityID, WeakComponent>;
-	using ConcurrentWeakScpVec = concurrent_vector<WeakScript, aligned_pool_allocator_single<WeakScript>>;
+	using ConcurrentWeakScpVec = concurrent_vector<WeakScript, u_pool_allocator_single<WeakScript>>;
 	using ConcurrentWeakScpMap = concurrent_fast_pool_map<GlobalEntityID, WeakScript>;
 	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<eComponentType, ConcurrentWeakComMap>;
 	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<eScriptType, ConcurrentWeakScpMap>;
@@ -423,6 +445,18 @@ namespace Engine
 	struct void_stub
 	{
 		using type = void;
+	};
+
+	template <typename Find, typename... Where>
+	struct find_pack
+	{
+		using type = std::bool_constant<(std::is_same_v<Find, Where> || ...)>;
+	};
+
+	template <template <typename> typename Wrapper, typename... Where>
+	struct find_pack_wrapper
+	{
+		using type = std::bool_constant<(std::is_same_v<Wrapper<void>, get_wrapper<Where>> || ...)>;
 	};
 
 	template <typename... T>

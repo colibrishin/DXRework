@@ -51,16 +51,16 @@ namespace Engine::Manager::Graphics
 		m_viewport_ = CD3DX12_VIEWPORT
 				(
 				 0.0f, 0.0f,
-				 g_window_width,
-				 g_window_height,
+				 static_cast<float>(g_window_width),
+				 static_cast<float>(g_window_height),
 				 0.0f, 1.0f
 				);
 
 		m_scissor_rect_ = CD3DX12_RECT
 				(
 				 0, 0,
-				 g_window_width,
-				 g_window_height
+				 static_cast<LONG>(g_window_width),
+				 static_cast<LONG>(g_window_height)
 				);
 	}
 

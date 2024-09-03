@@ -1,19 +1,29 @@
 #include "pch.h"
 #include "egScene.hpp"
+
+#ifdef PHYSX_ENABLED
+#include <PxPhysics.h>
+#include <PxSceneDesc.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
+#endif
+
+#include <PxScene.h>
+
 #include "egCamera.h"
 #include "egImGuiHeler.hpp"
 #include "egLight.h"
 #include "egManagerHelper.hpp"
 #include "egObserver.h"
+#include "PhysXSimulationCallback.h"
 
 SERIALIZE_IMPL
 (
- Engine::Scene,
- _ARTAG(_BSTSUPER(Renderable))
- _ARTAG(m_b_scene_raytracing_)
- _ARTAG(m_main_camera_local_id_)
- _ARTAG(m_main_actor_local_id_)
- _ARTAG(m_layers)
+	Engine::Scene,
+	_ARTAG(_BSTSUPER(Renderable))
+	_ARTAG(m_b_scene_raytracing_)
+	_ARTAG(m_main_camera_local_id_)
+	_ARTAG(m_main_actor_local_id_)
+	_ARTAG(m_layers)
 )
 
 namespace Engine
@@ -54,6 +64,41 @@ namespace Engine
 					 scene->initializeFinalize();
 				 }
 				);
+
+#ifdef PHYSX_ENABLED
+		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+		scene_desc.gravity = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
+		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
+		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_BODY_ACCELERATIONS;
+		scene_desc.filterShader = Engine::Physics::SimulationFilterShader;
+		scene_desc.filterCallback = &Engine::Physics::g_filter_callback;
+		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
+		scene_desc.kineKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
+		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
+
+		if constexpr (g_speculation_enabled)
+		{
+			scene_desc.flags |= physx::PxSceneFlag::eENABLE_CCD;
+		}
+
+		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
+
+		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
+
+		/*
+		 * for the note using PxDefaultSimulationFilterShader
+		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback
+		physx::PxGroupsMask all_ok;
+		std::memset(&all_ok.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
+		physx::PxSetFilterConstants(all_ok, all_ok);
+		physx::PxSetFilterBool(true);
+		physx::PxSetFilterOps(physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND);
+		*/
+		
+		m_physics_scene_->userData = this;
+#endif
 	}
 
 	void Scene::AssignLocalIDToObject(const StrongObjectBase& obj)
@@ -209,6 +254,9 @@ namespace Engine
 	{
 		if (const auto scene = ptr_scene.lock())
 		{
+#ifdef PHYSX_ENABLED
+			CleanupPhysX();
+#endif
 			for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
 			{
 				if (const auto locked = light.lock())
@@ -307,6 +355,22 @@ namespace Engine
 		}
 	}
 
+#ifdef PHYSX_ENABLED
+	physx::PxScene* Scene::GetPhysXScene() const
+	{
+		return m_physics_scene_;
+	}
+
+	void Scene::CleanupPhysX()
+	{
+		if (m_physics_scene_)
+		{
+			m_physics_scene_->release();
+			m_physics_scene_ = nullptr;
+		}
+	}
+#endif
+
 	void Scene::ChangeLayer(const eLayerType to, const GlobalEntityID id)
 	{
 		if (const auto& obj = FindGameObject(id).lock())
@@ -398,7 +462,7 @@ namespace Engine
 			return acc->second;
 		}
 
-		std::find_if
+		const auto& it = std::find_if
 				(
 				 m_layers.begin(), m_layers.end(),
 				 [id, &acc](const auto& layer)
@@ -406,6 +470,11 @@ namespace Engine
 					 return layer->FindGameObject(id).lock();
 				 }
 				);
+
+		if (it != m_layers.end())
+		{
+			return (*it)->FindGameObject(id);
+		}
 
 		return {};
 	}
@@ -913,6 +982,13 @@ namespace Engine
 	WeakObjectBase Scene::GetMainActor() const
 	{
 		return m_main_actor_;
+	}
+
+	Scene::~Scene()
+	{
+#ifdef PHYSX_ENABLED
+		CleanupPhysX();
+#endif
 	}
 
 	void Scene::DisableControllers()

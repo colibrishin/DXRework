@@ -34,6 +34,8 @@ namespace Engine::Components
 
 		void AddT1Force(const Vector3& force);
 		void AddT1Torque(const Vector3& torque);
+		void SetT1Force(const Vector3& force);
+		void SetT1Torque(const Vector3& torque);
 
 		float GetFrictionCoefficient() const;
 
@@ -69,6 +71,12 @@ namespace Engine::Components
 
 	protected:
 		Rigidbody();
+
+		void CheckColliderDependency(Weak<Component> component) const;
+
+#ifdef PHYSX_ENABLED
+		friend class Engine::Manager::Physics::PhysicsManager;
+#endif
 
 	private:
 		SERIALIZE_DECL

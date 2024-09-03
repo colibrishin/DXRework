@@ -3,6 +3,11 @@
 #include "egRenderComponent.h"
 #include "egStructuredBuffer.hpp"
 
+namespace Engine
+{
+	using InstanceParticles = aligned_vector<Graphics::SBs::InstanceParticleSB>;
+}
+
 namespace Engine::Components
 {
 	class ParticleRenderer : public Base::RenderComponent
@@ -34,7 +39,7 @@ namespace Engine::Components
 		void OnDeserialized() override;
 		void OnImGui() override;
 
-		[[nodiscard]] std::vector<Graphics::SBs::InstanceSB> GetParticles();
+		[[nodiscard]] aligned_vector<Graphics::SBs::InstanceSB> GetParticles();
 
 		void SetFollowOwner(bool follow);
 		void SetCount(size_t count);

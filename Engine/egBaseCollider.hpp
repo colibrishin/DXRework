@@ -3,7 +3,20 @@
 #include "egComponent.h"
 #include "egGenericBounding.hpp"
 #include "egHelper.hpp"
+#include "egDelegate.hpp"
 #include "egTransform.h"
+
+#ifdef PHYSX_ENABLED
+namespace physx
+{
+	class PxRigidDynamic;
+	class PxMaterial;
+	class PxShape;
+}
+#endif
+
+DEFINE_DELEGATE(OnCollisionEnter, Engine::Weak<Engine::Components::Collider>);
+DEFINE_DELEGATE(OnCollisionEnd, Engine::Weak<Engine::Components::Collider>);
 
 namespace Engine::Components
 {
@@ -12,10 +25,13 @@ namespace Engine::Components
 	class Collider final : public Abstract::Component
 	{
 	public:
-		COMPONENT_T(COM_T_COLLIDER)
+		COMPONENT_T(COM_T_COLLIDER);
+
+		DelegateOnCollisionEnter onCollisionEnter;
+		DelegateOnCollisionEnd onCollisionEnd;
 
 		Collider(const WeakObjectBase& owner);
-		~Collider() override = default;
+		~Collider() override;
 
 		void FromMatrix(const Matrix& mat);
 
@@ -116,6 +132,9 @@ namespace Engine::Components
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
+		void VerifyMaterial(boost::weak_ptr<Resources::Material> weak);
+		void UpdateByOwner(Weak<Component> component);
+		void ResetToStockObject(Weak<Component> component);
 
 		eBoundingType m_type_;
 		std::string   m_shape_meta_path_str_;
@@ -125,8 +144,15 @@ namespace Engine::Components
 		float m_mass_;
 
 		// Non-serialized
-		inline static std::vector<Graphics::VertexElement> m_cube_stock_   = {};
-		inline static std::vector<Graphics::VertexElement> m_sphere_stock_ = {};
+		inline static std::vector<Graphics::VertexElement> s_cube_stock_   = {};
+		inline static std::vector<Graphics::VertexElement> s_sphere_stock_ = {};
+		inline static std::vector<UINT> s_cube_stock_indices_ = {};
+		inline static std::vector<UINT> s_sphere_stock_indices_ = {};
+		static constexpr const char* s_stock_shape_names[] = 
+		{
+			"Cube",
+			"Sphere",
+		};
 
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
@@ -138,6 +164,31 @@ namespace Engine::Components
 		Matrix     m_local_matrix_;
 
 		WeakModel m_shape_;
+
+#ifdef PHYSX_ENABLED
+	private:
+		friend class Rigidbody;
+
+		void UpdatePhysXShape();
+		void CleanupPhysX();
+		void UpdateShapeFilter(const eLayerType left, const eLayerType right) const;
+
+		[[nodiscard]] physx::PxRigidDynamic* GetPhysXRigidbody() const;
+		void ResetRigidbody(Weak<Component> component);
+
+		Matrix m_previous_world_matrix_;
+		Vector3 m_previous_scale_;
+
+		inline static physx::PxTriangleMesh* s_px_cube_stock_ = nullptr;
+		inline static physx::PxTriangleMesh* s_px_sphere_stock_ = nullptr;
+
+		inline static physx::PxSDFDesc* s_px_cube_sdf_ = nullptr;
+		inline static physx::PxSDFDesc* s_px_sphere_sdf = nullptr;
+
+		physx::PxMaterial* m_px_material_;
+		physx::PxRigidDynamic* m_px_rb_static_;
+		std::vector<physx::PxShape*> m_px_meshes_;
+#endif
 	};
 } // namespace Engine::Component
 

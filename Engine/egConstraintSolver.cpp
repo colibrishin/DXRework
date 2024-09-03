@@ -26,6 +26,8 @@ namespace Engine::Manager::Physics
 
 	void ConstraintSolver::FixedUpdate(const float& dt)
 	{
+#ifdef PHYSX_ENABLED
+#else
 		auto& infos = GetCollisionDetector().GetCollisionInfo();
 
 		static tbb::affinity_partitioner ap;
@@ -44,6 +46,7 @@ namespace Engine::Manager::Physics
 
 		infos.clear();
 		m_collision_resolved_set_.clear();
+#endif
 	}
 
 	void ConstraintSolver::PostUpdate(const float& dt) {}
@@ -102,18 +105,9 @@ namespace Engine::Manager::Physics
 			{
 				return;
 			}
+			
 
-			// Gets the vector from center to collision point.
-			const auto lbnd = cl->GetBounding();
-			const auto rbnd = cl_other->GetBounding();
-
-			float distance = 0;
-			if (!lbnd.TestRay(rbnd, lhs_normal, distance))
-			{
-				return;
-			}
-
-			Vector3 collision_point = pos + (lhs_normal * distance);
+			Vector3 collision_point = pos + (lhs_normal * lhs_pen);
 			Vector3 lhs_weight_pen;
 			Vector3 rhs_weight_pen;
 
@@ -130,16 +124,16 @@ namespace Engine::Manager::Physics
 			if (!rb->IsFixed())
 			{
 				lt0->SetWorldPosition(pos + lhs_weight_pen);
-				rb->AddLinearImpulse(llimp);
-				rb->AddAngularImpulse(laimp);
+				rb->SetT0LinearVelocity(llimp);
+				rb->SetT0AngularVelocity(laimp);
 				rb->Synchronize();
 			}
 
 			if (!rb_other->IsFixed())
 			{
-				rt0->SetWorldPosition(pos + rhs_weight_pen);
-				rb_other->AddLinearImpulse(rlimp);
-				rb_other->AddAngularImpulse(raimp);
+				rt0->SetWorldPosition(other_pos + rhs_weight_pen);
+				rb_other->SetT0LinearVelocity(rlimp);
+				rb_other->SetT0AngularVelocity(raimp);
 				rb_other->Synchronize();
 			}
 		}
