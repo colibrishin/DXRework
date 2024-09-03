@@ -75,8 +75,8 @@ namespace Engine
 		scene_desc.filterShader = Engine::Physics::SimulationFilterShader;
 		scene_desc.filterCallback = &Engine::Physics::g_filter_callback;
 		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
-		scene_desc.kineKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
-		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKEEP;
+		scene_desc.kineKineFilteringMode = physx::PxPairFilteringMode::eSUPPRESS;
+		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKILL;
 
 		if constexpr (g_speculation_enabled)
 		{
