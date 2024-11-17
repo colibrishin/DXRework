@@ -53,10 +53,19 @@ namespace Engine
 		}
 	}
 
+	void CommandPair::SetDisposed()
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		DX::ThrowIfFailed(m_list_->Close());
+
+		m_b_ready_    = false;
+		m_b_executed_ = false;
+		m_b_disposed_ = true;
+	}
+
 	void CommandPair::HardReset()
 	{
-		std::lock_guard<std::mutex> el(m_execute_mutex_);
-		std::lock_guard<std::mutex> rl(m_ready_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
 
 		DX::ThrowIfFailed(m_allocator_->Reset());
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
@@ -64,21 +73,23 @@ namespace Engine
 
 		m_b_ready_    = false;
 		m_b_executed_ = false;
+		m_b_disposed_ = false;
 	}
 
 	void CommandPair::SoftReset()
 	{
-		std::lock_guard<std::mutex> el(m_execute_mutex_);
-		std::lock_guard<std::mutex> rl(m_ready_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 
 		m_b_executed_ = false;
 		m_b_ready_    = false;
+		m_b_disposed_ = false;
 	}
 
 	void CommandPair::FlagReady(const std::function<void()>& post_execution)
 	{
-		std::lock_guard<std::mutex> lock(m_ready_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		m_b_ready_ = true;
 
 		if (post_execution)
@@ -91,14 +102,20 @@ namespace Engine
 
 	bool CommandPair::IsReady()
 	{
-		std::lock_guard<std::mutex> lock(m_ready_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		return m_b_ready_;
 	}
 
 	bool CommandPair::IsExecuted()
 	{
-		std::lock_guard<std::mutex> lock(m_execute_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		return m_b_executed_;
+	}
+
+	bool CommandPair::IsDisposed()
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		return m_b_disposed_;
 	}
 
 	ID3D12GraphicsCommandList1* CommandPair::GetList() const
@@ -133,8 +150,7 @@ namespace Engine
 
 	void CommandPair::Execute(const bool lock_consuming)
 	{
-		std::lock_guard<std::mutex> el(m_execute_mutex_);
-		std::lock_guard<std::mutex> rl(m_ready_mutex_);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
 
 		if (lock_consuming)
 		{

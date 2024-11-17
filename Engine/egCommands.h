@@ -14,6 +14,7 @@ namespace Engine
 		CommandPair(const CommandPair& other)            = delete;
 		CommandPair& operator=(const CommandPair& other) = delete;
 
+		void SetDisposed();
 		void HardReset();
 		void SoftReset();
 
@@ -22,7 +23,7 @@ namespace Engine
 		void               FlagReady(const std::function<void()>& post_execution = {});
 		[[nodiscard]] bool IsReady();
 		[[nodiscard]] bool IsExecuted();
-
+		[[nodiscard]] bool IsDisposed();
 		[[nodiscard]] ID3D12GraphicsCommandList1* GetList() const;
 		[[nodiscard]] ID3D12GraphicsCommandList4* GetList4() const;
 		[[nodiscard]] eCommandTypes               GetType() const;
@@ -53,8 +54,8 @@ namespace Engine
 
 		bool       m_b_executed_;
 		bool       m_b_ready_;
-		std::mutex m_ready_mutex_;
-		std::mutex m_execute_mutex_;
+		bool       m_b_disposed_;
+		std::mutex m_critical_mutex_;
 
 		eCommandTypes                      m_type_;
 		ComPtr<ID3D12CommandAllocator>     m_allocator_;
