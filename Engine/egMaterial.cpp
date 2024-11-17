@@ -48,6 +48,8 @@ namespace Engine::Resources
 
 	void Material::OnSerialized()
 	{
+		Resource::OnSerialized();
+
 		m_shader_paths_.clear();
 		m_resource_paths_.clear();
 

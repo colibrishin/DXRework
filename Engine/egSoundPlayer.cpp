@@ -51,6 +51,8 @@ namespace Engine::Components
 
 	void SoundPlayer::OnSerialized()
 	{
+		Component::OnSerialized();
+
 		if (m_sound_ == nullptr)
 		{
 			return;

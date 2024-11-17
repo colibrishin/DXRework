@@ -428,6 +428,8 @@ namespace Engine::Components
 
 	void Collider::OnSerialized()
 	{
+		Component::OnSerialized();
+
 		if (const auto shape = m_shape_.lock())
 		{
 			Serializer::Serialize(shape->GetName(), shape);

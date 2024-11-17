@@ -43,4 +43,3 @@ namespace Engine::Components::Base
 }
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Components::Base::RenderComponent)
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Base::RenderComponent)

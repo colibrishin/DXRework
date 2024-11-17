@@ -272,7 +272,10 @@ namespace Engine::Components
 
 	void Transform::FixedUpdate(const float& dt) {}
 
-	void Transform::OnSerialized() {}
+	void Transform::OnSerialized()
+	{
+		Component::OnSerialized();
+	}
 
 	void Transform::OnImGui()
 	{

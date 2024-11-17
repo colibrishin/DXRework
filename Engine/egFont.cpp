@@ -83,7 +83,10 @@ namespace Engine::Resources
 		m_lazy_reload_ = true;
 	}
 
-	void Font::OnSerialized() {}
+	void Font::OnSerialized()
+	{
+		Resource::OnSerialized();
+	}
 
 	void Font::OnDeserialized()
 	{

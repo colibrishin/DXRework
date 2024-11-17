@@ -986,6 +986,8 @@ namespace Engine::Resources
 
 	void Texture::OnSerialized()
 	{
+		Resource::OnSerialized();
+
 		const auto                  name       = GetName();
 		const std::filesystem::path folder     = GetPrettyTypeName();
 		const std::filesystem::path filename   = name + ".dds";

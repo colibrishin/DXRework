@@ -8,7 +8,7 @@
 SERIALIZE_IMPL
 (
  Engine::Abstract::Resource,
- _ARTAG(_BSTSUPER(Entity))
+ _ARTAG(_BSTSUPER(Engine::Abstract::Entity))
  _ARTAG(m_bLoaded_)
  _ARTAG(m_path_str_)
  _ARTAG(m_type_)

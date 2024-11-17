@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Low-level">
       <UniqueIdentifier>{0d869fbc-e6b1-4abc-a44d-7e7424318d7f}</UniqueIdentifier>
     </Filter>
@@ -71,17 +67,11 @@
     <Filter Include="Mesh\SphereMesh">
       <UniqueIdentifier>{df9fd6c9-4f1f-41b7-a7bb-7d4f7c8a6e39}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Base\Component">
-      <UniqueIdentifier>{43156ce7-7a26-479e-adb3-f33cd6dcbc47}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Base\Layer">
       <UniqueIdentifier>{b1c4ed82-4ace-4949-8399-7fceb64293a4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Base\Object">
       <UniqueIdentifier>{d490737a-7dc1-4dff-b8f6-11c0a535ee7c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Base\Resource">
-      <UniqueIdentifier>{b3333d7b-b710-4704-bbca-49dea14d86ac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Base\Scene">
       <UniqueIdentifier>{66767e6a-0b0b-4915-b86d-252d283751d0}</UniqueIdentifier>
@@ -206,9 +196,6 @@
     <Filter Include="Low-level\Octree">
       <UniqueIdentifier>{c7c24fa4-9f05-4fe6-b344-76abf4d72dd8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Base\Script">
-      <UniqueIdentifier>{86b3d06f-2f9e-4937-8caf-9381f3583869}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Abstract">
       <UniqueIdentifier>{61a85c9c-bced-4b97-ba7b-b6c85031f820}</UniqueIdentifier>
     </Filter>
@@ -272,8 +259,21 @@
     <Filter Include="Singleton\Graphics\ImGuiManager">
       <UniqueIdentifier>{f76ac2b5-1390-4855-8aa0-e707739425ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Base\RenderComponent">
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Abstract\Component">
+      <UniqueIdentifier>{43156ce7-7a26-479e-adb3-f33cd6dcbc47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\RenderComponent">
       <UniqueIdentifier>{475dc8d6-d4a2-45a6-85d9-5d8f994ff875}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\Resource">
+      <UniqueIdentifier>{b3333d7b-b710-4704-bbca-49dea14d86ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Abstract\Script">
+      <UniqueIdentifier>{86b3d06f-2f9e-4937-8caf-9381f3583869}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -334,7 +334,7 @@
       <Filter>Mesh\SphereMesh</Filter>
     </ClInclude>
     <ClInclude Include="egComponent.h">
-      <Filter>Base\Component</Filter>
+      <Filter>Abstract\Component</Filter>
     </ClInclude>
     <ClInclude Include="egLayer.h">
       <Filter>Base\Layer</Filter>
@@ -343,7 +343,7 @@
       <Filter>Base\Object</Filter>
     </ClInclude>
     <ClInclude Include="egResource.h">
-      <Filter>Base\Resource</Filter>
+      <Filter>Abstract\Resource</Filter>
     </ClInclude>
     <ClInclude Include="egScene.hpp">
       <Filter>Base\Scene</Filter>
@@ -496,7 +496,7 @@
       <Filter>Low-level\Octree</Filter>
     </ClInclude>
     <ClInclude Include="egScript.h">
-      <Filter>Base\Script</Filter>
+      <Filter>Abstract\Script</Filter>
     </ClInclude>
     <ClInclude Include="egImGuiHeler.hpp" />
     <ClInclude Include="egAnimationsTexture.h">
@@ -518,7 +518,7 @@
       <Filter>Resource\Textures\ShadowTexture</Filter>
     </ClInclude>
     <ClInclude Include="egRenderComponent.h">
-      <Filter>Base\RenderComponent</Filter>
+      <Filter>Abstract\RenderComponent</Filter>
     </ClInclude>
     <ClInclude Include="egParticleRenderer.h">
       <Filter>Component\Renderer\ParticleRenderer</Filter>
@@ -624,7 +624,7 @@
       <Filter>Mesh\SphereMesh</Filter>
     </ClCompile>
     <ClCompile Include="egComponent.cpp">
-      <Filter>Base\Component</Filter>
+      <Filter>Abstract\Component</Filter>
     </ClCompile>
     <ClCompile Include="egLayer.cpp">
       <Filter>Base\Layer</Filter>
@@ -633,7 +633,7 @@
       <Filter>Base\Object</Filter>
     </ClCompile>
     <ClCompile Include="egResource.cpp">
-      <Filter>Base\Resource</Filter>
+      <Filter>Abstract\Resource</Filter>
     </ClCompile>
     <ClCompile Include="egScene.cpp">
       <Filter>Base\Scene</Filter>
@@ -757,7 +757,7 @@
       <Filter>Low-level\Octree</Filter>
     </ClCompile>
     <ClCompile Include="egScript.cpp">
-      <Filter>Base\Script</Filter>
+      <Filter>Abstract\Script</Filter>
     </ClCompile>
     <ClCompile Include="egStateController.cpp">
       <Filter>Component\StateController</Filter>
@@ -781,7 +781,7 @@
       <Filter>Resource\Textures\ShadowTexture</Filter>
     </ClCompile>
     <ClCompile Include="egRenderComponent.cpp">
-      <Filter>Base\RenderComponent</Filter>
+      <Filter>Abstract\RenderComponent</Filter>
     </ClCompile>
     <ClCompile Include="egParticleRenderer.cpp">
       <Filter>Component\Renderer\ParticleRenderer</Filter>

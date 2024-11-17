@@ -574,6 +574,8 @@ namespace Engine::Abstract
 
 	void ObjectBase::OnSerialized()
 	{
+		Actor::OnSerialized();
+
 		for (const auto& comp : m_components_ | std::views::values)
 		{
 			comp->OnSerialized();

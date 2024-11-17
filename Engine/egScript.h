@@ -65,4 +65,3 @@ namespace Engine
 } // namespace Engine::Component
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Script)
-BOOST_CLASS_EXPORT_KEY(Engine::Script);

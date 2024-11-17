@@ -46,6 +46,8 @@ namespace Engine::Components::Base
 
 	void RenderComponent::OnSerialized()
 	{
+		Component::OnSerialized();
+
 		if (m_material_)
 		{
 			Serializer::Serialize(m_material_->GetName(), m_material_);
@@ -56,6 +58,7 @@ namespace Engine::Components::Base
 	void RenderComponent::OnDeserialized()
 	{
 		Component::OnDeserialized();
+
 		if (const auto res_check = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock();
 			res_check && !res_check->GetMetadataPath().empty())
 		{

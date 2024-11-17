@@ -163,7 +163,10 @@ namespace Engine::Resources
 		Resource::OnDeserialized();
 	}
 
-	void Mesh::OnSerialized() {}
+	void Mesh::OnSerialized()
+	{
+		Resource::OnSerialized();
+	}
 
 	D3D12_VERTEX_BUFFER_VIEW Mesh::GetVertexView() const
 	{

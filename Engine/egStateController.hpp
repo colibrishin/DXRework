@@ -45,5 +45,4 @@ namespace Engine::Components
 	};
 } // namespace Engine::Abstract
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Components::StateController)
 BOOST_CLASS_EXPORT_KEY(Engine::Components::StateController)
