@@ -125,6 +125,7 @@ namespace Engine::Resources
 
 		return
 		{
+			.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D,
 			.Alignment = 0,
 			.Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
 			.Height = frame_count,

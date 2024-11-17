@@ -2,6 +2,7 @@
 #include "egMaterial.h"
 
 #include "egAnimationsTexture.h"
+#include "egAtlasAnimationTexture.h"
 #include "egCommands.h"
 #include "egDXCommon.h"
 #include "egDXType.h"
@@ -309,9 +310,9 @@ namespace Engine::Resources
 				continue;
 			}
 
-			if (type == RES_T_ATLAS_ANIM)
+			if (type == RES_T_ATLAS_TEX)
 			{
-				const auto& anim = resources.front()->GetSharedPtr<AnimationsTexture>();
+				const auto& anim = resources.front()->GetSharedPtr<AtlasAnimationTexture>();
 				anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
 				continue;
 			}
@@ -374,6 +375,11 @@ namespace Engine::Resources
 			{
 				tex->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
 			}
+		}
+
+		if (m_resources_loaded_.contains(RES_T_ATLAS_TEX))
+		{
+			m_resources_loaded_[RES_T_ATLAS_TEX].front()->GetSharedPtr<Texture>()->Unbind(cmd, BIND_TYPE_SRV);
 		}
 
 		m_material_sb_data_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);

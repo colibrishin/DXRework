@@ -856,7 +856,7 @@ namespace Engine::Manager::Graphics
 				}
 
 				if (const auto& queued = m_command_pairs_generated_.front().lock();
-					queued && queued->IsExecuted())
+					queued && (queued->IsExecuted() || queued->IsDisposed()))
 				{
 					m_command_pairs_count_.fetch_sub(1);
 					m_command_pairs_generated_.pop();

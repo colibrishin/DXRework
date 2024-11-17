@@ -13,6 +13,7 @@ namespace Engine::Resources
 			(
 			 "",
 			 {
+				 .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 				 .Alignment = 0,
 				 .Width = g_max_shadow_map_size,
 				 .Height = g_max_shadow_map_size,

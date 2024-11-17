@@ -471,21 +471,24 @@ namespace Engine::Resources
 	{
 		const auto& desc = GetDescription();
 
-		D3D12_RESOURCE_DIMENSION dim;
+		D3D12_RESOURCE_DIMENSION dim = desc.Dimension;
 
-		switch (m_type_)
+		if (desc.Dimension == static_cast<D3D12_RESOURCE_DIMENSION>(-1))
 		{
-		case TEX_TYPE_1D:
-			dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-			break;
-		case TEX_TYPE_2D:
-			dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-			break;
-		case TEX_TYPE_3D:
-			dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-			break;
-		default:
-			throw std::runtime_error("Unknown texture type");
+			switch (m_type_)
+			{
+			case TEX_TYPE_1D:
+				dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+				break;
+			case TEX_TYPE_2D:
+				dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+				break;
+			case TEX_TYPE_3D:
+				dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+				break;
+			default:
+				break;
+			}
 		}
 
 		const D3D12_RESOURCE_DESC native_desc
@@ -518,7 +521,16 @@ namespace Engine::Resources
 				 D3D12_RESOURCE_STATE_COPY_DEST
 				);
 
-		DX::ThrowIfFailed
+		const auto& dst_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 m_res_.Get(),
+				 D3D12_RESOURCE_STATE_COPY_DEST,
+				 D3D12_RESOURCE_STATE_COMMON
+				);
+
+		if (!DoesWantMapByResource())
+		{
+			DX::ThrowIfFailed
 				(
 				 DirectX::CreateUploadBuffer
 				 (
@@ -530,56 +542,68 @@ namespace Engine::Resources
 				 )
 				);
 
-		const auto& dst_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_res_.Get(),
-				 D3D12_RESOURCE_STATE_COPY_DEST,
-				 D3D12_RESOURCE_STATE_COMMON
-				);
+			char* mapped = nullptr;
 
-		char* mapped = nullptr;
+			DX::ThrowIfFailed
+					(
+					 m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped))
+					);
 
-		DX::ThrowIfFailed
-				(
-				 m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped))
-				);
+			const bool map_flag = map(mapped);
 
-		const bool map_flag = map(mapped);
+			m_upload_buffer_->Unmap(0, nullptr);
 
-		m_upload_buffer_->Unmap(0, nullptr);
+			if (!map_flag)
+			{
+				return;
+			}
 
-		if (!map_flag)
-		{
-			return;
+			const auto& cmd = GetD3Device().AcquireCommandPair(L"Texture Mapping").lock();
+
+			const auto dst      = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
+			auto       src      = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
+			src.Type            = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+			src.PlacedFootprint = {
+				0, {m_desc_.Format, static_cast<UINT>(m_desc_.Width), m_desc_.Height, m_desc_.DepthOrArraySize}
+			}; // UINT64 width, UINT placed foot print?
+
+			src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(footprint.Footprint.RowPitch);
+			src.PlacedFootprint.Footprint.Depth    = m_desc_.DepthOrArraySize;
+			src.PlacedFootprint.Footprint.Width    = static_cast<UINT>(m_desc_.Width);
+			src.PlacedFootprint.Footprint.Height   = m_desc_.Height;
+			src.PlacedFootprint.Footprint.Format   = m_desc_.Format;
+
+			cmd->SoftReset();
+			cmd->GetList()->ResourceBarrier(1, &dest_transition);
+
+			cmd->GetList()->CopyTextureRegion
+			(
+			 &dst,
+			 0, 0, 0,
+			 &src,
+			 nullptr
+			);
+
+			cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
+			cmd->FlagReady();
 		}
+		else
+		{
+			const auto& cmd = GetD3Device().AcquireCommandPair(L"Texture Mapping").lock();
+			
+			cmd->SoftReset();
+			cmd->GetList()->ResourceBarrier(1, &dest_transition);
 
-		const auto& cmd = GetD3Device().AcquireCommandPair(L"Texture Mapping").lock();
+			if (const bool map_flag = map(cmd, m_res_.Get());
+				!map_flag)
+			{
+				cmd->SetDisposed();
+				return;
+			}
 
-		const auto dst      = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
-		auto       src      = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
-		src.Type            = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-		src.PlacedFootprint = {
-			0, {m_desc_.Format, static_cast<UINT>(m_desc_.Width), m_desc_.Height, m_desc_.DepthOrArraySize}
-		}; // UINT64 width, UINT placed foot print?
-
-		src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(footprint.Footprint.RowPitch);
-		src.PlacedFootprint.Footprint.Depth    = m_desc_.DepthOrArraySize;
-		src.PlacedFootprint.Footprint.Width    = static_cast<UINT>(m_desc_.Width);
-		src.PlacedFootprint.Footprint.Height   = m_desc_.Height;
-		src.PlacedFootprint.Footprint.Format   = m_desc_.Format;
-
-		cmd->SoftReset();
-		cmd->GetList()->ResourceBarrier(1, &dest_transition);
-		cmd->GetList()->CopyTextureRegion
-				(
-				 &dst,
-				 0, 0, 0,
-				 &src,
-				 nullptr
-				);
-
-		cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
-		cmd->FlagReady();
+			cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
+			cmd->FlagReady();
+		}
 	}
 
 	Texture::Texture()
@@ -602,6 +626,11 @@ namespace Engine::Resources
 	UINT Texture::GetDepth() const
 	{
 		return m_desc_.DepthOrArraySize;
+	}
+
+	bool Texture::DoesWantMapByResource() const
+	{
+		return false;
 	}
 
 	void Texture::LazyDescription(const GenericTextureDescription& desc)
@@ -770,23 +799,7 @@ namespace Engine::Resources
 
 			const D3D12_RESOURCE_DESC desc = m_res_->GetDesc();
 
-			if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE1D)
-			{
-				m_type_ = TEX_TYPE_1D;
-			}
-			else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)
-			{
-				m_type_ = TEX_TYPE_2D;
-			}
-			else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
-			{
-				m_type_ = TEX_TYPE_3D;
-			}
-			else
-			{
-				throw std::runtime_error("Unknown type is loaded into texture");
-			}
-
+			m_desc_.Dimension		 = desc.Dimension;
 			m_desc_.Alignment        = desc.Alignment;
 			m_desc_.MipsLevel        = desc.MipLevels;
 			m_desc_.SampleDesc       = desc.SampleDesc;
@@ -801,21 +814,24 @@ namespace Engine::Resources
 		{
 			const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-			D3D12_RESOURCE_DIMENSION dim;
+			D3D12_RESOURCE_DIMENSION dim = m_desc_.Dimension;
 
-			switch (m_type_)
+			if (dim == static_cast<D3D12_RESOURCE_DIMENSION>(-1))
 			{
-			case TEX_TYPE_1D:
-				dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-				break;
-			case TEX_TYPE_2D:
-				dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-				break;
-			case TEX_TYPE_3D:
-				dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-				break;
-			default:
-				throw std::runtime_error("Unknown texture type");
+				switch (m_type_)
+				{
+				case TEX_TYPE_1D:
+					dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+					break;
+				case TEX_TYPE_2D:
+					dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+					break;
+				case TEX_TYPE_3D:
+					dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+					break;
+				default:
+					break;
+				}
 			}
 
 			const D3D12_RESOURCE_DESC desc
@@ -942,6 +958,11 @@ namespace Engine::Resources
 	}
 
 	bool Texture::map(char* mapped)
+	{
+		return false;
+	}
+
+	bool Texture::map(const Weak<CommandPair>& cmd, ID3D12Resource * texture_resource)
 	{
 		return false;
 	}
