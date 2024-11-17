@@ -79,6 +79,8 @@ namespace Engine::Components
 
 	void Animator::OnSerialized()
 	{
+		Component::OnSerialized();
+
 		if (const auto mr = GetOwner().lock()->GetComponent<ModelRenderer>().lock())
 		{
 			if (const auto mat = mr->GetMaterial().lock())

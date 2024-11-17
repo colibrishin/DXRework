@@ -364,7 +364,10 @@ namespace Engine::Components
 
 	void Rigidbody::FixedUpdate(const float& dt) {}
 
-	void Rigidbody::OnSerialized() {}
+	void Rigidbody::OnSerialized()
+	{
+		Component::OnSerialized();
+	}
 
 	void Rigidbody::OnDeserialized()
 	{

@@ -19,7 +19,7 @@
 SERIALIZE_IMPL
 (
 	Engine::Scene,
-	_ARTAG(_BSTSUPER(Renderable))
+	_ARTAG(_BSTSUPER(Engine::Abstract::Renderable))
 	_ARTAG(m_b_scene_raytracing_)
 	_ARTAG(m_main_camera_local_id_)
 	_ARTAG(m_main_actor_local_id_)
@@ -28,6 +28,44 @@ SERIALIZE_IMPL
 
 namespace Engine
 {
+#ifdef PHYSX_ENABLED
+	void Scene::InitializePhysX()
+	{
+		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
+		scene_desc.gravity            = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
+		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
+		scene_desc.cpuDispatcher      = GetPhysicsManager().GetCPUDispatcher();
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
+		scene_desc.flags |= physx::PxSceneFlag::eENABLE_BODY_ACCELERATIONS;
+		scene_desc.filterShader            = Engine::Physics::SimulationFilterShader;
+		scene_desc.filterCallback          = &Engine::Physics::g_filter_callback;
+		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
+		scene_desc.kineKineFilteringMode   = physx::PxPairFilteringMode::eSUPPRESS;
+		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKILL;
+
+		if constexpr (g_speculation_enabled)
+		{
+			scene_desc.flags |= physx::PxSceneFlag::eENABLE_CCD;
+		}
+
+		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
+
+		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
+
+		/*
+		 * for the note using PxDefaultSimulationFilterShader
+		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback
+		physx::PxGroupsMask all_ok;
+		std::memset(&all_ok.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
+		physx::PxSetFilterConstants(all_ok, all_ok);
+		physx::PxSetFilterBool(true);
+		physx::PxSetFilterOps(physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND);
+		*/
+		
+		m_physics_scene_->userData = this;
+	}
+#endif
+
 	void Scene::Initialize()
 	{
 		// won't initialize if already initialized
@@ -66,38 +104,7 @@ namespace Engine
 				);
 
 #ifdef PHYSX_ENABLED
-		physx::PxSceneDesc scene_desc(GetPhysicsManager().GetPhysX()->getTolerancesScale());
-		scene_desc.gravity = {g_gravity_vec.x, g_gravity_vec.y, g_gravity_vec.z};
-		scene_desc.cudaContextManager = GetPhysicsManager().GetCudaContext();
-		scene_desc.cpuDispatcher = GetPhysicsManager().GetCPUDispatcher();
-		scene_desc.flags |= physx::PxSceneFlag::eENABLE_GPU_DYNAMICS;
-		scene_desc.flags |= physx::PxSceneFlag::eENABLE_BODY_ACCELERATIONS;
-		scene_desc.filterShader = Engine::Physics::SimulationFilterShader;
-		scene_desc.filterCallback = &Engine::Physics::g_filter_callback;
-		scene_desc.simulationEventCallback = &Engine::Physics::g_simulation_callback;
-		scene_desc.kineKineFilteringMode = physx::PxPairFilteringMode::eSUPPRESS;
-		scene_desc.staticKineFilteringMode = physx::PxPairFilteringMode::eKILL;
-
-		if constexpr (g_speculation_enabled)
-		{
-			scene_desc.flags |= physx::PxSceneFlag::eENABLE_CCD;
-		}
-
-		scene_desc.broadPhaseType = physx::PxBroadPhaseType::eGPU;
-
-		m_physics_scene_ = GetPhysicsManager().GetPhysX()->createScene(scene_desc);
-
-		/*
-		 * for the note using PxDefaultSimulationFilterShader
-		// runOverlapFilters -> filterShader -> filterRbCollisionPairSecondStage -> mFilterCallback
-		physx::PxGroupsMask all_ok;
-		std::memset(&all_ok.bits0, std::numeric_limits<uint16_t>::max(), sizeof(uint16_t) * 4);
-		physx::PxSetFilterConstants(all_ok, all_ok);
-		physx::PxSetFilterBool(true);
-		physx::PxSetFilterOps(physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND, physx::PxFilterOp::PX_FILTEROP_AND);
-		*/
-		
-		m_physics_scene_->userData = this;
+		InitializePhysX();
 #endif
 	}
 
@@ -256,7 +263,9 @@ namespace Engine
 		{
 #ifdef PHYSX_ENABLED
 			CleanupPhysX();
+			InitializePhysX();
 #endif
+
 			for (const auto& light : m_layers[LAYER_LIGHT]->GetGameObjects())
 			{
 				if (const auto locked = light.lock())
@@ -605,6 +614,9 @@ namespace Engine
 	Scene::Scene()
 		: m_b_scene_imgui_open_(false),
 		  m_b_scene_raytracing_(false),
+#ifdef PHYSX_ENABLED
+		  m_physics_scene_(nullptr),
+#endif
 		  m_main_camera_local_id_(g_invalid_id),
 		  m_main_actor_local_id_(g_invalid_id),
 		  m_object_position_tree_() {}
@@ -669,15 +681,12 @@ namespace Engine
 
 	void Scene::OnSerialized()
 	{
+		Renderable::OnSerialized();
+
 		for (int i = LAYER_NONE; i < LAYER_MAX; ++i)
 		{
 			m_layers[static_cast<eLayerType>(i)]->OnSerialized();
 		}
-	}
-
-	void Scene::Save()
-	{
-		Serializer::Serialize(GetName(), GetSharedPtr<Scene>());
 	}
 
 	ConcurrentWeakObjVec Scene::GetGameObjects(eLayerType layer) const

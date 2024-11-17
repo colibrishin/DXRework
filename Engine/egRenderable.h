@@ -20,4 +20,3 @@ namespace Engine::Abstract
 } // namespace Engine::Abstract
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Renderable)
-BOOST_CLASS_EXPORT_KEY(Engine::Abstract::Renderable)

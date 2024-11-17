@@ -40,6 +40,8 @@ namespace Engine::Resources
 
 	void Shape::OnSerialized()
 	{
+		Resource::OnSerialized();
+
 		for (int i = 0; i < m_meshes_.size(); ++i)
 		{
 			Serializer::Serialize(m_meshes_[i]->GetName(), m_meshes_[i]);

@@ -157,6 +157,8 @@ namespace Engine::Resources
 
 	void Sound::OnSerialized()
 	{
+		Resource::OnSerialized();
+
 		if (exists(GetPath()))
 		{
 			const std::filesystem::path folder   = GetPrettyTypeName();

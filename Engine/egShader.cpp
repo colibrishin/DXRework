@@ -289,7 +289,10 @@ namespace Engine::Resources
 		m_pipeline_state_.Reset();
 	}
 
-	void Shader::OnDeserialized() {}
+	void Shader::OnDeserialized()
+	{
+		Resource::OnDeserialized();
+	}
 
 	void Shader::SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type)
 	{

@@ -6,7 +6,8 @@ SERIALIZE_IMPL
 (
  Engine::Layer,
  _ARTAG(_BSTSUPER(Engine::Abstract::Renderable))
- _ARTAG(m_layer_type_) _ARTAG(m_objects_)
+ _ARTAG(m_layer_type_)
+ _ARTAG(m_objects_)
 )
 
 namespace Engine
@@ -144,6 +145,8 @@ namespace Engine
 
 	void Layer::OnSerialized()
 	{
+		Renderable::OnSerialized();
+
 		for (const auto& object : m_objects_)
 		{
 			object->OnSerialized();

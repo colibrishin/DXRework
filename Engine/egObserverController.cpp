@@ -45,7 +45,10 @@ namespace Engine::Components
 		StateController::PostUpdate(dt);
 	}
 
-	void ObserverController::OnSerialized() {}
+	void ObserverController::OnSerialized()
+	{
+		StateController::OnSerialized();
+	}
 
 	void ObserverController::OnDeserialized()
 	{
