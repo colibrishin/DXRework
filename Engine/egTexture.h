@@ -13,15 +13,16 @@ namespace Engine::Resources
 
 		struct GenericTextureDescription
 		{
-			UINT64               Alignment        = 0;
-			UINT64               Width            = 0;
-			UINT                 Height           = 0;
-			UINT16               DepthOrArraySize = 0;
-			DXGI_FORMAT          Format           = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			D3D12_RESOURCE_FLAGS Flags            = D3D12_RESOURCE_FLAG_NONE;
-			UINT16               MipsLevel        = 1;
-			D3D12_TEXTURE_LAYOUT Layout           = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
-			DXGI_SAMPLE_DESC     SampleDesc       = {.Count = 1, .Quality = 0};
+			D3D12_RESOURCE_DIMENSION Dimension        = static_cast<D3D12_RESOURCE_DIMENSION>(-1);
+			UINT64                   Alignment        = 0;
+			UINT64                   Width            = 0;
+			UINT                     Height           = 0;
+			UINT16                   DepthOrArraySize = 0;
+			DXGI_FORMAT              Format           = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			D3D12_RESOURCE_FLAGS     Flags            = D3D12_RESOURCE_FLAG_NONE;
+			UINT16                   MipsLevel        = 1;
+			D3D12_TEXTURE_LAYOUT     Layout           = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
+			DXGI_SAMPLE_DESC         SampleDesc       = {.Count = 1, .Quality = 0};
 
 		private:
 			friend class boost::serialization::access;
@@ -101,11 +102,13 @@ namespace Engine::Resources
 		virtual UINT64 GetWidth() const;
 		virtual UINT   GetHeight() const;
 		virtual UINT   GetDepth() const;
+		virtual bool   DoesWantMapByResource() const;
 
 		const GenericTextureDescription& GetDescription() const;
 
 		virtual void loadDerived(ComPtr<ID3D12Resource>& res) = 0;
 		virtual bool map(char* mapped);
+		virtual bool map(const Weak<CommandPair>& cmd, ID3D12Resource* texture_resource);
 
 		[[nodiscard]] ID3D12Resource* GetRawResource() const;
 
