@@ -399,3 +399,9 @@ pythonenv3.8/
 DX/Metadata/_excluded/**
 
 !DX/fmod/lib/*
+
+
+Binaries/*
+Intermediate/*
+*.bff
+*.fdb

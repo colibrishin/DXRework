@@ -6,6 +6,10 @@
         "boost-serialization",
         "boost-pool",
         "boost-align",
-        "assimp"
+        "assimp",
+        "directxmath",
+        "directxtk12",
+        "tbb",
+        "pugixml"
     ]
 }
