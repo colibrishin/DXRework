@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{7230FA7B-5E1C-6F72-F17E-3F972237A82C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FastBuild", "FastBuild", "{DD960562-8A51-64E6-3C0C-70331C285B31}"
+	ProjectSection(SolutionItems) = preProject
+		kolibri-globalsettings.bff = kolibri-globalsettings.bff
+		kolibri.bff = kolibri.bff
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kolibri", "intermediate\projectfiles\Kolibri.vcxproj", "{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DebugClient|x64 = DebugClient|x64
+		DebugEditor|x64 = DebugEditor|x64
+		DebugServer|x64 = DebugServer|x64
+		DevelopmentClient|x64 = DevelopmentClient|x64
+		DevelopmentEditor|x64 = DevelopmentEditor|x64
+		DevelopmentServer|x64 = DevelopmentServer|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugClient|x64.ActiveCfg = DebugClient|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugClient|x64.Build.0 = DebugClient|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugEditor|x64.ActiveCfg = DebugEditor|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugEditor|x64.Build.0 = DebugEditor|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugServer|x64.ActiveCfg = DebugServer|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DebugServer|x64.Build.0 = DebugServer|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentClient|x64.ActiveCfg = DevelopmentClient|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentClient|x64.Build.0 = DevelopmentClient|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentEditor|x64.ActiveCfg = DevelopmentEditor|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentEditor|x64.Build.0 = DevelopmentEditor|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentServer|x64.ActiveCfg = DevelopmentServer|x64
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57}.DevelopmentServer|x64.Build.0 = DevelopmentServer|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A8CEF967-B7AF-1E38-4E1A-54AA03FE5B57} = {7230FA7B-5E1C-6F72-F17E-3F972237A82C}
+	EndGlobalSection
+EndGlobal
