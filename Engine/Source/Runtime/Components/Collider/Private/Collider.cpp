@@ -1,9 +1,12 @@
 #include "Source/Runtime/Components/Collider/Public/Collider.hpp"
 
+#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/GJK/Public/GJK.h"
+#include "Source/Runtime/RaycastExtension/Public/RaycastExtension.hpp"
 #include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
-#include "Source/ThirdParty/ImGui/Public/imgui.h"
+#include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
 
 #ifdef PHYSX_ENABLED
 #include <PxMaterial.h>
@@ -282,7 +285,7 @@ namespace Engine::Components
 		{
 			const auto    box     = GetBounding<BoundingOrientedBox>();
 			const Vector3 Extents = box.Extents;
-			const auto    test    = Physics::Raycast::TestRayOBBIntersection
+			const auto    test    = Physics::RaycastExtension::TestRayOBBIntersection
 					(
 					 start, dir, -Extents,
 					 Extents,
@@ -295,7 +298,7 @@ namespace Engine::Components
 		if (m_type_ == BOUNDING_TYPE_SPHERE)
 		{
 			const auto sphere = GetBounding<BoundingSphere>();
-			const auto test   = Physics::Raycast::TestRaySphereIntersection
+			const auto test   = Physics::RaycastExtension::TestRaySphereIntersection
 					(
 					 start, dir, sphere.Center,
 					 sphere.Radius,

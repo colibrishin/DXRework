@@ -1,9 +1,6 @@
-#include "pch.h"
-#include "egCollision.h"
-#include "egElastic.h"
-#include "egPhysics.hpp"
-
-#undef min
+#include "Source/Runtime/GJK/Public/GJK.h"
+#include "Source/Runtime/GJK/Public/Simplex.hpp"
+#include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
 
 namespace Engine::Physics 
 { 
@@ -16,7 +13,8 @@ namespace Engine::Physics
 
 		Vector3 __vectorcall GetFurthestPoint(
 			const VertexCollection& points,
-			const Matrix&           world, const Vector3& dir
+			const Matrix&           world,
+			const Vector3&          dir
 		)
 		{
 			float                       max = -FLT_MAX;
@@ -53,7 +51,8 @@ namespace Engine::Physics
 		Vector3 __vectorcall GetSupportPoint(
 			const VertexCollection& lhs,
 			const VertexCollection& rhs,
-			const Matrix&           lw, const Matrix& rw,
+			const Matrix&           lw,
+			const Matrix&           rw,
 			const Vector3&          dir
 		)
 		{
@@ -230,9 +229,13 @@ namespace Engine::Physics
 		void __vectorcall EPAAlgorithm(
 			const VertexCollection& lhs,
 			const VertexCollection& rhs,
-			const Matrix&           lw, const Matrix& rw,
-			const Simplex&          simplex, Vector3& normal,
-			float&                  penetration
+			const Matrix&           lw,
+			const Matrix&           rw,
+			const Simplex&          simplex,
+			Vector3&                normal,
+			float&                  penetration,
+			std::size_t             max_epa_iteration,
+			float					epsilon = 1e-03
 		)
 		{
 			const auto                    AddIfUnique = [](
@@ -271,7 +274,7 @@ namespace Engine::Physics
 				minNormal   = Vector3(normals[minFace]);
 				minDistance = normals[minFace].w;
 
-				if (iteration >= g_epa_max_iteration)
+				if (iteration >= max_epa_iteration)
 				{
 					break;
 				}
@@ -279,7 +282,7 @@ namespace Engine::Physics
 				Vector3 support   = GetSupportPoint(lhs, rhs, lw, rw, minNormal);
 				float   sDistance = minNormal.Dot(support);
 
-				if (std::abs(sDistance - minDistance) <= g_epsilon)
+				if (std::abs(sDistance - minDistance) <= epsilon)
 				{
 					break;
 				}
@@ -360,9 +363,14 @@ namespace Engine::Physics
 
 		bool __vectorcall GJKAlgorithm(
 			const Matrix&           lhs_world,
-			const Matrix&           rhs_world, const VertexCollection& lhs_vertices,
-			const VertexCollection& rhs_vertices, const Vector3&       dir,
-			Vector3&                normal, float&                     penetration
+			const Matrix&           rhs_world,
+			const VertexCollection& lhs_vertices,
+			const VertexCollection& rhs_vertices,
+			const Vector3&          dir,
+			Vector3&                normal,
+			float&                  penetration,
+			const std::size_t       max_gjk_iteration,
+			const std::size_t       max_epa_iteration
 		)
 		{
 			const Matrix& lw = lhs_world;
@@ -379,7 +387,7 @@ namespace Engine::Physics
 
 			size_t iteration = 0;
 
-			while (iteration < g_gjk_max_iteration)
+			while (iteration < max_gjk_iteration)
 			{
 				iteration++;
 
@@ -394,7 +402,7 @@ namespace Engine::Physics
 
 				if (NextSimplex(simplex, origin_dir))
 				{
-					EPAAlgorithm(lv, rv, lw, rw, simplex, normal, penetration);
+					EPAAlgorithm(lv, rv, lw, rw, simplex, normal, penetration, max_epa_iteration);
 
 					return true;
 				}

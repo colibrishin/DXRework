@@ -1,6 +1,7 @@
 #pragma once
-#include <SimpleMath.h>
 #include <array>
+
+#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 
 #undef min
 
@@ -53,20 +54,4 @@ namespace Engine::Physics
 			return m_points_.end() - (4 - m_size_);
 		}
 	};
-
-	extern Vector3 __vectorcall EvalGravity(float invMass, float dt);
-
-	__forceinline Vector3 __vectorcall EvalT1PositionDelta(
-		const Vector3& t0_vel, const Vector3& t0_force, const float dt
-	)
-	{
-		return (t0_vel * dt) + (t0_force * (dt * dt * 0.5f));
-	}
-
-	__forceinline Vector3 __vectorcall EvalT1Velocity(
-		const Vector3& t0_vel, const Vector3& t0_force, const Vector3& t1_force, const float dt
-	)
-	{
-		return t0_vel + ((t0_force + t1_force) * (0.5f * dt));
-	}
 } // namespace Engine::Physics
