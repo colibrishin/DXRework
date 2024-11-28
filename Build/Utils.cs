@@ -28,15 +28,15 @@ public class Utils
         {
             if (target.LaunchType == ELaunchType.Editor)
             {
-                conf.Name += " Editor";
+                conf.Name += "Editor";
             }
             else if (target.LaunchType == ELaunchType.Client)
             {
-                conf.Name += " Client";
+                conf.Name += "Client";
             }
             else if (target.LaunchType == ELaunchType.Server)
             {
-                conf.Name += " Server";
+                conf.Name += "Server";
             }
         }
     }
@@ -49,21 +49,20 @@ public class Utils
         {
             if (target.LaunchType == ELaunchType.Editor)
             {
-                conf.Name += " Editor";
+                conf.Name += "Editor";
             }
             else if (target.LaunchType == ELaunchType.Client)
             {
-                conf.Name += " Client";
+                conf.Name += "Client";
             }
             else if (target.LaunchType == ELaunchType.Server)
             {
-                conf.Name += " Server";
+                conf.Name += "Server";
             }
         }
 
         // Defines
         {
-            conf.Defines.Add("SOLUTION_NAME=\"$(SolutionName)\"");
             conf.Defines.Add("_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING");
             conf.Defines.Add("_HAS_STD_BYTE=0");
 

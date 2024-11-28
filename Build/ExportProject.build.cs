@@ -14,7 +14,10 @@ public abstract class ExportProject : Project
                 ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
                 Platform.win64,
                 DevEnv.vs2022,
-                Optimization.Debug | Optimization.Release
+                Optimization.Debug | Optimization.Release,
+                OutputType.Lib,
+                Blob.NoBlob,
+                BuildSystem.FastBuild
         ));
     }
 
@@ -24,18 +27,27 @@ public abstract class ExportProject : Project
     }
 
     [Configure(Optimization.Debug)] 
-    public virtual void ConfigureDebug(Configuration conf, EngineTarget Target)
+    public virtual void ConfigureDebug(Configuration conf, EngineTarget target)
     {
     }
 
     [Configure(Optimization.Release)]
-    public virtual void ConfigureRelease(Configuration conf, EngineTarget Target)
+    public virtual void ConfigureRelease(Configuration conf, EngineTarget target)
     {
     }
 }
 
-public class VCPKG : ExportProject 
+public class VCPKG : ExportProject
 {
+    protected VCPKG() 
+    {
+    }
+
+    public override void ConfigureAll(Configuration conf, EngineTarget target) 
+    {
+        base.ConfigureAll(conf, target);
+    }
+
     public override void ConfigureRelease(Configuration conf, EngineTarget target)
     {
         base.ConfigureRelease(conf, target);
