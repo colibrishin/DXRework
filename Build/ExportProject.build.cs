@@ -51,22 +51,24 @@ public class VCPKG : ExportProject
     public override void ConfigureRelease(Configuration conf, EngineTarget target)
     {
         base.ConfigureRelease(conf, target);
+        string SolutionDir = Utils.GetSolutionDir();
 
         // Add root include path for vcpkg packages.
-        conf.IncludePaths.Add(@"%EngineDir%\vcpkg_installed\x64-windows\include");
+        conf.IncludePaths.Add(SolutionDir + @"\vcpkg_installed\x64-windows\include");
 
         // Add root lib path for vcpkg packages.
-        conf.LibraryPaths.Add(@"%EngineDir%\vcpkg_installed\x64-windows\lib");
+        conf.LibraryPaths.Add(SolutionDir + @"\vcpkg_installed\x64-windows\lib");
     }
 
     public override void ConfigureDebug(Configuration conf, EngineTarget target)
     {
         base.ConfigureDebug(conf, target);
+        string SolutionDir = Utils.GetSolutionDir();
 
         // Add root include path for vcpkg packages.
-        conf.IncludePaths.Add(@"%EngineDir%\vcpkg_installed\x64-windows\include");
+        conf.IncludePaths.Add(SolutionDir + @"\vcpkg_installed\x64-windows\include");
 
         // Add root lib path for vcpkg packages.
-        conf.LibraryPaths.Add(@"%EngineDir%\vcpkg_installed\x64-windows\debug\lib");
+        conf.LibraryPaths.Add(SolutionDir + @"\vcpkg_installed\x64-windows\debug\lib");
     }
 }
