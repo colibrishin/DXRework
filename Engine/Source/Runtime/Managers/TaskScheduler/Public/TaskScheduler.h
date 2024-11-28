@@ -12,7 +12,7 @@ namespace Engine
 {
 	using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
 
-	enum eTaskType
+	enum eTaskType : uint8_t
 	{
 		TASK_NONE = 0,
 		TASK_TOGGLE_RASTER,

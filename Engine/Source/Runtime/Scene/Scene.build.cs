@@ -4,6 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Abstracts/CoreRenderable/CoreRenderable.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Abstracts/CoreComponent/CoreComponent.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Managers/ShadowManager/ShadowManager.build.cs")]
 
 [Generate]
 public class Scene : CommonProject
@@ -22,5 +23,6 @@ public class Scene : CommonProject
         conf.AddPublicDependency<Octree>(target);
         conf.AddPublicDependency<Layer>(target);
         conf.AddPrivateDependency<BoundingGetter>(target);
+        conf.AddPrivateDependency<ShadowManager>(target);
     }
 }

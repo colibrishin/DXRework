@@ -8,6 +8,7 @@
 
 #include "Source/Runtime/Layer/Public/Layer.h"
 #include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
+#include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
 #include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
 
 SERIALIZE_IMPL
@@ -194,7 +195,7 @@ namespace Engine
 
 		if (obj->GetObjectType() == DEF_OBJ_T_LIGHT)
 		{
-			GetShadowManager().RegisterLight(obj->GetSharedPtr<Objects::Light>());
+			Managers::ShadowManager::GetInstance().RegisterLight(obj->GetSharedPtr<Objects::Light>());
 		}
 	}
 
@@ -216,7 +217,7 @@ namespace Engine
 
 		if (layer == RESERVED_LAYER_LIGHT)
 		{
-			GetShadowManager().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>());
+			Managers::ShadowManager::GetInstance().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>());
 		}
 
 		for (const auto& comp : obj.lock()->GetAllComponents())
@@ -265,7 +266,7 @@ namespace Engine
 			{
 				if (const auto locked = light.lock())
 				{
-					GetShadowManager().UnregisterLight(locked->GetSharedPtr<Objects::Light>());
+					Managers::ShadowManager::GetInstance().UnregisterLight(locked->GetSharedPtr<Objects::Light>());
 				}
 			}
 
@@ -279,7 +280,7 @@ namespace Engine
 			{
 				if (const auto locked = light.lock())
 				{
-					GetShadowManager().RegisterLight(locked->GetSharedPtr<Objects::Light>());
+					Managers::ShadowManager::GetInstance().RegisterLight(locked->GetSharedPtr<Objects::Light>());
 				}
 			}
 

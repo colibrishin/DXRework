@@ -125,7 +125,7 @@ namespace Engine::Components
 		SERIALIZE_DECL
 		COMP_CLONE_DECL
 
-		friend class Managers::Physics::LerpManager;
+		friend class Managers::LerpManager;
 
 		static void InitializeStockVertices();
 

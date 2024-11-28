@@ -2,7 +2,7 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Abstracts/CoreSingleton/CoreSingleton.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Abstracts/CoreSingleton/CoreSingleton.build.cs")]
 
 [Generate]
 public class TaskScheduler : CommonProject

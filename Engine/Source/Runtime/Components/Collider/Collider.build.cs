@@ -29,5 +29,6 @@ public class Collider : CommonProject
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<VertexElement>(target);
         conf.AddPrivateDependency<RaycastExtension>(target);
+        conf.AddPrivateDependency<RenderComponent>(target);
     }
 }

@@ -12,7 +12,7 @@ namespace Engine
 	inline static constexpr float g_max_map_size = 2048;
 
 	// todo: generic octree
-	template <typename WeakT, typename BoundingValueGetter, float Epsilon = 1e-03>
+	template <typename WeakT, typename BoundingValueGetter, float Epsilon = 0.0001f>
 	class Octree
 	{
 	private:

@@ -4,6 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Abstracts/CoreObjectBase/CoreObjectBase.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Components/Transform/Transform.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Components/Collider/Collider.build.cs")]
 
 [Generate]
 public class BoundingGetter : CommonProject
@@ -18,5 +19,6 @@ public class BoundingGetter : CommonProject
         conf.AddPublicDependency<GenericBounding>(target);
         conf.AddPrivateDependency<CoreObjectBase>(target);
         conf.AddPrivateDependency<Transform>(target);
+        conf.AddPrivateDependency<Collider>(target);
     }
 }

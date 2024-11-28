@@ -1,5 +1,6 @@
 #include "Source/Runtime/Components/Collider/Public/Collider.hpp"
 
+#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
 #include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Components/Transform/Public/Transform.h"
@@ -7,6 +8,12 @@
 #include "Source/Runtime/RaycastExtension/Public/RaycastExtension.hpp"
 #include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
 #include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
+
+#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+
+#if defined(USE_DX12)
+#include <directxtk12/GeometricPrimitive.h>
+#endif
 
 #ifdef PHYSX_ENABLED
 #include <PxMaterial.h>
@@ -20,6 +27,7 @@
 #include <cooking/PxTriangleMeshDesc.h>
 #include <extensions/PxDefaultStreams.h>
 #endif
+#include <Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h>
 
 SERIALIZE_IMPL
 (
@@ -110,7 +118,7 @@ namespace Engine::Components
 #endif
 				};
 
-			if (const auto& rc = owner->GetComponent<Base::RenderComponent>().lock())
+			if (const auto& rc = owner->GetComponent<RenderComponent>().lock())
 			{
 				rc->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
 
@@ -137,6 +145,9 @@ namespace Engine::Components
 
 	void Collider::InitializeStockVertices()
 	{
+#if defined(USE_DX12)
+		using DirectX::DX12::GeometricPrimitive;
+
 		GeometricPrimitive::IndexCollection  index;
 		GeometricPrimitive::VertexCollection vertex;
 
@@ -168,6 +179,7 @@ namespace Engine::Components
 				s_sphere_stock_indices_.push_back(i);
 			}
 		}
+#endif
 
 #ifdef PHYSX_ENABLED
 
@@ -538,7 +550,7 @@ namespace Engine::Components
 		{
 			if (locked->GetComponentType() == COM_T_RENDERER)
 			{
-				const Strong<Base::RenderComponent> render_component = locked->GetSharedPtr<Base::RenderComponent>();
+				const Strong<RenderComponent> render_component = locked->GetSharedPtr<RenderComponent>();
 
 				render_component->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
 				VerifyMaterial(render_component->GetMaterial());
@@ -738,30 +750,29 @@ namespace Engine::Components
 	{
 		Component::PostUpdate(dt);
 
-		if constexpr (g_debug)
+#if WITH_DEBUG
+		if (m_collided_objects_.empty())
 		{
-			if (m_collided_objects_.empty())
+			if (m_type_ == BOUNDING_TYPE_BOX)
 			{
-				if (m_type_ == BOUNDING_TYPE_BOX)
-				{
-					GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
-				}
-				else
-				{
-					GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
-				}
+				GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::OrangeRed);
 			}
 			else
 			{
-				if (m_type_ == BOUNDING_TYPE_BOX)
-				{
-					GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
-				}
-				else
-				{
-					GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
-				}
+				GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::OrangeRed);
 			}
 		}
+		else
+		{
+			if (m_type_ == BOUNDING_TYPE_BOX)
+			{
+				GetDebugger().Draw(GetBounding<BoundingOrientedBox>(), Colors::GreenYellow);
+			}
+			else
+			{
+				GetDebugger().Draw(GetBounding<BoundingSphere>(), Colors::GreenYellow);
+			}
+		}
+#endif
 	}
 } // namespace Engine::Component

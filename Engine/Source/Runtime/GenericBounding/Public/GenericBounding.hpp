@@ -44,7 +44,7 @@ namespace Engine
 		}
 	}
 
-	template <float Epsilon = 1e-03>
+	template <float Epsilon = 0.0001f>
 	struct GenericBounding
 	{
 	public:

@@ -13,6 +13,7 @@ public class ConcurrentTypeLibrary : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPrivateDependency<TypeLibrary>(target);
+        conf.AddPublicDependency<Allocator>(target);
         conf.AddPublicDependency<TBB>(target);
     }
 }

@@ -17,7 +17,7 @@ DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>)
 
 namespace Engine
 {
-	enum eDefObjectType
+	enum eDefObjectType : uint8_t
 	{
 		DEF_OBJ_T_UNK = 0,
 		DEF_OBJ_T_NONE,
@@ -31,7 +31,7 @@ namespace Engine
 namespace Engine::Abstracts
 {
 	// Abstract base class for objects
-	class ObjectBase : public Abstracts::Actor
+	class ObjectBase : public Actor
 	{
 	public:
 		DelegateOnComponentAdded onComponentAdded;
@@ -142,11 +142,9 @@ namespace Engine::Abstracts
 
 		void SetActive(bool active);
 		void SetCulled(bool culled);
-		void SetImGuiOpen(bool open);
 
 		bool           GetActive() const;
 		bool           GetCulled() const;
-		bool&          GetImGuiOpen();
 		eDefObjectType GetObjectType() const;
 
 		Weak<ObjectBase>              GetParent() const;
@@ -168,8 +166,7 @@ namespace Engine::Abstracts
 			  m_parent_id_(g_invalid_id),
 			  m_type_(type),
 			  m_active_(true),
-			  m_culled_(true),
-			  m_imgui_open_(false) { };
+			  m_culled_(true) { };
 
 		virtual void OnCollisionEnter(const Strong<Components::Collider>& other);
 		virtual void OnCollisionContinue(const Strong<Components::Collider>& other);
@@ -178,7 +175,7 @@ namespace Engine::Abstracts
 	private:
 		SERIALIZE_DECL
 		friend class Scene;
-		friend class Managers::Graphics::ShadowManager;
+		friend class Managers::ShadowManager;
 
 		// Overridable function for derived object clone behavior.
 		[[nodiscard]] virtual Strong<ObjectBase> cloneImpl() const = 0;
@@ -253,20 +250,16 @@ namespace Engine::Abstracts
 		bool                      m_active_ = true;
 		bool                      m_culled_ = true;
 
-		bool m_imgui_open_            = false;
-		bool m_imgui_children_open_   = false;
-		bool m_imgui_components_open_ = false;
-
 		std::map<eComponentType, Strong<Component>> m_components_;
 		std::map<ScriptSizeType, Strong<Script>>       m_scripts_;
 
 		// Non-serialized
 		Weak<ObjectBase>                                     m_parent_;
 		std::map<LocalActorID, Weak<ObjectBase>>             m_children_cache_;
-		std::set<LocalComponentID>                         m_assigned_component_ids_;
+		std::set<LocalComponentID>                           m_assigned_component_ids_;
 		std::set<Weak<Component>, ComponentPriorityComparer> m_cached_component_;
 		std::vector<Weak<Script>>                            m_cached_script_;
 	};
-} // namespace Engine::Abstract
+} // namespace Engine::Abstracts
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::ObjectBase)
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::ObjectBase)
