@@ -1,15 +1,16 @@
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "dependencies": [
-        "tinyobjloader",
-        "boost-smart-ptr",
-        "boost-serialization",
-        "boost-pool",
-        "boost-align",
-        "assimp",
-        "directxmath",
-        "directxtk12",
-        "tbb",
-        "pugixml"
-    ]
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "dependencies": [
+    "assimp",
+    "boost-align",
+    "boost-pool",
+    "boost-serialization",
+    "boost-smart-ptr",
+    "directx12-agility",
+    "directxmath",
+    "directxtk12",
+    "pugixml",
+    "tbb",
+    "tinyobjloader"
+  ]
 }
