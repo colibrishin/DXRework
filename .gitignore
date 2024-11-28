@@ -405,5 +405,6 @@ Binaries/*
 Intermediate/*
 *.bff
 *.fdb
+kolibri.sln
 
 !Build/
