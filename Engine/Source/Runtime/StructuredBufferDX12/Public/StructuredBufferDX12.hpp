@@ -1,8 +1,69 @@
 #pragma once
 #include <wrl/client.h>
-#include <d3d12.h>
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
 
 #include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+
+// Static structured buffer type, this should be added to every structured buffer
+#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
+#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
+
+// Static structured buffer UAV type, this should be added to every structured buffer UAV
+#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType csbuavtype = enum_val;
+#define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
+
+namespace Engine 
+{
+	template <typename T>
+	struct which_sb
+	{
+		static constexpr eSBType value = T::sbtype;
+	};
+
+	template <typename T>
+	struct which_client_sb
+	{
+		static constexpr eClientSBType value = T::csbtype;
+	};
+
+	template <typename T>
+	struct which_sb_uav
+	{
+		static constexpr eSBUAVType value = T::sbuavtype;
+	};
+
+	template <typename T>
+	struct which_client_sb_uav
+	{
+		static constexpr eClientSBUAVType value = T::csbuavtype;
+	};
+
+	template <typename T, typename = void>
+	struct is_uav_sb : std::false_type {};
+
+	template <typename T>
+	struct is_uav_sb<T, std::void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
+
+	template <typename T, typename = void>
+	struct is_client_uav_sb : std::false_type {};
+
+	template <typename T>
+	struct is_client_uav_sb<T, std::void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
+
+	template <typename T, typename = void>
+	struct is_sb : std::false_type {};
+
+	template <typename T>
+	struct is_sb<T, std::void_t<decltype(T::sbtype == true)>> : std::true_type {};
+
+	template <typename T, typename = void>
+	struct is_client_sb : std::false_type {};
+
+	template <typename T>
+	struct is_client_sb<T, std::void_t<decltype(T::csbtype == true)>> : std::true_type {};
+
+}
 
 namespace Engine::Graphics
 {
@@ -71,7 +132,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateDescriptorHeap
+				 Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
 				 (
 				  &srv_heap_desc,
 				  IID_PPV_ARGS(m_srv_heap_.ReleaseAndGetAddressOf())
@@ -92,7 +153,7 @@ namespace Engine::Graphics
 			}
 		};
 
-		GetD3Device().GetDevice()->CreateShaderResourceView
+		Managers::D3Device::GetInstance().GetDevice()->CreateShaderResourceView
 				(
 				 m_buffer_.Get(),
 				 &srv_desc,
@@ -113,7 +174,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateDescriptorHeap
+				 Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
 				 (
 				  &uav_heap_desc,
 				  IID_PPV_ARGS(m_uav_heap_.ReleaseAndGetAddressOf())
@@ -129,7 +190,7 @@ namespace Engine::Graphics
 		uav_desc.Buffer.CounterOffsetInBytes = 0;
 		uav_desc.Buffer.Flags                = D3D12_BUFFER_UAV_FLAG_NONE;
 
-		GetD3Device().GetDevice()->CreateUnorderedAccessView
+		Managers::D3Device::GetInstance().GetDevice()->CreateUnorderedAccessView
 				(
 				 m_buffer_.Get(),
 				 nullptr,
@@ -155,7 +216,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateCommittedResource
+				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 				 (
 				  &default_heap,
 				  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -177,7 +238,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateCommittedResource
+				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 				 (
 				  &upload_heap,
 				  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -231,7 +292,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateCommittedResource
+				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 				 (
 				  &readback_heap,
 				  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -334,7 +395,7 @@ namespace Engine::Graphics
 	template <typename T>
 	void StructuredBuffer<T>::GetData(const UINT size, T* dst_ptr)
 	{
-		const auto& cmd = GetD3Device().AcquireCommandPair(L"Structured Buffer Copy").lock();
+		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Structured Buffer Copy").lock();
 
 		cmd->SoftReset();
 

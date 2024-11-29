@@ -1,20 +1,23 @@
 #include "../Public/D3Device.hpp"
 
-#include <directx/d3dx12.h>
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "dxcompiler.lib")
+
 #include <dxcapi.h>
 #include <dxgi1_5.h>
 #include <d3dcompiler.h>
 #include <directxtk12/DDSTextureLoader.h>
 #include <directxtk12/WICTextureLoader.h>
 #include <directxtk12/ResourceUploadBatch.h>
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
+#include <directx/d3dx12_core.h>
+
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 #include <Source/Runtime/CommandPair/Public/CommandPair.h>
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "dxcompiler.lib")
 
 namespace Engine::Managers
 {
@@ -383,7 +386,7 @@ namespace Engine::Managers
 		}
 
 		const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		const auto& depth_desc   = CD3DX12_RESOURCE_DESC::Tex2D
+		const CD3DX12_RESOURCE_DESC& depth_desc   = CD3DX12_RESOURCE_DESC::Tex2D
 				(
 				 DXGI_FORMAT_D24_UNORM_S8_UINT,
 				 g_window_width,

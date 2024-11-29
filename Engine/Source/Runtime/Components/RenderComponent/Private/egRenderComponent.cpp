@@ -1,5 +1,9 @@
 #include "../Public/egRenderComponent.h"
 
+#include "Source/Runtime/Resources/Material/Public/Material.h"
+#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+
 SERIALIZE_IMPL
 (
  Engine::Components::RenderComponent,
@@ -62,7 +66,7 @@ namespace Engine::Components
 		}
 		else
 		{
-			m_material_ = GetResourceManager().GetResourceByMetadataPath<Resources::Material>
+			m_material_ = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>
 					(m_mtr_meta_path_str_).lock();
 		}
 	}
