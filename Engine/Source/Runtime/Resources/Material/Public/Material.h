@@ -22,9 +22,9 @@ namespace Engine::Graphics::SBs
 			ar& bone;
 		}
 
-		OffsetT<int> tex[PER_PARAM_BUFFER_SIZE];
-		OffsetT<int> texArr[PER_PARAM_BUFFER_SIZE];
-		OffsetT<int> texCube[PER_PARAM_BUFFER_SIZE];
+		OffsetT<int> tex[CFG_PER_PARAM_BUFFER_SIZE];
+		OffsetT<int> texArr[CFG_PER_PARAM_BUFFER_SIZE];
+		OffsetT<int> texCube[CFG_PER_PARAM_BUFFER_SIZE];
 		OffsetT<int> bone;
 		OffsetT<int> atlas;
 	};

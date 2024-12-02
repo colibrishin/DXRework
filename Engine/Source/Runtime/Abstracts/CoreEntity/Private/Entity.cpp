@@ -4,7 +4,7 @@ SERIALIZE_IMPL
 (
  Engine::Abstracts::Entity,
  _ARTAG(m_name_)
- _ARTAG(m_meta_str_)
+ _ARTAG(m_meta_path_)
  _ARTAG(m_b_garbage_)
  _ARTAG(m_b_initialized_)
 )
@@ -60,14 +60,4 @@ bool Engine::Abstracts::Entity::IsInitialized() const
 void Engine::Abstracts::Entity::Initialize()
 {
 	m_b_initialized_ = true;
-}
-
-void Engine::Abstracts::Entity::OnSerialized()
-{
-	m_meta_path_ = m_meta_str_;
-}
-
-void Engine::Abstracts::Entity::OnDeserialized()
-{
-	m_meta_path_ = m_meta_str_;
 }

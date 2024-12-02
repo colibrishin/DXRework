@@ -43,9 +43,6 @@ namespace Engine::Components
 
 		Strong<Resources::Material>       m_material_;
 		eRenderComponentType m_type_;
-		std::string          m_mtr_meta_path_str_;
-
-		// non-serialized
 		std::filesystem::path m_mtr_meta_path_;
 	};
 }

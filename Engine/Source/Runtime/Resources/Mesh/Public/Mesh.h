@@ -1,12 +1,45 @@
 #pragma once
 #include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
 
+#if defined(USE_DX12)
+#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp"
+#endif
+
 #ifdef PHYSX_ENABLED
 namespace physx
 {
 	class PxSDFDesc;
 	class PxTriangleMeshGeometry;
 	class PxTriangleMesh;
+}
+#endif
+
+#if defined(USE_DX12)
+namespace Engine 
+{
+	struct AccelStructBuffer
+	{
+		Graphics::GraphicMemoryPool<
+			D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT,
+			D3D12_HEAP_TYPE_UPLOAD,
+			D3D12_RESOURCE_FLAG_NONE,
+			D3D12_RESOURCE_STATE_GENERIC_READ> instanceDescPool;
+
+		Graphics::GraphicMemoryPool<
+			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+			D3D12_HEAP_TYPE_DEFAULT,
+			D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE> resultPool;
+
+		Graphics::GraphicMemoryPool<
+			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
+			D3D12_HEAP_TYPE_DEFAULT,
+			D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS> scratchPool;
+
+		bool empty = true;
+	};
 }
 #endif
 
@@ -32,12 +65,17 @@ namespace Engine::Resources
 
 		void                     OnDeserialized() override;
 		void                     OnSerialized() override;
+
+#if defined(USE_DX12)
 		D3D12_VERTEX_BUFFER_VIEW GetVertexView() const;
 		D3D12_INDEX_BUFFER_VIEW  GetIndexView() const;
 
+#if CFG_RAYTRACING
 		const AccelStructBuffer&               GetBLAS() const;
-		const StructuredBuffer<VertexElement>& GetVertexStructuredBuffer() const;
+#endif
+		const Graphics::StructuredBuffer<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
 		ID3D12Resource*                        GetIndexBuffer() const;
+#endif
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
@@ -64,22 +102,26 @@ namespace Engine::Resources
 		IndexCollection  m_indices_;
 		BoundingOrientedBox m_bounding_box_;
 
+#if defined(USE_DX12)
 		ComPtr<ID3D12Resource> m_vertex_buffer_;
-		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_;
 		ComPtr<ID3D12Resource> m_index_buffer_;
-		ComPtr<ID3D12Resource> m_raytracing_index_buffer_;
-
 		ComPtr<ID3D12Resource> m_vertex_buffer_upload_;
-		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_upload_;
 		ComPtr<ID3D12Resource> m_index_buffer_upload_;
-		ComPtr<ID3D12Resource> m_raytracing_index_buffer_upload_;
 
-		StructuredBuffer<VertexElement> m_vertex_buffer_structured_;
+		Graphics::StructuredBuffer<Graphics::VertexElement> m_vertex_buffer_structured_;
 
 		D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_;
 		D3D12_INDEX_BUFFER_VIEW  m_index_buffer_view_;
 
+#if CFG_RAYTRACING
 		AccelStructBuffer m_blas_;
+
+		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_;
+		ComPtr<ID3D12Resource> m_raytracing_index_buffer_;
+		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_upload_;
+		ComPtr<ID3D12Resource> m_raytracing_index_buffer_upload_;
+#endif
+#endif
 
 #ifdef PHYSX_ENABLED
 	public:

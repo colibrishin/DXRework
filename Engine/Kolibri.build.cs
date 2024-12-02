@@ -45,12 +45,25 @@ public class KolibriProject : CommonProject
         conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
         conf.Defines.Add("USE_DX12");
         //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
-        conf.Defines.Add("PER_PARAM_BUFFER_SIZE=8");
-        conf.Defines.Add("MAX_CONCURRENT_COMMAND_LIST=256");
-        conf.Defines.Add("CASCADE_SHADOW_COUNT=3");
-        conf.Defines.Add("CASCADE_SHADOW_TEX_WIDTH=500");
-        conf.Defines.Add("CASCADE_SHADOW_TEX_HEIGHT=500");
-        conf.Defines.Add("MAX_DIRECTIONAL_LIGHT=8");
+
+        conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
+        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");
+        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_HEIGHT=500");
+
+        conf.Defines.Add("CFG_WIDTH=1024");
+        conf.Defines.Add("CFG_HEIGHT=768");
+        conf.Defines.Add("CFG_VSYNC=1");
+        conf.Defines.Add("CFG_FULLSCREEN=0");
+        conf.Defines.Add("CFG_FRAME_BUFFER=2");
+        conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
+        conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
+        conf.Defines.Add("CFG_FOV=90.f");
+        conf.Defines.Add("CFG_RAYTRACING=0");
+
+        conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
+        conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
+        conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
+        conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
     }
 }
 

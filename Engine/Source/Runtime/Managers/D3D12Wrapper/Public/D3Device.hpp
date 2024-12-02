@@ -18,6 +18,8 @@
 
 namespace Engine 
 {
+	static std::atomic<bool> g_raytracing;
+
 	enum eCommandList
 	{
 		COMMAND_LIST_PRE_RENDER,

@@ -4,6 +4,7 @@
 #include <directx/d3dx12.h>
 
 #include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;

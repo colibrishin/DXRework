@@ -15,6 +15,11 @@ DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>)
 // Static engine default provided object type, this should be added to every object
 #define OBJECT_T(enum_val) static constexpr Engine::eDefObjectType dotype = enum_val;
 
+// Cloning object declaration macro
+#define OBJ_CLONE_DECL Strong<Engine::Abstracts::ObjectBase> cloneImpl() const override;
+// Cloning object implementation macro
+#define OBJ_CLONE_IMPL(CLASS) Strong<Engine::Abstracts::ObjectBase> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
 namespace Engine
 {
 	enum eDefObjectType : uint8_t

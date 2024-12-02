@@ -4,6 +4,14 @@
 
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
+#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/Resources/Texture/Public/Texture.h"
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
+#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 SERIALIZE_IMPL
 (
@@ -205,7 +213,7 @@ namespace Engine::Resources
 		m_material_sb_data_.SetData(cmd->GetList(), 1, &m_material_sb_);
 		m_material_sb_data_.TransitionToSRV(cmd->GetList());
 		m_material_sb_data_.CopySRVHeap(heap);
-		GetRenderPipeline().BindConstantBuffers(cmd, heap);
+		Managers::RenderPipeline::GetInstance().BindConstantBuffers(cmd, heap);
 
 		for (const auto& s : m_resources_loaded_[RES_T_SHAPE])
 		{

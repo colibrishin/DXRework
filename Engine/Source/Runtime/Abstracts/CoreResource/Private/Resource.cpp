@@ -8,7 +8,7 @@ SERIALIZE_IMPL
  Engine::Abstracts::Resource,
  _ARTAG(_BSTSUPER(Engine::Abstracts::Entity))
  _ARTAG(m_bLoaded_)
- _ARTAG(m_path_str_)
+ _ARTAG(m_path_)
  _ARTAG(m_type_)
 )
 
@@ -39,7 +39,6 @@ namespace Engine::Abstracts
 		  m_type_(type),
 		  m_path_(std::move(path))
 	{
-		m_path_str_ = m_path_.string();
 	}
 
 	Resource::Resource()
@@ -50,7 +49,6 @@ namespace Engine::Abstracts
 	{
 		Entity::OnDeserialized();
 		m_bLoaded_ = false;
-		m_path_    = m_path_str_;
 	}
 
 	bool Resource::IsLoaded() const
@@ -65,8 +63,7 @@ namespace Engine::Abstracts
 
 	void Resource::SetPath(const std::filesystem::path& path)
 	{
-		m_path_     = std::move(path);
-		m_path_str_ = m_path_.generic_string();
+		m_path_     = path;
 	}
 
 	eResourceType Resource::GetResourceType() const

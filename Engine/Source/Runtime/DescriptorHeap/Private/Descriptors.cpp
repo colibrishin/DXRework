@@ -1,5 +1,12 @@
-#include "pch.h"
-#include "egDescriptors.h"
+#include "../Public/Descriptors.h"
+
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+
+#include <memory>
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
 
 namespace Engine
 {
@@ -90,7 +97,7 @@ namespace Engine
 				 m_sampler_descriptor_size_
 				);
 
-		GetD3Device().GetDevice()->CopyDescriptorsSimple
+		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
 				(
 				 1,
 				 handle,
@@ -113,7 +120,7 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		GetD3Device().GetDevice()->CopyDescriptorsSimple
+		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
 				(
 				 1,
 				 cbv_handle,
@@ -136,7 +143,7 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		GetD3Device().GetDevice()->CopyDescriptorsSimple
+		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
 				(
 				 1,
 				 heap_handle,
@@ -163,7 +170,7 @@ namespace Engine
 
 		for (UINT i = 0; i < count; ++i)
 		{
-			GetD3Device().GetDevice()->CopyDescriptorsSimple
+			Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
 					(
 					 1,
 					 heap_handle,
@@ -189,7 +196,7 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		GetD3Device().GetDevice()->CopyDescriptorsSimple
+		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
 				(
 				 1,
 				 uav_handle,
@@ -213,7 +220,7 @@ namespace Engine
 			return;
 		}
 
-		cmd->SetGraphicsRootSignature(GetRenderPipeline().GetRootSignature());
+		cmd->SetGraphicsRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
 
 		ID3D12DescriptorHeap* heaps[]
 		{
@@ -272,7 +279,7 @@ namespace Engine
 			return;
 		}
 
-		cmd->SetComputeRootSignature(GetRenderPipeline().GetRootSignature());
+		cmd->SetComputeRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
 
 		ID3D12DescriptorHeap* heaps[]
 		{
@@ -339,7 +346,7 @@ namespace Engine
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateDescriptorHeap
+				Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
 				 (
 				  &buffer_heap_desc,
 				  IID_PPV_ARGS(buffer_heap.GetAddressOf())
@@ -348,7 +355,7 @@ namespace Engine
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateDescriptorHeap
+				Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
 				 (
 				  &buffer_heap_desc_sampler,
 				  IID_PPV_ARGS(sampler_heap.GetAddressOf())
@@ -369,9 +376,9 @@ namespace Engine
 		// This value is 256 for matching with SIMD type size. (__m256i)
 		m_size_ = 256;
 		AppendNewHeaps();
-		m_buffer_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+		m_buffer_size_ = Managers::D3Device::GetInstance().GetDevice()->GetDescriptorHandleIncrementSize
 				(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_sampler_size_ = GetD3Device().GetDevice()->GetDescriptorHandleIncrementSize
+		m_sampler_size_ = Managers::D3Device::GetInstance().GetDevice()->GetDescriptorHandleIncrementSize
 				(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	}
 
