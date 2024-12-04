@@ -1,6 +1,8 @@
 #include "../Public/Camera.h"
 #include "Source/Runtime/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Components/Rigidbody/Public/Rigidbody.h"
+#include "Source/Runtime/Managers/SoundMananger/Public/SoundManager.h"
 
 SERIALIZE_IMPL
 (
@@ -134,7 +136,7 @@ namespace Engine::Objects
 				}
 			}
 
-			GetToolkitAPI().Set3DListener
+			Managers::SoundManager::GetInstance().Set3DListener
 					(
 					 {invView._41, invView._42, invView._43},
 					 {velocity.x, velocity.y, velocity.z},
@@ -196,8 +198,8 @@ namespace Engine::Objects
 	{
 		const Matrix  pv = Managers::D3Device::GetInstance().GetProjectionMatrix() * m_view_matrix_;
 		const Vector2 actual_mouse_position{
-			static_cast<float>(GetApplication().GetMouseState().x),
-			static_cast<float>(GetApplication().GetMouseState().y)
+			static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().x),
+			static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().y)
 		};
 
 		const Matrix invProjectionView = XMMatrixInverse(nullptr, pv);

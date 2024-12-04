@@ -5,11 +5,16 @@
 
 DEFINE_DELEGATE(OnMaterialChange, Engine::Weak<Engine::Resources::Material>)
 
+// Static Render Component type, this should be added to every render component
+#define RENDER_COM_T(enum_val) static constexpr eRenderComponentType rctype = enum_val;
+
 namespace Engine 
 {
 	enum eRenderComponentType : uint8_t 
 	{
 		RENDER_COM_T_UNK = 0,
+		RENDER_COM_T_MODEL,
+		RENDER_COM_T_PARTICLE
 	};
 }
 

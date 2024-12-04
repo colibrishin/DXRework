@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 #include <directx/d3d12.h>
 
+#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
 
@@ -57,13 +58,13 @@ namespace Engine::Managers
 		{SHADER_HULL, "hs_5_0"}, {SHADER_DOMAIN, "ds_5_0"}
 	};
 
-	class D3Device final : public Abstracts::Singleton<D3Device, HWND>
+	class D3Device final : public Abstracts::Singleton<D3Device>
 	{
 	public:
 		D3Device(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 
-		void            Initialize(HWND hWnd) override;
+		void            Initialize() override;
 		ID3D12Resource* GetRenderTarget(UINT64 frame_idx);
 
 		static void DEBUG_MEMORY()

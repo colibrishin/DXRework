@@ -1,3 +1,4 @@
+
 #pragma once
 #include <mutex>
 
@@ -5,7 +6,7 @@
 
 namespace Engine::Abstracts
 {
-	template <typename T, typename... InitArgs>
+	template <typename T>
 	class Singleton : public Abstracts::Renderable
 	{
 	public:
@@ -41,7 +42,7 @@ namespace Engine::Abstracts
 			}
 		}
 
-		virtual void Initialize(InitArgs... args) = 0;
+		virtual void Initialize() = 0;
 
 		void OnSerialized() final {}
 		void OnDeserialized() final {}

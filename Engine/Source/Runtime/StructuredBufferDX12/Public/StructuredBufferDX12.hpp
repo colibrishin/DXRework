@@ -64,6 +64,28 @@ namespace Engine
 	template <typename T>
 	struct is_client_sb<T, std::void_t<decltype(T::csbtype == true)>> : std::true_type {};
 
+	namespace Graphics::SBs 
+	{
+		struct LocalParamSB : public ParamBase
+		{
+			SB_T(SB_TYPE_LOCAL_PARAM)
+		};
+
+		struct InstanceSB : public ParamBase
+		{
+			SB_T(SB_TYPE_INSTANCE)
+				SB_UAV_T(SB_TYPE_UAV_INSTANCE)
+
+		private:
+			friend class boost::serialization::access;
+
+			template <class Archive>
+			void serialize(Archive& ar, const unsigned int file_version)
+			{
+				ar& boost::serialization::base_object<ParamBase>(*this);
+			}
+		};
+	}
 }
 
 namespace Engine::Graphics

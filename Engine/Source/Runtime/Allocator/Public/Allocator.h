@@ -46,7 +46,7 @@ namespace Engine
 	using u_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType>;
 
 	template <typename ValueType>
-	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, nearest_pow_two(sizeof(ValueType))>;
+	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, Engine::nearest_pow_two(sizeof(ValueType))>;
 
 	template <typename ValueType>
 	using u_pool_allocator_single = boost::pool_allocator<ValueType>;
