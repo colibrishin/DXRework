@@ -9,7 +9,7 @@ namespace Engine::Graphics
 {
 	inline static constexpr std::size_t g_max_bone_count = 4;
 
-	struct VertexBoneElement
+	struct CORE_API VertexBoneElement
 	{
 	    VertexBoneElement()
 	    {

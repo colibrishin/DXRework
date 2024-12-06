@@ -5,7 +5,7 @@
 
 namespace Engine::Graphics::SBs
 {
-	struct InstanceModelSB : public InstanceSB
+	struct CORE_API InstanceModelSB : public InstanceSB
 	{
 		InstanceModelSB()
 		{
@@ -70,7 +70,7 @@ namespace Engine::Graphics::SBs
 
 namespace Engine::Components
 {
-	class ModelRenderer final : public RenderComponent
+	class CORE_API ModelRenderer final : public RenderComponent
 	{
 	public:
 		RENDER_COM_T(RENDER_COM_T_MODEL)

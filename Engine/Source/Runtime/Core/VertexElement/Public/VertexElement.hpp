@@ -6,7 +6,7 @@
 
 namespace Engine::Graphics
 {
-	struct VertexElement
+	struct CORE_API VertexElement
 	{
 	    Vector3 position;
 	    Vector4 color;

@@ -13,12 +13,12 @@
 
 namespace Engine
 {
-	struct ComponentPriorityComparer
+	struct CORE_API ComponentPriorityComparer
 	{
 		bool operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const;
 	};
 
-	enum eComponentType : uint8_t
+	enum CORE_API eComponentType : uint8_t
 	{
 		COM_T_UNK = 0,
 		COM_T_TRANSFORM,
@@ -32,7 +32,7 @@ namespace Engine
 	};
 
 	template <typename T>
-	struct which_component
+	struct CORE_API which_component
 	{
 		static constexpr eComponentType value = T::ctype;
 	};
@@ -42,7 +42,7 @@ namespace Engine::Abstracts
 {
 	class ObjectBase;
 
-	class Component : public Abstracts::Entity
+	class CORE_API Component : public Abstracts::Entity
 	{
 	public:
 		~Component() override       = default;

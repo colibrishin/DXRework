@@ -5,7 +5,7 @@
 
 namespace Engine
 {
-	class Layer final : public Abstracts::Renderable
+	class CORE_API Layer final : public Abstracts::Renderable
 	{
 	public:
 		Layer(const LayerSizeType type);

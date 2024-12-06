@@ -5,6 +5,9 @@
 #include <string>
 #include <filesystem>
 
+#define DLLIMPORT __declspec(dllimport)
+#define DLLEXPORT __declspec(dllexport)
+
 #if defined(USE_DX12)
 #include <directxtk12/SimpleMath.h>
 #include <DirectXMath.h>

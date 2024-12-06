@@ -9,6 +9,8 @@
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/align/aligned_allocator.hpp>
 
+#include "Source/Runtime/Core/StructuredBuffer.h"
+
 namespace Engine 
 {
 	constexpr uint64_t Align(uint64_t size, uint64_t alignment)

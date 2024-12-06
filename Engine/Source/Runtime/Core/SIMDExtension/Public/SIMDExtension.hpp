@@ -4,7 +4,7 @@
 
 namespace Engine
 {
-    struct SIMDExtension
+    struct CORE_API SIMDExtension
     {
         inline static bool check_avx()
         {

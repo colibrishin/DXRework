@@ -4,7 +4,7 @@
 
 namespace Engine 
 {
-	enum eLightType
+	enum CORE_API eLightType
 	{
 		LIGHT_T_UNK = 0,
 		LIGHT_T_DIRECTIONAL,
@@ -14,7 +14,7 @@ namespace Engine
 
 namespace Engine::Objects
 {
-	class Light final : public Abstracts::ObjectBase
+	class CORE_API Light final : public Abstracts::ObjectBase
 	{
 	public:
 		OBJECT_T(DEF_OBJ_T_LIGHT)

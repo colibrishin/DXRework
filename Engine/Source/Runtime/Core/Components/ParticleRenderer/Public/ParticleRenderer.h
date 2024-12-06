@@ -12,7 +12,7 @@ namespace Engine
 {
 	namespace Graphics::SBs
 	{
-		struct InstanceParticleSB : public InstanceSB
+		struct CORE_API InstanceParticleSB : public InstanceSB
 		{
 		public:
 			InstanceParticleSB()
@@ -60,7 +60,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	class ParticleRenderer : public RenderComponent
+	class CORE_API ParticleRenderer : public RenderComponent
 	{
 	public:
 		// int

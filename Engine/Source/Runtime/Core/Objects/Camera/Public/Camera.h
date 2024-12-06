@@ -5,7 +5,7 @@
 
 namespace Engine::Objects
 {
-	class Camera final : public Abstracts::ObjectBase
+	class CORE_API Camera final : public Abstracts::ObjectBase
 	{
 	public:
 		OBJECT_T(DEF_OBJ_T_CAMERA)

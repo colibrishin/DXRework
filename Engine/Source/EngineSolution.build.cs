@@ -82,7 +82,7 @@ public class EngineSolution : Solution
             // conf.AddProject<EngineConfig>(target);
 
             {
-                //conf.AddProject<CommonRenderer>(target);
+                conf.AddProject<CommonRenderer>(target);
                 conf.AddProject<D3D12Toolkit>(target);
                 conf.AddProject<D3D12Wrapper>(target);
                 conf.AddProject<Debugger>(target);
