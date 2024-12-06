@@ -8,7 +8,6 @@
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
-#include "Source/Runtime/Core/Components/ParticleRenderer/Public/ParticleRenderer.h"
 
 SERIALIZE_IMPL
 (

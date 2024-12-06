@@ -7,6 +7,7 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 
 #if WITH_DEBUG
 #include "dxgidebug.h"

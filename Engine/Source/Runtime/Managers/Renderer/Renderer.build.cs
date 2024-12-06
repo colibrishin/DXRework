@@ -2,14 +2,11 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Core/Core.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/CommandPair/CommandPair.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/DescriptorHeap/DescriptorHeap.build.cs")]
 
 [Generate]
-public class TaskScheduler : CommonProject
+public class Renderer : CommonProject
 {
-    public TaskScheduler() { }
+    public Renderer() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

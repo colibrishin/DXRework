@@ -1,4 +1,7 @@
 #pragma once
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
+
 #include <directxtk12/CommonStates.h>
 #include <directxtk12/DescriptorHeap.h>
 #include <directxtk12/ResourceUploadBatch.h>

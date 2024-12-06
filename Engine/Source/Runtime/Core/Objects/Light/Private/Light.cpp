@@ -76,13 +76,6 @@ namespace Engine::Objects
 	void Light::Render(const float& dt)
 	{
 		ObjectBase::Render(dt);
-
-#if WITH_DEBUG
-		const auto tr = GetComponent<Components::Transform>().lock();
-
-		const BoundingSphere sphere(tr->GetWorldPosition(), 0.5f);
-		GetDebugger().Draw(sphere, DirectX::Colors::Yellow);
-#endif
 	}
 
 	void Light::PostRender(const float& dt)

@@ -5,6 +5,7 @@
 #include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp>
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
+#include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 
 namespace Engine::Graphics
 {

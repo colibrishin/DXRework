@@ -589,7 +589,7 @@ namespace Engine::Managers
 		    ) != WAIT_OBJECT_0)
 		{
 #if WITH_DEBUG
-			OutputDebugString("Waiting for Swap chain had an issue.");
+			OutputDebugString(TEXT("Waiting for Swap chain had an issue."));
 #endif
 		}
 

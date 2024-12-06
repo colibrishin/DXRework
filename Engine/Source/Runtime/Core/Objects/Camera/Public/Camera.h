@@ -1,7 +1,7 @@
 #pragma once
 #include "Source/Runtime/Core/Entity/Public/Entity.hpp"
 #include "Source/Runtime/Core/Objects/Object/Public/Object.hpp"
-#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBuffer.hpp"
+#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBufferDX12.hpp"
 
 namespace Engine::Objects
 {

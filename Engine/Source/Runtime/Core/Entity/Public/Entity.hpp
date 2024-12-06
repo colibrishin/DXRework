@@ -9,7 +9,7 @@
 
 namespace Engine::Abstracts
 {
-	class Entity : public boost::enable_shared_from_this<Entity>
+	class CORE_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
 		Entity(const Entity& other) = default;
@@ -49,8 +49,8 @@ namespace Engine::Abstracts
 		virtual void PostUpdate(const float& dt) = 0;
 		virtual void FixedUpdate(const float& dt) = 0;
 
-		virtual void OnSerialized();
-		virtual void OnDeserialized();
+		virtual void OnSerialized() = 0;
+		virtual void OnDeserialized() = 0;
 
 	protected:
 		Entity()

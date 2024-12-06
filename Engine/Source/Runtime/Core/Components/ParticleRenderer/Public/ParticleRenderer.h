@@ -4,6 +4,10 @@
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
+#if defined(USE_DX12)
+#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
+#endif
+
 namespace Engine
 {
 	namespace Graphics::SBs

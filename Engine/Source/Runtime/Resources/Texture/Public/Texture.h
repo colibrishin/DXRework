@@ -7,6 +7,8 @@
 #endif
 
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 // Static texture type, this should be added to every texture.
 #define TEX_T(enum_val) static constexpr eTexType textype = enum_val;

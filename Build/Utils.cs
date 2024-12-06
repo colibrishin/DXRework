@@ -22,7 +22,7 @@ public class Utils
 
     public static void MakeConfiturationNameDefine(Solution.Configuration conf, EngineTarget target)
     {
-        if (target.Name == "Release") { conf.Name = "Development"; }
+        if (target.Optimization == Optimization.Release) { conf.Name = "Development"; }
 
         // Conf Name
         {
@@ -43,7 +43,7 @@ public class Utils
 
     public static void MakeConfiturationNameDefine(Project.Configuration conf, EngineTarget target)
     {
-        if (target.Name == "Release") { conf.Name = "Development"; }
+        if (target.Optimization == Optimization.Release) { conf.Name = "Development"; }
 
         // Conf Name
         {

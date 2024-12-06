@@ -2,8 +2,6 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Core/Core.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/ThrowIfFailed/ThrowIfFailed.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DX12Agility/DX12Agility.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 

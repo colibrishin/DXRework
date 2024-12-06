@@ -10,7 +10,7 @@
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
-#include "Source/Runtime/CommandPairExtension/Public/CommandExtension.h"
+#include "Source/Runtime/CommandPairExtension/Public/CommandPairExtension.h"
 
 namespace Engine::Managers
 {
