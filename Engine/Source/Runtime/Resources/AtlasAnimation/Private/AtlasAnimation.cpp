@@ -45,14 +45,14 @@ namespace Engine::Resources
 	{
 		BaseAnimation::OnSerialized();
 
-		if (!std::filesystem::exists(GetPrettyTypeName()))
+		if (!boost::filesystem::exists(GetPrettyTypeName()))
 		{
-			std::filesystem::create_directory(GetPrettyTypeName());
+			boost::filesystem::create_directory(GetPrettyTypeName());
 		}
 
 		// Backup the xml file
-		const std::filesystem::path xml_path = m_xml_path_;
-		const std::filesystem::path p        = GetPrettyTypeName() / xml_path.filename();
+		const boost::filesystem::path xml_path = m_xml_path_;
+		const boost::filesystem::path p        = GetPrettyTypeName() / xml_path.filename();
 
 		if (m_xml_path_ == p.string())
 		{
@@ -62,7 +62,7 @@ namespace Engine::Resources
 		copy_file
 				(
 				 m_xml_path_, GetPrettyTypeName() / xml_path.filename(),
-				 std::filesystem::copy_options::overwrite_existing
+				 boost::filesystem::copy_options::overwrite_existing
 				);
 		m_xml_path_ = (GetPrettyTypeName() / xml_path.filename()).string();
 	}
@@ -87,7 +87,7 @@ namespace Engine::Resources
 		BaseAnimation::Unload_INTERNAL();
 	}
 
-	AtlasAnimationPrimitive AtlasAnimation::ParseXML(const std::filesystem::path& path)
+	AtlasAnimationPrimitive AtlasAnimation::ParseXML(const boost::filesystem::path& path)
 	{
 		pugi::xml_document doc;
 		doc.load_file(path.c_str());
@@ -128,7 +128,7 @@ namespace Engine::Resources
 		return primitive;
 	}
 
-	inline boost::shared_ptr<AtlasAnimation> Engine::Resources::AtlasAnimation::Create(const std::string& name, const std::filesystem::path& xml_path)
+	inline boost::shared_ptr<AtlasAnimation> Engine::Resources::AtlasAnimation::Create(const std::string& name, const boost::filesystem::path& xml_path)
 	{
 		if (const auto check = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimation>(name).lock())
 		{

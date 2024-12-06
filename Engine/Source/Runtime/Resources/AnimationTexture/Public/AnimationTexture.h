@@ -1,7 +1,5 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
-#include <Source/Runtime/Resources/Texture/Public/Texture.h>
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources

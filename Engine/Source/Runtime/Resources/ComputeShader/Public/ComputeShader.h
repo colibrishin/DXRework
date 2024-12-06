@@ -29,7 +29,7 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
 
 	protected:
-		ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<UINT, 3>& thread);
+		ComputeShader(const std::string& name, const boost::filesystem::path& path, const std::array<UINT, 3>& thread);
 
 		static Graphics::ParamBase& getParam(const Strong<Components::ParticleRenderer>& pr);
 		static InstanceParticles&   getInstances(const Strong<Components::ParticleRenderer>& pr);

@@ -6,7 +6,7 @@
 #include <directx/d3d12.h>
 #endif
 
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 // Static texture type, this should be added to every texture.
 #define TEX_T(enum_val) static constexpr eTexType textype = enum_val;
@@ -61,7 +61,7 @@ namespace Engine::Resources
 		};
 #endif
 
-		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
+		explicit Texture(boost::filesystem::path path, eTexType type, const GenericTextureDescription& description);
 
 		~Texture() override;
 

@@ -13,7 +13,7 @@ public class GenericBounding : CommonProject
     {
         base.ConfigureAll(conf, target);
 
-        conf.AddPublicDependency<TypeLibrary>(target);
+        conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<MathExtension>(target);
     }

@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 #if defined(USE_DX12)
 #include <directxtk12/BufferHelpers.h>
@@ -98,7 +98,7 @@ namespace Engine::Managers
 		UINT m_sampler_descriptor_size_ = 0;
 
 		std::mutex        m_descriptor_mutex_;
-		DescriptorHandler m_descriptor_handler_;
+		Engine::DescriptorHandler m_descriptor_handler_;
 
 		ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
 		ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;

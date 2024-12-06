@@ -172,10 +172,10 @@ namespace Engine::Resources
 
 		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimation)
 
-		[[nodiscard]] static AtlasAnimationPrimitive ParseXML(const std::filesystem::path& path);
+		[[nodiscard]] static AtlasAnimationPrimitive ParseXML(const boost::filesystem::path& path);
 
 		static boost::shared_ptr<AtlasAnimation> Create(
-			const std::string& name, const std::filesystem::path& xml_path
+			const std::string& name, const boost::filesystem::path& xml_path
 		);
 
 	protected:

@@ -19,7 +19,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-	Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
+	Texture::Texture(boost::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
 		: Resource(std::move(path), RES_T_TEX),
 		  m_desc_(description),
 		  m_type_(type),
@@ -989,9 +989,9 @@ namespace Engine::Resources
 		Resource::OnSerialized();
 
 		const auto                  name       = GetName();
-		const std::filesystem::path folder     = GetPrettyTypeName();
-		const std::filesystem::path filename   = name + ".dds";
-		const std::filesystem::path final_path = folder / filename;
+		const boost::filesystem::path folder     = GetPrettyTypeName();
+		const boost::filesystem::path filename   = name + ".dds";
+		const boost::filesystem::path final_path = folder / filename;
 
 		if (!IsLoaded())
 		{

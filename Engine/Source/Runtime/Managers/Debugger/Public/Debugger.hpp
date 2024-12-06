@@ -3,7 +3,7 @@
 #include <memory>
 #include <queue>
 
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include <directxtk12/SpriteFont.h>
 
 namespace Engine::Managers

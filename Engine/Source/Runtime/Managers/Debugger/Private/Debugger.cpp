@@ -3,9 +3,9 @@
 
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Managers/D3D12Toolkit/Public/ToolkitAPI.h"
-#include "Source/Runtime/Scene/Public/Scene.hpp"
-#include "Source/Runtime/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/CoreObjects/Camera/Public/Camera.h"
+#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 
 namespace Engine::Managers
 {

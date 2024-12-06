@@ -8,7 +8,7 @@ namespace Engine::Resources
 	public:
 		TEX_T(TEX_TYPE_1D)
 
-		explicit Texture1D(const std::filesystem::path& path, const GenericTextureDescription& description)
+		explicit Texture1D(const boost::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_1D, description) { }
 
 		~Texture1D() override = default;

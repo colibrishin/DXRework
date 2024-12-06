@@ -8,7 +8,7 @@ using Sharpmake;
 [Sharpmake.Export]
 public class Boost : VCPKG
 {
-    public Boost() : base()
+    public Boost()
     {
         Name = "Boost";
     }
@@ -32,7 +32,8 @@ public class Boost : VCPKG
             @"boost_serialization-vc143-mt-gd-x64-1_86.lib",
             @"boost_system-vc143-mt-gd-x64-1_86.lib",
             @"boost_thread-vc143-mt-gd-x64-1_86.lib",
-            @"boost_wserialization-vc143-mt-gd-x64-1_86.lib"
+            @"boost_wserialization-vc143-mt-gd-x64-1_86.lib",
+            @"boost_filesystem-vc143-mt-gd-x64-1_86.lib"
         );
     }
 
@@ -50,7 +51,8 @@ public class Boost : VCPKG
             @"boost_serialization-vc143-mt-x64-1_86.lib",
             @"boost_system-vc143-mt-x64-1_86.lib",
             @"boost_thread-vc143-mt-x64-1_86.lib",
-            @"boost_wserialization-vc143-mt-x64-1_86.lib"
+            @"boost_wserialization-vc143-mt-x64-1_86.lib",
+            @"boost_filesystem-vc143-mt-x64-1_86.lib"
         );
     }
 }

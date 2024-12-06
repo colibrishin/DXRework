@@ -3,7 +3,6 @@
 #include <DirectXColors.h>
 
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
@@ -24,7 +23,7 @@ SERIALIZE_IMPL
 
 namespace Engine::Resources
 {
-	Material::Material(const std::filesystem::path& path)
+	Material::Material(const boost::filesystem::path& path)
 		: Resource(path, RES_T_MTR),
 		  m_material_sb_(),
 		  m_b_edit_dialog_(false),

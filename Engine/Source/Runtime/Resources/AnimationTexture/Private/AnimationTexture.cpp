@@ -3,8 +3,8 @@
 #include <DirectXTex.h>
 #include <algorithm>
 
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 SERIALIZE_IMPL
 (
@@ -89,7 +89,7 @@ namespace Engine::Resources
 
 					const auto& mat = m_evaluated_animations_[i][j][k];
 
-					_mm256_memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
+					SIMDExtension::_mm256_memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
 				}
 			}
 		}

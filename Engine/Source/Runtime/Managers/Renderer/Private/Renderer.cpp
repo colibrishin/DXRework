@@ -1,15 +1,19 @@
 #include "../Public/Renderer.h"
 #include <tbb/parallel_for_each.h>
 
-#include "Source/Runtime/Allocator/Public/Allocator.h"
-#include "Source/Runtime/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
 #include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
-#include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
+#include "Source/Runtime/Managers/ProjectionFrustum/Public/ProjectionFrustum.h"
+#include "Source/Runtime/Managers/ReflectionEvaluator/Public/ReflectionEvaluator.h"
 
 namespace Engine::Managers
 {
@@ -58,7 +62,7 @@ namespace Engine::Managers
 							 m_tmp_descriptor_heaps_,
 							 m_tmp_instance_buffers_, [](const Strong<Abstracts::ObjectBase>& obj)
 							 {
-								 return GetProjectionFrustum().CheckRender(obj);
+								 return Managers::ProjectionFrustum::GetInstance().CheckRender(obj);
 							 }, [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
 							 {
 								 Managers::D3Device::GetInstance().DefaultRenderTarget(c);
@@ -69,7 +73,7 @@ namespace Engine::Managers
 
 								 if (i > SHADER_DOMAIN_OPAQUE)
 								 {
-									 GetReflectionEvaluator().BindReflectionMap(c, h);
+									 Managers::ReflectionEvaluator::GetInstance().BindReflectionMap(c, h);
 								 }
 							 }, [](const Weak<CommandPair>& c, const DescriptorPtr& h)
 							 {
@@ -81,11 +85,11 @@ namespace Engine::Managers
 					{
 						// Notify reflection evaluator that rendering is finished so that it
 						// can copy the rendered scene to the copy texture.
-						GetReflectionEvaluator().RenderFinished(cmd);
+						Managers::ReflectionEvaluator::GetInstance().RenderFinished(cmd);
 					}
 				}
 
-				GetReflectionEvaluator().UnbindReflectionMap(cmd);
+				Managers::ReflectionEvaluator::GetInstance().UnbindReflectionMap(cmd);
 
 				cmd->FlagReady();
 			}
@@ -133,8 +137,8 @@ namespace Engine::Managers
 		DescriptorContainer&                                    descriptor_heap_container,
 		StructuredBufferMemoryPool<SBs::InstanceSB>&                               instance_buffer_memory_pool,
 		const std::function<bool(const Strong<Abstracts::ObjectBase>&)>&                        predicate,
-		const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& initial_setup,
-		const std::function<void(const Weak<CommandPair>&, const DescriptorPtr&)>& post_setup,
+		const CommandPairExtension::CommandDescriptorLambda& initial_setup,
+		const CommandPairExtension::CommandDescriptorLambda& post_setup,
 		const std::vector<StructuredBufferBase*>&                                  additional_structured_buffers = {}
 	)
 	{

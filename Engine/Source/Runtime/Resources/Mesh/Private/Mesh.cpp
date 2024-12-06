@@ -11,10 +11,11 @@
 #include <execution>
 #include <directxtk12/BufferHelpers.h>
 
-#include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 SERIALIZE_IMPL
 (
@@ -289,7 +290,7 @@ namespace Engine::Resources
 		{
 			char* data = nullptr;
 			DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-			_mm256_memcpy(data, m_vertices_.data(), sizeof(Graphics::VertexElement) * m_vertices_.size());
+			SIMDExtension::_mm256_memcpy(data, m_vertices_.data(), sizeof(Graphics::VertexElement) * m_vertices_.size());
 			m_vertex_buffer_upload_->Unmap(0, nullptr);
 		}
 
@@ -335,7 +336,7 @@ namespace Engine::Resources
 		{
 			char* data = nullptr;
 			DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-			_mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
+			SIMDExtension::_mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
 			m_index_buffer_upload_->Unmap(0, nullptr);
 		}
 

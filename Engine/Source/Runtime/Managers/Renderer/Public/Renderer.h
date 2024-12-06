@@ -1,15 +1,16 @@
 #pragma once
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp"
-#include "Source/Runtime/Allocator/Public/Allocator.h"
-#include "Source/Runtime/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+#include "Source/Runtime/Core/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
+#include "Source/Runtime/CommandPairExtension/Public/CommandExtension.h"
 
 namespace Engine::Managers
 {
@@ -43,8 +44,8 @@ namespace Engine::Managers
 			DescriptorContainer&                         descriptor_heap_container,
 			StructuredBufferMemoryPool<SBs::InstanceSB>& instance_buffer_memory_pool,
 			const ObjectPredication&                     predicate,
-			const CommandDescriptorLambda&               initial_setup,
-			const CommandDescriptorLambda&               post_setup, 
+			const CommandPairExtension::CommandDescriptorLambda&               initial_setup,
+			const CommandPairExtension::CommandDescriptorLambda&               post_setup,
 			const std::vector<StructuredBufferBase*>&    additional_structured_buffers
 		);
 

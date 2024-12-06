@@ -15,6 +15,7 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 #include <directx/d3dx12_core.h>
+#include <boost/filesystem.hpp>
 
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 #include <Source/Runtime/CommandPair/Public/CommandPair.h>
@@ -625,12 +626,12 @@ namespace Engine::Managers
 	}
 
 	void D3Device::CreateTextureFromFile(
-		const std::filesystem::path& file_path,
+		const boost::filesystem::path& file_path,
 		ID3D12Resource**             res,
 		bool                         generate_mip = false
 	) const
 	{
-		if (!exists(file_path))
+		if (!boost::filesystem::exists(file_path))
 		{
 			throw std::runtime_error("File not found.");
 		}

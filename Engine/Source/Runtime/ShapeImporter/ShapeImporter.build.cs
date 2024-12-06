@@ -16,7 +16,7 @@ public class ShapeImporter : CommonProject
     {
         base.ConfigureAll(conf, target);
 
-        conf.AddPublicDependency<TypeLibrary>(target);
+        conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<DirectXMath>(target);
         conf.AddPublicDependency<Mesh>(target);
         conf.AddPublicDependency<Shape>(target);

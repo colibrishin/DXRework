@@ -1,8 +1,7 @@
 #pragma once
 #include <boost/serialization/access.hpp>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
 
 #include <map>
@@ -76,7 +75,7 @@ namespace Engine::Resources
 
 		RESOURCE_T(RES_T_MTR);
 
-		Material(const std::filesystem::path& path);
+		Material(const boost::filesystem::path& path);
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;

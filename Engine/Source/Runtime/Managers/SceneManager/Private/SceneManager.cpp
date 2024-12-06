@@ -1,9 +1,9 @@
 #include "../Public/SceneManager.hpp"
 
-#include "Source/Runtime/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
 #include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
-#include "Source/Runtime/CoreObjects/Light/Public/Light.h"
+#include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 
 namespace Engine::Managers
 {

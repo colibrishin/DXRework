@@ -3,6 +3,8 @@
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 #include <memory>
 #include <directx/d3d12.h>
@@ -389,7 +391,7 @@ namespace Engine
 		UINT64 element_offset = 0;
 		bool   found          = false;
 
-		if (check_avx())
+		if (SIMDExtension::check_avx())
 		{
 			static const __m256i all_mask = _mm256_set1_epi32(0xFFFFFFFF);
 

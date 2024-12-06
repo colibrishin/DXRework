@@ -2,7 +2,7 @@
 #include <assimp/Importer.hpp>
 #include <map>
 
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 namespace Engine::Resources
 {
@@ -11,7 +11,7 @@ namespace Engine::Resources
 	public:
 		RESOURCE_T(RES_T_SHAPE)
 
-		Shape(const std::filesystem::path& path);
+		Shape(const boost::filesystem::path& path);
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;

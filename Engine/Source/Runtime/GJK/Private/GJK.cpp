@@ -1,6 +1,6 @@
 #include "Source/Runtime/GJK/Public/GJK.h"
 #include "Source/Runtime/GJK/Public/Simplex.hpp"
-#include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 
 namespace Engine::Physics 
 { 

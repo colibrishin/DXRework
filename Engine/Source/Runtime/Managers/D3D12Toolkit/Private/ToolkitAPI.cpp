@@ -2,7 +2,7 @@
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/CoreObjects/Camera/Public/Camera.h"
+#include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 
 #pragma comment(lib, "fmod_vc.lib")

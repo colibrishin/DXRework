@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/GenericBounding/Public/GenericBounding.hpp"
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine 
 {

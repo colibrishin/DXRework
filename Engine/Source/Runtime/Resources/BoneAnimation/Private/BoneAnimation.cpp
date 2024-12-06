@@ -1,6 +1,5 @@
 #include "../Public/BoneAnimation.h"
 
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 
 namespace Engine::Graphics

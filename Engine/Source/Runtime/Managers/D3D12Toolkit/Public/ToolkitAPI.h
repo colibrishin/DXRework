@@ -7,7 +7,7 @@
 #include <directxtk12/Effects.h>
 #include <directxtk12/GeometricPrimitive.h>
 
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include <directxtk12/EffectPipelineStateDescription.h>
 
 namespace Engine::Managers
