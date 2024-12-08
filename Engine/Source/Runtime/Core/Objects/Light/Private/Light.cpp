@@ -2,14 +2,6 @@
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 
-SERIALIZE_IMPL
-(
- Engine::Objects::Light,
- _ARTAG(_BSTSUPER(ObjectBase)) 
- _ARTAG(m_color_)
- _ARTAG(m_type_)
-)
-
 namespace Engine::Objects
 {
 	OBJ_CLONE_IMPL(Light)

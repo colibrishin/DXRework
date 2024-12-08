@@ -1,56 +1,62 @@
 #include "../Public/CommandPair.h"
-#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
-#include <Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp>
+
+#pragma comment(lib, "d3d12.lib")
+
+#include "ThrowIfFailed.h"
 
 namespace Engine
 {
-	CommandPair::CommandPair(
-		const eCommandTypes type, const UINT64 ID, const UINT64 buffer_idx, const std::wstring& debug_name
+	CommandPair::CommandPair
+	(
+		CommandPairPool*    pool,
+		const D3D12_COMMAND_LIST_TYPE  type,
+		const UINT64        ID,
+		const UINT64        buffer_idx,
+		const std::wstring& debug_name
 	)
 		: m_command_id_(ID),
 		  m_buffer_idx_(buffer_idx),
 		  m_debug_name_(debug_name),
 		  m_b_executed_(false),
 		  m_b_ready_(false),
+		  m_b_disposed_(false),
 		  m_type_(type)
 	{
-		constexpr eCommandNativeType conversion[]
+		if (pool != nullptr)
 		{
-			COMMAND_NATIVE_DIRECT,
-			COMMAND_NATIVE_COPY,
-			COMMAND_NATIVE_COMPUTE
-		};
+			m_pool_ = pool;
 
-		DX::ThrowIfFailed
+			DX::ThrowIfFailed
 				(
-				 Managers::D3Device::GetInstance().GetDevice()->CreateCommandAllocator
+				 pool->m_dev_->CreateCommandAllocator
 				 (
-				  static_cast<D3D12_COMMAND_LIST_TYPE>(conversion[type]),
+				  type,
 				  IID_PPV_ARGS(m_allocator_.GetAddressOf())
 				 )
 				);
 
-		const std::wstring name = debug_name + L" Command Allocator";
-		DX::ThrowIfFailed(m_allocator_->SetName(name.c_str()));
+			const std::wstring name = debug_name + L" Command Allocator";
+			DX::ThrowIfFailed(m_allocator_->SetName(name.c_str()));
 
-		DX::ThrowIfFailed
-				(
-				Managers::D3Device::GetInstance().GetDevice()->CreateCommandList
-				 (
-				  0,
-				  static_cast<D3D12_COMMAND_LIST_TYPE>(conversion[type]),
-				  m_allocator_.Get(),
-				  nullptr,
-				  IID_PPV_ARGS(m_list_.GetAddressOf())
-				 )
-				);
+			DX::ThrowIfFailed
+					(
+					 pool->m_dev_->CreateCommandList
+					 (
+					  0,
+					  type,
+					  m_allocator_.Get(),
+					  nullptr,
+					  IID_PPV_ARGS(m_list_.GetAddressOf())
+					 )
+					);
 
-		DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
-		DX::ThrowIfFailed(m_list_->Close());
+			DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
+			DX::ThrowIfFailed(m_list_->Close());
 
-		if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
-		{
-			m_list4_ = nullptr;
+			if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
+			{
+				m_list4_ = nullptr;
+			}
 		}
 	}
 
@@ -97,8 +103,12 @@ namespace Engine
 		{
 			m_post_execute_function_ = post_execution;
 		}
+	}
 
-		Managers::D3Device::GetInstance().m_command_pairs_count_.notify_all();
+	void CommandPair::Execute() const
+	{
+		constexpr bool expected = true;
+		m_b_executed_.wait(expected);
 	}
 
 	bool CommandPair::IsReady()
@@ -129,7 +139,12 @@ namespace Engine
 		return m_list4_.Get();
 	}
 
-	eCommandTypes CommandPair::GetType() const
+	ID3D12CommandAllocator* CommandPair::GetAllocator() const
+	{
+		return m_allocator_.Get();
+	}
+
+	D3D12_COMMAND_LIST_TYPE CommandPair::GetType() const
 	{
 		return m_type_;
 	}
@@ -149,77 +164,318 @@ namespace Engine
 		return m_command_id_;
 	}
 
-	void CommandPair::Execute(const bool lock_consuming)
+	Weak<CommandPair> CommandPairPool::Allocate(
+		const D3D12_COMMAND_LIST_TYPE type, const UINT64 id, const UINT64 buffer_idx, const std::wstring& debug_name
+	)
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		std::lock_guard lock(m_mutex_);
 
-		if (lock_consuming)
+		const auto& it = std::ranges::find_if(m_allocation_map_, [](const std::pair<const address_value, bool>& kv) 
 		{
-			std::lock_guard<std::mutex> ql(Managers::D3Device::GetInstance().m_command_pairs_mutex_);
-			ExecuteImpl();
+			return !kv.second;
+		});
+
+		if (it == m_allocation_map_.end())
+		{
+			return {};
+		}
+
+		const address_value available = it->first;
+
+		m_allocation_map_[available] = true;
+
+		if (m_pool_[available]->GetType() == type && m_pool_[available]->GetList())
+		{
+			m_pool_[available]->m_command_id_ = id;
+			m_pool_[available]->m_buffer_idx_ = buffer_idx;
+			m_pool_[available]->m_debug_name_ = debug_name;
+
+			DX::ThrowIfFailed(m_pool_[available]->m_list_->SetName(debug_name.c_str()));
 		}
 		else
 		{
-			ExecuteImpl();
+			new(m_pool_[available].get()) CommandPair(this, type, id, buffer_idx, debug_name);
 		}
+			
+		return m_pool_[available];
 	}
 
-	UINT64 CommandPair::Signal(const eCommandTypes type) const
+	void CommandPairPool::Deallocate(const Weak<CommandPair>& pointer)
 	{
-		if (m_allocator_ == nullptr || m_list_ == nullptr)
+		std::lock_guard lock(m_mutex_);
+
+		if (const auto& locked = pointer.lock())
 		{
-			return -1;
+			locked->HardReset();
+			m_allocation_map_[reinterpret_cast<UINT64>(locked.get())] = false;
 		}
-
-		const auto& fence = Managers::D3Device::GetInstance().m_fence_;
-		auto&       nonce = Managers::D3Device::GetInstance().m_fence_nonce_[m_buffer_idx_];
-
-		DX::ThrowIfFailed
-				(
-					Managers::D3Device::GetInstance().GetCommandQueue(type)->Signal(fence.Get(), ++nonce)
-				);
-
-		return nonce;
 	}
 
-	void CommandPair::ExecuteImpl()
+	void CommandPairPool::Initialize(ID3D12Device2* dev)
 	{
-		if (m_b_executed_)
+		if (bool expected = false; 
+			m_b_initialized_.compare_exchange_strong(expected, true))
+		{
+			m_dev_ = dev;
+			m_pool_.reserve(size);
+
+			for (size_t i = 0; i < size; ++i)
+			{
+				const auto& allocated = boost::allocate_shared_noinit<CommandPair>(m_command_pair_pool_);
+
+				const auto address         = reinterpret_cast<address_value>(allocated.get());
+				m_pool_[address]           = allocated;
+				m_allocation_map_[address] = false;
+			}
+		}
+	}
+
+	void CommandPairTask::Initialize(ID3D12Device2* dev, const size_t buffer_count)
+	{
+		m_dev_ = dev;
+
+		for (int i = 0; i < std::size(available_); ++i)
+		{
+			DX::ThrowIfFailed
+					(
+					 dev->CreateCommandQueue
+					 (
+					  &queue_descs[i],
+					  IID_PPV_ARGS(m_queue_[i].GetAddressOf())
+					 )
+					);
+		}
+
+		m_buffer_count_ = buffer_count;
+
+		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
+		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
+
+		m_pool_.Initialize(dev);
+	}
+
+	uint64_t CommandPairTask::GetBufferIndex() const
+	{
+		return m_buffer_idx_;
+	}
+
+	ID3D12CommandQueue* CommandPairTask::GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const
+	{
+		if (m_queue_.size() > type)
+		{
+			return nullptr;
+		}
+
+		return m_queue_[type].Get();
+	}
+
+	bool CommandPairTask::IsCommandPairAvailable() const
+	{
+		if (m_dev_ == nullptr)
+		{
+			return false;
+		}
+
+		return m_command_pair_count_.load() < CFG_MAX_CONCURRENT_COMMAND_LIST;
+	}
+
+	Weak<CommandPair> CommandPairTask::Acquire(const D3D12_COMMAND_LIST_TYPE type, const std::wstring& debug_name)
+	{
+		if (m_dev_ == nullptr)
+		{
+			return {};
+		}
+
+		if (m_buffer_idx_ == -1)
+		{
+			return {};
+		}
+
+		std::lock_guard l(m_critical_mutex_);
+		m_command_pairs_.push_back(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name));
+		m_command_ids_ += 1;
+		m_command_pair_count_.fetch_add(1);
+
+		return m_command_pairs_.back();
+	}
+
+	void CommandPairTask::WaitForCommandsCompletion() const
+	{
+		if (m_dev_ == nullptr)
 		{
 			return;
 		}
 
-		DX::ThrowIfFailed(m_list_->Close());
-
-		const std::vector<ID3D12CommandList*> lists(1, m_list_.Get());
-
-		Managers::D3Device::GetInstance().GetCommandQueue(m_type_)->ExecuteCommandLists(1, lists.data());
-
-		m_latest_fence_value_ = Signal(m_type_);
-
-		if (Managers::D3Device::GetInstance().m_fence_->GetCompletedValue() < m_latest_fence_value_)
+		while (true)
 		{
-			const auto& handle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+			const UINT64 count = m_command_pair_count_.load();
+
+			if (count == 0)
+			{
+				break;
+			}
+
+			m_command_pair_count_.wait(count);
+		}
+	}
+
+	void CommandPairTask::StopTask()
+	{
+		std::lock_guard l(m_critical_mutex_);
+		m_running_ = false;
+		Cleanup();
+	}
+
+	void CommandPairTask::StartTask()
+	{
+		m_running_ = true;
+
+		while (m_running_)
+		{
+			if (const UINT64 count = m_command_pair_count_.load())
+			{
+				std::lock_guard lock(m_critical_mutex_);
+
+				if (m_command_pairs_.empty())
+				{
+					__debugbreak();
+					continue;
+				}
+
+				if (const auto& queued = m_command_pairs_.front().lock();
+					queued && (queued->IsExecuted() || queued->IsDisposed()))
+				{
+					m_command_pair_count_.fetch_sub(1);
+					m_command_pairs_.pop_front();
+					m_pool_.Deallocate(queued);
+					m_command_pair_count_.notify_all();
+				}
+				else if (queued && queued->IsReady())
+				{
+					Execute(queued, false);
+					m_command_pair_count_.fetch_sub(1);
+					m_command_pairs_.pop_front();
+					m_pool_.Deallocate(queued);
+					m_command_pair_count_.notify_all();
+				}
+			}
+			else
+			{
+				m_command_pair_count_.wait(count);
+			}
+		}
+
+		Cleanup();
+	}
+
+	void CommandPairTask::SwapBuffer(const uint32_t next_buffer)
+	{
+		m_fence_nonce_.get()[next_buffer] = m_fence_nonce_.get()[m_buffer_idx_];
+			
+		uint64_t nonce = m_fence_nonce_.get()[next_buffer];
+
+		DX::ThrowIfFailed(m_queue_[D3D12_COMMAND_LIST_TYPE_DIRECT]->Signal(m_fence_.Get(), ++nonce));
+		WaitForEventCompletion(nonce);
+
+		m_buffer_idx_ = next_buffer;
+	}
+
+	void CommandPairTask::Cleanup()
+	{
+		for (const Weak<CommandPair>& pair : m_command_pairs_)
+		{
+			if (const Strong<CommandPair> locked = pair.lock())
+			{
+				locked->HardReset();
+				m_pool_.Deallocate(locked);
+			}
+		}
+
+		for (const ComPtr<ID3D12CommandQueue>& queue : m_queue_)
+		{
+			queue->Release();
+		}
+
+		if (m_fence_event_ != nullptr)
+		{
+			CloseHandle(m_fence_event_);
+		}
+	}
+
+	void CommandPairTask::Execute(const Strong<CommandPair>& pair, const bool lock_consuming)
+	{
+		if (m_dev_ == nullptr)
+		{
+			return;
+		}
+
+		std::lock_guard l(m_critical_mutex_);
+
+		if (lock_consuming)
+		{
+			std::lock_guard pl(pair->m_critical_mutex_);
+			ExecuteImpl(pair);
+			return;
+		}
+
+		ExecuteImpl(pair);
+	}
+
+	void CommandPairTask::Signal(const Strong<CommandPair>& in_pair) const
+	{
+		if (in_pair->GetAllocator() == nullptr || in_pair->GetList() == nullptr)
+		{
+			return;
+		}
+
+		const auto& fence = m_fence_;
+		uint64_t    nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
+
+		DX::ThrowIfFailed(m_queue_[in_pair->GetType()]->Signal(fence.Get(), ++nonce));
+		in_pair->m_latest_fence_value_.store(nonce);
+	}
+
+	void CommandPairTask::WaitForEventCompletion(const uint64_t fence_value)
+	{
+		if (m_fence_->GetCompletedValue() < fence_value)
+		{
+			m_fence_event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
 			DX::ThrowIfFailed
 					(
-					Managers::D3Device::GetInstance().m_fence_->SetEventOnCompletion
+					 m_fence_->SetEventOnCompletion
 					 (
-					  m_latest_fence_value_,
-					  handle
+					  fence_value,
+					  m_fence_event_
 					 )
 					);
 
-			WaitForSingleObject(handle, INFINITE);
-			CloseHandle(handle);
+			WaitForSingleObject(m_fence_event_, INFINITE);
+			CloseHandle(m_fence_event_);
+			m_fence_event_ = nullptr;
 		}
+	}
 
-		if (m_post_execute_function_)
+	void CommandPairTask::ExecuteImpl(const Strong<CommandPair>& pair)
+	{
+		if (pair->IsExecuted())
 		{
-			m_post_execute_function_();
+			return;
 		}
 
-		m_b_ready_    = false;
-		m_b_executed_ = true;
+		DX::ThrowIfFailed(pair->GetList()->Close());
+		const std::vector<ID3D12CommandList*> lists(1, pair->GetList());
+		m_queue_[pair->GetType()]->ExecuteCommandLists(1, lists.data());
+
+		Signal(pair);
+		WaitForEventCompletion(pair->GetLatestFenceValue());
+
+		if (pair->m_post_execute_function_)
+		{
+			pair->m_post_execute_function_();
+		}
+
+		pair->m_b_ready_    = false;
+		pair->m_b_executed_ = true;
 	}
 }

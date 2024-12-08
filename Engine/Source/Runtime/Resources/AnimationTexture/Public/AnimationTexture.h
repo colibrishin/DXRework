@@ -1,10 +1,9 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
-	class AnimationTexture : public Texture3D
+	class ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{
 	public:
 		RESOURCE_T(RES_T_ANIMS_TEX)
@@ -25,17 +24,7 @@ namespace Engine::Resources
 
 		static boost::shared_ptr<AnimationTexture> Create(
 			const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
-		)
-		{
-			if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AnimationTexture>(name).lock())
-			{
-				return ncheck;
-			}
-
-			const auto obj = boost::make_shared<AnimationTexture>(anims);
-			Managers::ResourceManager::GetInstance().AddResource(name, obj);
-			return obj;
-		}
+		);
 
 	protected:
 		void loadDerived(ComPtr<ID3D12Resource>& res) override;
@@ -43,8 +32,6 @@ namespace Engine::Resources
 		bool map(char* mapped) override;
 
 	private:
-		SERIALIZE_DECL
-
 		AnimationTexture()
 			: Texture3D("", {}) {}
 
@@ -60,4 +47,3 @@ namespace Engine::Resources
 	};
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::AnimationTexture)

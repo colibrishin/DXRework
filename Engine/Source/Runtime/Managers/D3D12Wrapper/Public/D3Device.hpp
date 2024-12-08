@@ -21,24 +21,6 @@
 namespace Engine 
 {
 	static std::atomic<bool> g_raytracing;
-
-	enum eCommandList
-	{
-		COMMAND_LIST_PRE_RENDER,
-		COMMAND_LIST_RENDER,
-		COMMAND_LIST_POST_RENDER,
-		COMMAND_LIST_UPDATE,
-		COMMAND_LIST_COPY,
-		COMMAND_LIST_COMPUTE,
-		COMMAND_LIST_COUNT
-	};
-
-	enum eCommandNativeType
-	{
-		COMMAND_NATIVE_DIRECT = D3D12_COMMAND_LIST_TYPE_DIRECT,
-		COMMAND_NATIVE_COPY = D3D12_COMMAND_LIST_TYPE_COPY,
-		COMMAND_NATIVE_COMPUTE = D3D12_COMMAND_LIST_TYPE_COMPUTE
-	};
 }
 
 namespace Engine::Managers
@@ -59,7 +41,7 @@ namespace Engine::Managers
 		{SHADER_HULL, "hs_5_0"}, {SHADER_DOMAIN, "ds_5_0"}
 	};
 
-	class D3Device final : public Abstracts::Singleton<D3Device>
+	class D3D12WRAPPER_API D3Device final : public Abstracts::Singleton<D3Device>
 	{
 	public:
 		D3Device(SINGLETON_LOCK_TOKEN)
@@ -82,7 +64,9 @@ namespace Engine::Managers
 #endif // WITH_DEBUG
 		}
 
-		static float GetAspectRatio();
+		static float      GetAspectRatio();
+
+		Weak<CommandPair> AcquireCommandPair(const D3D12_COMMAND_LIST_TYPE type, const std::wstring& debug_name);
 
 		std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> GenerateInputDescription(
 			ID3DBlob* blob
@@ -106,44 +90,34 @@ namespace Engine::Managers
 			return m_ortho_matrix_;
 		}
 
-		[[nodiscard]] ID3D12Device* GetDevice() const
+		[[nodiscard]] ID3D12Device2* GetDevice() const
 		{
 			return m_device_.Get();
 		}
 
 		[[nodiscard]] HANDLE                      GetSwapchainAwaiter() const;
-		[[nodiscard]] ID3D12GraphicsCommandList1* GetCommandList(eCommandList list_enum, UINT64 frame_idx = -1) const;
-
-		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue(eCommandList list) const;
-		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue(eCommandTypes type) const;
-
 		[[nodiscard]] UINT64 GetFrameIndex() const
 		{
 			return m_frame_idx_;
 		}
 
-		[[nodiscard]] Weak<CommandPair> AcquireCommandPair(
-			const std::wstring& debug_name, UINT64 buffer_idx = -1
-		);
 		bool IsCommandPairAvailable(UINT64 buffer_idx = -1) const;
-
-		void WaitAndReset(eCommandList list, UINT64 buffer_idx = -1) const;
-		void Wait(UINT64 buffer_idx = -1) const;
-		void Signal(eCommandTypes type, UINT64 buffer_idx = -1) const;
+		void Wait(UINT64 buffer_idx) const;
 
 		void CreateTextureFromFile(
-			const boost::filesystem::path& file_path,
+			const std::filesystem::path& file_path,
 			ID3D12Resource**             res,
 			bool                         generate_mip
 		) const;
 
-		void DefaultRenderTarget(const Weak<CommandPair>& w_cmd) const;
-		void CopyBackBuffer(const Weak<CommandPair>& w_cmd, ID3D12Resource* resource) const;
+		void DefaultRenderTarget(ID3D12GraphicsCommandList4* cmd) const;
+		void CopyBackBuffer(ID3D12GraphicsCommandList4* w_cmd, ID3D12Resource* resource) const;
 		void ClearRenderTarget(bool barrier = true);
 
 		[[nodiscard]] ID3D12DescriptorHeap* GetRTVHeap() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetDSVHeap() const;
 		[[nodiscard]] UINT                  GetRTVHeapSize() const;
+		[[nodiscard]] ID3D12CommandQueue*   GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const;
 
 	private:
 		friend struct SingletonDeleter;
@@ -151,43 +125,16 @@ namespace Engine::Managers
 		friend struct DescriptorHandler;
 		friend class RenderPipeline;
 		friend class ToolkitAPI;
-		friend class GarbageCollector;
-
-		inline static constexpr eCommandNativeType s_native_target_types[] =
-		{
-			COMMAND_NATIVE_DIRECT,
-			COMMAND_NATIVE_DIRECT,
-			COMMAND_NATIVE_DIRECT,
-			COMMAND_NATIVE_DIRECT,
-			COMMAND_NATIVE_COPY,
-			COMMAND_NATIVE_COMPUTE
-		};
-
-		inline static constexpr eCommandTypes s_target_types[] =
-		{
-			COMMAND_TYPE_DIRECT,
-			COMMAND_TYPE_DIRECT,
-			COMMAND_TYPE_DIRECT,
-			COMMAND_TYPE_DIRECT,
-			COMMAND_TYPE_COPY,
-			COMMAND_TYPE_COMPUTE
-		};
 
 		~D3Device() override;
 
 		D3Device() = default;
 
 		void InitializeDevice();
-		void InitializeCommandAllocator();
-		void InitializeFence();
 		void InitializeConsumer();
 
-		void WaitForEventCompletion(UINT64 buffer_idx) const;
 		void WaitForCommandsCompletion() const;
 		void WaitNextFrame();
-		void ConsumeCommands();
-
-		UINT64 GetFenceValue(UINT64 buffer_idx = -1) const;
 
 		HWND m_hwnd_ = nullptr;
 
@@ -208,23 +155,14 @@ namespace Engine::Managers
 		ComPtr<ID3D12Resource>       m_depth_stencil_;
 		ComPtr<ID3D12DescriptorHeap> m_dsv_heap_;
 
+		CommandPairTask      m_command_pair_task_;
+		std::thread          m_command_consumer_;
 
 		ComPtr<ID3D12Fence>  m_fence_       = nullptr;
 		HANDLE               m_fence_event_ = nullptr;
 		std::atomic<UINT64>* m_fence_nonce_;
 
-		std::atomic<UINT64> m_command_ids_ = 0;
 		UINT64              m_frame_idx_   = 0;
-
-		std::map<FrameIndex, std::vector<Strong<CommandPair>>>     m_command_pairs_;
-		std::array<ComPtr<ID3D12CommandQueue>, COMMAND_TYPE_COUNT> m_command_queues_;
-
-		std::mutex                      m_command_pairs_mutex_;
-		pool_queue<Weak<CommandPair>>   m_command_pairs_generated_;
-		std::atomic<UINT64>             m_command_pairs_count_;
-
-		std::thread       m_command_consumer_;
-		std::atomic<bool> m_command_consumer_running_ = false;
 
 		std::mutex m_command_producer_mutex_;
 

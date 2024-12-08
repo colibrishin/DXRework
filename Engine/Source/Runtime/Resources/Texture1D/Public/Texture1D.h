@@ -3,12 +3,12 @@
 
 namespace Engine::Resources
 {
-	class Texture1D : public Texture
+	class TEXTURE1D_API Texture1D : public Texture
 	{
 	public:
 		TEX_T(TEX_TYPE_1D)
 
-		explicit Texture1D(const boost::filesystem::path& path, const GenericTextureDescription& description)
+		explicit Texture1D(const std::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_1D, description) { }
 
 		~Texture1D() override = default;
@@ -22,8 +22,6 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
-
 		Texture1D()
 			: Texture("", TEX_TYPE_1D, {}) {}
 
@@ -31,5 +29,3 @@ namespace Engine::Resources
 		UINT GetDepth() const final;
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture1D)

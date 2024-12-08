@@ -5,20 +5,20 @@
 #include <d3dcompiler.h>
 #include <directx/d3d12.h>
 
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#if WITH_DEBUG
 #include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#endif
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 
-SERIALIZE_IMPL
-(
- Engine::Resources::ComputeShader,
- _ARTAG(_BSTSUPER(Engine::Resources::Shader))
- _ARTAG(m_group_)
- _ARTAG(m_thread_)
-)
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
+	RESOURCE_SELF_INFER_GETTER_IMPL(ComputeShader);
+
 	void ComputeShader::Dispatch(
 		ID3D12GraphicsCommandList1* list, 
 		const DescriptorPtr& w_heap, 
@@ -42,25 +42,37 @@ namespace Engine::Resources
 
 		if (std::accumulate(m_group_, m_group_ + 3, 0) == 0)
 		{
+#if WITH_DEBUG
 			Managers::Debugger::GetInstance().Log("ComputeShader::Dispatch() : Group is not set. Ignore dispatching...");
+#endif
 			return;
 		}
 
 		if (std::accumulate(m_group_, m_group_ + 3, 1, std::multiplies()) > 1 << 16)
 		{
+#if WITH_DEBUG
 			Managers::Debugger::GetInstance().Log("ComputeShader::Dispatch() : Group is too large. Ignore dispatching...");
+
+#endif // WITH_DEBUG
+
 			return;
 		}
 
 		if (std::accumulate(m_thread_, m_thread_ + 3, 0) == 0)
 		{
+#if WITH_DEBUG
 			Managers::Debugger::GetInstance().Log("ComputeShader::Dispatch() : Thread is not set. Ignore dispatching...");
+
+#endif // WITH_DEBUG
 			return;
 		}
 
 		if (std::accumulate(m_thread_, m_thread_ + 3, 1, std::multiplies()) > 1024)
 		{
-			Managers::Debugger::GetInstance().Log("ComputeShader::Dispatch() : Thread is too large. Ignore dispatching...");
+#if WITH_DEBUG
+			//Managers::Debugger::GetInstance().Log("ComputeShader::Dispatch() : Thread is too large. Ignore dispatching...");
+
+#endif // WITH_DEBUG
 			return;
 		}
 
@@ -77,7 +89,7 @@ namespace Engine::Resources
 
 	ComputeShader::ComputeShader(
 		const std::string&           name,
-		const boost::filesystem::path& path,
+		const std::filesystem::path& path,
 		const std::array<UINT, 3>&   thread
 	)
 		: Shader
@@ -89,16 +101,6 @@ namespace Engine::Resources
 	{
 		SetPath(path);
 		std::ranges::copy(thread, m_thread_);
-	}
-
-	Graphics::ParamBase& ComputeShader::getParam(const Strong<Components::ParticleRenderer>& pr)
-	{
-		return pr->m_params_;
-	}
-
-	InstanceParticles& ComputeShader::getInstances(const Strong<Components::ParticleRenderer>& pr)
-	{
-		return pr->m_instances_;
 	}
 
 	void ComputeShader::SetGroup(const std::array<UINT, 3>& group)

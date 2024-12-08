@@ -1,6 +1,4 @@
 #pragma once
-#include <boost/serialization/access.hpp>
-
 #include "VertexBoneElement.hpp"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
@@ -17,21 +15,6 @@ namespace Engine::Graphics
 	    Vector3 binormal;
 
 	    VertexBoneElement boneElement;
-
-	private:
-	    friend class boost::serialization::access;
-
-	    template <class Archive>
-	    void serialize(Archive& ar, const unsigned int file_version)
-	    {
-	        ar & position;
-	        ar & color;
-	        ar & texCoord;
-	        ar & normal;
-	        ar & tangent;
-	        ar & binormal;
-	        ar & boneElement;
-	    }
 	};
 }
 

@@ -1,14 +1,18 @@
 #pragma once
 #include <array>
+
+#if defined(USE_DX12)
 #include <directx/d3d12.h>
+#endif
 
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Core/Components/ParticleRenderer/Public/ParticleRenderer.h"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 namespace Engine::Resources
 {
-	class ComputeShader : public Shader
+	class COMPUTESHADER_API ComputeShader : public Shader
 	{
 	public:
 		~ComputeShader() override = default;
@@ -33,10 +37,7 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
 
 	protected:
-		ComputeShader(const std::string& name, const boost::filesystem::path& path, const std::array<uint32_t, 3>& thread);
-
-		static Graphics::ParamBase& getParam(const Strong<Components::ParticleRenderer>& pr);
-		static InstanceParticles&   getInstances(const Strong<Components::ParticleRenderer>& pr);
+		ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
 		virtual void preDispatch(
 			ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param
@@ -58,7 +59,6 @@ namespace Engine::Resources
 		void Load_INTERNAL() final;
 		void Unload_INTERNAL() final;
 
-		SERIALIZE_DECL
 		ComputeShader();
 
 		ComPtr<ID3DBlob> m_cs_;
@@ -67,6 +67,3 @@ namespace Engine::Resources
 		uint32_t m_group_[3];
 	};
 } // namespace Engine::Resources
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::ComputeShader)
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::ComputeShader)

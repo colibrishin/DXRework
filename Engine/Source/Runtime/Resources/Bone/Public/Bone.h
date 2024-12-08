@@ -6,7 +6,7 @@ namespace Engine::Graphics
 {
 	using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
 
-	struct BonePrimitive
+	struct BONE_API BonePrimitive
 	{
 		BonePrimitive()
 			: m_idx_(0),
@@ -71,17 +71,6 @@ namespace Engine::Graphics
 		}
 
 	private:
-		friend class boost::serialization::access;
-
-		template <class Archive>
-		void serialize(Archive& ar, const unsigned int version)
-		{
-			ar& m_idx_;
-			ar& m_parent_idx_;
-			ar& m_inv_bind_pose_;
-			ar& m_transform_;
-		}
-
 		int    m_idx_;
 		int    m_parent_idx_;
 		Matrix m_inv_bind_pose_;
@@ -93,7 +82,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	class Bone : public Abstracts::Resource
+	class BONE_API Bone : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_BONE)
@@ -120,8 +109,6 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(Bone)
 
 	protected:
-		SERIALIZE_DECL
-
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
@@ -133,4 +120,3 @@ namespace Engine::Resources
 	};
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Bone)

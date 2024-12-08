@@ -11,19 +11,11 @@
 #include <execution>
 #include <directxtk12/BufferHelpers.h>
 
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-
-SERIALIZE_IMPL
-(
- Engine::Resources::Mesh,
- _ARTAG(_BSTSUPER(Engine::Abstracts::Resource))
- _ARTAG(m_vertices_) _ARTAG(m_indices_)
- _ARTAG(m_bounding_box_)
-)
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Mesh)
 
@@ -235,7 +227,7 @@ namespace Engine::Resources
 
 		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Mesh Load Command Pair").lock();
+		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Mesh Load Command Pair").lock();
 
 		cmd->SoftReset();
 

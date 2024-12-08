@@ -9,13 +9,13 @@
 
 namespace Engine::Resources
 {
-	class Shader : public Abstracts::Resource
+	class SHADER_API Shader : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_SHADER)
 
 		Shader(
-			const EntityName&             name, const boost::filesystem::path& path,
+			const EntityName&             name, const std::filesystem::path& path,
 			eShaderDomain                 domain, eShaderDepths              depth,
 			eShaderRasterizers            rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
 			const DXGI_FORMAT*            rtv_format,
@@ -38,12 +38,27 @@ namespace Engine::Resources
 
 		[[nodiscard]] ID3D12PipelineState*        GetPipelineState() const;
 		[[nodiscard]] D3D_PRIMITIVE_TOPOLOGY      GetTopology() const;
+		[[nodiscard]] D3D12_PRIMITIVE_TOPOLOGY_TYPE GetTopologyType() const;
 		[[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE GetShaderHeap() const;
+		
+		[[nodiscard]] ID3DBlob* GetVSBlob() const;
+		[[nodiscard]] ID3DBlob* GetPSBlob() const;
+		[[nodiscard]] ID3DBlob* GetGSBlob() const;
+		[[nodiscard]] ID3DBlob* GetHSBlob() const;
+		[[nodiscard]] ID3DBlob* GetDSBlob() const;
+
+		[[nodiscard]] D3D12_RASTERIZER_DESC GetRasterizerDesc() const;
+		[[nodiscard]] D3D12_DEPTH_STENCIL_DESC GetDepthStencilDesc() const;
+		[[nodiscard]] D3D12_BLEND_DESC GetBlendDesc() const;
+		[[nodiscard]] const std::vector<DXGI_FORMAT>& GetRTVFormats() const;
+		[[nodiscard]] DXGI_FORMAT GetDSVFormat() const;
+		[[nodiscard]] const std::vector<D3D12_INPUT_ELEMENT_DESC>& GetInputElements() const;
+		[[nodiscard]] size_t GetInputElementCount() const;
 
 		static boost::weak_ptr<Shader>   Get(const std::string& name);
 		static boost::shared_ptr<Shader> Create(
 			const std::string&            name,
-			const boost::filesystem::path&  path,
+			const std::filesystem::path&  path,
 			eShaderDomain                 domain,
 			UINT                          depth,
 			UINT                          rasterizer,
@@ -77,12 +92,12 @@ namespace Engine::Resources
 
 	private:
 		Shader();
-		SERIALIZE_DECL
-
 		eShaderDomain              m_domain_;
 		bool                       m_depth_flag_;
 
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_pipeline_state_desc_;
+		D3D12_RASTERIZER_DESC      m_rasterizer_desc_;
+		D3D12_DEPTH_STENCIL_DESC   m_depth_stencil_desc_;
+		D3D12_BLEND_DESC           m_blend_desc_;
 		D3D12_DEPTH_WRITE_MASK     m_depth_test_;
 		D3D12_COMPARISON_FUNC      m_depth_func_;
 		D3D12_FILTER               m_smp_filter_;
@@ -107,5 +122,3 @@ namespace Engine::Resources
 		ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
 	};
 } // namespace Engine::Graphic
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Shader);

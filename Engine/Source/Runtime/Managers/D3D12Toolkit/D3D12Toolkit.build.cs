@@ -14,8 +14,11 @@ public class D3D12Toolkit : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
+        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
+        conf.AddPrivateDependency<CommandPair>(target);
+        conf.AddPrivateDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<SceneManager>(target);
+        conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

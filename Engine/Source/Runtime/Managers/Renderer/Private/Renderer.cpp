@@ -1,19 +1,19 @@
 #include "../Public/Renderer.h"
 #include <tbb/parallel_for_each.h>
 
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
-#include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
+#include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
+#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
 #include "Source/Runtime/Managers/ProjectionFrustum/Public/ProjectionFrustum.h"
 #include "Source/Runtime/Managers/ReflectionEvaluator/Public/ReflectionEvaluator.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Managers/Renderer/Public/ShadowManager.hpp"
+#include "Source/Runtime/Resources/Material/Public/Material.h"
 
 namespace Engine::Managers
 {
@@ -49,7 +49,7 @@ namespace Engine::Managers
 		{
 			if (const auto cam = scene->GetMainCamera().lock())
 			{
-				const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Main Rendering").lock();
+				const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Main Rendering").lock();
 
 				cmd->SoftReset();
 
@@ -65,7 +65,7 @@ namespace Engine::Managers
 								 return Managers::ProjectionFrustum::GetInstance().CheckRender(obj);
 							 }, [i](const Weak<CommandPair>& c, const DescriptorPtr& h)
 							 {
-								 Managers::D3Device::GetInstance().DefaultRenderTarget(c);
+								 Managers::D3Device::GetInstance().DefaultRenderTarget(c.lock()->GetList4());
 								 Managers::RenderPipeline::GetInstance().DefaultViewport(c);
 								 Managers::RenderPipeline::GetInstance().DefaultScissorRect(c);
 								 Managers::ShadowManager::GetInstance().BindShadowMaps(c, h);
@@ -130,16 +130,16 @@ namespace Engine::Managers
 	 */
 	void Renderer::RenderPass
 	(
-		const float                                                                dt,
-		const eShaderDomain                                                        domain,
-		bool                                                                       shader_bypass,
-		const Weak<CommandPair>&                                                   w_cmd,
-		DescriptorContainer&                                    descriptor_heap_container,
-		StructuredBufferMemoryPool<SBs::InstanceSB>&                               instance_buffer_memory_pool,
-		const std::function<bool(const Strong<Abstracts::ObjectBase>&)>&                        predicate,
-		const CommandPairExtension::CommandDescriptorLambda& initial_setup,
-		const CommandPairExtension::CommandDescriptorLambda& post_setup,
-		const std::vector<StructuredBufferBase*>&                                  additional_structured_buffers = {}
+		const float                                                      dt,
+		const eShaderDomain                                              domain,
+		bool                                                             shader_bypass,
+		const Weak<CommandPair>&                                         w_cmd,
+		DescriptorContainer&                                             descriptor_heap_container,
+		StructuredBufferMemoryPool<SBs::InstanceSB>&                     instance_buffer_memory_pool,
+		const std::function<bool(const Strong<Abstracts::ObjectBase>&)>& predicate,
+		const CommandPairExtension::CommandDescriptorLambda&             initial_setup,
+		const CommandPairExtension::CommandDescriptorLambda&             post_setup,
+		const std::vector<StructuredBufferBase*>&                        additional_structured_buffers = {}
 	)
 	{
 		if (!Ready())
@@ -206,7 +206,7 @@ namespace Engine::Managers
 				}
 			}
 
-			heap->BindGraphic(cmd);
+			heap->BindGraphic(cmd->GetList4());
 
 			auto& instance = instance_buffer_memory_pool.get();
 

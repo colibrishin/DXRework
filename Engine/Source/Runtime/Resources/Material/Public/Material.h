@@ -1,26 +1,15 @@
 #pragma once
-#include <boost/serialization/access.hpp>
-
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
 
 #include <map>
 
 namespace Engine::Graphics::SBs 
 {
-	struct MaterialBindFlag
+	struct MATERIAL_API MaterialBindFlag
 	{
-		friend class boost::serialization::access;
-
-		template <class Archive>
-		void serialize(Archive& ar, const unsigned int file_version)
-		{
-			ar& tex;
-			ar& texArr;
-			ar& texCube;
-			ar& bone;
-		}
-
 		OffsetT<int> tex[CFG_PER_PARAM_BUFFER_SIZE];
 		OffsetT<int> texArr[CFG_PER_PARAM_BUFFER_SIZE];
 		OffsetT<int> texCube[CFG_PER_PARAM_BUFFER_SIZE];
@@ -28,25 +17,9 @@ namespace Engine::Graphics::SBs
 		OffsetT<int> atlas;
 	};
 
-	struct MaterialSB
+	struct MATERIAL_API MaterialSB
 	{
 		SB_T(SB_TYPE_MATERIAL)
-
-		friend class boost::serialization::access;
-
-		template <class Archive>
-		void serialize(Archive& ar, const unsigned int file_version)
-		{
-			ar& flags;
-			ar& specularPower;
-			ar& reflectionTranslation;
-			ar& reflectionScale;
-			ar& refractionScale;
-			ar& overrideColor;
-			ar& specularColor;
-			ar& clipPlane;
-		}
-
 		MaterialBindFlag flags;
 
 		float specularPower;
@@ -63,7 +36,7 @@ namespace Engine::Graphics::SBs
 
 namespace Engine::Resources
 {
-	class Material final : public Engine::Abstracts::Resource
+	class MATERIAL_API Material final : public Engine::Abstracts::Resource
 	{
 	public:
 		struct TempParam
@@ -75,7 +48,7 @@ namespace Engine::Resources
 
 		RESOURCE_T(RES_T_MTR);
 
-		Material(const boost::filesystem::path& path);
+		Material(const std::filesystem::path& path);
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
@@ -157,7 +130,6 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		Material();
 
 		void SetResource(const Strong<Resource>& resource);
@@ -178,4 +150,3 @@ namespace Engine::Resources
 	};
 }
 
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Material)

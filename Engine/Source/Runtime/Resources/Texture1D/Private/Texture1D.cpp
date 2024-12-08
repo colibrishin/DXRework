@@ -1,11 +1,5 @@
 #include "../Public/Texture1D.h"
 
-SERIALIZE_IMPL
-(
- Engine::Resources::Texture1D,
- _ARTAG(_BSTSUPER(Texture))
-)
-
 namespace Engine::Resources
 {
 	void Texture1D::OnDeserialized()

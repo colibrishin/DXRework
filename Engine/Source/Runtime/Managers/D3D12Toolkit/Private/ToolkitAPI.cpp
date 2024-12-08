@@ -5,8 +5,6 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 
-#pragma comment(lib, "fmod_vc.lib")
-
 namespace Engine::Managers
 {
 	ToolkitAPI::~ToolkitAPI()
@@ -30,7 +28,7 @@ namespace Engine::Managers
 		m_sprite_batch_ = std::make_unique<SpriteBatch>
 				(Managers::D3Device::GetInstance().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
 
-		m_resource_upload_batch_->End(Managers::D3Device::GetInstance().GetCommandQueue(COMMAND_LIST_UPDATE));
+		m_resource_upload_batch_->End(Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 
 		m_sprite_batch_->SetViewport(Managers::RenderPipeline::GetInstance().GetViewport());
 
@@ -72,7 +70,7 @@ namespace Engine::Managers
 
 		ID3D12DescriptorHeap* heaps[] = {m_descriptor_heap_->Heap(), m_states_->Heap()};
 
-		const auto& s_cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Toolkit Sprite Render").lock();
+		const auto& s_cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Toolkit Sprite Render").lock();
 
 		s_cmd->SoftReset();
 
@@ -82,7 +80,7 @@ namespace Engine::Managers
 				 SpriteSortMode_Deferred
 				);
 
-		Managers::D3Device::GetInstance().DefaultRenderTarget(s_cmd);
+		Managers::D3Device::GetInstance().DefaultRenderTarget(s_cmd->GetList4());
 		Managers::RenderPipeline::GetInstance().DefaultScissorRect(s_cmd);
 		Managers::RenderPipeline::GetInstance().DefaultViewport(s_cmd);
 		s_cmd->GetList()->SetDescriptorHeaps(2, heaps);
@@ -96,7 +94,7 @@ namespace Engine::Managers
 
 		s_cmd->FlagReady();
 
-		const auto& p_cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Toolkit Primitive Render").lock();
+		const auto& p_cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Toolkit Primitive Render").lock();
 
 		p_cmd->SoftReset();
 
@@ -111,7 +109,7 @@ namespace Engine::Managers
 			}
 		}
 
-		Managers::D3Device::GetInstance().DefaultRenderTarget(p_cmd);
+		Managers::D3Device::GetInstance().DefaultRenderTarget(p_cmd->GetList4());
 		Managers::RenderPipeline::GetInstance().DefaultScissorRect(p_cmd);
 		Managers::RenderPipeline::GetInstance().DefaultViewport(p_cmd);
 		p_cmd->GetList()->SetDescriptorHeaps(2, heaps);
@@ -131,7 +129,7 @@ namespace Engine::Managers
 
 		p_cmd->FlagReady();
 
-		m_graphics_memory_->Commit(Managers::D3Device::GetInstance().GetCommandQueue(COMMAND_TYPE_DIRECT));
+		m_graphics_memory_->Commit(Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 	}
 
 	void ToolkitAPI::FixedUpdate(const float& dt) { }

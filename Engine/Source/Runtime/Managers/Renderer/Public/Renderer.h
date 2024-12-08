@@ -1,23 +1,24 @@
 #pragma once
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
-
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+
+#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Core/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Managers/CommonRenderer/Public/CommonRenderer.h"
-#include "Source/Runtime/CommandPairExtension/Public/CommandPairExtension.h"
+#include "Source/Runtime/CommandPairExtension/Public/CommandPairExtension.hpp"
 
 namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
 	using namespace Engine::Rendering;
 
-	class Renderer : public Abstracts::Singleton<Renderer>
+	class RENDERER_API Renderer : public Abstracts::Singleton<Renderer>
 	{
 	public:
 		explicit Renderer(SINGLETON_LOCK_TOKEN)

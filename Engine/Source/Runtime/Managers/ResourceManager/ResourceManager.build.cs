@@ -4,14 +4,15 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ResourceMananger : CommonProject
+public class ResourceManager : CommonProject
 {
-    public ResourceMananger() { }
+    public ResourceManager() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
     }
 }

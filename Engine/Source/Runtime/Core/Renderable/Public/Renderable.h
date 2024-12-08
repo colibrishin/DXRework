@@ -14,9 +14,6 @@ namespace Engine::Abstracts
 	protected:
 		Renderable() = default;
 
-	private:
-		SERIALIZE_DECL
 	};
 } // namespace Engine::Abstract
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Renderable)

@@ -30,8 +30,7 @@ public class DX12Agility : VCPKG
             @"d3dcompiler.lib",
             @"dxcompiler.lib",
             @"DirectX-Guids.lib", 
-            @"DirectX-Headers.lib", 
-            @"dxcompiler.lib"
+            @"DirectX-Headers.lib"
         );
     }
 
@@ -47,8 +46,7 @@ public class DX12Agility : VCPKG
             @"d3dcompiler.lib",
             @"dxcompiler.lib",
             @"DirectX-Guids.lib", 
-            @"DirectX-Headers.lib", 
-            @"dxcompiler.lib"
+            @"DirectX-Headers.lib"
         );
     }
 }

@@ -4,34 +4,21 @@
 #include <ranges>
 
 #include "../Public/Shape.h"
-#include "Source/Runtime/Core/Serialization/Public/SerializationImpl.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
-#include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
+#include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
 
-SERIALIZE_IMPL
-(
- Engine::Resources::Shape,
- _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_animation_catalog_)
- _ARTAG(m_animations_path_)
- _ARTAG(m_bone_path_)
- _ARTAG(m_mesh_paths_)
- _ARTAG(m_bounding_box_)
- _ARTAG(m_bone_bounding_boxes_)
-)
-
 RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Shape)
 RESOURCE_SELF_INFER_CREATE_IMPL(Engine::Resources::Shape)
 
 namespace Engine::Resources
 {
-	Shape::Shape(const boost::filesystem::path& path)
+	Shape::Shape(const std::filesystem::path& path)
 		: Resource(path, RES_T_SHAPE),
 		  m_bounding_box_({}) {}
 
@@ -46,32 +33,6 @@ namespace Engine::Resources
 	void Shape::OnSerialized()
 	{
 		Resource::OnSerialized();
-
-		for (int i = 0; i < m_meshes_.size(); ++i)
-		{
-			Serializer::Serialize(m_meshes_[i]->GetName(), m_meshes_[i]);
-			m_mesh_paths_[i] = m_meshes_[i]->GetMetadataPath().generic_string();
-		}
-
-		for (const auto& animation : m_animation_catalog_)
-		{
-			if (const auto anim = Managers::ResourceManager::GetInstance().GetResource<BoneAnimation>(animation).lock())
-			{
-				Serializer::Serialize(anim->GetName(), anim);
-			}
-		}
-
-		if (m_bone_)
-		{
-			Serializer::Serialize(m_bone_->GetName(), m_bone_);
-			m_bone_path_ = m_bone_->GetMetadataPath().generic_string();
-		}
-
-		if (m_animations_)
-		{
-			Serializer::Serialize(m_animations_->GetName(), m_animations_);
-			m_animations_path_ = m_animations_->GetMetadataPath().generic_string();
-		}
 	}
 
 	void Shape::OnDeserialized()

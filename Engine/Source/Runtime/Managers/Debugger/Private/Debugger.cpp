@@ -1,11 +1,13 @@
 #include "../Public/Debugger.hpp"
 #include "../Public/DebugDraw.h"
 
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Managers/D3D12Toolkit/Public/ToolkitAPI.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Managers/InputManager/Public/InputManager.h"
 
 namespace Engine::Managers
@@ -147,7 +149,7 @@ namespace Engine::Managers
 				 Managers::ToolkitAPI::GetInstance().GetDescriptorHeap()->GetGpuHandle(0)
 				);
 
-		const auto& token = upload_batch.End(Managers::D3Device::GetInstance().GetCommandQueue(COMMAND_LIST_UPDATE));
+		const auto& token = upload_batch.End(Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 
 		token.wait();
 	}

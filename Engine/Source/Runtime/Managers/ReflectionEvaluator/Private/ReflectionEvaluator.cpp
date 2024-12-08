@@ -29,7 +29,10 @@ namespace Engine::Managers
 
 	void ReflectionEvaluator::RenderFinished(const Weak<CommandPair>& w_cmd) const
 	{
-		D3Device::GetInstance().CopyBackBuffer(w_cmd, m_copy_.GetRawResoruce());
+		if (const Strong<CommandPair>& cmd = w_cmd.lock())
+		{
+			D3Device::GetInstance().CopyBackBuffer(cmd->GetList4(), m_copy_.GetRawResoruce());
+		}
 	}
 
 	void ReflectionEvaluator::BindReflectionMap(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const

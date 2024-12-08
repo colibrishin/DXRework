@@ -6,18 +6,12 @@
 
 #include <DirectXTex.h>
 
-
-SERIALIZE_IMPL
-(
- Engine::Resources::AtlasAnimationTexture,
- _ARTAG(_BSTSUPER(Engine::Resources::Texture3D))
- _ARTAG(m_atlases_)
-)
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
 	AtlasAnimationTexture::AtlasAnimationTexture(
-		const boost::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+		const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 	)
 		: Texture3D(path, {}),
 		  m_atlases_(atlases) {}
@@ -33,12 +27,6 @@ namespace Engine::Resources
 	void AtlasAnimationTexture::OnSerialized()
 	{
 		Texture3D::OnSerialized();
-
-		// Backup the atlases. This could be removed.
-		for (const auto& atlas : m_atlases_)
-		{
-			Serializer::Serialize(atlas->GetName(), atlas);
-		}
 	}
 
 	void AtlasAnimationTexture::OnDeserialized()
@@ -49,6 +37,36 @@ namespace Engine::Resources
 	eResourceType AtlasAnimationTexture::GetResourceType() const
 	{
 		return RES_T_ATLAS_TEX;
+	}
+
+	boost::shared_ptr<AtlasAnimationTexture> AtlasAnimationTexture::Create(
+		const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+	)
+	{
+		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimationTexture>(name).lock())
+		{
+			return ncheck;
+		}
+
+		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AtlasAnimationTexture>(path).lock())
+		{
+			return pcheck;
+		}
+
+		const auto obj = boost::make_shared<AtlasAnimationTexture>(path, atlases);
+		Managers::ResourceManager::GetInstance().AddResource(name, obj);
+
+		// Sort atlases by order of name
+		std::ranges::sort
+				(
+				 obj->m_atlases_,
+				 [](const Strong<Texture2D>& a, const Strong<Texture2D>& b)
+				 {
+					 return a->GetName() < b->GetName();
+				 }
+				);
+
+		return obj;
 	}
 
 	bool AtlasAnimationTexture::DoesWantMapByResource() const

@@ -1,11 +1,5 @@
 #include "../Public/Object.hpp"
 
-SERIALIZE_IMPL
-(
- Engine::Object,
- _ARTAG(_BSTSUPER(Engine::Abstracts::ObjectBase))
-)
-
 namespace Engine
 {
 	Object::Object()

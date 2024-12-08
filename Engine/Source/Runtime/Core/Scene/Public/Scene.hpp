@@ -5,11 +5,12 @@
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Core/Renderable/Public/Renderable.h"
-#include "Source/Runtime/BoundingGetter/Public/BoundingGetter.h"
+#include "Source/Runtime/Core/BoundingGetter/Public/BoundingGetter.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
-#include "Source/Runtime/Octree/Public/Octree.hpp"
+#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "Source/Runtime/Core/Octree/Public/Octree.hpp"
 #include "Source/Runtime/Core/Script/Public/Script.h"
+#include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -17,6 +18,9 @@ namespace physx
 	class PxScene;
 }
 #endif
+
+DEFINE_DELEGATE(OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase>);
+DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
 
 namespace Engine
 {
@@ -34,6 +38,9 @@ namespace Engine
 	class CORE_API Scene : public Abstracts::Renderable
 	{
 	public:
+		DelegateOnObjectAdded onObjectAdded;
+		DelegateOnObjectRemoved onObjectRemoved;
+
 		Scene();
 		Scene(const Scene& other) = default;
 		~Scene() override;
@@ -320,7 +327,6 @@ namespace Engine
 		}
 
 	private:
-		SERIALIZE_DECL
 		friend class Managers::SceneManager;
 
 		void AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj);
@@ -379,5 +385,3 @@ namespace Engine
 #endif
 	};
 } // namespace Engine
-
-BOOST_CLASS_EXPORT_KEY(Engine::Scene)

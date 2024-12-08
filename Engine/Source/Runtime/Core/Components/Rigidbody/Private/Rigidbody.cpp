@@ -6,18 +6,7 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
-
-SERIALIZE_IMPL
-(
- Engine::Components::Rigidbody,
- _ARTAG(_BSTSUPER(Engine::Abstracts::Component)) _ARTAG(m_bGrounded)
- _ARTAG(m_bGravityOverride) _ARTAG(m_bFixed) _ARTAG(m_friction_mu_)
- _ARTAG(m_linear_velocity) _ARTAG(m_angular_velocity)
- _ARTAG(m_linear_friction_) _ARTAG(m_angular_friction_)
- _ARTAG(m_drag_force_) _ARTAG(m_t0_force_) _ARTAG(m_t0_torque_)
- _ARTAG(m_t1_force_) _ARTAG(m_t1_torque_)
-)
+#include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
 
 namespace Engine::Components
 {

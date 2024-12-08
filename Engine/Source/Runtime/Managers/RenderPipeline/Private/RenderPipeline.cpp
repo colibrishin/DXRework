@@ -1,5 +1,6 @@
 #include "../Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 
 namespace Engine::Managers
 {
@@ -442,6 +443,8 @@ namespace Engine::Managers
 		m_sampler_descriptor_size_ = Managers::D3Device::GetInstance().GetDevice()->GetDescriptorHandleIncrementSize
 				(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
+		m_descriptor_handler_.Initialize(Managers::D3Device::GetInstance().GetDevice(), GetRootSignature());
+
 		InitializeNullDescriptors();
 	}
 
@@ -477,12 +480,83 @@ namespace Engine::Managers
 		return m_scissor_rect_;
 	}
 
-	void RenderPipeline::SetPSO(const Weak<CommandPair>& w_cmd, const Strong<Shader>& Shader)
+	void RenderPipeline::SetPSO(const Weak<CommandPair>& w_cmd, const Strong<Shader>& shader)
 	{
 		const auto& cmd        = w_cmd.lock();
-		const auto& shader_pso = Shader->GetPipelineState();
 
-		cmd->GetList()->SetPipelineState(shader_pso);
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline_state_desc;
+
+		const D3D12_INPUT_LAYOUT_DESC il
+		{
+			.pInputElementDescs = shader->GetInputElements().data(),
+			.NumElements = static_cast<UINT>(shader->GetInputElementCount())
+		};
+
+		constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
+
+		pipeline_state_desc.pRootSignature = m_root_signature_.Get();
+		pipeline_state_desc.InputLayout    = il;
+		pipeline_state_desc.VS             = {shader->GetVSBlob()->GetBufferPointer(), shader->GetVSBlob()->GetBufferSize()};
+		pipeline_state_desc.PS             = {shader->GetPSBlob()->GetBufferPointer(), shader->GetPSBlob()->GetBufferSize()};
+
+		if (ID3DBlob* gs = shader->GetGSBlob())
+		{
+			pipeline_state_desc.GS = {gs->GetBufferPointer(), gs->GetBufferSize()};
+		}
+		else
+		{
+			pipeline_state_desc.GS = empty_shader;
+		}
+
+		if (ID3DBlob* hs = shader->GetHSBlob())
+		{
+			pipeline_state_desc.HS = {hs->GetBufferPointer(), hs->GetBufferSize()};
+		}
+		else
+		{
+			pipeline_state_desc.HS = empty_shader;
+		}
+
+		if (ID3DBlob* ds = shader->GetDSBlob())
+		{
+			pipeline_state_desc.DS = {ds->GetBufferPointer(), ds->GetBufferSize()};
+		}
+		else
+		{
+			pipeline_state_desc.DS = empty_shader;
+		}
+
+		pipeline_state_desc.SampleDesc            = {1, 0};
+		pipeline_state_desc.PrimitiveTopologyType = shader->GetTopologyType();
+		pipeline_state_desc.RasterizerState       = shader->GetRasterizerDesc();
+		pipeline_state_desc.DepthStencilState     = shader->GetDepthStencilDesc();
+		pipeline_state_desc.SampleMask            = UINT_MAX;
+		pipeline_state_desc.BlendState            = shader->GetBlendDesc();
+		pipeline_state_desc.NodeMask              = 0;
+		pipeline_state_desc.CachedPSO             = {};
+		pipeline_state_desc.Flags                 = D3D12_PIPELINE_STATE_FLAG_NONE;
+		pipeline_state_desc.DSVFormat             = shader->GetDSVFormat();
+		pipeline_state_desc.NumRenderTargets      = static_cast<UINT>(shader->GetRTVFormats().size());
+
+		const std::vector<DXGI_FORMAT> formats = shader->GetRTVFormats();
+
+		for (size_t i = 0; i < formats.size(); ++i)
+		{
+			pipeline_state_desc.RTVFormats[i] = formats[i];
+		}
+
+		// todo: cache PSO for each shaders
+
+		DX::ThrowIfFailed
+				(
+				 Managers::D3Device::GetInstance().GetDevice()->CreateGraphicsPipelineState
+				 (
+				  &pipeline_state_desc,
+				  IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
+				 )
+				);
+
+		cmd->GetList()->SetPipelineState(m_pipeline_state_.Get());
 	}
 
 	DescriptorPtr RenderPipeline::AcquireHeapSlot()

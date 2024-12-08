@@ -13,5 +13,10 @@ public class Shader : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<ResourceManager>(target);
+        conf.AddPrivateDependency<DX12Agility>(target);
+        conf.AddPrivateDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<ThrowIfFailed>(target);
     }
 }

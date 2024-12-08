@@ -65,12 +65,18 @@ public abstract class CommonProject : Project
 
         conf.DumpDependencyGraph = true;
 
-        conf.Defines.Add(Name.ToUpper() + "_API");
+        string emptyAPIString = Name.ToUpper() + "_API=EMPTY";
+
+        conf.ExportDefines.Add(emptyAPIString);
+        conf.Defines.Add(emptyAPIString);
 
         // conf.Output = Configuration.OutputType.Exe;
         if (target.LaunchType == ELaunchType.Editor)
         {
             conf.Output = Configuration.OutputType.Dll;
+
+            conf.ExportDefines.Remove(emptyAPIString);
+            conf.Defines.Remove(emptyAPIString);
 
             conf.ExportDefines.Add(Name.ToUpper() + "_API=DLLIMPORT");
             conf.Defines.Add(Name.ToUpper() + "_API=DLLEXPORT");

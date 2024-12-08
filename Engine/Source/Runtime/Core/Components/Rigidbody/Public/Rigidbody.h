@@ -77,7 +77,6 @@ namespace Engine::Components
 #endif
 
 	private:
-		SERIALIZE_DECL
 		COMP_CLONE_DECL
 
 		bool m_bGrounded;
@@ -102,6 +101,4 @@ namespace Engine::Components
 
 		std::unique_ptr<Transform> m_t1_;
 	};
-} // namespace Engine::Component
-
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Rigidbody)
+} // namespace Engine::Components

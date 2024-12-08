@@ -1,20 +1,8 @@
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
-
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/GJK/Public/GJK.h"
-#include "Source/Runtime/RaycastExtension/Public/RaycastExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
-#include "Source/Runtime/Core/Serialization/Public/SerializationImpl.hpp"
-
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
-#include "Source/Runtime/Core/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Resources/Material/Public/Material.h"
-
-#if defined(USE_DX12)
-#include <directxtk12/GeometricPrimitive.h>
-#endif
 
 #ifdef PHYSX_ENABLED
 #include <PxMaterial.h>
@@ -29,14 +17,10 @@
 #include <extensions/PxDefaultStreams.h>
 #endif
 
-
-SERIALIZE_IMPL
-(
- Engine::Components::Collider,
- _ARTAG(_BSTSUPER(Engine::Abstracts::Component))
- _ARTAG(m_type_) _ARTAG(m_shape_meta_path_) _ARTAG(m_mass_)
- _ARTAG(m_boundings_)
-)
+std::vector<Engine::Graphics::VertexElement> Engine::Components::Collider::s_cube_stock_           = {}; // todo: static stock vertices
+std::vector<Engine::Graphics::VertexElement> Engine::Components::Collider::s_sphere_stock_         = {};
+std::vector<UINT>                            Engine::Components::Collider::s_cube_stock_indices_   = {};
+std::vector<UINT>                            Engine::Components::Collider::s_sphere_stock_indices_ = {};
 
 namespace Engine::Components
 {
@@ -44,9 +28,9 @@ namespace Engine::Components
 
 	const std::vector<Graphics::VertexElement>& Collider::GetVertices() const
 	{
-		if (const auto model = m_shape_.lock())
+		if (!m_vertices_.empty())
 		{
-			return model->GetVertices();
+			return m_vertices_;
 		}
 
 		switch (m_type_)
@@ -95,50 +79,16 @@ namespace Engine::Components
 		owner->onLayerChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 #endif
 
-		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetToStockObject);
-		owner->onComponentAdded.Listen(GetSharedPtr<Collider>(), &Collider::UpdateByOwner);
+		const auto vtx_ptr = reinterpret_cast<Vector3*>(s_cube_stock_.data());
+		m_boundings_.CreateFromPoints<BoundingBox>(s_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
 
-		if (owner)
+		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
-			const auto& useStock = [this]()
-				{
-					const auto vtx_ptr = reinterpret_cast<Vector3*>(s_cube_stock_.data());
-					m_boundings_.CreateFromPoints<BoundingBox>(s_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
-
-					if (m_type_ == BOUNDING_TYPE_BOX)
-					{
-						GenerateInertiaCube();
-					}
-					else if (m_type_ == BOUNDING_TYPE_SPHERE)
-					{
-						GenerateInertiaSphere();
-					}
-
-#ifdef PHYSX_ENABLED
-					UpdatePhysXShape();
-#endif
-				};
-
-			if (const auto& rc = owner->GetComponent<RenderComponent>().lock())
-			{
-				rc->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
-
-				if (const auto& material = rc->GetMaterial().lock())
-				{
-					if (const auto& shape = material->GetResource<Resources::Shape>(0).lock())
-					{
-						SetShape(shape);
-					}
-				}
-				else
-				{
-					useStock();
-				}
-			}
-			else
-			{
-				useStock();
-			}
+			GenerateInertiaCube();
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE)
+		{
+			GenerateInertiaSphere();
 		}
 
 		UpdateInertiaTensor();
@@ -146,41 +96,7 @@ namespace Engine::Components
 
 	void Collider::InitializeStockVertices()
 	{
-#if defined(USE_DX12)
-		using DirectX::DX12::GeometricPrimitive;
-
-		GeometricPrimitive::IndexCollection  index;
-		GeometricPrimitive::VertexCollection vertex;
-
-		if (s_cube_stock_.empty())
-		{
-			GeometricPrimitive::CreateCube(vertex, index, 1.f, false);
-
-			for (const auto& v : vertex)
-			{
-				s_cube_stock_.push_back({v.position});
-			}
-
-			for (const auto& i : index)
-			{
-				s_cube_stock_indices_.push_back(i);
-			}
-		}
-		if (s_sphere_stock_.empty())
-		{
-			GeometricPrimitive::CreateSphere(vertex, index, 1.f, 16, false);
-
-			for (const auto& v : vertex)
-			{
-				s_sphere_stock_.push_back({v.position});
-			}
-
-			for (const auto& i : index)
-			{
-				s_sphere_stock_indices_.push_back(i);
-			}
-		}
-#endif
+		// todo: static stock vertices
 
 #ifdef PHYSX_ENABLED
 
@@ -238,30 +154,15 @@ namespace Engine::Components
 		}
 
 		UpdateInertiaTensor();
-	}
-
-	void Collider::SetShape(const Weak<Resources::Shape>& model)
-	{
-		if (const auto locked = model.lock())
-		{
-			m_shape_meta_path_ = locked->GetMetadataPath();
-			m_shape_           = locked;
-
-			BoundingOrientedBox obb;
-			BoundingOrientedBox::CreateFromBoundingBox(obb, locked->GetBoundingBox());
-			SetBoundingBox(obb);
-		}
-		else
-		{
-			// Assuming model has been reset.
-			m_shape_meta_path_ = "";
-			m_shape_ = {};
-			SetBoundingBox({});
-		}
 
 #ifdef PHYSX_ENABLED
 		UpdatePhysXShape();
 #endif
+	}
+
+	void Collider::SetVertices(const VertexCollection& vertex_collection)
+	{
+		m_vertices_ = vertex_collection;
 	}
 
 	bool Collider::Intersects(const Strong<Collider>& lhs, const Strong<Collider>& rhs, const Vector3& dir)
@@ -289,41 +190,6 @@ namespace Engine::Components
 				(container->m_boundings_, test->GetWorldMatrix(), container->GetWorldMatrix());
 	}
 
-	bool Collider::Intersects(
-		const Vector3& start, const Vector3& dir, float distance,
-		float&         intersection
-	) const
-	{
-		if (m_type_ == BOUNDING_TYPE_BOX)
-		{
-			const auto    box     = GetBounding<BoundingOrientedBox>();
-			const Vector3 Extents = box.Extents;
-			const auto    test    = Physics::RaycastExtension::TestRayOBBIntersection
-					(
-					 start, dir, -Extents,
-					 Extents,
-					 GetWorldMatrix(),
-					 intersection
-					);
-
-			return test && intersection <= distance;
-		}
-		if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			const auto sphere = GetBounding<BoundingSphere>();
-			const auto test   = Physics::RaycastExtension::TestRaySphereIntersection
-					(
-					 start, dir, sphere.Center,
-					 sphere.Radius,
-					 intersection
-					);
-
-			return test && intersection <= distance;
-		}
-
-		return false;
-	}
-
 	void Collider::AddCollidedObject(const GlobalEntityID id)
 	{
 		m_collided_objects_.insert(id);
@@ -342,21 +208,6 @@ namespace Engine::Components
 	const std::set<GlobalEntityID>& Collider::GetCollidedObjects() const
 	{
 		return m_collided_objects_;
-	}
-
-	bool Collider::GetPenetration(
-		const Collider& other, Vector3& normal,
-		float&          depth
-	) const
-	{
-		auto dir = other.GetWorldMatrix().Translation() - GetWorldMatrix().Translation();
-		dir.Normalize();
-
-		return Physics::GJK::GJKAlgorithm
-				(
-				 GetWorldMatrix(), other.GetWorldMatrix(), GetVertices(), other.GetVertices(), dir,
-				 normal, depth
-				);
 	}
 
 	float Collider::GetMass() const
@@ -434,12 +285,6 @@ namespace Engine::Components
 	void Collider::OnSerialized()
 	{
 		Component::OnSerialized();
-
-		if (const auto shape = m_shape_.lock())
-		{
-			Serializer::Serialize(shape->GetName(), shape);
-			m_shape_meta_path_     = shape->GetMetadataPath();
-		}
 	}
 
 	void Collider::OnDeserialized()
@@ -447,11 +292,6 @@ namespace Engine::Components
 		Component::OnDeserialized();
 
 		InitializeStockVertices();
-
-		if (!m_shape_meta_path_.empty())
-		{
-			SetShape(Resources::Shape::GetByMetadataPath(m_shape_meta_path_));
-		}
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
@@ -530,31 +370,6 @@ namespace Engine::Components
 		const float i      = 2.5f * GetInverseMass() / (radius * radius);
 
 		m_inverse_inertia_ = Vector3(i, i, i);
-	}
-
-	void Collider::VerifyMaterial(boost::weak_ptr<Resources::Material> weak_material)
-	{
-		if (const auto& material = weak_material.lock())
-		{
-			if (const Strong<Resources::Shape> shape = material->GetResource<Resources::Shape>(0).lock())
-			{
-				SetShape(shape);
-			}
-		}
-	}
-
-	void Collider::UpdateByOwner(Weak<Component> component)
-	{
-		if (const auto& locked = component.lock())
-		{
-			if (locked->GetComponentType() == COM_T_RENDERER)
-			{
-				const Strong<RenderComponent> render_component = locked->GetSharedPtr<RenderComponent>();
-
-				render_component->onMaterialChange.Listen(GetSharedPtr<Collider>(), &Collider::VerifyMaterial);
-				VerifyMaterial(render_component->GetMaterial());
-			}
-		}
 	}
 
 #ifdef PHYSX_ENABLED
@@ -722,18 +537,6 @@ namespace Engine::Components
 		}
 	}
 #endif
-
-	void Collider::ResetToStockObject(Weak<Component> component)
-	{
-		if (const Strong<Component>& locked = component.lock())
-		{
-			if (locked->GetComponentType() == COM_T_RENDERER)
-			{
-				// reset registered shape from render component and update shape information
-				SetShape({});
-			}
-		}
-	}
 
 	void Collider::PreUpdate(const float& dt)
 	{

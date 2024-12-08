@@ -3,12 +3,11 @@
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/Core/Serialization/Public/SerializationImpl.hpp"
 #include <boost/filesystem.hpp>
 
 namespace Engine::Managers
 {
-	class ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
+	class RESOURCEMANAGER_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
 	{
 	public:
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
@@ -85,7 +84,7 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResource(const EntityName& name, const eResourceType& type);
 
 		template <typename T>
-		boost::weak_ptr<T> GetResourceByRawPath(const boost::filesystem::path& path)
+		boost::weak_ptr<T> GetResourceByRawPath(const std::filesystem::path& path)
 		{
 			if (path.empty())
 			{
@@ -115,7 +114,7 @@ namespace Engine::Managers
 		}
 
 		template <typename T>
-		boost::weak_ptr<T> GetResourceByMetadataPath(const boost::filesystem::path& path)
+		boost::weak_ptr<T> GetResourceByMetadataPath(const std::filesystem::path& path)
 		{
 			if (path.empty())
 			{
@@ -140,19 +139,12 @@ namespace Engine::Managers
 
 				return boost::reinterpret_pointer_cast<T>(*it);
 			}
-			if (boost::filesystem::exists(path))
-			{
-				const auto res = Serializer::Deserialize<Entity>(path.generic_string())->GetSharedPtr<T>();
-				m_resources_[which_resource<T>::value].insert(res);
-				res->Load();
-				return res;
-			}
 
 			return {};
 		}
 
-		Weak<Abstracts::Resource> GetResourceByRawPath(const boost::filesystem::path& path, eResourceType type);
-		Weak<Abstracts::Resource> GetResourceByMetadataPath(const boost::filesystem::path& path, eResourceType type);
+		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, eResourceType type);
+		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, eResourceType type);
 
 	private:
 		friend struct SingletonDeleter;
@@ -162,4 +154,4 @@ namespace Engine::Managers
 		fast_pool_unordered_map<LocalResourceID, Weak<Abstracts::Resource>> m_resource_cache_;
 		fast_pool_unordered_map<LocalResourceID, GlobalEntityID> m_resource_ids_;
 	};
-} // namespace Engine::Manager
+} // namespace Engine::Managers

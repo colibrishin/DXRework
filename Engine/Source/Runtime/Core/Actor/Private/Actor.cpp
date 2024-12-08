@@ -1,13 +1,5 @@
 #include "../Public/Actor.h"
 
-SERIALIZE_IMPL
-(
- Engine::Abstracts::Actor,
- _ARTAG(_BSTSUPER(Renderable))
- _ARTAG(m_layer_)
- _ARTAG(m_local_id_)
-)
-
 namespace Engine::Abstracts
 {
 	Actor::Actor(const Actor& other)

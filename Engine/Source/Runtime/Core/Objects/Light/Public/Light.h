@@ -57,7 +57,6 @@ namespace Engine::Objects
 		}
 
 	private:
-		SERIALIZE_DECL
 		OBJ_CLONE_DECL
 
 		float      m_radius_;
@@ -66,5 +65,3 @@ namespace Engine::Objects
 		Color      m_color_;
 	};
 } // namespace Engine::Objects
-
-BOOST_CLASS_EXPORT_KEY(Engine::Objects::Light)

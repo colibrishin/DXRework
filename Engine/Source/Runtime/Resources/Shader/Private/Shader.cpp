@@ -1,6 +1,5 @@
 #include "../Public/Shader.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 #include <ranges>
 
@@ -9,16 +8,6 @@
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 #endif
-
-SERIALIZE_IMPL
-(
- Engine::Resources::Shader,
- _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_domain_) _ARTAG(m_depth_flag_) _ARTAG(m_depth_test_) _ARTAG(m_depth_func_)
- _ARTAG(m_smp_filter_) _ARTAG(m_smp_address_) _ARTAG(m_smp_func_)
- _ARTAG(m_cull_mode_) _ARTAG(m_fill_mode_) _ARTAG(m_topology_) _ARTAG(m_topology_type_)
- _ARTAG(m_rtv_formats_) _ARTAG(m_dsv_format_)
-)
 
 namespace Engine::Resources
 {
@@ -88,34 +77,32 @@ namespace Engine::Resources
 			throw std::runtime_error("Vertex shader is not found");
 		}
 
-		D3D12_DEPTH_STENCIL_DESC dsd;
-		dsd.DepthEnable                  = m_depth_flag_;
-		dsd.DepthWriteMask               = m_depth_test_;
-		dsd.DepthFunc                    = m_depth_func_;
-		dsd.StencilEnable                = true;
-		dsd.StencilReadMask              = 0xFF;
-		dsd.StencilWriteMask             = 0xFF;
-		dsd.FrontFace.StencilFailOp      = D3D12_STENCIL_OP_KEEP;
-		dsd.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_INCR;
-		dsd.FrontFace.StencilPassOp      = D3D12_STENCIL_OP_KEEP;
-		dsd.FrontFace.StencilFunc        = D3D12_COMPARISON_FUNC_ALWAYS;
-		dsd.BackFace.StencilFailOp       = D3D12_STENCIL_OP_KEEP;
-		dsd.BackFace.StencilDepthFailOp  = D3D12_STENCIL_OP_DECR;
-		dsd.BackFace.StencilPassOp       = D3D12_STENCIL_OP_KEEP;
-		dsd.BackFace.StencilFunc         = D3D12_COMPARISON_FUNC_ALWAYS;
+		m_depth_stencil_desc_.DepthEnable                  = m_depth_flag_;
+		m_depth_stencil_desc_.DepthWriteMask               = m_depth_test_;
+		m_depth_stencil_desc_.DepthFunc                    = m_depth_func_;
+		m_depth_stencil_desc_.StencilEnable                = true;
+		m_depth_stencil_desc_.StencilReadMask              = 0xFF;
+		m_depth_stencil_desc_.StencilWriteMask             = 0xFF;
+		m_depth_stencil_desc_.FrontFace.StencilFailOp      = D3D12_STENCIL_OP_KEEP;
+		m_depth_stencil_desc_.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_INCR;
+		m_depth_stencil_desc_.FrontFace.StencilPassOp      = D3D12_STENCIL_OP_KEEP;
+		m_depth_stencil_desc_.FrontFace.StencilFunc        = D3D12_COMPARISON_FUNC_ALWAYS;
+		m_depth_stencil_desc_.BackFace.StencilFailOp       = D3D12_STENCIL_OP_KEEP;
+		m_depth_stencil_desc_.BackFace.StencilDepthFailOp  = D3D12_STENCIL_OP_DECR;
+		m_depth_stencil_desc_.BackFace.StencilPassOp       = D3D12_STENCIL_OP_KEEP;
+		m_depth_stencil_desc_.BackFace.StencilFunc         = D3D12_COMPARISON_FUNC_ALWAYS;
 
-		D3D12_RASTERIZER_DESC rd;
-		rd.AntialiasedLineEnable = true;
-		rd.DepthBias             = 0;
-		rd.DepthBiasClamp        = 0.0f;
-		rd.DepthClipEnable       = true;
-		rd.CullMode              = m_cull_mode_;
-		rd.FillMode              = m_fill_mode_;
-		rd.FrontCounterClockwise = false;
-		rd.MultisampleEnable     = false;
-		rd.ForcedSampleCount     = 0;
-		rd.SlopeScaledDepthBias  = 0.0f;
-		rd.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+		m_rasterizer_desc_.AntialiasedLineEnable = true;
+		m_rasterizer_desc_.DepthBias             = 0;
+		m_rasterizer_desc_.DepthBiasClamp        = 0.0f;
+		m_rasterizer_desc_.DepthClipEnable       = true;
+		m_rasterizer_desc_.CullMode              = m_cull_mode_;
+		m_rasterizer_desc_.FillMode              = m_fill_mode_;
+		m_rasterizer_desc_.FrontCounterClockwise = false;
+		m_rasterizer_desc_.MultisampleEnable     = false;
+		m_rasterizer_desc_.ForcedSampleCount     = 0;
+		m_rasterizer_desc_.SlopeScaledDepthBias  = 0.0f;
+		m_rasterizer_desc_.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
 		constexpr D3D12_DESCRIPTOR_HEAP_DESC dhd =
 		{
@@ -149,22 +136,21 @@ namespace Engine::Resources
 		sd.MinLOD         = 0.0f;
 		sd.MaxLOD         = D3D12_FLOAT32_MAX;
 
-		D3D12_BLEND_DESC bd;
-		bd.AlphaToCoverageEnable  = m_domain_ == SHADER_DOMAIN_TRANSPARENT ? true : false;
-		bd.IndependentBlendEnable = false;
+		m_blend_desc_.AlphaToCoverageEnable  = m_domain_ == SHADER_DOMAIN_TRANSPARENT ? true : false;
+		m_blend_desc_.IndependentBlendEnable = false;
 
 		for (int i = 0; i < m_rtv_formats_.size(); ++i)
 		{
-			bd.RenderTarget[i].BlendEnable           = m_domain_ == SHADER_DOMAIN_TRANSPARENT ? true : false;
-			bd.RenderTarget[i].LogicOpEnable         = false;
-			bd.RenderTarget[i].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
-			bd.RenderTarget[i].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
-			bd.RenderTarget[i].BlendOp               = D3D12_BLEND_OP_ADD;
-			bd.RenderTarget[i].SrcBlendAlpha         = D3D12_BLEND_ONE;
-			bd.RenderTarget[i].DestBlendAlpha        = D3D12_BLEND_ZERO;
-			bd.RenderTarget[i].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
-			bd.RenderTarget[i].LogicOp               = D3D12_LOGIC_OP_NOOP;
-			bd.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+			m_blend_desc_.RenderTarget[i].BlendEnable           = m_domain_ == SHADER_DOMAIN_TRANSPARENT ? true : false;
+			m_blend_desc_.RenderTarget[i].LogicOpEnable         = false;
+			m_blend_desc_.RenderTarget[i].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
+			m_blend_desc_.RenderTarget[i].DestBlend             = D3D12_BLEND_INV_SRC_ALPHA;
+			m_blend_desc_.RenderTarget[i].BlendOp               = D3D12_BLEND_OP_ADD;
+			m_blend_desc_.RenderTarget[i].SrcBlendAlpha         = D3D12_BLEND_ONE;
+			m_blend_desc_.RenderTarget[i].DestBlendAlpha        = D3D12_BLEND_ZERO;
+			m_blend_desc_.RenderTarget[i].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+			m_blend_desc_.RenderTarget[i].LogicOp               = D3D12_LOGIC_OP_NOOP;
+			m_blend_desc_.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		}
 
 		Managers::D3Device::GetInstance().GetDevice()->CreateSampler(&sd, m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart());
@@ -175,76 +161,10 @@ namespace Engine::Resources
 		{
 			m_il_elements_.push_back(element);
 		}
-
-		const D3D12_INPUT_LAYOUT_DESC il
-		{
-			.pInputElementDescs = m_il_elements_.data(),
-			.NumElements = static_cast<UINT>(m_il_.size())
-		};
-
-		constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
-
-		m_pipeline_state_desc_.pRootSignature = Managers::RenderPipeline::GetInstance().GetRootSignature();
-		m_pipeline_state_desc_.InputLayout    = il;
-		m_pipeline_state_desc_.VS             = {m_vs_blob_->GetBufferPointer(), m_vs_blob_->GetBufferSize()};
-		m_pipeline_state_desc_.PS             = {m_ps_blob_->GetBufferPointer(), m_ps_blob_->GetBufferSize()};
-
-		if (m_gs_blob_)
-		{
-			m_pipeline_state_desc_.GS = {m_gs_blob_->GetBufferPointer(), m_gs_blob_->GetBufferSize()};
-		}
-		else
-		{
-			m_pipeline_state_desc_.GS = empty_shader;
-		}
-
-		if (m_hs_blob_)
-		{
-			m_pipeline_state_desc_.HS = {m_hs_blob_->GetBufferPointer(), m_hs_blob_->GetBufferSize()};
-		}
-		else
-		{
-			m_pipeline_state_desc_.HS = empty_shader;
-		}
-
-		if (m_ds_blob_)
-		{
-			m_pipeline_state_desc_.DS = {m_ds_blob_->GetBufferPointer(), m_ds_blob_->GetBufferSize()};
-		}
-		else
-		{
-			m_pipeline_state_desc_.DS = empty_shader;
-		}
-
-		m_pipeline_state_desc_.SampleDesc            = {1, 0};
-		m_pipeline_state_desc_.PrimitiveTopologyType = m_topology_type_;
-		m_pipeline_state_desc_.RasterizerState       = rd;
-		m_pipeline_state_desc_.DepthStencilState     = dsd;
-		m_pipeline_state_desc_.SampleMask            = UINT_MAX;
-		m_pipeline_state_desc_.BlendState            = bd;
-		m_pipeline_state_desc_.NodeMask              = 0;
-		m_pipeline_state_desc_.CachedPSO             = {};
-		m_pipeline_state_desc_.Flags                 = D3D12_PIPELINE_STATE_FLAG_NONE;
-		m_pipeline_state_desc_.DSVFormat             = m_dsv_format_;
-		m_pipeline_state_desc_.NumRenderTargets      = static_cast<UINT>(m_rtv_formats_.size());
-
-		for (size_t i = 0; i < m_rtv_formats_.size(); ++i)
-		{
-			m_pipeline_state_desc_.RTVFormats[i] = m_rtv_formats_[i];
-		}
-
-		DX::ThrowIfFailed
-				(
-				 Managers::D3Device::GetInstance().GetDevice()->CreateGraphicsPipelineState
-				 (
-				  &m_pipeline_state_desc_,
-				  IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
-				 )
-				);
 	}
 
 	Shader::Shader(
-		const EntityName&      name, const boost::filesystem::path& path, const eShaderDomain domain,
+		const EntityName&      name, const std::filesystem::path& path, const eShaderDomain domain,
 		const UINT             depth, const UINT rasterizer, const D3D12_FILTER filter, const UINT sampler,
 		const DXGI_FORMAT*     rtv_format, const UINT rtv_count, DXGI_FORMAT dsv_format,
 		D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
@@ -320,9 +240,74 @@ namespace Engine::Resources
 		return m_topology_;
 	}
 
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE Shader::GetTopologyType() const
+	{
+		return m_topology_type_;
+	}
+
 	D3D12_CPU_DESCRIPTOR_HANDLE Shader::GetShaderHeap() const
 	{
 		return m_sampler_descriptor_heap_->GetCPUDescriptorHandleForHeapStart();
+	}
+
+	ID3DBlob* Shader::GetVSBlob() const
+	{
+		return m_vs_blob_.Get();
+	}
+
+	ID3DBlob* Shader::GetPSBlob() const
+	{
+		return m_ps_blob_.Get();
+	}
+
+	ID3DBlob* Shader::GetGSBlob() const
+	{
+		return m_gs_blob_.Get();
+	}
+
+	ID3DBlob* Shader::GetHSBlob() const
+	{
+		return m_hs_blob_.Get();
+	}
+
+	ID3DBlob* Shader::GetDSBlob() const
+	{
+		return m_ds_blob_.Get();
+	}
+
+	D3D12_RASTERIZER_DESC Shader::GetRasterizerDesc() const
+	{
+		return m_rasterizer_desc_;
+	}
+
+	D3D12_DEPTH_STENCIL_DESC Shader::GetDepthStencilDesc() const
+	{
+		return m_depth_stencil_desc_;
+	}
+
+	D3D12_BLEND_DESC Shader::GetBlendDesc() const
+	{
+		return m_blend_desc_;
+	}
+
+	const std::vector<DXGI_FORMAT>& Shader::GetRTVFormats() const
+	{
+		return m_rtv_formats_;
+	}
+
+	DXGI_FORMAT Shader::GetDSVFormat() const
+	{
+		return m_dsv_format_;
+	}
+
+	const std::vector<D3D12_INPUT_ELEMENT_DESC>& Shader::GetInputElements() const
+	{
+		return m_il_elements_;
+	}
+
+	size_t Shader::GetInputElementCount() const
+	{
+		return m_il_.size();
 	}
 
 	boost::weak_ptr<Shader> Shader::Get(const std::string& name)
@@ -331,7 +316,7 @@ namespace Engine::Resources
 	}
 
 	boost::shared_ptr<Shader> Shader::Create(
-		const std::string&     name, const boost::filesystem::path& path, const eShaderDomain domain, const UINT depth,
+		const std::string&     name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
 		const UINT             rasterizer, const D3D12_FILTER filter, const UINT sampler,
 		const DXGI_FORMAT*     rtv_format, const UINT rtv_count, const DXGI_FORMAT dsv_format,
 		D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
@@ -357,9 +342,9 @@ namespace Engine::Resources
 	{
 		if (exists(GetPath()))
 		{
-			const boost::filesystem::path folder   = GetPrettyTypeName();
-			const boost::filesystem::path filename = GetPath().filename();
-			const boost::filesystem::path p        = folder / filename;
+			const std::filesystem::path folder   = GetPrettyTypeName();
+			const std::filesystem::path filename = GetPath().filename();
+			const std::filesystem::path p        = folder / filename;
 
 			if (!exists(folder))
 			{
@@ -373,10 +358,10 @@ namespace Engine::Resources
 
 			if (exists(p))
 			{
-				boost::filesystem::remove(p);
+				std::filesystem::remove(p);
 			}
 
-			copy_file(GetPath(), p, boost::filesystem::copy_options::overwrite_existing);
+			copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
 
 			SetPath(p);
 		}
@@ -384,7 +369,6 @@ namespace Engine::Resources
 
 	Shader::Shader()
 		: Resource("", RES_T_SHADER),
-		  m_pipeline_state_desc_(),
 		  m_domain_(),
 		  m_depth_flag_(false),
 		  m_depth_test_(),

@@ -1,12 +1,19 @@
 #pragma once
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
-#include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
+#include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
+#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+
+DEFINE_DELEGATE(OnSceneActive, Engine::Weak<Engine::Scene>);
+DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
 namespace Engine::Managers
 {
-	class SceneManager final : public Abstracts::Singleton<SceneManager>
+	class SCENEMANAGER_API SceneManager final : public Abstracts::Singleton<SceneManager>
 	{
 	public:
+		DelegateOnSceneActive onSceneActive;
+		DelegateOnSceneRemoved onSceneRemoved;
+
 		explicit SceneManager(SINGLETON_LOCK_TOKEN) {}
 
 		Weak<Scene> GetActiveScene() const
@@ -61,7 +68,6 @@ namespace Engine::Managers
 		void AddScene(const Weak<Scene>& ptr_scene);
 
 		void SetActiveFinalize(const Weak<Scene>& it);
-		void OpenLoadPopup();
 
 		void RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name);
 

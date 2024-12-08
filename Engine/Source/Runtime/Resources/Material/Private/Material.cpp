@@ -2,28 +2,22 @@
 
 #include <DirectXColors.h>
 
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
-#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/Resources/Texture/Public/Texture.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
-SERIALIZE_IMPL
-(
- Engine::Resources::Material,
- _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_material_sb_)
- _ARTAG(m_shader_paths_)
- _ARTAG(m_resource_paths_)
-)
+RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Material);
 
 namespace Engine::Resources
 {
-	Material::Material(const boost::filesystem::path& path)
+	Material::Material(const std::filesystem::path& path)
 		: Resource(path, RES_T_MTR),
 		  m_material_sb_(),
 		  m_b_edit_dialog_(false),
@@ -49,25 +43,6 @@ namespace Engine::Resources
 	void Material::OnSerialized()
 	{
 		Resource::OnSerialized();
-
-		m_shader_paths_.clear();
-		m_resource_paths_.clear();
-
-		for (const auto& shader : m_shaders_loaded_ | std::views::values)
-		{
-			Serializer::Serialize(shader->GetName(), shader);
-			m_shader_paths_.emplace_back(shader->GetName(), shader->GetMetadataPath().string());
-		}
-
-		for (const auto& resources : m_resources_loaded_ | std::views::values)
-		{
-			for (const auto& resource : resources)
-			{
-				Serializer::Serialize(resource->GetName(), resource);
-				m_resource_paths_[resource->GetResourceType()].emplace_back
-						(resource->GetName(), resource->GetMetadataPath().string());
-			}
-		}
 	}
 
 	void Material::OnDeserialized()
@@ -151,7 +126,7 @@ namespace Engine::Resources
 		const auto& cmd  = w_cmd.lock();
 		const auto& heap = w_heap.lock();
 
-		heap->BindGraphic(cmd);
+		heap->BindGraphic(cmd->GetList4());
 
 		if (!m_temp_param_.bypassShader)
 		{

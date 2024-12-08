@@ -1,8 +1,5 @@
 #pragma once
-#include <bitset>
-
 #if defined(USE_DX12)
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include <directx/d3d12.h>
 #endif
 
@@ -15,7 +12,7 @@
 
 namespace Engine 
 {
-	enum eTexType
+	enum TEXTURE_API eTexType
 	{
 		TEX_TYPE_1D,
 		TEX_TYPE_2D,
@@ -25,13 +22,13 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	class Texture : public Abstracts::Resource
+	class TEXTURE_API Texture : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_TEX)
 
 #if defined(USE_DX12)
-		struct GenericTextureDescription
+		struct TEXTURE_API GenericTextureDescription
 		{
 			D3D12_RESOURCE_DIMENSION Dimension        = static_cast<D3D12_RESOURCE_DIMENSION>(-1);
 			UINT64                   Alignment        = 0;
@@ -43,27 +40,10 @@ namespace Engine::Resources
 			UINT16                   MipsLevel        = 1;
 			D3D12_TEXTURE_LAYOUT     Layout           = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
 			DXGI_SAMPLE_DESC         SampleDesc       = {.Count = 1, .Quality = 0};
-
-		private:
-			friend class boost::serialization::access;
-
-			template <class Archive>
-			void serialize(Archive& ar, const unsigned int version)
-			{
-				ar & Alignment;
-				ar & Width;
-				ar & Height;
-				ar & DepthOrArraySize;
-				ar & Format;
-				ar & Flags;
-				ar & MipsLevel;
-				ar & Layout;
-				ar & SampleDesc;
-			}
 		};
 #endif
 
-		explicit Texture(boost::filesystem::path path, eTexType type, const GenericTextureDescription& description);
+		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
 
 		~Texture() override;
 
@@ -75,6 +55,7 @@ namespace Engine::Resources
 		void FixedUpdate(const float& dt) override;
 
 		void OnSerialized() override;
+		void OnDeserialized() override;
 
 		eResourceType GetResourceType() const override;
 		eTexType      GetPrimitiveTextureType() const;
@@ -102,7 +83,6 @@ namespace Engine::Resources
 
 		void        Unbind(const Weak<CommandPair>& cmd, eBindType type) const;
 		void        Unbind(ID3D12GraphicsCommandList1* cmd, eBindType type) const;
-		void        Unbind(eCommandList list, const Texture& dsv) const;
 		void        Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const;
 		static void Unbind(const Weak<CommandPair>& w_cmd, Texture** rtvs, UINT count, const Texture& dsv);
 
@@ -147,8 +127,6 @@ namespace Engine::Resources
 
 		void Unload_INTERNAL() override;
 
-		SERIALIZE_DECL
-
 	private:
 		Texture();
 		void Load_INTERNAL() final;
@@ -175,6 +153,3 @@ namespace Engine::Resources
 		bool                   m_b_lazy_window_;
 	};
 } // namespace Engine::Resources
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Resources::Texture)
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

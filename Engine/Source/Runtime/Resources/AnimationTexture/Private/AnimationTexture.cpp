@@ -1,18 +1,12 @@
 #include "../Public/AnimationTexture.h"
 
+#include <directxtk12/SimpleMath.h>
 #include <DirectXTex.h>
 #include <algorithm>
 
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-
-SERIALIZE_IMPL
-(
- Engine::Resources::AnimationTexture,
- _ARTAG(_BSTSUPER(Texture3D))
- _ARTAG(m_animations_)
- _ARTAG(m_evaluated_animations_)
-)
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
@@ -31,11 +25,6 @@ namespace Engine::Resources
 	void AnimationTexture::OnSerialized()
 	{
 		Texture3D::OnSerialized();
-
-		for (const auto& anim : m_animations_)
-		{
-			Serializer::Serialize(anim->GetName(), anim);
-		}
 	}
 
 	void AnimationTexture::OnDeserialized()
@@ -46,6 +35,19 @@ namespace Engine::Resources
 	eResourceType AnimationTexture::GetResourceType() const
 	{
 		return RES_T_ANIMS_TEX;
+	}
+
+	boost::shared_ptr<AnimationTexture> AnimationTexture::Create(
+		const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
+	) {
+		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AnimationTexture>(name).lock())
+		{
+			return ncheck;
+		}
+
+		const auto obj = boost::make_shared<AnimationTexture>(anims);
+		Managers::ResourceManager::GetInstance().AddResource(name, obj);
+		return obj;
 	}
 
 	void AnimationTexture::loadDerived(ComPtr<ID3D12Resource>& res)

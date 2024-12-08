@@ -6,6 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/Runtime/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Managers/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Components/**/*.build.cs")]
 
 public class FastBuildAllOverrideProject : FastBuildAllProject 
 {
@@ -56,49 +57,44 @@ public class EngineSolution : Solution
 
             // dll
             conf.AddProject<Core>(target);
-            conf.AddProject<SoundManager>(target);
-            conf.AddProject<BoundingGetter>(target);
-            conf.AddProject<CommandPair>(target);
-            conf.AddProject<CommandPairExtension>(target);
-            conf.AddProject<ConstantBufferDX12>(target);
-            conf.AddProject<DescriptorHeap>(target);
-            conf.AddProject<GenericBounding>(target);
             conf.AddProject<GJK>(target);
-            conf.AddProject<MathExtension>(target);
-            conf.AddProject<Octree>(target);
-            conf.AddProject<StructuredBufferDX12>(target);
-            conf.AddProject<ThrowIfFailed>(target);
+            conf.AddProject<RaycastExtension>(target);
+            conf.AddProject<ParticleRendererExtension>(target);
             conf.AddProject<Verlet>(target);
-            // conf.AddProject<Engine>(target);
-            // conf.AddProject<Launch>(target);
-            // conf.AddProject<Network>(target);
-            // conf.AddProject<RenderCore>(target);
-            // conf.AddProject<Renderer>(target);
-            // conf.AddProject<RHI>(target);
-            // conf.AddProject<D3D11RHI>(target);
-            // conf.AddProject<Slate>(target);
-
-            // // config
-            // conf.AddProject<EngineConfig>(target);
 
             {
+                conf.AddProject<CommandPair>(target);
+                conf.AddProject<CommandPairExtension>(target);
+                conf.AddProject<DescriptorHeap>(target);
+                conf.AddProject<ThrowIfFailed>(target);
+            }
+            
+
+            {
+                conf.AddProject<RenderComponent>(target);
+                conf.AddProject<ModelRenderer>(target);
+                conf.AddProject<ParticleRenderer>(target);
+                conf.AddProject<Animator>(target);
+            }
+
+            {
+                conf.AddProject<SoundManager>(target);
                 conf.AddProject<CommonRenderer>(target);
                 conf.AddProject<D3D12Toolkit>(target);
                 conf.AddProject<D3D12Wrapper>(target);
                 conf.AddProject<Debugger>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<InputManager>(target);
+                conf.AddProject<CameraManager>(target);
                 conf.AddProject<ProjectionFrustum>(target);
-                // conf.AddProject<RaytracingPipeline>(target);
+                //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
                 conf.AddProject<Renderer>(target);
                 conf.AddProject<RenderPipeline>(target);
-                conf.AddProject<ResourceMananger>(target);
+                conf.AddProject<ResourceManager>(target);
                 conf.AddProject<SceneManager>(target);
-                conf.AddProject<ShadowManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<StepTimer>(target);
-                conf.AddProject<TaskScheduler>(target);
                 conf.AddProject<WinAPIWrapper>(target);
             }
 

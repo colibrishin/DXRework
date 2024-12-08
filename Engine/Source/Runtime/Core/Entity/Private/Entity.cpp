@@ -1,14 +1,5 @@
 #include "..\Public\Entity.hpp"
 
-SERIALIZE_IMPL
-(
- Engine::Abstracts::Entity,
- _ARTAG(m_name_)
- _ARTAG(m_meta_path_)
- _ARTAG(m_b_garbage_)
- _ARTAG(m_b_initialized_)
-)
-
 void Engine::Abstracts::Entity::SetName(const EntityName& name)
 {
 	m_name_ = name;
@@ -19,7 +10,7 @@ void Engine::Abstracts::Entity::SetGarbage(bool garbage)
 	m_b_garbage_ = garbage;
 }
 
-const boost::filesystem::path& Engine::Abstracts::Entity::GetMetadataPath() const
+const std::filesystem::path& Engine::Abstracts::Entity::GetMetadataPath() const
 {
 	return m_meta_path_;
 }

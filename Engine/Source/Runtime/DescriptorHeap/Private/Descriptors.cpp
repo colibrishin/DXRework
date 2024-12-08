@@ -1,14 +1,13 @@
 #include "../Public/Descriptors.h"
 
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
+#include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 #include <memory>
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
+
+#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 
 namespace Engine
 {
@@ -99,7 +98,7 @@ namespace Engine
 				 m_sampler_descriptor_size_
 				);
 
-		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
+		m_handler_->m_dev_->CopyDescriptorsSimple
 				(
 				 1,
 				 handle,
@@ -122,7 +121,7 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
+		m_handler_->m_dev_->CopyDescriptorsSimple
 				(
 				 1,
 				 cbv_handle,
@@ -145,7 +144,7 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
+		m_handler_->m_dev_->CopyDescriptorsSimple
 				(
 				 1,
 				 heap_handle,
@@ -172,7 +171,7 @@ namespace Engine
 
 		for (UINT i = 0; i < count; ++i)
 		{
-			Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
+			m_handler_->m_dev_->CopyDescriptorsSimple
 					(
 					 1,
 					 heap_handle,
@@ -198,21 +197,13 @@ namespace Engine
 				 m_buffer_descriptor_size_
 				);
 
-		Managers::D3Device::GetInstance().GetDevice()->CopyDescriptorsSimple
+		m_handler_->m_dev_->CopyDescriptorsSimple
 				(
 				 1,
 				 uav_handle,
 				 uav,
 				 D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
 				);
-	}
-
-	void DescriptorPtrImpl::BindGraphic(const Weak<CommandPair>& w_cmd) const
-	{
-		if (const auto& cmd = w_cmd.lock())
-		{
-			BindGraphic(cmd->GetList());
-		}
 	}
 
 	void DescriptorPtrImpl::BindGraphic(ID3D12GraphicsCommandList1* cmd) const
@@ -222,7 +213,7 @@ namespace Engine
 			return;
 		}
 
-		cmd->SetGraphicsRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
+		cmd->SetGraphicsRootSignature(m_handler_->m_root_signature.Get());
 
 		ID3D12DescriptorHeap* heaps[]
 		{
@@ -266,14 +257,6 @@ namespace Engine
 				);
 	}
 
-	void DescriptorPtrImpl::BindCompute(const Weak<CommandPair>& w_cmd) const
-	{
-		if (const auto& cmd = w_cmd.lock())
-		{
-			BindCompute(cmd->GetList());
-		}
-	}
-
 	void DescriptorPtrImpl::BindCompute(ID3D12GraphicsCommandList1* cmd) const
 	{
 		if (!IsValid())
@@ -281,7 +264,7 @@ namespace Engine
 			return;
 		}
 
-		cmd->SetComputeRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
+		cmd->SetComputeRootSignature(m_handler_->m_root_signature.Get());
 
 		ID3D12DescriptorHeap* heaps[]
 		{
@@ -348,7 +331,7 @@ namespace Engine
 
 		DX::ThrowIfFailed
 				(
-				Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
+				m_dev_->CreateDescriptorHeap
 				 (
 				  &buffer_heap_desc,
 				  IID_PPV_ARGS(buffer_heap.GetAddressOf())
@@ -357,7 +340,7 @@ namespace Engine
 
 		DX::ThrowIfFailed
 				(
-				Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
+				m_dev_->CreateDescriptorHeap
 				 (
 				  &buffer_heap_desc_sampler,
 				  IID_PPV_ARGS(sampler_heap.GetAddressOf())
@@ -377,10 +360,17 @@ namespace Engine
 	{
 		// This value is 256 for matching with SIMD type size. (__m256i)
 		m_size_ = 256;
+	}
+
+	void DescriptorHandler::Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature)
+	{
+		m_dev_ = dev;
+		m_root_signature = root_signature;
+
 		AppendNewHeaps();
-		m_buffer_size_ = Managers::D3Device::GetInstance().GetDevice()->GetDescriptorHandleIncrementSize
+		m_buffer_size_ = m_dev_->GetDescriptorHandleIncrementSize
 				(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_sampler_size_ = Managers::D3Device::GetInstance().GetDevice()->GetDescriptorHandleIncrementSize
+		m_sampler_size_ = m_dev_->GetDescriptorHandleIncrementSize
 				(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	}
 

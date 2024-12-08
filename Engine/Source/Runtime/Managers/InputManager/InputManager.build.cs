@@ -14,5 +14,7 @@ public class InputManager : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<DirectXTK>(target);
+        conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<WinAPIWrapper>(target);
     }
 }

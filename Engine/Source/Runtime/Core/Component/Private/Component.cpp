@@ -1,13 +1,5 @@
 #include "../Public/Component.h"
 
-SERIALIZE_IMPL
-(
- Engine::Abstracts::Component,
- _ARTAG(_BSTSUPER(Entity))
- _ARTAG(m_local_id_)
- _ARTAG(m_type_)
-)
-
 namespace Engine
 {
 	bool ComponentPriorityComparer::operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const
