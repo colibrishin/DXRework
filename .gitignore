@@ -398,4 +398,13 @@ pythonenv3.8/
 !DX/Metadata/**
 DX/Metadata/_excluded/**
 
-!DX/fmod/lib/*
+!Engine/Source/ThirdParty/*/lib/*
+
+
+Binaries/*
+Intermediate/*
+*.bff
+*.fdb
+kolibri.sln
+
+!Build/
