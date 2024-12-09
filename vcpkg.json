@@ -6,7 +6,6 @@
     "boost-pool",
     "boost-serialization",
     "boost-smart-ptr",
-	"boost-filesystem",
     "directx12-agility",
     "directxmath",
     "directxtk12",

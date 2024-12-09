@@ -78,8 +78,13 @@ public class EngineSolution : Solution
             }
 
             {
+                conf.AddProject<ParticleRendererRenderTask>(target);
+                conf.AddProject<ModelRendererRenderTask>(target);
+                conf.AddProject<RenderPassTaskDX12>(target);
+            }
+
+            {
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<CommonRenderer>(target);
                 conf.AddProject<D3D12Toolkit>(target);
                 conf.AddProject<D3D12Wrapper>(target);
                 conf.AddProject<Debugger>(target);

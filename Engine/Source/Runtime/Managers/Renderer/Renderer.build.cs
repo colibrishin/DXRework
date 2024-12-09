@@ -30,7 +30,6 @@ public class Renderer : CommonProject
         conf.AddPrivateDependency<Debugger>(target);
         conf.AddPrivateDependency<ProjectionFrustum>(target);
         conf.AddPrivateDependency<ReflectionEvaluator>(target);
-        conf.AddPrivateDependency<CommonRenderer>(target);
         conf.AddPrivateDependency<Material>(target);
     }
 }
