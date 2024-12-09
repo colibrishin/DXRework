@@ -32,10 +32,13 @@ namespace Engine::Managers
 
 		for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i) 
 		{
-			if (RenderMap::accesor acc;
-				m_render_candidates_.find(i, acc)) 
+			for (size_t j = 0; j < SHADER_DOMAIN_MAX; ++j) 
 			{
-				m_render_instance_tasks_[i]->Cleanup(acc.second);
+				if (RenderMap::accessor acc;
+					m_render_candidates_[j].find(acc, i))
+				{
+					m_render_instance_tasks_[i]->Cleanup(&acc->second);
+				}
 			}
 		}
 
@@ -51,9 +54,19 @@ namespace Engine::Managers
 		// Pre-processing, Mapping the materials to the model renderers.
 		if (const auto& scene = Managers::SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
-			for (RenderInstanceTask* task : m_render_instance_tasks_)
+			for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i)
 			{
-				task->Run(scene.get(), m_render_candidates_, SHADER_DOMAIN_MAX, m_instance_count_);
+				for (size_t j = 0; j < SHADER_DOMAIN_MAX; ++j) 
+				{
+					if (RenderMap::accessor acc;
+						m_render_candidates_[j].find(acc, i))
+					{
+						m_render_instance_tasks_[i]->Run(
+							scene.get(), 
+							&acc->second, 
+							m_instance_count_);
+					}
+				}
 			}
 		}
 
@@ -64,24 +77,23 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPass(static_cast<eShaderDomain>(i));
+			RenderPass(dt, static_cast<eShaderDomain>(i));
 		}
 	}
 
-	void Renderer::RenderPass(const eShaderDomain domain) 
+	void Renderer::RenderPass(const float dt, const eShaderDomain domain) 
 	{
 		for (RenderPassTask* task : m_render_pass_tasks_) 
 		{
-			if (RenderMap::accessor acc;
-				m_render_candidates_.find(domain, acc)) 
-			{
-				task->Run(
-					domain,
-					acc.second,
-					m_instance_count_,
-					m_render_prequisite_tasks_.data(),
-					m_render_prequisite_tasks_.size());
-			}
+			task->Run(
+				dt,
+				false,
+				domain,
+				&m_render_candidates_[domain],
+				m_instance_count_,
+				m_render_prequisite_tasks_.data(),
+				m_render_prequisite_tasks_.size(),
+				{}); // todo: culling
 		}
 	}
 
@@ -91,7 +103,7 @@ namespace Engine::Managers
 
 	void Renderer::Initialize() {}
 
-	void Renderer::RegisterRenderInstance(const RenderInstanceTask* task)
+	void Renderer::RegisterRenderInstance(RenderInstanceTask* task)
 	{
 		if (task != nullptr) 
 		{
@@ -99,7 +111,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPass(const RenderPassTask* task)
+	void Renderer::RegisterRenderPass(RenderPassTask* task)
 	{
 		if (task != nullptr)
 		{
@@ -107,7 +119,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPassPrequisite(const RenderPassPrequisiteTask* task)
+	void Renderer::RegisterRenderPassPrequisite(RenderPassPrequisiteTask* task)
 	{
 		if (task != nullptr) 
 		{
