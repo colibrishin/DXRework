@@ -2,9 +2,6 @@
 
 #include <DirectXColors.h>
 
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"

@@ -38,7 +38,7 @@ namespace Engine
 		struct ViewportCB
 		{
 			RT_CB_T(RAYTRACING_CB_VIEWPORT)
-				Vector2 resolution;
+			Vector2 resolution;
 		};
 	}
 

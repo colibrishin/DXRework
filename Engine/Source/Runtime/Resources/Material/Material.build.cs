@@ -15,16 +15,11 @@ public class Material : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<CommandPair>(target);
-        conf.AddPublicDependency<DescriptorHeap>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
+        conf.AddPublicDependency<Shader>(target);
 
-        conf.AddPrivateDependency<DirectXTK>(target);
-        conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<ResourceManager>(target);
         conf.AddPrivateDependency<Shape>(target);
         conf.AddPrivateDependency<Mesh>(target);
-        conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<Texture>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);
         conf.AddPrivateDependency<AtlasAnimationTexture>(target);

@@ -1,11 +1,23 @@
 #pragma once
 #include <filesystem>
+#include <memory>
+
+#include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
-#if defined(USE_DX12)
-#include <directx/d3d12.h>
-#include <wrl/client.h>
-#endif
+namespace Engine
+{
+	struct SHADER_API GraphicPrimitiveShader
+	{
+	public:
+		virtual             ~GraphicPrimitiveShader() = default;
+		virtual void        Generate(const Weak<Resources::Shader>& shader, void* pipeline_signature) = 0;
+		[[nodiscard]] void* GetGraphicPrimitiveShader() const;
+
+	private:
+		void* m_shader_ = nullptr;
+	};
+}
 
 namespace Engine::Resources
 {
@@ -15,15 +27,20 @@ namespace Engine::Resources
 		RESOURCE_T(RES_T_SHADER)
 
 		Shader(
-			const EntityName&             name, const std::filesystem::path& path,
-			eShaderDomain                 domain, eShaderDepths              depth,
-			eShaderRasterizers            rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
-			const DXGI_FORMAT*            rtv_format,
-			UINT                          rtv_count     = 1,
-			DXGI_FORMAT                   dsv_format    = DXGI_FORMAT_D24_UNORM_S8_UINT,
-			D3D_PRIMITIVE_TOPOLOGY        topology      = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-			D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
+			const EntityName&            name,
+			const std::filesystem::path& path,
+			const eShaderDomain          domain,
+			const eShaderDepths          depth,
+			const eShaderRasterizers     rasterizer,
+			const eSamplerFilter         sampler_filter,
+			const eShaderSamplers        sampler,
+			const std::vector<eFormat>&  rtv_formats,
+			const eFormat                dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
+			const ePrimitiveTopology     topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			const ePrimitiveTopologyType topology_type = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+			const eSampler               sampler_slot  = SAMPLER_TEXTURE
 		);
+
 		~Shader() override = default;
 
 		void Initialize() override;
@@ -32,43 +49,32 @@ namespace Engine::Resources
 		void FixedUpdate(const float& dt) override;
 		void PostUpdate(const float& dt) override;
 
-		eShaderDomain GetDomain() const;
-
-		void SetTopology(D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE type);
-
-		[[nodiscard]] ID3D12PipelineState*        GetPipelineState() const;
-		[[nodiscard]] D3D_PRIMITIVE_TOPOLOGY      GetTopology() const;
-		[[nodiscard]] D3D12_PRIMITIVE_TOPOLOGY_TYPE GetTopologyType() const;
-		[[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE GetShaderHeap() const;
-		
-		[[nodiscard]] ID3DBlob* GetVSBlob() const;
-		[[nodiscard]] ID3DBlob* GetPSBlob() const;
-		[[nodiscard]] ID3DBlob* GetGSBlob() const;
-		[[nodiscard]] ID3DBlob* GetHSBlob() const;
-		[[nodiscard]] ID3DBlob* GetDSBlob() const;
-
-		[[nodiscard]] D3D12_RASTERIZER_DESC GetRasterizerDesc() const;
-		[[nodiscard]] D3D12_DEPTH_STENCIL_DESC GetDepthStencilDesc() const;
-		[[nodiscard]] D3D12_BLEND_DESC GetBlendDesc() const;
-		[[nodiscard]] const std::vector<DXGI_FORMAT>& GetRTVFormats() const;
-		[[nodiscard]] DXGI_FORMAT GetDSVFormat() const;
-		[[nodiscard]] const std::vector<D3D12_INPUT_ELEMENT_DESC>& GetInputElements() const;
-		[[nodiscard]] size_t GetInputElementCount() const;
+		[[nodiscard]] eShaderDomain GetDomain() const;
+		[[nodiscard]] eShaderDepths GetDepth() const;
+		[[nodiscard]] eShaderRasterizers GetRasterizer() const;
+		[[nodiscard]] eSamplerFilter GetSamplerFilter() const;
+		[[nodiscard]] eShaderSamplers GetShaderSampler() const;
+		[[nodiscard]] const std::vector<eFormat>& GetRTVFormat() const;
+		[[nodiscard]] eFormat GetDSVFormat() const;
+		[[nodiscard]] ePrimitiveTopology GetPrimitiveTopology() const;
+		[[nodiscard]] ePrimitiveTopologyType GetPrimitiveTopologyType() const;
+		[[nodiscard]] eSampler GetSampler() const;
+		[[nodiscard]] GraphicPrimitiveShader* GetPrimitiveShader() const;
 
 		static boost::weak_ptr<Shader>   Get(const std::string& name);
 		static boost::shared_ptr<Shader> Create(
-			const std::string&            name,
-			const std::filesystem::path&  path,
-			eShaderDomain                 domain,
-			UINT                          depth,
-			UINT                          rasterizer,
-			D3D12_FILTER                  filter,
-			UINT                          sampler,
-			const DXGI_FORMAT*            rtv_format,
-			UINT                          rtv_count,
-			DXGI_FORMAT                   dsv_format,
-			D3D_PRIMITIVE_TOPOLOGY        topology,
-			D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
+			const EntityName&            name,
+			const std::filesystem::path& path,
+			const eShaderDomain          domain,
+			const eShaderDepths          depth,
+			const eShaderRasterizers     rasterizer,
+			const eSamplerFilter         sampler_filter,
+			const eShaderSamplers        sampler,
+			const std::vector<eFormat>&  rtv_formats,
+			const eFormat                dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
+			const ePrimitiveTopology     topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			const ePrimitiveTopologyType topology_type = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+			const eSampler               sampler_slot  = SAMPLER_TEXTURE
 		);
 
 	protected:
@@ -78,47 +84,21 @@ namespace Engine::Resources
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
-		inline static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version =
-		{
-			{SHADER_VERTEX, "vs_main", "vs_5_0"},
-			{SHADER_PIXEL, "ps_main", "ps_5_0"},
-			{SHADER_GEOMETRY, "gs_main", "gs_5_0"},
-			{SHADER_COMPUTE, "cs_main", "cs_5_0"},
-			{SHADER_HULL, "hs_main", "hs_5_0"},
-			{SHADER_DOMAIN, "ds_main", "ds_5_0"}
-		};
-
-		ComPtr<ID3D12PipelineState> m_pipeline_state_;
-
 	private:
 		Shader();
-		eShaderDomain              m_domain_;
-		bool                       m_depth_flag_;
 
-		D3D12_RASTERIZER_DESC      m_rasterizer_desc_;
-		D3D12_DEPTH_STENCIL_DESC   m_depth_stencil_desc_;
-		D3D12_BLEND_DESC           m_blend_desc_;
-		D3D12_DEPTH_WRITE_MASK     m_depth_test_;
-		D3D12_COMPARISON_FUNC      m_depth_func_;
-		D3D12_FILTER               m_smp_filter_;
-		D3D12_TEXTURE_ADDRESS_MODE m_smp_address_;
-		D3D12_COMPARISON_FUNC      m_smp_func_;
-		D3D12_CULL_MODE            m_cull_mode_;
-		D3D12_FILL_MODE            m_fill_mode_;
+		eShaderDomain          m_domain_;
+		eShaderDepths          m_depth_;
+		eShaderRasterizers     m_rasterizer_;
+		eSamplerFilter         m_sampler_filter_;
+		eShaderSamplers        m_sampler_;
+		std::vector<eFormat>   m_rtv_formats_;
+		eFormat                m_dsv_format_;
+		ePrimitiveTopology     m_topology_;
+		ePrimitiveTopologyType m_topology_type_;
+		eSampler               m_sampler_slot_;
 
-		std::vector<DXGI_FORMAT>                                      m_rtv_formats_;
-		DXGI_FORMAT                                                   m_dsv_format_;
-		D3D_PRIMITIVE_TOPOLOGY                                        m_topology_;
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE                                 m_topology_type_;
-		std::vector<std::pair<D3D12_INPUT_ELEMENT_DESC, std::string>> m_il_;
-		std::vector<D3D12_INPUT_ELEMENT_DESC>                         m_il_elements_;
-
-		ComPtr<ID3DBlob> m_vs_blob_;
-		ComPtr<ID3DBlob> m_ps_blob_;
-		ComPtr<ID3DBlob> m_gs_blob_;
-		ComPtr<ID3DBlob> m_hs_blob_;
-		ComPtr<ID3DBlob> m_ds_blob_;
-
-		ComPtr<ID3D12DescriptorHeap> m_sampler_descriptor_heap_;
+		bool                                    m_depth_flag_;
+		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
 	};
 } // namespace Engine::Graphic

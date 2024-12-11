@@ -1,13 +1,10 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include <memory>
+#include "Source/Runtime/Core/ConstantBuffer.h"
 
-#if defined(USE_DX12)
-#include <directxtk12/BufferHelpers.h>
-#include <directx/d3d12.h>
-#include <directx/d3dx12.h>
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/ConstantBufferDX12.hpp"
-#endif
+#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
 
 namespace Engine::Managers
 {
@@ -24,7 +21,6 @@ namespace Engine::Managers
 			~TempParamTicket()
 			{
 				Managers::RenderPipeline::GetInstance().m_param_buffer_ = previousParam;
-				Managers::RenderPipeline::GetInstance().m_param_buffer_data_.SetData(&previousParam);
 			}
 
 		private:
@@ -49,32 +45,53 @@ namespace Engine::Managers
 		void SetParam(const T& v, const size_t slot)
 		{
 			m_param_buffer_.SetParam(slot, v);
-			m_param_buffer_data_.SetData(&m_param_buffer_);
+			m_param_cb_task_->SetData(&m_param_buffer_, 1);
 		}
 
-		[[nodiscard]] TempParamTicket SetParam(const ParamBase& param)
+		[[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param)
 		{
 			return {m_param_buffer_};
 		}
 
-		void DefaultViewport(const Weak<CommandPair>& w_cmd) const;
-		void DefaultScissorRect(const Weak<CommandPair>& w_cmd) const;
-		void DefaultRootSignature(const Weak<CommandPair>& w_cmd) const;
+		template <typename T> requires (std::is_base_of_v<ViewportRenderPrerequisiteTask, T>)
+		void SetViewportPrerequisiteTask()
+		{
+			m_viewport_task_ = std::make_unique<T>();
+		}
 
-		ID3D12RootSignature* GetRootSignature() const;
+		template <typename T> requires (std::is_base_of_v<ShaderRenderPrerequisiteTask, T>)
+		void SetShaderPrerequisiteTask()
+		{
+			m_graphics_shader_task_ = std::make_unique<T>();
+		}
 
-		D3D12_VIEWPORT GetViewport() const;
-		D3D12_RECT     GetScissorRect() const;
+		template <typename T> requires (std::is_base_of_v<PipelineRenderPrerequisiteTask, T>)
+		void SetPipelinePrerequisiteTask()
+		{
+			m_pipeline_task_ = std::make_unique<T>();
+		}
 
-		void SetPSO(const Weak<CommandPair>& w_cmd, const Strong<Resources::Shader>& shader);
+		template <typename T> requires (std::is_base_of_v<ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>, T>)
+		void SetPerspectiveConstantBufferPrerequisiteTask()
+		{
+			m_perspective_cb_task_ = std::make_unique<T>();
+		}
 
-		[[nodiscard]] DescriptorPtr AcquireHeapSlot();
+		template <typename T> requires (std::is_base_of_v<ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>, T>)
+		void SetParamConstantBufferPrerequisiteTask()
+		{
+			m_param_cb_task_ = std::make_unique<T>();
+		}
 
-		UINT GetBufferDescriptorSize() const;
-		UINT GetSamplerDescriptorSize() const;
+		[[nodiscard]] ViewportRenderPrerequisiteTask* GetDefaultViewportPrerequisiteTask() const;
+		[[nodiscard]] ShaderRenderPrerequisiteTask* GetShaderRenderPrerequisiteTask(const GraphicPrimitiveShader* shader) const;
+		[[nodiscard]] PipelineRenderPrerequisiteTask* GetPipelineRenderPrerequisiteTask() const;
+		
+		[[nodiscard]] ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>* GetPerspectiveConstantBufferRenderPrerequisiteTask() const;
+		[[nodiscard]] ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>* GetParamConstantBufferRenderPrerequisiteTask() const;
 
-		void BindConstantBuffers(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap);
-		void BindConstantBuffers(ID3D12GraphicsCommandList1* cmd, const DescriptorPtr& heap);
+		void SetPrimitivePipeline(PrimitivePipeline* pipeline);
+		[[nodiscard]] PrimitivePipeline* GetPrimitivePipeline() const;
 
 	private:
 		friend class ToolkitAPI;
@@ -85,37 +102,20 @@ namespace Engine::Managers
 		~RenderPipeline() override;
 
 		void PrecompileShaders();
-		void InitializeRootSignature();
-		void InitializeNullDescriptors();
-		void InitializeHeaps();
-		void InitializeStaticBuffers();
 		void InitializeViewport();
 
-		ComPtr<ID3D12RootSignature> m_root_signature_ = nullptr;
-		ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
+		Viewport m_viewport_;
 
-		UINT m_buffer_descriptor_size_  = 0;
-		UINT m_sampler_descriptor_size_ = 0;
+		std::unique_ptr<Engine::PipelineRenderPrerequisiteTask> m_pipeline_task_;
+		std::unique_ptr<Engine::ViewportRenderPrerequisiteTask> m_viewport_task_;
+		std::unique_ptr<Engine::ShaderRenderPrerequisiteTask> m_graphics_shader_task_;
 
-		std::mutex        m_descriptor_mutex_;
-		Engine::DescriptorHandler m_descriptor_handler_;
-
-		ComPtr<ID3D12DescriptorHeap> m_null_srv_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_null_sampler_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_null_cbv_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_null_uav_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_null_rtv_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_null_dsv_heap_;
-
-		D3D12_VIEWPORT m_viewport_{};
-		D3D12_RECT     m_scissor_rect_{};
-
+		std::unique_ptr<Engine::PrimitivePipeline> m_graphics_primitive_pipeline_;
+		
+		std::unique_ptr<Engine::ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>> m_perspective_cb_task_;
+		std::unique_ptr<Engine::ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>> m_param_cb_task_;
+		
 		Graphics::CBs::PerspectiveCB m_wvp_buffer_;
 		Graphics::CBs::ParamCB       m_param_buffer_;
-
-		Graphics::ConstantBuffer<CBs::PerspectiveCB> m_wvp_buffer_data_{};
-		Graphics::ConstantBuffer<CBs::ParamCB>       m_param_buffer_data_{};
-
-		Strong<Resources::Shader> m_fallback_shader_;
 	};
 } // namespace Engine::Manager::Graphics
