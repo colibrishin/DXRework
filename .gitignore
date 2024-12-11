@@ -398,6 +398,7 @@ pythonenv3.8/
 !DX/Metadata/**
 DX/Metadata/_excluded/**
 
+Engine/***/blob/*
 !Engine/Source/ThirdParty/*/lib/*
 
 
