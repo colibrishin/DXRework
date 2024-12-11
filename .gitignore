@@ -402,8 +402,8 @@ Engine/***/blob/*
 !Engine/Source/ThirdParty/*/lib/*
 
 
-Binaries/*
-Intermediate/*
+Binaries/***
+Intermediate/***
 *.bff
 *.fdb
 kolibri.sln
