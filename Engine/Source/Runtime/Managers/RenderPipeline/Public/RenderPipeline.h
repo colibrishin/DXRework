@@ -1,10 +1,205 @@
 #pragma once
 #include <memory>
 #include "Source/Runtime/Core/ConstantBuffer.h"
-
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
-#include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
+#include "Source/Runtime/Core/ConstantBuffer.h"
+#include "Source/Runtime/Resources/Texture/Public/Texture.h"
+
+namespace Engine 
+{
+	struct RENDERPIPELINE_API PrimitiveTexture 
+	{
+		virtual ~PrimitiveTexture() = default;
+		virtual void Generate(const Weak<Resources::Texture>& texture) = 0;
+		virtual void LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path) = 0;
+		virtual void SaveAsFile(const std::filesystem::path& path) = 0;
+		virtual void Map(void* src_ptr, const size_t stride, const size_t count) = 0;
+		void UpdateDescription(const Weak<Resources::Texture>& texture, const GenericTextureDescription& description);
+		[[nodiscard]] void* GetPrimitiveTexture() const;
+
+	protected:
+		void SetPrimitiveTexture(void* texture);
+
+	private:
+		void* m_texture_ = nullptr;
+	};
+
+	struct RENDERPIPELINE_API GraphicPrimitiveShader
+	{
+	public:
+		virtual             ~GraphicPrimitiveShader() = default;
+		virtual void        Generate(const Weak<Resources::Shader>& shader, void* pipeline_signature) = 0;
+		[[nodiscard]] void* GetGraphicPrimitiveShader() const;
+
+	private:
+		void* m_shader_ = nullptr;
+	};
+
+	struct RENDERPIPELINE_API ComputePrimitiveShader
+	{
+	public:
+		virtual             ~ComputePrimitiveShader() = default;
+		virtual void        Generate(const Weak<Resources::ComputeShader>& shader, void* pipeline_signature) = 0;
+		virtual void		Dispatch(const Weak<Resources::ComputeShader>& shader) = 0;
+		[[nodiscard]] void* GetComputePrimitiveShader() const;
+
+	private:
+		void* m_shader_ = nullptr;
+	};
+
+	struct RENDERPIPELINE_API RenderInstanceTask
+	{
+		virtual      ~RenderInstanceTask() = default;
+		virtual void Run(Scene const* scene, const RenderMapValueType* render_map, std::atomic<uint64_t>& instance_count) = 0;
+		virtual void Cleanup(const RenderMapValueType* render_map) = 0;
+	};
+
+	struct RenderPassTask;
+
+	struct RENDERPIPELINE_API RenderPassPrerequisiteTask
+	{
+		virtual      ~RenderPassPrerequisiteTask() = default;
+		virtual void Run(RenderPassTask* task_context) = 0;
+		virtual void Cleanup(RenderPassTask* task_context) = 0;
+	};
+
+	struct RENDERPIPELINE_API RenderPassTask
+	{
+		virtual      ~RenderPassTask() = default;
+		virtual void Run(
+			const float dt,
+			const bool shader_bypass,
+			const eShaderDomain domain,
+			RenderMap const* domain_map,
+			const Graphics::SBs::LocalParamSB& local_param,
+			const std::atomic<uint64_t>& instance_count,
+			RenderPassPrerequisiteTask* const* prerequisite,
+			const size_t prerequisite_count,
+			const ObjectPredication& predicate) = 0;
+
+		virtual void Cleanup() = 0;
+	};
+
+	struct RENDERPIPELINE_API BufferCopyTask
+	{
+		virtual ~BufferCopyTask() = default;
+		virtual void Run(
+			void* src_data,
+			const size_t stride,
+			const size_t count,
+			void* upload_buffer, 
+			void* dest_buffer) = 0;
+
+		virtual void Cleanup() = 0;
+	};
+
+	struct RENDERPIPELINE_API ViewportRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetViewport(const Viewport& viewport);
+		[[nodiscard]] Viewport GetViewport() const;
+
+	private:
+		Engine::Viewport m_viewport_{};
+	};
+
+	struct RENDERPIPELINE_API PipelineRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetPrimitivePipeline(PrimitivePipeline* pipeline);
+
+	protected:
+		[[nodiscard]] PrimitivePipeline* GetPrimitivePipeline() const;
+
+	private:
+		PrimitivePipeline* m_pipeline_ = nullptr;
+	};
+
+	struct RENDERPIPELINE_API ShaderRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetShader(const GraphicPrimitiveShader* shader);
+		void SetPipelineSignature(void* signature);
+
+		[[nodiscard]] const GraphicPrimitiveShader* GetShader() const;
+		[[nodiscard]] void* GetPipelineSignature() const;
+
+	private:
+		const GraphicPrimitiveShader* m_shader_ = nullptr;
+		void* m_pipeline_signature_ = nullptr;
+	};
+
+	template <typename T>
+	struct StructuredBufferRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetData(const T* data, const size_t count)
+		{
+			if (data)
+			{
+				m_ptr_ = data;
+				m_count_ = count;
+			}
+		}
+
+	protected:
+		void GetData(T** out_ptr, size_t& out_count)
+		{
+			*out_ptr = m_ptr_;
+			out_count = m_count_;
+		}
+
+		[[nodiscard]] bool IsDirty() const
+		{
+			return m_dirty_;
+		}
+
+		void FlipDirty()
+		{
+			m_dirty_ = true;
+		}
+
+	private:
+		bool m_dirty_ = true;
+
+		const T* m_ptr_ = nullptr;
+		size_t m_count_ = 1;
+	};
+
+	template <typename T>
+	struct ConstantBufferRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetData(const T* data, const size_t count)
+		{
+			if (data)
+			{
+				m_ptr_ = data;
+				m_count_ = count;
+			}
+		}
+
+	protected:
+		void GetData(T** out_ptr, size_t& out_count)
+		{
+			*out_ptr = m_ptr_;
+			out_count = m_count_;
+		}
+
+		[[nodiscard]] bool IsDirty() const
+		{
+			return m_dirty_;
+		}
+
+		void FlipDirty()
+		{
+			m_dirty_ = true;
+		}
+
+	private:
+		bool m_dirty_ = true;
+
+		const T* m_ptr_ = nullptr;
+		size_t m_count_ = 1;
+	};
+}
 
 namespace Engine::Managers
 {

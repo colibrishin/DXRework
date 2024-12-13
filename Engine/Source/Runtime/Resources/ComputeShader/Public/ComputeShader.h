@@ -6,9 +6,8 @@
 #endif
 
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 namespace Engine::Resources
 {
@@ -19,10 +18,7 @@ namespace Engine::Resources
 
 		void                SetGroup(const std::array<UINT, 3>& group);
 		std::array<uint32_t, 3> GetThread() const;
-		void Dispatch(
-			ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, Graphics::SBs::LocalParamSB& param,
-			Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
-		);
+		void Dispatch(Graphics::SBs::LocalParamSB& param);
 
 		template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
 		static boost::weak_ptr<T> Create()
@@ -39,12 +35,8 @@ namespace Engine::Resources
 	protected:
 		ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
-		virtual void preDispatch(
-			ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param
-		) = 0;
-		virtual void postDispatch(
-			ID3D12GraphicsCommandList1* list, const DescriptorPtr& heap, Graphics::SBs::LocalParamSB& param
-		) = 0;
+		virtual void preDispatch() = 0;
+		virtual void postDispatch() = 0;
 
 		virtual void loadDerived() = 0;
 		virtual void unloadDerived() = 0;
@@ -61,9 +53,9 @@ namespace Engine::Resources
 
 		ComputeShader();
 
-		ComPtr<ID3DBlob> m_cs_;
+		ComputePrimitiveShader* m_primitive_shader_;
 
-		uint32_t m_thread_[3];
-		uint32_t m_group_[3];
+		std::array<uint32_t, 3> m_thread_;
+		std::array<uint32_t, 3> m_group_;
 	};
 } // namespace Engine::Resources

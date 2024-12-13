@@ -5,9 +5,9 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class RenderPassTaskDX12 : CommonProject
+public class PrimitiveTextureDX12 : CommonProject
 {
-    public RenderPassTaskDX12() { }
+    public PrimitiveTextureDX12() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

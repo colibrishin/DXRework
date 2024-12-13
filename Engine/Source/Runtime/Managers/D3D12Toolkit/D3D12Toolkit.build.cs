@@ -19,6 +19,6 @@ public class D3D12Toolkit : CommonProject
         conf.AddPrivateDependency<DX12Agility>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<SceneManager>(target);
-        //conf.AddPrivateDependency<RenderPipeline>(target);
+        conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

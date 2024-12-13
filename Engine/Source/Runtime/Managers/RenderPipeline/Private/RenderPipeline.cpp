@@ -1,5 +1,5 @@
 #include "../Public/RenderPipeline.h"
-#include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
+#include "../Public/Renderer.h"
 
 namespace Engine::Managers
 {
@@ -257,6 +257,34 @@ namespace Engine::Managers
 
 namespace Engine
 {
+	void PrimitiveTexture::UpdateDescription(
+		const Weak<Resources::Texture>& texture,
+		const GenericTextureDescription& description)
+	{
+		if (const Strong<Resources::Texture>& tex = texture.lock())
+		{
+			tex->UpdateDescription(description);
+		}
+	}
+
+	void* PrimitiveTexture::GetPrimitiveTexture() const
+	{
+		return m_texture_;
+	}
+
+	void PrimitiveTexture::SetPrimitiveTexture(void* texture)
+	{
+		if (texture) 
+		{
+			m_texture_ = texture;
+		}
+	}
+
+	void* Engine::ComputePrimitiveShader::GetComputePrimitiveShader() const
+	{
+		return m_shader_;
+	}
+
 	void* GraphicPrimitiveShader::GetGraphicPrimitiveShader() const
 	{
 		return m_shader_;

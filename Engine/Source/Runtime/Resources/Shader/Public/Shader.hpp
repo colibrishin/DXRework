@@ -4,20 +4,7 @@
 
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-
-namespace Engine
-{
-	struct SHADER_API GraphicPrimitiveShader
-	{
-	public:
-		virtual             ~GraphicPrimitiveShader() = default;
-		virtual void        Generate(const Weak<Resources::Shader>& shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetGraphicPrimitiveShader() const;
-
-	private:
-		void* m_shader_ = nullptr;
-	};
-}
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 namespace Engine::Resources
 {

@@ -11,7 +11,7 @@ namespace Engine
         static bool Import
         (
             const GenericString& name,
-            const boost::filesystem::path& path,
+            const std::filesystem::path& path,
             std::vector<Strong<Resources::Mesh>>& meshes,
             Strong<Resources::Shape>& shape, 
             Strong<Resources::AnimationTexture>& animstex

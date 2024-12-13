@@ -1,6 +1,5 @@
 #pragma once
 #include <filesystem>
-#include <boost/filesystem/path.hpp>
 #include <directx/d3d12.h>
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"

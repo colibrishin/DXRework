@@ -2,6 +2,8 @@
 
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "../Public/RenderPipeline.h"
 
 namespace Engine::Managers
 {

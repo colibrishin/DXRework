@@ -89,6 +89,7 @@ public class EngineSolution : Solution
                 conf.AddProject<StructuredBufferRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<ConstantBufferRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<PrimitivePipelineDX12>(target);
+                conf.AddProject<PrimitiveTextureDX12>(target);
             }
 
             {
@@ -102,7 +103,6 @@ public class EngineSolution : Solution
                 conf.AddProject<ProjectionFrustum>(target);
                 //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
-                conf.AddProject<Renderer>(target);
                 conf.AddProject<RenderPipeline>(target);
                 conf.AddProject<ResourceManager>(target);
                 conf.AddProject<SceneManager>(target);
