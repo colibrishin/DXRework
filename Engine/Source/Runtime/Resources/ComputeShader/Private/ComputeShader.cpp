@@ -202,3 +202,16 @@ namespace Engine::Resources
 		  m_thread_{1,},
 		  m_group_{1,} {}
 }
+
+namespace Engine 
+{
+	void* ComputePrimitiveShader::GetComputePrimitiveShader() const
+	{
+		return m_shader_;
+	}
+
+	void* GraphicPrimitiveShader::GetGraphicPrimitiveShader() const
+	{
+		return m_shader_;
+	}
+}

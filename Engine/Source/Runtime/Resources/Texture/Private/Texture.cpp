@@ -1,6 +1,6 @@
 #include "../Public/Texture.h"
 
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
@@ -47,13 +47,6 @@ namespace Engine::Resources
 		return m_desc_.DepthOrArraySize;
 	}
 
-	bool Texture::DoesWantMapByResource() const
-	{
-		return false;
-	}
-
-	Texture::~Texture() = default;
-
 	void Texture::Initialize() { }
 
 	void Texture::PreUpdate(const float& dt) {}
@@ -71,6 +64,7 @@ namespace Engine::Resources
 		else
 		{
 			m_primitive_texture_->Generate(GetSharedPtr<Texture>());
+			Map();
 		}
 	}
 
@@ -80,6 +74,11 @@ namespace Engine::Resources
 		{
 			m_desc_ = description;
 		}
+	}
+
+	PrimitiveTexture* Texture::GetPrimitiveTexture() const
+	{
+		return m_primitive_texture_.get();
 	}
 
 	void Texture::Unload_INTERNAL()
@@ -116,3 +115,41 @@ namespace Engine::Resources
 		return Resource::GetResourceType();
 	}
 } // namespace Engine::Resources
+
+namespace Engine 
+{
+	std::unique_ptr<TextureMappingTask> PrimitiveTexture::s_mapping_task_ = nullptr;
+
+	void PrimitiveTexture::UpdateDescription(
+		const Weak<Resources::Texture>& texture,
+		const GenericTextureDescription& description)
+	{
+		if (const Strong<Resources::Texture>& tex = texture.lock())
+		{
+			tex->UpdateDescription(description);
+		}
+
+		m_description_ = description;
+	}
+
+	void* PrimitiveTexture::GetPrimitiveTexture() const
+	{
+		return m_texture_;
+	}
+
+	void PrimitiveTexture::SetPrimitiveTexture(void* texture)
+	{
+		if (texture)
+		{
+			m_texture_ = texture;
+		}
+	}
+	TextureMappingTask* PrimitiveTexture::GetMappingTask() const
+	{
+		return s_mapping_task_.get();
+	}
+	const GenericTextureDescription& PrimitiveTexture::GetDescription() const
+	{
+		return m_description_;
+	}
+}
