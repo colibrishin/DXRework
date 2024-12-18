@@ -4,6 +4,7 @@
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
+#include "Source/Runtime/ShaderRenderPrerequisiteTaskDX12/Public/ShaderRenderPrerequisiteTaskDX12.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::DX12GraphicPrimitiveShader::s_main_version =
 		{
@@ -17,6 +18,11 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 
 namespace Engine
 {
+	DX12GraphicPrimitiveShader::DX12GraphicPrimitiveShader()
+	{
+		SetBindingTask<DX12ShaderRenderPassPrerequisiteTask>();
+	}
+
 	void DX12GraphicPrimitiveShader::Generate(const Weak<Resources::Shader>& w_shader, void* pipeline_signature)
 	{
 		if (const Strong<Resources::Shader>& shader = w_shader.lock())
@@ -242,6 +248,9 @@ namespace Engine
 					  IID_PPV_ARGS(m_pipeline_state_.ReleaseAndGetAddressOf())
 					 )
 					);
+
+			SetPrimitiveShader(m_pipeline_state_.Get());
+			SetPrimitiveSampler(m_sampler_descriptor_heap_.Get());
 		}
 	}
 

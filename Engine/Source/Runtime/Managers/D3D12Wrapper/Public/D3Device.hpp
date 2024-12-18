@@ -119,6 +119,8 @@ namespace Engine::Managers
 		[[nodiscard]] UINT                  GetRTVHeapSize() const;
 		[[nodiscard]] ID3D12CommandQueue*   GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const;
 
+		void WaitForCommandsCompletion() const;
+
 	private:
 		friend struct SingletonDeleter;
 		friend struct CommandPair;
@@ -133,7 +135,6 @@ namespace Engine::Managers
 		void InitializeDevice();
 		void InitializeConsumer();
 
-		void WaitForCommandsCompletion() const;
 		void WaitNextFrame();
 
 		HWND m_hwnd_ = nullptr;

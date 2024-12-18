@@ -17,8 +17,6 @@ using Quaternion = DirectX::SimpleMath::Quaternion;
 using Ray = DirectX::SimpleMath::Ray;
 using Matrix = DirectX::SimpleMath::Matrix;
 
-constexpr DXGI_FORMAT g_default_rtv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
 namespace Microsoft::WRL
 {
 	template <typename T>

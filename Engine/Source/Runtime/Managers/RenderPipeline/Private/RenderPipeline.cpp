@@ -71,7 +71,6 @@ namespace Engine::Managers
 		PrecompileShaders();
 		InitializeViewport();
 		m_graphics_primitive_pipeline_->Generate();
-		m_graphics_shader_task_->SetPipelineSignature(m_graphics_primitive_pipeline_->GetNativePipeline());
 
 		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetDefaultViewportPrerequisiteTask());
 		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetPipelineRenderPrerequisiteTask());

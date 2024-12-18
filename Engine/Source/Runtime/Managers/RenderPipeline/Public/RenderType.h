@@ -11,7 +11,7 @@ namespace Engine
 	using RenderMapValueType = tbb::concurrent_vector<CandidateTuple, u_align_allocator<CandidateTuple>>;
 	using RenderMap = tbb::concurrent_hash_map<RenderInstanceIndex, RenderMapValueType>;
 
-	enum RENDERPIPELINE_API eFormat
+	enum RENDERPIPELINE_API eFormat : uint8_t
 	{
 		TEX_FORMAT_UNKNOWN = 0,
 		TEX_FORMAT_R32G32B32A32_TYPELESS = 1,
@@ -136,6 +136,12 @@ namespace Engine
 
 		TEX_FORMAT_A4B4G4R4_UNORM = 191
 	};
+
+	constexpr std::vector<eFormat> GetDefaultRTVFormat() 
+	{
+		std::vector<eFormat> v = { TEX_FORMAT_R8G8B8A8_UNORM };
+		return v;
+	}
 
 	enum RENDERPIPELINE_API eSamplerFilter
 	{

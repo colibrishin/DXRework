@@ -1,12 +1,14 @@
 #pragma once
 #include <wrl/client.h>
 
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 namespace Engine
 {
 	struct GRAPHICPRIMITIVESHADERDX12_API DX12GraphicPrimitiveShader : public GraphicPrimitiveShader
 	{
+		DX12GraphicPrimitiveShader();
 		void Generate(const Weak<Resources::Shader>& w_shader, void* pipeline_signature) override;
 		[[nodiscard]] ID3D12PipelineState* GetPSO() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetSamplerHeap() const;

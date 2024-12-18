@@ -1,7 +1,8 @@
 #include "RenderPassTaskDX12.h"
+
+#include <ranges>
 #include <tbb/parallel_for_each.h>
 
-#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Managers/RenderPipeline//Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
@@ -65,7 +66,7 @@ namespace Engine
 			for (const auto& [mtr, sbs] : final_mapping)
 			{
 				const auto task = reinterpret_cast<DX12PrimitivePipeline*>(Managers::RenderPipeline::GetInstance().GetPrimitivePipeline());
-				m_heaps_.emplace_back(task->GetHeapHandler()->Acquire());
+				m_heaps_.emplace_back(task->GetHeapHandler().Acquire());
 				m_current_heap_ = m_heaps_.back();
 
 				if (const StrongDescriptorPtr& heap = m_current_heap_.lock())
@@ -166,8 +167,9 @@ namespace Engine
 			if (!shader_bypass)
 			{
 				const Strong<Resources::Shader>& shader = mat->GetResource<Resources::Shader>(0).lock();
-				ShaderRenderPrerequisiteTask* task = Managers::RenderPipeline::GetInstance().GetShaderRenderPrerequisiteTask(shader);
-				task->Run(this);
+				GraphicPrimitiveShader* primitive = shader->GetPrimitiveShader();
+				ShaderRenderPrerequisiteTask& task = primitive->GetShaderPrerequisiteTask();
+				task.Run(this);
 			}
 
 			for (const auto& [type, resources] : material_resources)
@@ -175,7 +177,8 @@ namespace Engine
 				if (type == RES_T_ATLAS_TEX)
 				{
 					const auto& anim = resources.front()->GetSharedPtr<Resources::Texture>();
-					anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
+					TextureBindingTask& task = anim->GetPrimitiveTexture()->GetBindingTask();
+					task.Bind(this, anim->GetPrimitiveTexture(), BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
 					continue;
 				}
 
@@ -189,7 +192,8 @@ namespace Engine
 						const UINT  idx = static_cast<UINT>(std::distance(resources.begin(), it));
 						const auto& tex = res->GetSharedPtr<Resources::Texture>();
 
-						tex->Bind(cmd, heap, BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
+						TextureBindingTask& task = tex->GetPrimitiveTexture()->GetBindingTask();
+						task.Bind(this, tex->GetPrimitiveTexture(), BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
 					}
 				}
 			}
@@ -207,7 +211,8 @@ namespace Engine
 			{
 				if (const auto& anim = shape->GetAnimations().lock())
 				{
-					anim->Bind(cmd, heap, BIND_TYPE_SRV, RESERVED_TEX_BONES, 0);
+					TextureBindingTask& task = anim->GetPrimitiveTexture()->GetBindingTask();
+					task.Bind(this, anim->GetPrimitiveTexture(), BIND_TYPE_SRV, RESERVED_TEX_BONES, 0);
 				}
 
 				for (const auto& mesh : shape->GetMeshes())
@@ -224,7 +229,8 @@ namespace Engine
 
 				if (const auto& anim = shape->GetAnimations().lock())
 				{
-					anim->Unbind(cmd, BIND_TYPE_SRV);
+					PrimitiveTexture* primitive = anim->GetPrimitiveTexture();
+					primitive->GetBindingTask().Unbind(this, primitive, BIND_TYPE_SRV);
 				}
 			}
 
@@ -232,13 +238,15 @@ namespace Engine
 			{
 				for (const auto& tex : material_resources.at(RES_T_TEX))
 				{
-					tex->GetSharedPtr<Resources::Texture>()->Unbind(cmd, BIND_TYPE_SRV);
+					PrimitiveTexture* primitive = tex->GetSharedPtr<Resources::Texture>()->GetPrimitiveTexture();
+					primitive->GetBindingTask().Unbind(this, primitive, BIND_TYPE_SRV);
 				}
 			}
 
 			if (material_resources.contains(RES_T_ATLAS_TEX))
 			{
-				material_resources.at(RES_T_ATLAS_TEX).front()->GetSharedPtr<Resources::Texture>()->Unbind(cmd, BIND_TYPE_SRV);
+				PrimitiveTexture* primitive = material_resources.at(RES_T_ATLAS_TEX).front()->GetSharedPtr<Resources::Texture>()->GetPrimitiveTexture();
+				primitive->GetBindingTask().Unbind(this, primitive, BIND_TYPE_SRV);
 			}
 
 			m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);

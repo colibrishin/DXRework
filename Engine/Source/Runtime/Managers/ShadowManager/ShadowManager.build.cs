@@ -5,22 +5,21 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class GraphicPrimitiveShaderDX12 : CommonProject
+public class ShadowManager : CommonProject
 {
-    public GraphicPrimitiveShaderDX12() { }
+    public ShadowManager() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<RenderPipeline>(target);
         conf.AddPublicDependency<Shader>(target);
-        
-        conf.AddPrivateDependency<ShaderRenderPrerequisiteTaskDX12>(target);
-        conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
-        conf.AddPrivateDependency<D3D12Wrapper>(target);
+        conf.AddPublicDependency<ShadowTexture>(target);
+        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<RenderPipeline>(target);
+
+        conf.AddPrivateDependency<ResourceManager>(target);
+        conf.AddPrivateDependency<SceneManager>(target);
     }
 }

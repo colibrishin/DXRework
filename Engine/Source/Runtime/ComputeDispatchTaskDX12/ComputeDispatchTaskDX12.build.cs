@@ -5,9 +5,9 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class RenderPassTaskDX12 : CommonProject
+public class ComputeDispatchTaskDX12 : CommonProject
 {
-    public RenderPassTaskDX12() { }
+    public ComputeDispatchTaskDX12() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
@@ -18,11 +18,12 @@ public class RenderPassTaskDX12 : CommonProject
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<CommandPair>(target);
         conf.AddPublicDependency<DescriptorHeap>(target);
-        conf.AddPublicDependency<Material>(target);
+        conf.AddPublicDependency<ComputeShader>(target);
+        conf.AddPrivateDependency<PrimitivePipelineDX12>(target);
         conf.AddPublicDependency<D3D12Wrapper>(target);
 
-        conf.AddPrivateDependency<PrimitivePipelineDX12>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
+        conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<Texture>(target);
         conf.AddPrivateDependency<Shape>(target);
         conf.AddPrivateDependency<ModelRenderer>(target);

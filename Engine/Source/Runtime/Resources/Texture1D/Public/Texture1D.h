@@ -18,7 +18,7 @@ namespace Engine::Resources
 		UINT64 GetWidth() const final;
 
 	protected:
-		void loadDerived(ComPtr<ID3D12Resource>& res) override;
+		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:

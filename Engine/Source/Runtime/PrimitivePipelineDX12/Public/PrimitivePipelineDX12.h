@@ -1,5 +1,6 @@
 #pragma once
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 namespace Engine
 {
@@ -7,9 +8,9 @@ namespace Engine
 	{
 		void Generate() override;
 
-		[[nodiscard]] DescriptorHandler* GetHeapHandler()
+		[[nodiscard]] DescriptorHandler& GetHeapHandler()
 		{
-			return &m_heap_handler_;
+			return m_heap_handler_;
 		}
 
 	private:

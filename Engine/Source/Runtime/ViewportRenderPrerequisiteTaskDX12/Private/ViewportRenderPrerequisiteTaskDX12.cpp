@@ -21,8 +21,8 @@ namespace Engine
 			{
 			.left = 0,
 			.top = 0,
-			.right = (UINT)viewport.width,
-			.bottom = (UINT)viewport.height 
+			.right = static_cast<UINT>(viewport.width),
+			.bottom = static_cast<UINT>(viewport.height) 
 			};
 
 		const DX12RenderPassTask* dx12_task = reinterpret_cast<DX12RenderPassTask*>(task);
@@ -34,5 +34,15 @@ namespace Engine
 
 	void DX12ViewportRenderPrerequisiteTask::Cleanup(RenderPassTask* task_context)
 	{
+	}
+
+	const D3D12_VIEWPORT& DX12ViewportRenderPrerequisiteTask::GetNativeViewport() const 
+	{
+		return m_d3d_viewport_;
+	}
+
+	const D3D12_RECT& DX12ViewportRenderPrerequisiteTask::GetNativeScissorRect() const 
+	{
+		return m_d3d_scissor_;
 	}
 }

@@ -11,10 +11,12 @@
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
+#include "Source/Runtime/RenderPassTaskDX12/Public/RenderPassTaskDX12.h"
 
 Engine::DX12PrimitiveTexture::DX12PrimitiveTexture()
 {
 	SetTextureMappingTask<DX12TextureMappingTask>();
+	SetTextureBindingTask<DX12TextureBindingTask>();
 }
 
 void Engine::DX12PrimitiveTexture::Generate(const Weak<Resources::Texture>& texture)
@@ -307,6 +309,26 @@ void Engine::DX12PrimitiveTexture::SaveAsFile(const std::filesystem::path& path)
 	);
 }
 
+ID3D12DescriptorHeap* Engine::DX12PrimitiveTexture::GetSrv() const
+{
+	return m_srv_.Get();
+}
+
+ID3D12DescriptorHeap* Engine::DX12PrimitiveTexture::GetDsv() const
+{
+	return m_dsv_.Get();
+}
+
+ID3D12DescriptorHeap* Engine::DX12PrimitiveTexture::GetRtv() const
+{
+	return m_rtv_.Get();
+}
+
+ID3D12DescriptorHeap* Engine::DX12PrimitiveTexture::GetUav() const
+{
+	return m_uav_.Get();
+}
+
 D3D12_RESOURCE_DIMENSION Engine::DX12PrimitiveTexture::ConvertDimension(const eTexType type)
 {
 	switch (type)
@@ -523,4 +545,255 @@ void Engine::DX12TextureMappingTask::Map(
 		&src_desc,
 		&box
 	);
+}
+
+void Engine::DX12TextureBindingTask::Bind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType bind_type, const UINT bind_slot, const UINT offset)
+{
+	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	DX12PrimitiveTexture* tex = reinterpret_cast<DX12PrimitiveTexture*>(texture);
+	
+	ID3D12Resource* res = reinterpret_cast<ID3D12Resource*>(tex->GetPrimitiveTexture());
+	CommandPair* cmd = task->GetCurrentCommandList();
+	DescriptorPtrImpl* heap = task->GetCurrentHeap();
+
+	switch (bind_type)
+	{
+	case BIND_TYPE_SRV:
+	{
+		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &srv_trans);
+		heap->SetShaderResource(tex->GetSrv()->GetCPUDescriptorHandleForHeapStart(), bind_slot + offset);
+		break;
+	}
+	case BIND_TYPE_UAV:
+	{
+		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &uav_trans);
+		heap->SetUnorderedAccess(tex->GetUav()->GetCPUDescriptorHandleForHeapStart(), bind_slot + offset);
+		break;
+	}
+	case BIND_TYPE_RTV:
+	{
+		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+
+		const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
+		{
+			tex->GetRtv()->GetCPUDescriptorHandleForHeapStart()
+		};
+
+		cmd->GetList()->OMSetRenderTargets
+		(
+			1,
+			rtv_handle,
+			false,
+			nullptr
+		);
+		break;
+	}
+	case BIND_TYPE_DSV:
+	{
+		break;
+	}
+	case BIND_TYPE_DSV_ONLY:
+	{
+		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
+
+		const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
+		{
+			tex->GetDsv()->GetCPUDescriptorHandleForHeapStart()
+		};
+
+		cmd->GetList()->OMSetRenderTargets
+		(
+			0,
+			nullptr,
+			false,
+			dsv_handle
+		);
+
+		break;
+	}
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_CB:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+}
+
+void Engine::DX12TextureBindingTask::Unbind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType previous_bind_type)
+{
+	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	DX12PrimitiveTexture* tex = reinterpret_cast<DX12PrimitiveTexture*>(texture);
+
+	ID3D12Resource* res = reinterpret_cast<ID3D12Resource*>(tex->GetPrimitiveTexture());
+	CommandPair* cmd = task->GetCurrentCommandList();
+	DescriptorPtrImpl* heap = task->GetCurrentHeap();
+
+	switch (previous_bind_type)
+	{
+	case BIND_TYPE_UAV:
+		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &uav_trans);
+		break;
+	case BIND_TYPE_SRV:
+		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &srv_trans);
+		break;
+	case BIND_TYPE_RTV:
+		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+		break;
+	case BIND_TYPE_DSV:
+	case BIND_TYPE_DSV_ONLY:
+		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
+		break;
+	case BIND_TYPE_SAMPLER:
+		break;
+	case BIND_TYPE_CB:
+		break;
+	case BIND_TYPE_COUNT:
+		break;
+	default:;
+	}
+}
+
+void Engine::DX12TextureBindingTask::BindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv)
+{
+	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+
+	CommandPair* cmd = task->GetCurrentCommandList();
+	DescriptorPtrImpl* heap = task->GetCurrentHeap();
+
+	std::vector<D3D12_RESOURCE_BARRIER> transitions;
+	transitions.reserve(rtv_count + 1);
+
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs_heap;
+	rtvs_heap.reserve(rtv_count);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv_heap;
+
+	for (size_t i = 0; i < rtv_count; ++i) 
+	{
+		DX12PrimitiveTexture* rtv = reinterpret_cast<DX12PrimitiveTexture*>(rtvs[i]);
+		
+		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			static_cast<ID3D12Resource*>(rtvs[i]->GetPrimitiveTexture()),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		rtvs_heap.push_back(static_cast<DX12PrimitiveTexture*>(rtvs[i])->GetRtv()->GetCPUDescriptorHandleForHeapStart());
+		transitions.push_back(rtv_transition);
+	}
+
+	DX12PrimitiveTexture* native_dsv = reinterpret_cast<DX12PrimitiveTexture*>(dsv);
+	dsv_heap = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
+
+	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		static_cast<ID3D12Resource*>(native_dsv->GetPrimitiveTexture()),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	);
+
+	transitions.push_back(dsv_transition);
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
+	cmd->GetList()->OMSetRenderTargets
+	(
+		rtvs_heap.size(),
+		rtvs_heap.data(),
+		false,
+		&dsv_heap
+	);
+}
+
+void Engine::DX12TextureBindingTask::UnbindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv)
+{
+	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+
+	CommandPair* cmd = task->GetCurrentCommandList();
+	DescriptorPtrImpl* heap = task->GetCurrentHeap();
+
+	std::vector<D3D12_RESOURCE_BARRIER> transitions;
+	transitions.reserve(rtv_count + 1);
+
+	for (size_t i = 0; i < rtv_count; ++i)
+	{
+		DX12PrimitiveTexture* rtv = reinterpret_cast<DX12PrimitiveTexture*>(rtvs[i]);
+
+		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			static_cast<ID3D12Resource*>(rtvs[i]->GetPrimitiveTexture()),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		transitions.push_back(rtv_transition);
+	}
+
+	DX12PrimitiveTexture* native_dsv = reinterpret_cast<DX12PrimitiveTexture*>(dsv);
+
+	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		static_cast<ID3D12Resource*>(native_dsv->GetPrimitiveTexture()),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	transitions.push_back(dsv_transition);
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
 }

@@ -4,6 +4,7 @@
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/ViewportRenderPrerequisiteTaskDX12/Public/ViewportRenderPrerequisiteTaskDX12.h"
 
 namespace Engine::Managers
 {
@@ -18,8 +19,7 @@ namespace Engine::Managers
 
 		m_states_                = std::make_unique<CommonStates>(Managers::D3Device::GetInstance().GetDevice());
 		m_resource_upload_batch_ = std::make_unique<ResourceUploadBatch>(Managers::D3Device::GetInstance().GetDevice());
-		m_render_target_state_   = std::make_unique<RenderTargetState>
-				(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		m_render_target_state_   = std::make_unique<RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
 		m_sprite_pipeline_state_ = std::make_unique<SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
 
@@ -29,8 +29,6 @@ namespace Engine::Managers
 				(Managers::D3Device::GetInstance().GetDevice(), *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
 
 		m_resource_upload_batch_->End(Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
-
-		m_sprite_batch_->SetViewport(Managers::RenderPipeline::GetInstance().GetViewport());
 
 		m_primitive_batch_ = std::make_unique<PrimitiveBatch<VertexPositionColor>>(Managers::D3Device::GetInstance().GetDevice());
 
@@ -66,7 +64,10 @@ namespace Engine::Managers
 
 	void ToolkitAPI::PostRender(const float& dt)
 	{
-		m_sprite_batch_->SetViewport(Managers::RenderPipeline::GetInstance().GetViewport());
+		DX12ViewportRenderPrerequisiteTask* task = 
+			reinterpret_cast<DX12ViewportRenderPrerequisiteTask*>(Managers::RenderPipeline::GetInstance().GetDefaultViewportPrerequisiteTask());
+		
+		m_sprite_batch_->SetViewport(task->GetNativeViewport());
 
 		ID3D12DescriptorHeap* heaps[] = {m_descriptor_heap_->Heap(), m_states_->Heap()};
 
@@ -81,8 +82,8 @@ namespace Engine::Managers
 				);
 
 		Managers::D3Device::GetInstance().DefaultRenderTarget(s_cmd->GetList4());
-		Managers::RenderPipeline::GetInstance().DefaultScissorRect(s_cmd);
-		Managers::RenderPipeline::GetInstance().DefaultViewport(s_cmd);
+		s_cmd->GetList()->RSSetViewports(1, { &task->GetNativeViewport() });
+		s_cmd->GetList()->RSSetScissorRects(1, { &task->GetNativeScissorRect() });
 		s_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
 		for (const auto& callback : m_sprite_batch_callbacks_)
@@ -110,8 +111,8 @@ namespace Engine::Managers
 		}
 
 		Managers::D3Device::GetInstance().DefaultRenderTarget(p_cmd->GetList4());
-		Managers::RenderPipeline::GetInstance().DefaultScissorRect(p_cmd);
-		Managers::RenderPipeline::GetInstance().DefaultViewport(p_cmd);
+		p_cmd->GetList()->RSSetViewports(1, { &task->GetNativeViewport() });
+		p_cmd->GetList()->RSSetScissorRects(1, { &task->GetNativeScissorRect() });
 		p_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
 		m_primitive_batch_->Begin(p_cmd->GetList());

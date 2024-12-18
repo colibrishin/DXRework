@@ -29,6 +29,11 @@ namespace Engine::Graphics
 
 		void advance()
 		{
+			if (m_read_offset_ >= m_allocated_size_)
+			{
+				resize(static_cast<size_t>(m_allocated_size_ * 1.5f));
+			}
+
 			++m_read_offset_;
 		}
 

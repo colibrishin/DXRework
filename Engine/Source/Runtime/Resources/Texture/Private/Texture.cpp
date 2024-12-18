@@ -144,10 +144,27 @@ namespace Engine
 			m_texture_ = texture;
 		}
 	}
-	TextureMappingTask* PrimitiveTexture::GetMappingTask() const
+
+	TextureMappingTask& PrimitiveTexture::GetMappingTask() const
 	{
-		return s_mapping_task_.get();
+		if (!s_mapping_task_) 
+		{
+			throw std::runtime_error("Texture mapping task has not been assigned");
+		}
+
+		return *s_mapping_task_;
 	}
+
+	TextureBindingTask& PrimitiveTexture::GetBindingTask() const
+	{
+		if (!s_binding_task_)
+		{
+			throw std::runtime_error("Texture binding task has not been assigned");
+		}
+
+		return *s_binding_task_;
+	}
+
 	const GenericTextureDescription& PrimitiveTexture::GetDescription() const
 	{
 		return m_description_;
