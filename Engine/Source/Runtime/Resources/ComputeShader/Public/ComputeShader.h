@@ -2,8 +2,7 @@
 #include <array>
 
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
-#include "Source/Runtime/Core/StructuredBuffer.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine 
 {
@@ -32,7 +31,7 @@ namespace Engine::Resources
 		}
 
 		void SetPrimitiveShader(ComputePrimitiveShader* shader);
-		[[nodiscard]] ComputePrimitiveShader* GetPrimitiveShader() const;
+		[[nodiscard]] ComputePrimitiveShader& GetPrimitiveShader() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
 

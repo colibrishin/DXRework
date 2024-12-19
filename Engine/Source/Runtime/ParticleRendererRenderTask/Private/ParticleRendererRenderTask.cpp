@@ -1,24 +1,22 @@
 #include "../Public/ParticleRendererRenderTask.h"
+#include <tbb/parallel_for_each.h>
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Components/Animator/Public/Animator.h"
-#include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
-#include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
 #include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"
 
 namespace Engine 
 {
     void ParticleRendererRenderInstanceTask::Run(
-            const Scene const* scene, 
+            Scene const* scene, 
             const RenderMapValueType* render_map, 
-            const std::size_t map_size, 
             std::atomic<uint64_t>& instance_count)
     {
         const auto& rawcomponents = scene->GetCachedComponents<Components::RenderComponent>();
 
-        tbb::parallel_for_each(rawcomponents.begin(), rawcomponents.end(), [](const Weak<Components::RenderComponent>& comp)
+        tbb::parallel_for_each(rawcomponents.begin(), rawcomponents.end(), [&instance_count, render_map](const Weak<Components::RenderComponent>& comp)
         {
             if (const Strong<Components::RenderComponent>& pr = comp.lock())
             {
@@ -38,23 +36,15 @@ namespace Engine
 
                     if (mtr->IsRenderDomain(domain))
                     {
-                        auto particles = ParticleRendererExtension::GetInstances();
+                        const Strong<Components::ParticleRenderer>& locked = pr->GetSharedPtr<Components::ParticleRenderer>();
+                        auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(locked));
 
                         if (particles.empty())
                         {
                             continue;
                         }
 
-                        auto& domain_map = out_map[domain];
-
-                        RenderMap::accessor acc;
-
-                        if (!domain_map.find(acc, RENDER_COM_T_PARTICLE))
-                        {
-                            domain_map.insert(acc, RENDER_COM_T_PARTICLE);
-                        }
-
-                        if (pr->IsFollowOwner())
+                        if (locked->IsFollowOwner())
                         {
                             for (auto& particle : particles)
                             {
@@ -64,15 +54,15 @@ namespace Engine
                             }
                         }
 
-                        acc->second.push_back(std::make_tuple(obj, mtr, particles));
+                        render_map->push_back(std::make_tuple(obj, mtr, particles));
                         instance_count.fetch_add(particles.size());
                     }
                 }
             }
-        })
+        });
     }
 
-    void ParticleRendererRenderTask::Cleanup(const RenderMapValueType* render_map) 
+    void ParticleRendererRenderInstanceTask::Cleanup(RenderMapValueType* render_map) 
     {
         render_map->clear();
     }

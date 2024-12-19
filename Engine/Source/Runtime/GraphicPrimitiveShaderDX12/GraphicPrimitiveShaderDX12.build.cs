@@ -18,8 +18,6 @@ public class GraphicPrimitiveShaderDX12 : CommonProject
         conf.AddPublicDependency<RenderPipeline>(target);
         conf.AddPublicDependency<Shader>(target);
         
-        conf.AddPrivateDependency<ShaderRenderPrerequisiteTaskDX12>(target);
         conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<D3D12Wrapper>(target);
     }
 }

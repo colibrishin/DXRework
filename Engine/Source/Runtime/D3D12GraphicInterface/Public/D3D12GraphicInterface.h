@@ -10,6 +10,24 @@
 
 namespace Engine 
 {
+	struct D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
+	{
+	public:
+		void SetResource(void* resource) override
+		{
+			GraphicResourcePrimitive::SetResource(resource);
+			m_native_resource_ = resource;
+		}
+
+		ID3D12Resource** GetAddressOf()
+		{
+			return m_native_resource_.GetAddressOf();
+		}
+		
+	private:
+		ComPtr<ID3D12Resource> m_native_resource_;
+	};
+	
 	struct D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
 	{
 	public:
@@ -17,6 +35,9 @@ namespace Engine
 		void Shutdown() override;
 		void WaitForNextFrame() override;
 		void Present() override;
+
+		void* GetNativeInterface() override;
+		void* GetNativePipeline() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 		Strong<CommandListBase> GetCommandList(const int8_t type, const std::wstring_view debug_name) override;
@@ -31,11 +52,11 @@ namespace Engine
 		void Unbind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type) override;
 		void Clear(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType clear_type) override;
 		void ClearRenderTarget();
-		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex);
+		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const;
 
 	protected:
 		Unique<StructuredBufferTypelessBase>&& GetNativeStructuredBuffer() override;
-
+		
 	private:
 		void InitializeDevice();
 		void InitializePipeline();
@@ -47,7 +68,7 @@ namespace Engine
 
 		std::vector<ComPtr<ID3D12Resource>> m_render_targets_;
 		ComPtr<ID3D12DescriptorHeap>        m_rtv_heap_;
-		UINT                                m_rtv_heap_size_;
+		UINT                                m_rtv_heap_size_{};
 		ComPtr<ID3D12Resource>       m_depth_stencil_;
 		ComPtr<ID3D12DescriptorHeap> m_dsv_heap_;
 		uint64_t m_frame_idx_ = 0;

@@ -8,12 +8,11 @@ namespace Engine::Managers
 	void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
 	{
 		m_wvp_buffer_ = matrix;
-		m_perspective_cb_task_->SetData(&m_wvp_buffer_, 1);
-	}
-
-	GraphicInterface& RenderPipeline::GetInterface() const
-	{
-		return *m_graphic_interface_;
+		const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
+		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+		primitive.commandList->SoftReset();
+		m_wvp_buffer_cb_->SetData(&primitive, 1, &m_wvp_buffer_);
+		primitive.commandList->FlagReady();
 	}
 
 	RenderPipeline::~RenderPipeline() { }

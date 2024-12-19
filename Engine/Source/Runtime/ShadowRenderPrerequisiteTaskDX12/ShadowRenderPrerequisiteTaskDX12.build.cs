@@ -14,6 +14,5 @@ public class ShadowRenderPrerequisiteTaskDX12 : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
     }
 }

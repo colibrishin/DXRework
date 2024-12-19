@@ -1,11 +1,16 @@
+#include <directxtk12/Keyboard.h>
+
+#include "CommandPair.h"
+#include "Descriptors.h"
+
 #include "../Public/StructuredBufferMemoryPoolDX12.hpp"
 
-void Engine::Graphics::DXStructuredBufferTypeless::Clear()
+void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 {
 	m_buffer_.Reset();
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::TransitionToSRV(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const GraphicInterfaceContextPrimitive* context)
 {
 	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
 
@@ -20,7 +25,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::TransitionToSRV(const Graphic
 	m_current_state_ = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::TransitionToUAV(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const GraphicInterfaceContextPrimitive* context)
 {
 	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
 
@@ -35,7 +40,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::TransitionToUAV(const Graphic
 	m_current_state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::TransitionCommon(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const GraphicInterfaceContextPrimitive* context)
 {
 	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
 
@@ -50,7 +55,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::TransitionCommon(const Graphi
 	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+void Engine::Graphics::D3D12StructuredBufferTypeless::CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
 {
 	auto* heap = static_cast<DescriptorPtrImpl*>(context->heap);
 
@@ -61,7 +66,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::CopySRVHeap(const GraphicInte
 	);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+void Engine::Graphics::D3D12StructuredBufferTypeless::CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
 {
 	auto* heap = static_cast<DescriptorPtrImpl*>(context->heap);
 
@@ -72,12 +77,12 @@ void Engine::Graphics::DXStructuredBufferTypeless::CopyUAVHeap(const GraphicInte
 	);
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS Engine::Graphics::DXStructuredBufferTypeless::GetGPUAddress() const
+D3D12_GPU_VIRTUAL_ADDRESS Engine::Graphics::D3D12StructuredBufferTypeless::GetGPUAddress() const
 {
 	return m_buffer_->GetGPUVirtualAddress();
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::Create(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride, const bool uav)
+void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride, const bool uav)
 {
 	if (size == 0)
 	{
@@ -87,7 +92,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::Create(const GraphicInterface
 	m_size_ = size;
 	m_uav_ = uav;
 
-	InitializeMainBuffer(context, size, stride);
+	InitializeMainBuffer(size, stride);
 	InitializeSRV(size, stride);
 	if (m_uav_)
 	{
@@ -97,7 +102,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::Create(const GraphicInterface
 	InitializeReadBuffer(size, stride);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride)
 {
 	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
 
@@ -131,7 +136,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::SetData(const GraphicInterfac
 	cmd->ResourceBarrier(1, &common_transition);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride)
 {
 	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
 
@@ -151,7 +156,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::SetDataContainer(const Graphi
 
 	for (UINT i = 0; i < size; ++i)
 	{
-		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + i), stride);
+		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + (i * stride)), stride);
 	}
 
 	m_upload_buffer_->Unmap(0, nullptr);
@@ -168,10 +173,9 @@ void Engine::Graphics::DXStructuredBufferTypeless::SetDataContainer(const Graphi
 	cmd->ResourceBarrier(1, &common_transition);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::GetData(UINT size, void* dst_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride)
 {
-	const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_COPY, L"Structured Buffer Copy").lock();
-
+	auto* cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	cmd->SoftReset();
 
 	const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
@@ -195,20 +199,18 @@ void Engine::Graphics::DXStructuredBufferTypeless::GetData(UINT size, void* dst_
 		m_buffer_.Get()
 	);
 	cmd->GetList()->ResourceBarrier(1, &revert_barrier);
-
 	cmd->Execute();
 
 	char* data = nullptr;
-
 	DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-
-	SIMDExtension::_mm256_memcpy(dst_ptr, data, sizeof(T) * size);
-
+	SIMDExtension::_mm256_memcpy(dst_ptr, data, stride * size);
 	m_read_buffer_->Unmap(0, nullptr);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::InitializeSRV(UINT size, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeSRV(UINT size, const size_t stride)
 {
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc
 	{
 		.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -219,7 +221,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeSRV(UINT size, cons
 
 	DX::ThrowIfFailed
 	(
-		Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
+		dev->CreateDescriptorHeap
 		(
 			&srv_heap_desc,
 			IID_PPV_ARGS(m_srv_heap_.ReleaseAndGetAddressOf())
@@ -235,12 +237,12 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeSRV(UINT size, cons
 		{
 			.FirstElement = 0,
 			.NumElements = size,
-			.StructureByteStride = stride,
+			.StructureByteStride = static_cast<UINT>(stride),
 			.Flags = D3D12_BUFFER_SRV_FLAG_NONE
 		}
 	};
 
-	Managers::D3Device::GetInstance().GetDevice()->CreateShaderResourceView
+	dev->CreateShaderResourceView
 	(
 		m_buffer_.Get(),
 		&srv_desc,
@@ -248,8 +250,10 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeSRV(UINT size, cons
 	);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::InitializeUAV(UINT size, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUAV(UINT size, const size_t stride)
 {
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+	
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC uav_heap_desc
 	{
 		.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -260,7 +264,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUAV(UINT size, cons
 
 	DX::ThrowIfFailed
 	(
-		Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
+		dev->CreateDescriptorHeap
 		(
 			&uav_heap_desc,
 			IID_PPV_ARGS(m_uav_heap_.ReleaseAndGetAddressOf())
@@ -276,7 +280,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUAV(UINT size, cons
 	uav_desc.Buffer.CounterOffsetInBytes = 0;
 	uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-	Managers::D3Device::GetInstance().GetDevice()->CreateUnorderedAccessView
+	dev->CreateUnorderedAccessView
 	(
 		m_buffer_.Get(),
 		nullptr,
@@ -285,23 +289,22 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUAV(UINT size, cons
 	);
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::InitializeMainBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT size, const size_t stride)
 {
 	const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	auto        buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+	auto        buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
 
-	if constexpr (is_uav_sb<T>::value == true)
+	if constexpr (m_uav_)
 	{
 		buffer_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}
 
-	const std::string  gen_type_name = typeid(T).name();
-	const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
-	const std::wstring buffer_name = L"StructuredBuffer " + type_name;
+	const std::wstring buffer_name = L"StructuredBuffer";
 
 	DX::ThrowIfFailed
 	(
-		Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
+		dev->CreateCommittedResource
 		(
 			&default_heap,
 			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -315,14 +318,16 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeMainBuffer(const Gr
 	DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::InitializeUploadBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride)
 {
 	const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
-
+	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+	const auto  cmd         = static_cast<CommandPair*>(context->commandList);
+	
 	DX::ThrowIfFailed
 	(
-		Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
+		dev->CreateCommittedResource
 		(
 			&upload_heap,
 			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -333,7 +338,7 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUploadBuffer(const 
 		)
 	);
 
-	const std::string  gen_type_name = typeid(T).name();
+	const std::string  gen_type_name = typeid(DirectX::Keyboard::T).name();
 	const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
 	const std::wstring buffer_name = L"StructuredBuffer " + type_name;
 
@@ -344,14 +349,11 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUploadBuffer(const 
 	if (initial_data != nullptr)
 	{
 		char* data = nullptr;
-
 		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-
-		SIMDExtension::_mm256_memcpy(data, initial_data, sizeof(T) * size);
-
+		SIMDExtension::_mm256_memcpy(data, initial_data, stride * size);
 		m_upload_buffer_->Unmap(0, nullptr);
 
-		cmd->CopyResource
+		cmd->GetList()->CopyResource
 		(
 			m_buffer_.Get(),
 			m_upload_buffer_.Get()
@@ -364,18 +366,19 @@ void Engine::Graphics::DXStructuredBufferTypeless::InitializeUploadBuffer(const 
 			D3D12_RESOURCE_STATE_COMMON
 		);
 
-		cmd->ResourceBarrier(1, &common_transition);
+		cmd->GetList()->ResourceBarrier(1, &common_transition);
 	}
 }
 
-void Engine::Graphics::DXStructuredBufferTypeless::InitializeReadBuffer(UINT size, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeReadBuffer(UINT size, const size_t stride)
 {
 	const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * size);
+	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
 
 	DX::ThrowIfFailed
 	(
-		Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
+		dev->CreateCommittedResource
 		(
 			&readback_heap,
 			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,

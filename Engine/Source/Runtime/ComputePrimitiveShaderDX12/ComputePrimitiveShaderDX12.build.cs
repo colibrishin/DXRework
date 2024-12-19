@@ -19,7 +19,6 @@ public class ComputePrimitiveShaderDX12 : CommonProject
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPrivateDependency<PrimitivePipelineDX12>(target);
         conf.AddPrivateDependency<ComputeDispatchTaskDX12>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<Material>(target);

@@ -495,6 +495,22 @@ namespace Engine
 		virtual void LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path) = 0;
 		virtual void SaveAsFile(const std::filesystem::path& path) = 0;
 
+		virtual void Map(
+			void* data_ptr, 
+			const size_t width,
+			const size_t height,
+			const size_t stride,
+			const size_t depth) = 0;
+		
+		virtual void Map( 
+			PrimitiveTexture* src,
+			const UINT src_width,
+			const UINT src_height,
+			const size_t src_idx,
+			const UINT dst_x,
+			const UINT dst_y,
+			const size_t dst_idx) = 0;
+
 		void UpdateDescription(const Weak<Resources::Texture>& texture, const GenericTextureDescription& description);
 		[[nodiscard]] void* GetPrimitiveTexture() const;
 		[[nodiscard]] const GenericTextureDescription& GetDescription() const;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/GraphicInterface.h"
 
 // Static constant buffer type, this should be added to every constant buffer
 #define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;

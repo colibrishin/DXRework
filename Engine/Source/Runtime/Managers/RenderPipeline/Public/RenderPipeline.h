@@ -19,7 +19,7 @@ namespace Engine::Managers
 
 			~TempParamTicket()
 			{
-				Managers::RenderPipeline::GetInstance().m_param_buffer_ = previousParam;
+				GetInstance().m_param_buffer_ = previousParam;
 			}
 
 		private:
@@ -44,25 +44,17 @@ namespace Engine::Managers
 		void SetParam(const T& v, const size_t slot)
 		{
 			m_param_buffer_.SetParam(slot, v);
-			m_param_cb_task_->SetData(&m_param_buffer_, 1);
+			const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
+			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+			primitive.commandList->SoftReset();
+			m_param_buffer_cb_->SetData(&primitive, 1, &m_param_buffer_);
+			primitive.commandList->FlagReady();
 		}
 
 		[[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param)
 		{
 			return {m_param_buffer_};
 		}
-
-		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>) 
-		void SetGraphicInterface() 
-		{
-			if (!m_graphic_interface_) 
-			{
-				m_graphic_interface_ = std::make_unique<T>();
-				m_graphic_interface_->Initialize();
-			}
-		}
-
-		[[nodiscard]] GraphicInterface& GetInterface() const;
 
 	private:
 		friend struct SingletonDeleter;
@@ -74,12 +66,10 @@ namespace Engine::Managers
 
 		Viewport m_viewport_;
 
-		std::unique_ptr<GraphicInterface> m_graphic_interface_;
+		Unique<IStructuredBufferType<CBs::PerspectiveCB>> m_wvp_buffer_cb_;
+		Unique<IStructuredBufferType<CBs::ParamCB>> m_param_buffer_cb_;
 
-		Unique<StructuredBufferTypeBase<Graphics::CBs::PerspectiveCB>> m_wvp_buffer_;
-		Unique<StructuredBufferTypeBase<Graphics::CBs::ParamCB>> m_param_buffer_;
-
-		Graphics::CBs::PerspectiveCB m_wvp_buffer_;
-		Graphics::CBs::ParamCB       m_param_buffer_;
+		CBs::PerspectiveCB m_wvp_buffer_;
+		CBs::ParamCB       m_param_buffer_;
 	};
 } // namespace Engine::Manager::Graphics

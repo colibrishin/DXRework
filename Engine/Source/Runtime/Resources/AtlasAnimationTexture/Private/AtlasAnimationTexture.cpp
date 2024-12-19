@@ -1,7 +1,7 @@
 #include "../Public/AtlasAnimationTexture.h"
 
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {

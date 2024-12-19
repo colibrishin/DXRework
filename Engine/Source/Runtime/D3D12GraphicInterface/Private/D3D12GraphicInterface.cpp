@@ -3,6 +3,8 @@
 
 #include "StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
+#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
 void Engine::D3D12GraphicInterface::Initialize()
@@ -93,6 +95,16 @@ void Engine::D3D12GraphicInterface::Present()
 	);
 }
 
+void* Engine::D3D12GraphicInterface::GetNativeInterface()
+{
+	return m_dev_.Get();
+}
+
+void* Engine::D3D12GraphicInterface::GetNativePipeline()
+{
+	return m_pipeline_root_signature_.Get();
+}
+
 Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)
 {
     GraphicInterfaceContextReturnType context
@@ -113,8 +125,8 @@ void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPri
     {
         .left = 0,
         .top = 0,
-        .right = viewport.width,
-        .bottom = viewport.height
+        .right = static_cast<UINT>(viewport.width),
+        .bottom = static_cast<UINT>(viewport.height)
     };
 
     cmd->GetList()->RSSetViewports(1, &native_viewport);
@@ -129,10 +141,17 @@ void Engine::D3D12GraphicInterface::SetDefaultPipeline(const GraphicInterfaceCon
 
 void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, Resources::Shape* shape, const UINT instance_count)
 {
+	for (const Strong<Resources::Mesh>& mesh : shape->GetMeshes())
+	{
+		Draw(context, mesh.get(), instance_count);
+	}
 }
 
 void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, Resources::Mesh* mesh, const UINT instance_count)
 {
+	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
+	const UINT index_count = mesh->GetIndexCount();
+	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
 }
 
 void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, Resources::Shader* shader)
@@ -171,10 +190,10 @@ void Engine::D3D12GraphicInterface::ClearRenderTarget()
 	cmd->FlagReady();
 }
 
-void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex)
+void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
-	auto* resource = reinterpret_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetPrimitiveTexture());
+	auto* resource = static_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetPrimitiveTexture());
 
 	const auto& dst_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -213,7 +232,7 @@ void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceConte
 
 Engine::Unique<Engine::StructuredBufferTypelessBase>&& Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
 {
-	return std::move(std::make_unique<Engine::Graphics::DXStructuredBufferTypeless>());
+	return std::move(std::make_unique<Graphics::D3D12StructuredBufferTypeless>());
 }
 
 void Engine::D3D12GraphicInterface::InitializeDevice()
@@ -537,7 +556,7 @@ void Engine::D3D12GraphicInterface::InitializePipeline()
 		)
 	);
 
-	m_heap_handler_ = std::make_shared<DescriptorHandler>();
+	m_heap_handler_ = boost::make_shared<DescriptorHandler>();
 	m_heap_handler_->Initialize(m_dev_.Get(), m_pipeline_root_signature_.Get());
 }
 

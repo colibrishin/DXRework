@@ -16,7 +16,6 @@ public class ParticleRenderer : CommonProject
         conf.AddPublicDependency<RenderComponent>(target);
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPublicDependency<DX12Agility>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
         conf.AddPublicDependency<DirectXTK>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);

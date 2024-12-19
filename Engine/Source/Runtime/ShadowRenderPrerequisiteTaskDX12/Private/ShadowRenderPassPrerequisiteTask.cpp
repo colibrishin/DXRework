@@ -6,7 +6,7 @@ namespace Engine
 {
 	void DX12ShadowRenderPassPrerequisiteTask::Run(RenderPassTask* task_context)
 	{
-		const DX12RenderPassTask* dx12_task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+		const GenericRenderPassTask* dx12_task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 
 		ID3D12GraphicsCommandList1* cmd = dx12_task->GetCurrentCommandList()->GetList4();
 
@@ -27,7 +27,7 @@ namespace Engine
 	}
 	void DX12ShadowRenderPassPrerequisiteTask::Cleanup(RenderPassTask* task_context)
 	{
-		const DX12RenderPassTask* dx12_task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+		const GenericRenderPassTask* dx12_task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 
 		m_light_sb_.TransitionCommon(dx12_task->GetCurrentCommandList()->GetList4(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 		m_light_vp_sb_.TransitionCommon(dx12_task->GetCurrentCommandList()->GetList4(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
