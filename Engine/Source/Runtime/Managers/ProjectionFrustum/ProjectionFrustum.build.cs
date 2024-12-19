@@ -15,7 +15,6 @@ public class ProjectionFrustum : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<DirectXTK>(target);
-        conf.AddPrivateDependency<SceneManager>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
     }
 }

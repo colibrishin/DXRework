@@ -1,13 +1,12 @@
 #pragma once
 #include "StructuredBufferDX12.hpp"
+#include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 namespace Engine::Graphics
 {
-	class StructuredBufferBase;
-
-	template <typename SBType, typename SLock = std::enable_if<std::is_base_of_v<StructuredBufferBase, SBType>>>
-	class StructuredBufferMemoryPool
+	template <typename SBType>
+	class StructuredBufferMemoryPool : StructuredBufferMemoryPoolBase<SBType>
 	{
 	public:
 		StructuredBufferMemoryPool()
@@ -17,33 +16,27 @@ namespace Engine::Graphics
 
 		~StructuredBufferMemoryPool() { }
 
-		void resize(const size_t size)
+		void resize(const size_t size) override
 		{
 			Update(nullptr, size);
 		}
 
-		auto& get()
+		StructuredBufferTypeBase<SBType>& get()
 		{
 			return GetBaseResource()[m_read_offset_];
 		}
 
-		void advance()
+		void advance() override
 		{
+			StructuredBufferMemoryPoolBase<SBType>::advance();
+
 			if (m_read_offset_ >= m_allocated_size_)
 			{
 				resize(static_cast<size_t>(m_allocated_size_ * 1.5f));
 			}
-
-			++m_read_offset_;
 		}
 
-		void reset()
-		{
-			m_used_size_   = 0;
-			m_read_offset_ = 0;
-		}
-
-		void Update(const SBType* src_data, size_t count)
+		void Update(const SBType* src_data, size_t count) override
 		{
 			if (count == 0)
 			{
@@ -90,10 +83,7 @@ namespace Engine::Graphics
 		}
 
 	private:
-		std::vector<StructuredBuffer<SBType>> m_resource_;
-		size_t                                m_allocated_size_;
-		size_t                                m_used_size_;
-		size_t                                m_read_offset_;
+		std::vector<Unique<StructuredBufferTypeInterface<SBType>>> m_resource_;
 
 		void UpdateSizeIfNeeded(const size_t count)
 		{
@@ -103,16 +93,19 @@ namespace Engine::Graphics
 				size_t      end_it = m_resource_.size();
 				m_resource_.resize(count);
 
-				const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Allocation").lock();
+				GraphicInterface& gi = Managers::RenderPipeline::GetInstance().GetInterface();
+				Unique<StructuredBufferTypeInterface<SBType>> sb = gi.GetStructuredBuffer<SBType>();
+				const GraphicInterfaceContextReturnType& context = gi.GetNewContext(static_cast<uint8_t>(D3D12_COMMAND_LIST_TYPE_DIRECT), false, L"Structured Buffer Memory pool resizing");
+				const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 
-				cmd->SoftReset();
+				primitive.commandList->SoftReset();
 
 				for (; end_it < count; ++end_it)
 				{
-					m_resource_[end_it].SetData(cmd->GetList(), 1, nullptr);
+					m_resource_[end_it]->SetData(primmitive, 1, nullptr);
 				}
 
-				cmd->FlagReady();
+				primitive.commandList->FlagReady();
 
 				m_allocated_size_ = count;
 			}

@@ -8,11 +8,9 @@ namespace Engine
 {
 	struct DescriptorHandler;
 
-	struct DESCRIPTORHEAP_API DescriptorPtrImpl final
+	struct D3D12GRAPHICINTERFACE_API DescriptorPtrImpl final : public GraphicHeapBase
 	{
 	public:
-		DescriptorPtrImpl();
-
 		DescriptorPtrImpl(DescriptorPtrImpl&& other) noexcept;
 		DescriptorPtrImpl& operator=(DescriptorPtrImpl&& other) noexcept;
 
@@ -22,7 +20,7 @@ namespace Engine
 		~DescriptorPtrImpl();
 
 		[[nodiscard]] bool IsValid() const;
-		void               Release() const;
+		void               Release();
 
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap() const;
 
@@ -46,6 +44,7 @@ namespace Engine
 		void BindCompute(ID3D12GraphicsCommandList1* cmd) const;
 
 	private:
+		DescriptorPtrImpl();
 		friend struct DescriptorHandler;
 
 		explicit DescriptorPtrImpl(
@@ -82,18 +81,17 @@ namespace Engine
 		UINT m_sampler_descriptor_size_;
 	};
 
-	using StrongDescriptorPtr = Strong<DescriptorPtrImpl>;
-	using DescriptorPtr = Weak<DescriptorPtrImpl>;
-	using DescriptorContainer = aligned_vector<StrongDescriptorPtr>;
+	using DescriptorPtr = Unique<DescriptorPtrImpl>;
 
-	struct DESCRIPTORHEAP_API DescriptorHandler final
+	struct D3D12GRAPHICINTERFACE_API DescriptorHandler final
 	{
 	public:
 		DescriptorHandler();
 
 		void Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
-		DescriptorPtr Acquire();
-		void          Release(const DescriptorPtrImpl& handles);
+		DescriptorPtr&& Acquire();
+		bool            IsValid(const DescriptorPtrImpl* ptr);
+		void            Release(const DescriptorPtrImpl& handles);
 
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap(UINT64 offset) const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const;
@@ -109,7 +107,6 @@ namespace Engine
 		ComPtr<ID3D12RootSignature>                        m_root_signature{};
 		UINT                                               m_size_;
 		std::deque<__m256i>                                m_used_slots_{};
-		std::deque<std::vector<Strong<DescriptorPtrImpl>>> m_descriptors_{};
 
 		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
 		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};

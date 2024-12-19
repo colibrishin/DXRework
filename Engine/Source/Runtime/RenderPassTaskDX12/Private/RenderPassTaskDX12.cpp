@@ -53,51 +53,51 @@ namespace Engine
 			);
 		}
 
-		m_current_cmd_ = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Render Pass");
+		GraphicInterface& gi = Managers::RenderPipeline::GetInstance().GetInterface();
+		const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Render Pass");
+		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+		
+		primitive.commandList->SoftReset();
 
-		if (const Strong<CommandPair>& cmd = m_current_cmd_.lock())
+		StructuredBufferTypeBase<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_->get();
+		sb.SetData(&primitive, 1, &local_param);
+		sb.TransitionToSRV(&primitive);
+
+		for (const auto& [mtr, sbs] : final_mapping)
 		{
-			cmd->SoftReset();
+			m_heaps_.emplace_back(gi.GetHeap());
+			m_current_heap_ = m_heaps_.back().get();
 
-			Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
-			sb.SetData(cmd->GetList(), 1, &local_param);
-			sb.TransitionToSRV(cmd->GetList());
-
-			for (const auto& [mtr, sbs] : final_mapping)
+			GraphicInterfaceContextPrimitive temp_context
 			{
-				const auto task = reinterpret_cast<DX12PrimitivePipeline*>(Managers::RenderPipeline::GetInstance().GetPrimitivePipeline());
-				m_heaps_.emplace_back(task->GetHeapHandler().Acquire());
-				m_current_heap_ = m_heaps_.back();
+				.commandList = primitive.commandList,
+				.heap = m_current_heap_
+			};
 
-				if (const StrongDescriptorPtr& heap = m_current_heap_.lock())
-				{
-					for (size_t i = 0; i < prerequisite_count; ++i)
-					{
-						prerequisite[i]->Run(this);
-					}
-
-					sb.CopySRVHeap(heap.get());
-
-					heap->BindGraphic(cmd->GetList());
-					Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
-
-					RunImpl(dt, shader_bypass, domain, instance, mtr.lock(), cmd, heap, sbs);
-
-					for (size_t i = 0; i < prerequisite_count; ++i)
-					{
-						prerequisite[i]->Cleanup(this);
-					}
-
-					m_instance_pool_.advance();
-				}
-
+			for (size_t i = 0; i < prerequisite_count; ++i)
+			{
+				prerequisite[i]->Run(this);
 			}
 
-			sb.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-			cmd->FlagReady();
+			sb.CopySRVHeap(&temp_context);
+			m_current_heap_->BindGraphic(primitive.commandList);
 
-			m_local_param_pool_.advance();
+			StructuredBufferTypeBase<Graphics::SBs::InstanceSB>& instance = m_instance_pool_->get();
+			RunImpl(dt, shader_bypass, domain, instance, mtr.lock(), cmd, heap, sbs);
+
+			for (size_t i = 0; i < prerequisite_count; ++i)
+			{
+				prerequisite[i]->Cleanup(this);
+			}
+
+			m_instance_pool_->advance();
+
 		}
+
+		sb.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+		cmd->FlagReady();
+
+		m_local_param_pool_.advance();
 	}
 
 	void Engine::DX12RenderPassTask::Cleanup()
@@ -105,26 +105,6 @@ namespace Engine
 		m_updated_material_in_current_pass_.clear();
 		m_local_param_pool_.reset();
 		m_instance_pool_.reset();
-	}
-
-	Engine::CommandPair* Engine::DX12RenderPassTask::GetCurrentCommandList() const
-	{
-		if (const Strong<CommandPair>& cmd = m_current_cmd_.lock())
-		{
-			return cmd.get();
-		}
-
-		return nullptr;
-	}
-
-	Engine::DescriptorPtrImpl* Engine::DX12RenderPassTask::GetCurrentHeap() const
-	{
-		if (const StrongDescriptorPtr& heap = m_current_heap_.lock())
-		{
-			return heap.get();
-		}
-
-		return nullptr;
 	}
 
 	void Engine::DX12RenderPassTask::RunImpl(const float dt, const bool shader_bypass, const eShaderDomain shader_domain, Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>& instance_buffer, const Weak<Resources::Material>& material, const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap, const aligned_vector<const Graphics::SBs::InstanceSB*>& structuredbuffers)

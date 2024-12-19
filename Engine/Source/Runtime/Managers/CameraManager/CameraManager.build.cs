@@ -18,7 +18,6 @@ public class CameraManager : CommonProject
         conf.AddPublicDependency<TBB>(target);
 
         conf.AddPrivateDependency<DirectXTK>(target);
-        conf.AddPrivateDependency<SceneManager>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<SoundManager>(target);

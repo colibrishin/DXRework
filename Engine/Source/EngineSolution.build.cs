@@ -63,14 +63,6 @@ public class EngineSolution : Solution
             conf.AddProject<Verlet>(target);
 
             {
-                conf.AddProject<CommandPair>(target);
-                conf.AddProject<CommandPairExtension>(target);
-                conf.AddProject<DescriptorHeap>(target);
-                conf.AddProject<ThrowIfFailed>(target);
-            }
-            
-
-            {
                 conf.AddProject<RenderComponent>(target);
                 conf.AddProject<ModelRenderer>(target);
                 conf.AddProject<ParticleRenderer>(target);
@@ -80,6 +72,9 @@ public class EngineSolution : Solution
             {
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
+
+                conf.AddProject<D3D12GraphicInterface>(target);
+
                 conf.AddProject<RenderPassTaskDX12>(target);
 
                 conf.AddProject<ComputeDispatchTaskDX12>(target);
@@ -109,10 +104,7 @@ public class EngineSolution : Solution
                 conf.AddProject<ReflectionEvaluator>(target);
                 conf.AddProject<RenderPipeline>(target);
                 conf.AddProject<ShadowManager>(target);
-                conf.AddProject<ResourceManager>(target);
-                conf.AddProject<SceneManager>(target);
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<StepTimer>(target);
                 conf.AddProject<WinAPIWrapper>(target);
             }
 

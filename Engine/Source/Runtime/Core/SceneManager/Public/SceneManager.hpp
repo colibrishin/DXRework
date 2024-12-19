@@ -8,7 +8,7 @@ DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
 namespace Engine::Managers
 {
-	class SCENEMANAGER_API SceneManager final : public Abstracts::Singleton<SceneManager>
+	class CORE_API SceneManager final : public Abstracts::Singleton<SceneManager>
 	{
 	public:
 		DelegateOnSceneActive onSceneActive;

@@ -14,14 +14,11 @@ public class ComputeShader : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Shader>(target);
-        conf.AddPublicDependency<DescriptorHeap>(target);
-        conf.AddPublicDependency<ResourceManager>(target);
         conf.AddPublicDependency<D3D12Wrapper>(target);
 
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<DX12Agility>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
         conf.AddPrivateDependency<Debugger>(target);
     }
 }

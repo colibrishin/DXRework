@@ -118,8 +118,6 @@ namespace Engine::Resources
 
 namespace Engine 
 {
-	std::unique_ptr<TextureMappingTask> PrimitiveTexture::s_mapping_task_ = nullptr;
-
 	void PrimitiveTexture::UpdateDescription(
 		const Weak<Resources::Texture>& texture,
 		const GenericTextureDescription& description)
@@ -143,26 +141,6 @@ namespace Engine
 		{
 			m_texture_ = texture;
 		}
-	}
-
-	TextureMappingTask& PrimitiveTexture::GetMappingTask() const
-	{
-		if (!s_mapping_task_) 
-		{
-			throw std::runtime_error("Texture mapping task has not been assigned");
-		}
-
-		return *s_mapping_task_;
-	}
-
-	TextureBindingTask& PrimitiveTexture::GetBindingTask() const
-	{
-		if (!s_binding_task_)
-		{
-			throw std::runtime_error("Texture binding task has not been assigned");
-		}
-
-		return *s_binding_task_;
 	}
 
 	const GenericTextureDescription& PrimitiveTexture::GetDescription() const

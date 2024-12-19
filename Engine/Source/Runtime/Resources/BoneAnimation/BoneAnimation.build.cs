@@ -15,7 +15,6 @@ public class BoneAnimation : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<BaseAnimation>(target);
-        conf.AddPrivateDependency<ResourceManager>(target);
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<Bone>(target);
     }

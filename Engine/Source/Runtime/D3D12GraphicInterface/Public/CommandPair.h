@@ -12,13 +12,14 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Descriptors.h"
 
 namespace Engine
 {
 	struct CommandPairPool;
 	struct CommandPairTask;
 
-	struct COMMANDPAIR_API CommandPair final
+	struct D3D12GRAPHICINTERFACE_API CommandPair final : public CommandListBase
 	{
 	public:
 		explicit CommandPair
@@ -27,7 +28,8 @@ namespace Engine
 			const D3D12_COMMAND_LIST_TYPE type,
 			const UINT64 ID,
 			const UINT64 buffer_idx,
-			const std::wstring& debug_name
+			const std::wstring_view debug_name,
+			DescriptorPtr&& heap
 		);
 
 		CommandPair(const CommandPair& other)            = delete;
@@ -55,12 +57,8 @@ namespace Engine
 		[[nodiscard]] UINT64                      GetID() const;
 
 	private:
-		friend class Managers::D3Device;
 		friend struct CommandPairPool;
 		friend struct CommandPairTask;
-
-		template< class T, class A >
-		friend typename boost::detail::sp_if_not_array< T >::type boost::allocate_shared_noinit(A const& a);
 
 		CommandPair() = default;
 
@@ -82,18 +80,23 @@ namespace Engine
 		ComPtr<ID3D12CommandAllocator>     m_allocator_{};
 		ComPtr<ID3D12GraphicsCommandList1> m_list_{};
 		ComPtr<ID3D12GraphicsCommandList4> m_list4_{};
+		DescriptorPtr					   m_assigned_heap_{};
 	};
 
-	struct COMMANDPAIR_API CommandPairPool final
+	struct D3D12GRAPHICINTERFACE_API CommandPairPool final
 	{
 		using address_value = UINT64;
 		static constexpr size_t size = 256;
 
 		CommandPairPool() = default;
 
-		Weak<CommandPair> Allocate(const D3D12_COMMAND_LIST_TYPE type, const UINT64 id, const UINT64 buffer_idx, const std::wstring& debug_name);
+		Weak<CommandPair> Allocate(const D3D12_COMMAND_LIST_TYPE type, 
+			const UINT64 id, 
+			const UINT64 buffer_idx, 
+			const std::wstring_view debug_name,
+			const bool heap_allocation);
 		void Deallocate(const Weak<CommandPair>& pointer);
-		void Initialize(ID3D12Device2* dev);
+		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& handler);
 
 	private:
 		friend struct CommandPair;
@@ -105,11 +108,12 @@ namespace Engine
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
 		boost::pool_allocator<CommandPair>                          m_command_pair_pool_{};
+		Strong<DescriptorHandler>                                   m_heap_handler_;
 
 		ComPtr<ID3D12Device2> m_dev_{};
 	};
 
-	struct COMMANDPAIR_API CommandPairTask
+	struct D3D12GRAPHICINTERFACE_API CommandPairTask
 	{
 	private:
 		constexpr static D3D12_COMMAND_QUEUE_DESC queue_descs[]
@@ -151,12 +155,12 @@ namespace Engine
 	public:
 		CommandPairTask() = default;
 
-		void Initialize(ID3D12Device2* dev, const size_t buffer_count);
+		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& heap_handler, const size_t buffer_count);
 
 		[[nodiscard]] uint64_t GetBufferIndex() const;
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const;
 		[[nodiscard]] bool IsCommandPairAvailable() const;
-		[[nodiscard]] Weak<CommandPair> Acquire(const D3D12_COMMAND_LIST_TYPE type, const std::wstring& debug_name);
+		[[nodiscard]] Weak<CommandPair> Acquire(const D3D12_COMMAND_LIST_TYPE type, const bool heap_allocation, const std::wstring_view debug_name);
 
 		void WaitForCommandsCompletion() const;
 		void StopTask();

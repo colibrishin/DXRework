@@ -1,6 +1,5 @@
 #pragma once
-#include <boost/smart_ptr.hpp>
-#include <boost/serialization/access.hpp>
+#include <memory>
 #include <string>
 #include <filesystem>
 #include "Source/Runtime/Misc.h"
@@ -403,10 +402,13 @@ namespace Engine
 	enum eClientSBUAVType : uint8_t;
 
 	template <typename T>
-	using Weak = boost::weak_ptr<T>;
+	using Weak = std::weak_ptr<T>;
 
 	template <typename T>
-	using Strong = boost::shared_ptr<T>;
+	using Strong = std::shared_ptr<T>;
+
+	template <typename T>
+	using Unique = std::unique_ptr<T>;
 
 	using GenericString = std::string;
 	using EntityName = GenericString;

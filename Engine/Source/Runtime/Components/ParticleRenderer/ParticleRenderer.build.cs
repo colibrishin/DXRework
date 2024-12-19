@@ -19,8 +19,6 @@ public class ParticleRenderer : CommonProject
         conf.AddPublicDependency<D3D12Wrapper>(target);
         conf.AddPublicDependency<DirectXTK>(target);
 
-        conf.AddPrivateDependency<CommandPair>(target);
-        conf.AddPrivateDependency<DescriptorHeap>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

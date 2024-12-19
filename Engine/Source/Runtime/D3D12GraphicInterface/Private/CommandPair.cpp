@@ -12,7 +12,8 @@ namespace Engine
 		const D3D12_COMMAND_LIST_TYPE  type,
 		const UINT64        ID,
 		const UINT64        buffer_idx,
-		const std::wstring& debug_name
+		const std::wstring_view debug_name,
+		DescriptorPtr&& heap
 	)
 		: m_command_id_(ID),
 		  m_buffer_idx_(buffer_idx),
@@ -20,7 +21,8 @@ namespace Engine
 		  m_b_executed_(false),
 		  m_b_ready_(false),
 		  m_b_disposed_(false),
-		  m_type_(type)
+		  m_type_(type),
+		  m_assigned_heap_(std::move(heap))
 	{
 		if (pool != nullptr)
 		{
@@ -35,8 +37,10 @@ namespace Engine
 				 )
 				);
 
-			const std::wstring name = debug_name + L" Command Allocator";
-			DX::ThrowIfFailed(m_allocator_->SetName(name.c_str()));
+			std::wstring name(debug_name);
+			name += +L" Command Allocator";
+			
+			DX::ThrowIfFailed(m_allocator_->SetName(name.data()));
 
 			DX::ThrowIfFailed
 					(
@@ -50,7 +54,7 @@ namespace Engine
 					 )
 					);
 
-			DX::ThrowIfFailed(m_list_->SetName(debug_name.c_str()));
+			DX::ThrowIfFailed(m_list_->SetName(debug_name.data()));
 			DX::ThrowIfFailed(m_list_->Close());
 
 			if (FAILED(m_list_->QueryInterface(IID_PPV_ARGS(m_list4_.GetAddressOf()))))
@@ -165,7 +169,7 @@ namespace Engine
 	}
 
 	Weak<CommandPair> CommandPairPool::Allocate(
-		const D3D12_COMMAND_LIST_TYPE type, const UINT64 id, const UINT64 buffer_idx, const std::wstring& debug_name
+		const D3D12_COMMAND_LIST_TYPE type, const UINT64 id, const UINT64 buffer_idx, const std::wstring_view debug_name, const bool heap_allocation
 	)
 	{
 		std::lock_guard lock(m_mutex_);
@@ -190,11 +194,20 @@ namespace Engine
 			m_pool_[available]->m_buffer_idx_ = buffer_idx;
 			m_pool_[available]->m_debug_name_ = debug_name;
 
-			DX::ThrowIfFailed(m_pool_[available]->m_list_->SetName(debug_name.c_str()));
+			if (heap_allocation && m_heap_handler_) 
+			{
+				m_pool_[available]->m_assigned_heap_ = std::move(m_heap_handler_->Acquire());
+			}
+			else 
+			{
+				m_pool_[available]->m_assigned_heap_.reset();
+			}
+
+			DX::ThrowIfFailed(m_pool_[available]->m_list_->SetName(debug_name.data()));
 		}
 		else
 		{
-			new(m_pool_[available].get()) CommandPair(this, type, id, buffer_idx, debug_name);
+			new(m_pool_[available].get()) CommandPair(this, type, id, buffer_idx, debug_name, heap_allocation && m_heap_handler_ ? m_heap_handler_->Acquire() : nullptr);
 		}
 			
 		return m_pool_[available];
@@ -207,21 +220,26 @@ namespace Engine
 		if (const auto& locked = pointer.lock())
 		{
 			locked->HardReset();
+			locked->m_assigned_heap_.reset();
 			m_allocation_map_[reinterpret_cast<UINT64>(locked.get())] = false;
 		}
 	}
 
-	void CommandPairPool::Initialize(ID3D12Device2* dev)
+	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak <DescriptorHandler>& handler)
 	{
 		if (bool expected = false; 
 			m_b_initialized_.compare_exchange_strong(expected, true))
 		{
 			m_dev_ = dev;
+			if (const Strong<DescriptorHandler>& locked = handler.lock()) 
+			{
+				m_heap_handler_ = locked;
+			}
 			m_pool_.reserve(size);
 
 			for (size_t i = 0; i < size; ++i)
 			{
-				const auto& allocated = boost::allocate_shared_noinit<CommandPair>(m_command_pair_pool_);
+				const auto& allocated = std::allocate_shared<CommandPair>(m_command_pair_pool_);
 
 				const auto address         = reinterpret_cast<address_value>(allocated.get());
 				m_pool_[address]           = allocated;
@@ -230,7 +248,7 @@ namespace Engine
 		}
 	}
 
-	void CommandPairTask::Initialize(ID3D12Device2* dev, const size_t buffer_count)
+	void CommandPairTask::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& heap_handler, const size_t buffer_count)
 	{
 		m_dev_ = dev;
 
@@ -251,7 +269,7 @@ namespace Engine
 		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
 
-		m_pool_.Initialize(dev);
+		m_pool_.Initialize(dev, heap_handler);
 	}
 
 	uint64_t CommandPairTask::GetBufferIndex() const
@@ -279,7 +297,7 @@ namespace Engine
 		return m_command_pair_count_.load() < CFG_MAX_CONCURRENT_COMMAND_LIST;
 	}
 
-	Weak<CommandPair> CommandPairTask::Acquire(const D3D12_COMMAND_LIST_TYPE type, const std::wstring& debug_name)
+	Weak<CommandPair> CommandPairTask::Acquire(const D3D12_COMMAND_LIST_TYPE type, const bool heap_allocation, const std::wstring_view debug_name)
 	{
 		if (m_dev_ == nullptr)
 		{
@@ -292,7 +310,7 @@ namespace Engine
 		}
 
 		std::lock_guard l(m_critical_mutex_);
-		m_command_pairs_.push_back(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name));
+		m_command_pairs_.push_back(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation));
 		m_command_ids_ += 1;
 		m_command_pair_count_.fetch_add(1);
 

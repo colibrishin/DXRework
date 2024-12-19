@@ -52,49 +52,19 @@ namespace Engine::Managers
 			return {m_param_buffer_};
 		}
 
-		template <typename T> requires (std::is_base_of_v<ViewportRenderPrerequisiteTask, T>)
-		void SetViewportPrerequisiteTask()
+		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>) 
+		void SetGraphicInterface() 
 		{
-			m_viewport_task_ = std::make_unique<T>();
+			if (!m_graphic_interface_) 
+			{
+				m_graphic_interface_ = std::make_unique<T>();
+				m_graphic_interface_->Initialize();
+			}
 		}
 
-		template <typename T> requires (std::is_base_of_v<PipelineRenderPrerequisiteTask, T>)
-		void SetPipelinePrerequisiteTask()
-		{
-			m_pipeline_task_ = std::make_unique<T>();
-		}
-
-		template <typename T> requires (std::is_base_of_v<RenderPassPrerequisiteTask, T>)
-		void SetShaderPrerequisiteTask() 
-		{
-			m_graphics_shader_task_ = std::make_unique<T>();
-		}
-
-		template <typename T> requires (std::is_base_of_v<ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>, T>)
-		void SetPerspectiveConstantBufferPrerequisiteTask()
-		{
-			m_perspective_cb_task_ = std::make_unique<T>();
-		}
-
-		template <typename T> requires (std::is_base_of_v<ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>, T>)
-		void SetParamConstantBufferPrerequisiteTask()
-		{
-			m_param_cb_task_ = std::make_unique<T>();
-		}
-
-		[[nodiscard]] ViewportRenderPrerequisiteTask* GetDefaultViewportPrerequisiteTask() const;
-		[[nodiscard]] PipelineRenderPrerequisiteTask* GetPipelineRenderPrerequisiteTask() const;
-		
-		[[nodiscard]] ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>* GetPerspectiveConstantBufferRenderPrerequisiteTask() const;
-		[[nodiscard]] ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>* GetParamConstantBufferRenderPrerequisiteTask() const;
-
-		void SetPrimitivePipeline(PrimitivePipeline* pipeline);
-		[[nodiscard]] PrimitivePipeline* GetPrimitivePipeline() const;
+		[[nodiscard]] GraphicInterface& GetInterface() const;
 
 	private:
-		friend class ToolkitAPI;
-		friend class D3Device;
-
 		friend struct SingletonDeleter;
 		RenderPipeline() = default;
 		~RenderPipeline() override;
@@ -104,15 +74,11 @@ namespace Engine::Managers
 
 		Viewport m_viewport_;
 
-		std::unique_ptr<Engine::PipelineRenderPrerequisiteTask> m_pipeline_task_;
-		std::unique_ptr<Engine::ViewportRenderPrerequisiteTask> m_viewport_task_;
-		std::unique_ptr<Engine::RenderPassPrerequisiteTask> m_graphics_shader_task_;
+		std::unique_ptr<GraphicInterface> m_graphic_interface_;
 
-		std::unique_ptr<Engine::PrimitivePipeline> m_graphics_primitive_pipeline_;
-		
-		std::unique_ptr<Engine::ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>> m_perspective_cb_task_;
-		std::unique_ptr<Engine::ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>> m_param_cb_task_;
-		
+		Unique<StructuredBufferTypeBase<Graphics::CBs::PerspectiveCB>> m_wvp_buffer_;
+		Unique<StructuredBufferTypeBase<Graphics::CBs::ParamCB>> m_param_buffer_;
+
 		Graphics::CBs::PerspectiveCB m_wvp_buffer_;
 		Graphics::CBs::ParamCB       m_param_buffer_;
 	};

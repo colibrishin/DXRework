@@ -17,8 +17,6 @@ public class AtlasAnimationTexture : CommonProject
         conf.AddPublicDependency<Texture3D>(target);
         conf.AddPublicDependency<Texture2D>(target);
 
-        conf.AddPrivateDependency<ResourceManager>(target);
-        conf.AddPrivateDependency<CommandPair>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<DirectXTex>(target);
     }

@@ -17,7 +17,6 @@ public class Debugger : CommonProject
         conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<DX12Agility>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
-        conf.AddPrivateDependency<SceneManager>(target);
         conf.AddPrivateDependency<D3D12Toolkit>(target);
         conf.AddPrivateDependency<InputManager>(target);
     }

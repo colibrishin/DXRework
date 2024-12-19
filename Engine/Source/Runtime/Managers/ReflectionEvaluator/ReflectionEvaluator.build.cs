@@ -13,8 +13,5 @@ public class ReflectionEvaluator : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Texture2D>(target);
-        conf.AddPrivateDependency<D3D12Wrapper>(target);
-        conf.AddPrivateDependency<CommandPair>(target);
-        conf.AddPrivateDependency<DescriptorHeap>(target);
     }
 }

@@ -63,14 +63,24 @@ namespace Engine
 
 	bool DescriptorPtrImpl::IsValid() const
 	{
-		return m_heap_queue_offset_ != -1 && m_segment_offset_ != -1 && m_element_offset_ != -1;
+		return m_handler_ && m_handler_->IsValid(this);
 	}
 
-	void DescriptorPtrImpl::Release() const
+	void DescriptorPtrImpl::Release()
 	{
-		if (IsValid() && m_handler_ != nullptr)
+		if (IsValid())
 		{
 			m_handler_->Release(*this);
+			m_buffer_descriptor_size_ = {};
+			m_cpu_handle_ = {};
+			m_cpu_sampler_handle_ = {};
+			m_gpu_handle_ = {};
+			m_gpu_sampler_handle_ = {};
+			m_sampler_descriptor_size_ = {};
+
+			m_element_offset_ = -1;
+			m_heap_queue_offset_ = -1;
+			m_segment_offset_ = -1;
 		}
 	}
 
@@ -351,9 +361,6 @@ namespace Engine
 		m_main_sampler_descriptor_heap_.emplace_back(sampler_heap);
 
 		m_used_slots_.push_back({});
-		m_descriptors_.push_back({});
-
-		m_descriptors_.back().resize(m_size_);
 	}
 
 	DescriptorHandler::DescriptorHandler()
@@ -374,7 +381,7 @@ namespace Engine
 				(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	}
 
-	DescriptorPtr DescriptorHandler::Acquire()
+	DescriptorPtr&& DescriptorHandler::Acquire()
 	{
 		UINT64 queue_offset   = 0;
 		UINT64 segment_offset = 0;
@@ -500,7 +507,7 @@ namespace Engine
 				 m_sampler_size_
 				);
 
-		m_descriptors_[queue_offset][idx] = StrongDescriptorPtr
+		DescriptorPtr ptr = std::make_unique<DescriptorPtrImpl>
 				(
 				 new DescriptorPtrImpl
 				 (
@@ -517,32 +524,21 @@ namespace Engine
 				 )
 				);
 
-		m_used_slots_[queue_offset].m256i_i32[segment_offset] =
-				m_used_slots_[queue_offset].m256i_i32[segment_offset] | (1 << element_offset);
+		m_used_slots_[queue_offset].m256i_i32[segment_offset] |= (1 << element_offset);
 
-		return m_descriptors_[queue_offset][idx];
+		return std::move(ptr);
+	}
+
+	bool DescriptorHandler::IsValid(const DescriptorPtrImpl* ptr)
+	{
+		return ptr->m_heap_queue_offset_ != -1 && ptr->m_segment_offset_ != -1 && ptr->m_element_offset_ != -1 &&
+			(m_used_slots_[ptr->m_heap_queue_offset_].m256i_i32[ptr->m_segment_offset_] & (1 << ptr->m_element_offset_)) != 0;
 	}
 
 	void DescriptorHandler::Release(const DescriptorPtrImpl& handles)
 	{
-		m_used_slots_[handles.m_heap_queue_offset_].m256i_u32[handles.m_segment_offset_] =
-				m_used_slots_[handles.m_heap_queue_offset_].m256i_u32[handles.m_segment_offset_] & ~(
-					1 << handles.m_element_offset_);
-
-		// Dispose the handle.
-		const auto  prev_queue_offset   = handles.m_heap_queue_offset_;
-		const auto  prev_segment_offset = handles.m_segment_offset_;
-		const auto  prev_offset         = handles.m_element_offset_;
-		const auto& idx                 = prev_segment_offset * s_element_size + prev_offset;
-
-		m_descriptors_[prev_queue_offset][idx]->m_cpu_handle_         = {};
-		m_descriptors_[prev_queue_offset][idx]->m_gpu_handle_         = {};
-		m_descriptors_[prev_queue_offset][idx]->m_cpu_sampler_handle_ = {};
-		m_descriptors_[prev_queue_offset][idx]->m_gpu_sampler_handle_ = {};
-		m_descriptors_[prev_queue_offset][idx]->m_segment_offset_     = -1;
-		m_descriptors_[prev_queue_offset][idx]->m_element_offset_     = -1;
-		m_descriptors_[prev_queue_offset][idx]->m_heap_queue_offset_  = -1;
-		m_descriptors_[prev_queue_offset][idx].reset();
+		m_used_slots_[handles.m_heap_queue_offset_].m256i_u32[handles.m_segment_offset_] 
+			&= ~(1 << handles.m_element_offset_);
 	}
 
 	ID3D12DescriptorHeap* DescriptorHandler::GetMainDescriptorHeap(const UINT64 offset) const

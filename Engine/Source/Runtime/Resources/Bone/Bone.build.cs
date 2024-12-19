@@ -15,6 +15,5 @@ public class Bone : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPrivateDependency<ResourceManager>(target);
     }
 }

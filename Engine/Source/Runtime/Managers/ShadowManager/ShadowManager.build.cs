@@ -18,8 +18,5 @@ public class ShadowManager : CommonProject
         conf.AddPublicDependency<ShadowTexture>(target);
         conf.AddPublicDependency<Texture2D>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
-
-        conf.AddPrivateDependency<ResourceManager>(target);
-        conf.AddPrivateDependency<SceneManager>(target);
     }
 }
