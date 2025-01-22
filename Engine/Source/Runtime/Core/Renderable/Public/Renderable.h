@@ -7,9 +7,9 @@ namespace Engine::Abstracts
 	class CORE_API Renderable : public Entity
 	{
 	public:
-		virtual void PreRender(const float& dt) = 0;
-		virtual void Render(const float& dt) = 0;
-		virtual void PostRender(const float& dt) = 0;
+		virtual void PreRender(const float dt) = 0;
+		virtual void Render(const float dt) = 0;
+		virtual void PostRender(const float dt) = 0;
 
 	protected:
 		Renderable() = default;

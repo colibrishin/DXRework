@@ -109,7 +109,7 @@ namespace Engine::Managers
 		SetActive("UntitledScene");
 	}
 
-	void SceneManager::Update(const float& dt)
+	void SceneManager::Update(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -117,7 +117,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::PreUpdate(const float& dt)
+	void SceneManager::PreUpdate(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -125,7 +125,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::PreRender(const float& dt)
+	void SceneManager::PreRender(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -133,7 +133,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::PostUpdate(const float& dt)
+	void SceneManager::PostUpdate(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -141,7 +141,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::Render(const float& dt)
+	void SceneManager::Render(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -149,7 +149,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::FixedUpdate(const float& dt)
+	void SceneManager::FixedUpdate(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -157,7 +157,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::PostRender(const float& dt)
+	void SceneManager::PostRender(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{

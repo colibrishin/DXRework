@@ -55,31 +55,31 @@ namespace Engine::Managers
 		m_timer->Tick(internal_tick);
 	}
 
-	void EngineEntryPoint::PreUpdate(const float& dt)
+	void EngineEntryPoint::PreUpdate(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::FixedUpdate(const float& dt)
+	void EngineEntryPoint::FixedUpdate(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::Update(const float& dt)
+	void EngineEntryPoint::Update(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::PreRender(const float& dt)
+	void EngineEntryPoint::PreRender(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::Render(const float& dt)
+	void EngineEntryPoint::Render(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::PostRender(const float& dt)
+	void EngineEntryPoint::PostRender(const float dt)
 	{
 	}
 
-	void EngineEntryPoint::PostUpdate(const float& dt)
+	void EngineEntryPoint::PostUpdate(const float dt)
 	{
 	}
 

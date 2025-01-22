@@ -40,7 +40,7 @@ namespace Engine::Components
 		SetSize(1.f);
 	}
 
-	void ParticleRenderer::Update(const float& dt)
+	void ParticleRenderer::Update(const float dt)
 	{
 		if (m_cs_ && GetMaterial().lock())
 		{
@@ -83,9 +83,9 @@ namespace Engine::Components
 		}
 	}
 
-	void ParticleRenderer::PreUpdate(const float& dt) {}
+	void ParticleRenderer::PreUpdate(const float dt) {}
 
-	void ParticleRenderer::FixedUpdate(const float& dt) {}
+	void ParticleRenderer::FixedUpdate(const float dt) {}
 
 	void ParticleRenderer::OnSerialized()
 	{

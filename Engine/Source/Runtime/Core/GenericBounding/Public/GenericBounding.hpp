@@ -144,7 +144,7 @@ namespace Engine
 		}
 
 		[[nodiscard]] bool __vectorcall ContainsBy(
-			const GenericBounding& other, const Matrix& this_mat, const Matrix& other_mat
+			const GenericBounding& other, const Matrix& other_mat
 		) const
 		{
 			if (other.type == BOUNDING_TYPE_BOX)

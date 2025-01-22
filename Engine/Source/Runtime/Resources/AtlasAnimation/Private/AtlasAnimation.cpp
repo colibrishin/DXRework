@@ -9,22 +9,22 @@ namespace Engine::Resources
 	AtlasAnimation::AtlasAnimation(const AtlasAnimationPrimitive& primitive)
 		: m_primitive_(primitive) {}
 
-	void AtlasAnimation::PreUpdate(const float& dt)
+	void AtlasAnimation::PreUpdate(const float dt)
 	{
 		BaseAnimation::PreUpdate(dt);
 	}
 
-	void AtlasAnimation::Update(const float& dt)
+	void AtlasAnimation::Update(const float dt)
 	{
 		BaseAnimation::Update(dt);
 	}
 
-	void AtlasAnimation::FixedUpdate(const float& dt)
+	void AtlasAnimation::FixedUpdate(const float dt)
 	{
 		BaseAnimation::FixedUpdate(dt);
 	}
 
-	void AtlasAnimation::PostUpdate(const float& dt)
+	void AtlasAnimation::PostUpdate(const float dt)
 	{
 		BaseAnimation::PostUpdate(dt);
 	}

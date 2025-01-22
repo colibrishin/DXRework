@@ -421,7 +421,7 @@ namespace Engine::Abstracts
 		m_cached_component_.insert(component);
 	}
 
-	void ObjectBase::Render(const float& dt)
+	void ObjectBase::Render(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -447,7 +447,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::PostRender(const float& dt)
+	void ObjectBase::PostRender(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -473,7 +473,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::FixedUpdate(const float& dt)
+	void ObjectBase::FixedUpdate(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -509,7 +509,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::PostUpdate(const float& dt)
+	void ObjectBase::PostUpdate(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -644,7 +644,7 @@ namespace Engine::Abstracts
 		return m_cached_script_;
 	}
 
-	void ObjectBase::PreUpdate(const float& dt)
+	void ObjectBase::PreUpdate(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -680,7 +680,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::PreRender(const float& dt)
+	void ObjectBase::PreRender(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{
@@ -706,7 +706,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::Update(const float& dt)
+	void ObjectBase::Update(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)
 		{

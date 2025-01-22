@@ -2,19 +2,19 @@
 
 namespace Engine::Managers
 {
-	void ReflectionEvaluator::PreUpdate(const float& dt) {}
+	void ReflectionEvaluator::PreUpdate(const float dt) {}
 
-	void ReflectionEvaluator::Update(const float& dt) {}
+	void ReflectionEvaluator::Update(const float dt) {}
 
-	void ReflectionEvaluator::FixedUpdate(const float& dt) {}
+	void ReflectionEvaluator::FixedUpdate(const float dt) {}
 
-	void ReflectionEvaluator::PreRender(const float& dt) {}
+	void ReflectionEvaluator::PreRender(const float dt) {}
 
-	void ReflectionEvaluator::Render(const float& dt) {}
+	void ReflectionEvaluator::Render(const float dt) {}
 
-	void ReflectionEvaluator::PostRender(const float& dt) {}
+	void ReflectionEvaluator::PostRender(const float dt) {}
 
-	void ReflectionEvaluator::PostUpdate(const float& dt) {}
+	void ReflectionEvaluator::PostUpdate(const float dt) {}
 
 	void ReflectionEvaluator::Initialize()
 	{

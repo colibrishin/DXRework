@@ -60,6 +60,9 @@ namespace Engine
 		friend struct CommandPairPool;
 		friend struct CommandPairTask;
 
+		template< class T, class A >
+		friend typename boost::detail::sp_if_not_array< T >::type boost::allocate_shared_noinit(A const& a);
+
 		CommandPair() = default;
 
 		CommandPairPool* m_pool_{};

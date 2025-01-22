@@ -12,11 +12,11 @@ namespace Engine::Managers
 {
 	void ProjectionFrustum::Initialize() {}
 
-	void ProjectionFrustum::Update(const float& dt) {}
+	void ProjectionFrustum::Update(const float dt) {}
 
-	void ProjectionFrustum::PreUpdate(const float& dt) {}
+	void ProjectionFrustum::PreUpdate(const float dt) {}
 
-	void ProjectionFrustum::PreRender(const float& dt)
+	void ProjectionFrustum::PreRender(const float dt)
 	{
 		if (const auto scene = Managers::SceneManager::GetInstance().GetActiveScene().lock())
 		{
@@ -47,9 +47,9 @@ namespace Engine::Managers
 		}
 	}
 
-	void ProjectionFrustum::Render(const float& dt) {}
+	void ProjectionFrustum::Render(const float dt) {}
 
-	void ProjectionFrustum::PostRender(const float& dt) {}
+	void ProjectionFrustum::PostRender(const float dt) {}
 
 	bool ProjectionFrustum::CheckRender(const Weak<Abstracts::ObjectBase>& object) const
 	{
@@ -87,7 +87,7 @@ namespace Engine::Managers
 		return m_frustum;
 	}
 
-	void ProjectionFrustum::FixedUpdate(const float& dt) {}
+	void ProjectionFrustum::FixedUpdate(const float dt) {}
 
-	void ProjectionFrustum::PostUpdate(const float& dt) {}
+	void ProjectionFrustum::PostUpdate(const float dt) {}
 } // namespace Engine::Manager

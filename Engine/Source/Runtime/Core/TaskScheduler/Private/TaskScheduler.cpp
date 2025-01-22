@@ -4,7 +4,7 @@ namespace Engine::Managers
 {
 	void TaskScheduler::Initialize() {}
 
-	void TaskScheduler::PreUpdate(const float& dt)
+	void TaskScheduler::PreUpdate(const float dt)
 	{
 		for (int i = 0; i < TASK_MAX; ++i)
 		{
@@ -17,15 +17,15 @@ namespace Engine::Managers
 		}
 	}
 
-	void TaskScheduler::Update(const float& dt) {}
+	void TaskScheduler::Update(const float dt) {}
 
-	void TaskScheduler::PreRender(const float& dt) {}
+	void TaskScheduler::PreRender(const float dt) {}
 
-	void TaskScheduler::Render(const float& dt) {}
+	void TaskScheduler::Render(const float dt) {}
 
-	void TaskScheduler::PostRender(const float& dt) {}
+	void TaskScheduler::PostRender(const float dt) {}
 
-	void TaskScheduler::PostUpdate(const float& dt) {}
+	void TaskScheduler::PostUpdate(const float dt) {}
 
-	void TaskScheduler::FixedUpdate(const float& dt) {}
+	void TaskScheduler::FixedUpdate(const float dt) {}
 }

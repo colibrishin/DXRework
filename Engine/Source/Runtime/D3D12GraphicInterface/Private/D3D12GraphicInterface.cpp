@@ -133,8 +133,8 @@ void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPri
     {
         .left = 0,
         .top = 0,
-        .right = static_cast<UINT>(viewport.width),
-        .bottom = static_cast<UINT>(viewport.height)
+        .right = static_cast<LONG>(viewport.width),
+        .bottom = static_cast<LONG>(viewport.height)
     };
 
     cmd->GetList()->RSSetViewports(1, &native_viewport);
@@ -318,63 +318,61 @@ void Engine::D3D12GraphicInterface::Unbind(const GraphicInterfaceContextPrimitiv
 	auto               res       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
 	const CommandPair* cmd       = static_cast<CommandPair*>(context->commandList);
 
-	switch (bind_type)
-	{
-	case BIND_TYPE_UAV:
-		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_COMMON
-		);
+	const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+			(
+			 res,
+			 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			 D3D12_RESOURCE_STATE_COMMON
+			);
 
-		cmd->GetList()->ResourceBarrier(1, &uav_trans);
-		break;
-	case BIND_TYPE_SRV:
-		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_COMMON
-		);
+	const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+			(
+			 res,
+			 D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+			 D3D12_RESOURCE_STATE_COMMON
+			);
 
-		cmd->GetList()->ResourceBarrier(1, &srv_trans);
-		break;
-	case BIND_TYPE_RTV:
-		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_COMMON
-		);
+	const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+			(
+			 res,
+			 D3D12_RESOURCE_STATE_RENDER_TARGET,
+			 D3D12_RESOURCE_STATE_COMMON
+			);
 
-		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
-		break;
-	case BIND_TYPE_DSV:
-	case BIND_TYPE_DSV_ONLY:
-		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+	const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
 		(
 			res,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			D3D12_RESOURCE_STATE_COMMON
 		);
 
+	switch (bind_type)
+	{
+	case BIND_TYPE_UAV:
+		cmd->GetList()->ResourceBarrier(1, &uav_trans);
+		break;
+	case BIND_TYPE_SRV:
+		cmd->GetList()->ResourceBarrier(1, &srv_trans);
+		break;
+	case BIND_TYPE_RTV:
+		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+		break;
+	case BIND_TYPE_DSV:
+	case BIND_TYPE_DSV_ONLY:
 		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
 		break;
 	case BIND_TYPE_SAMPLER:
-		break;
 	case BIND_TYPE_CB:
-		break;
 	case BIND_TYPE_COUNT:
+	default:
 		break;
-	default:;
 	}
 }
 
 void Engine::D3D12GraphicInterface::BindMultiple(
 			const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
 			Resources::Texture* dsv
-		) override
+		)
 {
 	CommandPair* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -478,7 +476,7 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 void Engine::D3D12GraphicInterface::UnbindMultiple(
 	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
 	Resources::Texture* dsv
-) override
+)
 {
 	auto cmd = static_cast<CommandPair*>(context->commandList);
 

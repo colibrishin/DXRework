@@ -1,5 +1,4 @@
 #include "../Public/Debugger.hpp"
-#include "../Public/DebugDraw.h"
 
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
@@ -8,11 +7,11 @@
 
 namespace Engine::Managers
 {
-	void Debugger::Render(const float& dt) {}
+	void Debugger::Render(const float dt) {}
 
-	void Debugger::PreUpdate(const float& dt) {}
+	void Debugger::PreUpdate(const float dt) {}
 
-	void Debugger::Update(const float& dt)
+	void Debugger::Update(const float dt)
 	{	
 #if WITH_DEBUG
 		if (Managers::InputManager::GetInstance().GetCurrentKeyState().Scroll)
@@ -60,32 +59,32 @@ namespace Engine::Managers
 #endif
 	}
 
-	void Debugger::PreRender(const float& dt) {}
+	void Debugger::PreRender(const float dt) {}
 
-	void Debugger::FixedUpdate(const float& dt) {}
+	void Debugger::FixedUpdate(const float dt) {}
 
-	void Debugger::PostRender(const float& dt)
+	void Debugger::PostRender(const float dt)
 	{
 		if (!GetDebugFlag())
 		{
 			return;
 		}
 
-		if (m_render_queue.empty())
+		if (m_render_queue_.empty())
 		{
 			return;
 		}
 
-		while (m_render_queue.size() > CFG_DEBUG_MAX_MESSAGE)
+		while (m_render_queue_.size() > CFG_DEBUG_MAX_MESSAGE)
 		{
-			m_render_queue.pop_front();
+			m_render_queue_.pop_front();
 		}
 
-		for (auto it = m_render_queue.begin(); it != m_render_queue.end();)
+		for (auto it = m_render_queue_.begin(); it != m_render_queue_.end();)
 		{
-			if (it->first.elapsed_time > CFG_DEBUG_MESSAGE_LIFETIME)
+			if (it->elapsed_time > CFG_DEBUG_MESSAGE_LIFETIME)
 			{
-				it = m_render_queue.erase(it);
+				it = m_render_queue_.erase(it);
 			}
 			else
 			{
@@ -93,187 +92,128 @@ namespace Engine::Managers
 			}
 		}
 
-		for (auto it = m_render_queue.begin(); it != m_render_queue.end(); ++it)
+		for (auto it = m_render_queue_.begin(); it != m_render_queue_.end(); ++it)
 		{
-			switch (it->first.redirection)
-			{
-			case TOOLKIT_RENDER_PRIMITIVE:
-				Managers::ToolkitAPI::GetInstance().AppendPrimitiveBatch
-						(
-						 [this, it, dt]()
-						 {
-							 it->second(it->first, dt);
-						 }
-						);
-				break;
-			case TOOLKIT_RENDER_SPRITE:
-				Managers::ToolkitAPI::GetInstance().AppendSpriteBatch
-						(
-						 [this, it, dt]()
-						 {
-							 it->second(it->first, dt);
-						 }
-						);
-				break;
-			case TOOLKIT_RENDER_UNKNOWN:
-			default: ;
-			}
+			CallbackMessage(dt, it->type, *it);
 		}
-
-		y = CFG_DEBUG_MESSAGE_Y_MOVEMENT;
 	}
 
-	void Debugger::PostUpdate(const float& dt) {}
+	void Debugger::PostUpdate(const float dt) {}
 
 	Debugger::Debugger(SINGLETON_LOCK_TOKEN)
-		: Singleton(),
-		  m_bDebug(false) {}
+		: Singleton(), m_b_debug_(false) {}
 
-	void Debugger::Initialize()
+	void Debugger::Initialize() {}
+
+	void Debugger::Log(const std::string& str, const Color& color)
 	{
-		auto upload_batch = DirectX::ResourceUploadBatch(Managers::D3Device::GetInstance().GetDevice());
+		Message msg{};
+		msg.type = DEBUG_MSG_LOG;
+		msg.elapsed_time = 0.f;
+		msg.x = m_x_;
+		msg.y = m_y_;
+		msg.text = str;
+		msg.color = color;
 
-		upload_batch.Begin();
-
-		m_bDebug = true;
-		m_font_  = std::make_unique<DirectX::SpriteFont>
-				(
-				 Managers::D3Device::GetInstance().GetDevice(),
-				 upload_batch,
-				 L"consolas.spritefont",
-				 Managers::ToolkitAPI::GetInstance().GetDescriptorHeap()->GetCpuHandle(0),
-				 Managers::ToolkitAPI::GetInstance().GetDescriptorHeap()->GetGpuHandle(0)
-				);
-
-		const auto& token = upload_batch.End(Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
-
-		token.wait();
+		Push(msg);
+		m_y_ += CFG_DEBUG_MESSAGE_Y_MOVEMENT;
+		m_y_ = std::fmod(m_y_, CFG_HEIGHT);
 	}
 
-	void Debugger::Log(const std::string& str)
+	void Debugger::Draw(const Vector3& start, const Vector3& end, const Color& color)
 	{
-		Push
-				(
-				 Message{str, TOOLKIT_RENDER_SPRITE}, [&](Message& msg, const float& dt)
-				 {
-					 m_font_->DrawString
-							 (
-							  Managers::ToolkitAPI::GetInstance().GetSpriteBatch(), msg.log.c_str(),
-							  XMFLOAT2(static_cast<float>(x), static_cast<float>(y)),
-							  DirectX::Colors::OrangeRed, 0.0f, Vector2::Zero, 0.5f
-							 );
-
-					 y += CFG_DEBUG_MESSAGE_Y_MOVEMENT;
-					 y %= CFG_HEIGHT;
-					 msg.elapsed_time += dt;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_LINE;
+		msg.elapsed_time = 0.f;
+		msg.ray_start = start;
+		msg.ray_end = end;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
-	void Debugger::Draw(
-		const Vector3&     start, const Vector3& end,
-		const XMVECTORF32& color
-	)
+	void Debugger::Draw(const Ray& ray, const Color& color)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [start, end, color](Message& msg, const float& dt)
-				 {
-					 DX::DrawRay(Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), start, end, false, color);
-					 msg.elapsed_time += dt;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_RAY;
+		msg.elapsed_time = 0.f;
+		msg.ray = ray;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
-	void Debugger::Draw(Ray& ray, const XMVECTORF32& color)
+	void Debugger::SetCallback(const eDebugMessage type, const DebugCallback& callback)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [ray, color](Message& msg, const float& dt)
-				 {
-					 DX::DrawRay
-							 (
-							  Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), ray.position,
-							  ray.direction, true, color
-							 );
-					 msg.elapsed_time += dt;
-				 }
-				);
+		m_process_functions_[type] = callback;
 	}
 
-	void Debugger::Draw(const BoundingFrustum& frustum, const XMVECTORF32& color)
+	void Debugger::Draw(const BoundingFrustum& frustum, const Color& color)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [frustum, color](Message& msg, const float& dt)
-				 {
-					 DX::Draw(Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), frustum, color);
-					 msg.elapsed_time += 2.f;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_FRUSTUM;
+		msg.elapsed_time = 0.f;
+		msg.frustum = frustum;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
-	void Debugger::Draw(const BoundingSphere& sphere, const XMVECTORF32& color)
+	void Debugger::Draw(const BoundingSphere& sphere, const Color& color)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [sphere, color](Message& msg, const float& dt)
-				 {
-					 DX::Draw(Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), sphere, color);
-					 msg.elapsed_time += 2.f;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_LOG;
+		msg.elapsed_time = 0.f;
+		msg.sphere = sphere;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
-	void Debugger::Draw(const BoundingOrientedBox& obb, const XMVECTORF32& color)
+	void Debugger::Draw(const BoundingOrientedBox& obb, const Color& color)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [obb, color](Message& msg, const float& dt)
-				 {
-					 DX::Draw(Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), obb, color);
-					 msg.elapsed_time += 2.f;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_LOG;
+		msg.elapsed_time = 0.f;
+		msg.obb = obb;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
-	void Debugger::Draw(const BoundingBox& bb, const XMVECTORF32& color)
+	void Debugger::Draw(const BoundingBox& bb, const Color& color)
 	{
-		Push
-				(
-				 Message{"", TOOLKIT_RENDER_PRIMITIVE}, [bb, color](Message& msg, const float& dt)
-				 {
-					 DX::Draw(Managers::ToolkitAPI::GetInstance().GetPrimitiveBatch(), bb, color);
-					 msg.elapsed_time += 2.f;
-				 }
-				);
+		Message msg{};
+		msg.type = DEBUG_MSG_LOG;
+		msg.elapsed_time = 0.f;
+		msg.aabb = bb;
+		msg.color = color;
+		
+		Push(msg);
 	}
 
 	void Debugger::SetDebugFlag()
 	{
-		m_bDebug = true;
+		m_b_debug_ = true;
 	}
 
 	bool Debugger::GetDebugFlag() const
 	{
-		return m_bDebug;
+		return m_b_debug_;
 	}
 
-	void Debugger::Push(
-		const Message&                              msg,
-		const std::function<void(Message&, float)>& func
-	)
+	void Debugger::Push(const Message& msg)
 	{
-		if (!m_bDebug)
+		if (!m_b_debug_)
 		{
 			return;
 		}
 
-		if (m_render_queue.size() > CFG_DEBUG_MAX_MESSAGE)
+		if (m_render_queue_.size() > CFG_DEBUG_MAX_MESSAGE)
 		{
-			m_render_queue.pop_front();
+			m_render_queue_.pop_front();
 		}
 
-		m_render_queue.emplace_back(msg, func);
+		m_render_queue_.emplace_back(msg);
 	}
 } // namespace Engine::Manager

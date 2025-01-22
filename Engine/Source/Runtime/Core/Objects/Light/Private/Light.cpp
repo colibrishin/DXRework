@@ -50,32 +50,32 @@ namespace Engine::Objects
 		SetCulled(false);
 	}
 
-	void Light::PreUpdate(const float& dt)
+	void Light::PreUpdate(const float dt)
 	{
 		ObjectBase::PreUpdate(dt);
 	}
 
-	void Light::Update(const float& dt)
+	void Light::Update(const float dt)
 	{
 		ObjectBase::Update(dt);
 	}
 
-	void Light::PreRender(const float& dt)
+	void Light::PreRender(const float dt)
 	{
 		ObjectBase::PreRender(dt);
 	}
 
-	void Light::Render(const float& dt)
+	void Light::Render(const float dt)
 	{
 		ObjectBase::Render(dt);
 	}
 
-	void Light::PostRender(const float& dt)
+	void Light::PostRender(const float dt)
 	{
 		ObjectBase::PostRender(dt);
 	}
 
-	void Light::PostUpdate(const float& dt)
+	void Light::PostUpdate(const float dt)
 	{
 		ObjectBase::PostUpdate(dt);
 	}

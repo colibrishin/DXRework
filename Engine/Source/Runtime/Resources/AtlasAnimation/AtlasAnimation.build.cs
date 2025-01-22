@@ -14,6 +14,7 @@ public class AtlasAnimation : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<BaseAnimation>(target);
         conf.AddPrivateDependency<Pugixml>(target);

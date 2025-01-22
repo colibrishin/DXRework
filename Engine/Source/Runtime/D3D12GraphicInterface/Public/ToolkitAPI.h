@@ -12,22 +12,23 @@
 
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include <directxtk12/EffectPipelineStateDescription.h>
+#include <directxtk12/SpriteFont.h>
 
 namespace Engine::Managers
 {
-	class D3D12TOOLKIT_API ToolkitAPI final : public Abstracts::Singleton<ToolkitAPI>
+	class D3D12GRAPHICINTERFACE_API ToolkitAPI final : public Abstracts::Singleton<ToolkitAPI>
 	{
 	public:
 		explicit ToolkitAPI(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void PreRender(const float& dt) override;
-		void Render(const float& dt) override;
-		void PostRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void PostRender(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		void AppendSpriteBatch(const std::function<void()>& callback);
 		void AppendPrimitiveBatch(const std::function<void()>& callback);
@@ -38,6 +39,8 @@ namespace Engine::Managers
 		DirectX::DescriptorHeap*                      GetDescriptorHeap() const;
 
 	private:
+		void RegisterDebuggerFunction() const;
+
 		friend struct SingletonDeleter;
 		~ToolkitAPI() override;
 
@@ -52,6 +55,7 @@ namespace Engine::Managers
 		std::unique_ptr<DirectX::BasicEffect>                         m_basic_effect_          = nullptr;
 		std::unique_ptr<DirectX::RenderTargetState>                   m_render_target_state_   = nullptr;
 		std::unique_ptr<DirectX::GraphicsMemory>                      m_graphics_memory_       = nullptr;
+		std::unique_ptr<DirectX::SpriteFont>						  m_font_				   = nullptr;
 
 
 		std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_primitive_batch_ =

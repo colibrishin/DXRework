@@ -36,6 +36,160 @@ namespace Engine
 	using DirectX::XMFLOAT2;
 	using DirectX::XMFLOAT3X3;
 	using DirectX::XMVECTORF32;
+}
+#endif
+
+namespace Engine::Graphics
+{
+	struct CORE_API ParamBase
+	{
+	public:
+		constexpr ParamBase() = default;
+
+		template <typename T>
+		void SetParam(const size_t slot, const T& param)
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				i_param[slot] = param;
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				i_param[slot] = static_cast<int>(param);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				f_param[slot] = param;
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				std::memcpy(&v_param[slot], &param, sizeof(Vector3));
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				_mm_store_ps(v_param[slot].x, _mm_load_ps(param.x));
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				const auto row0 = const_cast<float*>(&param.m[0][0]);
+				const auto row2 = const_cast<float*>(&param.m[2][0]);
+
+				_mm256_store_ps(m_param[slot].m[0], _mm256_load_ps(row0));
+				_mm256_store_ps(m_param[slot].m[2], _mm256_load_ps(row2));
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+		template <typename T>
+		T& GetParam(const size_t slot)
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				return i_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				return reinterpret_cast<UINT&>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, bool>)
+			{
+				return reinterpret_cast<bool&>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				return f_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				return reinterpret_cast<Vector3&>(v_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				return reinterpret_cast<Vector4&>(v_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				return reinterpret_cast<Matrix&>(m_param[slot]);
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+		template <typename T>
+		T GetParam(const size_t slot) const
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				return i_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, bool>)
+			{
+				return static_cast<bool>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				return static_cast<UINT>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				return f_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				return v_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				return v_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				return m_param[slot];
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+	private:
+		constexpr static size_t max_param = 8;
+
+		float            f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		int              i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		Vector4 v_param[max_param]{};
+		Matrix  m_param[max_param]{};
+	};
+
+	static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
+	static_assert(sizeof(ParamBase) < 2048);
+}
+
+// Static structured buffer type, this should be added to every structured buffer
+#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
+#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
+
+// Static structured buffer UAV type, this should be added to every structured buffer UAV
+#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType csbuavtype = enum_val;
+#define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
+
+namespace Engine
+{
+	template <typename T, typename U>
+	void CheckSize(const U compare_value, const std::wstring_view out_string)
+	{
+#if WITH_DEBUG
+		if (compare_value > std::numeric_limits<T>::max() || compare_value < std::numeric_limits<T>::min())
+		{
+			OutputDebugStringW(out_string.data());
+		}
+#endif
+	}
 
 	enum CORE_API eBindType : uint8_t
 	{
@@ -208,160 +362,6 @@ namespace Engine
 	using eShaderDepths = UINT;
 	using eShaderRasterizers = UINT;
 	using eShaderSamplers = UINT;
-}
-
-namespace Engine::Graphics
-{
-	struct CORE_API ParamBase
-	{
-	public:
-		constexpr ParamBase() = default;
-
-		template <typename T>
-		void SetParam(const size_t slot, const T& param)
-		{
-			if constexpr (std::is_same_v<T, int>)
-			{
-				i_param[slot] = param;
-			}
-			else if constexpr (std::is_same_v<T, UINT>)
-			{
-				i_param[slot] = static_cast<int>(param);
-			}
-			else if constexpr (std::is_same_v<T, float>)
-			{
-				f_param[slot] = param;
-			}
-			else if constexpr (std::is_same_v<T, Vector3>)
-			{
-				std::memcpy(&v_param[slot], &param, sizeof(Vector3));
-			}
-			else if constexpr (std::is_same_v<T, Vector4>)
-			{
-				_mm_store_ps(v_param[slot].x, _mm_load_ps(param.x));
-			}
-			else if constexpr (std::is_same_v<T, Matrix>)
-			{
-				const auto row0 = const_cast<float*>(&param.m[0][0]);
-				const auto row2 = const_cast<float*>(&param.m[2][0]);
-
-				_mm256_store_ps(m_param[slot].m[0], _mm256_load_ps(row0));
-				_mm256_store_ps(m_param[slot].m[2], _mm256_load_ps(row2));
-			}
-			else
-			{
-				throw std::runtime_error("Invalid type");
-			}
-		}
-
-		template <typename T>
-		T& GetParam(const size_t slot)
-		{
-			if constexpr (std::is_same_v<T, int>)
-			{
-				return i_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, UINT>)
-			{
-				return reinterpret_cast<UINT&>(i_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, bool>)
-			{
-				return reinterpret_cast<bool&>(i_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, float>)
-			{
-				return f_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, Vector3>)
-			{
-				return reinterpret_cast<Vector3&>(v_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, Vector4>)
-			{
-				return reinterpret_cast<Vector4&>(v_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, Matrix>)
-			{
-				return reinterpret_cast<Matrix&>(m_param[slot]);
-			}
-			else
-			{
-				throw std::runtime_error("Invalid type");
-			}
-		}
-
-		template <typename T>
-		T GetParam(const size_t slot) const
-		{
-			if constexpr (std::is_same_v<T, int>)
-			{
-				return i_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, bool>)
-			{
-				return static_cast<bool>(i_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, UINT>)
-			{
-				return static_cast<UINT>(i_param[slot]);
-			}
-			else if constexpr (std::is_same_v<T, float>)
-			{
-				return f_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, Vector3>)
-			{
-				return v_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, Vector4>)
-			{
-				return v_param[slot];
-			}
-			else if constexpr (std::is_same_v<T, Matrix>)
-			{
-				return m_param[slot];
-			}
-			else
-			{
-				throw std::runtime_error("Invalid type");
-			}
-		}
-
-	private:
-		constexpr static size_t max_param = 8;
-
-		float            f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
-		int              i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
-		Vector4 v_param[max_param]{};
-		Matrix  m_param[max_param]{};
-	};
-
-	static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
-	static_assert(sizeof(ParamBase) < 2048);
-}
-#endif
-
-// Static structured buffer type, this should be added to every structured buffer
-#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
-#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
-
-// Static structured buffer UAV type, this should be added to every structured buffer UAV
-#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType csbuavtype = enum_val;
-#define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
-
-namespace Engine
-{
-	template <typename T, typename U>
-	void CheckSize(const U compare_value, const std::wstring_view out_string)
-	{
-#if WITH_DEBUG
-		if (compare_value > std::numeric_limits<T>::max() || compare_value < std::numeric_limits<T>::min())
-		{
-			OutputDebugStringW(out_string.data());
-		}
-#endif
-	}
 
 	template <typename T>
 	struct OffsetT

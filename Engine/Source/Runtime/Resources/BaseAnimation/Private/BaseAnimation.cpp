@@ -9,13 +9,13 @@ namespace Engine::Resources
 		  m_duration_(0),
 		  m_simple_primitive_(primitive) {}
 
-	void BaseAnimation::PreUpdate(const float& dt) {}
+	void BaseAnimation::PreUpdate(const float dt) {}
 
-	void BaseAnimation::Update(const float& dt) {}
+	void BaseAnimation::Update(const float dt) {}
 
-	void BaseAnimation::FixedUpdate(const float& dt) {}
+	void BaseAnimation::FixedUpdate(const float dt) {}
 
-	void BaseAnimation::PostUpdate(const float& dt) {}
+	void BaseAnimation::PostUpdate(const float dt) {}
 
 	void BaseAnimation::OnDeserialized()
 	{

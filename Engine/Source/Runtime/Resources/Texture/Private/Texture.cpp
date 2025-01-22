@@ -48,11 +48,11 @@ namespace Engine::Resources
 
 	void Texture::Initialize() { }
 
-	void Texture::PreUpdate(const float& dt) {}
+	void Texture::PreUpdate(const float dt) {}
 
-	void Texture::Update(const float& dt) {}
+	void Texture::Update(const float dt) {}
 
-	void Texture::PostUpdate(const float& dt) {}
+	void Texture::PostUpdate(const float dt) {}
 
 	void Texture::Load_INTERNAL()
 	{
@@ -85,7 +85,7 @@ namespace Engine::Resources
 		m_primitive_texture_.reset();
 	}
 
-	void Texture::FixedUpdate(const float& dt) {}
+	void Texture::FixedUpdate(const float dt) {}
 
 	void Texture::OnSerialized()
 	{

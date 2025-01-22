@@ -11,7 +11,6 @@ public class D3D12GraphicInterface : CommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<DX12Agility>(target);
@@ -20,7 +19,11 @@ public class D3D12GraphicInterface : CommonProject
         conf.AddPublicDependency<Mesh>(target);
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<ComputeShader>(target);
+        conf.AddPublicDependency<DirectXTK>(target);
+
+        conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
+        conf.AddPrivateDependency<Debugger>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

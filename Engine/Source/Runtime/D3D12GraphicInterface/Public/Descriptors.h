@@ -89,10 +89,10 @@ namespace Engine
 	public:
 		DescriptorHandler();
 
-		void Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
-		DescriptorPtr&& Acquire();
-		bool            IsValid(const DescriptorPtrImpl* ptr);
-		void            Release(const DescriptorPtrImpl& handles);
+		void          Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
+		DescriptorPtr Acquire();
+		bool          IsValid(const DescriptorPtrImpl* ptr);
+		void          Release(const DescriptorPtrImpl& handles);
 
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap(UINT64 offset) const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const;

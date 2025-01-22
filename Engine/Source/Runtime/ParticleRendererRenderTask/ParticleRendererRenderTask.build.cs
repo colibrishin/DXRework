@@ -17,7 +17,8 @@ public class ParticleRendererRenderTask : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        
+        conf.AddPublicDependency<RenderComponent>(target);
+
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ParticleRenderer>(target);
         conf.AddPrivateDependency<ParticleRendererExtension>(target);

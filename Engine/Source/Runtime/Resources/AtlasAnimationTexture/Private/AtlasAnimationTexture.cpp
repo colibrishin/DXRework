@@ -11,13 +11,13 @@ namespace Engine::Resources
 		: Texture3D(path, {}),
 		  m_atlases_(atlases) {}
 
-	void AtlasAnimationTexture::PreUpdate(const float& dt) {}
+	void AtlasAnimationTexture::PreUpdate(const float dt) {}
 
-	void AtlasAnimationTexture::Update(const float& dt) {}
+	void AtlasAnimationTexture::Update(const float dt) {}
 
-	void AtlasAnimationTexture::FixedUpdate(const float& dt) {}
+	void AtlasAnimationTexture::FixedUpdate(const float dt) {}
 
-	void AtlasAnimationTexture::PostUpdate(const float& dt) {}
+	void AtlasAnimationTexture::PostUpdate(const float dt) {}
 
 	void AtlasAnimationTexture::OnSerialized()
 	{

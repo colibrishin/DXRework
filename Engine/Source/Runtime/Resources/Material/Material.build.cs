@@ -16,6 +16,7 @@ public class Material : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Shader>(target);
+        conf.AddPublicDependency<DirectXTK>(target);
 
         conf.AddPrivateDependency<Shape>(target);
         conf.AddPrivateDependency<Mesh>(target);

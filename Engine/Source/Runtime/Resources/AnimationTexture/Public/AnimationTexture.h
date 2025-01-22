@@ -10,10 +10,10 @@ namespace Engine::Resources
 
 		AnimationTexture(const std::vector<Strong<BoneAnimation>>& animations);
 
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;

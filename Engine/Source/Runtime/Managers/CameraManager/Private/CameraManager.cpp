@@ -14,11 +14,11 @@ namespace Engine::Managers
 {
 	void CameraManager::Initialize() {}
 
-	void CameraManager::PreUpdate(const float& dt) {}
+	void CameraManager::PreUpdate(const float dt) {}
 
-	void CameraManager::Update(const float& dt) {}
+	void CameraManager::Update(const float dt) {}
 
-	void CameraManager::PreRender(const float& dt) 
+	void CameraManager::PreRender(const float dt) 
 	{
 		if (const Strong<Scene>& scene = Managers::SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
@@ -121,13 +121,13 @@ namespace Engine::Managers
 		}
 	}
 
-	void CameraManager::Render(const float& dt) {}
+	void CameraManager::Render(const float dt) {}
 
-	void CameraManager::PostRender(const float& dt) {}
+	void CameraManager::PostRender(const float dt) {}
 
-	void CameraManager::PostUpdate(const float& dt) {}
+	void CameraManager::PostUpdate(const float dt) {}
 
-	void    CameraManager::FixedUpdate(const float& dt) {}
+	void CameraManager::FixedUpdate(const float dt) {}
 
 	Vector2 CameraManager::GetWorldMousePosition() const
 	{

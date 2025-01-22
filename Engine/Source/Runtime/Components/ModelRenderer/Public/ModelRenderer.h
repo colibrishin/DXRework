@@ -30,10 +30,10 @@ namespace Engine::Components
 		RENDER_COM_T(RENDER_COM_T_MODEL)
 
 		ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner);
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 	private:
 		COMP_CLONE_DECL

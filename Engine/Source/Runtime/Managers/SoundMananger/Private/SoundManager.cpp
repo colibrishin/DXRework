@@ -48,24 +48,24 @@ namespace Engine::Managers
 		m_master_channel_group_->setVolume(0.5f);
 	}
 
-	void SoundManager::PreUpdate(const float& dt) { }
+	void SoundManager::PreUpdate(const float dt) { }
 
-	void SoundManager::Update(const float& dt)
+	void SoundManager::Update(const float dt)
 	{
 		m_audio_engine_->update();
 	}
 
-	void SoundManager::PreRender(const float& dt) { }
+	void SoundManager::PreRender(const float dt) { }
 
-	void SoundManager::Render(const float& dt) {}
+	void SoundManager::Render(const float dt) {}
 
-	void SoundManager::PostRender(const float& dt)
+	void SoundManager::PostRender(const float dt)
 	{
 	}
 
-	void SoundManager::FixedUpdate(const float& dt) { }
+	void SoundManager::FixedUpdate(const float dt) { }
 
-	void SoundManager::PostUpdate(const float& dt) { }
+	void SoundManager::PostUpdate(const float dt) { }
 
 	void SoundManager::LoadSound(FMOD::Sound** sound, const std::string& path) const
 	{

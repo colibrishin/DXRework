@@ -10,9 +10,9 @@ namespace Engine::Components
 		COMPONENT_T(COM_T_ANIMATOR)
 
 		Animator(const Weak<Engine::Abstracts::ObjectBase>& owner);
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;

@@ -22,6 +22,9 @@ namespace Engine::Managers
 				GetInstance().m_param_buffer_ = previousParam;
 			}
 
+			TempParamTicket(TempParamTicket&) = delete;
+			TempParamTicket operator=(TempParamTicket&) = delete;
+
 		private:
 			const CBs::ParamCB previousParam;
 		};
@@ -30,13 +33,13 @@ namespace Engine::Managers
 		explicit RenderPipeline(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
-		void PreRender(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void Render(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostRender(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreRender(const float dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void Render(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostRender(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
 
@@ -51,7 +54,7 @@ namespace Engine::Managers
 			primitive.commandList->FlagReady();
 		}
 
-		[[nodiscard]] TempParamTicket&& SetParam(const ParamBase& param)
+		[[nodiscard]] TempParamTicket SetParam(const ParamBase& param)
 		{
 			return {m_param_buffer_};
 		}

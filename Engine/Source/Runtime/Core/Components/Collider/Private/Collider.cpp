@@ -186,8 +186,7 @@ namespace Engine::Components
 
 	bool Collider::ContainsBy(const Strong<Collider>& test, const Strong<Collider>& container)
 	{
-		return test->m_boundings_.ContainsBy
-				(container->m_boundings_, test->GetWorldMatrix(), container->GetWorldMatrix());
+		return test->m_boundings_.ContainsBy(container->m_boundings_, container->GetWorldMatrix());
 	}
 
 	void Collider::AddCollidedObject(const GlobalEntityID id)
@@ -239,7 +238,7 @@ namespace Engine::Components
 		  m_inertia_tensor_(),
 		  m_local_matrix_(Matrix::Identity) {}
 
-	void Collider::FixedUpdate(const float& dt)
+	void Collider::FixedUpdate(const float dt)
 	{
 #ifdef PHYSX_ENABLED
 		if (const auto& owner = GetOwner().lock())
@@ -538,17 +537,17 @@ namespace Engine::Components
 	}
 #endif
 
-	void Collider::PreUpdate(const float& dt)
+	void Collider::PreUpdate(const float dt)
 	{
 		UpdateInertiaTensor();
 	}
 
-	void Collider::Update(const float& dt)
+	void Collider::Update(const float dt)
 	{
 		UpdateInertiaTensor();
 	}
 
-	void Collider::PostUpdate(const float& dt)
+	void Collider::PostUpdate(const float dt)
 	{
 		Component::PostUpdate(dt);
 	}

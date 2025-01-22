@@ -9,7 +9,7 @@ namespace Engine::Managers
 {
 	Renderer::~Renderer() {}
 
-	void Renderer::PreUpdate(const float& dt)
+	void Renderer::PreUpdate(const float dt)
 	{
 		for (size_t i = 0; i < m_render_pass_tasks_.size(); ++i)
 		{
@@ -24,11 +24,11 @@ namespace Engine::Managers
 		m_b_ready_ = false;
 	}
 
-	void Renderer::Update(const float& dt) {}
+	void Renderer::Update(const float dt) {}
 
-	void Renderer::FixedUpdate(const float& dt) {}
+	void Renderer::FixedUpdate(const float dt) {}
 
-	void Renderer::PreRender(const float& dt)
+	void Renderer::PreRender(const float dt)
 	{
 		if (const auto& scene = SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
@@ -47,7 +47,7 @@ namespace Engine::Managers
 		m_b_ready_ = true;
 	}
 
-	void Renderer::Render(const float& dt)
+	void Renderer::Render(const float dt)
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
@@ -78,9 +78,9 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::PostRender(const float& dt) {}
+	void Renderer::PostRender(const float dt) {}
 
-	void Renderer::PostUpdate(const float& dt) {}
+	void Renderer::PostUpdate(const float dt) {}
 
 	void Renderer::Initialize() {}
 

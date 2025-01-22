@@ -10,8 +10,6 @@
 #include "CommandPair.h"
 #include "ThrowIfFailed.h"
 
-#include "Source/Runtime/D3D12PrimitiveTexture/Public/D3D12PrimitiveTexture.h"
-
 namespace Engine
 {
 	DescriptorPtrImpl::DescriptorPtrImpl()
@@ -406,7 +404,7 @@ namespace Engine
 				(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	}
 
-	DescriptorPtr&& DescriptorHandler::Acquire()
+	DescriptorPtr DescriptorHandler::Acquire()
 	{
 		UINT64 queue_offset   = 0;
 		UINT64 segment_offset = 0;

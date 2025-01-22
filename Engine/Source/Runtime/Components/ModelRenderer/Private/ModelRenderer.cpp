@@ -7,13 +7,13 @@ namespace Engine::Components
 	ModelRenderer::ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
 		: RenderComponent(RENDER_COM_T_MODEL, owner) {}
 
-	void ModelRenderer::PreUpdate(const float& dt) {}
+	void ModelRenderer::PreUpdate(const float dt) {}
 
-	void ModelRenderer::Update(const float& dt) {}
+	void ModelRenderer::Update(const float dt) {}
 
-	void ModelRenderer::FixedUpdate(const float& dt) {}
+	void ModelRenderer::FixedUpdate(const float dt) {}
 
-	void ModelRenderer::PostUpdate(const float& dt)
+	void ModelRenderer::PostUpdate(const float dt)
 	{
 		Component::PostUpdate(dt);
 	}

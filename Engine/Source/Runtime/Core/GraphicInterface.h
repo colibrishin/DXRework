@@ -208,9 +208,7 @@ namespace Engine
 		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) = 0;
 		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
 
-		virtual Unique<GraphicResourcePrimitive> CreateBuffer() = 0;
-		
-		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex);
+		virtual void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) = 0;
 
 	protected:
 		virtual StructuredBufferTypelessBase* GetNativeStructuredBuffer() = 0;
@@ -244,8 +242,10 @@ namespace Engine
 	class StructuredBufferMemoryPool
 	{
 	public:
-		StructuredBufferMemoryPool() = default;
-		virtual ~StructuredBufferMemoryPool() = default;
+		StructuredBufferMemoryPool()
+		{
+			m_resource_ = {};	
+		}
 
 		void    resize(const size_t size)
 		{
@@ -257,7 +257,7 @@ namespace Engine
 			return *m_resource_[m_read_offset_];
 		}
 
-		virtual void advance() 
+		void advance() 
 		{
 			++m_read_offset_;
 
@@ -267,7 +267,7 @@ namespace Engine
 			}
 		}
 
-		virtual void reset() 
+		void reset() 
 		{
 			m_used_size_ = 0;
 			m_read_offset_ = 0;

@@ -54,7 +54,7 @@ namespace Engine::Abstracts
 
 		virtual void SetActive(bool active);
 		void         Initialize() override;
-		void         PostUpdate(const float& dt) override;
+		void         PostUpdate(const float dt) override;
 
 		void                          OnDeserialized() override;
 		[[nodiscard]] Strong<Component> Clone() const;

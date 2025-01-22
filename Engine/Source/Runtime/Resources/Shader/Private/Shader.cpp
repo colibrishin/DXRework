@@ -44,13 +44,13 @@ namespace Engine::Resources
 
 	void Shader::Initialize() {}
 
-	void Shader::PreUpdate(const float& dt) {}
+	void Shader::PreUpdate(const float dt) {}
 
-	void Shader::Update(const float& dt) {}
+	void Shader::Update(const float dt) {}
 
-	void Shader::FixedUpdate(const float& dt) {}
+	void Shader::FixedUpdate(const float dt) {}
 
-	void Shader::PostUpdate(const float& dt) {}
+	void Shader::PostUpdate(const float dt) {}
 
 	void Shader::Unload_INTERNAL()
 	{

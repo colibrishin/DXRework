@@ -38,10 +38,10 @@ namespace Engine::Resources
 		Mesh(const VertexCollection& shape, const IndexCollection& indices);
 		~Mesh() override;
 		void Initialize() override;
-		void PostUpdate(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
+		void PostUpdate(const float dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
 
 		[[nodiscard]] BoundingOrientedBox     GetBoundingBox() const;
 		[[nodiscard]] size_t                  GetIndexCount() const;

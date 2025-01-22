@@ -24,13 +24,13 @@ namespace Engine::Resources
 		m_material_sb_.repeatTexture         = false;
 	}
 
-	void Material::PreUpdate(const float& dt) {}
+	void Material::PreUpdate(const float dt) {}
 
-	void Material::Update(const float& dt) {}
+	void Material::Update(const float dt) {}
 
-	void Material::PostUpdate(const float& dt) {}
+	void Material::PostUpdate(const float dt) {}
 
-	void Material::FixedUpdate(const float& dt) {}
+	void Material::FixedUpdate(const float dt) {}
 
 	void Material::OnSerialized()
 	{

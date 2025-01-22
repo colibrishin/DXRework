@@ -324,12 +324,12 @@ namespace Engine
     void D3D12PrimitiveMesh::SetNativeIndexBuffer(void* buffer)
     {
 	    PrimitiveMesh::SetNativeIndexBuffer(buffer);
-    	m_native_index_buffer_ = buffer;
+    	m_native_index_buffer_ = static_cast<ID3D12Resource*>(buffer);
     }
 	
     void D3D12PrimitiveMesh::SetNativeVertexBuffer(void* buffer)
     {
 	    PrimitiveMesh::SetNativeVertexBuffer(buffer);
-    	m_native_vertex_buffer_ = buffer;
+    	m_native_vertex_buffer_ = static_cast<ID3D12Resource*>(buffer);
     }
 }

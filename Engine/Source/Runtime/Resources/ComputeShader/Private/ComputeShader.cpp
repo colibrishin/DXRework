@@ -53,13 +53,13 @@ namespace Engine::Resources
 		return thread;
 	}
 
-	void ComputeShader::PostUpdate(const float& dt) {}
+	void ComputeShader::PostUpdate(const float dt) {}
 
-	void ComputeShader::PreUpdate(const float& dt) {}
+	void ComputeShader::PreUpdate(const float dt) {}
 
-	void ComputeShader::FixedUpdate(const float& dt) {}
+	void ComputeShader::FixedUpdate(const float dt) {}
 
-	void ComputeShader::Update(const float& dt) {}
+	void ComputeShader::Update(const float dt) {}
 
 	void ComputeShader::Initialize()
 	{

@@ -36,10 +36,10 @@ namespace Engine::Resources
 		~Shader() override = default;
 
 		void Initialize() override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		[[nodiscard]] eShaderDomain GetDomain() const;
 		[[nodiscard]] eShaderDepths GetDepth() const;

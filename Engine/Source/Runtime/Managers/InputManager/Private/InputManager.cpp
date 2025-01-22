@@ -16,7 +16,7 @@ namespace Engine::Managers
 		WinAPI::WinAPIWrapper::RegisterHandler(std::bind_front(&InputManager::MessageHandler, this));
 	}
 
-	void InputManager::PreUpdate(const float& dt)
+	void InputManager::PreUpdate(const float dt)
 	{
 		m_current_mouse_position_ = GetNormalizedMousePosition();
 		Vector2 delta;
@@ -28,11 +28,11 @@ namespace Engine::Managers
 		m_mouse_rot_y_ = m_mouse_rot_y_ * Quaternion::CreateFromAxisAngle(Vector3::Right, delta.y * dt);
 	}
 
-	void InputManager::Update(const float& dt) {}
+	void InputManager::Update(const float dt) {}
 
-	void InputManager::FixedUpdate(const float& dt) {}
+	void InputManager::FixedUpdate(const float dt) {}
 
-	void InputManager::PostUpdate(const float& dt)
+	void InputManager::PostUpdate(const float dt)
 	{
 		m_previous_mouse_position_ = m_current_mouse_position_;
 	}
@@ -75,11 +75,11 @@ namespace Engine::Managers
 		return m_keyboard_->GetState();
 	}
 
-	void InputManager::PreRender(const float& dt) {}
+	void InputManager::PreRender(const float dt) {}
 
-	void InputManager::Render(const float& dt) {}
+	void InputManager::Render(const float dt) {}
 
-	void InputManager::PostRender(const float& dt) {}
+	void InputManager::PostRender(const float dt) {}
 
 	Vector2 InputManager::GetNormalizedMousePosition()
 	{

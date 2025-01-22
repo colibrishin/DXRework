@@ -32,7 +32,7 @@ namespace Engine::Managers
 		// Render target for shadow map mask.
 		m_shadow_map_mask_ = Resources::Texture2D::Create
 				(
-				 "Shadow Depth Mask Texture",
+				 "Shadow Render Target Texture",
 				 "",
 				 {
 					 .Alignment = 0,
@@ -54,7 +54,7 @@ namespace Engine::Managers
 		InitializeViewport();
 	}
 
-	void ShadowManager::PreUpdate(const float& dt)
+	void ShadowManager::PreUpdate(const float dt)
 	{
 		// Remove the expired lights just in case.
 		std::erase_if
@@ -66,7 +66,7 @@ namespace Engine::Managers
 				);
 	}
 
-	void ShadowManager::Update(const float& dt) {}
+	void ShadowManager::Update(const float dt) {}
 
 	void ShadowManager::GetLightVP(const boost::shared_ptr<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
 	{
@@ -94,7 +94,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::PreRender(const float& dt)
+	void ShadowManager::PreRender(const float dt)
 	{
 		constexpr size_t light_slot = 0;
 
@@ -173,13 +173,13 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::Render(const float& dt) {}
+	void ShadowManager::Render(const float dt) {}
 
-	void ShadowManager::PostRender(const float& dt) {}
+	void ShadowManager::PostRender(const float dt) {}
 
-	void ShadowManager::FixedUpdate(const float& dt) {}
+	void ShadowManager::FixedUpdate(const float dt) {}
 
-	void ShadowManager::PostUpdate(const float& dt) {}
+	void ShadowManager::PostUpdate(const float dt) {}
 
 	void ShadowManager::Reset()
 	{
@@ -354,7 +354,13 @@ namespace Engine::Managers
 	void ShadowManager::BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
 		GraphicInterface& gi = g_graphic_interface.GetInterface();
-		const aligned_vector<Resources::Texture*> textures(m_shadow_texs_.begin(), m_shadow_texs_.end());
+		aligned_vector<Resources::Texture*> textures;
+
+		for (const auto& tex : m_shadow_texs_ | std::views::values)
+		{
+			textures.push_back(tex.get());
+		}
+
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
 		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
 	}
@@ -362,7 +368,13 @@ namespace Engine::Managers
 	void ShadowManager::UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
 		GraphicInterface& gi = g_graphic_interface.GetInterface();
-		const aligned_vector<Resources::Texture*> textures(m_shadow_texs_.begin(), m_shadow_texs_.end());
+		aligned_vector<Resources::Texture*> textures;
+
+		for (const auto& tex : m_shadow_texs_ | std::views::values)
+		{
+			textures.push_back(tex.get());
+		}
+
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
 		gi.UnbindMultiple(context, textures.data(), BIND_TYPE_SRV, textures.size());
 	}
@@ -387,7 +399,7 @@ namespace Engine::Managers
 
 	void ShadowManager::InitializeShadowBuffer(const LocalActorID id)
 	{
-		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture", "", {});
+		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture", "");
 		m_shadow_texs_[id]->Load();
 	}
 
@@ -413,6 +425,7 @@ namespace Engine::Managers
 			tex->Clear(context);
 		}
 
-		m_shadow_map_mask_->Clear(context);
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		gi.Clear(context, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 	}
 } // namespace Engine::Managers

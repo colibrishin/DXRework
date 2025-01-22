@@ -14,6 +14,7 @@ public class AtlasAnimationTexture : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Texture3D>(target);
         conf.AddPublicDependency<Texture2D>(target);
     }

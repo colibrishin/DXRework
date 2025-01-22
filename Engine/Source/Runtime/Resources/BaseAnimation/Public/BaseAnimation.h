@@ -36,10 +36,10 @@ namespace Engine::Resources
 
 		BaseAnimation(const BoneAnimationPrimitive& primitive);
 
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		void OnDeserialized() override;
 		void OnSerialized() override;

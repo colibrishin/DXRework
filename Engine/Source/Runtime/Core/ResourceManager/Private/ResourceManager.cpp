@@ -7,7 +7,7 @@ namespace Engine::Managers
 {
 	void ResourceManager::Initialize() {}
 
-	void ResourceManager::PreUpdate(const float& dt)
+	void ResourceManager::PreUpdate(const float dt)
 	{
 		for (const auto& resources : m_resources_ | std::views::values)
 		{
@@ -21,17 +21,17 @@ namespace Engine::Managers
 		}
 	}
 
-	void ResourceManager::Update(const float& dt) {}
+	void ResourceManager::Update(const float dt) {}
 
-	void ResourceManager::PreRender(const float& dt) {}
+	void ResourceManager::PreRender(const float dt) {}
 
-	void ResourceManager::PostUpdate(const float& dt) {}
+	void ResourceManager::PostUpdate(const float dt) {}
 
-	void ResourceManager::Render(const float& dt) {}
+	void ResourceManager::Render(const float dt) {}
 
-	void ResourceManager::PostRender(const float& dt) {}
+	void ResourceManager::PostRender(const float dt) {}
 
-	void ResourceManager::FixedUpdate(const float& dt) {}
+	void ResourceManager::FixedUpdate(const float dt) {}
 
 	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const EntityName& name, const eResourceType& type)
 	{

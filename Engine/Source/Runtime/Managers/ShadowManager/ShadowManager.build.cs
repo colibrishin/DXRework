@@ -17,6 +17,7 @@ public class ShadowManager : CommonProject
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<ShadowTexture>(target);
         conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
     }
 }

@@ -9,7 +9,7 @@ namespace Engine
 
 	void Layer::Initialize() {}
 
-	void Layer::PreUpdate(const float& dt)
+	void Layer::PreUpdate(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -27,7 +27,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::Update(const float& dt)
+	void Layer::Update(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -45,7 +45,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::PreRender(const float& dt)
+	void Layer::PreRender(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -63,7 +63,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::Render(const float& dt)
+	void Layer::Render(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -81,7 +81,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::PostRender(const float& dt)
+	void Layer::PostRender(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -99,7 +99,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::FixedUpdate(const float& dt)
+	void Layer::FixedUpdate(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{
@@ -117,7 +117,7 @@ namespace Engine
 		}
 	}
 
-	void Layer::PostUpdate(const float& dt)
+	void Layer::PostUpdate(const float dt)
 	{
 		for (const auto& object : m_objects_)
 		{

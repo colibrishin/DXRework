@@ -340,16 +340,16 @@ namespace Engine::Components
 		Synchronize();
 	}
 
-	void Rigidbody::PreUpdate(const float& dt) {}
+	void Rigidbody::PreUpdate(const float dt) {}
 
-	void Rigidbody::Update(const float& dt) {}
+	void Rigidbody::Update(const float dt) {}
 
-	void Rigidbody::PostUpdate(const float& dt)
+	void Rigidbody::PostUpdate(const float dt)
 	{
 		Component::PostUpdate(dt);
 	}
 
-	void Rigidbody::FixedUpdate(const float& dt) {}
+	void Rigidbody::FixedUpdate(const float dt) {}
 
 	void Rigidbody::OnSerialized()
 	{

@@ -11,13 +11,13 @@ namespace Engine::Resources
 		: Texture3D("", {}),
 		  m_animations_(animations) {}
 
-	void AnimationTexture::PreUpdate(const float& dt) {}
+	void AnimationTexture::PreUpdate(const float dt) {}
 
-	void AnimationTexture::Update(const float& dt) {}
+	void AnimationTexture::Update(const float dt) {}
 
-	void AnimationTexture::FixedUpdate(const float& dt) {}
+	void AnimationTexture::FixedUpdate(const float dt) {}
 
-	void AnimationTexture::PostUpdate(const float& dt) {}
+	void AnimationTexture::PostUpdate(const float dt) {}
 
 	void AnimationTexture::OnSerialized()
 	{

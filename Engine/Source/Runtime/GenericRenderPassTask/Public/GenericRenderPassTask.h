@@ -1,14 +1,17 @@
 #pragma once
 #include <memory>
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 
 namespace Engine 
 {
 	struct GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
+		GenericRenderPassTask operator=(GenericRenderPassTask&) = delete;
+		GenericRenderPassTask(GenericRenderPassTask&) = delete;
+
 		void Run(
 			float                              dt,
 			bool                               shader_bypass,
@@ -48,6 +51,6 @@ namespace Engine
 		std::set<uint64_t> m_updated_material_in_current_pass_;
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_;
-		aligned_vector<Unique<GraphicHeapBase>> m_heaps_{};
+		std::vector<Unique<GraphicHeapBase>> m_heaps_;
 	};
 }

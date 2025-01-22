@@ -595,7 +595,7 @@ namespace Engine
 		  m_main_actor_local_id_(g_invalid_id),
 		  m_object_position_tree_() {}
 
-	void Scene::PreUpdate(const float& dt)
+	void Scene::PreUpdate(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -603,7 +603,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::Update(const float& dt)
+	void Scene::Update(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -613,7 +613,7 @@ namespace Engine
 		m_object_position_tree_.Update();
 	}
 
-	void Scene::PreRender(const float& dt)
+	void Scene::PreRender(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -621,7 +621,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::Render(const float& dt)
+	void Scene::Render(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -629,7 +629,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::FixedUpdate(const float& dt)
+	void Scene::FixedUpdate(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -637,7 +637,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::PostRender(const float& dt)
+	void Scene::PostRender(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{
@@ -645,7 +645,7 @@ namespace Engine
 		}
 	}
 
-	void Scene::PostUpdate(const float& dt)
+	void Scene::PostUpdate(const float dt)
 	{
 		for (const auto& layer : m_layers_)
 		{

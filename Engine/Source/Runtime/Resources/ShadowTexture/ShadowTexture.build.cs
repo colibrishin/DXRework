@@ -13,6 +13,7 @@ public class ShadowTexture : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Texture2D>(target);
     }
 }

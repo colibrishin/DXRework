@@ -184,21 +184,21 @@ namespace Engine::Managers
 		*/
 	}
 
-	void RenderPipeline::PreUpdate(const float& dt) {}
+	void RenderPipeline::PreUpdate(const float dt) {}
 
-	void RenderPipeline::PreRender(const float& dt)
+	void RenderPipeline::PreRender(const float dt)
 	{
 		//Managers::D3Device::GetInstance().ClearRenderTarget();
 	}
 
-	void RenderPipeline::Update(const float& dt) {}
+	void RenderPipeline::Update(const float dt) {}
 
-	void RenderPipeline::Render(const float& dt) {}
+	void RenderPipeline::Render(const float dt) {}
 
-	void RenderPipeline::FixedUpdate(const float& dt) {}
+	void RenderPipeline::FixedUpdate(const float dt) {}
 
-	void RenderPipeline::PostRender(const float& dt) {}
+	void RenderPipeline::PostRender(const float dt) {}
 
-	void RenderPipeline::PostUpdate(const float& dt) {}
+	void RenderPipeline::PostUpdate(const float dt) {}
 
 } // namespace Engine::Manager::Graphics

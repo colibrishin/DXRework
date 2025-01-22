@@ -44,23 +44,11 @@ namespace Engine::Resources
 		virtual void loadDerived() = 0;
 		virtual void unloadDerived() = 0;
 
-		template <typename T> requires (std::is_base_of_v<ComputeDispatchPrerequisiteTask, T>)
-		void RegisterPrerequisiteTask() 
-		{
-			m_registered_prerequisites_.push_back(std::move(std::make_unique<T>()));
-
-			m_unsafe_raw_prerequisites_.clear();
-			for (size_t i = 0; i < m_registered_prerequisites_.size(); ++i)
-			{
-				m_unsafe_raw_prerequisites_.push_back(m_registered_prerequisites_[i].get());
-			}
-		}
-
 	private:
-		void PostUpdate(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void Update(const float& dt) override;
+		void PostUpdate(const float dt) override;
+		void PreUpdate(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void Update(const float dt) override;
 		void Initialize() override;
 
 		void Load_INTERNAL() final;
@@ -68,10 +56,7 @@ namespace Engine::Resources
 
 		ComputeShader();
 
-		std::unique_ptr<ComputePrimitiveShader> m_primitive_shader_;
-		std::vector<std::unique_ptr<ComputeDispatchPrerequisiteTask>> m_registered_prerequisites_;
-		std::vector<ComputeDispatchPrerequisiteTask*> m_unsafe_raw_prerequisites_;
-
+		Unique<ComputePrimitiveShader> m_primitive_shader_;
 		std::array<uint32_t, 3> m_thread_;
 	};
 } // namespace Engine::Resources
@@ -96,12 +81,5 @@ namespace Engine
 
 	private:
 		void* m_shader_ = nullptr;
-	};
-
-	struct COMPUTESHADER_API ComputeDispatchPrerequisiteTask
-	{
-		virtual ~ComputeDispatchPrerequisiteTask() = default;
-		virtual void PreDispatch(ComputeDispatchTask* task_context) = 0;
-		virtual void PostDispatch(ComputeDispatchTask* task_context) = 0;
 	};
 }

@@ -63,13 +63,13 @@ namespace Engine::Resources
 		return *this;
 	}
 
-	void Bone::PreUpdate(const float& dt) {}
+	void Bone::PreUpdate(const float dt) {}
 
-	void Bone::Update(const float& dt) {}
+	void Bone::Update(const float dt) {}
 
-	void Bone::FixedUpdate(const float& dt) {}
+	void Bone::FixedUpdate(const float dt) {}
 
-	void Bone::PostUpdate(const float& dt) {}
+	void Bone::PostUpdate(const float dt) {}
 
 	void Bone::OnSerialized()
 	{

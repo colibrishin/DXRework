@@ -375,13 +375,13 @@ namespace Engine
 	void D3D12GraphicPrimitiveShader::SetNativeSampler(void* sampler)
 	{
 		GraphicPrimitiveShader::SetNativeSampler(sampler);
-		m_sampler_descriptor_heap_ = sampler;
+		m_sampler_descriptor_heap_ = static_cast<ID3D12DescriptorHeap*>(sampler);
 	}
 
 	void D3D12GraphicPrimitiveShader::SetNativeShader(void* shader)
 	{
 		GraphicPrimitiveShader::SetNativeShader(shader);
-		m_pipeline_state_ = shader;
+		m_pipeline_state_ = static_cast<ID3D12PipelineState*>(shader);
 	}
 
 	void D3D12GraphicPrimitiveShader::ConvertShader(const Resources::Shader* shader)

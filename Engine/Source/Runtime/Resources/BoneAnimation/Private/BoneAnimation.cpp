@@ -125,13 +125,13 @@ namespace Engine::Resources
 		  m_primitive_(primitive),
 		  m_evaluated_time_(0) {}
 
-	void BoneAnimation::PreUpdate(const float& dt) {}
+	void BoneAnimation::PreUpdate(const float dt) {}
 
-	void BoneAnimation::Update(const float& dt) {}
+	void BoneAnimation::Update(const float dt) {}
 
-	void BoneAnimation::FixedUpdate(const float& dt) {}
+	void BoneAnimation::FixedUpdate(const float dt) {}
 
-	void BoneAnimation::PostUpdate(const float& dt) {}
+	void BoneAnimation::PostUpdate(const float dt) {}
 
 	void BoneAnimation::OnSerialized()
 	{

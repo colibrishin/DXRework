@@ -12,6 +12,8 @@ public class GenericRenderPassTask : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<Material>(target);

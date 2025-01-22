@@ -56,11 +56,11 @@ namespace Engine::Resources
 
 		~ShadowTexture() override = default;
 
-		void FixedUpdate(const float& dt) override;
+		void FixedUpdate(const float dt) override;
 		void Initialize() override;
-		void PostUpdate(const float& dt) override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
+		void PostUpdate(const float dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
 
 		void          OnSerialized() override;
 		void          OnDeserialized() override;
@@ -71,6 +71,8 @@ namespace Engine::Resources
 		UINT64 GetWidth() const override;
 
 		void Clear(const GraphicInterfaceContextPrimitive* context) const;
+
+		RESOURCE_SELF_INFER_CREATE_DECL(ShadowTexture)
 
 	protected:
 		void Unload_INTERNAL() override;

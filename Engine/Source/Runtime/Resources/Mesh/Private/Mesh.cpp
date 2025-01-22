@@ -149,11 +149,11 @@ namespace Engine::Resources
 	}
 #endif
 
-	void Mesh::PreUpdate(const float& dt) {}
+	void Mesh::PreUpdate(const float dt) {}
 
-	void Mesh::Update(const float& dt) {}
+	void Mesh::Update(const float dt) {}
 
-	void Mesh::FixedUpdate(const float& dt) {}
+	void Mesh::FixedUpdate(const float dt) {}
 
 	void Mesh::OnDeserialized()
 	{
@@ -179,7 +179,7 @@ namespace Engine::Resources
 
 	void Mesh::Initialize() {}
 
-	void Mesh::PostUpdate(const float& dt) {}
+	void Mesh::PostUpdate(const float dt) {}
 
 	BoundingOrientedBox Mesh::GetBoundingBox() const
 	{

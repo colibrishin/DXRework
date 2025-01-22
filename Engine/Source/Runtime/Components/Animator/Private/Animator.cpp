@@ -19,9 +19,9 @@ namespace Engine::Components
 		  m_current_frame_(0),
 		  m_total_dt_(0) {}
 
-	void Animator::PreUpdate(const float& dt) {}
+	void Animator::PreUpdate(const float dt) {}
 
-	void Animator::Update(const float& dt)
+	void Animator::Update(const float dt)
 	{
 		if (!GetActive())
 		{
@@ -68,7 +68,7 @@ namespace Engine::Components
 		}
 	}
 
-	void Animator::FixedUpdate(const float& dt) {}
+	void Animator::FixedUpdate(const float dt) {}
 
 	void Animator::OnSerialized()
 	{

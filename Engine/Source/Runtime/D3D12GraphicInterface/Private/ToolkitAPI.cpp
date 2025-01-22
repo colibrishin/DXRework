@@ -3,6 +3,8 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
+#include "Source/Runtime/D3D12GraphicInterface/Public/DebugDraw.h"
+#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
 
 namespace Engine::Managers
 {
@@ -20,21 +22,10 @@ namespace Engine::Managers
 		m_states_                = std::make_unique<DirectX::CommonStates>(dev);
 		m_resource_upload_batch_ = std::make_unique<DirectX::ResourceUploadBatch>(dev);
 		m_render_target_state_   = std::make_unique<DirectX::RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
-
 		m_sprite_pipeline_state_ = std::make_unique<DirectX::SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
-
-		m_resource_upload_batch_->Begin();
-
-		m_sprite_batch_ = std::make_unique<DirectX::SpriteBatch>(dev, *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
-
-		m_resource_upload_batch_->End(gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
-
 		m_primitive_batch_ = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(dev);
-
 		m_graphics_memory_ = std::make_unique<DirectX::GraphicsMemory>(dev);
-
 		m_geometric_primitive_ = DirectX::GeometricPrimitive::CreateTeapot();
-
 		m_effect_pipeline_state_ = std::make_unique<DirectX::EffectPipelineStateDescription>
 				(
 				 &DirectX::VertexPositionColor::InputLayout,
@@ -44,23 +35,35 @@ namespace Engine::Managers
 				 *m_render_target_state_.get(),
 				 D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE
 				);
-
 		m_basic_effect_ = std::make_unique<DirectX::BasicEffect>(dev, DirectX::EffectFlags::VertexColor, *m_effect_pipeline_state_.get());
-
 		m_basic_effect_->SetProjection(gi.GetProjectionMatrix());
+
+		m_resource_upload_batch_->Begin();
+		m_sprite_batch_ = std::make_unique<DirectX::SpriteBatch>(dev, *m_resource_upload_batch_.get(), *m_sprite_pipeline_state_.get());
+		m_font_ = std::make_unique<DirectX::SpriteFont>
+					(
+					 dev,
+					 *m_resource_upload_batch_,
+					 L"consolas.spritefont",
+					 GetDescriptorHeap()->GetCpuHandle(0),
+					 GetDescriptorHeap()->GetGpuHandle(0)
+					);
+		
+		const auto& token = m_resource_upload_batch_->End(gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+		token.wait();
+
+		RegisterDebuggerFunction();
 	}
 
-	void ToolkitAPI::PreUpdate(const float& dt) { }
+	void ToolkitAPI::PreUpdate(const float dt) { }
 
-	void ToolkitAPI::Update(const float& dt)
-	{
-	}
+	void ToolkitAPI::Update(const float dt) { }
 
-	void ToolkitAPI::PreRender(const float& dt) { }
+	void ToolkitAPI::PreRender(const float dt) { }
 
-	void ToolkitAPI::Render(const float& dt) {}
+	void ToolkitAPI::Render(const float dt) { }
 
-	void ToolkitAPI::PostRender(const float& dt)
+	void ToolkitAPI::PostRender(const float dt)
 	{
 		m_sprite_batch_->SetViewport(reinterpret_cast<const D3D12_VIEWPORT&>(RenderPipeline::GetInstance().GetViewport()));
 
@@ -121,9 +124,9 @@ namespace Engine::Managers
 		m_graphics_memory_->Commit(gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 	}
 
-	void ToolkitAPI::FixedUpdate(const float& dt) { }
+	void ToolkitAPI::FixedUpdate(const float dt) { }
 
-	void ToolkitAPI::PostUpdate(const float& dt) { }
+	void ToolkitAPI::PostUpdate(const float dt) { }
 
 	void ToolkitAPI::AppendSpriteBatch(const std::function<void()>& callback)
 	{
@@ -153,5 +156,48 @@ namespace Engine::Managers
 	DirectX::DescriptorHeap* ToolkitAPI::GetDescriptorHeap() const
 	{
 		return m_descriptor_heap_.get();
+	}
+
+	void ToolkitAPI::RegisterDebuggerFunction() const
+	{
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_LOG, [this](const Message& msg)
+		{
+			m_font_->DrawString
+				(
+				 GetSpriteBatch(), msg.text.c_str(),
+				 XMFLOAT2(msg.x, msg.y),
+				 msg.color, 0.0f, Vector2::Zero, 0.5f
+				);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_LINE, [this](const Message& msg)
+		{
+			DX::DrawRay(GetPrimitiveBatch(), msg.ray_start, msg.ray_end, false, msg.color);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_RAY, [this](const Message& msg)
+		{
+			DX::DrawRay(GetPrimitiveBatch(), msg.ray.position, msg.ray.direction, true, msg.color);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_FRUSTUM, [this](const Message& msg)
+		{
+			DX::Draw(GetPrimitiveBatch(), msg.frustum, msg.color);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_SPHERE, [this](const Message& msg)
+		{
+			DX::Draw(GetPrimitiveBatch(), msg.sphere, msg.color);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_OBB, [this](const Message& msg)
+		{
+			DX::Draw(GetPrimitiveBatch(), msg.obb, msg.color);
+		});
+
+		Debugger::GetInstance().SetCallback(DEBUG_MSG_AABB, [this](const Message& msg)
+		{
+			DX::Draw(GetPrimitiveBatch(), msg.aabb, msg.color);
+		});
 	}
 } // namespace Engine::Manager::Graphics

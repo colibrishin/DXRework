@@ -54,14 +54,14 @@ namespace Engine::Managers
 			  m_viewport_() {}
 
 		void Initialize() override;
-		void PreUpdate(const float& dt) override;
-		void Update(const float& dt) override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
 		void GetLightVP(const Strong<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp);
-		void PreRender(const float& dt) override;
-		void Render(const float& dt) override;
-		void PostRender(const float& dt) override;
-		void FixedUpdate(const float& dt) override;
-		void PostUpdate(const float& dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void PostRender(const float dt) override;
+		void FixedUpdate(const float dt) override;
+		void PostUpdate(const float dt) override;
 
 		void Reset();
 		void RegisterLight(const Weak<Objects::Light>& light);
@@ -87,7 +87,7 @@ namespace Engine::Managers
 		);
 
 		Strong<Resources::Shader> m_shadow_shader_;
-		Strong<Resources::ShadowTexture> m_shadow_map_mask_;
+		Strong<Resources::Texture2D> m_shadow_map_mask_;
 		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
 
 		// sub part of the view frustum

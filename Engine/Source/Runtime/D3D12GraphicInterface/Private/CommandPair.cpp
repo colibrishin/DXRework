@@ -239,7 +239,7 @@ namespace Engine
 
 			for (size_t i = 0; i < size; ++i)
 			{
-				const auto& allocated = boost::allocate_shared<CommandPair>(m_command_pair_pool_);
+				const auto& allocated = boost::allocate_shared_noinit<CommandPair>(m_command_pair_pool_);
 
 				const auto address         = reinterpret_cast<address_value>(allocated.get());
 				m_pool_[address]           = allocated;

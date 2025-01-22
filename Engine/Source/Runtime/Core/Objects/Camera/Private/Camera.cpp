@@ -27,32 +27,32 @@ namespace Engine::Objects
 		AddComponent<Components::Transform>();
 	}
 
-	void Camera::PreUpdate(const float& dt)
+	void Camera::PreUpdate(const float dt)
 	{
 		ObjectBase::PreUpdate(dt);
 	}
 
-	void Camera::Update(const float& dt)
+	void Camera::Update(const float dt)
 	{
 		ObjectBase::Update(dt);
 	}
 
-	void Camera::PreRender(const float& dt)
+	void Camera::PreRender(const float dt)
 	{
 		ObjectBase::PreRender(dt);
 	}
 
-	void Camera::Render(const float& dt)
+	void Camera::Render(const float dt)
 	{
 		ObjectBase::Render(dt);
 	}
 
-	void Camera::PostRender(const float& dt)
+	void Camera::PostRender(const float dt)
 	{
 		ObjectBase::PostRender(dt);
 	}
 
-	void Camera::FixedUpdate(const float& dt)
+	void Camera::FixedUpdate(const float dt)
 	{
 		ObjectBase::FixedUpdate(dt);
 	}

@@ -239,11 +239,11 @@ namespace Engine::Components
 		m_previous_position_       = GetLocalPosition();
 	}
 
-	void Transform::PreUpdate(const float& dt) {}
+	void Transform::PreUpdate(const float dt) {}
 
-	void Transform::Update(const float& dt) {}
+	void Transform::Update(const float dt) {}
 
-	void Transform::PostUpdate(const float& dt)
+	void Transform::PostUpdate(const float dt)
 	{
 		Component::PostUpdate(dt);
 
@@ -251,7 +251,7 @@ namespace Engine::Components
 		m_previous_position_       = GetLocalPosition();
 	}
 
-	void Transform::FixedUpdate(const float& dt) {}
+	void Transform::FixedUpdate(const float dt) {}
 
 	void Transform::OnSerialized()
 	{

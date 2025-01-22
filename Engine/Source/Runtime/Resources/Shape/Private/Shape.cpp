@@ -22,13 +22,13 @@ namespace Engine::Resources
 		: Resource(path, RES_T_SHAPE),
 		  m_bounding_box_({}) {}
 
-	void Shape::PreUpdate(const float& dt) {}
+	void Shape::PreUpdate(const float dt) {}
 
-	void Shape::Update(const float& dt) {}
+	void Shape::Update(const float dt) {}
 
-	void Shape::FixedUpdate(const float& dt) {}
+	void Shape::FixedUpdate(const float dt) {}
 
-	void Shape::PostUpdate(const float& dt) {}
+	void Shape::PostUpdate(const float dt) {}
 
 	void Shape::OnSerialized()
 	{

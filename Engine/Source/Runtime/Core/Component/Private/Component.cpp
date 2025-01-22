@@ -47,7 +47,7 @@ namespace Engine::Abstracts
 		SetName(GetPrettyTypeName());
 	}
 
-	void Component::PostUpdate(const float& dt)
+	void Component::PostUpdate(const float dt)
 	{
 		m_b_ticked_ = true;
 	}

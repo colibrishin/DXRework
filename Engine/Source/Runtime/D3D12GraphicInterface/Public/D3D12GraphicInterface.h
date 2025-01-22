@@ -14,7 +14,7 @@ namespace Engine
 		void SetResource(void* resource) override
 		{
 			GraphicResourcePrimitive::SetResource(resource);
-			m_native_resource_ = resource;
+			m_native_resource_ = static_cast<ID3D12Resource*>(resource);
 		}
 
 		ID3D12Resource** GetAddressOf()
@@ -98,8 +98,5 @@ namespace Engine
 
 		Matrix m_projection_matrix_{};
 		Matrix m_ortho_matrix_{};
-
-	public:
-		Unique<GraphicResourcePrimitive> CreateBuffer() override;
 	};
 }

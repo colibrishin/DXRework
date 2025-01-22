@@ -58,9 +58,9 @@ namespace Engine::Abstracts
 			s_destroyed_ = true;
 		}
 
-		struct CORE_API SINGLETON_LOCK_TOKEN final {};
+		struct SINGLETON_LOCK_TOKEN final {};
 
-		struct CORE_API SingletonDeleter final
+		struct SingletonDeleter final
 		{
 			void operator()(const T* ptr) const
 			{
