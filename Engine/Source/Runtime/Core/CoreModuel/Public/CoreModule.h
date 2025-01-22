@@ -28,15 +28,6 @@ using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 		} \
 	}
 
-UPDATE_CALL_TEMPLATE_OneParam(OnUIUpdate, Engine::UIContext* const, parent)
-UPDATE_CALL_TEMPLATE(PreUpdate)
-UPDATE_CALL_TEMPLATE(Update)
-UPDATE_CALL_TEMPLATE(PostUpdate)
-UPDATE_CALL_TEMPLATE(FixedUpdate)
-UPDATE_CALL_TEMPLATE(PreRender)
-UPDATE_CALL_TEMPLATE(Render)
-UPDATE_CALL_TEMPLATE(PostRender)
-
 namespace Engine
 {
 	namespace Managers
