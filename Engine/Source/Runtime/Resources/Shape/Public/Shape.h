@@ -22,6 +22,10 @@ namespace Engine::Resources
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
+#ifdef WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
+
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
@@ -89,11 +93,11 @@ namespace Engine::Resources
 		EPROPERTY()
 		std::vector<std::string>     m_animation_catalog_;
 		EPROPERTY()
-		std::vector<MetadataPathStr> m_mesh_paths_;
+		std::vector<MetadataPath> m_mesh_paths_;
 		EPROPERTY()
-		MetadataPathStr              m_bone_path_;
+		MetadataPath              m_bone_path_;
 		EPROPERTY()
-		MetadataPathStr              m_animations_path_;
+		MetadataPath              m_animations_path_;
 
 		EPROPERTY()
 		BoundingBox                         m_bounding_box_;
@@ -106,6 +110,7 @@ namespace Engine::Resources
 		Strong<Bone>                   m_bone_;
 		Strong<AnimationTexture>       m_animations_;
 
+		bool m_ui_add_ui_opened_ = false;
 		std::vector<VertexElement> m_cached_vertices_;
 	};
 }

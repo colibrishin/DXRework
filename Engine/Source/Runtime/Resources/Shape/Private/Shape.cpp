@@ -4,6 +4,7 @@
 #include <ranges>
 
 #include "../Public/Shape.h"
+#include "Shape.generated.h"
 
 #include "Components/Collider/Public/Collider.h"
 
@@ -17,7 +18,8 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
-#include "Shape.generated.h"
+
+#include "UIHelpersResourceManager.h"
 
 namespace Engine::Resources
 {
@@ -32,6 +34,73 @@ namespace Engine::Resources
 	void Shape::FixedUpdate(const float dt) {}
 
 	void Shape::PostUpdate(const float dt) {}
+
+#ifdef WITH_EDITOR
+	void Shape::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		if (parent) 
+		{
+			Resource::OnUIUpdate(parent, dt);
+
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			*parent += ui.NewListBox({ "Mesh List", 0, 0 });
+			*parent |= ui.NewDragAndDropTarget({ "RESOURCE", [&](void* ptr)
+				{
+					if (auto casted = static_cast<Strong<Abstracts::Resource>*>(ptr))
+					{
+						if ((*casted)->IsBaseOf(Mesh::StaticTypeHash())) 
+						{
+							m_meshes_.push_back((*casted)->GetSharedPtr<Mesh>());
+							m_mesh_paths_.push_back((*casted)->GetMetadataPath());
+						}
+					}
+				} });
+
+			for (const auto& mesh : m_meshes_) 
+			{
+				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened });
+				if (mesh->m_ui_info_.dialogOpened) 
+				{
+					if (UIContext context = ui.NewContext(ui.NewDialog({ mesh.get(), mesh->GetName(), mesh->m_ui_info_.dialogOpened })))
+					{
+						mesh->OnUIUpdate(&context, dt);
+					}
+				}
+			}
+
+			--*parent;
+
+			(*parent |= ui.NewButton({ "Add New Meshes..." })).SetFunction([&]() 
+				{
+					m_ui_add_ui_opened_ = !m_ui_add_ui_opened_;
+				});
+
+			if (m_ui_add_ui_opened_) 
+			{
+				if (std::vector<Weak<Abstracts::Resource>> resources_to_load;
+					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh>(GetSharedPtr<Shape>(), resources_to_load))
+				{
+					for (const Weak<Resource>& resource : resources_to_load)
+					{
+						if (const Strong<Resource>& locked = resource.lock())
+						{
+							if (!locked->IsBaseOf(Mesh::StaticTypeHash()))
+							{
+								continue;
+							}
+
+							m_meshes_.push_back(locked->GetSharedPtr<Mesh>());
+							m_mesh_paths_.push_back(locked->GetMetadataPath());
+						}
+
+					}
+
+					m_ui_add_ui_opened_ = false;
+				}
+			}
+		}
+	}
+#endif
 
 	void Shape::OnSerialized()
 	{
@@ -114,11 +183,6 @@ namespace Engine::Resources
 
 	void Shape::Load_INTERNAL()
 	{
-		if (GetPath().empty())
-		{
-			return;
-		}
-
 		if (!GetMetadataPath().empty())
 		{
 			for (int i = 0; i < m_mesh_paths_.size(); ++i)
@@ -143,7 +207,11 @@ namespace Engine::Resources
 			}
 
 			UpdateVertices();
+			return;
+		}
 
+		if (GetPath().empty())
+		{
 			return;
 		}
 

@@ -45,6 +45,9 @@ namespace Engine::Abstracts
 		virtual void Load() final;
 		void         Unload();
 
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
 		void OnDeserialized() override;
 
 		[[nodiscard]] bool                         IsLoaded() const;

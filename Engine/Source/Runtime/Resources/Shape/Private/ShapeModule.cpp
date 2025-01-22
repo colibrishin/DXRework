@@ -11,13 +11,20 @@ void Engine::ShapeModule::Initialize()
 {
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 		{
+			const auto& ui_callback = [](UIContext* const context)
+				{
+					UIInterface& ui = UIInterfaceAccessor::GetInterface();
+					*context |= ui.NewText({ "Please Note that path should be the location of the mesh file (e.g., obj, fbx)" });
+					*context |= ui.NewText({ "Path can leave be empty if shape will be constructed in runtime." });
+				};
+
 			const auto& load_callback = [](const std::string_view name, const std::string_view path)
 				{
 					Resources::Shape::Create(name.data(), path);
 				};
 
 			// todo: coordination system
-			UIHelpers::OpenNewDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
+			UIHelpers::OpenNewDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, ui_callback, load_callback, {});
 		});
 
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)

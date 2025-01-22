@@ -119,7 +119,9 @@ namespace Engine::Abstracts
 		virtual void Update(const float dt) = 0;
 		virtual void PostUpdate(const float dt) = 0;
 		virtual void FixedUpdate(const float dt) = 0;
+#if WITH_EDITOR
 		virtual void OnUIUpdate(UIContext* const parent, const float dt);
+#endif
 
 		virtual void OnSerialized() = 0;
 		virtual void OnDeserialized() = 0;

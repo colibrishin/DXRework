@@ -26,6 +26,6 @@ namespace Engine::Resources
 
 	bool ComputeShaderModule::DynamicLoadable()
 	{
-		return false;
+		return true;
 	}
 } // namespace Engine::Resources

@@ -327,4 +327,8 @@ namespace Engine::Managers
 			}
 		}
 	}
+	const ResourceManager::ResourceMap& ResourceManager::GetResources() const
+	{
+		return m_resources_;
+	}
 }

@@ -32,6 +32,16 @@ namespace Engine::Abstracts
 	Resource::Resource()
 		: m_bLoaded_(false) {}
 
+	void Resource::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		if (parent)
+		{
+			Entity::OnUIUpdate(parent, dt);
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			*parent |= ui.NewLabelAndPath({ "Raw Path", m_path_ });
+		}
+	}
+
 	void Resource::OnDeserialized()
 	{
 		Entity::OnDeserialized();

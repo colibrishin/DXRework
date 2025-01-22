@@ -872,6 +872,11 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 		throw std::runtime_error("Cannot fetch a hash from a base class.");
 		return nullptr;
 	}
+	virtual bool IsBaseOf(const HashTypeImpl* other) const 
+	{
+		throw std::runtime_error("Cannot check the base class from HashTypeImpl");
+		return false;
+	}
 
 	constexpr HashTypeImpl() = default;
 	constexpr HashTypeImpl(cityhash::cityhash256 value) : v(value) {}
@@ -896,6 +901,21 @@ using HashType = const HashTypeValue*;
 
 template <typename T> struct type_hash;
 
+template <size_t Count>
+using HashArray = std::array<HashType, Count>;
+
+template <typename T>
+struct polymorphic_type_hash
+{
+	static constexpr size_t upcast_count = 0;
+	static constexpr HashArray<upcast_count> upcast_array{};
+
+	static bool is_base_of(const HashType base)
+	{
+		return false;
+	}
+};
+
 template <typename T>
 struct HashTypeT : public HashTypeImpl
 {
@@ -915,9 +935,14 @@ struct HashTypeT : public HashTypeImpl
 	{
 		return &type_hash<T>::value;
 	}
-	
+
+	bool IsBaseOf(const HashTypeImpl* other) const override
+	{
+		return polymorphic_type_hash<T>::is_base_of(other);
+	}
+
 	constexpr HashTypeT() :
-	HashTypeImpl(cityhash::CityHashCrc256_s(static_type_name<T>::full_name().data(), static_type_name<T>::full_name().size())) {}
+		HashTypeImpl(cityhash::CityHashCrc256_s(static_type_name<T>::full_name().data(), static_type_name<T>::full_name().size())) {}
 
 private:
 	friend class boost::serialization::access;
@@ -926,6 +951,25 @@ private:
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar& boost::serialization::base_object<HashTypeImpl>(*this);
+	}
+};
+
+template <typename T>
+struct type_hash
+{
+public:
+	static constexpr HashTypeT<T> value{};
+};
+
+template <>
+struct polymorphic_type_hash<void>
+{
+	static constexpr size_t upcast_count = 1;
+	static constexpr HashArray<upcast_count> upcast_array{ &type_hash<void>::value };
+
+	static bool is_base_of(const HashType base)
+	{
+		return true;
 	}
 };
 
@@ -952,35 +996,6 @@ struct std::hash<HashTypeImpl>
 	{
 		return h.v.hash();
 	}
-};
-
-template <typename T>
-struct type_hash
-{
-public:
-	static constexpr HashTypeT<T> value{};
-};
-
-template <size_t Count>
-using HashArray = std::array<HashType, Count>;
-
-template <typename T>
-struct polymorphic_type_hash
-{
-	static constexpr size_t upcast_count = 0;
-	static constexpr HashArray<upcast_count> upcast_array {};
-
-	static bool is_base_of(const HashType base)
-	{
-		return false;
-	}
-};
-
-template <>
-struct polymorphic_type_hash<void>
-{
-	static constexpr size_t upcast_count = 1;
-	static constexpr HashArray<upcast_count> upcast_array {&type_hash<void>::value};
 };
 
 #define POLYMORPHIC_MANAGER_TYPE_MAP(Type) \

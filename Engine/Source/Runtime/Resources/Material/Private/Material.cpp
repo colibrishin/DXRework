@@ -13,6 +13,7 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
+#include "UIHelpersResourceManager.h"
 
 namespace Engine::Resources
 {
@@ -29,9 +30,9 @@ namespace Engine::Resources
 		m_material_sb_.repeatTexture         = false;
 	}
 
+#if WITH_EDITOR
 	void Material::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		if (parent)
 		{
 			Resource::OnUIUpdate(parent, dt);
@@ -57,26 +58,12 @@ namespace Engine::Resources
 			(*parent |= ui.NewButton({"Add Resources"})).SetFunction([&]()
 			{
 				m_b_ui_add_resource_ = !m_b_ui_add_resource_;
-
-				if (m_b_ui_add_resource_)
-				{
-					if (!Managers::ResourceManager::GetInstance().RequestAddResourceDialog())
-					{
-						m_b_ui_add_resource_ = false;
-					}
-				}
-				else
-				{
-					Managers::ResourceManager::GetInstance().EndAddResourceDialog();
-				}
 			});
 
 			ProcessAddUI();
 		}
-#endif
 	}
 
-#if WITH_EDITOR
 	void Material::ProcessEditUI()
 	{
 		if (m_b_ui_edit_resource_)
@@ -84,7 +71,7 @@ namespace Engine::Resources
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 			if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Edit Resources", m_b_ui_edit_resource_})))
 			{
-				context += ui.NewListBox({"Resource Used", -1, -1});
+				context += ui.NewListBox({"Resource Used", 0, 0});
 				context >> ui.NewDragAndDropTarget({"RESOURCE", [&](void* ptr)
 				{
 					if (auto casted = static_cast<Strong<Abstracts::Resource>*>(ptr))
@@ -129,31 +116,28 @@ namespace Engine::Resources
 	{
 		if (m_b_ui_add_resource_)
 		{
-			std::vector<Strong<Resource>> resource_to_load{};
-
-			if (Managers::ResourceManager::GetInstance().TryAddResourceDialog(resource_to_load))
+			if (std::vector<Weak<Resource>> resources_to_load{};
+				UIHelpers::MultipleResourceSelectionDialogExclusion<Material, Material, Mesh>(GetSharedPtr<Material>(), resources_to_load))
 			{
 				m_b_ui_add_resource_ = false;
 
-				for (Strong<Resource>& resource : resource_to_load)
+				for (const Weak<Resource>& resource : resources_to_load)
 				{
-					/*
-					if (resource == GetSharedPtr<Material>())
+					if (const Strong<Resource>& locked = resource.lock()) 
 					{
-						continue;
-					}*/
+						if (locked->IsBaseOf(Material::StaticTypeHash()))
+						{
+							continue;
+						}
 
-					if (resource->IsBaseOf(Material::StaticTypeHash()))
-					{
-						continue;
+						if (locked->IsBaseOf(Mesh::StaticTypeHash()))
+						{
+							continue;
+						}
+
+						SetResource(locked);
 					}
-
-					if (resource->IsBaseOf(Mesh::StaticTypeHash()))
-					{
-						continue;
-					}
-
-					SetResource(resource);
+					
 				}
 			}
 		}

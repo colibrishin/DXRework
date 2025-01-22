@@ -133,8 +133,15 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~ResourceManager() override;
 
-		fast_pool_unordered_map<ResourceType, fast_pool_set<Strong<Abstracts::Resource>>> m_resources_;
+		using ResourceMap = fast_pool_unordered_map<ResourceType, fast_pool_set<Strong<Abstracts::Resource>>>;
+
+		ResourceMap m_resources_;
 		fast_pool_unordered_map<LocalResourceID, Weak<Abstracts::Resource>> m_resource_cache_;
 		fast_pool_unordered_map<LocalResourceID, GlobalEntityID> m_resource_ids_;
+
+#if WITH_EDITOR
+	public:
+		const ResourceMap& GetResources() const;
+#endif
 	};
 } // namespace Engine::Managers

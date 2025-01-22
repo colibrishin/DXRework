@@ -1,6 +1,6 @@
 #pragma once
+#if WITH_EDITOR
 #include <functional>
-
 #include "UIInterface.h"
 
 namespace Engine::UIHelpers
@@ -11,7 +11,7 @@ namespace Engine::UIHelpers
     using ManagedBooleanSignature = std::function<void(bool&)>;
     template <typename Key>
     using ManagedBoolAndFuncMap = std::unordered_map<Key, std::pair<bool, ManagedBooleanSignature>>;
-    
+
     template <bool UseName, bool UsePath>
     bool NamePathDialogTemplate(
         const void*                                pointer,
@@ -125,3 +125,4 @@ namespace Engine::UIHelpers
         return OpenNewDialog<T, U>(U::GetInstance(), flag, ui_callback, load_callback, cleanup_callback);
     }
 }
+#endif
