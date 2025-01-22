@@ -73,6 +73,7 @@ public class EngineSolution : Solution
             }
 
             {
+                conf.AddProject<ImGuiManager>(target);
                 conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);

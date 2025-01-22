@@ -17,7 +17,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class RENDERPIPELINE_API Renderer : public Abstracts::Singleton<Renderer>
+	class ENGINE_RENDERPIPELINE_API Renderer : public Abstracts::Singleton<Renderer>
 	{
 	public:
 		explicit Renderer(SINGLETON_LOCK_TOKEN)

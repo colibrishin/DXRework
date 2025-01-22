@@ -6,20 +6,18 @@
 #include <directx/d3d12.h>
 #include <dxgi1_5.h>
 
-#include "D3D12PrimitiveTexture.h"
-
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 
 namespace Engine
 {
-	struct D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
 	{
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
 	};
 
-	struct D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
 	{
 	public:
 		void SetResource(void* resource) override
@@ -37,7 +35,7 @@ namespace Engine
 		ComPtr<ID3D12Resource> m_native_resource_;
 	};
 	
-	struct D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
 	{
 	public:
 		void Initialize() override;
@@ -76,7 +74,7 @@ namespace Engine
 		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
 		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) override;
 		void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) override;
-		void ClearRenderTarget();
+		void ClearRenderTarget() override;
 		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) override;
 		
 		Matrix GetProjectionMatrix() override;

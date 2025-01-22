@@ -6,7 +6,7 @@
 
 namespace Engine::Managers
 {
-	class CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
+	class ENGINE_CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
 	{
 	public:
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}

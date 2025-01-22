@@ -4,7 +4,7 @@
 
 namespace Engine::Resources
 {
-	class ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
+	class ENGINE_ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
 	{
 	public:
 		RESOURCE_T(RES_T_ATLAS_TEX)

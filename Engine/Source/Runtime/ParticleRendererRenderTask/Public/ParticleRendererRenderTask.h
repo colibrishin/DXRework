@@ -5,15 +5,14 @@
 
 namespace Engine
 {
-    
-    struct PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTaskModule : public IModule
+    struct ENGINE_PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTaskModule : public IModule
     {
 	    void Initialize() override;
 	    void Shutdown() override;
 	    bool DynamicLoadable() override;
     };
 
-    struct PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTask : public RenderInstanceTask
+    struct ENGINE_PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTask : public RenderInstanceTask
     {
         void Run(
             Scene const* scene,

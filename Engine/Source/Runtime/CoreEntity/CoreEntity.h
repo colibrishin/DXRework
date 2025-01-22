@@ -18,7 +18,8 @@ namespace Engine
 	
 	using GenericString = std::string;
 	using EntityName = GenericString;
-	using TypeName = GenericString;
+
+	using TypeName = std::string_view;
 	using MetadataPathStr = GenericString;
 	using MetadataPath = std::filesystem::path;
 

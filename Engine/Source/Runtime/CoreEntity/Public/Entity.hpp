@@ -7,7 +7,7 @@
 
 namespace Engine::Abstracts
 {
-	class COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
+	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
 		Entity(const Entity& other) = default;
@@ -23,20 +23,20 @@ namespace Engine::Abstracts
 
 		const std::filesystem::path& GetMetadataPath() const;
 		GlobalEntityID               GetID() const;
-		EntityName                   GetName() const;
+		const EntityName&            GetName() const;
 		TypeName                     GetTypeName() const;
 		virtual TypeName             GetPrettyTypeName() const;
 		bool                         IsGarbage() const;
 		bool                         IsInitialized() const;
 
 		template <typename T>
-		__forceinline Weak<T> GetWeakPtr()
+		Weak<T> GetWeakPtr()
 		{
 			return boost::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
 		template <typename T>
-		__forceinline Strong<T> GetSharedPtr()
+		Strong<T> GetSharedPtr()
 		{
 			return boost::reinterpret_pointer_cast<T>(shared_from_this());
 		}
@@ -46,6 +46,7 @@ namespace Engine::Abstracts
 		virtual void Update(const float dt) = 0;
 		virtual void PostUpdate(const float dt) = 0;
 		virtual void FixedUpdate(const float dt) = 0;
+		virtual void OnUIUpdate(const float dt);
 
 		virtual void OnSerialized() = 0;
 		virtual void OnDeserialized() = 0;

@@ -44,7 +44,7 @@ namespace Engine::Abstracts
 	void Component::Initialize()
 	{
 		Entity::Initialize();
-		SetName(GetPrettyTypeName());
+		SetName(GetPrettyTypeName().data());
 	}
 
 	void Component::PostUpdate(const float dt)

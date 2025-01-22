@@ -9,7 +9,7 @@ namespace Engine
 
 	namespace Graphics::SBs
 	{
-		struct PARTICLERENDERER_API InstanceParticleSB : public InstanceSB
+		struct ENGINE_PARTICLERENDERER_API InstanceParticleSB : public InstanceSB
 		{
 		public:
 			InstanceParticleSB();
@@ -27,7 +27,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	class PARTICLERENDERER_API ParticleRenderer : public RenderComponent
+	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
 	{
 	public:
 		// int

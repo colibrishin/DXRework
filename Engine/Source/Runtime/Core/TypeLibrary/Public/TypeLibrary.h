@@ -43,7 +43,7 @@ namespace Engine
 
 namespace Engine::Graphics
 {
-	struct CORE_API ParamBase
+	struct ENGINE_CORE_API ParamBase
 	{
 	public:
 		constexpr ParamBase() = default;
@@ -193,7 +193,7 @@ namespace Engine
 #endif
 	}
 
-	enum CORE_API eBindType : uint8_t
+	enum ENGINE_CORE_API eBindType : uint8_t
 	{
 		BIND_TYPE_SAMPLER = 0,
 		BIND_TYPE_CB,
@@ -205,7 +205,7 @@ namespace Engine
 		BIND_TYPE_COUNT
 	};
 
-	enum CORE_API eTexBindSlot : uint8_t
+	enum ENGINE_CORE_API eTexBindSlot : uint8_t
 	{
 		BIND_SLOT_TEX = 0,
 		BIND_SLOT_TEXARR = BIND_SLOT_TEX + 4,
@@ -214,7 +214,7 @@ namespace Engine
 		BIND_SLOT_END = BIND_SLOT_TEX1D + 2,
 	};
 
-	enum CORE_API eSBType : uint8_t
+	enum ENGINE_CORE_API eSBType : uint8_t
 	{
 		SB_TYPE_LIGHT = BIND_SLOT_END,
 		SB_TYPE_LIGHT_VP,
@@ -224,7 +224,7 @@ namespace Engine
 		SB_TYPE_END
 	};
 
-	enum CORE_API eRaytracingSBType
+	enum ENGINE_CORE_API eRaytracingSBType
 	{
 		SB_TYPE_RAYTRACING_TLAS,
 		SB_TYPE_RAYTRACING_VERTEX,
@@ -232,7 +232,7 @@ namespace Engine
 		SB_TYPE_RAYTRACING_END
 	};
 
-	enum CORE_API eReservedTexBindSlot : uint8_t
+	enum ENGINE_CORE_API eReservedTexBindSlot : uint8_t
 	{
 		RESERVED_TEX_RENDERED = SB_TYPE_END,
 		RESERVED_TEX_BONES,
@@ -241,7 +241,7 @@ namespace Engine
 		RESERVED_TEX_END = RESERVED_TEX_SHADOW_MAP + CFG_MAX_DIRECTIONAL_LIGHT,
 	};
 
-	enum CORE_API eTexUAVBindSlot : uint8_t
+	enum ENGINE_CORE_API eTexUAVBindSlot : uint8_t
 	{
 		BIND_SLOT_UAV_TEX_1D = 0,
 		BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + 2,
@@ -249,7 +249,7 @@ namespace Engine
 		BIND_SLOT_UAV_END,
 	};
 
-	enum CORE_API eSBUAVType : uint8_t
+	enum ENGINE_CORE_API eSBUAVType : uint8_t
 	{
 		SB_TYPE_UAV_INSTANCE = BIND_SLOT_UAV_END,
 		SB_TYPE_UAV_RESERVED_1,
@@ -257,14 +257,14 @@ namespace Engine
 		SB_TYPE_UAV_END,
 	};
 
-	enum CORE_API eSampler : uint8_t
+	enum ENGINE_CORE_API eSampler : uint8_t
 	{
 		SAMPLER_TEXTURE = 0,
 		SAMPLER_SHADOW,
 		SAMPLER_END,
 	};
 
-	enum CORE_API eRasterizerSlot : uint8_t
+	enum ENGINE_CORE_API eRasterizerSlot : uint8_t
 	{
 		RASTERIZER_SLOT_SRV,
 		RASTERIZER_SLOT_CB,
@@ -273,20 +273,20 @@ namespace Engine
 		RASTERIZER_SLOT_COUNT
 	};
 
-	enum CORE_API eCBType : uint8_t
+	enum ENGINE_CORE_API eCBType : uint8_t
 	{
 		CB_TYPE_WVP = 0,
 		CB_TYPE_PARAM,
 		CB_TYPE_END,
 	};
 
-	enum CORE_API eRaytracingCBType : uint8_t
+	enum ENGINE_CORE_API eRaytracingCBType : uint8_t
 	{
 		RAYTRACING_CB_VIEWPORT = 0,
 		RAYTRACING_CB_COUNT
 	};
 
-	enum CORE_API eRaytracingCBLocalType : uint8_t
+	enum ENGINE_CORE_API eRaytracingCBLocalType : uint8_t
 	{
 		RAYTRACING_CB_LOCAL_MATERIAL = 0,
 		RAYTRACING_CB_LOCAL_COUNT
@@ -302,14 +302,14 @@ namespace Engine
 	constexpr UINT g_cb_offset = g_max_engine_texture_slots;
 	constexpr UINT g_uav_offset = g_cb_offset + g_max_cb_slots;
 
-	enum CORE_API eToolkitRenderType : uint8_t
+	enum ENGINE_CORE_API eToolkitRenderType : uint8_t
 	{
 		TOOLKIT_RENDER_UNKNOWN = 0,
 		TOOLKIT_RENDER_PRIMITIVE = 1,
 		TOOLKIT_RENDER_SPRITE,
 	};
 
-	enum CORE_API eShaderDomain : UINT
+	enum ENGINE_CORE_API eShaderDomain : UINT
 	{
 		SHADER_DOMAIN_OPAQUE = 0,
 		SHADER_DOMAIN_MASK,
@@ -318,7 +318,7 @@ namespace Engine
 		SHADER_DOMAIN_MAX,
 	};
 
-	enum CORE_API eShaderDepth : UINT
+	enum ENGINE_CORE_API eShaderDepth : UINT
 	{
 		SHADER_DEPTH_TEST_ZERO = 0,
 		SHADER_DEPTH_TEST_ALL = 1,
@@ -333,7 +333,7 @@ namespace Engine
 		SHADER_DEPTH_ALWAYS = 256,
 	};
 
-	enum CORE_API eShaderSampler : UINT
+	enum ENGINE_CORE_API eShaderSampler : UINT
 	{
 		SHADER_SAMPLER_CLAMP = 0,
 		SHADER_SAMPLER_WRAP = 1,
@@ -352,7 +352,7 @@ namespace Engine
 		SHADER_SAMPLER_ALWAYS = 2048,
 	};
 
-	enum CORE_API eShaderRasterizer : UINT
+	enum ENGINE_CORE_API eShaderRasterizer : UINT
 	{
 		SHADER_RASTERIZER_CULL_NONE = 0,
 		SHADER_RASTERIZER_CULL_FRONT = 1,
@@ -390,7 +390,7 @@ namespace Engine
 		}
 	};
 
-	enum CORE_API eShaderType : uint8_t
+	enum ENGINE_CORE_API eShaderType : uint8_t
 	{
 		SHADER_VERTEX = 0,
 		SHADER_PIXEL,

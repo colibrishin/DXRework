@@ -4,7 +4,7 @@
 
 namespace Engine 
 {
-    struct PARTICLERENDEREREXTENSION_API ParticleRendererExtension 
+    struct ENGINE_PARTICLERENDEREREXTENSION_API ParticleRendererExtension 
     {
         static Graphics::ParamBase& GetParam(const Strong<Components::ParticleRenderer>& pr);
         static InstanceParticles&   GetInstances(const Strong<Components::ParticleRenderer>& pr);

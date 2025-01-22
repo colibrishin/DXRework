@@ -3,7 +3,7 @@
 
 namespace Engine::Resources
 {
-	class TEXTURE1D_API Texture1D : public Texture
+	class ENGINE_TEXTURE1D_API Texture1D : public Texture
 	{
 	public:
 		TEX_T(TEX_TYPE_1D)

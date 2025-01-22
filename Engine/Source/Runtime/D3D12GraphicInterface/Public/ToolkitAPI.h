@@ -16,7 +16,7 @@
 
 namespace Engine::Managers
 {
-	class D3D12GRAPHICINTERFACE_API ToolkitAPI final : public Abstracts::Singleton<ToolkitAPI>
+	class ENGINE_D3D12GRAPHICINTERFACE_API ToolkitAPI final : public Abstracts::Singleton<ToolkitAPI>
 	{
 	public:
 		explicit ToolkitAPI(SINGLETON_LOCK_TOKEN) {}

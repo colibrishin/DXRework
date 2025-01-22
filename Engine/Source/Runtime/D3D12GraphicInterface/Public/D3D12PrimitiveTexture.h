@@ -7,7 +7,7 @@
 
 namespace Engine 
 {
-	struct D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public PrimitiveTexture
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public PrimitiveTexture
 	{
 		D3D12PrimitiveTexture();
 		void Generate(Resources::Texture* texture) override;

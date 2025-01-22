@@ -1,5 +1,7 @@
 #include "..\Public\Entity.hpp"
 
+#include "UIInterface.h"
+
 void Engine::Abstracts::Entity::SetName(const EntityName& name)
 {
 	m_name_ = name;
@@ -20,7 +22,7 @@ Engine::GlobalEntityID Engine::Abstracts::Entity::GetID() const
 	return reinterpret_cast<GlobalEntityID>(this);  // NOLINT(clang-diagnostic-pointer-to-int-cast)
 }
 
-Engine::EntityName Engine::Abstracts::Entity::GetName() const
+const Engine::EntityName& Engine::Abstracts::Entity::GetName() const
 {
 	return m_name_;
 }
@@ -34,6 +36,12 @@ Engine::TypeName Engine::Abstracts::Entity::GetPrettyTypeName() const
 {
 	const auto type_name = GetTypeName();
 	const auto pos       = type_name.find_last_of(":");
+
+	// case where there is no namespace.
+	if (pos == std::string::npos)
+	{
+		return type_name;
+	}
 
 	return type_name.substr(pos + 1);
 }
@@ -51,6 +59,10 @@ bool Engine::Abstracts::Entity::IsInitialized() const
 void Engine::Abstracts::Entity::Initialize()
 {
 	m_b_initialized_ = true;
+}
+
+void Engine::Abstracts::Entity::OnUIUpdate(const float dt)
+{
 }
 
 void Engine::Abstracts::Entity::OnSerialized()

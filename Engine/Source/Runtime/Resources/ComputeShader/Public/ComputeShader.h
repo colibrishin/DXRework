@@ -6,7 +6,7 @@
 
 namespace Engine::Resources
 {
-	class COMPUTESHADER_API ComputeShader : public Shader
+	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
 	{
 	public:
 		~ComputeShader() override = default;

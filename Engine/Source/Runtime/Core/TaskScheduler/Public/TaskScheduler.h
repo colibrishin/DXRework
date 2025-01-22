@@ -11,7 +11,7 @@ namespace Engine
 {
 	using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
 	
-	enum CORE_API eTaskType : uint8_t
+	enum ENGINE_CORE_API eTaskType : uint8_t
 	{
 		TASK_NONE = 0,
 		TASK_TOGGLE_RASTER,
@@ -45,7 +45,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class CORE_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
+	class ENGINE_CORE_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
 	{
 	public:
 		struct TaskValue

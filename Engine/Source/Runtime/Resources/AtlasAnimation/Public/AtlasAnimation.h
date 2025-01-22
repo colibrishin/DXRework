@@ -4,7 +4,7 @@
 
 namespace Engine 
 {
-	struct ATLASANIMATION_API AtlasAnimationPrimitive
+	struct ENGINE_ATLASANIMATION_API AtlasAnimationPrimitive
 	{
 	public:
 		struct AtlasFramePrimitive
@@ -62,7 +62,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	class ATLASANIMATION_API AtlasAnimation : public BaseAnimation
+	class ENGINE_ATLASANIMATION_API AtlasAnimation : public BaseAnimation
 	{
 	public:
 		RESOURCE_T(RES_T_ATLAS_ANIM)

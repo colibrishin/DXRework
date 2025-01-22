@@ -24,7 +24,7 @@ DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
 
 namespace Engine
 {
-	enum CORE_API eReservedLayerType
+	enum ENGINE_CORE_API eReservedLayerType
 	{
 		RESERVED_LAYER_DEFAULT,
 		RESERVED_LAYER_LIGHT,
@@ -36,7 +36,7 @@ namespace Engine
 		RESERVED_LAYER_MAX
 	};
 
-	class CORE_API Scene : public Abstracts::Renderable
+	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
 	public:
 		DelegateOnObjectAdded onObjectAdded;
@@ -57,6 +57,7 @@ namespace Engine
 		void FixedUpdate(const float dt) override;
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
+		void OnUIUpdate(const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
@@ -354,7 +355,6 @@ namespace Engine
 
 		void synchronize(const Weak<Scene>& ptr_scene);
 
-		bool m_b_scene_imgui_open_;
 		bool m_b_scene_raytracing_;
 
 		LocalActorID               m_main_camera_local_id_;
@@ -363,8 +363,12 @@ namespace Engine
 		std::vector<Strong<Layer>> m_layers_;
 
 		// Non-serialized
+#if WITH_EDITOR
+		bool m_b_dialog_opened_ = true;
+#endif
+
 		Weak<Abstracts::ObjectBase> m_observer_;
-		Weak<Objects::Camera>                  m_mainCamera_;
+		Weak<Objects::Camera>       m_mainCamera_;
 		Weak<Abstracts::ObjectBase> m_main_actor_;
 
 		ConcurrentLocalGlobalIDMap                           m_assigned_actor_ids_;

@@ -13,7 +13,7 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	class SHADER_API Shader : public Abstracts::Resource
+	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_SHADER)

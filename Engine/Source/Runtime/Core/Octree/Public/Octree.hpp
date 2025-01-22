@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <set>
-#include <boost/smart_ptr/weak_ptr.hpp>
 
 #include "Debugger/Public/Debugger.hpp"
 

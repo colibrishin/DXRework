@@ -19,7 +19,7 @@ namespace Engine
 	struct CommandPairPool;
 	struct CommandPairTask;
 
-	struct D3D12GRAPHICINTERFACE_API CommandPair final : public CommandListBase
+	struct ENGINE_D3D12GRAPHICINTERFACE_API CommandPair final : public CommandListBase
 	{
 	public:
 		explicit CommandPair
@@ -86,7 +86,7 @@ namespace Engine
 		DescriptorPtr					   m_assigned_heap_{};
 	};
 
-	struct D3D12GRAPHICINTERFACE_API CommandPairPool final
+	struct ENGINE_D3D12GRAPHICINTERFACE_API CommandPairPool final
 	{
 		using address_value = UINT64;
 		static constexpr size_t size = 256;
@@ -117,7 +117,7 @@ namespace Engine
 		ComPtr<ID3D12Device2> m_dev_{};
 	};
 
-	struct D3D12GRAPHICINTERFACE_API CommandPairTask
+	struct ENGINE_D3D12GRAPHICINTERFACE_API CommandPairTask
 	{
 	private:
 		constexpr static D3D12_COMMAND_QUEUE_DESC queue_descs[]

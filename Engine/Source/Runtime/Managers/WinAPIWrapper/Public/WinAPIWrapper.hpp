@@ -13,7 +13,7 @@ namespace WinAPI
         LPARAM lparam
     );
   
-    class WINAPIWRAPPER_API WinAPIWrapper final
+    class ENGINE_WINAPIWRAPPER_API WinAPIWrapper final
     {
     public:
         ~WinAPIWrapper()                               = default;

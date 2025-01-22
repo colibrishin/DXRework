@@ -2,12 +2,11 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
-#include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine::Graphics
 {
-	class D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypelessBase 
+	class ENGINE_D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypelessBase 
 	{
 	public:
 		D3D12StructuredBufferTypeless() = default;

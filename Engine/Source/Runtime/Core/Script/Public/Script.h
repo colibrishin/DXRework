@@ -12,7 +12,7 @@ namespace Engine
 		static constexpr ScriptSizeType value = T::scptype;
 	};
 
-	class CORE_API Script : public Abstracts::Renderable
+	class ENGINE_CORE_API Script : public Abstracts::Renderable
 	{
 	public:
 		~Script() override = default;

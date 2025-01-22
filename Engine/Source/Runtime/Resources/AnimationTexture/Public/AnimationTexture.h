@@ -3,7 +3,7 @@
 
 namespace Engine::Resources
 {
-	class ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
+	class ENGINE_ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{
 	public:
 		RESOURCE_T(RES_T_ANIMS_TEX)

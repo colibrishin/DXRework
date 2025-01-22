@@ -4,7 +4,7 @@
 
 namespace Engine::Managers
 {
-	class PROJECTIONFRUSTUM_API ProjectionFrustum final : public Abstracts::Singleton<ProjectionFrustum>
+	class ENGINE_PROJECTIONFRUSTUM_API ProjectionFrustum final : public Abstracts::Singleton<ProjectionFrustum>
 	{
 	public:
 		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN)

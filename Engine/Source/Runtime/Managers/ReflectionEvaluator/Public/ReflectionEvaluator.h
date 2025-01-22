@@ -10,7 +10,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class REFLECTIONEVALUATOR_API ReflectionEvaluator : public Abstracts::Singleton<ReflectionEvaluator>
+	class ENGINE_REFLECTIONEVALUATOR_API ReflectionEvaluator : public Abstracts::Singleton<ReflectionEvaluator>
 	{
 	public:
 		ReflectionEvaluator(SINGLETON_LOCK_TOKEN)

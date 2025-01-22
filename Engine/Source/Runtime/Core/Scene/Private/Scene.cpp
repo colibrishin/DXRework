@@ -6,6 +6,8 @@
 #endif
 #include "../Public/Scene.hpp"
 
+#include "UIInterface.h"
+
 #include "Source/Runtime/Core/Layer/Public/Layer.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
@@ -248,7 +250,6 @@ namespace Engine
 			InitializePhysX();
 #endif
 
-			m_b_scene_imgui_open_   = scene->m_b_scene_imgui_open_;
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
 			m_layers_               = scene->m_layers_;
 			m_mainCamera_           = scene->m_mainCamera_;
@@ -586,8 +587,7 @@ namespace Engine
 	}
 
 	Scene::Scene()
-		: m_b_scene_imgui_open_(false),
-		  m_b_scene_raytracing_(false),
+		: m_b_scene_raytracing_(false),
 #ifdef PHYSX_ENABLED
 		  m_physics_scene_(nullptr),
 #endif
@@ -651,6 +651,22 @@ namespace Engine
 		{
 			layer->PostUpdate(dt);
 		}
+	}
+
+	void Scene::OnUIUpdate(const float dt)
+	{
+#if WITH_EDITOR
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+		if (const UIContext& context = UIInterface::NewContext(ui.NewDialog({GetName(), m_b_dialog_opened_})))
+		{
+		}
+
+		for (const auto& layer : m_layers_)
+		{
+			layer->OnUIUpdate(dt);
+		}
+#endif
 	}
 
 	void Scene::OnSerialized()

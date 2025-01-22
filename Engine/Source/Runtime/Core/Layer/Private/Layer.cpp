@@ -135,6 +135,14 @@ namespace Engine
 		}
 	}
 
+	void Layer::OnUIUpdate(const float dt)
+	{
+		for (const auto& object : m_objects_)
+		{
+			object->OnUIUpdate(dt);
+		}
+	}
+
 	void Layer::OnSerialized()
 	{
 		Renderable::OnSerialized();

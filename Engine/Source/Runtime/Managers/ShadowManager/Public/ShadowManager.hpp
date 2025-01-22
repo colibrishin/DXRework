@@ -12,7 +12,7 @@ namespace Engine::Graphics
 {
 	namespace SBs
 	{
-		struct SHADOWMANAGER_API LightSB
+		struct ENGINE_SHADOWMANAGER_API LightSB
 		{
 			SB_T(SB_TYPE_LIGHT)
 
@@ -23,7 +23,7 @@ namespace Engine::Graphics
 			OffsetT<float> radius;
 		};
 
-		struct SHADOWMANAGER_API LightVPSB
+		struct ENGINE_SHADOWMANAGER_API LightVPSB
 		{
 			SB_T(SB_TYPE_LIGHT_VP)
 
@@ -40,7 +40,7 @@ namespace Engine::Managers
 	
 	constexpr float __placeholder = 0.f;
 
-	class SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
+	class ENGINE_SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
 	{
 	private:
 		struct Subfrusta

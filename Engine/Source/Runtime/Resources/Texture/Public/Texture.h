@@ -9,7 +9,7 @@
 
 namespace Engine::Resources
 {
-	class TEXTURE_API Texture : public Abstracts::Resource
+	class ENGINE_TEXTURE_API Texture : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_TEX)

@@ -3,7 +3,7 @@
 
 namespace Engine
 {
-	struct CORE_API IModule
+	struct ENGINE_CORE_API IModule
 	{
 		virtual ~IModule() = default;
 

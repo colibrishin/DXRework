@@ -6,7 +6,7 @@
 namespace DX
 {
 	// Helper class for COM exceptions
-	class D3D12GRAPHICINTERFACE_API com_exception : public std::exception
+	class ENGINE_D3D12GRAPHICINTERFACE_API com_exception : public std::exception
 	{
 	public:
 		com_exception(HRESULT hr)
@@ -18,5 +18,5 @@ namespace DX
 		HRESULT result;
 	};
 
-	D3D12GRAPHICINTERFACE_API void ThrowIfFailed(HRESULT hr);
+	ENGINE_D3D12GRAPHICINTERFACE_API void ThrowIfFailed(HRESULT hr);
 } // namespace DX

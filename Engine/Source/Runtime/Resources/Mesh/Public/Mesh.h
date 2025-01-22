@@ -14,7 +14,7 @@ namespace physx
 
 namespace Engine::Resources
 {
-	class MESH_API Mesh : public Abstracts::Resource
+	class ENGINE_MESH_API Mesh : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_MESH)

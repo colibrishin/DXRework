@@ -7,9 +7,42 @@
 
 namespace Engine
 {
-	struct DescriptorHandler;
+	struct DescriptorPtrImpl;
+	using DescriptorPtr = Unique<DescriptorPtrImpl>;
 
-	struct D3D12GRAPHICINTERFACE_API DescriptorPtrImpl final : public GraphicHeapBase
+	struct ENGINE_D3D12GRAPHICINTERFACE_API DescriptorHandler final
+	{
+	public:
+		DescriptorHandler();
+
+		void          Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
+		DescriptorPtr Acquire();
+		bool          IsValid(const DescriptorPtrImpl* ptr);
+		void          Release(const DescriptorPtrImpl& handles);
+
+		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap(UINT64 offset) const;
+		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const;
+
+	private:
+		friend struct DescriptorPtrImpl;
+		void AppendNewHeaps();
+
+		inline static constexpr size_t s_element_size = std::numeric_limits<unsigned int>::digits;
+		inline static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
+
+		ComPtr<ID3D12Device2>                              m_dev_{};
+		ComPtr<ID3D12RootSignature>                        m_root_signature{};
+		UINT                                               m_size_;
+		std::deque<__m256i>                                m_used_slots_{};
+
+		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
+		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};
+
+		UINT m_buffer_size_{};
+		UINT m_sampler_size_{};
+	};
+
+	struct ENGINE_D3D12GRAPHICINTERFACE_API DescriptorPtrImpl final : public GraphicHeapBase
 	{
 	public:
 		DescriptorPtrImpl(DescriptorPtrImpl&& other) noexcept;
@@ -18,7 +51,7 @@ namespace Engine
 		DescriptorPtrImpl(const DescriptorPtrImpl& other)            = delete;
 		DescriptorPtrImpl& operator=(const DescriptorPtrImpl& other) = delete;
 
-		~DescriptorPtrImpl();
+		~DescriptorPtrImpl() override;
 
 		[[nodiscard]] bool IsValid() const;
 		void               Release();
@@ -68,6 +101,23 @@ namespace Engine
 			  m_buffer_descriptor_size_(buffer_descriptor_size),
 			  m_sampler_descriptor_size_(sampler_descriptor_size) {}
 
+	public:
+		[[nodiscard]] void* GetNativeHeap() override
+		{
+			return GetMainDescriptorHeap();
+		}
+		
+		[[nodiscard]] void* GetNativeCPUHandle() override
+		{
+			return &m_cpu_handle_;
+		}
+		
+		[[nodiscard]] void* GetNativeGPUHandle() override
+		{
+			return &m_gpu_handle_;
+		}
+
+	private:
 		DescriptorHandler* m_handler_;
 		INT64              m_segment_offset_;
 		INT64              m_element_offset_;
@@ -81,39 +131,5 @@ namespace Engine
 
 		UINT m_buffer_descriptor_size_;
 		UINT m_sampler_descriptor_size_;
-	};
-
-	using DescriptorPtr = Unique<DescriptorPtrImpl>;
-
-	struct D3D12GRAPHICINTERFACE_API DescriptorHandler final
-	{
-	public:
-		DescriptorHandler();
-
-		void          Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
-		DescriptorPtr Acquire();
-		bool          IsValid(const DescriptorPtrImpl* ptr);
-		void          Release(const DescriptorPtrImpl& handles);
-
-		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap(UINT64 offset) const;
-		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const;
-
-	private:
-		friend struct DescriptorPtrImpl;
-		void AppendNewHeaps();
-
-		inline static constexpr size_t s_element_size = std::numeric_limits<unsigned int>::digits;
-		inline static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
-
-		ComPtr<ID3D12Device2>                              m_dev_{};
-		ComPtr<ID3D12RootSignature>                        m_root_signature{};
-		UINT                                               m_size_;
-		std::deque<__m256i>                                m_used_slots_{};
-
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};
-
-		UINT m_buffer_size_{};
-		UINT m_sampler_size_{};
 	};
 }

@@ -1,8 +1,9 @@
 #include "../Public/SceneManager.hpp"
 
+#include "UIInterface.h"
+
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
-//#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 
 #if WITH_DEBUG
 #include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
@@ -163,6 +164,54 @@ namespace Engine::Managers
 		{
 			scene->PostRender(dt);
 		}
+	}
+
+	void SceneManager::OnUIUpdate(const float dt)
+	{
+#if WITH_EDITOR
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+		if (const UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
+		{
+			auto& new_menu = context().AddChild(ui.NewMenu({"New"}));
+
+			new_menu.AddChild(ui.NewMenuItem({"Scene"})).SetFunction([&]()
+			{
+				AddScene("UntitledScene");
+				SetActive("UntitledScene");
+			});
+
+			// todo: customized new
+
+			auto& add_menu = context().AddChild(ui.NewMenu({"Add"}));
+			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
+			{
+				GetActiveScene().lock()->CreateGameObject<T>(Layer);
+			};
+
+			add_menu.AddChild(ui.NewMenuItem({"Camera"})).SetFunction([&]()
+			{
+				addTemplate.operator()<Objects::Camera, RESERVED_LAYER_CAMERA>();
+			});
+
+			add_menu.AddChild(ui.NewMenuItem({"Light"})).SetFunction([&]()
+			{
+				addTemplate.operator()<Objects::Light, RESERVED_LAYER_LIGHT>();
+			});
+
+			add_menu.AddChild(ui.NewMenuItem({"Object"})).SetFunction([&]()
+			{
+				addTemplate.operator()<Object, RESERVED_LAYER_DEFAULT>();
+			});
+
+			// todo: customized add
+		}
+
+		if (const auto& scene = m_active_scene_.lock())
+		{
+			scene->OnUIUpdate(dt);
+		}
+#endif
 	}
 
 	void SceneManager::AddScene(const Weak<Scene>& ptr_scene)

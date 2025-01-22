@@ -4,7 +4,7 @@
 
 namespace Engine
 {
-	enum eBoundingType
+	enum ENGINE_CORE_API eBoundingType
 	{
 		BOUNDING_TYPE_BOX = 0,
 		BOUNDING_TYPE_SPHERE,
@@ -34,7 +34,7 @@ namespace Engine
 		}
 	}
 
-	template <float Epsilon = 0.0001f>
+	template <float Epsilon = CFG_EPSILON>
 	struct GenericBounding
 	{
 	public:

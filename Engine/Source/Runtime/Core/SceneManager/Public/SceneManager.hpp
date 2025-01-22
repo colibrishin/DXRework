@@ -8,7 +8,7 @@ DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
 namespace Engine::Managers
 {
-	class CORE_API SceneManager final : public Abstracts::Singleton<SceneManager>
+	class ENGINE_CORE_API SceneManager final : public Abstracts::Singleton<SceneManager>
 	{
 	public:
 		DelegateOnSceneActive onSceneActive;
@@ -59,6 +59,7 @@ namespace Engine::Managers
 		void Render(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void PostRender(const float dt) override;
+		void OnUIUpdate(const float dt) override;
 
 	private:
 		friend struct SingletonDeleter;

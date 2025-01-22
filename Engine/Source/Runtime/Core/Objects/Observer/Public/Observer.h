@@ -3,7 +3,7 @@
 
 namespace Engine::Objects
 {
-	class CORE_API Observer : public Abstracts::ObjectBase
+	class ENGINE_CORE_API Observer : public Abstracts::ObjectBase
 	{
 	public:
 		OBJECT_T(DEF_OBJ_T_OBSERVER)

@@ -5,7 +5,7 @@
 namespace FMOD 
 {
 	// Helper class for COM exceptions
-	class SOUNDMANAGER_API fmod_exception : public std::exception
+	class ENGINE_SOUNDMANAGER_API fmod_exception : public std::exception
 	{
 	public:
 		fmod_exception(FMOD_RESULT hr)
@@ -20,7 +20,7 @@ namespace FMOD
 
 namespace Engine::Managers
 {
-	class SOUNDMANAGER_API SoundManager final : public Abstracts::Singleton<SoundManager>
+	class ENGINE_SOUNDMANAGER_API SoundManager final : public Abstracts::Singleton<SoundManager>
 	{
 	public:
 		explicit SoundManager(SINGLETON_LOCK_TOKEN) {}

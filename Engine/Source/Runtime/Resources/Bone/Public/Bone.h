@@ -9,7 +9,7 @@ namespace Engine::Graphics
 	struct BonePrimitive;
 	using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
 
-	struct BONE_API BonePrimitive
+	struct ENGINE_BONE_API BonePrimitive
 	{
 		BonePrimitive()
 			: m_idx_(0),
@@ -85,7 +85,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	class BONE_API Bone : public Abstracts::Resource
+	class ENGINE_BONE_API Bone : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_BONE)

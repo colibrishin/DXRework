@@ -61,12 +61,12 @@ namespace Engine
 
 	namespace Graphics::SBs 
 	{
-		struct LocalParamSB : public ParamBase
+		struct ENGINE_CORE_API LocalParamSB : public ParamBase
 		{
 			SB_T(SB_TYPE_LOCAL_PARAM)
 		};
 
-		struct InstanceSB : public ParamBase
+		struct ENGINE_CORE_API InstanceSB : public ParamBase
 		{
 			SB_T(SB_TYPE_INSTANCE)
 			SB_UAV_T(SB_TYPE_UAV_INSTANCE)

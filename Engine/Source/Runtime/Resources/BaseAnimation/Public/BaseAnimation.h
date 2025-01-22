@@ -4,7 +4,7 @@
 
 namespace Engine::Graphics 
 {
-	struct BASEANIMATION_API BoneAnimationPrimitive
+	struct ENGINE_BASEANIMATION_API BoneAnimationPrimitive
 	{
 	public:
 		BoneAnimationPrimitive();
@@ -30,7 +30,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	class BASEANIMATION_API BaseAnimation : public Abstracts::Resource
+	class ENGINE_BASEANIMATION_API BaseAnimation : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_BASE_ANIM)

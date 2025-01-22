@@ -39,7 +39,7 @@
 
 namespace Engine
 {
-	enum CORE_API eResourceType : uint8_t
+	enum ENGINE_CORE_API eResourceType : uint8_t
 	{
 		RES_T_UNK = 0,
 		RES_T_SHADER,
@@ -70,7 +70,7 @@ namespace Engine
 
 namespace Engine::Abstracts
 {
-	class CORE_API Resource : public Entity
+	class ENGINE_CORE_API Resource : public Entity
 	{
 	public:
 		using type = Resource;

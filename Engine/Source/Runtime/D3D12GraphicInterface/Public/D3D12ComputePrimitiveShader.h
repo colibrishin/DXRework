@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-	struct D3D12GRAPHICINTERFACE_API D3D12ComputePrimitiveShader : public ComputePrimitiveShader
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12ComputePrimitiveShader : public ComputePrimitiveShader
 	{
 		D3D12ComputePrimitiveShader();
 		void                               Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;

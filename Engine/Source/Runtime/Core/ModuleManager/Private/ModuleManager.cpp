@@ -6,12 +6,12 @@ namespace Engine::Managers
 {
 	ModuleManager::ModuleManager(SINGLETON_LOCK_TOKEN) {}
 
-	CORE_API void ModuleManager::Initialize()
+	ENGINE_CORE_API void ModuleManager::Initialize()
 	{
 		m_module_paths_.emplace(L"Default", "./");
 	}
 
-	CORE_API ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
+	ENGINE_CORE_API ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
 	{
 		std::lock_guard l(m_critical_mutex_);
 		if (!m_module_loaded_.contains(name.data()))
@@ -22,7 +22,7 @@ namespace Engine::Managers
 		return m_module_loaded_.at(name.data()).get();
 	}
 
-	CORE_API IModule* ModuleManager::LoadModule(const std::wstring_view name)
+	ENGINE_CORE_API IModule* ModuleManager::LoadModule(const std::wstring_view name)
 	{
 		ModuleInfo* module_info = FindModule(name);
 
@@ -99,7 +99,7 @@ namespace Engine::Managers
 	}
 #endif
 
-	CORE_API void ModuleManager::AddModule(const std::wstring_view name)
+	ENGINE_CORE_API void ModuleManager::AddModule(const std::wstring_view name)
 	{
 		if (m_module_loaded_.contains(name.data()))
 		{
@@ -143,7 +143,7 @@ namespace Engine::Managers
 
 	ModuleManager::~ModuleManager()
 	{
-		for (auto& ptr : m_module_loaded_ | std::views::values)
+		for (auto& ptr : m_module_loaded_ | std::views::reverse | std::views::values)
 		{
 			if (ptr->m_module_)
 			{

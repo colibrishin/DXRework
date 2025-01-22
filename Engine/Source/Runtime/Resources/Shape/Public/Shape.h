@@ -9,7 +9,7 @@
 
 namespace Engine::Resources
 {
-	class SHAPE_API Shape : public Abstracts::Resource
+	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_SHAPE)

@@ -4,7 +4,7 @@
 
 namespace Engine::Graphics
 {
-	struct CORE_API VertexElement
+	struct ENGINE_CORE_API VertexElement
 	{
 		constexpr VertexElement() :
 			position(0.f, 0.f, 0.f), color(0.f, 0.f, 0.f, 1.f), texCoord(0.f, 0.f), normal(0.f, 0.f, 0.f), tangent(0.f, 0.f, 0.f), binormal(0.f, 0.f, 0.f) {}

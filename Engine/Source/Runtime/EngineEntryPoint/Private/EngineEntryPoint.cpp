@@ -1,19 +1,9 @@
 #include "../Public/EngineEntryPoint.h"
 
+#include "UIInterface.h"
+
 #include "CoreModuel/Public/CoreModule.h"
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
-
-/*
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
-	HWND   hWnd,
-	UINT   msg,
-	WPARAM wParam,
-	LPARAM lParam
-);
-*/
 
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
@@ -53,8 +43,9 @@ namespace Engine::Managers
 		m_timer = std::make_unique<DX::StepTimer>();
 		ModuleManager::GetInstance().Initialize();
 		ModuleManager::GetInstance().LoadModule(L"Core");
-		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
 		ModuleManager::GetInstance().LoadModule(L"D3D12GraphicInterface");
+		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
+		ModuleManager::GetInstance().LoadModule(L"ImGuiManager");
 		ModuleManager::GetInstance().LoadModule(L"PhysicsManager");
 	}
 
@@ -62,6 +53,11 @@ namespace Engine::Managers
 	{
 		static auto internal_tick = std::bind_front(&EngineEntryPoint::tickInternal, this);
 		m_timer->Tick(internal_tick);
+	}
+
+	void EngineEntryPoint::OnUIUpdate(const float dt)
+	{
+		CoreModule::GetContext().OnUIUpdate(dt);
 	}
 
 	void EngineEntryPoint::PreUpdate(const float dt)
@@ -111,11 +107,25 @@ namespace Engine::Managers
 			dt      = 0.f;
 		}
 
+#if WITH_EDITOR
+		if (UIInterfaceAccessor::IsValid())
+		{
+			UIInterfaceAccessor::NewFrame();
+		}
+#endif
+		
 		while (elapsed >= s_fixed_update_interval)
 		{
 			FixedUpdate(s_fixed_update_interval);
 			elapsed -= s_fixed_update_interval;
 		}
+
+#if WITH_EDITOR
+		if (UIInterfaceAccessor::IsValid())
+		{
+			OnUIUpdate(dt);
+		}
+#endif
 		
 		PreUpdate(dt);
 		Update(dt);

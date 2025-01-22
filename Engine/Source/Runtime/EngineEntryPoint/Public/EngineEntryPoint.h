@@ -9,7 +9,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class ENGINEENTRYPOINT_API EngineEntryPoint final : public Abstracts::Singleton<EngineEntryPoint>
+	class ENGINE_ENGINEENTRYPOINT_API EngineEntryPoint final : public Abstracts::Singleton<EngineEntryPoint>
 	{
 	public:
 		EngineEntryPoint(SINGLETON_LOCK_TOKEN);
@@ -24,6 +24,7 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~EngineEntryPoint() override;
 
+		void OnUIUpdate(const float dt) override;
 		void PreUpdate(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -40,7 +41,6 @@ namespace Engine::Managers
 
 		// Time
 		std::unique_ptr<DX::StepTimer> m_timer;
-		CoreModule* m_static_core_module_;
 
 		// Check for Sigterm registration
 		static bool s_instantiated_;

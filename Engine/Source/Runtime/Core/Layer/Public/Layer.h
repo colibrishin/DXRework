@@ -5,7 +5,7 @@
 
 namespace Engine
 {
-	class CORE_API Layer final : public Abstracts::Renderable
+	class ENGINE_CORE_API Layer final : public Abstracts::Renderable
 	{
 	public:
 		Layer(const LayerSizeType type);
@@ -20,6 +20,7 @@ namespace Engine
 		void PostRender(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
+		void OnUIUpdate(const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;

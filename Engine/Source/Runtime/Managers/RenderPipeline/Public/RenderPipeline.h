@@ -9,7 +9,7 @@
 
 namespace Engine
 {
-	struct RenderPipelineModule : public IModule
+	struct ENGINE_RENDERPIPELINE_API RenderPipelineModule : public IModule
 	{
 		void Initialize() override;
 		void Shutdown() override;
@@ -21,10 +21,10 @@ namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
 
-	class RENDERPIPELINE_API RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
+	class ENGINE_RENDERPIPELINE_API RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
 	{
 	private:
-		struct RENDERPIPELINE_API TempParamTicket
+		struct ENGINE_RENDERPIPELINE_API TempParamTicket
 		{
 			TempParamTicket(const CBs::ParamCB& previousParam)
 				: previousParam(previousParam) {}
@@ -78,7 +78,6 @@ namespace Engine::Managers
 
 		void ConstantBufferGuard();
 
-		void PrecompileShaders();
 		void InitializeViewport();
 
 		Viewport m_viewport_;

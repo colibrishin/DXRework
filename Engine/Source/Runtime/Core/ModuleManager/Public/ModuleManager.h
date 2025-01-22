@@ -7,14 +7,14 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
 #define IS_EMPTY(...) (true __VA_OPT__(&& false))
-#define IS_DLL !BOOST_PP_IS_EMPTY(CORE_API)
+#define IS_DLL !BOOST_PP_IS_EMPTY(ENGINE_CORE_API)
 
 namespace Engine::Managers
 {
 	using ModuleInitializationFunctionCStyle = IModule*(*)();
 	using ModuleInitializationFunction = std::function<IModule*()>;
 
-	class CORE_API ModuleManager : public Abstracts::Singleton<ModuleManager>
+	class ENGINE_CORE_API ModuleManager : public Abstracts::Singleton<ModuleManager>
 	{
 	public:
 		explicit ModuleManager(SINGLETON_LOCK_TOKEN);

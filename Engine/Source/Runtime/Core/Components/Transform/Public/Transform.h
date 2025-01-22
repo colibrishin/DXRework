@@ -11,7 +11,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	class CORE_API Transform final : public Engine::Abstracts::Component
+	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 	public:
 		COMPONENT_T(COM_T_TRANSFORM)

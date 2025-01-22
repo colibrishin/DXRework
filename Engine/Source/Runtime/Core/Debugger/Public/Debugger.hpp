@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-	enum CORE_API eDebugMessage : uint8_t
+	enum ENGINE_CORE_API eDebugMessage : uint8_t
 	{
 		DEBUG_MSG_LOG,
 		DEBUG_MSG_LINE,
@@ -19,7 +19,7 @@ namespace Engine
 		DEBUG_MSG_MAX
 	};
 	
-	struct CORE_API Message
+	struct ENGINE_CORE_API Message
 	{
 		eDebugMessage type = DEBUG_MSG_MAX;
 		float elapsed_time = 0.f;
@@ -45,7 +45,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class CORE_API Debugger final : public Abstracts::Singleton<Debugger>
+	class ENGINE_CORE_API Debugger final : public Abstracts::Singleton<Debugger>
 	{
 	public:
 		explicit Debugger(SINGLETON_LOCK_TOKEN);

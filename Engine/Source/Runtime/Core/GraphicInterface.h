@@ -5,7 +5,7 @@
 
 namespace Engine
 {
-	enum CORE_API eHeapType
+	enum ENGINE_CORE_API eHeapType
 	{
 		HEAP_TYPE_DEFAULT	= 1,
 		HEAP_TYPE_UPLOAD	= 2,
@@ -14,7 +14,7 @@ namespace Engine
 		HEAP_TYPE_GPU_UPLOAD	= 5
 	};
 
-	enum CORE_API eHeapFlag
+	enum ENGINE_CORE_API eHeapFlag
 	{
 		HEAP_FLAG_NONE	= 0,
 		HEAP_FLAG_SHARED	= 0x1,
@@ -35,7 +35,7 @@ namespace Engine
 		HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES	= 0x84
 	};
 	
-	struct CORE_API Viewport
+	struct ENGINE_CORE_API Viewport
 	{
 		float topLeftX;
 		float topLeftY;
@@ -45,7 +45,7 @@ namespace Engine
 		float maxDepth;
 	};
 
-	enum CORE_API eFormat : uint8_t
+	enum ENGINE_CORE_API eFormat : uint8_t
 	{
 		TEX_FORMAT_UNKNOWN = 0,
 		TEX_FORMAT_R32G32B32A32_TYPELESS = 1,
@@ -177,7 +177,7 @@ namespace Engine
 		return v;
 	}
 
-	enum CORE_API eSamplerFilter
+	enum ENGINE_CORE_API eSamplerFilter
 	{
 		SAMPLER_FILTER_MIN_MAG_MIP_POINT = 0,
 		SAMPLER_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x1,
@@ -221,7 +221,7 @@ namespace Engine
 		SAMPLER_FILTER_MAXIMUM_ANISOTROPIC = 0x1d5
 	};
 
-	enum CORE_API ePrimitiveTopologyType
+	enum ENGINE_CORE_API ePrimitiveTopologyType
 	{
 		PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED = 0,
 		PRIMITIVE_TOPOLOGY_TYPE_POINT = 1,
@@ -230,7 +230,7 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_TYPE_PATCH = 4
 	};
 
-	enum CORE_API ePrimitiveTopology
+	enum ENGINE_CORE_API ePrimitiveTopology
 	{
 		PRIMITIVE_TOPOLOGY_UNDEFINED = 0,
 		PRIMITIVE_TOPOLOGY_POINTLIST = 1,
@@ -277,7 +277,7 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST = 64
 	};
 
-	enum CORE_API eResourceFlag
+	enum ENGINE_CORE_API eResourceFlag
 	{
 		RESOURCE_FLAG_NONE = 0,
 		RESOURCE_FLAG_ALLOW_RENDER_TARGET = 0x1,
@@ -293,7 +293,7 @@ namespace Engine
 
 	using eResourceFlags = UINT;
 
-	enum CORE_API eTextureLayout : uint8_t
+	enum ENGINE_CORE_API eTextureLayout : uint8_t
 	{
 		TEX_LAYOUT_UNKNOWN = 0,
 		TEX_LAYOUT_ROW_MAJOR = 1,
@@ -307,7 +307,7 @@ namespace Engine
 		UINT Quality;
 	};
 
-	enum CORE_API eTexType
+	enum ENGINE_CORE_API eTexType
 	{
 		TEX_TYPE_UNKNOWN = -1,
 		TEX_TYPE_1D,
@@ -316,7 +316,7 @@ namespace Engine
 		TEX_TYPE_BUFFER,
 	};
 
-	enum CORE_API eUAVNativeType
+	enum ENGINE_CORE_API eUAVNativeType
 	{
 		UAV_DIMENSION_UNKNOWN = 0,
 		UAV_DIMENSION_BUFFER = 1,
@@ -329,13 +329,13 @@ namespace Engine
 		UAV_DIMENSION_TEXTURE3D = 8
 	};
 
-	enum CORE_API eUAVBufferFlag
+	enum ENGINE_CORE_API eUAVBufferFlag
 	{
 		BUFFER_UAV_FLAG_NONE = 0,
 		BUFFER_UAV_FLAG_RAW = 0x1
 	};
 
-	struct CORE_API BufferUAVDescription
+	struct ENGINE_CORE_API BufferUAVDescription
 	{
 		UINT64 FirstElement;
 		UINT NumElements;
@@ -344,25 +344,25 @@ namespace Engine
 		eUAVBufferFlag Flags;
 	};
 
-	struct CORE_API Tex1dUAVDescription
+	struct ENGINE_CORE_API Tex1dUAVDescription
 	{
 		UINT MipSlice;
 	};
 
-	struct CORE_API Tex1dArrayUAVDescription
+	struct ENGINE_CORE_API Tex1dArrayUAVDescription
 	{
 		UINT MipSlice;
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API Tex2dUAVDescription
+	struct ENGINE_CORE_API Tex2dUAVDescription
 	{
 		UINT MipSlice;
 		UINT PlaneSlice;
 	};
 
-	struct CORE_API Tex2dArrayUAVDescription
+	struct ENGINE_CORE_API Tex2dArrayUAVDescription
 	{
 		UINT MipSlice;
 		UINT FirstArraySlice;
@@ -370,25 +370,25 @@ namespace Engine
 		UINT PlaneSlice;
 	};
 
-	struct CORE_API Tex2dMsUAVDescription
+	struct ENGINE_CORE_API Tex2dMsUAVDescription
 	{
 		UINT UnusedField_NothingToDefine;
 	};
 
-	struct CORE_API Tex2dMsArrayUAVDescription
+	struct ENGINE_CORE_API Tex2dMsArrayUAVDescription
 	{
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API Tex3dUAVDescription
+	struct ENGINE_CORE_API Tex3dUAVDescription
 	{
 		UINT MipSlice;
 		UINT FirstWSlice;
 		UINT WSize;
 	};
 
-	struct CORE_API UAVDescription
+	struct ENGINE_CORE_API UAVDescription
 	{
 		eFormat Format;
 		eUAVNativeType ViewDimension;
@@ -405,36 +405,36 @@ namespace Engine
 		};
 	};
 
-	struct CORE_API BufferRtvDescription
+	struct ENGINE_CORE_API BufferRtvDescription
 	{
 		UINT64 FirstElement;
 		UINT NumElements;
 	};
 
-	struct CORE_API Tex1dRtvDescription
+	struct ENGINE_CORE_API Tex1dRtvDescription
 	{
 		UINT MipSlice;
 	};
 
-	struct CORE_API Tex1dArrayRtvDescription
+	struct ENGINE_CORE_API Tex1dArrayRtvDescription
 	{
 		UINT MipSlice;
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API Tex2dRtvDescription
+	struct ENGINE_CORE_API Tex2dRtvDescription
 	{
 		UINT MipSlice;
 		UINT PlaneSlice;
 	};
 
-	struct CORE_API Tex2dMsRtvDescription
+	struct ENGINE_CORE_API Tex2dMsRtvDescription
 	{
 		UINT UnusedField_NothingToDefine;
 	};
 
-	struct CORE_API Tex2dArrayRtvDescription
+	struct ENGINE_CORE_API Tex2dArrayRtvDescription
 	{
 		UINT MipSlice;
 		UINT FirstArraySlice;
@@ -442,20 +442,20 @@ namespace Engine
 		UINT PlaneSlice;
 	};
 
-	struct CORE_API Tex2dMsArrayRtvDescription
+	struct ENGINE_CORE_API Tex2dMsArrayRtvDescription
 	{
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API Tex3dRtvDescription
+	struct ENGINE_CORE_API Tex3dRtvDescription
 	{
 		UINT MipSlice;
 		UINT FirstWSlice;
 		UINT WSize;
 	};
 
-	enum CORE_API eNativeRtvType
+	enum ENGINE_CORE_API eNativeRtvType
 	{
 		RTV_DIMENSION_UNKNOWN = 0,
 		RTV_DIMENSION_BUFFER = 1,
@@ -468,7 +468,7 @@ namespace Engine
 		RTV_DIMENSION_TEXTURE3D = 8
 	};
 
-	struct CORE_API RtvDescription
+	struct ENGINE_CORE_API RtvDescription
 	{
 		eFormat Format;
 		eNativeRtvType ViewDimension;
@@ -485,50 +485,50 @@ namespace Engine
 		};
 	};
 
-	struct CORE_API Tex1dDsvDescription
+	struct ENGINE_CORE_API Tex1dDsvDescription
 	{
 		UINT MipSlice;
 	};
 
-	struct CORE_API Tex1dArrayDsvDescription
-	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
-	};
-
-	struct CORE_API Tex2dDsvDescription
-	{
-		UINT MipSlice;
-	};
-
-	struct CORE_API Tex2dArrayDsvDescription
+	struct ENGINE_CORE_API Tex1dArrayDsvDescription
 	{
 		UINT MipSlice;
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API Tex2dMsDsvDescription
+	struct ENGINE_CORE_API Tex2dDsvDescription
+	{
+		UINT MipSlice;
+	};
+
+	struct ENGINE_CORE_API Tex2dArrayDsvDescription
+	{
+		UINT MipSlice;
+		UINT FirstArraySlice;
+		UINT ArraySize;
+	};
+
+	struct ENGINE_CORE_API Tex2dMsDsvDescription
 	{
 		UINT UnusedField_NothingToDefine;
 	};
 
-	struct CORE_API Tex2dMsArrayDsvDescription
+	struct ENGINE_CORE_API Tex2dMsArrayDsvDescription
 	{
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
 
-	enum CORE_API eDsvFlag
+	enum ENGINE_CORE_API eDsvFlag
 	{
 		DSV_FLAG_NONE = 0,
 		DSV_FLAG_READ_ONLY_DEPTH = 0x1,
 		DSV_FLAG_READ_ONLY_STENCIL = 0x2
 	};
 
-	enum CORE_API eNativeDsvType
+	enum ENGINE_CORE_API eNativeDsvType
 	{
 		DSV_DIMENSION_UNKNOWN = 0,
 		DSV_DIMENSION_TEXTURE1D = 1,
@@ -539,7 +539,7 @@ namespace Engine
 		DSV_DIMENSION_TEXTURE2DMSARRAY = 6
 	};
 
-	struct CORE_API DsvDescription
+	struct ENGINE_CORE_API DsvDescription
 	{
 		eFormat Format;
 		eNativeDsvType ViewDimension;
@@ -555,13 +555,13 @@ namespace Engine
 		};
 	};
 
-	enum CORE_API eSrvFlag
+	enum ENGINE_CORE_API eSrvFlag
 	{
 		BUFFER_SRV_FLAG_NONE = 0,
 		BUFFER_SRV_FLAG_RAW = 0x1
 	};
 
-	struct CORE_API BufferSrvDescription
+	struct ENGINE_CORE_API BufferSrvDescription
 	{
 		UINT64 FirstElement;
 		UINT NumElements;
@@ -569,14 +569,14 @@ namespace Engine
 		eSrvFlag Flags;
 	};
 
-	struct CORE_API Tex1dSrvDescription
+	struct ENGINE_CORE_API Tex1dSrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API Tex1dArraySrvDescription
+	struct ENGINE_CORE_API Tex1dArraySrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
@@ -585,7 +585,7 @@ namespace Engine
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API Tex2dSrvDescription
+	struct ENGINE_CORE_API Tex2dSrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
@@ -593,7 +593,7 @@ namespace Engine
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API Tex2dArraySrvDescription
+	struct ENGINE_CORE_API Tex2dArraySrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
@@ -603,21 +603,21 @@ namespace Engine
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API Tex3dSrvDescription
+	struct ENGINE_CORE_API Tex3dSrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API TexCubeSrvDescription
+	struct ENGINE_CORE_API TexCubeSrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API TexCubeArraySrvDescription
+	struct ENGINE_CORE_API TexCubeArraySrvDescription
 	{
 		UINT MostDetailedMip;
 		UINT MipLevels;
@@ -626,23 +626,23 @@ namespace Engine
 		FLOAT ResourceMinLODClamp;
 	};
 
-	struct CORE_API Tex2dMsSrvDescription
+	struct ENGINE_CORE_API Tex2dMsSrvDescription
 	{
 		UINT UnusedField_NothingToDefine;
 	};
 
-	struct CORE_API Tex2dMsArraySrvDescription
+	struct ENGINE_CORE_API Tex2dMsArraySrvDescription
 	{
 		UINT FirstArraySlice;
 		UINT ArraySize;
 	};
 
-	struct CORE_API AccelStructSrvDescription
+	struct ENGINE_CORE_API AccelStructSrvDescription
 	{
 		uint64_t Location; //todo: address type;
 	};
 
-	enum CORE_API eNativeSrvType
+	enum ENGINE_CORE_API eNativeSrvType
 	{
 		SRV_DIMENSION_UNKNOWN = 0,
 		SRV_DIMENSION_BUFFER = 1,
@@ -658,7 +658,7 @@ namespace Engine
 		SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE = 11
 	};
 
-	struct CORE_API SrvDescription
+	struct ENGINE_CORE_API SrvDescription
 	{
 		eFormat Format;
 		eNativeSrvType ViewDimension;
@@ -679,7 +679,7 @@ namespace Engine
 		};
 	};
 
-	struct CORE_API GenericTextureDescription
+	struct ENGINE_CORE_API GenericTextureDescription
 	{
 		eTexType				 Dimension = TEX_TYPE_UNKNOWN;
 		UINT64                   Alignment = 0;
@@ -701,7 +701,7 @@ namespace Engine
 		UAVDescription			 Uav{};
 	};
 
-	struct CORE_API PrimitiveTexture
+	struct ENGINE_CORE_API PrimitiveTexture
 	{
 		virtual      ~PrimitiveTexture() = default;
 		virtual void Generate(Resources::Texture* texture) = 0;
@@ -750,7 +750,7 @@ namespace Engine
 		void* m_texture_ = nullptr;
 	};
 
-	struct CORE_API GraphicPrimitiveShader
+	struct ENGINE_CORE_API GraphicPrimitiveShader
 	{
 	public:
 		virtual             ~GraphicPrimitiveShader() = default;
@@ -780,7 +780,7 @@ namespace Engine
 		void* m_sampler_ = nullptr;
 	};
 
-	struct CORE_API ComputePrimitiveShader
+	struct ENGINE_CORE_API ComputePrimitiveShader
 	{
 	public:
 		virtual      ~ComputePrimitiveShader() = default;
@@ -796,7 +796,7 @@ namespace Engine
 	};
 
 #if CFG_RAYTRACING
-	struct CORE_API AccelStructBuffer
+	struct ENGINE_CORE_API AccelStructBuffer
 	{
 		Unique<GraphicMemoryPool> instanceDescPool;
 		Unique<GraphicMemoryPool> resultPool;
@@ -806,7 +806,7 @@ namespace Engine
 	};
 #endif
 
-	struct CORE_API PrimitiveMesh
+	struct ENGINE_CORE_API PrimitiveMesh
 	{
 		virtual      ~PrimitiveMesh() = default;
 		virtual void Generate(const Resources::Mesh* mesh) = 0;
@@ -834,7 +834,7 @@ namespace Engine
 		void* m_index_buffer_ = nullptr;
 	};
 
-	struct CORE_API CommandListBase
+	struct ENGINE_CORE_API CommandListBase
 	{
 		virtual ~CommandListBase() = default;
 		virtual void SoftReset() = 0;
@@ -844,7 +844,7 @@ namespace Engine
 
 	struct GraphicInterfaceContextPrimitive;
 	
-	struct CORE_API GraphicHeapBase
+	struct ENGINE_CORE_API GraphicHeapBase
 	{
 		virtual ~GraphicHeapBase() = default;
 
@@ -855,15 +855,19 @@ namespace Engine
 		
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
+
+		virtual void* GetNativeHeap() = 0;
+		virtual void* GetNativeCPUHandle() = 0;
+		virtual void* GetNativeGPUHandle() = 0;
 	};
 
-	struct CORE_API GraphicInterfaceContextPrimitive
+	struct ENGINE_CORE_API GraphicInterfaceContextPrimitive
 	{
 		CommandListBase* commandList;
 		GraphicHeapBase* heap;
 	};
 
-	struct CORE_API GraphicResourcePrimitive
+	struct ENGINE_CORE_API GraphicResourcePrimitive
 	{
 	public:
 		virtual ~GraphicResourcePrimitive() = default;
@@ -889,7 +893,7 @@ namespace Engine
 		void* m_resource_ = nullptr;
 	};
 
-	struct CORE_API GraphicInterfaceContextReturnType
+	struct ENGINE_CORE_API GraphicInterfaceContextReturnType
 	{
 		GraphicInterfaceContextReturnType(const Weak<CommandListBase>& cmd, Unique<GraphicHeapBase>&& heap)
 		{
@@ -915,7 +919,7 @@ namespace Engine
 		Unique<GraphicHeapBase> heap;
 	};
 
-	class CORE_API ConstantBufferTypelessBase
+	class ENGINE_CORE_API ConstantBufferTypelessBase
 	{
 	public:
 		virtual ~ConstantBufferTypelessBase() = default;
@@ -969,7 +973,7 @@ namespace Engine
 		Unique<ConstantBufferTypelessBase> m_base_;
 	};
 
-	class CORE_API StructuredBufferTypelessBase
+	class ENGINE_CORE_API StructuredBufferTypelessBase
 	{
 	public:
 		virtual ~StructuredBufferTypelessBase() = default;
@@ -1066,7 +1070,7 @@ namespace Engine
 		Unique<StructuredBufferTypelessBase> m_base_;
 	};
 
-	struct CORE_API GraphicInterface
+	struct ENGINE_CORE_API GraphicInterface
 	{
 		virtual      ~GraphicInterface() = default;
 		
@@ -1130,7 +1134,7 @@ namespace Engine
 		virtual ConstantBufferTypelessBase* GetNativeConstantBuffer() = 0;
 	};
 
-	struct CORE_API GraphicInterfaceAccessor
+	struct ENGINE_CORE_API GraphicInterfaceAccessor
 	{
 	public:
 		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>)
@@ -1259,7 +1263,7 @@ namespace Engine
 		size_t                                        m_read_offset_{};
 	};
 
-	class CORE_API GraphicMemoryPool
+	class ENGINE_CORE_API GraphicMemoryPool
 	{
 	public:
 		GraphicMemoryPool()

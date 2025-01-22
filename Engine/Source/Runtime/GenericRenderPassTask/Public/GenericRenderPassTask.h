@@ -10,14 +10,14 @@
 
 namespace Engine 
 {
-	struct GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
+	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
 	{
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
 	};
 
-	struct GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
+	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
 		GenericRenderPassTask() = default;
 		GenericRenderPassTask& operator=(GenericRenderPassTask&) = delete;

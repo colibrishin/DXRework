@@ -78,8 +78,8 @@ public abstract class CommonProject : Project
             conf.ExportDefines.Remove(emptyAPIString);
             conf.Defines.Remove(emptyAPIString);
 
-            conf.ExportDefines.Add(Name.ToUpper() + "_API=DLLIMPORT");
-            conf.Defines.Add(Name.ToUpper() + "_API=DLLEXPORT");
+            conf.ExportDefines.Add("ENGINE_" + Name.ToUpper() + "_API=DLLIMPORT");
+            conf.Defines.Add("ENGINE_" + Name.ToUpper() + "_API=DLLEXPORT");
         }
         else
         {
@@ -173,7 +173,6 @@ public abstract class CommonProject : Project
 
         {
             conf.Defines.Add("NOMINMAX=1");
-            conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
             conf.Defines.Add("USE_DX12");
             //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 

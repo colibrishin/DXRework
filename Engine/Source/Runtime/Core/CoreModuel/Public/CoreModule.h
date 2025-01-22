@@ -17,6 +17,7 @@ using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 		} \
 	}
 
+UPDATE_CALL_TEMPLATE(OnUIUpdate);
 UPDATE_CALL_TEMPLATE(PreUpdate)
 UPDATE_CALL_TEMPLATE(Update)
 UPDATE_CALL_TEMPLATE(PostUpdate)
@@ -34,16 +35,17 @@ namespace Engine
 
 	struct CoreModule;
 
-	struct CORE_API CoreLoop
+	struct ENGINE_CORE_API CoreLoop
 	{
-		enum CORE_API eLoopType
+		enum ENGINE_CORE_API eLoopType
 		{
-			LOOP_TYPE_LOGIC,
 			LOOP_TYPE_RENDER,
+			LOOP_TYPE_LOGIC,
 			LOOP_TYPE_PHYSICS,
 			LOOP_TYPE_MAX
 		};
-		
+
+		void OnUIUpdate(const float dt) const;
 		void PreUpdate(const float dt) const;
 		void Update(const float dt) const;
 		void PostUpdate(const float dt) const;
@@ -91,7 +93,7 @@ namespace Engine
 		std::vector<Abstracts::SingletonBase&(*)()> m_singleton_accessor_[LOOP_TYPE_MAX];
 	};
 	
-	struct CORE_API CoreModule : public IModule
+	struct ENGINE_CORE_API CoreModule : public IModule
 	{
 		void Initialize() override
 		{

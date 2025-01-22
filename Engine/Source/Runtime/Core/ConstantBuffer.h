@@ -13,7 +13,7 @@ namespace Engine
 
 	namespace Graphics::CBs 
 	{
-		struct CORE_API PerspectiveCB
+		struct ENGINE_CORE_API PerspectiveCB
 		{
 			CB_T(CB_TYPE_WVP)
 
@@ -28,14 +28,14 @@ namespace Engine
 			Matrix reflectView;
 		};
 
-		struct CORE_API ParamCB : public ParamBase
+		struct ENGINE_CORE_API ParamCB : public ParamBase
 		{
 			CB_T(CB_TYPE_PARAM)
 		};
 
 		static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
 
-		struct CORE_API ViewportCB
+		struct ENGINE_CORE_API ViewportCB
 		{
 			RT_CB_T(RAYTRACING_CB_VIEWPORT)
 			Vector2 resolution;

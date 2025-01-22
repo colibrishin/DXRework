@@ -218,7 +218,7 @@ namespace Engine::Components
 {
 	using namespace DirectX;
 
-	class CORE_API Collider final : public Engine::Abstracts::Component
+	class ENGINE_CORE_API Collider final : public Engine::Abstracts::Component
 	{
 	public:
 		COMPONENT_T(COM_T_COLLIDER);

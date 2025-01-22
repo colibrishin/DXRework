@@ -8,7 +8,7 @@
 
 namespace Engine::Managers
 {
-	class INPUTMANAGER_API InputManager : public Abstracts::Singleton<InputManager>
+	class ENGINE_INPUTMANAGER_API InputManager : public Abstracts::Singleton<InputManager>
 	{
 	public:
 		InputManager(SINGLETON_LOCK_TOKEN)

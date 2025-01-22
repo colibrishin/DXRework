@@ -11,7 +11,7 @@ DEFINE_DELEGATE(OnMaterialChange, Engine::Weak<Engine::Resources::Material>)
 
 namespace Engine 
 {
-	enum RENDERCOMPONENT_API eRenderComponentType : uint8_t
+	enum ENGINE_RENDERCOMPONENT_API eRenderComponentType : uint8_t
 	{
 		RENDER_COM_T_UNK = 0,
 		RENDER_COM_T_MODEL,
@@ -21,7 +21,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	class RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
+	class ENGINE_RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
 	{
 	public:
 		COMPONENT_T(COM_T_RENDERER)

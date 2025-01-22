@@ -5,7 +5,7 @@
 
 namespace Engine::Abstracts
 {
-	class CORESINGLETON_API SingletonBase : public Abstracts::Renderable
+	class ENGINE_CORESINGLETON_API SingletonBase : public Abstracts::Renderable
 	{
 	public:
 		SingletonBase();
@@ -48,6 +48,7 @@ namespace Engine::Abstracts
 		}
 
 		virtual void Initialize() = 0;
+		void OnUIUpdate(const float dt) override {}
 
 		void OnSerialized() final {}
 		void OnDeserialized() final {}

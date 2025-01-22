@@ -2,12 +2,11 @@
 #include <memory>
 #include "RenderType.h"
 #include "Source/Runtime/Core/GraphicInterface.h"
-#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine 
 {
-	struct RENDERPIPELINE_API RenderInstanceTask
+	struct ENGINE_RENDERPIPELINE_API RenderInstanceTask
 	{
 		virtual      ~RenderInstanceTask() = default;
 		virtual void Run(Scene const* scene, RenderMap* render_map, const size_t map_size, std::atomic<uint64_t>& instance_count) = 0;
@@ -17,7 +16,7 @@ namespace Engine
 	struct RenderPassTask;
 	using ContextSetupFunction = std::function<void(const GraphicInterfaceContextPrimitive*)>;
 
-	struct RENDERPIPELINE_API RenderPassTask
+	struct ENGINE_RENDERPIPELINE_API RenderPassTask
 	{
 		virtual      ~RenderPassTask() = default;
 		virtual void Run(

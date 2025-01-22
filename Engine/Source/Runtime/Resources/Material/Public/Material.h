@@ -9,7 +9,7 @@
 
 namespace Engine::Graphics::SBs 
 {
-	struct MATERIAL_API MaterialBindFlag
+	struct ENGINE_MATERIAL_API MaterialBindFlag
 	{
 		OffsetT<int> tex[CFG_PER_PARAM_BUFFER_SIZE];
 		OffsetT<int> texArr[CFG_PER_PARAM_BUFFER_SIZE];
@@ -18,7 +18,7 @@ namespace Engine::Graphics::SBs
 		OffsetT<int> atlas;
 	};
 
-	struct MATERIAL_API MaterialSB
+	struct ENGINE_MATERIAL_API MaterialSB
 	{
 		SB_T(SB_TYPE_MATERIAL)
 		MaterialBindFlag flags;
@@ -37,7 +37,7 @@ namespace Engine::Graphics::SBs
 
 namespace Engine::Resources
 {
-	class MATERIAL_API Material final : public Engine::Abstracts::Resource
+	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_MTR)

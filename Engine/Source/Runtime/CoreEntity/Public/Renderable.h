@@ -4,7 +4,7 @@
 
 namespace Engine::Abstracts
 {
-	class COREENTITY_API Renderable : public Entity
+	class ENGINE_COREENTITY_API Renderable : public Entity
 	{
 	public:
 		virtual void PreRender(const float dt) = 0;

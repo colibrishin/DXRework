@@ -3,7 +3,7 @@
 
 namespace Engine::Physics 
 {
-	struct RAYCASTEXTENSION_API RaycastExtension
+	struct ENGINE_RAYCASTEXTENSION_API RaycastExtension
 	{
 		static bool Intersects(const Weak<Components::Collider>& collider, const Vector3& start, const Vector3& dir, float distance, float& intersection);
 
