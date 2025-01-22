@@ -10,10 +10,17 @@ lazy_static!{
 
 fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
 {
-    let mut add_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-    add_proc.current_dir(intermediate_path).args(["add", "."]).status().expect("git add failed");
-    let mut commit_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-    commit_proc.current_dir(intermediate_path).args(["commit", "-m", "\"Auto commit\""]).status().expect("git commit failed");
+    let command_to_run = vec![
+        vec!["config", "user.name", "header-parser"],
+        vec!["config", "user.email", "fake@localhost"], 
+        vec!["add", "."], 
+        vec!["commit", "-m", "\"Auto commit\""]];
+    
+    for command in command_to_run 
+    {
+        let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+        git_proc.current_dir(intermediate_path).args(command).status().expect("commit failed");
+    }
 }
 
 fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path)
