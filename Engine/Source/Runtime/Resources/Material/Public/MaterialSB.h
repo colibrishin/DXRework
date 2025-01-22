@@ -10,24 +10,23 @@ namespace Engine::Graphics::SBs
     {
         GENERATE_BODY
         SB_T(SB_TYPE_MATERIAL)
-        MaterialBindFlag flags;
 
         EPROPERTY()
-        float specularPower;
+        float specularPower = 100.f;
         EPROPERTY()
-        float reflectionTranslation;
+        float reflectionTranslation = 0.5f;
         EPROPERTY()
-        float reflectionScale;
+        float reflectionScale = 0.15f;
         EPROPERTY()
-        float refractionScale;
+        float refractionScale = 0.15f;
 
         EPROPERTY()
         Color        overrideColor;
         EPROPERTY()
-        Color        specularColor;
+        Color        specularColor = {1.f, 1.f, 1.f, 1.f};
         EPROPERTY()
-        Vector4      clipPlane;
+        Vector4      clipPlane = {0.f, 0.f, 0.f, 0.f};
         EPROPERTY()
-        OffsetT<int> repeatTexture;
+        OffsetT<int> repeatTexture = false;
     };
 }

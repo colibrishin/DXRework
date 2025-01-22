@@ -46,7 +46,7 @@ namespace Engine::Resources
 			*parent += ui.NewListBox({ "Mesh List", 0, 0 });
 			*parent |= ui.NewDragAndDropTarget({ "RESOURCE", [&](void* ptr)
 				{
-					if (auto casted = static_cast<Strong<Abstracts::Resource>*>(ptr))
+					if (auto casted = static_cast<Strong<Resource>*>(ptr))
 					{
 						if ((*casted)->IsBaseOf(Mesh::StaticTypeHash())) 
 						{
@@ -77,15 +77,12 @@ namespace Engine::Resources
 
 			if (m_ui_add_ui_opened_) 
 			{
-				if (std::vector<Weak<Abstracts::Resource>> resources_to_load;
+				if (std::vector<Weak<Resource>> resources_to_load;
 					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resources_to_load))
 				{
 					for (const Weak<Resource>& resource : resources_to_load)
 					{
-						if (const Strong<Resource>& locked = resource.lock())
-						{
-							Add(locked);
-						}
+						Add(resource);
 					}
 
 					m_ui_add_ui_opened_ = false;
@@ -172,6 +169,66 @@ namespace Engine::Resources
 				m_cached_vertices_.push_back(vertex);
 			}
 		}
+
+		BoundingBox::CreateFromPoints(
+			m_bounding_box_,
+			m_cached_vertices_.size(),
+			reinterpret_cast<const Vector3*>(m_cached_vertices_.data()),
+			sizeof(VertexElement));
+
+		std::map<UINT, std::vector<Vector3>> bone_vertices;
+
+		for (const auto& vertex : m_cached_vertices_)
+		{
+			for (const auto& idx : vertex.boneElement.GetIndices())
+			{
+				const auto unique = std::ranges::find_if
+				(
+					bone_vertices[idx],
+					[vertex](const Vector3& v)
+					{
+						return MathExtension::FloatCompare(v.x, vertex.position.x) &&
+							MathExtension::FloatCompare(v.y, vertex.position.y) &&
+							MathExtension::FloatCompare(v.z, vertex.position.z);
+					}
+				);
+
+				if (unique != bone_vertices[idx].end())
+				{
+					continue;
+				}
+
+				bone_vertices[idx].push_back(vertex.position);
+			}
+		}
+
+		for (const auto& [idx, vertices] : bone_vertices)
+		{
+			BoundingOrientedBox::CreateFromPoints
+			(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
+		}
+	}
+
+	void Shape::Add(const Weak<Resource>& res)
+	{
+		if (res.expired())
+		{
+			return;
+		}
+
+		const Strong<Resource>& locked = res.lock();
+		if (Mesh::StaticIsBaseOf(locked->GetTypeHash()))
+		{
+			addMeshImpl(boost::reinterpret_pointer_cast<Mesh>(locked));
+		}
+		else if (Bone::StaticIsBaseOf(locked->GetTypeHash()))
+		{
+			addBoneImpl(boost::reinterpret_pointer_cast<Bone>(locked));
+		}
+		else if (AnimationTexture::StaticIsBaseOf(locked->GetTypeHash()))
+		{
+			addAnimationImpl(boost::reinterpret_pointer_cast<AnimationTexture>(locked));
+		}
 	}
 
 	void Shape::Load_INTERNAL()
@@ -183,28 +240,22 @@ namespace Engine::Resources
 				if (const auto mesh = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Mesh>
 						(m_mesh_paths_[i]).lock())
 				{
-					m_meshes_.push_back(mesh);
+					Add(mesh);
 				}
 			}
 
 			if (const auto bone = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Bone>
 					(m_bone_path_).lock())
 			{
-				m_bone_ = bone;
+				Add(bone);
 			}
 
 			if (const auto anims = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AnimationTexture>
 					(m_animations_path_).lock())
 			{
-				m_animations_ = anims;
-				
-				for (const auto& animation : m_animations_->GetAnimations()) 
-				{
-					m_animation_catalog_.push_back(animation->GetName());
-				}
+				Add(anims);
 			}
 
-			UpdateVertices();
 			return;
 		}
 
@@ -238,8 +289,6 @@ namespace Engine::Resources
 		if (scene->HasMeshes())
 		{
 			const unsigned shape_count = scene->mNumMeshes;
-
-			std::vector<Vector3> total_vertices;
 
 			for (unsigned i = 0; i < shape_count; ++i)
 			{
@@ -321,7 +370,6 @@ namespace Engine::Resources
 					);
 
 					shape.emplace_back(vtx);
-					total_vertices.push_back({ vec.x, vec.y, vec.z });
 				}
 
 				for (unsigned j = 0; j < f_count; ++j)
@@ -388,61 +436,18 @@ namespace Engine::Resources
 						bone_map[bone_name] = bone_info;
 					}
 
-					auto bone = boost::make_shared<Bone>(bone_map);
-					bone->SetName(mesh_lookup_name + "_BONE");
-					Managers::ResourceManager::GetInstance().AddResource(bone);
-					bone->Load();
-					m_bone_path_ = bone->GetMetadataPath().generic_string();
-					m_bone_ = bone;
+					const Strong<Bone>& bone = Bone::Create(mesh_lookup_name + "_BONE", bone_map);
+					Add(bone);
 				}
 
-				auto mesh = boost::make_shared<Resources::Mesh>(shape, indices);
-				mesh->SetName(mesh_lookup_name);
-				mesh->Load();
-				Managers::ResourceManager::GetInstance().AddResource(mesh);
-				m_meshes_.push_back(mesh);
+				const Strong<Mesh>& mesh = Mesh::Create(mesh_lookup_name, shape, indices);
+				Add(mesh);
 			}
-
-			std::map<UINT, std::vector<Vector3>> bone_vertices;
-
-			for (const auto& mesh : m_meshes_)
-			{
-				for (const auto& vertex : mesh->GetVertexCollection())
-				{
-					for (const auto& idx : vertex.boneElement.GetIndices())
-					{
-						const auto unique = std::ranges::find_if
-						(
-							bone_vertices[idx],
-							[vertex](const Vector3& v)
-							{
-								return MathExtension::FloatCompare(v.x, vertex.position.x) &&
-									MathExtension::FloatCompare(v.y, vertex.position.y) &&
-									MathExtension::FloatCompare(v.z, vertex.position.z);
-							}
-						);
-
-						if (unique != bone_vertices[idx].end())
-						{
-							continue;
-						}
-
-						bone_vertices[idx].push_back(vertex.position);
-					}
-				}
-			}
-
-			for (const auto& [idx, vertices] : bone_vertices)
-			{
-				BoundingOrientedBox::CreateFromPoints
-				(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
-			}
-
-			std::vector<Strong<BoneAnimation>> animations;
 
 			if (scene->HasAnimations())
 			{
-				const unsigned animation_count = scene->mNumAnimations;
+				std::vector<Strong<BoneAnimation>> animations;
+				const unsigned                     animation_count = scene->mNumAnimations;
 
 				for (unsigned j = 0; j < animation_count; ++j)
 				{
@@ -519,42 +524,22 @@ namespace Engine::Resources
 						animation.Add(bone_name.C_Str(), bone_animation);
 					}
 
-					const auto anim = boost::make_shared<BoneAnimation>(animation);
-					anim->SetName(anim_name + "_ANIM");
-					anim->BindBone(m_bone_);
-					anim->Load();
+					const Strong<BoneAnimation>& anim = BoneAnimation::Create(anim_name + "_ANIM", animation);
 					m_animation_catalog_.push_back(anim_name + "_ANIM");
 					animations.push_back(anim);
 				}
-
-				// Sorts animations by name for consistency of the index of animation.
-				std::ranges::sort(m_animation_catalog_);
-				std::ranges::sort
-				(
-					animations
-					, [](const Strong<BoneAnimation>& lhs, const Strong<BoneAnimation>& rhs)
-					{
-						return lhs->GetName() < rhs->GetName();
-					}
-				);
 
 				for (const auto& anim : animations)
 				{
 					Managers::ResourceManager::GetInstance().AddResource(anim);
 				}
 
-				const auto anims = boost::make_shared<AnimationTexture>(animations);
-				anims->SetName(GetName() + "_ANIMS");
-				anims->Load();
-				Managers::ResourceManager::GetInstance().AddResource(anims);
-				m_animations_path_ = anims->GetMetadataPath().generic_string();
-				m_animations_ = anims;
+				const Strong<AnimationTexture>& anims = AnimationTexture::Create(GetName() + "_ANIMS", animations);
+				Add(anims);
 			}
 
 			UpdateVertices();
-
-			BoundingBox::CreateFromPoints
-			(m_bounding_box_, total_vertices.size(), total_vertices.data(), sizeof(Vector3));
+			
 			//m_bounding_box_.Transform(m_bounding_box_, AiMatrixToDirectXTranspose(scene->mRootNode->mTransformation));
 		}
 		else
@@ -576,4 +561,43 @@ namespace Engine::Resources
 	Shape::Shape()
 		: Resource(""),
 		  m_bounding_box_({}) {}
+
+	void Shape::addMeshImpl(const Strong<Mesh>& res)
+	{
+		m_meshes_.push_back(res);
+		
+		m_bounding_box_.Center  = {0, 0, 0};
+		m_bounding_box_.Extents = {0, 0, 0};
+				
+		for (const auto& mesh : m_meshes_)
+		{
+			const BoundingOrientedBox& obb = mesh->GetBoundingBox();
+			BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
+		}
+		
+		m_mesh_paths_.push_back(res->GetMetadataPath().generic_string());
+		UpdateVertices();
+	}
+	
+	void Shape::addAnimationImpl(const Strong<AnimationTexture>& res)
+	{
+		m_animations_      = res;
+		m_animations_path_ = res->GetMetadataPath().generic_string();
+		m_animation_catalog_.clear();
+		m_animation_catalog_.reserve(m_animations_->GetAnimations().size());
+
+		for (const auto& animation : m_animations_->GetAnimations())
+		{
+			m_animation_catalog_.push_back(animation->GetName());
+		}
+		
+		// Sorts animations by name for consistency of the index of animation.
+		std::ranges::sort(m_animation_catalog_, [](const std::string& lhs, const std::string& rhs){return lhs < rhs;});
+	}
+	
+	void Shape::addBoneImpl(const Strong<Bone>& res)
+	{
+		m_bone_      = res;
+		m_bone_path_ = res->GetMetadataPath().generic_string();
+	}
 }

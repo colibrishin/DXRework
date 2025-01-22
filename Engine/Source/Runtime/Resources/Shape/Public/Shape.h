@@ -37,7 +37,7 @@ namespace Engine::Resources
 		[[nodiscard]] const std::vector<std::string>&            GetAnimationCatalog() const;
 		[[nodiscard]] const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
-		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
+		template <typename T> requires (std::is_base_of_v<Resource, T> && !std::is_same_v<Resource, T>)
 		void Add(const Weak<T>& res)
 		{
 			if (res.expired())
@@ -45,44 +45,23 @@ namespace Engine::Resources
 				return;
 			}
 
+			const Strong<T>& locked = res.lock();
+			
 			if constexpr (Mesh::StaticIsBaseOf(T::StaticTypeHash()))
 			{
-				m_meshes_.push_back(res.lock());
-
-				m_bounding_box_.Center  = Vector3::Zero;
-				m_bounding_box_.Extents = Vector3::Zero;
-				
-				for (const auto& mesh : m_meshes_)
-				{
-					const BoundingOrientedBox& obb = mesh->GetBoundingBox();
-					BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
-				}
-
-				m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());
+				addMeshImpl(locked);
 			}
 			else if constexpr (Bone::StaticIsBaseOf(T::StaticTypeHash()))
 			{
-				m_bone_      = res.lock();
-				m_bone_path_ = res.lock()->GetMetadataPath().generic_string();
+				addBoneImpl(locked);
 			}
 			else if constexpr (AnimationTexture::StaticIsBaseOf(T::StaticTypeHash()))
 			{
-				m_animations_      = res.lock();
-				m_animations_path_ = res.lock()->GetMetadataPath().generic_string();
-				m_animation_catalog_.clear();
-
-				for (const auto& animation : m_animations_->GetAnimations())
-				{
-					m_animation_catalog_.push_back(animation->GetName());
-				}
+				addAnimationImpl(locked);
 			}
-			else
-			{
-				static_assert("Invalid resource type");
-			}
-
-			UpdateVertices();
 		}
+
+		void Add(const Weak<Resource>& res);
 
 	protected:
 		void Load_INTERNAL() override;
@@ -92,9 +71,9 @@ namespace Engine::Resources
 		friend class Managers::Renderer;
 		Shape();
 
-		void addMesh(const Strong<Mesh>& res);
-		void addAnimation(const Strong<AnimationTexture>& res);
-		void addBone(const Strong<Bone>& res);
+		void addMeshImpl(const Strong<Mesh>& res);
+		void addAnimationImpl(const Strong<AnimationTexture>& res);
+		void addBoneImpl(const Strong<Bone>& res);
 
 		void UpdateVertices();
 

@@ -1,12 +1,12 @@
 #pragma once
 #include "TypeLibrary/Public/TypeLibrary.h"
 
-#include "MaterialBindFlag.generated.h"
+#include "ShapeInstanceBindFlag.generated.h"
 
 namespace Engine::Graphics::SBs 
 {
     ECLASS(serialize)
-    struct ENGINE_MATERIAL_API MaterialBindFlag
+    struct ENGINE_MATERIAL_API ShapeInstanceBindFlag
     {
         GENERATE_BODY
         
