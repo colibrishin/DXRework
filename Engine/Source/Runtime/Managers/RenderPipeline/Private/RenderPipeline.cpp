@@ -215,12 +215,14 @@ MODULE_IMPL(Engine::RenderPipelineModule, RenderPipeline)
 void Engine::RenderPipelineModule::Initialize()
 {
 	CoreModule::GetContext().AddManager(
+		CoreLoop::LOOP_TYPE_RENDER,
 		&Managers::RenderPipeline::GetInstance,
 		&Managers::Renderer::GetInstance);
 }
 void Engine::RenderPipelineModule::Shutdown()
 {
 	CoreModule::GetContext().RemoveManager(
+		CoreLoop::LOOP_TYPE_RENDER,
 		&Managers::RenderPipeline::GetInstance,
 		&Managers::Renderer::GetInstance);
 }

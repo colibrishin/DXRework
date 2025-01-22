@@ -141,7 +141,24 @@ namespace Engine::Managers
 #endif
 	}
 
-	ModuleManager::~ModuleManager() = default;
+	ModuleManager::~ModuleManager()
+	{
+		for (auto& ptr : m_module_loaded_ | std::views::values)
+		{
+			if (ptr->m_module_)
+			{
+				ptr->m_module_.reset();
+			}
+			
+			if (ptr->m_handle_)
+			{
+				FreeLibrary(static_cast<HMODULE>(ptr->m_handle_));
+			}
+
+			ptr.reset();
+		}
+	}
+	
 	void ModuleManager::PreUpdate(const float dt) {}
 	void ModuleManager::FixedUpdate(const float dt) {}
 	void ModuleManager::Update(const float dt) {}

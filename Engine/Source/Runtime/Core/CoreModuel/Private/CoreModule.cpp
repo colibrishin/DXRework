@@ -7,35 +7,56 @@ Engine::CoreLoop Engine::CoreModule::s_core_module = {};
 
 void Engine::CoreLoop::PreUpdate(const float dt) const
 {
-	DoPreUpdate(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoPreUpdate(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::Update(const float dt) const
 {
-	DoUpdate(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoUpdate(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::PostUpdate(const float dt) const
 {
-	DoPostUpdate(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoPostUpdate(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::FixedUpdate(const float dt) const
 {
-	DoFixedUpdate(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoFixedUpdate(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::PreRender(const float dt) const
 {
-	DoPreRender(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoPreRender(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::Render(const float dt) const
 {
-	DoRender(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoRender(dt, singletons);	
+	}
 }
 
 void Engine::CoreLoop::PostRender(const float dt) const
 {
-	DoPostRender(dt, m_singleton_accessor_);
+	for (const auto& singletons : m_singleton_accessor_)
+	{
+		DoPostRender(dt, singletons);	
+	}
 }

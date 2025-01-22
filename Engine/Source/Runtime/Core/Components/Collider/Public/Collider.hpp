@@ -1,5 +1,7 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <set>
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
@@ -18,6 +20,199 @@ namespace physx
 
 DEFINE_DELEGATE(OnCollisionEnter, Engine::Weak<Engine::Components::Collider>);
 DEFINE_DELEGATE(OnCollisionEnd, Engine::Weak<Engine::Components::Collider>);
+
+namespace Engine
+{
+	template <size_t Longitutde = 16, size_t Latitudue = 16>
+	struct SphereGenerator
+	{
+	private:
+		static constexpr IndexCollection GenerateIndices()
+		{
+			IndexCollection indices;
+			
+			/*
+			*  Indices
+			*  k1--k1+1
+			*  |  / |
+			*  | /  |
+			*  k2--k2+1
+			*/
+			unsigned int k1, k2;
+			for(int i = 0; i < Latitudue; ++i)
+			{
+				k1 = i * (Longitutde + 1);
+				k2 = k1 + Longitutde + 1;
+				// 2 Triangles per latitude block excluding the first and last longitudes blocks
+				for (int j = 0; j < Longitutde; ++j, ++k1, ++k2)
+				{
+					if (i != 0)
+					{
+						indices.push_back(k1);
+						indices.push_back(k2);
+						indices.push_back(k1 + 1);
+					}
+
+					if (i != (Latitudue - 1))
+					{
+						indices.push_back(k1 + 1);
+						indices.push_back(k2);
+						indices.push_back(k2 + 1);
+					}
+				}
+			}
+
+			return indices;
+		}
+		
+		static constexpr VertexCollection GenerateSphereSmooth()
+		{
+			float radius = 1;
+			
+			VertexCollection collection;
+			float lengthInv = 1.0f / radius;    // normal
+
+			// Generate vertices
+			for (int lat = 0; lat <= Latitudue; ++lat)
+			{
+				float theta = lat * M_PI / Latitudue; // Polar angle
+				float sinTheta = std::sin(theta);
+				float cosTheta = std::cos(theta);
+
+				for (int lon = 0; lon <= Longitutde; ++lon)
+				{
+					float phi = (float)lon * 2.0f * M_PI / Longitutde; // Azimuthal angle
+					float sinPhi = std::sin(phi);
+					float cosPhi = std::cos(phi);
+
+					// Calculate vertex position
+					float x = sinTheta * cosPhi;
+					float y = cosTheta;
+					float z = sinTheta * sinPhi;
+					
+					float u = (float)lon/Longitutde;
+					float v = (float)lat/Latitudue;
+
+					// normalized vertex normal
+					float nx = x * lengthInv;
+					float ny = y * lengthInv;
+					float nz = z * lengthInv;
+
+					// Normal is the same as position for unit sphere
+					collection.push_back(Graphics::VertexElement(
+						Vector3(x, y, z),
+						Color(0.f, 0.f, 0.f, 1.f),
+						Vector2(u, v),
+						Vector3(nx, ny, nz),
+						Vector3(0.f, 0.f, 0.f),
+						Vector3(0.f, 0.f, 0.f),
+						Graphics::VertexBoneElement()));
+				}
+			}
+
+		    return collection;
+		}
+		
+	public:
+		static constexpr uint64_t s_vertices_count = (Latitudue + 1) * (Longitutde + 1);
+		static constexpr uint64_t s_indices_count = 6 * (Latitudue * Longitutde);
+		
+		static constexpr IndexCollection GetSphereIndices()
+		{
+			return GenerateIndices();
+		}
+
+		static constexpr VertexCollection GetSphereVertices()
+		{
+			return GenerateSphereSmooth();
+		}
+	};
+
+	struct CubeGenerator
+	{
+	private:
+		static constexpr Vector3 vertices[8] =
+		{
+			{-1, -1, -1},
+			{1, -1, -1},
+			{1, 1, -1},
+			{-1, 1, -1},
+			{-1, -1, 1},
+			{1, -1, 1},
+			{1, 1, 1},
+			{-1, 1, 1}
+		};
+
+		static constexpr Vector2 texCoords[4] =
+		{
+			{0, 0},
+			{1, 0},
+			{1, 1},
+			{0, 1}
+		};
+
+		static constexpr Vector3 normals[6] =
+		{
+			{0, 0, 1},
+			{1, 0, 0},
+			{0, 0, -1},
+			{-1, 0, 0},
+			{0, 1, 0},
+			{0, -1, 0}
+		};
+
+		static constexpr IndexCollection stock_indices =
+		{
+			0, 1, 3, 3, 1, 2,
+			1, 5, 2, 2, 5, 6,
+			5, 4, 6, 6, 4, 7,
+			4, 0, 7, 7, 0, 3,
+			3, 2, 7, 7, 2, 6,
+			4, 5, 0, 0, 5, 1
+		};
+
+		static constexpr uint32_t texInds[6] = {0, 1, 3, 3, 1, 2};
+
+		static constexpr VertexCollection GenerateCubeVertices()
+		{
+			VertexCollection collection(36);
+			const IndexCollection cube_indices = GetCubeIndices();
+
+			for (size_t i = 0; i < 36; ++i)
+			{
+				collection[i] = Graphics::VertexElement
+				(
+					vertices[cube_indices[i]],
+					{0.f, 0.f, 0.f, 1.f},
+					texCoords[texInds[i % 4]],
+					normals[cube_indices[i / 6]],
+					Vector3(0.f, 0.f, 0.f),
+					Vector3(0.f, 0.f, 0.f),
+					Graphics::VertexBoneElement()
+				);
+			}
+
+			return collection;
+		}
+
+	public:
+		static constexpr IndexCollection GetCubeIndices()
+		{
+			return stock_indices;
+		}
+	
+		static constexpr VertexCollection GetCubeVertices()
+		{
+			return GenerateCubeVertices();
+		}
+	};
+	
+	constexpr const char* s_stock_shape_names[] = 
+	{
+		"Cube",
+		"Sphere",
+	};
+}
 
 namespace Engine::Components
 {
@@ -49,7 +244,7 @@ namespace Engine::Components
 		void AddCollidedObject(GlobalEntityID id);
 		void RemoveCollidedObject(GlobalEntityID id);
 
-		[[nodiscard]] bool                                          IsCollidedObject(GlobalEntityID id) const;
+		[[nodiscard]] bool                            IsCollidedObject(GlobalEntityID id) const;
 		[[nodiscard]] const std::set<GlobalEntityID>& GetCollidedObjects() const;
 
 		[[nodiscard]] float      GetMass() const;
@@ -114,8 +309,12 @@ namespace Engine::Components
 
 	private:
 		COMP_CLONE_DECL
-
 		friend class Managers::LerpManager;
+
+		static VertexCollection s_cube_vertices_;
+		static IndexCollection s_cube_indices_;
+		static VertexCollection s_sphere_vertices_;
+		static IndexCollection s_sphere_indices_;
 
 		static void InitializeStockVertices();
 
@@ -128,20 +327,8 @@ namespace Engine::Components
 
 		float m_mass_;
 
-		// Non-serialized
-		static std::vector<Graphics::VertexElement> s_cube_stock_;
-		static std::vector<Graphics::VertexElement> s_sphere_stock_;
-		static std::vector<UINT> s_cube_stock_indices_;
-		static std::vector<UINT> s_sphere_stock_indices_;
-		static constexpr const char* s_stock_shape_names[] = 
-		{
-			"Cube",
-			"Sphere",
-		};
-
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
-		std::filesystem::path  m_shape_meta_path_;
 		std::set<GlobalEntityID> m_collided_objects_;
 
 		Vector3          m_inverse_inertia_;

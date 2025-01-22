@@ -33,6 +33,14 @@ namespace Engine
 
 	struct CORE_API CoreLoop
 	{
+		enum CORE_API eLoopType
+		{
+			LOOP_TYPE_LOGIC,
+			LOOP_TYPE_RENDER,
+			LOOP_TYPE_PHYSICS,
+			LOOP_TYPE_MAX
+		};
+		
 		void PreUpdate(const float dt) const;
 		void Update(const float dt) const;
 		void PostUpdate(const float dt) const;
@@ -42,14 +50,14 @@ namespace Engine
 		void PostRender(const float dt) const;
 		
 		template <typename... Args>
-		void AddManager(Args&&... args)
+		void AddManager(const eLoopType loop_type, Args&&... args)
 		{
 			(args().Initialize(), ...);
-			(m_singleton_accessor_.push_back(reinterpret_cast<Abstracts::SingletonBase&(*&&)()>(args)), ...);
+			(m_singleton_accessor_[loop_type].push_back(reinterpret_cast<Abstracts::SingletonBase&(*&&)()>(args)), ...);
 		}
 
 		template <typename... Args>
-		void RemoveManager(Args&&... args)
+		void RemoveManager(const eLoopType loop_type, Args&&... args)
 		{
 			(args().Destroy(), ...);
 
@@ -57,11 +65,11 @@ namespace Engine
 			{
 				const auto& removeFromArray = [&](const auto& ptr)
 				{
-					for (auto it = m_singleton_accessor_.begin(); it != m_singleton_accessor_.end();)
+					for (auto it = m_singleton_accessor_[loop_type].begin(); it != m_singleton_accessor_[loop_type].end();)
 					{
 						if (*it == reinterpret_cast<Abstracts::SingletonBase&(*)()>(ptr))
 						{
-							it = m_singleton_accessor_.erase(it);
+							it = m_singleton_accessor_[loop_type].erase(it);
 							break;
 						}
 						else
@@ -77,7 +85,7 @@ namespace Engine
 		}
 
 	private:
-		std::vector<Abstracts::SingletonBase&(*)()> m_singleton_accessor_{};
+		std::vector<Abstracts::SingletonBase&(*)()> m_singleton_accessor_[LOOP_TYPE_MAX];
 	};
 	
 	struct CORE_API CoreModule : public IModule
@@ -85,6 +93,7 @@ namespace Engine
 		void Initialize() override
 		{
 			s_core_module.AddManager(
+				CoreLoop::LOOP_TYPE_LOGIC,
 				&Managers::ResourceManager::GetInstance, 
 				&Managers::SceneManager::GetInstance, 
 				&Managers::TaskScheduler::GetInstance);
@@ -93,6 +102,7 @@ namespace Engine
 		void Shutdown() override
 		{
 			s_core_module.RemoveManager(
+				CoreLoop::LOOP_TYPE_LOGIC,
 				&Managers::ResourceManager::GetInstance,
 				&Managers::SceneManager::GetInstance,
 				&Managers::TaskScheduler::GetInstance);

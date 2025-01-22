@@ -26,11 +26,13 @@ namespace Engine::Resources
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void FixedUpdate(const float dt) override;
-
+		
 		[[nodiscard]] BoundingOrientedBox     GetBoundingBox() const;
 		[[nodiscard]] size_t                  GetIndexCount() const;
 		[[nodiscard]] const VertexCollection& GetVertexCollection() const;
 		[[nodiscard]] const IndexCollection&  GetIndexCollection() const;
+
+		void UpdateCollider(const Weak<Components::Collider>& w_collider) const;
 
 		void                     OnDeserialized() override;
 		void                     OnSerialized() override;

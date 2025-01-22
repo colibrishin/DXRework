@@ -129,5 +129,6 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::SIGTERM()
 	{
+		ModuleManager::GetInstance().Destroy();
 	}
 } // namespace Engine::Manager

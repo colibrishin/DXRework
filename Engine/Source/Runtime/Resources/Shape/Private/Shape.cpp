@@ -4,6 +4,9 @@
 #include <ranges>
 
 #include "../Public/Shape.h"
+
+#include "Components/Collider/Public/Collider.hpp"
+
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
@@ -79,11 +82,6 @@ namespace Engine::Resources
 	Weak<AnimationTexture> Shape::GetAnimations() const
 	{
 		return m_animations_;
-	}
-
-	const std::vector<Graphics::VertexElement>& Shape::GetVertices() const
-	{
-		return m_cached_vertices_;
 	}
 
 	std::vector<Strong<Mesh>> Shape::GetMeshes() const
@@ -245,15 +243,16 @@ namespace Engine::Resources
 						color = Vector4{ col[j].r, col[j].g, col[j].b, col[j].a };
 					}
 
-					const auto vtx = Graphics::VertexElement
-					{
+					const auto vtx = VertexElement
+					(
 						{vec.x, vec.y, vec.z},
 						color,
 						tex_coord,
 						normal_,
 						tangent_,
-						binormal_
-					};
+						binormal_,
+						{}
+					);
 
 					shape.emplace_back(vtx);
 					total_vertices.push_back({ vec.x, vec.y, vec.z });
@@ -512,3 +511,4 @@ namespace Engine::Resources
 		: Resource("", RES_T_SHAPE),
 		  m_bounding_box_({}) {}
 }
+

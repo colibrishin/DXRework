@@ -9,7 +9,7 @@
 
 namespace Engine::Resources
 {
-	class SHAPE_API Shape : public Engine::Abstracts::Resource
+	class SHAPE_API Shape : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_SHAPE)
@@ -24,14 +24,13 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		BoundingBox                                 GetBoundingBox() const;
-		Weak<Mesh>                                  GetMesh(const std::string& name) const;
-		Weak<Mesh>                                  GetMesh(UINT index) const;
-		Weak<AnimationTexture>                     GetAnimations() const;
-		const std::vector<Graphics::VertexElement>& GetVertices() const;
-		std::vector<Strong<Mesh>>                   GetMeshes() const;
-		const std::vector<std::string>&             GetAnimationCatalog() const;
-		const std::map<UINT, BoundingOrientedBox>&  GetBoneBoundingBoxes() const;
+		[[nodiscard]] BoundingBox                                GetBoundingBox() const;
+		[[nodiscard]] Weak<Mesh>                                 GetMesh(const std::string& name) const;
+		[[nodiscard]] Weak<Mesh>                                 GetMesh(UINT index) const;
+		[[nodiscard]] Weak<AnimationTexture>                     GetAnimations() const;
+		[[nodiscard]] std::vector<Strong<Mesh>>                  GetMeshes() const;
+		[[nodiscard]] const std::vector<std::string>&            GetAnimationCatalog() const;
+		[[nodiscard]] const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
 		void Add(const Weak<T>& res)
@@ -101,8 +100,8 @@ namespace Engine::Resources
 		inline static Assimp::Importer s_importer_;
 		std::vector<Strong<Mesh>>      m_meshes_;
 		Strong<Bone>                   m_bone_;
-		Strong<AnimationTexture>      m_animations_;
+		Strong<AnimationTexture>       m_animations_;
 
-		std::vector<Graphics::VertexElement> m_cached_vertices_;
+		std::vector<VertexElement> m_cached_vertices_;
 	};
 }

@@ -11,6 +11,8 @@
 #include <execution>
 #include <directxtk12/BufferHelpers.h>
 
+#include "Components/Collider/Public/Collider.hpp"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
@@ -32,6 +34,15 @@ namespace Engine::Resources
 	const IndexCollection& Mesh::GetIndexCollection() const
 	{
 		return m_indices_;
+	}
+
+	void Mesh::UpdateCollider(const Weak<Components::Collider>& w_collider) const
+	{
+		if (const Strong<Components::Collider>& collider = w_collider.lock())
+		{
+			collider->SetBoundingBox(GetBoundingBox());
+			collider->SetVertices(m_vertices_);
+		}
 	}
 
 	Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)

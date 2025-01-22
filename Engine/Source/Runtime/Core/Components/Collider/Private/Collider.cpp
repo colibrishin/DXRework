@@ -17,14 +17,14 @@
 #include <extensions/PxDefaultStreams.h>
 #endif
 
-std::vector<Engine::Graphics::VertexElement> Engine::Components::Collider::s_cube_stock_           = {}; // todo: static stock vertices
-std::vector<Engine::Graphics::VertexElement> Engine::Components::Collider::s_sphere_stock_         = {};
-std::vector<UINT>                            Engine::Components::Collider::s_cube_stock_indices_   = {};
-std::vector<UINT>                            Engine::Components::Collider::s_sphere_stock_indices_ = {};
-
 namespace Engine::Components
 {
 	COMP_CLONE_IMPL(Collider)
+	
+	VertexCollection Collider::s_cube_vertices_{};
+	IndexCollection Collider::s_cube_indices_{};
+	VertexCollection Collider::s_sphere_vertices_{};
+	IndexCollection Collider::s_sphere_indices_{};
 
 	const std::vector<Graphics::VertexElement>& Collider::GetVertices() const
 	{
@@ -36,10 +36,10 @@ namespace Engine::Components
 		switch (m_type_)
 		{
 		case BOUNDING_TYPE_BOX:
-			return s_cube_stock_;
+			return s_cube_vertices_;
 			break;
 		case BOUNDING_TYPE_SPHERE:
-			return s_sphere_stock_;
+			return s_sphere_vertices_;
 			break;
 		default: 
 			break;
@@ -79,8 +79,8 @@ namespace Engine::Components
 		owner->onLayerChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 #endif
 
-		const auto vtx_ptr = reinterpret_cast<Vector3*>(s_cube_stock_.data());
-		m_boundings_.CreateFromPoints<BoundingBox>(s_cube_stock_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+		const auto vtx_ptr = reinterpret_cast<const Vector3*>(s_cube_vertices_.data());
+		m_boundings_.CreateFromPoints<BoundingBox>(s_cube_vertices_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
@@ -96,10 +96,18 @@ namespace Engine::Components
 
 	void Collider::InitializeStockVertices()
 	{
-		// todo: static stock vertices
+		if (s_cube_vertices_.empty())
+		{
+			s_cube_vertices_ = CubeGenerator::GetCubeVertices();
+			s_cube_indices_ = CubeGenerator::GetCubeIndices();
+		}
 
+		if (s_sphere_vertices_.empty())
+		{
+			s_sphere_vertices_ = SphereGenerator<>::GetSphereVertices();
+			s_sphere_indices_ = SphereGenerator<>::GetSphereIndices();
+		}
 #ifdef PHYSX_ENABLED
-
 		if (!s_px_cube_stock_)
 		{
 			s_px_cube_sdf_ = new physx::PxSDFDesc;
@@ -232,9 +240,7 @@ namespace Engine::Components
 	Collider::Collider()
 		: Component(COM_T_COLLIDER, {}),
 		  m_type_(BOUNDING_TYPE_BOX),
-		  m_boundings_(),
 		  m_mass_(1.f),
-		  m_shape_meta_path_(),
 		  m_inertia_tensor_(),
 		  m_local_matrix_(Matrix::Identity) {}
 
@@ -337,9 +343,7 @@ namespace Engine::Components
 	Collider::Collider(const Weak<Engine::Abstracts::ObjectBase>& owner)
 		: Component(COM_T_COLLIDER, owner),
 		  m_type_(BOUNDING_TYPE_BOX),
-		  m_boundings_(),
 		  m_mass_(1.0f),
-		  m_shape_meta_path_(),
 		  m_inertia_tensor_(),
 		  m_local_matrix_(Matrix::Identity) { }
 
