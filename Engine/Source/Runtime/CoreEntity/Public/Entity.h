@@ -9,11 +9,14 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "boost-filesystem.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <string>
+
 #include "CoreEntity.h"
+#include "Public/Entity.generated.h"
 
 namespace Engine
 {
@@ -60,46 +63,13 @@ namespace Engine
 #include <UIInterface.h>
 #endif
 
-namespace boost::serialization
-{
-	template <class Archive>
-	void serialize(Archive& ar, std::filesystem::path& p, const unsigned int version)
-	{
-		std::wstring s;
-		if (Archive::is_saving::value)
-			s = p.generic_wstring();
-		ar& boost::serialization::make_nvp("wstring", s);
-		if (Archive::is_loading::value)
-			p = s;
-	}
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Entity, void)
-
 namespace Engine::Abstracts
 {
+	ECLASS()
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
-		static std::string_view StaticTypeName()
-		{
-			return static_type_name<Entity>::name();
-		}
-
-		static std::string_view StaticFullTypeName()
-		{
-			return static_type_name<Entity>::full_name();
-		}
-
-		static HashType StaticTypeHash()
-		{
-			return type_hash<Entity>::value;
-		}
-
-		static bool StaticIsBaseOf(HashType hash)
-		{
-			return polymorphic_type_hash<Entity>::is_base_of(hash);
-		}
+		GENERATE_BODY
 
 		Entity(const Entity& other) : enable_shared_from_this(other)
 		{
@@ -129,10 +99,6 @@ namespace Engine::Abstracts
 		const std::filesystem::path& GetMetadataPath() const;
 		GlobalEntityID               GetID() const;
 		const EntityName&            GetName() const;
-		virtual TypeName             GetTypeName() const;
-		virtual TypeName             GetPrettyTypeName() const;
-		virtual HashType             GetTypeHash() const;
-		virtual bool                 IsBaseOf(HashType hash) const;
 		bool                         IsGarbage() const;
 		bool                         IsInitialized() const;
 
@@ -167,9 +133,9 @@ namespace Engine::Abstracts
 			m_b_garbage_(false) {}
 
 	private:
-		SERIALIZE_DECL
-
+		//EPROPERTY()
 		EntityName     m_name_;
+
 #if WITH_EDITOR
 	public:
 		UIInfo         m_ui_info_;
@@ -182,5 +148,3 @@ namespace Engine::Abstracts
 		std::filesystem::path m_meta_path_;
 	};
 } // namespace Engine::Abstracts
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Entity)

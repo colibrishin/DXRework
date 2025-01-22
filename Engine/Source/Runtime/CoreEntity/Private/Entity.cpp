@@ -1,6 +1,7 @@
-#include "..\Public\Entity.hpp"
+#include "..\Public\Entity.h"
 
 #include "UIInterface.h"
+#include "Serialization.hpp"
 
 SERIALIZE_IMPL(ENGINE_COREENTITY_API, Engine::Abstracts::Entity, _ARTAG(m_name_) _ARTAG(m_meta_path_))
 
@@ -31,26 +32,6 @@ Engine::GlobalEntityID Engine::Abstracts::Entity::GetID() const
 const Engine::EntityName& Engine::Abstracts::Entity::GetName() const
 {
 	return m_name_;
-}
-
-Engine::TypeName Engine::Abstracts::Entity::GetTypeName() const
-{
-	return Entity::StaticFullTypeName();
-}
-
-Engine::TypeName Engine::Abstracts::Entity::GetPrettyTypeName() const
-{
-	return Entity::StaticTypeName();
-}
-
-HashType Engine::Abstracts::Entity::GetTypeHash() const
-{
-	return Entity::StaticTypeHash();
-}
-
-bool Engine::Abstracts::Entity::IsBaseOf(HashType hash) const
-{
-	return Entity::StaticIsBaseOf(hash);
 }
 
 bool Engine::Abstracts::Entity::IsGarbage() const

@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/CoreEntity/Public/Entity.hpp"
+#include "Source/Runtime/CoreEntity/Public/Entity.h"
 
 // Cloning component declaration macro
 #define COMP_CLONE_DECL Strong<Engine::Abstracts::Component> cloneImpl() const override;

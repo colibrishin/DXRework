@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/CoreEntity/Public/Entity.hpp"
+#include "Source/Runtime/CoreEntity/Public/Entity.h"
 
 // Static resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER_DECL(TYPE)                                         \
