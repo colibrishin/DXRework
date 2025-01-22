@@ -23,6 +23,7 @@ namespace Engine::Managers
 	class ENGINE_SOUNDMANAGER_API SoundManager final : public Abstracts::Singleton<SoundManager>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(SoundManager)
 		explicit SoundManager(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;

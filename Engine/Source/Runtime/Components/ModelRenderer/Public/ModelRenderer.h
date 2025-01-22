@@ -27,6 +27,7 @@ namespace Engine::Components
 	class ENGINE_MODELRENDERER_API ModelRenderer final : public RenderComponent
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ModelRenderer)
 		RENDER_COM_T(RENDER_COM_T_MODEL)
 
 		ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner);

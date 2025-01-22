@@ -665,12 +665,10 @@ namespace Engine
 
 		if (UIContext context = UIInterface::NewContext(ui.NewDialog({GetName(), m_b_dialog_opened_})))
 		{
-			m_layer_list_box_name_ = std::to_string(GetID()) + "LayersListBox";
-
 			context << [&]()
 			{
+				m_layer_list_box_name_ = std::to_string(GetID()) + "LayersListBox";
 				Renderable::OnUIUpdate(&context, dt);
-
 				context += ui.NewListBox({m_layer_list_box_name_, -1, -1});
 
 				for (const auto& layer : m_layers_)

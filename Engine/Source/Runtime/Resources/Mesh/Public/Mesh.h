@@ -17,6 +17,7 @@ namespace Engine::Resources
 	class ENGINE_MESH_API Mesh : public Abstracts::Resource
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Mesh)
 		RESOURCE_T(RES_T_MESH)
 
 		Mesh(const VertexCollection& shape, const IndexCollection& indices);

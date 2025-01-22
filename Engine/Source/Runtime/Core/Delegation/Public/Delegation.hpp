@@ -43,6 +43,8 @@ template <typename... Args>
 struct Delegate
 {
 public:
+	INLINE_COMPILE_TIME_TYPENAME(Delegate<Args...>)
+
 	using address_type = uint64_t;
 
 	using base_class_type = Engine::Abstracts::Entity;
@@ -134,4 +136,7 @@ private:
 };
 
 #define DEFINE_DELEGATE(Name, ...) \
-struct Delegate##Name : public Delegate<__VA_ARGS__> {};
+struct Delegate##Name : public Delegate<__VA_ARGS__> \
+{ \
+	INLINE_COMPILE_TIME_TYPENAME(Delegate##Name) \
+}; \

@@ -7,6 +7,8 @@ namespace Engine::Managers
 	class ENGINE_CORE_API CameraManager : public Abstracts::Singleton<CameraManager>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(CameraManager)
+
 		CameraManager(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

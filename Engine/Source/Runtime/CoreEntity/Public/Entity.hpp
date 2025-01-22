@@ -1,11 +1,10 @@
 #pragma once
 #include <boost/smart_ptr.hpp>
 #include <filesystem>
-#include <directx/d3d12.h>
-
 #include "CoreEntity.h"
 
-namespace Engine {
+namespace Engine
+{
 	struct UIContext;
 }
 
@@ -14,6 +13,8 @@ namespace Engine::Abstracts
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Entity)
+
 		Entity(const Entity& other) = default;
 		virtual ~Entity()           = default;
 

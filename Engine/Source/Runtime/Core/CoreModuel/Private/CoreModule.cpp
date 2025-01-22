@@ -68,3 +68,46 @@ void Engine::CoreLoop::PostRender(const float dt) const
 		DoPostRender(dt, singletons);	
 	}
 }
+
+void Engine::CoreModule::Initialize()
+{
+	s_core_module.AddManager
+			(
+			 CoreLoop::LOOP_TYPE_LOGIC,
+			 &Managers::ResourceManager::GetInstance,
+			 &Managers::SceneManager::GetInstance,
+			 &Managers::TaskScheduler::GetInstance,
+			 &Managers::CameraManager::GetInstance
+			);
+
+#if WITH_DEBUG
+	s_core_module.AddManager
+			(
+			 CoreLoop::LOOP_TYPE_RENDER,
+			 &Managers::Debugger::GetInstance
+			);
+#endif
+}
+
+void Engine::CoreModule::Shutdown()
+{
+	s_core_module.RemoveManager
+			(
+			 CoreLoop::LOOP_TYPE_LOGIC,
+			 &Managers::ResourceManager::GetInstance,
+			 &Managers::SceneManager::GetInstance,
+			 &Managers::TaskScheduler::GetInstance,
+			 &Managers::CameraManager::GetInstance
+			);
+
+#if WITH_DEBUG
+	s_core_module.RemoveManager
+			(
+			 CoreLoop::LOOP_TYPE_RENDER,
+			 &Managers::Debugger::GetInstance
+			);
+#endif
+
+	GraphicInterfaceAccessor::Shutdown();
+	UIInterfaceAccessor::Shutdown();
+}

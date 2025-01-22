@@ -1152,6 +1152,15 @@ namespace Engine
 			return *s_graphic_interface;
 		}
 
+		static void Shutdown()
+		{
+			if (s_graphic_interface) 
+			{
+				s_graphic_interface->Shutdown();
+				s_graphic_interface.reset();
+			}
+		}
+
 	private:
 		static Unique<GraphicInterface> s_graphic_interface;
 	};

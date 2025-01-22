@@ -12,6 +12,7 @@ namespace Engine
 {
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
 	{
+		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterfaceModule)
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
@@ -38,6 +39,7 @@ namespace Engine
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
 		void Initialize() override;
 		void Shutdown() override;
 		void WaitForNextFrame() override;

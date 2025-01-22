@@ -44,6 +44,8 @@ namespace Engine::Abstracts
 	class ENGINE_CORE_API Component : public Abstracts::Entity
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Component)
+
 		~Component() override       = default;
 		Component(const Component&) = default;
 

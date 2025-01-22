@@ -14,6 +14,7 @@ namespace Engine::Components
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Transform)
 		COMPONENT_T(COM_T_TRANSFORM)
 
 		Transform(const Weak<Engine::Abstracts::ObjectBase>& owner);

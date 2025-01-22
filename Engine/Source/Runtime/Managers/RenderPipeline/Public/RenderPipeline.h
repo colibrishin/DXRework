@@ -11,6 +11,7 @@ namespace Engine
 {
 	struct ENGINE_RENDERPIPELINE_API RenderPipelineModule : public IModule
 	{
+		INLINE_COMPILE_TIME_TYPENAME(RenderPipelineModule)
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
@@ -24,6 +25,7 @@ namespace Engine::Managers
 	class ENGINE_RENDERPIPELINE_API RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
 	{
 	private:
+		INLINE_COMPILE_TIME_TYPENAME(RenderPipeline)
 		struct ENGINE_RENDERPIPELINE_API TempParamTicket
 		{
 			TempParamTicket(const CBs::ParamCB& previousParam)

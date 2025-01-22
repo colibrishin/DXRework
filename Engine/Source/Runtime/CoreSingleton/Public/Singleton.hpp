@@ -15,6 +15,8 @@ namespace Engine::Abstracts
 	class Singleton : public SingletonBase
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Singleton<T>)
+
 		Singleton(const Singleton&)            = delete;
 		Singleton(Singleton&&)                 = delete;
 		Singleton& operator=(const Singleton&) = delete;

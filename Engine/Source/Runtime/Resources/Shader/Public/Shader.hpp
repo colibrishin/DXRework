@@ -16,6 +16,7 @@ namespace Engine::Resources
 	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Shader)
 		RESOURCE_T(RES_T_SHADER)
 
 		Shader(

@@ -48,6 +48,8 @@ namespace Engine::Managers
 	class ENGINE_CORE_API Debugger final : public Abstracts::Singleton<Debugger>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Debugger)
+
 		explicit Debugger(SINGLETON_LOCK_TOKEN);
 		void     Initialize() override;
 

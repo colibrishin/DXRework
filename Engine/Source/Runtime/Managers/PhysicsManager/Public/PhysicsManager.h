@@ -21,6 +21,7 @@ namespace Engine
 {
 	struct PhysicsManagerModule : public IModule
 	{
+		INLINE_COMPILE_TIME_TYPENAME(PhysicsManagerModule)
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
@@ -32,6 +33,7 @@ namespace Engine::Managers
 	class PhysicsManager : public Abstracts::Singleton<PhysicsManager>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(PhysicsManager)
 		explicit PhysicsManager(SINGLETON_LOCK_TOKEN)
 			: Abstracts::Singleton<PhysicsManager>() {}
 

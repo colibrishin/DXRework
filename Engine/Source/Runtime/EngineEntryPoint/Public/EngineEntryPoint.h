@@ -12,6 +12,7 @@ namespace Engine::Managers
 	class ENGINE_ENGINEENTRYPOINT_API EngineEntryPoint final : public Abstracts::Singleton<EngineEntryPoint>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(EngineEntryPoint)
 		EngineEntryPoint(SINGLETON_LOCK_TOKEN);
 
 		void        Initialize() override;

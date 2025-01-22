@@ -12,6 +12,7 @@ namespace Engine::Resources
 	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Shape)
 		RESOURCE_T(RES_T_SHAPE)
 
 		Shape(const std::filesystem::path& path);

@@ -49,6 +49,7 @@ namespace Engine::Managers
 		};
 
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ShadowManager)
 		explicit ShadowManager(SINGLETON_LOCK_TOKEN)
 			: Singleton<ShadowManager>(),
 			  m_viewport_() {}

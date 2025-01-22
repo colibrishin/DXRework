@@ -260,7 +260,7 @@ namespace Engine
             else
             {
 	            m_parent_->AddChild(child);
-                return *m_parent_;
+                return *child;
             }
         }
 
@@ -358,6 +358,14 @@ namespace Engine
         [[nodiscard]] static UIInterface& GetInterface()
         {
             return *m_ui_interface_;
+        }
+
+        static void Shutdown()
+        {
+	        if (IsValid())
+	        {
+		        m_ui_interface_.reset();
+	        }
         }
         
     private:

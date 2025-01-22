@@ -147,7 +147,7 @@ namespace Engine::Managers
 
 	private:
 		friend struct SingletonDeleter;
-		~ResourceManager() override = default;
+		~ResourceManager() override;
 
 		fast_pool_unordered_map<eResourceType, fast_pool_set<Strong<Abstracts::Resource>>> m_resources_;
 		fast_pool_unordered_map<LocalResourceID, Weak<Abstracts::Resource>> m_resource_cache_;

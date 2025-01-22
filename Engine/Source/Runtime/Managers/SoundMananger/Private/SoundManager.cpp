@@ -111,7 +111,10 @@ namespace Engine::Managers
 			)
 		);
 	}
-
+#if PLATFORM == Windows
+#pragma push_macro("PlaySound")
+#undef PlaySound
+#endif
 	void SoundManager::PlaySound(
 		FMOD::Sound* sound, const FMOD_VECTOR& pos,
 		const FMOD_VECTOR& vel,
@@ -135,7 +138,9 @@ namespace Engine::Managers
 		FMOD::ThrowIfFailed((*channel)->set3DAttributes(&pos, &vel));
 		FMOD::ThrowIfFailed((*channel)->set3DSpread(360.0f));
 	}
-
+#if PLATFORM == Windows
+#pragma pop_macro("PlaySound")
+#endif
 	void SoundManager::StopSound(FMOD::Sound* sound, FMOD::Channel** channel) const
 	{
 		FMOD::ThrowIfFailed

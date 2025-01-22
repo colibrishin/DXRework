@@ -7,6 +7,18 @@
 #include <string>
 #include <map>
 
+#include "ModuleManager/Public/IModule.h"
+
+namespace Engine
+{
+	struct MaterialModule : IModule
+	{
+		void Initialize() override;
+		void Shutdown() override;
+		bool DynamicLoadable() override;
+	};
+}
+
 namespace Engine::Graphics::SBs 
 {
 	struct ENGINE_MATERIAL_API MaterialBindFlag
@@ -40,6 +52,7 @@ namespace Engine::Resources
 	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Material)
 		RESOURCE_T(RES_T_MTR)
 
 		Material(const std::filesystem::path& path);

@@ -10,6 +10,8 @@ namespace Engine::Abstracts
 	class ENGINE_CORE_API Actor : public Renderable
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Actor)
+
 		DelegateOnLayerChange onLayerChange;
 		~Actor() override = default;
 

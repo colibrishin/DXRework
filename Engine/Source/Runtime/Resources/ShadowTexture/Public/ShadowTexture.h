@@ -1,4 +1,6 @@
 #pragma once
+#include <d3d12.h>
+
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
 namespace Engine::Resources
@@ -6,6 +8,7 @@ namespace Engine::Resources
 	class ENGINE_SHADOWTEXTURE_API ShadowTexture : public Texture2D
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ShadowTexture)
 		RESOURCE_T(RES_T_SHADOW_TEX)
 
 		ShadowTexture()

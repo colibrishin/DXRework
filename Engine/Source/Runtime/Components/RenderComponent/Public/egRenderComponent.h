@@ -24,6 +24,7 @@ namespace Engine::Components
 	class ENGINE_RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(RenderComponent)
 		COMPONENT_T(COM_T_RENDERER)
 
 		DelegateOnMaterialChange onMaterialChange;

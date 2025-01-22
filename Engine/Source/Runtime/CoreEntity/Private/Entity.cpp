@@ -69,12 +69,13 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 		GlobalEntityID id = GetID();
 
-		(*parent) |= ui.NewLabelAndText({"Name", m_name_, true});
-		(*parent) |= ui.NewLabelAndUInt({"Entity ID", id, false});
-		(*parent) |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
-		((*parent) |= (ui.NewButton({"Save"}))).SetFunction([]()
+		*parent |= ui.NewLabelAndText({"Name", m_name_, true});
+		*parent |= ui.NewLabelAndUInt({"Entity ID", id, false});
+		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
+		(*parent |= ui.NewButton({"Save"})).SetFunction([]()
 		{
 			// todo: trigger save
+			__nop();
 		});
 	}
 #endif

@@ -8,6 +8,7 @@ namespace Engine
 {
     struct ModelRendererRenderInstanceTaskModule : public IModule
     {
+        INLINE_COMPILE_TIME_TYPENAME(ModelRendererRenderInstanceTaskModule)
 	    void Initialize() override;
 	    void Shutdown() override;
 	    bool DynamicLoadable() override;
@@ -15,6 +16,7 @@ namespace Engine
 
     struct ModelRendererRenderInstanceTask : public RenderInstanceTask 
     {
+        INLINE_COMPILE_TIME_TYPENAME(ModelRendererRenderInstanceTask)
         void Run(
             Scene const* scene,
             RenderMap*   render_map,

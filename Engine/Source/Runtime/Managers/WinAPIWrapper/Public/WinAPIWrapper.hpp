@@ -1,8 +1,8 @@
 #pragma once
 #include <Windows.h>
+#include <functional>
 #include <memory>
 #include <string>
-#include <functional>
 #include <vector>
 #include "Source/Runtime/Misc.h"
 
@@ -16,6 +16,7 @@ namespace WinAPI
     class ENGINE_WINAPIWRAPPER_API WinAPIWrapper final
     {
     public:
+        INLINE_COMPILE_TIME_TYPENAME(WinAPIWrapper)
         ~WinAPIWrapper()                               = default;
         WinAPIWrapper(const WinAPIWrapper&)            = delete;
         WinAPIWrapper& operator=(const WinAPIWrapper&) = delete;

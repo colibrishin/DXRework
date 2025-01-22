@@ -1,8 +1,15 @@
 #pragma once
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
+#if PLATFORM == Windows
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
+#if USE_DX12
 #include <directxtk12/Mouse.h>
 #include <directxtk12/Keyboard.h>
+#endif
 
 #include "TypeLibrary/Public/TypeLibrary.h"
 
@@ -11,6 +18,7 @@ namespace Engine::Managers
 	class ENGINE_INPUTMANAGER_API InputManager : public Abstracts::Singleton<InputManager>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(InputManager)
 		InputManager(SINGLETON_LOCK_TOKEN)
 			: Singleton<InputManager>() {};
 		void Initialize() override;

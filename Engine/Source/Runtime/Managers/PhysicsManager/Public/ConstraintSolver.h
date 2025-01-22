@@ -9,6 +9,7 @@ namespace Engine::Managers
 	class ConstraintSolver : public Abstracts::Singleton<ConstraintSolver>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ConstraintSolver)
 		explicit ConstraintSolver(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

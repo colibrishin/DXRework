@@ -32,6 +32,7 @@ namespace Engine::Managers
 	class CollisionDetector : public Abstracts::Singleton<CollisionDetector>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(CollisionDetector)
 		DelegateOnLayerMaskChange onLayerMaskChange;
 
 		explicit CollisionDetector(SINGLETON_LOCK_TOKEN) {}

@@ -2,6 +2,10 @@
 
 #include <DirectXColors.h>
 
+#include "ModuleManager/Public/ModuleManager.h"
+
+#include "SceneManager/Public/SceneManager.hpp"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
@@ -11,15 +15,17 @@ RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Material);
 
 namespace Engine::Resources
 {
+	RESOURCE_SELF_INFER_CREATE_IMPL(Material)
+
 	Material::Material(const std::filesystem::path& path)
 		: Resource(path, RES_T_MTR),
 		  m_material_sb_()
 	{
 		m_material_sb_.specularPower         = 100.0f;
-		m_material_sb_.specularColor         = DirectX::Colors::White;
+		m_material_sb_.specularColor         = Color{1.f, 1.f, 1.f, 1.f};
 		m_material_sb_.reflectionScale       = 0.15f;
 		m_material_sb_.refractionScale       = 0.15f;
-		m_material_sb_.clipPlane             = Vector4::Zero;
+		m_material_sb_.clipPlane             = Vector4{0.f, 0.f, 0.f ,0.f};
 		m_material_sb_.reflectionTranslation = 0.5f;
 		m_material_sb_.repeatTexture         = false;
 	}
@@ -216,4 +222,30 @@ namespace Engine::Resources
 		m_resources_loaded_.clear();
 		m_shaders_loaded_.clear();
 	}
+}
+
+MODULE_IMPL(Engine::MaterialModule, Material)
+
+void Engine::MaterialModule::Initialize()
+{
+	Managers::SceneManager::GetInstance().RegisterNewMenuItem(Resources::Material::StaticTypeName(), []()
+	{
+		Resources::Material::Create("NewMaterial", "");
+	});
+
+	Managers::SceneManager::GetInstance().RegisterLoadMenuItem(Resources::Material::StaticTypeName(), [](std::string_view path)
+	{
+		Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>(path);
+	});
+}
+
+void Engine::MaterialModule::Shutdown()
+{
+	Managers::SceneManager::GetInstance().UnregisterNewMenuItem(Resources::Material::StaticTypeName());
+	Managers::SceneManager::GetInstance().UnregisterLoadMenuItem(Resources::Material::StaticTypeName());
+}
+
+bool Engine::MaterialModule::DynamicLoadable()
+{
+	return true;
 }

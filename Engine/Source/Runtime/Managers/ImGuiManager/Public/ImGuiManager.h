@@ -187,6 +187,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiManagerModule : public IModule
     {
+        INLINE_COMPILE_TIME_TYPENAME(ImGuiManagerModule)
         void Initialize() override;
         void Shutdown() override;
         bool DynamicLoadable() override;
@@ -198,6 +199,7 @@ namespace Engine::Managers
     class ENGINE_IMGUIMANAGER_API ImGuiManager final : public Abstracts::Singleton<ImGuiManager>
     {
     public:
+        INLINE_COMPILE_TIME_TYPENAME(ImGuiManager)
         explicit ImGuiManager(SINGLETON_LOCK_TOKEN) {}
 
         void Initialize() override;

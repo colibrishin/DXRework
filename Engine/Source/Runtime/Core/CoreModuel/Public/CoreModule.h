@@ -46,6 +46,8 @@ namespace Engine
 
 	struct ENGINE_CORE_API CoreLoop
 	{
+		INLINE_COMPILE_TIME_TYPENAME(CoreLoop)
+
 		enum ENGINE_CORE_API eLoopType
 		{
 			LOOP_TYPE_RENDER,
@@ -104,37 +106,11 @@ namespace Engine
 	
 	struct ENGINE_CORE_API CoreModule : public IModule
 	{
-		void Initialize() override
-		{
-			s_core_module.AddManager(
-				CoreLoop::LOOP_TYPE_LOGIC,
-				&Managers::ResourceManager::GetInstance, 
-				&Managers::SceneManager::GetInstance, 
-				&Managers::TaskScheduler::GetInstance,
-				&Managers::CameraManager::GetInstance);
+		INLINE_COMPILE_TIME_TYPENAME(CoreModule)
 
-#if WITH_DEBUG
-			s_core_module.AddManager(
-				CoreLoop::LOOP_TYPE_RENDER,
-				&Managers::Debugger::GetInstance);
-#endif
-		}
+		void Initialize() override;
 
-		void Shutdown() override
-		{
-			s_core_module.RemoveManager(
-				CoreLoop::LOOP_TYPE_LOGIC,
-				&Managers::ResourceManager::GetInstance,
-				&Managers::SceneManager::GetInstance,
-				&Managers::TaskScheduler::GetInstance,
-				&Managers::CameraManager::GetInstance);
-
-#if WITH_DEBUG
-			s_core_module.RemoveManager(
-				CoreLoop::LOOP_TYPE_RENDER,
-				&Managers::Debugger::GetInstance);
-#endif
-		}
+		void Shutdown() override;
 
 		bool DynamicLoadable() override
 		{

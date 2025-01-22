@@ -12,6 +12,7 @@ namespace Engine::Resources
 	class ENGINE_TEXTURE_API Texture : public Abstracts::Resource
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Texture)
 		RESOURCE_T(RES_T_TEX)
 		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
 		~Texture() override = default;

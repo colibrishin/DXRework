@@ -117,4 +117,19 @@ namespace Engine::Managers
 
 		return {};
 	}
+
+	ResourceManager::~ResourceManager()
+	{
+		m_resource_cache_.clear();
+		m_resource_ids_.clear();
+
+		for (auto& set : m_resources_ | std::views::values)
+		{
+			for (boost::shared_ptr<Abstracts::Resource> resource : set)
+			{
+				resource->Unload();
+				resource.reset();
+			}
+		}
+	}
 }

@@ -61,6 +61,25 @@ namespace Engine::Managers
 		void PostRender(const float dt) override;
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 
+#if WITH_EDITOR
+		using NewFunctionSignature = const std::function<void()>;
+		using AddFunctionSignature = const std::function<void()>;
+		using LoadFunctionSignature = std::function<void(const std::string_view)>;
+
+		void RegisterNewMenuItem(std::string_view name, const NewFunctionSignature& predicate);
+		void RegisterAddMenuItem(std::string_view name, const AddFunctionSignature& predicate);
+		void RegisterLoadMenuItem(std::string_view name, const LoadFunctionSignature& predicate);
+		void UnregisterNewMenuItem(std::string_view name);
+		void UnregisterAddMenuItem(std::string_view name);
+		void UnregisterLoadMenuItem(std::string_view name);
+
+	private:
+		// Assuming string address is constant.
+		std::unordered_map<std::string_view, NewFunctionSignature> m_custom_new_function_;
+		std::unordered_map<std::string_view, AddFunctionSignature> m_custom_add_function_;
+		std::unordered_map<std::string_view, LoadFunctionSignature> m_custom_load_function_;
+#endif
+
 	private:
 		friend struct SingletonDeleter;
 		~SceneManager() override = default;
@@ -71,8 +90,6 @@ namespace Engine::Managers
 		void SetActiveFinalize(const Weak<Scene>& it);
 
 		void RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name);
-
-		bool m_b_load_popup_ = false;
 
 		Weak<Scene>                m_active_scene_{};
 		std::vector<Strong<Scene>> m_scenes_{};

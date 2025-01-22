@@ -7,6 +7,7 @@ namespace Engine::Managers
 	class ENGINE_PROJECTIONFRUSTUM_API ProjectionFrustum final : public Abstracts::Singleton<ProjectionFrustum>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ProjectionFrustum)
 		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

@@ -259,6 +259,15 @@ namespace Engine::Abstracts
 
 		// Non-serialized
 #if WITH_EDITOR
+	public:
+		using ComponentFactorySignature = std::function<Strong<Component>()>;
+		void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
+		void UnregisterComponentFactory(std::string_view name);
+
+	private:
+		std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;
+
+		bool m_b_component_dialog_opened_ = false;
 		bool m_b_detail_opened_ = false;
 		std::string m_ui_summary_text_;
 #endif

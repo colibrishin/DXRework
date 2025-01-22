@@ -6,6 +6,7 @@ namespace Engine::Resources
 	class ENGINE_TEXTURE1D_API Texture1D : public Texture
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Texture1D)
 		TEX_T(TEX_TYPE_1D)
 
 		explicit Texture1D(const std::filesystem::path& path, const GenericTextureDescription& description)

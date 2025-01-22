@@ -30,7 +30,7 @@ namespace Engine::Managers
 		return m_viewport_;
 	}
 	
-	RenderPipeline::~RenderPipeline() { }
+	RenderPipeline::~RenderPipeline() {}
 
 	void RenderPipeline::ConstantBufferGuard()
 	{

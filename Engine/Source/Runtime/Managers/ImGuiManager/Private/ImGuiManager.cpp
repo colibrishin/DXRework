@@ -142,7 +142,6 @@ std::string Engine::LabelPrefix(const std::string_view label)
 {
 	std::string labelID = "##";
 	labelID += label;
-	labelID + std::to_string(reinterpret_cast<uint64_t>(label.data()));
 
 	return labelID;
 }
@@ -191,8 +190,7 @@ void Engine::ImGuiButtonToken::End() const {}
 
 bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title) const
 {
-	const std::string& temp_label = std::string(title) + LabelPrefix(title);
-	return ImGui::Button(temp_label.c_str(), {-1, 50});
+	return ImGui::Button(title.data(), {-1, 50});
 }
 
 void Engine::ImGuiLabelAndTextToken::End() const {}

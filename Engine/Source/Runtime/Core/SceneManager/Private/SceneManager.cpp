@@ -105,7 +105,6 @@ namespace Engine::Managers
 
 	void SceneManager::Initialize()
 	{
-		m_b_load_popup_ = false;
 		AddScene("UntitledScene");
 		SetActive("UntitledScene");
 	}
@@ -173,39 +172,55 @@ namespace Engine::Managers
 
 		if (UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
 		{
-			context << ui.NewMenu({"New"});
+			context += ui.NewMenu({"New"});
 
-			(context += ui.NewMenuItem({"Scene"})).SetFunction([&]()
+			(context |= ui.NewMenuItem({"Scene"})).SetFunction([&]()
 			{
 				AddScene("UntitledScene");
 				SetActive("UntitledScene");
 			});
 
-			// todo: customized new
+			for (const auto& [name, func] : m_custom_new_function_)
+			{
+				(context |= ui.NewMenuItem({name})).SetFunction([&]()
+				{
+					func();
+				});
+			}
 
-			context << ui.NewMenu({"Add"});
+			--context;
+
+			context += ui.NewMenu({"Add"});
 
 			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
 			{
 				GetActiveScene().lock()->CreateGameObject<T>(Layer);
 			};
 
-			(context += ui.NewMenuItem({"Camera"})).SetFunction([&]()
+			(context |= ui.NewMenuItem({"Camera"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Objects::Camera, RESERVED_LAYER_CAMERA>();
 			});
 
-			(context += ui.NewMenuItem({"Light"})).SetFunction([&]()
+			(context |= ui.NewMenuItem({"Light"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Objects::Light, RESERVED_LAYER_LIGHT>();
 			});
 
-			(context += ui.NewMenuItem({"Object"})).SetFunction([&]()
+			(context |= ui.NewMenuItem({"Object"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Object, RESERVED_LAYER_DEFAULT>();
 			});
 
-			// todo: customized add
+			for (const auto& [name, func] : m_custom_add_function_)
+			{
+				(context += ui.NewMenuItem({name})).SetFunction([&]()
+				{
+					func();
+				});
+			}
+
+			--context;
 
 			if (const auto& scene = m_active_scene_.lock())
 			{
@@ -214,6 +229,56 @@ namespace Engine::Managers
 		}
 #endif
 	}
+
+#if WITH_EDITOR
+	void SceneManager::RegisterNewMenuItem(std::string_view name, const std::function<void()>& predicate)
+	{
+		if (!m_custom_new_function_.contains(name))
+		{
+			m_custom_new_function_.emplace(name, predicate);	
+		}
+	}
+
+	void SceneManager::RegisterAddMenuItem(std::string_view name, const std::function<void()>& predicate)
+	{
+		if (!m_custom_add_function_.contains(name))
+		{
+			m_custom_add_function_.emplace(name, predicate);	
+		}
+	}
+
+	void SceneManager::RegisterLoadMenuItem(std::string_view name, const LoadFunctionSignature& predicate)
+	{
+		if (!m_custom_load_function_.contains(name))
+		{
+			m_custom_load_function_.emplace(name, predicate);
+		}
+	}
+
+	void SceneManager::UnregisterLoadMenuItem(const std::string_view name)
+	{
+		if (m_custom_load_function_.contains(name))
+		{
+			m_custom_load_function_.erase(name);
+		}
+	}
+
+	void SceneManager::UnregisterNewMenuItem(const std::string_view name)
+	{
+		if (m_custom_new_function_.contains(name))
+		{
+			m_custom_new_function_.erase(name);
+		}
+	}
+
+	void SceneManager::UnregisterAddMenuItem(const std::string_view name)
+	{
+		if (m_custom_add_function_.contains(name))
+		{
+			m_custom_add_function_.erase(name);
+		}
+	}
+#endif
 
 	void SceneManager::AddScene(const Weak<Scene>& ptr_scene)
 	{

@@ -13,6 +13,7 @@ namespace Engine::Managers
 	class ENGINE_REFLECTIONEVALUATOR_API ReflectionEvaluator : public Abstracts::Singleton<ReflectionEvaluator>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ReflectionEvaluator)
 		ReflectionEvaluator(SINGLETON_LOCK_TOKEN)
 			: Singleton(),
 			  m_copy_

@@ -6,6 +6,7 @@ namespace Engine::Components
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Rigidbody)
 		COMPONENT_T(COM_T_RIDIGBODY)
 
 		explicit Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object);

@@ -30,6 +30,7 @@ namespace Engine::Components
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ParticleRenderer)
 		// int
 		constexpr static size_t particle_count_slot = 0;
 

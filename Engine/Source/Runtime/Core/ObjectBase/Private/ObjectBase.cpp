@@ -348,9 +348,26 @@ namespace Engine::Abstracts
 		}
 
 		m_scripts_.emplace(type, script);
-
 		m_cached_script_.push_back(script);
 	}
+
+#if WITH_EDITOR
+	void ObjectBase::RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate)
+	{
+		if (!m_component_add_map_.contains(name))
+		{
+			m_component_add_map_.emplace(name, predicate);
+		}
+	}
+
+	void ObjectBase::UnregisterComponentFactory(std::string_view name)
+	{
+		if (m_component_add_map_.contains(name))
+		{
+			m_component_add_map_.erase(name);
+		}
+	}
+#endif
 
 	void ObjectBase::removeComponentImpl(const eComponentType type, const Strong<Component>& comp)
 	{
@@ -647,6 +664,9 @@ namespace Engine::Abstracts
 	void ObjectBase::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 #if WITH_EDITOR
+#include "Components/Transform/Public/Transform.h"
+#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Rigidbody/Public/Rigidbody.h"
 		if (parent)
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -655,10 +675,44 @@ namespace Engine::Abstracts
 			{
 				if (UIContext context = UIInterface::NewContext(ui.NewDialog({m_ui_summary_text_, m_b_detail_opened_})))
 				{
-					Actor::OnUIUpdate(&context, dt);
-				}
+					context << [&]()
+					{
+						Actor::OnUIUpdate(&context, dt);
 
-				// todo: component management
+						(context |= ui.NewButton({"Add Component"})).SetFunction([&]()
+						{
+							 m_b_component_dialog_opened_ = !m_b_component_dialog_opened_;
+						});
+
+						if (m_b_component_dialog_opened_)
+						{
+							context += ui.NewDialog({"Add Component dialog", m_b_component_dialog_opened_});
+
+							context += [&]()
+							{
+								const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
+								{
+									(context |= ui.NewButton({T::StaticTypeName()})).SetFunction([&]()
+									{
+										AddComponent<T>();
+									});
+								};
+
+								internalComponentTemplate.operator()<Components::Collider>();
+								internalComponentTemplate.operator()<Components::Transform>();
+								internalComponentTemplate.operator()<Components::Rigidbody>();
+
+								for (const auto& [name, predicate] : m_component_add_map_)
+								{
+									(context |= ui.NewButton({name})).SetFunction([&]()
+									{
+										addComponent(predicate());
+									});
+								}
+							};
+						}
+					};
+				}
 			}
 		}
 #endif

@@ -221,6 +221,7 @@ namespace Engine::Components
 	class ENGINE_CORE_API Collider final : public Engine::Abstracts::Component
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Collider)
 		COMPONENT_T(COM_T_COLLIDER);
 
 		DelegateOnCollisionEnter onCollisionEnter;

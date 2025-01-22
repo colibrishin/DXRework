@@ -12,6 +12,7 @@ namespace Engine
 {
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
 	{
+		INLINE_COMPILE_TIME_TYPENAME(GenericRenderPassTaskModule)
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;
@@ -19,6 +20,7 @@ namespace Engine
 
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
+		INLINE_COMPILE_TIME_TYPENAME(GenericRenderPassTask)
 		GenericRenderPassTask() = default;
 		GenericRenderPassTask& operator=(GenericRenderPassTask&) = delete;
 		GenericRenderPassTask(GenericRenderPassTask&) = delete;
