@@ -34,37 +34,17 @@ namespace Engine::Managers
 		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		void AddResource(const Strong<T>& resource)
 		{
-			if (!resource->GetMetadataPath().empty() &&
-			    SearchResourceByMetadata<T>(resource->GetMetadataPath()).lock())
-			{
-				return;
-			}
-			if (!resource->GetPath().empty() &&
-			    GetResourceByRawPath<T>(resource->GetPath()).lock())
-			{
-				return;
-			}
-
-			m_resources_[T::StaticTypeHash()].insert(resource);
+			AddResource(resource, T::StaticTypeHash());
 		}
 
 		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		void AddResource(const std::string_view name, const Strong<T>& resource)
 		{
-			if (!resource->GetMetadataPath().empty() &&
-			    SearchResourceByMetadata<T>(resource->GetMetadataPath()).lock())
-			{
-				return;
-			}
-			if (!resource->GetPath().empty() &&
-			    GetResourceByRawPath<T>(resource->GetPath()).lock())
-			{
-				return;
-			}
-
-			m_resources_[T::StaticTypeHash()].insert(resource);
-			resource->SetName(name);
+			AddResource(name, resource, T::StaticTypeHash());
 		}
+
+		inline void AddResource(const std::string_view name, const Strong<Abstracts::Resource>& resource, const ResourceType type);
+		inline void AddResource(const Strong<Abstracts::Resource>& resource, const ResourceType type);
 
 		template <typename T>
 		Weak<T> GetResource(const std::string_view name)
@@ -98,14 +78,6 @@ namespace Engine::Managers
 				return boost::reinterpret_pointer_cast<T>(found);
 			}
 
-			if (exists(path)) 
-			{
-				Strong<T> deserialized = Serializer::Deserialize<T>(path.generic_string());
-				AddResource(deserialized);
-				deserialized->Load();
-				return deserialized;
-			}
-
 			return {};
 		}
 		
@@ -117,14 +89,8 @@ namespace Engine::Managers
 		void UnregisterLoadResource(const std::string_view name);
 		auto RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor) -> void;
 		void UnregisterNewResource(const std::string_view name);
-
-		[[nodiscard]] bool RequestAddResourceDialog();
-		void EndAddResourceDialog();
-		[[nodiscard]] bool TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load);
 		
 	private:
-		bool m_b_ui_add_resource_ = false;
-
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_load_functions_;
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_new_functions_;
 #endif
@@ -145,7 +111,7 @@ namespace Engine::Managers
 			return SearchResourceByMetadata(path, T::StaticTypeHash());
 		}
 
-		Weak<Abstracts::Resource> SearchResourceByMetadata(const std::filesystem::path& path, ResourceType type);
+		Weak<Abstracts::Resource> SearchResourceByMetadata(const std::filesystem::path& path, ResourceType type) const;
 
 #if WITH_EDITOR
 	public:

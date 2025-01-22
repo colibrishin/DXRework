@@ -111,9 +111,12 @@ namespace Engine::Managers
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
 					{
-						const Strong<Scene>& scene = Serializer::Deserialize<Scene>(path.data());
-						GetInstance().AddScene(scene);
-						GetInstance().SetActive(scene->GetName());
+						if (Strong<Scene> scene;
+							Serializer::Deserialize<Scene>(path.data(), scene))
+						{
+							GetInstance().AddScene(scene);
+							GetInstance().SetActive(scene->GetName());
+						}
 					};
 
 				return UIHelpers::OpenLoadDialog<Scene, SceneManager>(managing_flag, {}, load_callback, {});

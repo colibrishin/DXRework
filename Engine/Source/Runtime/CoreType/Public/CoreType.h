@@ -21,6 +21,7 @@
 #include <unordered_set>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -40,6 +41,12 @@ template<class T, class U = typename std::make_unsigned<T>::type>
 constexpr U bswap(T i) {
 	return bswap_impl<U>(i, std::make_index_sequence<sizeof(T)>{});
 }
+
+template <typename T>
+struct is_serializable : public std::false_type {};
+
+template <typename T>
+constexpr bool is_serializable_v = std::is_base_of_v<std::true_type, is_serializable<T>>;
 
 #define bswap_32(x) bswap<uint32_t>(x)
 #define bswap_64(x) bswap<uint64_t>(x)
@@ -860,7 +867,8 @@ public:
 	virtual std::string_view GetTypeName() const { return Type##::StaticFullTypeName(); } \
 	virtual std::string_view GetPrettyTypeName() const { return Type##::StaticTypeName(); } \
 	virtual HashType GetTypeHash() const { return Type##::StaticTypeHash(); } \
-	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); }
+	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); } \
+	virtual bool IsBaseOf(HashType derived) const { return derived->IsDerivedOf(Type##::StaticTypeHash()); }
 
 struct ENGINE_CORETYPE_API HashTypeImpl
 {
@@ -878,11 +886,19 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 	}
 	virtual const HashTypeImpl* Fetch() const
 	{
-		throw std::runtime_error("Cannot fetch a hash from a base class.");
+		throw std::runtime_error("Not Implemented");
 	}
-	virtual bool IsDerivedOf(const HashTypeImpl* /*other*/) const 
+	virtual bool IsDerivedOf(const HashTypeImpl* /*base*/) const 
 	{
-		throw std::runtime_error("Cannot check the base class from HashTypeImpl");
+		throw std::runtime_error("Not Implemented");
+	}
+	virtual bool IsBaseOf(const HashTypeImpl* /*derived*/) const
+	{
+		throw std::runtime_error("Not Implemented");
+	}
+	virtual bool IsSerializable() const 
+	{
+		throw std::runtime_error("Not Implemented");
 	}
 
 	constexpr HashTypeImpl() = default;
@@ -942,10 +958,17 @@ struct HashTypeT : public HashTypeImpl
 	{
 		return &type_hash<T>::value;
 	}
-
-	bool IsDerivedOf(const HashTypeImpl* other) const override
+	bool IsDerivedOf(const HashTypeImpl* base) const override
 	{
-		return polymorphic_type_hash<T>::is_derived_of(other);
+		return polymorphic_type_hash<T>::is_derived_of(base);
+	}
+	bool IsBaseOf(const HashTypeImpl* derived) const override 
+	{
+		return derived->IsDerivedOf(this);
+	}
+	bool IsSerializable() const override 
+	{
+		return is_serializable_v<T>;
 	}
 
 	constexpr HashTypeT() :

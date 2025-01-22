@@ -13,6 +13,11 @@ namespace Engine
 		template <typename T>
 		static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
 		{
+			if (!is_serializable_v<T> || !object->GetTypeHash()->IsSerializable())
+			{
+				return false;
+			}
+
 			object->OnSerialized();
 			std::string fixed_name = filename;
 
@@ -91,9 +96,14 @@ namespace Engine
 		}
 
 		template <typename T>
-		static boost::shared_ptr<T> Deserialize(const std::string& filename)
+		static bool Deserialize(const std::string& filename, Strong<T>& out_ptr)
 		{
-			boost::shared_ptr<Abstracts::Entity> object;
+			if (!is_serializable_v<T>)
+			{
+				return false;
+			}
+
+			Strong<Abstracts::Entity> object;
 			std::fstream                        stream(filename, std::ios::in | std::ios::binary);
 
 			if (!stream.is_open())
@@ -106,9 +116,16 @@ namespace Engine
 				boost::archive::binary_iarchive archive(stream);
 				archive >> object;
 			}
+
+			if (!object->GetTypeHash()->IsDerivedOf(T::StaticTypeHash())) 
+			{
+				out_ptr = nullptr;
+				return false;
+			}
 			
 			object->OnDeserialized();
-			return boost::static_pointer_cast<T>(object);
+			out_ptr = boost::static_pointer_cast<T>(object);
+			return true;
 		}
 	};
 } // namespace Engine

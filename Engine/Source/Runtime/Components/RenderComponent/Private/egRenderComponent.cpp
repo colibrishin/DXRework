@@ -12,6 +12,7 @@ namespace Engine::Components
 
 		if (m_shape_) 
 		{
+			Serializer::Serialize(m_shape_->GetName(), m_shape_);
 			m_shape_meta_path_ = m_shape_->GetMetadataPath();
 		}
 	}

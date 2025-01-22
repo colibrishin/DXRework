@@ -6,7 +6,25 @@
 
 namespace Engine::Managers
 {
-	void ResourceManager::Initialize() {}
+	void ResourceManager::Initialize() 
+	{
+		for (const std::filesystem::directory_entry& p : 
+			std::filesystem::recursive_directory_iterator(std::filesystem::current_path()))
+		{
+			if (p.is_regular_file())
+			{
+				if (p.path().has_extension() && p.path().extension() == "meta")
+				{
+					if (Strong<Abstracts::Resource> deserialized;
+						Serializer::Deserialize<Abstracts::Resource>(p.path().generic_string(), deserialized))
+					{
+						AddResource(deserialized, deserialized->GetTypeHash());
+					}
+				}
+			}
+			
+		}
+	}
 
 #ifdef WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
@@ -116,6 +134,28 @@ namespace Engine::Managers
 
 	void ResourceManager::FixedUpdate(const float dt) {}
 
+	void ResourceManager::AddResource(const std::string_view name, const Strong<Abstracts::Resource>& resource, const ResourceType type)
+	{
+		AddResource(resource, type);
+		resource->SetName(name);
+	}
+
+	void ResourceManager::AddResource(const Strong<Abstracts::Resource>& resource, const ResourceType type)
+	{
+		if (!resource->GetMetadataPath().empty() &&
+			SearchResourceByMetadata(resource->GetMetadataPath(), type).lock())
+		{
+			return;
+		}
+		if (!resource->GetPath().empty() &&
+			GetResourceByRawPath(resource->GetPath(), type).lock())
+		{
+			return;
+		}
+
+		m_resources_[type].insert(resource);
+	}
+
 	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const std::string_view name, ResourceType type)
 	{
 		auto& resources = m_resources_[type];
@@ -182,6 +222,22 @@ namespace Engine::Managers
 			return resource;
 		}
 
+		if (exists(path))
+		{
+			if (Strong<Abstracts::Resource> deserialized;
+				Serializer::Deserialize<Abstracts::Resource>(path.generic_string(), deserialized))
+			{
+				if (!type->IsBaseOf(deserialized->GetTypeHash()))
+				{
+					return {};
+				}
+
+				AddResource(deserialized, deserialized->GetTypeHash());
+				deserialized->Load();
+				return deserialized;
+			}
+		}
+
 		return {};
 	}
 
@@ -217,86 +273,6 @@ namespace Engine::Managers
 			m_ui_new_functions_.erase(name);
 		}
 	}
-
-	bool ResourceManager::RequestAddResourceDialog()
-	{
-		if (m_b_ui_add_resource_)
-		{
-			return false;
-		}
-
-		m_b_ui_add_resource_ = true;
-		return true;
-	}
-
-	void ResourceManager::EndAddResourceDialog()
-	{
-		if (m_b_ui_add_resource_)
-		{
-			m_b_ui_add_resource_ = false;
-		}
-	}
-
-	bool ResourceManager::TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load)
-	{
-		bool                                                       window = true;
-		static std::unordered_map<Weak<Abstracts::Resource>, bool> selection{};
-
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Add Resources to...", window})))
-		{
-			context += ui.NewListBox({"Resource List", -1, -1});
-
-			for (const auto& resources : m_resources_ | std::views::values)
-			{
-				if (resources.empty())
-				{
-					continue;
-				}
-
-				const std::string_view type_name = (*resources.begin())->GetPrettyTypeName();
-
-				context += ui.NewTreeNode({type_name});
-
-				for (const Strong<Abstracts::Resource>& resource : resources)
-				{
-					context |= ui.NewSelectable({resource->GetName(), selection[resource]});
-				}
-
-				--context;
-			}
-
-			--context;
-
-			(context |= ui.NewButton({"Add Resources"})).SetFunction([&window]()
-			{
-				window = false;
-			});
-		}
-
-		if (!window)
-		{
-			resource_to_load.reserve(selection.size());
-
-			for (const auto& key : selection | std::views::keys)
-			{
-				if (const Strong<Abstracts::Resource>& resource = key.lock())
-				{
-					if (!resource->IsLoaded())
-					{
-						resource->Load();
-					}
-
-					resource_to_load.push_back(resource);
-				}
-			}
-
-			selection.clear();
-			m_b_ui_add_resource_ = false;
-		}
-
-		return !window;
-	}
 #endif
 
 	ResourceManager::~ResourceManager()
@@ -316,30 +292,30 @@ namespace Engine::Managers
 
 	Weak<Abstracts::Resource> ResourceManager::SearchResourceByMetadata(
 		const std::filesystem::path& path, ResourceType type
-	)
+	) const
 	{
 		if (path.empty())
 		{
 			return {};
 		}
-
-		if (!m_resources_.contains(type))
-		{
-			return {};
-		}
 		
-		auto& resources = m_resources_[type];
-		auto  it        = std::ranges::find_if
+		for (const auto& [res_type, resources] : m_resources_)
+		{
+			if (type == res_type || res_type->IsBaseOf(type))
+			{
+				const auto& it = std::ranges::find_if
 				(
-				 resources, [&path](const Strong<Abstracts::Resource>& resource)
-				 {
-					 return resource->GetMetadataPath() == path;
-				 }
+					resources, [&path](const Strong<Abstracts::Resource>& resource)
+					{
+						return resource->GetMetadataPath() == path;
+					}
 				);
 
-		if (it != m_resources_[type].end())
-		{
-			return *it;
+				if (it != m_resources_.at(res_type).end())
+				{
+					return *it;
+				}
+			}
 		}
 
 		return {};
