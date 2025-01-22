@@ -164,14 +164,13 @@ namespace Engine::Resources
 	{
 		const auto it = std::ranges::find_if
 				(
-				 m_meshes_
-				 , [&name](const auto& pair)
+				 m_cached_meshes_, [&name](const auto& pair)
 				 {
-					 return pair.first->GetName() == name;
+					 return pair.first.lock()->GetName() == name;
 				 }
 				);
 
-		if (it != m_meshes_.end())
+		if (it != m_cached_meshes_.end())
 		{
 			return it->first;
 		}
@@ -181,9 +180,9 @@ namespace Engine::Resources
 
 	Weak<Mesh> Shape::GetMesh(const UINT index) const
 	{
-		if (m_meshes_.size() > index)
+		if (m_cached_meshes_.size() > index)
 		{
-			return m_meshes_[index].first;
+			return m_cached_meshes_[index].first;
 		}
 
 		return {};
@@ -191,9 +190,9 @@ namespace Engine::Resources
 
 	Weak<Material> Shape::GetMaterial(UINT idx) const
 	{
-		if (m_meshes_.size() > idx)
+		if (m_cached_meshes_.size() > idx)
 		{
-			return m_meshes_[idx].second;
+			return m_cached_meshes_[idx].second;
 		}
 
 		return {};
@@ -201,12 +200,12 @@ namespace Engine::Resources
 
 	Weak<AnimationTexture> Shape::GetAnimations() const
 	{
-		return m_animations_;
+		return m_cached_animations_;
 	}
 
 	Weak<BaseAnimation> Shape::GetTransformAnimation() const
 	{
-		return m_tr_animation_;
+		return m_cached_tr_animation_;
 	}
 
 	const Shape::WeakMeshMaterialVector& Shape::GetMeshes() const
@@ -226,20 +225,16 @@ namespace Engine::Resources
 
 	void Shape::UpdateVertices()
 	{
-		m_cached_meshes_.clear();
-
-		for (const auto& pair : m_meshes_)
-		{
-			m_cached_meshes_.push_back(pair);
-		}
-		
 		m_cached_vertices_.clear();
 
-		for (const auto& mesh : m_meshes_ | std::views::keys)
+		for (const auto& mesh : m_cached_meshes_ | std::views::keys)
 		{
-			for (const auto& vertex : mesh->GetVertexCollection())
+			if (const Strong<Mesh>& locked = mesh.lock())
 			{
-				m_cached_vertices_.push_back(vertex);
+				for (const auto& vertex : locked->GetVertexCollection())
+				{
+					m_cached_vertices_.push_back(vertex);
+				}
 			}
 		}
 
@@ -309,29 +304,35 @@ namespace Engine::Resources
 			return;
 		}
 
-		const Strong<Mesh>& mesh_locked = target.lock();
-
-		const auto& it = std::ranges::find_if(m_meshes_, [&mesh_locked](const MeshMaterialPair<Strong>& pair)
+		if (const Strong<Mesh>& mesh_locked = target.lock())
+		{
+			const auto& it = std::ranges::find_if(m_cached_meshes_, [&mesh_locked](const MeshMaterialPair<Weak>& pair)
 			{
-				return pair.first == mesh_locked;
+				return pair.first.lock() == mesh_locked;
 			});
 
-		if (it != m_meshes_.end())
-		{
-			SetMaterial(std::distance(m_meshes_.begin(), it), mat);
+			if (it != m_cached_meshes_.end())
+			{
+				SetMaterial(std::distance(m_cached_meshes_.begin(), it), mat);
+			}
 		}
 	}
 
 	void Shape::SetMaterial(const size_t target_mesh_idx, const Weak<Material>& mat)
 	{
-		if (m_meshes_.size() <= target_mesh_idx)
+		if (m_cached_meshes_.size() <= target_mesh_idx)
 		{
 			return;
 		}
 		
 		if (const Strong<Material>& locked = mat.lock())
 		{
-			m_meshes_[target_mesh_idx].second = locked;
+			if (IsLoaded())
+			{
+				locked->Load();
+				m_meshes_[target_mesh_idx].second = locked;
+			}
+			
 			m_material_paths_[target_mesh_idx] = locked->GetMetadataPath();
 			m_cached_meshes_[target_mesh_idx].second = locked;
 		}
@@ -666,7 +667,13 @@ namespace Engine::Resources
 
 	void Shape::addMeshImpl(const Strong<Mesh>& res, const bool add_path)
 	{
-		m_meshes_.push_back({ res, {} });
+		if (IsLoaded())
+		{
+			res->Load();
+			m_meshes_.push_back({ res, {} });
+		}
+		
+		m_cached_meshes_.push_back({res, {}});
 
 #if WITH_EDITOR
 		m_ui_material_add_opened_.push_back(false);
@@ -674,10 +681,13 @@ namespace Engine::Resources
 		m_bounding_box_.Center  = {0, 0, 0};
 		m_bounding_box_.Extents = {0, 0, 0};
 				
-		for (const auto& mesh : m_meshes_ | std::views::keys)
+		for (const auto& mesh : m_cached_meshes_ | std::views::keys)
 		{
-			const BoundingOrientedBox& obb = mesh->GetBoundingBox();
-			BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
+			if (const Strong<Mesh>& locked = mesh.lock())
+			{
+				const BoundingOrientedBox& obb = locked->GetBoundingBox();
+				BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));	
+			}
 		}
 		
 		if (add_path)
@@ -685,12 +695,19 @@ namespace Engine::Resources
 			m_material_paths_.push_back({});
 			m_mesh_paths_.push_back(res->GetMetadataPath());
 		}
+		
 		UpdateVertices();
 	}
 	
 	void Shape::addAnimationImpl(const Strong<AnimationTexture>& res)
 	{
-		m_animations_      = res;
+		if (IsLoaded())
+		{
+			res->Load();
+			m_animations_      = res;
+		}
+
+		m_cached_animations_ = res;
 		m_animations_path_ = res->GetMetadataPath();
 		
 		m_animation_catalog_.clear();
@@ -708,7 +725,13 @@ namespace Engine::Resources
 	}
 	void Shape::addTrAnimationImpl(const Strong<BaseAnimation>& res)
 	{
-		m_tr_animation_ = res;
+		if (IsLoaded())
+		{
+			res->Load();
+			m_tr_animation_ = res;
+		}
+		
+		m_cached_tr_animation_ = res;
 		m_tr_animation_path_ = res->GetMetadataPath();
 	}
 }

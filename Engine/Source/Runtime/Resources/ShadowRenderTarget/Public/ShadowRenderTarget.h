@@ -1,17 +1,16 @@
 #pragma once
-#include <d3d12.h>
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
-#include "ShadowTexture.generated.h"
+#include "ShadowRenderTarget.generated.h"
 
 namespace Engine::Resources
 {
 	ECLASS(resource, internal)
-	class ENGINE_SHADOWTEXTURE_API ShadowTexture : public Texture2D
+	class ENGINE_SHADOWRENDERTARGET_API ShadowRenderTarget : public Texture2D
 	{
 		GENERATE_BODY
 	public:
-		ShadowTexture()
+		ShadowRenderTarget()
 			: Texture2D
 			(
 			 "",
@@ -22,40 +21,17 @@ namespace Engine::Resources
 				 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 				 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
 				 .DepthOrArraySize = CFG_CASCADE_SHADOW_COUNT,
-				 .Format = TEX_FORMAT_R32_TYPELESS,
-				 .Flags = RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+				 .Format = TEX_FORMAT_R8G8B8A8_UNORM,
+				 .Flags = RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 				 .MipsLevel = 1,
 				 .Layout = TEX_LAYOUT_UNKNOWN,
 				 .SampleDesc = {1, 0},
-				 .AsSRV = true,
-				 .AsDSV = true,
-				 .Srv = {
-					.Format = TEX_FORMAT_R32_FLOAT,
-					.ViewDimension = SRV_DIMENSION_TEXTURE2DARRAY,
-					.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-					.Texture2DArray = {
-						.MostDetailedMip = 0,
-						.MipLevels = 1,
-						.FirstArraySlice = 0,
-						.ArraySize = CFG_CASCADE_SHADOW_COUNT,
-						.PlaneSlice = 0,
-						.ResourceMinLODClamp = 0.f
-					},
-				 },
-				.Dsv = {
-					.Format = TEX_FORMAT_D32_FLOAT,
-					.ViewDimension = DSV_DIMENSION_TEXTURE2DARRAY,
-					.Flags = DSV_FLAG_NONE,
-					.Texture2DArray = {
-						.MipSlice = 0,
-						.FirstArraySlice = 0,
-						.ArraySize = CFG_CASCADE_SHADOW_COUNT
-					}
-				}
+				 .AsSRV = false,
+				 .AsRTV =  true,
 			 }
 			) { }
 
-		~ShadowTexture() override = default;
+		~ShadowRenderTarget() override = default;
 
 		void FixedUpdate(const float dt) override;
 		void Initialize() override;

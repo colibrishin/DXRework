@@ -9,6 +9,9 @@
 #define EPROPERTY(...)
 #define GENERATE_BODY
 
+#define STRINGIFY(X) STRINGIFY_IMPL(X)
+#define STRINGIFY_IMPL(X) #X
+
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -16,8 +19,6 @@
 #include <string_view>
 #include <stdint.h>
 #include <stdexcept>
-#include <exception>
-#include <gcem.hpp>
 #include <unordered_set>
 #include <memory>
 #include <mutex>
@@ -27,7 +28,6 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/archive/detail/iserializer.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/functional/hash.hpp>
 
 template<class T, std::size_t... N>
@@ -43,10 +43,16 @@ constexpr U bswap(T i) {
 }
 
 template <typename T>
-struct is_serializable : public std::false_type {};
+struct is_serializable : std::false_type {};
+
+template <typename T>
+struct is_internal : std::false_type {};
 
 template <typename T>
 constexpr bool is_serializable_v = std::is_base_of_v<std::true_type, is_serializable<T>>;
+
+template <typename T>
+constexpr bool is_internal_v = std::is_base_of_v<std::true_type, is_internal<T>>;
 
 #define bswap_32(x) bswap<uint32_t>(x)
 #define bswap_64(x) bswap<uint64_t>(x)
@@ -85,7 +91,8 @@ struct simple_gc_deleter : simple_gc_deleter_impl
 	simple_gc_deleter(const T* ptr) : simple_gc_deleter_impl(static_cast<const void*>(ptr)) {}
 
 	~simple_gc_deleter() override = default;
-	virtual void call_delete() const 
+
+	void call_delete() const override
 	{
 		delete static_cast<const T*>(ptr);
 	}
@@ -427,7 +434,7 @@ namespace cityhash
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned int version) 
+		void serialize(Archive& ar, const unsigned int /*version*/) 
 		{
 			ar& v;
 		}
@@ -613,11 +620,11 @@ namespace cityhash
 		f = f * 5 + 0xe6546b64;
 		size_t iters = (len - 1) / 20;
 		do {
-			uint32_t a0 = detail::Rotate32(detail::Fetch32(s) * detail::c1, 17) * detail::c2;
-			uint32_t a1 = detail::Fetch32(s + 4);
-			uint32_t a2 = detail::Rotate32(detail::Fetch32(s + 8) * detail::c1, 17) * detail::c2;
-			uint32_t a3 = detail::Rotate32(detail::Fetch32(s + 12) * detail::c1, 17) * detail::c2;
-			uint32_t a4 = detail::Fetch32(s + 16);
+			a0 = detail::Rotate32(detail::Fetch32(s) * detail::c1, 17) * detail::c2;
+			a1 = detail::Fetch32(s + 4);
+			a2 = detail::Rotate32(detail::Fetch32(s + 8) * detail::c1, 17) * detail::c2;
+			a3 = detail::Rotate32(detail::Fetch32(s + 12) * detail::c1, 17) * detail::c2;
+			a4 = detail::Fetch32(s + 16);
 			h ^= a0;
 			h = detail::Rotate32(h, 18);
 			h = h * 5 + 0xe6546b64;
@@ -840,7 +847,10 @@ public:
 		    return {TypeNameStorage.data() + dist, TypeNameStorage.size() - dist - 1};
 	    }
 
-	    return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
+#pragma warning( push )
+#pragma warning( disable : 4702)
+    	return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
+#pragma warning( pop ) 
     }
 };
 
@@ -880,29 +890,33 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 	constexpr bool operator==(const HashTypeImpl& other) const { return Equal(other); }
 	constexpr bool operator!=(const HashTypeImpl& other) const { return !Equal(other); }
 
-	constexpr virtual bool Equal(const HashTypeImpl& other) const
+	[[nodiscard]] constexpr virtual bool Equal(const HashTypeImpl& other) const
 	{
 		return v == other.v;
 	}
-	virtual const HashTypeImpl* Fetch() const
+	[[nodiscard]] virtual const HashTypeImpl* Fetch() const
 	{
 		throw std::runtime_error("Not Implemented");
 	}
-	virtual bool IsDerivedOf(const HashTypeImpl* /*base*/) const 
+	[[nodiscard]] virtual bool IsDerivedOf(const HashTypeImpl* /*base*/) const 
 	{
 		throw std::runtime_error("Not Implemented");
 	}
-	virtual bool IsBaseOf(const HashTypeImpl* /*derived*/) const
+	[[nodiscard]] virtual bool IsBaseOf(const HashTypeImpl* /*derived*/) const
 	{
 		throw std::runtime_error("Not Implemented");
 	}
-	virtual bool IsSerializable() const 
+	[[nodiscard]] virtual bool IsSerializable() const 
+	{
+		throw std::runtime_error("Not Implemented");
+	}
+	[[nodiscard]] virtual bool IsInternal() const
 	{
 		throw std::runtime_error("Not Implemented");
 	}
 
 	constexpr HashTypeImpl() = default;
-	constexpr HashTypeImpl(cityhash::cityhash256 value) : v(value) {}
+	constexpr HashTypeImpl(const cityhash::cityhash256& value) : v(value) {}
 
 	cityhash::cityhash256 v;
 	
@@ -933,14 +947,14 @@ struct polymorphic_type_hash
 	static constexpr size_t upcast_count = 0;
 	static constexpr HashArray<upcast_count> upcast_array{};
 
-	static bool is_derived_of(const HashType base)
+	static bool is_derived_of(const HashType /*base*/)
 	{
 		return false;
 	}
 };
 
 template <typename T>
-struct HashTypeT : public HashTypeImpl
+struct HashTypeT : HashTypeImpl
 {
 	constexpr bool operator>(const HashTypeT& other) const { return v > other.v; }
 	constexpr bool operator>=(const HashTypeT& other) const { return v >= other.v; }
@@ -949,12 +963,11 @@ struct HashTypeT : public HashTypeImpl
 	constexpr bool operator==(const HashTypeT& other) const { return Equal(other); }
 	constexpr bool operator!=(const HashTypeT& other) const { return !Equal(other); }
 
-	constexpr bool Equal(const HashTypeImpl& other) const override
+	[[nodiscard]] constexpr bool Equal(const HashTypeImpl& other) const override
 	{
 		return HashTypeImpl::Equal(other) && this == &other;
 	}
-
-	HashType Fetch() const override
+	[[nodiscard]] HashType Fetch() const override
 	{
 		return &type_hash<T>::value;
 	}
@@ -966,9 +979,13 @@ struct HashTypeT : public HashTypeImpl
 	{
 		return derived->IsDerivedOf(this);
 	}
-	bool IsSerializable() const override 
+	[[nodiscard]] bool IsSerializable() const override 
 	{
 		return is_serializable_v<T>;
+	}
+	[[nodiscard]] bool IsInternal() const override
+	{
+		return is_internal_v<T>;
 	}
 
 	constexpr HashTypeT() :
@@ -978,7 +995,7 @@ private:
 	friend class boost::serialization::access;
 
 	template <typename Archive>
-	void serialize(Archive& ar, const unsigned int version)
+	void serialize(Archive& ar, const unsigned int /*version*/)
 	{
 		ar& boost::serialization::base_object<HashTypeImpl>(*this);
 	}

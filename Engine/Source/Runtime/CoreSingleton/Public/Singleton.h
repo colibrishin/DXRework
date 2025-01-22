@@ -1,6 +1,5 @@
 #pragma once
 #include <mutex>
-
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
 #include "Singleton.generated.h"
@@ -8,7 +7,7 @@
 namespace Engine::Abstracts
 {
 	ECLASS()
-	class ENGINE_CORESINGLETON_API SingletonBase : public Abstracts::Renderable
+	class ENGINE_CORESINGLETON_API SingletonBase : public Renderable
 	{
 		GENERATE_BODY
 	public:

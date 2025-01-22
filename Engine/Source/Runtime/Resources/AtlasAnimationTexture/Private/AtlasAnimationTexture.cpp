@@ -1,6 +1,7 @@
 #include "../Public/AtlasAnimationTexture.h"
 #include "AtlasAnimationTexture.generated.h"
 
+#include "AtlasAnimation.h"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
@@ -8,7 +9,7 @@ namespace Engine::Resources
 {
 	AtlasAnimationTexture::AtlasAnimationTexture(
 		const std::filesystem::path& path,
-		const std::vector<Strong<Resources::AtlasAnimation>>& animations,
+		const std::vector<Strong<AtlasAnimation>>& animations,
 		const std::vector<Strong<Texture2D>>& atlases
 	)
 		: Texture3D(path, {}),

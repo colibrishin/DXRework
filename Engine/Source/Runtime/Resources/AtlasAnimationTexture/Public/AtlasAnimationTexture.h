@@ -1,9 +1,13 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
-#include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
-#include "AtlasAnimation.h"
 
 #include "AtlasAnimationTexture.generated.h"
+
+namespace Engine::Resources
+{
+	class AtlasAnimation;
+	class Texture2D;
+}
 
 namespace Engine::Resources
 {
@@ -14,7 +18,7 @@ namespace Engine::Resources
 	public:
 		AtlasAnimationTexture(
 			const std::filesystem::path& path, 
-			const std::vector<Strong<Resources::AtlasAnimation>>& animations,
+			const std::vector<Strong<AtlasAnimation>>& animations,
 			const std::vector<Strong<Texture2D>>& atlases);
 
 		void PreUpdate(const float dt) override;

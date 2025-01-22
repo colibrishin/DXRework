@@ -14,10 +14,12 @@ public class ShadowManager : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Shader>(target);
-        conf.AddPublicDependency<ShadowTexture>(target);
         conf.AddPublicDependency<Texture2D>(target);
         conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
+
+        conf.AddPrivateDependency<Shader>(target);
+        conf.AddPrivateDependency<ShadowTexture>(target);
+        conf.AddPrivateDependency<ShadowRenderTarget>(target);
     }
 }

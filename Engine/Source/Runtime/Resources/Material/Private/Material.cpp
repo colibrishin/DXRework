@@ -60,14 +60,23 @@ namespace Engine::Resources
 						}
 					}
 				}
+				else
+				{
+					*parent |= ui.NewText({"Empty"});
+					*parent |= ui.NewSeparator({});
+				}
 			}
 			--*parent;
 
 			{
-				std::string shader_string = {};
+				static std::string shader_string = {};
 				if (const Strong<Shader>& shader = m_cached_shader_.lock())
 				{
 					shader_string = shader->GetName();
+				}
+				else
+				{
+					shader_string = {};
 				}
 			
 				*parent |= ui.NewLabelAndText({"Shader", shader_string, false});
@@ -78,11 +87,16 @@ namespace Engine::Resources
 			}
 
 			{
-				std::string atlas_string = {};
+				static std::string atlas_string = {};
 				if (const Strong<AtlasAnimationTexture>& atlas = m_cached_atlas_.lock())
 				{
 					atlas_string = atlas->GetName();
 				}
+				else
+				{
+					atlas_string = {};
+				}
+				
 				*parent |= ui.NewLabelAndText({ "Atlas Texture", atlas_string, false});
 				(*parent |= ui.NewButton({ "Add Texture..." })).SetFunction([&]()
 					{
@@ -119,11 +133,14 @@ namespace Engine::Resources
 								continue;
 							}
 
-							const auto& it = std::find(m_textures_.begin(), m_textures_.end(), nullptr);
-
-							if (it != m_textures_.end())
+							const auto& it = std::ranges::find_if(m_cached_textures_, [&locked](const Weak<Texture>& tex)
 							{
-								SetTexture(locked->GetSharedPtr<Texture>(), std::distance(m_textures_.begin(), it));
+								return locked == tex.lock();
+							});
+
+							if (it != m_cached_textures_.end())
+							{
+								SetTexture(locked->GetSharedPtr<Texture>(), std::distance(m_cached_textures_.begin(), it));
 							}
 						}
 					}
@@ -177,24 +194,36 @@ namespace Engine::Resources
 
 	void Material::SetTexture(const Weak<Texture>& texture, const size_t slot)
 	{
-		if (slot > m_textures_.size()) 
+		if (slot > m_cached_textures_.size()) 
 		{
 			return;
 		}
 
 		if (const Strong<Texture>& locked = texture.lock())
 		{
-			if (const auto it = std::find(m_textures_.begin(), m_textures_.end(), locked);
-				it != m_textures_.end())
+			if (const auto it = std::ranges::find_if(m_cached_textures_, [&locked](const Weak<Texture>& tex)
 			{
-				const size_t idx = std::distance(m_textures_.begin(), it);
-				m_textures_[idx] = {};
+				return tex.lock() == locked;
+			});
+				it != m_cached_textures_.end())
+			{
+				const size_t idx = std::distance(m_cached_textures_.begin(), it);
+				if (IsLoaded())
+				{
+					m_textures_[idx] = {};	
+				}
+				
 				m_cached_textures_[idx] = {};
 				m_material_sb_.texSlot[slot] = false;
 				m_texture_paths_[slot] = "";
 			}
 
-			m_textures_[slot] = locked;
+			if (IsLoaded())
+			{
+				locked->Load();
+				m_textures_[slot] = locked;
+			}
+			
 			m_cached_textures_[slot] = locked;
 			m_material_sb_.texSlot[slot] = true;
 			m_texture_paths_[slot] = locked->GetMetadataPath();
@@ -205,7 +234,12 @@ namespace Engine::Resources
 	{
 		if (const Strong<AtlasAnimationTexture>& locked = texture.lock())
 		{
-			m_atlas_ = locked;
+			if (IsLoaded())
+			{
+				locked->Load();
+				m_atlas_ = locked;
+			}
+			
 			m_cached_atlas_ = locked;
 			m_atlas_path_ = locked->GetMetadataPath();
 		}
@@ -215,7 +249,12 @@ namespace Engine::Resources
 	{
 		if (const Strong<Shader>& locked = shader.lock())
 		{
-			m_shader_ = locked;
+			if (IsLoaded())
+			{
+				locked->Load();
+				m_shader_ = locked;
+			}
+			
 			m_cached_shader_ = locked;
 			m_shader_path_ = locked->GetMetadataPath();
 		}
@@ -248,7 +287,7 @@ namespace Engine::Resources
 
 	Weak<Shader> Material::GetShader() const
 	{
-		return m_shader_;
+		return m_cached_shader_;
 	}
 
 	Material::Material() : Resource("") {}
@@ -259,7 +298,7 @@ namespace Engine::Resources
 		{
 			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
 			{
-				SetShader(m_shader_);
+				SetShader(shader);
 			}
 		}
 

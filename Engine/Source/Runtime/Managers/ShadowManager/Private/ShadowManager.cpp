@@ -1,17 +1,18 @@
-#include "../Public/ShadowManager.h"
+#include "ShadowManager.h"
+#include "ShadowManager.generated.h"
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.h"
-
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.h"
-#include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
-
-#include "Source/Runtime/Managers/RenderPipeline/Public/Renderer.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
+#include "Source/Runtime/Core/SceneManager//Public/SceneManager.h"
+
+#include "RenderPipeline.h"
+#include "Renderer.h"
+#include "Shader.h"
+#include "ShadowRenderTarget.h"
+#include "ShadowTexture.h"
 
 namespace Engine::Managers
 {
@@ -30,25 +31,7 @@ namespace Engine::Managers
 				);
 
 		// Render target for shadow map mask.
-		m_shadow_map_mask_ = Resources::Texture2D::Create<true>
-				(
-				 "Shadow Render Target Texture",
-				 "",
-				 GenericTextureDescription {
-					 .Dimension = TEX_TYPE_2D,
-					 .Alignment = 0,
-					 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
-					 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
-					 .DepthOrArraySize = CFG_CASCADE_SHADOW_COUNT,
-					 .Format = TEX_FORMAT_R8G8B8A8_UNORM,
-					 .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-					 .MipsLevel = 1,
-					 .Layout = TEX_LAYOUT_UNKNOWN,
-					 .SampleDesc = {1, 0},
-					 .AsSRV = false,
-				 	 .AsRTV = true
-				 }
-				);
+		m_shadow_map_mask_ = Resources::ShadowRenderTarget::Create<true>("Shadow Render Target Texture");
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());

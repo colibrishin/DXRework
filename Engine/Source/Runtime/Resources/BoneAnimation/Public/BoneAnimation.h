@@ -1,5 +1,4 @@
 #pragma once
-#include <map>
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 #include "AnimationPrimitive.h"
 

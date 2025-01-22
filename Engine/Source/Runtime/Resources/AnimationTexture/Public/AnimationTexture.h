@@ -5,6 +5,11 @@
 
 namespace Engine::Resources
 {
+	class BoneAnimation;
+}
+
+namespace Engine::Resources
+{
 	ECLASS(resource, serialize)
 	class ENGINE_ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{

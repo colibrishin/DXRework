@@ -11,6 +11,7 @@ namespace Engine::Graphics
 		GENERATE_BODY
 	public:
 		BoneAnimationPrimitive();
+		~BoneAnimationPrimitive() = default;
 
 		void SetIndex(const int idx) noexcept;
 		void AddPosition(const float time, const Vector3& position);

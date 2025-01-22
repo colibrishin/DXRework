@@ -1,7 +1,7 @@
 #pragma once
 #include <filesystem>
-#include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 #include "AtlasAnimationPrimitive.h"
+#include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
 #include "AtlasAnimation.generated.h"
 

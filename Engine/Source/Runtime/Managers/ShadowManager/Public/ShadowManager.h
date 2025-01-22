@@ -1,14 +1,18 @@
 #pragma once
 
-#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
-#include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
-#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
-
 #include "RenderTask.h"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 
 #include "ShadowManager.generated.h"
+
+namespace Engine::Resources
+{
+	class Shader;
+	class ShadowTexture;
+	class ShadowRenderTarget;
+}
 
 namespace Engine::Graphics
 {
@@ -94,7 +98,7 @@ namespace Engine::Managers
 		);
 
 		Strong<Resources::Shader> m_shadow_shader_;
-		Strong<Resources::Texture2D> m_shadow_map_mask_;
+		Strong<Resources::ShadowRenderTarget> m_shadow_map_mask_;
 		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
 
 		// sub part of the view frustum

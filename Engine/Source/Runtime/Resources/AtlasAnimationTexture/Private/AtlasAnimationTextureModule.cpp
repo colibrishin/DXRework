@@ -5,18 +5,17 @@
 #include "AtlasAnimation.h"
 #include "ModuleManager/Public/ModuleManager.h"
 #include "ResourceManager/Public/ResourceManager.h"
-
-#include <string.h>
+#include "Texture2D.h"
 
 MODULE_IMPL(Engine::AtlasAnimationTextureModule, AtlasAnimationTexture)
 
 void Engine::AtlasAnimationTextureModule::Initialize()
 {
-    Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
+    Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
             const auto& load_callback = [](const std::string_view name, const std::string_view path) 
                 {
-                    Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::AtlasAnimationTexture>(path);
+                    Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::AtlasAnimationTexture>(path);
                 };
             
             UIHelpers::OpenLoadDialog<Resources::AtlasAnimationTexture, Managers::ResourceManager>(
@@ -26,7 +25,7 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                 {});
         });
 
-    Managers::ResourceManager::GetInstance().RegisterNewResource(Engine::Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
+    Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
             static std::string sub_atlas_name_buffer;
             static std::string sub_atlas_texture_path_buffer;
@@ -123,25 +122,25 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                                 if (const std::filesystem::path& xml_entry = entry.path();
                                     xml_entry.extension() == ".xml")
                                 {
-                                    std::any_of(std::begin(expected_tex_extensions), std::end(expected_tex_extensions), [xml_entry](const char* extension)
-                                        {
-                                            std::filesystem::path tex_path = xml_entry;
-                                            tex_path.replace_extension(extension);
+                                    std::ranges::any_of(expected_tex_extensions, [xml_entry](const char* extension)
+                                    {
+                                        std::filesystem::path tex_path = xml_entry;
+                                        tex_path.replace_extension(extension);
 
-                                            if (std::filesystem::exists(tex_path))
-                                            {
-                                                listed_pair.emplace_back
+                                        if (exists(tex_path))
+                                        {
+                                            listed_pair.emplace_back
                                                 (
-                                                    xml_entry.stem().generic_string(),
-                                                    tex_path.generic_string(),
-                                                    xml_entry.generic_string()
+                                                 xml_entry.stem().generic_string(),
+                                                 tex_path.generic_string(),
+                                                 xml_entry.generic_string()
                                                 );
 
-                                                return true;
-                                            }
+                                            return true;
+                                        }
 
-                                            return false;
-                                        });
+                                        return false;
+                                    });
                                 }
                             }
                         });
@@ -193,8 +192,8 @@ void Engine::AtlasAnimationTextureModule::Initialize()
 
 void Engine::AtlasAnimationTextureModule::Shutdown()
 {
-    Managers::ResourceManager::GetInstance().UnregisterNewResource(Engine::Resources::AtlasAnimationTexture::StaticTypeName());
-    Managers::ResourceManager::GetInstance().UnregisterLoadResource(Engine::Resources::AtlasAnimationTexture::StaticTypeName());
+    Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName());
+    Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName());
 }
 
 bool Engine::AtlasAnimationTextureModule::DynamicLoadable()

@@ -36,9 +36,7 @@ namespace Engine
 	}
 
     ModelRendererRenderInstanceTask::ModelRendererRenderInstanceTask()
-        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()),
-          m_allocation_count_(0),
-          m_used_count_(0) {}
+        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()) {}
 
     ModelRendererRenderInstanceTask::~ModelRendererRenderInstanceTask()
     {
