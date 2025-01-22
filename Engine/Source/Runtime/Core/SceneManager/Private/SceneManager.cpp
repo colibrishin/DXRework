@@ -16,7 +16,6 @@ namespace Engine::Managers
 	void SceneManager::SetActiveFinalize(const Weak<Scene>& it)
 	{
 		m_active_scene_ = it;
-		onSceneActive.Broadcast(m_active_scene_);
 
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -27,6 +26,8 @@ namespace Engine::Managers
 
 			//g_raytracing = scene->m_b_scene_raytracing_;
 		}
+
+		onSceneActive.Broadcast(m_active_scene_);
 	}
 
 	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ModuleManager/Public/IModule.h"
-
 #ifdef PHYSX_ENABLED
 namespace physx
 {
@@ -18,17 +16,6 @@ namespace physx
 #include "TypeLibrary/Public/TypeLibrary.h"
 
 #include "PhysicsManager.generated.h"
-
-namespace Engine
-{
-	struct PhysicsManagerModule : public IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(PhysicsManagerModule)
-		void Initialize() override;
-		void Shutdown() override;
-		bool DynamicLoadable() override;
-	};
-}
 
 namespace Engine::Managers
 {

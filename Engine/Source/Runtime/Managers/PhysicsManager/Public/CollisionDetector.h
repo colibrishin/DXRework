@@ -49,6 +49,10 @@ namespace Engine::Managers
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
+
 		void SetCollisionLayer(LayerSizeType a, LayerSizeType b);
 		void UnsetCollisionLayer(LayerSizeType layer, LayerSizeType layer2);
 		bool IsCollisionLayer(LayerSizeType layer1, LayerSizeType layer2);
@@ -69,13 +73,19 @@ namespace Engine::Managers
 		void DispatchInactiveExit(const Weak<Abstracts::ObjectBase>& lhs);
 
 		std::mutex m_layer_mask_mutex_;
-		bool       m_layer_mask_[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT];
+		bool       m_layer_mask_[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]{};
 
 		tbb::concurrent_vector<CollisionInfo> m_collision_produce_queue_;
 
 		tbb::concurrent_map<GlobalEntityID, std::set<GlobalEntityID>>      m_collision_map_;
 		tbb::concurrent_map<GlobalEntityID, std::set<GlobalEntityID>> m_frame_collision_map_;
 
+#if WITH_EDITOR
+		void UpdateLayerNames(Weak<Scene> scene);
+
+		std::map<std::pair<LayerSizeType, LayerSizeType>, std::string> m_layer_name_storage_;
+#endif
+		
 #ifdef PHYSX_ENABLED
 	public:
 		uint32_t GetLayerFilter(const eLayerType layer) const;

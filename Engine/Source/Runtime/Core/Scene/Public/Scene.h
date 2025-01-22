@@ -50,7 +50,7 @@ namespace Engine
 		"Observer",
 		"UI"
 	};
-
+	
 	ECLASS(serialize)
 	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
@@ -347,7 +347,12 @@ namespace Engine
 			return {};
 		}
 
-		auto operator[](size_t idx) const
+		Strong<Layer> operator[](const size_t idx) const
+		{
+			return m_layers_[idx];
+		}
+
+		Strong<Layer> at(const size_t idx) const
 		{
 			return m_layers_[idx];
 		}
@@ -380,6 +385,11 @@ namespace Engine
 		auto cend() const noexcept
 		{
 			return m_layers_.cend();
+		}
+
+		auto size() const noexcept
+		{
+			return m_layers_.size();
 		}
 
 	private:

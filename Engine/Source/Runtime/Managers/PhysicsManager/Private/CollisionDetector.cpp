@@ -6,6 +6,8 @@
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #include "Components/Transform/Public/Transform.h"
 
+#include "Layer/Public/Layer.h"
+
 #include "ObjectBase/Public/ObjectBase.h"
 
 #include "Scene/Public/Scene.h"
@@ -23,6 +25,24 @@
 
 namespace Engine::Managers
 {
+#if WITH_EDITOR
+	void CollisionDetector::UpdateLayerNames(Weak<Scene> scene)
+	{
+		m_layer_name_storage_.clear();
+		
+		if (const Strong<Scene>& locked = scene.lock())
+		{
+			for (size_t i = 0; i < locked->size(); ++i)
+			{
+				for (size_t j = 0; j < locked->size(); ++j)
+				{
+					m_layer_name_storage_[{i, j}] = std::format("{}\n{}", locked->at(i)->GetName(), locked->at(j)->GetName());
+				}
+			}
+		}
+	}
+#endif
+
 	void CollisionDetector::Initialize()
 	{
 		for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
@@ -50,6 +70,13 @@ namespace Engine::Managers
 				physx::PxSetGroupCollisionFlag(i, j, i == j);
 			}
 		}
+#endif
+
+#if WITH_EDITOR
+		UpdateLayerNames(SceneManager::GetInstance().GetActiveScene());
+		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
+		// todo: synchronize the collision infos from scene
+		// todo: save the collision infos in the scene
 #endif
 
 	}
@@ -194,6 +221,30 @@ namespace Engine::Managers
 
 	void CollisionDetector::PostUpdate(const float dt) {}
 
+#if WITH_EDITOR
+	void CollisionDetector::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Collision Detector", m_ui_info_.dialogOpened})))
+		{
+			if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
+			{
+				context += ui.NewTable({"Layer Mask", scene->size()});
+				for (size_t i = 0; i < scene->size(); ++i)
+				{
+					context |= ui.NewTableRow({});
+					for (size_t j = 0; j < i; ++j)
+					{
+						context |= ui.NewTableColumn({});
+						context |= ui.NewCheckbox({m_layer_name_storage_[{i, j}], m_layer_mask_[i][j]});
+					}
+				}
+				--context;
+			}
+		}
+	}
+#endif
+	
 	void CollisionDetector::TestCollision(const Weak<Abstracts::ObjectBase>& p_lhs, const Weak<Abstracts::ObjectBase>& p_rhs)
 	{
 		const auto lhs = p_lhs.lock();

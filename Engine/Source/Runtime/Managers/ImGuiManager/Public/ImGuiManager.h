@@ -244,6 +244,33 @@ namespace Engine
         bool DoImpl() const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiTableToken : TableToken
+    {
+        using TableToken::TableToken;
+
+        void End() const override;
+    protected:
+        bool DoImpl(std::string_view label, unsigned long long column_count) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiTableRowToken : TableRowToken
+    {
+        using TableRowToken::TableRowToken;
+        
+        void End() const override;
+    protected:
+        bool DoImpl() const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiTableColumnToken : TableColumnToken
+    {
+        using TableColumnToken::TableColumnToken;
+
+        void End() const override;
+    protected:
+        bool DoImpl(unsigned long long column) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -276,6 +303,9 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(ComboboxUInt8)
         IMGUI_INLINE_GETTER_DECL(Text)
         IMGUI_INLINE_GETTER_DECL(Separator)
+        IMGUI_INLINE_GETTER_DECL(Table)
+        IMGUI_INLINE_GETTER_DECL(TableRow)
+        IMGUI_INLINE_GETTER_DECL(TableColumn)
 
         void               NewFrame() override;
     };

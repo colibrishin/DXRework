@@ -398,6 +398,29 @@ bool Engine::ImGuiSeparatorToken::DoImpl() const
 	return true;
 }
 
+void Engine::ImGuiTableToken::End() const
+{
+	ImGui::EndTable();
+}
+
+bool Engine::ImGuiTableToken::DoImpl(std::string_view label, unsigned long long column_count) const
+{
+	return ImGui::BeginTable(label.data(), column_count);
+}
+void Engine::ImGuiTableRowToken::End() const {}
+bool Engine::ImGuiTableRowToken::DoImpl() const
+{
+	ImGui::TableNextRow();
+	return true;
+}
+void Engine::ImGuiTableColumnToken::End() const {}
+
+bool Engine::ImGuiTableColumnToken::DoImpl(unsigned long long column) const
+{
+	ImGui::TableNextColumn();
+	return true;
+}
+
 void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR
