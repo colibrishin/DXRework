@@ -6,6 +6,8 @@
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 
+#include "ModuleManager.generated.h"
+
 #define IS_EMPTY(...) (true __VA_OPT__(&& false))
 #define IS_DLL !BOOST_PP_IS_EMPTY(ENGINE_CORE_API)
 
@@ -14,15 +16,15 @@ namespace Engine::Managers
 	class ModuleManager;
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ModuleManager)
-
 namespace Engine::Managers
 {
 	using ModuleInitializationFunctionCStyle = IModule*(*)();
 	using ModuleInitializationFunction = std::function<IModule*()>;
 
+	ECLASS()
 	class ENGINE_CORE_API ModuleManager : public Abstracts::Singleton<ModuleManager>
 	{
+		GENERATE_BODY
 	public:
 		explicit ModuleManager(SINGLETON_LOCK_TOKEN);
 
