@@ -11,6 +11,11 @@ namespace Engine
 			return std::max(std::max(v.x, v.y), v.z);
 		}
 
+		inline static bool __vectorcall IsSamePolarity(const float v1, const float v2)
+		{
+			return std::copysign(1.0f, v1) == std::copysign(1.0f, v2);
+		}
+
 		inline static void ZeroToEpsilon(Vector3& v, const float epsilon = 0.0001f)
 		{
 			if (v.x == 0.0f)

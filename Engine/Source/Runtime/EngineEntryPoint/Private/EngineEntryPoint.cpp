@@ -55,6 +55,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"Core");
 		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
 		ModuleManager::GetInstance().LoadModule(L"D3D12GraphicInterface");
+		ModuleManager::GetInstance().LoadModule(L"PhysicsManager");
 	}
 
 	void EngineEntryPoint::Tick()

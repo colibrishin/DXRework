@@ -54,10 +54,8 @@ public class EngineSolution : Solution
         {
             // dll
             conf.AddProject<Core>(target);
-            conf.AddProject<GJK>(target);
             conf.AddProject<RaycastExtension>(target);
             conf.AddProject<ParticleRendererExtension>(target);
-            conf.AddProject<Verlet>(target);
 
             {
                 conf.AddProject<RenderComponent>(target);
@@ -75,6 +73,7 @@ public class EngineSolution : Solution
             }
 
             {
+                conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<InputManager>(target);

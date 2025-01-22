@@ -1,8 +1,5 @@
-[submodule "DX/pugixml"]
-	path = DX/pugixml
-	url = https://github.com/zeux/pugixml
-[submodule "DX/PhysX"]
-	path = DX/PhysX
+[submodule "Engine/Source/ThirdParty/PhysX/PhysX"]
+	path = PhysX
 	url = https://github.com/NVIDIA-Omniverse/PhysX.git
 [submodule "Programs/Sharpmake"]
 	path = Programs/Sharpmake

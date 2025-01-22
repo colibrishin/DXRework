@@ -191,6 +191,7 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_FOV=90.f");
             conf.Defines.Add("CFG_RAYTRACING=0");
             conf.Defines.Add("CFG_LAYER_COUNT=0");
+            conf.Defines.Add("CFG_EPSILON=0.0001f");
 
             conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
             conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
