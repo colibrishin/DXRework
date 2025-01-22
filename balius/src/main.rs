@@ -28,7 +28,7 @@ fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path:
     let parser_path = engine_dir.join("Programs").join("header-parser").join("Release").join("header-parser.exe");
     
     let mut parser = std::process::Command::new(&parser_path);
-    let _output = parser.current_dir(intermediate_path).args(target_files.lock().unwrap().clone()).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").status().expect("Unable to spawn the process");
+    let _output = parser.current_dir(intermediate_path).args(target_files.lock().unwrap().clone()).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").output().expect("Unable to spawn the process");
     //println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
     //println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
 }
