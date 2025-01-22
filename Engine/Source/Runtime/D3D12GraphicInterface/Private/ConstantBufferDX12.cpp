@@ -65,7 +65,7 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data,
 		char* data = nullptr;
 
 		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-		std::memcpy(data, src_data, stride);
+		SIMDExtension::_mm256_memcpy(data, src_data, stride);
 		m_upload_buffer_->Unmap(0, nullptr);
 
 		cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
@@ -154,11 +154,8 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Bind(const CommandPair* cmd,
 				);
 
 		char* data = nullptr;
-
 		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-
-		std::memcpy(data, &m_data_, m_stride_);
-
+		SIMDExtension::_mm256_memcpy(data, m_data_, m_stride_);
 		m_upload_buffer_->Unmap(0, nullptr);
 
 		const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition

@@ -22,7 +22,7 @@ namespace Engine::Managers
 
 	void CameraManager::PostUpdate(const float dt)
 	{
-		if (const Strong<Scene>& scene = Managers::SceneManager::GetInstance().GetActiveScene().lock()) 
+		if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
 			for (const Weak<Abstracts::ObjectBase>& w_object : scene->GetGameObjects(RESERVED_LAYER_CAMERA))
 			{

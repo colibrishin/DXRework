@@ -46,7 +46,7 @@ namespace Engine
 		float maxDepth;
 	};
 
-	enum ENGINE_CORE_API eFormat : uint8_t
+	enum ENGINE_CORE_API eFormat
 	{
 		TEX_FORMAT_UNKNOWN = 0,
 		TEX_FORMAT_R32G32B32A32_TYPELESS = 1,
@@ -302,7 +302,7 @@ namespace Engine
 		TEX_LAYOUT_64KB_STANDARD_SWIZZLE = 3
 	};
 
-	struct SamplerDescription
+	struct ENGINE_CORE_API SamplerDescription
 	{
 		UINT Count;
 		UINT Quality;
@@ -338,16 +338,16 @@ namespace Engine
 
 	struct ENGINE_CORE_API BufferUAVDescription
 	{
-		UINT64 FirstElement;
-		UINT NumElements;
-		UINT StructureByteStride;
-		UINT64 CounterOffsetInBytes;
-		eUAVBufferFlag Flags;
+		UINT64 FirstElement = 0;
+		UINT NumElements = 0;
+		UINT StructureByteStride = 0;
+		UINT64 CounterOffsetInBytes = 0;
+		eUAVBufferFlag Flags = BUFFER_UAV_FLAG_NONE;
 	};
 
 	struct ENGINE_CORE_API Tex1dUAVDescription
 	{
-		UINT MipSlice;
+		UINT MipSlice = 0;
 
 	private:
 		friend class boost::serialization::access;
@@ -361,41 +361,41 @@ namespace Engine
 
 	struct ENGINE_CORE_API Tex1dArrayUAVDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dUAVDescription
 	{
-		UINT MipSlice;
-		UINT PlaneSlice;
+		UINT MipSlice = 0;
+		UINT PlaneSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dArrayUAVDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
-		UINT PlaneSlice;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
+		UINT PlaneSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsUAVDescription
 	{
-		UINT UnusedField_NothingToDefine;
+		UINT UnusedField_NothingToDefine = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsArrayUAVDescription
 	{
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex3dUAVDescription
 	{
-		UINT MipSlice;
-		UINT FirstWSlice;
-		UINT WSize;
+		UINT MipSlice = 0;
+		UINT FirstWSlice = 0;
+		UINT WSize = 0;
 	};
 
 	struct ENGINE_CORE_API UAVDescription
@@ -417,52 +417,52 @@ namespace Engine
 
 	struct ENGINE_CORE_API BufferRtvDescription
 	{
-		UINT64 FirstElement;
-		UINT NumElements;
+		UINT64 FirstElement{};
+		UINT NumElements{};
 	};
 
 	struct ENGINE_CORE_API Tex1dRtvDescription
 	{
-		UINT MipSlice;
+		UINT MipSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex1dArrayRtvDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dRtvDescription
 	{
-		UINT MipSlice;
-		UINT PlaneSlice;
+		UINT MipSlice = 0;
+		UINT PlaneSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsRtvDescription
 	{
-		UINT UnusedField_NothingToDefine;
+		UINT UnusedField_NothingToDefine = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dArrayRtvDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
-		UINT PlaneSlice;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
+		UINT PlaneSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsArrayRtvDescription
 	{
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex3dRtvDescription
 	{
-		UINT MipSlice;
-		UINT FirstWSlice;
-		UINT WSize;
+		UINT MipSlice = 0;
+		UINT FirstWSlice = 0;
+		UINT WSize = 0;
 	};
 
 	enum ENGINE_CORE_API eNativeRtvType
@@ -497,37 +497,37 @@ namespace Engine
 
 	struct ENGINE_CORE_API Tex1dDsvDescription
 	{
-		UINT MipSlice;
+		UINT MipSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex1dArrayDsvDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dDsvDescription
 	{
-		UINT MipSlice;
+		UINT MipSlice = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dArrayDsvDescription
 	{
-		UINT MipSlice;
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsDsvDescription
 	{
-		UINT UnusedField_NothingToDefine;
+		UINT UnusedField_NothingToDefine = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsArrayDsvDescription
 	{
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 
@@ -573,83 +573,83 @@ namespace Engine
 
 	struct ENGINE_CORE_API BufferSrvDescription
 	{
-		UINT64 FirstElement;
-		UINT NumElements;
-		UINT StructureByteStride;
-		eSrvFlag Flags;
+		UINT64 FirstElement = 0;
+		UINT NumElements = 0;
+		UINT StructureByteStride = 0;
+		eSrvFlag Flags = eSrvFlag::BUFFER_SRV_FLAG_NONE;
 	};
 
 	struct ENGINE_CORE_API Tex1dSrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API Tex1dArraySrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		UINT  FirstArraySlice;
-		UINT  ArraySize;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		UINT  FirstArraySlice = 0;
+		UINT  ArraySize = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dSrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		UINT  PlaneSlice;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		UINT  PlaneSlice = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dArraySrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		UINT  FirstArraySlice;
-		UINT  ArraySize;
-		UINT  PlaneSlice;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		UINT  FirstArraySlice = 0;
+		UINT  ArraySize = 0;
+		UINT  PlaneSlice = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API Tex3dSrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API TexCubeSrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API TexCubeArraySrvDescription
 	{
-		UINT  MostDetailedMip;
-		UINT  MipLevels;
-		UINT  First2DArrayFace;
-		UINT  NumCubes;
-		FLOAT ResourceMinLODClamp;
+		UINT  MostDetailedMip = 0;
+		UINT  MipLevels = 0;
+		UINT  First2DArrayFace = 0;
+		UINT  NumCubes = 0;
+		FLOAT ResourceMinLODClamp = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsSrvDescription
 	{
-		UINT UnusedField_NothingToDefine;
+		UINT UnusedField_NothingToDefine = 0;
 	};
 
 	struct ENGINE_CORE_API Tex2dMsArraySrvDescription
 	{
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
 	};
 
 	struct ENGINE_CORE_API AccelStructSrvDescription
 	{
-		uint64_t Location; //todo: address type;
+		uint64_t Location = 0; //todo: address type;
 	};
 
 	enum ENGINE_CORE_API eNativeSrvType
@@ -679,7 +679,7 @@ namespace Engine
 			Tex1dSrvDescription Texture1D;
 			Tex1dArraySrvDescription Texture1DArray;
 			Tex2dSrvDescription Texture2D;
-			Tex2dArraySrvDescription Texture2DArray;
+			Tex2dArraySrvDescription Texture2DArray = {};
 			Tex2dMsSrvDescription Texture2DMS;
 			Tex2dMsArraySrvDescription Texture2DMSArray;
 			Tex3dSrvDescription Texture3D;
@@ -755,8 +755,8 @@ namespace Engine
 			m_texture_ = texture;
 		}
 
-	private:
 		GenericTextureDescription m_description_;
+	private:
 		void* m_texture_ = nullptr;
 	};
 
@@ -979,9 +979,7 @@ namespace Engine
 		{
 			if (m_base_) m_base_->Bind(context, slot);
 		}
-
-		virtual void Create(const void* src_data) = 0;
-		virtual void SetData(const void* src_data) = 0;
+		
 		virtual void Bind(const GraphicInterfaceContextPrimitive* context) const = 0;
 
 	protected:
@@ -999,12 +997,12 @@ namespace Engine
 			static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
 		}
 		
-		void Create(const void* src_data) override
+		void Create(const T* src_data) const
 		{
 			if (m_base_) m_base_->Create(src_data, sizeof(T));
 		}
 
-		void SetData(const void* src_data) override
+		void SetData(const T* src_data) const
 		{
 			if (m_base_) m_base_->SetData(src_data, sizeof(T));
 		}

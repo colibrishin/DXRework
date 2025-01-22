@@ -17,6 +17,7 @@ namespace Engine::Resources
 			 "",
 			 GenericTextureDescription
 			{
+				 .Dimension = TEX_TYPE_2D,
 				 .Alignment = 0,
 				 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 				 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,

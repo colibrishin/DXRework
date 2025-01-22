@@ -33,7 +33,7 @@ namespace Engine::Abstracts
 			if (s_instance_ == nullptr || s_destroyed_)
 			{
 				static_assert(SingletonChecker::ctor_void, "Singleton should not have default constructor");
-				s_instance_ = std::unique_ptr<T, SingletonDeleter>(new T(SINGLETON_LOCK_TOKEN{}));
+				s_instance_ = boost::shared_ptr<T>(new T(SINGLETON_LOCK_TOKEN{}), SingletonDeleter());
 				std::call_once(s_first_call_, std::atexit, &Destroy);
 				s_destroyed_ = false;
 			}
@@ -53,8 +53,6 @@ namespace Engine::Abstracts
 				s_destroyed_ = true;
 			}
 		}
-
-		virtual void Initialize() = 0;
 		
 		void OnSerialized() final {}
 		void OnDeserialized() final {}
@@ -89,9 +87,9 @@ namespace Engine::Abstracts
 			constexpr static bool dtor      = !std::is_destructible_v<T>;
 		};
 
-		inline static std::unique_ptr<T, SingletonDeleter> s_instance_ = nullptr;
-		inline static std::once_flag                       s_first_call_;
-		inline static std::atomic<bool>                    s_destroyed_ = true;
-		inline static std::mutex                           s_mutex_     = std::mutex();
+		inline static Strong<T>         s_instance_ = nullptr;
+		inline static std::once_flag    s_first_call_;
+		inline static std::atomic<bool> s_destroyed_ = true;
+		inline static std::mutex        s_mutex_     = std::mutex();
 	};
 } // namespace Engine::Abstract

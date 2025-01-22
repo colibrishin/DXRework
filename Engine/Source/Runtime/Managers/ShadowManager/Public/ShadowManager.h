@@ -40,7 +40,7 @@ namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
 	
-	constexpr float __placeholder = 0.f;
+	constexpr float _placeholder = 0.f;
 
 	ECLASS()
 	class ENGINE_SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
@@ -55,8 +55,7 @@ namespace Engine::Managers
 
 	public:
 		explicit ShadowManager(SINGLETON_LOCK_TOKEN)
-			: Singleton<ShadowManager>(),
-			  m_viewport_() {}
+			: m_viewport_() {}
 
 		void Initialize() override;
 		void PreUpdate(const float dt) override;
@@ -69,8 +68,8 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void Reset();
-		void RegisterLight(const Weak<Objects::Light>& light);
-		void UnregisterLight(const Weak<Objects::Light>& light);
+		void RegisterLight(Weak<Abstracts::ObjectBase> light);
+		void UnregisterLight(Weak<Abstracts::ObjectBase> light);
 
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
 		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
@@ -80,10 +79,13 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~ShadowManager() override;
 
+		void PreSwapScene(Weak<Scene> scene);
+		void PostSwapScene(Weak<Scene> scene);
+		
 		void InitializeViewport();
 		void InitializeShadowBuffer(LocalActorID id);
 
-		void BuildShadowMap(float dt, const Strong<Objects::Light>& light, UINT light_idx);
+		void BuildShadowMap(float dt, const Strong<Objects::Light>& light, UINT light_idx) const;
 		void ClearShadowMaps(const GraphicInterfaceContextPrimitive* context);
 
 		static void CreateSubfrusta(

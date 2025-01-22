@@ -17,7 +17,7 @@ namespace Engine::Managers
 {
 	void ShadowManager::Initialize()
 	{
-		m_shadow_shader_ = Resources::Shader::Create
+		m_shadow_shader_ = Resources::Shader::Create<true>
 				(
 				 "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", 
 				 SHADER_DOMAIN_OPAQUE, true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -30,11 +30,12 @@ namespace Engine::Managers
 				);
 
 		// Render target for shadow map mask.
-		m_shadow_map_mask_ = Resources::Texture2D::Create
+		m_shadow_map_mask_ = Resources::Texture2D::Create<true>
 				(
 				 "Shadow Render Target Texture",
 				 "",
 				 GenericTextureDescription {
+					 .Dimension = TEX_TYPE_2D,
 					 .Alignment = 0,
 					 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 					 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
@@ -44,6 +45,14 @@ namespace Engine::Managers
 					 .MipsLevel = 1,
 					 .Layout = TEX_LAYOUT_UNKNOWN,
 					 .SampleDesc = {1, 0},
+					 .AsSRV = true,
+				 	 .AsRTV = true,
+					 .AsDSV = false,
+					 .AsUAV = false,
+					 .Srv = {},
+					 .Rtv = {},
+					 .Dsv = {},
+					 .Uav = {}
 				 }
 				);
 
@@ -53,18 +62,36 @@ namespace Engine::Managers
 
 		InitializeViewport();
 
-		Managers::Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
-		Managers::Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
+		SceneManager::GetInstance().onSceneRemoved.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::PreSwapScene);
+		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::PostSwapScene);
 
-		Managers::Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
+		if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
+		{
+			PostSwapScene(scene);
+
+			for (const Weak<Abstracts::ObjectBase>& object : scene->GetGameObjects(RESERVED_LAYER_LIGHT))
+			{
+				if (const Strong<Abstracts::ObjectBase>& locked = object.lock();
+					locked && locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
+				{
+					RegisterLight(locked->GetSharedPtr<Objects::Light>());
+				}
+			}
+		}
+
+		Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
+		Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
+
+		Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
 		{
 			GetInstance().BindShadowMaps(context);
 		});
 
-		Managers::Renderer::GetInstance().RegisterContextPostRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
+		Renderer::GetInstance().RegisterContextPostRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
 		{
 			GetInstance().UnbindShadowMaps(context);
 		});
+
 	}
 
 	void ShadowManager::PreUpdate(const float dt)
@@ -135,7 +162,7 @@ namespace Engine::Managers
 		}
 
 		// Notify the number of lights to the shader.
-		Managers::RenderPipeline::GetInstance().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
+		RenderPipeline::GetInstance().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
 
 		// If there is no light, it does not need to be updated.
 		if (light_buffer.empty())
@@ -205,7 +232,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::BuildShadowMap(const float dt, const Strong<Objects::Light>& light, const UINT light_idx)
+	void ShadowManager::BuildShadowMap(const float dt, const Strong<Objects::Light>& light, const UINT light_idx) const
 	{
 		// Notify the light index to the shader.
 		SBs::LocalParamSB local_param{};
@@ -288,10 +315,11 @@ namespace Engine::Managers
 		// https://cutecatgame.tistory.com/6
 		if (const auto& camera = ptr_cam.lock())
 		{
-			const float near_plane = CFG_SCREEN_NEAR;
-			const float far_plane  = CFG_SCREEN_FAR;
+			constexpr float near_plane = CFG_SCREEN_NEAR;
+			constexpr float far_plane  = CFG_SCREEN_FAR;
 
-			const float cascadeEnds[]{near_plane, 10.f, 80.f, far_plane};
+			// todo: evaluate in log scale
+			constexpr float cascadeEnds[]{near_plane, 10.f, 80.f, far_plane};
 
 			// for cascade shadow mapping, total 3 parts are used.
 			// (near, 6), (6, 18), (18, far)
@@ -342,7 +370,7 @@ namespace Engine::Managers
 						);
 
 				buffer.proj[i] =
-					DirectX::XMMatrixTranspose
+					XMMatrixTranspose
 						(
 						 DirectX::XMMatrixOrthographicOffCenterLH
 						 (
@@ -392,37 +420,61 @@ namespace Engine::Managers
 		gi.UnbindMultiple(context, textures.data(), BIND_TYPE_SRV, textures.size());
 	}
 
-	void ShadowManager::RegisterLight(const Weak<Objects::Light>& light)
+	void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
 	{
 		if (const auto locked = light.lock())
 		{
-			m_lights_[locked->GetLocalID()] = light;
-			InitializeShadowBuffer(locked->GetLocalID());
+			if (locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
+			{
+				m_lights_[locked->GetLocalID()] = locked->GetSharedPtr<Objects::Light>();
+				InitializeShadowBuffer(locked->GetLocalID());
+			}
 		}
 	}
 
-	void ShadowManager::UnregisterLight(const Weak<Objects::Light>& light)
+	void ShadowManager::UnregisterLight(Weak<Abstracts::ObjectBase> light)
 	{
 		if (const auto locked = light.lock())
 		{
-			m_lights_.erase(locked->GetLocalID());
-			m_shadow_texs_.erase(locked->GetLocalID());
+			if (locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
+			{
+				m_lights_.erase(locked->GetLocalID());
+				m_shadow_texs_.erase(locked->GetLocalID());	
+			}
 		}
 	}
 
 	void ShadowManager::InitializeShadowBuffer(const LocalActorID id)
 	{
-		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture");
+		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture " + std::to_string(id));
 		m_shadow_texs_[id]->Load();
 	}
 
 	ShadowManager::~ShadowManager()
 	{
-		Managers::Renderer::GetInstance().UnregisterStructuredBuffer(m_light_sb_.get());
-		Managers::Renderer::GetInstance().UnregisterStructuredBuffer(m_light_vp_sb_.get());
+		Renderer::GetInstance().UnregisterStructuredBuffer(m_light_sb_.get());
+		Renderer::GetInstance().UnregisterStructuredBuffer(m_light_vp_sb_.get());
 		
-		Managers::Renderer::GetInstance().UnregisterContextPreRenderSetup("Shadow Manager");
-		Managers::Renderer::GetInstance().UnregisterContextPostRenderSetup("Shadow Manager");
+		Renderer::GetInstance().UnregisterContextPreRenderSetup("Shadow Manager");
+		Renderer::GetInstance().UnregisterContextPostRenderSetup("Shadow Manager");
+	}
+
+	void ShadowManager::PreSwapScene(Weak<Scene> scene)
+	{
+		if (const Strong<Scene>& locked = scene.lock())
+		{
+			locked->onObjectAdded.Remove(GetSharedPtr<ShadowManager>(), &ShadowManager::RegisterLight);
+			locked->onObjectRemoved.Remove(GetSharedPtr<ShadowManager>(), &ShadowManager::UnregisterLight);
+		}
+	}
+
+	void ShadowManager::PostSwapScene(Weak<Scene> scene)
+	{
+		if (const Strong<Scene>& locked = scene.lock())
+		{
+			locked->onObjectAdded.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::RegisterLight);
+			locked->onObjectRemoved.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::UnregisterLight);
+		}
 	}
 
 	void ShadowManager::InitializeViewport()

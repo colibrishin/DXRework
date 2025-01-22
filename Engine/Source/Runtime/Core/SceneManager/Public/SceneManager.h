@@ -21,14 +21,14 @@ namespace Engine::Managers
 
 		explicit SceneManager(SINGLETON_LOCK_TOKEN) {}
 
-		Weak<Scene> GetActiveScene() const
+		[[nodiscard]] Weak<Scene> GetActiveScene() const
 		{
 			return m_active_scene_;
 		}
 
 		void AddScene(const std::string& name);
 		void SetActive(const std::string& name);
-		Weak<Scene> GetScene(const std::string& name) const;
+		[[nodiscard]] Weak<Scene> GetScene(const std::string& name) const;
 
 		template <typename T>
 		void RemoveScene(const std::string& name)

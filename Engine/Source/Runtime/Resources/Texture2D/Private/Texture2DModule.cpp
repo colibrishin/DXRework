@@ -71,7 +71,7 @@ void Engine::Texture2DModule::Initialize()
 			*context |= ui.NewLabelAndULLD({"Width", desc.Width, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt({"Height", desc.Height, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt16({"Depth or Array Size", desc.DepthOrArraySize, 0.1f, 0, 0, true});
-			*context |= ui.NewComboboxUInt8({"Format", reinterpret_cast<uint8_t*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size()}); // should recast before use, non-linear enum
+			*context |= ui.NewCombobox({"Format", reinterpret_cast<int*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size()}); // should recast before use, non-linear enum
 
 			{
 				*context += ui.NewListBox({"Resource Flags", -1, 0});

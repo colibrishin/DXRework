@@ -22,36 +22,47 @@ Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() {}
 
 void Engine::D3D12PrimitiveTexture::Generate(Engine::Resources::Texture* texture)
 {
-	m_desc_ = texture->GetDescription();
+	m_description_ = texture->GetDescription();
 
-	if ((m_desc_.Flags & RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) &&
-		(m_desc_.Flags & RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
+	if ((m_description_.Flags & RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) &&
+		(m_description_.Flags & RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
 	{
 		throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
 	}
 	
 	const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	const D3D12_RESOURCE_DIMENSION dim = ConvertDimension(m_desc_.Dimension);
+	const D3D12_RESOURCE_DIMENSION dim = ConvertDimension(m_description_.Dimension);
 
 	m_native_desc_ = 
 	{
 		.Dimension = dim,
-		.Alignment = m_desc_.Alignment,
-		.Width = m_desc_.Width,
-		.Height = m_desc_.Height,
-		.DepthOrArraySize = m_desc_.DepthOrArraySize,
-		.MipLevels = m_desc_.MipsLevel,
-		.Format = static_cast<DXGI_FORMAT>(m_desc_.Format),
-		.SampleDesc = reinterpret_cast<const DXGI_SAMPLE_DESC&>(m_desc_.SampleDesc),
-		.Layout = static_cast<D3D12_TEXTURE_LAYOUT>(m_desc_.Layout),
-		.Flags = static_cast<D3D12_RESOURCE_FLAGS>(m_desc_.Flags)
+		.Alignment = m_description_.Alignment,
+		.Width = m_description_.Width,
+		.Height = m_description_.Height,
+		.DepthOrArraySize = m_description_.DepthOrArraySize,
+		.MipLevels = m_description_.MipsLevel,
+		.Format = static_cast<DXGI_FORMAT>(m_description_.Format),
+		.SampleDesc = reinterpret_cast<const DXGI_SAMPLE_DESC&>(m_description_.SampleDesc),
+		.Layout = static_cast<D3D12_TEXTURE_LAYOUT>(m_description_.Layout),
+		.Flags = static_cast<D3D12_RESOURCE_FLAGS>(m_description_.Flags)
 	};
 
 	D3D12_CLEAR_VALUE clear_value = {};
 
 	if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
 	{
-		clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsRTV != TEX_FORMAT_UNKNOWN ? m_desc_.AsRTV : m_desc_.Format);
+		if (m_description_.AsRTV)
+		{
+			if (m_description_.Rtv.Format == DXGI_FORMAT_UNKNOWN)
+			{
+				clear_value.Format = m_native_desc_.Format;
+			}
+			else
+			{
+				clear_value.Format = static_cast<DXGI_FORMAT>(m_description_.Rtv.Format);
+			}
+		}
+
 		clear_value.Color[0] = 0.0f;
 		clear_value.Color[1] = 0.0f;
 		clear_value.Color[2] = 0.0f;
@@ -60,7 +71,17 @@ void Engine::D3D12PrimitiveTexture::Generate(Engine::Resources::Texture* texture
 
 	if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 	{
-		clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsDSV != TEX_FORMAT_UNKNOWN ? m_desc_.AsDSV : m_desc_.Format);
+		if (m_description_.AsDSV)
+		{
+			if (m_description_.Dsv.Format == DXGI_FORMAT_UNKNOWN)
+			{
+				clear_value.Format = m_native_desc_.Format;
+			}
+			else
+			{
+				clear_value.Format = static_cast<DXGI_FORMAT>(m_description_.Dsv.Format);
+			}
+		}
 		clear_value.DepthStencil.Depth = 1.0f;
 		clear_value.DepthStencil.Stencil = 0;
 	}
@@ -286,57 +307,105 @@ void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 
 void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 {
+	const auto& compare = [](const void* a, const void* b, size_t length)
+	{
+		auto ba = static_cast<const char*>(a);
+		auto bb = static_cast<const char*>(b);
+		while (length--)
+		{
+			if (*ba != *bb)
+			{
+				return false;
+			}
+
+			++ba;
+			++bb;
+		}
+
+		return true;
+	};
+
 	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 	
+	if (m_description_.AsSRV)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
-		if (m_desc_.AsSRV)
+		D3D12_SHADER_RESOURCE_VIEW_DESC* target = &desc;
+
+		//todo: due to the alignment padding, the struct cannot directly compared.
+		desc = reinterpret_cast<const D3D12_SHADER_RESOURCE_VIEW_DESC&>(m_description_.Srv);
+		static constexpr D3D12_SHADER_RESOURCE_VIEW_DESC empty_desc{};
+		if (compare(&desc, &empty_desc, sizeof(decltype(desc))))
 		{
-			desc = reinterpret_cast<const D3D12_SHADER_RESOURCE_VIEW_DESC&>(m_desc_.Srv);
+			target = nullptr;
 		}
-	
+
 		dev->CreateShaderResourceView
 		(
 			m_dx12_texture_.Get(),
-			nullptr,
+			target,
 			m_srv_->GetCPUDescriptorHandleForHeapStart()
 		);
 	}
 
-	if (m_desc_.AsRTV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	if (m_description_.AsRTV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
 	{
 		D3D12_RENDER_TARGET_VIEW_DESC desc{};
-		desc = reinterpret_cast<const D3D12_RENDER_TARGET_VIEW_DESC&>(m_desc_.Rtv);
-		
+		D3D12_RENDER_TARGET_VIEW_DESC* target = &desc;
+
+		//todo: due to the alignment padding, the struct cannot directly compared.
+		desc = reinterpret_cast<const D3D12_RENDER_TARGET_VIEW_DESC&>(m_description_.Rtv);
+		static constexpr D3D12_RENDER_TARGET_VIEW_DESC empty_desc{};
+		if (compare(&desc, &empty_desc, sizeof(D3D12_RENDER_TARGET_VIEW_DESC)))
+		{
+			target = nullptr;
+		}
+
 		dev->CreateRenderTargetView
 		(
 			m_dx12_texture_.Get(),
-			&desc,
-			m_srv_->GetCPUDescriptorHandleForHeapStart());
+			target,
+			m_rtv_->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	if (m_desc_.AsDSV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	if (m_description_.AsDSV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 	{
 		D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
-		desc = reinterpret_cast<const D3D12_DEPTH_STENCIL_VIEW_DESC&>(m_desc_.Dsv);
-		
+		D3D12_DEPTH_STENCIL_VIEW_DESC* target = &desc;
+
+		//todo: due to the alignment padding, the struct cannot directly compared.
+		desc = reinterpret_cast<const D3D12_DEPTH_STENCIL_VIEW_DESC&>(m_description_.Dsv);
+		static constexpr D3D12_DEPTH_STENCIL_VIEW_DESC empty_desc{};
+		if (compare(&desc, &empty_desc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC)))
+		{
+			target = nullptr;
+		}
+
 		dev->CreateDepthStencilView
 		(
 			m_dx12_texture_.Get(),
-			&desc,
+			target,
 			m_dsv_->GetCPUDescriptorHandleForHeapStart());
 	}
 	
-	if (m_desc_.AsUAV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+	if (m_description_.AsUAV && m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
 	{
 		D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};
-		desc = reinterpret_cast<const D3D12_UNORDERED_ACCESS_VIEW_DESC&>(m_desc_.Uav);
-		
+		D3D12_UNORDERED_ACCESS_VIEW_DESC* target = &desc;
+
+		//todo: due to the alignment padding, the struct cannot directly compared.
+		desc = reinterpret_cast<const D3D12_UNORDERED_ACCESS_VIEW_DESC&>(m_description_.Uav);
+		static constexpr D3D12_UNORDERED_ACCESS_VIEW_DESC empty_desc{};
+		if (compare(&desc, &empty_desc, sizeof(D3D12_UNORDERED_ACCESS_VIEW_DESC)))
+		{
+			target = nullptr;
+		}
+
 		dev->CreateUnorderedAccessView
 		(
 			m_dx12_texture_.Get(),
 			nullptr,
-			&desc,
+			target,
 			m_uav_->GetCPUDescriptorHandleForHeapStart());
 	}
 }
@@ -366,17 +435,17 @@ void Engine::D3D12PrimitiveTexture::Map(
 	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 	const GenericTextureDescription& desc = GetDescription();
 
-	size_t pixel_in_bytes = DirectX::BitsPerPixel(static_cast<DXGI_FORMAT>(desc.Format)) / 8;
+	const size_t pixel_in_bytes = DirectX::BitsPerPixel(static_cast<DXGI_FORMAT>(desc.Format)) / 8;
 
 	// Align(Width * format bytes, 256) = Row pitch
-	size_t row_pitch = Align
+	const size_t row_pitch = Align
 	(
 		desc.Width * pixel_in_bytes,
 		D3D12_TEXTURE_DATA_PITCH_ALIGNMENT
 	);
 
 	// RowPitch * Height = Slice pitch
-	size_t slice_pitch = Align(desc.Height * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	const size_t slice_pitch = Align(desc.Height * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 	size_t total_bytes = row_pitch;
 
 	if (slice_pitch > 0) 
