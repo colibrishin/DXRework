@@ -14,6 +14,8 @@
 
 #include "Scene.generated.h"
 
+#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+
 #ifdef PHYSX_ENABLED
 namespace physx
 {
@@ -112,10 +114,11 @@ namespace Engine
 
 		void RemoveGameObject(GlobalEntityID id, LayerSizeType layer);
 
-		Weak<Abstracts::ObjectBase> FindGameObject(GlobalEntityID id) const;
-		Weak<Abstracts::ObjectBase> FindGameObjectByLocalID(LocalActorID id) const;
+		Weak<Abstracts::ObjectBase> FindGameObject(GlobalEntityID id);
+		Weak<Abstracts::ObjectBase> FindGameObjectByLocalID(LocalActorID id);
 
-		ConcurrentWeakObjVec  GetGameObjects(LayerSizeType layer) const;
+		ConcurrentWeakObjVec  GetGameObjectsConcurrent(LayerSizeType layer) const;
+		WeakObjVec  GetGameObjects(LayerSizeType layer) const;
 		Weak<Objects::Camera> GetMainCamera() const;
 
 		const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& GetObjectTree();
@@ -210,7 +213,7 @@ namespace Engine
 							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& scp   = std::any_cast<Strong<Script>>(params[1]);
 
-							 scene->addCacheScriptImpl(scp, scp->GetScriptType());
+							 scene->addCacheScriptImpl(scp, scp->GetTypeHash());
 						 }
 						);
 			}
@@ -225,7 +228,7 @@ namespace Engine
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
-							 scene->addCacheScriptImpl(component, which_script<T>::value);
+							 scene->addCacheScriptImpl(component, T::StaticTypeHash());
 						 }
 						);
 			}
@@ -247,7 +250,7 @@ namespace Engine
 							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& scp   = std::any_cast<Strong<Script>>(params[1]);
 
-							 scene->removeCacheScriptImpl(scp, scp->GetScriptType());
+							 scene->removeCacheScriptImpl(scp, scp->GetTypeHash());
 						 }
 						);
 			}
@@ -262,18 +265,18 @@ namespace Engine
 							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& scp   = std::any_cast<Strong<T>>(params[1]);
 
-							 scene->removeCacheScriptImpl(scp, which_script<T>::value);
+							 scene->removeCacheScriptImpl(scp, T::StaticTypeHash());
 						 }
 						);
 			}
 		}
 
 		template <typename T>
-		ConcurrentWeakComVec GetCachedComponents() const
+		[[nodiscard]] ConcurrentWeakComVec GetCachedComponentsConcurrent() const
 		{
 			ConcurrentWeakComRootMap::const_accessor acc;
 
-			if (m_cached_components_.find(acc, T::StaticTypeHash()))
+			if (m_concurrent_cached_components_.find(acc, T::StaticTypeHash()))
 			{
 				ConcurrentWeakComVec result;
 
@@ -289,11 +292,29 @@ namespace Engine
 		}
 
 		template <typename T>
-		ConcurrentWeakScpVec GetCachedScripts()
+		[[nodiscard]] WeakComVec GetCachedComponents() const
+		{
+			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
+			if (m_cached_components_.contains(T::StaticTypeHash()))
+			{
+				auto& found = m_cached_components_.at(T::StaticTypeHash());
+				WeakComVec result;
+				for (const auto& comp : m_cached_components_.at(T::StaticTypeHash()) | std::views::values)
+				{
+					result.emplace_back(comp);
+				}
+				return result;
+			}
+
+			return {};
+		}
+
+		template <typename T>
+		[[nodiscard]] ConcurrentWeakScpVec GetCachedScriptsConcurrent() const
 		{
 			ConcurrentWeakScpRootMap::const_accessor acc;
 
-			if (m_cached_scripts_.find(acc, which_script<T>::value))
+			if (m_cached_scripts_.find(acc, T::StaticTypeHash()))
 			{
 				ConcurrentWeakScpVec result;
 
@@ -302,6 +323,24 @@ namespace Engine
 					result.push_back(scp);
 				}
 
+				return result;
+			}
+
+			return {};
+		}
+
+		template <typename T>
+		[[nodiscard]] WeakScpVec GetCachedScripts() const
+		{
+			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
+			if (m_cached_scripts_.contains(T::StaticTypeHash()))
+			{
+				auto& found = m_cached_scripts_.at(T::StaticTypeHash());
+				WeakScpVec result;
+				for (const auto& comp : m_cached_scripts_.at(T::StaticTypeHash()) | std::views::values)
+				{
+					result.emplace_back(comp);
+				}
 				return result;
 			}
 
@@ -356,9 +395,9 @@ namespace Engine
 		void removeCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 
 		// Add cache script from the object.
-		void addCacheScriptImpl(const Strong<Script>& script, ScriptSizeType type);
+		void addCacheScriptImpl(const Strong<Script>& script, const ScriptType type);
 		// Remove cache script from the object.
-		void removeCacheScriptImpl(const Strong<Script>& component, ScriptSizeType type);
+		void removeCacheScriptImpl(const Strong<Script>& script, const ScriptType type);
 
 		// Functions for the next frame.
 
@@ -374,18 +413,17 @@ namespace Engine
 		bool m_b_scene_raytracing_;
 
 		EPROPERTY()
-		LocalActorID               m_main_camera_local_id_;
+		LocalActorID m_main_camera_local_id_;
 
 		EPROPERTY()
-		LocalActorID               m_main_actor_local_id_;
+		LocalActorID m_main_actor_local_id_;
 
 		EPROPERTY()
-		LayerSizeType              m_layer_count_ = RESERVED_LAYER_MAX + CFG_LAYER_COUNT;
+		LayerSizeType m_layer_count_ = RESERVED_LAYER_MAX + CFG_LAYER_COUNT;
 
 		EPROPERTY()
 		std::vector<Strong<Layer>> m_layers_;
 
-		// Non-serialized
 #if WITH_EDITOR
 		bool m_b_dialog_opened_ = true;
 		std::string m_layer_list_box_name_;
@@ -395,10 +433,19 @@ namespace Engine
 		Weak<Objects::Camera>       m_mainCamera_;
 		Weak<Abstracts::ObjectBase> m_main_actor_;
 
-		ConcurrentLocalGlobalIDMap                           m_assigned_actor_ids_;
-		ConcurrentWeakObjGlobalMap                           m_cached_objects_;
-		ConcurrentWeakComRootMap                             m_cached_components_;
-		ConcurrentWeakScpRootMap                             m_cached_scripts_;
+		LocalGlobalIDMap            m_assigned_actor_ids_;
+
+		WeakObjGlobalMap                                     m_cached_objects_;
+		WeakComRootMap                                       m_cached_components_;
+		WeakScpRootMap                                       m_cached_scripts_;
+
+		size_t m_object_lock_;
+		size_t m_component_lock_;
+		size_t m_script_lock_;
+
+		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
+		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
+		ConcurrentWeakScpRootMap                             m_concurrent_cached_scripts_;
 		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_position_tree_;
 
 		static std::atomic<bool> s_debug_observer_;

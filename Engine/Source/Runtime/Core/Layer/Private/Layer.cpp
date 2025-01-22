@@ -2,12 +2,15 @@
 
 #include "UIInterface.h"
 
+#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
 namespace Engine
 {
 	Layer::Layer(const LayerSizeType type)
-		: m_layer_type_(type) { }
+		: m_layer_type_(type),
+		  m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()) { }
 
 	void Layer::Initialize() {}
 
@@ -171,41 +174,39 @@ namespace Engine
 		Renderable::OnDeserialized();
 
 		// rebuild cache
+		SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_cache_lock_idx_);
 		for (const auto& object : m_objects_)
 		{
 			object->OnDeserialized();
-			m_weak_objects_cache_.insert({object->GetID(), object});
+			m_weak_objects_cache_.emplace(object->GetID(), object);
+			m_concurrent_weak_objects_cache_.emplace(object->GetID(), object);
 		}
 	}
 
 	void Layer::AddGameObject(const Strong<Abstracts::ObjectBase>& obj)
 	{
 		{
-			if (decltype(m_weak_objects_cache_)::const_accessor it;
-				m_weak_objects_cache_.find(it, obj->GetID()))
+			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_cache_lock_idx_);
+			if (m_weak_objects_cache_.contains(obj->GetID()))
 			{
 				return;
 			}
 		}
 
 		m_objects_.push_back(obj);
-		m_weak_objects_cache_.insert({obj->GetID(), obj});
+		m_weak_objects_cache_.emplace(obj->GetID(), obj);
+		m_concurrent_weak_objects_cache_.emplace(obj->GetID(), obj);
 	}
 
 	void Layer::RemoveGameObject(GlobalEntityID id)
 	{
-		Weak<Abstracts::ObjectBase> obj;
-
+		SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_cache_lock_idx_);
+		if (!m_weak_objects_cache_.contains(id))
 		{
-			ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-			if (m_weak_objects_cache_.find(acc, id))
-			{
-				obj = acc->second;
-			}
+			return;
 		}
 
-		if (const auto locked = obj.lock())
+		if (const auto locked = m_weak_objects_cache_[id].lock())
 		{
 			std::erase_if(m_objects_, [&locked](const Strong<Abstracts::ObjectBase>& value)
 				{
@@ -213,16 +214,15 @@ namespace Engine
 				});
 
 			m_weak_objects_cache_.erase(id);
+			m_concurrent_weak_objects_cache_.erase(id);
 		}
 	}
 
 	Weak<Abstracts::ObjectBase> Layer::FindGameObject(GlobalEntityID id) const
 	{
-		ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-		if (m_weak_objects_cache_.find(acc, id))
+		if (m_weak_objects_cache_.contains(id))
 		{
-			return acc->second;
+			return m_weak_objects_cache_.at(id);
 		}
 
 		if (const auto& it = std::ranges::find_if
@@ -259,11 +259,11 @@ namespace Engine
 		return {};
 	}
 
-	ConcurrentWeakObjVec Layer::GetGameObjects() const
+	ConcurrentWeakObjVec Layer::GetGameObjectsConcurrent() const
 	{
 		ConcurrentWeakObjVec result;
 
-		for (const auto& obj : m_weak_objects_cache_ | std::views::values)
+		for (const auto& obj : m_concurrent_weak_objects_cache_ | std::views::values)
 		{
 			result.push_back(obj);
 		}
@@ -271,6 +271,17 @@ namespace Engine
 		return result;
 	}
 
-	Layer::Layer()
-		: m_layer_type_(0) {}
+	WeakObjVec Layer::GetGameObjects() const
+	{
+		SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_cache_lock_idx_);
+		WeakObjVec result;
+		for (const auto& obj : m_weak_objects_cache_ | std::views::values)
+		{
+			result.emplace_back(obj);
+		}
+		return result;
+	}
+
+	Layer::Layer() :
+		m_layer_type_(0) {}
 } // namespace Engine

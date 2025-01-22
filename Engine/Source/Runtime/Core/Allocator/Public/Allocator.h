@@ -9,8 +9,6 @@
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/align/aligned_allocator.hpp>
 
-#include "Source/Runtime/Core/StructuredBuffer.h"
-
 namespace Engine 
 {
 	constexpr uint64_t Align(uint64_t size, uint64_t alignment)
@@ -30,17 +28,7 @@ namespace Engine
 		return result;
 	}
 
-	inline static constexpr size_t g_default_pool_size = 16;
-	inline static constexpr size_t g_cache_alignment = 16;
-
-	template <typename KeyType, typename ValueType>
-	struct aligned_pair_size
-	{
-		constexpr unsigned operator()() const
-		{
-			return static_cast<unsigned>(Align(sizeof(std::pair<const KeyType, ValueType>) * g_default_pool_size, g_cache_alignment));
-		}
-	};
+	inline static constexpr size_t g_cache_alignment = 8;
 
 	template <typename KeyType, typename ValueType>
 	using u_fast_pool_allocator = boost::fast_pool_allocator<std::pair<const KeyType, ValueType>>;
@@ -49,7 +37,7 @@ namespace Engine
 	using u_fast_pool_allocator_single = boost::fast_pool_allocator<ValueType>;
 
 	template <typename ValueType>
-	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, nearest_pow_two(sizeof(ValueType))>;
+	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, g_cache_alignment>;
 
 	template <typename ValueType>
 	using u_pool_allocator_single = boost::pool_allocator<ValueType>;

@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "CoreEntity.h"
-
+#include "Allocator/Public/Allocator.h"
 #include "Source/Runtime/Misc.h"
 
 #if defined(USE_DX12)
@@ -661,4 +661,15 @@ namespace Engine
 	} // namespace Managers
 
 	using ObjectPredication = std::function<bool(const Strong<Abstracts::ObjectBase>&)>;
+
+	using WeakObjGlobalMap = fast_pool_unordered_map<GlobalEntityID, Weak<Abstracts::ObjectBase>>;
+	using WeakObjVec = aligned_vector<Weak<Abstracts::ObjectBase>>;
+	using LocalGlobalIDMap = fast_pool_unordered_map<LocalActorID, GlobalEntityID>;
+	using WeakComVec = aligned_vector<Weak<Abstracts::Component>>;
+	using WeakComMap = fast_pool_unordered_map<GlobalEntityID, Weak<Abstracts::Component>>;
+	using WeakScpVec = aligned_vector<Weak<Script>>;
+	using WeakScpMap = fast_pool_unordered_map<GlobalEntityID, Weak<Script>>;
+	using WeakComRootMap = fast_pool_unordered_map<ComponentType, WeakComMap>;
+	using WeakScpRootMap = fast_pool_unordered_map<ScriptType, WeakScpMap>;
+
 }

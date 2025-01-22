@@ -1080,6 +1080,8 @@ namespace Engine
 		Unique<StructuredBufferTypelessBase> m_base_;
 	};
 
+	using InstanceBufferContainer = aligned_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
+
 	struct ENGINE_CORE_API GraphicInterface
 	{
 		virtual      ~GraphicInterface() = default;

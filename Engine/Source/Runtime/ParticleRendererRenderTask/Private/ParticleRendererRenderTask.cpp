@@ -32,7 +32,7 @@ namespace Engine
         const size_t map_size, std::atomic<uint64_t>& instance_count
     )
     {
-        const auto& prs = scene->GetCachedComponents<Components::ParticleRenderer>();
+        const auto& prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
 
         tbb::parallel_for_each(prs.begin(), prs.end(), [&](const Weak<Abstracts::Component>& comp)
         {

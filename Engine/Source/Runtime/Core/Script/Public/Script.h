@@ -7,12 +7,6 @@
 
 namespace Engine
 {
-	template <typename T>
-	struct which_script
-	{
-		static constexpr ScriptSizeType value = T::scptype;
-	};
-
 	ECLASS()
 	class ENGINE_CORE_API Script : public Abstracts::Renderable
 	{
@@ -31,11 +25,6 @@ namespace Engine
 		Weak<Abstracts::ObjectBase> GetOwner() const
 		{
 			return m_owner_;
-		}
-
-		ScriptSizeType GetScriptType() const
-		{
-			return m_type_;
 		}
 
 		[[nodiscard]] Strong<Script> Clone(const Weak<Abstracts::ObjectBase>& owner) const;
@@ -67,9 +56,6 @@ namespace Engine
 		[[nodiscard]] virtual Strong<Script> cloneImpl() const = 0;
 
 		void SetOwner(const Weak<Abstracts::ObjectBase>& owner);
-
-		EPROPERTY()
-		ScriptSizeType              m_type_;
 		
 		EPROPERTY()
 		Weak<Abstracts::ObjectBase> m_owner_;

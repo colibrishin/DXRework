@@ -87,16 +87,14 @@ namespace Engine::Abstracts
 		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
 		Weak<T> AddScript(const std::string& name = "")
 		{
-			const auto type = which_script<T>::value;
-
-			if (m_scripts_.contains(which_script<T>::value))
+			if (m_scripts_.contains(T::StaticTypeHash()))
 			{
-				return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
+				return boost::static_pointer_cast<T>(m_scripts_[T::StaticTypeHash()]);
 			}
 
 			Strong<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
 			script->SetName(name);
-			addScriptImpl(script, type);
+			addScriptImpl(script, T::StaticTypeHash());
 			addScriptToSceneCache<T>(script);
 
 			return script;
@@ -105,9 +103,9 @@ namespace Engine::Abstracts
 		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
 		Weak<T> GetScript(const std::string& name = "")
 		{
-			if (m_scripts_.contains(which_script<T>::value))
+			if (m_scripts_.contains(T::StaticTypeHash()))
 			{
-				return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
+				return boost::static_pointer_cast<T>(m_scripts_[T::StaticTypeHash()]);
 			}
 
 			return {};
@@ -116,8 +114,8 @@ namespace Engine::Abstracts
 		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
 		void RemoveScript()
 		{
-			removeScriptFromSceneCache<T>(m_scripts_[which_script<T>::value]);
-			removeScriptImpl(which_script<T>::value);
+			removeScriptFromSceneCache<T>(m_scripts_[T::StaticTypeHash()]);
+			removeScriptImpl(T::StaticTypeHash());
 		}
 
 		const std::set<Weak<Component>, ComponentPriorityComparer>& GetAllComponents();
@@ -191,7 +189,7 @@ namespace Engine::Abstracts
 
 		// Check whether the component is already added to the object.
 		Weak<Component> checkComponent(ComponentType type);
-		Weak<Script>    checkScript(const ScriptSizeType type);
+		Weak<Script>    checkScript(const ScriptType type);
 
 		// Add component to the scene cache.
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
@@ -232,8 +230,8 @@ namespace Engine::Abstracts
 			}
 		}
 
-		void removeScript(const ScriptSizeType type);
-		void removeScriptImpl(const ScriptSizeType type);
+		void removeScript(const ScriptType type);
+		void removeScriptImpl(const ScriptType type);
 
 		// Add pre-existing component to the object.
 		Weak<Component> addComponent(const Strong<Component>& component);
@@ -251,7 +249,7 @@ namespace Engine::Abstracts
 		// Commit the component to the object.
 		void addComponentImpl(const Strong<Component>& component, ComponentType type);
 		// Commit the script to the object.
-		void addScriptImpl(const Strong<Script>& script, ScriptSizeType type);
+		void addScriptImpl(const Strong<Script>& script, const ScriptType type);
 
 		EPROPERTY()
 		LocalActorID m_parent_id_;
@@ -268,11 +266,12 @@ namespace Engine::Abstracts
 		EPROPERTY()
 		bool m_culled_ = true;
 
+		/* todo: type hash is runtime address, should not use in serialization. */
 		EPROPERTY()
 		std::map<ComponentType, Strong<Component>> m_components_;
 
 		EPROPERTY()
-		std::map<ScriptSizeType, Strong<Script>> m_scripts_;
+		std::map<ScriptType, Strong<Script>> m_scripts_;
 
 		// Non-serialized
 #if WITH_EDITOR

@@ -309,7 +309,7 @@ namespace Engine
 		}
 
 		std::lock_guard l(m_critical_mutex_);
-		m_command_pairs_.push_back(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation));
+		m_command_pairs_.push(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation));
 		m_command_ids_ += 1;
 		m_command_pair_count_.fetch_add(1);
 
@@ -363,7 +363,7 @@ namespace Engine
 					queued && (queued->IsExecuted() || queued->IsDisposed()))
 				{
 					m_command_pair_count_.fetch_sub(1);
-					m_command_pairs_.pop_front();
+					m_command_pairs_.pop();
 					m_pool_.Deallocate(queued);
 					m_command_pair_count_.notify_all();
 				}
@@ -371,7 +371,7 @@ namespace Engine
 				{
 					Execute(queued, false);
 					m_command_pair_count_.fetch_sub(1);
-					m_command_pairs_.pop_front();
+					m_command_pairs_.pop();
 					m_pool_.Deallocate(queued);
 					m_command_pair_count_.notify_all();
 				}
@@ -399,8 +399,13 @@ namespace Engine
 
 	void CommandPairTask::Cleanup()
 	{
-		for (const Weak<CommandPair>& pair : m_command_pairs_)
+		WaitForCommandsCompletion();
+
+		while (!m_command_pairs_.empty())
 		{
+			const auto& pair = m_command_pairs_.front();
+			m_command_pairs_.pop();
+
 			if (const Strong<CommandPair> locked = pair.lock())
 			{
 				locked->HardReset();

@@ -115,8 +115,7 @@ namespace Engine
 				throw std::exception("Actor ID overflow");
 			}
 
-			ConcurrentLocalGlobalIDMap::const_accessor acc;
-			if (!m_assigned_actor_ids_.find(acc, id))
+			if (!m_assigned_actor_ids_.contains(id))
 			{
 				m_assigned_actor_ids_.emplace(id, obj->GetID());
 				break;
@@ -145,6 +144,14 @@ namespace Engine
 			if (const auto& locked = comp.lock())
 			{
 				AddCacheComponent(locked);
+			}
+		}
+
+		for (const auto& script : obj->GetAllScripts())
+		{
+			if (const auto& locked = script.lock())
+			{
+				AddCacheScript(locked);
 			}
 		}
 
@@ -179,6 +186,7 @@ namespace Engine
 		// add object to scene
 		m_layers_[layer]->AddGameObject(obj);
 		m_cached_objects_.emplace(obj->GetID(), obj);
+		m_concurrent_cached_objects_.emplace(obj->GetID(), obj);
 
 		if (layer == RESERVED_LAYER_LIGHT && obj->GetObjectType() != DEF_OBJ_T_LIGHT)
 		{
@@ -198,33 +206,49 @@ namespace Engine
 
 	void Scene::RemoveObjectFinalize(const GlobalEntityID id, const LayerSizeType layer)
 	{
-		Weak<Abstracts::ObjectBase> obj;
-
+		if (!m_cached_objects_.contains(id))
 		{
-			ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-			if (!m_cached_objects_.find(acc, id))
-			{
-				// This is not intended to happen.
-				throw std::runtime_error("object removal is called twice.");
-			}
-
-			onObjectRemoved.Broadcast(obj);
-			obj = acc->second;
+			// This is not intended to happen.
+			throw std::runtime_error("object removal is called twice.");
 		}
 
-		for (const auto& comp : obj.lock()->GetAllComponents())
+		const Weak<Abstracts::ObjectBase> obj = m_cached_objects_[id];
+		onObjectRemoved.Broadcast(obj);
+		
 		{
-			ConcurrentWeakComRootMap::accessor comp_acc;
-
-			if (m_cached_components_.find(comp_acc, comp.lock()->GetTypeHash()))
+			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
+			for (const auto& comp : obj.lock()->GetAllComponents())
 			{
-				comp_acc->second.erase(comp.lock()->GetID());
+				ConcurrentWeakComRootMap::accessor comp_acc;
+				if (m_concurrent_cached_components_.find(comp_acc, comp.lock()->GetTypeHash()))
+				{
+					comp_acc->second.erase(comp.lock()->GetID());
+				}
+				if (m_cached_components_.contains(comp.lock()->GetTypeHash()))
+				{
+					m_cached_components_[comp.lock()->GetTypeHash()].erase(comp.lock()->GetID());
+				}
+
+				if (comp.lock()->GetTypeHash() == Components::Transform::StaticTypeHash())
+				{
+					m_object_position_tree_.Remove(obj.lock());
+				}
 			}
+		}
 
-			if (comp.lock()->GetTypeHash() == Components::Transform::StaticTypeHash())
+		{
+			auto token = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
+			for (const auto& script : obj.lock()->GetAllScripts())
 			{
-				m_object_position_tree_.Remove(obj.lock());
+				ConcurrentWeakScpRootMap::accessor script_acc;
+				if (m_concurrent_cached_scripts_.find(script_acc, script.lock()->GetTypeHash()))
+				{
+					script_acc->second.erase(script.lock()->GetID());
+				}
+				if (m_cached_scripts_.contains(script.lock()->GetTypeHash()))
+				{
+					m_cached_scripts_[script.lock()->GetTypeHash()].erase(script.lock()->GetID());
+				}
 			}
 		}
 
@@ -237,6 +261,7 @@ namespace Engine
 		}
 
 		m_cached_objects_.erase(id);
+		m_concurrent_cached_objects_.erase(id);
 		m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
 		m_layers_[layer]->RemoveGameObject(id);
 	}
@@ -255,6 +280,10 @@ namespace Engine
 			InitializePhysX();
 #endif
 
+			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(scene->m_object_lock_);
+			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(scene->m_component_lock_);
+			SpinLockToken st = SingletonSpinLock::GetInstance().Lock(scene->m_script_lock_);
+
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
 			m_layers_               = scene->m_layers_;
 			m_mainCamera_           = scene->m_mainCamera_;
@@ -263,6 +292,10 @@ namespace Engine
 			m_object_position_tree_.Clear();
 			m_cached_objects_.clear();
 			m_cached_components_.clear();
+			m_cached_scripts_.clear();
+			m_concurrent_cached_scripts_.clear();
+			m_concurrent_cached_components_.clear();
+			m_concurrent_cached_objects_.clear();
 			m_object_position_tree_.Clear();
 			m_assigned_actor_ids_.clear();
 
@@ -275,6 +308,8 @@ namespace Engine
 						onObjectAdded.Broadcast(obj);
 
 						m_cached_objects_.emplace(locked->GetID(), locked);
+						m_concurrent_cached_objects_.emplace(locked->GetID(), locked);
+
 						m_assigned_actor_ids_.emplace
 								(
 								 locked->GetLocalID(),
@@ -296,6 +331,14 @@ namespace Engine
 							if (const auto locked_comp = comp.lock())
 							{
 								AddCacheComponent(locked_comp);
+							}
+						}
+
+						for (const auto& script : locked->GetAllScripts())
+						{
+							if (const auto& locked_script = script.lock())
+							{
+								AddCacheScript(locked_script);
 							}
 						}
 
@@ -384,9 +427,9 @@ namespace Engine
 	void Scene::RemoveGameObject(const GlobalEntityID id, LayerSizeType layer)
 	{
 		{
-			ConcurrentWeakObjGlobalMap::const_accessor acc;
+			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
 
-			if (!m_cached_objects_.find(acc, id))
+			if (!m_cached_objects_.contains(id))
 			{
 				return;
 			}
@@ -396,12 +439,12 @@ namespace Engine
 			}
 
 			// This object is already flagged to be deleted.
-			if (acc->second.lock()->IsGarbage())
+			if (m_cached_objects_[id].lock()->IsGarbage())
 			{
 				return;
 			}
 
-			acc->second.lock()->SetGarbage(true);
+			m_cached_objects_[id].lock()->SetGarbage(true);
 		}
 
 		if (const auto locked = FindGameObject(id).lock())
@@ -434,24 +477,25 @@ namespace Engine
 				);
 	}
 
-	Weak<Abstracts::ObjectBase> Scene::FindGameObject(GlobalEntityID id) const
+	Weak<Abstracts::ObjectBase> Scene::FindGameObject(GlobalEntityID id)
 	{
 		if (id == g_invalid_id)
 		{
 			return {};
 		}
 
-		ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-		if (m_cached_objects_.find(acc, id))
 		{
-			return acc->second;
+			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+			if (m_cached_objects_.contains(id))
+			{
+				return m_cached_objects_.at(id);
+			}
 		}
 
 		const auto& it = std::find_if
 				(
 				 m_layers_.begin(), m_layers_.end(),
-				 [id, &acc](const auto& layer)
+				 [id](const auto& layer)
 				 {
 					 return layer->FindGameObject(id).lock();
 				 }
@@ -465,22 +509,19 @@ namespace Engine
 		return {};
 	}
 
-	Weak<Abstracts::ObjectBase> Scene::FindGameObjectByLocalID(LocalActorID id) const
+	Weak<Abstracts::ObjectBase> Scene::FindGameObjectByLocalID(LocalActorID id)
 	{
 		if (id == g_invalid_id)
 		{
 			return {};
 		}
 
-		ConcurrentLocalGlobalIDMap::const_accessor actor_acc;
-
-		if (m_assigned_actor_ids_.find(actor_acc, id))
+		if (m_assigned_actor_ids_.contains(id))
 		{
-			ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-			if (m_cached_objects_.find(acc, actor_acc->second))
+			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+			if (m_cached_objects_.contains(m_assigned_actor_ids_.at(id)))
 			{
-				return acc->second;
+				return m_cached_objects_.at(m_assigned_actor_ids_.at(id));
 			}
 		}
 
@@ -501,25 +542,16 @@ namespace Engine
 		{
 			return;
 		}
+		
+		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+		SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
 
-		ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-		if (!m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+		if (m_cached_objects_.contains(component->GetOwner().lock()->GetID()))
 		{
-			return;
-		}
+			m_cached_components_[type].emplace(component->GetID(), component);
 
-		ConcurrentWeakComRootMap::accessor comp_acc;
-
-		if (!m_cached_components_.find(comp_acc, type))
-		{
-			m_cached_components_.insert(comp_acc, type);
-		}
-
-		ConcurrentWeakComMap::const_accessor comp_map_acc;
-
-		if (!comp_acc->second.find(comp_map_acc, component->GetID()))
-		{
+			ConcurrentWeakComRootMap::accessor comp_acc;
+			if (!m_concurrent_cached_components_.find(comp_acc, type)) m_concurrent_cached_components_.insert(comp_acc, type);
 			comp_acc->second.emplace(component->GetID(), component);
 
 			if (type == Components::Transform::StaticTypeHash())
@@ -531,74 +563,74 @@ namespace Engine
 
 	void Scene::removeCacheComponentImpl(const Strong<Abstracts::Component>& component, const ComponentType type)
 	{
-		ConcurrentWeakObjGlobalMap::const_accessor acc;
+		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+		SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
 
-		if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
+		if (m_cached_objects_.contains(component->GetOwner().lock()->GetID()))
 		{
-			ConcurrentWeakComRootMap::accessor comp_acc;
-			if (m_cached_components_.find(comp_acc, type))
+			if (m_cached_components_.contains(type))
 			{
-				comp_acc->second.erase(component->GetID());
-			}
-		}
+				m_cached_components_[type].erase(component->GetID());
+				ConcurrentWeakComRootMap::accessor comp_acc;
 
-		if (type == Components::Transform::StaticTypeHash())
-		{
-			m_object_position_tree_.Remove(component->GetOwner().lock());
+				if (m_concurrent_cached_components_.find(comp_acc, type)) comp_acc->second.erase(component->GetID());
+			}
+
+			if (type == Components::Transform::StaticTypeHash())
+			{
+				m_object_position_tree_.Remove(component->GetOwner().lock());
+			}
 		}
 	}
 
-	void Scene::addCacheScriptImpl(const Strong<Script>& script, const ScriptSizeType type)
+	void Scene::addCacheScriptImpl(const Strong<Script>& script, const ScriptType type)
 	{
 		if (!script->GetOwner().lock())
 		{
 			return;
 		}
 
-		if (ConcurrentWeakObjGlobalMap::const_accessor acc;
-			m_cached_objects_.find(acc, script->GetOwner().lock()->GetID()))
+		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+		SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
+
+		if (m_cached_objects_.contains(script->GetOwner().lock()->GetID()))
 		{
-			if (ConcurrentWeakScpRootMap::accessor scp_acc;
-				m_cached_scripts_.find(scp_acc, type))
-			{
-				if (ConcurrentWeakScpMap::const_accessor scp_map_acc;
-					scp_acc->second.find(scp_map_acc, script->GetID()))
-				{
-					return;
-				}
+			m_cached_scripts_[type].emplace(script->GetID(), script);
 
-				scp_acc->second.emplace(script->GetID(), script);
-			}
-			else
-			{
-				m_cached_scripts_.insert(scp_acc, type);
-				scp_acc->second.emplace(script->GetID(), script);
-			}
-		}
-	}
-
-	void Scene::removeCacheScriptImpl(const Strong<Script>& component, const ScriptSizeType type)
-	{
-		ConcurrentWeakObjGlobalMap::const_accessor acc;
-
-		if (m_cached_objects_.find(acc, component->GetOwner().lock()->GetID()))
-		{
 			ConcurrentWeakScpRootMap::accessor scp_acc;
-			if (m_cached_scripts_.find(scp_acc, type))
+			if (!m_concurrent_cached_scripts_.find(scp_acc, type)) m_concurrent_cached_scripts_.insert(scp_acc, type);
+
+			scp_acc->second.emplace(script->GetID(), script);
+		}
+	}
+
+	void Scene::removeCacheScriptImpl(const Strong<Script>& script, const ScriptType type)
+	{
+		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+		SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
+
+		if (m_cached_objects_.contains(script->GetOwner().lock()->GetID()))
+		{
+			if (m_cached_scripts_.contains(type))
 			{
-				scp_acc->second.erase(component->GetID());
+				m_cached_scripts_[type].erase(script->GetID());
+				ConcurrentWeakScpRootMap::accessor scp_acc;
+				if (m_concurrent_cached_scripts_.find(scp_acc, type)) scp_acc->second.erase(script->GetID());
 			}
 		}
 	}
 
-	Scene::Scene()
-		: m_b_scene_raytracing_(false),
+	Scene::Scene() :
+	m_b_scene_raytracing_(false),
 #ifdef PHYSX_ENABLED
-		  m_physics_scene_(nullptr),
+	m_physics_scene_(nullptr),
 #endif
-		  m_main_camera_local_id_(g_invalid_id),
-		  m_main_actor_local_id_(g_invalid_id),
-		  m_object_position_tree_() {}
+	m_main_camera_local_id_(g_invalid_id),
+	m_main_actor_local_id_(g_invalid_id),
+	m_object_position_tree_(),
+	m_object_lock_(SingletonSpinLock::GetInstance().Register()),
+	m_script_lock_(SingletonSpinLock::GetInstance().Register()),
+	m_component_lock_(SingletonSpinLock::GetInstance().Register()){}
 
 	void Scene::PreUpdate(const float dt)
 	{
@@ -690,7 +722,17 @@ namespace Engine
 		}
 	}
 
-	ConcurrentWeakObjVec Scene::GetGameObjects(const LayerSizeType layer) const
+	ConcurrentWeakObjVec Scene::GetGameObjectsConcurrent(const LayerSizeType layer) const
+	{
+		if (layer > m_layers_.size())
+		{
+			return {};
+		}
+
+		return m_layers_[layer]->GetGameObjectsConcurrent();
+	}
+
+	WeakObjVec Scene::GetGameObjects(const LayerSizeType layer) const
 	{
 		if (layer > m_layers_.size())
 		{
@@ -739,51 +781,58 @@ namespace Engine
 			}
 		}
 
-		// rebuild cache
-		for (int i = 0; i < m_layer_count_; ++i)
 		{
-			m_layers_[i]->OnDeserialized();
+			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
+			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
+			SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
 
-			for (const auto& obj :
-			     m_layers_[i]->GetGameObjects())
+			// rebuild cache
+			for (int i = 0; i < m_layer_count_; ++i)
 			{
-				m_cached_objects_.emplace(obj.lock()->GetID(), obj);
-				obj.lock()->SetScene(GetSharedPtr<Scene>());
-				obj.lock()->SetLayer(i);
-				m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID(), obj.lock()->GetID());
+				m_layers_[i]->OnDeserialized();
 
-				if (m_main_actor_local_id_ == obj.lock()->GetLocalID())
+				for (const auto& obj : m_layers_[i]->GetGameObjects())
 				{
-					m_main_actor_ = obj;
-				}
+					m_cached_objects_.emplace(obj.lock()->GetID(), obj);
+					obj.lock()->SetScene(GetSharedPtr<Scene>());
+					obj.lock()->SetLayer(i);
+					m_assigned_actor_ids_.emplace(obj.lock()->GetLocalID(), obj.lock()->GetID());
 
-				for (const auto& comp : obj.lock()->GetAllComponents())
-				{
-					if (ConcurrentWeakComRootMap::accessor acc;
-						m_cached_components_.find
-						(acc, comp.lock()->GetTypeHash()))
+					if (m_main_actor_local_id_ == obj.lock()->GetLocalID())
 					{
-						acc->second.emplace(comp.lock()->GetID(), comp);
+						m_main_actor_ = obj;
 					}
-					else
-					{
-						m_cached_components_.insert(acc, comp.lock()->GetTypeHash());
-						acc->second.emplace(comp.lock()->GetID(), comp);
-					}
-				}
 
-				for (const auto& scp : obj.lock()->GetAllScripts())
-				{
-					if (ConcurrentWeakScpRootMap::accessor acc;
-						m_cached_scripts_.find
-						(acc, scp.lock()->GetScriptType()))
+					for (const auto& comp : obj.lock()->GetAllComponents())
 					{
-						acc->second.emplace(scp.lock()->GetID(), scp);
+						m_cached_components_[comp.lock()->GetTypeHash()].emplace(comp.lock()->GetID(), comp);
+
+						if (ConcurrentWeakComRootMap::accessor acc;
+							m_concurrent_cached_components_.find(acc, comp.lock()->GetTypeHash()))
+						{
+							acc->second.emplace(comp.lock()->GetID(), comp);
+						}
+						else
+						{
+							m_concurrent_cached_components_.insert(acc, comp.lock()->GetTypeHash());
+							acc->second.emplace(comp.lock()->GetID(), comp);
+						}
 					}
-					else
+
+					for (const auto& scp : obj.lock()->GetAllScripts())
 					{
-						m_cached_scripts_.insert(acc, scp.lock()->GetScriptType());
-						acc->second.emplace(scp.lock()->GetID(), scp);
+						m_cached_scripts_[scp.lock()->GetTypeHash()].emplace(scp.lock()->GetID(), scp);
+
+						if (ConcurrentWeakScpRootMap::accessor acc;
+							m_concurrent_cached_scripts_.find(acc, scp.lock()->GetTypeHash()))
+						{
+							acc->second.emplace(scp.lock()->GetID(), scp);
+						}
+						else
+						{
+							m_concurrent_cached_scripts_.insert(acc, scp.lock()->GetTypeHash());
+							acc->second.emplace(scp.lock()->GetID(), scp);
+						}
 					}
 				}
 			}

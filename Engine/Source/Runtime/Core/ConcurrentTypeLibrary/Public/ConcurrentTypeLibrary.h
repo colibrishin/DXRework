@@ -13,10 +13,10 @@
 namespace Engine
 {
 	template <typename KeyType, typename ValueType>
-	using concurrent_fast_pool_map = tbb::concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, u_fast_pool_allocator<KeyType, ValueType>>;
+	using concurrent_fast_pool_map = tbb::concurrent_hash_map<KeyType, ValueType, tbb::tbb_hash_compare<KeyType>, boost::fast_pool_allocator<std::pair<const KeyType, ValueType>, boost::default_user_allocator_new_delete, boost::details::pool::default_mutex, 64>>;
 
 	template <typename ValueType>
-	using concurrent_aligned_vector = tbb::concurrent_vector<ValueType, u_align_allocator<ValueType>>;
+	using concurrent_aligned_vector = tbb::concurrent_vector<ValueType, boost::alignment::aligned_allocator<ValueType, 64>>;
 
 	// Concurrent type definitions
 	using ConcurrentWeakObjGlobalMap = concurrent_fast_pool_map<GlobalEntityID, Weak<Abstracts::ObjectBase>>;
@@ -27,7 +27,7 @@ namespace Engine
 	using ConcurrentWeakScpVec = tbb::concurrent_vector<Weak<Script>, u_pool_allocator_single<Weak<Script>>>;
 	using ConcurrentWeakScpMap = concurrent_fast_pool_map<GlobalEntityID, Weak<Script>>;
 	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<ComponentType, ConcurrentWeakComMap>;
-	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<ScriptSizeType, ConcurrentWeakScpMap>;
+	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<ScriptType, ConcurrentWeakScpMap>;
 
-	using InstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
+	using ConcurrentInstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
 }

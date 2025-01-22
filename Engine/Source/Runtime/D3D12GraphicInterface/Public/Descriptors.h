@@ -35,8 +35,8 @@ namespace Engine
 		UINT                                               m_size_;
 		std::deque<__m256i>                                m_used_slots_{};
 
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};
+		aligned_vector<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
+		aligned_vector<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};
 
 		UINT m_buffer_size_{};
 		UINT m_sampler_size_{};

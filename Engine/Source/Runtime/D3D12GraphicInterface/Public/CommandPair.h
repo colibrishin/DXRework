@@ -111,7 +111,7 @@ namespace Engine
 
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
-		boost::pool_allocator<CommandPair>                          m_command_pair_pool_{};
+		u_align_allocator<CommandPair>								m_command_pair_pool_{};
 		Strong<DescriptorHandler>                                   m_heap_handler_{};
 
 		ComPtr<ID3D12Device2> m_dev_{};
@@ -185,7 +185,7 @@ namespace Engine
 		std::atomic<bool> m_running_;
 
 		CommandPairPool                 m_pool_{};
-		std::deque<Weak<CommandPair>>   m_command_pairs_{};
+		pool_queue<Weak<CommandPair>>   m_command_pairs_{};
 
 		std::array<ComPtr<ID3D12CommandQueue>, std::size(queue_descs)> m_queue_{};
 		ComPtr<ID3D12Device2>                                        m_dev_{};

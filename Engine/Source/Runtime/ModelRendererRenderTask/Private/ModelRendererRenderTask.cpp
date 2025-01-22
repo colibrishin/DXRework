@@ -40,7 +40,7 @@ namespace Engine
             const size_t map_size,
             std::atomic<uint64_t>& instance_count) 
     {
-        const auto& mrs = scene->GetCachedComponents<Components::ModelRenderer>();
+        const auto& mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
 
         tbb::parallel_for_each(mrs.begin(), mrs.end(), [&](const Weak<Abstracts::Component>& comp)
         {

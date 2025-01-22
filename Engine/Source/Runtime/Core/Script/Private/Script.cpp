@@ -2,9 +2,8 @@
 
 namespace Engine
 {
-	Script::Script(const ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner)
-	: m_type_(type),
-	  m_b_active_(true)
+	Script::Script(const ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner) :
+	m_b_active_(true)
 	{
 		if (const auto obj = owner.lock())
 		{
@@ -24,9 +23,8 @@ namespace Engine
 		return clone;
 	}
 
-	Script::Script()
-		: m_type_(),
-		  m_b_active_(true) {}
+	Script::Script() :
+	m_b_active_(true) {}
 
 	void Script::SetOwner(const Weak<Abstracts::ObjectBase>& owner)
 	{

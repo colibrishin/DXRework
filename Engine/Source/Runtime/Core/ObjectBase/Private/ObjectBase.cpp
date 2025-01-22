@@ -256,7 +256,7 @@ namespace Engine::Abstracts
 		return {};
 	}
 
-	Weak<Script> ObjectBase::checkScript(const ScriptSizeType type)
+	Weak<Script> ObjectBase::checkScript(const ScriptType type)
 	{
 		if (m_scripts_.contains(type))
 		{
@@ -266,13 +266,13 @@ namespace Engine::Abstracts
 		return {};
 	}
 
-	void ObjectBase::removeScript(const ScriptSizeType type)
+	void ObjectBase::removeScript(const ScriptType type)
 	{
 		removeScriptFromSceneCache(m_scripts_[type]);
 		removeScriptImpl(type);
 	}
 
-	void ObjectBase::removeScriptImpl(const ScriptSizeType type)
+	void ObjectBase::removeScriptImpl(const ScriptType type)
 	{
 		if (m_scripts_.contains(type))
 		{
@@ -283,7 +283,7 @@ namespace Engine::Abstracts
 					 [](const std::vector<std::any>& params, const float)
 					 {
 						 const auto& obj  = std::any_cast<Strong<ObjectBase>>(params[0]);
-						 const auto& type = std::any_cast<ScriptSizeType>(params[1]);
+						 const auto& type = std::any_cast<ScriptType>(params[1]);
 
 						 std::erase_if
 								 (
@@ -291,7 +291,7 @@ namespace Engine::Abstracts
 								  {
 									  if (const auto& locked = script.lock())
 									  {
-										  return locked->GetScriptType() == type;
+										  return locked->GetTypeHash() == type;
 									  }
 
 									  return false;
@@ -330,7 +330,7 @@ namespace Engine::Abstracts
 
 	Weak<Script> ObjectBase::addScript(const Strong<Script>& script)
 	{
-		const auto type = script->GetScriptType();
+		const auto type = script->GetTypeHash();
 
 		if (const auto scp = checkScript(type).lock())
 		{
@@ -341,7 +341,7 @@ namespace Engine::Abstracts
 		if (const auto prev = script->GetOwner().lock();
 			prev && prev != GetSharedPtr<ObjectBase>())
 		{
-			prev->removeScript(script->GetScriptType());
+			prev->removeScript(type);
 		}
 
 		// Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
@@ -354,7 +354,7 @@ namespace Engine::Abstracts
 		return script;
 	}
 
-	void ObjectBase::addScriptImpl(const Strong<Script>& script, const ScriptSizeType type)
+	void ObjectBase::addScriptImpl(const Strong<Script>& script, const ScriptType type)
 	{
 		script->SetOwner(GetSharedPtr<ObjectBase>());
 
