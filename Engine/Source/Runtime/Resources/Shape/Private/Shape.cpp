@@ -7,6 +7,8 @@
 
 #include "Components/Collider/Public/Collider.hpp"
 
+#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
@@ -512,3 +514,46 @@ namespace Engine::Resources
 		  m_bounding_box_({}) {}
 }
 
+MODULE_IMPL(Engine::ShapeModule, Shape);
+
+void Engine::ShapeModule::Initialize()
+{
+	Managers::ResourceManager::GetInstance().RegisterLoadResource("Shape", [](bool& managing_flag)
+	{
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+		const auto& load_callback = [](const std::string& name, const std::string& path)
+		{
+			try
+			{
+				if (path.empty())
+				{
+					return;
+				}
+				else
+				{
+					if (std::filesystem::exists(path))
+					{
+						Resources::Shape::Create(name, path);
+					}
+				}
+			}
+			catch (std::exception e)
+			{
+				return;
+			}
+		};
+
+		Managers::ResourceManager::GetInstance().OpenNewSimpleDialog<Resources::Shape>(managing_flag, {}, load_callback);
+	});
+}
+
+void Engine::ShapeModule::Shutdown()
+{
+	Managers::ResourceManager::GetInstance().UnregisterLoadResource("Shape");	
+}
+
+bool Engine::ShapeModule::DynamicLoadable()
+{
+	return true;
+}

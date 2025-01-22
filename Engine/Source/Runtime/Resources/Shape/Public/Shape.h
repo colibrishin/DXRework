@@ -2,12 +2,33 @@
 #include <assimp/Importer.hpp>
 #include <map>
 
+#include "ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 
 POLYMORPHIC_TYPE_MAP(Engine::Resources::Shape, Engine::Abstracts::Resource)
+
+namespace Engine
+{
+	struct ShapeModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::ShapeModule, Engine::IModule);
+
+namespace Engine
+{
+	struct ShapeModule : IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(ShapeModule);
+
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
 
 namespace Engine::Resources
 {
