@@ -411,3 +411,4 @@ kolibri.sln
 !Build/
 Programs/CMake/***
 Programs/vcpkg/***
+lock

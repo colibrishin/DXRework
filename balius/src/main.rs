@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 use fs2::FileExt;
+use std::io::BufRead;
 
 lazy_static!{
     static ref target_files: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
@@ -178,6 +179,91 @@ fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
     }
 }
 
+fn acquire_lock()
+{
+    loop 
+    {
+        match std::fs::File::create_new("lock")
+        {
+            Ok(mut file) =>
+            {
+                match file.try_lock_exclusive()
+                {
+                    Ok(_) =>
+                    {
+                        let string_pid: Vec<u8> = std::process::id().to_string().into();
+                        file.write(&string_pid).expect("Unable to write a lock file");
+                        file.unlock().unwrap();
+                        break;
+                    },
+                    Err(_) => continue
+                }
+            },
+            Err(_) =>
+            {
+                match std::fs::File::open("lock")
+                {
+                    Ok(file) =>
+                    {
+                        match file.try_lock_exclusive()
+                        {
+                            Ok(_) =>
+                            {
+                                let mut reader = std::io::BufReader::new(&file);
+                                let mut pid = String::new();
+                                reader.read_line(&mut pid).expect("Unable to read a file");
+
+                                let sys = sysinfo::System::new_all();
+                                match pid.parse::<usize>()
+                                {
+                                    Ok(parse_pid) =>
+                                    {
+                                        match sys.process(sysinfo::Pid::from(parse_pid))
+                                        {
+                                            None =>
+                                            {
+                                                file.unlock().unwrap();
+                                                match std::fs::remove_file("lock")
+                                                {
+                                                    Ok(()) => (),
+                                                    Err(_) => (),
+                                                }
+                                                continue;
+                                            },
+                                            Some(_) => 
+                                            {
+                                                continue;
+                                            }
+                                        }
+                                    },
+                                    Err(_) =>
+                                    {
+                                        if pid.is_empty()
+                                        {
+                                            file.unlock().unwrap();
+                                            match std::fs::remove_file("lock")
+                                            {
+                                                Ok(()) => (),
+                                                Err(_) => (),
+                                            }
+                                            continue;
+                                        }
+
+                                        file.unlock().unwrap();
+                                        continue;
+                                    }
+                                }
+                            },
+                            Err(_) => continue
+                        }
+                    },
+                    Err(_) => continue
+                }
+            }
+        }
+    }
+}
+
 fn main() 
 {
     let args: Vec<String> = std::env::args().collect();
@@ -204,6 +290,8 @@ fn main()
         eprintln!("Engine directory does not exist");
         return;
     }
+
+    acquire_lock();
 
     let intermediate_path = engine_dir.join("Intermediate").join("HeaderParser");
     check_git(&git_dir, &intermediate_path);
