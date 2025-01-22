@@ -5,6 +5,18 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "RenderTask.h"
 
+#include "ModuleManager/Public/IModule.h"
+
+namespace Engine
+{
+	struct RenderPipelineModule : public IModule
+	{
+		void Initialize() override;
+		void Shutdown() override;
+		bool DynamicLoadable() override;
+	};
+}
+
 namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
@@ -47,7 +59,7 @@ namespace Engine::Managers
 		void SetParam(const T& v, const size_t slot)
 		{
 			m_param_buffer_.SetParam(slot, v);
-			const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
+			const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
 			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 			primitive.commandList->SoftReset();
 			m_param_buffer_cb_->SetData(&primitive, 1, &m_param_buffer_);

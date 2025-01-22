@@ -17,6 +17,5 @@ public class ComputeShader : CommonProject
         conf.AddPublicDependency<Shader>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
-        conf.AddPrivateDependency<Debugger>(target);
     }
 }

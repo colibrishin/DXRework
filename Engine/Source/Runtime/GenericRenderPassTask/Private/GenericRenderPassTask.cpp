@@ -67,7 +67,7 @@ namespace Engine
 			);
 		}
 
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Render Pass");
 		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 		
@@ -169,7 +169,7 @@ namespace Engine
 
 			context->heap->BindGraphic(context);
 
-			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 
 			if (!shader_bypass)
 			{

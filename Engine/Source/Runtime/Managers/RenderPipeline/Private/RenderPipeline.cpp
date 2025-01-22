@@ -1,6 +1,9 @@
 #include "../Public/RenderPipeline.h"
 #include "../Public/Renderer.h"
 
+#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
+#include "CoreModuel/Public/CoreModule.h"
+
 namespace Engine::Managers
 {
 	using namespace Resources;
@@ -8,7 +11,7 @@ namespace Engine::Managers
 	void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
 	{
 		m_wvp_buffer_ = matrix;
-		const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
+		const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
 		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 		primitive.commandList->SoftReset();
 		m_wvp_buffer_cb_->SetData(&primitive, 1, &m_wvp_buffer_);
@@ -188,7 +191,7 @@ namespace Engine::Managers
 
 	void RenderPipeline::PreRender(const float dt)
 	{
-		//Managers::D3Device::GetInstance().ClearRenderTarget();
+		GraphicInterfaceAccessor::GetInterface().ClearRenderTarget();
 	}
 
 	void RenderPipeline::Update(const float dt) {}
@@ -197,8 +200,32 @@ namespace Engine::Managers
 
 	void RenderPipeline::FixedUpdate(const float dt) {}
 
-	void RenderPipeline::PostRender(const float dt) {}
+	void RenderPipeline::PostRender(const float dt)
+	{
+		GraphicInterfaceAccessor::GetInterface().Present();
+		GraphicInterfaceAccessor::GetInterface().WaitForNextFrame();
+	}
 
 	void RenderPipeline::PostUpdate(const float dt) {}
 
 } // namespace Engine::Manager::Graphics
+
+MODULE_IMPL(Engine::RenderPipelineModule, RenderPipeline)
+
+void Engine::RenderPipelineModule::Initialize()
+{
+	CoreModule::GetContext().AddManager(
+		&Managers::RenderPipeline::GetInstance,
+		&Managers::Renderer::GetInstance);
+}
+void Engine::RenderPipelineModule::Shutdown()
+{
+	CoreModule::GetContext().RemoveManager(
+		&Managers::RenderPipeline::GetInstance,
+		&Managers::Renderer::GetInstance);
+}
+
+bool Engine::RenderPipelineModule::DynamicLoadable()
+{
+	return true;
+}

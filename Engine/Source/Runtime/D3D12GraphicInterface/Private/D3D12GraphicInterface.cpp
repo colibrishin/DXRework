@@ -1,5 +1,7 @@
 #include "D3D12GraphicInterface.h"
 
+#include <dxgidebug.h>
+
 #include "D3D12GraphicPrimitiveShader.h"
 #include "D3D12PrimitiveMesh.h"
 #include "ThrowIfFailed.h"
@@ -21,12 +23,12 @@ namespace Engine
 {
 	void Engine::D3D12GraphicInterfaceModule::Initialize()
 	{
-		g_graphic_interface.SetGraphicInterface<D3D12GraphicInterface>();
+		GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
 	}
 
 	void Engine::D3D12GraphicInterfaceModule::Shutdown()
 	{
-		auto& gi = static_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
+		auto& gi = static_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		gi.Shutdown();
 	}
 
@@ -88,7 +90,9 @@ void Engine::D3D12GraphicInterface::WaitForNextFrame()
 #endif
 	}
 
-	m_command_pair_task_.SwapBuffer(m_swap_chain_->GetCurrentBackBufferIndex());
+	const uint64_t next_buffer = m_swap_chain_->GetCurrentBackBufferIndex();
+	m_command_pair_task_.SwapBuffer(next_buffer);
+	m_frame_idx_ = next_buffer;
 }
 
 void Engine::D3D12GraphicInterface::Present()
@@ -104,9 +108,7 @@ void Engine::D3D12GraphicInterface::Present()
 
 	cmd->SoftReset();
 	cmd->GetList()->ResourceBarrier(1, &present_barrier);
-	cmd->FlagReady();
-
-	m_command_pair_task_.WaitForCommandsCompletion();
+	cmd->Execute();
 
 	DXGI_PRESENT_PARAMETERS params;
 	params.DirtyRectsCount = 0;
@@ -221,7 +223,7 @@ void Engine::D3D12GraphicInterface::Dispatch(
 {
 	if (!m_local_param_)
 	{
-		GraphicInterface& gi = g_graphic_interface.GetInterface(); 	
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface(); 	
 		m_local_param_ = std::unique_ptr<IStructuredBufferType<Graphics::SBs::LocalParamSB>>(gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>());
 	}
 
@@ -686,6 +688,14 @@ void Engine::D3D12GraphicInterface::ClearRenderTarget()
 	);
 
 	const auto& dsv_handle = m_dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+	const auto initial_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+			(
+			 m_render_targets_[m_frame_idx_].Get(),
+			 D3D12_RESOURCE_STATE_PRESENT,
+			 D3D12_RESOURCE_STATE_RENDER_TARGET
+			);
+
+	cmd->GetList()->ResourceBarrier(1, &initial_barrier);
 
 	cmd->GetList()->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
 	cmd->GetList()->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
@@ -966,7 +976,7 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 
 #if WITH_DEBUG
 	ComPtr<ID3D12InfoQueue> info_queue;
-	if (SUCCEEDED(m_device_.As(&info_queue)))
+	if (SUCCEEDED(m_dev_.As(&info_queue)))
 	{
 		DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true));
 		DX::ThrowIfFailed(info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true));

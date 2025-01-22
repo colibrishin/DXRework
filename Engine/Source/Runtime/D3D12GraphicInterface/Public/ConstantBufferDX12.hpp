@@ -23,7 +23,7 @@ namespace Engine::Graphics
 
 		void Create(const T* src_data) override
 		{
-			GraphicInterface&                        gi        = g_graphic_interface.GetInterface();
+			GraphicInterface&                        gi        = GraphicInterfaceAccessor::GetInterface();
 			const auto                               dev       = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
 			const GraphicInterfaceContextReturnType& context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"ConstantBuffer Initialization");
 			const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();

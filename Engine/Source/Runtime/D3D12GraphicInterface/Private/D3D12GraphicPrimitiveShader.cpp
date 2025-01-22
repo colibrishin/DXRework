@@ -85,7 +85,7 @@ namespace Engine
 			throw std::runtime_error("Vertex shader is not found");
 		}
 
-		const auto& dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+		const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 
 		D3D12_DEPTH_STENCIL_DESC dsd;
 		dsd.DepthEnable                  = m_depth_flag_;

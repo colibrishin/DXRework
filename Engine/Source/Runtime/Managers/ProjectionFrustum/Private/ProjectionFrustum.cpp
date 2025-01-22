@@ -5,7 +5,7 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
 #endif
 
 namespace Engine::Managers
@@ -27,7 +27,7 @@ namespace Engine::Managers
 				BoundingFrustum::CreateFromMatrix
 						(
 						 m_frustum,
-						 g_graphic_interface.GetInterface().GetProjectionMatrix()
+						 GraphicInterfaceAccessor::GetInterface().GetProjectionMatrix()
 						);
 			}
 			else
@@ -73,7 +73,7 @@ namespace Engine::Managers
 			catch (const std::exception& e)
 			{
 #if WITH_DEBUG
-				Managers::Debugger::GetInstance().Log(e.what());
+				Managers::Debugger::GetInstance().Log(e.what(), {1.f, 0.f, 0.f, 1.f});
 #endif
 				return false;
 			}

@@ -3,14 +3,14 @@
 #include "ResourceManager/Public/ResourceManager.hpp"
 #include "SceneManager/Public/SceneManager.hpp"
 
-using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase*>;
+using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 
 #define UPDATE_CALL_TEMPLATE(UpdateType) \
 	void Do##UpdateType(const float dt, const SingletonCollection& singletons) \
 	{ \
 		for (const auto& s : singletons) \
 		{ \
-			s->##UpdateType(dt); \
+			s().##UpdateType(dt); \
 		} \
 	}
 
@@ -40,22 +40,18 @@ namespace Engine
 		void PreRender(const float dt) const;
 		void Render(const float dt) const;
 		void PostRender(const float dt) const;
-
-	private:
-		friend class Managers::ModuleManager;
-		friend struct CoreModule;
 		
 		template <typename... Args>
 		void AddManager(Args&&... args)
 		{
-			(args->Initialize(), ...);
-			(m_singleton_accessor_.push_back(args), ...);
+			(args().Initialize(), ...);
+			(m_singleton_accessor_.push_back(reinterpret_cast<Abstracts::SingletonBase&(*&&)()>(args)), ...);
 		}
 
 		template <typename... Args>
 		void RemoveManager(Args&&... args)
 		{
-			(args->Destroy(), ...);
+			(args().Destroy(), ...);
 
 			std::apply([&](const auto&... ptrs)
 			{
@@ -63,7 +59,7 @@ namespace Engine
 				{
 					for (auto it = m_singleton_accessor_.begin(); it != m_singleton_accessor_.end();)
 					{
-						if (*it == ptr)
+						if (*it == reinterpret_cast<Abstracts::SingletonBase&(*)()>(ptr))
 						{
 							it = m_singleton_accessor_.erase(it);
 							break;
@@ -80,7 +76,8 @@ namespace Engine
 			}, std::forward_as_tuple(args...));
 		}
 
-		std::vector<Abstracts::SingletonBase*> m_singleton_accessor_{};
+	private:
+		std::vector<Abstracts::SingletonBase&(*)()> m_singleton_accessor_{};
 	};
 	
 	struct CORE_API CoreModule : public IModule
@@ -88,17 +85,17 @@ namespace Engine
 		void Initialize() override
 		{
 			s_core_module.AddManager(
-				&Managers::ResourceManager::GetInstance(), 
-				&Managers::SceneManager::GetInstance(), 
-				&Managers::TaskScheduler::GetInstance());
+				&Managers::ResourceManager::GetInstance, 
+				&Managers::SceneManager::GetInstance, 
+				&Managers::TaskScheduler::GetInstance);
 		}
 
 		void Shutdown() override
 		{
 			s_core_module.RemoveManager(
-				&Managers::ResourceManager::GetInstance(),
-				&Managers::SceneManager::GetInstance(),
-				&Managers::TaskScheduler::GetInstance());
+				&Managers::ResourceManager::GetInstance,
+				&Managers::SceneManager::GetInstance,
+				&Managers::TaskScheduler::GetInstance);
 		}
 
 		bool DynamicLoadable() override

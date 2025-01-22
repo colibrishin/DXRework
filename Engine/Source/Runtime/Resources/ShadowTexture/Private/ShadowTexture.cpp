@@ -75,7 +75,7 @@ namespace Engine::Resources
 
 	void ShadowTexture::Clear(const GraphicInterfaceContextPrimitive* context) const
 	{
-		g_graphic_interface.GetInterface().Clear(context, this, BIND_TYPE_DSV);
+		GraphicInterfaceAccessor::GetInterface().Clear(context, this, BIND_TYPE_DSV);
 	}
 
 	void ShadowTexture::Unload_INTERNAL()

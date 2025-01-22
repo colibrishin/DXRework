@@ -25,7 +25,6 @@ public class D3D12GraphicInterface : CommonProject
 
         conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
-        conf.AddPrivateDependency<Debugger>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

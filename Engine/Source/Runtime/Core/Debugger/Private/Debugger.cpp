@@ -14,6 +14,7 @@ namespace Engine::Managers
 	void Debugger::Update(const float dt)
 	{	
 #if WITH_DEBUG
+		/*
 		if (Managers::InputManager::GetInstance().GetCurrentKeyState().Scroll)
 		{
 			m_bDebug = !m_bDebug;
@@ -56,6 +57,7 @@ namespace Engine::Managers
 				}
 			}
 		}
+		*/
 #endif
 	}
 

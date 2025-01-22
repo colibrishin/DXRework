@@ -9,8 +9,8 @@ namespace Engine::Resources
 {
 	void Shader::Load_INTERNAL()
 	{
-		m_primitive_ = Unique<GraphicPrimitiveShader>(g_graphic_interface.GetInterface().GetNewGraphicPrimitiveShader());
-		m_primitive_->Generate(this, g_graphic_interface.GetInterface().GetNativePipeline());
+		m_primitive_ = Unique<GraphicPrimitiveShader>(GraphicInterfaceAccessor::GetInterface().GetNewGraphicPrimitiveShader());
+		m_primitive_->Generate(this, GraphicInterfaceAccessor::GetInterface().GetNativePipeline());
 	}
 
 	Shader::Shader(

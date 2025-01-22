@@ -1,7 +1,7 @@
 #include "../Public/ComputeShader.h"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
 #endif
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
@@ -13,7 +13,7 @@ namespace Engine::Resources
 
 	void ComputeShader::Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const
 	{
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		gi.Dispatch(context, this, param, group_count);
 	}
 
@@ -63,8 +63,8 @@ namespace Engine::Resources
 
 	void ComputeShader::Load_INTERNAL()
 	{
-		m_primitive_shader_ = Unique<ComputePrimitiveShader>(g_graphic_interface.GetInterface().GetNewComputePrimitiveShader());
-		m_primitive_shader_->Generate(this, g_graphic_interface.GetInterface().GetNativePipeline());
+		m_primitive_shader_ = Unique<ComputePrimitiveShader>(GraphicInterfaceAccessor::GetInterface().GetNewComputePrimitiveShader());
+		m_primitive_shader_->Generate(this, GraphicInterfaceAccessor::GetInterface().GetNativePipeline());
 		
 		loadDerived();
 	}

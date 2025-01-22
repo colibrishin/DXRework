@@ -4,7 +4,7 @@
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
 #include "Source/Runtime/D3D12GraphicInterface/Public/DebugDraw.h"
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
 
 namespace Engine::Managers
 {
@@ -14,7 +14,7 @@ namespace Engine::Managers
 
 	void ToolkitAPI::Initialize()
 	{
-		auto& gi = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
+		auto& gi = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		auto dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
 		
 		m_descriptor_heap_ = std::make_unique<DirectX::DescriptorHeap>(dev, 1);
@@ -68,7 +68,7 @@ namespace Engine::Managers
 		m_sprite_batch_->SetViewport(reinterpret_cast<const D3D12_VIEWPORT&>(RenderPipeline::GetInstance().GetViewport()));
 
 		ID3D12DescriptorHeap*                    heaps[]     = {m_descriptor_heap_->Heap(), m_states_->Heap()};
-		auto&                                    gi          = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
+		auto&                                    gi          = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		const GraphicInterfaceContextReturnType& s_context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Toolkit Render");
 		const GraphicInterfaceContextPrimitive&  s_primitive = s_context.GetPointers();
 		auto                                     s_cmd       = static_cast<CommandPair*>(s_primitive.commandList);

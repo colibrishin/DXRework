@@ -47,7 +47,7 @@ namespace Engine::Managers
 				 }
 				);
 
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightSB>>(gi.GetStructuredBuffer<SBs::LightSB>());
 		m_light_vp_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightVPSB>>(gi.GetStructuredBuffer<SBs::LightVPSB>());
 
@@ -132,7 +132,7 @@ namespace Engine::Managers
 
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
-			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Depth pass for Shadow");
 			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 
@@ -198,7 +198,7 @@ namespace Engine::Managers
 		SBs::LocalParamSB local_param{};
 		local_param.SetParam(0, static_cast<int>(light_idx));
 
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		Renderer::GetInstance().RenderPass
 			(
 			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, [](const Strong<Abstracts::ObjectBase>& obj)
@@ -353,7 +353,7 @@ namespace Engine::Managers
 
 	void ShadowManager::BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		aligned_vector<Resources::Texture*> textures;
 
 		for (const auto& tex : m_shadow_texs_ | std::views::values)
@@ -367,7 +367,7 @@ namespace Engine::Managers
 
 	void ShadowManager::UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		aligned_vector<Resources::Texture*> textures;
 
 		for (const auto& tex : m_shadow_texs_ | std::views::values)
@@ -425,7 +425,7 @@ namespace Engine::Managers
 			tex->Clear(context);
 		}
 
-		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		gi.Clear(context, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 	}
 } // namespace Engine::Managers

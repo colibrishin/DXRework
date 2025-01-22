@@ -42,7 +42,7 @@ namespace Engine
 		// post_execution is called after the command list is executed.
 		// thread-safety of post_execution inside values should be guaranteed by the caller.
 		void               FlagReady(const std::function<void()>& post_execution = {}) override;
-		void               Execute() const override;
+		void               Execute() override;
 		[[nodiscard]] bool IsReady();
 		[[nodiscard]] bool IsExecuted();
 		[[nodiscard]] bool IsDisposed();
@@ -99,19 +99,20 @@ namespace Engine
 			const std::wstring_view debug_name,
 			const bool heap_allocation);
 		void Deallocate(const Weak<CommandPair>& pointer);
-		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& handler);
+		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& handler, CommandPairTask* task);
 
 	private:
 		friend struct CommandPair;
 
 		std::mutex                m_mutex_;
+		CommandPairTask*          m_task_{};
 		std::atomic<bool>         m_b_initialized_;
 		D3D12_COMMAND_LIST_TYPE   m_type_ = D3D12_COMMAND_LIST_TYPE_NONE;
 
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
 		boost::pool_allocator<CommandPair>                          m_command_pair_pool_{};
-		Strong<DescriptorHandler>                                   m_heap_handler_;
+		Strong<DescriptorHandler>                                   m_heap_handler_{};
 
 		ComPtr<ID3D12Device2> m_dev_{};
 	};
@@ -123,12 +124,6 @@ namespace Engine
 		{
 			{
 				.Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
-				.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
-				.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
-				.NodeMask = 0
-			},
-			{
-				.Type = D3D12_COMMAND_LIST_TYPE_BUNDLE,
 				.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
 				.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
 				.NodeMask = 0
@@ -147,10 +142,17 @@ namespace Engine
 			},
 		};
 
+		constexpr static int64_t s_conversion[]
+		{
+			0,
+			-1,
+			1,
+			2,
+		};
+
 		constexpr static D3D12_COMMAND_LIST_TYPE available_[]
 		{
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			D3D12_COMMAND_LIST_TYPE_BUNDLE,
 			D3D12_COMMAND_LIST_TYPE_COMPUTE,
 			D3D12_COMMAND_LIST_TYPE_COPY
 		};

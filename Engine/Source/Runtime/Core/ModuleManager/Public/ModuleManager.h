@@ -28,6 +28,7 @@ namespace Engine::Managers
 
 			void* m_handle_;
 			bool m_b_dynamic_ = false;
+			uint64_t m_last_error_ = 0;
 			
 			std::unique_ptr<IModule> m_module_;
 		};

@@ -71,6 +71,7 @@ namespace Engine::Managers
 
 			if (!module_info->m_handle_)
 			{
+				module_info->m_last_error_ = GetLastError();
 				return nullptr;
 			}
 

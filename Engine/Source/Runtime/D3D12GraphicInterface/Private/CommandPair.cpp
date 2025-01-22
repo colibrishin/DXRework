@@ -107,29 +107,30 @@ namespace Engine
 		{
 			m_post_execute_function_ = post_execution;
 		}
+
+		m_pool_->m_task_->m_command_pair_count_.notify_all();
 	}
 
-	void CommandPair::Execute() const
+	void CommandPair::Execute()
 	{
-		constexpr bool expected = true;
-		m_b_executed_.wait(expected);
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		m_b_ready_ = true;
+		m_pool_->m_task_->m_command_pair_count_.notify_all();
+		m_b_executed_.wait(false);
 	}
 
 	bool CommandPair::IsReady()
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		return m_b_ready_;
 	}
 
 	bool CommandPair::IsExecuted()
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		return m_b_executed_;
 	}
 
 	bool CommandPair::IsDisposed()
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		return m_b_disposed_;
 	}
 
@@ -225,16 +226,19 @@ namespace Engine
 		}
 	}
 
-	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak <DescriptorHandler>& handler)
+	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak <DescriptorHandler>& handler, CommandPairTask* task)
 	{
 		if (bool expected = false; 
 			m_b_initialized_.compare_exchange_strong(expected, true))
 		{
 			m_dev_ = dev;
+			m_task_ = task;
+
 			if (const Strong<DescriptorHandler>& locked = handler.lock()) 
 			{
 				m_heap_handler_ = locked;
 			}
+
 			m_pool_.reserve(size);
 
 			for (size_t i = 0; i < size; ++i)
@@ -269,7 +273,7 @@ namespace Engine
 		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
 
-		m_pool_.Initialize(dev, heap_handler);
+		m_pool_.Initialize(dev, heap_handler, this);
 	}
 
 	uint64_t CommandPairTask::GetBufferIndex() const
@@ -279,12 +283,7 @@ namespace Engine
 
 	ID3D12CommandQueue* CommandPairTask::GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const
 	{
-		if (m_queue_.size() > type)
-		{
-			return nullptr;
-		}
-
-		return m_queue_[type].Get();
+		return m_queue_[s_conversion[type]].Get();
 	}
 
 	bool CommandPairTask::IsCommandPairAvailable() const
@@ -390,7 +389,7 @@ namespace Engine
 	{
 		m_fence_nonce_.get()[next_buffer] = m_fence_nonce_.get()[m_buffer_idx_];
 			
-		uint64_t nonce = m_fence_nonce_.get()[next_buffer];
+		uint64_t& nonce = m_fence_nonce_.get()[next_buffer];
 
 		DX::ThrowIfFailed(m_queue_[D3D12_COMMAND_LIST_TYPE_DIRECT]->Signal(m_fence_.Get(), ++nonce));
 		WaitForEventCompletion(nonce);
@@ -427,8 +426,6 @@ namespace Engine
 			return;
 		}
 
-		std::lock_guard l(m_critical_mutex_);
-
 		if (lock_consuming)
 		{
 			std::lock_guard pl(pair->m_critical_mutex_);
@@ -447,7 +444,7 @@ namespace Engine
 		}
 
 		const auto& fence = m_fence_;
-		uint64_t    nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
+		uint64_t&   nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
 
 		DX::ThrowIfFailed(m_queue_[in_pair->GetType()]->Signal(fence.Get(), ++nonce));
 		in_pair->m_latest_fence_value_.store(nonce);
@@ -494,6 +491,11 @@ namespace Engine
 		}
 
 		pair->m_b_ready_    = false;
-		pair->m_b_executed_ = true;
+
+		if (bool expected = false;
+			pair->m_b_executed_.compare_exchange_strong(expected, true))
+		{
+			pair->m_b_executed_.notify_all();
+		}
 	}
 }

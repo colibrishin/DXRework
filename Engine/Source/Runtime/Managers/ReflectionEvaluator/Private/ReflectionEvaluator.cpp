@@ -25,16 +25,16 @@ namespace Engine::Managers
 
 	void ReflectionEvaluator::RenderFinished(const GraphicInterfaceContextPrimitive* context)
 	{
-		g_graphic_interface.GetInterface().CopyRenderTarget(context, &m_copy_);
+		GraphicInterfaceAccessor::GetInterface().CopyRenderTarget(context, &m_copy_);
 	}
 
 	void ReflectionEvaluator::BindReflectionMap(const GraphicInterfaceContextPrimitive* context)
 	{
-		g_graphic_interface.GetInterface().Bind(context, &m_copy_, BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
+		GraphicInterfaceAccessor::GetInterface().Bind(context, &m_copy_, BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
 	}
 
 	void ReflectionEvaluator::UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context)
 	{
-		g_graphic_interface.GetInterface().Unbind(context, &m_copy_, BIND_TYPE_SRV);
+		GraphicInterfaceAccessor::GetInterface().Unbind(context, &m_copy_, BIND_TYPE_SRV);
 	}
 }

@@ -35,7 +35,7 @@ namespace Engine
         {
             const auto& heap_desc = CD3DX12_HEAP_PROPERTIES(HeapProperty);
             const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(Align(count * stride, Alignment), Flags);
-            const auto& dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+            const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 
             DX::ThrowIfFailed
                 (

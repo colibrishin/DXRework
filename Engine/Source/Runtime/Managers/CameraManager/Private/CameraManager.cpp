@@ -57,7 +57,7 @@ namespace Engine::Managers
 					}
 					else
 					{
-						camera->m_projection_matrix_ = g_graphic_interface.GetInterface().GetProjectionMatrix();
+						camera->m_projection_matrix_ = GraphicInterfaceAccessor::GetInterface().GetProjectionMatrix();
 					}
 
 					const auto invView = camera->m_view_matrix_.Invert();
@@ -135,7 +135,7 @@ namespace Engine::Managers
 		{
 			if (const Strong<Objects::Camera>& camera = scene->GetMainCamera().lock())
 			{
-				const Matrix  pv = g_graphic_interface.GetInterface().GetProjectionMatrix() * camera->m_view_matrix_;
+				const Matrix  pv = GraphicInterfaceAccessor::GetInterface().GetProjectionMatrix() * camera->m_view_matrix_;
 				const Vector2 actual_mouse_position{
 					static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().x),
 					static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().y)

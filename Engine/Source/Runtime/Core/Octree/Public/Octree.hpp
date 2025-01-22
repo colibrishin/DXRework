@@ -416,7 +416,7 @@ namespace Engine
 					// Lifecycle management
 					if (node->empty())
 					{
-						life_count--;
+						--life_count;
 					}
 					else
 					{

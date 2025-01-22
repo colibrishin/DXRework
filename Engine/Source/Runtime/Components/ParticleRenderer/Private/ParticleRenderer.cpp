@@ -44,7 +44,7 @@ namespace Engine::Components
 	{
 		if (m_cs_ && GetMaterial().lock())
 		{
-			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
 			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 			

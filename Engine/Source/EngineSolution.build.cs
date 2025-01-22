@@ -76,7 +76,6 @@ public class EngineSolution : Solution
 
             {
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<Debugger>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<InputManager>(target);
                 conf.AddProject<CameraManager>(target);

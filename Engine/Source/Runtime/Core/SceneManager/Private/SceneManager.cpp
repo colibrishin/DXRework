@@ -5,7 +5,7 @@
 //#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
 #endif
 
 namespace Engine::Managers
@@ -31,7 +31,7 @@ namespace Engine::Managers
 		if (scene == m_active_scene_.lock())
 		{
 #if WITH_DEBUG
-			Managers::Debugger::GetInstance().Log("Warning: Active scene has been removed.");
+			Managers::Debugger::GetInstance().Log("Warning: Active scene has been removed.", {1.f, 0.f, 0.f, 1.f});
 #endif
 			onSceneRemoved.Broadcast(m_active_scene_);
 			m_active_scene_.reset();

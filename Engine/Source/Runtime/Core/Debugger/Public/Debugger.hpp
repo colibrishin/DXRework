@@ -2,16 +2,12 @@
 #include <deque>
 #include <memory>
 
-#include <directx/d3d12.h>
-
-#include <directxtk12/SpriteFont.h>
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
-
 #include "TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
 {
-	enum DEBUGGER_API eDebugMessage : uint8_t
+	enum CORE_API eDebugMessage : uint8_t
 	{
 		DEBUG_MSG_LOG,
 		DEBUG_MSG_LINE,
@@ -23,7 +19,7 @@ namespace Engine
 		DEBUG_MSG_MAX
 	};
 	
-	struct DEBUGGER_API Message
+	struct CORE_API Message
 	{
 		eDebugMessage type = DEBUG_MSG_MAX;
 		float elapsed_time = 0.f;
@@ -49,7 +45,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class DEBUGGER_API Debugger final : public Abstracts::Singleton<Debugger>
+	class CORE_API Debugger final : public Abstracts::Singleton<Debugger>
 	{
 	public:
 		explicit Debugger(SINGLETON_LOCK_TOKEN);

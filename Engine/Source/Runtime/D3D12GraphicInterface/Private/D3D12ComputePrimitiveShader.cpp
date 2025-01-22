@@ -68,7 +68,7 @@ namespace Engine
 				D3D12_PIPELINE_STATE_FLAG_NONE
 			};
 
-			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 			const auto dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
 
 			DX::ThrowIfFailed

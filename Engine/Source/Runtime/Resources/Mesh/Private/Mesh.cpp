@@ -207,7 +207,7 @@ namespace Engine::Resources
 				 sizeof(Vector3)
 				);
 
-		m_primitive_mesh_ = Unique<PrimitiveMesh>(g_graphic_interface.GetInterface().GetNewPrimitiveMesh());
+		m_primitive_mesh_ = Unique<PrimitiveMesh>(GraphicInterfaceAccessor::GetInterface().GetNewPrimitiveMesh());
 		m_primitive_mesh_->Generate(this);
 	}
 

@@ -53,6 +53,8 @@ namespace Engine::Managers
 		m_timer = std::make_unique<DX::StepTimer>();
 		ModuleManager::GetInstance().Initialize();
 		ModuleManager::GetInstance().LoadModule(L"Core");
+		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
+		ModuleManager::GetInstance().LoadModule(L"D3D12GraphicInterface");
 	}
 
 	void EngineEntryPoint::Tick()

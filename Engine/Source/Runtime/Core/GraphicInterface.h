@@ -837,7 +837,7 @@ namespace Engine
 		virtual ~CommandListBase() = default;
 		virtual void SoftReset() = 0;
 		virtual void FlagReady(const std::function<void()>& post_function = {}) = 0;
-		virtual void Execute() const = 0;
+		virtual void Execute() = 0;
 	};
 
 	struct GraphicInterfaceContextPrimitive;
@@ -1001,6 +1001,7 @@ namespace Engine
 		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
 		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) = 0;
 		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
+		virtual void ClearRenderTarget() = 0;
 
 		virtual void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) = 0;
 
@@ -1012,25 +1013,23 @@ namespace Engine
 	{
 	public:
 		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>)
-		void SetGraphicInterface()
+		static void SetGraphicInterface()
 		{
-			if (!m_graphic_interface_)
+			if (!s_graphic_interface)
 			{
-				m_graphic_interface_ = std::make_unique<T>();
-				m_graphic_interface_->Initialize();
+				s_graphic_interface = std::make_unique<T>();
+				s_graphic_interface->Initialize();
 			}
 		}
 
-		[[nodiscard]] GraphicInterface& GetInterface() const
+		[[nodiscard]] static GraphicInterface& GetInterface()
 		{
-			return *m_graphic_interface_;
+			return *s_graphic_interface;
 		}
 
 	private:
-		Unique<GraphicInterface> m_graphic_interface_{};
+		static Unique<GraphicInterface> s_graphic_interface;
 	};
-
-	inline GraphicInterfaceAccessor g_graphic_interface{};
 
 	template <typename T>
 	class StructuredBufferMemoryPool
@@ -1094,7 +1093,7 @@ namespace Engine
 				size_t      end_it = m_resource_.size();
 				m_resource_.resize(count);
 
-				GraphicInterface& gi = g_graphic_interface.GetInterface();
+				GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 				const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool resizing");
 				const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 
@@ -1119,7 +1118,7 @@ namespace Engine
 				throw std::logic_error("Memory pool is not allocated enough size");
 			}
 
-			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool copy");
 			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 

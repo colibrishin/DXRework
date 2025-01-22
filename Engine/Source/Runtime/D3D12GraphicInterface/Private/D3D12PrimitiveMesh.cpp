@@ -19,9 +19,9 @@ namespace Engine
 
 		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-		const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Mesh Load Command Pair");
+		const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Mesh Load Command Pair");
     	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-    	const auto& dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+    	const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 		const auto& cmd = static_cast<CommandPair*>(primitive.commandList);
     	
 		primitive.commandList->SoftReset();
