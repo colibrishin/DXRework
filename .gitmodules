@@ -1,6 +1,6 @@
-[submodule "Engine/Source/ThirdParty/PhysX/PhysX"]
-	path = PhysX
-	url = https://github.com/NVIDIA-Omniverse/PhysX.git
 [submodule "Programs/Sharpmake"]
 	path = Programs/Sharpmake
 	url = https://github.com/colibrishin/Sharpmake
+[submodule "Engine/Source/ThirdParty/PhysX/PhysX"]
+	path = Engine/Source/ThirdParty/PhysX/PhysX
+	url = https://github.com/NVIDIA-Omniverse/PhysX.git
