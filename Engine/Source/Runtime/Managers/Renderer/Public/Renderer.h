@@ -23,11 +23,11 @@ namespace Engine::Managers
 		void PostUpdate(const float& dt) override;
 		void Initialize() override;
 
-		void RegisterRenderInstance(const RenderInstanceTask* task);
-		void RegisterRenderPass(const RenderPassTask* task);
-		void RegisterRenderPassPrequisite(const RenderPassPrequisiteTask* task);
+		RAWPOINTER void RegisterRenderInstance(RenderInstanceTask* task);
+		RAWPOINTER void RegisterRenderPass(RenderPassTask* task);
+		RAWPOINTER void RegisterRenderPassPrequisite(RenderPassPrequisiteTask* task);
 
-		void RenderPass(const eShaderDomain domain);
+		void RenderPass(const float dt, const eShaderDomain domain);
 
 		bool Ready() const;
 		uint64_t GetInstanceCount() const;
@@ -38,9 +38,9 @@ namespace Engine::Managers
 		~Renderer() override;
 		
 		bool m_b_ready_;
-		aligned_vector<RenderInstanceTask*> m_render_instance_tasks_;
-		aligned_vector<RenderPassTask*> m_render_pass_tasks_;
-		aligned_vector<RenderPassPrequisiteTask*> m_render_prequisite_tasks_;
+		RAWPOINTER aligned_vector<RenderInstanceTask*> m_render_instance_tasks_;
+		RAWPOINTER aligned_vector<RenderPassTask*> m_render_pass_tasks_;
+		RAWPOINTER aligned_vector<RenderPassPrequisiteTask*> m_render_prequisite_tasks_;
 		std::atomic<uint64_t> m_instance_count_;
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};

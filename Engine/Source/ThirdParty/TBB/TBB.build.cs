@@ -27,7 +27,8 @@ public class TBB : VCPKG
         (
             @"tbb12_debug.lib", 
             @"tbbmalloc_debug.lib", 
-            @"tbbmalloc_proxy_debug.lib"
+            @"tbbmalloc_proxy_debug.lib",
+	    @"hwloc.lib"
         );
     }
 
@@ -39,7 +40,8 @@ public class TBB : VCPKG
         (
             @"tbb12.lib", 
             @"tbbmalloc.lib", 
-            @"tbbmalloc_proxy.lib"
+            @"tbbmalloc_proxy.lib",
+	    @"hwloc.lib"
         );
     }
 }

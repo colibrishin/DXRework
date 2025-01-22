@@ -20,7 +20,7 @@ namespace Engine
 
 	struct RENDERER_API RenderInstanceTask 
 	{
-		virtual void Run(const Scene const* scene, const RenderMapValueType* render_map, const size_t map_size, std::atomic<uint64_t>& instance_count) = 0;
+		virtual void Run(const Scene const* scene, const RenderMapValueType* render_map, std::atomic<uint64_t>& instance_count) = 0;
 		virtual void Cleanup(const RenderMapValueType* render_map) = 0;
 	};
 
