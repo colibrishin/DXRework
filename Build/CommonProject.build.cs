@@ -193,6 +193,13 @@ public abstract class CommonProject : Project
         conf.IsFastBuild = true;
 
         {
+            conf.Defines.Add("ECLASS(...)=EMPTY");
+            conf.Defines.Add("EENUM(...)=EMPTY");
+            conf.Defines.Add("EFUNC(...)=EMPTY");
+            conf.Defines.Add("EPROPERTY(...)=EMPTY");
+        }
+
+        {
             conf.Defines.Add("NOMINMAX=1");
             if (target.GraphicAPI == EGraphicAPI.D3D12) 
             {
