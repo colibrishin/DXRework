@@ -41,6 +41,7 @@ public abstract class CommonProject : Project
 
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
+        StripFastBuildSourceFiles = false;
 
         SourceRootPath = @"[project.RootPath]";
         SourceFilesExtensions.Add(".cs");
@@ -64,10 +65,15 @@ public abstract class CommonProject : Project
 
         conf.DumpDependencyGraph = true;
 
+        conf.Defines.Add(Name.ToUpper() + "_API");
+
         // conf.Output = Configuration.OutputType.Exe;
         if (target.LaunchType == ELaunchType.Editor)
         {
             conf.Output = Configuration.OutputType.Dll;
+
+            conf.ExportDefines.Add(Name.ToUpper() + "_API=DLLIMPORT");
+            conf.Defines.Add(Name.ToUpper() + "_API=DLLEXPORT");
         }
         else
         {
@@ -117,7 +123,7 @@ public abstract class CommonProject : Project
 
             // Include
             {
-                conf.IncludePrivatePaths.Add(conf.ProjectPath);
+                conf.IncludePrivatePaths.Add(conf.ProjectPath + @"/Private");
 
                 string HeaderParserTargetDir = SolutionDir + @"/Intermediate/HeaderParser/HeaderParserGenerated/[project.Name]";
                 conf.IncludePaths.Add(HeaderParserTargetDir);

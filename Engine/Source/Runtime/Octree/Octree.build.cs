@@ -15,5 +15,6 @@ public class Octree : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<DirectXTK>(target);
+        conf.AddPublicDependency<BoundingGetter>(target);
     }
 }

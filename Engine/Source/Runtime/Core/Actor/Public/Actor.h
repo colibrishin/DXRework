@@ -8,7 +8,7 @@ DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
 
 namespace Engine::Abstracts
 {
-	class Actor : public Renderable
+	class CORE_API Actor : public Renderable
 	{
 	public:
 		DelegateOnLayerChange onLayerChange;

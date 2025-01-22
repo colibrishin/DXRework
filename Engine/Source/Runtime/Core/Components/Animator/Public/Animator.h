@@ -3,7 +3,7 @@
 
 namespace Engine::Components
 {
-	class Animator final : public Engine::Abstracts::Component
+	class CORE_API Animator final : public Engine::Abstracts::Component
 	{
 	public:
 		COMPONENT_T(COM_T_ANIMATOR)

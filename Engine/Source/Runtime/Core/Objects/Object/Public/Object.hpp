@@ -4,7 +4,7 @@
 namespace Engine
 {
 	// Anonymous non-type defined object
-	class Object final : public Abstracts::ObjectBase
+	class CORE_API Object final : public Abstracts::ObjectBase
 	{
 	public:
 		OBJECT_T(DEF_OBJ_T_NONE)

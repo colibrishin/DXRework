@@ -20,7 +20,7 @@ namespace physx
 
 namespace Engine
 {
-	enum eReservedLayerType
+	enum CORE_API eReservedLayerType
 	{
 		RESERVED_LAYER_DEFAULT,
 		RESERVED_LAYER_LIGHT,
@@ -31,7 +31,7 @@ namespace Engine
 		RESERVED_LAYER_UI,
 	};
 
-	class Scene : public Abstracts::Renderable
+	class CORE_API Scene : public Abstracts::Renderable
 	{
 	public:
 		Scene();

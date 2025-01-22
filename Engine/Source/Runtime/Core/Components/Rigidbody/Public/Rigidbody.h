@@ -3,7 +3,7 @@
 
 namespace Engine::Components
 {
-	class Rigidbody final : public Engine::Abstracts::Component
+	class CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 	public:
 		COMPONENT_T(COM_T_RIDIGBODY)

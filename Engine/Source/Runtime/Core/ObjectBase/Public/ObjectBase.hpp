@@ -20,7 +20,7 @@ DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>)
 
 namespace Engine
 {
-	enum eDefObjectType : uint8_t
+	enum CORE_API eDefObjectType : uint8_t
 	{
 		DEF_OBJ_T_UNK = 0,
 		DEF_OBJ_T_NONE,
@@ -34,7 +34,7 @@ namespace Engine
 namespace Engine::Abstracts
 {
 	// Abstract base class for objects
-	class ObjectBase : public Actor
+	class CORE_API ObjectBase : public Actor
 	{
 	public:
 		DelegateOnComponentAdded onComponentAdded;
