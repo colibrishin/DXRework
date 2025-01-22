@@ -2,59 +2,90 @@
 #define EMPTY
 #define DLLIMPORT __declspec(dllimport)
 #define DLLEXPORT __declspec(dllexport)
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <string_view>
-// If you can't use C++17's standard library, you'll need to use the GSL 
-// string_view or implement your own struct (which would not be very difficult,
-// since we only need a few methods here)
 
-template <typename T> constexpr std::string_view compile_time_type_name();
-
-template <>
-constexpr std::string_view compile_time_type_name<void>()
-{ return "void"; }
-
-namespace detail {
-
-using type_name_prober = void;
-
-template <typename T>
-constexpr std::string_view wrapped_type_name() 
+struct typename_prober
 {
-#ifdef __clang__
-    return __PRETTY_FUNCTION__;
-#elif defined(__GNUC__)
-    return __PRETTY_FUNCTION__;
-#elif defined(_MSC_VER)
-    return __FUNCSIG__;
+public:
+    template <typename T>
+	[[nodiscard]] static constexpr std::string_view probe()
+	{
+#ifndef _MSC_VER
+	    return __PRETTY_FUNCTION__;
 #else
-#error "Unsupported compiler"
+	    return __FUNCSIG__;
 #endif
-}
+	}
 
-constexpr std::size_t wrapped_type_name_prefix_length() { 
-    return wrapped_type_name<type_name_prober>().find(compile_time_type_name<type_name_prober>()); 
-}
+private:
+    static constexpr std::string_view VoidTypeName = probe<void>();
 
-constexpr std::size_t wrapped_type_name_suffix_length() { 
-    return wrapped_type_name<type_name_prober>().length() 
-        - wrapped_type_name_prefix_length() 
-        - compile_time_type_name<type_name_prober>().length();
-}
-
-} // namespace detail
+public:
+    static constexpr size_t PrefixCount = VoidTypeName.find("void");
+    static constexpr size_t RemovalCount = VoidTypeName.size() - 4;
+	static_assert(PrefixCount != std::string::npos, "Unable to determine the type name format on this compiler.");
+};
 
 template <typename T>
-constexpr std::string_view compile_time_type_name() {
-    constexpr auto wrapped_name = detail::wrapped_type_name<T>();
-    constexpr auto prefix_length = detail::wrapped_type_name_prefix_length();
-    constexpr auto suffix_length = detail::wrapped_type_name_suffix_length();
-    constexpr auto type_name_length = wrapped_name.length() - prefix_length - suffix_length;
-    return wrapped_name.substr(prefix_length, type_name_length);
-}
+struct static_type_name
+{
+private:
+    static constexpr std::string_view PlainTypeName = typename_prober::probe<T>();
+    static constexpr size_t TypeNameLengthNullTrailling = PlainTypeName.size() - typename_prober::RemovalCount + 1;
+    static constexpr size_t TypeNameStartOffset = typename_prober::PrefixCount;
+
+    using TypeNameStorageT = std::array<char, TypeNameLengthNullTrailling>;
+
+    static consteval TypeNameStorageT EvalTypeNameImpl()
+    {
+	    TypeNameStorageT ret{};
+        std::copy_n(PlainTypeName.data() + TypeNameStartOffset, ret.size() - 1, ret.data());
+        return ret;
+    }
+
+    static constexpr TypeNameStorageT TypeNameStorage = EvalTypeNameImpl();
+
+public:
+    static constexpr std::string_view name()
+    {
+	    // MSVC tested, others are not tested.
+	    // Find the begining of the namespace from the end
+	    constexpr auto it = std::find(TypeNameStorage.rbegin(), TypeNameStorage.rend(), ':');
+	    if constexpr (it == TypeNameStorage.rend())
+	    {
+	        // No namespace
+		    return {TypeNameStorage.data(), TypeNameStorage.size()};
+	    }
+
+	    constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
+	    constexpr auto length = TypeNameStorage.size() - dist;
+	    return {TypeNameStorage.data() + dist, length};
+    }
+
+    static constexpr std::string_view full_name()
+    {
+	    // MSVC tested, others are not tested.
+        constexpr auto it = std::find(TypeNameStorage.rbegin(), TypeNameStorage.rend(), ' ');
+	    if constexpr (it != TypeNameStorage.rend())
+	    {
+	        constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
+		    return {TypeNameStorage.data() + dist, TypeNameStorage.size() - dist};
+	    }
+
+	    return {TypeNameStorage.data(), TypeNameStorage.size()};
+    }
+};
 
 #define INLINE_COMPILE_TIME_TYPENAME(Type) \
 	static std::string_view StaticTypeName() \
 	{ \
-		static constexpr std::string_view type_name = compile_time_type_name<Type>(); \
-		return type_name; \
-	}
+		return static_type_name<##Type##>::name(); \
+	} \
+    static std::string_view StaticFullTypeName() \
+    { \
+		return static_type_name<##Type##>::full_name(); \
+    }
