@@ -6,4 +6,4 @@
 	url = https://github.com/NVIDIA-Omniverse/PhysX.git
 [submodule "Programs/Sharpmake"]
 	path = Programs/Sharpmake
-	url = https://github.com/ubisoft/Sharpmake
+	url = https://github.com/colibrishin/Sharpmake
