@@ -64,6 +64,10 @@ public class KolibriProject : CommonProject
         conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
         conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
         conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
+
+        conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
+        conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
+        conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
     }
 }
 

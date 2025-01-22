@@ -32,6 +32,19 @@ namespace Engine
 
 			Matrix reflectView;
 		};
+
+		struct ParamCB : public ParamBase
+		{
+			CB_T(CB_TYPE_PARAM)
+		};
+
+		static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
+
+		struct ViewportCB
+		{
+			RT_CB_T(RAYTRACING_CB_VIEWPORT)
+				Vector2 resolution;
+		};
 	}
 
 	template <typename T>

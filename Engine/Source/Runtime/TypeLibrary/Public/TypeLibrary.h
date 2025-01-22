@@ -15,6 +15,8 @@ using Quaternion = DirectX::SimpleMath::Quaternion;
 using Ray = DirectX::SimpleMath::Ray;
 using Matrix = DirectX::SimpleMath::Matrix;
 
+constexpr DXGI_FORMAT g_default_rtv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 namespace Microsoft::WRL
 {
 	template <typename T>
@@ -214,6 +216,151 @@ namespace Engine
 	using eShaderRasterizers = UINT;
 	using eShaderSamplers = UINT;
 }
+
+namespace Engine::Graphics
+{
+	struct ParamBase
+	{
+	public:
+		constexpr ParamBase() = default;
+
+		template <typename T>
+		void SetParam(const size_t slot, const T& param)
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				i_param[slot] = param;
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				i_param[slot] = static_cast<int>(param);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				f_param[slot] = param;
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				std::memcpy(&v_param[slot], &param, sizeof(Vector3));
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				_mm_store_ps(v_param[slot].x.m128_f32, _mm_load_ps(param.x));
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				const auto row0 = const_cast<float*>(&param.m[0][0]);
+				const auto row2 = const_cast<float*>(&param.m[2][0]);
+
+				_mm256_store_ps(m_param[slot].m[0], _mm256_load_ps(row0));
+				_mm256_store_ps(m_param[slot].m[2], _mm256_load_ps(row2));
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+		template <typename T>
+		T& GetParam(const size_t slot)
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				return i_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				return reinterpret_cast<UINT&>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, bool>)
+			{
+				return reinterpret_cast<bool&>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				return f_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				return reinterpret_cast<Vector3&>(v_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				return reinterpret_cast<Vector4&>(v_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				return reinterpret_cast<Matrix&>(m_param[slot]);
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+		template <typename T>
+		T GetParam(const size_t slot) const
+		{
+			if constexpr (std::is_same_v<T, int>)
+			{
+				return i_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, bool>)
+			{
+				return static_cast<bool>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, UINT>)
+			{
+				return static_cast<UINT>(i_param[slot]);
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				return f_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector3>)
+			{
+				return v_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Vector4>)
+			{
+				return v_param[slot];
+			}
+			else if constexpr (std::is_same_v<T, Matrix>)
+			{
+				Matrix m;
+				_mm256_store_ps(m.m[0], m_param[slot].m[0]);
+				_mm256_store_ps(m.m[2], m_param[slot].m[1]);
+				return m;
+			}
+			else
+			{
+				throw std::runtime_error("Invalid type");
+			}
+		}
+
+	private:
+		friend class boost::serialization::access;
+
+		template <class Archive>
+		void serialize(Archive& ar, const unsigned int file_version)
+		{
+			ar& f_param;
+			ar& i_param;
+			ar& v_param;
+			ar& m_param;
+		}
+
+		constexpr static size_t max_param = 8;
+
+		float            f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		int              i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		Vector4 v_param[max_param]{};
+		Matrix  m_param[max_param]{};
+	};
+
+	static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
+	static_assert(sizeof(ParamBase) < 2048);
+}
 #endif
 
 // Static structured buffer type, this should be added to every structured buffer
@@ -406,7 +553,7 @@ namespace Engine
 		class Renderable;
 		class Resource;
 
-		template <typename T, typename... Args>
+		template <typename T>
 		class Singleton;
 	} // namespace Abstracts
 
@@ -421,6 +568,8 @@ namespace Engine
 		class ReflectionEvaluator;
 		class Renderer;
 		class ImGuiManager;
+		class SoundManager;
+		class InputManager;
 
 		class PhysicsManager;
 		class LerpManager;
@@ -429,7 +578,7 @@ namespace Engine
 		class Graviton;
 
 		class ProjectionFrustum;
-		class Application;
+		class EngineEntryPoint;
 		class ResourceManager;
 		class SceneManager;
 		class Debugger;

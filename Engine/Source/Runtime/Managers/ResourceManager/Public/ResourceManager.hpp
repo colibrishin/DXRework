@@ -3,6 +3,7 @@
 #include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
 #include <Source/Runtime/TypeLibrary/Public/TypeLibrary.h>
 #include <Source/Runtime/Allocator/Public/Allocator.h>
+#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
 
 namespace Engine::Managers
 {

@@ -113,7 +113,6 @@ namespace Engine::Managers
 		D3D12_VIEWPORT m_viewport_;
 		D3D12_RECT     m_scissor_rect_;
 
-		using DescriptorContainer = aligned_vector<StrongDescriptorPtr>;
 		DescriptorContainer m_shadow_descriptor_heap_;
 
 		Graphics::StructuredBufferMemoryPool<SBs::InstanceSB>   m_shadow_instance_buffer_;

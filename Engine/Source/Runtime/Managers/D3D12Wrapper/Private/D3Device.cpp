@@ -18,6 +18,7 @@
 
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 #include <Source/Runtime/CommandPair/Public/CommandPair.h>
+#include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
 
 std::atomic<bool> g_raytracing = false;
 
@@ -596,9 +597,9 @@ namespace Engine::Managers
 
 	void D3Device::PostUpdate(const float& dt) {}
 
-	void D3Device::Initialize(HWND hwnd)
+	void D3Device::Initialize()
 	{
-		m_hwnd_ = hwnd;
+		m_hwnd_ = WinAPI::WinAPIWrapper::GetHWND();
 
 		InitializeDevice();
 		InitializeCommandAllocator();

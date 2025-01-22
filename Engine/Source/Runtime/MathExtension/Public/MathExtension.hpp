@@ -21,6 +21,31 @@ namespace Engine
 			return std::max(std::max(v.x, v.y), v.z);
 		}
 
+		inline static void ZeroToEpsilon(Vector3& v, const float epsilon = 0.0001f)
+		{
+			if (v.x == 0.0f)
+			{
+				v.x = epsilon;
+			}
+			if (v.y == 0.0f)
+			{
+				v.y = epsilon;
+			}
+			if (v.z == 0.0f)
+			{
+				v.z = epsilon;
+			}
+		}
+
+		inline static void __vectorcall Vector3CheckNanException(const Vector3& v)
+		{
+			if (std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z))
+			{
+				throw std::runtime_error
+				("Vector3CheckNan: NaN detected");
+			}
+		}
+
 		inline static Vector3 __vectorcall MaxUnitVector(const Vector3& v)
 		{
 			const auto x = std::fabs(v.x);

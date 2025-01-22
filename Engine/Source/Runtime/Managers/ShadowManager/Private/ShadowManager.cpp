@@ -14,6 +14,8 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
 
 namespace Engine::Managers
 {
@@ -53,8 +55,8 @@ namespace Engine::Managers
 		InitializeViewport();
 		InitializeProcessor();
 
-		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_buffer_);
-		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_vps_buffer_);
+		Managers::Renderer::GetInstance().AppendAdditionalStructuredBuffer(&m_sb_light_buffer_);
+		Managers::Renderer::GetInstance().AppendAdditionalStructuredBuffer(&m_sb_light_vps_buffer_);
 
 		m_local_param_buffers_.resize(CFG_MAX_DIRECTIONAL_LIGHT);
 	}
@@ -145,7 +147,7 @@ namespace Engine::Managers
 			return;
 		}
 
-		if (const auto scene = GetSceneManager().GetActiveScene().lock())
+		if (const auto scene = Managers::SceneManager::GetInstance().GetActiveScene().lock())
 		{
 			std::vector<SBs::LightVPSB> current_light_vp;
 			GetLightVP(scene, current_light_vp);
@@ -170,7 +172,7 @@ namespace Engine::Managers
 			UINT idx = 0;
 
 			m_shadow_instance_buffer_.reset();
-			m_shadow_instance_buffer_.resize(GetRenderer().GetInstanceCount() * m_lights_.size());
+			m_shadow_instance_buffer_.resize(Managers::Renderer::GetInstance().GetInstanceCount() * m_lights_.size());
 
 			for (const auto& ptr_light : m_lights_ | std::views::values)
 			{
@@ -216,7 +218,7 @@ namespace Engine::Managers
 		auto& local_param_mem = m_local_param_buffers_.get();
 		local_param_mem.SetData(cmd->GetList(), 1, &local_param);
 
-		GetRenderer().RenderPass
+		Managers::Renderer::GetInstance().RenderPass
 				(
 				 dt, SHADER_DOMAIN_OPAQUE, true,
 				 cmd,
