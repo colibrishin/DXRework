@@ -1,13 +1,14 @@
 #pragma once
 #include <array>
 
-#if defined(USE_DX12)
-#include <directx/d3d12.h>
-#endif
-
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+
+namespace Engine 
+{
+	struct ComputePrimitiveShader;
+}
 
 namespace Engine::Resources
 {
@@ -59,3 +60,19 @@ namespace Engine::Resources
 		std::array<uint32_t, 3> m_group_;
 	};
 } // namespace Engine::Resources
+
+
+namespace Engine 
+{
+	struct COMPUTESHADER_API ComputePrimitiveShader
+	{
+	public:
+		virtual             ~ComputePrimitiveShader() = default;
+		virtual void        Generate(const Weak<Resources::ComputeShader>& shader, void* pipeline_signature) = 0;
+		virtual void		Dispatch(const Weak<Resources::ComputeShader>& shader) = 0;
+		[[nodiscard]] void* GetComputePrimitiveShader() const;
+
+	private:
+		void* m_shader_ = nullptr;
+	};
+}

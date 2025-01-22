@@ -12,17 +12,45 @@ namespace Engine::Resources
 			: Texture2D
 			(
 			 "",
-			 {
-				 .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+			 GenericTextureDescription
+			{
 				 .Alignment = 0,
 				 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 				 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
 				 .DepthOrArraySize = CFG_CASCADE_SHADOW_COUNT,
-				 .Format = DXGI_FORMAT_R32_TYPELESS,
-				 .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+				 .Format = TEX_FORMAT_R32_TYPELESS,
+				 .Flags = RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 				 .MipsLevel = 1,
-				 .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+				 .Layout = TEX_LAYOUT_UNKNOWN,
 				 .SampleDesc = {1, 0},
+				 .AsSRV = true,
+				 .AsRTV = false,
+				 .AsDSV = true,
+				 .AsUAV = false,
+				 .Srv = {
+					.Format = TEX_FORMAT_R32_FLOAT,
+					.ViewDimension = SRV_DIMENSION_TEXTURE2DARRAY,
+					.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+					.Texture2DArray = {
+						.MostDetailedMip = 0,
+						.MipLevels = 1,
+						.FirstArraySlice = 0,
+						.ArraySize = CFG_CASCADE_SHADOW_COUNT,
+						.PlaneSlice = 0,
+						.ResourceMinLODClamp = 0.f
+					},
+				 },
+				.Rtv = {},
+				.Dsv = {
+					.Format = TEX_FORMAT_D32_FLOAT,
+					.ViewDimension = DSV_DIMENSION_TEXTURE2DARRAY,
+					.Flags = DSV_FLAG_NONE,
+					.Texture2DArray = {
+						.MipSlice = 0,
+						.FirstArraySlice = 0,
+						.ArraySize = CFG_CASCADE_SHADOW_COUNT
+					}
+				}
 			 }
 			) { }
 
@@ -45,7 +73,6 @@ namespace Engine::Resources
 		void Clear(ID3D12GraphicsCommandList1* cmd) const;
 
 	protected:
-		void loadDerived(ComPtr<ID3D12Resource>& res) override;
 		void Unload_INTERNAL() override;
 	};
 }

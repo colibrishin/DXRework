@@ -1,10 +1,21 @@
 #include "PrimitiveTextureDX12.h"
 
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
+#include <DirectXTex.h>
+
 #include <directxtk12/ScreenGrab.h>
+#include <directxtk12/BufferHelpers.h>
 
 #include "ThrowIfFailed.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
+
+Engine::DX12PrimitiveTexture::DX12PrimitiveTexture()
+{
+	SetTextureMappingTask<DX12TextureMappingTask>();
+}
 
 void Engine::DX12PrimitiveTexture::Generate(const Weak<Resources::Texture>& texture)
 {
@@ -84,12 +95,9 @@ void Engine::DX12PrimitiveTexture::Generate(const Weak<Resources::Texture>& text
 		
 		InitializeDescriptorHeaps();
 		InitializeResourceViews();
-	}
-}
 
-void Engine::DX12PrimitiveTexture::Map(void* src_ptr, const size_t stride, const size_t count)
-{
-	
+		SetPrimitiveTexture(m_dx12_texture_.Get());
+	}
 }
 
 void Engine::DX12PrimitiveTexture::LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path)
@@ -316,4 +324,203 @@ D3D12_RESOURCE_DIMENSION Engine::DX12PrimitiveTexture::ConvertDimension(const eT
 	}
 	
 	return D3D12_RESOURCE_DIMENSION_UNKNOWN;
+}
+
+void Engine::DX12TextureMappingTask::Map(
+	PrimitiveTexture* texture, 
+	void* data_ptr,
+	const size_t width,
+	const size_t height,
+	const size_t stride,
+	const size_t depth)
+{
+	const GenericTextureDescription& desc = texture->GetDescription();
+
+	size_t pixel_in_bytes = DirectX::BitsPerPixel(static_cast<DXGI_FORMAT>(desc.Format)) / 8;
+
+	// Align(Width * format bytes, 256) = Row pitch
+	size_t row_pitch = Align
+	(
+		desc.Width * pixel_in_bytes,
+		D3D12_TEXTURE_DATA_PITCH_ALIGNMENT
+	);
+
+	// RowPitch * Height = Slice pitch
+	size_t slice_pitch = Align(desc.Height * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	size_t total_bytes = row_pitch;
+
+	if (slice_pitch > 0) 
+	{
+		total_bytes = row_pitch * slice_pitch;
+	}
+
+	const uint64_t ptr_id = reinterpret_cast<uint64_t>(texture);
+	const uint64_t new_id = GetNextValue(ptr_id);
+	ComPtr<ID3D12Resource>& upload_res = m_upload_buffers_[{ptr_id, new_id}];
+
+	DX::ThrowIfFailed
+	(
+		DirectX::CreateUploadBuffer
+		(
+			Managers::D3Device::GetInstance().GetDevice(),
+			nullptr,
+			total_bytes,
+			pixel_in_bytes,
+			upload_res.GetAddressOf()
+		)
+	);
+
+	char* mapped = nullptr;
+	char* byte_ptr = static_cast<char*>(data_ptr);
+
+	DX::ThrowIfFailed
+	(
+		upload_res->Map(0, nullptr, reinterpret_cast<void**>(&mapped))
+	);
+
+	const GenericTextureDescription& desc = texture->GetDescription();
+	
+	for (UINT64 i = 0; i < desc.DepthOrArraySize; ++i)
+	{
+		const UINT64 d = slice_pitch * i;
+
+		for (UINT64 j = 0; j < desc.Height; ++j)
+		{
+			if (j >= height) 
+			{
+				break;
+			}
+
+			const UINT64 h = row_pitch * j;
+
+			for (UINT64 k = 0; k < desc.Width; ++k)
+			{
+				if (k >= width) 
+				{
+					break;
+				}
+
+				SIMDExtension::_mm256_memcpy(
+					mapped + d + h + k * stride,
+					byte_ptr + i + j + k * stride,
+					stride);
+			}
+		}
+	}
+	
+	upload_res->Unmap(0, nullptr);
+
+	ID3D12Resource* texture_res = reinterpret_cast<ID3D12Resource*>(texture->GetPrimitiveTexture());
+
+	const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_COPY, L"Texture Mapping").lock();
+
+	const auto dst = CD3DX12_TEXTURE_COPY_LOCATION(texture_res, 0);
+	auto       src = CD3DX12_TEXTURE_COPY_LOCATION(upload_res.Get(), 0);
+	
+	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(row_pitch);
+	src.PlacedFootprint.Footprint.Depth = desc.DepthOrArraySize;
+	src.PlacedFootprint.Footprint.Width = static_cast<UINT>(desc.Width);
+	src.PlacedFootprint.Footprint.Height = desc.Height;
+	src.PlacedFootprint.Footprint.Format = static_cast<DXGI_FORMAT>(desc.Format);
+
+	const auto& dest_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		texture_res,
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_COPY_DEST
+	);
+
+	const auto& dst_transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		texture_res,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	cmd->SoftReset();
+
+	cmd->GetList()->ResourceBarrier(1, &dest_transition);
+	cmd->GetList()->CopyTextureRegion
+	(
+		&dst,
+		0, 0, 0,
+		&src,
+		nullptr
+	);
+
+	cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
+	cmd->FlagReady(
+		[this, ptr_id, new_id]() 
+		{
+			ReleaseUploadBuffer(ptr_id, new_id);
+		});
+}
+
+uint64_t Engine::DX12TextureMappingTask::GetNextValue(const uint64_t key)
+{
+	if (!m_last_used_values_.contains(key)) 
+	{
+		return 0;
+	}
+	
+	return m_last_used_values_.at(key) + 1;
+}
+
+void Engine::DX12TextureMappingTask::ReleaseUploadBuffer(const uint64_t ptr_id, const uint64_t bucket)
+{
+	if (m_upload_buffers_.contains({ ptr_id, bucket }))
+	{
+		m_upload_buffers_.at({ ptr_id, bucket })->Release();
+		m_upload_buffers_.erase({ptr_id, bucket});
+	}
+}
+
+void Engine::DX12TextureMappingTask::Map(
+	PrimitiveTexture* src, 
+	PrimitiveTexture* dst,
+	const UINT src_width,
+	const UINT src_height,
+	const size_t src_idx,
+	const UINT dst_x,
+	const UINT dst_y,
+	const size_t dst_idx)
+{
+	const Strong<CommandPair>& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_COPY, L"Texture Copy").lock();
+
+	DX12PrimitiveTexture* native_src = reinterpret_cast<DX12PrimitiveTexture*>(src);
+	DX12PrimitiveTexture* native_dst = reinterpret_cast<DX12PrimitiveTexture*>(dst);
+
+	ID3D12Resource* src_res = reinterpret_cast<ID3D12Resource*>(native_src->GetPrimitiveTexture());
+	ID3D12Resource* dst_res = reinterpret_cast<ID3D12Resource*>(native_dst->GetPrimitiveTexture());
+
+	D3D12_BOX box = 
+	{
+		0, 0, 0, 
+		src_width, src_height, src_idx
+	};
+
+	D3D12_TEXTURE_COPY_LOCATION dst_desc
+	{
+		.pResource = dst_res,
+		.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+		.SubresourceIndex = 0
+	};
+
+	D3D12_TEXTURE_COPY_LOCATION src_desc
+	{
+		.pResource = src_res,
+		.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+		.SubresourceIndex = 0
+	};
+
+	cmd->GetList()->CopyTextureRegion
+	(
+		&dst_desc,
+		dst_x,
+		dst_y,
+		dst_idx,
+		&src_desc,
+		&box
+	);
 }

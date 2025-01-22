@@ -26,7 +26,7 @@ namespace Engine::Resources
 		UINT   GetDepth() const override;
 
 	protected:
-		void loadDerived(ComPtr<ID3D12Resource>& res) override;
+		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:

@@ -1,7 +1,5 @@
 #include "../Public/AnimationTexture.h"
 
-#include <directxtk12/SimpleMath.h>
-#include <DirectXTex.h>
 #include <algorithm>
 
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
@@ -50,56 +48,32 @@ namespace Engine::Resources
 		return obj;
 	}
 
-	void AnimationTexture::loadDerived(ComPtr<ID3D12Resource>& res)
+	void AnimationTexture::Load_INTERNAL()
 	{
-		LazyDescription(preEvaluateAnimations(m_animations_, m_evaluated_animations_));
+		GenericTextureDescription new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);
+		GetPrimitiveTexture()->UpdateDescription(GetSharedPtr<AnimationTexture>(), new_desc);
 
-		Texture3D::loadDerived(res);
+		Texture3D::Load_INTERNAL();
 	}
 
-	bool AnimationTexture::map(char* mapped)
+	void AnimationTexture::Map()
 	{
-		Texture3D::map(mapped);
+		Texture3D::Map();
 
-		const D3D12_RESOURCE_DESC          desc            = GetRawResoruce()->GetDesc();
+		const GenericTextureDescription& desc = GetDescription();
+		PrimitiveTexture* tex = GetPrimitiveTexture();
+		TextureMappingTask* map_task = tex->GetMappingTask();
 
-		// Align(Width * format bytes, 256) = Row pitch
-		size_t row_pitch = Align(GetWidth() * (DirectX::BitsPerPixel(desc.Format) / 8), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-		// RowPitch * Height = Slice pitch
-		size_t slice_pitch = Align(GetHeight() * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-
-		auto* data = reinterpret_cast<float*>(mapped);
-
-		for (UINT64 i = 0; i < GetDepth(); ++i)
-		{
-			const UINT64 d = slice_pitch / sizeof(float) * i;
-
-			for (UINT64 j = 0; j < GetHeight(); ++j)
-			{
-				const UINT64 h = row_pitch / sizeof(float) * j;
-				if (j >= m_evaluated_animations_[i].size())
-				{
-					break;
-				}
-
-				for (UINT64 k = 0; k < GetWidth() / s_vec4_to_mat; ++k)
-				{
-					if (k >= m_evaluated_animations_[i][j].size())
-					{
-						break;
-					}
-
-					const auto& mat = m_evaluated_animations_[i][j][k];
-
-					SIMDExtension::_mm256_memcpy(data + d + h + k * s_float_per_mat, &mat, sizeof(Matrix));
-				}
-			}
-		}
-
-		return true;
+		map_task->Map(
+			tex,
+			m_evaluated_animations_.data(),
+			desc.Width / s_vec4_to_mat,
+			desc.Height,
+			sizeof(Matrix),
+			desc.DepthOrArraySize);
 	}
 
-	Texture::GenericTextureDescription AnimationTexture::preEvaluateAnimations(
+	GenericTextureDescription AnimationTexture::preEvaluateAnimations(
 		const std::vector<Strong<BoneAnimation>>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated
 	)
 	{
@@ -128,15 +102,14 @@ namespace Engine::Resources
 
 		return
 		{
-			.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D,
 			.Alignment = 0,
 			.Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
 			.Height = frame_count,
 			.DepthOrArraySize = static_cast<UINT16>(anim_count),
-			.Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
-			.Flags = D3D12_RESOURCE_FLAG_NONE,
+			.Format = TEX_FORMAT_R32G32B32A32_FLOAT,
+			.Flags = RESOURCE_FLAG_NONE,
 			.MipsLevel = 1,
-			.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+			.Layout = TEX_LAYOUT_UNKNOWN,
 			.SampleDesc = {.Count = 1, .Quality = 0}
 		};
 	}

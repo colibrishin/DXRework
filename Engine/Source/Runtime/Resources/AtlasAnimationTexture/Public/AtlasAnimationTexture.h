@@ -28,9 +28,8 @@ namespace Engine::Resources
 		);
 
 	protected:
-		bool DoesWantMapByResource() const override;
-		void loadDerived(ComPtr<ID3D12Resource>& res) override;
-		bool map(const Weak<CommandPair>& w_cmd, ID3D12Resource* texture_resource) override;
+		void Load_INTERNAL() override;
+		void Map() override;
 
 	private:
 		AtlasAnimationTexture()

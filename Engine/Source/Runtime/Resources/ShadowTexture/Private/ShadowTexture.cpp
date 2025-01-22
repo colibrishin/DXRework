@@ -85,42 +85,6 @@ namespace Engine::Resources
 		cmd->ResourceBarrier(1, &dsv_trans_back);
 	}
 
-	void ShadowTexture::loadDerived(ComPtr<ID3D12Resource>& res)
-	{
-		constexpr D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc
-		{
-			.Format = DXGI_FORMAT_D32_FLOAT,
-			.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY,
-			.Flags = D3D12_DSV_FLAG_NONE,
-			.Texture2DArray = {
-				.MipSlice = 0,
-				.FirstArraySlice = 0,
-				.ArraySize = CFG_CASCADE_SHADOW_COUNT
-			}
-		};
-
-		constexpr D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc
-		{
-			.Format = DXGI_FORMAT_R32_FLOAT,
-			.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY,
-			.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-			.Texture2DArray =
-			{
-				.MostDetailedMip = 0,
-				.MipLevels = 1,
-				.FirstArraySlice = 0,
-				.ArraySize = CFG_CASCADE_SHADOW_COUNT,
-				.PlaneSlice = 0,
-				.ResourceMinLODClamp = 0.f
-			}
-		};
-
-		LazySRV(srv_desc);
-		LazyDSV(dsv_desc);
-
-		Texture2D::loadDerived(res);
-	}
-
 	void ShadowTexture::Unload_INTERNAL()
 	{
 		Texture2D::Unload_INTERNAL();

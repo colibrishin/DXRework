@@ -197,3 +197,32 @@ namespace Engine::Resources
 		  m_sampler_slot_(),
 		  m_depth_flag_(false) { }
 } // namespace Engine::Graphic
+
+namespace Engine 
+{
+	void ShaderRenderPrerequisiteTask::SetShader(const GraphicPrimitiveShader* shader)
+	{
+		if (shader)
+		{
+			m_shader_ = shader;
+		}
+	}
+
+	void ShaderRenderPrerequisiteTask::SetPipelineSignature(void* signature)
+	{
+		if (signature)
+		{
+			m_pipeline_signature_ = signature;
+		}
+	}
+
+	const GraphicPrimitiveShader* ShaderRenderPrerequisiteTask::GetShader() const
+	{
+		return m_shader_;
+	}
+
+	void* ShaderRenderPrerequisiteTask::GetPipelineSignature() const
+	{
+		return m_pipeline_signature_;
+	}
+}

@@ -89,3 +89,31 @@ namespace Engine::Resources
 		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
 	};
 } // namespace Engine::Graphic
+
+
+namespace Engine
+{
+	struct SHADER_API GraphicPrimitiveShader
+	{
+	public:
+		virtual             ~GraphicPrimitiveShader() = default;
+		virtual void        Generate(const Weak<Resources::Shader>& shader, void* pipeline_signature) = 0;
+		[[nodiscard]] void* GetGraphicPrimitiveShader() const;
+
+	private:
+		void* m_shader_ = nullptr;
+	};
+
+	struct SHADER_API ShaderRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetShader(const GraphicPrimitiveShader* shader);
+		void SetPipelineSignature(void* signature);
+
+		[[nodiscard]] const GraphicPrimitiveShader* GetShader() const;
+		[[nodiscard]] void* GetPipelineSignature() const;
+
+	private:
+		const GraphicPrimitiveShader* m_shader_ = nullptr;
+		void* m_pipeline_signature_ = nullptr;
+	};
+}

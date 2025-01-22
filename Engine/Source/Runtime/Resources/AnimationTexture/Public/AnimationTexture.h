@@ -26,11 +26,6 @@ namespace Engine::Resources
 			const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
 		);
 
-	protected:
-		void loadDerived(ComPtr<ID3D12Resource>& res) override;
-
-		bool map(char* mapped) override;
-
 	private:
 		AnimationTexture()
 			: Texture3D("", {}) {}
@@ -38,11 +33,12 @@ namespace Engine::Resources
 		constexpr static size_t s_vec4_to_mat   = 4;
 		constexpr static size_t s_float_per_mat = sizeof(Matrix) / sizeof(float);
 
+		void Map() override;
 		GenericTextureDescription preEvaluateAnimations(
 			const std::vector<Strong<BoneAnimation>>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated
 		);
 
-		std::vector<Strong<BoneAnimation>>              m_animations_;
+		std::vector<Strong<BoneAnimation>>            m_animations_;
 		std::vector<std::vector<std::vector<Matrix>>> m_evaluated_animations_;
 	};
 }
