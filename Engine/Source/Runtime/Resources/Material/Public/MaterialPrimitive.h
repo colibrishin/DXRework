@@ -27,11 +27,13 @@ namespace Engine::Graphics
 
         EPROPERTY()
         int repeatTexture = false;
-
         EPROPERTY()
         int atlas = false;
-
         EPROPERTY()
-        int texSlot[BIND_SLOT_END];
+        int RESERVED_texOffset = 0; // Should be defined by renderer
+        EPROPERTY()
+        int texSlot[g_max_texture_per_material];
+
+        void Apply(SBs::InstanceSB& instance) const;
     };
 }

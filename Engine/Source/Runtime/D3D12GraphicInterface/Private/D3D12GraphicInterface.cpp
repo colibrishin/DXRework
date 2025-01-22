@@ -228,19 +228,11 @@ void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const GraphicInter
 	cmd->GetList()->SetComputeRootSignature(m_pipeline_root_signature_.Get());
 }
 
-void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count)
-{
-	for (const Strong<Resources::Mesh>& mesh : shape->GetMeshes())
-	{
-		Draw(context, mesh.get(), instance_count);
-	}
-}
-
-void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count)
+void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count, const UINT instance_offset)
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	const UINT index_count = mesh->GetIndexCount();
-	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
+	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, instance_offset);
 }
 
 void Engine::D3D12GraphicInterface::Dispatch(

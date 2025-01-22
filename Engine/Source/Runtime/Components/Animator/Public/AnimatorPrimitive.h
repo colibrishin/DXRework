@@ -2,6 +2,8 @@
 #include "Serialization.hpp"
 #include "AnimatorPrimitive.generated.h"
 
+#include "StructuredBuffer/Public/StructuredBuffer.h"
+
 namespace Engine::Graphics
 {
 	ECLASS(serialize)
@@ -26,5 +28,7 @@ namespace Engine::Graphics
 		int atlasW;
 		EPROPERTY()
 		int atlasH;
+
+		void Apply(SBs::InstanceSB& instance) const;
 	};
 }

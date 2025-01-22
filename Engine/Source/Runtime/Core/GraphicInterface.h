@@ -1128,8 +1128,7 @@ namespace Engine
 		virtual void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) = 0;
 		virtual void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) = 0;
 
-		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count) = 0;
-		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count) = 0;
+		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, UINT instance_count, UINT instance_offset) = 0;
 		virtual void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
 
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) = 0;

@@ -5,12 +5,13 @@ struct PixelBillboardInputType
 	float4 position : SV_Position;
 	float4 color : COLOR0;
 	float2 tex : TEXCOORD0;
+	uint instanceId : SV_InstanceID;
 };
 
 struct GeometryBillboardInputType
 {
 	float4 position : POSITION0;
-	uint   InstanceID : SV_InstanceID;
+	uint   instanceId : SV_InstanceID;
 };
 
 GeometryBillboardInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
@@ -19,7 +20,7 @@ GeometryBillboardInputType vs_main(VertexInputType input, uint instanceId : SV_I
 
 	output.position = float4(input.position, 1.0f);
     output.position = mul(output.position, INST_WORLD(instanceId));
-	output.InstanceID = instanceId;
+	output.instanceId = instanceId;
 
 	return output;
 };
@@ -32,8 +33,8 @@ void gs_main(
 {
 	PixelBillboardInputType output[6];
 
-    const float4 worldPos = GetTranslation(INST_WORLD(input[0].InstanceID));
-    const float3 scale = GetScale(INST_WORLD(input[0].InstanceID));
+    const float4 worldPos = GetTranslation(INST_WORLD(input[0].instanceId));
+    const float3 scale = GetScale(INST_WORLD(input[0].instanceId));
 	const float4 viewPos  = mul(worldPos, g_camView);
 
 	float4 baseSquare[4] =
@@ -56,6 +57,11 @@ void gs_main(
 		float2(1.0f, 1.0f),
 		float2(0.0f, 1.0f)
 	};
+
+	output[0].instanceId = input[0].instanceId;
+	output[1].instanceId = input[0].instanceId;
+	output[2].instanceId = input[0].instanceId;
+	output[3].instanceId = input[0].instanceId;
 
 	output[0].position = mul(baseSquare[0] + viewPos, g_camProj);
 	output[1].position = mul(baseSquare[1] + viewPos, g_camProj);
@@ -85,6 +91,6 @@ void gs_main(
 
 float4 ps_main(PixelBillboardInputType input) : SV_TARGET
 {
-	const float4 tex = tex00.Sample(PSSampler, input.tex);
+	const float4 tex = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 0);
 	return tex;
 };

@@ -70,6 +70,11 @@ namespace Engine
 		{
 			SB_T(SB_TYPE_INSTANCE)
 			SB_UAV_T(SB_TYPE_UAV_INSTANCE)
+
+			void SetTextureOffset(const UINT offset)
+			{
+				SetParam<int>(10, offset);
+			}
 		};
 	}
 }

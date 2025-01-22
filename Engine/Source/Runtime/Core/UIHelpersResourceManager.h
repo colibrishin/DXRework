@@ -56,7 +56,7 @@ namespace Engine::UIHelpers
                         continue;
                     }
 
-                    (context |= ui.NewSelectable({ resource->GetName(), selection[ptr][resource] })).SetFunction([]()
+                    (context |= ui.NewSelectable({ resource->GetName(), selection[ptr][resource] })).SetFunction([&window]()
                         {
                             window = false;
                         });
@@ -216,7 +216,7 @@ namespace Engine::UIHelpers
                 return !std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 
-        return MultipleResourceSelectionDialog<T>(ptr, resources_to_load, {}, type_pred);
+        return SingleResourceSelectionDialog<T>(ptr, resources_to_load, {}, type_pred);
     }
 
     template <typename T, typename... Included>
@@ -230,7 +230,7 @@ namespace Engine::UIHelpers
                 return std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 
-        return MultipleResourceSelectionDialog<T>(ptr, resources_to_load, {}, type_pred);
+        return SingleResourceSelectionDialog<T>(ptr, resources_to_load, {}, type_pred);
     }
 }
 #endif

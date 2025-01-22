@@ -12,12 +12,16 @@
 
 namespace Engine
 {
+	GenericRenderPassTask::GenericRenderPassTask()
+		: m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
+		  m_local_param_pool_ticket(SingletonSpinLock::GetInstance().Register()),
+		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()) {}
+
 	void GenericRenderPassTask::Run(
 		const float                        dt,
 		const bool                         shader_bypass,
 		RenderMap const*                   domain_map,
 		const Graphics::SBs::LocalParamSB& local_param,
-		const std::atomic<uint64_t>&       instance_count,
 		const ObjectPredication&           predicate,
 		const ContextSetupFunction&        prerender_predicate,
 		const ContextSetupFunction&        postrender_predicate
@@ -28,214 +32,275 @@ namespace Engine
 			return;
 		}
 
-		tbb::concurrent_hash_map<Weak<Resources::Material>, aligned_vector<const Graphics::SBs::InstanceSB*>> final_mapping;
+		// Filter the instances by the predicate
+		IntermediateMeshMap intermediate_mesh_map = PredicateObject(predicate, domain_map);
 
-		for (const auto& mtr_m : *domain_map | std::views::values)
+		for (const auto& renderer : *domain_map | std::views::values)
+		{
+			for (const auto& [mesh, shader_map] : renderer)
+			{
+				tbb::parallel_for_each(shader_map.begin(), shader_map.end(),
+					[weak_mesh = Weak(mesh), this, &local_param, &prerender_predicate, &postrender_predicate, &shader_bypass, &dt, &intermediate_mesh_map](const std::pair<Strong<Resources::Shader>, aligned_vector<InstancePair>>& pair)
+				{
+					// todo: possible bottleneck?
+					if (decltype(intermediate_mesh_map)::const_accessor acc; intermediate_mesh_map.find(acc, weak_mesh))
+					{
+						StartPhase_MultiThread(dt, shader_bypass, weak_mesh, pair.first, local_param, prerender_predicate, postrender_predicate, acc->second);
+					}
+				});
+			}
+		}
+	}
+
+	void GenericRenderPassTask::Cleanup()
+	{
+		m_local_param_pool_.reset();
+		m_instance_pool_.reset();
+	}
+
+	GenericRenderPassTask::IntermediateMeshMap GenericRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map)
+	{
+		IntermediateMeshMap final_mapping;
+		
+		for (const auto& meshes : *domain_map | std::views::values)
 		{
 			tbb::parallel_for_each
 			(
-				mtr_m.begin(), mtr_m.end(), [&](const CandidateTuple& tuple)
+				meshes.begin(), meshes.end(), [&](const std::pair<Strong<Resources::Mesh>, ShaderMap>& mesh_pair)
 				{
-					if (!predicate || (predicate && predicate(std::get<0>(tuple).lock())))
+					for (const aligned_vector<InstancePair>& instances : mesh_pair.second | std::views::values)
 					{
-						decltype(final_mapping)::accessor acc;
-
-						if (!final_mapping.find(acc, std::get<1>(tuple)))
+						for (const InstancePair& instance_pair : instances)
 						{
-							final_mapping.insert(acc, std::get<1>(tuple));
-						}
+							if (predicate && !predicate(instance_pair.object))
+							{
+								continue;
+							}
 
-						for (const Graphics::SBs::InstanceSB& instance : std::get<2>(tuple))
-						{
-							acc->second.push_back(&instance);
+							decltype(final_mapping)::accessor acc;
+							if (!final_mapping.find(acc, mesh_pair.first))
+							{
+								final_mapping.insert(acc, mesh_pair.first);
+							}
+
+							acc->second.push_back(&instance_pair);
 						}
 					}
 				}
 			);
 		}
 
-		GraphicInterface&                        gi        = GraphicInterfaceAccessor::GetInterface();
-		const GraphicInterfaceContextReturnType& context   = gi.GetNewContext(0, false, L"Render Pass");
+		return final_mapping;
+	}
+
+	void GenericRenderPassTask::StartPhase_MultiThread(
+		const float dt,
+		const bool shader_bypass,
+		const Weak<Resources::Mesh>& mesh,
+		const Weak<Resources::Shader>& shader,
+		const Graphics::SBs::LocalParamSB& local_param,
+		const ContextSetupFunction& prerender_predicate,
+		const ContextSetupFunction& postrender_predicate,
+		const aligned_vector<const InstancePair*>& instance_pairs)
+	{
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+
+		// Manual release
+		SpinLockToken gi_token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
+		const GraphicInterfaceContextReturnType& context = std::move(gi.GetNewContext(0, false, L"Render Pass"));
+		gi_token.Release();
+		
 		const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();
 
 		primitive.commandList->SoftReset();
-		m_current_cmd_ = primitive.commandList;
 
+		// Manual release
+		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb          = m_local_param_pool_.get();
+		local_param_token.Release();
+		
 		StructuredBufferTypelessBase&                           sb_typeless = sb.GetTypeless();
 		sb.SetData(&primitive, 1, &local_param);
 		sb_typeless.TransitionToSRV(&primitive);
 		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&primitive);
 		gi.SetDefaultRenderTarget(&primitive);
 
-		for (const auto& [mtr, sbs] : final_mapping)
+		GraphicHeapBase*                 current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
+		GraphicInterfaceContextPrimitive temp_context
 		{
-			m_heaps_.emplace_back(gi.GetHeap());
-			m_current_heap_ = m_heaps_.back().get();
+			.commandList = primitive.commandList,
+			.heap = current_heap
+		};
 
-			GraphicInterfaceContextPrimitive temp_context
-			{
-				.commandList = primitive.commandList,
-				.heap = m_current_heap_
-			};
+		if (prerender_predicate) { prerender_predicate(&temp_context); }
 
-			if (prerender_predicate)
-			{
-				prerender_predicate(&temp_context);
-			}
+		sb.CopySRVHeap(&temp_context);
+		current_heap->BindGraphic(&primitive);
 
-			sb.CopySRVHeap(&temp_context);
-			m_current_heap_->BindGraphic(&primitive);
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
+		
+		static aligned_vector<Graphics::SBs::InstanceSB*> instances;
+		static aligned_vector<TexturePair> texture_pairs;
+		
+		if (instance_pairs.size() > instances.capacity())
+		{
+			instances.resize(instance_pairs.size());
+			texture_pairs.resize(instance_pairs.size());
+		}
 
-			StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
-			RunImpl(dt, shader_bypass, instance, mtr.lock(), &temp_context, sbs);
+		size_t idx = 0;
+		for (const InstancePair* instance_pair : instance_pairs)
+		{
+			instances[idx] = instance_pair->instance;
+			texture_pairs[idx] = TexturePair(&instance_pair->textures, &instance_pair->reservedTextures);
+			++idx;
+		}
+		
+		DrawPhase_MultiThread(dt, shader_bypass, idx, instance, shader, mesh, &temp_context, instances, texture_pairs);
 
-			if (postrender_predicate)
-			{
-				postrender_predicate(&temp_context);
-			}
-
+		if (postrender_predicate) { postrender_predicate(&temp_context); }
+		
+		{
+			auto token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
 			m_instance_pool_.advance();
 		}
 
 		sb_typeless.TransitionCommon(&primitive);
 		primitive.commandList->FlagReady();
 
-		m_local_param_pool_.advance();
-	}
-
-	void GenericRenderPassTask::Cleanup()
-	{
-		m_updated_material_in_current_pass_.clear();
-		m_local_param_pool_.reset();
-		m_instance_pool_.reset();
-	}
-
-	CommandListBase* GenericRenderPassTask::GetCurrentCommandList() const
-	{
-		return m_current_cmd_;
-	}
-
-	GraphicHeapBase* GenericRenderPassTask::GetCurrentHeap() const
-	{
-		return m_current_heap_;
-	}
-
-	void GenericRenderPassTask::RunImpl(
-		const float dt,
-		const bool shader_bypass,
-		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
-		const Weak<Resources::Material>& material,
-		const GraphicInterfaceContextPrimitive* context,
-		const aligned_vector<const Graphics::SBs::InstanceSB*>& structuredbuffers)
-	{
-		CheckSize<UINT>(structuredbuffers.size(), L"Warning: Renderer will take a lot of amount of instance buffers!");
-		instance_buffer.SetDataContainer(context, static_cast<UINT>(structuredbuffers.size()), structuredbuffers.data());
-		StructuredBufferTypelessBase& typeless = instance_buffer.GetTypeless();
-		typeless.TransitionToSRV(context);
-		instance_buffer.CopySRVHeap(context);
-
-		DrawPhase(shader_bypass, structuredbuffers.size(), material, context);
-
-		typeless.TransitionCommon(context);
-	}
-
-	void GenericRenderPassTask::DrawPhase(
-		const bool shader_bypass,
-		const uint64_t instance_count,
-		const Weak<Resources::Material>& material,
-		const GraphicInterfaceContextPrimitive* context)
-	{
-		if (const Strong<Resources::Material>& mat = material.lock())
 		{
-			if (mat->GetResource<Resources::Shape>(0).expired())
+			auto token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
+			m_local_param_pool_.advance();
+		}
+	}
+
+	void GenericRenderPassTask::DrawPhase_MultiThread(
+		float dt,
+		bool shader_bypass,
+		const size_t instance_count,
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
+		const Weak<Resources::Shader>& shader,
+		const Weak<Resources::Mesh>& mesh,
+		const GraphicInterfaceContextPrimitive* context,
+		const aligned_vector<Graphics::SBs::InstanceSB*>& instances,
+		const aligned_vector<TexturePair>& texture_pairs
+	)
+	{
+		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
+		context->heap->BindGraphic(context);
+
+		// Manual release
+		auto token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		token.Release();
+
+		const Strong<Resources::Shader>& locked_shader = shader.lock();
+		if (!shader_bypass)
+		{
+			gi.BindGraphic(context, locked_shader.get());
+		}
+
+		size_t instance_resolved = 0;
+		while (instance_resolved != instance_count)
+		{
+			assert(instance_resolved > instance_count);
+			
+			size_t instance_to_resolve = 0;
+
+			constexpr size_t max_tex_binds = BIND_SLOT_TEXARR - BIND_SLOT_TEX;
+			uint16_t tex_bind_mask = 0; // See max tex binds
+
+			while (const uint16_t count = _tzcnt_u16(tex_bind_mask))
 			{
-				return;
-			}
-
-			const Graphics::SBs::MaterialSB& mat_sb = mat->GetMaterialSB();
-			const auto& material_resources = mat->GetResources();
-
-			context->heap->BindGraphic(context);
-
-			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-
-			if (!shader_bypass)
-			{
-				const Strong<Resources::Shader>& shader = mat->GetResource<Resources::Shader>(0).lock();
-				gi.BindGraphic(context, shader.get());
-			}
-
-			for (const auto& [type, resources] : material_resources)
-			{
-				if (type == Resources::AtlasAnimationTexture::StaticTypeHash())
+				const TexturePair& pair = texture_pairs[instance_resolved];
+				if (pair.reservedTextures->size())
 				{
-					const auto& anim = resources.front()->GetSharedPtr<Resources::Texture>();
-					gi.Bind(context, anim.get(), BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
-					continue;
-				}
-
-				if (type == Resources::Texture::StaticTypeHash()) 
-				{
-					for (auto it = resources.begin(); it != resources.end(); ++it)
+					// independent draw call, no redundant specific textures slots.
+					constexpr size_t offset = 0;
+					for (size_t i = 0; i < pair.textures->size(); ++i)
 					{
-						const auto& res = *it;
+						tex_bind_mask |= (1 << (offset + i));
+					}
+					instances[offset]->SetTextureOffset(offset);
+					instance_to_resolve++;
+					break;
+				}
+				
+				if (!pair.reservedTextures->size() && count > pair.textures->size())
+				{
+					const size_t offset = max_tex_binds - count;
+					for (size_t i = 0; i < pair.textures->size(); ++i)
+					{
+						tex_bind_mask |= (1 << (offset + i));
+					}
+					instances[offset]->SetTextureOffset(offset);
+					instance_to_resolve++;
+				}
+			}
 
-						// todo: distinguish tex type
-						const UINT  idx = static_cast<UINT>(std::distance(resources.begin(), it));
-						const auto& tex = res->GetSharedPtr<Resources::Texture>();
-						gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, idx);
+			instance_buffer.SetDataContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
+			StructuredBufferTypelessBase& typeless = instance_buffer.GetTypeless();
+			typeless.TransitionToSRV(context);
+			instance_buffer.CopySRVHeap(context);
+
+			const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
+
+			UINT total_offset = 0;
+			for (size_t i = 0; i < instance_to_resolve; ++i)
+			{
+				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
+				{
+					const auto& tex = texture_pairs[instance_resolved + i].textures->at(j);
+					gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, total_offset);
+					++total_offset;
+				}
+				
+				if (texture_pairs[instance_resolved + i].reservedTextures->size())
+				{
+					for (size_t j = 0; j < texture_pairs[instance_resolved + i].reservedTextures->size(); ++j)
+					{
+						const auto& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j);
+						if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+						{
+							gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0);
+						}
+						else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
+						{
+							gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0);
+						}
 					}
 				}
 			}
 
-			if (!m_updated_material_in_current_pass_.contains(reinterpret_cast<uint64_t>(mat.get()))) 
-			{
-				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())] = 
-					gi.GetStructuredBuffer<Graphics::SBs::MaterialSB>();
-				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].SetData(context, 1, &mat_sb);
-				m_updated_material_in_current_pass_.insert(reinterpret_cast<uint64_t>(mat.get()));
-			}
+			gi.Draw(context, locked_mesh.get(), instance_to_resolve, instance_resolved);
 
-			StructuredBufferTypeProxy<Graphics::SBs::MaterialSB>& sb = m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())];
-			StructuredBufferTypelessBase& material_typeless = sb.GetTypeless();
-			material_typeless.TransitionToSRV(context);
-			sb.CopySRVHeap(context);
-
-			if (const Strong<Resources::Shape>& shape = mat->GetResource<Resources::Shape>(0).lock())
+			for (size_t i = 0; i < instance_to_resolve; ++i)
 			{
-				if (const auto& anim = shape->GetAnimations().lock())
+				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
 				{
-					gi.Bind(context, anim.get(), BIND_TYPE_SRV, RESERVED_TEX_BONES, 0);
+					const auto& tex = texture_pairs[instance_resolved + i].textures->at(j);
+					gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
 				}
 
-				for (const auto& mesh : shape->GetMeshes())
+				if (texture_pairs[instance_resolved + i].reservedTextures->size())
 				{
-					gi.Draw(context, mesh.get(), instance_count);
-				}
-
-				if (const auto& anim = shape->GetAnimations().lock())
-				{
-					gi.Unbind(context, anim.get(), BIND_TYPE_SRV);
+					for (size_t j = 0; j < texture_pairs[instance_resolved + i].reservedTextures->size(); ++j)
+					{
+						const auto& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j);
+						if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+						{
+							gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+						}
+						else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
+						{
+							gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+						}
+					}
 				}
 			}
 
-			if (material_resources.contains(Resources::Texture::StaticTypeHash()))
-			{
-				for (const auto& tex : material_resources.at(Resources::Texture::StaticTypeHash()))
-				{
-					const Strong<Resources::Texture>& casted = tex->GetSharedPtr<Resources::Texture>();
-					gi.Unbind(context, casted.get(), BIND_TYPE_SRV);
-				}
-			}
-
-			if (material_resources.contains(Resources::AtlasAnimationTexture::StaticTypeHash()))
-			{
-				const Strong<Resources::Texture>& atlas = material_resources.at(Resources::AtlasAnimationTexture::StaticTypeHash()).front()->GetSharedPtr<Resources::Texture>();
-				gi.Unbind(context, atlas.get(), BIND_TYPE_SRV);
-			}
-
-			material_typeless.TransitionCommon(context);
+			typeless.TransitionCommon(context);
+			instance_resolved += instance_to_resolve;
 		}
 	}
 }

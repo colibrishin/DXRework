@@ -1,10 +1,14 @@
 #pragma once
 #include <assimp/Importer.hpp>
 #include <map>
+
+#include "BaseAnimation.h"
+
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Source/Runtime/Resources/Material/Public/Material.h"
 
 #include "Shape.generated.h"
 
@@ -16,8 +20,11 @@ namespace Engine::Resources
 		GENERATE_BODY
 	public:
 
-		typedef std::pair<Strong<Mesh>, Strong<Material>> MeshMaterialPair;
-		typedef std::vector<MeshMaterialPair> MeshMaterialVector;
+		template <template <typename> typename T>
+		using MeshMaterialPair = std::pair<T<Mesh>, T<Material>>;
+
+		typedef std::vector<MeshMaterialPair<Weak>> WeakMeshMaterialVector;
+		typedef std::vector<MeshMaterialPair<Strong>> StrongMeshMaterialVector;
 
 		Shape(const std::filesystem::path& path);
 
@@ -39,7 +46,7 @@ namespace Engine::Resources
 		[[nodiscard]] Weak<Material>                             GetMaterial(UINT idx) const;
 		[[nodiscard]] Weak<AnimationTexture>                     GetAnimations() const;
 		[[nodiscard]] Weak<BaseAnimation>                        GetTransformAnimation() const;
-		[[nodiscard]] const MeshMaterialVector&                  GetMeshes() const;
+		[[nodiscard]] const WeakMeshMaterialVector&              GetMeshes() const;
 		[[nodiscard]] const std::vector<std::string>&            GetAnimationCatalog() const;
 		[[nodiscard]] const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
@@ -83,18 +90,18 @@ namespace Engine::Resources
 		void UpdateVertices();
 
 		EPROPERTY()
-		std::vector<std::string>     m_animation_catalog_;
+		std::vector<std::string> m_animation_catalog_;
 		EPROPERTY()
 		std::vector<MetadataPath> m_mesh_paths_;
 		EPROPERTY()
 		std::vector<MetadataPath> m_material_paths_;
 		EPROPERTY()
-		MetadataPath              m_animations_path_;
+		MetadataPath m_animations_path_;
 		EPROPERTY()
-		MetadataPath              m_tr_animation_path_;
+		MetadataPath m_tr_animation_path_;
 
 		EPROPERTY()
-		BoundingBox                         m_bounding_box_;
+		BoundingBox m_bounding_box_;
 		EPROPERTY()
 		std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 
@@ -106,7 +113,9 @@ namespace Engine::Resources
 		// non-serialized
 		inline static Assimp::Importer s_importer_;
 		
-		MeshMaterialVector m_meshes_;
+		StrongMeshMaterialVector m_meshes_;
+
+		WeakMeshMaterialVector m_cached_meshes_;
 
 		Strong<AnimationTexture> m_animations_;
 

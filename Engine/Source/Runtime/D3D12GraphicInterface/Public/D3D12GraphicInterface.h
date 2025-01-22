@@ -68,8 +68,7 @@ namespace Engine
 		void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) override;
 		void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) override;
 
-		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count) override;
-		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count) override;
+		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, UINT instance_count, UINT instance_offset) override;
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) override;
 		void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) override;
 		void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) override;

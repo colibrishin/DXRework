@@ -285,6 +285,38 @@ namespace Engine::Graphics
 			}
 		}
 
+		template <typename T> requires (std::is_same_v<float, T> || std::is_same_v<int, T> || std::is_same_v<Vector4, T> || std::is_same_v<Matrix, T>)
+		T* EvaluateAddress(const size_t slot)
+		{
+			auto cast_address = reinterpret_cast<char*>(this);
+			
+			if constexpr (std::is_same_v<float, T>)
+			{
+				assert(slot < max_param * (sizeof(Vector4) / sizeof(float)));
+				return reinterpret_cast<float*>(cast_address + float_section_begin + sizeof(float) * slot);
+			}
+			else if constexpr (std::is_same_v<int, T>)
+			{
+				assert(slot < max_param * (sizeof(Vector4) / sizeof(float)));
+				return reinterpret_cast<int*>(cast_address + int_section_begin + sizeof(int) * slot);
+			}
+			else if constexpr (std::is_same_v<Vector4, T>)
+			{
+				assert(slot < max_param);
+				return reinterpret_cast<Vector4*>(cast_address + vector_section_begin + sizeof(Vector4) * slot);
+			}
+			else if constexpr (std::is_same_v<Matrix, T>)
+			{
+				assert(slot < max_param);
+				return reinterpret_cast<Matrix*>(cast_address + matrix_section_begin + sizeof(Matrix) * slot);
+			}
+			else
+			{
+				assert(false, "Invalid type");
+			}
+			return nullptr; // Suppressing the warning
+		}
+
 	private:
 		friend class boost::serialization::access;
 		template <typename Archive>
@@ -302,6 +334,11 @@ namespace Engine::Graphics
 		int     i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
 		Vector4 v_param[max_param]{};
 		Matrix  m_param[max_param]{};
+
+		constexpr static size_t float_section_begin = 0;
+		constexpr static size_t int_section_begin = float_section_begin + sizeof(i_param);
+		constexpr static size_t vector_section_begin = int_section_begin + sizeof(v_param);
+		constexpr static size_t matrix_section_begin = vector_section_begin + sizeof(m_param);
 	};
 
 	static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
@@ -351,11 +388,13 @@ namespace Engine
 	enum ENGINE_CORE_API eTexBindSlot : uint8_t
 	{
 		BIND_SLOT_TEX = 0,
-		BIND_SLOT_TEXARR = BIND_SLOT_TEX + 4,
+		BIND_SLOT_TEXARR = BIND_SLOT_TEX + 16,
 		BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + 2,
 		BIND_SLOT_TEX1D = BIND_SLOT_TEXCUBE + 2,
 		BIND_SLOT_END = BIND_SLOT_TEX1D + 2,
 	};
+
+	static constexpr size_t g_max_texture_per_material = 4;
 
 	enum ENGINE_CORE_API eSBType : uint8_t
 	{
@@ -377,10 +416,16 @@ namespace Engine
 	enum ENGINE_CORE_API eReservedTexBindSlot : uint8_t
 	{
 		RESERVED_TEX_RENDERED = SB_TYPE_END,
-		RESERVED_TEX_BONES,
-		RESERVED_TEX_ATLAS,
 		RESERVED_TEX_SHADOW_MAP,
 		RESERVED_TEX_END = RESERVED_TEX_SHADOW_MAP + CFG_MAX_DIRECTIONAL_LIGHT,
+	};
+
+	enum ENGINE_CORE_API eReservedTexUserTexBindSlot : uint8_t
+	{
+		RESERVED_USER_TEX_BEGIN = RESERVED_TEX_END,
+		RESERVED_USER_TEX_BONES = RESERVED_USER_TEX_BEGIN,
+		RESERVED_USER_TEX_ATLAS,
+		RESERVED_USER_TEX_END,
 	};
 
 	enum ENGINE_CORE_API eTexUAVBindSlot : uint8_t

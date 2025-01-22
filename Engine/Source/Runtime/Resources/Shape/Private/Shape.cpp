@@ -18,7 +18,6 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
-#include "Material.h"
 
 #include "UIHelpersResourceManager.h"
 
@@ -183,9 +182,9 @@ namespace Engine::Resources
 		return m_tr_animation_;
 	}
 
-	const Shape::MeshMaterialVector& Shape::GetMeshes() const
+	const Shape::WeakMeshMaterialVector& Shape::GetMeshes() const
 	{
-		return m_meshes_;
+		return m_cached_meshes_;
 	}
 
 	const std::vector<std::string>& Shape::GetAnimationCatalog() const
@@ -200,6 +199,13 @@ namespace Engine::Resources
 
 	void Shape::UpdateVertices()
 	{
+		m_cached_meshes_.clear();
+
+		for (const auto& pair : m_meshes_)
+		{
+			m_cached_meshes_.push_back(pair);
+		}
+		
 		m_cached_vertices_.clear();
 
 		for (const auto& mesh : m_meshes_ | std::views::keys)
@@ -278,7 +284,7 @@ namespace Engine::Resources
 
 		const Strong<Mesh>& mesh_locked = target.lock();
 
-		const auto& it = std::ranges::find_if(m_meshes_, [&mesh_locked](const MeshMaterialPair& pair)
+		const auto& it = std::ranges::find_if(m_meshes_, [&mesh_locked](const MeshMaterialPair<Strong>& pair)
 			{
 				return pair.first == mesh_locked;
 			});
@@ -291,10 +297,16 @@ namespace Engine::Resources
 
 	void Shape::SetMaterial(const size_t target_mesh_idx, const Weak<Material>& mat)
 	{
+		if (m_meshes_.size() > target_mesh_idx)
+		{
+			return;
+		}
+		
 		if (const Strong<Material>& locked = mat.lock())
 		{
 			m_meshes_[target_mesh_idx].second = locked;
 			m_material_paths_[target_mesh_idx] = locked->GetMetadataPath();
+			m_cached_meshes_[target_mesh_idx].second = locked;
 		}
 	}
 

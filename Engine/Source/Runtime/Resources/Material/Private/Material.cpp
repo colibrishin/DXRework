@@ -155,7 +155,7 @@ namespace Engine::Resources
 		}
 	}
 
-	const Graphics::MaterialPrimitive& Material::GetMaterialPrimitive() const
+	const Graphics::MaterialPrimitive& Material::GetPrimitive() const
 	{
 		return m_material_sb_;
 	}

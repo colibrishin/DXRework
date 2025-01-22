@@ -34,13 +34,7 @@ namespace Engine::Managers
 		{
 			for (const auto& ptr : m_render_instance_tasks_ | std::views::values)
 			{
-				ptr->Run
-					(
-					 scene.get(),
-					 m_render_candidates_,
-					 SHADER_DOMAIN_MAX,
-					 m_instance_count_
-					);
+				ptr->Run(scene.get(), m_render_candidates_, SHADER_DOMAIN_MAX);
 			}
 		}
 
@@ -71,7 +65,6 @@ namespace Engine::Managers
 			          shader_bypass,
 			          &m_render_candidates_[domain],
 			          local_param_sb,
-			          m_instance_count_,
 			          predication,
 			          prerender_predicate,
 			          postrender_predicate);
@@ -119,10 +112,5 @@ namespace Engine::Managers
 	bool Renderer::Ready() const
 	{
 		return m_b_ready_;
-	}
-
-	uint64_t Renderer::GetInstanceCount() const
-	{
-		return m_instance_count_.load();
 	}
 }

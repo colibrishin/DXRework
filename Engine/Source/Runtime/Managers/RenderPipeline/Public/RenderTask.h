@@ -16,7 +16,7 @@ namespace Engine
 	struct ENGINE_RENDERPIPELINE_API RenderInstanceTask
 	{
 		virtual      ~RenderInstanceTask() = default;
-		virtual void Run(Scene const* scene, RenderMap* render_map, const size_t map_size, std::atomic<uint64_t>& instance_count) = 0;
+		virtual void Run(Scene const* scene, RenderMap* render_map, const size_t map_size) = 0;
 		virtual void Cleanup(RenderMap* render_map, const size_t map_size) = 0;
 
 		virtual std::string_view GetTypeName() const = 0;
@@ -41,7 +41,6 @@ namespace Engine
 			bool                                    shader_bypass,
 			RenderMap const*                        domain_map,
 			const Graphics::SBs::LocalParamSB&      local_param,
-			const std::atomic<uint64_t>&            instance_count,
 			const ObjectPredication&                predicate,
 			const ContextSetupFunction&				prerender_predicate,
 			const ContextSetupFunction&             postrender_predicate

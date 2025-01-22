@@ -70,10 +70,7 @@ namespace Engine
 	{
 		~SpinLockToken()
 		{
-			if (IsValid())
-			{
-				Engine::SingletonSpinLock::GetInstance().Unlock(m_idx_);	
-			}
+			Release();
 		}
 
 		SpinLockToken(const SpinLockToken&) = delete;
@@ -82,7 +79,16 @@ namespace Engine
 		explicit SpinLockToken(size_t idx) :
 		m_idx_(idx) {}
 
-		bool IsValid() const
+		void Release()
+		{
+			if (IsValid())
+			{
+				SingletonSpinLock::GetInstance().Unlock(m_idx_);
+				m_idx_ = -1;
+			}
+		}
+		
+		[[nodiscard]] bool IsValid() const
 		{
 			return m_idx_ != -1;
 		}

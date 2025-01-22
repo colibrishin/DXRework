@@ -16,7 +16,7 @@ namespace Engine::Resources
 	{
 		GENERATE_BODY
 	public:
-		typedef std::array<Strong<Texture>, BIND_SLOT_END> TextureArray;
+		typedef std::array<Strong<Texture>, g_max_texture_per_material> TextureArray;
 
 		Material(const Graphics::MaterialPrimitive& material);
 
@@ -35,7 +35,7 @@ namespace Engine::Resources
 		void SetAtlasTexture(const Weak<AtlasAnimationTexture>& texture);
 		void SetShader(const Weak<Shader>& shader);
 
-		[[nodiscard]] const Graphics::MaterialPrimitive& GetMaterialPrimitive() const;
+		[[nodiscard]] const Graphics::MaterialPrimitive& GetPrimitive() const;
 		[[nodiscard]] const TextureArray& GetTextures() const;
 		[[nodiscard]] Weak<AtlasAnimationTexture> GetAtlasTexture() const;
 		[[nodiscard]] Weak<AtlasAnimation>        GetAtlasAnimation(const size_t idx) const;
@@ -56,7 +56,7 @@ namespace Engine::Resources
 		MetadataPath m_shader_path_;
 
 		EPROPERTY()
-		std::array<MetadataPath, BIND_SLOT_END> m_texture_paths_;
+		std::array<MetadataPath, g_max_texture_per_material> m_texture_paths_;
 
 		EPROPERTY()
 		MetadataPath m_atlas_path_;

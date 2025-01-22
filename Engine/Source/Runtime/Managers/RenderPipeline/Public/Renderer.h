@@ -38,12 +38,12 @@ namespace Engine::Managers
 			bool shader_bypass,
 			eShaderDomain domain,
 			const Graphics::SBs::LocalParamSB& local_param_sb,
-			const ObjectPredication& predication, const ContextSetupFunction& prerender_predicate, const ContextSetupFunction&
-			postrender_predicate
+			const ObjectPredication& predication,
+			const ContextSetupFunction& prerender_predicate,
+			const ContextSetupFunction& postrender_predicate
 		) const;
 
 		[[nodiscard]] bool Ready() const;
-		[[nodiscard]] uint64_t GetInstanceCount() const;
 
 	private:
 		friend struct SingletonDeleter;
@@ -53,7 +53,6 @@ namespace Engine::Managers
 		bool m_b_ready_;
 		std::unordered_map<std::wstring, Unique<RenderInstanceTask>> m_render_instance_tasks_;
 		std::unordered_map<std::wstring, Unique<RenderPassTask>> m_render_pass_tasks_;
-		std::atomic<uint64_t> m_instance_count_;
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};
 }

@@ -13,9 +13,8 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Components/Animator/Public/Animator.h"
-#include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
-#include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
-#include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
+#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
+#include "Source/Runtime/Resources/Shape/Public/Shape.h"
 
 MODULE_IMPL(Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderInstanceTask)
 
@@ -36,11 +35,13 @@ namespace Engine
 		return true;
 	}
 
+    ModelRendererRenderInstanceTask::ModelRendererRenderInstanceTask()
+        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()) {}
+
     void ModelRendererRenderInstanceTask::Run(
             Scene const* scene, 
             RenderMap* render_map,
-            const size_t map_size,
-            std::atomic<uint64_t>& instance_count) 
+            const size_t map_size) 
     {
         const auto& mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
 
@@ -59,70 +60,77 @@ namespace Engine
                 const Strong<Resources::Shape> shape = mr->GetShape().lock();
                 const Strong<Components::Transform> tr  = obj->GetComponent<Components::Transform>().lock();
 
-                // animator parameters
-                float anim_frame    = 0.0f;
-                UINT  anim_idx      = 0;
-                UINT  anim_duration = 0;
-                bool  no_anim       = false;
-                UINT  atlas_x       = 0;
-                UINT  atlas_y       = 0;
-                UINT  atlas_w       = 0;
-                UINT  atlas_h       = 0;
-
-                if (const auto atr = obj->GetComponent<Components::Animator>().lock())
-                {
-                    anim_frame = atr->GetFrame();
-                    anim_idx   = atr->GetAnimation();
-                    no_anim    = !atr->GetActive();
-
-                    if (const auto bone_anim = mtr->GetResource<Resources::BoneAnimation>(anim_idx).lock())
-                    {
-                        // Drop the fractional part and interpolate the frame in shader.
-                        anim_duration = static_cast<UINT>(bone_anim->GetDuration());
-                    }
-
-                    if (const auto atlas_anim = mtr->GetResource<Resources::AtlasAnimation>(anim_idx).lock())
-                    {
-                        AtlasFramePrimitive atlas_frame{};
-                        atlas_anim->GetFrame(anim_frame, atlas_frame);
-
-                        atlas_x = atlas_frame.X;
-                        atlas_y = atlas_frame.Y;
-                        atlas_w = atlas_frame.Width;
-                        atlas_h = atlas_frame.Height;
-                    }
-                }
-
-                // Pre-mapping by the material.
+                // Pre-mapping by the shader domain.
                 for (size_t i = 0; i < map_size; ++i)
                 {
                     const auto domain = static_cast<eShaderDomain>(i);
+                    auto& domain_map = render_map[domain];
 
-                    if (mtr->IsRenderDomain(domain))
+                    RenderMap::accessor acc;
+                    if (!domain_map.find(acc, Components::ModelRenderer::StaticTypeHash()))
                     {
-                        auto& domain_map = render_map[domain];
-
-                        RenderMap::accessor acc;
-
-                        if (!domain_map.find(acc, Components::ModelRenderer::StaticTypeHash()))
+                        domain_map.insert(acc, Components::ModelRenderer::StaticTypeHash());
+                    }
+                    
+                    for (const auto& [mesh, mtr] : shape->GetMeshes())
+                    {
+                        if (mesh.expired() || mtr.expired())
                         {
-                            domain_map.insert(acc, Components::ModelRenderer::StaticTypeHash());
+                            continue;
+                        }
+
+                        const Strong<Resources::Material>& locked_mtr = mtr.lock();
+                        const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
+
+                        MeshMap::accessor mesh_acc;
+                        if (!acc->second.find(mesh_acc, locked_mesh))
+                        {
+                            acc->second.insert(mesh_acc, locked_mesh);
                         }
                         
-                        Graphics::SBs::InstanceModelSB sb{};
-                        sb.SetWorld(tr->GetWorldMatrix().Transpose());
-                        sb.SetFrame(anim_frame);
-                        sb.SetAnimDuration(anim_duration);
-                        sb.SetAnimIndex(anim_idx);
-                        sb.SetNoAnim(no_anim);
-                        sb.SetAtlasX(atlas_x);
-                        sb.SetAtlasY(atlas_y);
-                        sb.SetAtlasW(atlas_w);
-                        sb.SetAtlasH(atlas_h);
+                        if (const Strong<Resources::Shader>& locked_shader = locked_mtr->GetShader().lock())
+                        {
+                            if (locked_shader->GetDomain() != domain)
+                            {
+                                continue;
+                            }
 
-                        // todo: stacking structured buffer data might be get large easily.
-                        acc->second.push_back(std::make_tuple(obj, mtr, aligned_vector<Graphics::SBs::InstanceSB>{sb}));
-                        instance_count.fetch_add(1);
+                            decltype(mesh_acc->second)::accessor shader_acc;
+                            if (!mesh_acc->second.find(shader_acc, locked_shader))
+                            {
+                                mesh_acc->second.insert(shader_acc, locked_shader);
+                            }
+
+                            InstancePair instance_pair;
+                            instance_pair.object = obj;
+                            
+                            instance_pair.instance = GetInstance();
+                            
+                            // Copy the material primitive and animator primitive if it exists.
+                            locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
+
+                            if (const Strong<Components::Animator>& anim = obj->GetComponent<Components::Animator>().lock())
+                            {
+                                anim->GetPrimitive().Apply(*instance_pair.instance);
+                            }
+
+                            instance_pair.textures.insert(
+                                instance_pair.textures.end(),
+                                locked_mtr->GetTextures().begin(),
+                                locked_mtr->GetTextures().end());
+
+                            if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
+                            {
+                                instance_pair.reservedTextures[RESERVED_USER_TEX_BONES] = anims;
+                            }
+                            
+                            if (const Strong<Resources::AtlasAnimationTexture>& atlas = locked_mtr->GetAtlasTexture().lock())
+                            {
+                                instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS] = atlas;
+                            }
+                            
+                            shader_acc->second.emplace_back(instance_pair);
+                        }
                     }
                 }
             }
@@ -141,5 +149,30 @@ namespace Engine
                 domain_map.erase(Components::ModelRenderer::StaticTypeHash());
             }
         }
+
+	    for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)
+        {
+            m_instance_allocator_.deallocate(instance);
+	        instance = nullptr;
+        }
+    }
+
+    Graphics::SBs::InstanceSB* ModelRendererRenderInstanceTask::GetInstance()
+	{
+	    SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
+	    Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
+	    const auto& it = std::ranges::find_if(m_instance_generated_, [&](const Graphics::SBs::InstanceSB* ptr)
+        {
+            return ptr == nullptr;
+        });
+
+	    if (it == m_instance_generated_.end())
+	    {
+	        m_instance_generated_.push_back(generated);
+	        return generated;
+	    }
+
+	    *it = generated;
+        return generated;
     }
 }

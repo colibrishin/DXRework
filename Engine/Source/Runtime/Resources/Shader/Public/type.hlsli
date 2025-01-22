@@ -84,16 +84,11 @@ struct PixelInputType
 #define INST_ATLAS_H(INSTANCE) bufInstance[INSTANCE].iParam[1].w
 #define INST_REPEAT_TEX(INSTANCE) bufInstance[INSTANCE].iParam[2].x
 #define INST_ATLAS_FLAG(INSTANCE) bufInstance[INSTANCE].iParam[2].y
-#define INST_TEX_SLOT0(INSTANCE) bufInstance[INSTANCE].iParam[2].z
-#define INST_TEX_SLOT1(INSTANCE) bufInstance[INSTANCE].iParam[2].w
-#define INST_TEX_SLOT2(INSTANCE) bufInstance[INSTANCE].iParam[3].x
-#define INST_TEX_SLOT3(INSTANCE) bufInstance[INSTANCE].iParam[3].y
-#define INST_TEX_SLOT4(INSTANCE) bufInstance[INSTANCE].iParam[3].z
-#define INST_TEX_SLOT5(INSTANCE) bufInstance[INSTANCE].iParam[3].w
-#define INST_TEX_SLOT6(INSTANCE) bufInstance[INSTANCE].iParam[4].x
-#define INST_TEX_SLOT7(INSTANCE) bufInstance[INSTANCE].iParam[4].y
-#define INST_TEX_SLOT8(INSTANCE) bufInstance[INSTANCE].iParam[4].z
-#define INST_TEX_SLOT9(INSTANCE) bufInstance[INSTANCE].iParam[4].w
+#define INST_TEX_SLOT_OFFSET(INSTANCE) bufInstance[INSTANCE].iParam[2].z
+#define INST_TEX_SLOT0(INSTANCE) bufInstance[INSTANCE].iParam[2].w
+#define INST_TEX_SLOT1(INSTANCE) bufInstance[INSTANCE].iParam[3].x
+#define INST_TEX_SLOT2(INSTANCE) bufInstance[INSTANCE].iParam[3].y
+#define INST_TEX_SLOT3(INSTANCE) bufInstance[INSTANCE].iParam[3].z
 
 #define INST_OVERRIDE_COL(INSTANCE) bufInstance[INSTANCE].vParam[0]
 #define INST_SPECULAR_COL(INSTANCE) bufInstance[INSTANCE].vParam[1]
