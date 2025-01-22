@@ -37,6 +37,8 @@ namespace Engine::Managers
 							resource->OnUIUpdate(&resource_context, dt);
 						}
 					}
+
+					--context;
 				}
 
 				--context;

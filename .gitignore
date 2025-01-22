@@ -409,3 +409,4 @@ Intermediate/***
 kolibri.sln
 
 !Build/
+Programs/CMake/***
