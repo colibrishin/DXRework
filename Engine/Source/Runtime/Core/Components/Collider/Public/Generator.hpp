@@ -125,6 +125,8 @@ namespace Engine
 		}
 	};
 
+	typedef SphereGenerator<16, 16> DefaultSphereGenerator;
+
 	struct CubeGenerator
 	{
 	private:
