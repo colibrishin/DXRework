@@ -68,6 +68,10 @@ namespace Engine::Resources
 						m_b_ui_add_resource_ = false;
 					}
 				}
+				else
+				{
+					Managers::ResourceManager::GetInstance().EndAddResourceDialog();
+				}
 			});
 
 			ProcessAddUI();
@@ -84,6 +88,13 @@ namespace Engine::Resources
 			if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Edit Resources", m_b_ui_edit_resource_})))
 			{
 				context += ui.NewListBox({"Resource Used", -1, -1});
+				context >> ui.NewDragAndDropTarget({"RESOURCE", [&](void* ptr)
+				{
+					if (auto casted = static_cast<Strong<Abstracts::Resource>*>(ptr))
+					{
+						SetResource(*casted);
+					}
+				}});
 
 				for (auto& resources : m_resources_loaded_ | std::views::values)
 				{
@@ -125,6 +136,8 @@ namespace Engine::Resources
 
 			if (Managers::ResourceManager::GetInstance().TryAddResourceDialog(resource_to_load))
 			{
+				m_b_ui_add_resource_ = false;
+
 				for (Strong<Resource>& resource : resource_to_load)
 				{
 					/*
@@ -143,12 +156,7 @@ namespace Engine::Resources
 						continue;
 					}
 
-					if (!m_resources_loaded_.contains(resource->GetTypeHash()))
-					{
-						m_resources_loaded_.insert({resource->GetTypeHash(), {}});
-					}
-
-					m_resources_loaded_[resource->GetTypeHash()].emplace_back(resource);
+					SetResource(resource);
 				}
 			}
 		}
@@ -219,12 +227,12 @@ namespace Engine::Resources
 
 	void Material::SetResource(const Strong<Resource>& resource)
 	{
-		if (resource->GetTypeHash() == Material::StaticTypeHash())
+		if (resource->IsBaseOf(Material::StaticTypeHash()))
 		{
 			return;
 		}
 
-		if (resource->GetTypeHash() == Mesh::StaticTypeHash())
+		if (resource->IsBaseOf(Mesh::StaticTypeHash()))
 		{
 			return;
 		}
@@ -234,7 +242,7 @@ namespace Engine::Resources
 			resource->Load();
 		}
 
-		if (resource->GetTypeHash() == Shader::StaticTypeHash())
+		if (resource->IsBaseOf(Shader::StaticTypeHash()))
 		{
 			if (!resource->GetMetadataPath().empty() &&
 			    std::ranges::find_if
@@ -272,18 +280,18 @@ namespace Engine::Resources
 		m_resources_loaded_[resource->GetTypeHash()].push_back(resource);
 
 
-		if (resource->GetTypeHash() == BoneAnimation::StaticTypeHash())
+		if (resource->IsBaseOf(BoneAnimation::StaticTypeHash()))
 		{
 			m_material_sb_.flags.bone = 1;
 		}
 
-		if (resource->GetTypeHash() == AtlasAnimation::StaticTypeHash())
+		if (resource->IsBaseOf(AtlasAnimation::StaticTypeHash()))
 		{
 			m_material_sb_.flags.atlas = 1;
 		}
 
-		if (resource->GetTypeHash() == BoneAnimation::StaticTypeHash() ||
-			resource->GetTypeHash() == AtlasAnimation::StaticTypeHash())
+		if (resource->IsBaseOf(BoneAnimation::StaticTypeHash()) ||
+			resource->IsBaseOf(AtlasAnimation::StaticTypeHash()))
 		{
 			std::ranges::sort
 			(

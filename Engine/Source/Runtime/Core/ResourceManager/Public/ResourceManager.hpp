@@ -152,6 +152,7 @@ namespace Engine::Managers
 
 #if WITH_EDITOR
 		[[nodiscard]] bool RequestAddResourceDialog();
+		void EndAddResourceDialog();
 		[[nodiscard]] bool TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load);
 
 	private:

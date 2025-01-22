@@ -314,6 +314,49 @@ bool Engine::ImGuiLabelAndVec4Token::DoImpl(const std::string_view label, float*
 	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }
 
+void Engine::ImGuiDragAndDropTargetToken::End() const
+{
+	return ImGui::EndDragDropTarget();
+}
+
+bool Engine::ImGuiDragAndDropTargetToken::DoImpl(const std::string_view tag, const std::function<void(void*)> functor) const
+{
+	const bool ret = ImGui::BeginDragDropTarget();
+
+	if (ret)
+	{
+		if (const auto payload = ImGui::AcceptDragDropPayload(tag.data()))
+		{
+			if (functor)
+			{
+				functor(payload->Data);	
+			}
+		}
+	}
+
+	return ret;
+}
+
+void Engine::ImGuiDragAndDropSourceToken::End() const
+{
+	ImGui::EndDragDropSource();
+}
+
+bool Engine::ImGuiDragAndDropSourceToken::DoImpl(
+	const std::string_view tag, const std::string_view label, const void* ptr, unsigned long long size
+) const
+{
+	const bool ret = ImGui::BeginDragDropSource();
+
+	if (ret)
+	{
+		ImGui::SetDragDropPayload(tag.data(), ptr, size);
+		ImGui::Text(label.data());
+	}
+
+	return ret;
+}
+
 void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR

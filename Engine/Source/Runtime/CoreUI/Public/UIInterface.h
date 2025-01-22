@@ -157,6 +157,8 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
+    NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
+    NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
     struct UIContext
     {
@@ -247,6 +249,20 @@ namespace Engine
             }
         }
 
+        UITokenBase& operator>>(UITokenBase* child) const
+        {
+            if (m_active_child_ && m_active_child_->GetParentInternal())
+            {
+				m_active_child_->GetParentInternal()->AddChild(child);
+                return *child;
+            }
+            else
+            {
+	            m_parent_->AddChild(child);
+                return *m_parent_;
+            }
+        }
+
         UITokenBase& operator--()
         {
 	        m_active_child_ = m_active_child_->GetParentInternal();
@@ -288,6 +304,8 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(Checkbox);
         TOKEN_PURE_GETTER_DECL(Combobox);
         TOKEN_PURE_GETTER_DECL(LabelAndVec4);
+        TOKEN_PURE_GETTER_DECL(DragAndDropSource)
+        TOKEN_PURE_GETTER_DECL(DragAndDropTarget)
 
         virtual void NewFrame() = 0;
 

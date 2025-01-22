@@ -24,7 +24,8 @@ namespace Engine::Managers
 
 				for (const Strong<Abstracts::Resource>& resource : set)
 				{
-					context |= ui.NewSelectable({resource->GetName(), resource->m_ui_info_.dialogOpened});
+					context += ui.NewSelectable({resource->GetName(), resource->m_ui_info_.dialogOpened});
+					context >> ui.NewDragAndDropSource({"RESOURCE", resource->GetName(), &resource, sizeof(decltype(resource))});
 
 					if (resource->m_ui_info_.dialogOpened)
 					{
@@ -161,13 +162,21 @@ namespace Engine::Managers
 		return true;
 	}
 
+	void ResourceManager::EndAddResourceDialog()
+	{
+		if (m_b_ui_add_resource_)
+		{
+			m_b_ui_add_resource_ = false;
+		}
+	}
+
 	bool ResourceManager::TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load)
 	{
-		bool                                                       ret = false;
+		bool                                                       window = true;
 		static std::unordered_map<Weak<Abstracts::Resource>, bool> selection{};
 
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Add Resources to...", ret})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Add Resources to...", window})))
 		{
 			context += ui.NewListBox({"Resource List", -1, -1});
 
@@ -192,13 +201,13 @@ namespace Engine::Managers
 
 			--context;
 
-			(context |= ui.NewButton({"Add Resources"})).SetFunction([&ret]()
+			(context |= ui.NewButton({"Add Resources"})).SetFunction([&window]()
 			{
-				ret = true;
+				window = false;
 			});
 		}
 
-		if (ret)
+		if (!window)
 		{
 			resource_to_load.reserve(selection.size());
 
@@ -216,11 +225,10 @@ namespace Engine::Managers
 			}
 
 			selection.clear();
-
 			m_b_ui_add_resource_ = false;
 		}
 
-		return ret;
+		return !window;
 	}
 #endif
 

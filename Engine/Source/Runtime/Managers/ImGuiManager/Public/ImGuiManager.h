@@ -183,6 +183,24 @@ namespace Engine
 	    [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiDragAndDropTargetToken : DragAndDropTargetToken
+    {
+        using DragAndDropTargetToken::DragAndDropTargetToken;
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, const std::function<void(void*)>) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiDragAndDropSourceToken : DragAndDropSourceToken
+    {
+        using DragAndDropSourceToken::DragAndDropSourceToken;
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, const std::string_view, const void*, unsigned long long) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -209,6 +227,8 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(Checkbox)
         IMGUI_INLINE_GETTER_DECL(Combobox)
         IMGUI_INLINE_GETTER_DECL(LabelAndVec4)
+        IMGUI_INLINE_GETTER_DECL(DragAndDropSource)
+        IMGUI_INLINE_GETTER_DECL(DragAndDropTarget)
 
         void               NewFrame() override;
     };
