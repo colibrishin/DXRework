@@ -12,8 +12,6 @@ lazy_static!{
 fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
 {
     let command_to_run = vec![
-        vec!["config", "user.name", "header-parser"],
-        vec!["config", "user.email", "fake@localhost"], 
         vec!["add", "."], 
         vec!["commit", "-m", "\"Auto commit\""]];
     
@@ -155,9 +153,9 @@ fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
                 file.unlock().expect("Unable to unlock the file");
 
                 let command_to_run = vec![
+                vec!["init"], 
                 vec!["config", "user.name", "header-parser"],
                 vec!["config", "user.email", "fake@localhost"],
-                vec!["init"], 
                 vec!["add", "."], 
                 vec!["commit", "-m", "\"Init\""]];
                 
