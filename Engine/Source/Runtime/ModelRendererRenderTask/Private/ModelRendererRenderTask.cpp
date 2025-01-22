@@ -170,10 +170,12 @@ namespace Engine
 
 	    if (it == m_instance_generated_.end())
 	    {
+	        std::memset(generated, 0, sizeof(decltype(*generated)));
 	        m_instance_generated_.push_back(generated);
 	        return generated;
 	    }
 
+	    std::memset(generated, 0, sizeof(decltype(*generated)));
 	    *it = generated;
         return generated;
     }

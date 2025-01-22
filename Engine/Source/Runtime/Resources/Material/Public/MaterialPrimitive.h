@@ -21,7 +21,7 @@ namespace Engine::Graphics
         EPROPERTY()
         Color        overrideColor;
         EPROPERTY()
-        Color        specularColor = {1.f, 1.f, 1.f, 1.f};
+        Color        specularColor = {0.f, 0.f, 0.f, 1.f};
         EPROPERTY()
         Vector4      clipPlane = {0.f, 0.f, 0.f, 0.f};
 
