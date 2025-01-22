@@ -174,14 +174,13 @@ public abstract class CommonProject : Project
         }
         
         string EngineDir = Utils.GetEngineDir();
-        string WinDir = Environment.GetEnvironmentVariable("WINDIR"); // this is required due to no env variable in fastbuild cmd.
         string GitDir = @"C:\Program Files\Git"; // todo: find git directory with where git
 
         Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
             $@"{EngineDir}\balius\target\release\balius.exe",
             $@"",
             @"[project.Name]-headerparser.log",
-            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}"" {WinDir}",
+            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}""",
             EngineDir,
             true,
             true

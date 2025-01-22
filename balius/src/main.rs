@@ -1,9 +1,8 @@
-use std::io::BufRead;
-use std::io::Read;
 use std::io::Write;
 use std::collections::HashSet;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
+use fs2::FileExt;
 
 lazy_static!{
     static ref target_files: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
@@ -12,9 +11,9 @@ lazy_static!{
 fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
 {
     let mut add_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-    add_proc.current_dir(intermediate_path).args(["add", "."]).output().expect("git add failed");
+    add_proc.current_dir(intermediate_path).args(["add", "."]).status().expect("git add failed");
     let mut commit_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-    commit_proc.current_dir(intermediate_path).args(["commit", "-m", "\"Auto commit\""]).output().expect("git commit failed");
+    commit_proc.current_dir(intermediate_path).args(["commit", "-m", "\"Auto commit\""]).status().expect("git commit failed");
 }
 
 fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path)
@@ -102,27 +101,71 @@ fn copy_headers(intermediate_path: &std::path::Path, project_name: &String, proj
 fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
 {
     println!("Intermediate Path: {}", intermediate_path.display());
+    
+    let init_trap = || 
+        {
+            let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+            git_proc.current_dir(intermediate_path).args(["rev-parse", "HEAD"]);
+            loop 
+            {
+                match git_proc.status()
+                {
+                    Ok(status) => 
+                    {
+                        if status.success()
+                        {
+                            break;
+                        }
+                    },
+                    Err(_) => continue
+                }
+            }
+        };
 
     if !intermediate_path.exists()
     {
-        println!("Header parser seems not initialized...");
-        std::fs::create_dir(&intermediate_path).expect("Unable to create a intermediate path");
-        let gitignore_data : Vec<u8> = "target\nHeaderGenerated\\***\n*.generated.h\n".into();
-        
-        let gitignore_path = intermediate_path.join(".gitignore");
-        let mut gitignore_file = std::fs::File::create(gitignore_path).expect("Unable to create a gitignore");
-        gitignore_file.write(&gitignore_data).expect("Unable to write a gitignore file.");
+        println!("Header parser seems to be not initialized...");
 
-        let command_to_run = vec![
-            vec!["init"], 
-            vec!["add", "."], 
-            vec!["commit", "-m", "\"Init\""]];
-        
-        for command in command_to_run 
+        match std::fs::create_dir(&intermediate_path)
         {
-            let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-            git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
-        }
+            Ok(()) => (),
+            Err(_) => 
+            {
+                init_trap();
+            }
+        };
+
+        let gitignore_data : &[u8] = "target\nHeaderGenerated\\***\n*.generated.h\n".as_bytes();
+        let gitignore_path = intermediate_path.join(".gitignore");
+
+        match std::fs::File::create_new(gitignore_path)
+        {
+            Ok(mut file) =>
+            {
+                file.lock_exclusive().expect("Unable to lock the file");
+                file.write(&gitignore_data).expect("Unable to write a gitignore file.");
+                file.unlock().expect("Unable to unlock the file");
+
+                let command_to_run = vec![
+                vec!["init"], 
+                vec!["add", "."], 
+                vec!["commit", "-m", "\"Init\""]];
+                
+                for command in command_to_run 
+                {
+                    let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+                    git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
+                }
+            }
+            Err(_) =>
+            {
+                init_trap();
+            }
+        }; 
+    }
+    else 
+    {
+        init_trap();
     }
 }
 
@@ -130,7 +173,7 @@ fn main()
 {
     let args: Vec<String> = std::env::args().collect();
 
-    if args.len() < 5
+    if args.len() < 4
     {
         eprintln!("Insufficient arguments");
         return;
@@ -140,7 +183,6 @@ fn main()
     let project_name: &String = &args[2];
     let project_dir = std::path::Path::new(&args[3]);
     let git_dir = std::path::Path::new(&args[4]);
-    let win_dir = std::path::Path::new(&args[5]);
 
     if !engine_dir.exists() 
     {
