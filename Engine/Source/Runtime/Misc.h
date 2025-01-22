@@ -78,6 +78,10 @@ struct polymorphic_type_hash<##Type##> \
 	}(); \
 	static bool is_base_of(const HashType hash) \
 	{ \
+		if constexpr ((upcast_count * sizeof(HashType)) < (1 << 7)) \
+		{ \
+			return std::ranges::find(upcast_array, hash) != upcast_array.end(); \
+		} \
 		static bool first_run = true; \
 		static std::array<HashType, upcast_count> sorted_upcast = upcast_array; \
 		if (first_run) \
