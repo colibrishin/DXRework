@@ -178,10 +178,10 @@ public abstract class CommonProject : Project
         string GitDir = @"C:\Program Files\Git"; // todo: find git directory with where git
 
         Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
-            $@"{EngineDir}\run-parser.bat",
+            $@"{EngineDir}\balius\target\release\balius.exe",
             $@"",
             @"[project.Name]-headerparser.log",
-            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" {WinDir} ""{GitDir}""",
+            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}"" {WinDir}",
             EngineDir,
             true,
             true

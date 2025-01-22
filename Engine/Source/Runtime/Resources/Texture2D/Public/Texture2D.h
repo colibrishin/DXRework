@@ -1,27 +1,7 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
-
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
 #include "Texture2D.generated.h"
-
-namespace Engine
-{
-	struct Texture2DModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::Texture2DModule, Engine::IModule);
-
-namespace Engine
-{
-	struct Texture2DModule : public Engine::IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(Texture2DModule)
-		void             Initialize() override;
-		void             Shutdown() override;
-		bool             DynamicLoadable() override;
-	};
-}
 
 namespace Engine::Resources
 {
