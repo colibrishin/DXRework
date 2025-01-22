@@ -39,7 +39,7 @@ SET Cmake="..\CMake\cmake-3.31.4-windows-x86_64\bin\cmake.exe"
 echo [Build header-parser]
 pushd Programs\header-parser
 start /b /wait "" %Cmake% "CMakeLists.txt"
-start /b /wait "" %Cmake% "--build" "."
+start /b /wait "" %Cmake% "--build" "." "--config" "Release"
 popd
 
 echo [Run VCPKG]
