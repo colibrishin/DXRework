@@ -73,7 +73,7 @@ namespace Engine::Managers
 
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
 		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
-		void UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
+		void TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 
 	private:
 		friend struct SingletonDeleter;

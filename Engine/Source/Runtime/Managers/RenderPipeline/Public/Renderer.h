@@ -41,7 +41,7 @@ namespace Engine::Managers
 		void RegisterContextPostRenderSetup(const std::string_view name, const ContextSetupFunction& postrender_func);
 		void UnregisterContextPostRenderSetup(const std::string_view name);
 
-		void RenderPass(
+		void RenderPassVanilla(
 			float dt,
 			bool shader_bypass,
 			eShaderDomain domain,
@@ -49,7 +49,21 @@ namespace Engine::Managers
 			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
 			const ObjectPredication& predication,
 			const ContextSetupFunction& prerender_predicate, 
-			const ContextSetupFunction& postrender_predicate) const;
+			const ContextSetupFunction& postrender_predicate,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs,
+			const bool call_cleanup = false) const;
+		
+		void RenderPassAssisted(
+			float dt,
+			bool shader_bypass,
+			eShaderDomain domain,
+			const Graphics::SBs::LocalParamSB& local_param_sb,
+			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
+			const ObjectPredication& predication,
+			const ContextSetupFunction& prerender_predicate, 
+			const ContextSetupFunction& postrender_predicate,
+			const bool call_cleanup = false) const;
 
 		[[nodiscard]] bool Ready() const;
 

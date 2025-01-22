@@ -400,15 +400,15 @@ namespace Engine
 
 	struct ENGINE_CORE_API UAVDescription
 	{
-		eFormat Format;
-		eUAVNativeType ViewDimension;
+		eFormat Format{};
+		eUAVNativeType ViewDimension{};
 		union
 		{
 			BufferUAVDescription Buffer;
 			Tex1dUAVDescription Texture1D;
 			Tex1dArrayUAVDescription Texture1DArray;
 			Tex2dUAVDescription Texture2D;
-			Tex2dArrayUAVDescription Texture2DArray;
+			Tex2dArrayUAVDescription Texture2DArray = {};
 			Tex2dMsUAVDescription Texture2DMS;
 			Tex2dMsArrayUAVDescription Texture2DMSArray;
 			Tex3dUAVDescription Texture3D;
@@ -480,15 +480,15 @@ namespace Engine
 
 	struct ENGINE_CORE_API RtvDescription
 	{
-		eFormat Format;
-		eNativeRtvType ViewDimension;
+		eFormat Format{};
+		eNativeRtvType ViewDimension{};
 		union
 		{
 			BufferRtvDescription Buffer;
 			Tex1dRtvDescription Texture1D;
 			Tex1dArrayRtvDescription Texture1DArray;
 			Tex2dRtvDescription Texture2D;
-			Tex2dArrayRtvDescription Texture2DArray;
+			Tex2dArrayRtvDescription Texture2DArray = {};
 			Tex2dMsRtvDescription Texture2DMS;
 			Tex2dMsArrayRtvDescription Texture2DMSArray;
 			Tex3dRtvDescription Texture3D;
@@ -551,15 +551,15 @@ namespace Engine
 
 	struct ENGINE_CORE_API DsvDescription
 	{
-		eFormat Format;
-		eNativeDsvType ViewDimension;
-		eDsvFlag Flags;
+		eFormat Format{};
+		eNativeDsvType ViewDimension{};
+		eDsvFlag Flags{};
 		union
 		{
 			Tex1dDsvDescription Texture1D;
 			Tex1dArrayDsvDescription Texture1DArray;
 			Tex2dDsvDescription Texture2D;
-			Tex2dArrayDsvDescription Texture2DArray;
+			Tex2dArrayDsvDescription Texture2DArray = {};
 			Tex2dMsDsvDescription Texture2DMS;
 			Tex2dMsArrayDsvDescription Texture2DMSArray;
 		};
@@ -576,7 +576,7 @@ namespace Engine
 		UINT64 FirstElement = 0;
 		UINT NumElements = 0;
 		UINT StructureByteStride = 0;
-		eSrvFlag Flags = eSrvFlag::BUFFER_SRV_FLAG_NONE;
+		eSrvFlag Flags = BUFFER_SRV_FLAG_NONE;
 	};
 
 	struct ENGINE_CORE_API Tex1dSrvDescription
@@ -670,16 +670,16 @@ namespace Engine
 
 	struct ENGINE_CORE_API SrvDescription
 	{
-		eFormat Format;
-		eNativeSrvType ViewDimension;
-		UINT Shader4ComponentMapping;
+		eFormat Format{};
+		eNativeSrvType ViewDimension{};
+		UINT Shader4ComponentMapping{};
 		union
 		{
 			BufferSrvDescription Buffer;
 			Tex1dSrvDescription Texture1D;
 			Tex1dArraySrvDescription Texture1DArray;
 			Tex2dSrvDescription Texture2D;
-			Tex2dArraySrvDescription Texture2DArray = {};
+			Tex2dArraySrvDescription Texture2DArray;
 			Tex2dMsSrvDescription Texture2DMS;
 			Tex2dMsArraySrvDescription Texture2DMSArray;
 			Tex3dSrvDescription Texture3D;
@@ -705,10 +705,10 @@ namespace Engine
 		bool					 AsRTV = false;
 		bool					 AsDSV = false;
 		bool					 AsUAV = false;
-		SrvDescription			 Srv{};
-		RtvDescription			 Rtv{};
-		DsvDescription			 Dsv{};
-		UAVDescription			 Uav{};
+		SrvDescription			 Srv = ZeroSet<decltype(Srv)>();
+		RtvDescription			 Rtv = ZeroSet<decltype(Rtv)>();
+		DsvDescription			 Dsv = ZeroSet<decltype(Dsv)>();
+		UAVDescription			 Uav = ZeroSet<decltype(Uav)>();
 	};
 
 	struct ENGINE_CORE_API PrimitiveTexture
@@ -1226,13 +1226,15 @@ namespace Engine
 
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) = 0;
 		virtual void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) = 0;
+		
+		virtual void TransitTo(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
+		virtual void TransitBack(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
+		virtual void TransitToMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
+		virtual void TransitBackMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
 
 		virtual void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
 		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
 		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
-		virtual void Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
-		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) = 0;
 		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
 		virtual void ClearRenderTarget() = 0;
 

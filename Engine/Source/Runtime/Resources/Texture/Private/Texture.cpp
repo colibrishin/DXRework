@@ -7,8 +7,11 @@ namespace Engine::Resources
 {
 	Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
 		: Resource(std::move(path)),
-		  m_desc_(description),
-		  m_type_(type) {}
+		  m_type_(type)
+	{
+		std::memset(&m_desc_, 0 , sizeof(decltype(m_desc_)));
+		m_desc_ = description;
+	}
 
 	eTexType Texture::GetPrimitiveTextureType() const
 	{

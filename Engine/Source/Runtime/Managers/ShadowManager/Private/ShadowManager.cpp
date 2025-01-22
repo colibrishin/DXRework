@@ -45,14 +45,8 @@ namespace Engine::Managers
 					 .MipsLevel = 1,
 					 .Layout = TEX_LAYOUT_UNKNOWN,
 					 .SampleDesc = {1, 0},
-					 .AsSRV = true,
-				 	 .AsRTV = true,
-					 .AsDSV = false,
-					 .AsUAV = false,
-					 .Srv = {},
-					 .Rtv = {},
-					 .Dsv = {},
-					 .Uav = {}
+					 .AsSRV = false,
+				 	 .AsRTV = true
 				 }
 				);
 
@@ -86,12 +80,6 @@ namespace Engine::Managers
 		{
 			GetInstance().BindShadowMaps(context);
 		});
-
-		Renderer::GetInstance().RegisterContextPostRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
-		{
-			GetInstance().UnbindShadowMaps(context);
-		});
-
 	}
 
 	void ShadowManager::PreUpdate(const float dt)
@@ -140,65 +128,58 @@ namespace Engine::Managers
 
 		// # Pass 1 : depth only, building shadow map
 
-		// Build light information structured buffer.
-		std::vector<SBs::LightSB> light_buffer;
-
-		for (const auto& light : m_lights_ | std::views::values)
-		{
-			if (const auto locked = light.lock())
-			{
-				const auto tr = locked->GetComponent<Components::Transform>().lock();
-
-				const auto world = tr->GetWorldMatrix();
-
-				light_buffer.emplace_back
-						(
-						 world.Transpose(),
-						 locked->GetColor(),
-						 locked->GetType(),
-						 locked->GetRange()
-						);
-			}
-		}
-
 		// Notify the number of lights to the shader.
 		RenderPipeline::GetInstance().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
 
 		// If there is no light, it does not need to be updated.
-		if (light_buffer.empty())
+		if (m_lights_.empty())
 		{
 			return;
 		}
 
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
-			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Depth pass for Shadow");
-			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-
-			primitive.commandList->SoftReset();
 			std::vector<SBs::LightVPSB> current_light_vp;
 			GetLightVP(scene, current_light_vp);
 
-			// Also, if there is no light, it does not need to be updated.
-			if (current_light_vp.empty())
+			// Build light information structured buffer.
+			std::vector<SBs::LightSB> light_buffer;
+
+			for (const auto& light : m_lights_ | std::views::values)
 			{
-				return;
+				if (const auto locked = light.lock())
+				{
+					const auto tr = locked->GetComponent<Components::Transform>().lock();
+
+					const auto world = tr->GetWorldMatrix();
+
+					light_buffer.emplace_back
+							(
+							 world.Transpose(),
+							 locked->GetColor(),
+							 locked->GetType(),
+							 locked->GetRange()
+							);
+				}
 			}
 
-			ClearShadowMaps(&primitive);
-			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
-			CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+			
+			{
+				const auto& context = gi.GetNewContext(0, false, L"Light Structured Buffer Transition");
+				const auto& primitive = context.GetPointers();
 
-			m_light_sb_->TransitionCommon(&primitive);
-			m_light_vp_sb_->TransitionCommon(&primitive);
+				primitive.commandList->SoftReset();
+				ClearShadowMaps(&primitive);
+				CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
+				CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
 
-			m_light_sb_->SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
-			m_light_vp_sb_->SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
-
-			m_light_sb_->TransitionToSRV(&primitive);
-			m_light_vp_sb_->TransitionToSRV(&primitive);
-			primitive.commandList->FlagReady();
+				m_light_sb_->SetData(&primitive, m_lights_.size(), light_buffer.data());
+				m_light_vp_sb_->SetData(&primitive, current_light_vp.size(), current_light_vp.data());
+				m_light_sb_->TransitionToSRV(&primitive);
+				m_light_vp_sb_->TransitionToSRV(&primitive);
+				primitive.commandList->FlagReady();
+			}
 			
 			UINT idx = 0;
 
@@ -239,7 +220,16 @@ namespace Engine::Managers
 		local_param.SetParam(0, static_cast<int>(light_idx));
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		Renderer::GetInstance().RenderPass
+		{
+			const auto context   = gi.GetNewContext(0, false, L"Shadow Map Transition");
+			const auto primitive = context.GetPointers();
+			primitive.commandList->SoftReset();
+			gi.TransitTo(&primitive, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
+			gi.TransitTo(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_DSV);
+			primitive.commandList->FlagReady();
+		}
+		
+		Renderer::GetInstance().RenderPassVanilla
 			(
 			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get() },
 			 [](const Strong<Abstracts::ObjectBase>& obj)
@@ -254,17 +244,21 @@ namespace Engine::Managers
 			 },
 			 [&gi, this, &light](const GraphicInterfaceContextPrimitive* context)
 			 {
-				 gi.BindGraphic(context, m_shadow_shader_.get());
-				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
-				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
-				 BindShadowMaps(context);
-			 }, [this, &gi, &light](const GraphicInterfaceContextPrimitive* context)
-			 {
-				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
-				 gi.UnbindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
-				 UnbindShadowMaps(context);
-			 }
+			 	gi.BindGraphic(context, m_shadow_shader_.get());
+				Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
+				gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
+			 }, {}, {}, {}, true
 			);
+
+		{
+			const auto context   = gi.GetNewContext(0, false, L"Shadow Map Transition To Common");
+			const auto primitive = context.GetPointers();
+			primitive.commandList->SoftReset();
+			gi.TransitBack(&primitive, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
+			gi.TransitBack(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_DSV);
+			gi.TransitTo(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_SRV);
+			primitive.commandList->FlagReady();
+		}
 	}
 
 	void ShadowManager::CreateSubfrusta(
@@ -406,7 +400,7 @@ namespace Engine::Managers
 		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
 	}
 
-	void ShadowManager::UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
+	void ShadowManager::TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		aligned_vector<Resources::Texture*> textures;
@@ -417,7 +411,7 @@ namespace Engine::Managers
 		}
 
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
-		gi.UnbindMultiple(context, textures.data(), BIND_TYPE_SRV, textures.size());
+		gi.TransitBackMultiple(context, textures.data(), textures.size(), BIND_TYPE_SRV);
 	}
 
 	void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
@@ -439,7 +433,7 @@ namespace Engine::Managers
 			if (locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
 			{
 				m_lights_.erase(locked->GetLocalID());
-				m_shadow_texs_.erase(locked->GetLocalID());	
+				m_shadow_texs_.erase(locked->GetLocalID()); // todo: remove from resource manager
 			}
 		}
 	}
@@ -456,7 +450,6 @@ namespace Engine::Managers
 		Renderer::GetInstance().UnregisterStructuredBuffer(m_light_vp_sb_.get());
 		
 		Renderer::GetInstance().UnregisterContextPreRenderSetup("Shadow Manager");
-		Renderer::GetInstance().UnregisterContextPostRenderSetup("Shadow Manager");
 	}
 
 	void ShadowManager::PreSwapScene(Weak<Scene> scene)
@@ -492,12 +485,14 @@ namespace Engine::Managers
 
 	void ShadowManager::ClearShadowMaps(const GraphicInterfaceContextPrimitive* context)
 	{
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		
 		for (auto& tex : m_shadow_texs_ | std::views::values)
 		{
+			gi.TransitBack(context, tex.get(), BIND_TYPE_SRV);
 			tex->Clear(context);
 		}
 
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		gi.Clear(context, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 	}
 } // namespace Engine::Managers

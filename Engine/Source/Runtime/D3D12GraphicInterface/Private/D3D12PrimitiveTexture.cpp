@@ -307,11 +307,14 @@ void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 
 void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 {
+	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+
 	const auto& compare = [](const void* a, const void* b, size_t length)
 	{
 		auto ba = static_cast<const char*>(a);
 		auto bb = static_cast<const char*>(b);
-		while (length--)
+
+		while(length--)
 		{
 			if (*ba != *bb)
 			{
@@ -324,8 +327,6 @@ void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 
 		return true;
 	};
-
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
 	
 	if (m_description_.AsSRV)
 	{

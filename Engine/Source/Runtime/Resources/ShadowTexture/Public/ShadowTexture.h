@@ -28,9 +28,7 @@ namespace Engine::Resources
 				 .Layout = TEX_LAYOUT_UNKNOWN,
 				 .SampleDesc = {1, 0},
 				 .AsSRV = true,
-				 .AsRTV = false,
 				 .AsDSV = true,
-				 .AsUAV = false,
 				 .Srv = {
 					.Format = TEX_FORMAT_R32_FLOAT,
 					.ViewDimension = SRV_DIMENSION_TEXTURE2DARRAY,
@@ -44,7 +42,6 @@ namespace Engine::Resources
 						.ResourceMinLODClamp = 0.f
 					},
 				 },
-				.Rtv = {},
 				.Dsv = {
 					.Format = TEX_FORMAT_D32_FLOAT,
 					.ViewDimension = DSV_DIMENSION_TEXTURE2DARRAY,

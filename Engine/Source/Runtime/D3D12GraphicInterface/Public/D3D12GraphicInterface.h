@@ -72,12 +72,19 @@ namespace Engine
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) override;
 		void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) override;
 		void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) override;
+
+		inline void Transit(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const D3D12_RESOURCE_STATES before, const D3D12_RESOURCE_STATES after);
+		void TransitTo(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) override;
+		void TransitBack(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) override;
+		
+		inline void TransitMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+		void TransitToMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) override;
+		void TransitBackMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) override;
+		
 		void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) override;
-		void Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) override;
 		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
 		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) override;
-		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
-		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) override;
+
 		void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) override;
 		void ClearRenderTarget() override;
 		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) override;

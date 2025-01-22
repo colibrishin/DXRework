@@ -24,29 +24,29 @@ namespace Engine::Resources
 	public:
 		Shader(
 			const std::filesystem::path& path,
-			const eShaderDomain          domain,
-			const bool                   depth_enabled,
-			const eShaderDepthMode          depth,
-			const eShaderDepthFunction     depth_func,
-			const eShaderSamplerAddress         sampler_addr,
-			const eShaderSamplerFunction        sampler_func,
-			const eSamplerFilter sampler_filter,
-			const eShaderRasterizerCull rasterizer_cull,
-			const eShaderRasterizerDraw rasterizer_draw,
+			eShaderDomain                domain,
+			bool                         depth_enabled,
+			eShaderDepthMode             depth,
+			eShaderDepthFunction         depth_func,
+			eShaderSamplerAddress        sampler_addr,
+			eShaderSamplerFunction       sampler_func,
+			eSamplerFilter               sampler_filter,
+			eShaderRasterizerCull        rasterizer_cull,
+			eShaderRasterizerDraw        rasterizer_draw,
 			const std::vector<eFormat>&  rtv_formats,
-			const eFormat                dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
-			const ePrimitiveTopology     topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-			const ePrimitiveTopologyType topology_type = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-			const eSampler               sampler_slot  = SAMPLER_TEXTURE
+			eFormat                      dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
+			ePrimitiveTopology           topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			ePrimitiveTopologyType       topology_type = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+			eSampler                     sampler_slot  = SAMPLER_TEXTURE
 		);
 
 		~Shader() override = default;
 
 		void Initialize() override;
-		void PreUpdate(const float dt) override;
-		void Update(const float dt) override;
-		void FixedUpdate(const float dt) override;
-		void PostUpdate(const float dt) override;
+		void PreUpdate(float dt) override;
+		void Update(float dt) override;
+		void FixedUpdate(float dt) override;
+		void PostUpdate(float dt) override;
 
 		[[nodiscard]] eShaderDomain GetDomain() const;
 		[[nodiscard]] bool IsDepthEnabled() const;

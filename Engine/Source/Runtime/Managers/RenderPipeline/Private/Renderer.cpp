@@ -45,19 +45,20 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
+			RenderPassAssisted(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
 		}
 	}
 
-	void Renderer::RenderPass(
-		const float                                                dt,
-		const bool                                                 shader_bypass,
-		const eShaderDomain                                        domain,
-		const SBs::LocalParamSB&                                   local_param_sb,
+	void Renderer::RenderPassAssisted(
+		float                                                   dt,
+		bool                                                    shader_bypass,
+		eShaderDomain                                           domain,
+		const SBs::LocalParamSB&                                local_param_sb,
 		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-		const ObjectPredication&                                   predication,
-		const ContextSetupFunction&                                prerender_predicate,
-		const ContextSetupFunction&                                postrender_predicate
+		const ObjectPredication&                                predication,
+		const ContextSetupFunction&                             prerender_predicate,
+		const ContextSetupFunction&                             postrender_predicate,
+		const bool call_cleanup
 	) const
 	{
 		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
@@ -75,6 +76,14 @@ namespace Engine::Managers
 					 m_prerender_funcs_,
 					 m_postrender_funcs_
 					);
+		}
+
+		if (call_cleanup)
+		{
+			for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+			{
+				ptr->Cleanup();
+			}
 		}
 	}
 
@@ -164,6 +173,44 @@ namespace Engine::Managers
 		if (m_postrender_funcs_.contains(name))
 		{
 			m_postrender_funcs_.erase(name);
+		}
+	}
+
+	void Renderer::RenderPassVanilla(
+		float dt, bool shader_bypass, eShaderDomain domain,
+		const SBs::LocalParamSB& local_param_sb,
+		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
+		const ObjectPredication& predication,
+		const ContextSetupFunction& prerender_predicate,
+		const ContextSetupFunction& postrender_predicate,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs,
+		const bool call_cleanup
+	) const
+	{
+		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+		{
+			ptr->Run
+					(
+					 dt,
+					 shader_bypass,
+					 &m_render_candidates_[domain],
+					 additional_sbs,
+					 local_param_sb,
+					 predication,
+					 prerender_predicate,
+					 postrender_predicate,
+					 prerender_funcs,
+					 postrender_funcs
+					);
+		}
+
+		if (call_cleanup)
+		{
+			for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+			{
+				ptr->Cleanup();
+			}
 		}
 	}
 

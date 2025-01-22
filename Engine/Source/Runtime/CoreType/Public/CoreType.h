@@ -123,6 +123,15 @@ struct simple_gc_scope
 	}
 };
 
+template <typename T>
+T ZeroSet()
+{
+	T new_t{};
+	// cannot be defined as constexpr due to the reinterpret cast.
+	std::fill_n(reinterpret_cast<char*>(&new_t), sizeof(T), 0);
+	return new_t;
+}
+
 namespace crc32
 {
 	/// merge two CRC32 such that result = crc32(dataB, lengthB, crc32(dataA, lengthA))
@@ -870,12 +879,10 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 	virtual const HashTypeImpl* Fetch() const
 	{
 		throw std::runtime_error("Cannot fetch a hash from a base class.");
-		return nullptr;
 	}
-	virtual bool IsDerivedOf(const HashTypeImpl* other) const 
+	virtual bool IsDerivedOf(const HashTypeImpl* /*other*/) const 
 	{
 		throw std::runtime_error("Cannot check the base class from HashTypeImpl");
-		return false;
 	}
 
 	constexpr HashTypeImpl() = default;
@@ -967,7 +974,7 @@ struct polymorphic_type_hash<void>
 	static constexpr size_t upcast_count = 1;
 	static constexpr HashArray<upcast_count> upcast_array{ &type_hash<void>::value };
 
-	static bool is_derived_of(const HashType base)
+	static bool is_derived_of(const HashType /*base*/)
 	{
 		return true;
 	}

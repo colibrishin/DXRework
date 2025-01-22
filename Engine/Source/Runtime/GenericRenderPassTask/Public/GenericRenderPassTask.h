@@ -70,6 +70,9 @@ namespace Engine
 			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
 			const aligned_vector<InstancePair>&                               instance_pairs
 		);
+		void RecordUsedTexture(
+			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
+		);
 
 
 		inline void DrawPhase_MultiThread(
@@ -82,14 +85,16 @@ namespace Engine
 			const GraphicInterfaceContextPrimitive*               context,
 			const aligned_vector<Graphics::SBs::InstanceSB*>&     instances,
 			const aligned_vector<TexturePair>&                    texture_pairs
-		) const;
+		);
 
 		SpinLockTicket m_gi_ticket_;
 		SpinLockTicket m_local_param_pool_ticket;
 		SpinLockTicket m_instance_pool_ticket;
+		SpinLockTicket m_texture_record_ticket_;
 
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};
 		tbb::concurrent_vector<Unique<GraphicHeapBase>> m_heaps_{};
+		std::vector<Resources::Texture*> m_used_shader_textures_{};
 	};
 }

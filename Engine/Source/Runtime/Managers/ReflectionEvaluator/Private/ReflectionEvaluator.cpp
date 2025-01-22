@@ -51,6 +51,6 @@ namespace Engine::Managers
 
 	void ReflectionEvaluator::UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context)
 	{
-		GraphicInterfaceAccessor::GetInterface().Unbind(context, m_copy_.get(), BIND_TYPE_SRV);
+		GraphicInterfaceAccessor::GetInterface().TransitBack(context, m_copy_.get(), BIND_TYPE_SRV);
 	}
 }

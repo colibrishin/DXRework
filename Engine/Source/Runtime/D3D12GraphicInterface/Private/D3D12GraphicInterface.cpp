@@ -282,6 +282,173 @@ void Engine::D3D12GraphicInterface::BindCompute(
 	cmd->GetList()->SetPipelineState(static_cast<ID3D12PipelineState*>(shader->GetComputePrimitiveShader().GetNativeShader()));
 }
 
+void Engine::D3D12GraphicInterface::Transit(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const D3D12_RESOURCE_STATES before,
+	const D3D12_RESOURCE_STATES after
+)
+{
+	const D3D12PrimitiveTexture* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
+	auto                         res       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+	auto                         cmd       = static_cast<CommandPair*>(context->commandList);
+
+	const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			before,
+			after
+		);
+	
+	cmd->GetList()->ResourceBarrier(1, &transition);
+}
+
+void Engine::D3D12GraphicInterface::TransitTo(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type
+)
+{
+	switch (bind_type)
+	{
+	case BIND_TYPE_SRV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+			break;
+		}
+	case BIND_TYPE_UAV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			break;
+		}
+	case BIND_TYPE_RTV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+			break;
+		}
+	case BIND_TYPE_DSV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			break;
+		}
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_CB:
+	case BIND_TYPE_COUNT:
+	default: break;
+	}
+}
+
+void Engine::D3D12GraphicInterface::TransitBack(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type
+)
+{
+	switch (bind_type)
+	{
+	case BIND_TYPE_SRV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+			break;
+		}
+	case BIND_TYPE_UAV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
+			break;
+		}
+	case BIND_TYPE_RTV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+			break;
+		}
+	case BIND_TYPE_DSV:
+		{
+			Transit(context, tex, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
+			break;
+		}
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_CB:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+}
+
+void Engine::D3D12GraphicInterface::TransitMultiple(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after
+)
+{
+	const auto cmd  = static_cast<CommandPair*>(context->commandList);
+
+	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
+	transitions.reserve(count);
+	
+	for (size_t i = 0; i < count; ++i)
+	{
+		const auto tex = static_cast<ID3D12Resource*>(texes[i]->GetPrimitiveTexture()->GetNativeTexture());
+
+		const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 tex,
+				 before,
+				 after
+				);
+
+		transitions.push_back(transition);
+	}
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
+}
+
+void Engine::D3D12GraphicInterface::TransitToMultiple(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	const eBindType bind_type
+)
+{
+	switch(bind_type)
+	{
+	case BIND_TYPE_UAV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		break;
+	case BIND_TYPE_SRV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+		break;
+	case BIND_TYPE_DSV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		break;
+	case BIND_TYPE_RTV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		break;
+	case BIND_TYPE_CB:
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+}
+
+void Engine::D3D12GraphicInterface::TransitBackMultiple(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	const eBindType bind_type
+)
+{
+	switch(bind_type)
+	{
+	case BIND_TYPE_UAV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
+		break;
+	case BIND_TYPE_SRV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+		break;
+	case BIND_TYPE_DSV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
+		break;
+	case BIND_TYPE_RTV:
+		TransitMultiple(context, texes, count, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+		break;
+	case BIND_TYPE_CB:
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+}
+
 void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset)
 {
 	const D3D12PrimitiveTexture* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
@@ -293,41 +460,16 @@ void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive*
 	{
 	case BIND_TYPE_SRV:
 	{
-		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
-		);
-
-		cmd->GetList()->ResourceBarrier(1, &srv_trans);
 		heap->SetShaderResource(primitive->GetSrv()->GetCPUDescriptorHandleForHeapStart(), slot + offset);
 		break;
 	}
 	case BIND_TYPE_UAV:
 	{
-		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-		);
-
-		cmd->GetList()->ResourceBarrier(1, &uav_trans);
 		heap->SetUnorderedAccess(primitive->GetUav()->GetCPUDescriptorHandleForHeapStart(), slot + offset);
 		break;
 	}
 	case BIND_TYPE_RTV:
 	{
-		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_RENDER_TARGET
-		);
-
-		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
-
 		const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
 		{
 			primitive->GetRtv()->GetCPUDescriptorHandleForHeapStart()
@@ -344,19 +486,6 @@ void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive*
 	}
 	case BIND_TYPE_DSV:
 	{
-		break;
-	}
-	case BIND_TYPE_DSV_ONLY:
-	{
-		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE
-		);
-
-		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
-
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
 		{
 			primitive->GetDsv()->GetCPUDescriptorHandleForHeapStart()
@@ -380,105 +509,19 @@ void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive*
 	}
 }
 
-void Engine::D3D12GraphicInterface::Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type)
-{
-	auto               primitive = static_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
-	auto               res       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
-	const CommandPair* cmd       = static_cast<CommandPair*>(context->commandList);
-
-	const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
-			(
-			 res,
-			 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			 D3D12_RESOURCE_STATE_COMMON
-			);
-
-	const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-			(
-			 res,
-			 D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
-			 D3D12_RESOURCE_STATE_COMMON
-			);
-
-	const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-			(
-			 res,
-			 D3D12_RESOURCE_STATE_RENDER_TARGET,
-			 D3D12_RESOURCE_STATE_COMMON
-			);
-
-	const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			res,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			D3D12_RESOURCE_STATE_COMMON
-		);
-
-	switch (bind_type)
-	{
-	case BIND_TYPE_UAV:
-		cmd->GetList()->ResourceBarrier(1, &uav_trans);
-		break;
-	case BIND_TYPE_SRV:
-		cmd->GetList()->ResourceBarrier(1, &srv_trans);
-		break;
-	case BIND_TYPE_RTV:
-		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
-		break;
-	case BIND_TYPE_DSV:
-	case BIND_TYPE_DSV_ONLY:
-		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
-		break;
-	case BIND_TYPE_SAMPLER:
-	case BIND_TYPE_CB:
-	case BIND_TYPE_COUNT:
-	default:
-		break;
-	}
-}
-
 void Engine::D3D12GraphicInterface::BindMultiple(
 			const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
 			Resources::Texture* dsv
 		)
 {
 	CommandPair* cmd = static_cast<CommandPair*>(context->commandList);
-
-	std::vector<D3D12_RESOURCE_BARRIER> transitions;
-	transitions.reserve(rtv_count + 1);
-
+	
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs_heap;
-	rtvs_heap.reserve(rtv_count);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv_heap;
-
-	for (size_t i = 0; i < rtv_count; ++i) 
-	{
-		auto rtv = reinterpret_cast<D3D12PrimitiveTexture*>(rtvs[i]->GetPrimitiveTexture());
-		
-		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			static_cast<ID3D12Resource*>(rtv->GetNativeTexture()),
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_RENDER_TARGET
-		);
-
-		rtvs_heap.push_back(rtv->GetRtv()->GetCPUDescriptorHandleForHeapStart());
-		transitions.push_back(rtv_transition);
-	}
 
 	D3D12PrimitiveTexture* native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
 	dsv_heap = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
 
-	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-	(
-		static_cast<ID3D12Resource*>(native_dsv->GetNativeTexture()),
-		D3D12_RESOURCE_STATE_COMMON,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE
-	);
-
-	transitions.push_back(dsv_transition);
-
-	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
 	cmd->GetList()->OMSetRenderTargets
 	(
 		rtvs_heap.size(),
@@ -496,135 +539,8 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 	const UINT offset,
 	const size_t count)
 {
-	const auto cmd  = static_cast<CommandPair*>(context->commandList);
 	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
-
-	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
-	transitions.reserve(count);
-
-	const auto& doTransition = [&textures, &count, &transitions]<D3D12_RESOURCE_STATES State>()
-	{
-		for (size_t i = 0; i < count; ++i)
-		{
-			const auto tex = static_cast<ID3D12Resource*>(textures[i]->GetPrimitiveTexture()->GetNativeTexture());
-
-			const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-					(
-					 tex,
-					 D3D12_RESOURCE_STATE_COMMON,
-					 State
-					);
-
-			transitions.push_back(uav_transition);
-		}
-	};
-
-	switch(bind_type)
-	{
-	case BIND_TYPE_UAV:
-		doTransition.operator()<D3D12_RESOURCE_STATE_UNORDERED_ACCESS>();
-		break;
-	case BIND_TYPE_SRV:
-		doTransition.operator()<D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE>();
-		break;
-	case BIND_TYPE_DSV:
-	case BIND_TYPE_CB:	
-	case BIND_TYPE_RTV:
-	case BIND_TYPE_SAMPLER:
-	case BIND_TYPE_DSV_ONLY:
-	case BIND_TYPE_COUNT:
-	default:
-		break;
-	}
-
-	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
 	heap->SetShaderResources(textures, count, slot + offset);
-}
-
-void Engine::D3D12GraphicInterface::UnbindMultiple(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
-	Resources::Texture* dsv
-)
-{
-	auto cmd = static_cast<CommandPair*>(context->commandList);
-
-	std::vector<D3D12_RESOURCE_BARRIER> transitions;
-	transitions.reserve(rtv_count + 1);
-
-	for (size_t i = 0; i < rtv_count; ++i)
-	{
-		auto rtv = reinterpret_cast<D3D12PrimitiveTexture*>(rtvs[i]->GetPrimitiveTexture());
-
-		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			static_cast<ID3D12Resource*>(rtv->GetNativeTexture()),
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_COMMON
-		);
-
-		transitions.push_back(rtv_transition);
-	}
-
-	auto native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
-
-	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-	(
-		static_cast<ID3D12Resource*>(native_dsv->GetNativeTexture()),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_COMMON
-	);
-
-	transitions.push_back(dsv_transition);
-
-	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
-}
-
-void Engine::D3D12GraphicInterface::UnbindMultiple(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures,
-	const eBindType bind_type, const size_t count
-)
-{
-	const auto cmd  = static_cast<CommandPair*>(context->commandList);
-
-	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
-	transitions.reserve(count);
-
-	const auto& doTransition = [&textures, &count, &transitions]<D3D12_RESOURCE_STATES State>()
-	{
-		for (size_t i = 0; i < count; ++i)
-		{
-			const auto tex = static_cast<ID3D12Resource*>(textures[i]->GetPrimitiveTexture()->GetNativeTexture());
-
-			const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
-					(
-					 tex,
-					 State,
-					 D3D12_RESOURCE_STATE_COMMON
-					);
-
-			transitions.push_back(uav_transition);
-		}
-	};
-
-	switch(bind_type)
-	{
-	case BIND_TYPE_UAV:
-		doTransition.operator()<D3D12_RESOURCE_STATE_UNORDERED_ACCESS>();
-		break;
-	case BIND_TYPE_SRV:
-		doTransition.operator()<D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE>();
-		break;
-	case BIND_TYPE_DSV:
-	case BIND_TYPE_CB:	
-	case BIND_TYPE_RTV:
-	case BIND_TYPE_SAMPLER:
-	case BIND_TYPE_DSV_ONLY:
-	case BIND_TYPE_COUNT:
-	default:
-		break;
-	}
-
-	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
 }
 
 void Engine::D3D12GraphicInterface::Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type)

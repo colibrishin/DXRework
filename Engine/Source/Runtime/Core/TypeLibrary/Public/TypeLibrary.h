@@ -381,7 +381,6 @@ namespace Engine
 		BIND_TYPE_SRV,
 		BIND_TYPE_RTV,
 		BIND_TYPE_DSV,
-		BIND_TYPE_DSV_ONLY,
 		BIND_TYPE_COUNT
 	};
 

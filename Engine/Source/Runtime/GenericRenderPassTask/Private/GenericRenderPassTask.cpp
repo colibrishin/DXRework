@@ -15,7 +15,8 @@ namespace Engine
 	GenericRenderPassTask::GenericRenderPassTask()
 		: m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
 		  m_local_param_pool_ticket(SingletonSpinLock::GetInstance().Register()),
-		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()) {}
+		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()),
+		  m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()) {}
 
 	void GenericRenderPassTask::Run(
 		float                                                             dt,
@@ -30,11 +31,16 @@ namespace Engine
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 	)
 	{
+		for (auto& tex : m_used_shader_textures_)
+		{
+			tex = nullptr;
+		}
+		
 		if (domain_map->empty())
 		{
 			return;
 		}
-
+		
 		// Filter the instances by the predicate
 		uint64_t instance_count = 0;
 		IntermediateMeshMap intermediate_mesh_map;
@@ -58,13 +64,25 @@ namespace Engine
 				});
 			}
 		}
+
+		auto& gi = GraphicInterfaceAccessor::GetInterface();
+		auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
+		auto primitive = context.GetPointers();
+		
+		primitive.commandList->SoftReset();
+		const auto& range = std::ranges::unique(m_used_shader_textures_);
+		const size_t unique_idx = std::distance(range.begin(), range.end());
+		gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+		primitive.commandList->FlagReady();
 	}
 
 	void GenericRenderPassTask::Cleanup()
 	{
 		m_local_param_pool_.reset();
 		m_instance_pool_.reset();
-		m_heaps_.clear();
+		m_heaps_.clear(); // todo: reuse
+
+		std::ranges::fill(m_used_shader_textures_, nullptr);
 	}
 
 	void GenericRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateMeshMap& out_map) const
@@ -152,6 +170,7 @@ namespace Engine
 		sb.CopySRVHeap(&temp_context);
 		current_heap->BindGraphic(&temp_context);
 		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&temp_context);
+		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
 
 		// Manual release
 		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
@@ -200,6 +219,24 @@ namespace Engine
 		temp_context.commandList->FlagReady();
 	}
 
+	void GenericRenderPassTask::RecordUsedTexture(const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex)
+	{
+		auto tt = SingletonSpinLock::GetInstance().Lock(m_texture_record_ticket_);
+		if (std::ranges::find(m_used_shader_textures_, tex.get()) == m_used_shader_textures_.end())
+		{
+			gi.TransitTo(context, tex.get(), BIND_TYPE_SRV);
+			if (const auto& empty_slot = std::ranges::find(m_used_shader_textures_, nullptr);
+				empty_slot == m_used_shader_textures_.end())
+			{
+				m_used_shader_textures_.push_back(tex.get());	
+			}
+			else
+			{
+				*empty_slot = tex.get();
+			}
+		}
+	}
+
 	void GenericRenderPassTask::DrawPhase_MultiThread(
 		float dt,
 		bool shader_bypass,
@@ -210,7 +247,7 @@ namespace Engine
 		const GraphicInterfaceContextPrimitive* context,
 		const aligned_vector<Graphics::SBs::InstanceSB*>& instances,
 		const aligned_vector<TexturePair>& texture_pairs
-	) const
+	)
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
 		context->heap->BindGraphic(context);
@@ -275,6 +312,7 @@ namespace Engine
 				{
 					if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].textures->at(j))
 					{
+						RecordUsedTexture(context, gi, tex);
 						gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, total_offset);
 						++total_offset;
 					}
@@ -288,10 +326,12 @@ namespace Engine
 						{
 							if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
 							{
+								RecordUsedTexture(context, gi, tex);
 								gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0);
 							}
 							else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
 							{
+								RecordUsedTexture(context, gi, tex);
 								gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0);
 							}
 						}
@@ -300,35 +340,6 @@ namespace Engine
 			}
 
 			gi.Draw(context, locked_mesh.get(), instance_to_resolve, instance_resolved);
-
-			for (size_t i = 0; i < instance_to_resolve; ++i)
-			{
-				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
-				{
-					if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].textures->at(j))
-					{
-						gi.Unbind(context, tex.get(), BIND_TYPE_SRV);	
-					}
-				}
-
-				if (texture_pairs[instance_resolved + i].reservedTextures->size())
-				{
-					for (size_t j = 0; j < texture_pairs[instance_resolved + i].reservedTextures->size(); ++j)
-					{
-						if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j))
-						{
-							if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
-							{
-								gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
-							}
-							else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
-							{
-								gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
-							}
-						}
-					}
-				}
-			}
 
 			instance_buffer.TransitionCommon(context);
 			instance_resolved += instance_to_resolve;
