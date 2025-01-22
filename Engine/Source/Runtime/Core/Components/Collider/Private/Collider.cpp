@@ -3,6 +3,7 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "../Public/Generator.hpp"
 
 #ifdef PHYSX_ENABLED
 #include <PxMaterial.h>
@@ -98,14 +99,18 @@ namespace Engine::Components
 	{
 		if (s_cube_vertices_.empty())
 		{
-			s_cube_vertices_ = CubeGenerator::GetCubeVertices();
-			s_cube_indices_ = CubeGenerator::GetCubeIndices();
+			constexpr auto cube_v = CubeGenerator::GetCubeVertices();
+			s_cube_vertices_.insert(s_cube_vertices_.end(), cube_v.begin(), cube_v.end());
+			constexpr auto cube_i = CubeGenerator::GetCubeIndices();
+			s_cube_indices_.insert(s_cube_indices_.end(), cube_i.begin(), cube_i.end());
 		}
 
 		if (s_sphere_vertices_.empty())
 		{
-			s_sphere_vertices_ = SphereGenerator<>::GetSphereVertices();
-			s_sphere_indices_ = SphereGenerator<>::GetSphereIndices();
+			constexpr auto sphere_v = SphereGenerator<>::GetSphereVertices();
+			s_sphere_vertices_.insert(s_sphere_vertices_.end(), sphere_v.begin(), sphere_v.end());
+			constexpr auto sphere_i = SphereGenerator<>::GetSphereIndices();
+			s_sphere_indices_.insert(s_sphere_indices_.end(), sphere_i.begin(), sphere_i.end());
 		}
 #ifdef PHYSX_ENABLED
 		if (!s_px_cube_stock_)

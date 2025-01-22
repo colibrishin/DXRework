@@ -4,3 +4,6 @@
 [submodule "Engine/Source/ThirdParty/PhysX/PhysX"]
 	path = Engine/Source/ThirdParty/PhysX/PhysX
 	url = https://github.com/NVIDIA-Omniverse/PhysX.git
+[submodule "Engine/Source/ThirdParty/GCEM/GCEM"]
+	path = Engine/Source/ThirdParty/GCEM/GCEM
+	url = https://github.com/kthohr/gcem.git
