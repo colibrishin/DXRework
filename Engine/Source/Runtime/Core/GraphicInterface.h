@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/serialization/access.hpp>
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
@@ -347,6 +348,15 @@ namespace Engine
 	struct ENGINE_CORE_API Tex1dUAVDescription
 	{
 		UINT MipSlice;
+
+	private:
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& MipSlice;
+		}
 	};
 
 	struct ENGINE_CORE_API Tex1dArrayUAVDescription
@@ -571,58 +581,58 @@ namespace Engine
 
 	struct ENGINE_CORE_API Tex1dSrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API Tex1dArraySrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
-		UINT FirstArraySlice;
-		UINT ArraySize;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
+		UINT  FirstArraySlice;
+		UINT  ArraySize;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API Tex2dSrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
-		UINT PlaneSlice;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
+		UINT  PlaneSlice;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API Tex2dArraySrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
-		UINT FirstArraySlice;
-		UINT ArraySize;
-		UINT PlaneSlice;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
+		UINT  FirstArraySlice;
+		UINT  ArraySize;
+		UINT  PlaneSlice;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API Tex3dSrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API TexCubeSrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
 		FLOAT ResourceMinLODClamp;
 	};
 
 	struct ENGINE_CORE_API TexCubeArraySrvDescription
 	{
-		UINT MostDetailedMip;
-		UINT MipLevels;
-		UINT First2DArrayFace;
-		UINT NumCubes;
+		UINT  MostDetailedMip;
+		UINT  MipLevels;
+		UINT  First2DArrayFace;
+		UINT  NumCubes;
 		FLOAT ResourceMinLODClamp;
 	};
 
@@ -1340,4 +1350,429 @@ namespace Engine
 		size_t                           m_allocated_size_;
 		size_t                           m_used_size_;
 	};
+}
+
+namespace boost::serialization
+{
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::AccelStructSrvDescription& x, const unsigned int version)
+	{
+		ar& x.Location;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsArraySrvDescription& x, const unsigned int version)
+	{
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsSrvDescription& x, const unsigned int version) {}
+
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::TexCubeArraySrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.First2DArrayFace;
+		ar& x.NumCubes;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::TexCubeSrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex3dSrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dArraySrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+		ar& x.PlaneSlice;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dSrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.PlaneSlice;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dArraySrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dSrvDescription& x, const unsigned int version)
+	{
+		ar& x.MostDetailedMip;
+		ar& x.MipLevels;
+		ar& x.ResourceMinLODClamp;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::BufferSrvDescription& x, const unsigned int version)
+	{
+		ar& x.FirstElement;
+		ar& x.NumElements;
+		ar& x.StructureByteStride;
+		ar& x.Flags;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsArrayDsvDescription& x, const unsigned int version)
+	{
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsDsvDescription& x, const unsigned int version) {}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dArrayDsvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dDsvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dArrayDsvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dDsvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex3dRtvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstWSlice;
+		ar& x.WSize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsArrayRtvDescription& x, const unsigned int version)
+	{
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dArrayRtvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+		ar& x.PlaneSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsRtvDescription& x, const unsigned int version) {}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dRtvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.PlaneSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dArrayRtvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dRtvDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::BufferRtvDescription& x, const unsigned int version)
+	{
+		ar& x.FirstElement;
+		ar& x.NumElements;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex3dUAVDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstWSlice;
+		ar& x.WSize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsArrayUAVDescription& x, const unsigned int version)
+	{
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dMsUAVDescription& x, const unsigned int version) {}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dArrayUAVDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+		ar& x.PlaneSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex2dUAVDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.PlaneSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dArrayUAVDescription& x, const unsigned int version)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::BufferUAVDescription& x, const unsigned int version)
+	{
+		ar& x.FirstElement;
+		ar& x.NumElements;
+		ar& x.StructureByteStride;
+		ar& x.CounterOffsetInBytes;
+		ar& x.Flags;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::SamplerDescription& x, const unsigned int version) 
+	{
+		ar& x.Count;
+		ar& x.Quality;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::UAVDescription& x, const unsigned int version)
+	{
+		ar& x.Format;
+		ar& x.ViewDimension;
+
+		switch (x.ViewDimension)
+		{
+		case Engine::UAV_DIMENSION_BUFFER:
+			ar& x.Buffer;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE1D:
+			ar& x.Texture1D;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE1DARRAY:
+			ar& x.Texture1DArray;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE2D:
+			ar& x.Texture2D;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE2DARRAY:
+			ar& x.Texture2DArray;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE2DMS:
+			ar& x.Texture2DMS;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE2DMSARRAY:
+			ar& x.Texture2DMSArray;
+			break;
+		case Engine::UAV_DIMENSION_TEXTURE3D:
+			ar& x.Texture3D;
+			break;
+		case Engine::UAV_DIMENSION_UNKNOWN:
+		default:
+			break;
+		}
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::DsvDescription& x, const unsigned int version)
+	{
+		ar& x.Format;
+		ar& x.ViewDimension;
+		ar& x.Flags;
+
+		switch (x.ViewDimension)
+		{
+		case Engine::DSV_DIMENSION_TEXTURE1D:
+			ar& x.Texture1D;
+			break;
+		case Engine::DSV_DIMENSION_TEXTURE1DARRAY:
+			ar& x.Texture1DArray;
+			break;
+		case Engine::DSV_DIMENSION_TEXTURE2D:
+			ar& x.Texture2D;
+			break;
+		case Engine::DSV_DIMENSION_TEXTURE2DARRAY:
+			ar& x.Texture2DArray;
+			break;
+		case Engine::DSV_DIMENSION_TEXTURE2DMS:
+			ar& x.Texture2DMS;
+			break;
+		case Engine::DSV_DIMENSION_TEXTURE2DMSARRAY:
+			ar& x.Texture2DMSArray;
+			break;
+		case Engine::DSV_DIMENSION_UNKNOWN:
+		default:
+			break;
+		}
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::RtvDescription& x, const unsigned int version) 
+	{
+		ar& x.Format;
+		ar& x.ViewDimension;
+
+		switch (x.ViewDimension) 
+		{
+		case Engine::RTV_DIMENSION_BUFFER:
+			ar& x.Buffer;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE1D:
+			ar& x.Texture1D;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE1DARRAY:
+			ar& x.Texture1DArray;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE2D:
+			ar& x.Texture2D;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE2DARRAY:
+			ar& x.Texture2DArray;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE2DMS:
+			ar& x.Texture2DMS;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE2DMSARRAY:
+			ar& x.Texture2DMSArray;
+			break;
+		case Engine::RTV_DIMENSION_TEXTURE3D:
+			ar& x.Texture3D;
+			break;
+		case Engine::RTV_DIMENSION_UNKNOWN:
+		default:
+			break;
+		}
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::SrvDescription& x, const unsigned int version)
+	{
+		ar& x.Format;
+		ar& x.ViewDimension;
+		ar& x.Shader4ComponentMapping;
+
+		switch (x.ViewDimension) 
+		{
+		case Engine::SRV_DIMENSION_BUFFER:
+			ar& x.Buffer;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE1D:
+			ar& x.Texture1D;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE1DARRAY:
+			ar& x.Texture1DArray;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE2D:
+			ar& x.Texture2D;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE2DARRAY:
+			ar& x.Texture2DArray;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE2DMS:
+			ar& x.Texture2DMS;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE2DMSARRAY:
+			ar& x.Texture2DMSArray;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURE3D:
+			ar& x.Texture3D;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURECUBE:
+			ar& x.TextureCube;
+			break;
+		case Engine::SRV_DIMENSION_TEXTURECUBEARRAY:
+			ar& x.TextureCubeArray;
+			break;
+		case Engine::SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE:
+			ar& x.RaytracingAccelerationStructure;
+			break;
+		case Engine::SRV_DIMENSION_UNKNOWN:
+		default:
+			break;
+		}
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::GenericTextureDescription& x, const unsigned int version) 
+	{
+		ar& x.Dimension;
+		ar& x.Alignment;
+		ar& x.Width;
+		ar& x.Height;
+		ar& x.DepthOrArraySize;
+		ar& x.Format;
+		ar& x.Flags;
+		ar& x.MipsLevel;
+		ar& x.Layout;
+		ar& x.SampleDesc;
+		ar& x.AsSRV;
+		ar& x.AsRTV;
+		ar& x.AsDSV;
+		ar& x.AsUAV;
+		ar& x.Srv;
+		ar& x.Rtv;
+		ar& x.Dsv;
+		ar& x.Uav;
+	}
 }

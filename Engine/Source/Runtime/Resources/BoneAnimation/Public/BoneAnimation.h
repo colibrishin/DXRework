@@ -25,6 +25,19 @@ namespace Engine::Graphics
 		void RebuildIndexCache();
 
 	private:
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version) 
+		{
+			ar& name_;
+			ar& duration;
+			ar& ticks_per_second;
+			ar& global_inverse_transform_;
+			ar& bone_animations;
+			ar& bone_animations_index_wise;
+		}
+
 		std::string                                   name_;
 		float                                         duration;
 		float                                         ticks_per_second;
@@ -68,14 +81,17 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		SERIALIZE_DECL
 		BoneAnimation();
 
 		AnimationPrimitive m_primitive_;
-		Strong<Bone>       m_bone_;
-		MetadataPath       m_bone_meta_path_str_;
+		MetadataPath       m_bone_path_;
 
 		// non-serialized
+		Strong<Bone>        m_bone_;
 		float               m_evaluated_time_;
 		std::vector<Matrix> m_evaluated_data_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::BoneAnimation)

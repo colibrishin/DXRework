@@ -24,7 +24,10 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		SERIALIZE_DECL
 		Texture3D()
 			: Texture("", TEX_TYPE_3D, {}) {}
 	};
 } // namespace Engine::Resources
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture3D)

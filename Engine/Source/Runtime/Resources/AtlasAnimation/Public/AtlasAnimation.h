@@ -14,6 +14,19 @@ namespace Engine
 			UINT  Width;
 			UINT  Height;
 			float Duration;
+
+		private:
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned int version) 
+			{
+				ar& X;
+				ar& Y;
+				ar& Width;
+				ar& Height;
+				ar& Duration;
+			}
 		};
 
 		void Append(const AtlasFramePrimitive& frame);
@@ -55,6 +68,19 @@ namespace Engine
 		float m_total_duration_ = 0;
 
 		std::vector<AtlasFramePrimitive> m_frames_;
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version) 
+		{
+			ar& m_texture_width_;
+			ar& m_texture_height_;
+			ar& m_unit_width_;
+			ar& m_unit_height_;
+			ar& m_total_duration_;
+			ar& m_frames_;
+		}
 	};
 }
 
@@ -95,6 +121,7 @@ namespace Engine::Resources
 		);
 
 	protected:
+		SERIALIZE_DECL
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
@@ -104,3 +131,5 @@ namespace Engine::Resources
 		AtlasAnimationPrimitive m_primitive_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::AtlasAnimation)

@@ -52,6 +52,7 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		SERIALIZE_DECL
 		Texture2D()
 			: Texture("", TEX_TYPE_2D, {}) {}
 
@@ -61,3 +62,5 @@ namespace Engine::Resources
 #endif
 	};
 } // namespace Engine::Resources
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture2D)

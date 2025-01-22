@@ -22,6 +22,15 @@ using Matrix = DirectX::SimpleMath::Matrix;
 namespace boost::serialization
 {
 	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Quaternion& x, const unsigned int version)
+	{
+		ar& x.x;
+		ar& x.y;
+		ar& x.z;
+		ar& x.w;
+	}
+
+	template <typename Archive>
 	void serialize(Archive& ar, DirectX::SimpleMath::Matrix& x, const unsigned int version)
 	{
 		ar & x._11;

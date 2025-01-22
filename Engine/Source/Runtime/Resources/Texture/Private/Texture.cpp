@@ -2,6 +2,8 @@
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
+SERIALIZE_IMPL(ENGINE_TEXTURE_API, Engine::Resources::Texture, _BSTSUPER(Resource) _ARTAG(m_desc_) _ARTAG(m_type_))
+
 namespace Engine::Resources
 {
 	RESOURCE_SELF_INFER_GETTER_IMPL(Texture);

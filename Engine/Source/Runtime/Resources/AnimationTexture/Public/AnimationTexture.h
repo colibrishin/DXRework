@@ -30,6 +30,7 @@ namespace Engine::Resources
 		void Load_INTERNAL() override;
 
 	private:
+		SERIALIZE_DECL
 		AnimationTexture()
 			: Texture3D("", {}) {}
 
@@ -46,3 +47,4 @@ namespace Engine::Resources
 	};
 }
 
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::AnimationTexture)

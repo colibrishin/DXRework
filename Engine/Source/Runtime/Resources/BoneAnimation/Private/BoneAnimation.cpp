@@ -3,6 +3,9 @@
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
+SERIALIZE_IMPL(ENGINE_BONEANIMATION_API, Engine::Resources::BoneAnimation,
+	_BSTSUPER(BaseAnimation) _ARTAG(m_primitive_) _ARTAG(m_bone_path_))
+
 namespace Engine::Graphics
 {
 	struct BoneTransformElement;
@@ -136,14 +139,13 @@ namespace Engine::Resources
 	void BoneAnimation::OnSerialized()
 	{
 		BaseAnimation::OnSerialized();
-		m_bone_meta_path_str_ = m_bone_->GetMetadataPath().string();
 	}
 
 	void BoneAnimation::OnDeserialized()
 	{
 		BaseAnimation::OnDeserialized();
 
-		if (const auto res_check = Bone::GetByMetadataPath(m_bone_meta_path_str_).lock();
+		if (const auto res_check = Bone::GetByMetadataPath(m_bone_path_).lock();
 			res_check && !res_check->GetMetadataPath().empty())
 		{
 			m_bone_ = res_check;

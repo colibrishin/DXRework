@@ -23,6 +23,17 @@ namespace Engine::Graphics
 		std::vector<std::pair<float, Vector3>>    m_positions_{};
 		std::vector<std::pair<float, Vector3>>    m_scales_{};
 		std::vector<std::pair<float, Quaternion>> m_rotations_{};
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version) 
+		{
+			ar& bone_idx;
+			ar& m_positions_;
+			ar& m_scales_;
+			ar& m_rotations_;
+		}
 	};
 }
 

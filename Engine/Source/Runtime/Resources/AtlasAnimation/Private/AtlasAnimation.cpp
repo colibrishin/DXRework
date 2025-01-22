@@ -4,6 +4,8 @@
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Core/StepTimer/Public/StepTimer.hpp"
 
+SERIALIZE_IMPL(ENGINE_ATLASANIMATION_API, Engine::Resources::AtlasAnimation, _BSTSUPER(BaseAnimation) _ARTAG(m_xml_path_) _ARTAG(m_primitive_))
+
 namespace Engine::Resources
 {
 	AtlasAnimation::AtlasAnimation(const AtlasAnimationPrimitive& primitive)

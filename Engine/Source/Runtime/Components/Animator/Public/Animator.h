@@ -47,6 +47,7 @@ namespace Engine::Components
 		float GetDt() const;
 
 	private:
+		SERIALIZE_DECL
 		COMP_CLONE_DECL
 		Animator();
 
@@ -73,3 +74,5 @@ namespace Engine::Components
 		float m_total_dt_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Animator)

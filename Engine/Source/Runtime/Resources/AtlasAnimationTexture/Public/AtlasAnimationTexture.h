@@ -37,9 +37,12 @@ namespace Engine::Resources
 		void Map() override;
 
 	private:
+		SERIALIZE_DECL
 		AtlasAnimationTexture()
 			: Texture3D("", {}) {}
 
 		std::vector<Strong<Texture2D>> m_atlases_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::AtlasAnimationTexture)

@@ -42,6 +42,7 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
+		SERIALIZE_DECL
 		friend struct Engine::PrimitiveTexture;
 		
 		Texture();
@@ -52,3 +53,5 @@ namespace Engine::Resources
 		eTexType m_type_;
 	};
 } // namespace Engine::Resources
+
+BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

@@ -5,6 +5,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/access.hpp>
 
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
@@ -58,6 +59,20 @@ namespace Engine
 #if WITH_EDITOR
 #include <UIInterface.h>
 #endif
+
+namespace boost::serialization
+{
+	template <class Archive>
+	void serialize(Archive& ar, std::filesystem::path& p, const unsigned int version)
+	{
+		std::wstring s;
+		if (Archive::is_saving::value)
+			s = p.generic_wstring();
+		ar& boost::serialization::make_nvp("wstring", s);
+		if (Archive::is_loading::value)
+			p = s;
+	}
+}
 
 POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Entity, void)
 
