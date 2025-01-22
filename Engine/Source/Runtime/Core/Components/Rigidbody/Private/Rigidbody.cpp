@@ -74,7 +74,7 @@ namespace Engine::Components
 			});
 			*context |= ui.NewCheckbox({ "Lerp", m_b_lerp_ });
 
-			*context |= ui.NewLabelAndFloat({ "Friction Coefficient", m_friction_mu_, 0.01f, 0, true });
+			*context |= ui.NewLabelAndFloat({ "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
 		}
 #endif
 	}

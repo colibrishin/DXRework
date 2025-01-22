@@ -40,10 +40,6 @@ namespace Engine::Managers
 					{
 						continue;
 					}
-					if (rb->GetGrounded())
-					{
-						continue;
-					}
 					if (!rb->GetActive())
 					{
 						continue;

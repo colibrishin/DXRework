@@ -47,7 +47,7 @@ namespace Engine::Abstracts
 				*(parent) |= ui.NewLabelAndText({"Layer", empty, false});
 			}
 
-			*(parent) |= ui.NewLabelAndUInt({"Local ID", const_cast<LocalActorID&>(GetLocalID()), 0.f, 0.f, -1.f, false});
+			*(parent) |= ui.NewLabelAndUInt({"Local ID", const_cast<LocalActorID&>(GetLocalID()), 0.f, 0, 0, false});
 		}
 	}
 

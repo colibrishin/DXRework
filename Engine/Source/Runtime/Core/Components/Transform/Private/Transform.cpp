@@ -275,18 +275,18 @@ namespace Engine::Components
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 			Component::OnUIUpdate(context, dt);
-			*context |= ui.NewLabelAndVec3({"Position", m_position_.x});
+			*context |= ui.NewLabelAndVec3({"Position", &m_position_.x, 0.1f, 0.f, 0.f, true});
 
 			m_euler_rotation_ = MathExtension::ToEuler(m_rotation_);
 			m_euler_rotation_ *= 180.f / M_PI;
-			(*context |= ui.NewLabelAndVec3({"Rotation", m_euler_rotation_.x })).SetFunction([&]()
+			(*context |= ui.NewLabelAndVec3({"Rotation", &m_euler_rotation_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
 			{
 				m_euler_rotation_ *= M_PI / 180.f;
 				// since z axis is the forward, roll should be z.
 				m_rotation_ = MathExtension::ToQuaternion(m_euler_rotation_.x, m_euler_rotation_.y, m_euler_rotation_.z);
 			});
 
-			*context |= ui.NewLabelAndVec3({"Scale", m_scale_.x });
+			*context |= ui.NewLabelAndVec3({"Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
 			*context |= ui.NewCheckbox({"Absolute Size", m_b_s_absolute_});
 			*context |= ui.NewCheckbox({"Absolute Rotation",m_b_r_absolute_});
 		}

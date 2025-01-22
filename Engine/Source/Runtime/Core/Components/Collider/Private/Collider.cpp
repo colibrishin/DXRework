@@ -113,7 +113,7 @@ namespace Engine::Components
 			{
 				SetType(m_type_);
 			});
-			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 1.0f, 0.1f, 0.f, -1.f, true});
+			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 0.1f, 0.f, 0.f, true});
 		}
 #endif
 	}

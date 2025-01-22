@@ -76,7 +76,7 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 		{
 			OnNameChanged();
 		});
-		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, false});
+		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, 0.f, 0, 0, false});
 		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
 		(*parent |= ui.NewButton({"Save"})).SetFunction([]()
 		{
