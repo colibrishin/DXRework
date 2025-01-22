@@ -13,20 +13,7 @@ namespace Engine::Managers
 	public:
 		ReflectionEvaluator(SINGLETON_LOCK_TOKEN)
 			: Singleton(),
-			  m_copy_
-			  (
-			   "", {
-				   .Alignment = 0,
-				   .Width = CFG_WIDTH,
-				   .Height = CFG_HEIGHT,
-				   .DepthOrArraySize = 1,
-				   .Format = TEX_FORMAT_R8G8B8A8_UNORM,
-				   .Flags = RESOURCE_FLAG_NONE,
-				   .MipsLevel = 1,
-				   .Layout = TEX_LAYOUT_UNKNOWN,
-				   .SampleDesc = {.Count = 1, .Quality = 0}
-			   }
-			  ) {}
+			  m_copy_() {}
 
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -45,6 +32,6 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~ReflectionEvaluator() override = default;
 
-		Resources::Texture2D m_copy_;
+		Strong<Resources::Texture2D> m_copy_;
 	};
 }

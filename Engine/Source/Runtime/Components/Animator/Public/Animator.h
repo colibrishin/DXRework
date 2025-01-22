@@ -6,24 +6,6 @@
 
 #include "Animator.generated.h"
 
-namespace Engine
-{
-	struct AnimatorModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::AnimatorModule, Engine::IModule)
-
-namespace Engine
-{
-	struct AnimatorModule : public IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(AnimatorModule)
-		void             Initialize() override;
-		void             Shutdown() override;
-		bool             DynamicLoadable() override;
-	};
-}
-
 namespace Engine::Components
 {
 	ECLASS()

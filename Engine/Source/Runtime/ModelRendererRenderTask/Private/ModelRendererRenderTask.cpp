@@ -81,7 +81,7 @@ namespace Engine
 
                     if (const auto atlas_anim = mtr->GetResource<Resources::AtlasAnimation>(anim_idx).lock())
                     {
-                        AtlasAnimationPrimitive::AtlasFramePrimitive atlas_frame{};
+                        AtlasFramePrimitive atlas_frame{};
                         atlas_anim->GetFrame(anim_frame, atlas_frame);
 
                         atlas_x = atlas_frame.X;

@@ -7,6 +7,7 @@
 #define EENUM(...)
 #define EFUNC(...)
 #define EPROPERTY(...)
+#define GENERATE_BODY
 
 #include <algorithm>
 #include <array>
