@@ -22,7 +22,7 @@ on:
 
 env:
   # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: kolibri.sln
+  SOLUTION_FILE_PATH: .\
 
 jobs:
   analyze:
@@ -37,13 +37,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        BUILD_CONFIGURATION: [DevelopmentEditor, DebugEditor, DevelopmentClient, DebugClient]
+
         language: [ 'cpp' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
         # Use only 'java' to analyze code written in Java, Kotlin or both
         # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
-        vcpkgCommitId: [ '830f86fb309ad7167468a433a890b7415fbb90a5' ]
+        vcpkgCommitId: [ 'd033613d9021107e4a7b52c5fac1f87ae8a6fcc6' ]
 
     steps:
     - name: Checkout repository
@@ -106,40 +108,29 @@ jobs:
 
     - name: Copy PhysX preset
       working-directory: ${{env.SOLUTION_FILE_PATH}}
-      run: Copy-Item -Path "vc17win64.xml" -Destination "PhysX/physx/buildtools/presets/public" -Force
+      run: Copy-Item -Path "vc17win64.xml" -Destination "Engine\Source\ThirdParty\PhysX\PhysX\physx\buildtools\presets\public" -Force
 
     - name: Generate project file for PhysX
-      working-directory: ${{env.SOLUTION_FILE_PATH}}/PhysX/physx
+      working-directory: ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX\physx
       run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
 
     - name: Build PhysX
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}/PhysX/physx/compiler/vc17win64/PhysXSDK.sln
+      run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX/physx/compiler/vc17win64/PhysXSDK.sln
 
     - name: Start Build Prerequisites
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: Setup.bat
+      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "Setup.bat"); 
 
     - name: Generate Solution files
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: GenerateSolution.bat
+      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "GenerateSolution.bat"); 
 
-    - name: Build Development Editor
+    - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=DevelopmentEditor ${{env.SOLUTION_FILE_PATH}}
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
-
-    - name: Build Debug Editor
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=DebugEditor ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}kolibri.sln
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
