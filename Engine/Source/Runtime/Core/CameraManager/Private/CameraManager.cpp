@@ -3,7 +3,7 @@
 #include "Source/Runtime/Core/Components/Rigidbody/Public/Rigidbody.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 
 namespace Engine::Managers
 {

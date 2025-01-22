@@ -14,8 +14,10 @@ namespace physx
 }
 #endif
 
-#include "Singleton.hpp"
+#include "Singleton.h"
 #include "TypeLibrary/Public/TypeLibrary.h"
+
+#include "PhysicsManager.generated.h"
 
 namespace Engine
 {
@@ -30,10 +32,11 @@ namespace Engine
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class PhysicsManager : public Abstracts::Singleton<PhysicsManager>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(PhysicsManager)
 		explicit PhysicsManager(SINGLETON_LOCK_TOKEN)
 			: Abstracts::Singleton<PhysicsManager>() {}
 

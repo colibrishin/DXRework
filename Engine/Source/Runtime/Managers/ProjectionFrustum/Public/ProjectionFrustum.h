@@ -1,15 +1,16 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ProjectionFrustum)
+#include "ProjectionFrustum.generated.h"
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_PROJECTIONFRUSTUM_API ProjectionFrustum final : public Abstracts::Singleton<ProjectionFrustum>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ProjectionFrustum)
 		explicit ProjectionFrustum(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

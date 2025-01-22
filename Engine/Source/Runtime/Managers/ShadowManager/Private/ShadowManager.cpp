@@ -1,4 +1,4 @@
-#include "../Public/ShadowManager.hpp"
+#include "../Public/ShadowManager.h"
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
@@ -10,8 +10,8 @@
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/Renderer.h"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 
 namespace Engine::Managers
 {

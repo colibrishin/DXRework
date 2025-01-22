@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::CameraManager)

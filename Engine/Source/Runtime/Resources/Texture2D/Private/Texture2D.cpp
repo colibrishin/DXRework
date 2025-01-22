@@ -2,7 +2,7 @@
 
 #include "ModuleManager/Public/ModuleManager.h"
 
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include <magic_enum.hpp>
 
 bool Engine::Resources::Texture2D::m_b_ui_load_dialog_ = false;

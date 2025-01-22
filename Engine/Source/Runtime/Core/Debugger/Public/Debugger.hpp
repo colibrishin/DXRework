@@ -2,7 +2,7 @@
 #include <deque>
 #include <memory>
 
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine

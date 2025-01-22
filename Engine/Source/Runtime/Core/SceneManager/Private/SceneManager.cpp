@@ -1,4 +1,4 @@
-#include "../Public/SceneManager.hpp"
+#include "../Public/SceneManager.h"
 
 #include "UIInterface.h"
 

@@ -1,17 +1,18 @@
 #pragma once
 #include <set>
 
-#include "Singleton.hpp"
+#include "Singleton.h"
 #include "TypeLibrary/Public/TypeLibrary.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ConstraintSolver)
+#include "ConstraintSolver.generated.h"
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_PHYSICSMANAGER_API ConstraintSolver : public Abstracts::Singleton<ConstraintSolver>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ConstraintSolver)
 		explicit ConstraintSolver(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

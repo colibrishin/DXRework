@@ -8,16 +8,16 @@
 #include <tbb/concurrent_map.h>
 
 #include "CollisionInfo.h"
-#include "Singleton.hpp"
+#include "Singleton.h"
 
 #include "TypeLibrary/Public/TypeLibrary.h"
 #include "Delegation/Public/Delegation.hpp"
 
 #include "Scene/Public/Scene.h"
 
-DEFINE_DELEGATE(OnLayerMaskChange, const Engine::LayerSizeType, const Engine::LayerSizeType);
+#include "CollisionDetector.generated.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::CollisionDetector)
+DEFINE_DELEGATE(OnLayerMaskChange, const Engine::LayerSizeType, const Engine::LayerSizeType);
 
 #ifdef PHYSX_ENABLED
 namespace Engine
@@ -31,10 +31,11 @@ namespace Engine
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_PHYSICSMANAGER_API CollisionDetector : public Abstracts::Singleton<CollisionDetector>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(CollisionDetector)
 		DelegateOnLayerMaskChange onLayerMaskChange;
 
 		explicit CollisionDetector(SINGLETON_LOCK_TOKEN) {}

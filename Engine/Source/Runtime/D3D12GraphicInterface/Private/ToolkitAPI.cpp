@@ -1,7 +1,7 @@
 #include "../Public/ToolkitAPI.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 #include "Source/Runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
 #include "Source/Runtime/D3D12GraphicInterface/Public/DebugDraw.h"
 #include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"

@@ -10,7 +10,7 @@
 #include <directxtk12/Effects.h>
 #include <directxtk12/GeometricPrimitive.h>
 
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include <directxtk12/EffectPipelineStateDescription.h>
 #include <directxtk12/SpriteFont.h>
 

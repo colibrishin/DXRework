@@ -1,6 +1,8 @@
 #pragma once
 #include "Source/ThirdParty/FMOD/Public/fmod.hpp"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
+
+#include "SoundManager.generated.h"
 
 namespace FMOD 
 {
@@ -20,10 +22,11 @@ namespace FMOD
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_SOUNDMANAGER_API SoundManager final : public Abstracts::Singleton<SoundManager>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(SoundManager)
 		explicit SoundManager(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;

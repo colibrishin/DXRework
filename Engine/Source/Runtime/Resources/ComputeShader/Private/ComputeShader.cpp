@@ -5,7 +5,7 @@
 #endif
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 namespace Engine::Resources
 {

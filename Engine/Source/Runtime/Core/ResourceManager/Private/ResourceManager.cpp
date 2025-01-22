@@ -1,4 +1,4 @@
-#include "../Public/ResourceManager.hpp"
+#include "../Public/ResourceManager.h"
 
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"

@@ -1,25 +1,16 @@
 #pragma once
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/StepTimer/Public/StepTimer.hpp"
 
-namespace Engine
-{
-	struct CoreModule;
-}
+#include "EngineEntryPoint.generated.h"
 
 namespace Engine::Managers
 {
-	class EngineEntryPoint;
-}
-
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::EngineEntryPoint)
-
-namespace Engine::Managers
-{
+	ECLASS()
 	class ENGINE_ENGINEENTRYPOINT_API EngineEntryPoint final : public Abstracts::Singleton<EngineEntryPoint>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(EngineEntryPoint)
 		EngineEntryPoint(SINGLETON_LOCK_TOKEN);
 
 		void        Initialize() override;

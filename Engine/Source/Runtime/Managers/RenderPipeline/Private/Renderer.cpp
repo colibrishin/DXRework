@@ -1,7 +1,7 @@
 #include "../Public/Renderer.h"
 
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "../Public/RenderPipeline.h"
 

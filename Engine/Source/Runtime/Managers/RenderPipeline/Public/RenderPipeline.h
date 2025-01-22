@@ -2,10 +2,12 @@
 #include <memory>
 #include "Source/Runtime/Core/ConstantBuffer.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "RenderTask.h"
 
 #include "ModuleManager/Public/IModule.h"
+
+#include "RenderPipeline.generated.h"
 
 namespace Engine
 {
@@ -25,16 +27,15 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::RenderPipeline)
-
 namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
 
+	ECLASS()
 	class ENGINE_RENDERPIPELINE_API RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
 	{
+		GENERATE_BODY
 	private:
-		INLINE_COMPILE_TIME_TYPENAME(RenderPipeline)
 		struct ENGINE_RENDERPIPELINE_API TempParamTicket
 		{
 			TempParamTicket(const CBs::ParamCB& previousParam)

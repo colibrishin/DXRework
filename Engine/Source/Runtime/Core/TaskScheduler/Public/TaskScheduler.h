@@ -5,7 +5,9 @@
 #include <numeric>
 #include <queue>
 
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
+
+#include "TaskScheduler.generated.h"
 
 namespace Engine
 {
@@ -43,14 +45,13 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::TaskScheduler)
-
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_CORE_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(TaskScheduler)
 		struct TaskValue
 		{
 			eTaskType             type;

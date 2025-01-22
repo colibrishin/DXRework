@@ -7,7 +7,7 @@
 
 #include "Scene/Public/Scene.h"
 
-#include "SceneManager/Public/SceneManager.hpp"
+#include "SceneManager/Public/SceneManager.h"
 
 #pragma comment(lib, "fmod_vc.lib")
 

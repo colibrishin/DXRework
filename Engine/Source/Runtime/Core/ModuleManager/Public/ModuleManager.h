@@ -4,7 +4,7 @@
 
 #include "boost/preprocessor/facilities/is_empty.hpp"
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 
 #define IS_EMPTY(...) (true __VA_OPT__(&& false))
 #define IS_DLL !BOOST_PP_IS_EMPTY(ENGINE_CORE_API)

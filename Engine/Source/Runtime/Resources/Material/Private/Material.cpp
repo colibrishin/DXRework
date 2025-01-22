@@ -4,9 +4,9 @@
 
 #include "ModuleManager/Public/ModuleManager.h"
 
-#include "SceneManager/Public/SceneManager.hpp"
+#include "SceneManager/Public/SceneManager.h"
 
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"

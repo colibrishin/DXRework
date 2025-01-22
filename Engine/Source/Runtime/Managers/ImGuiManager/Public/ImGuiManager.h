@@ -1,10 +1,12 @@
 ﻿#pragma once
 #include "GraphicInterface.h"
-#include "Singleton.hpp"
+#include "Singleton.h"
 
 #include "ModuleManager/Public/IModule.h"
 
 #include "Source/Runtime/CoreUI/Public/UIInterface.h"
+
+#include "ImGuiManager.generated.h"
 
 namespace Engine
 {
@@ -269,10 +271,11 @@ namespace Engine
 
 namespace Engine::Managers
 {
+    ECLASS()
     class ENGINE_IMGUIMANAGER_API ImGuiManager final : public Abstracts::Singleton<ImGuiManager>
     {
+        GENERATE_BODY
     public:
-        INLINE_COMPILE_TIME_TYPENAME(ImGuiManager)
         explicit ImGuiManager(SINGLETON_LOCK_TOKEN) {}
 
         void Initialize() override;

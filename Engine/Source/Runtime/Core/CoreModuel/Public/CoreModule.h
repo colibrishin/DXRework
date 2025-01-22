@@ -3,8 +3,8 @@
 
 #include "Debugger/Public/Debugger.hpp"
 #include "ModuleManager/Public/IModule.h"
-#include "ResourceManager/Public/ResourceManager.hpp"
-#include "SceneManager/Public/SceneManager.hpp"
+#include "ResourceManager/Public/ResourceManager.h"
+#include "SceneManager/Public/SceneManager.h"
 
 using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 

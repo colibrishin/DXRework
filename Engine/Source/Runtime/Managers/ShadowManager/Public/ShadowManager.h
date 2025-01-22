@@ -2,11 +2,13 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
 #include "RenderTask.h"
+
+#include "ShadowManager.generated.h"
 
 namespace Engine::Graphics
 {
@@ -40,8 +42,11 @@ namespace Engine::Managers
 	
 	constexpr float __placeholder = 0.f;
 
+	ECLASS()
 	class ENGINE_SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
 	{
+		GENERATE_BODY
+
 	private:
 		struct Subfrusta
 		{
@@ -49,7 +54,6 @@ namespace Engine::Managers
 		};
 
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ShadowManager)
 		explicit ShadowManager(SINGLETON_LOCK_TOKEN)
 			: Singleton<ShadowManager>(),
 			  m_viewport_() {}

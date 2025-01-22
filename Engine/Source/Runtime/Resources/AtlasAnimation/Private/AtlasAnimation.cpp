@@ -1,7 +1,7 @@
 #include "../Public/AtlasAnimation.h"
 
 #include <pugixml.hpp>
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Core/StepTimer/Public/StepTimer.hpp"
 
 namespace Engine::Resources

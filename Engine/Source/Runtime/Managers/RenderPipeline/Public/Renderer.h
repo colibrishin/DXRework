@@ -3,14 +3,18 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 #include "RenderTask.h"
 
+#include "Renderer.generated.h"
+
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_RENDERPIPELINE_API Renderer : public Abstracts::Singleton<Renderer>
 	{
+		GENERATE_BODY
 	public:
 		explicit Renderer(SINGLETON_LOCK_TOKEN)
 			: Singleton(),

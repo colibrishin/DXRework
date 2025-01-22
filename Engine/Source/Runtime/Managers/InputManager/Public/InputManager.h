@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 
 #if PLATFORM == Windows
 #define WIN32_LEAN_AND_MEAN
@@ -13,12 +13,15 @@
 
 #include "TypeLibrary/Public/TypeLibrary.h"
 
+#include "InputManager.generated.h"
+
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_INPUTMANAGER_API InputManager : public Abstracts::Singleton<InputManager>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(InputManager)
 		InputManager(SINGLETON_LOCK_TOKEN)
 			: Singleton<InputManager>() {};
 		void Initialize() override;

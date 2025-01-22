@@ -2,7 +2,7 @@
 #include <array>
 
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include "ComputeShader.generated.h"
 

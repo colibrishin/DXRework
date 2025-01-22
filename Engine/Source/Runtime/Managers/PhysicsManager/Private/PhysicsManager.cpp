@@ -6,7 +6,7 @@
 #include "Friction.hpp"
 #include "Graviton.h"
 
-#include "SceneManager/Public/SceneManager.hpp"
+#include "SceneManager/Public/SceneManager.h"
 #include "Scene/Public/Scene.h"
 #include "ObjectBase/Public/ObjectBase.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"

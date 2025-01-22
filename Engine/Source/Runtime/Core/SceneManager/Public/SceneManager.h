@@ -1,17 +1,19 @@
 #pragma once
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+
+#include "SceneManager.generated.h"
 
 DEFINE_DELEGATE(OnSceneActive, Engine::Weak<Engine::Scene>);
 DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::SceneManager)
-
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_CORE_API SceneManager final : public Abstracts::Singleton<SceneManager>
 	{
+		GENERATE_BODY
 	public:
 		DelegateOnSceneActive onSceneActive;
 		DelegateOnSceneRemoved onSceneRemoved;

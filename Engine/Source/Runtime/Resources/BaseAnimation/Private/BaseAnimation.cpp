@@ -1,5 +1,5 @@
 #include "../Public/BaseAnimation.h"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 namespace Engine::Resources
 {

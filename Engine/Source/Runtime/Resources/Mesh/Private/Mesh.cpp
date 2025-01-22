@@ -13,7 +13,7 @@
 
 #include "Components/Collider/Public/Collider.h"
 
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 

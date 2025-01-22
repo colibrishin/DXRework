@@ -12,7 +12,7 @@
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"

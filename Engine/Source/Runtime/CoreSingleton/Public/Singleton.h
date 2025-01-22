@@ -3,16 +3,18 @@
 
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
+#include "Singleton.generated.h"
+
 namespace Engine::Abstracts
 {
+	ECLASS()
 	class ENGINE_CORESINGLETON_API SingletonBase : public Abstracts::Renderable
 	{
+		GENERATE_BODY
 	public:
 		SingletonBase();
 	};
 }
-
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::SingletonBase, Engine::Abstracts::Renderable)
 
 namespace Engine::Abstracts
 {
@@ -20,8 +22,6 @@ namespace Engine::Abstracts
 	class Singleton : public SingletonBase
 	{
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Singleton<T>)
-
 		Singleton(const Singleton&)            = delete;
 		Singleton(Singleton&&)                 = delete;
 		Singleton& operator=(const Singleton&) = delete;

@@ -1,19 +1,16 @@
 #pragma once
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
-#include <directx/d3d12.h>
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
-namespace Engine 
-{
-	struct CommandPair;
-}
+#include "ReflectionEvaluator.generated.h"
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_REFLECTIONEVALUATOR_API ReflectionEvaluator : public Abstracts::Singleton<ReflectionEvaluator>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ReflectionEvaluator)
 		ReflectionEvaluator(SINGLETON_LOCK_TOKEN)
 			: Singleton(),
 			  m_copy_

@@ -1,17 +1,18 @@
 #pragma once
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ResourceManager)
+#include "ResourceManager.generated.h"
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ResourceManager)
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;

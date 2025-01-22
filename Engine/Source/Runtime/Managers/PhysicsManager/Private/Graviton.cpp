@@ -10,7 +10,7 @@
 
 #include "Scene/Public/Scene.h"
 
-#include "SceneManager/Public/SceneManager.hpp"
+#include "SceneManager/Public/SceneManager.h"
 
 namespace Engine::Managers
 {
