@@ -201,6 +201,21 @@ void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPri
     cmd->GetList()->RSSetScissorRects(1, &scissor_rect);
 }
 
+void Engine::D3D12GraphicInterface::SetDefaultRenderTarget(const GraphicInterfaceContextPrimitive* context)
+{
+	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
+	const auto& rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+			(
+			 m_rtv_heap_->GetCPUDescriptorHandleForHeapStart(),
+			 static_cast<UINT>(m_frame_idx_),
+			 m_rtv_heap_size_
+			);
+
+	const auto& dsv_handle = m_dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+	cmd->GetList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
+}
+
 void Engine::D3D12GraphicInterface::SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);

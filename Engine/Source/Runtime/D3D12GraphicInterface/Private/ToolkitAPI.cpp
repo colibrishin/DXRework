@@ -74,9 +74,8 @@ namespace Engine::Managers
 		s_cmd->SoftReset();
 		m_sprite_batch_->Begin(s_cmd->GetList(), DirectX::SpriteSortMode_Deferred);
 
-		gi.SetDefaultGraphicPipeline(&s_primitive);
 		gi.SetViewport(&s_primitive, RenderPipeline::GetInstance().GetViewport());
-		RenderPipeline::GetInstance().BindConstantBuffers(&s_primitive);
+		gi.SetDefaultRenderTarget(&s_primitive);
 		s_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
 		for (const auto& callback : m_sprite_batch_callbacks_)
@@ -103,9 +102,8 @@ namespace Engine::Managers
 			}
 		}
 
-		gi.SetDefaultGraphicPipeline(&p_primitive);
-		RenderPipeline::GetInstance().BindConstantBuffers(&p_primitive);
 		gi.SetViewport(&p_primitive, RenderPipeline::GetInstance().GetViewport());
+		gi.SetDefaultRenderTarget(&p_primitive);
 		p_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
 		m_primitive_batch_->Begin(p_cmd->GetList());
@@ -160,46 +158,68 @@ namespace Engine::Managers
 		return m_descriptor_heap_.get();
 	}
 
-	void ToolkitAPI::RegisterDebuggerFunction() const
+	void ToolkitAPI::RegisterDebuggerFunction()
 	{
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_LOG, [this](const Message& msg)
 		{
-			m_font_->DrawString
+			AppendSpriteBatch([&]()
+			{
+				m_font_->DrawString
 				(
 				 GetSpriteBatch(), msg.text.c_str(),
 				 XMFLOAT2(msg.x, msg.y),
 				 msg.color, 0.0f, Vector2::Zero, 0.5f
 				);
+			});
+			
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_LINE, [this](const Message& msg)
 		{
-			DX::DrawRay(GetPrimitiveBatch(), msg.ray_start, msg.ray_end, false, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::DrawRay(GetPrimitiveBatch(), msg.ray_start, msg.ray_end, false, msg.color);	
+			});
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_RAY, [this](const Message& msg)
 		{
-			DX::DrawRay(GetPrimitiveBatch(), msg.ray.position, msg.ray.direction, true, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::DrawRay(GetPrimitiveBatch(), msg.ray.position, msg.ray.direction, true, msg.color);
+			});
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_FRUSTUM, [this](const Message& msg)
 		{
-			DX::Draw(GetPrimitiveBatch(), msg.frustum, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::Draw(GetPrimitiveBatch(), msg.frustum, msg.color);
+			});
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_SPHERE, [this](const Message& msg)
 		{
-			DX::Draw(GetPrimitiveBatch(), msg.sphere, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::Draw(GetPrimitiveBatch(), msg.sphere, msg.color);
+			});
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_OBB, [this](const Message& msg)
 		{
-			DX::Draw(GetPrimitiveBatch(), msg.obb, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::Draw(GetPrimitiveBatch(), msg.obb, msg.color);
+			});
 		});
 
 		Debugger::GetInstance().SetCallback(DEBUG_MSG_AABB, [this](const Message& msg)
 		{
-			DX::Draw(GetPrimitiveBatch(), msg.aabb, msg.color);
+			AppendPrimitiveBatch([&]()
+			{
+				DX::Draw(GetPrimitiveBatch(), msg.aabb, msg.color);
+			});
 		});
 	}
 } // namespace Engine::Manager::Graphics

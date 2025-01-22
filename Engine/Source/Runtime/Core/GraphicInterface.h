@@ -1103,6 +1103,7 @@ namespace Engine
 		virtual Unique<GraphicHeapBase> GetHeap() = 0;
 
 		virtual void SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport) = 0;
+		virtual void SetDefaultRenderTarget(const GraphicInterfaceContextPrimitive* context) = 0;
 		virtual void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) = 0;
 		virtual void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) = 0;
 

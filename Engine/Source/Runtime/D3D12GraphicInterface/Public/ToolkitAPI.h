@@ -39,7 +39,7 @@ namespace Engine::Managers
 		DirectX::DescriptorHeap*                      GetDescriptorHeap() const;
 
 	private:
-		void RegisterDebuggerFunction() const;
+		void RegisterDebuggerFunction();
 
 		friend struct SingletonDeleter;
 		~ToolkitAPI() override;

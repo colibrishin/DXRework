@@ -65,7 +65,9 @@ namespace Engine::Managers
 
 	void Debugger::FixedUpdate(const float dt) {}
 
-	void Debugger::PostRender(const float dt)
+	void Debugger::PostRender(const float dt) { }
+
+	void Debugger::PostUpdate(const float dt)
 	{
 #if WITH_DEBUG
 		if (m_render_queue_.empty())
@@ -97,8 +99,6 @@ namespace Engine::Managers
 		}
 #endif
 	}
-
-	void Debugger::PostUpdate(const float dt) {}
 
 	Debugger::Debugger(SINGLETON_LOCK_TOKEN)
 		: Singleton() {}
@@ -164,7 +164,7 @@ namespace Engine::Managers
 	void Debugger::Draw(const BoundingSphere& sphere, const Color& color)
 	{
 		Message msg{};
-		msg.type = DEBUG_MSG_LOG;
+		msg.type = DEBUG_MSG_SPHERE;
 		msg.elapsed_time = 0.f;
 		msg.sphere = sphere;
 		msg.color = color;
@@ -175,7 +175,7 @@ namespace Engine::Managers
 	void Debugger::Draw(const BoundingOrientedBox& obb, const Color& color)
 	{
 		Message msg{};
-		msg.type = DEBUG_MSG_LOG;
+		msg.type = DEBUG_MSG_OBB;
 		msg.elapsed_time = 0.f;
 		msg.obb = obb;
 		msg.color = color;
@@ -186,7 +186,7 @@ namespace Engine::Managers
 	void Debugger::Draw(const BoundingBox& bb, const Color& color)
 	{
 		Message msg{};
-		msg.type = DEBUG_MSG_LOG;
+		msg.type = DEBUG_MSG_AABB;
 		msg.elapsed_time = 0.f;
 		msg.aabb = bb;
 		msg.color = color;

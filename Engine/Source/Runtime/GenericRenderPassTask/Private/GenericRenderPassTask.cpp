@@ -80,6 +80,7 @@ namespace Engine
 		sb.SetData(&primitive, 1, &local_param);
 		sb_typeless.TransitionToSRV(&primitive);
 		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&primitive);
+		gi.SetDefaultRenderTarget(&primitive);
 
 		for (const auto& [mtr, sbs] : final_mapping)
 		{

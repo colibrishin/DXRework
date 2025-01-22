@@ -60,8 +60,10 @@ namespace Engine
 		Unique<GraphicHeapBase> GetHeap() override;
 
 		void SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport) override;
+		void SetDefaultRenderTarget(const GraphicInterfaceContextPrimitive* context) override;
 		void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) override;
 		void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) override;
+
 		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count) override;
 		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count) override;
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) override;
