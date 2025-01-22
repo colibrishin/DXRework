@@ -111,7 +111,7 @@ namespace Engine::Resources
 		// See DepthOrArraySize for type.
 		const UINT16 num_atlases = static_cast<UINT16>(m_atlases_.size());
 		PrimitiveTexture* atlas_tex = GetPrimitiveTexture();
-		TextureMappingTask* mapping_task = atlas_tex->GetMappingTask();
+		TextureMappingTask& mapping_task = atlas_tex->GetMappingTask();
 
 		if (GetPath().empty())
 		{
@@ -120,7 +120,7 @@ namespace Engine::Resources
 			// for matching with xml data.
 			for (UINT16 i = 0; i < num_atlases; ++i)
 			{
-				mapping_task->Map(
+				mapping_task.Map(
 					atlas_tex,
 					m_atlases_[i]->GetPrimitiveTexture(),
 					m_atlases_[i]->GetWidth(),

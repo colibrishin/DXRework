@@ -1,5 +1,8 @@
 #include "../Public/PrimitivePipelineDX12.h"
+#include <directx/d3d12.h>
 #include <directx/d3dx12.h>
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 
 namespace Engine
 {

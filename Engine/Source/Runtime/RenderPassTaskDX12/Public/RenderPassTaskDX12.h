@@ -2,7 +2,7 @@
 #include <map>
 #include <set>
 
-#include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"

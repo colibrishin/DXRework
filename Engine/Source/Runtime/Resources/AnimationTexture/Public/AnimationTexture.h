@@ -26,6 +26,9 @@ namespace Engine::Resources
 			const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
 		);
 
+	protected:
+		void Load_INTERNAL() override;
+
 	private:
 		AnimationTexture()
 			: Texture3D("", {}) {}

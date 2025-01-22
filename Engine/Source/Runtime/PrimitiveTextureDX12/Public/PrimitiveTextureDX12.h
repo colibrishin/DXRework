@@ -9,6 +9,15 @@
 
 namespace Engine 
 {
+	struct PRIMITIVETEXTUREDX12_API DX12TextureBindingTask : public TextureBindingTask 
+	{
+		void Bind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType bind_type, const UINT bind_slot, const UINT offset) override;
+		void Unbind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType previous_bind_type) override;
+
+		void BindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) override;
+		void UnbindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) override;
+	};
+
 	struct PRIMITIVETEXTUREDX12_API DX12TextureMappingTask : public TextureMappingTask 
 	{
 		void Map(
@@ -43,6 +52,11 @@ namespace Engine
 		void Generate(const Weak<Resources::Texture>& texture) override;
 		void LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path) override;
 		void SaveAsFile(const std::filesystem::path& path) override;
+
+		[[nodiscard]] ID3D12DescriptorHeap* GetSrv() const;
+		[[nodiscard]] ID3D12DescriptorHeap* GetDsv() const;
+		[[nodiscard]] ID3D12DescriptorHeap* GetRtv() const;
+		[[nodiscard]] ID3D12DescriptorHeap* GetUav() const;
 
 	private:
 		D3D12_RESOURCE_DIMENSION ConvertDimension(const eTexType type);

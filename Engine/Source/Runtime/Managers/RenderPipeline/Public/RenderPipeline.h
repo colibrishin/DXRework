@@ -64,6 +64,12 @@ namespace Engine::Managers
 			m_pipeline_task_ = std::make_unique<T>();
 		}
 
+		template <typename T> requires (std::is_base_of_v<RenderPassPrerequisiteTask, T>)
+		void SetShaderPrerequisiteTask() 
+		{
+			m_graphics_shader_task_ = std::make_unique<T>();
+		}
+
 		template <typename T> requires (std::is_base_of_v<ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>, T>)
 		void SetPerspectiveConstantBufferPrerequisiteTask()
 		{
@@ -100,7 +106,7 @@ namespace Engine::Managers
 
 		std::unique_ptr<Engine::PipelineRenderPrerequisiteTask> m_pipeline_task_;
 		std::unique_ptr<Engine::ViewportRenderPrerequisiteTask> m_viewport_task_;
-		std::unique_ptr<Engine::ShaderRenderPrerequisiteTask> m_graphics_shader_task_;
+		std::unique_ptr<Engine::RenderPassPrerequisiteTask> m_graphics_shader_task_;
 
 		std::unique_ptr<Engine::PrimitivePipeline> m_graphics_primitive_pipeline_;
 		

@@ -9,7 +9,7 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 
-#include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/Renderer.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 
@@ -22,10 +22,10 @@ namespace Engine::Managers
 				 "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", 
 				 SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_TEST_ALL | SHADER_DEPTH_LESS_EQUAL,
 				 SHADER_RASTERIZER_CULL_BACK | SHADER_RASTERIZER_FILL_SOLID,
-				 D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+				 SAMPLER_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
 				 SHADER_SAMPLER_CLAMP | SHADER_SAMPLER_LESS_EQUAL,
-				 &g_default_rtv_format, 1, DXGI_FORMAT_D32_FLOAT,
-				 D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+				 GetDefaultRTVFormat(), TEX_FORMAT_D32_FLOAT,
+				 PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
 				 SAMPLER_SHADOW
 				);
 
@@ -39,10 +39,10 @@ namespace Engine::Managers
 					 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 					 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
 					 .DepthOrArraySize = CFG_CASCADE_SHADOW_COUNT,
-					 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+					 .Format = TEX_FORMAT_R8G8B8A8_UNORM,
 					 .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 					 .MipsLevel = 1,
-					 .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+					 .Layout = TEX_LAYOUT_UNKNOWN,
 					 .SampleDesc = {1, 0},
 				 }
 				);
@@ -147,10 +147,6 @@ namespace Engine::Managers
 				return;
 			}
 
-			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Shadow Rendering").lock();
-
-			cmd->SoftReset();
-
 			ClearShadowMaps(cmd);
 			
 			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
@@ -166,11 +162,9 @@ namespace Engine::Managers
 				if (const auto light = ptr_light.lock())
 				{
 					// Render the depth of the object from the light's point of view.
-					BuildShadowMap(dt, cmd, light, idx++);
+					BuildShadowMap(dt, light, idx++);
 				}
 			}
-
-			cmd->FlagReady();
 		}
 	}
 
@@ -194,11 +188,9 @@ namespace Engine::Managers
 	}
 
 	void ShadowManager::BuildShadowMap(
-		const float dt, const Weak<CommandPair>& w_cmd, const Strong<Objects::Light>& light, const UINT light_idx
+		const float dt, const Strong<Objects::Light>& light, const UINT light_idx
 	)
 	{
-		const auto& cmd = w_cmd.lock();
-
 		// Notify the light index to the shader.
 		SBs::LocalParamSB local_param{};
 		local_param.SetParam(0, static_cast<int>(light_idx));

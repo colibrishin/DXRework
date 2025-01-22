@@ -443,7 +443,7 @@ namespace Engine::Resources
 	public:
 		RESOURCE_T(RES_T_TEX)
 		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
-		~Texture() override;
+		~Texture() override = default;
 
 	public:
 		void Initialize() override;
@@ -476,7 +476,7 @@ namespace Engine::Resources
 	private:
 		friend struct Engine::PrimitiveTexture;
 		
-		Texture() = default;
+		Texture();
 		void UpdateDescription(const GenericTextureDescription& description);
 
 		GenericTextureDescription m_desc_;
@@ -488,6 +488,9 @@ namespace Engine::Resources
 
 namespace Engine 
 {
+	struct TextureMappingTask;
+	struct TextureBindingTask;
+
 	struct TEXTURE_API PrimitiveTexture
 	{
 		virtual ~PrimitiveTexture() = default;
@@ -497,13 +500,15 @@ namespace Engine
 
 		void UpdateDescription(const Weak<Resources::Texture>& texture, const GenericTextureDescription& description);
 		[[nodiscard]] void* GetPrimitiveTexture() const;
-		[[nodiscard]] TextureMappingTask* GetMappingTask() const;
+		[[nodiscard]] TextureMappingTask& GetMappingTask() const;
+		[[nodiscard]] TextureBindingTask& GetBindingTask() const;
 		[[nodiscard]] const GenericTextureDescription& GetDescription() const;
 
 	protected:
 		void SetPrimitiveTexture(void* texture);
+		
 		template <typename T> requires (std::is_base_of_v<TextureMappingTask, T>)
-			void SetTextureMappingTask()
+		void SetTextureMappingTask()
 		{
 			if (s_mapping_task_ == nullptr)
 			{
@@ -511,10 +516,30 @@ namespace Engine
 			}
 		}
 
+		template <typename T> requires (std::is_base_of_v<TextureBindingTask, T>) 
+		void SetTextureBindingTask() 
+		{
+			if (s_binding_task_ == nullptr) 
+			{
+				s_binding_task_ = std::make_unique<T>();
+			}
+		}
+
 	private:
 		static std::unique_ptr<TextureMappingTask> s_mapping_task_;
+		static std::unique_ptr<TextureBindingTask> s_binding_task_;
 		GenericTextureDescription m_description_;
 		void* m_texture_ = nullptr;
+	};
+
+	struct TEXTURE_API TextureBindingTask 
+	{
+		virtual ~TextureBindingTask() = default;
+		virtual void Bind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType bind_type, const UINT bind_slot, const UINT offset) = 0;
+		virtual void Unbind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType previous_bind_type) = 0;
+
+		virtual void BindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) = 0;
+		virtual void UnbindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) = 0;
 	};
 
 	struct TEXTURE_API TextureMappingTask
@@ -522,7 +547,7 @@ namespace Engine
 		virtual ~TextureMappingTask() = default;
 		virtual void Map(
 			PrimitiveTexture* texture,
-			void* data_ptr = nullptr,
+			void* data_ptr,
 			const size_t width,
 			const size_t height,
 			const size_t stride,

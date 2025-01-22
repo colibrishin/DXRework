@@ -4,7 +4,13 @@
 
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
+
+namespace Engine 
+{
+	struct GraphicPrimitiveShader;
+}
 
 namespace Engine::Resources
 {
@@ -93,15 +99,41 @@ namespace Engine::Resources
 
 namespace Engine
 {
+	struct ShaderRenderPrerequisiteTask;
+	
 	struct SHADER_API GraphicPrimitiveShader
 	{
 	public:
 		virtual             ~GraphicPrimitiveShader() = default;
 		virtual void        Generate(const Weak<Resources::Shader>& shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetGraphicPrimitiveShader() const;
+		[[nodiscard]] void* GetGraphicPrimitiveShader() const
+		{
+			return m_shader_;
+		}
+		[[nodiscard]] void* GetPrimitiveSampler() const 
+		{
+			return m_sampler_;
+		}
+
+		[[nodiscard]] ShaderRenderPrerequisiteTask& GetShaderPrerequisiteTask() const;
+
+	protected:
+		template <typename T> requires (std::is_base_of_v<ShaderRenderPrerequisiteTask, T>)
+		void SetBindingTask() 
+		{
+			if (!s_binding_task_) 
+			{
+				s_binding_task_ = std::make_unique<T>();
+			}
+		}
+
+		void SetPrimitiveShader(void* shader);
+		void SetPrimitiveSampler(void* sampler);
 
 	private:
+		static std::unique_ptr<ShaderRenderPrerequisiteTask> s_binding_task_;
 		void* m_shader_ = nullptr;
+		void* m_sampler_ = nullptr;
 	};
 
 	struct SHADER_API ShaderRenderPrerequisiteTask : RenderPassPrerequisiteTask

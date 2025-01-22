@@ -18,6 +18,7 @@ namespace Engine::Resources
 		UINT   GetDepth() const final;
 
 	protected:
+		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 	private:

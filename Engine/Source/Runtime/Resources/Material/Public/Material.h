@@ -1,8 +1,10 @@
 #pragma once
 #include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 
+#include <string>
 #include <map>
 
 namespace Engine::Graphics::SBs 
@@ -64,7 +66,7 @@ namespace Engine::Resources
 		[[nodiscard]] const std::map<const eResourceType, std::vector<Strong<Resource>>>& GetResources() const;
 
 		template <typename T>
-		[[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name) const
+		[[nodiscard]] Weak<T> GetResource(const std::string& name) const
 		{
 			if (!m_resources_loaded_.contains(which_resource<T>::value))
 			{
@@ -87,7 +89,7 @@ namespace Engine::Resources
 		}
 
 		template <typename T>
-		[[nodiscard]] boost::weak_ptr<T> GetResource(UINT idx) const
+		[[nodiscard]] Weak<T> GetResource(UINT idx) const
 		{
 			if (!m_resources_loaded_.contains(which_resource<T>::value))
 			{
@@ -107,7 +109,7 @@ namespace Engine::Resources
 			return boost::static_pointer_cast<T>(*(anims.begin() + idx));
 		}
 
-		void SetResource(const Strong<Resource>& resource);
+		void SetResource(const Strong<Abstracts::Resource>& resource);
 		void SetTextureSlot(const std::string& name, UINT slot);
 
 		[[nodiscard]] const Graphics::SBs::MaterialSB& GetMaterialSB() const;

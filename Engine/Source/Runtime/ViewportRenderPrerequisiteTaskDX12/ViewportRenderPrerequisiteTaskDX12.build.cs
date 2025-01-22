@@ -13,7 +13,8 @@ public class ViewportRenderPrerequisiteTaskDX12 : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<DX12Agility>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<RenderPassTaskDX12>(target);
     }
 }

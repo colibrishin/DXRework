@@ -225,4 +225,25 @@ namespace Engine
 	{
 		return m_pipeline_signature_;
 	}
+
+	ShaderRenderPrerequisiteTask& Engine::GraphicPrimitiveShader::GetShaderPrerequisiteTask() const
+	{
+		return *s_binding_task_;
+	}
+
+	void GraphicPrimitiveShader::SetPrimitiveShader(void* shader) 
+	{
+		if (shader) 
+		{
+			m_shader_ = shader;
+		}
+	}
+
+	void GraphicPrimitiveShader::SetPrimitiveSampler(void* sampler) 
+	{
+		if (sampler) 
+		{
+			m_sampler_ = sampler;
+		}
+	}
 }

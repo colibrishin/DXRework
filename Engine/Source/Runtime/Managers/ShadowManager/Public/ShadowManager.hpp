@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
+#include "RenderTask.h"
+
 namespace Engine::Graphics
 {
-	namespace SBs 
+	namespace SBs
 	{
-		struct RENDERER_API LightSB
+		struct SHADOWMANAGER_API LightSB
 		{
 			SB_T(SB_TYPE_LIGHT)
 
@@ -21,7 +22,7 @@ namespace Engine::Graphics
 			OffsetT<float> radius;
 		};
 
-		struct RENDERER_API LightVPSB
+		struct SHADOWMANAGER_API LightVPSB
 		{
 			SB_T(SB_TYPE_LIGHT_VP)
 
@@ -34,7 +35,7 @@ namespace Engine::Graphics
 
 namespace Engine
 {
-	struct ShadowRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	struct SHADOWMANAGER_API ShadowRenderPrerequisiteTask : RenderPassPrerequisiteTask
 	{
 		void SetShadowShader(const Strong<Resources::Shader>& shader);
 		void UpdateLight(const std::vector<Graphics::SBs::LightSB>& sb);
@@ -57,7 +58,7 @@ namespace Engine::Managers
 {
 	constexpr float __placeholder = 0.f;
 
-	class RENDERER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
+	class SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
 	{
 	private:
 		struct Subfrusta
@@ -105,11 +106,8 @@ namespace Engine::Managers
 		void InitializeViewport();
 		void InitializeShadowBuffer(LocalActorID id);
 
-		void BuildShadowMap(
-			float dt, const Weak<CommandPair>& w_cmd, const Strong<Objects::Light>& light, UINT
-			light_idx
-		);
-		void ClearShadowMaps(const Weak<CommandPair>& w_cmd);
+		void BuildShadowMap(float dt, const Strong<Objects::Light>& light, UINT light_idx);
+		void ClearShadowMaps();
 
 		static void CreateSubfrusta(
 			const Matrix& projection, float start, float end,

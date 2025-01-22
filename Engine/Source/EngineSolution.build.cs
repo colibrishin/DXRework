@@ -81,10 +81,14 @@ public class EngineSolution : Solution
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
                 conf.AddProject<RenderPassTaskDX12>(target);
+
+                conf.AddProject<ComputeDispatchTaskDX12>(target);
+
                 conf.AddProject<ShadowRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<ViewportRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<ShaderRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<GraphicPrimitiveShaderDX12>(target);
+                conf.AddProject<ComputePrimitiveShaderDX12>(target);
                 conf.AddProject<PipelineRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<StructuredBufferRenderPrerequisiteTaskDX12>(target);
                 conf.AddProject<ConstantBufferRenderPrerequisiteTaskDX12>(target);
@@ -104,6 +108,7 @@ public class EngineSolution : Solution
                 //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
                 conf.AddProject<RenderPipeline>(target);
+                conf.AddProject<ShadowManager>(target);
                 conf.AddProject<ResourceManager>(target);
                 conf.AddProject<SceneManager>(target);
                 conf.AddProject<SoundManager>(target);

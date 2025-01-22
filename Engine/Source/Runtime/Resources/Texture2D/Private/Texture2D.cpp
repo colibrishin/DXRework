@@ -27,7 +27,7 @@ namespace Engine::Resources
 		return Texture::GetHeight();
 	}
 
-	void Texture2D::loadDerived(ComPtr<ID3D12Resource>& res)
+	void Texture2D::Load_INTERNAL()
 	{
 		const auto& gd = GetDescription();
 
@@ -35,6 +35,8 @@ namespace Engine::Resources
 		{
 			throw std::logic_error("Hotloading texture should be define in width, height");
 		}
+
+		Texture::Load_INTERNAL();
 	}
 
 	void Texture2D::Unload_INTERNAL()
