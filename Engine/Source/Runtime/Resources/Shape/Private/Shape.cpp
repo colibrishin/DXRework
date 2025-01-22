@@ -120,32 +120,32 @@ namespace Engine::Resources
 	void Shape::OnSerialized()
 	{
 		Resource::OnSerialized();
-
-		for (size_t i = 0; i < m_meshes_.size(); ++i)
+		
+		for (size_t i = 0; i < m_cached_meshes_.size(); ++i)
 		{
-			if (const Strong<Mesh>& mesh = m_meshes_[i].first)
+			if (const Strong<Mesh>& mesh = m_cached_meshes_[i].first.lock())
 			{
 				Serializer::Serialize(mesh->GetName(), mesh);
 				m_mesh_paths_[i] = mesh->GetMetadataPath();
 			}
 
-			if (const Strong<Material>& mtr = m_meshes_[i].second)
+			if (const Strong<Material>& mtr = m_cached_meshes_[i].second.lock())
 			{
 				Serializer::Serialize(mtr->GetName(), mtr);
 				m_material_paths_[i] = mtr->GetMetadataPath();
 			}
 		}
 
-		if (m_animations_)
+		if (const Strong<AnimationTexture>& anim = m_cached_animations_.lock())
 		{
-			Serializer::Serialize(m_animations_->GetName(), m_animations_);
-			m_animations_path_ = m_animations_->GetMetadataPath();
+			Serializer::Serialize(anim->GetName(), anim);
+			m_animations_path_ = anim->GetMetadataPath();
 		}
 
-		if (m_tr_animation_)
+		if (const Strong<BaseAnimation>& banim = m_cached_tr_animation_.lock())
 		{
-			Serializer::Serialize(m_tr_animation_->GetName(), m_tr_animation_);
-			m_tr_animation_path_ = m_tr_animation_->GetMetadataPath();
+			Serializer::Serialize(banim->GetName(), banim);
+			m_tr_animation_path_ = banim->GetMetadataPath();
 		}
 	}
 

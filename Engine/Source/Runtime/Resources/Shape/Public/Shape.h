@@ -118,7 +118,7 @@ namespace Engine::Resources
 
 		WeakMeshMaterialVector m_cached_meshes_;
 		Weak<AnimationTexture> m_cached_animations_;
-		Weak<BaseAnimation> m_tr_animations_;
+		Weak<BaseAnimation> m_cached_tr_animation_;
 		aligned_vector<VertexElement> m_cached_vertices_;
 	};
 }

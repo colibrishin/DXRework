@@ -37,49 +37,59 @@ namespace Engine::Resources
 			*parent |= ui.NewCheckbox({"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture)});
 
 			*parent += ui.NewListBox({ "Textures", 0, 0 });
-			for (auto it = m_textures_.begin(); it != m_textures_.end(); ++it)
+			for (auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it)
 			{
-				if (*it == nullptr)
+				if (const Strong<Texture>& tex = it->lock())
 				{
-					continue;
-				}
+					*parent |= ui.NewSelectable({ tex->GetName(), tex->m_ui_info_.dialogOpened });
+					(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&]()
+						{
+							SetTexture(*it, std::distance(m_cached_textures_.begin(), it) - 1);
+						});
+					(*parent |= ui.NewButton({ "Move Down" })).SetFunction([&]()
+						{
+							SetTexture(*it, std::distance(m_cached_textures_.begin(), it) + 1);
+						});
+					*parent |= ui.NewSeparator({});
 
-				const Strong<Texture>& tex = *it;
-
-				*parent |= ui.NewSelectable({ tex->GetName(), tex->m_ui_info_.dialogOpened });
-				(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&]()
+					if (tex->m_ui_info_.dialogOpened) 
 					{
-						SetTexture(*it, std::distance(m_textures_.begin(), it) - 1);
-					});
-				(*parent |= ui.NewButton({ "Move Down" })).SetFunction([&]()
-					{
-						SetTexture(*it, std::distance(m_textures_.begin(), it) + 1);
-					});
-				*parent |= ui.NewSeparator({});
-
-				if (tex->m_ui_info_.dialogOpened) 
-				{
-					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ tex.get(), tex->GetName(), tex->m_ui_info_.dialogOpened })))
-					{
-						tex->OnUIUpdate(&context, dt);
+						if (UIContext context = UIInterface::NewContext(ui.NewDialog({ tex.get(), tex->GetName(), tex->m_ui_info_.dialogOpened })))
+						{
+							tex->OnUIUpdate(&context, dt);
+						}
 					}
 				}
 			}
 			--*parent;
+
+			{
+				std::string shader_string = {};
+				if (const Strong<Shader>& shader = m_cached_shader_.lock())
+				{
+					shader_string = shader->GetName();
+				}
 			
-			static std::string empty_string = {};
-			*parent |= ui.NewLabelAndText({"Shader", m_shader_ ? const_cast<std::string&>(m_shader_->GetName()) : empty_string, false});
-			(*parent |= ui.NewButton({"Set Shader"})).SetFunction([&]()
-				{
-					m_ui_shader_dialog_ = !m_ui_shader_dialog_;
-				});
+				*parent |= ui.NewLabelAndText({"Shader", shader_string, false});
+				(*parent |= ui.NewButton({"Set Shader"})).SetFunction([&]()
+					{
+						m_ui_shader_dialog_ = !m_ui_shader_dialog_;
+					});
+			}
 
-			*parent |= ui.NewLabelAndText({ "Atlas Texture", m_atlas_loaded_ ? const_cast<std::string&>(m_atlas_loaded_->GetName()) : empty_string, false});
-			(*parent |= ui.NewButton({ "Add Texture..." })).SetFunction([&]()
+			{
+				std::string atlas_string = {};
+				if (const Strong<AtlasAnimationTexture>& atlas = m_cached_atlas_.lock())
 				{
-					m_ui_add_dialog_ = !m_ui_add_dialog_;
-				});
-
+					atlas_string = atlas->GetName();
+				}
+				*parent |= ui.NewLabelAndText({ "Atlas Texture", atlas_string, false});
+				(*parent |= ui.NewButton({ "Add Texture..." })).SetFunction([&]()
+					{
+						m_ui_add_dialog_ = !m_ui_add_dialog_;
+					});
+			}
+			
 			if (m_ui_shader_dialog_)
 			{
 				if (Weak<Resource> resource_to_load;
@@ -96,7 +106,7 @@ namespace Engine::Resources
 			
 			if (m_ui_add_dialog_)
 			{
-				if (std::vector<Weak<Abstracts::Resource>> resource_to_load;
+				if (std::vector<Weak<Resource>> resource_to_load;
 					UIHelpers::MultipleResourceSelectionDialogInclusion<Material, Texture>(GetSharedPtr<Material>(), resource_to_load))
 				{
 					for (const Weak<Resource>& resource : resource_to_load)
@@ -137,24 +147,24 @@ namespace Engine::Resources
 	{
 		Resource::OnSerialized();
 
-		if (m_shader_)
+		if (const Strong<Shader>& shader = m_cached_shader_.lock())
 		{
-			Serializer::Serialize(m_shader_->GetName(), m_shader_);
-			m_shader_path_ = m_shader_->GetMetadataPath();
+			Serializer::Serialize(shader->GetName(), shader);
+			m_shader_path_ = shader->GetMetadataPath();
 		}
 
-		if (m_atlas_loaded_)
+		if (const Strong<AtlasAnimationTexture>& atlas = m_cached_atlas_.lock())
 		{
-			Serializer::Serialize(m_atlas_loaded_->GetName(), m_atlas_loaded_);
-			m_atlas_path_ = m_atlas_loaded_->GetMetadataPath();
+			Serializer::Serialize(atlas->GetName(), atlas);
+			m_atlas_path_ = atlas->GetMetadataPath();
 		}
 
-		for (auto it = m_textures_.begin(); it != m_textures_.end(); ++it)
+		for (auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it)
 		{
-			if (const Strong<Texture>& tex = *it)
+			if (const Strong<Texture>& tex = it->lock())
 			{
 				Serializer::Serialize(tex->GetName(), tex);
-				m_texture_paths_[std::distance(m_textures_.begin(), it)] = tex->GetMetadataPath();
+				m_texture_paths_[std::distance(m_cached_textures_.begin(), it)] = tex->GetMetadataPath();
 			}
 		}
 	}
@@ -179,11 +189,13 @@ namespace Engine::Resources
 			{
 				const size_t idx = std::distance(m_textures_.begin(), it);
 				m_textures_[idx] = {};
+				m_cached_textures_[idx] = {};
 				m_material_sb_.texSlot[slot] = false;
 				m_texture_paths_[slot] = "";
 			}
 
 			m_textures_[slot] = locked;
+			m_cached_textures_[slot] = locked;
 			m_material_sb_.texSlot[slot] = true;
 			m_texture_paths_[slot] = locked->GetMetadataPath();
 		}
@@ -193,7 +205,8 @@ namespace Engine::Resources
 	{
 		if (const Strong<AtlasAnimationTexture>& locked = texture.lock())
 		{
-			m_atlas_loaded_ = locked;
+			m_atlas_ = locked;
+			m_cached_atlas_ = locked;
 			m_atlas_path_ = locked->GetMetadataPath();
 		}
 	}
@@ -203,6 +216,7 @@ namespace Engine::Resources
 		if (const Strong<Shader>& locked = shader.lock())
 		{
 			m_shader_ = locked;
+			m_cached_shader_ = locked;
 			m_shader_path_ = locked->GetMetadataPath();
 		}
 	}
@@ -212,21 +226,21 @@ namespace Engine::Resources
 		return m_material_sb_;
 	}
 
-	const Material::TextureArray& Material::GetTextures() const
+	const Material::WeakTextureArray& Material::GetTextures() const
 	{
-		return m_textures_;
+		return m_cached_textures_;
 	}
 
 	Weak<AtlasAnimationTexture> Material::GetAtlasTexture() const
 	{
-		return m_atlas_loaded_;
+		return m_cached_atlas_;
 	}
 
 	Weak<AtlasAnimation> Material::GetAtlasAnimation(const size_t idx) const
 	{
-		if (m_atlas_loaded_)
+		if (const Strong<AtlasAnimationTexture>& anim = m_cached_atlas_.lock())
 		{
-			return m_atlas_loaded_->GetAnimation(idx);
+			return anim->GetAnimation(idx);
 		}
 
 		return {};

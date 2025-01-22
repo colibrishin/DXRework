@@ -132,10 +132,14 @@ namespace Engine
                                 anim->GetPrimitive().Apply(*instance_pair.instance);
                             }
 
-                            std::ranges::copy(
-                                locked_mtr->GetTextures().begin(),
-                                locked_mtr->GetTextures().end(),
-                                instance_pair.textures.begin());
+                            for (auto it = locked_mtr->GetTextures().begin(); it != locked_mtr->GetTextures().end(); ++it)
+                            {
+                                const size_t idx = std::distance(locked_mtr->GetTextures().begin(), it);
+                                if (const Strong<Resources::Texture>& locked = it->lock())
+                                {
+                                    instance_pair.textures[idx] = locked;
+                                }
+                            }
 
                             if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
                             {
