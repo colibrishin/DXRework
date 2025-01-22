@@ -10,7 +10,7 @@ void Engine::MaterialModule::Initialize()
 {
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Material::StaticTypeName(), [](bool& managing_flag)
 		{
-			Resources::Material::Create("NewMaterial", "");
+			Resources::Material::Create("NewMaterial", Graphics::SBs::MaterialSB{});
 			managing_flag = false;
 		});
 

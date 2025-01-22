@@ -1,6 +1,5 @@
 #pragma once
 #include "TypeLibrary/Public/TypeLibrary.h"
-#include "MaterialBindFlag.h"
 #include "MaterialSB.generated.h"
 
 namespace Engine::Graphics::SBs

@@ -3,9 +3,7 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
-
 #include <string>
-#include <map>
 
 #include "MaterialSB.h"
 
@@ -36,6 +34,11 @@ namespace Engine::Resources
 	private:
 		Material();
 
+	protected:
+		void Load_INTERNAL() override;
+		void Unload_INTERNAL() override;
+
+	private:
 		EPROPERTY()
 		Graphics::SBs::MaterialSB m_material_sb_;
 	};

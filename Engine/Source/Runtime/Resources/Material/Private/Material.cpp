@@ -68,5 +68,8 @@ namespace Engine::Resources
 
 	Material::Material()
 		: Resource("") {}
-	
+
+	void Material::Load_INTERNAL() {}
+
+	void Material::Unload_INTERNAL() {}
 }
