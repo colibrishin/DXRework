@@ -55,15 +55,15 @@ namespace Engine::Resources
 		{
 			if (const Strong<T>& locked = res.lock())
 			{
-				if constexpr (Mesh::StaticIsBaseOf(T::StaticTypeHash()))
+				if constexpr (T::StaticIsDerivedOf(Mesh::StaticTypeHash()))
 				{
 					addMeshImpl(locked);
 				}
-				else if constexpr (AnimationTexture::StaticIsBaseOf(T::StaticTypeHash()))
+				else if constexpr (T::StaticIsDerivedOf(AnimationTexture::StaticTypeHash()))
 				{
 					addAnimationImpl(locked);
 				}
-				else if constexpr (BaseAnimation::StaticIsBaseOf(T::StaticTypeHash()))
+				else if constexpr (T::StaticIsDerivedOf(BaseAnimation::StaticTypeHash()))
 				{
 					addTrAnimationImpl(locked);
 				}
@@ -83,7 +83,7 @@ namespace Engine::Resources
 		friend class Managers::Renderer;
 		Shape();
 
-		void addMeshImpl(const Strong<Mesh>& res);
+		void addMeshImpl(const Strong<Mesh>& res, const bool add_path = true);
 		void addAnimationImpl(const Strong<AnimationTexture>& res);
 		void addTrAnimationImpl(const Strong<BaseAnimation>& res);
 

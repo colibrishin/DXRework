@@ -36,13 +36,16 @@ namespace Engine
 
 		virtual      ~RenderPassTask() = default;
 		virtual void Run(
-			float                                   dt,
-			bool                                    shader_bypass,
-			RenderMap const*                        domain_map,
-			const Graphics::SBs::LocalParamSB&      local_param,
-			const ObjectPredication&                predicate,
-			const ContextSetupFunction&				prerender_predicate,
-			const ContextSetupFunction&             postrender_predicate
+			float                                                             dt,
+			bool                                                              shader_bypass,
+			RenderMap const*                                                  domain_map,
+			const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+			const Graphics::SBs::LocalParamSB&                                local_param,
+			const ObjectPredication&                                          predicate,
+			const ContextSetupFunction&                                       prerender_predicate,
+			const ContextSetupFunction&                                       postrender_predicate,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 		) = 0;
 
 		virtual void Cleanup() = 0;

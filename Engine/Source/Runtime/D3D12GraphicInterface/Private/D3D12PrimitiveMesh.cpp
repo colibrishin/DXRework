@@ -47,7 +47,6 @@ namespace Engine
 				);
 
 		DX::ThrowIfFailed(m_native_vertex_buffer_->SetName(vertex_name.c_str()));
-    	SetNativeVertexBuffer(m_native_vertex_buffer_.Get());
     	
 		// -- Upload Buffer -- //
 		// Create the upload heap.
@@ -97,7 +96,6 @@ namespace Engine
 				);
 
 		DX::ThrowIfFailed(m_native_index_buffer_->SetName(index_name.c_str()));
-		SetNativeIndexBuffer(m_native_index_buffer_.Get());
 		
 		// Create the upload heap.
 		DX::ThrowIfFailed
@@ -143,6 +141,9 @@ namespace Engine
 
 		cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 		cmd->GetList()->ResourceBarrier(1, &idx_trans);
+
+		SetNativeVertexBuffer(&m_vertex_buffer_view_);
+		SetNativeIndexBuffer(&m_index_buffer_view_);
 
 #if CFG_RAYTRACING
 		AccelStructBuffer& blas = GetAccelStructBuffer(mesh);
@@ -319,17 +320,5 @@ namespace Engine
 #endif
 
     	cmd->FlagReady();
-    }
-
-    void D3D12PrimitiveMesh::SetNativeIndexBuffer(void* buffer)
-    {
-	    PrimitiveMesh::SetNativeIndexBuffer(buffer);
-    	m_native_index_buffer_ = static_cast<ID3D12Resource*>(buffer);
-    }
-	
-    void D3D12PrimitiveMesh::SetNativeVertexBuffer(void* buffer)
-    {
-	    PrimitiveMesh::SetNativeVertexBuffer(buffer);
-    	m_native_vertex_buffer_ = static_cast<ID3D12Resource*>(buffer);
     }
 }

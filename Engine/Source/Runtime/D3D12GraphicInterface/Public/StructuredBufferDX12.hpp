@@ -6,7 +6,7 @@
 
 namespace Engine::Graphics
 {
-	class ENGINE_D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypelessBase 
+	class ENGINE_D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypeless 
 	{
 	public:
 		D3D12StructuredBufferTypeless() = default;

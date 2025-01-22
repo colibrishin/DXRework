@@ -1,11 +1,6 @@
 #include "../Public/Shader.h"
-
-#include <ranges>
-
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
-
-#include <magic_enum.hpp>
 #include "Shader.generated.h"
 
 namespace Engine::Resources
@@ -32,22 +27,22 @@ namespace Engine::Resources
 		const ePrimitiveTopology     topology,
 		const ePrimitiveTopologyType topology_type,
 		const eSampler               sampler_slot
-	) : 
-		Resource(path),
-		m_domain_(domain),
-		m_depth_enabled_(depth_enabled),
-		m_depth_(depth),
-		m_depth_func_(depth_func),
-		m_sampler_addr_(sampler_addr),
-		m_sampler_func_(m_sampler_func_),
-		m_sampler_filter_(sampler_filter),
-		m_cull_mode_(rasterizer_cull),
-		m_draw_mode(rasterizer_draw),
-		m_rtv_formats_(rtv_formats),
-		m_dsv_format_(dsv_format),
-		m_topology_(topology),
-		m_topology_type_(topology_type),
-		m_sampler_slot_(sampler_slot) {}
+	)
+		: Resource(path),
+		  m_domain_(domain),
+		  m_depth_enabled_(depth_enabled),
+		  m_depth_(depth),
+		  m_depth_func_(depth_func),
+		  m_sampler_addr_(sampler_addr),
+		  m_sampler_func_(sampler_func),
+		  m_sampler_filter_(sampler_filter),
+		  m_cull_mode_(rasterizer_cull),
+		  m_draw_mode(rasterizer_draw),
+		  m_rtv_formats_(rtv_formats),
+		  m_dsv_format_(dsv_format),
+		  m_topology_(topology),
+		  m_topology_type_(topology_type),
+		  m_sampler_slot_(sampler_slot) {}
 
 	void Shader::Initialize() {}
 
@@ -180,12 +175,12 @@ namespace Engine::Resources
 		  m_depth_(),
 		  m_depth_func_(),
 		  m_sampler_addr_(),
+		  m_sampler_func_(),
 		  m_sampler_filter_(),
 		  m_cull_mode_(),
 		  m_draw_mode(),
 		  m_dsv_format_(),
 		  m_topology_(),
 		  m_topology_type_(),
-		  m_sampler_slot_(),
-		  m_depth_flag_(false) { }
+		  m_sampler_slot_() {}
 } // namespace Engine::Graphic

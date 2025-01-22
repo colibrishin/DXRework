@@ -34,6 +34,7 @@ namespace Engine::Resources
 		[[nodiscard]] size_t                  GetIndexCount() const;
 		[[nodiscard]] const VertexCollection& GetVertexCollection() const;
 		[[nodiscard]] const IndexCollection&  GetIndexCollection() const;
+		[[nodiscard]] PrimitiveMesh*          GetPrimitive() const;
 
 		void UpdateCollider(const Weak<Components::Collider>& w_collider) const;
 

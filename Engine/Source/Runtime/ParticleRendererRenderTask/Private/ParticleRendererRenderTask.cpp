@@ -1,6 +1,5 @@
 #include "../Public/ParticleRendererRenderTask.h"
 #include <tbb/parallel_for_each.h>
-#include <algorithm>
 #include "Renderer.h"
 
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
@@ -53,6 +52,11 @@ namespace Engine
                 const Strong<Resources::Shape>& shape = pr->GetShape().lock();
                 const Strong<Components::Transform>& tr  = obj->GetComponent<Components::Transform>().lock();
 
+                if (!shape || !tr)
+                {
+                    return;
+                }
+                
                 // Pre-mapping by the shader domain.
                 for (auto i = 0; i < map_size; ++i)
                 {
@@ -130,12 +134,7 @@ namespace Engine
         for (size_t i = 0; i < map_size; ++i)
         {
             auto& domain_map = render_map[i];
-
-            if (RenderMap::accessor acc;
-                domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
-            {
-                domain_map.erase(Components::ParticleRenderer::StaticTypeHash());
-            }
+            domain_map.erase(Components::ParticleRenderer::StaticTypeHash());
         }
 
         for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)

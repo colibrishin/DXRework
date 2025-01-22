@@ -74,7 +74,7 @@ namespace Engine::Resources
 
 			for (auto it = m_meshes_.begin(); it != m_meshes_.end(); ++it)
 			{
-				const auto& mesh = (*it).first;
+				const auto& mesh = it->first;
 				const size_t idx = std::distance(m_meshes_.begin(), it);
 
 				if (m_ui_material_add_opened_[idx])
@@ -119,12 +119,38 @@ namespace Engine::Resources
 	void Shape::OnSerialized()
 	{
 		Resource::OnSerialized();
+
+		for (size_t i = 0; i < m_meshes_.size(); ++i)
+		{
+			if (const Strong<Mesh>& mesh = m_meshes_[i].first)
+			{
+				Serializer::Serialize(mesh->GetName(), mesh);
+				m_mesh_paths_[i] = mesh->GetMetadataPath();
+			}
+
+			if (const Strong<Material>& mtr = m_meshes_[i].second)
+			{
+				Serializer::Serialize(mtr->GetName(), mtr);
+				m_material_paths_[i] = mtr->GetMetadataPath();
+			}
+		}
+
+		if (m_animations_)
+		{
+			Serializer::Serialize(m_animations_->GetName(), m_animations_);
+			m_animations_path_ = m_animations_->GetMetadataPath();
+		}
+
+		if (m_tr_animation_)
+		{
+			Serializer::Serialize(m_tr_animation_->GetName(), m_tr_animation_);
+			m_tr_animation_path_ = m_tr_animation_->GetMetadataPath();
+		}
 	}
 
 	void Shape::OnDeserialized()
 	{
 		Resource::OnDeserialized();
-
 		Load();
 	}
 
@@ -297,7 +323,7 @@ namespace Engine::Resources
 
 	void Shape::SetMaterial(const size_t target_mesh_idx, const Weak<Material>& mat)
 	{
-		if (m_meshes_.size() > target_mesh_idx)
+		if (m_meshes_.size() <= target_mesh_idx)
 		{
 			return;
 		}
@@ -316,17 +342,20 @@ namespace Engine::Resources
 		{
 			for (int i = 0; i < m_mesh_paths_.size(); ++i)
 			{
-				if (const auto mesh = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Mesh>
-						(m_mesh_paths_[i]).lock())
+				if (const auto mesh = Mesh::GetByMetadataPath(m_mesh_paths_[i]).lock())
 				{
-					Add(mesh);
+					addMeshImpl(mesh, false);
 				}
 			}
 
-			if (const auto anims = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AnimationTexture>
-					(m_animations_path_).lock())
+			if (const auto anims = AnimationTexture::GetByMetadataPath(m_animations_path_).lock())
 			{
 				Add(anims);
+			}
+
+			if (const auto tr_anim = BaseAnimation::GetByMetadataPath(m_tr_animation_path_).lock())
+			{
+				Add(tr_anim);
 			}
 
 			return;
@@ -636,7 +665,7 @@ namespace Engine::Resources
 		: Resource(""),
 		  m_bounding_box_({}) {}
 
-	void Shape::addMeshImpl(const Strong<Mesh>& res)
+	void Shape::addMeshImpl(const Strong<Mesh>& res, const bool add_path)
 	{
 		m_meshes_.push_back({ res, {} });
 
@@ -651,21 +680,26 @@ namespace Engine::Resources
 			const BoundingOrientedBox& obb = mesh->GetBoundingBox();
 			BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
 		}
-		
-		m_mesh_paths_.push_back(res->GetMetadataPath().generic_string());
+
+		m_cached_meshes_.push_back({res, {}});
+		m_material_paths_.push_back({});
+		if (add_path)
+		{
+			m_mesh_paths_.push_back(res->GetMetadataPath());
+		}
 		UpdateVertices();
 	}
 	
 	void Shape::addAnimationImpl(const Strong<AnimationTexture>& res)
 	{
 		m_animations_      = res;
-		m_animations_path_ = res->GetMetadataPath().generic_string();
+		m_animations_path_ = res->GetMetadataPath();
 		m_animation_catalog_.clear();
 		m_animation_catalog_.reserve(m_animations_->GetAnimations().size());
 
 		for (const auto& animation : m_animations_->GetAnimations())
 		{
-			if (const Strong<Resources::BoneAnimation>& locked = animation.lock())
+			if (const Strong<BoneAnimation>& locked = animation.lock())
 			{
 				m_animation_catalog_.push_back(locked->GetName());
 			}

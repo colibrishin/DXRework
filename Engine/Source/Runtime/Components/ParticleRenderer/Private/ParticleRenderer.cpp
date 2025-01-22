@@ -55,7 +55,8 @@ namespace Engine::Components
 
 			primitive.commandList->SoftReset();
 			m_sb_buffer_->SetData(&primitive, static_cast<UINT>(m_instances_.size()), m_instances_.data());
-			m_sb_buffer_->GetTypeless().TransitionToUAV(&primitive);
+			
+			m_sb_buffer_->TransitionToUAV(&primitive);
 			m_sb_buffer_->CopyUAVHeap(&primitive);
 
 			const auto thread      = m_cs_->GetThread();
@@ -107,12 +108,12 @@ namespace Engine::Components
 
 	eComponentUpdatePriority ParticleRenderer::GetUpdatePriority() const
 	{
-		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
+		return COM_PRIORITY_RENDER;
 	}
 
 	aligned_vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
 	{
-		std::lock_guard<std::mutex> lock(m_instances_mutex_);
+		std::lock_guard lock(m_instances_mutex_);
 		return reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(m_instances_);
 	}
 
@@ -123,7 +124,7 @@ namespace Engine::Components
 
 	void ParticleRenderer::SetCount(const size_t count)
 	{
-		std::lock_guard<std::mutex> lock(m_instances_mutex_);
+		std::lock_guard lock(m_instances_mutex_);
 		// Expand and apply the world matrix of the owner to each instance.
 		m_instances_.resize(count);
 		m_params_.SetParam(particle_count_slot, static_cast<int>(count));
@@ -131,7 +132,7 @@ namespace Engine::Components
 
 	void ParticleRenderer::SetDuration(const float duration)
 	{
-		std::lock_guard<std::mutex> lock(m_instances_mutex_);
+		std::lock_guard lock(m_instances_mutex_);
 		m_params_.SetParam(duration_slot, duration);
 
 		for (auto& instance : m_instances_)

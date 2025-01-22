@@ -18,13 +18,16 @@ namespace Engine
 		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()) {}
 
 	void GenericRenderPassTask::Run(
-		const float                        dt,
-		const bool                         shader_bypass,
-		RenderMap const*                   domain_map,
-		const Graphics::SBs::LocalParamSB& local_param,
-		const ObjectPredication&           predicate,
-		const ContextSetupFunction&        prerender_predicate,
-		const ContextSetupFunction&        postrender_predicate
+		float                                                             dt,
+		bool                                                              shader_bypass,
+		RenderMap const*                                                  domain_map,
+		const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+		const Graphics::SBs::LocalParamSB&                                local_param,
+		const ObjectPredication&                                          predicate,
+		const ContextSetupFunction&                                       prerender_predicate,
+		const ContextSetupFunction&                                       postrender_predicate,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 	)
 	{
 		if (domain_map->empty())
@@ -33,19 +36,24 @@ namespace Engine
 		}
 
 		// Filter the instances by the predicate
-		IntermediateMeshMap intermediate_mesh_map = PredicateObject(predicate, domain_map);
+		uint64_t instance_count = 0;
+		IntermediateMeshMap intermediate_mesh_map;
+		PredicateObject(predicate, domain_map, instance_count, intermediate_mesh_map);
+
+		m_local_param_pool_.Update(nullptr, instance_count);
+		m_instance_pool_.Update(nullptr, instance_count);
 
 		for (const auto& renderer : *domain_map | std::views::values)
 		{
 			for (const auto& [mesh, shader_map] : renderer)
 			{
 				tbb::parallel_for_each(shader_map.begin(), shader_map.end(),
-					[weak_mesh = Weak(mesh), this, &local_param, &prerender_predicate, &postrender_predicate, &shader_bypass, &dt, &intermediate_mesh_map](const std::pair<Strong<Resources::Shader>, aligned_vector<InstancePair>>& pair)
+					[weak_mesh = Weak(mesh), this, &local_param, &postrender_predicates, &prerender_predicates, &prerender_predicate, &postrender_predicate, &additional_sbs, &shader_bypass, &dt, &intermediate_mesh_map](const std::pair<Strong<Resources::Shader>, aligned_vector<InstancePair>>& pair)
 				{
 					// todo: possible bottleneck?
 					if (decltype(intermediate_mesh_map)::const_accessor acc; intermediate_mesh_map.find(acc, weak_mesh))
 					{
-						StartPhase_MultiThread(dt, shader_bypass, weak_mesh, pair.first, local_param, prerender_predicate, postrender_predicate, acc->second);
+						StartPhase_MultiThread(dt, shader_bypass, weak_mesh, pair.first, additional_sbs, local_param, prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates, acc->second);
 					}
 				});
 			}
@@ -56,11 +64,12 @@ namespace Engine
 	{
 		m_local_param_pool_.reset();
 		m_instance_pool_.reset();
+		m_heaps_.clear();
 	}
 
-	GenericRenderPassTask::IntermediateMeshMap GenericRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map)
+	void GenericRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateMeshMap& out_map) const
 	{
-		IntermediateMeshMap final_mapping;
+		out_map.clear();
 		
 		for (const auto& meshes : *domain_map | std::views::values)
 		{
@@ -77,31 +86,34 @@ namespace Engine
 								continue;
 							}
 
-							decltype(final_mapping)::accessor acc;
-							if (!final_mapping.find(acc, mesh_pair.first))
+							std::remove_reference_t<decltype(out_map)>::accessor acc;
+							if (!out_map.find(acc, mesh_pair.first))
 							{
-								final_mapping.insert(acc, mesh_pair.first);
+								out_map.insert(acc, mesh_pair.first);
 							}
 
-							acc->second.push_back(&instance_pair);
+							acc->second.push_back(instance_pair);
+							++instance_count;
 						}
 					}
 				}
 			);
 		}
-
-		return final_mapping;
 	}
 
 	void GenericRenderPassTask::StartPhase_MultiThread(
-		const float dt,
-		const bool shader_bypass,
-		const Weak<Resources::Mesh>& mesh,
-		const Weak<Resources::Shader>& shader,
-		const Graphics::SBs::LocalParamSB& local_param,
-		const ContextSetupFunction& prerender_predicate,
-		const ContextSetupFunction& postrender_predicate,
-		const aligned_vector<const InstancePair*>& instance_pairs)
+		const float                                                       dt,
+		const bool                                                        shader_bypass,
+		const Weak<Resources::Mesh>&                                      mesh,
+		const Weak<Resources::Shader>&                                    shader,
+		const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+		const Graphics::SBs::LocalParamSB&                                local_param,
+		const ContextSetupFunction&                                       prerender_predicate,
+		const ContextSetupFunction&                                       postrender_predicate,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
+		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
+		const aligned_vector<InstancePair>&                               instance_pairs
+	)
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 
@@ -111,33 +123,41 @@ namespace Engine
 		gi_token.Release();
 		
 		const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();
-
 		primitive.commandList->SoftReset();
 
 		// Manual release
 		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
-		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb          = m_local_param_pool_.get();
+		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
+		m_local_param_pool_.advance();
 		local_param_token.Release();
-		
-		StructuredBufferTypelessBase&                           sb_typeless = sb.GetTypeless();
-		sb.SetData(&primitive, 1, &local_param);
-		sb_typeless.TransitionToSRV(&primitive);
-		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&primitive);
-		gi.SetDefaultRenderTarget(&primitive);
 
-		GraphicHeapBase*                 current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
-		GraphicInterfaceContextPrimitive temp_context
+		GraphicHeapBase*                       current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
+		const GraphicInterfaceContextPrimitive temp_context
 		{
 			.commandList = primitive.commandList,
 			.heap = current_heap
 		};
 
+		sb.SetData(&temp_context, 1, &local_param);
+		sb.TransitionToSRV(&temp_context);
+		gi.SetDefaultRenderTarget(&temp_context);
+
 		if (prerender_predicate) { prerender_predicate(&temp_context); }
 
-		sb.CopySRVHeap(&temp_context);
-		current_heap->BindGraphic(&primitive);
+		for (const auto& func : prerender_predicates | std::views::values)
+		{
+			func(&temp_context);
+		}
 
+		sb.CopySRVHeap(&temp_context);
+		current_heap->BindGraphic(&temp_context);
+		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&temp_context);
+
+		// Manual release
+		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
+		m_instance_pool_.advance();
+		instance_token.Release();
 		
 		static aligned_vector<Graphics::SBs::InstanceSB*> instances;
 		static aligned_vector<TexturePair> texture_pairs;
@@ -149,29 +169,35 @@ namespace Engine
 		}
 
 		size_t idx = 0;
-		for (const InstancePair* instance_pair : instance_pairs)
+		for (const InstancePair& instance_pair : instance_pairs)
 		{
-			instances[idx] = instance_pair->instance;
-			texture_pairs[idx] = TexturePair(&instance_pair->textures, &instance_pair->reservedTextures);
+			instances[idx] = instance_pair.instance;
+			texture_pairs[idx] = TexturePair(&instance_pair.textures, &instance_pair.reservedTextures);
 			++idx;
+		}
+
+		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
+		{
+			additional_sb->TransitionToSRV(&temp_context);
+			additional_sb->CopySRVHeap(&temp_context);
 		}
 		
 		DrawPhase_MultiThread(dt, shader_bypass, idx, instance, shader, mesh, &temp_context, instances, texture_pairs);
 
 		if (postrender_predicate) { postrender_predicate(&temp_context); }
+
+		for (const auto& func : postrender_predicates | std::views::values)
+		{
+			func(&temp_context);
+		}
 		
+		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
 		{
-			auto token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
-			m_instance_pool_.advance();
+			additional_sb->TransitionCommon(&temp_context);
 		}
 
-		sb_typeless.TransitionCommon(&primitive);
-		primitive.commandList->FlagReady();
-
-		{
-			auto token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
-			m_local_param_pool_.advance();
-		}
+		sb.TransitionCommon(&temp_context);
+		temp_context.commandList->FlagReady();
 	}
 
 	void GenericRenderPassTask::DrawPhase_MultiThread(
@@ -184,7 +210,7 @@ namespace Engine
 		const GraphicInterfaceContextPrimitive* context,
 		const aligned_vector<Graphics::SBs::InstanceSB*>& instances,
 		const aligned_vector<TexturePair>& texture_pairs
-	)
+	) const
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
 		context->heap->BindGraphic(context);
@@ -203,8 +229,6 @@ namespace Engine
 		size_t instance_resolved = 0;
 		while (instance_resolved != instance_count)
 		{
-			assert(instance_resolved > instance_count);
-			
 			size_t instance_to_resolve = 0;
 
 			constexpr size_t max_tex_binds = BIND_SLOT_TEXARR - BIND_SLOT_TEX;
@@ -239,8 +263,7 @@ namespace Engine
 			}
 
 			instance_buffer.SetDataContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
-			StructuredBufferTypelessBase& typeless = instance_buffer.GetTypeless();
-			typeless.TransitionToSRV(context);
+			instance_buffer.TransitionToSRV(context);
 			instance_buffer.CopySRVHeap(context);
 
 			const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
@@ -250,23 +273,27 @@ namespace Engine
 			{
 				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
 				{
-					const auto& tex = texture_pairs[instance_resolved + i].textures->at(j);
-					gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, total_offset);
-					++total_offset;
+					if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].textures->at(j))
+					{
+						gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, total_offset);
+						++total_offset;
+					}
 				}
 				
 				if (texture_pairs[instance_resolved + i].reservedTextures->size())
 				{
 					for (size_t j = 0; j < texture_pairs[instance_resolved + i].reservedTextures->size(); ++j)
 					{
-						const auto& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j);
-						if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+						if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j))
 						{
-							gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0);
-						}
-						else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
-						{
-							gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0);
+							if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+							{
+								gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0);
+							}
+							else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
+							{
+								gi.Bind(context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0);
+							}
 						}
 					}
 				}
@@ -278,28 +305,32 @@ namespace Engine
 			{
 				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
 				{
-					const auto& tex = texture_pairs[instance_resolved + i].textures->at(j);
-					gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+					if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].textures->at(j))
+					{
+						gi.Unbind(context, tex.get(), BIND_TYPE_SRV);	
+					}
 				}
 
 				if (texture_pairs[instance_resolved + i].reservedTextures->size())
 				{
 					for (size_t j = 0; j < texture_pairs[instance_resolved + i].reservedTextures->size(); ++j)
 					{
-						const auto& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j);
-						if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+						if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].reservedTextures->at(j))
 						{
-							gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
-						}
-						else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
-						{
-							gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+							if (tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash())
+							{
+								gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+							}
+							else if (tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash())
+							{
+								gi.Unbind(context, tex.get(), BIND_TYPE_SRV);
+							}
 						}
 					}
 				}
 			}
 
-			typeless.TransitionCommon(context);
+			instance_buffer.TransitionCommon(context);
 			instance_resolved += instance_to_resolve;
 		}
 	}

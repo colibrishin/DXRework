@@ -45,29 +45,36 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, {}, {}, {});
+			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
 		}
 	}
 
 	void Renderer::RenderPass(
-		const float                                        dt, 
-		const bool                                         shader_bypass, 
-		const eShaderDomain                                domain,
-		const SBs::LocalParamSB&                           local_param_sb,
-		const ObjectPredication&                           predication,
-		const ContextSetupFunction&						   prerender_predicate,
-		const ContextSetupFunction&						   postrender_predicate) const
+		const float                                                dt,
+		const bool                                                 shader_bypass,
+		const eShaderDomain                                        domain,
+		const SBs::LocalParamSB&                                   local_param_sb,
+		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
+		const ObjectPredication&                                   predication,
+		const ContextSetupFunction&                                prerender_predicate,
+		const ContextSetupFunction&                                postrender_predicate
+	) const
 	{
-		for (const auto& ptr : m_render_pass_tasks_ | std::views::values) 
+		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
 		{
-			ptr->Run(
-			          dt,
-			          shader_bypass,
-			          &m_render_candidates_[domain],
-			          local_param_sb,
-			          predication,
-			          prerender_predicate,
-			          postrender_predicate);
+			ptr->Run
+					(
+					 dt,
+					 shader_bypass,
+					 &m_render_candidates_[domain],
+					 additional_sbs,
+					 local_param_sb,
+					 predication,
+					 prerender_predicate,
+					 postrender_predicate,
+					 m_prerender_funcs_,
+					 m_postrender_funcs_
+					);
 		}
 	}
 
@@ -106,6 +113,57 @@ namespace Engine::Managers
 		if (m_render_pass_tasks_.contains(name.data()))
 		{
 			m_render_pass_tasks_.erase(name.data());
+		}
+	}
+
+	void Renderer::RegisterStructuredBuffer(const StructuredBufferDecorator* sb)
+	{
+		if (const auto& it = std::ranges::find(m_additional_sbs_, sb);
+			it == m_additional_sbs_.end())
+		{
+			m_additional_sbs_.push_back(sb);
+		}
+	}
+	
+	void Renderer::UnregisterStructuredBuffer(const StructuredBufferDecorator* sb)
+	{
+		std::erase_if(m_additional_sbs_, [&sb](const StructuredBufferDecorator* elem)
+		{
+			return elem == sb;
+		});
+	}
+
+	void Renderer::RegisterContextPreRenderSetup(
+		const std::string_view name, const ContextSetupFunction& prerender_func)
+	{
+		if (!m_prerender_funcs_.contains(name))
+		{
+			m_prerender_funcs_.emplace(name, prerender_func);	
+		}
+	}
+
+	void Renderer::UnregisterContextPreRenderSetup(const std::string_view name)
+	{
+		if (m_prerender_funcs_.contains(name))
+		{
+			m_prerender_funcs_.erase(name);
+		}
+	}
+
+	void Renderer::RegisterContextPostRenderSetup(
+		const std::string_view name, const ContextSetupFunction& postrender_func)
+	{
+		if (!m_postrender_funcs_.contains(name))
+		{
+			m_postrender_funcs_.erase(name);
+		}
+	}
+
+	void Renderer::UnregisterContextPostRenderSetup(const std::string_view name)
+	{
+		if (m_postrender_funcs_.contains(name))
+		{
+			m_postrender_funcs_.erase(name);
 		}
 	}
 

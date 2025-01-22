@@ -33,15 +33,23 @@ namespace Engine::Managers
 		void UnregisterRenderInstance(const std::wstring_view name);
 		void UnregisterRenderPass(const std::wstring_view name);
 
+		void RegisterStructuredBuffer(const StructuredBufferDecorator* sb);
+		void UnregisterStructuredBuffer(const StructuredBufferDecorator* sb);
+
+		void RegisterContextPreRenderSetup(const std::string_view name, const ContextSetupFunction& prerender_func);
+		void UnregisterContextPreRenderSetup(const std::string_view name);
+		void RegisterContextPostRenderSetup(const std::string_view name, const ContextSetupFunction& postrender_func);
+		void UnregisterContextPostRenderSetup(const std::string_view name);
+
 		void RenderPass(
 			float dt,
 			bool shader_bypass,
 			eShaderDomain domain,
 			const Graphics::SBs::LocalParamSB& local_param_sb,
+			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
 			const ObjectPredication& predication,
-			const ContextSetupFunction& prerender_predicate,
-			const ContextSetupFunction& postrender_predicate
-		) const;
+			const ContextSetupFunction& prerender_predicate, 
+			const ContextSetupFunction& postrender_predicate) const;
 
 		[[nodiscard]] bool Ready() const;
 
@@ -51,6 +59,9 @@ namespace Engine::Managers
 		~Renderer() override;
 		
 		bool m_b_ready_;
+		std::unordered_map<std::string_view, ContextSetupFunction> m_prerender_funcs_;
+		std::unordered_map<std::string_view, ContextSetupFunction> m_postrender_funcs_;
+		aligned_vector<const StructuredBufferDecorator*> m_additional_sbs_;
 		std::unordered_map<std::wstring, Unique<RenderInstanceTask>> m_render_instance_tasks_;
 		std::unordered_map<std::wstring, Unique<RenderPassTask>> m_render_pass_tasks_;
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];

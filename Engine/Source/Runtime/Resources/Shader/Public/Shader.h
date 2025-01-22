@@ -75,35 +75,33 @@ namespace Engine::Resources
 		Shader();
 
 		EPROPERTY()
-		eShaderDomain          m_domain_;
+		eShaderDomain m_domain_;
 		EPROPERTY()
-		bool                  m_depth_enabled_;
+		bool m_depth_enabled_;
 		EPROPERTY()
-		eShaderDepthMode          m_depth_;
+		eShaderDepthMode m_depth_;
 		EPROPERTY()
-		eShaderDepthFunction   m_depth_func_;
+		eShaderDepthFunction m_depth_func_;
 		EPROPERTY()
 		eShaderSamplerAddress m_sampler_addr_;
 		EPROPERTY()
 		eShaderSamplerFunction m_sampler_func_;
 		EPROPERTY()
-		eSamplerFilter         m_sampler_filter_;
+		eSamplerFilter m_sampler_filter_;
 		EPROPERTY()
 		eShaderRasterizerCull m_cull_mode_;
 		EPROPERTY()
 		eShaderRasterizerDraw m_draw_mode;
 		EPROPERTY()
-		std::vector<eFormat>   m_rtv_formats_;
+		std::vector<eFormat> m_rtv_formats_;
 		EPROPERTY()
-		eFormat                m_dsv_format_;
+		eFormat m_dsv_format_;
 		EPROPERTY()
-		ePrimitiveTopology     m_topology_;
+		ePrimitiveTopology m_topology_;
 		EPROPERTY()
 		ePrimitiveTopologyType m_topology_type_;
 		EPROPERTY()
-		eSampler               m_sampler_slot_;
-		EPROPERTY()
-		bool                                    m_depth_flag_;
+		eSampler                                m_sampler_slot_;
 		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
 	};
 } // namespace Engine::Graphic

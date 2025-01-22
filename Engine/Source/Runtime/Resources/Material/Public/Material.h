@@ -62,6 +62,7 @@ namespace Engine::Resources
 		MetadataPath m_atlas_path_;
 
 #if WITH_EDITOR
+		bool m_ui_shader_dialog_ = false;
 		bool m_ui_add_dialog_ = false;
 #endif
 

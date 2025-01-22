@@ -13,9 +13,6 @@ namespace Engine
 		void Generate(const Resources::Mesh* mesh) override;
 
 	private:
-		void SetNativeIndexBuffer(void* buffer) override;
-		void SetNativeVertexBuffer(void* buffer) override;
-		
 		ComPtr<ID3D12Resource> m_native_vertex_buffer_;
 		D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_{};
 		ComPtr<ID3D12Resource> m_native_index_buffer_;

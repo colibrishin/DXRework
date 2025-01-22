@@ -2,6 +2,11 @@
 
 #include "SIMDExtension/Public/SIMDExtension.hpp"
 
+Engine::Graphics::D3D12ConstantBufferTypeless::~D3D12ConstantBufferTypeless()
+{
+	delete[] m_data_;
+}
+
 void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data, const size_t stride)
 {
 	m_stride_ = stride;
@@ -106,7 +111,11 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data,
 	m_b_dirty_ = false;
 
 	m_data_ = new char[stride];
-	SIMDExtension::_mm256_memcpy(m_data_, src_data, stride);
+
+	if (src_data)
+	{
+		SIMDExtension::_mm256_memcpy(m_data_, src_data, stride);	
+	}
 }
 
 void Engine::Graphics::D3D12ConstantBufferTypeless::SetData(const void* src_data, const size_t stride)
@@ -132,6 +141,9 @@ void* Engine::Graphics::D3D12ConstantBufferTypeless::GetData() const
 
 void Engine::Graphics::D3D12ConstantBufferTypeless::Bind(const CommandPair* cmd, const DescriptorPtrImpl* heap, const size_t slot)
 {
+	assert(m_buffer_);
+	assert(m_cpu_cbv_heap_);
+
 	if (m_b_dirty_)
 	{
 		const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition

@@ -66,7 +66,7 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context);
+		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const;
 
 		template <typename T>
 		void SetParam(const T& v, const size_t slot)

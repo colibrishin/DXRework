@@ -60,6 +60,7 @@ namespace Engine::Resources
 		if (!GetPath().empty())
 		{
 			m_primitive_texture_->LoadFromFile(this, GetPath());
+			m_desc_ = m_primitive_texture_->GetDescription();
 		}
 		else
 		{
@@ -101,6 +102,11 @@ namespace Engine::Resources
 		if (!IsLoaded())
 		{
 			Load();
+		}
+
+		if (!exists(folder))
+		{
+			create_directories(folder);
 		}
 
 		m_primitive_texture_->SaveAsFile(final_path);

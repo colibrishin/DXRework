@@ -23,8 +23,7 @@ namespace Engine
         void Run(
             Scene const* scene,
             RenderMap*   render_map,
-            const size_t       map_size
-        ) override;
+            const size_t       map_size) override;
 
 		void Cleanup(RenderMap* render_map, const size_t map_size) override;
         

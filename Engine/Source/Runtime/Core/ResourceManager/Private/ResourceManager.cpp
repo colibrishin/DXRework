@@ -172,28 +172,14 @@ namespace Engine::Managers
 		const std::filesystem::path& path, const ResourceType type
 	)
 	{
-		if (path.empty())
+		if (const Strong<Abstracts::Resource>& resource = SearchResourceByMetadata(path, type).lock())
 		{
-			return {};
-		}
-
-		auto& resources = m_resources_[type];
-		auto  it        = std::ranges::find_if
-				(
-				 resources, [&path](const Strong<Abstracts::Resource>& resource)
-				 {
-					 return resource->GetMetadataPath() == path;
-				 }
-				);
-
-		if (it != resources.end())
-		{
-			if (!(*it)->IsLoaded())
+			if (!resource->IsLoaded())
 			{
-				(*it)->Load();
+				resource->Load();
 			}
 
-			return *it;
+			return resource;
 		}
 
 		return {};
@@ -327,6 +313,38 @@ namespace Engine::Managers
 			}
 		}
 	}
+
+	Weak<Abstracts::Resource> ResourceManager::SearchResourceByMetadata(
+		const std::filesystem::path& path, ResourceType type
+	)
+	{
+		if (path.empty())
+		{
+			return {};
+		}
+
+		if (!m_resources_.contains(type))
+		{
+			return {};
+		}
+		
+		auto& resources = m_resources_[type];
+		auto  it        = std::ranges::find_if
+				(
+				 resources, [&path](const Strong<Abstracts::Resource>& resource)
+				 {
+					 return resource->GetMetadataPath() == path;
+				 }
+				);
+
+		if (it != m_resources_[type].end())
+		{
+			return *it;
+		}
+
+		return {};
+	}
+
 	const ResourceManager::ResourceMap& ResourceManager::GetResources() const
 	{
 		return m_resources_;

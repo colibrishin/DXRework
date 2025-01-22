@@ -232,6 +232,8 @@ void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive*
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	const UINT index_count = mesh->GetIndexCount();
+	cmd->GetList()->IASetVertexBuffers(0, 1, static_cast<D3D12_VERTEX_BUFFER_VIEW*>(mesh->GetPrimitive()->GetNativeVertexBuffer()));
+	cmd->GetList()->IASetIndexBuffer(static_cast<const D3D12_INDEX_BUFFER_VIEW*>(mesh->GetPrimitive()->GetNativeIndexBuffer()));
 	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, instance_offset);
 }
 
@@ -253,13 +255,12 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	BindCompute(context, shader);
 	
 	m_local_param_.SetData(context, 1, &local_param);
-	StructuredBufferTypelessBase& typeless = m_local_param_.GetTypeless();
-	typeless.TransitionToSRV(context);
+	m_local_param_.TransitionToSRV(context);
 	m_local_param_.CopySRVHeap(context);
 	heap->BindCompute(context);
 
 	cmd->GetList()->Dispatch(group_count[0], group_count[1], group_count[2]);
-	typeless.TransitionCommon(context);
+	m_local_param_.TransitionCommon(context);
 }
 
 void Engine::D3D12GraphicInterface::BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader)
@@ -761,12 +762,12 @@ void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceConte
 	cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
 }
 
-Engine::StructuredBufferTypelessBase* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
+Engine::StructuredBufferTypeless* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
 {
 	return new Graphics::D3D12StructuredBufferTypeless();
 }
 
-Engine::ConstantBufferTypelessBase* Engine::D3D12GraphicInterface::GetNativeConstantBuffer()
+Engine::ConstantBufferTypeless* Engine::D3D12GraphicInterface::GetNativeConstantBuffer()
 {
 	return new Graphics::D3D12ConstantBufferTypeless();
 }

@@ -19,7 +19,7 @@ namespace Engine::Managers
 		m_wvp_buffer_cb_.SetData(&m_wvp_buffer_);
 	}
 
-	void RenderPipeline::BindConstantBuffers(const GraphicInterfaceContextPrimitive* context)
+	void RenderPipeline::BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const
 	{
 		m_wvp_buffer_cb_.Bind(context);
 		m_param_buffer_cb_.Bind(context);
@@ -39,11 +39,13 @@ namespace Engine::Managers
 		if (!m_wvp_buffer_cb_)
 		{
 			m_wvp_buffer_cb_ = gi.GetConstantBuffer<CBs::PerspectiveCB>();
+			m_wvp_buffer_cb_.SetData(nullptr);
 		}
 
 		if (!m_param_buffer_cb_)
 		{
 			m_param_buffer_cb_ = gi.GetConstantBuffer<CBs::ParamCB>();
+			m_param_buffer_cb_.SetData(nullptr);
 		}
 	}
 

@@ -60,6 +60,12 @@ namespace Engine
                 const Strong<Resources::Shape> shape = mr->GetShape().lock();
                 const Strong<Components::Transform> tr  = obj->GetComponent<Components::Transform>().lock();
 
+                // Nothing to render or no position information given.
+                if (!shape || !tr)
+                {
+                    return;
+                }
+                
                 // Pre-mapping by the shader domain.
                 for (size_t i = 0; i < map_size; ++i)
                 {
@@ -143,12 +149,7 @@ namespace Engine
         for (size_t i = 0; i < map_size; ++i)
         {
             auto& domain_map = render_map[i];
-
-            if (RenderMap::accessor acc;
-                domain_map.find(acc, Components::ModelRenderer::StaticTypeHash()))
-            {
-                domain_map.erase(Components::ModelRenderer::StaticTypeHash());
-            }
+            domain_map.erase(Components::ModelRenderer::StaticTypeHash());
         }
 
 	    for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)

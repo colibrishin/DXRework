@@ -45,17 +45,20 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"Core");
 		ModuleManager::GetInstance().LoadModule(L"D3D12GraphicInterface");
 		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
+		ModuleManager::GetInstance().LoadModule(L"GenericRenderPassTask");
 		ModuleManager::GetInstance().LoadModule(L"ImGuiManager");
 		ModuleManager::GetInstance().LoadModule(L"PhysicsManager");
 		ModuleManager::GetInstance().LoadModule(L"Material");
 		ModuleManager::GetInstance().LoadModule(L"Animator");
 		ModuleManager::GetInstance().LoadModule(L"ModelRenderer");
+		ModuleManager::GetInstance().LoadModule(L"ModelRendererRenderTask");
 		ModuleManager::GetInstance().LoadModule(L"ParticleRenderer");
 		ModuleManager::GetInstance().LoadModule(L"Texture2D");
 		ModuleManager::GetInstance().LoadModule(L"Shader");
 		ModuleManager::GetInstance().LoadModule(L"Shape");
 		ModuleManager::GetInstance().LoadModule(L"AtlasAnimationTexture");
 		ModuleManager::GetInstance().LoadModule(L"Mesh");
+		ModuleManager::GetInstance().LoadModule(L"ShadowManager");
 	}
 
 	void EngineEntryPoint::Tick()

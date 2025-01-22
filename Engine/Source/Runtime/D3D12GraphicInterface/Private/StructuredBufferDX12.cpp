@@ -15,7 +15,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const GraphicInterfaceContextPrimitive* context)
 {
-	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -24,13 +24,13 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const Grap
 		D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
 	);
 
-	cmd->ResourceBarrier(1, &srv_transition);
+	cmd->GetList4()->ResourceBarrier(1, &srv_transition);
 	m_current_state_ = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const GraphicInterfaceContextPrimitive* context)
 {
-	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -39,13 +39,13 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const Grap
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
-	cmd->ResourceBarrier(1, &uav_transition);
+	cmd->GetList()->ResourceBarrier(1, &uav_transition);
 	m_current_state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const GraphicInterfaceContextPrimitive* context)
 {
-	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -54,7 +54,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const Gra
 		D3D12_RESOURCE_STATE_COMMON
 	);
 
-	cmd->ResourceBarrier(1, &common_transition);
+	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
@@ -107,7 +107,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const GraphicInterf
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride)
 {
-	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	if (m_size_ < size)
 	{
@@ -127,7 +127,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInter
 
 	m_upload_buffer_->Unmap(0, nullptr);
 
-	cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -136,12 +136,12 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInter
 		D3D12_RESOURCE_STATE_COMMON
 	);
 
-	cmd->ResourceBarrier(1, &common_transition);
+	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride)
 {
-	auto* cmd = reinterpret_cast<ID3D12GraphicsCommandList1*>(context->commandList);
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	if (m_size_ < size)
 	{
@@ -164,7 +164,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const Gra
 
 	m_upload_buffer_->Unmap(0, nullptr);
 
-	cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -173,7 +173,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const Gra
 		D3D12_RESOURCE_STATE_COMMON
 	);
 
-	cmd->ResourceBarrier(1, &common_transition);
+	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride)

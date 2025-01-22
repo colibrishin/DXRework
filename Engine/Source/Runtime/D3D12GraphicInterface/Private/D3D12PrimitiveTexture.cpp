@@ -165,6 +165,7 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	cmd->GetList()->ResourceBarrier(1, &common_transition);
 	cmd->FlagReady();
 
+	SetPrimitiveTexture(m_dx12_texture_.Get());
 	const D3D12_RESOURCE_DESC desc = m_dx12_texture_->GetDesc();
 	GenericTextureDescription tex_desc;
 
@@ -197,6 +198,9 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	tex_desc.Flags = desc.Flags;
 	tex_desc.DepthOrArraySize = desc.DepthOrArraySize;
 
+	InitializeDescriptorHeaps();
+	InitializeResourceViews();
+	
 	UpdateDescription(tex_desc);
 }
 
@@ -209,7 +213,7 @@ void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 		{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			.NumDescriptors = 1,
-			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 			.NodeMask = 0
 		};
 
@@ -228,7 +232,7 @@ void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 		{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			.NumDescriptors = 1,
-			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 			.NodeMask = 0
 		};
 
@@ -294,7 +298,7 @@ void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 		dev->CreateShaderResourceView
 		(
 			m_dx12_texture_.Get(),
-			&desc,
+			nullptr,
 			m_srv_->GetCPUDescriptorHandleForHeapStart()
 		);
 	}

@@ -19,7 +19,7 @@ namespace Engine
 	{
 		TexturePair() = default;
 		
-		explicit TexturePair(
+		TexturePair(
 			const std::array<Strong<Resources::Texture>, g_max_texture_per_material>* textures,
 			const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>* reservedTextures)
 			: textures(textures),
@@ -38,47 +38,56 @@ namespace Engine
 		GenericRenderPassTask(GenericRenderPassTask&) = delete;
 
 		void Run(
-			float                              dt,
-			bool                               shader_bypass,
-			RenderMap const*                   domain_map,
-			const Graphics::SBs::LocalParamSB& local_param,
-			const ObjectPredication&           predicate,
-			const ContextSetupFunction&		   prerender_predicate,
-			const ContextSetupFunction&		   postrender_predicate
+			float                                                             dt,
+			bool                                                              shader_bypass,
+			RenderMap const*                                                  domain_map,
+			const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+			const Graphics::SBs::LocalParamSB&                                local_param,
+			const ObjectPredication&                                          predicate,
+			const ContextSetupFunction&                                       prerender_predicate,
+			const ContextSetupFunction&                                       postrender_predicate,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 		) override;
 		
 		void Cleanup() override;
 
 	private:
-		using IntermediateMeshMap = concurrent_fast_pool_map<Weak<Resources::Mesh>, aligned_vector<const InstancePair*>>;
+		using IntermediateMeshMap = concurrent_fast_pool_map<Weak<Resources::Mesh>, aligned_vector<InstancePair>>;
 		
-		inline IntermediateMeshMap PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map);
+		inline void PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateMeshMap& out_map) const;
 
 		inline void StartPhase_MultiThread(
-			float dt,
-			bool shader_bypass,
-			const Weak<Resources::Mesh>& mesh,
-			const Weak<Resources::Shader>& shader,
-			const Graphics::SBs::LocalParamSB& local_param,
-			const ContextSetupFunction& prerender_predicate,
-			const ContextSetupFunction& postrender_predicate, const aligned_vector<const InstancePair*>& instance_pairs
+			float                                                             dt,
+			bool                                                              shader_bypass,
+			const Weak<Resources::Mesh>&                                      mesh,
+			const Weak<Resources::Shader>&                                    shader,
+			const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+			const Graphics::SBs::LocalParamSB&                                local_param,
+			const ContextSetupFunction&                                       prerender_predicate,
+			const ContextSetupFunction&                                       postrender_predicate,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
+			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
+			const aligned_vector<InstancePair>&                               instance_pairs
 		);
 
 
 		inline void DrawPhase_MultiThread(
-			float dt,
-			bool shader_bypass,
-			size_t instance_count,
+			float                                                 dt,
+			bool                                                  shader_bypass,
+			size_t                                                instance_count,
 			StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
-			const Weak<Resources::Shader>& shader,
-			const Weak<Resources::Mesh>& mesh, const GraphicInterfaceContextPrimitive* context, const aligned_vector<Graphics::
-			SBs::InstanceSB*>& instances, const aligned_vector<TexturePair>& texture_pairs
-		);
+			const Weak<Resources::Shader>&                        shader,
+			const Weak<Resources::Mesh>&                          mesh,
+			const GraphicInterfaceContextPrimitive*               context,
+			const aligned_vector<Graphics::SBs::InstanceSB*>&     instances,
+			const aligned_vector<TexturePair>&                    texture_pairs
+		) const;
 
 		SpinLockTicket m_gi_ticket_;
 		SpinLockTicket m_local_param_pool_ticket;
 		SpinLockTicket m_instance_pool_ticket;
-		
+
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};
 		tbb::concurrent_vector<Unique<GraphicHeapBase>> m_heaps_{};

@@ -35,6 +35,11 @@ namespace Engine::Resources
 		return m_indices_;
 	}
 
+	PrimitiveMesh* Mesh::GetPrimitive() const
+	{
+		return m_primitive_mesh_.get();
+	}
+
 	void Mesh::UpdateCollider(const Weak<Components::Collider>& w_collider) const
 	{
 		if (const Strong<Components::Collider>& collider = w_collider.lock())

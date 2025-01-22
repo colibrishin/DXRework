@@ -86,8 +86,8 @@ namespace Engine
 		Matrix GetOrthogonalMatrix() override;
 		
 	protected:
-		StructuredBufferTypelessBase* GetNativeStructuredBuffer() override;
-		ConstantBufferTypelessBase* GetNativeConstantBuffer() override;
+		StructuredBufferTypeless* GetNativeStructuredBuffer() override;
+		ConstantBufferTypeless* GetNativeConstantBuffer() override;
 		
 	private:
 		void InitializeDevice();

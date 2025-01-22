@@ -821,6 +821,9 @@ namespace Engine
 		virtual      ~PrimitiveMesh() = default;
 		virtual void Generate(const Resources::Mesh* mesh) = 0;
 
+		[[nodiscard]] void* GetNativeVertexBuffer() const { return m_vertex_buffer_; }
+		[[nodiscard]] void* GetNativeIndexBuffer() const { return m_index_buffer_; }
+
 	protected:
 		virtual void SetNativeVertexBuffer(void* buffer)
 		{
@@ -905,34 +908,34 @@ namespace Engine
 
 	struct ENGINE_CORE_API GraphicInterfaceContextReturnType
 	{
-		GraphicInterfaceContextReturnType(const Weak<CommandListBase>& cmd, Unique<GraphicHeapBase>&& heap)
+		GraphicInterfaceContextReturnType(const Weak<CommandListBase>& cmd, Unique<GraphicHeapBase> heap)
 		{
 			if (const Strong<CommandListBase>& locked = cmd.lock()) 
 			{
-				commandList = locked;
+				m_command_list_ = locked;
 			}
 
-			this->heap = std::move(heap);
+			m_heap_ = std::move(heap);
 		}
 
 		GraphicInterfaceContextPrimitive GetPointers() const
 		{
 			return GraphicInterfaceContextPrimitive
 			{
-				.commandList = this->commandList.get(),
-				.heap = this->heap.get()
+				.commandList = m_command_list_.get(),
+				.heap = m_heap_.get()
 			};
 		}
 
 	private:
-		Strong<CommandListBase> commandList;
-		Unique<GraphicHeapBase> heap;
+		Strong<CommandListBase> m_command_list_{};
+		Unique<GraphicHeapBase> m_heap_{};
 	};
 
-	class ENGINE_CORE_API ConstantBufferTypelessBase
+	class ENGINE_CORE_API ConstantBufferTypeless
 	{
 	public:
-		virtual ~ConstantBufferTypelessBase() = default;
+		virtual ~ConstantBufferTypeless() = default;
 
 		virtual void                Create(const void* src_data, const size_t stride) = 0;
 		virtual void                SetData(const void* src_data, const size_t stride) = 0;
@@ -940,15 +943,21 @@ namespace Engine
 		virtual void                Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) = 0;
 	};
 
-	template <typename T>
-	class ConstantBufferTypeProxy
+	class ENGINE_CORE_API ConstantBufferDecorator
 	{
 	public:
-		ConstantBufferTypeProxy() = default;
+		virtual  ~ConstantBufferDecorator() = default;
 
-		explicit ConstantBufferTypeProxy(ConstantBufferTypelessBase* base) : m_base_(base)
+		ConstantBufferDecorator() = default;
+		explicit ConstantBufferDecorator(ConstantBufferTypeless* base)
+			: m_base_(base) {}
+		ConstantBufferDecorator(ConstantBufferDecorator&) = delete;
+		ConstantBufferDecorator& operator=(ConstantBufferDecorator& other) = delete;
+
+		ConstantBufferDecorator& operator=(ConstantBufferDecorator&& other) noexcept
 		{
-			static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
+			m_base_ = std::move(other.m_base_);
+			return *this;
 		}
 
 		bool operator!() const
@@ -956,37 +965,60 @@ namespace Engine
 			return m_base_ == nullptr;
 		}
 
-		void Create(const T* src_data)
+		void Create(const void* src_data, const size_t stride) const { if (m_base_) m_base_->Create(src_data, stride); }
+
+		void SetData(const void* src_data, const size_t stride) const { if (m_base_) m_base_->SetData(src_data, stride); }
+
+		[[nodiscard]] void* GetData() const
 		{
-			if (!m_base_) return;
-			m_base_->Create(src_data, sizeof(T));
+			if (!m_base_) return nullptr;
+			return m_base_->GetData();
 		}
 
-		void SetData(const T* src_data)
+		void Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) const
 		{
-			if (!m_base_) return;
-			m_base_->SetData(src_data, sizeof(T));
+			if (m_base_) m_base_->Bind(context, slot);
 		}
 
-		T GetData() const
-		{
-			if (!m_base_) throw std::runtime_error("Uninitialized constant buffer");
-			return *static_cast<const T*>(m_base_->GetData());
-		}
+		virtual void Create(const void* src_data) = 0;
+		virtual void SetData(const void* src_data) = 0;
+		virtual void Bind(const GraphicInterfaceContextPrimitive* context) const = 0;
 
-		void Bind(const GraphicInterfaceContextPrimitive* context)
-		{
-			m_base_->Bind(context, which_cb<T>::value);
-		}
-
-	private:
-		Unique<ConstantBufferTypelessBase> m_base_;
+	protected:
+		Unique<ConstantBufferTypeless> m_base_{};
 	};
 
-	class ENGINE_CORE_API StructuredBufferTypelessBase
+	template <typename T>
+	class ConstantBufferTypeProxy : public ConstantBufferDecorator
 	{
 	public:
-		virtual ~StructuredBufferTypelessBase() = default;
+		ConstantBufferTypeProxy() = default;
+
+		explicit ConstantBufferTypeProxy(ConstantBufferTypeless* base) : ConstantBufferDecorator(base)
+		{
+			static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
+		}
+		
+		void Create(const void* src_data) override
+		{
+			if (m_base_) m_base_->Create(src_data, sizeof(T));
+		}
+
+		void SetData(const void* src_data) override
+		{
+			if (m_base_) m_base_->SetData(src_data, sizeof(T));
+		}
+
+		void Bind(const GraphicInterfaceContextPrimitive* context) const override
+		{
+			if (m_base_) m_base_->Bind(context, which_cb<T>::value);
+		}
+	};
+
+	class ENGINE_CORE_API StructuredBufferTypeless
+	{
+	public:
+		virtual ~StructuredBufferTypeless() = default;
 
 		virtual void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) = 0;
 		virtual void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride) = 0;
@@ -1002,48 +1034,123 @@ namespace Engine
 		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
 	};
 
-	template <typename T>
-	class StructuredBufferTypeProxy
+	class ENGINE_CORE_API StructuredBufferDecorator
 	{
 	public:
-		StructuredBufferTypeProxy() = default;
+		virtual ~StructuredBufferDecorator() = default;
+
+		StructuredBufferDecorator() = default;
+		explicit StructuredBufferDecorator(StructuredBufferTypeless* base) : m_base_(base) {}
+		StructuredBufferDecorator (StructuredBufferDecorator&) = delete;
+		StructuredBufferDecorator& operator=(StructuredBufferDecorator&) = delete;
 		
-		explicit StructuredBufferTypeProxy(StructuredBufferTypelessBase* base) : m_base_(base) {}
+		StructuredBufferDecorator(StructuredBufferDecorator&& other) noexcept
+		{
+			m_base_ = std::move(other.m_base_);
+		}
+
+		StructuredBufferDecorator& operator=(StructuredBufferDecorator&& other) noexcept
+		{
+			m_base_ = std::move(other.m_base_);
+			return *this;	
+		}
 
 		bool operator!() const
 		{
 			return m_base_ == nullptr;
 		}
 
+		void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) const
+		{
+			if (m_base_) m_base_->Create(context, size, initial_data, stride, uav);
+		}
+		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride) const
+		{
+			if (m_base_) m_base_->SetData(context, size, src_data, stride);
+		}
+		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
+		{
+			if (m_base_) m_base_->SetDataContainer(context, size, container_ptr, stride);
+		}
+		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) const
+		{
+			if (m_base_) m_base_->GetData(context, size, dst_ptr, stride);
+		}
+		void Clear() const
+		{
+			if (m_base_) m_base_->Clear();
+		}
+
+		void TransitionToSRV(const GraphicInterfaceContextPrimitive* context) const
+		{
+			if (m_base_) m_base_->TransitionToSRV(context);
+		}
+		void TransitionToUAV(const GraphicInterfaceContextPrimitive* context) const
+		{
+			if (m_base_) m_base_->TransitionToUAV(context);
+		}
+		void TransitionCommon(const GraphicInterfaceContextPrimitive* context) const
+		{
+			if (m_base_) m_base_->TransitionCommon(context);
+		}
+
+		void CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+		{
+			if (m_base_) m_base_->CopySRVHeap(context, slot);
+		}
+		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+		{
+			if (m_base_) m_base_->CopyUAVHeap(context, slot);
+		}
+		
+		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+
+	protected:
+		Unique<StructuredBufferTypeless> m_base_{};
+	};
+	
+	template <typename T>
+	class StructuredBufferTypeProxy : public StructuredBufferDecorator
+	{
+	public:
+		StructuredBufferTypeProxy() = default;
+
+		using StructuredBufferDecorator::StructuredBufferDecorator;
+		StructuredBufferTypeProxy(StructuredBufferTypeProxy&& other) noexcept
+			: StructuredBufferDecorator(std::move(other))
+		{}
+		StructuredBufferTypeProxy& operator=(StructuredBufferTypeProxy&& other) noexcept
+		{
+			StructuredBufferDecorator::operator=(reinterpret_cast<StructuredBufferDecorator&&>(other));
+			return *this;
+		}
+
 		void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* initial_data)
 		{
 			if (!m_base_) return;
-
 			m_base_->Create(context, size, initial_data, sizeof(T), is_uav_sb<T>::value || is_client_uav_sb<T>::value);
 		}
 
 		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* src_data)
 		{
 			if (!m_base_) return;
-
 			m_base_->SetData(context, size, src_data, sizeof(T));
 		}
 
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr)
 		{
 			if (!m_base_) return;
-
 			m_base_->SetDataContainer(context, size, reinterpret_cast<const void* const*>(container_ptr), sizeof(T));
 		}
 
 		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, T* dst_ptr)
 		{
 			if (!m_base_) return;
-
 			m_base_->GetData(context, size, dst_ptr, sizeof(T));
 		}
-
-		void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const
+		
+		void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const override
 		{
 			if (!m_base_) return;
 
@@ -1057,7 +1164,7 @@ namespace Engine
 			}
 		}
 
-		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const
+		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const override
 		{
 			if (!m_base_) return;
 
@@ -1070,14 +1177,6 @@ namespace Engine
 				m_base_->CopySRVHeap(context, which_client_sb_uav<T>::value);
 			}
 		}
-
-		[[nodiscard]] StructuredBufferTypelessBase& GetTypeless()
-		{
-			return reinterpret_cast<StructuredBufferTypelessBase&>(*this);
-		}
-
-	private:
-		Unique<StructuredBufferTypelessBase> m_base_;
 	};
 
 	using InstanceBufferContainer = aligned_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
@@ -1142,8 +1241,8 @@ namespace Engine
 		virtual void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) = 0;
 
 	protected:
-		virtual StructuredBufferTypelessBase* GetNativeStructuredBuffer() = 0;
-		virtual ConstantBufferTypelessBase* GetNativeConstantBuffer() = 0;
+		virtual StructuredBufferTypeless* GetNativeStructuredBuffer() = 0;
+		virtual ConstantBufferTypeless* GetNativeConstantBuffer() = 0;
 	};
 
 	struct ENGINE_CORE_API GraphicInterfaceAccessor
@@ -1191,7 +1290,7 @@ namespace Engine
 			Update(nullptr, size);
 		}
 
-		StructuredBufferTypeProxy<T>& get()
+		[[nodiscard]] StructuredBufferTypeProxy<T>& get()
 		{
 			return m_resource_[m_read_offset_];
 		}

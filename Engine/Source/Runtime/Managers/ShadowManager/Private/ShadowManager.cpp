@@ -48,10 +48,23 @@ namespace Engine::Managers
 				);
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		m_light_sb_ = gi.GetStructuredBuffer<SBs::LightSB>();
-		m_light_vp_sb_ = gi.GetStructuredBuffer<SBs::LightVPSB>();
+		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());
+		m_light_vp_sb_ = std::make_unique<decltype(m_light_vp_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightVPSB>());
 
 		InitializeViewport();
+
+		Managers::Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
+		Managers::Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
+
+		Managers::Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
+		{
+			GetInstance().BindShadowMaps(context);
+		});
+
+		Managers::Renderer::GetInstance().RegisterContextPostRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
+		{
+			GetInstance().UnbindShadowMaps(context);
+		});
 	}
 
 	void ShadowManager::PreUpdate(const float dt)
@@ -150,14 +163,14 @@ namespace Engine::Managers
 			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
 			CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
 
-			m_light_sb_.GetTypeless().TransitionCommon(&primitive);
-			m_light_vp_sb_.GetTypeless().TransitionCommon(&primitive);
+			m_light_sb_->TransitionCommon(&primitive);
+			m_light_vp_sb_->TransitionCommon(&primitive);
 
-			m_light_sb_.SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
-			m_light_vp_sb_.SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+			m_light_sb_->SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
+			m_light_vp_sb_->SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
-			m_light_sb_.GetTypeless().TransitionToSRV(&primitive);
-			m_light_vp_sb_.GetTypeless().TransitionToSRV(&primitive);
+			m_light_sb_->TransitionToSRV(&primitive);
+			m_light_vp_sb_->TransitionToSRV(&primitive);
 			primitive.commandList->FlagReady();
 			
 			UINT idx = 0;
@@ -201,7 +214,8 @@ namespace Engine::Managers
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		Renderer::GetInstance().RenderPass
 			(
-			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, [](const Strong<Abstracts::ObjectBase>& obj)
+			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get() },
+			 [](const Strong<Abstracts::ObjectBase>& obj)
 			 {
 				 if (obj->GetLayer() == RESERVED_LAYER_CAMERA ||
 				     obj->GetLayer() == RESERVED_LAYER_UI ||
@@ -217,8 +231,7 @@ namespace Engine::Managers
 				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
 				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
 				 BindShadowMaps(context);
-			 },
-			 [this, &gi, &light](const GraphicInterfaceContextPrimitive* context)
+			 }, [this, &gi, &light](const GraphicInterfaceContextPrimitive* context)
 			 {
 				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
 				 gi.UnbindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
@@ -403,7 +416,14 @@ namespace Engine::Managers
 		m_shadow_texs_[id]->Load();
 	}
 
-	ShadowManager::~ShadowManager() { }
+	ShadowManager::~ShadowManager()
+	{
+		Managers::Renderer::GetInstance().UnregisterStructuredBuffer(m_light_sb_.get());
+		Managers::Renderer::GetInstance().UnregisterStructuredBuffer(m_light_vp_sb_.get());
+		
+		Managers::Renderer::GetInstance().UnregisterContextPreRenderSetup("Shadow Manager");
+		Managers::Renderer::GetInstance().UnregisterContextPostRenderSetup("Shadow Manager");
+	}
 
 	void ShadowManager::InitializeViewport()
 	{

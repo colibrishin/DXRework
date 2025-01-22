@@ -68,13 +68,32 @@ namespace Engine::Resources
 			--*parent;
 			
 			static std::string empty_string = {};
-			*parent |= ui.NewLabelAndText({ "Atlas Texture", m_atlas_loaded_ ? const_cast<std::string&>(m_atlas_loaded_->GetName()) : empty_string, false});
+			*parent |= ui.NewLabelAndText({"Shader", m_shader_ ? const_cast<std::string&>(m_shader_->GetName()) : empty_string, false});
+			(*parent |= ui.NewButton({"Set Shader"})).SetFunction([&]()
+				{
+					m_ui_shader_dialog_ = !m_ui_shader_dialog_;
+				});
 
+			*parent |= ui.NewLabelAndText({ "Atlas Texture", m_atlas_loaded_ ? const_cast<std::string&>(m_atlas_loaded_->GetName()) : empty_string, false});
 			(*parent |= ui.NewButton({ "Add Texture..." })).SetFunction([&]()
 				{
 					m_ui_add_dialog_ = !m_ui_add_dialog_;
 				});
 
+			if (m_ui_shader_dialog_)
+			{
+				if (Weak<Resource> resource_to_load;
+					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
+				{
+					if (const Strong<Resource>& locked = resource_to_load.lock())
+					{
+						SetShader(locked->GetSharedPtr<Shader>());
+					}
+
+					m_ui_shader_dialog_ = false;
+				}
+			}
+			
 			if (m_ui_add_dialog_)
 			{
 				if (std::vector<Weak<Abstracts::Resource>> resource_to_load;
@@ -117,12 +136,33 @@ namespace Engine::Resources
 	void Material::OnSerialized()
 	{
 		Resource::OnSerialized();
-		Load();
+
+		if (m_shader_)
+		{
+			Serializer::Serialize(m_shader_->GetName(), m_shader_);
+			m_shader_path_ = m_shader_->GetMetadataPath();
+		}
+
+		if (m_atlas_loaded_)
+		{
+			Serializer::Serialize(m_atlas_loaded_->GetName(), m_atlas_loaded_);
+			m_atlas_path_ = m_atlas_loaded_->GetMetadataPath();
+		}
+
+		for (auto it = m_textures_.begin(); it != m_textures_.end(); ++it)
+		{
+			if (const Strong<Texture>& tex = *it)
+			{
+				Serializer::Serialize(tex->GetName(), tex);
+				m_texture_paths_[std::distance(m_textures_.begin(), it)] = tex->GetMetadataPath();
+			}
+		}
 	}
 
 	void Material::OnDeserialized()
 	{
 		Resource::OnDeserialized();
+		Load();
 	}
 
 	void Material::SetTexture(const Weak<Texture>& texture, const size_t slot)
@@ -167,7 +207,7 @@ namespace Engine::Resources
 		}
 	}
 
-	const Graphics::MaterialPrimitive& Material::GetPrimitive() const
+	const MaterialPrimitive& Material::GetPrimitive() const
 	{
 		return m_material_sb_;
 	}
@@ -197,10 +237,34 @@ namespace Engine::Resources
 		return m_shader_;
 	}
 
-	Material::Material()
-		: Resource("") {}
+	Material::Material() : Resource("") {}
 
-	void Material::Load_INTERNAL() {}
+	void Material::Load_INTERNAL()
+	{
+		if (!m_shader_path_.empty())
+		{
+			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
+			{
+				SetShader(m_shader_);
+			}
+		}
+
+		if (!m_atlas_path_.empty())
+		{
+			if (const auto& atlas = AtlasAnimationTexture::GetByMetadataPath(m_atlas_path_).lock())
+			{
+				SetAtlasTexture(atlas);
+			}
+		}
+
+		for (size_t i = 0; i < m_texture_paths_.size(); ++i)
+		{
+			if (const auto& tex = Texture::GetByMetadataPath(m_texture_paths_[i]).lock())
+			{
+				SetTexture(tex, i);
+			}
+		}
+	}
 
 	void Material::Unload_INTERNAL() {}
 }

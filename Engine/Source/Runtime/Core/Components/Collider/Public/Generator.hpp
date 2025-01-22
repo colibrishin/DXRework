@@ -179,17 +179,17 @@ namespace Engine
 		}
 
 	private:
-		static consteval std::array<Graphics::VertexElement, 36> GenerateCubeVertices()
+		static consteval std::array<Graphics::VertexElement, 8> GenerateCubeVertices()
 		{
-			std::array<Graphics::VertexElement, 36> collection;
+			std::array<Graphics::VertexElement, 8> collection;
 			constexpr auto cube_indices = GetCubeIndices();
 
-			for (size_t i = 0; i < 36; ++i)
+			for (size_t i = 0; i < 8; ++i)
 			{
 				collection[i] = Graphics::VertexElement
 				(
 					vertices[cube_indices[i]],
-					{ 0.f, 0.f, 0.f, 1.f },
+					{ 0.f, 0.f, 1.f, 1.f },
 					texCoords[texInds[i % 4]],
 					normals[cube_indices[i / 6]],
 					Vector3(0.f, 0.f, 0.f),
@@ -202,9 +202,9 @@ namespace Engine
 		}
 
 	public:
-		static consteval std::array<Graphics::VertexElement, 36> GetCubeVertices()
+		static consteval std::array<Graphics::VertexElement, 8> GetCubeVertices()
 		{
-			constexpr std::array<Graphics::VertexElement, 36> vertices = GenerateCubeVertices();
+			constexpr std::array<Graphics::VertexElement, 8> vertices = GenerateCubeVertices();
 			return vertices;
 		}
 	};

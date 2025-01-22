@@ -293,22 +293,22 @@ namespace Engine::Graphics
 			if constexpr (std::is_same_v<float, T>)
 			{
 				assert(slot < max_param * (sizeof(Vector4) / sizeof(float)));
-				return reinterpret_cast<float*>(cast_address + float_section_begin + sizeof(float) * slot);
+				return reinterpret_cast<float*>(cast_address + float_section_begin) + slot;
 			}
 			else if constexpr (std::is_same_v<int, T>)
 			{
 				assert(slot < max_param * (sizeof(Vector4) / sizeof(float)));
-				return reinterpret_cast<int*>(cast_address + int_section_begin + sizeof(int) * slot);
+				return reinterpret_cast<int*>(cast_address + int_section_begin) + slot;
 			}
 			else if constexpr (std::is_same_v<Vector4, T>)
 			{
 				assert(slot < max_param);
-				return reinterpret_cast<Vector4*>(cast_address + vector_section_begin + sizeof(Vector4) * slot);
+				return reinterpret_cast<Vector4*>(cast_address + vector_section_begin) + slot;
 			}
 			else if constexpr (std::is_same_v<Matrix, T>)
 			{
 				assert(slot < max_param);
-				return reinterpret_cast<Matrix*>(cast_address + matrix_section_begin + sizeof(Matrix) * slot);
+				return reinterpret_cast<Matrix*>(cast_address + matrix_section_begin) + slot;
 			}
 			else
 			{

@@ -31,11 +31,11 @@ namespace Engine::Managers
 		void PostRender(const float dt) override;
 		void FixedUpdate(const float dt) override;
 
-		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
+		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		void AddResource(const Strong<T>& resource)
 		{
 			if (!resource->GetMetadataPath().empty() &&
-			    GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
+			    SearchResourceByMetadata<T>(resource->GetMetadataPath()).lock())
 			{
 				return;
 			}
@@ -48,11 +48,11 @@ namespace Engine::Managers
 			m_resources_[T::StaticTypeHash()].insert(resource);
 		}
 
-		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
+		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		void AddResource(const std::string_view name, const Strong<T>& resource)
 		{
 			if (!resource->GetMetadataPath().empty() &&
-			    GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
+			    SearchResourceByMetadata<T>(resource->GetMetadataPath()).lock())
 			{
 				return;
 			}
@@ -79,7 +79,7 @@ namespace Engine::Managers
 
 		Weak<Abstracts::Resource> GetResource(const std::string_view name, ResourceType type);
 
-		template <typename T>
+		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		Weak<T> GetResourceByRawPath(const std::filesystem::path& path)
 		{
 			if (const Strong<Abstracts::Resource>& locked = GetResourceByRawPath(path, T::StaticTypeHash()).lock()) 
@@ -90,7 +90,7 @@ namespace Engine::Managers
 			return {};
 		}
 
-		template <typename T>
+		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		Weak<T> GetResourceByMetadataPath(const std::filesystem::path& path)
 		{
 			if (const Strong<Abstracts::Resource>& found = GetResourceByMetadataPath(path, T::StaticTypeHash()).lock()) 
@@ -98,7 +98,7 @@ namespace Engine::Managers
 				return boost::reinterpret_pointer_cast<T>(found);
 			}
 
-			if (std::filesystem::exists(path)) 
+			if (exists(path)) 
 			{
 				Strong<T> deserialized = Serializer::Deserialize<T>(path.generic_string());
 				AddResource(deserialized);
@@ -108,7 +108,7 @@ namespace Engine::Managers
 
 			return {};
 		}
-
+		
 		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, ResourceType type);
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
@@ -138,6 +138,14 @@ namespace Engine::Managers
 		ResourceMap m_resources_;
 		fast_pool_unordered_map<LocalResourceID, Weak<Abstracts::Resource>> m_resource_cache_;
 		fast_pool_unordered_map<LocalResourceID, GlobalEntityID> m_resource_ids_;
+
+		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
+		Weak<Abstracts::Resource> SearchResourceByMetadata(const std::filesystem::path& path)
+		{
+			return SearchResourceByMetadata(path, T::StaticTypeHash());
+		}
+
+		Weak<Abstracts::Resource> SearchResourceByMetadata(const std::filesystem::path& path, ResourceType type);
 
 #if WITH_EDITOR
 	public:
