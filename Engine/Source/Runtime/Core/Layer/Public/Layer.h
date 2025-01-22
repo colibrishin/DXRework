@@ -2,6 +2,7 @@
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "SingletonSpinLock/Public/SingletonSpinLock.h"
 
 #include "Layer.generated.h"
 
@@ -14,7 +15,7 @@ namespace Engine
 	public:
 		Layer(const LayerSizeType type);
 
-		~Layer() override = default;
+		~Layer() override;
 
 		void Initialize() override;
 		void PreUpdate(const float dt) override;
@@ -72,6 +73,11 @@ namespace Engine
 			return m_objects_.size();
 		}
 
+		size_t Empty() const noexcept 
+		{
+			return m_objects_.empty();
+		}
+
 	private:
 		Layer();
 
@@ -81,13 +87,9 @@ namespace Engine
 		EPROPERTY()
 		aligned_vector<Strong<Abstracts::ObjectBase>> m_objects_;
 
-		size_t m_cache_lock_idx_;
+		SpinLockTicket m_cache_lock_idx_;
 
 		// Non-serialized
-#if WITH_EDITOR
-		bool m_b_layer_expanded_ = false;
-		std::string                m_ui_text_;
-#endif
 		ConcurrentWeakObjGlobalMap m_concurrent_weak_objects_cache_;
 		WeakObjGlobalMap m_weak_objects_cache_;
 	};

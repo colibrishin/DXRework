@@ -7,6 +7,7 @@
 
 namespace Engine
 {
+	struct SpinLockTicket;
 	struct SpinLockToken;
 
 	ECLASS()
@@ -26,24 +27,43 @@ namespace Engine
 		void PostRender(const float dt) override {}
 		void Initialize() override {}
 
-		size_t Register();
-		SpinLockToken Lock(const size_t idx);
+		SpinLockTicket Register();
+		SpinLockToken Lock(const SpinLockTicket& idx);
 
 	private:
 		SingletonSpinLock() = default;
 		~SingletonSpinLock() override;
 		friend struct SpinLockToken;
+		friend struct SpinLockTicket;
 		friend struct SingletonDeleter;
 
+		void Unregister(const size_t idx);
 		void Unlock(const size_t idx);
 
 		void SelfLock();
 		void SelfUnlock();
 
 		std::atomic<bool>                                     m_critical_lock_;
-		size_t                                                m_nonce_;
+		size_t                                                m_nonce_ = 0;
 		std::unordered_map<size_t, Strong<std::atomic<bool>>> m_spin_locks_;
 		u_align_allocator<std::atomic<bool>>                  m_allocator_;
+	};
+
+	struct SpinLockTicket
+	{
+		const size_t idx;
+
+		~SpinLockTicket()
+		{
+			if (idx != -1) 
+			{
+				SingletonSpinLock::GetInstance().Unregister(idx);
+			}
+		}
+
+	private:
+		SpinLockTicket(const size_t idx) : idx(idx) {}
+		friend class SingletonSpinLock;
 	};
 
 	struct SpinLockToken

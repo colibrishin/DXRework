@@ -12,6 +12,8 @@ namespace Engine
 		: m_layer_type_(type),
 		  m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()) { }
 
+	Layer::~Layer() {}
+
 	void Layer::Initialize() {}
 
 	void Layer::PreUpdate(const float dt)
@@ -283,5 +285,6 @@ namespace Engine
 	}
 
 	Layer::Layer() :
-		m_layer_type_(0) {}
+		m_layer_type_(0),
+		m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()){}
 } // namespace Engine

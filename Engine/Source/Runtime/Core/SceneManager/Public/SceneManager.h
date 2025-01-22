@@ -3,6 +3,7 @@
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
+#include "UIHelpers.h"
 #include "SceneManager.generated.h"
 
 DEFINE_DELEGATE(OnSceneActive, Engine::Weak<Engine::Scene>);
@@ -66,22 +67,15 @@ namespace Engine::Managers
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 
 #if WITH_EDITOR
-		using NewFunctionSignature = const std::function<void()>;
-		using AddFunctionSignature = const std::function<void()>;
-		using LoadFunctionSignature = std::function<void(const std::string_view)>;
-
-		void RegisterNewMenuItem(std::string_view name, const NewFunctionSignature& predicate);
-		void RegisterAddMenuItem(std::string_view name, const AddFunctionSignature& predicate);
-		void RegisterLoadMenuItem(std::string_view name, const LoadFunctionSignature& predicate);
+		void RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate);
+		void RegisterLoadMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate);
 		void UnregisterNewMenuItem(std::string_view name);
-		void UnregisterAddMenuItem(std::string_view name);
 		void UnregisterLoadMenuItem(std::string_view name);
 
 	private:
 		// Assuming string address is constant.
-		std::unordered_map<std::string_view, NewFunctionSignature> m_custom_new_function_;
-		std::unordered_map<std::string_view, AddFunctionSignature> m_custom_add_function_;
-		std::unordered_map<std::string_view, LoadFunctionSignature> m_custom_load_function_;
+		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_custom_new_function_;
+		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_custom_load_function_;
 #endif
 
 	private:

@@ -5,6 +5,7 @@
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 #include "SceneManager.generated.h"
+#include "Serialization.hpp"
 
 #if WITH_DEBUG
 #include "Source/Runtime/Core/Debugger/Public/Debugger.h"
@@ -106,6 +107,25 @@ namespace Engine::Managers
 
 	void SceneManager::Initialize()
 	{
+		RegisterLoadMenuItem(Scene::StaticTypeName(), [](bool& managing_flag)
+			{
+				const auto& load_callback = [](const std::string_view name, const std::string_view path)
+					{
+						const Strong<Scene>& scene = Serializer::Deserialize<Scene>(path.data());
+						GetInstance().AddScene(scene);
+						GetInstance().SetActive(scene->GetName());
+					};
+
+				return UIHelpers::OpenLoadDialog<Scene, SceneManager>(managing_flag, {}, load_callback, {});
+			});
+
+		RegisterNewMenuItem(Scene::StaticTypeName(), [](bool& managing_flag) 
+			{
+				GetInstance().AddScene("UntitledScene");
+				GetInstance().SetActive("UntitledScene");
+				managing_flag = false;
+			});
+
 		AddScene("UntitledScene");
 		SetActive("UntitledScene");
 	}
@@ -181,43 +201,43 @@ namespace Engine::Managers
 				SetActive("UntitledScene");
 			});
 
-			for (const auto& [name, func] : m_custom_new_function_)
+			for (auto& [name, func] : m_custom_new_function_)
 			{
 				(context |= ui.NewMenuItem({name})).SetFunction([&]()
 				{
-					func();
+					func.first = true;
 				});
 			}
-
-			--context;
-
-			context += ui.NewMenu({"Add"});
 
 			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
 			{
 				GetActiveScene().lock()->CreateGameObject<T>(Layer);
 			};
 
-			(context |= ui.NewMenuItem({"Camera"})).SetFunction([&]()
-			{
-				addTemplate.operator()<Objects::Camera, RESERVED_LAYER_CAMERA>();
-			});
-
-			(context |= ui.NewMenuItem({"Light"})).SetFunction([&]()
-			{
-				addTemplate.operator()<Objects::Light, RESERVED_LAYER_LIGHT>();
-			});
-
-			(context |= ui.NewMenuItem({"Object"})).SetFunction([&]()
-			{
-				addTemplate.operator()<Object, RESERVED_LAYER_DEFAULT>();
-			});
-
-			for (const auto& [name, func] : m_custom_add_function_)
-			{
-				(context += ui.NewMenuItem({name})).SetFunction([&]()
+			(context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
 				{
-					func();
+					addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
+				});
+
+			(context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
+				{
+					addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
+				});
+
+			(context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
+				{
+					addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
+				});
+
+			--context;
+
+			context += ui.NewMenu({"Load"});
+
+			for (auto& [name, func] : m_custom_load_function_)
+			{
+				(context |= ui.NewMenuItem({name})).SetFunction([&]()
+				{
+					func.first = true;
 				});
 			}
 
@@ -227,32 +247,40 @@ namespace Engine::Managers
 			{
 				scene->OnUIUpdate(&context, dt);
 			}
+
+			for (auto& [flag, func] : m_custom_new_function_ | std::views::values)
+			{
+				if (flag) 
+				{
+					func(flag);
+				}
+			}
+
+			for (auto& [flag, func] : m_custom_load_function_ | std::views::values)
+			{
+				if (flag)
+				{
+					func(flag);
+				}
+			}
 		}
 #endif
 	}
 
 #if WITH_EDITOR
-	void SceneManager::RegisterNewMenuItem(std::string_view name, const std::function<void()>& predicate)
+	void SceneManager::RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
 	{
 		if (!m_custom_new_function_.contains(name))
 		{
-			m_custom_new_function_.emplace(name, predicate);	
+			m_custom_new_function_[name] = { false, predicate };
 		}
 	}
 
-	void SceneManager::RegisterAddMenuItem(std::string_view name, const std::function<void()>& predicate)
-	{
-		if (!m_custom_add_function_.contains(name))
-		{
-			m_custom_add_function_.emplace(name, predicate);	
-		}
-	}
-
-	void SceneManager::RegisterLoadMenuItem(std::string_view name, const LoadFunctionSignature& predicate)
+	void SceneManager::RegisterLoadMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
 	{
 		if (!m_custom_load_function_.contains(name))
 		{
-			m_custom_load_function_.emplace(name, predicate);
+			m_custom_load_function_[name] = { false, predicate };
 		}
 	}
 
@@ -269,14 +297,6 @@ namespace Engine::Managers
 		if (m_custom_new_function_.contains(name))
 		{
 			m_custom_new_function_.erase(name);
-		}
-	}
-
-	void SceneManager::UnregisterAddMenuItem(const std::string_view name)
-	{
-		if (m_custom_add_function_.contains(name))
-		{
-			m_custom_add_function_.erase(name);
 		}
 	}
 #endif

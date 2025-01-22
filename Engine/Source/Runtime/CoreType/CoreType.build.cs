@@ -13,5 +13,6 @@ public class CoreType : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<GCEM>(target);
     }
 }

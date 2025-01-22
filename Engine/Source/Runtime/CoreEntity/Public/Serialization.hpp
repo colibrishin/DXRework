@@ -101,8 +101,12 @@ namespace Engine
 				throw std::runtime_error("Failed to open file for deserialization");
 			}
 
-			boost::archive::binary_iarchive archive(stream);
-			archive >> object;
+			{
+				simple_gc_scope gc;
+				boost::archive::binary_iarchive archive(stream);
+				archive >> object;
+			}
+			
 			object->OnDeserialized();
 			return boost::static_pointer_cast<T>(object);
 		}

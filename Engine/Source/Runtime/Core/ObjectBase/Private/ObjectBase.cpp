@@ -606,6 +606,10 @@ namespace Engine::Abstracts
 	{
 		Actor::OnDeserialized();
 
+#if WITH_EDITOR
+		UpdateUIText();
+#endif
+
 		for (const auto& comp : m_components_ | std::views::values)
 		{
 			comp->SetOwner(GetSharedPtr<ObjectBase>());

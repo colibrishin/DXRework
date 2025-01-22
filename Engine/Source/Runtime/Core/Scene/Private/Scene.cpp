@@ -758,6 +758,16 @@ namespace Engine
 	{
 #if WITH_DEBUG
 		DisableControllers();
+
+		const auto& observers = m_layers_[RESERVED_LAYER_OBSERVER]->GetGameObjects();
+		for (const auto& observer : observers)
+		{
+			if (const auto& locked = observer.lock())
+			{
+				RemoveGameObject(locked->GetID(), RESERVED_LAYER_OBSERVER);
+			}
+		}
+
 		const auto& observer = CreateGameObject<Objects::Observer>(RESERVED_LAYER_OBSERVER).lock();
 		m_observer_         = observer;
 		observer->AddChild(GetMainCamera());
@@ -953,7 +963,6 @@ namespace Engine
 	void Scene::DisableControllers()
 	{
 		/*
-		// Note: accessor should be destroyed in used context, if not, it will cause deadlock.
 		ConcurrentWeakComRootMap::accessor accessor;
 		if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
 		{

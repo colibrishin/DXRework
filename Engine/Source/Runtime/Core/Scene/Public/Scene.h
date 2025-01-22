@@ -2,8 +2,6 @@
 #include <any>
 #include <ranges>
 #include <boost/serialization/export.hpp>
-#include <boost/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
@@ -441,9 +439,9 @@ namespace Engine
 		WeakComRootMap                                       m_cached_components_;
 		WeakScpRootMap                                       m_cached_scripts_;
 
-		size_t m_object_lock_;
-		size_t m_component_lock_;
-		size_t m_script_lock_;
+		SpinLockTicket m_object_lock_;
+		SpinLockTicket m_component_lock_;
+		SpinLockTicket m_script_lock_;
 
 		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
 		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
