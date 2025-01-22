@@ -405,3 +405,5 @@ Binaries/*
 Intermediate/*
 *.bff
 *.fdb
+
+!Build/
