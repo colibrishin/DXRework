@@ -115,7 +115,6 @@ void Engine::Texture2DModule::Initialize()
 				--*context;
 			}
 
-			//*context |= ui.NewCombobox({"Resource flag", reinterpret_cast<int*>(&desc.Flags), res_flag_cstr.data(), res_flag_cstr.size()}); // should recast before use, non-linear enum, todo: multiple choices
 			*context |= ui.NewLabelAndUInt16({"Mips Level", desc.MipsLevel, 0.1f, 0, 0, true});
 			*context |= ui.NewComboboxUInt8({"Texture layout", reinterpret_cast<uint8_t*>(&desc.Layout), tex_layout_cstr.data(), tex_layout_cstr.size()}); // should recast before use, non-linear enum
 			*context |= ui.NewLabelAndUInt({"Sampler Count", desc.SampleDesc.Count, 0.1f, 0, 0, true});

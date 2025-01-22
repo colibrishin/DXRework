@@ -3,8 +3,29 @@
 #include <memory>
 
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+
+#include "ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
+
+namespace Engine
+{
+	struct ShaderModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::ShaderModule, Engine::IModule);
+
+namespace Engine
+{
+	struct ShaderModule : public IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(ShaderModule)
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
 
 namespace Engine 
 {

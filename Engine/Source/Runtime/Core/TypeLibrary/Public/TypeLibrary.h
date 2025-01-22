@@ -325,11 +325,14 @@ namespace Engine
 		SHADER_DOMAIN_MAX,
 	};
 
-	enum ENGINE_CORE_API eShaderDepth : UINT
+	enum ENGINE_CORE_API eShaderDepthEnable : uint8_t
 	{
 		SHADER_DEPTH_TEST_ZERO = 0,
 		SHADER_DEPTH_TEST_ALL = 1,
+	};
 
+	enum ENGINE_CORE_API eShaderDepthFunction : UINT
+	{
 		SHADER_DEPTH_NEVER = 2,
 		SHADER_DEPTH_LESS = 4,
 		SHADER_DEPTH_EQUAL = 8,
@@ -340,15 +343,17 @@ namespace Engine
 		SHADER_DEPTH_ALWAYS = 256,
 	};
 
-	enum ENGINE_CORE_API eShaderSampler : UINT
+	enum ENGINE_CORE_API eShaderSamplerAddress : UINT
 	{
 		SHADER_SAMPLER_CLAMP = 0,
 		SHADER_SAMPLER_WRAP = 1,
 		SHADER_SAMPLER_MIRROR = 2,
 		SHADER_SAMPLER_BORDER = 4,
-		SHADER_SAMPLER_MIRROR_ONCE = 8,
-		shader_sampler_address_mask = 15,
+		SHADER_SAMPLER_MIRROR_ONCE = 8
+	};
 
+	enum ENGINE_CORE_API eShaderSamplerFunction : UINT
+	{
 		SHADER_SAMPLER_NEVER = 16,
 		SHADER_SAMPLER_LESS = 32,
 		SHADER_SAMPLER_EQUAL = 64,
@@ -359,11 +364,15 @@ namespace Engine
 		SHADER_SAMPLER_ALWAYS = 2048,
 	};
 
-	enum ENGINE_CORE_API eShaderRasterizer : UINT
+	enum ENGINE_CORE_API eShaderRasterizerCull : uint8_t
 	{
 		SHADER_RASTERIZER_CULL_NONE = 0,
 		SHADER_RASTERIZER_CULL_FRONT = 1,
 		SHADER_RASTERIZER_CULL_BACK = 2,
+	};
+
+	enum ENGINE_CORE_API eShaderRasterizerDraw : uint8_t
+	{
 		SHADER_RASTERIZER_FILL_WIREFRAME = 4,
 		SHADER_RASTERIZER_FILL_SOLID = 8,
 	};
