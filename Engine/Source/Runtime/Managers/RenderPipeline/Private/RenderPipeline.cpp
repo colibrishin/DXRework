@@ -11,45 +11,9 @@ namespace Engine::Managers
 		m_perspective_cb_task_->SetData(&m_wvp_buffer_, 1);
 	}
 
-	ViewportRenderPrerequisiteTask* RenderPipeline::GetDefaultViewportPrerequisiteTask() const
+	GraphicInterface& RenderPipeline::GetInterface() const
 	{
-		m_viewport_task_->SetViewport(m_viewport_);
-		return m_viewport_task_.get();
-	}
-
-	PipelineRenderPrerequisiteTask* RenderPipeline::GetPipelineRenderPrerequisiteTask() const
-	{
-		return m_pipeline_task_.get();
-	}
-
-	ConstantBufferRenderPrerequisiteTask<CBs::PerspectiveCB>* RenderPipeline::GetPerspectiveConstantBufferRenderPrerequisiteTask() const
-	{
-		if (!m_perspective_cb_task_)
-		{
-			throw std::runtime_error("Perspective constant buffer task has not assigned to");
-		}
-
-		return m_perspective_cb_task_.get();
-	}
-
-	ConstantBufferRenderPrerequisiteTask<CBs::ParamCB>* RenderPipeline::GetParamConstantBufferRenderPrerequisiteTask() const
-	{
-		if (!m_param_cb_task_)
-		{
-			throw std::runtime_error("Param constant buffer task has not assigned to");
-		}
-
-		return m_param_cb_task_.get();
-	}
-
-	void RenderPipeline::SetPrimitivePipeline(PrimitivePipeline* pipeline)
-	{
-		m_graphics_primitive_pipeline_ = std::unique_ptr<PrimitivePipeline>(pipeline);
-	}
-
-	PrimitivePipeline* RenderPipeline::GetPrimitivePipeline() const
-	{
-		return m_graphics_primitive_pipeline_.get();
+		return *m_graphic_interface_;
 	}
 
 	RenderPipeline::~RenderPipeline() { }
@@ -70,12 +34,6 @@ namespace Engine::Managers
 	{
 		PrecompileShaders();
 		InitializeViewport();
-		m_graphics_primitive_pipeline_->Generate();
-
-		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetDefaultViewportPrerequisiteTask());
-		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetPipelineRenderPrerequisiteTask());
-		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetPerspectiveConstantBufferRenderPrerequisiteTask());
-		Managers::Renderer::GetInstance().RegisterRenderPassPrerequisite(GetParamConstantBufferRenderPrerequisiteTask());
 	}
 
 	void RenderPipeline::PrecompileShaders()

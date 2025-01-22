@@ -47,13 +47,13 @@ namespace Engine
 			const Weak<CommandPair>& w_cmd,
 			const DescriptorPtr& w_heap);
 
-		Weak<CommandPair> m_current_cmd_;
-		DescriptorPtr m_current_heap_;
+		CommandListBase* m_current_cmd_;
+		GraphicHeapBase* m_current_heap_;
 
 		std::map<uint64_t, Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>> m_material_sbs_;
 		std::set<uint64_t> m_updated_material_in_current_pass_;
-		Graphics::StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
-		Graphics::StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_;
-		aligned_vector<DescriptorPtr> m_heaps_;
+		Strong<StructuredBufferMemoryPoolBase<Graphics::SBs::LocalParamSB>> m_local_param_pool_;
+		Strong<StructuredBufferMemoryPoolBase<Graphics::SBs::InstanceSB>> m_instance_pool_;
+		aligned_vector<Unique<GraphicHeapBase>> m_heaps_;
 	};
 }

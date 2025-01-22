@@ -431,47 +431,6 @@ namespace Engine::Managers
 
 	void D3Device::PostRender(const float& dt)
 	{
-		const auto& cmd = AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Finalize Render").lock();
-
-		const auto present_barrier = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 GetRenderTarget(m_frame_idx_),
-				 D3D12_RESOURCE_STATE_RENDER_TARGET,
-				 D3D12_RESOURCE_STATE_PRESENT
-				);
-
-		cmd->SoftReset();
-		cmd->GetList()->ResourceBarrier(1, &present_barrier);
-		cmd->FlagReady();
-
-		WaitForCommandsCompletion();
-
-		DXGI_PRESENT_PARAMETERS params;
-		params.DirtyRectsCount = 0;
-		params.pDirtyRects     = nullptr;
-		params.pScrollRect     = nullptr;
-		params.pScrollOffset   = nullptr;
-
-		DX::ThrowIfFailed
-				(
-				 m_swap_chain_->Present1
-				 (
-				  CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-				  &params
-				 )
-				);
-
-		if (WaitForSingleObjectEx
-		    (
-		     GetSwapchainAwaiter(), CFG_FRAME_LATENCY_TOLERANCE_SECOND * 1000,
-		     true
-		    ) != WAIT_OBJECT_0)
-		{
-#if WITH_DEBUG
-			OutputDebugString(TEXT("Waiting for Swap chain had an issue."));
-#endif
-		}
-
 		WaitNextFrame();
 	}
 

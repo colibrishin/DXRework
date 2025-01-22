@@ -17,12 +17,10 @@ public class Material : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Shader>(target);
 
-        conf.AddPrivateDependency<ResourceManager>(target);
         conf.AddPrivateDependency<Shape>(target);
         conf.AddPrivateDependency<Mesh>(target);
         conf.AddPrivateDependency<Texture>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);
         conf.AddPrivateDependency<AtlasAnimationTexture>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
     }
 }

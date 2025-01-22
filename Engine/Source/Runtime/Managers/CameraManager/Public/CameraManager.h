@@ -4,7 +4,7 @@
 
 namespace Engine::Managers
 {
-	class CameraManager : public Abstracts::Singleton<CameraManager>
+	class CORE_API CameraManager : public Abstracts::Singleton<CameraManager>
 	{
 	public:
 		CameraManager(SINGLETON_LOCK_TOKEN)

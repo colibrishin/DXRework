@@ -6,7 +6,7 @@
 
 namespace Engine::Managers
 {
-	class RESOURCEMANAGER_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
+	class CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
 	{
 	public:
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
@@ -56,7 +56,7 @@ namespace Engine::Managers
 		}
 
 		template <typename T>
-		boost::weak_ptr<T> GetResource(const EntityName& name)
+		Weak<T> GetResource(const EntityName& name)
 		{
 			auto& resources = m_resources_[which_resource<T>::value];
 			auto  it        = std::find_if
@@ -83,7 +83,7 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResource(const EntityName& name, const eResourceType& type);
 
 		template <typename T>
-		boost::weak_ptr<T> GetResourceByRawPath(const std::filesystem::path& path)
+		Weak<T> GetResourceByRawPath(const std::filesystem::path& path)
 		{
 			if (path.empty())
 			{
@@ -113,7 +113,7 @@ namespace Engine::Managers
 		}
 
 		template <typename T>
-		boost::weak_ptr<T> GetResourceByMetadataPath(const std::filesystem::path& path)
+		Weak<T> GetResourceByMetadataPath(const std::filesystem::path& path)
 		{
 			if (path.empty())
 			{

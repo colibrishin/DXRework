@@ -2,17 +2,17 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "CommandPair.h"
 #include "Source/Runtime/Core/ConstantBuffer.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
+#include "Descriptors.h"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
+#include "ThrowIfFailed.h"
 
 namespace Engine::Graphics
 {
 	// Creates a constant buffer for only current back buffer.
 	template <typename T>
-	class ConstantBuffer
+	class ConstantBuffer : public ConstantBufferTypeBase<T>
 	{
 	public:
 		ConstantBuffer() : m_b_dirty_(false)
@@ -134,6 +134,12 @@ namespace Engine::Graphics
 		T GetData() const
 		{
 			return m_data_;
+		}
+
+		void Bind(const GraphicInterfaceContextReturnType* context) override 
+		{
+			Bind(static_cast<ID3D12GraphicsCommandList1*>(context->commandList), 
+				static_cast<DescriptorPtrImpl*>(context->heap));
 		}
 
 		void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtrImpl* w_heap)

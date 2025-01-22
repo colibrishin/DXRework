@@ -30,17 +30,6 @@ namespace Engine::Managers
 	using Microsoft::WRL::ComPtr;
 	using namespace Engine::Graphics;
 
-	const std::unordered_map<std::wstring, eShaderType> g_shader_type_map = {
-		{L"vs", SHADER_VERTEX}, {L"ps", SHADER_PIXEL}, {L"gs", SHADER_GEOMETRY},
-		{L"cs", SHADER_COMPUTE}, {L"hs", SHADER_HULL}, {L"ds", SHADER_DOMAIN}
-	};
-
-	const std::unordered_map<eShaderType, std::string> g_shader_target_map = {
-		{SHADER_VERTEX, "vs_5_0"}, {SHADER_PIXEL, "ps_5_0"},
-		{SHADER_GEOMETRY, "gs_5_0"}, {SHADER_COMPUTE, "cs_5_0"},
-		{SHADER_HULL, "hs_5_0"}, {SHADER_DOMAIN, "ds_5_0"}
-	};
-
 	class D3D12WRAPPER_API D3Device final : public Abstracts::Singleton<D3Device>
 	{
 	public:
@@ -103,12 +92,6 @@ namespace Engine::Managers
 
 		bool IsCommandPairAvailable(UINT64 buffer_idx = -1) const;
 		void Wait(UINT64 buffer_idx) const;
-
-		void CreateTextureFromFile(
-			const std::filesystem::path& file_path,
-			ID3D12Resource**             res,
-			bool                         generate_mip
-		) const;
 
 		void DefaultRenderTarget(ID3D12GraphicsCommandList4* cmd) const;
 		void CopyBackBuffer(ID3D12GraphicsCommandList4* w_cmd, ID3D12Resource* resource) const;

@@ -20,7 +20,6 @@ public class GraphicPrimitiveShaderDX12 : CommonProject
         
         conf.AddPrivateDependency<ShaderRenderPrerequisiteTaskDX12>(target);
         conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
         conf.AddPrivateDependency<D3D12Wrapper>(target);
     }
 }

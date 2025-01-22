@@ -3,6 +3,7 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/ConstantBuffer.h"
 
 namespace Engine 
 {
@@ -241,16 +242,6 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST = 62,
 		PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST = 63,
 		PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST = 64
-	};
-
-	struct RENDERPIPELINE_API Viewport
-	{
-		float topLeftX;
-		float topLeftY;
-		float width;
-		float height;
-		float minDepth;
-		float maxDepth;
 	};
 
 	struct RENDERPIPELINE_API PrimitivePipeline

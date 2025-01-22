@@ -15,7 +15,6 @@ public class AnimationTexture : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Texture3D>(target);
 
-        conf.AddPrivateDependency<ResourceManager>(target);
         conf.AddPrivateDependency<BaseAnimation>(target);
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<DX12Agility>(target);

@@ -6,7 +6,7 @@
 
 namespace Engine::Abstracts
 {
-	class CORE_API Entity : public boost::enable_shared_from_this<Entity>
+	class CORE_API Entity : public std::enable_shared_from_this<Entity>
 	{
 	public:
 		Entity(const Entity& other) = default;
@@ -29,15 +29,15 @@ namespace Engine::Abstracts
 		bool                         IsInitialized() const;
 
 		template <typename T>
-		__forceinline boost::weak_ptr<T> GetWeakPtr()
+		__forceinline Weak<T> GetWeakPtr()
 		{
-			return boost::reinterpret_pointer_cast<T>(shared_from_this());
+			return std::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
 		template <typename T>
-		__forceinline boost::shared_ptr<T> GetSharedPtr()
+		__forceinline Strong<T> GetSharedPtr()
 		{
-			return boost::reinterpret_pointer_cast<T>(shared_from_this());
+			return std::reinterpret_pointer_cast<T>(shared_from_this());
 		}
 
 		virtual void Initialize();

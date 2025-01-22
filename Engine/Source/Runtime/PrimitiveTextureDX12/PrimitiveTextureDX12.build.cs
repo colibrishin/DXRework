@@ -16,8 +16,6 @@ public class PrimitiveTextureDX12 : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<CommandPair>(target);
-        conf.AddPublicDependency<DescriptorHeap>(target);
         conf.AddPublicDependency<D3D12Wrapper>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);

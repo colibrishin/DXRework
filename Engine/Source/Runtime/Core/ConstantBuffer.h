@@ -11,6 +11,22 @@ namespace Engine
 	enum eCBType : uint8_t;
 	enum eRaytracingCBType :uint8_t;
 
+	class ConstantBufferTypelessBase
+	{
+	public:
+		virtual ~ConstantBufferTypelessBase() = default;
+		virtual void Bind(const GraphicInterfaceContextReturnType* context) = 0;
+	};
+
+	template <typename T>
+	class ConstantBufferTypeBase : public ConstantBufferTypelessBase
+	{
+	public:
+		virtual void Create(const T* src_data) = 0;
+		virtual void SetData(const T* src_data) = 0;
+		virtual T GetData() const = 0;
+	};
+
 	namespace Graphics::CBs 
 	{
 		struct PerspectiveCB

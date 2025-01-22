@@ -13,6 +13,5 @@ public class Texture2D : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Texture>(target);
-        conf.AddPrivateDependency<ResourceManager>(target);
     }
 }
