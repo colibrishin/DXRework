@@ -43,9 +43,14 @@ start /b /wait "" %Cmake% "--build" "."
 popd
 
 echo [Run VCPKG]
-pushd Progams\vcpkg
 IF NOT EXIST Programs\vcpkg (
+pushd Programs
 git clone https://github.com/Microsoft/vcpkg.git
+popd
+)
+
+IF NOT EXIST Programs\vcpkg\vcpkg.exe (
+pushd Programs\vcpkg
 call bootstrap-vcpkg.bat
 popd
 )
