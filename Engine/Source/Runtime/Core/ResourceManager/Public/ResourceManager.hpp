@@ -1,7 +1,7 @@
 #pragma once
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
 namespace Engine::Managers
@@ -21,7 +21,7 @@ namespace Engine::Managers
 		void FixedUpdate(const float dt) override;
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
-		void AddResource(const boost::shared_ptr<T>& resource)
+		void AddResource(const Strong<T>& resource)
 		{
 			if (!resource->GetMetadataPath().empty() &&
 			    GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())
@@ -38,7 +38,7 @@ namespace Engine::Managers
 		}
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
-		void AddResource(const EntityName& name, const boost::shared_ptr<T>& resource)
+		void AddResource(const EntityName& name, const Strong<T>& resource)
 		{
 			if (!resource->GetMetadataPath().empty() &&
 			    GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())

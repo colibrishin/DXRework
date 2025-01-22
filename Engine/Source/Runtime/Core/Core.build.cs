@@ -18,5 +18,7 @@ public class Core : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<DirectXTK>(target);
+        conf.AddPublicDependency<CoreEntity>(target);
+        conf.AddPublicDependency<CoreSingleton>(target);
     }
 }

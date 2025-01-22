@@ -4,17 +4,17 @@
 
 namespace Engine::Resources
 {
-	boost::shared_ptr<ShadowTexture> ShadowTexture::Create(const std::string& name, const std::filesystem::path& path)
+	Strong<ShadowTexture> ShadowTexture::Create(const std::string& name, const std::filesystem::path& path)
 	{
-		if (const auto pcheck = Engine::Managers::ResourceManager::GetInstance().GetResourceByRawPath<ShadowTexture>
+		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByRawPath<ShadowTexture>
 					(path).lock();
-			const auto ncheck = Engine::Managers::ResourceManager::GetInstance().GetResource<ShadowTexture>
+			const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<ShadowTexture>
 					(name).lock())
 		{
 			return ncheck;
 		}
 		const auto obj = boost::make_shared<ShadowTexture>();
-		Engine::Managers::ResourceManager::GetInstance().AddResource(name, obj);
+		Managers::ResourceManager::GetInstance().AddResource(name, obj);
 		return obj;
 	}
 

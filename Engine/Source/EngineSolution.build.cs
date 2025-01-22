@@ -52,9 +52,6 @@ public class EngineSolution : Solution
 
 		// Add Projects
         {
-            // // ThirdParty
-            // conf.AddProject<FBX>(target);
-
             // dll
             conf.AddProject<Core>(target);
             conf.AddProject<GJK>(target);
@@ -89,7 +86,7 @@ public class EngineSolution : Solution
                 conf.AddProject<RenderPipeline>(target);
                 conf.AddProject<ShadowManager>(target);
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<WinAPIWrapper>(target);
+                conf.AddProject<Launch>(target);
             }
 
             {
@@ -112,7 +109,8 @@ public class EngineSolution : Solution
             }
 
             // exe
-            conf.SetStartupProject<WinAPIWrapper>();
+            conf.AddProject<WinAPIWrapper>(target);
+            conf.SetStartupProject<Launch>();
         }
     }
 }

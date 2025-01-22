@@ -6,8 +6,19 @@
 #include <directx/d3d12.h>
 #include <dxgi1_5.h>
 
-namespace Engine 
+#include "D3D12PrimitiveTexture.h"
+
+#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+
+namespace Engine
 {
+	struct D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
+	{
+		void Initialize() override;
+		void Shutdown() override;
+		bool DynamicLoadable() override;
+	};
+
 	struct D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
 	{
 	public:
@@ -37,6 +48,11 @@ namespace Engine
 		void* GetNativeInterface() override;
 		void* GetNativePipeline() override;
 
+		PrimitiveTexture*       GetNewPrimitiveTexture() override;
+		PrimitiveMesh*          GetNewPrimitiveMesh() override;
+		GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() override;
+		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
+
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 
 		CommandPairTask& GetCommandTask();
@@ -59,7 +75,7 @@ namespace Engine
 		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) override;
 		void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) override;
 		void ClearRenderTarget();
-		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const;
+		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) override;
 		
 		Matrix GetProjectionMatrix() override;
 		Matrix GetOrthogonalMatrix() override;
@@ -72,7 +88,7 @@ namespace Engine
 		void InitializePipeline();
 		void DetachCommandThread();
 		float GetAspectRatio();
-
+		
 		Unique<IStructuredBufferType<Graphics::SBs::LocalParamSB>> m_local_param_;
 		
 		ComPtr<ID3D12Device2> m_dev_;

@@ -30,7 +30,7 @@ namespace Engine::Components
 		void UpdateTransform(const Strong<Transform>& tr, const Strong<Resources::BaseAnimation>& anim) const;
 
 		template <typename T>
-		void ResetIfTimer(const boost::shared_ptr<T>& anim)
+		void ResetIfTimer(const Strong<T>& anim)
 		{
 			if (anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond()) >= anim->GetDuration())
 			{
@@ -40,7 +40,7 @@ namespace Engine::Components
 		}
 
 		template <typename T>
-		void UpdateTimer(const boost::shared_ptr<T>& anim)
+		void UpdateTimer(const Strong<T>& anim)
 		{
 			m_current_frame_ = anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond());
 		}

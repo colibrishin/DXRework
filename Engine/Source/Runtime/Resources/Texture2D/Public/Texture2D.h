@@ -15,7 +15,7 @@ namespace Engine::Resources
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Texture2D)
 
-		static boost::shared_ptr<Texture2D> Create(
+		static Strong<Texture2D> Create(
 			const std::string&               name,
 			const std::filesystem::path&     path,
 			const GenericTextureDescription& desc

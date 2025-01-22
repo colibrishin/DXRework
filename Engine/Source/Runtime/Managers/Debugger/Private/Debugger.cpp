@@ -1,6 +1,6 @@
 #include "../Public/Debugger.hpp"
 
-#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"

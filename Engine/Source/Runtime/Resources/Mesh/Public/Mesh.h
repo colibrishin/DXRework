@@ -12,22 +12,6 @@ namespace physx
 }
 #endif
 
-namespace Engine 
-{
-	struct PrimitiveMesh;
-
-#if CFG_RAYTRACING
-	struct MESH_API AccelStructBuffer
-	{
-		Unique<GraphicMemoryPool> instanceDescPool;
-		Unique<GraphicMemoryPool> resultPool;
-		Unique<GraphicMemoryPool> scratchPool;
-
-		bool empty = true;
-	};
-#endif
-}
-
 namespace Engine::Resources
 {
 	class MESH_API Mesh : public Abstracts::Resource
@@ -55,7 +39,7 @@ namespace Engine::Resources
 		const AccelStructBuffer&               GetBLAS() const;
 #endif
 		
-		[[nodiscard]] const IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
+		[[nodiscard]] IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
@@ -98,39 +82,3 @@ namespace Engine::Resources
 #endif
 	};
 } // namespace Engine::Resources
-
-namespace Engine
-{
-	struct MESH_API PrimitiveMesh
-	{
-		virtual      ~PrimitiveMesh() = default;
-		virtual void Generate(const Resources::Mesh* mesh) = 0;
-
-	protected:
-		virtual void SetNativeVertexBuffer(void* buffer)
-		{
-			m_vertex_buffer_ = buffer;
-		}
-
-		virtual void SetNativeIndexBuffer(void* buffer)
-		{
-			m_index_buffer_ = buffer;
-		}
-
-		static IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer(const Resources::Mesh* mesh)
-		{
-			return *mesh->m_vertex_buffer_structured_;
-		}
-
-#if CFG_RAYTRACING
-		static AccelStructBuffer& GetAccelStructBuffer(const Resources::Mesh* mesh)
-		{
-			return mesh->m_blas_;
-		}
-#endif
-		
-	private:
-		void* m_vertex_buffer_ = nullptr;
-		void* m_index_buffer_ = nullptr;
-	};
-}

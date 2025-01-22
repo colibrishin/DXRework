@@ -2,7 +2,7 @@
 #include <map>
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
 namespace Engine
 {

@@ -9,7 +9,7 @@ namespace Engine::Resources
 {
 	void Shader::Load_INTERNAL()
 	{
-		m_primitive_ = std::unique_ptr<GraphicPrimitiveShader>();
+		m_primitive_ = Unique<GraphicPrimitiveShader>(g_graphic_interface.GetInterface().GetNewGraphicPrimitiveShader());
 		m_primitive_->Generate(this, g_graphic_interface.GetInterface().GetNativePipeline());
 	}
 
@@ -117,12 +117,12 @@ namespace Engine::Resources
 		return *m_primitive_;
 	}
 
-	boost::weak_ptr<Shader> Shader::Get(const std::string& name)
+	Weak<Shader> Shader::Get(const std::string& name)
 	{
 		return Managers::ResourceManager::GetInstance().GetResource<Shader>(name);
 	}
 
-	boost::shared_ptr<Shader> Shader::Create(
+	Strong<Shader> Shader::Create(
 			const EntityName&            name,
 			const std::filesystem::path& path,
 			const eShaderDomain          domain,
@@ -197,22 +197,3 @@ namespace Engine::Resources
 		  m_sampler_slot_(),
 		  m_depth_flag_(false) { }
 } // namespace Engine::Graphic
-
-namespace Engine 
-{
-	void GraphicPrimitiveShader::SetNativeShader(void* shader) 
-	{
-		if (shader) 
-		{
-			m_shader_ = shader;
-		}
-	}
-
-	void GraphicPrimitiveShader::SetNativeSampler(void* sampler) 
-	{
-		if (sampler) 
-		{
-			m_sampler_ = sampler;
-		}
-	}
-}

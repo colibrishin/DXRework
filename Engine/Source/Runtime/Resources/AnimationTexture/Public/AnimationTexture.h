@@ -22,7 +22,7 @@ namespace Engine::Resources
 
 		RESOURCE_SELF_INFER_GETTER_DECL(AnimationTexture)
 
-		static boost::shared_ptr<AnimationTexture> Create(
+		static Strong<AnimationTexture> Create(
 			const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
 		);
 

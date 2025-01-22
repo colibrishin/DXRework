@@ -56,13 +56,16 @@ namespace Engine::Resources
 
 	void Texture::Load_INTERNAL()
 	{
+		m_primitive_texture_ = Unique<PrimitiveTexture>(g_graphic_interface.GetInterface().GetNewPrimitiveTexture());
+
 		if (!GetPath().empty())
 		{
-			m_primitive_texture_->LoadFromFile(GetSharedPtr<Texture>(), GetPath());
+			m_primitive_texture_->LoadFromFile(this, GetPath());
 		}
 		else
 		{
-			m_primitive_texture_->Generate(GetSharedPtr<Texture>());
+			m_primitive_texture_->Generate(this);
+			m_desc_ = m_primitive_texture_->GetDescription();
 			Map();
 		}
 	}
@@ -114,36 +117,3 @@ namespace Engine::Resources
 		return Resource::GetResourceType();
 	}
 } // namespace Engine::Resources
-
-namespace Engine 
-{
-	void PrimitiveTexture::UpdateDescription(
-		const Weak<Resources::Texture>& texture,
-		const GenericTextureDescription& description)
-	{
-		if (const Strong<Resources::Texture>& tex = texture.lock())
-		{
-			tex->UpdateDescription(description);
-		}
-
-		m_description_ = description;
-	}
-
-	void* PrimitiveTexture::GetNativeTexture() const
-	{
-		return m_texture_;
-	}
-
-	void PrimitiveTexture::SetPrimitiveTexture(void* texture)
-	{
-		if (texture)
-		{
-			m_texture_ = texture;
-		}
-	}
-
-	const GenericTextureDescription& PrimitiveTexture::GetDescription() const
-	{
-		return m_description_;
-	}
-}

@@ -4,7 +4,7 @@
 #include <boost/serialization/export.hpp>
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/BoundingGetter/Public/BoundingGetter.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
@@ -33,6 +33,7 @@ namespace Engine
 		RESERVED_LAYER_SKYBOX,
 		RESERVED_LAYER_OBSERVER,
 		RESERVED_LAYER_UI,
+		RESERVED_LAYER_MAX
 	};
 
 	class CORE_API Scene : public Abstracts::Renderable
@@ -67,7 +68,7 @@ namespace Engine
 		// If the object is bound to another scene or layer, it will be moved to this scene and layer.
 		// Note that the object will be added finally at the next frame.
 		template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstracts::ObjectBase, T>>>
-		void AddGameObject(LayerSizeType layer, const boost::shared_ptr<T>& obj)
+		void AddGameObject(LayerSizeType layer, const Strong<T>& obj)
 		{
 			const auto& downcast = obj->template GetSharedPtr<Abstracts::ObjectBase>();
 			addGameObjectImpl(layer, downcast);
@@ -77,7 +78,7 @@ namespace Engine
 		// Note that the object will be added finally at the next frame.
 		template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<
 			          Abstracts::ObjectBase, T>>>
-		boost::weak_ptr<T> CreateGameObject(LayerSizeType layer, Args&&... args)
+		Weak<T> CreateGameObject(LayerSizeType layer, Args&&... args)
 		{
 			// Create object, dynamic allocation from scene due to the access limitation.
 			const auto& obj_t = boost::make_shared<T>(args...);
@@ -105,7 +106,7 @@ namespace Engine
 
 		// Add cache component from the object.
 		template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstracts::Component, T>>>
-		void AddCacheComponent(const boost::shared_ptr<T>& component)
+		void AddCacheComponent(const Strong<T>& component)
 		{
 			// If the component cannot be deduced, go with runtime.
 			if constexpr (std::is_same_v<Abstracts::Component, T>)
@@ -132,7 +133,7 @@ namespace Engine
 						 [](const std::vector<std::any>& params, const float)
 						 {
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
+							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
 							 scene->addCacheComponentImpl(component, which_component<T>::value);
 						 }
@@ -142,7 +143,7 @@ namespace Engine
 
 		// Remove cache component from the object.
 		template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstracts::Component, T>>>
-		void RemoveCacheComponent(const boost::shared_ptr<T>& script)
+		void RemoveCacheComponent(const Strong<T>& script)
 		{
 			// If the component cannot be deduced, go with runtime.
 			if constexpr (std::is_same_v<Abstracts::Component, T>)
@@ -169,7 +170,7 @@ namespace Engine
 						 [](const std::vector<std::any>& params, const float)
 						 {
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
+							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
 							 scene->removeCacheComponentImpl(component, which_component<T>::value);
 						 }
@@ -179,7 +180,7 @@ namespace Engine
 
 		// Add cache script from the object.
 		template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void AddCacheScript(const boost::shared_ptr<T>& script)
+		void AddCacheScript(const Strong<T>& script)
 		{
 			// If the component cannot be deduced, go with runtime.
 			if constexpr (std::is_same_v<Script, T>)
@@ -206,7 +207,7 @@ namespace Engine
 						 [](const std::vector<std::any>& params, const float)
 						 {
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& component = std::any_cast<boost::shared_ptr<T>>(params[1]);
+							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
 							 scene->addCacheScriptImpl(component, which_script<T>::value);
 						 }
@@ -216,7 +217,7 @@ namespace Engine
 
 		// Remove cache script from the object.
 		template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void RemoveCacheScript(const boost::shared_ptr<T>& script)
+		void RemoveCacheScript(const Strong<T>& script)
 		{
 			// If the component cannot be deduced, go with runtime.
 			if constexpr (std::is_same_v<Script, T>)
@@ -243,7 +244,7 @@ namespace Engine
 						 [](const std::vector<std::any>& params, const float)
 						 {
 							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& scp   = std::any_cast<boost::shared_ptr<T>>(params[1]);
+							 const auto& scp   = std::any_cast<Strong<T>>(params[1]);
 
 							 scene->removeCacheScriptImpl(scp, which_script<T>::value);
 						 }
@@ -358,7 +359,7 @@ namespace Engine
 
 		LocalActorID               m_main_camera_local_id_;
 		LocalActorID               m_main_actor_local_id_;
-		LayerSizeType              m_layer_count_;
+		LayerSizeType              m_layer_count_ = RESERVED_LAYER_MAX + CFG_LAYER_COUNT;
 		std::vector<Strong<Layer>> m_layers_;
 
 		// Non-serialized

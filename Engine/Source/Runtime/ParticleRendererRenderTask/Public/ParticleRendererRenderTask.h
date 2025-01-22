@@ -1,9 +1,19 @@
 #pragma once
 #include "RenderTask.h"
 
+#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+
 namespace Engine
 {
-    struct ParticleRendererRenderInstanceTask : public RenderInstanceTask
+    
+    struct PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTaskModule : public IModule
+    {
+	    void Initialize() override;
+	    void Shutdown() override;
+	    bool DynamicLoadable() override;
+    };
+
+    struct PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTask : public RenderInstanceTask
     {
         void Run(
             Scene const* scene,

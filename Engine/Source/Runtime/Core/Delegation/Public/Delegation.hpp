@@ -1,8 +1,8 @@
 #pragma once
 #include <functional>
 #include <map>
-#include <ranges>
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/CoreEntity/CoreEntity.h"
 
 namespace Engine
 {
@@ -48,10 +48,10 @@ public:
 	using base_class_type = Engine::Abstracts::Entity;
 
 	template <typename T>
-	using strong_this_type = boost::shared_ptr<T>;
+	using strong_this_type = Engine::Strong<T>;
 
 	template <typename T>
-	using weak_this_type = boost::weak_ptr<T>;
+	using weak_this_type = Engine::Weak<T>;
 	using func_ptr_type = address_type;
 
 	using bucket_type = std::pair<weak_this_type<base_class_type>, func_ptr_type>;

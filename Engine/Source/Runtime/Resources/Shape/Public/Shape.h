@@ -34,7 +34,7 @@ namespace Engine::Resources
 		const std::map<UINT, BoundingOrientedBox>&  GetBoneBoundingBoxes() const;
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Resource, T>>>
-		void Add(const boost::weak_ptr<T>& res)
+		void Add(const Weak<T>& res)
 		{
 			if (res.expired())
 			{

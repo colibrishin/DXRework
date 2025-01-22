@@ -1,9 +1,12 @@
 #pragma once
-#include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include <map>
+
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 namespace Engine::Graphics 
 {
+	struct BonePrimitive;
 	using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
 
 	struct BONE_API BonePrimitive

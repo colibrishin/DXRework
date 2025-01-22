@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
-#include <boost/smart_ptr.hpp>
 #include <string>
 #include <filesystem>
+
+#include "CoreEntity.h"
+
 #include "Source/Runtime/Misc.h"
 
 #if defined(USE_DX12)
@@ -160,8 +162,8 @@ namespace Engine::Graphics
 	private:
 		constexpr static size_t max_param = 8;
 
-		float            f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
-		int              i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		float   f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
+		int     i_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
 		Vector4 v_param[max_param]{};
 		Matrix  m_param[max_param]{};
 	};
@@ -402,23 +404,6 @@ namespace Engine
 	enum eClientSBType : uint8_t;
 	enum eClientSBUAVType : uint8_t;
 
-	template <typename T>
-	using Weak = boost::weak_ptr<T>;
-
-	template <typename T>
-	using Strong = boost::shared_ptr<T>;
-
-	template <typename T>
-	using Unique = std::unique_ptr<T>;
-
-	using GenericString = std::string;
-	using EntityName = GenericString;
-	using TypeName = GenericString;
-	using MetadataPathStr = GenericString;
-	using MetadataPath = std::filesystem::path;
-
-	using IDType = uint32_t;
-	using GlobalEntityID = IDType;
 	using LocalActorID = IDType;
 	using LocalComponentID = IDType;
 	using LocalResourceID = IDType;
@@ -514,15 +499,10 @@ namespace Engine
 
 	namespace Abstracts
 	{
-		class Entity;
 		class ObjectBase;
 		class Component;
 		class Actor;
-		class Renderable;
 		class Resource;
-
-		template <typename T>
-		class Singleton;
 	} // namespace Abstracts
 
 	namespace Managers

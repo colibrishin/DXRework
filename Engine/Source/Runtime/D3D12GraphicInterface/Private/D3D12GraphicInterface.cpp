@@ -1,4 +1,7 @@
 #include "D3D12GraphicInterface.h"
+
+#include "D3D12GraphicPrimitiveShader.h"
+#include "D3D12PrimitiveMesh.h"
 #include "ThrowIfFailed.h"
 
 #include "StructuredBufferDX12.hpp"
@@ -9,6 +12,29 @@
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
 #include "D3D12PrimitiveTexture.h"
+#include "D3D12ComputePrimitiveShader.h"
+#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
+
+MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
+
+namespace Engine
+{
+	void Engine::D3D12GraphicInterfaceModule::Initialize()
+	{
+		g_graphic_interface.SetGraphicInterface<D3D12GraphicInterface>();
+	}
+
+	void Engine::D3D12GraphicInterfaceModule::Shutdown()
+	{
+		auto& gi = static_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
+		gi.Shutdown();
+	}
+
+	bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
+	{
+		return true;
+	}
+}
 
 void Engine::D3D12GraphicInterface::Initialize()
 {
@@ -106,6 +132,26 @@ void* Engine::D3D12GraphicInterface::GetNativeInterface()
 void* Engine::D3D12GraphicInterface::GetNativePipeline()
 {
 	return m_pipeline_root_signature_.Get();
+}
+
+Engine::PrimitiveTexture* Engine::D3D12GraphicInterface::GetNewPrimitiveTexture()
+{
+	return new D3D12PrimitiveTexture();
+}
+
+Engine::PrimitiveMesh* Engine::D3D12GraphicInterface::GetNewPrimitiveMesh()
+{
+	return new D3D12PrimitiveMesh();
+}
+
+Engine::GraphicPrimitiveShader* Engine::D3D12GraphicInterface::GetNewGraphicPrimitiveShader()
+{
+	return new D3D12GraphicPrimitiveShader();
+}
+
+Engine::ComputePrimitiveShader* Engine::D3D12GraphicInterface::GetNewComputePrimitiveShader()
+{
+	return new D3D12ComputePrimitiveShader();
 }
 
 Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)
@@ -646,7 +692,7 @@ void Engine::D3D12GraphicInterface::ClearRenderTarget()
 	cmd->FlagReady();
 }
 
-void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const
+void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	auto* resource = static_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetNativeTexture());

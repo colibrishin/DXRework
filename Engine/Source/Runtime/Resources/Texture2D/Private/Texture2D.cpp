@@ -3,7 +3,7 @@
 
 namespace Engine::Resources
 {
-	boost::shared_ptr<Texture2D> Texture2D::Create(
+	Strong<Texture2D> Texture2D::Create(
 		const std::string& name, const std::filesystem::path& path, const GenericTextureDescription& desc
 	)
 	{

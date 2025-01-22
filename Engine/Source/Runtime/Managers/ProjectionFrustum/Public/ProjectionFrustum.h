@@ -1,5 +1,6 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
 namespace Engine::Managers
 {

@@ -53,8 +53,8 @@ namespace Engine::Resources
 		[[nodiscard]] eSampler GetSampler() const;
 		[[nodiscard]] GraphicPrimitiveShader& GetGraphicPrimitiveShader() const;
 
-		static boost::weak_ptr<Shader>   Get(const std::string& name);
-		static boost::shared_ptr<Shader> Create(
+		static Weak<Shader>   Get(const std::string& name);
+		static Strong<Shader> Create(
 			const EntityName&            name,
 			const std::filesystem::path& path,
 			const eShaderDomain          domain,
@@ -94,30 +94,3 @@ namespace Engine::Resources
 		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
 	};
 } // namespace Engine::Graphic
-
-
-namespace Engine
-{
-	struct SHADER_API GraphicPrimitiveShader
-	{
-	public:
-		virtual             ~GraphicPrimitiveShader() = default;
-		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetNativeShader() const
-		{
-			return m_shader_;
-		}
-		[[nodiscard]] void* GetNativeSampler() const 
-		{
-			return m_sampler_;
-		}
-
-	protected:
-		virtual void SetNativeShader(void* shader);
-		virtual void SetNativeSampler(void* sampler);
-
-	private:
-		void* m_shader_ = nullptr;
-		void* m_sampler_ = nullptr;
-	};
-}

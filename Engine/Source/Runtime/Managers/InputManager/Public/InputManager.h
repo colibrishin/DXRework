@@ -1,8 +1,10 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
 #include <directxtk12/Mouse.h>
 #include <directxtk12/Keyboard.h>
+
+#include "TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine::Managers
 {

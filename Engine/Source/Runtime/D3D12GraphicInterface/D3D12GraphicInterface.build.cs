@@ -13,6 +13,8 @@ public class D3D12GraphicInterface : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<TBB>(target);
+        conf.AddPublicDependency<EngineEntryPoint>(target);
         conf.AddPublicDependency<DX12Agility>(target);
         conf.AddPublicDependency<Texture>(target);
         conf.AddPublicDependency<Shape>(target);

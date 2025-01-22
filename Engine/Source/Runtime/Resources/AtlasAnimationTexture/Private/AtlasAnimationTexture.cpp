@@ -34,7 +34,7 @@ namespace Engine::Resources
 		return RES_T_ATLAS_TEX;
 	}
 
-	boost::shared_ptr<AtlasAnimationTexture> AtlasAnimationTexture::Create(
+	Strong<AtlasAnimationTexture> AtlasAnimationTexture::Create(
 		const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 	)
 	{
@@ -100,7 +100,7 @@ namespace Engine::Resources
 				.SampleDesc = {1, 0}
 			};
 
-			GetPrimitiveTexture()->UpdateDescription(GetSharedPtr<AtlasAnimationTexture>(), new_desc);
+			GetPrimitiveTexture()->UpdateDescription(new_desc);
 		}
 
 		Texture3D::Load_INTERNAL();

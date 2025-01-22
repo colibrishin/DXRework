@@ -34,7 +34,7 @@ namespace Engine::Resources
 		return RES_T_ANIMS_TEX;
 	}
 
-	boost::shared_ptr<AnimationTexture> AnimationTexture::Create(
+	Strong<AnimationTexture> AnimationTexture::Create(
 		const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
 	) {
 		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AnimationTexture>(name).lock())
@@ -49,8 +49,8 @@ namespace Engine::Resources
 
 	void AnimationTexture::Load_INTERNAL()
 	{
-		GenericTextureDescription new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);
-		GetPrimitiveTexture()->UpdateDescription(GetSharedPtr<AnimationTexture>(), new_desc);
+		const GenericTextureDescription& new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);
+		GetPrimitiveTexture()->UpdateDescription(new_desc);
 
 		Texture3D::Load_INTERNAL();
 	}

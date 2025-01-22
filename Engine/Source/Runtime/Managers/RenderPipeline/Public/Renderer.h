@@ -3,7 +3,7 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 #include "RenderTask.h"
 
@@ -32,9 +32,11 @@ namespace Engine::Managers
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
 		void Initialize() override;
-
-		void RegisterRenderInstance(RenderInstanceTask* task);
-		void RegisterRenderPass(RenderPassTask* task);
+		
+		void RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task);
+		void RegisterRenderPass(const std::wstring_view name, RenderPassTask* task);
+		void UnregisterRenderInstance(const std::wstring_view name);
+		void UnregisterRenderPass(const std::wstring_view name);
 
 		void RenderPass(
 			float dt,
@@ -54,8 +56,8 @@ namespace Engine::Managers
 		~Renderer() override;
 		
 		bool m_b_ready_;
-		aligned_vector<Unique<RenderInstanceTask>> m_render_instance_tasks_;
-		aligned_vector<Unique<RenderPassTask>> m_render_pass_tasks_;
+		std::unordered_map<std::wstring, Unique<RenderInstanceTask>> m_render_instance_tasks_;
+		std::unordered_map<std::wstring, Unique<RenderPassTask>> m_render_pass_tasks_;
 		std::atomic<uint64_t> m_instance_count_;
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};

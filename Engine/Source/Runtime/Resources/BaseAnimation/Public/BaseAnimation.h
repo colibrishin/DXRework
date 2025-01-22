@@ -1,4 +1,5 @@
 #pragma once
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 namespace Engine::Graphics 
@@ -53,7 +54,7 @@ namespace Engine::Resources
 
 		RESOURCE_SELF_INFER_GETTER_DECL(BaseAnimation)
 
-		static boost::shared_ptr<BaseAnimation> Create(
+		static Strong<BaseAnimation> Create(
 			const std::string& name, const BoneAnimationPrimitive& primitive
 		);
 

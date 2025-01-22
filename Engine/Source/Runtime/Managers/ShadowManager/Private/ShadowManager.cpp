@@ -68,7 +68,7 @@ namespace Engine::Managers
 
 	void ShadowManager::Update(const float dt) {}
 
-	void ShadowManager::GetLightVP(const boost::shared_ptr<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
+	void ShadowManager::GetLightVP(const Strong<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
 	{
 		for (const auto& ptr_light : m_lights_ | std::views::values)
 		{

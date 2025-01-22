@@ -23,7 +23,7 @@ namespace Engine::Resources
 
 		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimationTexture)
 
-		static boost::shared_ptr<AtlasAnimationTexture> Create(
+		static Strong<AtlasAnimationTexture> Create(
 			const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 		);
 

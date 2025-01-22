@@ -85,7 +85,7 @@ namespace Engine::Resources
 
 		[[nodiscard]] static AtlasAnimationPrimitive ParseXML(const std::filesystem::path& path);
 
-		static boost::shared_ptr<AtlasAnimation> Create(
+		static Strong<AtlasAnimation> Create(
 			const std::string& name, const std::filesystem::path& xml_path
 		);
 

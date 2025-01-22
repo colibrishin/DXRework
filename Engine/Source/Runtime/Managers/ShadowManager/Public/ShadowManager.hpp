@@ -2,7 +2,7 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 

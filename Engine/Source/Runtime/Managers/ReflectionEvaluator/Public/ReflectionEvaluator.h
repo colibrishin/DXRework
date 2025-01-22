@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include <directx/d3d12.h>
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 

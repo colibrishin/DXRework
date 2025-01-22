@@ -1,12 +1,18 @@
 #pragma once
 #include <mutex>
 
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
 namespace Engine::Abstracts
 {
+	class CORESINGLETON_API SingletonBase : public Abstracts::Renderable
+	{
+	public:
+		SingletonBase();
+	};
+
 	template <typename T>
-	class Singleton : public Abstracts::Renderable
+	class Singleton : public SingletonBase
 	{
 	public:
 		Singleton(const Singleton&)            = delete;
@@ -47,7 +53,7 @@ namespace Engine::Abstracts
 		void OnDeserialized() final {}
 
 	protected:
-		Singleton()
+		Singleton() : SingletonBase()
 		{
 			static_assert(SingletonChecker::base, "Singleton must be derived from Singleton<T>");
 		}

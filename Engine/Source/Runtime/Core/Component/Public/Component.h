@@ -1,5 +1,6 @@
 #pragma once
-#include "Source/Runtime/Core/Entity/Public/Entity.hpp"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 
 // Static Component type, this should be added to every component
 #define COMPONENT_T(enum_val) static constexpr eComponentType ctype = enum_val;

@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 

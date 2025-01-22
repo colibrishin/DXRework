@@ -1,5 +1,8 @@
 #include "../Public/EngineEntryPoint.h"
 
+#include "CoreModuel/Public/CoreModule.h"
+#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
+
 /*
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -47,6 +50,9 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::Initialize()
 	{
+		m_timer = std::make_unique<DX::StepTimer>();
+		ModuleManager::GetInstance().Initialize();
+		ModuleManager::GetInstance().LoadModule(L"Core");
 	}
 
 	void EngineEntryPoint::Tick()
@@ -57,30 +63,37 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::PreUpdate(const float dt)
 	{
+		CoreModule::GetContext().PreUpdate(dt);
 	}
 
 	void EngineEntryPoint::FixedUpdate(const float dt)
 	{
+		CoreModule::GetContext().FixedUpdate(dt);
 	}
 
 	void EngineEntryPoint::Update(const float dt)
 	{
+		CoreModule::GetContext().Update(dt);
 	}
 
 	void EngineEntryPoint::PreRender(const float dt)
 	{
+		CoreModule::GetContext().PreRender(dt);
 	}
 
 	void EngineEntryPoint::Render(const float dt)
 	{
+		CoreModule::GetContext().Render(dt);
 	}
 
 	void EngineEntryPoint::PostRender(const float dt)
 	{
+		CoreModule::GetContext().PostRender(dt);
 	}
 
 	void EngineEntryPoint::PostUpdate(const float dt)
 	{
+		CoreModule::GetContext().PostUpdate(dt);
 	}
 
 	void EngineEntryPoint::tickInternal()

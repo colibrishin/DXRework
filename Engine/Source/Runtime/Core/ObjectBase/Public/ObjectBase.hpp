@@ -56,7 +56,7 @@ namespace Engine::Abstracts
 		[[nodiscard]] Strong<ObjectBase> Clone(bool register_scene = true) const;
 
 		template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
-		boost::weak_ptr<T> AddComponent(Args&&... args)
+		Weak<T> AddComponent(Args&&... args)
 		{
 			const auto type = which_component<T>::value;
 
@@ -67,7 +67,7 @@ namespace Engine::Abstracts
 
 			const auto thisObject = GetSharedPtr<ObjectBase>();
 
-			boost::shared_ptr<T> component =
+			Strong<T> component =
 					boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 			component->Initialize();
 
@@ -80,7 +80,7 @@ namespace Engine::Abstracts
 		}
 
 		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		boost::weak_ptr<T> AddScript(const std::string& name = "")
+		Weak<T> AddScript(const std::string& name = "")
 		{
 			const auto type = which_script<T>::value;
 
@@ -89,7 +89,7 @@ namespace Engine::Abstracts
 				return boost::static_pointer_cast<T>(m_scripts_[which_script<T>::value]);
 			}
 
-			boost::shared_ptr<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
+			Strong<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
 			script->SetName(name);
 			addScriptImpl(script, type);
 			addScriptToSceneCache<T>(script);
@@ -98,7 +98,7 @@ namespace Engine::Abstracts
 		}
 
 		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		boost::weak_ptr<T> GetScript(const std::string& name = "")
+		Weak<T> GetScript(const std::string& name = "")
 		{
 			if (m_scripts_.contains(which_script<T>::value))
 			{
@@ -119,7 +119,7 @@ namespace Engine::Abstracts
 		const std::vector<Weak<Script>>&                            GetAllScripts();
 
 		template <typename T>
-		boost::weak_ptr<T> GetComponent()
+		Weak<T> GetComponent()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
@@ -188,7 +188,7 @@ namespace Engine::Abstracts
 
 		// Add component to the scene cache.
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
-		void addComponentToSceneCache(const boost::shared_ptr<T>& component)
+		void addComponentToSceneCache(const Strong<T>& component)
 		{
 			if (const auto scene = GetScene().lock())
 			{
@@ -197,7 +197,7 @@ namespace Engine::Abstracts
 		}
 
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
-		void removeComponentFromSceneCache(const boost::shared_ptr<T>& component)
+		void removeComponentFromSceneCache(const Strong<T>& component)
 		{
 			if (const auto scene = GetScene().lock())
 			{
@@ -207,7 +207,7 @@ namespace Engine::Abstracts
 
 		// Add script to the scene cache.
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void addScriptToSceneCache(const boost::shared_ptr<T>& script)
+		void addScriptToSceneCache(const Strong<T>& script)
 		{
 			if (const auto scene = GetScene().lock())
 			{
@@ -217,7 +217,7 @@ namespace Engine::Abstracts
 
 		// Remove script from the scene cache.
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void removeScriptFromSceneCache(const boost::shared_ptr<T>& script)
+		void removeScriptFromSceneCache(const Strong<T>& script)
 		{
 			if (const auto scene = GetScene().lock())
 			{

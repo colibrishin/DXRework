@@ -1,5 +1,8 @@
 #include "../Public/ParticleRendererRenderTask.h"
 #include <tbb/parallel_for_each.h>
+
+#include "Renderer.h"
+
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
@@ -8,6 +11,21 @@
 
 namespace Engine 
 {
+	void ParticleRendererRenderInstanceTaskModule::Initialize()
+	{
+		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ParticleRendererRenderInstanceTask", new ParticleRendererRenderInstanceTask());
+	}
+
+	void ParticleRendererRenderInstanceTaskModule::Shutdown()
+	{
+        Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ParticleRendererRenderInstanceTask");
+	}
+
+	bool ParticleRendererRenderInstanceTaskModule::DynamicLoadable()
+	{
+		return true;
+	}
+
     void ParticleRendererRenderInstanceTask::Run(
         Scene const* scene,
         RenderMap*   render_map,

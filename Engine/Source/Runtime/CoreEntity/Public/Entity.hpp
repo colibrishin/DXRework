@@ -1,12 +1,13 @@
 #pragma once
+#include <boost/smart_ptr.hpp>
 #include <filesystem>
 #include <directx/d3d12.h>
 
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "CoreEntity.h"
 
 namespace Engine::Abstracts
 {
-	class CORE_API Entity : public boost::enable_shared_from_this<Entity>
+	class COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
 		Entity(const Entity& other) = default;

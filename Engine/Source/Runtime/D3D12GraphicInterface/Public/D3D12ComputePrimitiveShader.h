@@ -7,10 +7,10 @@
 
 namespace Engine
 {
-	struct D3D12GRAPHICINTERFACE_API DX12ComputePrimitiveShader : public ComputePrimitiveShader
+	struct D3D12GRAPHICINTERFACE_API D3D12ComputePrimitiveShader : public ComputePrimitiveShader
 	{
-		DX12ComputePrimitiveShader();
-		void                               Generate(const Weak<Resources::ComputeShader>& w_shader, void* pipeline_signature) override;
+		D3D12ComputePrimitiveShader();
+		void                               Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;
 		[[nodiscard]] ID3D12PipelineState* GetPSO() const;
 
 	private:

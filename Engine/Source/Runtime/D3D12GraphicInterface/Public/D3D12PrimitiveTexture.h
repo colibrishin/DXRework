@@ -10,8 +10,8 @@ namespace Engine
 	struct D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public PrimitiveTexture
 	{
 		D3D12PrimitiveTexture();
-		void Generate(const Weak<Resources::Texture>& texture) override;
-		void LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path) override;
+		void Generate(Resources::Texture* texture) override;
+		void LoadFromFile(Resources::Texture* texture, const std::filesystem::path& path) override;
 		void SaveAsFile(const std::filesystem::path& path) override;
 
 		void Map(

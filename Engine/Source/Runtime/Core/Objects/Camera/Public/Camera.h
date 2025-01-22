@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/Entity/Public/Entity.hpp"
+#include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 #include "Source/Runtime/Core/Objects/Object/Public/Object.hpp"
 #include "Source/Runtime/Core/ConstantBuffer.h"
 

@@ -20,194 +20,184 @@
 
 Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() {}
 
-void Engine::D3D12PrimitiveTexture::Generate(const Weak<Resources::Texture>& texture)
+void Engine::D3D12PrimitiveTexture::Generate(Engine::Resources::Texture* texture)
 {
-	if (const Strong<Resources::Texture>& tex = texture.lock()) 
+	m_desc_ = texture->GetDescription();
+
+	if ((m_desc_.Flags & RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) &&
+		(m_desc_.Flags & RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
 	{
-		m_desc_ = tex->GetDescription();
-
-		if ((m_desc_.Flags & RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) &&
-			(m_desc_.Flags & RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
-		{
-			throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
-		}
-		
-		const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		const D3D12_RESOURCE_DIMENSION dim = ConvertDimension(m_desc_.Dimension);
-
-		m_native_desc_ = 
-		{
-			.Dimension = dim,
-			.Alignment = m_desc_.Alignment,
-			.Width = m_desc_.Width,
-			.Height = m_desc_.Height,
-			.DepthOrArraySize = m_desc_.DepthOrArraySize,
-			.MipLevels = m_desc_.MipsLevel,
-			.Format = static_cast<DXGI_FORMAT>(m_desc_.Format),
-			.SampleDesc = reinterpret_cast<const DXGI_SAMPLE_DESC&>(m_desc_.SampleDesc),
-			.Layout = static_cast<D3D12_TEXTURE_LAYOUT>(m_desc_.Layout),
-			.Flags = static_cast<D3D12_RESOURCE_FLAGS>(m_desc_.Flags)
-		};
-
-		D3D12_CLEAR_VALUE clear_value = {};
-
-		if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
-		{
-			clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsRTV != TEX_FORMAT_UNKNOWN ? m_desc_.AsRTV : m_desc_.Format);
-			clear_value.Color[0] = 0.0f;
-			clear_value.Color[1] = 0.0f;
-			clear_value.Color[2] = 0.0f;
-			clear_value.Color[3] = 1.0f;
-		}
-
-		if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-		{
-			clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsDSV != TEX_FORMAT_UNKNOWN ? m_desc_.AsDSV : m_desc_.Format);
-			clear_value.DepthStencil.Depth = 1.0f;
-			clear_value.DepthStencil.Stencil = 0;
-		}
-
-		const D3D12_CLEAR_VALUE* cv_ptr = (
-			m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) ||
-			(m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ?
-			&clear_value :
-			nullptr;
-
-		const auto dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
-
-		DX::ThrowIfFailed
-		(
-			dev->CreateCommittedResource
-			(
-				&heap_prop,
-				D3D12_HEAP_FLAG_NONE,
-				&m_native_desc_,
-				D3D12_RESOURCE_STATE_COMMON,
-				cv_ptr,
-				IID_PPV_ARGS(m_dx12_texture_.GetAddressOf())
-			)
-		);
-
-		if (const std::string& name = tex->GetName(); name.empty())
-		{
-			DX::ThrowIfFailed(m_dx12_texture_->SetName(L"Texture"));
-		}
-		else
-		{
-			const auto wname = L"Texture" + std::wstring(name.begin(), name.end());
-			DX::ThrowIfFailed(m_dx12_texture_->SetName(wname.c_str()));
-		}
-		
-		InitializeDescriptorHeaps();
-		InitializeResourceViews();
-
-		SetPrimitiveTexture(m_dx12_texture_.Get());
+		throw std::logic_error("Depth stencil and unordered cannot be flagged in same texture");
 	}
+	
+	const auto& heap_prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	const D3D12_RESOURCE_DIMENSION dim = ConvertDimension(m_desc_.Dimension);
+
+	m_native_desc_ = 
+	{
+		.Dimension = dim,
+		.Alignment = m_desc_.Alignment,
+		.Width = m_desc_.Width,
+		.Height = m_desc_.Height,
+		.DepthOrArraySize = m_desc_.DepthOrArraySize,
+		.MipLevels = m_desc_.MipsLevel,
+		.Format = static_cast<DXGI_FORMAT>(m_desc_.Format),
+		.SampleDesc = reinterpret_cast<const DXGI_SAMPLE_DESC&>(m_desc_.SampleDesc),
+		.Layout = static_cast<D3D12_TEXTURE_LAYOUT>(m_desc_.Layout),
+		.Flags = static_cast<D3D12_RESOURCE_FLAGS>(m_desc_.Flags)
+	};
+
+	D3D12_CLEAR_VALUE clear_value = {};
+
+	if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	{
+		clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsRTV != TEX_FORMAT_UNKNOWN ? m_desc_.AsRTV : m_desc_.Format);
+		clear_value.Color[0] = 0.0f;
+		clear_value.Color[1] = 0.0f;
+		clear_value.Color[2] = 0.0f;
+		clear_value.Color[3] = 1.0f;
+	}
+
+	if (m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	{
+		clear_value.Format = static_cast<DXGI_FORMAT>(m_desc_.AsDSV != TEX_FORMAT_UNKNOWN ? m_desc_.AsDSV : m_desc_.Format);
+		clear_value.DepthStencil.Depth = 1.0f;
+		clear_value.DepthStencil.Stencil = 0;
+	}
+
+	const D3D12_CLEAR_VALUE* cv_ptr = (
+		m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) ||
+		(m_native_desc_.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ?
+		&clear_value :
+		nullptr;
+
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+
+	DX::ThrowIfFailed
+	(
+		dev->CreateCommittedResource
+		(
+			&heap_prop,
+			D3D12_HEAP_FLAG_NONE,
+			&m_native_desc_,
+			D3D12_RESOURCE_STATE_COMMON,
+			cv_ptr,
+			IID_PPV_ARGS(m_dx12_texture_.GetAddressOf())
+		)
+	);
+
+	if (const std::string& name = texture->GetName(); name.empty())
+	{
+		DX::ThrowIfFailed(m_dx12_texture_->SetName(L"Texture"));
+	}
+	else
+	{
+		const auto wname = L"Texture" + std::wstring(name.begin(), name.end());
+		DX::ThrowIfFailed(m_dx12_texture_->SetName(wname.c_str()));
+	}
+	
+	InitializeDescriptorHeaps();
+	InitializeResourceViews();
+
+	SetPrimitiveTexture(m_dx12_texture_.Get());
 }
 
-void Engine::D3D12PrimitiveTexture::LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path)
+void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* texture, const std::filesystem::path& path)
 {
-	if (const Strong<Resources::Texture>& tex = texture.lock())
+	const auto dev    = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
+	auto&      native = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
+
+	ID3D12CommandQueue* queue = native.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+	
+	if (!exists(path))
 	{
-		{
-			const auto dev    = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
-			auto&      native = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_interface.GetInterface());
-
-			ID3D12CommandQueue* queue = native.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
-			
-			if (!exists(path))
-			{
-				throw std::runtime_error("File not found.");
-			}
-
-			DirectX::ResourceUploadBatch resource_upload_batch(dev);
-
-			resource_upload_batch.Begin();
-
-			if (path.extension() == ".dds")
-			{
-				DX::ThrowIfFailed
-						(
-						 CreateDDSTextureFromFile
-						 (
-						  dev,
-						  resource_upload_batch,
-						  path.c_str(),
-						  m_dx12_texture_.GetAddressOf(),
-						  false
-						 )
-						);
-			}
-			else
-			{
-				DX::ThrowIfFailed
-						(
-						 CreateWICTextureFromFile
-						 (
-						  dev,
-						  resource_upload_batch,
-						  path.c_str(),
-						  m_dx12_texture_.GetAddressOf(),
-						  false
-						 )
-						);
-			}
-
-			const auto& token = resource_upload_batch.End(queue);
-			token.wait();
-		}
-
-		{
-			const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_COPY, false, L"Texture Uploading");
-			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-
-			const auto& cmd = reinterpret_cast<CommandPair*>(primitive.commandList);
-			const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
-			(
-				m_dx12_texture_.Get(),
-				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-				D3D12_RESOURCE_STATE_COMMON
-			);
-
-			cmd->SoftReset();
-			cmd->GetList()->ResourceBarrier(1, &common_transition);
-			cmd->FlagReady();
-
-			const D3D12_RESOURCE_DESC desc = m_dx12_texture_->GetDesc();
-			GenericTextureDescription tex_desc;
-
-			switch (desc.Dimension)
-			{
-			case D3D12_RESOURCE_DIMENSION_UNKNOWN:
-				tex_desc.Dimension = TEX_TYPE_UNKNOWN;
-				break;
-			case D3D12_RESOURCE_DIMENSION_BUFFER:
-				tex_desc.Dimension = TEX_TYPE_BUFFER;
-				break;
-			case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-				tex_desc.Dimension = TEX_TYPE_1D;
-				break;
-			case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
-				tex_desc.Dimension = TEX_TYPE_2D;
-				break;
-			case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
-				tex_desc.Dimension = TEX_TYPE_3D;
-				break;
-			};
-
-			tex_desc.Format = static_cast<eFormat>(desc.Format);
-			tex_desc.Alignment = desc.Alignment;
-			tex_desc.Width = desc.Width;
-			tex_desc.Height = desc.Height;
-			tex_desc.MipsLevel = desc.MipLevels;
-			tex_desc.SampleDesc = reinterpret_cast<const SamplerDescription&>(desc.SampleDesc);
-			tex_desc.Layout = static_cast<eTextureLayout>(desc.Layout);
-			tex_desc.Flags = desc.Flags;
-			tex_desc.DepthOrArraySize = desc.DepthOrArraySize;
-
-			UpdateDescription(tex, tex_desc);
-		}
+		throw std::runtime_error("File not found.");
 	}
+
+	DirectX::ResourceUploadBatch resource_upload_batch(dev);
+
+	resource_upload_batch.Begin();
+
+	if (path.extension() == ".dds")
+	{
+		DX::ThrowIfFailed
+				(
+				 CreateDDSTextureFromFile
+				 (
+				  dev,
+				  resource_upload_batch,
+				  path.c_str(),
+				  m_dx12_texture_.GetAddressOf(),
+				  false
+				 )
+				);
+	}
+	else
+	{
+		DX::ThrowIfFailed
+				(
+				 CreateWICTextureFromFile
+				 (
+				  dev,
+				  resource_upload_batch,
+				  path.c_str(),
+				  m_dx12_texture_.GetAddressOf(),
+				  false
+				 )
+				);
+	}
+
+	const auto& token = resource_upload_batch.End(queue);
+	token.wait();
+
+	const GraphicInterfaceContextReturnType& context = g_graphic_interface.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_COPY, false, L"Texture Uploading");
+	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+
+	const auto& cmd = reinterpret_cast<CommandPair*>(primitive.commandList);
+	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		m_dx12_texture_.Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	cmd->SoftReset();
+	cmd->GetList()->ResourceBarrier(1, &common_transition);
+	cmd->FlagReady();
+
+	const D3D12_RESOURCE_DESC desc = m_dx12_texture_->GetDesc();
+	GenericTextureDescription tex_desc;
+
+	switch (desc.Dimension)
+	{
+	case D3D12_RESOURCE_DIMENSION_UNKNOWN:
+		tex_desc.Dimension = TEX_TYPE_UNKNOWN;
+		break;
+	case D3D12_RESOURCE_DIMENSION_BUFFER:
+		tex_desc.Dimension = TEX_TYPE_BUFFER;
+		break;
+	case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
+		tex_desc.Dimension = TEX_TYPE_1D;
+		break;
+	case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
+		tex_desc.Dimension = TEX_TYPE_2D;
+		break;
+	case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
+		tex_desc.Dimension = TEX_TYPE_3D;
+		break;
+	};
+
+	tex_desc.Format = static_cast<eFormat>(desc.Format);
+	tex_desc.Alignment = desc.Alignment;
+	tex_desc.Width = desc.Width;
+	tex_desc.Height = desc.Height;
+	tex_desc.MipsLevel = desc.MipLevels;
+	tex_desc.SampleDesc = reinterpret_cast<const SamplerDescription&>(desc.SampleDesc);
+	tex_desc.Layout = static_cast<eTextureLayout>(desc.Layout);
+	tex_desc.Flags = desc.Flags;
+	tex_desc.DepthOrArraySize = desc.DepthOrArraySize;
+
+	UpdateDescription(tex_desc);
 }
 
 void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()

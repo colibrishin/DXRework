@@ -11,14 +11,14 @@ namespace Engine::Managers
 
 	void Renderer::PreUpdate(const float dt)
 	{
-		for (size_t i = 0; i < m_render_pass_tasks_.size(); ++i)
+		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
 		{
-			m_render_pass_tasks_[i]->Cleanup();
+			ptr->Cleanup();
 		}
 
-		for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i) 
+		for (const auto& ptr : m_render_instance_tasks_ | std::views::values) 
 		{
-			m_render_instance_tasks_[i]->Cleanup(m_render_candidates_, SHADER_DOMAIN_MAX);
+			ptr->Cleanup(m_render_candidates_, SHADER_DOMAIN_MAX);
 		}
 
 		m_b_ready_ = false;
@@ -32,9 +32,9 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
-			for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i)
+			for (const auto& ptr : m_render_instance_tasks_ | std::views::values)
 			{
-				m_render_instance_tasks_[i]->Run
+				ptr->Run
 					(
 					 scene.get(),
 					 m_render_candidates_,
@@ -64,9 +64,9 @@ namespace Engine::Managers
 		const ContextSetupFunction&						   prerender_predicate,
 		const ContextSetupFunction&						   postrender_predicate) const
 	{
-		for (size_t i = 0; i < m_render_pass_tasks_.size(); ++i) 
+		for (const auto& ptr : m_render_pass_tasks_ | std::views::values) 
 		{
-			m_render_pass_tasks_[i]->Run(
+			ptr->Run(
 			          dt,
 			          shader_bypass,
 			          &m_render_candidates_[domain],
@@ -84,19 +84,35 @@ namespace Engine::Managers
 
 	void Renderer::Initialize() {}
 
-	void Renderer::RegisterRenderInstance(RenderInstanceTask* task)
+	void Renderer::RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task)
 	{
 		if (task != nullptr) 
 		{
-			m_render_instance_tasks_.push_back(std::unique_ptr<RenderInstanceTask>(task));
+			m_render_instance_tasks_.emplace(name, std::unique_ptr<RenderInstanceTask>(task));
 		}
 	}
 
-	void Renderer::RegisterRenderPass(RenderPassTask* task)
+	void Renderer::RegisterRenderPass(const std::wstring_view name, RenderPassTask* task)
 	{
 		if (task != nullptr)
 		{
-			m_render_pass_tasks_.push_back(std::unique_ptr<RenderPassTask>(task));
+			m_render_pass_tasks_.emplace(name, std::unique_ptr<RenderPassTask>(task));
+		}
+	}
+
+	void Renderer::UnregisterRenderInstance(const std::wstring_view name)
+	{
+		if (m_render_instance_tasks_.contains(name.data()))
+		{
+			m_render_instance_tasks_.erase(name.data());
+		}
+	}
+
+	void Renderer::UnregisterRenderPass(const std::wstring_view name)
+	{
+		if (m_render_pass_tasks_.contains(name.data()))
+		{
+			m_render_pass_tasks_.erase(name.data());
 		}
 	}
 

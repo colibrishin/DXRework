@@ -5,12 +5,12 @@
 #include <numeric>
 #include <queue>
 
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
 namespace Engine
 {
 	using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
-
+	
 	enum CORE_API eTaskType : uint8_t
 	{
 		TASK_NONE = 0,

@@ -17,11 +17,6 @@ namespace Engine::Resources
 		gi.Dispatch(context, this, param, group_count);
 	}
 
-	void ComputeShader::SetPrimitiveShader(ComputePrimitiveShader* shader)
-	{
-		m_primitive_shader_ = std::unique_ptr<ComputePrimitiveShader>(shader);
-	}
-
 	ComputePrimitiveShader& ComputeShader::GetComputePrimitiveShader() const
 	{
 		return *m_primitive_shader_;
@@ -68,9 +63,8 @@ namespace Engine::Resources
 
 	void ComputeShader::Load_INTERNAL()
 	{
-		m_primitive_shader_->Generate(
-			GetSharedPtr<ComputeShader>(), 
-			g_graphic_interface.GetInterface().GetNativePipeline());
+		m_primitive_shader_ = Unique<ComputePrimitiveShader>(g_graphic_interface.GetInterface().GetNewComputePrimitiveShader());
+		m_primitive_shader_->Generate(this, g_graphic_interface.GetInterface().GetNativePipeline());
 		
 		loadDerived();
 	}
@@ -78,6 +72,7 @@ namespace Engine::Resources
 	void ComputeShader::Unload_INTERNAL()
 	{
 		m_primitive_shader_.reset();
+
 		unloadDerived();
 	}
 
@@ -86,12 +81,4 @@ namespace Engine::Resources
 		  ("", "", SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_NEVER, SHADER_RASTERIZER_CULL_NONE,
 		   SAMPLER_FILTER_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER, GetDefaultRTVFormat()),
 		  m_thread_{1,} {}
-}
-
-namespace Engine 
-{
-	void* ComputePrimitiveShader::GetNativeShader() const
-	{
-		return m_shader_;
-	}
 }

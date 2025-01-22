@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Source/Runtime/Core/Entity/Public/Entity.hpp"
+#include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 
 namespace Engine::Abstracts
 {
-	class CORE_API Renderable : public Entity
+	class COREENTITY_API Renderable : public Entity
 	{
 	public:
 		virtual void PreRender(const float dt) = 0;

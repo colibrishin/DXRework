@@ -1,9 +1,18 @@
 #pragma once
+#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 
-namespace Engine 
+namespace Engine
 {
+    struct ModelRendererRenderInstanceTaskModule : public IModule
+    {
+	    void Initialize() override;
+	    void Shutdown() override;
+	    bool DynamicLoadable() override;
+    };
+
     struct ModelRendererRenderInstanceTask : public RenderInstanceTask 
     {
         void Run(

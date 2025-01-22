@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 

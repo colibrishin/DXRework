@@ -1,18 +1,5 @@
 #include "../Public/WinAPIWrapper.hpp"
-#include "Source/Runtime/Managers/EngineEntryPoint/Public/EngineEntryPoint.h"
-
-int WINAPI WinMain(
-	HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
-	int       iCmdshow
-)
-{
-	// Create the system object.
-	const auto hwnd = WinAPI::WinAPIWrapper::Initialize(hInstance);
-	Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
-
-	WinAPI::WinAPIWrapper::Update();
-	return 0;
-}
+#include "Source/Runtime/EngineEntryPoint/Public/EngineEntryPoint.h"
 
 std::unique_ptr<WinAPI::WinAPIWrapper> WinAPI::WinAPIWrapper::s_instance_         = nullptr;
 std::wstring                           WinAPI::WinAPIWrapper::s_application_name_ = L"Engine";

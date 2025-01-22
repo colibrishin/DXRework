@@ -18,7 +18,9 @@ public class ModelRendererRenderTask : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<RenderComponent>(target);
-        
+        conf.AddPublicDependency<EngineEntryPoint>(target);
+
+        conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ModelRenderer>(target);
         conf.AddPrivateDependency<BaseAnimation>(target);

@@ -121,7 +121,7 @@ namespace Engine::Resources
 		return primitive;
 	}
 
-	inline boost::shared_ptr<AtlasAnimation> Engine::Resources::AtlasAnimation::Create(const std::string& name, const std::filesystem::path& xml_path)
+	inline Strong<AtlasAnimation> AtlasAnimation::Create(const std::string& name, const std::filesystem::path& xml_path)
 	{
 		if (const auto check = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimation>(name).lock())
 		{

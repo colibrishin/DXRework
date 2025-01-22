@@ -3,7 +3,10 @@
 #include <tbb/concurrent_vector.h>
 
 #include "ModelRenderer.h"
+#include "RenderPipeline.h"
+#include "Renderer.h"
 
+#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
@@ -12,8 +15,25 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
 
+MODULE_IMPL(Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderInstanceTask)
+
 namespace Engine 
 {
+	void ModelRendererRenderInstanceTaskModule::Initialize()
+	{
+		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ModelRendererRenderInstanceTask", new ModelRendererRenderInstanceTask());
+	}
+
+	void ModelRendererRenderInstanceTaskModule::Shutdown()
+	{
+        Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ModelRendererRenderInstanceTask");
+	}
+
+	bool ModelRendererRenderInstanceTaskModule::DynamicLoadable()
+	{
+		return true;
+	}
+
     void ModelRendererRenderInstanceTask::Run(
             Scene const* scene, 
             RenderMap* render_map,

@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);

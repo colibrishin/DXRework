@@ -1,6 +1,11 @@
 #pragma once
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/StepTimer/Public/StepTimer.hpp"
+
+namespace Engine
+{
+	struct CoreModule;
+}
 
 namespace Engine::Managers
 {
@@ -35,6 +40,7 @@ namespace Engine::Managers
 
 		// Time
 		std::unique_ptr<DX::StepTimer> m_timer;
+		CoreModule* m_static_core_module_;
 
 		// Check for Sigterm registration
 		static bool s_instantiated_;

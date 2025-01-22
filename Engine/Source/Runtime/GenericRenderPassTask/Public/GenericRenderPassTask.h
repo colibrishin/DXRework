@@ -1,5 +1,8 @@
 #pragma once
 #include <memory>
+
+#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
@@ -7,9 +10,17 @@
 
 namespace Engine 
 {
+	struct GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
+	{
+		void Initialize() override;
+		void Shutdown() override;
+		bool DynamicLoadable() override;
+	};
+
 	struct GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
-		GenericRenderPassTask operator=(GenericRenderPassTask&) = delete;
+		GenericRenderPassTask() = default;
+		GenericRenderPassTask& operator=(GenericRenderPassTask&) = delete;
 		GenericRenderPassTask(GenericRenderPassTask&) = delete;
 
 		void Run(
@@ -47,10 +58,10 @@ namespace Engine
 		CommandListBase* m_current_cmd_ = nullptr;
 		GraphicHeapBase* m_current_heap_ = nullptr;
 
-		std::map<uint64_t, Unique<IStructuredBufferType<Graphics::SBs::MaterialSB>>> m_material_sbs_;
-		std::set<uint64_t> m_updated_material_in_current_pass_;
-		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
-		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_;
-		std::vector<Unique<GraphicHeapBase>> m_heaps_;
+		std::map<uint64_t, Unique<IStructuredBufferType<Graphics::SBs::MaterialSB>>> m_material_sbs_{};
+		std::set<uint64_t> m_updated_material_in_current_pass_{};
+		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
+		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};
+		std::vector<Unique<GraphicHeapBase>> m_heaps_{};
 	};
 }
