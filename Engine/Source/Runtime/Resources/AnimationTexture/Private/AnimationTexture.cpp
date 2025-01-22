@@ -53,6 +53,12 @@ namespace Engine::Resources
 			desc.DepthOrArraySize);
 	}
 
+
+	const std::vector<Strong<BoneAnimation>>& AnimationTexture::GetAnimations() const
+	{
+		return m_animations_;
+	}
+
 	GenericTextureDescription AnimationTexture::preEvaluateAnimations(
 		const std::vector<Strong<BoneAnimation>>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated
 	)

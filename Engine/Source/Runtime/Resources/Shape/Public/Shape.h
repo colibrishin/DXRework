@@ -45,32 +45,36 @@ namespace Engine::Resources
 				return;
 			}
 
-			if constexpr (T::StaticTypeHash() == Mesh::StaticTypeHash())
+			if constexpr (Mesh::StaticIsBaseOf(T::StaticTypeHash()))
 			{
 				m_meshes_.push_back(res.lock());
 
 				m_bounding_box_.Center  = Vector3::Zero;
 				m_bounding_box_.Extents = Vector3::Zero;
-
 				
 				for (const auto& mesh : m_meshes_)
 				{
 					const BoundingOrientedBox& obb = mesh->GetBoundingBox();
-
 					BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
 				}
 
 				m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());
 			}
-			else if constexpr (T::StaticTypeHash() == Bone::StaticTypeHash())
+			else if constexpr (Bone::StaticIsBaseOf(T::StaticTypeHash()))
 			{
 				m_bone_      = res.lock();
 				m_bone_path_ = res.lock()->GetMetadataPath().generic_string();
 			}
-			else if constexpr (T::StaticTypeHash() == AnimationTexture::StaticTypeHash())
+			else if constexpr (AnimationTexture::StaticIsBaseOf(T::StaticTypeHash()))
 			{
 				m_animations_      = res.lock();
 				m_animations_path_ = res.lock()->GetMetadataPath().generic_string();
+				m_animation_catalog_.clear();
+
+				for (const auto& animation : m_animations_->GetAnimations())
+				{
+					m_animation_catalog_.push_back(animation->GetName());
+				}
 			}
 			else
 			{
@@ -87,6 +91,10 @@ namespace Engine::Resources
 	private:
 		friend class Managers::Renderer;
 		Shape();
+
+		void addMesh(const Strong<Mesh>& res);
+		void addAnimation(const Strong<AnimationTexture>& res);
+		void addBone(const Strong<Bone>& res);
 
 		void UpdateVertices();
 

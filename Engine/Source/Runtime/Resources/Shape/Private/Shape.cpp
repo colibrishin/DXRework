@@ -78,21 +78,14 @@ namespace Engine::Resources
 			if (m_ui_add_ui_opened_) 
 			{
 				if (std::vector<Weak<Abstracts::Resource>> resources_to_load;
-					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh>(GetSharedPtr<Shape>(), resources_to_load))
+					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resources_to_load))
 				{
 					for (const Weak<Resource>& resource : resources_to_load)
 					{
 						if (const Strong<Resource>& locked = resource.lock())
 						{
-							if (!locked->IsBaseOf(Mesh::StaticTypeHash()))
-							{
-								continue;
-							}
-
-							m_meshes_.push_back(locked->GetSharedPtr<Mesh>());
-							m_mesh_paths_.push_back(locked->GetMetadataPath());
+							Add(locked);
 						}
-
 					}
 
 					m_ui_add_ui_opened_ = false;
@@ -204,6 +197,11 @@ namespace Engine::Resources
 					(m_animations_path_).lock())
 			{
 				m_animations_ = anims;
+				
+				for (const auto& animation : m_animations_->GetAnimations()) 
+				{
+					m_animation_catalog_.push_back(animation->GetName());
+				}
 			}
 
 			UpdateVertices();

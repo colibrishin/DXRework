@@ -20,6 +20,8 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
+		const std::vector<Strong<BoneAnimation>>& GetAnimations() const;
+
 	protected:
 		void Load_INTERNAL() override;
 
