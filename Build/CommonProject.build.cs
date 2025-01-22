@@ -140,7 +140,7 @@ public abstract class CommonProject : Project
             {
                 conf.IncludePrivatePaths.Add(conf.ProjectPath + @"/Private");
 
-                string HeaderParserTargetDir = SolutionDir + @"/Intermediate/HeaderParser/HeaderParserGenerated/[project.Name]";
+                string HeaderParserTargetDir = SolutionDir + @"/Intermediate/HeaderParser/HeaderGenerated/[project.Name]";
                 conf.IncludePaths.Add(HeaderParserTargetDir);
                 conf.IncludePaths.Add(@"[project.SourceRootPath]");
                 conf.IncludePaths.Add(@"[project.SourceRootPath]/Public");
@@ -172,8 +172,20 @@ public abstract class CommonProject : Project
             //        conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreaded);
             //}
         }
-        ///string EngineDir = Utils.GetEngineDir();
-        ///conf.EventPreBuild.Add(@"cmd /c """"" + EngineDir + @"\Engine\Source\Programs\HeaderParser\HeaderParser.bat"" ""$(SolutionDir)"" [project.Name] ""[project.SourceRootPath]"" " + @""""+ EngineDir + @"""""");
+        
+        string EngineDir = Utils.GetEngineDir();
+        string WinDir = Environment.GetEnvironmentVariable("WINDIR"); // this is required due to no env variable in fastbuild cmd.
+        string GitDir = @"C:\Program Files\Git"; // todo: find git directory with where git
+
+        conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", new Configuration.BuildStepExecutable(
+            $@"{EngineDir}\run-parser.bat",
+            "",
+            @"[project.Name]-headerparser.log",
+            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" {WinDir} ""{GitDir}""",
+            EngineDir,
+            false,
+            true
+        ));
 
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
 

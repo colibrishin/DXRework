@@ -7,3 +7,6 @@
 [submodule "Engine/Source/ThirdParty/GCEM/GCEM"]
 	path = Engine/Source/ThirdParty/GCEM/GCEM
 	url = https://github.com/kthohr/gcem.git
+[submodule "Programs/header-parser"]
+	path = Programs/header-parser
+	url = https://github.com/baszalmstra/header-parser.git
