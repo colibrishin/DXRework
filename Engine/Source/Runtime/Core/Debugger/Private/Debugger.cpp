@@ -1,4 +1,4 @@
-#include "../Public/Debugger.hpp"
+#include "../Public/Debugger.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"

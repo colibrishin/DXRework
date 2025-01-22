@@ -2,8 +2,6 @@
 #include "GraphicInterface.h"
 #include "Singleton.h"
 
-#include "ModuleManager/Public/IModule.h"
-
 #include "Source/Runtime/CoreUI/Public/UIInterface.h"
 
 #include "ImGuiManager.generated.h"
@@ -258,14 +256,6 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(ComboboxUInt8)
 
         void               NewFrame() override;
-    };
-
-    struct ENGINE_IMGUIMANAGER_API ImGuiManagerModule : public IModule
-    {
-        INLINE_COMPILE_TIME_TYPENAME(ImGuiManagerModule)
-        void Initialize() override;
-        void Shutdown() override;
-        bool DynamicLoadable() override;
     };
 }
 

@@ -4,7 +4,7 @@
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 #include "Source/Runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
 #include "Source/Runtime/D3D12GraphicInterface/Public/DebugDraw.h"
-#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.h"
 
 namespace Engine::Managers
 {

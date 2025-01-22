@@ -6,11 +6,6 @@
 
 namespace Engine::Resources
 {
-	class AtlasAnimationTexture;
-}
-
-namespace Engine::Resources
-{
 	ECLASS()
 	class ENGINE_ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
 	{

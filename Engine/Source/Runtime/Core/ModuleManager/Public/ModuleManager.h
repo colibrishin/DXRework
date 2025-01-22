@@ -92,8 +92,8 @@ namespace Engine::Managers
 
 #if !IS_DLL
 #define MODULE_IMPL(ModuleType, Name) \
-	static StaticLinkModuleEntry<ModuleType> ModuleEntry##Name(L"#Name"); \
-	extern "C" void MODULE_IMPL_#Name() {} 
+	static StaticLinkModuleEntry<ModuleType> ModuleEntry##Name(L"##Name##"); \
+	extern "C" void MODULE_IMPL_##Name() {} 
 #else
 #define MODULE_IMPL(ModuleType, Name) \
 	extern "C" DLLEXPORT Engine::IModule* InitializeModule() \

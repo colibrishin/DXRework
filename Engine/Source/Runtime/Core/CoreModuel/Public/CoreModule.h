@@ -1,10 +1,12 @@
 #pragma once
 #include "CameraManager/Public/CameraManager.h"
 
-#include "Debugger/Public/Debugger.hpp"
+#include "Debugger/Public/Debugger.h"
 #include "ModuleManager/Public/IModule.h"
 #include "ResourceManager/Public/ResourceManager.h"
 #include "SceneManager/Public/SceneManager.h"
+
+#include "CoreModule.generated.h"
 
 using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 
@@ -105,18 +107,15 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::CoreModule, Engine::IModule)
-
 namespace Engine
 {
+	ECLASS(module)
 	struct ENGINE_CORE_API CoreModule : public IModule
 	{
-		INLINE_COMPILE_TIME_TYPENAME(CoreModule)
+		GENERATE_BODY
 
 		void Initialize() override;
-
 		void Shutdown() override;
-
 		bool DynamicLoadable() override
 		{
 			return true;

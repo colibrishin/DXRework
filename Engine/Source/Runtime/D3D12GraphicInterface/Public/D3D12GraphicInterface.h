@@ -8,11 +8,14 @@
 
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 
+#include "D3D12GraphicInterface.generated.h"
+
 namespace Engine
 {
+	ECLASS(module)
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
 	{
-		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterfaceModule)
+		GENERATE_BODY
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;

@@ -26,8 +26,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
-MODULE_IMPL(Engine::ImGuiManagerModule, ImGuiManager)
-
 namespace Engine::Managers
 {
 	void ImGuiManager::Initialize()
@@ -396,23 +394,4 @@ void Engine::ImGuiUIInterface::NewFrame()
 		
 	ImGui::NewFrame();
 #endif
-}
-
-void Engine::ImGuiManagerModule::Initialize()
-{
-	CoreModule::GetContext().AddManager(
-		CoreLoop::LOOP_TYPE_RENDER,
-		Managers::ImGuiManager::GetInstance);
-}
-
-void Engine::ImGuiManagerModule::Shutdown()
-{
-	CoreModule::GetContext().RemoveManager(
-		CoreLoop::LOOP_TYPE_RENDER,
-		Managers::ImGuiManager::GetInstance);
-}
-
-bool Engine::ImGuiManagerModule::DynamicLoadable()
-{
-	return true;	
 }

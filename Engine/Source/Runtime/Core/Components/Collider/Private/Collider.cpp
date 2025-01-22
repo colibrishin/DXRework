@@ -6,7 +6,7 @@
 #include "../Public/Generator.hpp"
 
 #if WITH_DEBUG
-#include "Debugger/Public/Debugger.hpp"
+#include "Debugger/Public/Debugger.h"
 #endif
 
 #if WITH_EDITOR

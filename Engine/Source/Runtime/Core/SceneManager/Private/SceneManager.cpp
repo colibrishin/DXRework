@@ -6,7 +6,7 @@
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.h"
 #endif
 
 namespace Engine::Managers

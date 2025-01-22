@@ -5,6 +5,8 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "TypeLibrary/Public/TypeLibrary.h"
 
+#include "Debugger.generated.h"
+
 namespace Engine
 {
 	enum ENGINE_CORE_API eDebugMessage : uint8_t
@@ -45,15 +47,13 @@ namespace Engine
 	using DebugCallback = std::function<void(const Message&)>;
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::Debugger)
-
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_CORE_API Debugger final : public Abstracts::Singleton<Debugger>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Debugger)
-
 		explicit Debugger(SINGLETON_LOCK_TOKEN);
 		void     Initialize() override;
 

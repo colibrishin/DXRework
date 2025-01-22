@@ -1,7 +1,7 @@
 #include "../Public/ComputeShader.h"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.h"
 #endif
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"

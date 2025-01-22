@@ -11,24 +11,6 @@
 
 #include "Material.generated.h"
 
-namespace Engine
-{
-	struct MaterialModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::MaterialModule, Engine::IModule)
-
-namespace Engine
-{
-	struct MaterialModule : IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(MaterialModule)
-		void Initialize() override;
-		void Shutdown() override;
-		bool DynamicLoadable() override;
-	};
-}
-
 namespace Engine::Graphics::SBs 
 {
 	struct ENGINE_MATERIAL_API MaterialBindFlag

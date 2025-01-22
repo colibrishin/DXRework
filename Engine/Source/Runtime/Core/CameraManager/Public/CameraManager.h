@@ -2,15 +2,15 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::CameraManager)
+#include "CameraManager.generated.h"
 
 namespace Engine::Managers
 {
+	ECLASS()
 	class ENGINE_CORE_API CameraManager : public Abstracts::Singleton<CameraManager>
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(CameraManager)
-
 		CameraManager(SINGLETON_LOCK_TOKEN)
 			: Singleton() {}
 

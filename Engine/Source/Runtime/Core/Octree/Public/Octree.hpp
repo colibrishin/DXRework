@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 
-#include "Debugger/Public/Debugger.hpp"
+#include "Debugger/Public/Debugger.h"
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 

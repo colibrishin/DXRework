@@ -5,7 +5,7 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 
 #if WITH_DEBUG
-#include "Source/Runtime/Core/Debugger/Public/Debugger.hpp"
+#include "Source/Runtime/Core/Debugger/Public/Debugger.h"
 #endif
 
 namespace Engine::Managers

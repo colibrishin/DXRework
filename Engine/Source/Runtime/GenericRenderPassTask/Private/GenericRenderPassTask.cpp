@@ -12,21 +12,6 @@
 
 namespace Engine
 {
-	void GenericRenderPassTaskModule::Initialize()
-	{
-		Managers::Renderer::GetInstance().RegisterRenderPass(L"GenericRenderPassTask", new GenericRenderPassTask());
-	}
-
-	void GenericRenderPassTaskModule::Shutdown()
-	{
-		Managers::Renderer::GetInstance().UnregisterRenderPass(L"GenericRenderPassTask");
-	}
-
-	bool GenericRenderPassTaskModule::DynamicLoadable()
-	{
-		return true;
-	}
-
 	void GenericRenderPassTask::Run(
 		const float                        dt,
 		const bool                         shader_bypass,

@@ -8,36 +8,14 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 
-namespace Engine
-{
-	struct GenericRenderPassTaskModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::GenericRenderPassTaskModule, Engine::IModule)
-
-namespace Engine 
-{
-	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(GenericRenderPassTaskModule)
-		void Initialize() override;
-		void Shutdown() override;
-		bool DynamicLoadable() override;
-	};
-}
+#include "GenericRenderPassTask.generated.h"
 
 namespace Engine
 {
-	struct GenericRenderPassTask;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::GenericRenderPassTask, Engine::RenderPassTask)
-
-namespace Engine
-{
+	ECLASS()
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
-		INLINE_COMPILE_TIME_TYPENAME(GenericRenderPassTask)
+		GENERATE_BODY
 		GenericRenderPassTask() = default;
 		GenericRenderPassTask& operator=(GenericRenderPassTask&) = delete;
 		GenericRenderPassTask(GenericRenderPassTask&) = delete;
