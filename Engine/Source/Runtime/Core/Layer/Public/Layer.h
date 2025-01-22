@@ -3,12 +3,15 @@
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
+#include "Layer.generated.h"
+
 namespace Engine
 {
+	ECLASS()
 	class ENGINE_CORE_API Layer final : public Abstracts::Renderable
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Layer)
 		Layer(const LayerSizeType type);
 
 		~Layer() override = default;
@@ -68,10 +71,12 @@ namespace Engine
 		}
 
 	private:
-		SERIALIZE_DECL
 		Layer();
 
+		EPROPERTY()
 		LayerSizeType                                 m_layer_type_;
+
+		EPROPERTY()
 		aligned_vector<Strong<Abstracts::ObjectBase>> m_objects_;
 
 		// Non-serialized
@@ -82,5 +87,3 @@ namespace Engine
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
 	};
 } // namespace Engine
-
-BOOST_CLASS_EXPORT_KEY(Engine::Layer)
