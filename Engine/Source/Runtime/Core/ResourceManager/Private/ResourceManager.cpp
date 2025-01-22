@@ -7,6 +7,7 @@ namespace Engine::Managers
 {
 	void ResourceManager::Initialize() {}
 
+#ifdef WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -43,17 +44,37 @@ namespace Engine::Managers
 
 		if (UIContext menu_context = UIInterface::NewContext(ui.NewMainMenuBar({})))
 		{
+			menu_context += ui.NewMenu({ "New" });
+
+			for (const auto& name : m_ui_new_functions_ | std::views::keys) 
+			{
+				(menu_context |= ui.NewMenuItem({ name })).SetFunction([&]()
+					{
+						m_ui_new_functions_managing_[name] = true;
+					});
+			}
+
+			--menu_context;
+
 			menu_context += ui.NewMenu({"Load"});
 
 			for (const auto& name : m_ui_load_functions_ | std::views::keys)
 			{
 				(menu_context |= ui.NewMenuItem({name})).SetFunction([&]()
-				{
-					m_ui_load_functions_managing_[name] = true;
-				});
+					{
+						m_ui_load_functions_managing_[name] = true;
+					});
 			}
 
 			--menu_context;
+		}
+
+		for (auto& [name, flag] : m_ui_new_functions_managing_)
+		{
+			if (flag)
+			{
+				m_ui_new_functions_[name](flag);
+			}
 		}
 
 		for (auto& [name, flag] : m_ui_load_functions_managing_)
@@ -64,6 +85,7 @@ namespace Engine::Managers
 			}
 		}
 	}
+#endif
 
 	void ResourceManager::PreUpdate(const float dt)
 	{
@@ -91,7 +113,7 @@ namespace Engine::Managers
 
 	void ResourceManager::FixedUpdate(const float dt) {}
 
-	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const EntityName& name, ResourceType type)
+	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const std::string_view name, ResourceType type)
 	{
 		auto& resources = m_resources_[type];
 		const auto it = std::ranges::find_if
@@ -175,7 +197,7 @@ namespace Engine::Managers
 	}
 
 #if WITH_EDITOR
-	void ResourceManager::RegisterLoadResource(const std::string_view name, const LoadResourceSignature& functor)
+	void ResourceManager::RegisterLoadResource(const std::string_view name, const ManagedBooleanSignature& functor)
 	{
 		if (!m_ui_load_functions_.contains(name))
 		{
@@ -188,6 +210,24 @@ namespace Engine::Managers
 		if (m_ui_load_functions_.contains(name))
 		{
 			m_ui_load_functions_.erase(name);
+			m_ui_load_functions_managing_.erase(name);
+		}
+	}
+
+	void ResourceManager::RegisterNewResource(const std::string_view name, const ManagedBooleanSignature& functor)
+	{
+		if (!m_ui_new_functions_.contains(name))
+		{
+			m_ui_new_functions_.emplace(name, functor);
+		}
+	}
+
+	void ResourceManager::UnregisterNewResource(const std::string_view name)
+	{
+		if (m_ui_new_functions_.contains(name))
+		{
+			m_ui_new_functions_.erase(name);
+			m_ui_new_functions_managing_.erase(name);
 		}
 	}
 

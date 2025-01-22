@@ -380,6 +380,24 @@ bool Engine::ImGuiComboboxUInt8Token::DoImpl(
 	return ret;
 }
 
+void Engine::ImGuiTextToken::End() const
+{
+}
+bool Engine::ImGuiTextToken::DoImpl(const std::string_view text) const
+{
+	ImGui::Text(text.data());
+	return true;
+}
+
+void Engine::ImGuiSeparatorToken::End() const
+{
+}
+bool Engine::ImGuiSeparatorToken::DoImpl() const
+{
+	ImGui::Separator();
+	return true;
+}
+
 void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR

@@ -6,10 +6,24 @@
 namespace Engine::Resources
 {
 	AtlasAnimationTexture::AtlasAnimationTexture(
-		const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+		const std::filesystem::path& path,
+		const std::vector<Strong<Resources::AtlasAnimation>>& animations,
+		const std::vector<Strong<Texture2D>>& atlases
 	)
 		: Texture3D(path, {}),
-		  m_atlases_(atlases) {}
+		  m_animations_(animations),
+		  m_atlases_(atlases) 
+	{
+		// Sort atlases by order of name
+		std::ranges::sort
+		(
+			m_atlases_,
+			[](const Strong<Texture2D>& a, const Strong<Texture2D>& b)
+			{
+				return a->GetName() < b->GetName();
+			}
+		);
+	}
 
 	void AtlasAnimationTexture::PreUpdate(const float dt) {}
 
@@ -27,10 +41,16 @@ namespace Engine::Resources
 	void AtlasAnimationTexture::OnDeserialized()
 	{
 		Texture3D::OnDeserialized();
+
+		for (const Strong<AtlasAnimation>& animation : m_animations_)
+		{
+			Managers::ResourceManager::GetInstance().AddResource(animation);
+		}
 	}
 
 	Strong<AtlasAnimationTexture> AtlasAnimationTexture::Create(
-		const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+		const std::string& name, const std::filesystem::path& path, 
+		const std::vector<Strong<AtlasAnimation>>& animations, const std::vector<Strong<Texture2D>>& atlases
 	)
 	{
 		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimationTexture>(name).lock())
@@ -43,7 +63,7 @@ namespace Engine::Resources
 			return pcheck;
 		}
 
-		const auto obj = boost::make_shared<AtlasAnimationTexture>(path, atlases);
+		const auto obj = boost::make_shared<AtlasAnimationTexture>(path, animations, atlases);
 		Managers::ResourceManager::GetInstance().AddResource(name, obj);
 
 		// Sort atlases by order of name

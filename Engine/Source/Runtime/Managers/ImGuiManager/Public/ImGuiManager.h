@@ -224,6 +224,26 @@ namespace Engine
 	    ) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiTextToken : TextToken 
+    {
+        using TextToken::TextToken;
+
+        void End() const override;
+
+    protected:
+        bool DoImpl(const std::string_view text) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiSeparatorToken : SeparatorToken 
+    {
+        using SeparatorToken::SeparatorToken;
+
+        void End() const override;
+
+    protected:
+        bool DoImpl() const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -254,6 +274,8 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(DragAndDropTarget)
         IMGUI_INLINE_GETTER_DECL(LabelAndUInt16)
         IMGUI_INLINE_GETTER_DECL(ComboboxUInt8)
+        IMGUI_INLINE_GETTER_DECL(Text)
+        IMGUI_INLINE_GETTER_DECL(Separator)
 
         void               NewFrame() override;
     };

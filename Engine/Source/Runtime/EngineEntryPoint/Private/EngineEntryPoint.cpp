@@ -54,6 +54,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"Texture2D");
 		ModuleManager::GetInstance().LoadModule(L"Shader");
 		ModuleManager::GetInstance().LoadModule(L"Shape");
+		ModuleManager::GetInstance().LoadModule(L"AtlasAnimationTexture");
 	}
 
 	void EngineEntryPoint::Tick()

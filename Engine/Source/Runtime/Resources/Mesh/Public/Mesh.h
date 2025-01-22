@@ -1,6 +1,7 @@
 #pragma once
 #include "GraphicInterface.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "VertexElement/Public/VertexElement.hpp"
 
 #include "Mesh.generated.h"
 

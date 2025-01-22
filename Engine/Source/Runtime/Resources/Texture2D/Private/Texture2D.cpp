@@ -60,7 +60,17 @@ MODULE_IMPL(Engine::Texture2DModule, Texture2D)
 
 void Engine::Texture2DModule::Initialize()
 {
-	Managers::ResourceManager::GetInstance().RegisterLoadResource("Texture2D", [](bool& managing_flag)
+	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
+		{
+			const auto& load_callback = [](const std::string_view name, const std::string_view path)
+				{
+					Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::Texture2D>(path);
+				};
+
+			Managers::ResourceManager::GetInstance().OpenLoadDialog<Engine::Resources::Texture2D>(managing_flag, {}, load_callback, {});
+		});
+
+	Managers::ResourceManager::GetInstance().RegisterNewResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 		static GenericTextureDescription desc{};
@@ -98,6 +108,11 @@ void Engine::Texture2DModule::Initialize()
 			return ret;
 		}();
 
+		static constexpr auto cleanup_callback = []()
+			{
+				desc = {};
+			};
+
 		const auto& ui_callback = [&](UIContext* const context)
 		{
 			*context |= ui.NewLabelAndULLD({"Alignment", desc.Alignment, 0.1f, 0.f, 0.f, true});
@@ -134,7 +149,7 @@ void Engine::Texture2DModule::Initialize()
 				{
 					if (std::filesystem::exists(path))
 					{
-						Resources::Texture2D::Create(name, path, {});
+						Resources::Texture2D::Create(name, path, GenericTextureDescription{});
 					}
 				}
 				else
@@ -162,24 +177,25 @@ void Engine::Texture2DModule::Initialize()
 					}
 
 					Resources::Texture2D::Create(name, "", desc);
-					desc = {};
+					cleanup_callback();
 					res_flag_bool = {};
 				}
 			}
 			catch (std::exception e)
 			{
-				desc = {};
+				cleanup_callback();
 				return;
 			}
 		};
 
-		Managers::ResourceManager::GetInstance().OpenNewSimpleDialog<Resources::Texture2D>(managing_flag, ui_callback, load_callback);
+		Managers::ResourceManager::GetInstance().OpenNewDialog<Resources::Texture2D>(managing_flag, ui_callback, load_callback, cleanup_callback);
 	});
 }
 
 void Engine::Texture2DModule::Shutdown()
 {
-	Managers::ResourceManager::GetInstance().UnregisterLoadResource("Texture2D");
+	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Engine::Resources::Texture2D::StaticTypeName());
+	Managers::ResourceManager::GetInstance().UnregisterNewResource(Engine::Resources::Texture2D::StaticTypeName());
 }
 
 bool Engine::Texture2DModule::DynamicLoadable()

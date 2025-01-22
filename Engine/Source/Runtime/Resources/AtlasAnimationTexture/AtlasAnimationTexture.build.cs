@@ -18,5 +18,6 @@ public class AtlasAnimationTexture : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Texture3D>(target);
         conf.AddPublicDependency<Texture2D>(target);
+		conf.AddPublicDependency<AtlasAnimation>(target);
     }
 }

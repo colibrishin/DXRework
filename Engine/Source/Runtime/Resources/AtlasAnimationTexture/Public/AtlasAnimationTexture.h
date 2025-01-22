@@ -1,6 +1,7 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
+#include "AtlasAnimation.h"
 
 #include "AtlasAnimationTexture.generated.h"
 
@@ -11,7 +12,10 @@ namespace Engine::Resources
 	{
 		GENERATE_BODY
 	public:
-		AtlasAnimationTexture(const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases);
+		AtlasAnimationTexture(
+			const std::filesystem::path& path, 
+			const std::vector<Strong<Resources::AtlasAnimation>>& animations,
+			const std::vector<Strong<Texture2D>>& atlases);
 
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -24,7 +28,9 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimationTexture)
 
 		static Strong<AtlasAnimationTexture> Create(
-			const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+			const std::string& name, const std::filesystem::path& path, 
+			const std::vector<Strong<AtlasAnimation>>& animations,
+			const std::vector<Strong<Texture2D>>& atlases
 		);
 
 	protected:
@@ -34,6 +40,9 @@ namespace Engine::Resources
 	private:
 		AtlasAnimationTexture()
 			: Texture3D("", {}) {}
+
+		EPROPERTY()
+		std::vector<Strong<AtlasAnimation>> m_animations_;
 
 		EPROPERTY()
 		std::vector<Strong<Texture2D>> m_atlases_;

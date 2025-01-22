@@ -7,21 +7,28 @@ MODULE_IMPL(Engine::MaterialModule, Material)
 
 void Engine::MaterialModule::Initialize()
 {
-	Managers::SceneManager::GetInstance().RegisterNewMenuItem(Resources::Material::StaticTypeName(), []()
+	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Material::StaticTypeName(), [](bool& managing_flag)
 		{
 			Resources::Material::Create("NewMaterial", "");
+			managing_flag = false;
 		});
 
-	Managers::SceneManager::GetInstance().RegisterLoadMenuItem(Resources::Material::StaticTypeName(), [](std::string_view path)
+	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Material::StaticTypeName(), [](bool& managing_flag)
 		{
-			Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>(path);
+			const auto& load_callback = [](const std::string_view name, const std::string_view path)
+				{
+					Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>(path);
+				};
+
+			Managers::ResourceManager::GetInstance().OpenLoadDialog<Resources::Material>(managing_flag, {}, load_callback, {});
+			
 		});
 }
 
 void Engine::MaterialModule::Shutdown()
 {
-	Managers::SceneManager::GetInstance().UnregisterNewMenuItem(Resources::Material::StaticTypeName());
-	Managers::SceneManager::GetInstance().UnregisterLoadMenuItem(Resources::Material::StaticTypeName());
+	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Material::StaticTypeName());
+	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Material::StaticTypeName());
 }
 
 bool Engine::MaterialModule::DynamicLoadable()

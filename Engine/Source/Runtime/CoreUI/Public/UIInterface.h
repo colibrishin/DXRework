@@ -139,6 +139,8 @@ namespace Engine
     NEW_TOKEN_DECL(Checkbox, const std::string_view, bool&)
     NEW_TOKEN_DECL(Combobox, const std::string_view, int*, const char* const*, const size_t)
     NEW_TOKEN_DECL(ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t)
+    NEW_TOKEN_DECL(Text, const std::string_view)
+    NEW_TOKEN_DECL(Separator)
 
     template <typename Numerical>
     struct ENGINE_COREUI_API LabelAndNumericalToken : UIToken<const std::string_view, Numerical&, float, Numerical, Numerical, bool>
@@ -310,6 +312,8 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(DragAndDropSource)
         TOKEN_PURE_GETTER_DECL(DragAndDropTarget)
         TOKEN_PURE_GETTER_DECL(ComboboxUInt8)
+        TOKEN_PURE_GETTER_DECL(Text)
+        TOKEN_PURE_GETTER_DECL(Separator)
 
         virtual void NewFrame() = 0;
 
