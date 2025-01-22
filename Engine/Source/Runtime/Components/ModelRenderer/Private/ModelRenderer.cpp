@@ -18,6 +18,11 @@ namespace Engine::Components
 		Component::PostUpdate(dt);
 	}
 
+	eComponentUpdatePriority ModelRenderer::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
+	}
+
 	ModelRenderer::ModelRenderer() {}
 }
 

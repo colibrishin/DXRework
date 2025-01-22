@@ -173,6 +173,16 @@ namespace Engine
         [[nodiscard]] bool DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndVec4Token : LabelAndVec4Token
+    {
+        using LabelAndVec4Token::LabelAndVec4Token;
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -198,6 +208,7 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(LabelAndVec3)
         IMGUI_INLINE_GETTER_DECL(Checkbox)
         IMGUI_INLINE_GETTER_DECL(Combobox)
+        IMGUI_INLINE_GETTER_DECL(LabelAndVec4)
 
         void               NewFrame() override;
     };

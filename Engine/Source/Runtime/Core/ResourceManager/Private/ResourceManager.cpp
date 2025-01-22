@@ -7,6 +7,39 @@ namespace Engine::Managers
 {
 	void ResourceManager::Initialize() {}
 
+	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Resource Manager", m_ui_info_.dialogOpened})))
+		{
+			for (const auto& set : m_resources_ | std::views::values)
+			{
+				if (set.empty())
+				{
+					continue;
+				}
+
+				const std::string_view type_name = (*set.begin())->GetPrettyTypeName();
+				context += ui.NewTreeNode({type_name});
+
+				for (const Strong<Abstracts::Resource>& resource : set)
+				{
+					context |= ui.NewSelectable({resource->GetName(), resource->m_ui_info_.dialogOpened});
+
+					if (resource->m_ui_info_.dialogOpened)
+					{
+						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->GetName(), resource->m_ui_info_.dialogOpened})))
+						{
+							resource->OnUIUpdate(&resource_context, dt);
+						}
+					}
+				}
+
+				--context;
+			}
+		}
+	}
+
 	void ResourceManager::PreUpdate(const float dt)
 	{
 		for (const auto& resources : m_resources_ | std::views::values)
@@ -115,6 +148,81 @@ namespace Engine::Managers
 
 		return {};
 	}
+
+#if WITH_EDITOR
+	bool ResourceManager::RequestAddResourceDialog()
+	{
+		if (m_b_ui_add_resource_)
+		{
+			return false;
+		}
+
+		m_b_ui_add_resource_ = true;
+		return true;
+	}
+
+	bool ResourceManager::TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load)
+	{
+		bool                                                       ret = false;
+		static std::unordered_map<Weak<Abstracts::Resource>, bool> selection{};
+
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Add Resources to...", ret})))
+		{
+			context += ui.NewListBox({"Resource List", -1, -1});
+
+			for (const auto& resources : m_resources_ | std::views::values)
+			{
+				if (resources.empty())
+				{
+					continue;
+				}
+
+				const std::string_view type_name = (*resources.begin())->GetPrettyTypeName();
+
+				context += ui.NewTreeNode({type_name});
+
+				for (const Strong<Abstracts::Resource>& resource : resources)
+				{
+					context |= ui.NewSelectable({resource->GetName(), selection[resource]});
+				}
+
+				--context;
+			}
+
+			--context;
+
+			(context |= ui.NewButton({"Add Resources"})).SetFunction([&ret]()
+			{
+				ret = true;
+			});
+		}
+
+		if (ret)
+		{
+			resource_to_load.reserve(selection.size());
+
+			for (const auto& key : selection | std::views::keys)
+			{
+				if (const Strong<Abstracts::Resource>& resource = key.lock())
+				{
+					if (!resource->IsLoaded())
+					{
+						resource->Load();
+					}
+
+					resource_to_load.push_back(resource);
+				}
+			}
+
+			selection.clear();
+
+			m_b_ui_add_resource_ = false;
+		}
+
+		return ret;
+	}
+#endif
 
 	ResourceManager::~ResourceManager()
 	{

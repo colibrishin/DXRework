@@ -37,6 +37,8 @@ namespace Engine::Components
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
+		eComponentUpdatePriority GetUpdatePriority() const override;
+
 	private:
 		COMP_CLONE_DECL
 		friend class Managers::Renderer;

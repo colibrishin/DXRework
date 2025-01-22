@@ -55,6 +55,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
+		eComponentUpdatePriority GetUpdatePriority() const override;
 
 		[[nodiscard]] aligned_vector<Graphics::SBs::InstanceSB> GetParticles();
 

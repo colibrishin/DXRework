@@ -156,6 +156,7 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(UInt, uint32_t)
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
+    NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
 
     struct UIContext
     {
@@ -286,6 +287,7 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(LabelAndVec3);
         TOKEN_PURE_GETTER_DECL(Checkbox);
         TOKEN_PURE_GETTER_DECL(Combobox);
+        TOKEN_PURE_GETTER_DECL(LabelAndVec4);
 
         virtual void NewFrame() = 0;
 

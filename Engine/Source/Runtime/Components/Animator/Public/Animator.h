@@ -2,6 +2,8 @@
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
+POLYMORPHIC_TYPE_MAP(Engine::Components::Animator, Engine::Abstracts::Component)
+
 namespace Engine::Components
 {
 	class ENGINE_ANIMATOR_API Animator final : public Engine::Abstracts::Component
@@ -17,6 +19,7 @@ namespace Engine::Components
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
+		eComponentUpdatePriority GetUpdatePriority() const override;
 		void SetAnimation(UINT idx);
 
 		UINT  GetAnimation() const;

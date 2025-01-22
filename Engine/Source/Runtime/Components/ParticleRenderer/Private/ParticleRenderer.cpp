@@ -102,6 +102,11 @@ namespace Engine::Components
 		}
 	}
 
+	eComponentUpdatePriority ParticleRenderer::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
+	}
+
 	aligned_vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
 	{
 		std::lock_guard<std::mutex> lock(m_instances_mutex_);

@@ -193,6 +193,13 @@ namespace Engine
 #endif
 	}
 
+	enum ENGINE_CORE_API eComponentUpdatePriority : uint64_t
+	{
+		COM_PRIORITY_POSITIONAL = 100,
+		COM_PRIORITY_PHYSICS = COM_PRIORITY_POSITIONAL + 100,
+		COM_PRIORITY_RENDER = COM_PRIORITY_PHYSICS + 100
+	};
+
 	enum ENGINE_CORE_API eBindType : uint8_t
 	{
 		BIND_TYPE_SAMPLER = 0,

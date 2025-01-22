@@ -15,6 +15,8 @@ namespace Engine::Managers
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
+
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PreRender(const float dt) override;
@@ -148,6 +150,13 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, ResourceType type);
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
+#if WITH_EDITOR
+		[[nodiscard]] bool RequestAddResourceDialog();
+		[[nodiscard]] bool TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load);
+
+	private:
+		bool m_b_ui_add_resource_ = false;
+#endif
 	private:
 		friend struct SingletonDeleter;
 		~ResourceManager() override;

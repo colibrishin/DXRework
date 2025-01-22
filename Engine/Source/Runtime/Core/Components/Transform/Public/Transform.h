@@ -68,6 +68,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
+		eComponentUpdatePriority GetUpdatePriority() const override;
 
 		Matrix GetLocalMatrix() const;
 		Matrix GetWorldMatrix() const;

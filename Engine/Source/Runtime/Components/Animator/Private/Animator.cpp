@@ -80,6 +80,11 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
+	eComponentUpdatePriority Animator::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
+	}
+
 	void Animator::SetAnimation(UINT idx)
 	{
 		m_animation_id_ = idx;

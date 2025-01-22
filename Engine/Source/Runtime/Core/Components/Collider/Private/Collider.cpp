@@ -338,6 +338,11 @@ namespace Engine::Components
 		UpdateInertiaTensor();
 	}
 
+	eComponentUpdatePriority Collider::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_PHYSICS;
+	}
+
 	GenericBounding<> Collider::GetBounding() const
 	{
 		return m_boundings_.Transform(GetWorldMatrix());

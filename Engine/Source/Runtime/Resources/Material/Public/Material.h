@@ -66,6 +66,7 @@ namespace Engine::Resources
 
 		Material(const std::filesystem::path& path);
 
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
@@ -147,6 +148,14 @@ namespace Engine::Resources
 		Material();
 
 		Graphics::SBs::MaterialSB m_material_sb_;
+
+#if WITH_EDITOR
+		bool m_b_ui_edit_resource_ = false;
+		bool m_b_ui_add_resource_ = false;
+
+		void ProcessEditUI();
+		void ProcessAddUI();
+#endif
 
 		std::vector<std::pair<EntityName, MetadataPathStr>>                         m_shader_paths_;
 		std::map<ResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;

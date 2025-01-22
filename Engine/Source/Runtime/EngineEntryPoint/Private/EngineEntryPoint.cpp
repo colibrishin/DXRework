@@ -47,6 +47,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"RenderPipeline");
 		ModuleManager::GetInstance().LoadModule(L"ImGuiManager");
 		ModuleManager::GetInstance().LoadModule(L"PhysicsManager");
+		ModuleManager::GetInstance().LoadModule(L"Material");
 	}
 
 	void EngineEntryPoint::Tick()

@@ -32,6 +32,129 @@ namespace Engine::Resources
 		m_material_sb_.repeatTexture         = false;
 	}
 
+	void Material::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+#if WITH_EDITOR
+		if (parent)
+		{
+			Resource::OnUIUpdate(parent, dt);
+
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			*parent |= ui.NewLabelAndFloat({"Specular Power", m_material_sb_.specularPower, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
+			*parent |= ui.NewLabelAndFloat({"Reflection Scale", m_material_sb_.reflectionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
+			*parent |= ui.NewLabelAndFloat({"Refraction Scale", m_material_sb_.refractionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
+			*parent |= ui.NewLabelAndFloat({"Reflection Translation", m_material_sb_.reflectionTranslation, 0.1f, 0.f, 0.f, true});
+			*parent |= ui.NewLabelAndVec4({"Override Color", &m_material_sb_.overrideColor.x, 0.01f, 0.1, 1.f, true});
+			*parent |= ui.NewLabelAndVec4({"Specular Color", &m_material_sb_.specularColor.x, 0.01f, 0.1, 1.f, true});
+			*parent |= ui.NewLabelAndVec3({"Clip Plane", &m_material_sb_.clipPlane.x, 0.01f, 0.f, 0.f, true});
+			*parent |= ui.NewCheckbox({"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture.value)});
+
+			(*parent |= ui.NewButton({"Edit Resources"})).SetFunction([&]()
+			{
+				m_b_ui_edit_resource_ = !m_b_ui_edit_resource_;
+			});
+
+			ProcessEditUI();
+
+			(*parent |= ui.NewButton({"Add Resources"})).SetFunction([&]()
+			{
+				m_b_ui_add_resource_ = !m_b_ui_add_resource_;
+
+				if (m_b_ui_add_resource_)
+				{
+					if (!Managers::ResourceManager::GetInstance().RequestAddResourceDialog())
+					{
+						m_b_ui_add_resource_ = false;
+					}
+				}
+			});
+
+			ProcessAddUI();
+		}
+#endif
+	}
+
+#if WITH_EDITOR
+	void Material::ProcessEditUI()
+	{
+		if (m_b_ui_edit_resource_)
+		{
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Edit Resources", m_b_ui_edit_resource_})))
+			{
+				context += ui.NewListBox({"Resource Used", -1, -1});
+
+				for (auto& resources : m_resources_loaded_ | std::views::values)
+				{
+					if (resources.empty())
+					{
+						continue;
+					}
+
+					const std::string_view type_name = (*resources.begin())->GetPrettyTypeName();
+					context += ui.NewTreeNode({type_name});
+
+					for (auto it = resources.begin(); it != resources.end(); ++it)
+					{
+						bool temp = false;
+						GlobalEntityID target_id = (*it)->GetID();
+
+						(context |= ui.NewSelectable({(*it)->GetName(), temp})).SetFunction([&, target_id]()
+						{
+							std::erase_if(resources, [target_id](const Strong<Resource>& value)
+							{
+								return value->GetID() == target_id;
+							});
+						});
+					}
+
+					--context;
+				}
+
+				--context;
+			}
+		}
+	}
+
+	void Material::ProcessAddUI()
+	{
+		if (m_b_ui_add_resource_)
+		{
+			std::vector<Strong<Resource>> resource_to_load{};
+
+			if (Managers::ResourceManager::GetInstance().TryAddResourceDialog(resource_to_load))
+			{
+				for (Strong<Resource>& resource : resource_to_load)
+				{
+					/*
+					if (resource == GetSharedPtr<Material>())
+					{
+						continue;
+					}*/
+
+					if (resource->IsBaseOf(Material::StaticTypeHash()))
+					{
+						continue;
+					}
+
+					if (resource->IsBaseOf(Mesh::StaticTypeHash()))
+					{
+						continue;
+					}
+
+					if (!m_resources_loaded_.contains(resource->GetTypeHash()))
+					{
+						m_resources_loaded_.insert({resource->GetTypeHash(), {}});
+					}
+
+					m_resources_loaded_[resource->GetTypeHash()].emplace_back(resource);
+				}
+			}
+		}
+	}
+#endif
+
 	void Material::PreUpdate(const float dt) {}
 
 	void Material::Update(const float dt) {}

@@ -367,6 +367,11 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
+	eComponentUpdatePriority Rigidbody::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_PHYSICS;
+	}
+
 	Rigidbody::Rigidbody()
 		: Component({}),
 		  m_b_no_angular_(false),

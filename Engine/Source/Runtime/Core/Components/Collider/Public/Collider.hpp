@@ -82,6 +82,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
+		eComponentUpdatePriority GetUpdatePriority() const override;
 
 		[[nodiscard]] GenericBounding<> GetBounding() const;
 

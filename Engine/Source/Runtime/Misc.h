@@ -74,12 +74,18 @@ struct polymorphic_type_hash<##Type##> \
 	{ \
 		std::array<HashType, upcast_count> ret { type_hash<##Type##>::value }; \
 		std::copy_n(polymorphic_type_hash<##Base##>::upcast_array.begin(),  polymorphic_type_hash<##Base##>::upcast_array.size(), ret.data() + 1); \
-		std::sort(ret.begin(), ret.end()); \
 		return ret; \
 	}(); \
-	static bool is_base_of(HashType base) \
+	static bool is_base_of(const HashType hash) \
 	{ \
-		return std::ranges::binary_search(upcast_array, base); \
+		static bool first_run = true; \
+		static std::array<HashType, upcast_count> sorted_upcast = upcast_array; \
+		if (first_run) \
+		{ \
+			std::sort(sorted_upcast.begin(), sorted_upcast.end(), std::less<int const*>()); /* since we cannot determine where the pointer would be allocated, reallocate in runtime and sorts the array.*/ \
+			first_run = false; \
+		} \
+		return std::ranges::binary_search(sorted_upcast, hash); \
 	} \
 };
 

@@ -37,6 +37,7 @@ namespace Engine::Abstracts
 		bool             GetActive() const;
 
 		virtual void SetActive(bool active);
+		virtual eComponentUpdatePriority GetUpdatePriority() const = 0;
 		void         Initialize() override;
 		void         PostUpdate(const float dt) override;
 

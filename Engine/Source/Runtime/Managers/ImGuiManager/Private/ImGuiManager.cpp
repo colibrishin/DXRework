@@ -307,6 +307,13 @@ bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value
 	return ImGui::Combo(label.data(), value, label_arr, arr_size);
 }
 
+void Engine::ImGuiLabelAndVec4Token::End() const {}
+
+bool Engine::ImGuiLabelAndVec4Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
+{
+	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
+}
+
 void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR

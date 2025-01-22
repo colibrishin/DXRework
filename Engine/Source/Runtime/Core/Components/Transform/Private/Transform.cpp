@@ -303,6 +303,11 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
+	eComponentUpdatePriority Transform::GetUpdatePriority() const
+	{
+		return eComponentUpdatePriority::COM_PRIORITY_POSITIONAL;
+	}
+
 	Matrix Transform::GetLocalMatrix() const
 	{
 		return Matrix::CreateScale(m_scale_) *
