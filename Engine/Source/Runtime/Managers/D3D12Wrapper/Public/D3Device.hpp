@@ -2,6 +2,7 @@
 #include <dxgi1_5.h>
 #include <Windows.h>
 #include <wrl/client.h>
+#include <directx/d3d12.h>
 
 #include "Source/Runtime/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"

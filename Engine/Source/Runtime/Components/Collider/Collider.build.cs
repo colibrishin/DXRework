@@ -30,5 +30,6 @@ public class Collider : CommonProject
         conf.AddPrivateDependency<VertexElement>(target);
         conf.AddPrivateDependency<RaycastExtension>(target);
         conf.AddPrivateDependency<RenderComponent>(target);
+        conf.AddPrivateDependency<Mateiral>(target);
     }
 }

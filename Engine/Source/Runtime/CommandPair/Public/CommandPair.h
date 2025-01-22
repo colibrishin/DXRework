@@ -4,9 +4,9 @@
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 
 #include <wrl/client.h>
-#include <d3d12.h>
 #include <mutex>
 #include <atomic>
+#include <directx/d3d12.h>
 
 #include "Source/Runtime/Allocator/Public/Allocator.h"
 #include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"

@@ -1,5 +1,4 @@
 #pragma once
-#include <Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h>
 #include <Source/Runtime/TypeLibrary/Public/TypeLibrary.h>
 #include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp>
 
@@ -22,9 +21,9 @@ namespace Engine::Graphics
 		{
 			SB_T(SB_TYPE_LIGHT_VP)
 
-			Matrix  view[g_max_shadow_cascades];
-			Matrix  proj[g_max_shadow_cascades];
-			Vector4 end_clip_spaces[g_max_shadow_cascades];
+			Matrix  view[CASCADE_SHADOW_COUNT];
+			Matrix  proj[CASCADE_SHADOW_COUNT];
+			Vector4 end_clip_spaces[CASCADE_SHADOW_COUNT];
 		};
 	}
 }

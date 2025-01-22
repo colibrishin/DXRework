@@ -1,17 +1,20 @@
 #include "../Public/ShadowManager.hpp"
 
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+
 namespace Engine::Managers
 {
 	void ShadowManager::Initialize()
 	{
 		m_shadow_shader_ = Resources::Shader::Get("cascade_shadow_stage1").lock();
 
-		const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Manager Initialization").lock();
+		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Shadow Manager Initialization").lock();
 
 		cmd->SoftReset();
 
-		m_sb_light_buffer_.Create(cmd->GetList(), g_max_lights, nullptr);
-		m_sb_light_vps_buffer_.Create(cmd->GetList(), g_max_lights, nullptr);
+		m_sb_light_buffer_.Create(cmd->GetList(), MAX_DIRECTIONAL_LIGHT, nullptr);
+		m_sb_light_vps_buffer_.Create(cmd->GetList(), MAX_DIRECTIONAL_LIGHT, nullptr);
 
 		cmd->FlagReady();
 
@@ -21,9 +24,9 @@ namespace Engine::Managers
 				 "",
 				 {
 					 .Alignment = 0,
-					 .Width = g_max_shadow_map_size,
-					 .Height = g_max_shadow_map_size,
-					 .DepthOrArraySize = g_max_shadow_cascades,
+					 .Width = CASCADE_SHADOW_TEX_WIDTH,
+					 .Height = CASCADE_SHADOW_TEX_HEIGHT,
+					 .DepthOrArraySize = CASCADE_SHADOW_COUNT,
 					 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
 					 .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 					 .MipsLevel = 1,
@@ -41,7 +44,7 @@ namespace Engine::Managers
 		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_buffer_);
 		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_vps_buffer_);
 
-		m_local_param_buffers_.resize(g_max_lights);
+		m_local_param_buffers_.resize(MAX_DIRECTIONAL_LIGHT);
 	}
 
 	void ShadowManager::PreUpdate(const float& dt)
@@ -491,8 +494,8 @@ namespace Engine::Managers
 
 	void ShadowManager::InitializeViewport()
 	{
-		m_viewport_.Width    = static_cast<float>(g_max_shadow_map_size);
-		m_viewport_.Height   = static_cast<float>(g_max_shadow_map_size);
+		m_viewport_.Width    = static_cast<float>(CASCADE_SHADOW_TEX_WIDTH);
+		m_viewport_.Height   = static_cast<float>(CASCADE_SHADOW_TEX_HEIGHT);
 		m_viewport_.MinDepth = 0.f;
 		m_viewport_.MaxDepth = 1.f;
 		m_viewport_.TopLeftX = 0.f;
@@ -500,8 +503,8 @@ namespace Engine::Managers
 
 		m_scissor_rect_.left   = 0;
 		m_scissor_rect_.top    = 0;
-		m_scissor_rect_.right  = g_max_shadow_map_size;
-		m_scissor_rect_.bottom = g_max_shadow_map_size;
+		m_scissor_rect_.right  = CASCADE_SHADOW_TEX_WIDTH;
+		m_scissor_rect_.bottom = CASCADE_SHADOW_TEX_HEIGHT;
 	}
 
 	void ShadowManager::ClearShadowMaps(const Weak<CommandPair>& w_cmd)
@@ -541,4 +544,4 @@ namespace Engine::Managers
 
 		cmd->GetList()->ResourceBarrier(1, &rtv_to_common);
 	}
-} // namespace Engine::Manager::Graphics
+} // namespace Engine::Managers

@@ -10,6 +10,8 @@
 #include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
 
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include <Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h>
+#include "Source/Runtime/Resources/Material/Public/Material.h"
 
 #if defined(USE_DX12)
 #include <directxtk12/GeometricPrimitive.h>
@@ -27,7 +29,7 @@
 #include <cooking/PxTriangleMeshDesc.h>
 #include <extensions/PxDefaultStreams.h>
 #endif
-#include <Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h>
+
 
 SERIALIZE_IMPL
 (

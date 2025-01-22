@@ -9,6 +9,8 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/Runtime/GenericBounding/GenericBounding.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Serialization/Serialization.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/RaycastExtension/RaycastExtension.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Components/Material/Material.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/Managers/ResourceManager/ResourceManager.build.cs")]
 
 [Generate]
 public class Collider : CommonProject
@@ -29,5 +31,7 @@ public class Collider : CommonProject
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<VertexElement>(target);
         conf.AddPrivateDependency<RaycastExtension>(target);
+        conf.AddPrivateDependency<Material>(target);
+        conf.AddPrivateDependency<ResourceManager>(target);
     }
 }

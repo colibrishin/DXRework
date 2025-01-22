@@ -44,7 +44,13 @@ public class KolibriProject : CommonProject
         conf.Defines.Add("NOMINMAX=1");
         conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
         conf.Defines.Add("USE_DX12");
-        conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
+        //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
+        conf.Defines.Add("PER_PARAM_BUFFER_SIZE=8");
+        conf.Defines.Add("MAX_CONCURRENT_COMMAND_LIST=256");
+        conf.Defines.Add("CASCADE_SHADOW_COUNT=3");
+        conf.Defines.Add("CASCADE_SHADOW_TEX_WIDTH=500");
+        conf.Defines.Add("CASCADE_SHADOW_TEX_HEIGHT=500");
+        conf.Defines.Add("MAX_DIRECTIONAL_LIGHT=8");
     }
 }
 

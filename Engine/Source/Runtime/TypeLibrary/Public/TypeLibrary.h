@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/smart_ptr.hpp>
 #include <string>
 
 #if defined(USE_DX12)
@@ -92,6 +93,83 @@ namespace Engine
 		SHADER_DOMAIN,
 		SHADER_UNKNOWN
 	};
+
+	enum eShaderDomain : uint8_t
+	{
+		SHADER_DOMAIN_OPAQUE = 0,
+		SHADER_DOMAIN_MASK,
+		SHADER_DOMAIN_TRANSPARENT,
+		SHADER_DOMAIN_POST_PROCESS,
+		SHADER_DOMAIN_MAX,
+	};
+
+	enum eBindType : uint8_t
+	{
+		BIND_TYPE_SAMPLER = 0,
+		BIND_TYPE_CB,
+		BIND_TYPE_UAV,
+		BIND_TYPE_SRV,
+		BIND_TYPE_RTV,
+		BIND_TYPE_DSV,
+		BIND_TYPE_DSV_ONLY,
+		BIND_TYPE_COUNT
+	};
+
+	enum eTexBindSlot : uint8_t
+	{
+		BIND_SLOT_TEX = 0,
+		BIND_SLOT_TEXARR = BIND_SLOT_TEX + 4,
+		BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + 2,
+		BIND_SLOT_TEX1D = BIND_SLOT_TEXCUBE + 2,
+		BIND_SLOT_END = BIND_SLOT_TEX1D + 2,
+	};
+
+	enum eSBType : uint8_t
+	{
+		SB_TYPE_LIGHT = BIND_SLOT_END,
+		SB_TYPE_LIGHT_VP,
+		SB_TYPE_INSTANCE,
+		SB_TYPE_LOCAL_PARAM,
+		SB_TYPE_MATERIAL,
+		SB_TYPE_END
+	};
+
+	enum eTexBindSlot : uint8_t
+	{
+		BIND_SLOT_TEX = 0,
+		BIND_SLOT_TEXARR = BIND_SLOT_TEX + 4,
+		BIND_SLOT_TEXCUBE = BIND_SLOT_TEXARR + 2,
+		BIND_SLOT_TEX1D = BIND_SLOT_TEXCUBE + 2,
+		BIND_SLOT_END = BIND_SLOT_TEX1D + 2,
+	};
+
+	enum eReservedTexBindSlot : uint8_t
+	{
+		RESERVED_TEX_RENDERED = SB_TYPE_END,
+		RESERVED_TEX_BONES,
+		RESERVED_TEX_ATLAS,
+		RESERVED_TEX_SHADOW_MAP,
+		RESERVED_TEX_END = RESERVED_TEX_SHADOW_MAP + MAX_DIRECTIONAL_LIGHT,
+	};
+
+	enum eTexUAVBindSlot : uint8_t
+	{
+		BIND_SLOT_UAV_TEX_1D = 0,
+		BIND_SLOT_UAV_TEX_2D = BIND_SLOT_UAV_TEX_1D + 2,
+		BIND_SLOT_UAV_TEXARR = BIND_SLOT_UAV_TEX_2D + 2,
+		BIND_SLOT_UAV_END,
+	};
+
+	enum eSBUAVType : uint8_t
+	{
+		SB_TYPE_UAV_INSTANCE = BIND_SLOT_UAV_END,
+		SB_TYPE_UAV_RESERVED_1,
+		SB_TYPE_UAV_RESERVED_2,
+		SB_TYPE_UAV_END,
+	};
+
+	enum eClientSBType : uint8_t;
+	enum eClientSBUAVType : uint8_t;
 
 	template <typename T>
 	using Weak = boost::weak_ptr<T>;
