@@ -176,6 +176,45 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const Gra
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 }
 
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
+	const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride
+)
+{
+	auto* cmd = static_cast<CommandPair*>(context->commandList);
+
+	if (m_size_ < size)
+	{
+		Create(context, size, nullptr, stride, m_uav_);
+	}
+
+	if (src_ptr == nullptr)
+	{
+		return;
+	}
+
+	char* data = nullptr;
+
+	DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+
+	for (UINT i = 0; i < size; ++i)
+	{
+		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + i), stride);
+	}
+
+	m_upload_buffer_->Unmap(0, nullptr);
+
+	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+
+	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		m_buffer_.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	cmd->GetList4()->ResourceBarrier(1, &common_transition);
+}
+
 void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride)
 {
 	auto* cmd = reinterpret_cast<CommandPair*>(context->commandList);

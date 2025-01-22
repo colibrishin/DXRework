@@ -1021,6 +1021,7 @@ namespace Engine
 		virtual void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) = 0;
 		virtual void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride) = 0;
 		virtual void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
+		virtual void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
 		virtual void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) = 0;
 		virtual void Clear() = 0;
 
@@ -1069,6 +1070,10 @@ namespace Engine
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
 		{
 			if (m_base_) m_base_->SetDataContainer(context, size, container_ptr, stride);
+		}
+		void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
+		{
+			if (m_base_) m_base_->SetDataPointerContainer(context, size, container_ptr, stride);
 		}
 		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) const
 		{
@@ -1140,6 +1145,12 @@ namespace Engine
 		{
 			if (!m_base_) return;
 			m_base_->SetDataContainer(context, size, reinterpret_cast<const void* const*>(container_ptr), sizeof(T));
+		}
+
+		void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr)
+		{
+			if (!m_base_) return;
+			m_base_->SetDataPointerContainer(context, size, reinterpret_cast<const void* const*>(container_ptr), sizeof(T));
 		}
 
 		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, T* dst_ptr)

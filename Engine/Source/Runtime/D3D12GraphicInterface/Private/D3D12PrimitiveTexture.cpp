@@ -18,7 +18,7 @@
 #include "source/runtime/D3D12GraphicInterface/Public/CommandPair.h"
 #include "source/runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
 
-Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() {}
+Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() = default;
 
 void Engine::D3D12PrimitiveTexture::Generate(Engine::Resources::Texture* texture)
 {

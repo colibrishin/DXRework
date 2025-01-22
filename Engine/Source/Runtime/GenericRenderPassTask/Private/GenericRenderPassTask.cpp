@@ -218,7 +218,9 @@ namespace Engine
 		temp_context.commandList->FlagReady();
 	}
 
-	void GenericRenderPassTask::RecordUsedTexture(const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex)
+	void GenericRenderPassTask::RecordUsedTexture(
+		const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
+	)
 	{
 		auto tt = SingletonSpinLock::GetInstance().Lock(m_texture_record_ticket_);
 		if (std::ranges::find(m_used_shader_textures_, tex.get()) == m_used_shader_textures_.end())
@@ -271,33 +273,46 @@ namespace Engine
 
 			while (const uint16_t count = _tzcnt_u16(tex_bind_mask))
 			{
-				const TexturePair& pair = texture_pairs[instance_resolved];
-				if (pair.reservedTextures->size())
+				if (instance_resolved + instance_to_resolve == instance_count)
 				{
-					// independent draw call, no redundant specific textures slots.
+					break;
+				}
+				
+				const TexturePair& pair = texture_pairs[instance_resolved];
+				if (std::ranges::any_of(*pair.reservedTextures, [](const Strong<Resources::Texture>& tex)
+				{
+					return tex != nullptr;
+				}))
+				{
+					// independent draw call, no redundant reserved textures slots.
 					constexpr size_t offset = 0;
 					for (size_t i = 0; i < pair.textures->size(); ++i)
 					{
-						tex_bind_mask |= (1 << (offset + i));
+						tex_bind_mask |= 1 << (offset + i);
 					}
 					instances[offset]->SetTextureOffset(offset);
 					instance_to_resolve++;
 					break;
 				}
 				
-				if (!pair.reservedTextures->size() && count > pair.textures->size())
+				if (count > pair.textures->size())
 				{
-					const size_t offset = max_tex_binds - count;
+					size_t msb = count - 1;
+					const size_t lsb = max_tex_binds - count;
 					for (size_t i = 0; i < pair.textures->size(); ++i)
 					{
-						tex_bind_mask |= (1 << (offset + i));
+						if (pair.textures->at(i))
+						{
+							tex_bind_mask |= 1 << msb;
+							--msb;
+						}
 					}
-					instances[offset]->SetTextureOffset(offset);
+					instances[instance_to_resolve]->SetTextureOffset(lsb);
 					instance_to_resolve++;
 				}
 			}
 
-			instance_buffer.SetDataContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
+			instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
 			instance_buffer.TransitionToSRV(context);
 			instance_buffer.CopySRVHeap(context);
 

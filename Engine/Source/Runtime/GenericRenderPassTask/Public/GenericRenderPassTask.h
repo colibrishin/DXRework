@@ -70,7 +70,7 @@ namespace Engine
 			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
 			const aligned_vector<InstancePair>&                               instance_pairs
 		);
-		void RecordUsedTexture(
+		[[nodiscard]] void RecordUsedTexture(
 			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
 		);
 
