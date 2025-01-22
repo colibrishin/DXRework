@@ -1,6 +1,10 @@
 #pragma once
 #include <Source/Runtime/TypeLibrary/Public/TypeLibrary.h>
+#include <Source/Runtime/Allocator/Public/Allocator.h>
 #include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp>
+#include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp>
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
 namespace Engine::Graphics
 {
@@ -21,9 +25,9 @@ namespace Engine::Graphics
 		{
 			SB_T(SB_TYPE_LIGHT_VP)
 
-			Matrix  view[CASCADE_SHADOW_COUNT];
-			Matrix  proj[CASCADE_SHADOW_COUNT];
-			Vector4 end_clip_spaces[CASCADE_SHADOW_COUNT];
+			Matrix  view[CFG_CASCADE_SHADOW_COUNT];
+			Matrix  proj[CFG_CASCADE_SHADOW_COUNT];
+			Vector4 end_clip_spaces[CFG_CASCADE_SHADOW_COUNT];
 		};
 	}
 }
@@ -109,10 +113,11 @@ namespace Engine::Managers
 		D3D12_VIEWPORT m_viewport_;
 		D3D12_RECT     m_scissor_rect_;
 
+		using DescriptorContainer = aligned_vector<StrongDescriptorPtr>;
 		DescriptorContainer m_shadow_descriptor_heap_;
 
-		StructuredBufferMemoryPool<SBs::InstanceSB>   m_shadow_instance_buffer_;
-		StructuredBufferMemoryPool<SBs::LocalParamSB> m_local_param_buffers_;
+		Graphics::StructuredBufferMemoryPool<SBs::InstanceSB>   m_shadow_instance_buffer_;
+		Graphics::StructuredBufferMemoryPool<SBs::LocalParamSB> m_local_param_buffers_;
 
 		Resources::Texture2D m_shadow_map_mask_;
 

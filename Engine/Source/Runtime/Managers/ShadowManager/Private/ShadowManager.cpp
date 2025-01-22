@@ -1,7 +1,19 @@
 #include "../Public/ShadowManager.hpp"
 
+#if defined(USE_DX12)
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#endif
+
+#include "Source/Runtime/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/CoreObjects/Light/Public/Light.h"
+#include "Source/Runtime/CoreObjects/Camera/Public/Camera.h"
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
+#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 namespace Engine::Managers
 {
@@ -13,8 +25,8 @@ namespace Engine::Managers
 
 		cmd->SoftReset();
 
-		m_sb_light_buffer_.Create(cmd->GetList(), MAX_DIRECTIONAL_LIGHT, nullptr);
-		m_sb_light_vps_buffer_.Create(cmd->GetList(), MAX_DIRECTIONAL_LIGHT, nullptr);
+		m_sb_light_buffer_.Create(cmd->GetList(), CFG_MAX_DIRECTIONAL_LIGHT, nullptr);
+		m_sb_light_vps_buffer_.Create(cmd->GetList(), CFG_MAX_DIRECTIONAL_LIGHT, nullptr);
 
 		cmd->FlagReady();
 
@@ -24,9 +36,9 @@ namespace Engine::Managers
 				 "",
 				 {
 					 .Alignment = 0,
-					 .Width = CASCADE_SHADOW_TEX_WIDTH,
-					 .Height = CASCADE_SHADOW_TEX_HEIGHT,
-					 .DepthOrArraySize = CASCADE_SHADOW_COUNT,
+					 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
+					 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
+					 .DepthOrArraySize = CFG_CASCADE_SHADOW_COUNT,
 					 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
 					 .Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 					 .MipsLevel = 1,
@@ -44,7 +56,7 @@ namespace Engine::Managers
 		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_buffer_);
 		GetRenderer().AppendAdditionalStructuredBuffer(&m_sb_light_vps_buffer_);
 
-		m_local_param_buffers_.resize(MAX_DIRECTIONAL_LIGHT);
+		m_local_param_buffers_.resize(CFG_MAX_DIRECTIONAL_LIGHT);
 	}
 
 	void ShadowManager::PreUpdate(const float& dt)
@@ -125,7 +137,7 @@ namespace Engine::Managers
 		}
 
 		// Notify the number of lights to the shader.
-		GetRenderPipeline().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
+		Managers::RenderPipeline::GetInstance().SetParam<int>(static_cast<UINT>(m_lights_.size()), light_slot);
 
 		// If there is no light, it does not need to be updated.
 		if (light_buffer.empty())
@@ -144,7 +156,7 @@ namespace Engine::Managers
 				return;
 			}
 
-			const auto& cmd = GetD3Device().AcquireCommandPair(L"Shadow Rendering").lock();
+			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Shadow Rendering").lock();
 
 			cmd->SoftReset();
 
@@ -193,7 +205,7 @@ namespace Engine::Managers
 	}
 
 	void ShadowManager::BuildShadowMap(
-		const float dt, const Weak<CommandPair>& w_cmd, const StrongLight& light, const UINT light_idx
+		const float dt, const Weak<CommandPair>& w_cmd, const Strong<Objects::Light>& light, const UINT light_idx
 	)
 	{
 		const auto& cmd = w_cmd.lock();
@@ -210,11 +222,11 @@ namespace Engine::Managers
 				 cmd,
 				 m_shadow_descriptor_heap_,
 				 m_shadow_instance_buffer_,
-				 [this](const StrongObjectBase& obj)
+				 [this](const Strong<Abstracts::ObjectBase>& obj)
 				 {
-					 if (obj->GetLayer() == LAYER_CAMERA || obj->GetLayer() == LAYER_UI || obj->GetLayer() ==
-					     LAYER_ENVIRONMENT ||
-					     obj->GetLayer() == LAYER_LIGHT || obj->GetLayer() == LAYER_SKYBOX)
+					 if (obj->GetLayer() == RESERVED_LAYER_CAMERA || obj->GetLayer() == RESERVED_LAYER_UI || obj->GetLayer() ==
+						 RESERVED_LAYER_ENVIRONMENT ||
+					     obj->GetLayer() == RESERVED_LAYER_LIGHT || obj->GetLayer() == RESERVED_LAYER_SKYBOX)
 					 {
 						 return false;
 					 }
@@ -295,21 +307,21 @@ namespace Engine::Managers
 		subfrusta.corners[7] = XMVectorSelect(righTopFar, LeftBottomFar, vGrabY);
 	}
 
-	void ShadowManager::EvalShadowVP(const WeakCamera& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer)
+	void ShadowManager::EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer)
 	{
 		// https://cutecatgame.tistory.com/6
 		if (const auto& camera = ptr_cam.lock())
 		{
-			const float near_plane = g_screen_near;
-			const float far_plane  = g_screen_far;
+			const float near_plane = CFG_SCREEN_NEAR;
+			const float far_plane  = CFG_SCREEN_FAR;
 
 			const float cascadeEnds[]{near_plane, 10.f, 80.f, far_plane};
 
 			// for cascade shadow mapping, total 3 parts are used.
 			// (near, 6), (6, 18), (18, far)
-			for (auto i = 0; i < g_max_shadow_cascades; ++i)
+			for (auto i = 0; i < CFG_CASCADE_SHADOW_COUNT; ++i)
 			{
-				Subfrusta subfrusta[g_max_shadow_cascades];
+				Subfrusta subfrusta[CFG_CASCADE_SHADOW_COUNT];
 
 				// frustum = near points 4 + far points 4
 				CreateSubfrusta
@@ -433,7 +445,7 @@ namespace Engine::Managers
 		return &m_sb_light_vps_buffer_;
 	}
 
-	void ShadowManager::RegisterLight(const WeakLight& light)
+	void ShadowManager::RegisterLight(const Weak<Objects::Light>& light)
 	{
 		if (const auto locked = light.lock())
 		{
@@ -442,7 +454,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::UnregisterLight(const WeakLight& light)
+	void ShadowManager::UnregisterLight(const Weak<Objects::Light>& light)
 	{
 		if (const auto locked = light.lock())
 		{
@@ -482,11 +494,11 @@ namespace Engine::Managers
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateDescriptorHeap
+				 Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
 				 (&sampler_heap_desc, IID_PPV_ARGS(m_sampler_heap_.GetAddressOf()))
 				);
 
-		GetD3Device().GetDevice()->CreateSampler
+		Managers::D3Device::GetInstance().GetDevice()->CreateSampler
 				(
 				 &sampler_desc, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart()
 				);
@@ -494,8 +506,8 @@ namespace Engine::Managers
 
 	void ShadowManager::InitializeViewport()
 	{
-		m_viewport_.Width    = static_cast<float>(CASCADE_SHADOW_TEX_WIDTH);
-		m_viewport_.Height   = static_cast<float>(CASCADE_SHADOW_TEX_HEIGHT);
+		m_viewport_.Width    = static_cast<float>(CFG_CASCADE_SHADOW_TEX_WIDTH);
+		m_viewport_.Height   = static_cast<float>(CFG_CASCADE_SHADOW_TEX_HEIGHT);
 		m_viewport_.MinDepth = 0.f;
 		m_viewport_.MaxDepth = 1.f;
 		m_viewport_.TopLeftX = 0.f;
@@ -503,8 +515,8 @@ namespace Engine::Managers
 
 		m_scissor_rect_.left   = 0;
 		m_scissor_rect_.top    = 0;
-		m_scissor_rect_.right  = CASCADE_SHADOW_TEX_WIDTH;
-		m_scissor_rect_.bottom = CASCADE_SHADOW_TEX_HEIGHT;
+		m_scissor_rect_.right  = CFG_CASCADE_SHADOW_TEX_WIDTH;
+		m_scissor_rect_.bottom = CFG_CASCADE_SHADOW_TEX_HEIGHT;
 	}
 
 	void ShadowManager::ClearShadowMaps(const Weak<CommandPair>& w_cmd)

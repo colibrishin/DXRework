@@ -98,10 +98,7 @@ namespace Engine::Abstracts
 		friend class Managers::ResourceManager;
 
 		bool          m_bLoaded_;
-		std::string   m_path_str_; // for serialization
 		eResourceType m_type_;
-
-		// non-serialized
 		std::filesystem::path m_path_;
 	};
 } // namespace Engine::Abstract

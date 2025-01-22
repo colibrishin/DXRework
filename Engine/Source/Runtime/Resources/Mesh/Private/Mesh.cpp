@@ -9,14 +9,17 @@
 
 #include <algorithm>
 #include <execution>
+#include <directxtk12/BufferHelpers.h>
 
 #include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 
 SERIALIZE_IMPL
 (
  Engine::Resources::Mesh,
- _ARTAG(_BSTSUPER(Engine::Abstract::Resource))
+ _ARTAG(_BSTSUPER(Engine::Abstracts::Resource))
  _ARTAG(m_vertices_) _ARTAG(m_indices_)
  _ARTAG(m_bounding_box_)
 )
@@ -178,12 +181,14 @@ namespace Engine::Resources
 		return m_index_buffer_view_;
 	}
 
+#if CFG_RAYTRACING
 	const AccelStructBuffer& Mesh::GetBLAS() const
 	{
 		return m_blas_;
 	}
+#endif
 
-	const StructuredBuffer<VertexElement>& Mesh::GetVertexStructuredBuffer() const
+	const Graphics::StructuredBuffer<Graphics::VertexElement>& Mesh::GetVertexStructuredBuffer() const
 	{
 		return m_vertex_buffer_structured_;
 	}
@@ -229,7 +234,7 @@ namespace Engine::Resources
 
 		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-		const auto& cmd = GetD3Device().AcquireCommandPair(L"Mesh Load Command Pair").lock();
+		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Mesh Load Command Pair").lock();
 
 		cmd->SoftReset();
 
@@ -249,11 +254,11 @@ namespace Engine::Resources
 		// -- Vertex Buffer -- //
 		// Initialize vertex buffer.
 		const auto& default_heap    = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		const auto& vtx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(VertexElement) * m_vertices_.size());
+		const auto& vtx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Graphics::VertexElement) * m_vertices_.size());
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateCommittedResource
+				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 				 (
 				  &default_heap,
 				  D3D12_HEAP_FLAG_NONE,
@@ -272,7 +277,7 @@ namespace Engine::Resources
 				(
 				 DirectX::CreateUploadBuffer
 				 (
-				  GetD3Device().GetDevice(),
+				  Managers::D3Device::GetInstance().GetDevice(),
 				  m_vertices_.data(),
 				  m_vertices_.size(),
 				  m_vertex_buffer_upload_.GetAddressOf()
@@ -284,7 +289,7 @@ namespace Engine::Resources
 		{
 			char* data = nullptr;
 			DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-			_mm256_memcpy(data, m_vertices_.data(), sizeof(VertexElement) * m_vertices_.size());
+			_mm256_memcpy(data, m_vertices_.data(), sizeof(Graphics::VertexElement) * m_vertices_.size());
 			m_vertex_buffer_upload_->Unmap(0, nullptr);
 		}
 
@@ -293,8 +298,8 @@ namespace Engine::Resources
 		// -- Vertex Buffer View -- //
 		// Initialize vertex buffer view.
 		m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
-		m_vertex_buffer_view_.SizeInBytes    = sizeof(VertexElement) * static_cast<UINT>(m_vertices_.size());
-		m_vertex_buffer_view_.StrideInBytes  = sizeof(VertexElement);
+		m_vertex_buffer_view_.SizeInBytes    = sizeof(Graphics::VertexElement) * static_cast<UINT>(m_vertices_.size());
+		m_vertex_buffer_view_.StrideInBytes  = sizeof(Graphics::VertexElement);
 
 		const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
 
@@ -302,7 +307,7 @@ namespace Engine::Resources
 
 		DX::ThrowIfFailed
 				(
-				 GetD3Device().GetDevice()->CreateCommittedResource
+				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 				 (
 				  &default_heap,
 				  D3D12_HEAP_FLAG_NONE,
@@ -320,7 +325,7 @@ namespace Engine::Resources
 				(
 				 DirectX::CreateUploadBuffer
 				 (
-				  GetD3Device().GetDevice(),
+				  Managers::D3Device::GetInstance().GetDevice(),
 				  m_indices_.data(),
 				  m_indices_.size(),
 				  m_index_buffer_upload_.GetAddressOf()
@@ -359,6 +364,7 @@ namespace Engine::Resources
 		cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 		cmd->GetList()->ResourceBarrier(1, &idx_trans);
 
+#if CFG_RAYTRACING
 		if (GetRaytracingPipeline().IsRaytracingSupported() && pure_vertices.size() % 3 == 0)
 		{
 			const auto& vtx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vector3) * pure_vertices.size());
@@ -366,7 +372,7 @@ namespace Engine::Resources
 
 			DX::ThrowIfFailed
 					(
-					 GetD3Device().GetDevice()->CreateCommittedResource
+					 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 					 (
 					  &default_heap,
 					  D3D12_HEAP_FLAG_NONE,
@@ -379,7 +385,7 @@ namespace Engine::Resources
 
 			DX::ThrowIfFailed
 					(
-					 GetD3Device().GetDevice()->CreateCommittedResource
+					 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
 					 (
 					  &default_heap,
 					  D3D12_HEAP_FLAG_NONE,
@@ -394,7 +400,7 @@ namespace Engine::Resources
 					(
 					 CreateUploadBuffer
 					 (
-					  GetD3Device().GetDevice(),
+					  Managers::D3Device::GetInstance().GetDevice(),
 					  pure_vertices.data(),
 					  pure_vertices.size(),
 					  m_raytracing_vertex_buffer_upload_.GetAddressOf()
@@ -405,7 +411,7 @@ namespace Engine::Resources
 					(
 					 DirectX::CreateUploadBuffer
 					 (
-					  GetD3Device().GetDevice(),
+					  Managers::D3Device::GetInstance().GetDevice(),
 					  m_indices_.data(),
 					  m_indices_.size(),
 					  m_raytracing_index_buffer_upload_.GetAddressOf()
@@ -513,6 +519,7 @@ namespace Engine::Resources
 		{
 			m_blas_.empty = true;
 		}
+#endif
 
 		cmd->FlagReady();
 
@@ -531,6 +538,7 @@ namespace Engine::Resources
 		m_vertex_buffer_upload_->Release();
 		m_index_buffer_upload_->Release();
 
+#if CFG_RAYTRACING
 		if (m_blas_.resultPool.GetResource())
 		{
 			m_blas_.resultPool.Release();
@@ -559,6 +567,7 @@ namespace Engine::Resources
 		{
 			m_blas_.instanceDescPool.Release();
 		}
+#endif
 
 #ifdef PHYSX_ENABLED
 		if (m_px_mesh_)

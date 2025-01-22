@@ -19,6 +19,8 @@
 #include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 #include <Source/Runtime/CommandPair/Public/CommandPair.h>
 
+std::atomic<bool> g_raytracing = false;
+
 namespace Engine::Managers
 {
 	HANDLE D3Device::GetSwapchainAwaiter() const
@@ -278,8 +280,8 @@ namespace Engine::Managers
 		DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
 
 		swap_chain_desc.BufferCount        = 2;
-		swap_chain_desc.Width              = g_window_width;
-		swap_chain_desc.Height             = g_window_height;
+		swap_chain_desc.Width              = CFG_WIDTH;
+		swap_chain_desc.Height             = CFG_HEIGHT;
 		swap_chain_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swap_chain_desc.BufferUsage        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swap_chain_desc.SampleDesc.Count   = 1;
@@ -291,10 +293,10 @@ namespace Engine::Managers
 
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC full_screen_desc = {};
 
-		full_screen_desc.Windowed         = !g_full_screen;
+		full_screen_desc.Windowed         = !CFG_FULLSCREEN;
 		full_screen_desc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 
-		if (g_vsync_enabled)
+		if (CFG_VSYNC)
 		{
 			full_screen_desc.RefreshRate.Denominator = s_refresh_rate_denominator_;
 			full_screen_desc.RefreshRate.Numerator   = s_refresh_rate_numerator_;
@@ -318,12 +320,12 @@ namespace Engine::Managers
 				 )
 				);
 
-		DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(g_max_frame_latency_second));
+		DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(CFG_FRAME_LATENCY_TOLERANCE_SECOND));
 		m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
-		m_render_targets_.resize(g_frame_buffer);
+		m_render_targets_.resize(CFG_FRAME_BUFFER);
 
-		for (UINT i = 0; i < g_frame_buffer; ++i)
+		for (UINT i = 0; i < CFG_FRAME_BUFFER; ++i)
 		{
 			DX::ThrowIfFailed
 					(
@@ -338,7 +340,7 @@ namespace Engine::Managers
 		const D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc
 		{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-			.NumDescriptors = g_frame_buffer,
+			.NumDescriptors = CFG_FRAME_BUFFER,
 			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 			.NodeMask = 0
 		};
@@ -363,7 +365,7 @@ namespace Engine::Managers
 			.Texture2D = {0, 0}
 		};
 
-		for (UINT i = 0; i < g_frame_buffer; ++i)
+		for (UINT i = 0; i < CFG_FRAME_BUFFER; ++i)
 		{
 			DX::ThrowIfFailed
 					(
@@ -389,8 +391,8 @@ namespace Engine::Managers
 		const CD3DX12_RESOURCE_DESC& depth_desc   = CD3DX12_RESOURCE_DESC::Tex2D
 				(
 				 DXGI_FORMAT_D24_UNORM_S8_UINT,
-				 g_window_width,
-				 g_window_height,
+				 CFG_WIDTH,
+				 CFG_HEIGHT,
 				 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
 				);
 
@@ -466,7 +468,7 @@ namespace Engine::Managers
 
 	void D3Device::InitializeCommandAllocator()
 	{
-		for (UINT i = 0; i < g_frame_buffer; ++i)
+		for (UINT i = 0; i < CFG_FRAME_BUFFER; ++i)
 		{
 			for (int t = 0; t < _countof(s_target_types); ++t)
 			{
@@ -487,7 +489,7 @@ namespace Engine::Managers
 				 )
 				);
 
-		m_fence_nonce_ = new std::atomic<UINT64>[g_frame_buffer]{0,};
+		m_fence_nonce_ = new std::atomic<UINT64>[CFG_FRAME_BUFFER]{0,};
 
 		m_fence_event_ = CreateEvent(nullptr, false, false, nullptr);
 
@@ -573,18 +575,20 @@ namespace Engine::Managers
 				(
 				 m_swap_chain_->Present1
 				 (
-				  g_vsync_enabled ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
+				  CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
 				  &params
 				 )
 				);
 
 		if (WaitForSingleObjectEx
 		    (
-		     GetSwapchainAwaiter(), g_max_frame_latency_ms,
+		     GetSwapchainAwaiter(), CFG_FRAME_LATENCY_TOLERANCE_SECOND * 1000,
 		     true
 		    ) != WAIT_OBJECT_0)
 		{
-			GetDebugger().Log("Waiting for Swap chain had an issue.");
+#if WITH_DEBUG
+			OutputDebugString("Waiting for Swap chain had an issue.");
+#endif
 		}
 
 		WaitNextFrame();
@@ -603,15 +607,15 @@ namespace Engine::Managers
 
 		m_projection_matrix_ = XMMatrixPerspectiveFovLH
 				(
-				 g_fov, GetAspectRatio(),
-				 g_screen_near, g_screen_far
+				 CFG_FOV, GetAspectRatio(),
+				 CFG_SCREEN_NEAR, CFG_SCREEN_FAR
 				);
 		m_ortho_matrix_ = XMMatrixOrthographicLH
 				(
-				 static_cast<float>(g_window_width),
-				 static_cast<float>(g_window_height),
-				 g_screen_near, g_screen_far
-				);
+				 static_cast<float>(CFG_WIDTH),
+				 static_cast<float>(CFG_HEIGHT),
+				CFG_SCREEN_NEAR, CFG_SCREEN_FAR
+			);
 	}
 
 	ID3D12Resource* D3Device::GetRenderTarget(UINT64 frame_idx)
@@ -775,8 +779,8 @@ namespace Engine::Managers
 
 	float D3Device::GetAspectRatio()
 	{
-		return static_cast<float>(g_window_width) /
-		       static_cast<float>(g_window_height);
+		return static_cast<float>(CFG_WIDTH) /
+		       static_cast<float>(CFG_HEIGHT);
 	}
 
 	Weak<CommandPair> D3Device::AcquireCommandPair(const std::wstring& debug_name, UINT64 buffer_idx)
@@ -797,7 +801,7 @@ namespace Engine::Managers
 
 	bool D3Device::IsCommandPairAvailable(UINT64 buffer_idx) const
 	{
-		return m_command_pairs_count_.load() < g_max_concurrent_command_lists;
+		return m_command_pairs_count_.load() < CFG_MAX_CONCURRENT_COMMAND_LIST;
 	}
 
 	void D3Device::WaitAndReset(const eCommandList list, UINT64 buffer_idx) const

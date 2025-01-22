@@ -14,10 +14,9 @@ namespace Engine
             const std::filesystem::path& path,
             std::vector<Strong<Resources::Mesh>>& meshes,
             Strong<Resources::Shape>& shape, 
-            Strong<Resources::AnimationsTexture>& animstex
+            Strong<Resources::AnimationTexture>& animstex
         );
 
-    private:
         __forceinline static Matrix __vectorcall AiMatrixToDirectXTranspose(const aiMatrix4x4& from)
         {
             return Matrix

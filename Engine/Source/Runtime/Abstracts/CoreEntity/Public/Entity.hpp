@@ -64,9 +64,6 @@ namespace Engine::Abstracts
 		bool       m_b_initialized_;
 		bool       m_b_garbage_;
 
-		std::string m_meta_str_; // for serialization
-
-		// non-serialized
 		std::filesystem::path m_meta_path_;
 	};
 } // namespace Engine::Abstracts

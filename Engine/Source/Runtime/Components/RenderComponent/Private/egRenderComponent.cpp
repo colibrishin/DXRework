@@ -8,7 +8,7 @@ SERIALIZE_IMPL
 (
  Engine::Components::RenderComponent,
  _ARTAG(_BSTSUPER(Engine::Abstracts::Component))
- _ARTAG(m_mtr_meta_path_str_)
+ _ARTAG(m_mtr_meta_path_)
  _ARTAG(m_type_)
 )
 
@@ -51,7 +51,6 @@ namespace Engine::Components
 		if (m_material_)
 		{
 			Serializer::Serialize(m_material_->GetName(), m_material_);
-			m_mtr_meta_path_str_ = m_material_->GetMetadataPath().string();
 		}
 	}
 
@@ -63,11 +62,6 @@ namespace Engine::Components
 			res_check && !res_check->GetMetadataPath().empty())
 		{
 			m_material_ = res_check;
-		}
-		else
-		{
-			m_material_ = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>
-					(m_mtr_meta_path_str_).lock();
 		}
 	}
 

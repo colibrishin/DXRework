@@ -15,7 +15,7 @@ namespace Engine
 		const std::filesystem::path& path,
 		std::vector<Strong<Resources::Mesh>>& meshes,
 		Strong<Resources::Shape>& shape, 
-		Strong<Resources::AnimationsTexture>& animstex
+		Strong<Resources::AnimationTexture>& animstex
 	)
 	{
 		

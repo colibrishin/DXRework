@@ -9,6 +9,10 @@
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Resources/Bone/Public/Bone.h"
+#include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
+#include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
+#include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
 
 SERIALIZE_IMPL
 (
@@ -51,7 +55,7 @@ namespace Engine::Resources
 
 		for (const auto& animation : m_animation_catalog_)
 		{
-			if (const auto anim = GetResourceManager().GetResource<BoneAnimation>(animation).lock())
+			if (const auto anim = Managers::ResourceManager::GetInstance().GetResource<BoneAnimation>(animation).lock())
 			{
 				Serializer::Serialize(anim->GetName(), anim);
 			}
@@ -111,7 +115,7 @@ namespace Engine::Resources
 		return {};
 	}
 
-	Weak<AnimationsTexture> Shape::GetAnimations() const
+	Weak<AnimationTexture> Shape::GetAnimations() const
 	{
 		return m_animations_;
 	}
@@ -160,20 +164,20 @@ namespace Engine::Resources
 		{
 			for (int i = 0; i < m_mesh_paths_.size(); ++i)
 			{
-				if (const auto mesh = GetResourceManager().GetResourceByMetadataPath<Mesh>
+				if (const auto mesh = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Mesh>
 						(m_mesh_paths_[i]).lock())
 				{
 					m_meshes_.push_back(mesh);
 				}
 			}
 
-			if (const auto bone = GetResourceManager().GetResourceByMetadataPath<Bone>
+			if (const auto bone = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Bone>
 					(m_bone_path_).lock())
 			{
 				m_bone_ = bone;
 			}
 
-			if (const auto anims = GetResourceManager().GetResourceByMetadataPath<AnimationsTexture>
+			if (const auto anims = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AnimationTexture>
 					(m_animations_path_).lock())
 			{
 				m_animations_ = anims;
@@ -222,7 +226,7 @@ namespace Engine::Resources
 
 				const std::string mesh_lookup_name = GetName() + "_" + mesh_name + "_" + std::to_string(i);
 
-				if (const auto mesh = GetResourceManager().GetResource<Resources::Mesh>(mesh_lookup_name).lock())
+				if (const auto mesh = Managers::ResourceManager::GetInstance().GetResource<Resources::Mesh>(mesh_lookup_name).lock())
 				{
 					m_meshes_.push_back(mesh);
 					continue;
@@ -308,7 +312,7 @@ namespace Engine::Resources
 
 				if (shape_->HasBones())
 				{
-					BonePrimitiveMap bone_map;
+					Graphics::BonePrimitiveMap bone_map;
 
 					for (unsigned j = 0; j < b_count; ++j)
 					{
@@ -321,7 +325,7 @@ namespace Engine::Resources
 
 						const std::string bone_name = bone->mName.C_Str();
 
-						if (const auto check = GetResourceManager().GetResource<Bone>
+						if (const auto check = Managers::ResourceManager::GetInstance().GetResource<Bone>
 							(mesh_lookup_name + "_BONE").lock())
 						{
 							m_bone_ = check;
@@ -352,15 +356,15 @@ namespace Engine::Resources
 						BonePrimitive bone_info;
 						bone_info.SetIndex(j);
 						bone_info.SetParentIndex(parent_idx);
-						bone_info.SetInvBindPose(AiMatrixToDirectXTranspose(offset));
-						bone_info.SetTransform(AiMatrixToDirectXTranspose(transformation));
+						bone_info.SetInvBindPose(ShapeImporter::AiMatrixToDirectXTranspose(offset));
+						bone_info.SetTransform(ShapeImporter::AiMatrixToDirectXTranspose(transformation));
 
 						bone_map[bone_name] = bone_info;
 					}
 
 					auto bone = boost::make_shared<Bone>(bone_map);
 					bone->SetName(mesh_lookup_name + "_BONE");
-					GetResourceManager().AddResource(bone);
+					Managers::ResourceManager::GetInstance().AddResource(bone);
 					bone->Load();
 					m_bone_path_ = bone->GetMetadataPath().generic_string();
 					m_bone_ = bone;
@@ -369,7 +373,7 @@ namespace Engine::Resources
 				auto mesh = boost::make_shared<Resources::Mesh>(shape, indices);
 				mesh->SetName(mesh_lookup_name);
 				mesh->Load();
-				GetResourceManager().AddResource(mesh);
+				Managers::ResourceManager::GetInstance().AddResource(mesh);
 				m_meshes_.push_back(mesh);
 			}
 
@@ -408,7 +412,7 @@ namespace Engine::Resources
 				(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
 			}
 
-			std::vector<StrongBoneAnimation> animations;
+			std::vector<Strong<BoneAnimation>> animations;
 
 			if (scene->HasAnimations())
 			{
@@ -420,7 +424,7 @@ namespace Engine::Resources
 					const unsigned    affect_bone_count = animation_->mNumChannels;
 					const std::string anim_name = animation_->mName.C_Str();
 
-					if (const auto check = GetResourceManager().GetResource<BoneAnimation>(anim_name + "_ANIM").lock())
+					if (const auto check = Managers::ResourceManager::GetInstance().GetResource<BoneAnimation>(anim_name + "_ANIM").lock())
 					{
 						m_animation_catalog_.push_back(anim_name + "_ANIM");
 						continue;
@@ -432,7 +436,7 @@ namespace Engine::Resources
 					AnimationPrimitive animation
 					(
 						anim_name, static_cast<float>(duration), static_cast<float>(ticks_per_second),
-						AiMatrixToDirectXTranspose
+						ShapeImporter::AiMatrixToDirectXTranspose
 						(
 							scene->mRootNode->mTransformation.
 							Inverse()
@@ -502,7 +506,7 @@ namespace Engine::Resources
 				std::ranges::sort
 				(
 					animations
-					, [](const StrongBoneAnimation& lhs, const StrongBoneAnimation& rhs)
+					, [](const Strong<BoneAnimation>& lhs, const Strong<BoneAnimation>& rhs)
 					{
 						return lhs->GetName() < rhs->GetName();
 					}
@@ -510,13 +514,13 @@ namespace Engine::Resources
 
 				for (const auto& anim : animations)
 				{
-					GetResourceManager().AddResource(anim);
+					Managers::ResourceManager::GetInstance().AddResource(anim);
 				}
 
-				const auto anims = boost::make_shared<AnimationsTexture>(animations);
+				const auto anims = boost::make_shared<AnimationTexture>(animations);
 				anims->SetName(GetName() + "_ANIMS");
 				anims->Load();
-				GetResourceManager().AddResource(anims);
+				Managers::ResourceManager::GetInstance().AddResource(anims);
 				m_animations_path_ = anims->GetMetadataPath().generic_string();
 				m_animations_ = anims;
 			}

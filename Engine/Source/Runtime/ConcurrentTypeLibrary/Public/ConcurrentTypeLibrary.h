@@ -26,4 +26,6 @@ namespace Engine
 	using ConcurrentWeakScpMap = concurrent_fast_pool_map<GlobalEntityID, Weak<Script>>;
 	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<eComponentType, ConcurrentWeakComMap>;
 	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<ScriptSizeType, ConcurrentWeakScpMap>;
+
+	using InstanceBufferContainer = tbb::concurrent_vector<Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>>;
 }
