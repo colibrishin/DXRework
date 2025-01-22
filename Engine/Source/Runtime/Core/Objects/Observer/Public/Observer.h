@@ -6,6 +6,7 @@ namespace Engine::Objects
 	class ENGINE_CORE_API Observer : public Abstracts::ObjectBase
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Observer)
 		OBJECT_T(DEF_OBJ_T_OBSERVER)
 
 		Observer();

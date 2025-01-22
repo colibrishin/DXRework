@@ -46,7 +46,7 @@ namespace Engine
 
 	struct ENGINE_CORE_API CoreLoop
 	{
-		INLINE_COMPILE_TIME_TYPENAME(CoreLoop)
+		INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(CoreLoop)
 
 		enum ENGINE_CORE_API eLoopType
 		{

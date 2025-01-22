@@ -17,7 +17,15 @@ namespace Engine::Abstracts
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Entity)
+		static std::string_view StaticTypeName()
+		{
+			return static_type_name<Entity>::name();
+		}
+
+		static std::string_view StaticFullTypeName()
+		{
+			return static_type_name<Entity>::full_name();
+		}
 
 		Entity(const Entity& other) 
 		{
@@ -47,8 +55,8 @@ namespace Engine::Abstracts
 		const std::filesystem::path& GetMetadataPath() const;
 		GlobalEntityID               GetID() const;
 		const EntityName&            GetName() const;
-		TypeName                     GetTypeName() const;
-		virtual TypeName             GetPrettyTypeName() const;
+		virtual TypeName      GetTypeName() const;
+		virtual TypeName      GetPrettyTypeName() const;
 		bool                         IsGarbage() const;
 		bool                         IsInitialized() const;
 

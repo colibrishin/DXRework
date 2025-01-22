@@ -11,6 +11,9 @@ namespace Engine
 		virtual      ~RenderInstanceTask() = default;
 		virtual void Run(Scene const* scene, RenderMap* render_map, const size_t map_size, std::atomic<uint64_t>& instance_count) = 0;
 		virtual void Cleanup(RenderMap* render_map, const size_t map_size) = 0;
+
+		virtual std::string_view GetTypeName() const = 0;
+		virtual std::string_view GetPrettyTypeName() const = 0;
 	};
 
 	struct RenderPassTask;
@@ -31,5 +34,8 @@ namespace Engine
 		) = 0;
 
 		virtual void Cleanup() = 0;
+
+		virtual std::string_view GetTypeName() const = 0;
+		virtual std::string_view GetPrettyTypeName() const = 0;
 	};
 }

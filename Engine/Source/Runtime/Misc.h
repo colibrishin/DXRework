@@ -58,12 +58,12 @@ public:
 	    if constexpr (it == TypeNameStorage.rend())
 	    {
 	        // No namespace
-		    return {TypeNameStorage.data(), TypeNameStorage.size()};
+		    return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
 	    }
 
 	    constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
 	    constexpr auto length = TypeNameStorage.size() - dist;
-	    return {TypeNameStorage.data() + dist, length};
+	    return {TypeNameStorage.data() + dist, length - 1};
     }
 
     static constexpr std::string_view full_name()
@@ -73,14 +73,27 @@ public:
 	    if constexpr (it != TypeNameStorage.rend())
 	    {
 	        constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
-		    return {TypeNameStorage.data() + dist, TypeNameStorage.size() - dist};
+		    return {TypeNameStorage.data() + dist, TypeNameStorage.size() - dist - 1};
 	    }
 
-	    return {TypeNameStorage.data(), TypeNameStorage.size()};
+	    return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
     }
 };
 
 #define INLINE_COMPILE_TIME_TYPENAME(Type) \
+	static std::string_view StaticTypeName() \
+	{ \
+		return static_type_name<##Type##>::name(); \
+	} \
+    static std::string_view StaticFullTypeName() \
+    { \
+		return static_type_name<##Type##>::full_name(); \
+    }  \
+	std::string_view GetTypeName() const override { return Type##::StaticFullTypeName(); } \
+	std::string_view GetPrettyTypeName() const override { return Type##::StaticTypeName(); }
+
+
+#define INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Type) \
 	static std::string_view StaticTypeName() \
 	{ \
 		return static_type_name<##Type##>::name(); \

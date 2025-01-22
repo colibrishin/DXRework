@@ -7,6 +7,7 @@ namespace Engine
 	class ENGINE_CORE_API Object final : public Abstracts::ObjectBase
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Object)
 		OBJECT_T(DEF_OBJ_T_NONE)
 		Object();
 

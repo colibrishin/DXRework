@@ -17,6 +17,7 @@ namespace Engine::Objects
 	class ENGINE_CORE_API Light final : public Abstracts::ObjectBase
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Light)
 		OBJECT_T(DEF_OBJ_T_LIGHT)
 
 		Light();

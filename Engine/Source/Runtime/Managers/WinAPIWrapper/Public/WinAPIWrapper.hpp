@@ -16,7 +16,7 @@ namespace WinAPI
     class ENGINE_WINAPIWRAPPER_API WinAPIWrapper final
     {
     public:
-        INLINE_COMPILE_TIME_TYPENAME(WinAPIWrapper)
+        INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(WinAPIWrapper)
         ~WinAPIWrapper()                               = default;
         WinAPIWrapper(const WinAPIWrapper&)            = delete;
         WinAPIWrapper& operator=(const WinAPIWrapper&) = delete;

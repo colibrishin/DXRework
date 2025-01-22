@@ -40,6 +40,7 @@ namespace Engine
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
+
 		void Initialize() override;
 		void Shutdown() override;
 		void WaitForNextFrame() override;

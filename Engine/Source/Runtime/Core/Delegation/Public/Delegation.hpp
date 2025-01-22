@@ -43,7 +43,7 @@ template <typename... Args>
 struct Delegate
 {
 public:
-	INLINE_COMPILE_TIME_TYPENAME(Delegate<Args...>)
+	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Delegate<Args...>)
 
 	using address_type = uint64_t;
 
@@ -138,5 +138,5 @@ private:
 #define DEFINE_DELEGATE(Name, ...) \
 struct Delegate##Name : public Delegate<__VA_ARGS__> \
 { \
-	INLINE_COMPILE_TIME_TYPENAME(Delegate##Name) \
+	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Delegate##Name) \
 }; \

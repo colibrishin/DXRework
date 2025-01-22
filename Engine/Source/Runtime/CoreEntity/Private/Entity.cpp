@@ -33,21 +33,12 @@ const Engine::EntityName& Engine::Abstracts::Entity::GetName() const
 
 Engine::TypeName Engine::Abstracts::Entity::GetTypeName() const
 {
-	return typeid(*this).name();
+	return Entity::StaticFullTypeName();
 }
 
 Engine::TypeName Engine::Abstracts::Entity::GetPrettyTypeName() const
 {
-	const auto type_name = GetTypeName();
-	const auto pos       = type_name.find_last_of(":");
-
-	// case where there is no namespace.
-	if (pos == std::string::npos)
-	{
-		return type_name;
-	}
-
-	return type_name.substr(pos + 1);
+	return Entity::StaticTypeName();
 }
 
 bool Engine::Abstracts::Entity::IsGarbage() const

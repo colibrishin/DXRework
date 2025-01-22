@@ -13,6 +13,7 @@ namespace Engine
 {
 	struct MaterialModule : IModule
 	{
+		INLINE_COMPILE_TIME_TYPENAME(MaterialModule)
 		void Initialize() override;
 		void Shutdown() override;
 		bool DynamicLoadable() override;

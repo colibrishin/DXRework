@@ -37,6 +37,7 @@ namespace Engine::Abstracts
 	class ENGINE_CORE_API ObjectBase : public Actor
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ObjectBase)
 		DelegateOnComponentAdded onComponentAdded;
 		DelegateOnComponentRemoved onComponentRemoved;
 

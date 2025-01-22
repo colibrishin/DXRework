@@ -8,6 +8,8 @@ namespace Engine::Objects
 	class ENGINE_CORE_API Camera final : public Abstracts::ObjectBase
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Camera)
+
 		OBJECT_T(DEF_OBJ_T_CAMERA)
 
 		Camera()
