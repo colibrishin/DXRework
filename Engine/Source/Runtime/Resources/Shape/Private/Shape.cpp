@@ -18,9 +18,6 @@
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
 
-RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Shape)
-RESOURCE_SELF_INFER_CREATE_IMPL(Engine::Resources::Shape)
-
 namespace Engine::Resources
 {
 	Shape::Shape(const std::filesystem::path& path)

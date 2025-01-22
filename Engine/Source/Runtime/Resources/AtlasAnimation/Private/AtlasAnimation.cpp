@@ -6,8 +6,17 @@
 
 namespace Engine::Resources
 {
-	AtlasAnimation::AtlasAnimation(const AtlasAnimationPrimitive& primitive)
-		: m_primitive_(primitive) {}
+	AtlasAnimation::AtlasAnimation(const std::filesystem::path& xml_path)
+		: m_primitive_(ParseXML(xml_path))
+	{
+		// Save primitive value for serialization and loading.
+		m_xml_path_ = xml_path.string();
+		SetTicksPerSecond(1.f);
+
+		float duration = 0.f;
+		m_primitive_.GetTotalFrameDuration(duration);
+		SetDuration(duration);
+	}
 
 	void AtlasAnimation::PreUpdate(const float dt)
 	{
@@ -114,30 +123,6 @@ namespace Engine::Resources
 		}
 
 		return primitive;
-	}
-
-	inline Strong<AtlasAnimation> AtlasAnimation::Create(const std::string& name, const std::filesystem::path& xml_path)
-	{
-		if (const auto check = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimation>(name).lock())
-		{
-			return check;
-		}
-
-		// Parse the xml file
-		const auto& primitive = ParseXML(xml_path);
-		const auto  obj = boost::make_shared<AtlasAnimation>(primitive);
-
-		// Save primitive value for serialization and loading.
-		obj->m_xml_path_ = xml_path.string();
-
-		obj->SetTicksPerSecond(1.f);
-
-		float duration = 0.f;
-		primitive.GetTotalFrameDuration(duration);
-		obj->SetDuration(duration);
-
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-		return obj;
 	}
 }
 

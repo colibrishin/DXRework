@@ -16,7 +16,6 @@ namespace Engine::Resources
 	}
 
 	Shader::Shader(
-		const EntityName&            name,
 		const std::filesystem::path& path,
 		const eShaderDomain          domain,
 		const eShaderDepths          depth,
@@ -28,8 +27,8 @@ namespace Engine::Resources
 		const ePrimitiveTopology     topology,
 		const ePrimitiveTopologyType topology_type,
 		const eSampler               sampler_slot  
-	)
-		: Resource(path),
+	) : 
+		Resource(path),
 		m_domain_(domain),
 		m_depth_(depth),
 		m_rasterizer_(rasterizer),
@@ -39,10 +38,7 @@ namespace Engine::Resources
 		m_dsv_format_(dsv_format),
 		m_topology_(topology),
 		m_topology_type_(topology_type),
-		m_sampler_slot_(sampler_slot)
-	{
-		SetName(name);
-	}
+		m_sampler_slot_(sampler_slot) {}
 
 	void Shader::Initialize() {}
 
@@ -117,44 +113,6 @@ namespace Engine::Resources
 	GraphicPrimitiveShader& Shader::GetGraphicPrimitiveShader() const
 	{
 		return *m_primitive_;
-	}
-
-	Weak<Shader> Shader::Get(const std::string& name)
-	{
-		return Managers::ResourceManager::GetInstance().GetResource<Shader>(name);
-	}
-
-	Strong<Shader> Shader::Create(
-			const EntityName&            name,
-			const std::filesystem::path& path,
-			const eShaderDomain          domain,
-			const eShaderDepths          depth,
-			const eShaderRasterizers     rasterizer,
-			const eSamplerFilter         sampler_filter,
-			const eShaderSamplers        sampler,
-			const std::vector<eFormat>&  rtv_formats,
-			const eFormat                dsv_format,
-			const ePrimitiveTopology     topology,
-			const ePrimitiveTopologyType topology_type,
-			const eSampler               sampler_slot
-	)
-	{
-		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByRawPath<Shader>
-					(path).lock();
-			const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<Shader>(name).lock())
-		{
-			return ncheck;
-		}
-
-		const auto obj = boost::make_shared<Shader>
-				(
-				 name, path, domain, depth, rasterizer, sampler_filter, 
-				 sampler, rtv_formats, dsv_format, topology,
-				 topology_type, sampler_slot
-				);
-
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-		return obj;
 	}
 
 	void Shader::OnSerialized()

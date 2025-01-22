@@ -34,7 +34,7 @@ namespace Engine::Managers
 				(
 				 "Shadow Render Target Texture",
 				 "",
-				 {
+				 GenericTextureDescription {
 					 .Alignment = 0,
 					 .Width = CFG_CASCADE_SHADOW_TEX_WIDTH,
 					 .Height = CFG_CASCADE_SHADOW_TEX_HEIGHT,
@@ -399,7 +399,7 @@ namespace Engine::Managers
 
 	void ShadowManager::InitializeShadowBuffer(const LocalActorID id)
 	{
-		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture", "");
+		m_shadow_texs_[id] = Resources::ShadowTexture::Create("Shadow texture");
 		m_shadow_texs_[id]->Load();
 	}
 

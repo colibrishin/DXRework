@@ -7,36 +7,25 @@
 #include "Resource.generated.h"
 
 // Static resource getter which infers self as type
-#define RESOURCE_SELF_INFER_GETTER_DECL(TYPE)                                         \
-  static Engine::Weak<TYPE> Get(const std::string& name);                          \
-  static Engine::Weak<TYPE> GetByMetadataPath(const std::filesystem::path& path);  \
-  static Engine::Weak<TYPE> GetByRawPath(const std::filesystem::path& path);
+#define RESOURCE_SELF_INFER_GETTER(TYPE) \
+	template <typename Void = void> requires (std::is_base_of_v<Engine::Abstracts::Resource, TYPE##>)\
+	static Engine::Weak<TYPE> Get(const std::string& name) { return Engine::Managers::ResourceManager::GetInstance().GetResource<TYPE>(name); }\
+	template <typename Void = void> requires (std::is_base_of_v<Engine::Abstracts::Resource, TYPE##>)\
+	static Engine::Weak<TYPE> GetByMetadataPath(const std::filesystem::path& meta_path) { return Engine::Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<TYPE>(meta_path); } \
+	template <typename Void = void> requires (std::is_base_of_v<Engine::Abstracts::Resource, TYPE##>)\
+	static Engine::Weak<TYPE> GetByRawPath(const std::filesystem::path& path) { return Engine::Managers::ResourceManager::GetInstance().GetResourceByRawPath<TYPE>(path); }
 
-#define RESOURCE_SELF_INFER_GETTER_IMPL(TYPE)										  \
-	Engine::Weak<TYPE> TYPE::Get(const std::string& name) { return Engine::Managers::ResourceManager::GetInstance().GetResource<TYPE>(name); }										\
-	Engine::Weak<TYPE> TYPE::GetByMetadataPath(const std::filesystem::path& path) { return Engine::Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<TYPE>(path); } \
-	Engine::Weak<TYPE> TYPE::GetByRawPath(const std::filesystem::path& path) { return Engine::Managers::ResourceManager::GetInstance().GetResourceByRawPath<TYPE>(path); }
-
-
-// Creatable resource creator which infers self as type
-#define RESOURCE_SELF_INFER_CREATE_DECL(TYPE)                                     \
-    static Engine::Strong<TYPE> Create(const std::string& name, const std::filesystem::path& path);
-
-#define RESOURCE_SELF_INFER_CREATE_IMPL(TYPE)									  \
-    Engine::Strong<TYPE> TYPE::Create(                                                    \
-    const std::string& name, const std::filesystem::path& path)                   \
-    {                                                                             \
-        if (const auto pcheck = Engine::Managers::ResourceManager::GetInstance(). \
-                               GetResourceByRawPath<TYPE>(path).lock();           \
-            const auto ncheck = Engine::Managers::ResourceManager::GetInstance(). \
-                               GetResource<TYPE>(name).lock())					  \
-        {																		  \
-            return ncheck;														  \
-        }																		  \
-        const auto obj = boost::make_shared<TYPE>(path);						  \
-        Engine::Managers::ResourceManager::GetInstance().AddResource(name, obj);  \
-        return obj;																  \
-    }
+// Static resource create function
+// using std::enable_if_t<...> in template throws error of undefined class, however requires keyword works fine.
+#define RESOURCE_SELF_INFER_CREATE(TYPE)\
+template <typename... Args> requires (std::is_base_of_v<Engine::Abstracts::Resource, TYPE##>)\
+static Engine::Strong<TYPE> Create(const std::string_view name, Args&&... args)\
+{\
+if (!name.empty() && Engine::Managers::ResourceManager::GetInstance().GetResource<##TYPE##>(name).lock()) { return {}; }\
+const auto obj = boost::make_shared<##TYPE##>(std::forward<Args>(args)...);\
+Engine::Managers::ResourceManager::GetInstance().AddResource(name, obj);\
+return obj;\
+}
 
 namespace Engine
 {
@@ -58,7 +47,7 @@ namespace Engine::Abstracts
 
 		void OnDeserialized() override;
 
-		[[nodiscard]] bool                           IsLoaded() const;
+		[[nodiscard]] bool                         IsLoaded() const;
 		[[nodiscard]] const std::filesystem::path& GetPath() const;
 
 		void SetPath(const std::filesystem::path& path);

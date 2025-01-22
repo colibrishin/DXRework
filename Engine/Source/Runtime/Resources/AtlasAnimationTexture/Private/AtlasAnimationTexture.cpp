@@ -48,37 +48,6 @@ namespace Engine::Resources
 		}
 	}
 
-	Strong<AtlasAnimationTexture> AtlasAnimationTexture::Create(
-		const std::string& name, const std::filesystem::path& path, 
-		const std::vector<Strong<AtlasAnimation>>& animations, const std::vector<Strong<Texture2D>>& atlases
-	)
-	{
-		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimationTexture>(name).lock())
-		{
-			return ncheck;
-		}
-
-		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AtlasAnimationTexture>(path).lock())
-		{
-			return pcheck;
-		}
-
-		const auto obj = boost::make_shared<AtlasAnimationTexture>(path, animations, atlases);
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-
-		// Sort atlases by order of name
-		std::ranges::sort
-				(
-				 obj->m_atlases_,
-				 [](const Strong<Texture2D>& a, const Strong<Texture2D>& b)
-				 {
-					 return a->GetName() < b->GetName();
-				 }
-				);
-
-		return obj;
-	}
-
 	void AtlasAnimationTexture::Load_INTERNAL()
 	{
 		if (m_atlases_.size() > std::numeric_limits<UINT16>::max())

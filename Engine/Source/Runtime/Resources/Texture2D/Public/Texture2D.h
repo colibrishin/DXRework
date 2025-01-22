@@ -25,7 +25,7 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_TEXTURE2D_API Texture2D : public Texture
 	{
 		GENERATE_BODY
@@ -34,14 +34,6 @@ namespace Engine::Resources
 			: Texture(path, TEX_TYPE_2D, description) { }
 
 		~Texture2D() override = default;
-
-		RESOURCE_SELF_INFER_GETTER_DECL(Texture2D)
-
-		static Strong<Texture2D> Create(
-			const std::string&               name,
-			const std::filesystem::path&     path,
-			const GenericTextureDescription& desc
-		);
 
 		UINT64 GetWidth() const override;
 		UINT   GetHeight() const override;

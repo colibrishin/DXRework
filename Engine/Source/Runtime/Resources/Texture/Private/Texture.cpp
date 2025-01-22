@@ -4,8 +4,6 @@
 
 namespace Engine::Resources
 {
-	RESOURCE_SELF_INFER_GETTER_IMPL(Texture);
-
 	Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
 		: Resource(std::move(path)),
 		  m_desc_(description),

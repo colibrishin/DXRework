@@ -148,7 +148,7 @@ namespace Engine::Abstracts
 			removeComponent(T::StaticTypeHash());
 		}
 
-		void SetName(const EntityName& name) override;
+		void SetName(const std::string_view name) override;
 		void SetActive(bool active);
 		void SetCulled(bool culled);
 

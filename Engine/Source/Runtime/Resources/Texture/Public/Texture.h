@@ -2,12 +2,13 @@
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "ResourceManager/Public/ResourceManager.h"
 
 #include "Texture.generated.h"
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_TEXTURE_API Texture : public Abstracts::Resource
 	{
 		GENERATE_BODY
@@ -30,7 +31,6 @@ namespace Engine::Resources
 		[[nodiscard]] PrimitiveTexture* GetPrimitiveTexture() const;
 
 		bool IsHotload() const;
-		RESOURCE_SELF_INFER_GETTER_DECL(Texture)
 
 	protected:
 		// Derived class should hide these by their own case.

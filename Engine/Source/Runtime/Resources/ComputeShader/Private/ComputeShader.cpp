@@ -9,8 +9,6 @@
 
 namespace Engine::Resources
 {
-	RESOURCE_SELF_INFER_GETTER_IMPL(ComputeShader);
-
 	void ComputeShader::Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
@@ -23,12 +21,11 @@ namespace Engine::Resources
 	}
 
 	ComputeShader::ComputeShader(
-		const std::string&           name,
 		const std::filesystem::path& path,
 		const std::array<UINT, 3>&   thread
 	)
 		: Shader
-		(name, path, SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_NEVER, SHADER_RASTERIZER_CULL_NONE,
+		(path, SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_NEVER, SHADER_RASTERIZER_CULL_NONE,
 		 SAMPLER_FILTER_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER, GetDefaultRTVFormat())
 	{
 		SetPath(path);
@@ -78,7 +75,7 @@ namespace Engine::Resources
 
 	ComputeShader::ComputeShader()
 		: Shader
-		  ("", "", SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_NEVER, SHADER_RASTERIZER_CULL_NONE,
+		  ("", SHADER_DOMAIN_OPAQUE, SHADER_DEPTH_NEVER, SHADER_RASTERIZER_CULL_NONE,
 		   SAMPLER_FILTER_MIN_MAG_MIP_POINT, SHADER_SAMPLER_NEVER, GetDefaultRTVFormat()),
 		  m_thread_{1,} {}
 }

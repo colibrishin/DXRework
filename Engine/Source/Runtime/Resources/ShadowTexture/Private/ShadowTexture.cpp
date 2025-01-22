@@ -4,20 +4,6 @@
 
 namespace Engine::Resources
 {
-	Strong<ShadowTexture> ShadowTexture::Create(const std::string& name, const std::filesystem::path& path)
-	{
-		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByRawPath<ShadowTexture>
-					(path).lock();
-			const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<ShadowTexture>
-					(name).lock())
-		{
-			return ncheck;
-		}
-		const auto obj = boost::make_shared<ShadowTexture>();
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-		return obj;
-	}
-
 	void ShadowTexture::FixedUpdate(const float dt)
 	{
 		Texture2D::FixedUpdate(dt);

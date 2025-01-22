@@ -4,8 +4,6 @@
 
 namespace Engine::Resources
 {
-	RESOURCE_SELF_INFER_GETTER_IMPL(Bone)
-
 	Bone::Bone(const BonePrimitiveMap& bone_map)
 		: Resource(""),
 		  m_bone_map(bone_map)

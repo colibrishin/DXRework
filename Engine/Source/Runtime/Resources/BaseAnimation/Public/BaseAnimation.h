@@ -1,6 +1,7 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "ResourceManager/Public/ResourceManager.h"
 
 #include "BaseAnimation.generated.h"
 
@@ -43,7 +44,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_BASEANIMATION_API BaseAnimation : public Abstracts::Resource
 	{
 		GENERATE_BODY
@@ -64,12 +65,6 @@ namespace Engine::Resources
 		float GetDuration() const;
 
 		static float ConvertDtToFrame(const float& dt, float ticks_per_second);
-
-		RESOURCE_SELF_INFER_GETTER_DECL(BaseAnimation)
-
-		static Strong<BaseAnimation> Create(
-			const std::string& name, const BoneAnimationPrimitive& primitive
-		);
 
 	protected:
 		friend class Components::Animator;

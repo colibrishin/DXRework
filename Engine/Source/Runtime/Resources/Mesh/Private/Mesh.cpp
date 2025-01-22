@@ -17,8 +17,6 @@
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 
-RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Mesh)
-
 namespace Engine::Resources
 {
 	size_t Mesh::GetIndexCount() const

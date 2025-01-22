@@ -7,7 +7,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
 	{
 		GENERATE_BODY
@@ -24,14 +24,6 @@ namespace Engine::Resources
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		
-		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimationTexture)
-
-		static Strong<AtlasAnimationTexture> Create(
-			const std::string& name, const std::filesystem::path& path, 
-			const std::vector<Strong<AtlasAnimation>>& animations,
-			const std::vector<Strong<Texture2D>>& atlases
-		);
 
 	protected:
 		void Load_INTERNAL() override;

@@ -3,6 +3,9 @@
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "ResourceManager/Public/ResourceManager.h"
+
+#include "Bone.generated.h"
 
 namespace Engine::Graphics 
 {
@@ -81,17 +84,14 @@ namespace Engine::Graphics
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Bone, Engine::Abstracts::Resource)
-
 namespace Engine::Resources
 {
 	using namespace Graphics;
-
+	ECLASS(resource)
 	class ENGINE_BONE_API Bone : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Bone)
-
 		Bone(const BonePrimitiveMap& bone_map);
 		Bone(Bone&& other) noexcept = default;
 		Bone(const Bone& other);
@@ -111,8 +111,6 @@ namespace Engine::Resources
 		[[nodiscard]] const BonePrimitive* GetBoneParent(UINT idx) const;
 		size_t                             GetBoneCount() const;
 
-		RESOURCE_SELF_INFER_GETTER_DECL(Bone)
-
 	protected:
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
@@ -120,7 +118,9 @@ namespace Engine::Resources
 	private:
 		Bone();
 
+		EPROPERTY()
 		BonePrimitiveMap            m_bone_map;
+		
 		std::vector<BonePrimitive*> m_bones_index_wise_;
 	};
 }

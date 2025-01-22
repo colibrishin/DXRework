@@ -48,7 +48,7 @@ namespace Engine::Managers
 		}
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
-		void AddResource(const EntityName& name, const Strong<T>& resource)
+		void AddResource(const std::string_view name, const Strong<T>& resource)
 		{
 			if (!resource->GetMetadataPath().empty() &&
 			    GetResourceByMetadataPath<T>(resource->GetMetadataPath()).lock())

@@ -41,7 +41,7 @@ namespace Engine::Graphics::SBs
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
 		GENERATE_BODY
@@ -118,9 +118,6 @@ namespace Engine::Resources
 		void SetTextureSlot(const std::string& name, UINT slot);
 
 		[[nodiscard]] const Graphics::SBs::MaterialSB& GetMaterialSB() const;
-
-		RESOURCE_SELF_INFER_GETTER_DECL(Material)
-		RESOURCE_SELF_INFER_CREATE_DECL(Material)
 
 	protected:
 		void Load_INTERNAL() override;

@@ -2,6 +2,7 @@
 #include "GraphicInterface.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "VertexElement/Public/VertexElement.hpp"
+#include "ResourceManager/Public/ResourceManager.h"
 
 #include "Mesh.generated.h"
 
@@ -16,7 +17,7 @@ namespace physx
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_MESH_API Mesh : public Abstracts::Resource
 	{
 		GENERATE_BODY
@@ -44,8 +45,6 @@ namespace Engine::Resources
 #endif
 		
 		[[nodiscard]] StructuredBufferTypeProxy<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
-
-		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
 	protected:
 		Mesh();

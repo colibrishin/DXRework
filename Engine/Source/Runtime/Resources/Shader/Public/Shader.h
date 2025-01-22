@@ -17,13 +17,12 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
 		GENERATE_BODY
 	public:
 		Shader(
-			const EntityName&            name,
 			const std::filesystem::path& path,
 			const eShaderDomain          domain,
 			const eShaderDepths          depth,
@@ -56,22 +55,6 @@ namespace Engine::Resources
 		[[nodiscard]] ePrimitiveTopologyType GetPrimitiveTopologyType() const;
 		[[nodiscard]] eSampler GetSampler() const;
 		[[nodiscard]] GraphicPrimitiveShader& GetGraphicPrimitiveShader() const;
-
-		static Weak<Shader>   Get(const std::string& name);
-		static Strong<Shader> Create(
-			const EntityName&            name,
-			const std::filesystem::path& path,
-			const eShaderDomain          domain,
-			const eShaderDepths          depth,
-			const eShaderRasterizers     rasterizer,
-			const eSamplerFilter         sampler_filter,
-			const eShaderSamplers        sampler,
-			const std::vector<eFormat>&  rtv_formats,
-			const eFormat                dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
-			const ePrimitiveTopology     topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-			const ePrimitiveTopologyType topology_type = PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-			const eSampler               sampler_slot  = SAMPLER_TEXTURE
-		);
 
 	protected:
 		void OnSerialized() override;

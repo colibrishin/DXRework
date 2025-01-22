@@ -47,19 +47,6 @@ namespace Engine::Resources
 		return m_duration_;
 	}
 
-	boost::shared_ptr<BaseAnimation> BaseAnimation::Create(
-		const std::string& name, const BoneAnimationPrimitive& primitive
-	)
-	{
-		if (const auto check = Managers::ResourceManager::GetInstance().GetResource<BaseAnimation>(name).lock())
-		{
-			return check;
-		}
-		const auto obj = boost::make_shared<BaseAnimation>(primitive);
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-		return obj;
-	}
-
 	void                             BaseAnimation::Load_INTERNAL() {}
 
 	void BaseAnimation::Unload_INTERNAL() {}

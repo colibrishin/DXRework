@@ -6,7 +6,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_SHADOWTEXTURE_API ShadowTexture : public Texture2D
 	{
 		GENERATE_BODY
@@ -73,8 +73,6 @@ namespace Engine::Resources
 		UINT64 GetWidth() const override;
 
 		void Clear(const GraphicInterfaceContextPrimitive* context) const;
-
-		RESOURCE_SELF_INFER_CREATE_DECL(ShadowTexture)
 
 	protected:
 		void Unload_INTERNAL() override;

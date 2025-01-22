@@ -95,12 +95,12 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_ATLASANIMATION_API AtlasAnimation : public BaseAnimation
 	{
 		GENERATE_BODY
 	public:
-		AtlasAnimation(const AtlasAnimationPrimitive& primitive);
+		AtlasAnimation(const std::filesystem::path& xml_path);
 
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -112,13 +112,7 @@ namespace Engine::Resources
 
 		void __vectorcall GetFrame(float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const;
 
-		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimation)
-
 		[[nodiscard]] static AtlasAnimationPrimitive ParseXML(const std::filesystem::path& path);
-
-		static Strong<AtlasAnimation> Create(
-			const std::string& name, const std::filesystem::path& xml_path
-		);
 
 	protected:
 		void Load_INTERNAL() override;

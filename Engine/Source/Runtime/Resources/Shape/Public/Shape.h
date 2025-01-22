@@ -10,7 +10,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
 		GENERATE_BODY
@@ -75,9 +75,6 @@ namespace Engine::Resources
 
 			UpdateVertices();
 		}
-
-		RESOURCE_SELF_INFER_GETTER_DECL(Shape)
-		RESOURCE_SELF_INFER_CREATE_DECL(Shape)
 
 	protected:
 		void Load_INTERNAL() override;

@@ -16,7 +16,7 @@ std::unordered_map<std::string_view, Engine::Abstracts::ObjectBase::ComponentFac
 
 namespace Engine::Abstracts
 {
-	void ObjectBase::SetName(const EntityName& name)
+	void ObjectBase::SetName(const std::string_view name)
 	{
 		Actor::SetName(name);
 #if WITH_EDITOR

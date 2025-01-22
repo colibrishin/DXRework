@@ -13,12 +13,8 @@
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
-RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Material);
-
 namespace Engine::Resources
 {
-	RESOURCE_SELF_INFER_CREATE_IMPL(Material)
-
 	Material::Material(const std::filesystem::path& path)
 		: Resource(path),
 		  m_material_sb_()

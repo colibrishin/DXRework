@@ -165,7 +165,7 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                         for (const auto& [sub_atlas_name, tex_path, xml_path] : listed_pair)
                         {
                             animations.emplace_back(Resources::AtlasAnimation::Create(sub_atlas_name, xml_path));
-                            textures.emplace_back(Resources::Texture2D::Create(sub_atlas_name, tex_path, {}));
+                            textures.emplace_back(Resources::Texture2D::Create(sub_atlas_name, tex_path, GenericTextureDescription{}));
                         }
 
                         Resources::AtlasAnimationTexture::Create(name.data(), "", animations, textures);

@@ -118,8 +118,6 @@ namespace Engine::Graphics
 
 namespace Engine::Resources
 {
-	RESOURCE_SELF_INFER_GETTER_IMPL(BoneAnimation)
-
 	BoneAnimation::BoneAnimation(const AnimationPrimitive& primitive)
 		: BaseAnimation(),
 		  m_primitive_(primitive),

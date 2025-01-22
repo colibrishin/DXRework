@@ -8,7 +8,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
 	{
 		GENERATE_BODY
@@ -18,22 +18,10 @@ namespace Engine::Resources
 		std::array<uint32_t, 3> GetThread() const;
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const;
 
-		template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
-		static Weak<T> Create()
-		{
-			const auto& v = boost::make_shared<T>();
-			v->Initialize();
-			v->Load();
-			Managers::ResourceManager::GetInstance().AddResource(v);
-			return v;
-		}
-
 		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
 
-		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
-
 	protected:
-		ComputeShader(const std::string& name, const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
+		ComputeShader(const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
 		virtual void preDispatch() = 0;
 		virtual void postDispatch() = 0;

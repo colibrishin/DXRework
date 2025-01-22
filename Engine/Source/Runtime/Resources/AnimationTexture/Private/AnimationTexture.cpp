@@ -29,19 +29,6 @@ namespace Engine::Resources
 		Texture3D::OnDeserialized();
 	}
 
-	Strong<AnimationTexture> AnimationTexture::Create(
-		const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
-	) {
-		if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AnimationTexture>(name).lock())
-		{
-			return ncheck;
-		}
-
-		const auto obj = boost::make_shared<AnimationTexture>(anims);
-		Managers::ResourceManager::GetInstance().AddResource(name, obj);
-		return obj;
-	}
-
 	void AnimationTexture::Load_INTERNAL()
 	{
 		const GenericTextureDescription& new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);

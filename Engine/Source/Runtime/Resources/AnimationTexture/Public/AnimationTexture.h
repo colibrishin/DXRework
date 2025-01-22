@@ -5,7 +5,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{
 		GENERATE_BODY
@@ -19,12 +19,6 @@ namespace Engine::Resources
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-
-		RESOURCE_SELF_INFER_GETTER_DECL(AnimationTexture)
-
-		static Strong<AnimationTexture> Create(
-			const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
-		);
 
 	protected:
 		void Load_INTERNAL() override;

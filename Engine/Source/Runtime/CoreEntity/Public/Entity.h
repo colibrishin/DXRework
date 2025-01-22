@@ -90,7 +90,7 @@ namespace Engine::Abstracts
 			return GetID() == other.GetID();
 		}
 
-		virtual void SetName(const EntityName& name);
+		virtual void SetName(const std::string_view name);
 #if WITH_EDITOR
 		virtual void OnNameChanged();
 #endif

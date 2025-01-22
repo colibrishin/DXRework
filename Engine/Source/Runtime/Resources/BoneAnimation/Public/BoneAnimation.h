@@ -54,7 +54,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS()
+	ECLASS(resource)
 	class ENGINE_BONEANIMATION_API BoneAnimation : public BaseAnimation
 	{
 		GENERATE_BODY
@@ -73,8 +73,6 @@ namespace Engine::Resources
 
 		std::vector<Matrix> GetFrameAnimationDt(float dt);
 		std::vector<Matrix> GetFrameAnimation(float time);
-
-		RESOURCE_SELF_INFER_GETTER_DECL(BoneAnimation)
 
 	protected:
 		void Load_INTERNAL() override;

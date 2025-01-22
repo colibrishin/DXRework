@@ -3,7 +3,7 @@
 #include "UIInterface.h"
 #include "Serialization.hpp"
 
-void Engine::Abstracts::Entity::SetName(const EntityName& name)
+void Engine::Abstracts::Entity::SetName(const std::string_view name)
 {
 	m_name_ = name;
 }
