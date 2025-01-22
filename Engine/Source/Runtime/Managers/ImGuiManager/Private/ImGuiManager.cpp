@@ -182,7 +182,9 @@ void Engine::ImGuiDialogToken::End() const
 
 bool Engine::ImGuiDialogToken::DoImpl(const void* context, const std::string_view title, bool& opened) const
 {
-	const std::string& temp_label = std::string(title) + LabelSuffix(std::to_string(reinterpret_cast<uint64_t>(context)));
+	std::string address_suffix = std::to_string(reinterpret_cast<uint64_t>(context));
+	address_suffix += title;
+	const std::string& temp_label = std::string(title) + LabelSuffix(address_suffix);
 	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse);
 }
 

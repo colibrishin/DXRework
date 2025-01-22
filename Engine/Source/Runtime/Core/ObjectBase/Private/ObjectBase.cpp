@@ -710,32 +710,28 @@ namespace Engine::Abstracts
 
 					if (m_b_add_component_dialog_opened_)
 					{
-						context += ui.NewDialog({ this, "Add Component dialog", m_b_add_component_dialog_opened_ });
-
-						context += [&]()
+						if (UIContext add_com_context = UIInterface::NewContext(ui.NewDialog({this, "Add Component dialog", m_b_add_component_dialog_opened_}))) 
+						{
+							const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
 							{
-								const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
-								{
-									(context |= ui.NewButton({ T::StaticTypeName() })).SetFunction([&]()
-										{
-											AddComponent<T>();
-										});
-								};
-
-								internalComponentTemplate.operator() < Components::Collider > ();
-								internalComponentTemplate.operator() < Components::Transform > ();
-								internalComponentTemplate.operator() < Components::Rigidbody > ();
-
-								for (const auto& [name, predicate] : m_component_add_map_)
-								{
-									(context |= ui.NewButton({ name })).SetFunction([&]()
-										{
-											addComponent(predicate());
-										});
-								}
+								(add_com_context |= ui.NewButton({ T::StaticTypeName() })).SetFunction([&]()
+									{
+										AddComponent<T>();
+									});
 							};
 
-						--context;
+							internalComponentTemplate.operator() < Components::Collider > ();
+							internalComponentTemplate.operator() < Components::Transform > ();
+							internalComponentTemplate.operator() < Components::Rigidbody > ();
+
+							for (const auto& [name, predicate] : m_component_add_map_)
+							{
+								(add_com_context |= ui.NewButton({ name })).SetFunction([&]()
+									{
+										addComponent(predicate());
+									});
+							}
+						};
 					}
 
 					context += ui.NewTreeNode({"Components"});
