@@ -51,7 +51,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        submodules: true
+        submodules: recursive
     
     - name: Setup anew (or from cache) vcpkg (and does not build any package)
       uses: lukka/run-vcpkg@v11 # Always specify the specific _version_ of the
@@ -112,22 +112,22 @@ jobs:
 
     - name: Generate project file for PhysX
       working-directory: ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX\physx
-      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
+      run: Start-Process -FilePath "cmd.exe" -Wait -NoNewWindow -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
 
     - name: Build PhysX
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+      working-directory: ${{github.workspace}}
       run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX/physx/compiler/vc17win64/PhysXSDK.sln
 
     - name: Start Build Prerequisites
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "Setup.bat"); 
+      working-directory: ${{github.workspace}}
+      run: Start-Process -FilePath "cmd.exe" -Wait -NoNewWindow -ArgumentList @("/C", "Setup.bat"); 
 
     - name: Generate Solution files
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: Start-Process -FilePath "cmd.exe" -Wait -ArgumentList @("/C", "GenerateSolution.bat"); 
+      working-directory: ${{github.workspace}}
+      run: Start-Process -FilePath "cmd.exe" -Wait -NoNewWindow -ArgumentList @("/C", "GenerateSolution.bat"); 
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+      working-directory: ${{github.workspace}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} kolibri.sln
