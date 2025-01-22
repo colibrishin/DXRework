@@ -8,7 +8,7 @@
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
-#include "Source/Runtime/Components/ParticleRenderer/Public/ParticleRenderer.h"
+#include "Source/Runtime/Core/Components/ParticleRenderer/Public/ParticleRenderer.h"
 
 SERIALIZE_IMPL
 (
@@ -78,7 +78,7 @@ namespace Engine::Resources
 
 	ComputeShader::ComputeShader(
 		const std::string&           name,
-		const std::filesystem::path& path,
+		const boost::filesystem::path& path,
 		const std::array<UINT, 3>&   thread
 	)
 		: Shader

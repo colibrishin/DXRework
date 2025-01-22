@@ -2,8 +2,8 @@
 
 #include <ranges>
 
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include <boost/filesystem.hpp>
 
 namespace Engine::Managers
 {
@@ -60,7 +60,7 @@ namespace Engine::Managers
 		return {};
 	}
 
-	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
+	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const boost::filesystem::path& path, const eResourceType type)
 	{
 		if (path.empty())
 		{
@@ -90,7 +90,7 @@ namespace Engine::Managers
 	}
 
 	Weak<Abstracts::Resource> ResourceManager::GetResourceByMetadataPath(
-		const std::filesystem::path& path, const eResourceType type
+		const boost::filesystem::path& path, const eResourceType type
 	)
 	{
 		if (path.empty())
@@ -116,7 +116,7 @@ namespace Engine::Managers
 
 			return *it;
 		}
-		if (exists(path))
+		if (boost::filesystem::exists(path))
 		{
 			const auto res = Serializer::Deserialize<Abstracts::Entity>(path.generic_string())->GetSharedPtr<Abstracts::Resource>();
 			m_resources_[type].insert(res);

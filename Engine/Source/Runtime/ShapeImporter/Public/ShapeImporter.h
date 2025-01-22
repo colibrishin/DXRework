@@ -1,7 +1,7 @@
 #pragma once
 #include <assimp/Importer.hpp>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include <filesystem>
 
 namespace Engine 
@@ -11,7 +11,7 @@ namespace Engine
         static bool Import
         (
             const GenericString& name,
-            const std::filesystem::path& path,
+            const boost::filesystem::path& path,
             std::vector<Strong<Resources::Mesh>>& meshes,
             Strong<Resources::Shape>& shape, 
             Strong<Resources::AnimationTexture>& animstex

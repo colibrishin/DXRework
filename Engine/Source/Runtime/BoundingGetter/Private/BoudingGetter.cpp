@@ -1,9 +1,9 @@
 #include "Source/Runtime/BoundingGetter/Public/BoundingGetter.h"
 
-#include "Source/Runtime/Abstracts/CoreObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/GenericBounding/Public/GenericBounding.hpp"
-#include "Source/Runtime/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Components/Collider/Public/Collider.hpp"
+#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
 
 namespace Engine
 {

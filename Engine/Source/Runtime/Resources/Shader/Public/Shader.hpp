@@ -1,7 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 #if defined(USE_DX12)
 #include <directx/d3d12.h>
@@ -16,7 +15,7 @@ namespace Engine::Resources
 		RESOURCE_T(RES_T_SHADER)
 
 		Shader(
-			const EntityName&             name, const std::filesystem::path& path,
+			const EntityName&             name, const boost::filesystem::path& path,
 			eShaderDomain                 domain, eShaderDepths              depth,
 			eShaderRasterizers            rasterizer, D3D12_FILTER           sampler_filter, eShaderSamplers sampler,
 			const DXGI_FORMAT*            rtv_format,
@@ -44,7 +43,7 @@ namespace Engine::Resources
 		static boost::weak_ptr<Shader>   Get(const std::string& name);
 		static boost::shared_ptr<Shader> Create(
 			const std::string&            name,
-			const std::filesystem::path&  path,
+			const boost::filesystem::path&  path,
 			eShaderDomain                 domain,
 			UINT                          depth,
 			UINT                          rasterizer,

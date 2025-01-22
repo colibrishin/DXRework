@@ -1,4 +1,9 @@
 #pragma once
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include <directx/d3d12.h>
+#include <directx/d3dx12.h>
 
 namespace Engine
 {
@@ -80,6 +85,10 @@ namespace Engine
 		UINT m_buffer_descriptor_size_;
 		UINT m_sampler_descriptor_size_;
 	};
+
+	using StrongDescriptorPtr = Strong<DescriptorPtrImpl>;
+	using DescriptorPtr = Weak<DescriptorPtrImpl>;
+	using DescriptorContainer = aligned_vector<StrongDescriptorPtr>;
 
 	struct DescriptorHandler final
 	{

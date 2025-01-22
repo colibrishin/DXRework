@@ -4,9 +4,9 @@
 #include <wrl/client.h>
 #include <directx/d3d12.h>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Allocator/Public/Allocator.h"
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 #if WITH_DEBUG
 #include "dxgidebug.h"
@@ -131,7 +131,7 @@ namespace Engine::Managers
 		void Signal(eCommandTypes type, UINT64 buffer_idx = -1) const;
 
 		void CreateTextureFromFile(
-			const std::filesystem::path& file_path,
+			const boost::filesystem::path& file_path,
 			ID3D12Resource**             res,
 			bool                         generate_mip
 		) const;

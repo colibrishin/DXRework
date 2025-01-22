@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/ThirdParty/FMOD/Public/fmod.hpp"
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 namespace FMOD 
 {

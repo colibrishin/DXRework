@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Graphics 

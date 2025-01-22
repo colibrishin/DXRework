@@ -8,8 +8,8 @@
 #include <atomic>
 #include <directx/d3d12.h>
 
-#include "Source/Runtime/Allocator/Public/Allocator.h"
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
 {

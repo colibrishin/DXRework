@@ -14,9 +14,8 @@ public class GJK : CommonProject
     {
         base.ConfigureAll(conf, target);
 
-        conf.AddPublicDependency<TypeLibrary>(target);
+        conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<DirectXMath>(target);
-        conf.AddPublicDependency<VertexElement>(target);
     }
 }

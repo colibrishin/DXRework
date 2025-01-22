@@ -5,8 +5,7 @@
 #include <numeric>
 #include <queue>
 
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 namespace Engine
 {

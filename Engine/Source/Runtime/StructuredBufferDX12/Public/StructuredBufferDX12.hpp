@@ -3,90 +3,10 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-
-// Static structured buffer type, this should be added to every structured buffer
-#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
-#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
-
-// Static structured buffer UAV type, this should be added to every structured buffer UAV
-#define CLIENT_SB_UAV_T(enum_val) static constexpr eClientSBUAVType csbuavtype = enum_val;
-#define SB_UAV_T(enum_val) static constexpr eSBUAVType sbuavtype = enum_val;
-
-namespace Engine 
-{
-	template <typename T>
-	struct which_sb
-	{
-		static constexpr eSBType value = T::sbtype;
-	};
-
-	template <typename T>
-	struct which_client_sb
-	{
-		static constexpr eClientSBType value = T::csbtype;
-	};
-
-	template <typename T>
-	struct which_sb_uav
-	{
-		static constexpr eSBUAVType value = T::sbuavtype;
-	};
-
-	template <typename T>
-	struct which_client_sb_uav
-	{
-		static constexpr eClientSBUAVType value = T::csbuavtype;
-	};
-
-	template <typename T, typename = void>
-	struct is_uav_sb : std::false_type {};
-
-	template <typename T>
-	struct is_uav_sb<T, std::void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
-
-	template <typename T, typename = void>
-	struct is_client_uav_sb : std::false_type {};
-
-	template <typename T>
-	struct is_client_uav_sb<T, std::void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
-
-	template <typename T, typename = void>
-	struct is_sb : std::false_type {};
-
-	template <typename T>
-	struct is_sb<T, std::void_t<decltype(T::sbtype == true)>> : std::true_type {};
-
-	template <typename T, typename = void>
-	struct is_client_sb : std::false_type {};
-
-	template <typename T>
-	struct is_client_sb<T, std::void_t<decltype(T::csbtype == true)>> : std::true_type {};
-
-	namespace Graphics::SBs 
-	{
-		struct LocalParamSB : public ParamBase
-		{
-			SB_T(SB_TYPE_LOCAL_PARAM)
-		};
-
-		struct InstanceSB : public ParamBase
-		{
-			SB_T(SB_TYPE_INSTANCE)
-				SB_UAV_T(SB_TYPE_UAV_INSTANCE)
-
-		private:
-			friend class boost::serialization::access;
-
-			template <class Archive>
-			void serialize(Archive& ar, const unsigned int file_version)
-			{
-				ar& boost::serialization::base_object<ParamBase>(*this);
-			}
-		};
-	}
-}
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
+#include "Source/Runtime/Core/StructuredBuffer.h"
 
 namespace Engine::Graphics
 {
@@ -286,7 +206,7 @@ namespace Engine::Graphics
 
 			DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-			_mm256_memcpy(data, initial_data, sizeof(T) * size);
+			SIMDExtension::_mm256_memcpy(data, initial_data, sizeof(T) * size);
 
 			m_upload_buffer_->Unmap(0, nullptr);
 
@@ -367,7 +287,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-		_mm256_memcpy(data, src_ptr, sizeof(T) * size);
+		SIMDExtension::_mm256_memcpy(data, src_ptr, sizeof(T) * size);
 
 		m_upload_buffer_->Unmap(0, nullptr);
 
@@ -397,7 +317,7 @@ namespace Engine::Graphics
 
 		for (UINT i = 0; i < size; ++i)
 		{
-			_mm256_memcpy(data + (i * sizeof(T)), *(src_ptr + i), sizeof(T));	
+			SIMDExtension::_mm256_memcpy(data + (i * sizeof(T)), *(src_ptr + i), sizeof(T));
 		}
 
 		m_upload_buffer_->Unmap(0, nullptr);
@@ -450,7 +370,7 @@ namespace Engine::Graphics
 
 		DX::ThrowIfFailed(m_read_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
-		_mm256_memcpy(dst_ptr, data, sizeof(T) * size);
+		SIMDExtension::_mm256_memcpy(dst_ptr, data, sizeof(T) * size);
 
 		m_read_buffer_->Unmap(0, nullptr);
 	}

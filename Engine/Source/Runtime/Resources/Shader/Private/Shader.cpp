@@ -244,7 +244,7 @@ namespace Engine::Resources
 	}
 
 	Shader::Shader(
-		const EntityName&      name, const std::filesystem::path& path, const eShaderDomain domain,
+		const EntityName&      name, const boost::filesystem::path& path, const eShaderDomain domain,
 		const UINT             depth, const UINT rasterizer, const D3D12_FILTER filter, const UINT sampler,
 		const DXGI_FORMAT*     rtv_format, const UINT rtv_count, DXGI_FORMAT dsv_format,
 		D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
@@ -331,7 +331,7 @@ namespace Engine::Resources
 	}
 
 	boost::shared_ptr<Shader> Shader::Create(
-		const std::string&     name, const std::filesystem::path& path, const eShaderDomain domain, const UINT depth,
+		const std::string&     name, const boost::filesystem::path& path, const eShaderDomain domain, const UINT depth,
 		const UINT             rasterizer, const D3D12_FILTER filter, const UINT sampler,
 		const DXGI_FORMAT*     rtv_format, const UINT rtv_count, const DXGI_FORMAT dsv_format,
 		D3D_PRIMITIVE_TOPOLOGY topology, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology_type
@@ -357,9 +357,9 @@ namespace Engine::Resources
 	{
 		if (exists(GetPath()))
 		{
-			const std::filesystem::path folder   = GetPrettyTypeName();
-			const std::filesystem::path filename = GetPath().filename();
-			const std::filesystem::path p        = folder / filename;
+			const boost::filesystem::path folder   = GetPrettyTypeName();
+			const boost::filesystem::path filename = GetPath().filename();
+			const boost::filesystem::path p        = folder / filename;
 
 			if (!exists(folder))
 			{
@@ -373,10 +373,10 @@ namespace Engine::Resources
 
 			if (exists(p))
 			{
-				std::filesystem::remove(p);
+				boost::filesystem::remove(p);
 			}
 
-			copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
+			copy_file(GetPath(), p, boost::filesystem::copy_options::overwrite_existing);
 
 			SetPath(p);
 		}

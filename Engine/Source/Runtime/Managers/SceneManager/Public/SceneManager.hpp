@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Abstracts/CoreSingleton/Public/Singleton.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
 
 namespace Engine::Managers

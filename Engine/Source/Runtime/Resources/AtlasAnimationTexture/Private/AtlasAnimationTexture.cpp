@@ -1,7 +1,5 @@
 #include "../Public/AtlasAnimationTexture.h"
 
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
-
 #if defined(USE_DX12)
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #endif
@@ -19,7 +17,7 @@ SERIALIZE_IMPL
 namespace Engine::Resources
 {
 	AtlasAnimationTexture::AtlasAnimationTexture(
-		const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+		const boost::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 	)
 		: Texture3D(path, {}),
 		  m_atlases_(atlases) {}

@@ -1,21 +1,11 @@
 #pragma once
-#include <DirectXMath.h>
-#include <directxtk12/SimpleMath.h>
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
 namespace Engine
 {
 	struct MathExtension
 	{
-		using Vector3 = DirectX::SimpleMath::Vector3;
-
-		inline static bool check_avx()
-		{
-			// todo: less platform specific way
-			constexpr size_t minimum_avx_requirements = 6; // == std::_Stl_isa_available_avx2
-			static bool use_avx = std::__isa_available >= minimum_avx_requirements;
-			return use_avx;
-		}
-
 		inline static float __vectorcall MaxElement(const Vector3& v)
 		{
 			return std::max(std::max(v.x, v.y), v.z);
@@ -85,7 +75,7 @@ namespace Engine
 
 		inline static Vector3 __vectorcall VectorElementAdd(const Vector3& lhs, const float value)
 		{
-			if (check_avx())
+			if (SIMDExtension::check_avx())
 			{
 				const __m128 v = _mm_set_ps(lhs.x, lhs.y, lhs.z, 0.f);
 				return _mm_add_ps(v, _mm_set1_ps(value));
@@ -101,7 +91,7 @@ namespace Engine
 
 		inline static Vector3 __vectorcall XMTensorCross(const XMFLOAT3X3& lhs, const Vector3& rhs)
 		{
-			if (check_avx())
+			if (SIMDExtension::check_avx())
 			{
 				const __m128 v   = _mm_set_ps(rhs.x, rhs.y, rhs.z, 0.f);
 				__m128       mr0 = _mm_set_ps(lhs._11, lhs._12, lhs._13, 0.f);

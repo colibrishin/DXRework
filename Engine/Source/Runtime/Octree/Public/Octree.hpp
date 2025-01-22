@@ -5,7 +5,7 @@
 #include <vector>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
 {
@@ -157,7 +157,7 @@ namespace Engine
 			// exact match (which is the smallest node that can contain the object)
 			bool found = false;
 
-			const auto bounding_value = BoundingValueGetter::value(*obj.lock());
+			const auto bounding_value = BoundingValueGetter::value(obj.lock());
 
 			while (!stack.empty())
 			{
@@ -343,7 +343,7 @@ namespace Engine
 							}
 
 							const auto obj         = it->lock();
-							const auto obj_bound   = BoundingValueGetter::value(*obj);
+							const auto obj_bound   = BoundingValueGetter::value(obj);
 							const auto bound_check = obj_bound.ContainsBy(node_bound);
 
 							if (bound_check != DirectX::ContainmentType::CONTAINS)
@@ -435,7 +435,7 @@ namespace Engine
 							}
 
 							const auto obj       = it->lock();
-							const auto obj_bound = BoundingValueGetter::value(*obj);
+							const auto obj_bound = BoundingValueGetter::value(obj);
 							bool       found     = false;
 
 							for (int i = 0; i < octant_count; ++i)
@@ -738,7 +738,7 @@ namespace Engine
 				{
 					for (auto it = node_value.begin(); it != node_value.end();)
 					{
-						if (BoundingValueGetter::value(*it->lock()).ContainsBy(octants[i]) == DirectX::CONTAINS)
+						if (BoundingValueGetter::value(it->lock()).ContainsBy(octants[i]) == DirectX::CONTAINS)
 						{
 							octant_values[i].push_back(*it);
 							it = node_value.erase(it);

@@ -9,7 +9,7 @@ namespace Engine::Resources
 	public:
 		TEX_T(TEX_TYPE_2D)
 
-		explicit Texture2D(const std::filesystem::path& path, const GenericTextureDescription& description)
+		explicit Texture2D(const boost::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_2D, description) { }
 
 		~Texture2D() override = default;
@@ -18,7 +18,7 @@ namespace Engine::Resources
 
 		static boost::shared_ptr<Texture2D> Create(
 			const std::string&               name,
-			const std::filesystem::path&     path,
+			const boost::filesystem::path&     path,
 			const GenericTextureDescription& desc
 		)
 		{

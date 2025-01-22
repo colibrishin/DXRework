@@ -1,6 +1,6 @@
 #pragma once
-#include <Source/Runtime/TypeLibrary/Public/TypeLibrary.h>
-#include <Source/Runtime/Allocator/Public/Allocator.h>
+#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp>
 #include <Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp>
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Abstracts/CoreResource/Public/Resource.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 #if defined(USE_DX12)
 #include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"

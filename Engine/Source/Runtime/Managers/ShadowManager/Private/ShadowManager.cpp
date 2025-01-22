@@ -7,15 +7,16 @@
 #include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #endif
 
-#include "Source/Runtime/Scene/Public/Scene.hpp"
-#include "Source/Runtime/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/CoreObjects/Light/Public/Light.h"
-#include "Source/Runtime/CoreObjects/Camera/Public/Camera.h"
+#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/Core/Objects/Light/Public/Light.h"
+#include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Managers/Renderer/Public/Renderer.h"
+#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 namespace Engine::Managers
 {

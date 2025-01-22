@@ -4,8 +4,8 @@
 #include <ranges>
 
 #include "../Public/Shape.h"
-#include "Source/Runtime/Serialization/Public/SerializationImpl.hpp"
-#include "Source/Runtime/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/Serialization/Public/SerializationImpl.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/MathExtension/Public/MathExtension.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
@@ -31,7 +31,7 @@ RESOURCE_SELF_INFER_CREATE_IMPL(Engine::Resources::Shape)
 
 namespace Engine::Resources
 {
-	Shape::Shape(const std::filesystem::path& path)
+	Shape::Shape(const boost::filesystem::path& path)
 		: Resource(path, RES_T_SHAPE),
 		  m_bounding_box_({}) {}
 

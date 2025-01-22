@@ -10,7 +10,7 @@ namespace Engine::Resources
 	public:
 		RESOURCE_T(RES_T_ATLAS_TEX)
 
-		AtlasAnimationTexture(const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases);
+		AtlasAnimationTexture(const boost::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases);
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
@@ -25,7 +25,7 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimationTexture)
 
 		static boost::shared_ptr<AtlasAnimationTexture> Create(
-			const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
+			const std::string& name, const boost::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 		)
 		{
 			if (const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<AtlasAnimationTexture>(name).lock())

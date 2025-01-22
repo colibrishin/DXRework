@@ -18,6 +18,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
+std::atomic<bool> Engine::Managers::EngineEntryPoint::s_fullscreen = false;
 std::atomic<float> Engine::Managers::EngineEntryPoint::s_fixed_update_interval = 1 / 30.f;
 
 namespace Engine::Managers
@@ -71,6 +72,11 @@ namespace Engine::Managers
 	uint32_t EngineEntryPoint::GetHeight() const
 	{
 		return CFG_HEIGHT;
+	}
+
+	bool EngineEntryPoint::IsFullScreen() const
+	{
+		return s_fullscreen;
 	}
 
 	EngineEntryPoint::~EngineEntryPoint()
@@ -148,41 +154,5 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::SIGTERM()
 	{
-	}
-
-	LRESULT EngineEntryPoint::MessageHandler(
-		HWND   hwnd, UINT msg, WPARAM wparam,
-		LPARAM lparam
-	)
-	{
-		switch (msg)
-		{
-		case WM_ACTIVATE:
-		case WM_ACTIVATEAPP:
-			break;
-
-		case WM_INPUT:
-		case WM_MOUSEMOVE:
-		case WM_LBUTTONDOWN:
-		case WM_LBUTTONUP:
-		case WM_RBUTTONDOWN:
-		case WM_RBUTTONUP:
-		case WM_MBUTTONDOWN:
-		case WM_MBUTTONUP:
-		case WM_MOUSEWHEEL:
-		case WM_XBUTTONDOWN:
-		case WM_XBUTTONUP:
-		case WM_MOUSEHOVER:
-			break;
-
-		case WM_KEYDOWN:
-		case WM_KEYUP:
-		case WM_SYSKEYUP:
-		case WM_SYSKEYDOWN:
-			break;
-
-		default:
-			return DefWindowProc(hwnd, msg, wparam, lparam);
-		}
 	}
 } // namespace Engine::Manager

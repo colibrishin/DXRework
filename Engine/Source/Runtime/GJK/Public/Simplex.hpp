@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 #undef min
 
