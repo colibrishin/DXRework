@@ -1,4 +1,5 @@
 use std::io::BufRead;
+use std::io::Read;
 use std::io::Write;
 use std::collections::HashSet;
 use lazy_static::lazy_static;
@@ -8,19 +9,22 @@ lazy_static!{
     static ref target_files: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
 }
 
+fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
+{
+    let mut add_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+    add_proc.current_dir(intermediate_path).args(["add", "."]).output().expect("git add failed");
+    let mut commit_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+    commit_proc.current_dir(intermediate_path).args(["commit", "-m", "\"Auto commit\""]).output().expect("git commit failed");
+}
 
 fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path)
 {
-    let parser_path = engine_dir.join("Programs").join("header-parser").join("MinSizeRel").join("header-parser.exe");
+    let parser_path = engine_dir.join("Programs").join("header-parser").join("Release").join("header-parser.exe");
     
-    for header in target_files.lock().unwrap().clone()
-    {
-        let mut parser = std::process::Command::new(&parser_path);
-        println!("{}", intermediate_path.display());
-        let output = parser.current_dir(intermediate_path).arg(header).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").output().expect("Unable to spawn the process");
-        println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
-        println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
-    }  
+    let mut parser = std::process::Command::new(&parser_path);
+    let _output = parser.current_dir(intermediate_path).args(target_files.lock().unwrap().clone()).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").status().expect("Unable to spawn the process");
+    //println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
+    //println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
 }
 
 fn diff_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
@@ -103,7 +107,7 @@ fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
     {
         println!("Header parser seems not initialized...");
         std::fs::create_dir(&intermediate_path).expect("Unable to create a intermediate path");
-        let gitignore_data : Vec<u8> = "target\nHeaderGenerated\\***".into();
+        let gitignore_data : Vec<u8> = "target\nHeaderGenerated\\***\n*.generated.h\n".into();
         
         let gitignore_path = intermediate_path.join(".gitignore");
         let mut gitignore_file = std::fs::File::create(gitignore_path).expect("Unable to create a gitignore");
@@ -118,60 +122,6 @@ fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
         {
             let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
             git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
-        }
-    }
-}
-
-fn acquire_lock(win_dir: &std::path::Path) 
-{
-    loop
-    {
-        match std::fs::File::create("lock")
-        {
-            Ok(mut file) => 
-            {
-                let string_pid: Vec<u8> = std::process::id().to_string().into();
-                file.write(&string_pid).expect("Unable to write a lock file");
-                break;
-            },
-            Err(_) => match std::fs::File::open("lock") 
-            {
-                Ok(file) => 
-                {
-                    let mut reader = std::io::BufReader::new(file);
-                    let mut pid = String::new();
-                    reader.read_line(&mut pid).expect("Unable to read a lock file");
-                    
-                    let output = std::process::Command::new(win_dir.join("System32").join("tasklist.exe"))
-                        .arg("/FI")
-                        .arg(format!("PID eq {}", pid))
-                        .output();
-                    
-                    match output 
-                    {
-                        Ok(_) => continue,
-                        Err(_) => 
-                        {
-                            loop 
-                            {
-                                match std::fs::File::create("lock")
-                                {
-                                    Ok(mut retry_file) => 
-                                    {
-                                        let string_pid: Vec<u8> = std::process::id().to_string().into();
-                                        retry_file.write(&string_pid).expect("Unable to write a lock file");
-                                        break;
-                                    },
-                                    Err(_) => continue
-                                }
-                            }
-                            
-                            break;
-                        }
-                    }
-                },
-                Err(_) => continue
-            }
         }
     }
 }
@@ -204,12 +154,13 @@ fn main()
         return;
     }
 
-    acquire_lock(&win_dir);
+    //acquire_lock();
 
     let intermediate_path = engine_dir.join("Intermediate").join("HeaderParser");
     check_git(&git_dir, &intermediate_path);
     copy_headers(&intermediate_path, &project_name, &project_dir);
     diff_git(&git_dir, &intermediate_path);
+    commit_git(&git_dir, &intermediate_path);
 
     if !target_files.lock().unwrap().is_empty()
     {

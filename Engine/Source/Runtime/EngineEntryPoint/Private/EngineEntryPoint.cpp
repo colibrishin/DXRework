@@ -55,6 +55,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"Shader");
 		ModuleManager::GetInstance().LoadModule(L"Shape");
 		ModuleManager::GetInstance().LoadModule(L"AtlasAnimationTexture");
+		ModuleManager::GetInstance().LoadModule(L"Mesh");
 	}
 
 	void EngineEntryPoint::Tick()

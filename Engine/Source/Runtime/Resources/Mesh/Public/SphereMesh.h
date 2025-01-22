@@ -4,7 +4,7 @@
 
 namespace Engine::Meshes
 {
-	ECLASS(serialize)
+	ECLASS(resource, serialize)
 	class SphereMesh : public Resources::Mesh
 	{
 	public:
