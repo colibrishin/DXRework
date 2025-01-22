@@ -176,8 +176,6 @@ namespace Engine::Managers
 
 				m_light_sb_->SetData(&primitive, m_lights_.size(), light_buffer.data());
 				m_light_vp_sb_->SetData(&primitive, current_light_vp.size(), current_light_vp.data());
-				m_light_sb_->TransitionToSRV(&primitive);
-				m_light_vp_sb_->TransitionToSRV(&primitive);
 				primitive.commandList->FlagReady();
 			}
 			
@@ -231,7 +229,7 @@ namespace Engine::Managers
 		
 		Renderer::GetInstance().RenderPassVanilla
 			(
-			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get() },
+			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get(), m_light_vp_sb_.get() },
 			 [](const Strong<Abstracts::ObjectBase>& obj)
 			 {
 				 if (obj->GetLayer() == RESERVED_LAYER_CAMERA ||

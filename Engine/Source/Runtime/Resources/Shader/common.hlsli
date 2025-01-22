@@ -35,7 +35,7 @@ StructuredBuffer<CascadeShadowElement> bufLightVP : register(t23);
 StructuredBuffer<ParamElement>         bufInstance : register(t24);
 StructuredBuffer<ParamElement>         bufLocalParam : register(t25);
 Texture2D                              texRendered : register(t26);
-Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t29);
+Texture2DArray                         texShadowMap[MAX_NUM_LIGHTS] : register(t27);
 Texture3D                              texAnimations : register(t35);
 Texture3D                              texAtlases : register(t36);
 

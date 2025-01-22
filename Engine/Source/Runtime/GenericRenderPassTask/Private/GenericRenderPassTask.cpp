@@ -156,9 +156,13 @@ namespace Engine
 			.heap = current_heap
 		};
 
+		current_heap->BindGraphic(&temp_context);
 		sb.SetData(&temp_context, 1, &local_param);
 		sb.TransitionToSRV(&temp_context);
 		gi.SetDefaultRenderTarget(&temp_context);
+		sb.CopySRVHeap(&temp_context);
+		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&temp_context);
+		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
 
 		if (prerender_predicate) { prerender_predicate(&temp_context); }
 
@@ -166,12 +170,7 @@ namespace Engine
 		{
 			func(&temp_context);
 		}
-
-		sb.CopySRVHeap(&temp_context);
-		current_heap->BindGraphic(&temp_context);
-		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&temp_context);
-		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
-
+		
 		// Manual release
 		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
@@ -250,7 +249,6 @@ namespace Engine
 	)
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
-		context->heap->BindGraphic(context);
 
 		// Manual release
 		auto token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
