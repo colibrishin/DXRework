@@ -177,15 +177,19 @@ public abstract class CommonProject : Project
         string WinDir = Environment.GetEnvironmentVariable("WINDIR"); // this is required due to no env variable in fastbuild cmd.
         string GitDir = @"C:\Program Files\Git"; // todo: find git directory with where git
 
-        conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", new Configuration.BuildStepExecutable(
+        Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
             $@"{EngineDir}\run-parser.bat",
-            $@"{EngineDir}\Intermediate\HeaderParser\target", //temporarliy set, will start prebuild event everytime.
+            $@"",
             @"[project.Name]-headerparser.log",
             $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" {WinDir} ""{GitDir}""",
             EngineDir,
-            false,
+            true,
             true
-        ));
+        );
+        Exec.FastBuildAlwaysShowOutput = false;
+        Exec.FastBuildExecAlways = true;
+
+        conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);
 
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
 
