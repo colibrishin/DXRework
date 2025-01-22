@@ -1,7 +1,7 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_ANIMATIONTEXTURE_API, Engine::Resources::AnimationTexture, Engine::Resources::Texture3D)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::AnimationTexture, Engine::Resources::Texture3D)
 
 namespace Engine::Resources
 {

@@ -7,7 +7,7 @@ namespace Engine::Resources
 	class AtlasAnimationTexture;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_ATLASANIMATIONTEXTURE_API, Engine::Resources::AtlasAnimationTexture, Engine::Resources::Texture3D);
+POLYMORPHIC_TYPE_MAP(Engine::Resources::AtlasAnimationTexture, Engine::Resources::Texture3D);
 
 namespace Engine::Resources
 {

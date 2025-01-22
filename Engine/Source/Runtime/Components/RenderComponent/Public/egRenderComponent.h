@@ -11,7 +11,7 @@ namespace Engine::Components
 	class RenderComponent;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_RENDERCOMPONENT_API, Engine::Components::RenderComponent, Engine::Abstracts::Component)
+POLYMORPHIC_TYPE_MAP(Engine::Components::RenderComponent, Engine::Abstracts::Component)
 
 namespace Engine::Components
 {

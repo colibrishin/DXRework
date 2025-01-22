@@ -14,7 +14,7 @@ namespace Engine::Managers
 	class ModuleManager;
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::ModuleManager)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ModuleManager)
 
 namespace Engine::Managers
 {

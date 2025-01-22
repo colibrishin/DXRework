@@ -6,7 +6,7 @@
 DEFINE_DELEGATE(OnSceneActive, Engine::Weak<Engine::Scene>);
 DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::SceneManager)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::SceneManager)
 
 namespace Engine::Managers
 {

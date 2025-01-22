@@ -2,7 +2,7 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::CameraManager)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::CameraManager)
 
 namespace Engine::Managers
 {

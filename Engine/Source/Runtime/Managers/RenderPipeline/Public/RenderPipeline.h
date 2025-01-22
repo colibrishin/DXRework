@@ -12,7 +12,7 @@ namespace Engine
 	struct RenderPipelineModule;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderPipelineModule, Engine::IModule)
+POLYMORPHIC_TYPE_MAP(Engine::RenderPipelineModule, Engine::IModule)
 
 namespace Engine
 {
@@ -25,7 +25,7 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::Managers::RenderPipeline)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::RenderPipeline)
 
 namespace Engine::Managers
 {

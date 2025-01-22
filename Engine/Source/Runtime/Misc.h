@@ -61,13 +61,13 @@ struct polymorphic_type_hash<void>
 	static constexpr std::array<HashType, upcast_count> upcast_array { type_hash<void>::value };
 };
 
-#define POLYMORPHIC_MANAGER_TYPE_MAP(API, Type) \
-POLYMORPHIC_TYPE_MAP(API, Engine::Abstracts::Singleton<##Type##>, Engine::Abstracts::SingletonBase) \
-POLYMORPHIC_TYPE_MAP(API, Type, Engine::Abstracts::Singleton<##Type##>)
+#define POLYMORPHIC_MANAGER_TYPE_MAP(Type) \
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Singleton<##Type##>, Engine::Abstracts::SingletonBase) \
+POLYMORPHIC_TYPE_MAP(Type, Engine::Abstracts::Singleton<##Type##>)
 
-#define POLYMORPHIC_TYPE_MAP(API, Type, Base) \
+#define POLYMORPHIC_TYPE_MAP(Type, Base) \
 template <> \
-struct API polymorphic_type_hash<##Type##> \
+struct polymorphic_type_hash<##Type##> \
 { \
 	static constexpr size_t upcast_count = 1 + polymorphic_type_hash<##Base##>::upcast_count; \
 	static constexpr std::array<HashType, upcast_count> upcast_array = [] \

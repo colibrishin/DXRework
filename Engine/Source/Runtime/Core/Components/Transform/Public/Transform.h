@@ -10,7 +10,7 @@ namespace Engine
 	inline static constexpr Vector3 g_forward = {0, 0, -1.f};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Components::Transform, Engine::Abstracts::Component)
+POLYMORPHIC_TYPE_MAP(Engine::Components::Transform, Engine::Abstracts::Component)
 
 namespace Engine::Components
 {

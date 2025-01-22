@@ -3,7 +3,7 @@
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_TEXTURE_API, Engine::Resources::Texture, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Texture, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

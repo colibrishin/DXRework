@@ -7,7 +7,7 @@
 #include <UIInterface.h>
 #endif
 
-POLYMORPHIC_TYPE_MAP(ENGINE_COREENTITY_API, Engine::Abstracts::Entity, void)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Entity, void)
 
 namespace Engine::Abstracts
 {

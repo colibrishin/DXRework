@@ -12,7 +12,7 @@ namespace physx
 }
 #endif
 
-POLYMORPHIC_TYPE_MAP(ENGINE_MESH_API, Engine::Resources::Mesh, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Mesh, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

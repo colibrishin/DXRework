@@ -22,7 +22,7 @@ namespace physx
 DEFINE_DELEGATE(OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase>);
 DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Scene, Engine::Abstracts::Renderable)
+POLYMORPHIC_TYPE_MAP(Engine::Scene, Engine::Abstracts::Renderable)
 
 namespace Engine
 {

@@ -6,7 +6,7 @@ namespace Engine
 	struct IModule;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::IModule, void)
+POLYMORPHIC_TYPE_MAP(Engine::IModule, void)
 
 namespace Engine
 {

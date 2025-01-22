@@ -25,7 +25,7 @@ namespace Engine
 	using InstanceParticles = aligned_vector<Graphics::SBs::InstanceParticleSB>;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_PARTICLERENDERER_API, Engine::Components::ParticleRenderer, Engine::Components::RenderComponent)
+POLYMORPHIC_TYPE_MAP(Engine::Components::ParticleRenderer, Engine::Components::RenderComponent)
 
 namespace Engine::Components
 {

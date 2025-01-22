@@ -2,7 +2,7 @@
 
 #include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_COREENTITY_API, Engine::Abstracts::Renderable, Engine::Abstracts::Entity)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Renderable, Engine::Abstracts::Entity)
 
 namespace Engine::Abstracts
 {

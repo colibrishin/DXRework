@@ -35,7 +35,7 @@ namespace Engine::Graphics
 	
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_BONEANIMATION_API, Engine::Resources::BoneAnimation, Engine::Resources::BaseAnimation)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::BoneAnimation, Engine::Resources::BaseAnimation)
 
 namespace Engine::Resources
 {

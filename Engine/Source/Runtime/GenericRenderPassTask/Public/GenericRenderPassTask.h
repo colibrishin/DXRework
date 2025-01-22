@@ -13,7 +13,7 @@ namespace Engine
 	class GenericRenderPassTaskModule;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_GENERICRENDERPASSTASK_API, Engine::GenericRenderPassTaskModule, Engine::IModule)
+POLYMORPHIC_TYPE_MAP(Engine::GenericRenderPassTaskModule, Engine::IModule)
 
 namespace Engine 
 {
@@ -31,7 +31,7 @@ namespace Engine
 	class GenericRenderPassTask;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_GENERICRENDERPASSTASK_API, Engine::GenericRenderPassTask, Engine::RenderPassTask)
+POLYMORPHIC_TYPE_MAP(Engine::GenericRenderPassTask, Engine::RenderPassTask)
 
 namespace Engine
 {

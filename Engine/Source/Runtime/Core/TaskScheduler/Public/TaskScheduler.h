@@ -43,7 +43,7 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::TaskScheduler)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::TaskScheduler)
 
 namespace Engine::Managers
 {

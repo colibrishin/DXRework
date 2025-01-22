@@ -11,7 +11,7 @@ namespace Engine
 	struct GraphicPrimitiveShader;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_SHADER_API, Engine::Resources::Shader, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Shader, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

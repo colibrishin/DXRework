@@ -6,7 +6,7 @@ namespace Engine
 	class Object;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Object, Engine::Abstracts::ObjectBase)
+POLYMORPHIC_TYPE_MAP(Engine::Object, Engine::Abstracts::ObjectBase)
 
 namespace Engine
 {

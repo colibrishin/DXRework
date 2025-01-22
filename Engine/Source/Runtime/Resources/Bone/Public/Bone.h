@@ -81,7 +81,7 @@ namespace Engine::Graphics
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_BONE_API, Engine::Resources::Bone, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Bone, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

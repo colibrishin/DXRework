@@ -22,7 +22,7 @@ namespace Engine::Graphics::SBs
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_MODELRENDERER_API, Engine::Components::ModelRenderer, Engine::Components::RenderComponent)
+POLYMORPHIC_TYPE_MAP(Engine::Components::ModelRenderer, Engine::Components::RenderComponent)
 
 namespace Engine::Components
 {

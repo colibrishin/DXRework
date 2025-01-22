@@ -12,7 +12,7 @@ namespace Engine::Abstracts
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORESINGLETON_API, Engine::Abstracts::SingletonBase, Engine::Abstracts::Renderable)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::SingletonBase, Engine::Abstracts::Renderable)
 
 namespace Engine::Abstracts
 {

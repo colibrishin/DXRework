@@ -28,7 +28,7 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Components::Collider, Engine::Abstracts::Component)
+POLYMORPHIC_TYPE_MAP(Engine::Components::Collider, Engine::Abstracts::Component)
 
 namespace Engine::Components
 {

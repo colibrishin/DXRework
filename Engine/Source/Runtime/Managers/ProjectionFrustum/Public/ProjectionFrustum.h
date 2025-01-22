@@ -2,7 +2,7 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_PROJECTIONFRUSTUM_API, Engine::Managers::ProjectionFrustum)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ProjectionFrustum)
 
 namespace Engine::Managers
 {

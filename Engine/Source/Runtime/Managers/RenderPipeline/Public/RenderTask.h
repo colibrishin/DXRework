@@ -9,7 +9,7 @@ namespace Engine
 	struct RenderInstanceTask;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderInstanceTask, void)
+POLYMORPHIC_TYPE_MAP(Engine::RenderInstanceTask, void)
 
 namespace Engine 
 {
@@ -29,7 +29,7 @@ namespace Engine
 	using ContextSetupFunction = std::function<void(const GraphicInterfaceContextPrimitive*)>;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderPassTask, void)
+POLYMORPHIC_TYPE_MAP(Engine::RenderPassTask, void)
 
 namespace Engine
 {

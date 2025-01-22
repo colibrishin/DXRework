@@ -105,7 +105,7 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::CoreModule, Engine::IModule)
+POLYMORPHIC_TYPE_MAP(Engine::CoreModule, Engine::IModule)
 
 namespace Engine
 {

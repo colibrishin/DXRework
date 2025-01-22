@@ -7,7 +7,7 @@
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_SHAPE_API, Engine::Resources::Shape, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Shape, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

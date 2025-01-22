@@ -17,7 +17,7 @@
 
 DEFINE_DELEGATE(OnLayerMaskChange, const Engine::LayerSizeType, const Engine::LayerSizeType);
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_PHYSICSMANAGER_API, Engine::Managers::CollisionDetector)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::CollisionDetector)
 
 #ifdef PHYSX_ENABLED
 namespace Engine

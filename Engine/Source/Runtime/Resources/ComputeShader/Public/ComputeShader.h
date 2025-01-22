@@ -4,7 +4,7 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_COMPUTESHADER_API, Engine::Resources::ComputeShader, Engine::Resources::Shader)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::ComputeShader, Engine::Resources::Shader)
 
 namespace Engine::Resources
 {

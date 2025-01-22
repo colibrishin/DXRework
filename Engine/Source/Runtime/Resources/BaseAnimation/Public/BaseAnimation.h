@@ -26,7 +26,7 @@ namespace Engine::Graphics
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_BASEANIMATION_API, Engine::Resources::BaseAnimation, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::BaseAnimation, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

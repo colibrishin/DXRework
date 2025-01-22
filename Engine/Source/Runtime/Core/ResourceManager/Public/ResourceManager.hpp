@@ -4,7 +4,7 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
-POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::ResourceManager)
+POLYMORPHIC_MANAGER_TYPE_MAP(Engine::Managers::ResourceManager)
 
 namespace Engine::Managers
 {

@@ -39,7 +39,7 @@ namespace Engine
 	using ResourceType = HashType;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::Resource, Engine::Abstracts::Entity)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Resource, Engine::Abstracts::Entity)
 
 namespace Engine::Abstracts
 {

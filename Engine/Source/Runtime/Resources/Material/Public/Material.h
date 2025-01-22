@@ -14,7 +14,7 @@ namespace Engine
 	struct MaterialModule;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_MATERIAL_API, Engine::MaterialModule, Engine::IModule)
+POLYMORPHIC_TYPE_MAP(Engine::MaterialModule, Engine::IModule)
 
 namespace Engine
 {
@@ -55,7 +55,7 @@ namespace Engine::Graphics::SBs
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_MATERIAL_API, Engine::Resources::Material, Engine::Abstracts::Resource)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::Material, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {

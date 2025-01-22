@@ -4,7 +4,7 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Script, Engine::Abstracts::Renderable)
+POLYMORPHIC_TYPE_MAP(Engine::Script, Engine::Abstracts::Renderable)
 
 namespace Engine
 {

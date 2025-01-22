@@ -3,7 +3,7 @@
 
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
-POLYMORPHIC_TYPE_MAP(ENGINE_SHADOWTEXTURE_API, Engine::Resources::ShadowTexture, Engine::Resources::Texture2D)
+POLYMORPHIC_TYPE_MAP(Engine::Resources::ShadowTexture, Engine::Resources::Texture2D)
 
 namespace Engine::Resources
 {

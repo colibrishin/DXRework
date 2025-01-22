@@ -17,7 +17,7 @@ namespace Engine
 	using ComponentType = HashType;
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::Component, Engine::Abstracts::Entity)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Component, Engine::Abstracts::Entity)
 
 namespace Engine::Abstracts
 {

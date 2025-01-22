@@ -31,7 +31,7 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::ObjectBase, Engine::Abstracts::Actor)
+POLYMORPHIC_TYPE_MAP(Engine::Abstracts::ObjectBase, Engine::Abstracts::Actor)
 
 namespace Engine::Abstracts
 {
