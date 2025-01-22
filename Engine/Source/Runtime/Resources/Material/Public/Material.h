@@ -57,12 +57,10 @@ namespace Engine::Resources
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-
-		void SetTempParam(TempParam&& param) noexcept;
 		bool IsRenderDomain(eShaderDomain domain) const noexcept;
 
 		template <typename T>
-		[[nodiscard]] auto GetResources() const
+		[[nodiscard]] auto GetResourcesByType() const
 		{
 			if (!m_resources_loaded_.contains(which_resource<T>::value))
 			{
@@ -70,6 +68,8 @@ namespace Engine::Resources
 			}
 			return m_resources_loaded_.at(which_resource<T>::value);
 		}
+
+		[[nodiscard]] const std::map<const eResourceType, std::vector<Strong<Resource>>>& GetResources() const;
 
 		template <typename T>
 		[[nodiscard]] boost::weak_ptr<T> GetResource(const std::string& name) const
@@ -115,12 +115,10 @@ namespace Engine::Resources
 			return boost::static_pointer_cast<T>(*(anims.begin() + idx));
 		}
 
+		void SetResource(const Strong<Resource>& resource);
 		void SetTextureSlot(const std::string& name, UINT slot);
 
-		void Draw(const float& dt, const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap);
-
-		Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>& GetMaterialSBBuffer();
-		void                               UpdateMaterialSB(ID3D12GraphicsCommandList1* cmd);
+		[[nodiscard]] const Graphics::SBs::MaterialSB& GetMaterialSB() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Material)
 		RESOURCE_SELF_INFER_CREATE_DECL(Material)
@@ -132,19 +130,12 @@ namespace Engine::Resources
 	private:
 		Material();
 
-		void SetResource(const Strong<Resource>& resource);
-
 		Graphics::SBs::MaterialSB                   m_material_sb_;
-		Graphics::StructuredBuffer<Graphics::SBs::MaterialSB> m_material_sb_data_;
 
 		std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
 		std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
 
 		// non-serialized
-		bool                                                       m_b_edit_dialog_;
-		bool                                                       m_b_wait_for_choices_;
-		std::vector<Strong<Resource>>                                m_resources_to_load_;
-		TempParam                                                  m_temp_param_;
 		std::map<const eShaderDomain, Strong<Shader>>                m_shaders_loaded_;
 		std::map<const eResourceType, std::vector<Strong<Resource>>> m_resources_loaded_;
 	};

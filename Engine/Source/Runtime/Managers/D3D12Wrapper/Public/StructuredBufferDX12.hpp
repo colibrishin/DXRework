@@ -282,6 +282,10 @@ namespace Engine::Graphics
 		if (m_size_ < size)
 		{
 			Create(cmd, size, src_ptr);
+		}
+
+		if (src_ptr == nullptr) 
+		{
 			return;
 		}
 
@@ -311,6 +315,11 @@ namespace Engine::Graphics
 		if (m_size_ < size)
 		{
 			Create(cmd, size, nullptr);
+		}
+
+		if (src_ptr == nullptr) 
+		{
+			return;
 		}
 
 		char* data = nullptr;
