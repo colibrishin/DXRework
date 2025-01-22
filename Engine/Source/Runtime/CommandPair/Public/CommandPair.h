@@ -4,6 +4,7 @@
 
 #include <array>
 #include <atomic>
+#include <deque>
 #include <mutex>
 
 #include <directx/d3d12.h>

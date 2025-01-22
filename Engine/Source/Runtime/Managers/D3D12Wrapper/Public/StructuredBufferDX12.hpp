@@ -21,8 +21,8 @@ namespace Engine::Graphics
 		virtual void TransitionToUAV(ID3D12GraphicsCommandList1* cmd) const = 0;
 		virtual void TransitionCommon(ID3D12GraphicsCommandList1* cmd, D3D12_RESOURCE_STATES before) const = 0;
 
-		virtual void CopySRVHeap(const DescriptorPtr& heap) const = 0;
-		virtual void CopyUAVHeap(const DescriptorPtr& heap) const = 0;
+		virtual void CopySRVHeap(const DescriptorPtrImpl* heap) const = 0;
+		virtual void CopyUAVHeap(const DescriptorPtrImpl* heap) const = 0;
 
 	protected:
 		ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
@@ -50,8 +50,8 @@ namespace Engine::Graphics
 		void TransitionToUAV(ID3D12GraphicsCommandList1* cmd) const override;
 		void TransitionCommon(ID3D12GraphicsCommandList1* cmd, D3D12_RESOURCE_STATES before) const override;
 
-		void                      CopySRVHeap(const DescriptorPtr& heap) const override;
-		void                      CopyUAVHeap(const DescriptorPtr& heap) const override;
+		void                      CopySRVHeap(const DescriptorPtrImpl* heap) const override;
+		void                      CopyUAVHeap(const DescriptorPtrImpl* heap) const override;
 		D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
 
 	private:
@@ -434,10 +434,8 @@ namespace Engine::Graphics
 	}
 
 	template <typename T>
-	void StructuredBuffer<T>::CopySRVHeap(const DescriptorPtr& w_heap) const
+	void StructuredBuffer<T>::CopySRVHeap(const DescriptorPtrImpl* heap) const
 	{
-		const auto& heap = w_heap.lock();
-
 		if constexpr (is_client_sb<T>::value == true)
 		{
 			heap->SetShaderResource
@@ -457,10 +455,8 @@ namespace Engine::Graphics
 	}
 
 	template <typename T>
-	void StructuredBuffer<T>::CopyUAVHeap(const DescriptorPtr& w_heap) const
+	void StructuredBuffer<T>::CopyUAVHeap(const DescriptorPtrImpl* heap) const
 	{
-		const auto& heap = w_heap.lock();
-
 		if constexpr (is_client_uav_sb<T>::value == true)
 		{
 			heap->SetUnorderedAccess

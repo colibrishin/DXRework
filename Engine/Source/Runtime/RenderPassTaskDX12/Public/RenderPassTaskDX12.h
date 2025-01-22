@@ -2,7 +2,8 @@
 #include <map>
 #include <set>
 
-#include "Source/Runtime/Managers/Renderer/Public/RenderTask.h"
+#include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
@@ -17,10 +18,11 @@ namespace Engine
 			const float dt,
 			const bool shader_bypass,
 			const eShaderDomain domain, 
-			const RenderMap const* domain_map, 
-			const std::atomic<uint64_t>& instance_count, 
-			RenderPassPrequisiteTask* const* prequisite, 
-			const size_t prequisite_count,
+			RenderMap const* domain_map,
+			const Graphics::SBs::LocalParamSB& local_param,
+			const std::atomic<uint64_t>& instance_count,
+			RenderPassPrerequisiteTask* const* prerequisite, 
+			const size_t prerequisite_count,
 			const ObjectPredication& predicate) override;
 		void Cleanup() override;
 
@@ -50,7 +52,8 @@ namespace Engine
 
 		std::map<uint64_t, Graphics::StructuredBuffer<Graphics::SBs::MaterialSB>> m_material_sbs_;
 		std::set<uint64_t> m_updated_material_in_current_pass_;
-		Graphics::StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instances_;
+		Graphics::StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
+		Graphics::StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_;
 		aligned_vector<DescriptorPtr> m_heaps_;
 	};
 }

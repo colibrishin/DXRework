@@ -81,6 +81,14 @@ public class EngineSolution : Solution
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
                 conf.AddProject<RenderPassTaskDX12>(target);
+                conf.AddProject<ShadowRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<ViewportRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<ShaderRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<GraphicPrimitiveShaderDX12>(target);
+                conf.AddProject<PipelineRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<StructuredBufferRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<ConstantBufferRenderPrerequisiteTaskDX12>(target);
+                conf.AddProject<PrimitivePipelineDX12>(target);
             }
 
             {

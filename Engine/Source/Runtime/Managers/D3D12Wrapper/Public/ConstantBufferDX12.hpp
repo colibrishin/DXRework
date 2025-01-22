@@ -136,7 +136,7 @@ namespace Engine::Graphics
 			return m_data_;
 		}
 
-		void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap)
+		void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtrImpl* w_heap)
 		{
 			if (const auto& cmd = w_cmd.lock())
 			{
@@ -144,7 +144,7 @@ namespace Engine::Graphics
 			}
 		}
 
-		void Bind(ID3D12GraphicsCommandList* cmd, const DescriptorPtr& w_heap)
+		void Bind(ID3D12GraphicsCommandList* cmd, const DescriptorPtrImpl* heap)
 		{
 			if (m_b_dirty_)
 			{
@@ -176,8 +176,6 @@ namespace Engine::Graphics
 
 				m_b_dirty_ = false;
 			}
-
-			const auto& heap = w_heap.lock();
 
 			if (heap == nullptr)
 			{

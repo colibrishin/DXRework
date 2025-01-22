@@ -1,8 +1,7 @@
 #pragma once
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 
 #include <map>
 
@@ -39,14 +38,7 @@ namespace Engine::Resources
 	class MATERIAL_API Material final : public Engine::Abstracts::Resource
 	{
 	public:
-		struct TempParam
-		{
-			UINT          instanceCount = 1;
-			bool          bypassShader  = false;
-			eShaderDomain domain        = SHADER_DOMAIN_OPAQUE;
-		};
-
-		RESOURCE_T(RES_T_MTR);
+		RESOURCE_T(RES_T_MTR)
 
 		Material(const std::filesystem::path& path);
 

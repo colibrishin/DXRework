@@ -5,23 +5,7 @@
 
 namespace Engine::Managers
 {
-	Renderer::~Renderer() 
-	{
-		for (const RenderInstanceTask* task : m_render_instance_tasks_) 
-		{
-			delete task;
-		}
-
-		for (const RenderPassTask* task : m_render_pass_tasks_) 
-		{
-			delete task;
-		}
-
-		for (const RenderPassPrequisiteTask* task : m_render_prequisite_tasks_) 
-		{
-			delete task;
-		}
-	}
+	Renderer::~Renderer() {}
 
 	void Renderer::PreUpdate(const float& dt)
 	{
@@ -77,24 +61,36 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPass(dt, static_cast<eShaderDomain>(i));
+			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, {}, {});
 		}
 	}
 
-	void Renderer::RenderPass(const float dt, const eShaderDomain domain) 
+	void Renderer::RenderPass(
+		const float                                        dt, 
+		const bool                                         shader_bypass, 
+		const eShaderDomain                                domain,
+		const Graphics::SBs::LocalParamSB&                 local_param_sb,
+		const aligned_vector<RenderPassPrerequisiteTask*>& additional_task,
+		const ObjectPredication&                           predication) 
 	{
+		const size_t default_offset = m_render_prerequisite_tasks_.size();
+		m_render_prerequisite_tasks_.insert(m_render_prerequisite_tasks_.end(), additional_task.begin(), additional_task.end());
+
 		for (RenderPassTask* task : m_render_pass_tasks_) 
 		{
 			task->Run(
 				dt,
-				false,
+				shader_bypass,
 				domain,
 				&m_render_candidates_[domain],
+				local_param_sb,
 				m_instance_count_,
-				m_render_prequisite_tasks_.data(),
-				m_render_prequisite_tasks_.size(),
-				{}); // todo: culling
+				m_render_prerequisite_tasks_.data(),
+				m_render_prerequisite_tasks_.size(),
+				predication); // todo: culling
 		}
+
+		m_render_prerequisite_tasks_.erase(m_render_prerequisite_tasks_.begin() + default_offset, m_render_prerequisite_tasks_.end());
 	}
 
 	void Renderer::PostRender(const float& dt) {}
@@ -119,11 +115,11 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPassPrequisite(RenderPassPrequisiteTask* task)
+	void Renderer::RegisterRenderPassPrerequisite(RenderPassPrerequisiteTask* task)
 	{
 		if (task != nullptr) 
 		{
-			m_render_prequisite_tasks_.push_back(task);
+			m_render_prerequisite_tasks_.push_back(task);
 		}
 	}
 

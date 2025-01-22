@@ -15,12 +15,6 @@ public class RenderPipeline : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<CommandPair>(target);
-        conf.AddPublicDependency<DescriptorHeap>(target);
-        conf.AddPrivateDependency<Shader>(target);
-        conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
+        conf.AddPrivateDependency<Renderer>(target);
     }
 }

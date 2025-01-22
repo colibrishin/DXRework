@@ -4,17 +4,17 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class Shader : CommonProject
+public class PipelineRenderPrerequisiteTaskDX12 : CommonProject
 {
-    public Shader() { }
+    public PipelineRenderPrerequisiteTaskDX12() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<Boost>(target);
-        conf.AddPrivateDependency<ResourceManager>(target);
-        conf.AddPrivateDependency<RenderPipeline>(target);
+        conf.AddPublicDependency<Renderer>(target);
+        conf.AddPublicDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<Shader>(target);
     }
 }

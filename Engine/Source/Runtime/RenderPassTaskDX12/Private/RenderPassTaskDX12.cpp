@@ -6,6 +6,7 @@
 #include "Source/Runtime/Managers/RenderPipeline//Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
+#include "Source/Runtime/PrimitivePipelineDX12/Public/PrimitivePipelineDX12.h"
 
 namespace Engine 
 {
@@ -13,10 +14,11 @@ namespace Engine
 		const float dt,
 		const bool shader_bypass,
 		const eShaderDomain domain,
-		const RenderMap const* domain_map,
+		RenderMap const* domain_map,
+		const Graphics::SBs::LocalParamSB& local_param,
 		const std::atomic<uint64_t>& instance_count,
-		RenderPassPrequisiteTask* const* prequisite,
-		const size_t prequisite_count,
+		RenderPassPrerequisiteTask* const* prerequisite,
+		const size_t prerequisite_count,
 		const ObjectPredication& predicate)
 	{
 		if (domain_map->empty())
@@ -56,39 +58,52 @@ namespace Engine
 		{
 			cmd->SoftReset();
 
+			Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
+			sb.SetData(cmd->GetList(), 1, &local_param);
+			sb.TransitionToSRV(cmd->GetList());
+
 			for (const auto& [mtr, sbs] : final_mapping)
 			{
-				m_heaps_.emplace_back(Managers::RenderPipeline::GetInstance().AcquireHeapSlot().lock());
+				const auto task = reinterpret_cast<DX12PrimitivePipeline*>(Managers::RenderPipeline::GetInstance().GetPrimitivePipeline());
+				m_heaps_.emplace_back(task->GetHeapHandler()->Acquire());
 				m_current_heap_ = m_heaps_.back();
 
 				if (const StrongDescriptorPtr& heap = m_current_heap_.lock())
 				{
-					for (size_t i = 0; i < prequisite_count; ++i)
+					for (size_t i = 0; i < prerequisite_count; ++i)
 					{
-						prequisite[i]->Run(this);
+						prerequisite[i]->Run(this);
 					}
 
+					sb.CopySRVHeap(heap.get());
+
 					heap->BindGraphic(cmd->GetList());
-					Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>& instance = m_instances_.get();
+					Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 
 					RunImpl(dt, shader_bypass, domain, instance, mtr.lock(), cmd, heap, sbs);
 
-					for (size_t i = 0; i < prequisite_count; ++i)
+					for (size_t i = 0; i < prerequisite_count; ++i)
 					{
-						prequisite[i]->Cleanup(this);
+						prerequisite[i]->Cleanup(this);
 					}
 
-					m_instances_.advance();
+					m_instance_pool_.advance();
 				}
+
 			}
 
+			sb.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 			cmd->FlagReady();
+
+			m_local_param_pool_.advance();
 		}
 	}
 
 	void Engine::DX12RenderPassTask::Cleanup()
 	{
 		m_updated_material_in_current_pass_.clear();
+		m_local_param_pool_.reset();
+		m_instance_pool_.reset();
 	}
 
 	Engine::CommandPair* Engine::DX12RenderPassTask::GetCurrentCommandList() const
@@ -114,11 +129,12 @@ namespace Engine
 	void Engine::DX12RenderPassTask::RunImpl(const float dt, const bool shader_bypass, const eShaderDomain shader_domain, Graphics::StructuredBuffer<Graphics::SBs::InstanceSB>& instance_buffer, const Weak<Resources::Material>& material, const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap, const aligned_vector<const Graphics::SBs::InstanceSB*>& structuredbuffers)
 	{
 		const Strong<CommandPair>& cmd = w_cmd.lock();
+		const StrongDescriptorPtr heap = w_heap.lock();
 
 		CheckSize<UINT>(structuredbuffers.size(), L"Warning: Renderer will take a lot of amount of instance buffers!");
 		instance_buffer.SetDataContainer(cmd->GetList(), static_cast<UINT>(structuredbuffers.size()), structuredbuffers.data());
 		instance_buffer.TransitionToSRV(cmd->GetList());
-		instance_buffer.CopySRVHeap(w_heap);
+		instance_buffer.CopySRVHeap(heap.get());
 
 		DrawPhase(shader_bypass, structuredbuffers.size(), material, w_cmd, w_heap);
 
@@ -150,7 +166,8 @@ namespace Engine
 			if (!shader_bypass)
 			{
 				const Strong<Resources::Shader>& shader = mat->GetResource<Resources::Shader>(0).lock();
-				Managers::RenderPipeline::GetInstance().SetPSO(cmd, shader);
+				ShaderRenderPrerequisiteTask* task = Managers::RenderPipeline::GetInstance().GetShaderRenderPrerequisiteTask(shader);
+				task->Run(this);
 			}
 
 			for (const auto& [type, resources] : material_resources)
@@ -184,8 +201,7 @@ namespace Engine
 			}
 
 			m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].TransitionToSRV(cmd->GetList());
-			m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].CopySRVHeap(heap);
-			Managers::RenderPipeline::GetInstance().BindConstantBuffers(cmd, heap);
+			m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].CopySRVHeap(heap.get());
 
 			if (const Strong<Resources::Shape>& shape = mat->GetResource<Resources::Shape>(0).lock())
 			{

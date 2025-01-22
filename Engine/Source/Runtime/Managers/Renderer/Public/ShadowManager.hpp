@@ -1,11 +1,5 @@
 #pragma once
 
-#if defined(USE_DX12)
-#include <directx/d3d12.h>
-#endif
-
-#include <Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp>
-#include <Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp>
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
@@ -38,6 +32,27 @@ namespace Engine::Graphics
 	}
 }
 
+namespace Engine
+{
+	struct ShadowRenderPrerequisiteTask : RenderPassPrerequisiteTask
+	{
+		void SetShadowShader(const Strong<Resources::Shader>& shader);
+		void UpdateLight(const std::vector<Graphics::SBs::LightSB>& sb);
+		void UpdateLightVP(const std::vector<Graphics::SBs::LightVPSB>& sb);
+
+	protected:
+		std::vector<Graphics::SBs::LightVPSB> m_light_vps_;
+		std::vector<Graphics::SBs::LightSB> m_lights_;
+		Strong<Resources::Shader> m_shadow_shader_;
+
+		bool IsLazy() const;
+		void FlipLazy();
+
+	private:
+		bool m_lazy_ = false;
+	};
+}
+
 namespace Engine::Managers
 {
 	constexpr float __placeholder = 0.f;
@@ -53,9 +68,7 @@ namespace Engine::Managers
 	public:
 		explicit ShadowManager(SINGLETON_LOCK_TOKEN)
 			: Singleton<ShadowManager>(),
-			  m_viewport_(),
-			  m_scissor_rect_(),
-			  m_shadow_map_mask_("", {}) {}
+			  m_viewport_() {}
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
@@ -71,21 +84,25 @@ namespace Engine::Managers
 		void RegisterLight(const Weak<Objects::Light>& light);
 		void UnregisterLight(const Weak<Objects::Light>& light);
 
+		template <typename T> requires (std::is_base_of_v<ShadowRenderPrerequisiteTask, T>)
+		void SetShadowRenderPrerequisiteTask()
+		{
+			m_shadow_task_ = std::make_unique<T>();
+		}
+
+		template <typename T> requires (std::is_base_of_v<ViewportRenderPrerequisiteTask, T>)
+		void SetViewportRenderPrerequisiteTask()
+		{
+			m_viewport_task_ = std::make_unique<T>();
+		}
+
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
-
-		void BindShadowMaps(const Weak<CommandPair>& cmd, const DescriptorPtr& heap) const;
-		void BindShadowSampler(const DescriptorPtr& heap) const;
-		void UnbindShadowMaps(const Weak<CommandPair>& w_cmd) const;
-
-		Graphics::StructuredBuffer<SBs::LightSB>*   GetLightBuffer();
-		Graphics::StructuredBuffer<SBs::LightVPSB>* GetLightVPBuffer();
 
 	private:
 		friend struct SingletonDeleter;
 		~ShadowManager() override;
 
 		void InitializeViewport();
-		void InitializeProcessor();
 		void InitializeShadowBuffer(LocalActorID id);
 
 		void BuildShadowMap(
@@ -100,6 +117,8 @@ namespace Engine::Managers
 		);
 
 		Strong<Resources::Shader> m_shadow_shader_;
+		Strong<Resources::ShadowTexture> m_shadow_map_mask_;
+		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
 
 		// sub part of the view frustum
 		Subfrusta m_subfrusta_[3];
@@ -108,24 +127,9 @@ namespace Engine::Managers
 		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
 
 		// The DX resources for each of the shadow map (texture, depth stencil view and shader resource view)
-		std::map<LocalActorID, Resources::ShadowTexture> m_shadow_texs_;
+		std::unique_ptr<ShadowRenderPrerequisiteTask> m_shadow_task_;
+		std::unique_ptr<ViewportRenderPrerequisiteTask> m_viewport_task_;
 
-		// light structured buffer
-		Graphics::StructuredBuffer<SBs::LightSB> m_sb_light_buffer_{};
-		// The structured buffer for the chunk of light view projection matrices
-		Graphics::StructuredBuffer<SBs::LightVPSB> m_sb_light_vps_buffer_;
-
-
-		D3D12_VIEWPORT m_viewport_;
-		D3D12_RECT     m_scissor_rect_;
-
-		DescriptorContainer m_shadow_descriptor_heap_;
-
-		Graphics::StructuredBufferMemoryPool<SBs::InstanceSB>   m_shadow_instance_buffer_;
-		Graphics::StructuredBufferMemoryPool<SBs::LocalParamSB> m_local_param_buffers_;
-
-		Resources::Texture2D m_shadow_map_mask_;
-
-		ComPtr<ID3D12DescriptorHeap> m_sampler_heap_;
+		Viewport m_viewport_;
 	};
 } // namespace Engine::Manager::Graphics
