@@ -7,6 +7,7 @@ namespace Engine::Meshes
 	ECLASS(resource, serialize)
 	class SphereMesh : public Resources::Mesh
 	{
+		GENERATE_BODY
 	public:
 		SphereMesh();
 		~SphereMesh() override = default;

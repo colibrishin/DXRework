@@ -4,6 +4,10 @@
 #include "MeshModule.generated.h"
 #include "SphereMesh.h"
 
+#include "ModuleManager/Public/ModuleManager.h"
+
+MODULE_IMPL(Engine::MeshModule, Mesh)
+
 void Engine::MeshModule::Initialize()
 {
     Meshes::CubeMesh::Create("CubeMesh");

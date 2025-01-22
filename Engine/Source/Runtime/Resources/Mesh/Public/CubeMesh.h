@@ -7,6 +7,7 @@ namespace Engine::Meshes
 	ECLASS(resource, serialize)
 	class CubeMesh : public Resources::Mesh
 	{
+		GENERATE_BODY
 	public:
 		CubeMesh();
 		~CubeMesh() override = default;
