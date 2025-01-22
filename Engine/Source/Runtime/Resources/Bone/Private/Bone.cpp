@@ -1,15 +1,11 @@
 #include "../Public/Bone.h"
 #include <ranges>
-
-SERIALIZE_IMPL
-(
- Engine::Resources::Bone,
- _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_bone_map)
-)
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
+	RESOURCE_SELF_INFER_GETTER_IMPL(Bone)
+
 	Bone::Bone(const BonePrimitiveMap& bone_map)
 		: Resource("", RES_T_BONE),
 		  m_bone_map(bone_map)

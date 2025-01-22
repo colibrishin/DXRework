@@ -3,15 +3,18 @@
 #include <map>
 
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
+#include "Source/Runtime/Resources/Bone/Public/Bone.h"
+#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 
 namespace Engine::Resources
 {
-	class Shape : public Engine::Abstracts::Resource
+	class SHAPE_API Shape : public Engine::Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_SHAPE)
 
-		Shape(const boost::filesystem::path& path);
+		Shape(const std::filesystem::path& path);
 
 		void PreUpdate(const float& dt) override;
 		void Update(const float& dt) override;
@@ -81,7 +84,6 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		friend class Managers::Renderer;
 		Shape();
 
@@ -104,5 +106,3 @@ namespace Engine::Resources
 		std::vector<Graphics::VertexElement> m_cached_vertices_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Shape)

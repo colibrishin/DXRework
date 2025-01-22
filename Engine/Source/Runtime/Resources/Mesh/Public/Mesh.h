@@ -2,8 +2,8 @@
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 #if defined(USE_DX12)
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferDX12.hpp"
-#include "Source/Runtime/StructuredBufferDX12/Public/StructuredBufferMemoryPoolDX12.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"
 #endif
 
 #ifdef PHYSX_ENABLED
@@ -18,7 +18,7 @@ namespace physx
 #if defined(USE_DX12)
 namespace Engine 
 {
-	struct AccelStructBuffer
+	struct MESH_API AccelStructBuffer
 	{
 		Graphics::GraphicMemoryPool<
 			D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT,
@@ -45,7 +45,7 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	class Mesh : public Engine::Abstracts::Resource
+	class MESH_API Mesh : public Engine::Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_MESH)
@@ -80,7 +80,6 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
 	protected:
-		SERIALIZE_DECL
 		Mesh();
 
 		friend class Components::Collider;
@@ -134,5 +133,3 @@ namespace Engine::Resources
 #endif
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Mesh)

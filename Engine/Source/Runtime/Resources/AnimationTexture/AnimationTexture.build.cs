@@ -13,5 +13,14 @@ public class AnimationTexture : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Texture3D>(target);
+
+        conf.AddPrivateDependency<ResourceManager>(target);
+        conf.AddPrivateDependency<BaseAnimation>(target);
+        conf.AddPrivateDependency<DirectXTK>(target);
+        conf.AddPrivateDependency<DX12Agility>(target);
+        conf.AddPrivateDependency<DirectXTex>(target);
+        conf.AddPrivateDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<BoneAnimation>(target);
     }
 }

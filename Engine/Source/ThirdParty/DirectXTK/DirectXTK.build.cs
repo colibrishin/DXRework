@@ -24,10 +24,7 @@ public class DirectXTK : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"DirectX-Guids.lib", 
-            @"DirectX-Headers.lib", 
-            @"DirectXTK12.lib",
-            @"dxcompiler.lib"
+            @"DirectXTK12.lib"
         );
     }
 
@@ -37,10 +34,7 @@ public class DirectXTK : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"DirectX-Guids.lib", 
-            @"DirectX-Headers.lib", 
-            @"DirectXTK12.lib",
-            @"dxcompiler.lib"
+            @"DirectXTK12.lib"
         );
     }
 }

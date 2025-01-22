@@ -13,5 +13,15 @@ public class Texture : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<DX12Agility>(target);
+        conf.AddPublicDependency<CommandPair>(target);
+        conf.AddPublicDependency<DescriptorHeap>(target);
+
+        conf.AddPrivateDependency<ResourceManager>(target);
+        conf.AddPrivateDependency<DirectXTex>(target);
+        conf.AddPrivateDependency<DirectXTK>(target);
+        conf.AddPrivateDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<ThrowIfFailed>(target);
     }
 }

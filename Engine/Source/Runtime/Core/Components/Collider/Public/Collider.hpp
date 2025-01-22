@@ -3,9 +3,9 @@
 #include <set>
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
-#include "Source/Runtime/GenericBounding/Public/GenericBounding.hpp"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -38,38 +38,29 @@ namespace Engine::Components
 
 		void SetType(eBoundingType type);
 		void SetMass(float mass);
-
 		void SetBoundingBox(const BoundingOrientedBox& bounding);
-		void SetShape(const Weak<Resources::Shape>& model);
+		void SetVertices(const VertexCollection& vertex_collection);
 
 		static bool Intersects(const Strong<Collider>& lhs, const Strong<Collider>& rhs, const Vector3& dir);
 		static bool Intersects(const Strong<Collider>& lhs, const Strong<Collider>& rhs, float epsilon = 1e-03);
 		static bool Intersects(const Strong<Collider>& lhs, const Strong<Collider>& rhs, float dist, const Vector3& dir);
-
 		static bool ContainsBy(const Strong<Collider>& test, const Strong<Collider>& container);
-
-		bool Intersects(const Vector3& start, const Vector3& dir, float distance, float& intersection) const;
 
 		void AddCollidedObject(GlobalEntityID id);
 		void RemoveCollidedObject(GlobalEntityID id);
 
-		bool                            IsCollidedObject(GlobalEntityID id) const;
-		const std::set<GlobalEntityID>& GetCollidedObjects() const;
+		[[nodiscard]] bool                                          IsCollidedObject(GlobalEntityID id) const;
+		[[nodiscard]] const std::set<GlobalEntityID>& GetCollidedObjects() const;
 
-		bool GetPenetration(
-			const Collider& other, Vector3& normal,
-			float&          depth
-		) const;
+		[[nodiscard]] float      GetMass() const;
+		[[nodiscard]] float      GetInverseMass() const;
+		[[nodiscard]] XMFLOAT3X3 GetInertiaTensor() const;
 
-		float      GetMass() const;
-		float      GetInverseMass() const;
-		XMFLOAT3X3 GetInertiaTensor() const;
+		[[nodiscard]] eBoundingType GetType() const;
 
-		eBoundingType GetType() const;
-
-		const std::vector<Graphics::VertexElement>& GetVertices() const;
-		Matrix                                      GetWorldMatrix() const;
-		virtual Matrix                              GetLocalMatrix() const;
+		[[nodiscard]] const std::vector<Graphics::VertexElement>& GetVertices() const;
+		[[nodiscard]] Matrix                                      GetWorldMatrix() const;
+		[[nodiscard]] virtual Matrix                              GetLocalMatrix() const;
 
 		void Initialize() override;
 		void PreUpdate(const float& dt) override;
@@ -80,10 +71,10 @@ namespace Engine::Components
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		GenericBounding<> GetBounding() const;
+		[[nodiscard]] GenericBounding<> GetBounding() const;
 
 		template <typename T>
-		T GetBounding() const
+		[[nodiscard]] T GetBounding() const
 		{
 			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
 			{
@@ -101,7 +92,7 @@ namespace Engine::Components
 		}
 
 		template <typename T>
-		T GetBoundingLocal() const
+		[[nodiscard]] T GetBoundingLocal() const
 		{
 			if constexpr (std::is_same_v<T, BoundingOrientedBox>)
 			{
@@ -122,7 +113,6 @@ namespace Engine::Components
 		Collider();
 
 	private:
-		SERIALIZE_DECL
 		COMP_CLONE_DECL
 
 		friend class Managers::LerpManager;
@@ -132,9 +122,6 @@ namespace Engine::Components
 		void UpdateInertiaTensor();
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
-		void VerifyMaterial(boost::weak_ptr<Resources::Material> weak);
-		void UpdateByOwner(Weak<Component> component);
-		void ResetToStockObject(Weak<Component> component);
 
 		eBoundingType m_type_;
 		GenericBounding<> m_boundings_;
@@ -142,10 +129,10 @@ namespace Engine::Components
 		float m_mass_;
 
 		// Non-serialized
-		inline static std::vector<Graphics::VertexElement> s_cube_stock_   = {};
-		inline static std::vector<Graphics::VertexElement> s_sphere_stock_ = {};
-		inline static std::vector<UINT> s_cube_stock_indices_ = {};
-		inline static std::vector<UINT> s_sphere_stock_indices_ = {};
+		static std::vector<Graphics::VertexElement> s_cube_stock_;
+		static std::vector<Graphics::VertexElement> s_sphere_stock_;
+		static std::vector<UINT> s_cube_stock_indices_;
+		static std::vector<UINT> s_sphere_stock_indices_;
 		static constexpr const char* s_stock_shape_names[] = 
 		{
 			"Cube",
@@ -154,14 +141,13 @@ namespace Engine::Components
 
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
-		boost::filesystem::path    m_shape_meta_path_;
+		std::filesystem::path  m_shape_meta_path_;
 		std::set<GlobalEntityID> m_collided_objects_;
 
-		Vector3    m_inverse_inertia_;
-		XMFLOAT3X3 m_inertia_tensor_;
-		Matrix     m_local_matrix_;
-
-		Weak<Resources::Shape> m_shape_;
+		Vector3          m_inverse_inertia_;
+		XMFLOAT3X3       m_inertia_tensor_;
+		Matrix           m_local_matrix_;
+		VertexCollection m_vertices_;
 
 #ifdef PHYSX_ENABLED
 	private:
@@ -189,6 +175,4 @@ namespace Engine::Components
 		std::vector<physx::PxShape*> m_px_meshes_;
 #endif
 	};
-} // namespace Engine::Component
-
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)
+} // namespace Engine::Components

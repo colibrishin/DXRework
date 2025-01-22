@@ -1,9 +1,5 @@
 #include "../Public/EngineEntryPoint.h"
 
-#if PLATFORM == WINDOWS
-#include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
-#endif
-
 /*
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -18,30 +14,10 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
-std::atomic<bool> Engine::Managers::EngineEntryPoint::s_fullscreen = false;
 std::atomic<float> Engine::Managers::EngineEntryPoint::s_fixed_update_interval = 1 / 30.f;
 
 namespace Engine::Managers
 {
-	void EngineEntryPoint::UpdateWindowSize()
-	{
-#if PLATFORM == WINDOWS
-		HWND hWnd = WinAPI::WinAPIWrapper::GetHWND();
-
-		SetWindowPos
-				(
-				 hWnd, nullptr,
-				 (GetSystemMetrics(SM_CXSCREEN) - CFG_WIDTH) / 2,
-				 (GetSystemMetrics(SM_CYSCREEN) - CFG_HEIGHT) / 2,
-				 CFG_WIDTH, CFG_HEIGHT, SWP_NOMOVE | SWP_NOZORDER
-				);
-
-		ShowWindow(hWnd, SW_SHOW);
-		SetForegroundWindow(hWnd);
-		SetFocus(hWnd);
-#endif
-	}
-
 	EngineEntryPoint::EngineEntryPoint(SINGLETON_LOCK_TOKEN)
 		: Singleton()
 	{
@@ -64,21 +40,6 @@ namespace Engine::Managers
 		return m_timer->GetFramesPerSecond();
 	}
 
-	uint32_t EngineEntryPoint::GetWidth() const
-	{
-		return CFG_WIDTH;
-	}
-
-	uint32_t EngineEntryPoint::GetHeight() const
-	{
-		return CFG_HEIGHT;
-	}
-
-	bool EngineEntryPoint::IsFullScreen() const
-	{
-		return s_fullscreen;
-	}
-
 	EngineEntryPoint::~EngineEntryPoint()
 	{
 		SIGTERM();
@@ -86,7 +47,6 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::Initialize()
 	{
-		UpdateWindowSize();
 	}
 
 	void EngineEntryPoint::Tick()

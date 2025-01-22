@@ -13,5 +13,11 @@ public class Mesh : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<DX12Agility>(target);
+        conf.AddPrivateDependency<ResourceManager>(target);
+        conf.AddPrivateDependency<DirectXTK>(target);
+        conf.AddPublicDependency<D3D12Wrapper>(target);
+        conf.AddPrivateDependency<CommandPair>(target);
+        conf.AddPrivateDependency<DescriptorHeap>(target);
     }
 }

@@ -13,6 +13,7 @@ public class SoundManager : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<FMOD>(target);
     }
 }

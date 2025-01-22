@@ -1,133 +1,30 @@
 #pragma once
+#include <map>
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
 namespace Engine::Graphics 
 {
-	struct AnimationPrimitive
+	struct BONEANIMATION_API AnimationPrimitive
 	{
 	public:
-		AnimationPrimitive()
-			: duration(0.f),
-			ticks_per_second(0.f)
-		{
-			RebuildIndexCache();
-		}
+		AnimationPrimitive();
+		AnimationPrimitive(std::string name, float duration, float ticks_per_second, Matrix global_inverse_transform);
+		AnimationPrimitive(const AnimationPrimitive& other) noexcept;
+		AnimationPrimitive(AnimationPrimitive&& other) noexcept;
+		AnimationPrimitive& operator=(const AnimationPrimitive& other) noexcept;
 
-		AnimationPrimitive(std::string name, float duration, float ticks_per_second, Matrix global_inverse_transform)
-			: name_(std::move(name)),
-			duration(duration),
-			ticks_per_second(ticks_per_second),
-			global_inverse_transform_(std::move(global_inverse_transform))
-		{
-			RebuildIndexCache();
-		}
+		void Add(const std::string& name, const BoneAnimationPrimitive& bone_animation);
+		void SetGlobalInverseTransform(const Matrix& global_inverse_transform);
+		size_t GetBoneCount() const noexcept;
+		float GetDuration() const noexcept;
 
-		AnimationPrimitive(const AnimationPrimitive& other) noexcept
-		{
-			name_ = other.name_;
-			duration = other.duration;
-			ticks_per_second = other.ticks_per_second;
-			global_inverse_transform_ = other.global_inverse_transform_;
-			bone_animations = other.bone_animations;
-
-			RebuildIndexCache();
-		}
-
-		AnimationPrimitive(AnimationPrimitive&& other) noexcept
-		{
-			name_ = other.name_;
-			duration = other.duration;
-			ticks_per_second = other.ticks_per_second;
-			global_inverse_transform_ = other.global_inverse_transform_;
-			bone_animations = std::move(other.bone_animations);
-			bone_animations_index_wise = std::move(other.bone_animations_index_wise);
-		}
-
-		AnimationPrimitive& operator=(const AnimationPrimitive& other) noexcept
-		{
-			name_ = other.name_;
-			duration = other.duration;
-			ticks_per_second = other.ticks_per_second;
-			global_inverse_transform_ = other.global_inverse_transform_;
-			bone_animations = other.bone_animations;
-
-			RebuildIndexCache();
-
-			return *this;
-		}
-
-		void Add(const std::string& name, const BoneAnimationPrimitive& bone_animation)
-		{
-			bone_animations[name] = bone_animation;
-			bone_animations_index_wise[bone_animation.GetIndex()] = &bone_animations[name];
-		}
-
-		void SetGlobalInverseTransform(const Matrix& global_inverse_transform)
-		{
-			this->global_inverse_transform_ = global_inverse_transform;
-		}
-
-		size_t GetBoneCount() const noexcept
-		{
-			return bone_animations.size();
-		}
-
-		float GetDuration() const noexcept
-		{
-			return duration;
-		}
-
-		float GetTicksPerSecond() const noexcept
-		{
-			return ticks_per_second;
-		}
-
-		const Matrix& GetGlobalInverseTransform() const noexcept
-		{
-			return global_inverse_transform_;
-		}
-
-		const BoneAnimationPrimitive* GetBoneAnimation(const int idx) const
-		{
-			if (bone_animations_index_wise.contains(idx))
-			{
-				return bone_animations_index_wise.at(idx);
-			}
-
-			return nullptr;
-		}
-
-		const BoneAnimationPrimitive* GetBoneAnimation(const std::string& name) const
-		{
-			if (bone_animations.contains(name))
-			{
-				return &bone_animations.at(name);
-			}
-
-			return nullptr;
-		}
-
-		void RebuildIndexCache()
-		{
-			for (const auto& [key, value] : bone_animations)
-			{
-				bone_animations_index_wise[value.GetIndex()] = &bone_animations[key];
-			}
-		}
+		float GetTicksPerSecond() const noexcept;
+		const Matrix& GetGlobalInverseTransform() const noexcept;
+		const BoneAnimationPrimitive* GetBoneAnimation(const int idx) const;
+		const BoneAnimationPrimitive* GetBoneAnimation(const std::string& name) const;
+		void RebuildIndexCache();
 
 	private:
-		friend class boost::serialization::access;
-
-		template <class Archive>
-		void serialize(Archive& ar, const unsigned int version)
-		{
-			ar& name_;
-			ar& duration;
-			ar& ticks_per_second;
-			ar& global_inverse_transform_;
-			ar& bone_animations;
-		}
-
 		std::string                                   name_;
 		float                                         duration;
 		float                                         ticks_per_second;
@@ -135,13 +32,14 @@ namespace Engine::Graphics
 		std::map<std::string, BoneAnimationPrimitive> bone_animations;
 		std::map<int, BoneAnimationPrimitive*>        bone_animations_index_wise;
 	};
+	
 }
 
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	class BoneAnimation : public BaseAnimation
+	class BONEANIMATION_API BoneAnimation : public BaseAnimation
 	{
 	public:
 		RESOURCE_T(RES_T_BONE_ANIM)
@@ -165,8 +63,6 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(BoneAnimation)
 
 	protected:
-		SERIALIZE_DECL
-
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
@@ -182,6 +78,3 @@ namespace Engine::Resources
 		std::vector<Matrix> m_evaluated_data_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::BoneAnimation)
-BOOST_CLASS_EXPORT_KEY(Engine::Graphics::AnimationPrimitive)

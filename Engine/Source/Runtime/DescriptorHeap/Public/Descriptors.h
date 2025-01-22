@@ -1,7 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
@@ -9,7 +8,7 @@ namespace Engine
 {
 	struct DescriptorHandler;
 
-	struct DescriptorPtrImpl final
+	struct DESCRIPTORHEAP_API DescriptorPtrImpl final
 	{
 	public:
 		DescriptorPtrImpl();
@@ -43,10 +42,7 @@ namespace Engine
 		void SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data) const;
 		void SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, UINT slot) const;
 
-		void BindGraphic(const Weak<CommandPair>& w_cmd) const;
 		void BindGraphic(ID3D12GraphicsCommandList1* cmd) const;
-
-		void BindCompute(const Weak<CommandPair>& w_cmd) const;
 		void BindCompute(ID3D12GraphicsCommandList1* cmd) const;
 
 	private:
@@ -90,11 +86,12 @@ namespace Engine
 	using DescriptorPtr = Weak<DescriptorPtrImpl>;
 	using DescriptorContainer = aligned_vector<StrongDescriptorPtr>;
 
-	struct DescriptorHandler final
+	struct DESCRIPTORHEAP_API DescriptorHandler final
 	{
 	public:
 		DescriptorHandler();
 
+		void Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature);
 		DescriptorPtr Acquire();
 		void          Release(const DescriptorPtrImpl& handles);
 
@@ -102,19 +99,22 @@ namespace Engine
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const;
 
 	private:
+		friend struct DescriptorPtrImpl;
 		void AppendNewHeaps();
 
 		inline static constexpr size_t s_element_size = std::numeric_limits<unsigned int>::digits;
 		inline static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
 
+		ComPtr<ID3D12Device2>                              m_dev_{};
+		ComPtr<ID3D12RootSignature>                        m_root_signature{};
 		UINT                                               m_size_;
-		std::deque<__m256i>                                m_used_slots_;
-		std::deque<std::vector<Strong<DescriptorPtrImpl>>> m_descriptors_;
+		std::deque<__m256i>                                m_used_slots_{};
+		std::deque<std::vector<Strong<DescriptorPtrImpl>>> m_descriptors_{};
 
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_;
-		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_;
+		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
+		std::deque<ComPtr<ID3D12DescriptorHeap>> m_main_sampler_descriptor_heap_{};
 
-		UINT m_buffer_size_;
-		UINT m_sampler_size_;
+		UINT m_buffer_size_{};
+		UINT m_sampler_size_{};
 	};
 }

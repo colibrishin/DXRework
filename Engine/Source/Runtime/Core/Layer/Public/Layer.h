@@ -68,8 +68,6 @@ namespace Engine
 	private:
 		Layer();
 
-		SERIALIZE_DECL
-
 		LayerSizeType                                 m_layer_type_;
 		aligned_vector<Strong<Abstracts::ObjectBase>> m_objects_;
 
@@ -77,5 +75,3 @@ namespace Engine
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
 	};
 } // namespace Engine
-
-BOOST_CLASS_EXPORT_KEY(Engine::Layer)

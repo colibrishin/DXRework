@@ -1,11 +1,5 @@
 #include "../Public/Texture3D.h"
 
-SERIALIZE_IMPL
-(
- Engine::Resources::Texture3D,
- _ARTAG(_BSTSUPER(Texture))
-)
-
 namespace Engine::Resources
 {
 	UINT64 Texture3D::GetWidth() const

@@ -1,16 +1,19 @@
 #include "../Public/SceneManager.hpp"
 
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
-#include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
-#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
+//#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+
+#if WITH_DEBUG
+#include "Source/Runtime/Managers/Debugger/Public/Debugger.hpp"
+#endif
 
 namespace Engine::Managers
 {
 	void SceneManager::SetActiveFinalize(const Weak<Scene>& it)
 	{
-		Managers::ShadowManager::GetInstance().Reset();
 		m_active_scene_ = it;
+		onSceneActive.Broadcast(m_active_scene_);
 
 		if (const auto& scene = m_active_scene_.lock())
 		{
@@ -19,16 +22,7 @@ namespace Engine::Managers
 				scene->Initialize();
 			}
 
-			for (const auto& light :
-			     scene->GetGameObjects(RESERVED_LAYER_LIGHT))
-			{
-				Managers::ShadowManager::GetInstance().RegisterLight
-						(
-						 light.lock()->GetSharedPtr<Objects::Light>()
-						);
-			}
-
-			g_raytracing = scene->m_b_scene_raytracing_;
+			//g_raytracing = scene->m_b_scene_raytracing_;
 		}
 	}
 
@@ -36,18 +30,23 @@ namespace Engine::Managers
 	{
 		if (scene == m_active_scene_.lock())
 		{
+#if WITH_DEBUG
 			Managers::Debugger::GetInstance().Log("Warning: Active scene has been removed.");
-			Managers::ShadowManager::GetInstance().Reset();
+#endif
+			onSceneRemoved.Broadcast(m_active_scene_);
 			m_active_scene_.reset();
 		}
 
-		std::erase_if
+		const decltype(m_scenes_)::iterator& found_scene = std::ranges::find_if
 		(
-			m_scenes_, [scene](const auto& v_scene)
+		 m_scenes_, [scene](const auto& v_scene)
 			{
 				return scene == v_scene;
 			}
 		);
+
+		onSceneRemoved.Broadcast(*found_scene);
+		m_scenes_.erase(found_scene);
 	}
 
 	void SceneManager::AddScene(const std::string& name)

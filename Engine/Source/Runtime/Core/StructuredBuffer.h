@@ -1,10 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/base_object.hpp>
-
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
 #define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
@@ -74,17 +70,6 @@ namespace Engine
 		{
 			SB_T(SB_TYPE_INSTANCE)
 			SB_UAV_T(SB_TYPE_UAV_INSTANCE)
-
-		private:
-			friend class boost::serialization::access;
-
-			template <class Archive>
-			void serialize(Archive& ar, const unsigned int file_version)
-			{
-				ar& boost::serialization::base_object<ParamBase>(*this);
-			}
 		};
 	}
 }
-
-BOOST_CLASS_EXPORT(Engine::Graphics::SBs::InstanceSB);

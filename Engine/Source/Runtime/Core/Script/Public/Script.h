@@ -59,7 +59,6 @@ namespace Engine
 		virtual void OnCollisionExit(const Weak<Components::Collider>& other) = 0;
 
 	private:
-		SERIALIZE_DECL
 		friend class Abstracts::ObjectBase;
 
 		[[nodiscard]] virtual Strong<Script> cloneImpl() const = 0;
@@ -70,6 +69,4 @@ namespace Engine
 		Weak<Abstracts::ObjectBase> m_owner_;
 		bool                        m_b_active_;
 	};
-} // namespace Engine::Component
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Script)
+} // namespace Engine::Components

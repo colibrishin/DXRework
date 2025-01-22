@@ -14,8 +14,15 @@ public class D3D12Wrapper : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
-        conf.AddPrivateDependency<ThrowIfFailed>(target);
+        conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<TBB>(target);
+
+        conf.AddPublicDependency<CommandPair>(target);
+        conf.AddPublicDependency<ThrowIfFailed>(target);
+        conf.AddPublicDependency<DescriptorHeap>(target);
+
         conf.AddPrivateDependency<DX12Agility>(target);
         conf.AddPrivateDependency<DirectXTK>(target);
+        conf.AddPrivateDependency<WinAPIWrapper>(target);
     }
 }

@@ -1,6 +1,4 @@
 #pragma once
-#include <boost/serialization/assume_abstract.hpp>
-
 #include "Source/Runtime/Core/Entity/Public/Entity.hpp"
 
 // Static Component type, this should be added to every component
@@ -32,7 +30,7 @@ namespace Engine
 	};
 
 	template <typename T>
-	struct CORE_API which_component
+	struct which_component
 	{
 		static constexpr eComponentType value = T::ctype;
 	};
@@ -65,7 +63,6 @@ namespace Engine::Abstracts
 		Component(eComponentType type, const Weak<ObjectBase>& owner);
 
 	private:
-		SERIALIZE_DECL
 		friend class ObjectBase;
 
 		[[nodiscard]] virtual Strong<Component> cloneImpl() const = 0;
@@ -89,6 +86,4 @@ namespace Engine::Abstracts
 		bool             m_b_ticked_;
 		bool             m_b_active_;
 	};
-} // namespace Engine::Abstract
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Component)
+} // namespace Engine::Abstracts

@@ -6,17 +6,17 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBufferDX12.hpp"
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/ConstantBufferDX12.hpp"
 #endif
 
 namespace Engine::Managers
 {
 	using namespace Engine::Graphics;
 
-	class RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
+	class RENDERPIPELINE_API RenderPipeline final : public Abstracts::Singleton<RenderPipeline>
 	{
 	private:
-		struct TempParamTicket
+		struct RENDERPIPELINE_API TempParamTicket
 		{
 			TempParamTicket(const CBs::ParamCB& previousParam)
 				: previousParam(previousParam) {}
@@ -66,7 +66,7 @@ namespace Engine::Managers
 		D3D12_VIEWPORT GetViewport() const;
 		D3D12_RECT     GetScissorRect() const;
 
-		static void SetPSO(const Weak<CommandPair>& w_cmd, const Strong<Resources::Shader>& Shader);
+		void SetPSO(const Weak<CommandPair>& w_cmd, const Strong<Resources::Shader>& shader);
 
 		[[nodiscard]] DescriptorPtr AcquireHeapSlot();
 

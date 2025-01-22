@@ -3,12 +3,12 @@
 
 namespace Engine::Resources
 {
-	class Texture3D : public Texture
+	class TEXTURE3D_API Texture3D : public Texture
 	{
 	public:
 		TEX_T(TEX_TYPE_3D)
 
-		explicit Texture3D(const boost::filesystem::path& path, const GenericTextureDescription& description)
+		explicit Texture3D(const std::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_3D, description) {}
 
 		~Texture3D() override = default;
@@ -22,11 +22,8 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 
 		Texture3D()
 			: Texture("", TEX_TYPE_3D, {}) {}
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture3D)

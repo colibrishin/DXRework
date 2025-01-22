@@ -3,7 +3,7 @@
 
 namespace Engine::Resources
 {
-	class ShadowTexture : public Texture2D
+	class SHADOWTEXTURE_API ShadowTexture : public Texture2D
 	{
 	public:
 		RESOURCE_T(RES_T_SHADOW_TEX)

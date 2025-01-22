@@ -2,14 +2,6 @@
 
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 
-SERIALIZE_IMPL
-(
- Engine::Layer,
- _ARTAG(_BSTSUPER(Engine::Abstracts::Renderable))
- _ARTAG(m_layer_type_)
- _ARTAG(m_objects_)
-)
-
 namespace Engine
 {
 	Layer::Layer(const LayerSizeType type)

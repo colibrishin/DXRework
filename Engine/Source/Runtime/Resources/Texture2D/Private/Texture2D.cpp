@@ -1,13 +1,22 @@
 #include "../Public/Texture2D.h"
-
-SERIALIZE_IMPL
-(
- Engine::Resources::Texture2D,
- _ARTAG(_BSTSUPER(Texture))
-)
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
+	boost::shared_ptr<Texture2D> Texture2D::Create(
+		const std::string& name, const std::filesystem::path& path, const GenericTextureDescription& desc
+	)
+	{
+		if (const auto pcheck = Managers::ResourceManager::GetInstance().GetResourceByRawPath<Texture2D>(path).lock();
+			const auto ncheck = Managers::ResourceManager::GetInstance().GetResource<Texture2D>(name).lock())
+		{
+			return ncheck;
+		}
+		const auto obj = boost::make_shared<Texture2D>(path, desc);
+		Managers::ResourceManager::GetInstance().AddResource(name, obj);
+		return obj;
+	}
+
 	UINT64 Texture2D::GetWidth() const
 	{
 		return Texture::GetWidth();

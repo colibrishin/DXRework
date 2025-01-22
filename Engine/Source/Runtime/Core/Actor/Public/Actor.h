@@ -1,8 +1,7 @@
 #pragma once
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
-#include "Source/Runtime/Core/Serialization/Public/SerializationHelper.hpp"
+#include "Source/Runtime/Core/Renderable/Public/Renderable.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
 
@@ -24,7 +23,6 @@ namespace Engine::Abstracts
 		explicit Actor();
 
 	private:
-		SERIALIZE_DECL
 		friend class Scene;
 
 		void SetLayer(LayerSizeType layer);
@@ -35,6 +33,4 @@ namespace Engine::Abstracts
 		LayerSizeType   m_layer_;
 		LocalActorID m_local_id_;
 	};
-} // namespace Engine::Abstract
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstract::Actor)
+} // namespace Engine::Abstracts

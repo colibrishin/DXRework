@@ -76,7 +76,6 @@ namespace Engine::Components
 
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
 
-		SERIALIZE_DECL
 		COMP_CLONE_DECL
 
 		bool       m_b_s_absolute_;
@@ -92,6 +91,4 @@ namespace Engine::Components
 		Vector3    m_animation_scale_;
 		Matrix     m_animation_matrix_;
 	};
-} // namespace Engine::Component
-
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Transform)
+} // namespace Engine::Components

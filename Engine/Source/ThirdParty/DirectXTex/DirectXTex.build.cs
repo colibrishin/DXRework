@@ -8,7 +8,7 @@ using Sharpmake;
 [Sharpmake.Export]
 public class DirectXTex : VCPKG
 {
-    public DirectXMath() : base()
+    public DirectXTex() : base()
     {
         Name = "DirectXTex";
     }
@@ -16,5 +16,24 @@ public class DirectXTex : VCPKG
     public override void ConfigureAll(Configuration conf, EngineTarget target) 
     {
         base.ConfigureAll(conf, target);
+    }
+    public override void ConfigureDebug(Configuration conf, EngineTarget target)
+    {
+        base.ConfigureDebug(conf, target);
+
+        conf.LibraryFiles.Add
+        (
+            @"DirectXTex.lib"
+        );
+    }
+
+    public override void ConfigureRelease(Configuration conf, EngineTarget target)
+    {
+        base.ConfigureRelease(conf, target);
+
+        conf.LibraryFiles.Add
+        (
+            @"DirectXTex.lib"
+        );
     }
 }

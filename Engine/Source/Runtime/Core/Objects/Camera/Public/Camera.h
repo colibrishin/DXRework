@@ -1,7 +1,7 @@
 #pragma once
 #include "Source/Runtime/Core/Entity/Public/Entity.hpp"
 #include "Source/Runtime/Core/Objects/Object/Public/Object.hpp"
-#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBufferDX12.hpp"
+#include "Source/Runtime/Core/ConstantBuffer.h"
 
 namespace Engine::Objects
 {
@@ -34,15 +34,15 @@ namespace Engine::Objects
 		Matrix  GetViewMatrix() const;
 		Matrix  GetProjectionMatrix() const;
 		Matrix  GetWorldMatrix() const;
-		Vector2 GetWorldMousePosition();
 		bool    GetOrthogonal() const;
 		float   GetFOV() const;
 
 	private:
-		SERIALIZE_DECL
 		OBJ_CLONE_DECL
 
 	private:
+		friend class Managers::CameraManager; 
+
 		float m_fov_;
 		bool  m_b_orthogonal_;
 		bool  m_b_fixed_up_;
@@ -55,5 +55,3 @@ namespace Engine::Objects
 		Graphics::CBs::PerspectiveCB m_wvp_buffer_;
 	};
 } // namespace Engine::Objects
-
-BOOST_CLASS_EXPORT_KEY(Engine::Objects::Camera)

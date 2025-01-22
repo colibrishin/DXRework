@@ -7,23 +7,11 @@
 #include "../Public/Scene.hpp"
 
 #include "Source/Runtime/Core/Layer/Public/Layer.h"
-#include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
-#include "Source/Runtime/Managers/ShadowManager/Public/ShadowManager.hpp"
+#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-
-SERIALIZE_IMPL
-(
-	Engine::Scene,
-	_ARTAG(_BSTSUPER(Engine::Abstracts::Renderable))
-	_ARTAG(m_b_scene_raytracing_)
-	_ARTAG(m_main_camera_local_id_)
-	_ARTAG(m_main_actor_local_id_)
-	_ARTAG(m_layers_)
-	_ARTAG(m_layer_count_)
-)
 
 std::atomic<bool> Engine::Scene::s_debug_observer_ = false;
 
@@ -198,10 +186,7 @@ namespace Engine
 			throw std::logic_error("Observer object can only be added to UI layer");
 		}
 
-		if (obj->GetObjectType() == DEF_OBJ_T_LIGHT)
-		{
-			Managers::ShadowManager::GetInstance().RegisterLight(obj->GetSharedPtr<Objects::Light>());
-		}
+		onObjectAdded.Broadcast(obj);
 	}
 
 	void Scene::RemoveObjectFinalize(const GlobalEntityID id, const LayerSizeType layer)
@@ -217,12 +202,8 @@ namespace Engine
 				throw std::runtime_error("object removal is called twice.");
 			}
 
+			onObjectRemoved.Broadcast(obj);
 			obj = acc->second;
-		}
-
-		if (layer == RESERVED_LAYER_LIGHT)
-		{
-			Managers::ShadowManager::GetInstance().UnregisterLight(obj.lock()->GetSharedPtr<Objects::Light>());
 		}
 
 		for (const auto& comp : obj.lock()->GetAllComponents())
@@ -267,27 +248,11 @@ namespace Engine
 			InitializePhysX();
 #endif
 
-			for (const auto& light : m_layers_[RESERVED_LAYER_LIGHT]->GetGameObjects())
-			{
-				if (const auto locked = light.lock())
-				{
-					Managers::ShadowManager::GetInstance().UnregisterLight(locked->GetSharedPtr<Objects::Light>());
-				}
-			}
-
 			m_b_scene_imgui_open_   = scene->m_b_scene_imgui_open_;
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
 			m_layers_               = scene->m_layers_;
 			m_mainCamera_           = scene->m_mainCamera_;
 			m_main_actor_local_id_  = scene->m_main_actor_local_id_;
-
-			for (const auto& light : m_layers_[RESERVED_LAYER_LIGHT]->GetGameObjects())
-			{
-				if (const auto locked = light.lock())
-				{
-					Managers::ShadowManager::GetInstance().RegisterLight(locked->GetSharedPtr<Objects::Light>());
-				}
-			}
 
 			m_object_position_tree_.Clear();
 			m_cached_objects_.clear();
@@ -301,6 +266,8 @@ namespace Engine
 				{
 					if (const auto locked = obj.lock())
 					{
+						onObjectAdded.Broadcast(obj);
+
 						m_cached_objects_.emplace(locked->GetID(), locked);
 						m_assigned_actor_ids_.emplace
 								(

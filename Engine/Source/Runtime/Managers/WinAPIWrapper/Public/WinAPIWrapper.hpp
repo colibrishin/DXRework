@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <vector>
+#include "Source/Runtime/Misc.h"
 
 namespace WinAPI
 {
@@ -12,7 +13,7 @@ namespace WinAPI
         LPARAM lparam
     );
   
-    class WinAPIWrapper final
+    class WINAPIWRAPPER_API WinAPIWrapper final
     {
     public:
         ~WinAPIWrapper()                               = default;
@@ -20,6 +21,7 @@ namespace WinAPI
         WinAPIWrapper& operator=(const WinAPIWrapper&) = delete;
 
         static HWND Initialize(HINSTANCE hInstance);
+        static void UpdateWindowSize(const uint32_t width, const uint32_t height);
         static void Update();
         static HWND GetHWND();
         static void RegisterHandler(const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& func);

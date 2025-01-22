@@ -1,14 +1,15 @@
 #pragma once
-#include <Windows.h>
+#include <deque>
 #include <memory>
-#include <queue>
 
-#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
+#include <directx/d3d12.h>
+
 #include <directxtk12/SpriteFont.h>
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 
 namespace Engine::Managers
 {
-	class Debugger final : public Abstracts::Singleton<Debugger>
+	class DEBUGGER_API Debugger final : public Abstracts::Singleton<Debugger>
 	{
 	public:
 		explicit Debugger(SINGLETON_LOCK_TOKEN);

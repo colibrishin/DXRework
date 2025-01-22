@@ -60,7 +60,7 @@ namespace Engine::Managers
 		return {};
 	}
 
-	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const boost::filesystem::path& path, const eResourceType type)
+	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
 	{
 		if (path.empty())
 		{
@@ -90,7 +90,7 @@ namespace Engine::Managers
 	}
 
 	Weak<Abstracts::Resource> ResourceManager::GetResourceByMetadataPath(
-		const boost::filesystem::path& path, const eResourceType type
+		const std::filesystem::path& path, const eResourceType type
 	)
 	{
 		if (path.empty())
@@ -115,13 +115,6 @@ namespace Engine::Managers
 			}
 
 			return *it;
-		}
-		if (boost::filesystem::exists(path))
-		{
-			const auto res = Serializer::Deserialize<Abstracts::Entity>(path.generic_string())->GetSharedPtr<Abstracts::Resource>();
-			m_resources_[type].insert(res);
-			res->Load();
-			return res;
 		}
 
 		return {};

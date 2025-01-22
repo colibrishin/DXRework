@@ -2,22 +2,9 @@
 
 #include <any>
 
-#include "Source/Runtime/Managers/TaskScheduler/Public/TaskScheduler.h"
-#include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
-
-SERIALIZE_IMPL
-(
- Engine::Abstracts::ObjectBase,
- _ARTAG(_BSTSUPER(Actor))
- _ARTAG(m_parent_id_)
- _ARTAG(m_children_)
- _ARTAG(m_type_)
- _ARTAG(m_active_)
- _ARTAG(m_culled_)
- _ARTAG(m_components_)
- _ARTAG(m_scripts_)
-)
+#include "Source/Runtime/Core/Script/Public/Script.h"
+#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
 namespace Engine::Abstracts
 {

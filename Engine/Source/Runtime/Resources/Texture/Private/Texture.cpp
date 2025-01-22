@@ -1,25 +1,18 @@
 #include "../Public/Texture.h"
-#include <directx/d3d12.h>
-#include <directx/d3dx12.h>
-#include <directxtk12/BufferHelpers.h>
+
 #include <DirectXTex.h>
+#include <directxtk12/BufferHelpers.h>
+#include <directxtk12/ScreenGrab.h>
 
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-
-SERIALIZE_IMPL
-(
- Engine::Resources::Texture,
- _ARTAG(_BSTSUPER(Resource))
- _ARTAG(m_desc_) _ARTAG(m_type_)
- _ARTAG(m_custom_desc_) _ARTAG(m_rtv_desc_)
- _ARTAG(m_dsv_desc_) _ARTAG(m_uav_desc_)
- _ARTAG(m_srv_desc_)
-)
+#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
+#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
 
 namespace Engine::Resources
 {
-	Texture::Texture(boost::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
+	RESOURCE_SELF_INFER_GETTER_IMPL(Texture);
+
+	Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
 		: Resource(std::move(path), RES_T_TEX),
 		  m_desc_(description),
 		  m_type_(type),
@@ -60,26 +53,6 @@ namespace Engine::Resources
 	ID3D12Resource* Texture::GetRawResoruce() const
 	{
 		return m_res_.Get();
-	}
-
-	void Texture::Unbind(const eCommandList list, const Texture& dsv) const
-	{
-		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_res_.Get(),
-				 D3D12_RESOURCE_STATE_RENDER_TARGET,
-				 D3D12_RESOURCE_STATE_COMMON
-				);
-
-		const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 dsv.GetRawResource(),
-				 D3D12_RESOURCE_STATE_DEPTH_WRITE,
-				 D3D12_RESOURCE_STATE_COMMON
-				);
-
-		Managers::D3Device::GetInstance().GetCommandList(list)->ResourceBarrier(1, &rtv_transition);
-		Managers::D3Device::GetInstance().GetCommandList(list)->ResourceBarrier(1, &dsv_transition);
 	}
 
 	void Texture::Unbind(const Weak<CommandPair>& w_cmd, const Texture& dsv) const
@@ -557,7 +530,7 @@ namespace Engine::Resources
 				return;
 			}
 
-			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Texture Mapping").lock();
+			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Texture Mapping").lock();
 
 			const auto dst      = CD3DX12_TEXTURE_COPY_LOCATION(m_res_.Get(), 0);
 			auto       src      = CD3DX12_TEXTURE_COPY_LOCATION(m_upload_buffer_.Get(), 0);
@@ -588,7 +561,7 @@ namespace Engine::Resources
 		}
 		else
 		{
-			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Texture Mapping").lock();
+			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Texture Mapping").lock();
 			
 			cmd->SoftReset();
 			cmd->GetList()->ResourceBarrier(1, &dest_transition);
@@ -799,7 +772,7 @@ namespace Engine::Resources
 					 false
 					);
 
-			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(L"Texture Uploading").lock();
+			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Texture Uploading").lock();
 
 			const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 					(
@@ -989,9 +962,9 @@ namespace Engine::Resources
 		Resource::OnSerialized();
 
 		const auto                  name       = GetName();
-		const boost::filesystem::path folder     = GetPrettyTypeName();
-		const boost::filesystem::path filename   = name + ".dds";
-		const boost::filesystem::path final_path = folder / filename;
+		const std::filesystem::path folder     = GetPrettyTypeName();
+		const std::filesystem::path filename   = name + ".dds";
+		const std::filesystem::path final_path = folder / filename;
 
 		if (!IsLoaded())
 		{
@@ -1000,37 +973,25 @@ namespace Engine::Resources
 
 		if (m_res_)
 		{
-			DirectX::ScratchImage image;
-
 			DX::ThrowIfFailed
-					(
-					 CaptureTexture
-					 (
-					  Managers::D3Device::GetInstance().GetCommandQueue
-					  (COMMAND_LIST_UPDATE), m_res_.Get(), false, image, D3D12_RESOURCE_STATE_COMMON,
-					  D3D12_RESOURCE_STATE_COMMON
-					 )
-					);
-
-			if (!exists(folder))
-			{
-				create_directories(folder);
-			}
-
-			DX::ThrowIfFailed
-					(
-					 SaveToDDSFile
-					 (
-					  image.GetImages(),
-					  image.GetImageCount(),
-					  image.GetMetadata(),
-					  DirectX::DDS_FLAGS_ALLOW_LARGE_FILES,
-					  final_path.c_str()
-					 )
-					);
+			(
+				DirectX::SaveDDSTextureToFile
+				(
+					Managers::D3Device::GetInstance().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT),
+					m_res_.Get(),
+					final_path.c_str(),
+					D3D12_RESOURCE_STATE_COMMON,
+					D3D12_RESOURCE_STATE_COMMON
+				)
+			);
 
 			SetPath(final_path);
 		}
+	}
+
+	void Texture::OnDeserialized()
+	{
+		Resource::OnDeserialized();
 	}
 
 	eResourceType Texture::GetResourceType() const

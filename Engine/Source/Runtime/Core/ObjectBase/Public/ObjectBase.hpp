@@ -176,7 +176,6 @@ namespace Engine::Abstracts
 		virtual void OnCollisionExit(const Strong<Components::Collider>& other);
 
 	private:
-		SERIALIZE_DECL
 		friend class Scene;
 		friend class Managers::ShadowManager;
 
@@ -265,4 +264,3 @@ namespace Engine::Abstracts
 	};
 } // namespace Engine::Abstracts
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::ObjectBase)

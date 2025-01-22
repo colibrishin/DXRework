@@ -1,6 +1,14 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
+namespace Engine
+{
+	struct GJKExtension
+	{
+		static bool GetPenetration(const Weak<Components::Collider>& left, const Weak<Components::Collider>& right, Vector3& normal, float& depth);
+	};
+}
+
 namespace Engine::Physics
 {
 	namespace GJK

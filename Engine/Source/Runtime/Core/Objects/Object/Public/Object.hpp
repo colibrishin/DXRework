@@ -13,9 +13,5 @@ namespace Engine
 	protected:
 		Strong<Abstracts::ObjectBase> cloneImpl() const override;
 
-	private:
-		SERIALIZE_DECL
 	};
 } // namespace Engine
-
-BOOST_CLASS_EXPORT_KEY(Engine::Object)

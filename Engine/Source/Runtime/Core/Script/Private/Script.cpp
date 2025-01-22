@@ -1,11 +1,5 @@
 #include "../Public/Script.h"
 
-SERIALIZE_IMPL
-(
- Engine::Script,
- _ARTAG(_BSTSUPER(Renderable))
-)
-
 namespace Engine
 {
 	Script::Script(const ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner)

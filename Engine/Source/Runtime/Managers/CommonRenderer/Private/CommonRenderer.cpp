@@ -4,13 +4,16 @@
 
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
-#include "Source/Runtime/Core/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Core/Components/ParticleRenderer/Public/ParticleRenderer.h"
-#include "Source/Runtime/Core/Components/ModelRenderer/Public/ModelRenderer.h"
+
+#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+#include "Source/Runtime/Components/ModelRenderer/Public/ModelRenderer.h"
+#include "Source/Runtime/Components/Animator/Public/Animator.h"
+
+#include "Source/Runtime/Components/ParticleRenderer/Public/ParticleRenderer.h"
+
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
-#include "Source/Runtime/Core/Components/Animator/Public/Animator.h"
 #include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
 
 namespace Engine::Rendering

@@ -1,4 +1,9 @@
 #include "Source/Runtime/GJK/Public/GJK.h"
+
+#include <oneapi/tbb/task_arena.h>
+
+#include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
+
 #include "Source/Runtime/GJK/Public/Simplex.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 
@@ -412,3 +417,31 @@ namespace Engine::Physics
 		}
 	} // namespace GJK
 } // namespace Engine::Physics
+
+namespace Engine
+{
+	bool GJKExtension::GetPenetration(
+		const Weak<Components::Collider>& left, 
+		const Weak<Components::Collider>& right,
+		Vector3& normal,
+		float& depth)
+	{
+		if (const Strong<Components::Collider>& left_locked = left.lock())
+		{
+			if (const Strong<Components::Collider>& right_locked = right.lock())
+			{
+				auto dir = left_locked->GetWorldMatrix().Translation() - right_locked->GetWorldMatrix().Translation();
+				dir.Normalize();
+
+				return Physics::GJK::GJKAlgorithm
+						(
+						 left_locked->GetWorldMatrix(), right_locked->GetWorldMatrix(), 
+						 left_locked->GetVertices(), right_locked->GetVertices(), dir,
+						 normal, depth);
+			}
+		}
+
+		return false;
+	}
+}
+
