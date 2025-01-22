@@ -15,6 +15,10 @@ namespace Engine::Resources
 	{
 		GENERATE_BODY
 	public:
+
+		typedef std::pair<Strong<Mesh>, Strong<Material>> MeshMaterialPair;
+		typedef std::vector<MeshMaterialPair> MeshMaterialVector;
+
 		Shape(const std::filesystem::path& path);
 
 		void PreUpdate(const float dt) override;
@@ -32,37 +36,38 @@ namespace Engine::Resources
 		[[nodiscard]] BoundingBox                                GetBoundingBox() const;
 		[[nodiscard]] Weak<Mesh>                                 GetMesh(const std::string& name) const;
 		[[nodiscard]] Weak<Mesh>                                 GetMesh(UINT index) const;
+		[[nodiscard]] Weak<Material>                             GetMaterial(UINT idx) const;
 		[[nodiscard]] Weak<AnimationTexture>                     GetAnimations() const;
-		[[nodiscard]] std::vector<Strong<Mesh>>                  GetMeshes() const;
+		[[nodiscard]] Weak<BaseAnimation>                        GetTransformAnimation() const;
+		[[nodiscard]] const MeshMaterialVector&                  GetMeshes() const;
 		[[nodiscard]] const std::vector<std::string>&            GetAnimationCatalog() const;
 		[[nodiscard]] const std::map<UINT, BoundingOrientedBox>& GetBoneBoundingBoxes() const;
 
 		template <typename T> requires (std::is_base_of_v<Resource, T> && !std::is_same_v<Resource, T>)
 		void Add(const Weak<T>& res)
 		{
-			if (res.expired())
+			if (const Strong<T>& locked = res.lock())
 			{
-				return;
-			}
-
-			const Strong<T>& locked = res.lock();
-			
-			if constexpr (Mesh::StaticIsBaseOf(T::StaticTypeHash()))
-			{
-				addMeshImpl(locked);
-			}
-			else if constexpr (Bone::StaticIsBaseOf(T::StaticTypeHash()))
-			{
-				addBoneImpl(locked);
-			}
-			else if constexpr (AnimationTexture::StaticIsBaseOf(T::StaticTypeHash()))
-			{
-				addAnimationImpl(locked);
+				if constexpr (Mesh::StaticIsBaseOf(T::StaticTypeHash()))
+				{
+					addMeshImpl(locked);
+				}
+				else if constexpr (AnimationTexture::StaticIsBaseOf(T::StaticTypeHash()))
+				{
+					addAnimationImpl(locked);
+				}
+				else if constexpr (BaseAnimation::StaticIsBaseOf(T::StaticTypeHash()))
+				{
+					addTrAnimationImpl(locked);
+				}
 			}
 		}
 
 		void Add(const Weak<Resource>& res);
 
+		void SetMaterial(const Weak<Mesh>& target, const Weak<Material>& mat);
+		void SetMaterial(const size_t target_mesh_idx, const Weak<Material>& mat);
+		
 	protected:
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
@@ -73,7 +78,7 @@ namespace Engine::Resources
 
 		void addMeshImpl(const Strong<Mesh>& res);
 		void addAnimationImpl(const Strong<AnimationTexture>& res);
-		void addBoneImpl(const Strong<Bone>& res);
+		void addTrAnimationImpl(const Strong<BaseAnimation>& res);
 
 		void UpdateVertices();
 
@@ -82,22 +87,31 @@ namespace Engine::Resources
 		EPROPERTY()
 		std::vector<MetadataPath> m_mesh_paths_;
 		EPROPERTY()
-		MetadataPath              m_bone_path_;
+		std::vector<MetadataPath> m_material_paths_;
 		EPROPERTY()
 		MetadataPath              m_animations_path_;
+		EPROPERTY()
+		MetadataPath              m_tr_animation_path_;
 
 		EPROPERTY()
 		BoundingBox                         m_bounding_box_;
 		EPROPERTY()
 		std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 
+#if WITH_EDITOR
+		bool m_ui_mesh_add_opened_ = false;
+		std::vector<bool> m_ui_material_add_opened_{};
+#endif
+
 		// non-serialized
 		inline static Assimp::Importer s_importer_;
-		std::vector<Strong<Mesh>>      m_meshes_;
-		Strong<Bone>                   m_bone_;
-		Strong<AnimationTexture>       m_animations_;
+		
+		MeshMaterialVector m_meshes_;
 
-		bool m_ui_add_ui_opened_ = false;
-		std::vector<VertexElement> m_cached_vertices_;
+		Strong<AnimationTexture> m_animations_;
+
+		Strong<BaseAnimation> m_tr_animation_;
+
+		aligned_vector<VertexElement> m_cached_vertices_;
 	};
 }

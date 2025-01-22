@@ -101,7 +101,6 @@ public class EngineSolution : Solution
                 conf.AddProject<Texture1D>(target);
                 conf.AddProject<Texture2D>(target);
                 conf.AddProject<Texture3D>(target);
-                conf.AddProject<ShapeInstance>(target);
             }
 
             conf.SetStartupProject<Launch>();

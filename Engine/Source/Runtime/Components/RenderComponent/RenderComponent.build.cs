@@ -14,6 +14,6 @@ public class RenderComponent : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Material>(target);
+        conf.AddPublicDependency<Shape>(target);
     }
 }

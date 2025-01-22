@@ -25,6 +25,8 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
+		[[nodiscard]] Weak<AtlasAnimation> GetAnimation(const size_t idx) const;
+
 	protected:
 		void Load_INTERNAL() override;
 		void Map() override;

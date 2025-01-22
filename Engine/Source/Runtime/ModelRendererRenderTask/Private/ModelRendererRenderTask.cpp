@@ -56,7 +56,7 @@ namespace Engine
 
                 const Strong<Components::ModelRenderer>& mr = raw_component->GetSharedPtr<Components::ModelRenderer>();
                 const Strong<Abstracts::ObjectBase>& obj = raw_component->GetOwner().lock();
-                const Strong<Resources::Material> mtr = mr->GetMaterial().lock();
+                const Strong<Resources::Shape> shape = mr->GetShape().lock();
                 const Strong<Components::Transform> tr  = obj->GetComponent<Components::Transform>().lock();
 
                 // animator parameters

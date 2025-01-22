@@ -1,14 +1,13 @@
 #pragma once
 #include "TypeLibrary/Public/TypeLibrary.h"
-#include "MaterialSB.generated.h"
+#include "MaterialPrimitive.generated.h"
 
-namespace Engine::Graphics::SBs
+namespace Engine::Graphics
 {
     ECLASS(serialize)
-    struct ENGINE_MATERIAL_API MaterialSB
+    struct MaterialPrimitive
     {
         GENERATE_BODY
-        SB_T(SB_TYPE_MATERIAL)
 
         EPROPERTY()
         float specularPower = 100.f;
@@ -25,7 +24,14 @@ namespace Engine::Graphics::SBs
         Color        specularColor = {1.f, 1.f, 1.f, 1.f};
         EPROPERTY()
         Vector4      clipPlane = {0.f, 0.f, 0.f, 0.f};
+
         EPROPERTY()
-        OffsetT<int> repeatTexture = false;
+        int repeatTexture = false;
+
+        EPROPERTY()
+        int atlas = false;
+
+        EPROPERTY()
+        int texSlot[BIND_SLOT_END];
     };
 }

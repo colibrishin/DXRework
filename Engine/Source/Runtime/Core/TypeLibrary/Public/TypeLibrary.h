@@ -363,7 +363,6 @@ namespace Engine
 		SB_TYPE_LIGHT_VP,
 		SB_TYPE_INSTANCE,
 		SB_TYPE_LOCAL_PARAM,
-		SB_TYPE_MATERIAL,
 		SB_TYPE_END
 	};
 
@@ -630,7 +629,6 @@ namespace Engine
 			struct InstanceParticleSB;
 			struct LocalParamSB;
 			struct InstanceModelSB;
-			struct MaterialSB;
 		} // namespace SBs
 	} // namespace Graphic
 

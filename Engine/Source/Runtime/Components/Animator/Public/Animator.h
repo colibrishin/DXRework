@@ -4,6 +4,8 @@
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
+#include "AnimatorPrimitive.h"
+
 #include "Animator.generated.h"
 
 namespace Engine::Components
@@ -27,6 +29,7 @@ namespace Engine::Components
 		UINT  GetAnimation() const;
 		float GetFrame() const;
 		float GetDt() const;
+		const Graphics::AnimatorPrimitive& GetPrimitive() const;
 
 	private:
 		COMP_CLONE_DECL
@@ -58,5 +61,8 @@ namespace Engine::Components
 		
 		EPROPERTY()
 		float m_total_dt_;
+
+		EPROPERTY()
+		Graphics::AnimatorPrimitive m_primitive_;
 	};
 }

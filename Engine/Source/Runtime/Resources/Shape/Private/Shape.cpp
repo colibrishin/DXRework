@@ -18,6 +18,7 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
+#include "Material.h"
 
 #include "UIHelpersResourceManager.h"
 
@@ -48,18 +49,22 @@ namespace Engine::Resources
 				{
 					if (auto casted = static_cast<Strong<Resource>*>(ptr))
 					{
-						if ((*casted)->IsBaseOf(Mesh::StaticTypeHash())) 
-						{
-							m_meshes_.push_back((*casted)->GetSharedPtr<Mesh>());
-							m_mesh_paths_.push_back((*casted)->GetMetadataPath());
-						}
+						Add(*casted);
 					}
 				} });
 
-			for (const auto& mesh : m_meshes_) 
+			for (auto it = m_meshes_.begin(); it != m_meshes_.end(); ++it)
 			{
-				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened });
-				if (mesh->m_ui_info_.dialogOpened) 
+				const auto& mesh = (*it).first;
+
+				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened});
+				(*parent += ui.NewButton({ "Edit Material" })).SetFunction([&]()
+					{
+						m_ui_material_add_opened_[std::distance(m_meshes_.begin(), it)] = true;
+					});
+				--*parent;
+
+				if (mesh->m_ui_info_.dialogOpened)
 				{
 					if (UIContext context = ui.NewContext(ui.NewDialog({ mesh.get(), mesh->GetName(), mesh->m_ui_info_.dialogOpened })))
 					{
@@ -68,14 +73,34 @@ namespace Engine::Resources
 				}
 			}
 
+			for (auto it = m_meshes_.begin(); it != m_meshes_.end(); ++it)
+			{
+				const auto& mesh = (*it).first;
+				const size_t idx = std::distance(m_meshes_.begin(), it);
+
+				if (m_ui_material_add_opened_[idx])
+				{
+					if (Weak<Resource> resources_to_load;
+						UIHelpers::SingleResourceSelectionDialogInclusion<Shape, Material>(mesh->GetSharedPtr<Entity>(), resources_to_load))
+					{
+						if (const Strong<Resource>& res = resources_to_load.lock())
+						{
+							SetMaterial(idx, res->GetSharedPtr<Material>());
+						}
+
+						m_ui_material_add_opened_[std::distance(m_meshes_.begin(), it)] = false;
+					}
+				}
+			}
+
 			--*parent;
 
-			(*parent |= ui.NewButton({ "Add New Meshes..." })).SetFunction([&]() 
+			(*parent |= ui.NewButton({ "Add New..." })).SetFunction([&]() 
 				{
-					m_ui_add_ui_opened_ = !m_ui_add_ui_opened_;
+					m_ui_mesh_add_opened_ = !m_ui_mesh_add_opened_;
 				});
 
-			if (m_ui_add_ui_opened_) 
+			if (m_ui_mesh_add_opened_) 
 			{
 				if (std::vector<Weak<Resource>> resources_to_load;
 					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resources_to_load))
@@ -85,7 +110,7 @@ namespace Engine::Resources
 						Add(resource);
 					}
 
-					m_ui_add_ui_opened_ = false;
+					m_ui_mesh_add_opened_ = false;
 				}
 			}
 		}
@@ -114,15 +139,15 @@ namespace Engine::Resources
 		const auto it = std::ranges::find_if
 				(
 				 m_meshes_
-				 , [&name](const auto& mesh)
+				 , [&name](const auto& pair)
 				 {
-					 return mesh->GetName() == name;
+					 return pair.first->GetName() == name;
 				 }
 				);
 
 		if (it != m_meshes_.end())
 		{
-			return *it;
+			return it->first;
 		}
 
 		return {};
@@ -132,7 +157,17 @@ namespace Engine::Resources
 	{
 		if (m_meshes_.size() > index)
 		{
-			return m_meshes_[index];
+			return m_meshes_[index].first;
+		}
+
+		return {};
+	}
+
+	Weak<Material> Shape::GetMaterial(UINT idx) const
+	{
+		if (m_meshes_.size() > idx)
+		{
+			return m_meshes_[idx].second;
 		}
 
 		return {};
@@ -143,7 +178,12 @@ namespace Engine::Resources
 		return m_animations_;
 	}
 
-	std::vector<Strong<Mesh>> Shape::GetMeshes() const
+	Weak<BaseAnimation> Shape::GetTransformAnimation() const
+	{
+		return m_tr_animation_;
+	}
+
+	const Shape::MeshMaterialVector& Shape::GetMeshes() const
 	{
 		return m_meshes_;
 	}
@@ -162,7 +202,7 @@ namespace Engine::Resources
 	{
 		m_cached_vertices_.clear();
 
-		for (const auto& mesh : m_meshes_)
+		for (const auto& mesh : m_meshes_ | std::views::keys)
 		{
 			for (const auto& vertex : mesh->GetVertexCollection())
 			{
@@ -211,23 +251,50 @@ namespace Engine::Resources
 
 	void Shape::Add(const Weak<Resource>& res)
 	{
-		if (res.expired())
+		if (const Strong<Resource>& locked = res.lock())
+		{
+			if (Mesh::StaticIsBaseOf(locked->GetTypeHash()))
+			{
+				addMeshImpl(boost::reinterpret_pointer_cast<Mesh>(locked));
+			}
+			else if (AnimationTexture::StaticIsBaseOf(locked->GetTypeHash()))
+			{
+				addAnimationImpl(boost::reinterpret_pointer_cast<AnimationTexture>(locked));
+			}
+			else if (BaseAnimation::StaticIsBaseOf(locked->GetTypeHash()))
+			{
+				addTrAnimationImpl(boost::reinterpret_pointer_cast<BaseAnimation
+				>(locked));
+			}
+		}
+	}
+
+	void Shape::SetMaterial(const Weak<Mesh>& target, const Weak<Material>& mat)
+	{
+		if (mat.expired() || target.expired()) 
 		{
 			return;
 		}
 
-		const Strong<Resource>& locked = res.lock();
-		if (Mesh::StaticIsBaseOf(locked->GetTypeHash()))
+		const Strong<Mesh>& mesh_locked = target.lock();
+
+		const auto& it = std::ranges::find_if(m_meshes_, [&mesh_locked](const MeshMaterialPair& pair)
+			{
+				return pair.first == mesh_locked;
+			});
+
+		if (it != m_meshes_.end())
 		{
-			addMeshImpl(boost::reinterpret_pointer_cast<Mesh>(locked));
+			SetMaterial(std::distance(m_meshes_.begin(), it), mat);
 		}
-		else if (Bone::StaticIsBaseOf(locked->GetTypeHash()))
+	}
+
+	void Shape::SetMaterial(const size_t target_mesh_idx, const Weak<Material>& mat)
+	{
+		if (const Strong<Material>& locked = mat.lock())
 		{
-			addBoneImpl(boost::reinterpret_pointer_cast<Bone>(locked));
-		}
-		else if (AnimationTexture::StaticIsBaseOf(locked->GetTypeHash()))
-		{
-			addAnimationImpl(boost::reinterpret_pointer_cast<AnimationTexture>(locked));
+			m_meshes_[target_mesh_idx].second = locked;
+			m_material_paths_[target_mesh_idx] = locked->GetMetadataPath();
 		}
 	}
 
@@ -242,12 +309,6 @@ namespace Engine::Resources
 				{
 					Add(mesh);
 				}
-			}
-
-			if (const auto bone = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Bone>
-					(m_bone_path_).lock())
-			{
-				Add(bone);
 			}
 
 			if (const auto anims = Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<AnimationTexture>
@@ -289,6 +350,7 @@ namespace Engine::Resources
 		if (scene->HasMeshes())
 		{
 			const unsigned shape_count = scene->mNumMeshes;
+			Strong<Bone> generated_bone;
 
 			for (unsigned i = 0; i < shape_count; ++i)
 			{
@@ -300,9 +362,9 @@ namespace Engine::Resources
 
 				const std::string mesh_lookup_name = GetName() + "_" + mesh_name + "_" + std::to_string(i);
 
-				if (const auto mesh = Managers::ResourceManager::GetInstance().GetResource<Resources::Mesh>(mesh_lookup_name).lock())
+				if (const auto mesh = Mesh::Get(mesh_lookup_name).lock())
 				{
-					m_meshes_.push_back(mesh);
+					m_meshes_.push_back({ mesh , {} });
 					continue;
 				}
 
@@ -402,8 +464,8 @@ namespace Engine::Resources
 						if (const auto check = Managers::ResourceManager::GetInstance().GetResource<Bone>
 							(mesh_lookup_name + "_BONE").lock())
 						{
-							m_bone_ = check;
-							break;
+							generated_bone = check;
+							continue;
 						}
 
 						const unsigned weight_count = bone->mNumWeights;
@@ -436,8 +498,8 @@ namespace Engine::Resources
 						bone_map[bone_name] = bone_info;
 					}
 
-					const Strong<Bone>& bone = Bone::Create(mesh_lookup_name + "_BONE", bone_map);
-					Add(bone);
+					// create and forget
+					generated_bone = Bone::Create(mesh_lookup_name + "_BONE", bone_map);
 				}
 
 				const Strong<Mesh>& mesh = Mesh::Create(mesh_lookup_name, shape, indices);
@@ -479,7 +541,7 @@ namespace Engine::Resources
 						const auto channel = animation_->mChannels[k];
 						const auto bone_name = channel->mNodeName;
 
-						const auto bone = m_bone_->GetBone(bone_name.C_Str());
+						const auto bone = generated_bone->GetBone(bone_name.C_Str());
 
 						if (!bone)
 						{
@@ -524,6 +586,7 @@ namespace Engine::Resources
 						animation.Add(bone_name.C_Str(), bone_animation);
 					}
 
+					// todo: need an uuid to mark the supported bone.
 					const Strong<BoneAnimation>& anim = BoneAnimation::Create(anim_name + "_ANIM", animation);
 					m_animation_catalog_.push_back(anim_name + "_ANIM");
 					animations.push_back(anim);
@@ -555,7 +618,6 @@ namespace Engine::Resources
 		m_bone_bounding_boxes_.clear();
 		m_cached_vertices_.clear();
 		m_bounding_box_ = {};
-		m_bone_.reset();
 	}
 
 	Shape::Shape()
@@ -564,12 +626,15 @@ namespace Engine::Resources
 
 	void Shape::addMeshImpl(const Strong<Mesh>& res)
 	{
-		m_meshes_.push_back(res);
-		
+		m_meshes_.push_back({ res, {} });
+
+#if WITH_EDITOR
+		m_ui_material_add_opened_.push_back(false);
+#endif
 		m_bounding_box_.Center  = {0, 0, 0};
 		m_bounding_box_.Extents = {0, 0, 0};
 				
-		for (const auto& mesh : m_meshes_)
+		for (const auto& mesh : m_meshes_ | std::views::keys)
 		{
 			const BoundingOrientedBox& obb = mesh->GetBoundingBox();
 			BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
@@ -588,16 +653,18 @@ namespace Engine::Resources
 
 		for (const auto& animation : m_animations_->GetAnimations())
 		{
-			m_animation_catalog_.push_back(animation->GetName());
+			if (const Strong<Resources::BoneAnimation>& locked = animation.lock())
+			{
+				m_animation_catalog_.push_back(locked->GetName());
+			}
 		}
 		
 		// Sorts animations by name for consistency of the index of animation.
 		std::ranges::sort(m_animation_catalog_, [](const std::string& lhs, const std::string& rhs){return lhs < rhs;});
 	}
-	
-	void Shape::addBoneImpl(const Strong<Bone>& res)
+	void Shape::addTrAnimationImpl(const Strong<BaseAnimation>& res)
 	{
-		m_bone_      = res;
-		m_bone_path_ = res->GetMetadataPath().generic_string();
+		m_tr_animation_ = res;
+		m_tr_animation_path_ = res->GetMetadataPath();
 	}
 }

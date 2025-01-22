@@ -49,6 +49,16 @@ namespace Engine::Resources
 		}
 	}
 
+	Weak<AtlasAnimation> AtlasAnimationTexture::GetAnimation(const size_t idx) const
+	{
+		if (m_animations_.size() > idx)
+		{
+			return m_animations_[idx];
+		}
+
+		return {};
+	}
+
 	void AtlasAnimationTexture::Load_INTERNAL()
 	{
 		if (m_atlases_.size() > std::numeric_limits<UINT16>::max())

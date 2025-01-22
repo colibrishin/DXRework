@@ -6,7 +6,11 @@ using Sharpmake;
 [Generate]
 public class Shader : CommonProject
 {
-    public Shader() { }
+    public Shader() 
+    {
+        SourceFilesExtensions.Add(".hlsl");
+        SourceFilesExtensions.Add(".hlsli");
+    }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

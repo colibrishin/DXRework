@@ -10,7 +10,13 @@ namespace Engine::Resources
 {
 	AnimationTexture::AnimationTexture(const std::vector<Strong<BoneAnimation>>& animations)
 		: Texture3D("", {}),
-		  m_animations_(animations) {}
+		  m_animations_(animations) 
+	{
+		for (const Strong<BoneAnimation>& animation : m_animations_)
+		{
+			m_cached_animations_.push_back(animation);
+		}
+	}
 
 	void AnimationTexture::PreUpdate(const float dt) {}
 
@@ -54,9 +60,9 @@ namespace Engine::Resources
 	}
 
 
-	const std::vector<Strong<BoneAnimation>>& AnimationTexture::GetAnimations() const
+	const std::vector<Weak<BoneAnimation>>& AnimationTexture::GetAnimations() const
 	{
-		return m_animations_;
+		return m_cached_animations_;
 	}
 
 	GenericTextureDescription AnimationTexture::preEvaluateAnimations(

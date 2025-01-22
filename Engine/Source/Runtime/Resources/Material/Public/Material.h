@@ -3,9 +3,9 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
-#include <string>
-
-#include "MaterialSB.h"
+#include "AtlasAnimationTexture.h"
+#include "AtlasAnimation.h"
+#include "MaterialPrimitive.h"
 
 #include "Material.generated.h"
 
@@ -16,7 +16,9 @@ namespace Engine::Resources
 	{
 		GENERATE_BODY
 	public:
-		Material(const Graphics::SBs::MaterialSB& material);
+		typedef std::array<Strong<Texture>, BIND_SLOT_END> TextureArray;
+
+		Material(const Graphics::MaterialPrimitive& material);
 
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -29,7 +31,15 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		[[nodiscard]] const Graphics::SBs::MaterialSB& GetMaterialSB() const;
+		void SetTexture(const Weak<Texture>& texture, const size_t slot = 0);
+		void SetAtlasTexture(const Weak<AtlasAnimationTexture>& texture);
+		void SetShader(const Weak<Shader>& shader);
+
+		[[nodiscard]] const Graphics::MaterialPrimitive& GetMaterialPrimitive() const;
+		[[nodiscard]] const TextureArray& GetTextures() const;
+		[[nodiscard]] Weak<AtlasAnimationTexture> GetAtlasTexture() const;
+		[[nodiscard]] Weak<AtlasAnimation>        GetAtlasAnimation(const size_t idx) const;
+		[[nodiscard]] Weak<Shader>                GetShader() const;
 
 	private:
 		Material();
@@ -40,6 +50,25 @@ namespace Engine::Resources
 
 	private:
 		EPROPERTY()
-		Graphics::SBs::MaterialSB m_material_sb_;
+		Graphics::MaterialPrimitive m_material_sb_;
+
+		EPROPERTY()
+		MetadataPath m_shader_path_;
+
+		EPROPERTY()
+		std::array<MetadataPath, BIND_SLOT_END> m_texture_paths_;
+
+		EPROPERTY()
+		MetadataPath m_atlas_path_;
+
+#if WITH_EDITOR
+		bool m_ui_add_dialog_ = false;
+#endif
+
+		Strong<Shader> m_shader_;
+
+		TextureArray m_textures_;
+
+		Strong<AtlasAnimationTexture> m_atlas_loaded_;
 	};
 }

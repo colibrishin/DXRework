@@ -20,7 +20,7 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		const std::vector<Strong<BoneAnimation>>& GetAnimations() const;
+		const std::vector<Weak<BoneAnimation>>& GetAnimations() const;
 
 	protected:
 		void Load_INTERNAL() override;
@@ -39,6 +39,7 @@ namespace Engine::Resources
 
 		EPROPERTY()
 		std::vector<Strong<BoneAnimation>>            m_animations_;
+		std::vector<Weak<BoneAnimation>>              m_cached_animations_;
 		
 		std::vector<std::vector<std::vector<Matrix>>> m_evaluated_animations_;
 	};

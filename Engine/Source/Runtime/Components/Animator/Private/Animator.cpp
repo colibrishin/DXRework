@@ -38,37 +38,56 @@ namespace Engine::Components
 		{
 			return;
 		}
-		const auto mat = mr.lock()->GetMaterial();
-		if (mat.expired())
+
+		const auto shape = mr.lock()->GetShape();
+
+		if (const auto& locked = shape.lock())
 		{
-			return;
-		}
-
-		const auto tr_anim    = mat.lock()->GetResource<Resources::BaseAnimation>(m_animation_id_).lock();
-		const auto bone_anim  = mat.lock()->GetResource<Resources::BoneAnimation>(m_animation_id_).lock();
-		const auto atlas_anim = mat.lock()->GetResource<Resources::AtlasAnimation>(m_animation_id_).lock();
-
-		m_total_dt_ += dt;
-
-		if (tr_anim)
-		{
-			ResetIfTimer(tr_anim);
-			UpdateTimer(tr_anim);
-
-			if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock())
+			m_total_dt_ += dt;
+			int duration = 0;
+			
+			// todo: multiple application of animations
+			if (const Strong<Resources::BaseAnimation>& tr_anim = locked->GetTransformAnimation().lock())
 			{
-				UpdateTransform(tr, tr_anim);
+				duration = tr_anim->GetDuration();
+				ResetIfTimer(tr_anim);
+				UpdateTimer(tr_anim);
+
+				if (const auto tr = GetOwner().lock()->GetComponent<Transform>().lock())
+				{
+					UpdateTransform(tr, tr_anim);
+				}
 			}
-		}
-		else if (bone_anim)
-		{
-			ResetIfTimer(bone_anim);
-			UpdateTimer(bone_anim);
-		}
-		else if (atlas_anim)
-		{
-			ResetIfTimer(atlas_anim);
-			UpdateTimer(atlas_anim);
+			else if (const Strong<Resources::AnimationTexture> anim_tex = locked->GetAnimations().lock())
+			{
+				if (const std::vector<Weak<Resources::BoneAnimation>>& bone_anims = anim_tex->GetAnimations();
+					bone_anims.size() > m_animation_id_ && !bone_anims[m_animation_id_].expired())
+				{
+					const Strong<Resources::BoneAnimation>& bone_anim = bone_anims[m_animation_id_].lock();
+					duration = bone_anim->GetDuration();
+					ResetIfTimer(bone_anim);
+					UpdateTimer(bone_anim);
+				}
+			}
+			else if (const Strong<Resources::Material>& mat = locked->GetMaterial(0).lock(); mat && !mat->GetAtlasTexture().expired())
+			{
+				const Strong<Resources::AtlasAnimation>& atlas_anim = mat->GetAtlasAnimation(m_animation_id_).lock();
+				duration = atlas_anim->GetDuration();
+				ResetIfTimer(atlas_anim);
+				UpdateTimer(atlas_anim);
+
+				AtlasFramePrimitive current_frame;
+				atlas_anim->GetFrame(m_current_frame_, current_frame);
+
+				m_primitive_.atlasX = current_frame.X;
+				m_primitive_.atlasY = current_frame.Y;
+				m_primitive_.atlasW = current_frame.Width;
+				m_primitive_.atlasH = current_frame.Height;
+			}
+
+			m_primitive_.animationID = m_animation_id_;
+			m_primitive_.animationDuration = duration;
+			m_primitive_.currentFrame = m_current_frame_;
 		}
 	}
 
@@ -107,6 +126,11 @@ namespace Engine::Components
 	float Animator::GetDt() const
 	{
 		return m_total_dt_;
+	}
+
+	const Graphics::AnimatorPrimitive& Animator::GetPrimitive() const
+	{
+		return m_primitive_;
 	}
 
 	Animator::Animator()

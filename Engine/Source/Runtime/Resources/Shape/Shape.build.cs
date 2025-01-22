@@ -19,6 +19,7 @@ public class Shape : CommonProject
         conf.AddPublicDependency<Assimp>(target);
         conf.AddPublicDependency<Mesh>(target);
         conf.AddPublicDependency<Bone>(target);
+        conf.AddPublicDependency<Material>(target);
 
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);

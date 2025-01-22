@@ -6,7 +6,7 @@
 
 namespace Engine 
 {
-	using CandidateTuple = std::tuple<Weak<Abstracts::ObjectBase>, Weak<Resources::Material>, aligned_vector<Graphics::SBs::InstanceSB>>;
-	using RenderMapValueType = tbb::concurrent_vector<CandidateTuple, u_align_allocator<CandidateTuple>>;
-	using RenderMap = tbb::concurrent_hash_map<HashType, RenderMapValueType>;
+	using CandidatePair = std::pair<Weak<Abstracts::ObjectBase>, aligned_vector<Graphics::SBs::InstanceSB>>;
+	using RenderMapValueType = concurrent_fast_pool_map<Weak<Resources::Material>, CandidatePair>;
+	using RenderMap = concurrent_fast_pool_map<HashType, RenderMapValueType>;
 }

@@ -5,40 +5,43 @@
 
 namespace Engine::Components
 {
-	void RenderComponent::SetMaterial(const Weak<Resources::Material>& material) noexcept
-	{
-		if (const auto mtr = material.lock())
-		{
-			m_material_      = mtr;
-			m_mtr_meta_path_ = mtr->GetMetadataPath();
-			onMaterialChange.Broadcast(mtr);
-		}
-	}
-
-	Weak<Resources::Material> RenderComponent::GetMaterial() const noexcept
-	{
-		return m_material_;
-	}
-
-	const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept
-	{
-		return m_mtr_meta_path_;
-	}
-
 	void RenderComponent::OnSerialized()
 	{
 		Component::OnSerialized();
+
+		if (m_shape_) 
+		{
+			m_shape_meta_path_ = m_shape_->GetMetadataPath();
+		}
 	}
 
 	void RenderComponent::OnDeserialized()
 	{
 		Component::OnDeserialized();
 
-		if (const auto res_check = Resources::Material::GetByMetadataPath(m_mtr_meta_path_).lock();
-			res_check && !res_check->GetMetadataPath().empty())
+		if (const Strong<Resources::Shape>& shape = Resources::Shape::GetByMetadataPath(m_shape_meta_path_).lock())
 		{
-			m_material_ = res_check;
+			m_shape_ = shape;
 		}
+	}
+
+	void RenderComponent::SetShape(const Weak<Resources::Shape>& shape)
+	{
+		if (const Strong<Resources::Shape>& locked = shape.lock())
+		{
+			m_shape_ = locked;
+			m_shape_meta_path_ = locked->GetMetadataPath();
+		}
+	}
+
+	Weak<Resources::Shape> RenderComponent::GetShape() const
+	{
+		return m_shape_;
+	}
+
+	const MetadataPath& RenderComponent::GetShapeMetadataPath() const
+	{
+		return m_shape_meta_path_;
 	}
 
 	RenderComponent::RenderComponent()
