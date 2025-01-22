@@ -12,19 +12,20 @@ pushd balius
 cargo b -r
 popd)
 
-IF EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
-    SET Msbuild="%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-) else if EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
-    SET Msbuild="%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat"
-) else if EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
-    SET Msbuild="%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+IF EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community" (
+    SET "VSPath=%PROGRAMFILES%\Microsoft Visual Studio\2022\Community"
+) else if EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional" (
+    SET "VSPath=%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional"
+) else if EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise" (
+    SET "VSPath=%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise"
 ) else (
     echo "No Visual Studio has been found"
     exit /b
 )
 
 SET Cmake="cmake"
-call %Msbuild%
+SET "VSDevEnv=%VSPath%\VC\Auxiliary\Build\vcvars64.bat"
+call "%VSDevEnv%"
 
 where cmake
 IF errorlevel 1 (
@@ -37,10 +38,11 @@ SET Cmake="..\CMake\cmake-3.31.4-windows-x86_64\bin\cmake.exe"
 
 echo [Build header-parser]
 pushd Programs\header-parser
-start /b /wait "" cmake "CMakeLists.txt"
-start /b /wait "" cmake "--build" "."
+start /b /wait "" %Cmake% "CMakeLists.txt"
+start /b /wait "" %Cmake% "--build" "."
 popd
 
-set VSVcpkg="%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe"
-IF EXIST %VSVcpkg% (echo Found Visual studo vcpkg) else (echo No vcpkg from Visual studio found, fallback to env path)
-IF EXIST %VSVcpkg% (%VSVcpkg% install) ELSE (vcpkg install)
+set "VSVcpkg=%VSPath%\VC\vcpkg\vcpkg.exe"
+IF NOT EXIST vcpkg_installed (mkdir vcpkg_installed)
+IF EXIST "%VSVcpkg%" (echo Found Visual studo vcpkg) else (echo No vcpkg from Visual studio found, fallback to env path)
+IF EXIST "%VSVcpkg%" ("%VSVcpkg%" install --x-install-root=%cd%\vcpkg_installed) ELSE (vcpkg install --x-install-root=%cd%\vcpkg_installed)

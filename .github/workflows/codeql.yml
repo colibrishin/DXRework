@@ -106,6 +106,13 @@ jobs:
       working-directory: ${{env.SOLUTION_FILE_PATH}}
       run: vcpkg integrate install
 
+    - name: Cache PhysX
+      id: cache-physx
+      uses: actions/cache@v4
+      with:
+        path: ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX\physx
+        key: ${{ runner.os }}-physx
+
     - name: Copy PhysX preset
       working-directory: ${{env.SOLUTION_FILE_PATH}}
       run: Copy-Item -Path "vc17win64.xml" -Destination "Engine\Source\ThirdParty\PhysX\PhysX\physx\buildtools\presets\public" -Force
@@ -115,6 +122,7 @@ jobs:
       run: Start-Process -FilePath "cmd.exe" -Wait -NoNewWindow -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
 
     - name: Build PhysX
+      if: steps.cache-physx.outputs.cachie-hit != 'true'
       working-directory: ${{github.workspace}}
       run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX/physx/compiler/vc17win64/PhysXSDK.sln
 
