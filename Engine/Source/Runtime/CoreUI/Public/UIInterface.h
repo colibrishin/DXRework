@@ -215,6 +215,12 @@ namespace Engine
             : UIToken<const std::string_view, bool&>(basic_string_view, flag) {}
     };
 
+    struct ENGINE_COREUI_API ComboboxToken : UIToken<const std::string_view, int*, const char* const*, const size_t>
+    {
+        ComboboxToken(const std::string_view basic_string_view, int* value, const char* const* label_arr, const size_t arr_size)
+            : UIToken(basic_string_view, value, label_arr, arr_size) {}
+    };
+
     struct UIContext
     {
         explicit UIContext(UITokenBase* parent)
@@ -340,6 +346,7 @@ namespace Engine
         virtual UITokenBase* NewSelectable(const SelectableToken::ArgumentTuple& arguments) = 0;
         virtual UITokenBase* NewLabelAndVec3(const LabelAndVec3Token::ArgumentTuple& arguments) = 0;
         virtual UITokenBase* NewCheckbox(const CheckboxToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewCombobox(const ComboboxToken::ArgumentTuple& arguments) = 0;
 
         virtual void NewFrame() = 0;
 

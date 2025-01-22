@@ -297,6 +297,14 @@ bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag
 	return ImGui::Checkbox(temp_label.data(), &flag);
 }
 
+void Engine::ImGuiComboboxToken::End() const
+{
+}
+bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size) const
+{
+	return ImGui::Combo(label.data(), value, label_arr, arr_size);
+}
+
 void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR

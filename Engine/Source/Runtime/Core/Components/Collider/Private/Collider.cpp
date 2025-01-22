@@ -5,6 +5,14 @@
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "../Public/Generator.hpp"
 
+#if WITH_DEBUG
+#include "Debugger/Public/Debugger.hpp"
+#endif
+
+#if WITH_EDITOR
+#include "UIInterface.h"
+#endif
+
 #ifdef PHYSX_ENABLED
 #include <PxMaterial.h>
 #include <PxPhysics.h>
@@ -70,29 +78,44 @@ namespace Engine::Components
 			const auto _ = owner->AddComponent<Transform>().lock();
 		}
 
+		if (const Strong<Transform> tr = owner->GetComponent<Transform>().lock())
+		{
+			tr->onTransformChanged.Listen(GetSharedPtr<Collider>(), &Collider::UpdateInertiaTensor);
+		}
+
 		InitializeStockVertices();
 
+		// use cube shape by default
+		const auto vtx_ptr = reinterpret_cast<Vector3*>(s_cube_vertices_.data());
+		m_boundings_.CreateFromPoints<BoundingBox>(s_cube_vertices_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
+		GenerateInertiaCube();
+		UpdateInertiaTensor();
+
 #ifdef PHYSX_ENABLED
+		UpdatePhysXShape();
 		// todo: move friction value from rb to collider
 		m_px_material_ = GetPhysicsManager().GetPhysX()->createMaterial(0.1f, 0.1f, g_restitution_coefficient);
 		owner->onComponentRemoved.Listen(GetSharedPtr<Collider>(), &Collider::ResetRigidbody);
 		GetCollisionDetector().onLayerMaskChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 		owner->onLayerChange.Listen(GetSharedPtr<Collider>(), &Collider::UpdateShapeFilter);
 #endif
+	}
 
-		const auto vtx_ptr = reinterpret_cast<const Vector3*>(s_cube_vertices_.data());
-		m_boundings_.CreateFromPoints<BoundingBox>(s_cube_vertices_.size(), vtx_ptr, sizeof(Graphics::VertexElement));
-
-		if (m_type_ == BOUNDING_TYPE_BOX)
+	void Collider::OnUIUpdate(UIContext* const context, const float dt)
+	{
+#if WITH_EDITOR
+		if (context)
 		{
-			GenerateInertiaCube();
-		}
-		else if (m_type_ == BOUNDING_TYPE_SPHERE)
-		{
-			GenerateInertiaSphere();
-		}
+			Component::OnUIUpdate(context, dt);
 
-		UpdateInertiaTensor();
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names) })).SetFunction([&]() 
+			{
+				SetType(m_type_);
+			});
+			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 1.0f, 0.1f, true});
+		}
+#endif
 	}
 
 	void Collider::InitializeStockVertices()
@@ -546,18 +569,31 @@ namespace Engine::Components
 	}
 #endif
 
-	void Collider::PreUpdate(const float dt)
-	{
-		UpdateInertiaTensor();
-	}
+	void Collider::PreUpdate(const float dt) {}
 
-	void Collider::Update(const float dt)
-	{
-		UpdateInertiaTensor();
-	}
+	void Collider::Update(const float dt) {}
 
 	void Collider::PostUpdate(const float dt)
 	{
 		Component::PostUpdate(dt);
+
+#if WITH_DEBUG
+		if (m_type_ == BOUNDING_TYPE_BOX) 
+		{
+			Managers::Debugger::GetInstance().Draw
+			(
+				GetBounding<BoundingOrientedBox>(),
+				m_collided_objects_.empty() ? Color{ 1.f, 0.f, 0.f, 1.f } : Color{ 0.f, 1.f, 0.f, 1.f }
+			);
+		}
+		else if (m_type_ == BOUNDING_TYPE_SPHERE) 
+		{
+			Managers::Debugger::GetInstance().Draw
+			(
+				GetBounding<BoundingSphere>(),
+				m_collided_objects_.empty() ? Color{ 1.f, 0.f, 0.f, 1.f } : Color{ 0.f, 1.f, 0.f, 1.f }
+			);
+		}
+#endif
 	}
 } // namespace Engine::Component

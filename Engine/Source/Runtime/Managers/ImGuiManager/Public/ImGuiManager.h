@@ -177,6 +177,17 @@ namespace Engine
         [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiComboboxToken : ComboboxToken
+    {
+        ImGuiComboboxToken(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size)
+            : ComboboxToken(label, value, label_arr, arr_size) {}
+
+        void End() const override;
+
+    protected:
+        [[nodiscard]] bool DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -201,6 +212,7 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(Selectable)
         IMGUI_INLINE_GETTER_DECL(LabelAndVec3)
         IMGUI_INLINE_GETTER_DECL(Checkbox)
+        IMGUI_INLINE_GETTER_DECL(Combobox)
 
         void               NewFrame() override;
     };

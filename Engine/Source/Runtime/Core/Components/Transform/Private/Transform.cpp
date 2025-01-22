@@ -27,6 +27,7 @@ namespace Engine::Components
 		world                  = world.Invert();
 
 		m_position_ = Vector3::Transform(position, world);
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetWorldRotation(const Quaternion& rotation)
@@ -38,6 +39,7 @@ namespace Engine::Components
 		world.Inverse(world);
 
 		m_rotation_ = rotation * world;
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::SetWorldScale(const Vector3& scale)
@@ -47,21 +49,25 @@ namespace Engine::Components
 		world               = world / local;
 
 		m_scale_ = scale / world;
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetLocalPosition(const Vector3& position)
 	{
 		m_position_ = position;
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetLocalRotation(const Quaternion& rotation)
 	{
 		m_rotation_ = rotation;
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetLocalScale(const Vector3& scale)
 	{
 		m_scale_ = scale;
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::SetLocalMatrix(const Matrix& matrix)
@@ -71,16 +77,19 @@ namespace Engine::Components
 			throw std::runtime_error
 					("Matrix decomposition failed");
 		}
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::SetSizeAbsolute(bool absolute)
 	{
 		m_b_s_absolute_ = absolute;
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::SetRotateAbsolute(bool absolute)
 	{
 		m_b_r_absolute_ = absolute;
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetAnimationPosition(const Vector3& position)
@@ -89,6 +98,7 @@ namespace Engine::Components
 		m_animation_matrix_   = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_).Invert();
 		m_animation_position_ = position;
 		m_animation_matrix_   = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_);
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetAnimationRotation(const Quaternion& rotation)
@@ -98,6 +108,7 @@ namespace Engine::Components
 		m_animation_matrix_   = Matrix::CreateScale(m_animation_scale_) *
 		                        Matrix::CreateFromQuaternion(m_animation_rotation_) *
 		                        Matrix::CreateTranslation(m_animation_position_);
+		onTransformChanged.Broadcast();
 	}
 
 	void __vectorcall Transform::SetAnimationScale(const Vector3& scale)
@@ -106,11 +117,13 @@ namespace Engine::Components
 		m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_).Invert() * m_animation_matrix_;
 		m_animation_scale_  = scale;
 		m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_) * m_animation_matrix_;
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::SetAnimationMatrix(const Matrix& matrix)
 	{
 		m_animation_matrix_ = matrix;
+		onTransformChanged.Broadcast();
 	}
 
 	Vector3 Transform::GetWorldPosition()
@@ -230,6 +243,7 @@ namespace Engine::Components
 	void Transform::Translate(Vector3 translation)
 	{
 		m_position_ += translation;
+		onTransformChanged.Broadcast();
 	}
 
 	void Transform::Initialize()

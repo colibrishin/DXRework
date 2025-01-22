@@ -17,7 +17,6 @@ namespace Engine::Components
 		Transform* GetT1() const;
 
 		void SetGravityOverride(bool gravity);
-		void SetGrounded(bool grounded);
 		void SetFrictionCoefficient(float mu);
 		void SetFixed(bool fixed);
 		void SetNoAngular(bool no_angular);
@@ -55,11 +54,11 @@ namespace Engine::Components
 
 		bool IsGravityAllowed() const;
 		bool IsFixed() const;
-		bool IsGrounded() const;
 		bool GetNoAngular() const;
 		bool GetLerp() const;
 
 		void Initialize() override;
+		void OnUIUpdate(UIContext* const context, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
@@ -80,7 +79,6 @@ namespace Engine::Components
 	private:
 		COMP_CLONE_DECL
 
-		bool m_bGrounded;
 		bool m_b_no_angular_;
 		bool m_bGravityOverride;
 		bool m_bFixed;

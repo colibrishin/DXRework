@@ -1,8 +1,9 @@
 #pragma once
-#include <directxtk12/SimpleMath.h>
 #include <boost/serialization/export.hpp>
-
+#include "Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/Component/Public/Component.h"
+
+DEFINE_DELEGATE(OnTranfromChanged);
 
 namespace Engine
 {
@@ -16,6 +17,8 @@ namespace Engine::Components
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Transform)
 		COMPONENT_T(COM_T_TRANSFORM)
+
+		DelegateOnTranfromChanged onTransformChanged;
 
 		Transform(const Weak<Engine::Abstracts::ObjectBase>& owner);
 		~Transform() override = default;

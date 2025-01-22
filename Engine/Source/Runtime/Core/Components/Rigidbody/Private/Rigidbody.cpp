@@ -52,9 +52,24 @@ namespace Engine::Components
 		}
 	}
 
+	void Rigidbody::OnUIUpdate(UIContext* const context, const float dt)
+	{
+#if WITH_EDITOR
+		if (context) 
+		{
+			Component::OnUIUpdate(context, dt);
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			(*context |= ui.NewCheckbox({ "Gravity Override", m_bGravityOverride })).SetFunction([&]()
+			{
+				SetGravityOverride(m_bGravityOverride);
+			});
+		}
+#endif
+	}
+
 	Rigidbody::Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object)
 		: Component(COM_T_RIDIGBODY, object),
-		  m_bGrounded(false),
 		  m_b_no_angular_(false),
 		  m_bGravityOverride(false),
 		  m_bFixed(false),
@@ -64,7 +79,6 @@ namespace Engine::Components
 	Rigidbody::Rigidbody(const Rigidbody& other)
 		: Component(other)
 	{
-		m_bGrounded         = other.m_bGrounded;
 		m_b_no_angular_     = other.m_b_no_angular_;
 		m_bGravityOverride  = other.m_bGravityOverride;
 		m_bFixed            = other.m_bFixed;
@@ -100,11 +114,6 @@ namespace Engine::Components
 			}
 		}
 #endif
-	}
-
-	void Rigidbody::SetGrounded(bool grounded)
-	{
-		m_bGrounded = grounded;
 	}
 
 	void Rigidbody::SetFrictionCoefficient(float mu)
@@ -280,11 +289,6 @@ namespace Engine::Components
 		return m_t1_torque_;
 	}
 
-	bool Rigidbody::GetGrounded() const
-	{
-		return m_bGrounded;
-	}
-
 	bool Rigidbody::IsGravityAllowed() const
 	{
 		return m_bGravityOverride;
@@ -293,11 +297,6 @@ namespace Engine::Components
 	bool Rigidbody::IsFixed() const
 	{
 		return m_bFixed;
-	}
-
-	bool Rigidbody::IsGrounded() const
-	{
-		return m_bGrounded;
 	}
 
 	bool Rigidbody::GetNoAngular() const
@@ -312,8 +311,6 @@ namespace Engine::Components
 
 	void Rigidbody::Reset()
 	{
-		m_bGrounded = false;
-
 		m_t0_force_         = m_t1_force_;
 		m_t0_torque_        = m_t1_torque_;
 		m_t1_force_         = Vector3::Zero;
@@ -325,8 +322,6 @@ namespace Engine::Components
 
 	void Rigidbody::FullReset()
 	{
-		m_bGrounded = false;
-
 		m_linear_velocity   = Vector3::Zero;
 		m_angular_velocity  = Vector3::Zero;
 		m_t0_force_         = Vector3::Zero;
@@ -363,7 +358,6 @@ namespace Engine::Components
 
 	Rigidbody::Rigidbody()
 		: Component(COM_T_RIDIGBODY, {}),
-		  m_bGrounded(false),
 		  m_b_no_angular_(false),
 		  m_bGravityOverride(false),
 		  m_bFixed(false),
