@@ -8,7 +8,7 @@
 
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_ANIMATOR_API Animator final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY

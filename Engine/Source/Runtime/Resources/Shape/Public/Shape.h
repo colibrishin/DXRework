@@ -10,7 +10,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
 		GENERATE_BODY

@@ -65,7 +65,7 @@ namespace Engine
 
 namespace Engine::Abstracts
 {
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:

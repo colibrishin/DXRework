@@ -8,7 +8,7 @@
 
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
 	{
 		GENERATE_BODY

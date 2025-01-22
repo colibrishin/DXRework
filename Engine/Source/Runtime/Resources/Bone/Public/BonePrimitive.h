@@ -10,7 +10,7 @@ namespace Engine::Graphics
 	struct BonePrimitive;
 	using BonePrimitiveMap = std::map<std::string, Graphics::BonePrimitive>;
 
-	ECLASS()
+	ECLASS(serialize)
 	struct ENGINE_BONE_API BonePrimitive
 	{
 		GENERATE_BODY

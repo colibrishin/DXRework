@@ -9,7 +9,7 @@
 
 #include "ModuleManager/Public/ModuleManager.h"
 
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
@@ -17,6 +17,7 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
+#include "Shape.generated.h"
 
 namespace Engine::Resources
 {

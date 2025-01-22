@@ -85,6 +85,7 @@ namespace Engine::Managers
 #endif
 
 	private:
+		SceneManager() = default;
 		friend struct SingletonDeleter;
 		~SceneManager() override = default;
 

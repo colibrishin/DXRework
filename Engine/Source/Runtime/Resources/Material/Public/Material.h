@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
@@ -7,41 +7,13 @@
 #include <string>
 #include <map>
 
-#include "ModuleManager/Public/IModule.h"
+#include "MaterialSB.h"
 
 #include "Material.generated.h"
 
-namespace Engine::Graphics::SBs 
-{
-	struct ENGINE_MATERIAL_API MaterialBindFlag
-	{
-		OffsetT<int> tex[CFG_PER_PARAM_BUFFER_SIZE];
-		OffsetT<int> texArr[CFG_PER_PARAM_BUFFER_SIZE];
-		OffsetT<int> texCube[CFG_PER_PARAM_BUFFER_SIZE];
-		OffsetT<int> bone;
-		OffsetT<int> atlas;
-	};
-
-	struct ENGINE_MATERIAL_API MaterialSB
-	{
-		SB_T(SB_TYPE_MATERIAL)
-		MaterialBindFlag flags;
-
-		float specularPower;
-		float reflectionTranslation;
-		float reflectionScale;
-		float refractionScale;
-
-		Color        overrideColor;
-		Color        specularColor;
-		Vector4      clipPlane;
-		OffsetT<int> repeatTexture;
-	};
-}
-
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
 		GENERATE_BODY

@@ -4,7 +4,7 @@
 
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
 
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 
 namespace Engine::Physics 
 { 

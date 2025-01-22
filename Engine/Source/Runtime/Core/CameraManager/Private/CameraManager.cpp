@@ -1,4 +1,5 @@
 #include "../Public/CameraManager.h"
+#include "CameraManager.generated.h"
 
 #include "Source/Runtime/Core/Components/Rigidbody/Public/Rigidbody.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"

@@ -17,7 +17,7 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
 		GENERATE_BODY

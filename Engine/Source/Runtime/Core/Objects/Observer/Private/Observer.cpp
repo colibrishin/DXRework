@@ -2,6 +2,7 @@
 #include "ObjectBase/Public/ObjectBase.h"
 
 #include "Components/Transform/Public/Transform.h"
+#include "Observer.generated.h"
 
 namespace Engine::Objects
 {

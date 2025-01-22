@@ -2,6 +2,8 @@
 #include <bitset>
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
+#include "Light.generated.h"
+
 namespace Engine 
 {
 	enum ENGINE_CORE_API eLightType
@@ -14,10 +16,11 @@ namespace Engine
 
 namespace Engine::Objects
 {
+	ECLASS(serialize)
 	class ENGINE_CORE_API Light final : public Abstracts::ObjectBase
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Light)
 		OBJECT_T(DEF_OBJ_T_LIGHT)
 
 		Light();

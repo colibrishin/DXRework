@@ -52,6 +52,15 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Vector4& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+		ar & x.z;
+		ar & x.w;
+	}
+	
+	template <typename Archive>
 	void serialize(Archive& ar, DirectX::SimpleMath::Color& x, const unsigned int version)
 	{
 		ar & x.x;
@@ -66,6 +75,13 @@ namespace boost::serialization
 		ar & x.x;
 		ar & x.y;
 		ar & x.z;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Vector2& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
 	}
 
 	template <typename Archive>
@@ -270,6 +286,16 @@ namespace Engine::Graphics
 		}
 
 	private:
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& f_param;
+			ar& i_param;
+			ar& v_param;
+			ar& m_param;
+		}
+		
 		constexpr static size_t max_param = 8;
 
 		float   f_param[max_param * (sizeof(Vector4) / sizeof(float))]{};
@@ -513,6 +539,15 @@ namespace Engine
 		{
 			value = v;
 			return *this;
+		}
+
+	private:
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& value;
 		}
 	};
 

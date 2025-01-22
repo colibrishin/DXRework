@@ -75,7 +75,6 @@ namespace Engine
 
 			std::filesystem::path final_path = folder / final_filename;
 			object->m_meta_path_             = final_path;
-			object->m_meta_str_              = final_path.string();
 
 			if (exists(final_path))
 			{

@@ -1,11 +1,16 @@
 #pragma once
-#include "VertexBoneElement.hpp"
+#include "VertexBoneElement.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+
+#include "VertexElement.generated.h"
 
 namespace Engine::Graphics
 {
+	ECLASS(serialize)
 	struct ENGINE_CORE_API VertexElement
 	{
+		GENERATE_BODY
+		
 		constexpr VertexElement() :
 			position(0.f, 0.f, 0.f), color(0.f, 0.f, 0.f, 1.f), texCoord(0.f, 0.f), normal(0.f, 0.f, 0.f), tangent(0.f, 0.f, 0.f), binormal(0.f, 0.f, 0.f) {}
 
@@ -13,29 +18,25 @@ namespace Engine::Graphics
 			: position(p), color(col), texCoord(tex), normal(norm), tangent(tangent), binormal(binormal), boneElement(bone.bone_indices_, bone.bone_weights_, bone.bone_count_)
 		{}
 
+		EPROPERTY()
 		Vector3 position;
+
+		EPROPERTY()
 		Color color;
+
+		EPROPERTY()
 		Vector2 texCoord;
+
+		EPROPERTY()
 		Vector3 normal;
+
+		EPROPERTY()
 		Vector3 tangent;
+
+		EPROPERTY()
 		Vector3 binormal;
 
+		EPROPERTY()
 	    VertexBoneElement boneElement;
 	};
 }
-
-namespace boost::serialization
-{
-	template <typename Archive>
-	void serialize(Archive& ar, Engine::Graphics::VertexElement& x, const unsigned int version)
-	{
-		ar & x.position;
-		ar & x.color;
-		ar & x.normal;
-		ar & x.tangent;
-		ar & x.binormal;
-		ar & x.boneElement;
-	}
-}
-
-BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexElement)

@@ -6,7 +6,7 @@
 #include <array>
 
 #include "TypeLibrary/Public/TypeLibrary.h"
-#include "VertexElement/Public/VertexElement.hpp"
+#include "VertexElement/Public/VertexElement.h"
 
 namespace Engine 
 {

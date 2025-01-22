@@ -1,4 +1,5 @@
 #include "..\Public\Entity.h"
+#include "Entity.generated.h"
 
 #include "UIInterface.h"
 #include "Serialization.hpp"
@@ -60,10 +61,9 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 		});
 		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, 0.f, 0, 0, false});
 		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
-		(*parent |= ui.NewButton({"Save"})).SetFunction([]()
+		(*parent |= ui.NewButton({"Save"})).SetFunction([&]()
 		{
-			// todo: trigger save
-			__nop();
+			Serializer::Serialize(m_name_, GetSharedPtr<Entity>());
 		});
 	}
 #endif

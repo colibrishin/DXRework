@@ -1,4 +1,5 @@
 #include "../Public/Script.h"
+#include "Script.generated.h"
 
 namespace Engine
 {

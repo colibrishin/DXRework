@@ -4,6 +4,7 @@
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
+#include "ParticleRenderer.generated.h"
 
 namespace Engine::Components
 {
@@ -161,65 +162,4 @@ namespace Engine::Components
 			m_cs_meta_path_ = shader->GetMetadataPath().string();
 		}
 	}
-}
-
-Engine::Graphics::SBs::InstanceParticleSB::InstanceParticleSB()
-{
-	SetLife(0.0f);
-	SetActive(true);
-	SetVelocity(Vector3::One);
-	SetWorld(Matrix::Identity);
-}
-
-void Engine::Graphics::SBs::InstanceParticleSB::SetLife(const float life)
-{
-	SetParam(0, life);
-}
-
-void Engine::Graphics::SBs::InstanceParticleSB::SetActive(const bool active)
-{
-	SetParam(0, static_cast<int>(active));
-}
-
-void Engine::Graphics::SBs::InstanceParticleSB::SetVelocity(const Vector3& velocity)
-{
-	SetParam(0, velocity);
-}
-
-void Engine::Graphics::SBs::InstanceParticleSB::SetWorld(const Matrix& world)
-{
-	SetParam(0, world);
-}
-
-Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
-{
-	return GetParam<Matrix>(0);
-}
-
-bool& Engine::Graphics::SBs::InstanceParticleSB::GetActive()
-{
-	return reinterpret_cast<bool&>(GetParam<int>(0));
-}
-
-MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)
-
-void Engine::ParticleRendererModule::Initialize()
-{
-	Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
-	{
-		if (const Strong<Abstracts::ObjectBase>& locked = owner.lock())
-		{
-			locked->AddComponent<Components::ParticleRenderer>();
-		}
-	});
-}
-
-void Engine::ParticleRendererModule::Shutdown()
-{
-	Abstracts::ObjectBase::UnregisterComponentFactory("ParticleRenderer");
-}
-
-bool Engine::ParticleRendererModule::DynamicLoadable()
-{
-	return true;
 }

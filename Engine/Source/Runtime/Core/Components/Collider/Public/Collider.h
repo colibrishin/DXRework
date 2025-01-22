@@ -4,7 +4,7 @@
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
 
 #include "Collider.generated.h"
@@ -32,7 +32,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Collider final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY

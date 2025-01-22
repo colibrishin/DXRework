@@ -11,7 +11,7 @@
 namespace Engine::Resources
 {
 	using namespace Graphics;
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_BONE_API Bone : public Abstracts::Resource
 	{
 		GENERATE_BODY

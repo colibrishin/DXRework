@@ -15,7 +15,7 @@ namespace Engine::Components
 
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(abstract, serialize)
 	class ENGINE_RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY

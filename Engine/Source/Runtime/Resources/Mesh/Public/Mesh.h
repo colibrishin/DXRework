@@ -1,7 +1,7 @@
 #pragma once
 #include "GraphicInterface.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "VertexElement/Public/VertexElement.hpp"
+#include "VertexElement/Public/VertexElement.h"
 #include "ResourceManager/Public/ResourceManager.h"
 
 #include "Mesh.generated.h"
@@ -17,7 +17,7 @@ namespace physx
 
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_MESH_API Mesh : public Abstracts::Resource
 	{
 		GENERATE_BODY

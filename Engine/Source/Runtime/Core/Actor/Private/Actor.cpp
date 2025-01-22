@@ -1,4 +1,5 @@
 #include "../Public/Actor.h"
+#include "Actor.generated.h"
 
 #include "UIInterface.h"
 #include "Layer/Public/Layer.h"

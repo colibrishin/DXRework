@@ -1,4 +1,5 @@
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "TaskScheduler.generated.h"
 
 namespace Engine::Managers
 {

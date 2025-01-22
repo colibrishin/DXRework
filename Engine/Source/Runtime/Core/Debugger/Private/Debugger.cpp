@@ -4,6 +4,7 @@
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Debugger.generated.h"
 
 namespace Engine::Managers
 {

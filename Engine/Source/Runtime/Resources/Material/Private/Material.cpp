@@ -1,4 +1,5 @@
 #include "../Public/Material.h"
+#include "Material.generated.h"
 
 #include <DirectXColors.h>
 

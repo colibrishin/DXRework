@@ -3,12 +3,17 @@
 #include <ranges>
 #include <vector>
 
+#include "VertexBoneElement.generated.h"
+
 namespace Engine::Graphics
 {
 	inline static constexpr std::size_t g_max_bone_count = 4;
 
+	ECLASS(serialize)
 	struct ENGINE_CORE_API VertexBoneElement
 	{
+		GENERATE_BODY
+		
 	    constexpr VertexBoneElement()
 	    {
 	        bone_count_ = 0;
@@ -82,16 +87,3 @@ namespace Engine::Graphics
 	    uint32_t bone_count_;
 	};
 }
-
-namespace boost::serialization
-{
-	template <typename Archive>
-	void serialize(Archive& ar, Engine::Graphics::VertexBoneElement& x, const unsigned int version)
-	{
-		ar & x.bone_count_;
-		ar & x.bone_indices_;
-		ar & x.bone_weights_;
-	}
-}
-
-BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexBoneElement)

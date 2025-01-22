@@ -1,4 +1,5 @@
 #include "../Public/ComputeShader.h"
+#include "ComputeShader.generated.h"
 
 #if WITH_DEBUG
 #include "Source/Runtime/Core/Debugger/Public/Debugger.h"

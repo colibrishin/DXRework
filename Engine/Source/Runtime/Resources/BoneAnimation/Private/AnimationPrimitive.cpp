@@ -1,4 +1,5 @@
 #include "AnimationPrimitive.h"
+#include "AnimationPrimitive.generated.h"
 
 namespace Engine::Graphics
 {

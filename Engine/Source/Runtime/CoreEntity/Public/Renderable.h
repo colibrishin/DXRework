@@ -4,7 +4,7 @@
 
 namespace Engine::Abstracts
 {
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_COREENTITY_API Renderable : public Entity
 	{
 	public:

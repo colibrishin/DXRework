@@ -1,3 +1,4 @@
+#pragma once
 #include "../Misc.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
@@ -6,7 +7,7 @@
 namespace Engine
 {
 	ECLASS(module)
-	struct MaterialModule : IModule
+	struct ENGINE_MATERIAL_API MaterialModule : IModule
 	{
 		GENERATE_BODY
 		void Initialize() override;

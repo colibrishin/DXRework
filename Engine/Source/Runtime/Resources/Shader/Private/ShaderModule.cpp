@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include "ShaderModule.h"
+#include "ShaderModule.generated.h"
 
 #include <ranges>
 

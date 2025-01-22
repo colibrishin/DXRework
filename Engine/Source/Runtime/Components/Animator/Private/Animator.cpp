@@ -1,4 +1,5 @@
 #include "../Public/Animator.h"
+#include "Animator.generated.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 

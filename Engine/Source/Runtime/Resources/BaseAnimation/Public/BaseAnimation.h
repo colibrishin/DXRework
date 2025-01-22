@@ -2,49 +2,15 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "ResourceManager/Public/ResourceManager.h"
+#include "BoneAnimationPrimitive.h"
 
 #include "BaseAnimation.generated.h"
-
-namespace Engine::Graphics 
-{
-	struct ENGINE_BASEANIMATION_API BoneAnimationPrimitive
-	{
-	public:
-		BoneAnimationPrimitive();
-
-		void SetIndex(const int idx) noexcept;
-		void AddPosition(const float time, const Vector3& position);
-		void AddScale(const float time, const Vector3& scale);
-		void AddRotation(const float time, const Quaternion& rotation);
-		[[nodiscard]] int GetIndex() const noexcept;
-		[[nodiscard]] Vector3 GetPosition(const float time) const;
-		[[nodiscard]] Vector3 GetScale(const float time) const;
-		[[nodiscard]] Quaternion GetRotation(const float time) const;
-
-	private:
-		int                                       bone_idx;
-		std::vector<std::pair<float, Vector3>>    m_positions_{};
-		std::vector<std::pair<float, Vector3>>    m_scales_{};
-		std::vector<std::pair<float, Quaternion>> m_rotations_{};
-
-		friend class boost::serialization::access;
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned int version) 
-		{
-			ar& bone_idx;
-			ar& m_positions_;
-			ar& m_scales_;
-			ar& m_rotations_;
-		}
-	};
-}
 
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_BASEANIMATION_API BaseAnimation : public Abstracts::Resource
 	{
 		GENERATE_BODY

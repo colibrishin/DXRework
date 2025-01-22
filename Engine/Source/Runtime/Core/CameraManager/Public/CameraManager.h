@@ -24,6 +24,7 @@ namespace Engine::Managers
 		void FixedUpdate(const float dt) override;
 
 	private:
+		CameraManager() = default;
 		friend struct SingletonDeleter;
 		~CameraManager() override = default;
 	};

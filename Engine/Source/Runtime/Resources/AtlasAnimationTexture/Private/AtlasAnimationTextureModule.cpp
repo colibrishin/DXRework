@@ -1,4 +1,6 @@
 #include "AtlasAnimationTextureModule.h"
+#include "AtlasAnimationTextureModule.generated.h"
+
 #include "AtlasAnimationTexture.h"
 #include "AtlasAnimation.h"
 #include "ModuleManager/Public/ModuleManager.h"

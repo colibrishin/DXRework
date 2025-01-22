@@ -2,8 +2,9 @@
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "../Public/Generator.hpp"
+#include "Collider.generated.h"
 
 #if WITH_DEBUG
 #include "Debugger/Public/Debugger.h"

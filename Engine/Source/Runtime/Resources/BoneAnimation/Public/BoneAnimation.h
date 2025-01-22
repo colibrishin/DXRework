@@ -1,60 +1,15 @@
 #pragma once
 #include <map>
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
+#include "AnimationPrimitive.h"
 
 #include "BoneAnimation.generated.h"
-
-namespace Engine::Graphics 
-{
-	struct ENGINE_BONEANIMATION_API AnimationPrimitive
-	{
-	public:
-		AnimationPrimitive();
-		AnimationPrimitive(std::string name, float duration, float ticks_per_second, Matrix global_inverse_transform);
-		AnimationPrimitive(const AnimationPrimitive& other) noexcept;
-		AnimationPrimitive(AnimationPrimitive&& other) noexcept;
-		AnimationPrimitive& operator=(const AnimationPrimitive& other) noexcept;
-
-		void Add(const std::string& name, const BoneAnimationPrimitive& bone_animation);
-		void SetGlobalInverseTransform(const Matrix& global_inverse_transform);
-		size_t GetBoneCount() const noexcept;
-		float GetDuration() const noexcept;
-
-		float GetTicksPerSecond() const noexcept;
-		const Matrix& GetGlobalInverseTransform() const noexcept;
-		const BoneAnimationPrimitive* GetBoneAnimation(const int idx) const;
-		const BoneAnimationPrimitive* GetBoneAnimation(const std::string& name) const;
-		void RebuildIndexCache();
-
-	private:
-		friend class boost::serialization::access;
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned int version) 
-		{
-			ar& name_;
-			ar& duration;
-			ar& ticks_per_second;
-			ar& global_inverse_transform_;
-			ar& bone_animations;
-			ar& bone_animations_index_wise;
-		}
-
-		std::string                                   name_;
-		float                                         duration;
-		float                                         ticks_per_second;
-		Matrix                                        global_inverse_transform_;
-		std::map<std::string, BoneAnimationPrimitive> bone_animations;
-		std::map<int, BoneAnimationPrimitive*>        bone_animations_index_wise;
-	};
-	
-}
 
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_BONEANIMATION_API BoneAnimation : public BaseAnimation
 	{
 		GENERATE_BODY

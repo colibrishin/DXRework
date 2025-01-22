@@ -1,4 +1,5 @@
 #include "../Public/ResourceManager.h"
+#include "ResourceManager.generated.h"
 
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"

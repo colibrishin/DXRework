@@ -77,6 +77,7 @@ namespace Engine::Managers
 
 	private:
 		friend struct SingletonDeleter;
+		Debugger() = default;
 		~Debugger() override = default;
 
 		void CallbackMessage(const float dt, const eDebugMessage type, Message& message) const

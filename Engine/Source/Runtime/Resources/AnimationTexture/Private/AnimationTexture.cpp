@@ -1,4 +1,5 @@
 #include "../Public/AnimationTexture.h"
+#include "AnimationTexture.generated.h"
 
 #include <algorithm>
 

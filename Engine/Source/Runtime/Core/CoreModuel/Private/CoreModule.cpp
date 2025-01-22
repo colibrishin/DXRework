@@ -1,4 +1,5 @@
 #include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule.generated.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
 MODULE_IMPL(Engine::CoreModule, Core);

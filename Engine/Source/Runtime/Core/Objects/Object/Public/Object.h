@@ -5,7 +5,7 @@
 namespace Engine
 {
 	// Anonymous non-type defined object
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Object final : public Abstracts::ObjectBase
 	{
 		GENERATE_BODY

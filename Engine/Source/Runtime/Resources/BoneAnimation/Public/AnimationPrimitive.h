@@ -8,7 +8,7 @@
 
 namespace Engine::Graphics 
 {
-	ECLASS()
+	ECLASS(serialize)
 	struct ENGINE_BONEANIMATION_API AnimationPrimitive
 	{
 		GENERATE_BODY

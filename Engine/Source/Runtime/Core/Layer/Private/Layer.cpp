@@ -1,5 +1,5 @@
 #include "../Public/Layer.h"
-
+#include "Layer.generated.h"
 #include "UIInterface.h"
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"

@@ -1,4 +1,5 @@
 #include "../Public/Texture.h"
+#include "Texture.generated.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 

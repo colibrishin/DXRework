@@ -1,4 +1,5 @@
 #include "BoneAnimationPrimitive.h"
+#include "BoneAnimationPrimitive.generated.h"
 
 Engine::Graphics::BoneAnimationPrimitive::BoneAnimationPrimitive()
 	: bone_idx(0) { }

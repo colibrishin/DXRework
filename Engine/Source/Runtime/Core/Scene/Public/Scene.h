@@ -2,6 +2,8 @@
 #include <any>
 #include <ranges>
 #include <boost/serialization/export.hpp>
+#include <boost/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
@@ -11,10 +13,10 @@
 #include "Source/Runtime/Core/Octree/Public/Octree.hpp"
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
+#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+
 
 #include "Scene.generated.h"
-
-#include "SingletonSpinLock/Public/SingletonSpinLock.h"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -51,7 +53,7 @@ namespace Engine
 		"UI"
 	};
 
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
 		GENERATE_BODY

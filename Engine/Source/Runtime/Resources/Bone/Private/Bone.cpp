@@ -1,6 +1,7 @@
 #include "../Public/Bone.h"
 #include <ranges>
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
+#include "Bone.generated.h"
 
 namespace Engine::Resources
 {

@@ -1,7 +1,9 @@
 #include "../Public/ModelRendererRenderTask.h"
+#include "ModelRendererRenderTask.generated.h"
 #include <tbb/parallel_for_each.h>
 #include <tbb/concurrent_vector.h>
 
+#include "InstanceModelSB.h"
 #include "ModelRenderer.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"

@@ -1,4 +1,5 @@
 #include "../Public/ObjectBase.h"
+#include "ObjectBase.generated.h"
 
 #include <any>
 

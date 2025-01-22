@@ -56,6 +56,7 @@ namespace Engine::Managers
 #endif
 
 	private:
+		ModuleManager() = default;
 		friend struct SingletonDeleter;
 		~ModuleManager() override;
 

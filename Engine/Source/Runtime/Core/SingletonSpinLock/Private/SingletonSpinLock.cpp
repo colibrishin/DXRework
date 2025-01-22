@@ -1,4 +1,5 @@
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
+#include "SingletonSpinLock.generated.h"
 
 size_t Engine::SingletonSpinLock::Register()
 {

@@ -9,7 +9,7 @@ DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
 
 namespace Engine::Abstracts
 {
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_CORE_API Actor : public Renderable
 	{
 		GENERATE_BODY

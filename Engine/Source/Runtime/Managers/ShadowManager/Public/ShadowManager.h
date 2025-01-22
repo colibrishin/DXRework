@@ -4,7 +4,7 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
-#include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
 
 #include "RenderTask.h"
 

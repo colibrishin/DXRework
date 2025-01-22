@@ -4,7 +4,6 @@
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
-#include "Source/Runtime/Core/StructuredBuffer.h"
 #include "RenderTask.h"
 
 #include "Renderer.generated.h"

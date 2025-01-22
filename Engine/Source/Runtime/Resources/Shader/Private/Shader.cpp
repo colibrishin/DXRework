@@ -6,6 +6,7 @@
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include <magic_enum.hpp>
+#include "Shader.generated.h"
 
 namespace Engine::Resources
 {

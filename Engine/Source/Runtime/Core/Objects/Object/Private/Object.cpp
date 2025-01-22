@@ -1,4 +1,5 @@
 #include "../Public/Object.h"
+#include "Object.generated.h"
 
 namespace Engine
 {

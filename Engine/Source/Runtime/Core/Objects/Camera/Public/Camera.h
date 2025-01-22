@@ -3,15 +3,17 @@
 #include "Source/Runtime/Core/Objects/Object/Public/Object.h"
 #include "Source/Runtime/Core/ConstantBuffer.h"
 
+#include "Camera.generated.h"
+
 POLYMORPHIC_TYPE_MAP(Engine::Objects::Camera, Engine::Abstracts::ObjectBase)
 
 namespace Engine::Objects
 {
+	ECLASS(serialize)
 	class ENGINE_CORE_API Camera final : public Abstracts::ObjectBase
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Camera)
-
 		OBJECT_T(DEF_OBJ_T_CAMERA)
 
 		Camera()

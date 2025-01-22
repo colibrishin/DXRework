@@ -9,7 +9,7 @@ namespace Engine::Resources
 {
 	using namespace Graphics;
 
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_ATLASANIMATION_API AtlasAnimation : public BaseAnimation
 	{
 		GENERATE_BODY

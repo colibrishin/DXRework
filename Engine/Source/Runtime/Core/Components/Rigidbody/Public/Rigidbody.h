@@ -5,7 +5,7 @@
 
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY

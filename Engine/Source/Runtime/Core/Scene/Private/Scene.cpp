@@ -5,6 +5,7 @@
 #include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 #include "../Public/Scene.h"
+#include "Scene.generated.h"
 
 #include "UIInterface.h"
 
@@ -734,6 +735,7 @@ namespace Engine
 
 	WeakObjVec Scene::GetGameObjects(const LayerSizeType layer) const
 	{
+		auto token = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
 		if (layer > m_layers_.size())
 		{
 			return {};

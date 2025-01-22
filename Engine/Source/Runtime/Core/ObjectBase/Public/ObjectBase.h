@@ -36,7 +36,7 @@ namespace Engine
 namespace Engine::Abstracts
 {
 	// Abstract base class for objects
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_CORE_API ObjectBase : public Actor
 	{
 		GENERATE_BODY
@@ -266,7 +266,6 @@ namespace Engine::Abstracts
 		EPROPERTY()
 		bool m_culled_ = true;
 
-		/* todo: type hash is runtime address, should not use in serialization. */
 		EPROPERTY()
 		std::map<ComponentType, Strong<Component>> m_components_;
 

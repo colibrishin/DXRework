@@ -1,4 +1,5 @@
 #include "ModuleManager/Public/ModuleManager.h"
+#include "ModuleManager.generated.h"
 
 #include <ranges>
 

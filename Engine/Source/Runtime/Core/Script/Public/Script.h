@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Script : public Abstracts::Renderable
 	{
 		GENERATE_BODY

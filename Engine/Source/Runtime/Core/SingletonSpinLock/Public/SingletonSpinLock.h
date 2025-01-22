@@ -30,6 +30,7 @@ namespace Engine
 		SpinLockToken Lock(const size_t idx);
 
 	private:
+		SingletonSpinLock() = default;
 		~SingletonSpinLock() override;
 		friend struct SpinLockToken;
 		friend struct SingletonDeleter;

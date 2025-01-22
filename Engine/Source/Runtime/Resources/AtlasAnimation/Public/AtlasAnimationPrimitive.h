@@ -9,7 +9,7 @@
 
 namespace Engine
 {
-	ECLASS()
+	ECLASS(serialize)
 	struct ENGINE_ATLASANIMATION_API AtlasAnimationPrimitive
 	{
 		GENERATE_BODY

@@ -1,12 +1,15 @@
 #pragma once
 #include "ObjectBase/Public/ObjectBase.h"
 
+#include "Observer.generated.h"
+
 namespace Engine::Objects
 {
+	ECLASS(serialize)
 	class ENGINE_CORE_API Observer : public Abstracts::ObjectBase
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Observer)
 		OBJECT_T(DEF_OBJ_T_OBSERVER)
 
 		Observer();

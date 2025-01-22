@@ -2,7 +2,7 @@
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
 
 namespace Engine 
 {

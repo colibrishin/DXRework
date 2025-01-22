@@ -5,7 +5,7 @@
 
 namespace Engine::Graphics 
 {
-	ECLASS()
+	ECLASS(serialize)
 	struct ENGINE_BASEANIMATION_API BoneAnimationPrimitive
 	{
 		GENERATE_BODY

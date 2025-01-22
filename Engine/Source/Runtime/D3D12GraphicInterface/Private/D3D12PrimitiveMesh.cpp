@@ -5,7 +5,7 @@
 
 #include <directxtk12/BufferHelpers.h>
 
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"

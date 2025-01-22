@@ -14,7 +14,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY

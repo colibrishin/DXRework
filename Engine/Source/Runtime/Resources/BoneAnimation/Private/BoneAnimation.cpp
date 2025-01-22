@@ -1,7 +1,7 @@
 #include "../Public/BoneAnimation.h"
 
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
+#include "BoneAnimation.generated.h"
 
 namespace Engine::Resources
 {

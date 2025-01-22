@@ -245,6 +245,7 @@ namespace Engine::Managers
 		std::unordered_map<std::string_view, bool> m_ui_new_functions_managing_;
 #endif
 	private:
+		ResourceManager() = default;
 		friend struct SingletonDeleter;
 		~ResourceManager() override;
 

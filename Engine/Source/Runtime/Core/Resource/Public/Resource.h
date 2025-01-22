@@ -34,7 +34,7 @@ namespace Engine
 
 namespace Engine::Abstracts
 {
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_CORE_API Resource : public Entity
 	{
 	public:

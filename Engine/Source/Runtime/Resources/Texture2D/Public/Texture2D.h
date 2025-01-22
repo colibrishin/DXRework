@@ -25,7 +25,7 @@ namespace Engine
 
 namespace Engine::Resources
 {
-	ECLASS(resource)
+	ECLASS(resource, serialize)
 	class ENGINE_TEXTURE2D_API Texture2D : public Texture
 	{
 		GENERATE_BODY

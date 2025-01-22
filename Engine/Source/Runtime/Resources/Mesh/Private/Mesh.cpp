@@ -6,6 +6,7 @@
 #endif
 
 #include "../Public/Mesh.h"
+#include "Mesh.generated.h"
 
 #include <algorithm>
 #include <execution>
@@ -15,7 +16,7 @@
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
+#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 
 namespace Engine::Resources
 {

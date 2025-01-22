@@ -84,6 +84,7 @@ namespace Engine::Managers
 		}
 
 	private:
+		TaskScheduler() = default;
 		friend struct SingletonDeleter;
 		~TaskScheduler() override = default;
 

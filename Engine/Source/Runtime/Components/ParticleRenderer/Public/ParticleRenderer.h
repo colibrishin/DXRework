@@ -1,53 +1,14 @@
 #pragma once
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/Core/StructuredBuffer.h"
+#include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
+#include "InstanceParticleSB.h"
 
 #include "ParticleRenderer.generated.h"
 
-namespace Engine
-{
-	struct ParticleRendererExtension;
-
-	namespace Graphics::SBs
-	{
-		struct ENGINE_PARTICLERENDERER_API InstanceParticleSB : public InstanceSB
-		{
-		public:
-			InstanceParticleSB();
-			void SetLife(const float life);
-			void SetActive(const bool active);
-			void SetVelocity(const Vector3& velocity);
-			void SetWorld(const Matrix& world);
-			Matrix& GetWorld();
-			bool& GetActive();
-		};
-	}
-
-	using InstanceParticles = aligned_vector<Graphics::SBs::InstanceParticleSB>;
-}
-
-namespace Engine
-{
-	struct ParticleRendererModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::ParticleRendererModule, Engine::IModule);
-
-namespace Engine
-{
-	struct ParticleRendererModule : public Engine::IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(ParticleRendererModule)
-		void             Initialize() override;
-		void             Shutdown() override;
-		bool             DynamicLoadable() override;
-	};
-}
-
 namespace Engine::Components
 {
-	ECLASS()
+	ECLASS(serialize)
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
 	{
 		GENERATE_BODY

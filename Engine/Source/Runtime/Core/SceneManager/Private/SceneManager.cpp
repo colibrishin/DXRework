@@ -4,6 +4,7 @@
 
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
+#include "SceneManager.generated.h"
 
 #if WITH_DEBUG
 #include "Source/Runtime/Core/Debugger/Public/Debugger.h"

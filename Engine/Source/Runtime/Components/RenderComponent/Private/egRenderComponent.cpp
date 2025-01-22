@@ -1,4 +1,5 @@
 #include "../Public/egRenderComponent.h"
+#include "egRenderComponent.generated.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 

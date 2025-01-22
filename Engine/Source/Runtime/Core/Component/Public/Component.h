@@ -23,7 +23,7 @@ namespace Engine::Abstracts
 {
 	class ObjectBase;
 
-	ECLASS(abstract)
+	ECLASS(abstract, serialize)
 	class ENGINE_CORE_API Component : public Abstracts::Entity
 	{
 	public:

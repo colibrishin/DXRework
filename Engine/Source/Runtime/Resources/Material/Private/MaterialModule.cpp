@@ -1,4 +1,5 @@
 #include "MaterialModule.h"
+#include "MaterialModule.generated.h"
 #include "Material.h"
 #include "SceneManager/Public/SceneManager.h"
 #include "ResourceManager/Public/ResourceManager.h"

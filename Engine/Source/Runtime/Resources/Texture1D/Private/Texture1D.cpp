@@ -1,4 +1,5 @@
 #include "../Public/Texture1D.h"
+#include "Texture1D.generated.h"
 
 namespace Engine::Resources
 {

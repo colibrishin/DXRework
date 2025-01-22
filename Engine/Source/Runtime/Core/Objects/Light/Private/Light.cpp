@@ -1,6 +1,7 @@
 #include "../Public/Light.h"
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Light.generated.h"
 
 namespace Engine::Objects
 {
