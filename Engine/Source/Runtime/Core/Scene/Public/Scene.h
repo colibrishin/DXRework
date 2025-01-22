@@ -12,6 +12,8 @@
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 
+#include "Scene.generated.h"
+
 #ifdef PHYSX_ENABLED
 namespace physx
 {
@@ -21,8 +23,6 @@ namespace physx
 
 DEFINE_DELEGATE(OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase>);
 DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
-
-POLYMORPHIC_TYPE_MAP(Engine::Scene, Engine::Abstracts::Renderable)
 
 namespace Engine
 {
@@ -49,14 +49,14 @@ namespace Engine
 		"UI"
 	};
 
+	ECLASS()
 	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Scene)
 		DelegateOnObjectAdded onObjectAdded;
 		DelegateOnObjectRemoved onObjectRemoved;
 
-		SERIALIZE_DECL
 		Scene();
 		Scene(const Scene& other) = default;
 		~Scene() override;
@@ -370,11 +370,19 @@ namespace Engine
 
 		void synchronize(const Weak<Scene>& ptr_scene);
 
+		EPROPERTY()
 		bool m_b_scene_raytracing_;
 
+		EPROPERTY()
 		LocalActorID               m_main_camera_local_id_;
+
+		EPROPERTY()
 		LocalActorID               m_main_actor_local_id_;
+
+		EPROPERTY()
 		LayerSizeType              m_layer_count_ = RESERVED_LAYER_MAX + CFG_LAYER_COUNT;
+
+		EPROPERTY()
 		std::vector<Strong<Layer>> m_layers_;
 
 		// Non-serialized
@@ -406,5 +414,3 @@ namespace Engine
 #endif
 	};
 } // namespace Engine
-
-BOOST_CLASS_EXPORT_KEY(Engine::Scene)

@@ -4,7 +4,7 @@
 #include "Renderer.h"
 
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"

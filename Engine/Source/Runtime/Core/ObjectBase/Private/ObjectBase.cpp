@@ -2,13 +2,13 @@
 
 #include <any>
 
-#include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
+#include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
 #if WITH_EDITOR
 #include "Components/Transform/Public/Transform.h"
-#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Collider/Public/Collider.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #endif
 

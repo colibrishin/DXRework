@@ -2,7 +2,7 @@
 
 #include <oneapi/tbb/task_arena.h>
 
-#include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
+#include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
 
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 

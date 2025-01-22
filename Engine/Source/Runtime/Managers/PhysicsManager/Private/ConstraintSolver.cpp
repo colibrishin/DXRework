@@ -4,11 +4,11 @@
 #include "GJK.h"
 #include "Impulse.hpp"
 
-#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Collider/Public/Collider.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #include "Components/Transform/Public/Transform.h"
 
-#include "ObjectBase/Public/ObjectBase.hpp"
+#include "ObjectBase/Public/ObjectBase.h"
 
 namespace Engine::Managers
 {

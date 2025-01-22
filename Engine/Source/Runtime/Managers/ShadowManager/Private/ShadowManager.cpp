@@ -3,7 +3,7 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"

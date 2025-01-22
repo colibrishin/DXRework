@@ -6,7 +6,7 @@
 
 #include "Objects/Camera/Public/Camera.h"
 
-#include "Scene/Public/Scene.hpp"
+#include "Scene/Public/Scene.h"
 
 namespace Engine::Managers
 {

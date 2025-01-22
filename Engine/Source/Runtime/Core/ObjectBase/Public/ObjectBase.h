@@ -3,7 +3,7 @@
 #include <set>
 
 #include "Source/Runtime/Core/Actor/Public/Actor.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Component/Public/Component.h"
 

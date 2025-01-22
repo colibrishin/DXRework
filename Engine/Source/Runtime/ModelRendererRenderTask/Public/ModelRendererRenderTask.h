@@ -2,7 +2,7 @@
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
 
 namespace Engine
 {

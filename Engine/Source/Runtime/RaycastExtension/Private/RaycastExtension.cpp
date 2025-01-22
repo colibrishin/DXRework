@@ -1,6 +1,6 @@
 #include "../Public/RaycastExtension.hpp"
 
-#include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
+#include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
 #include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
 
 bool Engine::Physics::RaycastExtension::Intersects(

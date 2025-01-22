@@ -3,7 +3,7 @@
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
 #include "Source/Runtime/Components/ModelRenderer/Public/ModelRenderer.h"
 

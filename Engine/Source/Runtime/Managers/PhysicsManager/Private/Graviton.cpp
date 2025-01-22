@@ -3,12 +3,12 @@
 #include "Friction.hpp"
 #include "Verlet.hpp"
 
-#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Collider/Public/Collider.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 
-#include "ObjectBase/Public/ObjectBase.hpp"
+#include "ObjectBase/Public/ObjectBase.h"
 
-#include "Scene/Public/Scene.hpp"
+#include "Scene/Public/Scene.h"
 
 #include "SceneManager/Public/SceneManager.hpp"
 

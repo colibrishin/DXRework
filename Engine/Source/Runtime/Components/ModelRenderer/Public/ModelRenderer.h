@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
 namespace Engine

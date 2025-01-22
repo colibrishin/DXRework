@@ -8,7 +8,7 @@
 
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Components/Animator/Public/Animator.h"
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"

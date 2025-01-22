@@ -7,6 +7,8 @@
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
 
+#include "Collider.generated.h"
+
 #ifdef PHYSX_ENABLED
 namespace physx
 {
@@ -28,17 +30,13 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::Collider, Engine::Abstracts::Component)
-
 namespace Engine::Components
 {
-	using namespace DirectX;
-
+	ECLASS()
 	class ENGINE_CORE_API Collider final : public Engine::Abstracts::Component
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Collider)
-
 		DelegateOnCollisionEnter onCollisionEnter;
 		DelegateOnCollisionEnd onCollisionEnd;
 
@@ -123,7 +121,6 @@ namespace Engine::Components
 		}
 
 	protected:
-		SERIALIZE_DECL
 		Collider();
 
 	private:
@@ -141,18 +138,29 @@ namespace Engine::Components
 		void GenerateInertiaCube();
 		void GenerateInertiaSphere();
 
+		EPROPERTY()
 		eBoundingType m_type_;
+		
+		EPROPERTY()
 		GenericBounding<> m_boundings_;
 
+		EPROPERTY()
 		float m_mass_;
 
 		// Theoretically we could fallback the model by using the raw resource
 		// path, however it stores the meta data for the consistency.
 		std::set<GlobalEntityID> m_collided_objects_;
 
+		EPROPERTY()
 		Vector3          m_inverse_inertia_;
+		
+		EPROPERTY()
 		XMFLOAT3X3       m_inertia_tensor_;
+		
+		EPROPERTY()
 		Matrix           m_local_matrix_;
+		
+		EPROPERTY()
 		VertexCollection m_vertices_;
 
 #ifdef PHYSX_ENABLED
@@ -182,5 +190,3 @@ namespace Engine::Components
 #endif
 	};
 } // namespace Engine::Components
-
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)

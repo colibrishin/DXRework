@@ -4,7 +4,7 @@
 #include <PxScene.h>
 #include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
-#include "../Public/Scene.hpp"
+#include "../Public/Scene.h"
 
 #include "UIInterface.h"
 
@@ -16,8 +16,6 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 
 std::atomic<bool> Engine::Scene::s_debug_observer_ = false;
-
-SERIALIZE_IMPL(ENGINE_CORE_API, Engine::Scene, _BSTSUPER(Entity) _ARTAG(m_b_scene_raytracing_) _ARTAG(m_main_camera_local_id_) _ARTAG(m_main_actor_local_id_) _ARTAG(m_layer_count_) _ARTAG(m_layers_))
 
 namespace Engine
 {

@@ -7,8 +7,8 @@
 #include "Graviton.h"
 
 #include "SceneManager/Public/SceneManager.hpp"
-#include "Scene/Public/Scene.hpp"
-#include "ObjectBase/Public/ObjectBase.hpp"
+#include "Scene/Public/Scene.h"
+#include "ObjectBase/Public/ObjectBase.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #include "Components/Transform/Public/Transform.h"
 

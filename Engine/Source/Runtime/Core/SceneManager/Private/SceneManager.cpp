@@ -2,7 +2,7 @@
 
 #include "UIInterface.h"
 
-#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 
 #if WITH_DEBUG

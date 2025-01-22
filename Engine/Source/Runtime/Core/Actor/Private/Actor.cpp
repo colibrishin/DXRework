@@ -2,7 +2,7 @@
 
 #include "UIInterface.h"
 #include "Layer/Public/Layer.h"
-#include "Scene/Public/Scene.hpp"
+#include "Scene/Public/Scene.h"
 
 namespace Engine::Abstracts
 {

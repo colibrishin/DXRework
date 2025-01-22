@@ -1,7 +1,7 @@
 #include "../Public/ProjectionFrustum.h"
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.hpp"
+#include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 
 #if WITH_DEBUG

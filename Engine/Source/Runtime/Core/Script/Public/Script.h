@@ -3,8 +3,7 @@
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
-
-POLYMORPHIC_TYPE_MAP(Engine::Script, Engine::Abstracts::Renderable)
+#include "Script.generated.h"
 
 namespace Engine
 {
@@ -14,10 +13,11 @@ namespace Engine
 		static constexpr ScriptSizeType value = T::scptype;
 	};
 
+	ECLASS()
 	class ENGINE_CORE_API Script : public Abstracts::Renderable
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Script)
 		~Script() override = default;
 		explicit Script(ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner);
 
@@ -68,8 +68,13 @@ namespace Engine
 
 		void SetOwner(const Weak<Abstracts::ObjectBase>& owner);
 
+		EPROPERTY()
 		ScriptSizeType              m_type_;
+		
+		EPROPERTY()
 		Weak<Abstracts::ObjectBase> m_owner_;
+		
+		EPROPERTY()
 		bool                        m_b_active_;
 	};
 } // namespace Engine::Components

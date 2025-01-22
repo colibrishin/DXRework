@@ -13,7 +13,7 @@
 #include "TypeLibrary/Public/TypeLibrary.h"
 #include "Delegation/Public/Delegation.hpp"
 
-#include "Scene/Public/Scene.hpp"
+#include "Scene/Public/Scene.h"
 
 DEFINE_DELEGATE(OnLayerMaskChange, const Engine::LayerSizeType, const Engine::LayerSizeType);
 

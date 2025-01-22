@@ -5,7 +5,7 @@
 
 #include "../Public/Shape.h"
 
-#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Collider/Public/Collider.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 

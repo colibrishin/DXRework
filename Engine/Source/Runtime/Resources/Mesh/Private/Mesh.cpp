@@ -11,7 +11,7 @@
 #include <execution>
 #include <directxtk12/BufferHelpers.h>
 
-#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Collider/Public/Collider.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
