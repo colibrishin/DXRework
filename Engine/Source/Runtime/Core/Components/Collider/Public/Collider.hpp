@@ -123,6 +123,7 @@ namespace Engine::Components
 		}
 
 	protected:
+		SERIALIZE_DECL
 		Collider();
 
 	private:
@@ -181,3 +182,5 @@ namespace Engine::Components
 #endif
 	};
 } // namespace Engine::Components
+
+BOOST_CLASS_EXPORT_KEY(Engine::Components::Collider)

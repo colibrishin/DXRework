@@ -24,3 +24,18 @@ namespace Engine::Graphics
 	};
 }
 
+namespace boost::serialization
+{
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Graphics::VertexElement& x, const unsigned int version)
+	{
+		ar & x.position;
+		ar & x.color;
+		ar & x.normal;
+		ar & x.tangent;
+		ar & x.binormal;
+		ar & x.boneElement;
+	}
+}
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexElement)

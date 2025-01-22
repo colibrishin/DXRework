@@ -52,6 +52,7 @@ namespace Engine::Abstracts
 		Component(const Weak<ObjectBase>& owner);
 
 	private:
+		SERIALIZE_DECL
 		friend class ObjectBase;
 
 		[[nodiscard]] virtual Strong<Component> cloneImpl() const = 0;
@@ -67,11 +68,13 @@ namespace Engine::Abstracts
 		}
 
 	private:
-		LocalComponentID m_local_id_;
+		LocalComponentID m_local_id_{};
 
 		// Non-serialized
 		Weak<ObjectBase> m_owner_{};
-		bool             m_b_ticked_;
-		bool             m_b_active_;
+		bool             m_b_ticked_{};
+		bool             m_b_active_{};
 	};
 } // namespace Engine::Abstracts
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Component)

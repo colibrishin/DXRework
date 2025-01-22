@@ -26,6 +26,13 @@
 #include <extensions/PxDefaultStreams.h>
 #endif
 
+SERIALIZE_IMPL
+(
+ ENGINE_CORE_API, Engine::Components::Collider,
+ _ARTAG(m_type_) _ARTAG(m_boundings_) _ARTAG(m_mass_) _ARTAG(m_collided_objects_) _ARTAG(m_inverse_inertia_) _ARTAG(
+	 m_inertia_tensor_) _ARTAG(m_local_matrix_) _ARTAG(m_vertices_)
+)
+
 namespace Engine::Components
 {
 	COMP_CLONE_IMPL(Collider)

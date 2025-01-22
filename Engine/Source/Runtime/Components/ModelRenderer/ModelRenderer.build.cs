@@ -13,6 +13,7 @@ public class ModelRenderer : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<RenderComponent>(target);
         conf.AddPublicDependency<DirectXTK>(target);

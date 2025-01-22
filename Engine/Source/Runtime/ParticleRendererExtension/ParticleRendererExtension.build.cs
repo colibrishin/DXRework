@@ -12,6 +12,7 @@ public class ParticleRendererExtension : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ParticleRenderer>(target);
     }

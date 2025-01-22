@@ -15,6 +15,7 @@ public class RenderPipeline : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
     }
 }

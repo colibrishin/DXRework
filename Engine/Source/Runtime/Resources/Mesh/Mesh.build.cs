@@ -13,5 +13,6 @@ public class Mesh : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
     }
 }

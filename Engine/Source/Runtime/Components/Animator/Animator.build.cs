@@ -13,6 +13,7 @@ public class Animator : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<DirectXTK>(target);        
         conf.AddPublicDependency<BaseAnimation>(target);

@@ -14,6 +14,7 @@ public class Shape : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<AnimationTexture>(target);
         conf.AddPublicDependency<Assimp>(target);
         conf.AddPublicDependency<Mesh>(target);

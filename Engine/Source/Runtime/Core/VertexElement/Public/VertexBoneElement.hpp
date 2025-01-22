@@ -83,3 +83,15 @@ namespace Engine::Graphics
 	};
 }
 
+namespace boost::serialization
+{
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Graphics::VertexBoneElement& x, const unsigned int version)
+	{
+		ar & x.bone_count_;
+		ar & x.bone_indices_;
+		ar & x.bone_weights_;
+	}
+}
+
+BOOST_CLASS_EXPORT_KEY(Engine::Graphics::VertexBoneElement)

@@ -38,6 +38,23 @@ namespace Engine
 	struct GenericBounding
 	{
 	public:
+		friend class boost::serialization::access;
+
+		template <class Archive>
+		void serialize(Archive& ar, const unsigned int file_version)
+		{
+			ar & type;
+
+			if (type == BOUNDING_TYPE_BOX)
+			{
+				ar & m_boundings_.box;
+			}
+			else if (type == BOUNDING_TYPE_SPHERE)
+			{
+				ar & m_boundings_.sphere;
+			}
+		}
+
 		GenericBounding()
 			: type(BOUNDING_TYPE_BOX),
 			  m_boundings_({}) {}
@@ -439,3 +456,5 @@ namespace Engine
 		} m_boundings_;
 	};
 }
+
+BOOST_CLASS_EXPORT_KEY(Engine::GenericBounding<CFG_EPSILON>)

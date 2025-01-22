@@ -13,6 +13,7 @@ public class AnimationTexture : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Texture3D>(target);
 
         conf.AddPrivateDependency<BaseAnimation>(target);

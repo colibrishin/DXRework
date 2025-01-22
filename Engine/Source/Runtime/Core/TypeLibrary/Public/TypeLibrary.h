@@ -19,6 +19,107 @@ using Quaternion = DirectX::SimpleMath::Quaternion;
 using Ray = DirectX::SimpleMath::Ray;
 using Matrix = DirectX::SimpleMath::Matrix;
 
+namespace boost::serialization
+{
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Matrix& x, const unsigned int version)
+	{
+		ar & x._11;
+		ar & x._12;
+		ar & x._13;
+		ar & x._14;
+		ar & x._21;
+		ar & x._22;
+		ar & x._23;
+		ar & x._24;
+		ar & x._31;
+		ar & x._32;
+		ar & x._33;
+		ar & x._34;
+		ar & x._41;
+		ar & x._42;
+		ar & x._43;
+		ar & x._44;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Color& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+		ar & x.z;
+		ar & x.w;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::SimpleMath::Vector3& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+		ar & x.z;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::XMFLOAT3X3& x, const unsigned int version)
+	{
+		ar & x._11;
+		ar & x._12;
+		ar & x._13;
+		ar & x._21;
+		ar & x._22;
+		ar & x._23;
+		ar & x._31;
+		ar & x._32;
+		ar & x._33;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::XMFLOAT2& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::XMFLOAT3& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+		ar & x.z;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::XMFLOAT4& x, const unsigned int version)
+	{
+		ar & x.x;
+		ar & x.y;
+		ar & x.z;
+		ar & x.w;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::BoundingBox& bb, const unsigned int version)
+	{
+		ar & bb.Center;
+		ar & bb.Extents;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::BoundingOrientedBox& obb, const unsigned int version)
+	{
+		ar & obb.Center;
+		ar & obb.Orientation;
+		ar & obb.Extents;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, DirectX::BoundingSphere& bs, const unsigned int version)
+	{
+		ar & bs.Center;
+		ar & bs.Radius;
+	}
+}
+
 namespace Microsoft::WRL
 {
 	template <typename T>

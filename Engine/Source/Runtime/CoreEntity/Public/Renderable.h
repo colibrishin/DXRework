@@ -16,8 +16,9 @@ namespace Engine::Abstracts
 		virtual void PostRender(const float dt) = 0;
 
 	protected:
+		SERIALIZE_DECL
 		Renderable() = default;
-
 	};
 } // namespace Engine::Abstract
 
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Renderable)

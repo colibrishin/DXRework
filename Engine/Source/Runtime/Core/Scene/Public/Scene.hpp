@@ -56,6 +56,7 @@ namespace Engine
 		DelegateOnObjectAdded onObjectAdded;
 		DelegateOnObjectRemoved onObjectRemoved;
 
+		SERIALIZE_DECL
 		Scene();
 		Scene(const Scene& other) = default;
 		~Scene() override;
@@ -405,3 +406,5 @@ namespace Engine
 #endif
 	};
 } // namespace Engine
+
+BOOST_CLASS_EXPORT_KEY(Engine::Scene)

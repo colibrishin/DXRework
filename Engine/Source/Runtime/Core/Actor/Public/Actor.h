@@ -26,6 +26,7 @@ namespace Engine::Abstracts
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		
 	protected:
+		SERIALIZE_DECL
 		explicit Actor();
 
 	private:
@@ -40,3 +41,5 @@ namespace Engine::Abstracts
 		LocalActorID  m_local_id_;
 	};
 } // namespace Engine::Abstracts
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Actor)

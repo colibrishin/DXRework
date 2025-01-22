@@ -68,6 +68,7 @@ namespace Engine
 		}
 
 	private:
+		SERIALIZE_DECL
 		Layer();
 
 		LayerSizeType                                 m_layer_type_;
@@ -81,3 +82,5 @@ namespace Engine
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
 	};
 } // namespace Engine
+
+BOOST_CLASS_EXPORT_KEY(Engine::Layer)

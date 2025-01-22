@@ -13,6 +13,7 @@ public class Texture1D : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<TBB>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Texture>(target);
     }
 }

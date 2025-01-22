@@ -13,6 +13,7 @@ public class ParticleRenderer : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<RenderComponent>(target);
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPublicDependency<DX12Agility>(target);
