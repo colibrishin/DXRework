@@ -24,6 +24,8 @@ public class Assimp : VCPKG
             @"minizip.lib",
             @"draco.lib"
         );
+
+        conf.AddPublicDependency<Pugixml>(target);
     }
 
     public override void ConfigureDebug(Configuration conf, EngineTarget target)

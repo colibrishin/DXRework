@@ -22,7 +22,6 @@ public class DX12Agility : VCPKG
         conf.TargetCopyFiles.Add
         (
             BinPath + @"/D3D12Core.dll",
-            BinPath + @"/d3d12SDKLayers.dll",
             BinPath + @"/dxcompiler.dll",
             BinPath + @"/dxil.dll"
         );
@@ -31,6 +30,13 @@ public class DX12Agility : VCPKG
     public override void ConfigureDebug(Configuration conf, EngineTarget target)
     {
         base.ConfigureDebug(conf, target);
+        
+        string BinPath = GetVCPKGBinPath(target);
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/d3d12SDKLayers.dll"
+        );
+
         conf.LibraryFiles.Add
         (
             @"d3d12.lib",
