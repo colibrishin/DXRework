@@ -18,6 +18,10 @@ namespace Engine::Components
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt);
+#endif
+
 		void SetShape(const Weak<Resources::Shape>& shape);
 		[[nodiscard]] Weak<Resources::Shape> GetShape() const;
 		[[nodiscard]] const MetadataPath& GetShapeMetadataPath() const;
@@ -28,6 +32,10 @@ namespace Engine::Components
 	private:		
 		EPROPERTY()
 		MetadataPath m_shape_meta_path_;
+
+#if WITH_EDITOR
+		bool m_shape_set_dialog_ = false;
+#endif
 
 		Strong<Resources::Shape> m_shape_;
 	};

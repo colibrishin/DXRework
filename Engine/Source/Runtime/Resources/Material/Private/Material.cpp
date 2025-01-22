@@ -57,9 +57,12 @@ namespace Engine::Resources
 					});
 				*parent |= ui.NewSeparator({});
 
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({ tex.get(), tex->GetName(), tex->m_ui_info_.dialogOpened})))
+				if (tex->m_ui_info_.dialogOpened) 
 				{
-					tex->OnUIUpdate(&context, dt);
+					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ tex.get(), tex->GetName(), tex->m_ui_info_.dialogOpened })))
+					{
+						tex->OnUIUpdate(&context, dt);
+					}
 				}
 			}
 			--*parent;

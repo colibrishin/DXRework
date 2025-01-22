@@ -2,9 +2,8 @@
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
-#include "ModelRenderer.generated.h"
-
 #include "ModuleManager/Public/IModule.h"
+#include "ModelRenderer.generated.h"
 
 namespace Engine::Components
 {
