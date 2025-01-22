@@ -3,7 +3,7 @@
 #include <boost/smart_ptr.hpp>
 #include <string>
 #include <filesystem>
-#include "Source/Runtime/Misc.h"
+#include "CoreType.h"
 
 namespace Engine
 {

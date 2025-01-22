@@ -13,6 +13,7 @@ public class WinAPIWrapper : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPrivateDependency<Core>(target);
         conf.AddPrivateDependency<Boost>(target);
+        conf.AddPublicDependency<CoreType>(target);
         conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

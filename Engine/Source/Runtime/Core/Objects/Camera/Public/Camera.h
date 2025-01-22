@@ -1,11 +1,9 @@
 #pragma once
 #include "Source/Runtime/CoreEntity/Public/Entity.h"
-#include "Source/Runtime/Core/Objects/Object/Public/Object.h"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/ConstantBuffer.h"
 
 #include "Camera.generated.h"
-
-POLYMORPHIC_TYPE_MAP(Engine::Objects::Camera, Engine::Abstracts::ObjectBase)
 
 namespace Engine::Objects
 {
@@ -45,13 +43,18 @@ namespace Engine::Objects
 		[[nodiscard]] const Graphics::CBs::PerspectiveCB& GetPerspectiveCB() const;
 
 	private:
-		OBJ_CLONE_DECL
+		OBJ_CLONE_DECL;
 
 	private:
 		friend class Managers::CameraManager; 
 
+		EPROPERTY()
 		float m_fov_;
+
+		EPROPERTY()
 		bool  m_b_orthogonal_;
+
+		EPROPERTY()
 		bool  m_b_fixed_up_;
 
 		// Non-serialized

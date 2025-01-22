@@ -71,7 +71,7 @@ echo Overwritting
 start "" /b /wait "%SH_PATH%" -c "%COMMAND_OW%")
 echo Parsing header of %2...
 for /f "tokens=*" %%a in (target) do (
-  start "" /b /wait "..\..\Programs\header-parser\Release\header-parser.exe" %%a -c ECLASS -e EENUM -f EFUNC -p EPROPERTY 2>&1
+  start "" /b /wait "..\..\Programs\header-parser\MinSizeRel\header-parser.exe" %%a -c ECLASS -e EENUM -f EFUNC -p EPROPERTY 2>&1
 )
 popd
 del lock

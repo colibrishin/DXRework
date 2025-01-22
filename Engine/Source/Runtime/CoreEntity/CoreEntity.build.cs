@@ -17,6 +17,7 @@ public class CoreEntity : CommonProject
 
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
+        conf.AddPublicDependency<CoreType>(target);
 
         if (target.LaunchType == ELaunchType.Editor)
         {

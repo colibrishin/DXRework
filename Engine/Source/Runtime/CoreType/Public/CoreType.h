@@ -20,6 +20,7 @@
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 
 template<class T, std::size_t... N>
@@ -300,8 +301,9 @@ public:
 	HashType GetTypeHash() const override { return Type##::StaticTypeHash(); } \
 	bool IsBaseOf(HashType hash) const override{ return Type##::StaticIsBaseOf(hash); }
 
-struct HashTypeImpl
+struct ENGINE_CORETYPE_API HashTypeImpl
 {
+	virtual        ~HashTypeImpl() = default;
 	constexpr bool operator>(const HashTypeImpl& other) const { return v > other.v; }
 	constexpr bool operator>=(const HashTypeImpl& other) const { return v >= other.v; }
 	constexpr bool operator<(const HashTypeImpl& other) const { return v < other.v; }
@@ -335,6 +337,8 @@ private:
 	}
 };
 
+BOOST_CLASS_EXPORT_KEY(HashTypeImpl)
+
 using HashTypeValue = const HashTypeImpl;
 using HashType = const HashTypeValue*;
 
@@ -365,7 +369,7 @@ struct HashTypeT : public HashTypeImpl
 
 private:
 	friend class boost::serialization::access;
-	
+
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
@@ -373,16 +377,19 @@ private:
 	}
 };
 
-template <typename Archive>
-void serialize(Archive& ar, HashType& x, const unsigned int version)
+namespace boost::serialization
 {
-	ar& x;
-	if (Archive::is_loading::value)
+	template <typename Archive>
+	void serialize(Archive& ar, HashType& x, const unsigned int version)
 	{
-		if (x != nullptr)
+		ar& x;
+		if (Archive::is_loading::value)
 		{
-			HashType* runtime_fetched = x->Fetch();
-			x = runtime_fetched;
+			if (x != nullptr)
+			{
+				HashType runtime_fetched = x->Fetch();
+				x = runtime_fetched;
+			}
 		}
 	}
 }

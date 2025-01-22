@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "Source/Runtime/Misc.h"
+#include "CoreType.h"
 
 namespace WinAPI
 {

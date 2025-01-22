@@ -6,7 +6,7 @@
 #include <vector>
 #include <tuple>
 
-#include "../Misc.h"
+#include "CoreType.h"
 
 namespace Engine
 {

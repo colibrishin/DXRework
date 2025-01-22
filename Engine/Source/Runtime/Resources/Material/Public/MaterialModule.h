@@ -1,5 +1,5 @@
 #pragma once
-#include "../Misc.h"
+#include "CoreType.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "MaterialModule.generated.h"

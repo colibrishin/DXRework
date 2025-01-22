@@ -1,7 +1,7 @@
 #pragma once
 #include <exception>
 #include <Windows.h>
-#include "Source/Runtime/Misc.h"
+#include "CoreType.h"
 
 namespace DX
 {

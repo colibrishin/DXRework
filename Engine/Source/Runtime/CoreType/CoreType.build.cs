@@ -4,15 +4,14 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class CoreUI : CommonProject
+public class CoreType : CommonProject
 {
-    public CoreUI() { }
+    public CoreType() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<CoreType>(target);
     }
 }

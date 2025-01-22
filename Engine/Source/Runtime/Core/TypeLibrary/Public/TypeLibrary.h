@@ -5,7 +5,7 @@
 
 #include "CoreEntity.h"
 #include "Allocator/Public/Allocator.h"
-#include "Source/Runtime/Misc.h"
+#include "CoreType.h"
 
 #if defined(USE_DX12)
 #include <directxtk12/SimpleMath.h>

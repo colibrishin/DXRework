@@ -23,6 +23,6 @@ namespace Engine::Objects
 		void FixedUpdate(const float dt) override;
 
 	private:
-		OBJ_CLONE_DECL
+		OBJ_CLONE_DECL;
 	};
 } // namespace Engine::Objects

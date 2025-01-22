@@ -61,7 +61,7 @@ namespace Engine::Objects
 		}
 
 	private:
-		OBJ_CLONE_DECL
+		OBJ_CLONE_DECL;
 
 		float      m_radius_;
 		float      m_range_;

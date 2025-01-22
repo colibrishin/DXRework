@@ -2,6 +2,7 @@
 #include "Entity.h"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include "CoreType.h"
 
 namespace Engine
 {

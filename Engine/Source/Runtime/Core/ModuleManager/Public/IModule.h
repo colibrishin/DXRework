@@ -1,5 +1,5 @@
 #pragma once
-#include "../Misc.h"
+#include "CoreType.h"
 
 #include "Serialization.hpp"
 #include "IModule.generated.h"
