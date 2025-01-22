@@ -3,6 +3,11 @@
 #define DLLIMPORT __declspec(dllimport)
 #define DLLEXPORT __declspec(dllexport)
 
+#define ECLASS(...)
+#define EENUM(...)
+#define EFUNC(...)
+#define EPROPERTY(...)
+
 #include <algorithm>
 #include <array>
 #include <vector>
