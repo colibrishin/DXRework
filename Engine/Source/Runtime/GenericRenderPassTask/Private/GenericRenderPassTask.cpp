@@ -6,6 +6,7 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
+#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 
@@ -182,14 +183,14 @@ namespace Engine
 
 			for (const auto& [type, resources] : material_resources)
 			{
-				if (type == RES_T_ATLAS_TEX)
+				if (type == Resources::AtlasAnimationTexture::StaticTypeHash())
 				{
 					const auto& anim = resources.front()->GetSharedPtr<Resources::Texture>();
 					gi.Bind(context, anim.get(), BIND_TYPE_SRV, RESERVED_TEX_ATLAS, 0);
 					continue;
 				}
 
-				if (type == RES_T_TEX) 
+				if (type == Resources::Texture::StaticTypeHash()) 
 				{
 					for (auto it = resources.begin(); it != resources.end(); ++it)
 					{
@@ -234,18 +235,18 @@ namespace Engine
 				}
 			}
 
-			if (material_resources.contains(RES_T_TEX))
+			if (material_resources.contains(Resources::Texture::StaticTypeHash()))
 			{
-				for (const auto& tex : material_resources.at(RES_T_TEX))
+				for (const auto& tex : material_resources.at(Resources::Texture::StaticTypeHash()))
 				{
 					const Strong<Resources::Texture>& casted = tex->GetSharedPtr<Resources::Texture>();
 					gi.Unbind(context, casted.get(), BIND_TYPE_SRV);
 				}
 			}
 
-			if (material_resources.contains(RES_T_ATLAS_TEX))
+			if (material_resources.contains(Resources::AtlasAnimationTexture::StaticTypeHash()))
 			{
-				const Strong<Resources::Texture>& atlas = material_resources.at(RES_T_ATLAS_TEX).front()->GetSharedPtr<Resources::Texture>();
+				const Strong<Resources::Texture>& atlas = material_resources.at(Resources::AtlasAnimationTexture::StaticTypeHash()).front()->GetSharedPtr<Resources::Texture>();
 				gi.Unbind(context, atlas.get(), BIND_TYPE_SRV);
 			}
 

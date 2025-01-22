@@ -266,7 +266,7 @@ namespace Engine::Components
 	}
 
 	Collider::Collider()
-		: Component(COM_T_COLLIDER, {}),
+		: Component({}),
 		  m_type_(BOUNDING_TYPE_BOX),
 		  m_mass_(1.f),
 		  m_inertia_tensor_(),
@@ -369,7 +369,7 @@ namespace Engine::Components
 	}
 
 	Collider::Collider(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: Component(COM_T_COLLIDER, owner),
+		: Component(owner),
 		  m_type_(BOUNDING_TYPE_BOX),
 		  m_mass_(1.0f),
 		  m_inertia_tensor_(),

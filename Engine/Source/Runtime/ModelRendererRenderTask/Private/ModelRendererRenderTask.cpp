@@ -102,9 +102,9 @@ namespace Engine
 
                         RenderMap::accessor acc;
 
-                        if (!domain_map.find(acc, RENDER_COM_T_MODEL))
+                        if (!domain_map.find(acc, Components::ModelRenderer::StaticTypeHash()))
                         {
-                            domain_map.insert(acc, RENDER_COM_T_MODEL);
+                            domain_map.insert(acc, Components::ModelRenderer::StaticTypeHash());
                         }
                         
                         Graphics::SBs::InstanceModelSB sb{};
@@ -134,9 +134,9 @@ namespace Engine
             auto& domain_map = render_map[i];
 
             if (RenderMap::accessor acc;
-                domain_map.find(acc, RENDER_COM_T_MODEL))
+                domain_map.find(acc, Components::ModelRenderer::StaticTypeHash()))
             {
-                domain_map.erase(RENDER_COM_T_MODEL);
+                domain_map.erase(Components::ModelRenderer::StaticTypeHash());
             }
         }
     }

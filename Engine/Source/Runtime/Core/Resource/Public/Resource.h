@@ -2,9 +2,6 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 
-// Static Resource type, this should be added to every resource
-#define RESOURCE_T(enum_val) static constexpr eResourceType rtype = enum_val;
-
 // Static resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER_DECL(TYPE)                                         \
   static Engine::Weak<TYPE> Get(const std::string& name);                          \
@@ -39,41 +36,18 @@
 
 namespace Engine
 {
-	enum ENGINE_CORE_API eResourceType : uint8_t
-	{
-		RES_T_UNK = 0,
-		RES_T_SHADER,
-		RES_T_TEX, // Broad definition of texture
-		RES_T_FONT,
-		RES_T_SOUND,
-		RES_T_BONE_ANIM,
-		RES_T_BONE,
-		RES_T_BASE_ANIM,
-		RES_T_MTR,
-		RES_T_MESH,
-		RES_T_SHAPE,
-		RES_T_ANIMS_TEX,
-		RES_T_COMPUTE_SHADER,
-		RES_T_SHADOW_TEX,
-		RES_T_PREFAB,
-		RES_T_ATLAS_TEX,
-		RES_T_ATLAS_ANIM,
-		RES_T_MAX,
-	};
-
-	template <typename T>
-	struct which_resource
-	{
-		static constexpr eResourceType value = T::rtype;
-	};
+	using ResourceType = HashType;
 }
+
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::Resource, Engine::Abstracts::Entity)
 
 namespace Engine::Abstracts
 {
 	class ENGINE_CORE_API Resource : public Entity
 	{
 	public:
-		using type = Resource;
+		INLINE_COMPILE_TIME_TYPENAME(Resource)
+
 		~Resource() override;
 
 		virtual void Load() final;
@@ -83,12 +57,11 @@ namespace Engine::Abstracts
 
 		[[nodiscard]] bool                           IsLoaded() const;
 		[[nodiscard]] const std::filesystem::path& GetPath() const;
-		[[nodiscard]] virtual eResourceType          GetResourceType() const;
 
 		void SetPath(const std::filesystem::path& path);
 
 	protected:
-		Resource(std::filesystem::path path, eResourceType type);
+		Resource(std::filesystem::path path);
 
 		virtual void Load_INTERNAL() = 0;
 		virtual void Unload_INTERNAL() = 0;
@@ -98,7 +71,6 @@ namespace Engine::Abstracts
 		friend class Managers::ResourceManager;
 
 		bool                    m_bLoaded_;
-		eResourceType           m_type_;
 		std::filesystem::path m_path_;
 	};
 } // namespace Engine::Abstract

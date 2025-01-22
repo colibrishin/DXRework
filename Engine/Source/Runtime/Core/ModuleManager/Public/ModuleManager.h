@@ -11,6 +11,13 @@
 
 namespace Engine::Managers
 {
+	class ModuleManager;
+}
+
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::ModuleManager)
+
+namespace Engine::Managers
+{
 	using ModuleInitializationFunctionCStyle = IModule*(*)();
 	using ModuleInitializationFunction = std::function<IModule*()>;
 

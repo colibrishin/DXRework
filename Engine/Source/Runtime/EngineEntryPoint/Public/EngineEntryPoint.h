@@ -9,6 +9,13 @@ namespace Engine
 
 namespace Engine::Managers
 {
+	class EngineEntryPoint;
+}
+
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_ENGINEENTRYPOINT_API, Engine::Managers::EngineEntryPoint)
+
+namespace Engine::Managers
+{
 	class ENGINE_ENGINEENTRYPOINT_API EngineEntryPoint final : public Abstracts::Singleton<EngineEntryPoint>
 	{
 	public:

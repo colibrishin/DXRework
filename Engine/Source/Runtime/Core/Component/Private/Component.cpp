@@ -4,10 +4,9 @@ namespace Engine
 {
 	bool ComponentPriorityComparer::operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const
 	{
-		if (Left.lock()->GetComponentType() != Right.lock()->GetComponentType())
+		if (Left.lock()->GetTypeHash() != Right.lock()->GetTypeHash())
 		{
-			return
-				Left.lock()->GetComponentType() < Right.lock()->GetComponentType();
+			return Left.lock()->GetTypeHash() < Right.lock()->GetTypeHash();
 		}
 
 		return Left.lock()->GetID() < Right.lock()->GetID();
@@ -19,11 +18,6 @@ namespace Engine::Abstracts
 	Weak<ObjectBase> Component::GetOwner() const
 	{
 		return m_owner_;
-	}
-
-	eComponentType Component::GetComponentType() const
-	{
-		return m_type_;
 	}
 
 	LocalComponentID Component::GetLocalID() const
@@ -80,9 +74,8 @@ namespace Engine::Abstracts
 		return cloned;
 	}
 
-	Component::Component(const eComponentType type, const Weak<ObjectBase>& owner)
+	Component::Component(const Weak<ObjectBase>& owner)
 		: m_local_id_(g_invalid_id),
-		  m_type_(type),
 		  m_owner_(owner),
 		  m_b_ticked_(false),
 		  m_b_active_(true) {}

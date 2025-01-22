@@ -33,7 +33,7 @@ namespace Engine::Managers
 
 	void ResourceManager::FixedUpdate(const float dt) {}
 
-	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const EntityName& name, const eResourceType& type)
+	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const EntityName& name, ResourceType type)
 	{
 		auto& resources = m_resources_[type];
 		const auto it = std::ranges::find_if
@@ -58,7 +58,7 @@ namespace Engine::Managers
 		return {};
 	}
 
-	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const eResourceType type)
+	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const ResourceType type)
 	{
 		if (path.empty())
 		{
@@ -66,13 +66,11 @@ namespace Engine::Managers
 		}
 
 		auto& resources = m_resources_[type];
-		auto  it        = std::find_if
-				(
-				 resources.begin(), resources.end(), [&path](const Strong<Abstracts::Resource>& resource)
+		auto  it        = std::ranges::find_if(
+				 resources, [&path](const Strong<Abstracts::Resource>& resource)
 				 {
 					 return resource->GetPath() == path;
-				 }
-				);
+				 });
 
 		if (it != resources.end())
 		{
@@ -88,7 +86,7 @@ namespace Engine::Managers
 	}
 
 	Weak<Abstracts::Resource> ResourceManager::GetResourceByMetadataPath(
-		const std::filesystem::path& path, const eResourceType type
+		const std::filesystem::path& path, const ResourceType type
 	)
 	{
 		if (path.empty())
@@ -97,9 +95,9 @@ namespace Engine::Managers
 		}
 
 		auto& resources = m_resources_[type];
-		auto  it        = std::find_if
+		auto  it        = std::ranges::find_if
 				(
-				 resources.begin(), resources.end(), [&path](const Strong<Abstracts::Resource>& resource)
+				 resources, [&path](const Strong<Abstracts::Resource>& resource)
 				 {
 					 return resource->GetMetadataPath() == path;
 				 }

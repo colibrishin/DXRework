@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
-
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
-// Static texture type, this should be added to every texture.
-#define TEX_T(enum_val) static constexpr eTexType textype = enum_val;
+POLYMORPHIC_TYPE_MAP(ENGINE_TEXTURE_API, Engine::Resources::Texture, Engine::Abstracts::Resource)
 
 namespace Engine::Resources
 {
@@ -13,7 +11,6 @@ namespace Engine::Resources
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Texture)
-		RESOURCE_T(RES_T_TEX)
 		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
 		~Texture() override = default;
 
@@ -27,7 +24,6 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		[[nodiscard]] eResourceType GetResourceType() const override;
 		[[nodiscard]] eTexType GetPrimitiveTextureType() const;
 		[[nodiscard]] const GenericTextureDescription& GetDescription() const;
 		[[nodiscard]] PrimitiveTexture* GetPrimitiveTexture() const;

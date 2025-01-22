@@ -5,6 +5,8 @@
 
 DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::Actor, Engine::Abstracts::Renderable)
+
 namespace Engine::Abstracts
 {
 	class ENGINE_CORE_API Actor : public Renderable

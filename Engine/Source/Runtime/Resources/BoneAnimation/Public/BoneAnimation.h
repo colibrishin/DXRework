@@ -35,6 +35,8 @@ namespace Engine::Graphics
 	
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_BONEANIMATION_API, Engine::Resources::BoneAnimation, Engine::Resources::BaseAnimation)
+
 namespace Engine::Resources
 {
 	using namespace Graphics;
@@ -42,7 +44,7 @@ namespace Engine::Resources
 	class ENGINE_BONEANIMATION_API BoneAnimation : public BaseAnimation
 	{
 	public:
-		RESOURCE_T(RES_T_BONE_ANIM)
+		INLINE_COMPILE_TIME_TYPENAME(BoneAnimation)
 
 		BoneAnimation(const AnimationPrimitive& primitive);
 
@@ -55,7 +57,6 @@ namespace Engine::Resources
 		void OnDeserialized() override;
 
 		void          BindBone(const Weak<Bone>& bone_info);
-		eResourceType GetResourceType() const override;
 
 		std::vector<Matrix> GetFrameAnimationDt(float dt);
 		std::vector<Matrix> GetFrameAnimation(float time);

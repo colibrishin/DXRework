@@ -1,13 +1,14 @@
 #pragma once
 #include "Source/Runtime/Core/Component/Public/Component.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Components::Rigidbody, Engine::Abstracts::Component)
+
 namespace Engine::Components
 {
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Rigidbody)
-		COMPONENT_T(COM_T_RIDIGBODY)
 
 		explicit Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object);
 		Rigidbody(const Rigidbody& other);

@@ -415,9 +415,9 @@ namespace Engine
 
     using UINT = uint32_t;
 
-	enum eResourceType : uint8_t;
-	enum eComponentType : uint8_t;
-	enum eDefObjectType : uint8_t;
+	using ResourceType = HashType;
+	using ComponentType = HashType;
+	using ScriptType = HashType;
 	enum eTaskType : uint8_t;
 
 	class Serializer;

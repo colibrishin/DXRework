@@ -66,9 +66,9 @@ namespace Engine
 
                         RenderMap::accessor acc;
 
-                        if (!domain_map.find(acc, RENDER_COM_T_PARTICLE))
+                        if (!domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
                         {
-                            domain_map.insert(acc, RENDER_COM_T_PARTICLE);
+                            domain_map.insert(acc, Components::ParticleRenderer::StaticTypeHash());
                         }
                         
                         if (pr->IsFollowOwner())
@@ -96,9 +96,9 @@ namespace Engine
             auto& domain_map = render_map[i];
 
             if (RenderMap::accessor acc;
-                domain_map.find(acc, RENDER_COM_T_PARTICLE))
+                domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
             {
-                domain_map.erase(RENDER_COM_T_PARTICLE);
+                domain_map.erase(Components::ParticleRenderer::StaticTypeHash());
             }
         }
     }

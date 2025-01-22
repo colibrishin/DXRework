@@ -6,18 +6,12 @@
 
 DEFINE_DELEGATE(OnMaterialChange, Engine::Weak<Engine::Resources::Material>)
 
-// Static Render Component type, this should be added to every render component
-#define RENDER_COM_T(enum_val) static constexpr eRenderComponentType rctype = enum_val;
-
-namespace Engine 
+namespace Engine::Components
 {
-	enum ENGINE_RENDERCOMPONENT_API eRenderComponentType : uint8_t
-	{
-		RENDER_COM_T_UNK = 0,
-		RENDER_COM_T_MODEL,
-		RENDER_COM_T_PARTICLE
-	};
+	class RenderComponent;
 }
+
+POLYMORPHIC_TYPE_MAP(ENGINE_RENDERCOMPONENT_API, Engine::Components::RenderComponent, Engine::Abstracts::Component)
 
 namespace Engine::Components
 {
@@ -25,30 +19,24 @@ namespace Engine::Components
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(RenderComponent)
-		COMPONENT_T(COM_T_RENDERER)
 
 		DelegateOnMaterialChange onMaterialChange;
 
-		explicit RenderComponent(eRenderComponentType type, const Weak<Engine::Abstracts::ObjectBase>& owner)
-			: Component(COM_T_RENDERER, owner),
-			  m_type_(type),
-			  m_mtr_meta_path_() {}
+		using Component::Component;
 
 		void SetMaterial(const Weak<Resources::Material>& material) noexcept;
 
-		eRenderComponentType         GetRenderType() const noexcept;
-		Weak<Resources::Material>                 GetMaterial() const noexcept;
+		Weak<Resources::Material>    GetMaterial() const noexcept;
 		const std::filesystem::path& GetMaterialMetadataPath() const noexcept;
-		eRenderComponentType         GetType() const noexcept;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-	private:
+	protected:
 		RenderComponent();
 
-		Strong<Resources::Material>       m_material_;
-		eRenderComponentType m_type_;
-		std::filesystem::path m_mtr_meta_path_;
+	private:
+		Strong<Resources::Material> m_material_{};
+		std::filesystem::path       m_mtr_meta_path_;
 	};
 }

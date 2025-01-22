@@ -46,7 +46,7 @@ namespace Engine::Resources
 	}
 
 	Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)
-		: Resource("", RES_T_MESH),
+		: Resource(""),
 		  m_vertices_(shape),
 		  m_indices_(indices) {}
 
@@ -198,7 +198,7 @@ namespace Engine::Resources
 	}
 
 	Mesh::Mesh()
-		: Resource("", RES_T_MESH) {}
+		: Resource("") {}
 
 	void Mesh::Load_INTERNAL()
 	{

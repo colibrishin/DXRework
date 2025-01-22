@@ -18,6 +18,8 @@ public class Material : CommonProject
         conf.AddPublicDependency<Shader>(target);
 
         conf.AddPrivateDependency<Shape>(target);
+        conf.AddPrivateDependency<BoneAnimation>(target);
+        conf.AddPrivateDependency<AtlasAnimation>(target);
         conf.AddPrivateDependency<Mesh>(target);
         conf.AddPrivateDependency<Texture>(target);
         conf.AddPublicDependency<DirectXTK>(target);

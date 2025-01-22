@@ -45,6 +45,8 @@ namespace Engine
 	using DebugCallback = std::function<void(const Message&)>;
 }
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::Debugger)
+
 namespace Engine::Managers
 {
 	class ENGINE_CORE_API Debugger final : public Abstracts::Singleton<Debugger>

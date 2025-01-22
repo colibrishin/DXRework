@@ -10,13 +10,14 @@ namespace Engine
 	inline static constexpr Vector3 g_forward = {0, 0, -1.f};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Components::Transform, Engine::Abstracts::Component)
+
 namespace Engine::Components
 {
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Transform)
-		COMPONENT_T(COM_T_TRANSFORM)
 
 		DelegateOnTranfromChanged onTransformChanged;
 

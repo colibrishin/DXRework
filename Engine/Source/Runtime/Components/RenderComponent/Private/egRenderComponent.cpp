@@ -14,11 +14,6 @@ namespace Engine::Components
 		}
 	}
 
-	eRenderComponentType RenderComponent::GetRenderType() const noexcept
-	{
-		return m_type_;
-	}
-
 	Weak<Resources::Material> RenderComponent::GetMaterial() const noexcept
 	{
 		return m_material_;
@@ -27,11 +22,6 @@ namespace Engine::Components
 	const std::filesystem::path& RenderComponent::GetMaterialMetadataPath() const noexcept
 	{
 		return m_mtr_meta_path_;
-	}
-
-	eRenderComponentType RenderComponent::GetType() const noexcept
-	{
-		return m_type_;
 	}
 
 	void RenderComponent::OnSerialized()
@@ -51,6 +41,5 @@ namespace Engine::Components
 	}
 
 	RenderComponent::RenderComponent()
-		: Component(COM_T_RENDERER, {}),
-		  m_type_(RENDER_COM_T_UNK) {}
+		: Component({}) {}
 }

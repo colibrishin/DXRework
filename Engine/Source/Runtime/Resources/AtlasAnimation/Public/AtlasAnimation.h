@@ -60,12 +60,19 @@ namespace Engine
 
 namespace Engine::Resources
 {
+	class AtlasAnimation;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_ATLASANIMATION_API, Engine::Resources::AtlasAnimation, Engine::Resources::BaseAnimation)
+
+namespace Engine::Resources
+{
 	using namespace Graphics;
 
 	class ENGINE_ATLASANIMATION_API AtlasAnimation : public BaseAnimation
 	{
 	public:
-		RESOURCE_T(RES_T_ATLAS_ANIM)
+		INLINE_COMPILE_TIME_TYPENAME(AtlasAnimation)
 
 		AtlasAnimation(const AtlasAnimationPrimitive& primitive);
 
@@ -76,8 +83,6 @@ namespace Engine::Resources
 
 		void OnDeserialized() override;
 		void OnSerialized() override;
-
-		eResourceType GetResourceType() const override;
 
 		void __vectorcall GetFrame(float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const;
 

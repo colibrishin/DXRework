@@ -7,7 +7,7 @@ namespace Engine::Resources
 	RESOURCE_SELF_INFER_GETTER_IMPL(Bone)
 
 	Bone::Bone(const BonePrimitiveMap& bone_map)
-		: Resource("", RES_T_BONE),
+		: Resource(""),
 		  m_bone_map(bone_map)
 	{
 		for (auto& bone : m_bone_map | std::views::values)
@@ -25,7 +25,7 @@ namespace Engine::Resources
 	}
 
 	Bone::Bone(const Bone& other)
-		: Resource("", RES_T_BONE)
+		: Resource("")
 	{
 		m_bone_map = other.m_bone_map;
 
@@ -132,5 +132,5 @@ namespace Engine::Resources
 	void Bone::Unload_INTERNAL() { }
 
 	Bone::Bone()
-		: Resource("", RES_T_BONE) {}
+		: Resource("") {}
 }

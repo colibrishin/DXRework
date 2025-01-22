@@ -22,7 +22,7 @@ RESOURCE_SELF_INFER_CREATE_IMPL(Engine::Resources::Shape)
 namespace Engine::Resources
 {
 	Shape::Shape(const std::filesystem::path& path)
-		: Resource(path, RES_T_SHAPE),
+		: Resource(path),
 		  m_bounding_box_({}) {}
 
 	void Shape::PreUpdate(const float dt) {}
@@ -508,7 +508,7 @@ namespace Engine::Resources
 	}
 
 	Shape::Shape()
-		: Resource("", RES_T_SHAPE),
+		: Resource(""),
 		  m_bounding_box_({}) {}
 }
 

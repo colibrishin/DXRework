@@ -22,6 +22,8 @@ namespace physx
 DEFINE_DELEGATE(OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase>);
 DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Scene, Engine::Abstracts::Renderable)
+
 namespace Engine
 {
 	enum ENGINE_CORE_API eReservedLayerType
@@ -50,6 +52,7 @@ namespace Engine
 	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Scene)
 		DelegateOnObjectAdded onObjectAdded;
 		DelegateOnObjectRemoved onObjectRemoved;
 
@@ -132,7 +135,7 @@ namespace Engine
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& component = std::any_cast<Strong<Abstracts::Component>>(params[1]);
 
-							 scene->addCacheComponentImpl(component, component->GetComponentType());
+							 scene->addCacheComponentImpl(component, component->GetTypeHash());
 						 }
 						);
 			}
@@ -147,7 +150,7 @@ namespace Engine
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
-							 scene->addCacheComponentImpl(component, which_component<T>::value);
+							 scene->addCacheComponentImpl(component, T::StaticTypeHash());
 						 }
 						);
 			}
@@ -169,7 +172,7 @@ namespace Engine
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& component = std::any_cast<Strong<Abstracts::Component>>(params[1]);
 
-							 scene->removeCacheComponentImpl(component, component->GetComponentType());
+							 scene->removeCacheComponentImpl(component, component->GetTypeHash());
 						 }
 						);
 			}
@@ -184,7 +187,7 @@ namespace Engine
 							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
 							 const auto& component = std::any_cast<Strong<T>>(params[1]);
 
-							 scene->removeCacheComponentImpl(component, which_component<T>::value);
+							 scene->removeCacheComponentImpl(component, T::StaticTypeHash());
 						 }
 						);
 			}
@@ -269,7 +272,7 @@ namespace Engine
 		{
 			ConcurrentWeakComRootMap::const_accessor acc;
 
-			if (m_cached_components_.find(acc, which_component<T>::value))
+			if (m_cached_components_.find(acc, T::StaticTypeHash()))
 			{
 				ConcurrentWeakComVec result;
 
@@ -347,9 +350,9 @@ namespace Engine
 		// Set the scene and layer to the object, and schedule the object to be added at the next frame.
 		void addGameObjectImpl(LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
 		// Add cache component from the object.
-		void addCacheComponentImpl(const Strong<Abstracts::Component>& component, eComponentType type);
+		void addCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 		// Remove cache component from the object.
-		void removeCacheComponentImpl(const Strong<Abstracts::Component>& component, eComponentType type);
+		void removeCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 
 		// Add cache script from the object.
 		void addCacheScriptImpl(const Strong<Script>& script, ScriptSizeType type);

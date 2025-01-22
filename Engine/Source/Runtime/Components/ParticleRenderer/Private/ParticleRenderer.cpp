@@ -8,7 +8,7 @@ namespace Engine::Components
 	COMP_CLONE_IMPL(ParticleRenderer)
 
 	ParticleRenderer::ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(RENDER_COM_T_PARTICLE, owner),
+		: RenderComponent(owner),
 		  m_b_follow_owner_(true) {}
 
 	ParticleRenderer::ParticleRenderer(const ParticleRenderer& other)
@@ -143,7 +143,7 @@ namespace Engine::Components
 	}
 
 	ParticleRenderer::ParticleRenderer()
-		: RenderComponent(RENDER_COM_T_PARTICLE, {}),
+		: RenderComponent(),
 		  m_b_follow_owner_(true) {}
 
 	void ParticleRenderer::SetComputeShader(const Weak<Resources::ComputeShader>& cs)

@@ -4,9 +4,11 @@
 #include "Singleton.hpp"
 #include "TypeLibrary/Public/TypeLibrary.h"
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_PHYSICSMANAGER_API, Engine::Managers::ConstraintSolver)
+
 namespace Engine::Managers
 {
-	class ConstraintSolver : public Abstracts::Singleton<ConstraintSolver>
+	class ENGINE_PHYSICSMANAGER_API ConstraintSolver : public Abstracts::Singleton<ConstraintSolver>
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(ConstraintSolver)

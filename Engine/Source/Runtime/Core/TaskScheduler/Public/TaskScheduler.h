@@ -43,11 +43,14 @@ namespace Engine
 	};
 }
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::TaskScheduler)
+
 namespace Engine::Managers
 {
 	class ENGINE_CORE_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(TaskScheduler)
 		struct TaskValue
 		{
 			eTaskType             type;

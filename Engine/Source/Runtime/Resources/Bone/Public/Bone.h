@@ -81,6 +81,8 @@ namespace Engine::Graphics
 	};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_BONE_API, Engine::Resources::Bone, Engine::Abstracts::Resource)
+
 namespace Engine::Resources
 {
 	using namespace Graphics;
@@ -88,7 +90,7 @@ namespace Engine::Resources
 	class ENGINE_BONE_API Bone : public Abstracts::Resource
 	{
 	public:
-		RESOURCE_T(RES_T_BONE)
+		INLINE_COMPILE_TIME_TYPENAME(Bone)
 
 		Bone(const BonePrimitiveMap& bone_map);
 		Bone(Bone&& other) noexcept = default;

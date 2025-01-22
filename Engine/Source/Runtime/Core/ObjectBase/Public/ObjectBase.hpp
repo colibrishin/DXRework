@@ -31,6 +31,8 @@ namespace Engine
 	};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::ObjectBase, Engine::Abstracts::Actor)
+
 namespace Engine::Abstracts
 {
 	// Abstract base class for objects
@@ -61,7 +63,7 @@ namespace Engine::Abstracts
 		template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
 		Weak<T> AddComponent(Args&&... args)
 		{
-			const auto type = which_component<T>::value;
+			const auto type = T::StaticTypeHash();
 
 			if (const auto comp = checkComponent(type).lock())
 			{
@@ -126,12 +128,12 @@ namespace Engine::Abstracts
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(which_component<T>::value))
+				if (!m_components_.contains(T::StaticTypeHash()))
 				{
 					return {};
 				}
 
-				const auto& comp = m_components_[which_component<T>::value];
+				const auto& comp = m_components_[T::StaticTypeHash()];
 
 				return boost::static_pointer_cast<T>(comp);
 			}
@@ -142,8 +144,8 @@ namespace Engine::Abstracts
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
 		void RemoveComponent()
 		{
-			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[which_component<T>::value]));
-			removeComponent(which_component<T>::value);
+			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[T::StaticTypeHash()]));
+			removeComponent(T::StaticTypeHash());
 		}
 
 		void SetName(const EntityName& name) override;
@@ -188,7 +190,7 @@ namespace Engine::Abstracts
 		[[nodiscard]] virtual Strong<ObjectBase> cloneImpl() const = 0;
 
 		// Check whether the component is already added to the object.
-		Weak<Component> checkComponent(eComponentType type);
+		Weak<Component> checkComponent(ComponentType type);
 		Weak<Script>    checkScript(const ScriptSizeType type);
 
 		// Add component to the scene cache.
@@ -240,14 +242,14 @@ namespace Engine::Abstracts
 		Weak<Script> addScript(const Strong<Script>& script);
 
 		// Remove component from the object. Cached component at the scene should be removed manually.
-		void removeComponent(eComponentType type);
+		void removeComponent(ComponentType type);
 		// Remove specific component from the object. Cached component at the scene should be removed manually.
 		void removeComponent(GlobalEntityID id);
 		// Remove component from the object finally, notify task scheduler to remove the component.
-		void removeComponentImpl(eComponentType type, const Strong<Component>& comp);
+		void removeComponentImpl(ComponentType type, const Strong<Component>& comp);
 
 		// Commit the component to the object.
-		void addComponentImpl(const Strong<Component>& component, eComponentType type);
+		void addComponentImpl(const Strong<Component>& component, ComponentType type);
 		// Commit the script to the object.
 		void addScriptImpl(const Strong<Script>& script, ScriptSizeType type);
 
@@ -257,7 +259,7 @@ namespace Engine::Abstracts
 		bool                      m_active_ = true;
 		bool                      m_culled_ = true;
 
-		std::map<eComponentType, Strong<Component>> m_components_;
+		std::map<ComponentType, Strong<Component>> m_components_;
 		std::map<ScriptSizeType, Strong<Script>>       m_scripts_;
 
 		// Non-serialized

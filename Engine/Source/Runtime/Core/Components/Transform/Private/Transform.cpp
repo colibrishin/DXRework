@@ -7,7 +7,7 @@ namespace Engine::Components
 	COMP_CLONE_IMPL(Transform)
 
 	Transform::Transform(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: Engine::Abstracts::Component(COM_T_TRANSFORM, owner),
+		: Engine::Abstracts::Component(owner),
 		  m_b_s_absolute_(true),
 		  m_b_r_absolute_(false),
 		  m_previous_position_(Vector3::Zero),
@@ -350,7 +350,7 @@ namespace Engine::Components
 	}
 
 	Transform::Transform()
-		: Component(COM_T_TRANSFORM, {}),
+		: Component({}),
 		  m_b_s_absolute_(true),
 		  m_b_r_absolute_(false),
 		  m_previous_position_(Vector3::Zero),

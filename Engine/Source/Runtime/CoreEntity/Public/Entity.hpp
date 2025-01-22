@@ -7,10 +7,7 @@
 #include <UIInterface.h>
 #endif
 
-namespace Engine
-{
-	struct UIContext;
-}
+POLYMORPHIC_TYPE_MAP(ENGINE_COREENTITY_API, Engine::Abstracts::Entity, void)
 
 namespace Engine::Abstracts
 {
@@ -27,7 +24,17 @@ namespace Engine::Abstracts
 			return static_type_name<Entity>::full_name();
 		}
 
-		Entity(const Entity& other) 
+		static HashType StaticTypeHash()
+		{
+			return type_hash<Entity>::value;
+		}
+
+		static bool StaticIsBaseOf(HashType hash)
+		{
+			return polymorphic_type_hash<Entity>::is_base_of(hash);
+		}
+
+		Entity(const Entity& other) : enable_shared_from_this(other)
 		{
 			m_name_ = other.m_name_;
 #if WITH_EDITOR
@@ -55,8 +62,10 @@ namespace Engine::Abstracts
 		const std::filesystem::path& GetMetadataPath() const;
 		GlobalEntityID               GetID() const;
 		const EntityName&            GetName() const;
-		virtual TypeName      GetTypeName() const;
-		virtual TypeName      GetPrettyTypeName() const;
+		virtual TypeName             GetTypeName() const;
+		virtual TypeName             GetPrettyTypeName() const;
+		virtual HashType             GetTypeHash() const;
+		virtual bool                 IsBaseOf(HashType hash) const;
 		bool                         IsGarbage() const;
 		bool                         IsInitialized() const;
 

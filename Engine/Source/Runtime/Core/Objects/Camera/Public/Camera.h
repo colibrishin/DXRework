@@ -3,6 +3,8 @@
 #include "Source/Runtime/Core/Objects/Object/Public/Object.hpp"
 #include "Source/Runtime/Core/ConstantBuffer.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Objects::Camera, Engine::Abstracts::ObjectBase)
+
 namespace Engine::Objects
 {
 	class ENGINE_CORE_API Camera final : public Abstracts::ObjectBase

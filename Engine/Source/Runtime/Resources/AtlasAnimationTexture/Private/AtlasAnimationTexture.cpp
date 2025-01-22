@@ -29,11 +29,6 @@ namespace Engine::Resources
 		Texture3D::OnDeserialized();
 	}
 
-	eResourceType AtlasAnimationTexture::GetResourceType() const
-	{
-		return RES_T_ATLAS_TEX;
-	}
-
 	Strong<AtlasAnimationTexture> AtlasAnimationTexture::Create(
 		const std::string& name, const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases
 	)

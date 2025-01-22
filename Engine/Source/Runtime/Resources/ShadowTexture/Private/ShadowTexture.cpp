@@ -53,11 +53,6 @@ namespace Engine::Resources
 		Texture2D::OnDeserialized();
 	}
 
-	eResourceType ShadowTexture::GetResourceType() const
-	{
-		return RES_T_SHADOW_TEX;
-	}
-
 	UINT ShadowTexture::GetDepth() const
 	{
 		return Texture2D::GetDepth();

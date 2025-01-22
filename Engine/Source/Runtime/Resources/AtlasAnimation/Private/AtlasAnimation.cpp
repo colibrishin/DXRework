@@ -60,11 +60,6 @@ namespace Engine::Resources
 		m_xml_path_ = (GetPrettyTypeName() / xml_path.filename()).string();
 	}
 
-	eResourceType AtlasAnimation::GetResourceType() const
-	{
-		return RES_T_ATLAS_ANIM;
-	}
-
 	void AtlasAnimation::GetFrame(const float dt, AtlasAnimationPrimitive::AtlasFramePrimitive& out) const
 	{
 		m_primitive_.GetFrame(ConvertDtToFrame(dt, GetTicksPerSecond()), out);

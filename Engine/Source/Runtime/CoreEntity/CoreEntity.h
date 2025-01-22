@@ -31,4 +31,8 @@ namespace Engine
 		class Entity;
 		class Renderable;
 	} // namespace Abstracts
+
+#if WITH_EDITOR
+	struct UIContext;
+#endif
 }

@@ -5,7 +5,7 @@ namespace Engine::Components
 	COMP_CLONE_IMPL(ModelRenderer)
 
 	ModelRenderer::ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(RENDER_COM_T_MODEL, owner) {}
+		: RenderComponent(owner) {}
 
 	void ModelRenderer::PreUpdate(const float dt) {}
 
@@ -18,8 +18,7 @@ namespace Engine::Components
 		Component::PostUpdate(dt);
 	}
 
-	ModelRenderer::ModelRenderer()
-		: RenderComponent(RENDER_COM_T_MODEL, {}) {}
+	ModelRenderer::ModelRenderer() {}
 }
 
 Engine::Graphics::SBs::InstanceModelSB::InstanceModelSB()

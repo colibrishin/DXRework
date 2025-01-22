@@ -4,10 +4,17 @@
 
 namespace Engine::Resources
 {
+	class AtlasAnimationTexture;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_ATLASANIMATIONTEXTURE_API, Engine::Resources::AtlasAnimationTexture, Engine::Resources::Texture3D);
+
+namespace Engine::Resources
+{
 	class ENGINE_ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
 	{
 	public:
-		RESOURCE_T(RES_T_ATLAS_TEX)
+		INLINE_COMPILE_TIME_TYPENAME(AtlasAnimationTexture)
 
 		AtlasAnimationTexture(const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases);
 
@@ -18,9 +25,7 @@ namespace Engine::Resources
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-
-		eResourceType GetResourceType() const override;
-
+		
 		RESOURCE_SELF_INFER_GETTER_DECL(AtlasAnimationTexture)
 
 		static Strong<AtlasAnimationTexture> Create(

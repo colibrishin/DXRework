@@ -7,14 +7,6 @@
 #include "Source/Runtime/Core/StructuredBuffer.h"
 #include "RenderTask.h"
 
-namespace Engine 
-{
-	using RenderInstanceIndex = uint64_t;
-	using CandidateTuple = std::tuple<Weak<Engine::Abstracts::ObjectBase>, Weak<Engine::Resources::Material>, aligned_vector<Engine::Graphics::SBs::InstanceSB>>;
-	using RenderMapValueType = tbb::concurrent_vector<CandidateTuple, u_align_allocator<CandidateTuple>>;
-	using RenderMap = tbb::concurrent_hash_map<RenderInstanceIndex, RenderMapValueType>;
-}
-
 namespace Engine::Managers
 {
 	class ENGINE_RENDERPIPELINE_API Renderer : public Abstracts::Singleton<Renderer>

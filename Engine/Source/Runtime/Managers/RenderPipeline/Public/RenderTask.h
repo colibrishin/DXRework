@@ -4,6 +4,13 @@
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
+namespace Engine
+{
+	struct RenderInstanceTask;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderInstanceTask, void)
+
 namespace Engine 
 {
 	struct ENGINE_RENDERPIPELINE_API RenderInstanceTask
@@ -14,11 +21,18 @@ namespace Engine
 
 		virtual std::string_view GetTypeName() const = 0;
 		virtual std::string_view GetPrettyTypeName() const = 0;
+		virtual HashType GetTypeHash() const = 0;
+		virtual bool IsBaseOf(HashType hash) const = 0;
 	};
 
 	struct RenderPassTask;
 	using ContextSetupFunction = std::function<void(const GraphicInterfaceContextPrimitive*)>;
+}
 
+POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderPassTask, void)
+
+namespace Engine
+{
 	struct ENGINE_RENDERPIPELINE_API RenderPassTask
 	{
 		virtual      ~RenderPassTask() = default;
@@ -37,5 +51,7 @@ namespace Engine
 
 		virtual std::string_view GetTypeName() const = 0;
 		virtual std::string_view GetPrettyTypeName() const = 0;
+		virtual HashType GetTypeHash() const = 0;
+		virtual bool IsBaseOf(HashType hash) const = 0;
 	};
 }

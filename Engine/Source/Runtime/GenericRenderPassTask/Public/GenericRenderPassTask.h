@@ -8,6 +8,13 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 
+namespace Engine
+{
+	class GenericRenderPassTaskModule;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_GENERICRENDERPASSTASK_API, Engine::GenericRenderPassTaskModule, Engine::IModule)
+
 namespace Engine 
 {
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
@@ -17,7 +24,17 @@ namespace Engine
 		void Shutdown() override;
 		bool DynamicLoadable() override;
 	};
+}
 
+namespace Engine
+{
+	class GenericRenderPassTask;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_GENERICRENDERPASSTASK_API, Engine::GenericRenderPassTask, Engine::RenderPassTask)
+
+namespace Engine
+{
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
 		INLINE_COMPILE_TIME_TYPENAME(GenericRenderPassTask)

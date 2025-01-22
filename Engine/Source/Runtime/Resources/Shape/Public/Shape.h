@@ -7,13 +7,14 @@
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_SHAPE_API, Engine::Resources::Shape, Engine::Abstracts::Resource)
+
 namespace Engine::Resources
 {
 	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Shape)
-		RESOURCE_T(RES_T_SHAPE)
 
 		Shape(const std::filesystem::path& path);
 
@@ -41,7 +42,7 @@ namespace Engine::Resources
 				return;
 			}
 
-			if constexpr (which_resource<T>::value == RES_T_MESH)
+			if constexpr (T::StaticTypeHash() == Mesh::StaticTypeHash())
 			{
 				m_meshes_.push_back(res.lock());
 
@@ -58,12 +59,12 @@ namespace Engine::Resources
 
 				m_mesh_paths_.push_back(res.lock()->GetMetadataPath().generic_string());
 			}
-			else if constexpr (which_resource<T>::value == RES_T_BONE)
+			else if constexpr (T::StaticTypeHash() == Bone::StaticTypeHash())
 			{
 				m_bone_      = res.lock();
 				m_bone_path_ = res.lock()->GetMetadataPath().generic_string();
 			}
-			else if constexpr (which_resource<T>::value == RES_T_ANIMS_TEX)
+			else if constexpr (T::StaticTypeHash() == AnimationTexture::StaticTypeHash())
 			{
 				m_animations_      = res.lock();
 				m_animations_path_ = res.lock()->GetMetadataPath().generic_string();

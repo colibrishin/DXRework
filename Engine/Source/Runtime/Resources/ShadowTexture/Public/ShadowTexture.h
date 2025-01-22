@@ -3,13 +3,14 @@
 
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_SHADOWTEXTURE_API, Engine::Resources::ShadowTexture, Engine::Resources::Texture2D)
+
 namespace Engine::Resources
 {
 	class ENGINE_SHADOWTEXTURE_API ShadowTexture : public Texture2D
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(ShadowTexture)
-		RESOURCE_T(RES_T_SHADOW_TEX)
 
 		ShadowTexture()
 			: Texture2D
@@ -67,7 +68,6 @@ namespace Engine::Resources
 
 		void          OnSerialized() override;
 		void          OnDeserialized() override;
-		eResourceType GetResourceType() const override;
 
 		UINT   GetDepth() const override;
 		UINT   GetHeight() const override;

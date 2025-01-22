@@ -11,13 +11,14 @@ namespace Engine
 	struct GraphicPrimitiveShader;
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_SHADER_API, Engine::Resources::Shader, Engine::Abstracts::Resource)
+
 namespace Engine::Resources
 {
 	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Shader)
-		RESOURCE_T(RES_T_SHADER)
 
 		Shader(
 			const EntityName&            name,

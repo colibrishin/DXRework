@@ -4,11 +4,14 @@
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_COMPUTESHADER_API, Engine::Resources::ComputeShader, Engine::Resources::Shader)
+
 namespace Engine::Resources
 {
 	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ComputeShader)
 		~ComputeShader() override = default;
 
 		std::array<uint32_t, 3> GetThread() const;

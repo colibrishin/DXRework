@@ -2,6 +2,8 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::CameraManager)
+
 namespace Engine::Managers
 {
 	class ENGINE_CORE_API CameraManager : public Abstracts::Singleton<CameraManager>

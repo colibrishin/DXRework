@@ -27,7 +27,7 @@ namespace Engine::Resources
 		const ePrimitiveTopologyType topology_type,
 		const eSampler               sampler_slot  
 	)
-		: Resource(path, RES_T_SHADER),
+		: Resource(path),
 		m_domain_(domain),
 		m_depth_(depth),
 		m_rasterizer_(rasterizer),
@@ -185,7 +185,7 @@ namespace Engine::Resources
 	}
 
 	Shader::Shader()
-		: Resource("", RES_T_SHADER),
+		: Resource(""),
 		  m_domain_(),
 		  m_depth_(0),
 		  m_rasterizer_(0),

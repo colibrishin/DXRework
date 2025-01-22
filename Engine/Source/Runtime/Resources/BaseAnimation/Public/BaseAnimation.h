@@ -26,6 +26,8 @@ namespace Engine::Graphics
 	};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_BASEANIMATION_API, Engine::Resources::BaseAnimation, Engine::Abstracts::Resource)
+
 namespace Engine::Resources
 {
 	using namespace Graphics;
@@ -33,7 +35,7 @@ namespace Engine::Resources
 	class ENGINE_BASEANIMATION_API BaseAnimation : public Abstracts::Resource
 	{
 	public:
-		RESOURCE_T(RES_T_BASE_ANIM)
+		INLINE_COMPILE_TIME_TYPENAME(BaseAnimation)
 
 		BaseAnimation(const BoneAnimationPrimitive& primitive);
 

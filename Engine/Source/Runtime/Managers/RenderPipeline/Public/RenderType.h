@@ -6,8 +6,7 @@
 
 namespace Engine 
 {
-	using RenderInstanceIndex = uint64_t;
 	using CandidateTuple = std::tuple<Weak<Abstracts::ObjectBase>, Weak<Resources::Material>, aligned_vector<Graphics::SBs::InstanceSB>>;
 	using RenderMapValueType = tbb::concurrent_vector<CandidateTuple, u_align_allocator<CandidateTuple>>;
-	using RenderMap = tbb::concurrent_hash_map<RenderInstanceIndex, RenderMapValueType>;
+	using RenderMap = tbb::concurrent_hash_map<HashType, RenderMapValueType>;
 }

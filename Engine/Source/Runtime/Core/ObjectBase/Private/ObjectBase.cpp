@@ -244,7 +244,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	Weak<Abstracts::Component> ObjectBase::checkComponent(const eComponentType type)
+	Weak<Abstracts::Component> ObjectBase::checkComponent(const ComponentType type)
 	{
 		if (m_components_.contains(type))
 		{
@@ -303,7 +303,7 @@ namespace Engine::Abstracts
 
 	Weak<Abstracts::Component> ObjectBase::addComponent(const Strong<Component>& component)
 	{
-		const auto type = component->GetComponentType();
+		const auto type = component->GetTypeHash();
 
 		if (const auto comp = checkComponent(type).lock())
 		{
@@ -391,7 +391,7 @@ namespace Engine::Abstracts
 	}
 #endif
 
-	void ObjectBase::removeComponentImpl(const eComponentType type, const Strong<Component>& comp)
+	void ObjectBase::removeComponentImpl(const ComponentType type, const Strong<Component>& comp)
 	{
 		onComponentRemoved.Broadcast(comp);
 
@@ -403,7 +403,7 @@ namespace Engine::Abstracts
 				 {
 					 const auto& obj  = std::any_cast<Strong<ObjectBase>>(params[0]);
 					 const auto& comp = std::any_cast<Strong<Component>>(params[1]);
-					 const auto& type = std::any_cast<eComponentType>(params[2]);
+					 const auto& type = std::any_cast<ComponentType>(params[2]);
 
 					 obj->m_assigned_component_ids_.erase(comp->GetLocalID());
 					 obj->m_cached_component_.erase(comp);
@@ -412,7 +412,7 @@ namespace Engine::Abstracts
 				);
 	}
 
-	void ObjectBase::removeComponent(const eComponentType type)
+	void ObjectBase::removeComponent(const ComponentType type)
 	{
 		if (m_components_.contains(type))
 		{
@@ -434,7 +434,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::addComponentImpl(const Strong<Component>& component, eComponentType type)
+	void ObjectBase::addComponentImpl(const Strong<Component>& component, ComponentType type)
 	{
 		m_components_.emplace(type, component);
 

@@ -22,16 +22,14 @@ namespace Engine::Abstracts
 		}
 	}
 
-	Resource::Resource(std::filesystem::path path, eResourceType type)
+	Resource::Resource(std::filesystem::path path)
 		: m_bLoaded_(false),
-		  m_type_(type),
 		  m_path_(std::move(path))
 	{
 	}
 
 	Resource::Resource()
-		: m_bLoaded_(false),
-		  m_type_(static_cast<eResourceType>(0)) {}
+		: m_bLoaded_(false) {}
 
 	void Resource::OnDeserialized()
 	{
@@ -52,10 +50,5 @@ namespace Engine::Abstracts
 	void Resource::SetPath(const std::filesystem::path& path)
 	{
 		m_path_     = path;
-	}
-
-	eResourceType Resource::GetResourceType() const
-	{
-		return m_type_;
 	}
 } // namespace Engine::Abstract

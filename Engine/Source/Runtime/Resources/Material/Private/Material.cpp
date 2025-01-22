@@ -7,6 +7,8 @@
 #include "SceneManager/Public/SceneManager.hpp"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
+#include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
@@ -18,7 +20,7 @@ namespace Engine::Resources
 	RESOURCE_SELF_INFER_CREATE_IMPL(Material)
 
 	Material::Material(const std::filesystem::path& path)
-		: Resource(path, RES_T_MTR),
+		: Resource(path),
 		  m_material_sb_()
 	{
 		m_material_sb_.specularPower         = 100.0f;
@@ -54,14 +56,14 @@ namespace Engine::Resources
 		return m_shaders_loaded_.contains(domain);
 	}
 
-	const std::map<const eResourceType, std::vector<Strong<Abstracts::Resource>>>& Material::GetResources() const
+	const std::map<ResourceType, std::vector<Strong<Abstracts::Resource>>>& Material::GetResources() const
 	{
 		return m_resources_loaded_;
 	}
 
 	void Material::SetTextureSlot(const std::string& name, const UINT slot)
 	{
-		auto       texs = m_resources_loaded_[which_resource<Texture>::value];
+		auto       texs = m_resources_loaded_[Texture::StaticTypeHash()];
 		const auto it   = std::ranges::find_if
 				(
 				 texs, [&name](const Strong<Resource>& res)
@@ -89,17 +91,17 @@ namespace Engine::Resources
 	}
 
 	Material::Material()
-		: Resource("", RES_T_MTR),
+		: Resource(""),
 		  m_material_sb_() {}
 
 	void Material::SetResource(const Strong<Resource>& resource)
 	{
-		if (resource->GetResourceType() == RES_T_MTR)
+		if (resource->GetTypeHash() == Material::StaticTypeHash())
 		{
 			return;
 		}
 
-		if (resource->GetResourceType() == RES_T_MESH)
+		if (resource->GetTypeHash() == Mesh::StaticTypeHash())
 		{
 			return;
 		}
@@ -109,7 +111,7 @@ namespace Engine::Resources
 			resource->Load();
 		}
 
-		if (resource->GetResourceType() == RES_T_SHADER)
+		if (resource->GetTypeHash() == Shader::StaticTypeHash())
 		{
 			if (!resource->GetMetadataPath().empty() &&
 			    std::ranges::find_if
@@ -132,37 +134,37 @@ namespace Engine::Resources
 		if (!resource->GetMetadataPath().empty() &&
 		    std::ranges::find_if
 		    (
-		     m_resource_paths_[resource->GetResourceType()],
+		     m_resource_paths_[resource->GetTypeHash()],
 		     [&resource](const std::pair<EntityName, MetadataPathStr>& pair)
 		     {
 			     return pair.second == resource->GetMetadataPath();
 		     }
-		    ) != m_resource_paths_[resource->GetResourceType()].end())
+		    ) != m_resource_paths_[resource->GetTypeHash()].end())
 		{
 			return;
 		}
 
-		m_resource_paths_[resource->GetResourceType()].emplace_back
+		m_resource_paths_[resource->GetTypeHash()].emplace_back
 				(resource->GetName(), resource->GetMetadataPath().string());
-		m_resources_loaded_[resource->GetResourceType()].push_back(resource);
+		m_resources_loaded_[resource->GetTypeHash()].push_back(resource);
 
 
-		if (resource->GetResourceType() == RES_T_BONE_ANIM)
+		if (resource->GetTypeHash() == BoneAnimation::StaticTypeHash())
 		{
 			m_material_sb_.flags.bone = 1;
 		}
 
-		if (resource->GetResourceType() == RES_T_ATLAS_ANIM)
+		if (resource->GetTypeHash() == AtlasAnimation::StaticTypeHash())
 		{
 			m_material_sb_.flags.atlas = 1;
 		}
 
-		if (resource->GetResourceType() == RES_T_BONE_ANIM ||
-			resource->GetResourceType() == RES_T_ATLAS_ANIM)
+		if (resource->GetTypeHash() == BoneAnimation::StaticTypeHash() ||
+			resource->GetTypeHash() == AtlasAnimation::StaticTypeHash())
 		{
 			std::ranges::sort
 			(
-				m_resources_loaded_[resource->GetResourceType()],
+				m_resources_loaded_[resource->GetTypeHash()],
 				[](const Strong<Resource>& lhs, const Strong<Resource>& rhs)
 				{
 					return lhs->GetName() < rhs->GetName();
@@ -170,10 +172,10 @@ namespace Engine::Resources
 			);
 		}
 
-		if (resource->GetResourceType() == RES_T_TEX)
+		if (resource->IsBaseOf(Texture::StaticTypeHash()))
 		{
 			// todo: distinguish tex type
-			const auto& tex_arr = m_resources_loaded_[resource->GetResourceType()];
+			const auto& tex_arr = m_resources_loaded_[resource->GetTypeHash()];
 			decltype(m_resources_loaded_)::mapped_type::const_iterator it = std::find_if(tex_arr.begin(), tex_arr.end(), [&resource](const Strong<Resource>& other)
 				{
 					return resource == other;

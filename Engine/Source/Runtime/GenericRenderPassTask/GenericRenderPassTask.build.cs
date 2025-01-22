@@ -21,5 +21,6 @@ public class GenericRenderPassTask : CommonProject
         conf.AddPublicDependency<Material>(target);
         conf.AddPrivateDependency<Shape>(target);
         conf.AddPrivateDependency<Texture>(target);
+        conf.AddPrivateDependency<AtlasAnimationTexture>(target);
     }
 }

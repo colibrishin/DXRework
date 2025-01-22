@@ -10,7 +10,12 @@ namespace Engine::Abstracts
 	public:
 		SingletonBase();
 	};
+}
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORESINGLETON_API, Engine::Abstracts::SingletonBase, Engine::Abstracts::Renderable)
+
+namespace Engine::Abstracts
+{
 	template <typename T>
 	class Singleton : public SingletonBase
 	{

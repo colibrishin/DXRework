@@ -6,6 +6,8 @@
 DEFINE_DELEGATE(OnSceneActive, Engine::Weak<Engine::Scene>);
 DEFINE_DELEGATE(OnSceneRemoved, Engine::Weak<Engine::Scene>);
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::SceneManager)
+
 namespace Engine::Managers
 {
 	class ENGINE_CORE_API SceneManager final : public Abstracts::Singleton<SceneManager>

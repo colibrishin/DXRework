@@ -4,7 +4,7 @@
 namespace Engine::Resources
 {
 	BaseAnimation::BaseAnimation(const BoneAnimationPrimitive& primitive)
-		: Resource("", RES_T_BASE_ANIM),
+		: Resource(""),
 		  m_ticks_per_second_(0),
 		  m_duration_(0),
 		  m_simple_primitive_(primitive) {}
@@ -65,7 +65,7 @@ namespace Engine::Resources
 	void BaseAnimation::Unload_INTERNAL() {}
 
 	BaseAnimation::BaseAnimation()
-		: Resource("", RES_T_BASE_ANIM),
+		: Resource(""),
 		  m_ticks_per_second_(0),
 		  m_duration_(0) {}
 

@@ -41,6 +41,16 @@ Engine::TypeName Engine::Abstracts::Entity::GetPrettyTypeName() const
 	return Entity::StaticTypeName();
 }
 
+HashType Engine::Abstracts::Entity::GetTypeHash() const
+{
+	return Entity::StaticTypeHash();
+}
+
+bool Engine::Abstracts::Entity::IsBaseOf(HashType hash) const
+{
+	return Entity::StaticIsBaseOf(hash);
+}
+
 bool Engine::Abstracts::Entity::IsGarbage() const
 {
 	return m_b_garbage_;

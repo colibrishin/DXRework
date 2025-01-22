@@ -4,6 +4,8 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Script, Engine::Abstracts::Renderable)
+
 namespace Engine
 {
 	template <typename T>
@@ -15,6 +17,7 @@ namespace Engine
 	class ENGINE_CORE_API Script : public Abstracts::Renderable
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Script)
 		~Script() override = default;
 		explicit Script(ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner);
 

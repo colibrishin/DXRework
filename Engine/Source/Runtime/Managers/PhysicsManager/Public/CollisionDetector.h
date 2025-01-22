@@ -17,6 +17,8 @@
 
 DEFINE_DELEGATE(OnLayerMaskChange, const Engine::LayerSizeType, const Engine::LayerSizeType);
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_PHYSICSMANAGER_API, Engine::Managers::CollisionDetector)
+
 #ifdef PHYSX_ENABLED
 namespace Engine
 {
@@ -29,7 +31,7 @@ namespace Engine
 
 namespace Engine::Managers
 {
-	class CollisionDetector : public Abstracts::Singleton<CollisionDetector>
+	class ENGINE_PHYSICSMANAGER_API CollisionDetector : public Abstracts::Singleton<CollisionDetector>
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(CollisionDetector)

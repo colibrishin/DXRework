@@ -25,6 +25,8 @@ namespace Engine
 	using InstanceParticles = aligned_vector<Graphics::SBs::InstanceParticleSB>;
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_PARTICLERENDERER_API, Engine::Components::ParticleRenderer, Engine::Components::RenderComponent)
+
 namespace Engine::Components
 {
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
@@ -37,8 +39,6 @@ namespace Engine::Components
 		// float
 		constexpr static size_t duration_slot = 0;
 		constexpr static size_t size_slot     = 1;
-
-		RENDER_COM_T(RENDER_COM_T_PARTICLE)
 
 		ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner);
 

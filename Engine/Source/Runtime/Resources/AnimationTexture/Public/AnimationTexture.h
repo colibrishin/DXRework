@@ -1,12 +1,14 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
 
+POLYMORPHIC_TYPE_MAP(ENGINE_ANIMATIONTEXTURE_API, Engine::Resources::AnimationTexture, Engine::Resources::Texture3D)
+
 namespace Engine::Resources
 {
 	class ENGINE_ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{
 	public:
-		RESOURCE_T(RES_T_ANIMS_TEX)
+		INLINE_COMPILE_TIME_TYPENAME(AnimationTexture)
 
 		AnimationTexture(const std::vector<Strong<BoneAnimation>>& animations);
 
@@ -17,8 +19,6 @@ namespace Engine::Resources
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-
-		eResourceType GetResourceType() const override;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(AnimationTexture)
 

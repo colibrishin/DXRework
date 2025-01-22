@@ -103,7 +103,12 @@ namespace Engine
 	private:
 		std::vector<Abstracts::SingletonBase&(*)()> m_singleton_accessor_[LOOP_TYPE_MAX];
 	};
-	
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::CoreModule, Engine::IModule)
+
+namespace Engine
+{
 	struct ENGINE_CORE_API CoreModule : public IModule
 	{
 		INLINE_COMPILE_TIME_TYPENAME(CoreModule)
@@ -125,3 +130,4 @@ namespace Engine
 		static CoreLoop s_core_module;
 	};
 }
+

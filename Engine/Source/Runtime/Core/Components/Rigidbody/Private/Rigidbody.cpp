@@ -80,7 +80,7 @@ namespace Engine::Components
 	}
 
 	Rigidbody::Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object)
-		: Component(COM_T_RIDIGBODY, object),
+		: Component(object),
 		  m_b_no_angular_(false),
 		  m_bGravityOverride(false),
 		  m_bFixed(false),
@@ -368,7 +368,7 @@ namespace Engine::Components
 	}
 
 	Rigidbody::Rigidbody()
-		: Component(COM_T_RIDIGBODY, {}),
+		: Component({}),
 		  m_b_no_angular_(false),
 		  m_bGravityOverride(false),
 		  m_bFixed(false),
@@ -379,7 +379,7 @@ namespace Engine::Components
 	{
 		if (const Strong<Component>& locked = component.lock())
 		{
-			if (locked->GetComponentType() == COM_T_COLLIDER)
+			if (locked->GetTypeHash() == Collider::StaticTypeHash())
 			{
 				if (const Strong<Engine::Abstracts::ObjectBase>& owner = GetOwner().lock())
 				{

@@ -2,9 +2,6 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Entity.hpp"
 
-// Static Component type, this should be added to every component
-#define COMPONENT_T(enum_val) static constexpr eComponentType ctype = enum_val;
-
 // Cloning component declaration macro
 #define COMP_CLONE_DECL Strong<Engine::Abstracts::Component> cloneImpl() const override;
 // Cloning component implementation macro
@@ -17,25 +14,10 @@ namespace Engine
 		bool operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const;
 	};
 
-	enum ENGINE_CORE_API eComponentType : uint8_t
-	{
-		COM_T_UNK = 0,
-		COM_T_TRANSFORM,
-		COM_T_COLLIDER,
-		COM_T_RIDIGBODY,
-		COM_T_STATE,
-		COM_T_SOUND_PLAYER,
-		COM_T_ANIMATOR,
-		COM_T_RENDERER,
-		COM_T_SCRIPT,
-	};
-
-	template <typename T>
-	struct which_component
-	{
-		static constexpr eComponentType value = T::ctype;
-	};
+	using ComponentType = HashType;
 }
+
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Abstracts::Component, Engine::Abstracts::Entity)
 
 namespace Engine::Abstracts
 {
@@ -50,7 +32,6 @@ namespace Engine::Abstracts
 		Component(const Component&) = default;
 
 		Weak<ObjectBase>   GetOwner() const;
-		eComponentType   GetComponentType() const;
 		LocalComponentID GetLocalID() const;
 		bool             IsTicked() const;
 		bool             GetActive() const;
@@ -67,7 +48,7 @@ namespace Engine::Abstracts
 		[[nodiscard]] Strong<Component> Clone() const;
 
 	protected:
-		Component(eComponentType type, const Weak<ObjectBase>& owner);
+		Component(const Weak<ObjectBase>& owner);
 
 	private:
 		friend class ObjectBase;
@@ -86,7 +67,6 @@ namespace Engine::Abstracts
 
 	private:
 		LocalComponentID m_local_id_;
-		eComponentType   m_type_;
 
 		// Non-serialized
 		Weak<ObjectBase> m_owner_{};

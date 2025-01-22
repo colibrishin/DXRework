@@ -7,7 +7,7 @@ namespace Engine::Components
 	class ENGINE_ANIMATOR_API Animator final : public Engine::Abstracts::Component
 	{
 	public:
-		COMPONENT_T(COM_T_ANIMATOR)
+		INLINE_COMPILE_TIME_TYPENAME(Animator)
 
 		Animator(const Weak<Engine::Abstracts::ObjectBase>& owner);
 		void PreUpdate(const float dt) override;

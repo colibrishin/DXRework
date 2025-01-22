@@ -9,6 +9,13 @@
 
 namespace Engine
 {
+	struct RenderPipelineModule;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::RenderPipelineModule, Engine::IModule)
+
+namespace Engine
+{
 	struct ENGINE_RENDERPIPELINE_API RenderPipelineModule : public IModule
 	{
 		INLINE_COMPILE_TIME_TYPENAME(RenderPipelineModule)
@@ -17,6 +24,8 @@ namespace Engine
 		bool DynamicLoadable() override;
 	};
 }
+
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_RENDERPIPELINE_API, Engine::Managers::RenderPipeline)
 
 namespace Engine::Managers
 {

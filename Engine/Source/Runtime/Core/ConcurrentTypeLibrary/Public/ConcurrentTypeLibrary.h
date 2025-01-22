@@ -9,6 +9,7 @@
 #include <tbb/concurrent_hash_map.h>
 #include <tbb/concurrent_vector.h>
 
+
 namespace Engine
 {
 	template <typename KeyType, typename ValueType>
@@ -25,7 +26,7 @@ namespace Engine
 	using ConcurrentWeakComMap = concurrent_fast_pool_map<GlobalEntityID, Weak<Abstracts::Component>>;
 	using ConcurrentWeakScpVec = tbb::concurrent_vector<Weak<Script>, u_pool_allocator_single<Weak<Script>>>;
 	using ConcurrentWeakScpMap = concurrent_fast_pool_map<GlobalEntityID, Weak<Script>>;
-	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<eComponentType, ConcurrentWeakComMap>;
+	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<ComponentType, ConcurrentWeakComMap>;
 	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<ScriptSizeType, ConcurrentWeakScpMap>;
 
 	using InstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;

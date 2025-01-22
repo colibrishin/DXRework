@@ -8,6 +8,7 @@ namespace Engine
 	class ENGINE_CORE_API Layer final : public Abstracts::Renderable
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(Layer)
 		Layer(const LayerSizeType type);
 
 		~Layer() override = default;

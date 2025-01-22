@@ -14,7 +14,7 @@ namespace Engine::Components
 	COMP_CLONE_IMPL(Animator)
 
 	Animator::Animator(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: Component(COM_T_ANIMATOR, owner),
+		: Component(owner),
 		  m_animation_id_(0),
 		  m_current_frame_(0),
 		  m_total_dt_(0) {}
@@ -101,7 +101,7 @@ namespace Engine::Components
 	}
 
 	Animator::Animator()
-		: Component(COM_T_ANIMATOR, {}),
+		: Component({}),
 		  m_animation_id_(0),
 		  m_current_frame_(0),
 		  m_total_dt_(0) {}

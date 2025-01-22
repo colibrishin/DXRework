@@ -3,6 +3,13 @@
 
 namespace Engine
 {
+	class Object;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Object, Engine::Abstracts::ObjectBase)
+
+namespace Engine
+{
 	// Anonymous non-type defined object
 	class ENGINE_CORE_API Object final : public Abstracts::ObjectBase
 	{

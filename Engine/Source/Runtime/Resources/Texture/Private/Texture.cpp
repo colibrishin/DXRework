@@ -7,7 +7,7 @@ namespace Engine::Resources
 	RESOURCE_SELF_INFER_GETTER_IMPL(Texture);
 
 	Texture::Texture(std::filesystem::path path, const eTexType type, const GenericTextureDescription& description)
-		: Resource(std::move(path), RES_T_TEX),
+		: Resource(std::move(path)),
 		  m_desc_(description),
 		  m_type_(type) {}
 
@@ -27,7 +27,7 @@ namespace Engine::Resources
 	}
 	
 	Texture::Texture()
-		: Resource("", RES_T_TEX), m_desc_({}), m_type_(TEX_TYPE_2D)
+		: Resource(""), m_desc_({}), m_type_(TEX_TYPE_2D)
 	{
 	}
 
@@ -110,10 +110,5 @@ namespace Engine::Resources
 	void Texture::OnDeserialized()
 	{
 		Resource::OnDeserialized();
-	}
-
-	eResourceType Texture::GetResourceType() const
-	{
-		return Resource::GetResourceType();
 	}
 } // namespace Engine::Resources

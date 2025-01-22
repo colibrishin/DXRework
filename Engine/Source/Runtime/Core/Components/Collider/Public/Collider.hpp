@@ -28,6 +28,8 @@ namespace Engine
 	};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_CORE_API, Engine::Components::Collider, Engine::Abstracts::Component)
+
 namespace Engine::Components
 {
 	using namespace DirectX;
@@ -36,7 +38,6 @@ namespace Engine::Components
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Collider)
-		COMPONENT_T(COM_T_COLLIDER);
 
 		DelegateOnCollisionEnter onCollisionEnter;
 		DelegateOnCollisionEnd onCollisionEnd;

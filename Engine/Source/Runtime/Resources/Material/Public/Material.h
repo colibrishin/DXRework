@@ -11,6 +11,13 @@
 
 namespace Engine
 {
+	struct MaterialModule;
+}
+
+POLYMORPHIC_TYPE_MAP(ENGINE_MATERIAL_API, Engine::MaterialModule, Engine::IModule)
+
+namespace Engine
+{
 	struct MaterialModule : IModule
 	{
 		INLINE_COMPILE_TIME_TYPENAME(MaterialModule)
@@ -48,13 +55,14 @@ namespace Engine::Graphics::SBs
 	};
 }
 
+POLYMORPHIC_TYPE_MAP(ENGINE_MATERIAL_API, Engine::Resources::Material, Engine::Abstracts::Resource)
+
 namespace Engine::Resources
 {
 	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Material)
-		RESOURCE_T(RES_T_MTR)
 
 		Material(const std::filesystem::path& path);
 
@@ -70,55 +78,55 @@ namespace Engine::Resources
 		template <typename T>
 		[[nodiscard]] auto GetResourcesByType() const
 		{
-			if (!m_resources_loaded_.contains(which_resource<T>::value))
+			if (!m_resources_loaded_.contains(T::StaticTypeHash()))
 			{
 				return std::vector<Strong<Resource>>{};
 			}
-			return m_resources_loaded_.at(which_resource<T>::value);
+			return m_resources_loaded_.at(T::StaticTypeHash());
 		}
 
-		[[nodiscard]] const std::map<const eResourceType, std::vector<Strong<Resource>>>& GetResources() const;
+		[[nodiscard]] const std::map<ResourceType, std::vector<Strong<Resource>>>& GetResources() const;
 
 		template <typename T>
 		[[nodiscard]] Weak<T> GetResource(const std::string& name) const
 		{
-			if (!m_resources_loaded_.contains(which_resource<T>::value))
+			if (!m_resources_loaded_.contains(T::StaticTypeHash()))
 			{
 				return {};
 			}
-			if (m_resources_loaded_.at(which_resource<T>::value).empty())
-			{
-				return {};
-			}
-
-			const auto it = std::ranges::find(m_resources_loaded_.at(which_resource<T>::value), name);
-
-			if (it == m_resources_loaded_.at(which_resource<T>::value).end())
+			if (m_resources_loaded_.at(T::StaticTypeHash()).empty())
 			{
 				return {};
 			}
 
-			const auto idx = std::distance(m_resources_loaded_.at(which_resource<T>::value).begin(), it);
-			return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(which_resource<T>::value)[idx]);
+			const auto it = std::ranges::find(m_resources_loaded_.at(T::StaticTypeHash()), name);
+
+			if (it == m_resources_loaded_.at(T::StaticTypeHash()).end())
+			{
+				return {};
+			}
+
+			const auto idx = std::distance(m_resources_loaded_.at(T::StaticTypeHash()).begin(), it);
+			return boost::reinterpret_pointer_cast<T>(m_resources_loaded_.at(T::StaticTypeHash())[idx]);
 		}
 
 		template <typename T>
 		[[nodiscard]] Weak<T> GetResource(UINT idx) const
 		{
-			if (!m_resources_loaded_.contains(which_resource<T>::value))
+			if (!m_resources_loaded_.contains(T::StaticTypeHash()))
 			{
 				return {};
 			}
-			if (m_resources_loaded_.at(which_resource<T>::value).empty())
+			if (m_resources_loaded_.at(T::StaticTypeHash()).empty())
 			{
 				return {};
 			}
-			if (m_resources_loaded_.at(which_resource<T>::value).size() <= idx)
+			if (m_resources_loaded_.at(T::StaticTypeHash()).size() <= idx)
 			{
 				return {};
 			}
 
-			const auto& anims = m_resources_loaded_.at(which_resource<T>::value);
+			const auto& anims = m_resources_loaded_.at(T::StaticTypeHash());
 
 			return boost::static_pointer_cast<T>(*(anims.begin() + idx));
 		}
@@ -138,14 +146,13 @@ namespace Engine::Resources
 	private:
 		Material();
 
-		Graphics::SBs::MaterialSB                   m_material_sb_;
+		Graphics::SBs::MaterialSB m_material_sb_;
 
-		std::vector<std::pair<EntityName, MetadataPathStr>>                                m_shader_paths_;
-		std::map<const eResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
+		std::vector<std::pair<EntityName, MetadataPathStr>>                         m_shader_paths_;
+		std::map<ResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
 
 		// non-serialized
-		std::map<const eShaderDomain, Strong<Shader>>                m_shaders_loaded_;
-		std::map<const eResourceType, std::vector<Strong<Resource>>> m_resources_loaded_;
+		std::map<const eShaderDomain, Strong<Shader>>         m_shaders_loaded_;
+		std::map<ResourceType, std::vector<Strong<Resource>>> m_resources_loaded_;
 	};
 }
-

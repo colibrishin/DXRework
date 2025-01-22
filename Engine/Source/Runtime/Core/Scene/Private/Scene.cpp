@@ -217,12 +217,12 @@ namespace Engine
 		{
 			ConcurrentWeakComRootMap::accessor comp_acc;
 
-			if (m_cached_components_.find(comp_acc, comp.lock()->GetComponentType()))
+			if (m_cached_components_.find(comp_acc, comp.lock()->GetTypeHash()))
 			{
 				comp_acc->second.erase(comp.lock()->GetID());
 			}
 
-			if (comp.lock()->GetComponentType() == COM_T_TRANSFORM)
+			if (comp.lock()->GetTypeHash() == Components::Transform::StaticTypeHash())
 			{
 				m_object_position_tree_.Remove(obj.lock());
 			}
@@ -495,7 +495,7 @@ namespace Engine
 		return {};
 	}
 
-	void Scene::addCacheComponentImpl(const Strong<Abstracts::Component>& component, const eComponentType type)
+	void Scene::addCacheComponentImpl(const Strong<Abstracts::Component>& component, const ComponentType type)
 	{
 		if (!component->GetOwner().lock())
 		{
@@ -522,14 +522,14 @@ namespace Engine
 		{
 			comp_acc->second.emplace(component->GetID(), component);
 
-			if (type == COM_T_TRANSFORM)
+			if (type == Components::Transform::StaticTypeHash())
 			{
 				m_object_position_tree_.Insert(component->GetOwner().lock());
 			}
 		}
 	}
 
-	void Scene::removeCacheComponentImpl(const Strong<Abstracts::Component>& component, const eComponentType type)
+	void Scene::removeCacheComponentImpl(const Strong<Abstracts::Component>& component, const ComponentType type)
 	{
 		ConcurrentWeakObjGlobalMap::const_accessor acc;
 
@@ -542,7 +542,7 @@ namespace Engine
 			}
 		}
 
-		if (type == COM_T_TRANSFORM)
+		if (type == Components::Transform::StaticTypeHash())
 		{
 			m_object_position_tree_.Remove(component->GetOwner().lock());
 		}
@@ -761,13 +761,13 @@ namespace Engine
 				{
 					if (ConcurrentWeakComRootMap::accessor acc;
 						m_cached_components_.find
-						(acc, comp.lock()->GetComponentType()))
+						(acc, comp.lock()->GetTypeHash()))
 					{
 						acc->second.emplace(comp.lock()->GetID(), comp);
 					}
 					else
 					{
-						m_cached_components_.insert(acc, comp.lock()->GetComponentType());
+						m_cached_components_.insert(acc, comp.lock()->GetTypeHash());
 						acc->second.emplace(comp.lock()->GetID(), comp);
 					}
 				}
@@ -901,6 +901,7 @@ namespace Engine
 
 	void Scene::DisableControllers()
 	{
+		/*
 		// Note: accessor should be destroyed in used context, if not, it will cause deadlock.
 		ConcurrentWeakComRootMap::accessor accessor;
 		if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
@@ -913,5 +914,6 @@ namespace Engine
 				locked->SetActive(false);
 			}
 		}
+		*/
 	}
 } // namespace Engine

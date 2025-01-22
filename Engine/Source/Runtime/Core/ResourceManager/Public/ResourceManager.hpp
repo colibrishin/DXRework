@@ -4,11 +4,14 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
+POLYMORPHIC_MANAGER_TYPE_MAP(ENGINE_CORE_API, Engine::Managers::ResourceManager)
+
 namespace Engine::Managers
 {
 	class ENGINE_CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
 	{
 	public:
+		INLINE_COMPILE_TIME_TYPENAME(ResourceManager)
 		explicit ResourceManager(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
@@ -34,7 +37,7 @@ namespace Engine::Managers
 				return;
 			}
 
-			m_resources_[which_resource<T>::value].insert(resource);
+			m_resources_[T::StaticTypeHash()].insert(resource);
 		}
 
 		template <typename T, typename ResLock = std::enable_if_t<std::is_base_of_v<Abstracts::Resource, T>>>
@@ -51,14 +54,14 @@ namespace Engine::Managers
 				return;
 			}
 
-			m_resources_[which_resource<T>::value].insert(resource);
+			m_resources_[T::StaticTypeHash()].insert(resource);
 			resource->SetName(name);
 		}
 
 		template <typename T>
 		Weak<T> GetResource(const EntityName& name)
 		{
-			auto& resources = m_resources_[which_resource<T>::value];
+			auto& resources = m_resources_[T::StaticTypeHash()];
 			auto  it        = std::find_if
 					(
 					 resources.begin(), resources.end(), [&name](const Strong<Abstracts::Resource>& resource)
@@ -80,7 +83,7 @@ namespace Engine::Managers
 			return {};
 		}
 
-		Weak<Abstracts::Resource> GetResource(const EntityName& name, const eResourceType& type);
+		Weak<Abstracts::Resource> GetResource(const EntityName& name, ResourceType type);
 
 		template <typename T>
 		Weak<T> GetResourceByRawPath(const std::filesystem::path& path)
@@ -90,7 +93,7 @@ namespace Engine::Managers
 				return {};
 			}
 
-			auto& resources = m_resources_[which_resource<T>::value];
+			auto& resources = m_resources_[T::StaticTypeHash()];
 			auto  it        = std::find_if
 					(
 					 resources.begin(), resources.end(), [&path](const Strong<Abstracts::Resource>& resource)
@@ -120,7 +123,7 @@ namespace Engine::Managers
 				return {};
 			}
 
-			auto& resources = m_resources_[which_resource<T>::value];
+			auto& resources = m_resources_[T::StaticTypeHash()];
 			auto  it        = std::find_if
 					(
 					 resources.begin(), resources.end(), [&path](const Strong<Abstracts::Resource>& resource)
@@ -142,14 +145,14 @@ namespace Engine::Managers
 			return {};
 		}
 
-		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, eResourceType type);
-		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, eResourceType type);
+		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, ResourceType type);
+		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
 	private:
 		friend struct SingletonDeleter;
 		~ResourceManager() override;
 
-		fast_pool_unordered_map<eResourceType, fast_pool_set<Strong<Abstracts::Resource>>> m_resources_;
+		fast_pool_unordered_map<ResourceType, fast_pool_set<Strong<Abstracts::Resource>>> m_resources_;
 		fast_pool_unordered_map<LocalResourceID, Weak<Abstracts::Resource>> m_resource_cache_;
 		fast_pool_unordered_map<LocalResourceID, GlobalEntityID> m_resource_ids_;
 	};

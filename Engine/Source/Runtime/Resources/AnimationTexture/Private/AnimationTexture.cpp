@@ -29,11 +29,6 @@ namespace Engine::Resources
 		Texture3D::OnDeserialized();
 	}
 
-	eResourceType AnimationTexture::GetResourceType() const
-	{
-		return RES_T_ANIMS_TEX;
-	}
-
 	Strong<AnimationTexture> AnimationTexture::Create(
 		const std::string& name, const std::vector<Strong<BoneAnimation>>& anims
 	) {

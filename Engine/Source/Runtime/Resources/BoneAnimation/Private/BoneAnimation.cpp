@@ -160,11 +160,6 @@ namespace Engine::Resources
 		}
 	}
 
-	eResourceType BoneAnimation::GetResourceType() const
-	{
-		return RES_T_BONE_ANIM;
-	}
-
 	std::vector<Matrix> BoneAnimation::GetFrameAnimationDt(const float dt)
 	{
 		const auto anim_time = ConvertDtToFrame(dt, m_primitive_.GetTicksPerSecond());
