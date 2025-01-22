@@ -55,9 +55,9 @@ namespace Engine::Managers
 		m_timer->Tick(internal_tick);
 	}
 
-	void EngineEntryPoint::OnUIUpdate(const float dt)
+	void EngineEntryPoint::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		CoreModule::GetContext().OnUIUpdate(dt);
+		CoreModule::GetContext().OnUIUpdate(parent, dt);
 	}
 
 	void EngineEntryPoint::PreUpdate(const float dt)
@@ -123,7 +123,7 @@ namespace Engine::Managers
 #if WITH_EDITOR
 		if (UIInterfaceAccessor::IsValid())
 		{
-			OnUIUpdate(dt);
+			OnUIUpdate(nullptr, dt);
 		}
 #endif
 		

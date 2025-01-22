@@ -59,7 +59,7 @@ namespace Engine::Managers
 		void Render(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void PostRender(const float dt) override;
-		void OnUIUpdate(const float dt) override;
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 
 	private:
 		friend struct SingletonDeleter;
@@ -74,7 +74,7 @@ namespace Engine::Managers
 
 		bool m_b_load_popup_ = false;
 
-		Weak<Scene>                m_active_scene_;
-		std::vector<Strong<Scene>> m_scenes_;
+		Weak<Scene>                m_active_scene_{};
+		std::vector<Strong<Scene>> m_scenes_{};
 	};
 } // namespace Engine::Managers

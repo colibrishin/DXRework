@@ -15,9 +15,11 @@ namespace Engine::Abstracts
 
 		Actor(const Actor& other);
 
-		LayerSizeType   GetLayer() const;
-		Weak<Scene>    GetScene() const;
-		LocalActorID GetLocalID() const;
+		LayerSizeType       GetLayer() const;
+		Weak<Scene>         GetScene() const;
+		const LocalActorID& GetLocalID() const;
+
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		
 	protected:
 		explicit Actor();
@@ -29,8 +31,8 @@ namespace Engine::Abstracts
 		void SetScene(const Weak<Scene>& scene);
 		void SetLocalID(LocalActorID id);
 
-		Weak<Scene>    m_assigned_scene_;
-		LayerSizeType   m_layer_;
-		LocalActorID m_local_id_;
+		Weak<Scene>   m_assigned_scene_;
+		LayerSizeType m_layer_;
+		LocalActorID  m_local_id_;
 	};
 } // namespace Engine::Abstracts

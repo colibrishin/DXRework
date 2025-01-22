@@ -1,5 +1,9 @@
 #include "../Public/Actor.h"
 
+#include "UIInterface.h"
+#include "Layer/Public/Layer.h"
+#include "Scene/Public/Scene.hpp"
+
 namespace Engine::Abstracts
 {
 	Actor::Actor(const Actor& other)
@@ -20,9 +24,31 @@ namespace Engine::Abstracts
 		return m_assigned_scene_;
 	}
 
-	LocalActorID Actor::GetLocalID() const
+	const LocalActorID& Actor::GetLocalID() const
 	{
 		return m_local_id_;
+	}
+
+	void Actor::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		if (parent)
+		{
+			Renderable::OnUIUpdate(parent, dt);
+
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			if (const Strong<Scene>& scene = GetScene().lock())
+			{
+				*(parent) |= ui.NewLabelAndText({"Layer", const_cast<EntityName&>((*scene)[GetLayer()]->GetName()), false});
+			}
+			else
+			{
+				static std::string empty;
+				*(parent) |= ui.NewLabelAndText({"Layer", empty, false});
+			}
+
+			*(parent) |= ui.NewLabelAndUInt({"Local ID", const_cast<LocalActorID&>(GetLocalID()), false});
+		}
 	}
 
 	Actor::Actor()

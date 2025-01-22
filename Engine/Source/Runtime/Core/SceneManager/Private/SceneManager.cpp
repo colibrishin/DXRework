@@ -166,16 +166,16 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::OnUIUpdate(const float dt)
+	void SceneManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 #if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (const UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
+		if (UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
 		{
-			auto& new_menu = context().AddChild(ui.NewMenu({"New"}));
+			context << ui.NewMenu({"New"});
 
-			new_menu.AddChild(ui.NewMenuItem({"Scene"})).SetFunction([&]()
+			(context += ui.NewMenuItem({"Scene"})).SetFunction([&]()
 			{
 				AddScene("UntitledScene");
 				SetActive("UntitledScene");
@@ -183,33 +183,34 @@ namespace Engine::Managers
 
 			// todo: customized new
 
-			auto& add_menu = context().AddChild(ui.NewMenu({"Add"}));
+			context << ui.NewMenu({"Add"});
+
 			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
 			{
 				GetActiveScene().lock()->CreateGameObject<T>(Layer);
 			};
 
-			add_menu.AddChild(ui.NewMenuItem({"Camera"})).SetFunction([&]()
+			(context += ui.NewMenuItem({"Camera"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Objects::Camera, RESERVED_LAYER_CAMERA>();
 			});
 
-			add_menu.AddChild(ui.NewMenuItem({"Light"})).SetFunction([&]()
+			(context += ui.NewMenuItem({"Light"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Objects::Light, RESERVED_LAYER_LIGHT>();
 			});
 
-			add_menu.AddChild(ui.NewMenuItem({"Object"})).SetFunction([&]()
+			(context += ui.NewMenuItem({"Object"})).SetFunction([&]()
 			{
 				addTemplate.operator()<Object, RESERVED_LAYER_DEFAULT>();
 			});
 
 			// todo: customized add
-		}
 
-		if (const auto& scene = m_active_scene_.lock())
-		{
-			scene->OnUIUpdate(dt);
+			if (const auto& scene = m_active_scene_.lock())
+			{
+				scene->OnUIUpdate(&context, dt);
+			}
 		}
 #endif
 	}

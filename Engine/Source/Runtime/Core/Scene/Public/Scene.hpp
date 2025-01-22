@@ -36,6 +36,17 @@ namespace Engine
 		RESERVED_LAYER_MAX
 	};
 
+	constexpr const char* g_reserved_layer_name[] = 
+	{
+		"Default",
+		"Light",
+		"Camera",
+		"Environment",
+		"Skybox",
+		"Observer",
+		"UI"
+	};
+
 	class ENGINE_CORE_API Scene : public Abstracts::Renderable
 	{
 	public:
@@ -57,7 +68,7 @@ namespace Engine
 		void FixedUpdate(const float dt) override;
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
-		void OnUIUpdate(const float dt) override;
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
@@ -365,6 +376,7 @@ namespace Engine
 		// Non-serialized
 #if WITH_EDITOR
 		bool m_b_dialog_opened_ = true;
+		std::string m_layer_list_box_name_;
 #endif
 
 		Weak<Abstracts::ObjectBase> m_observer_;

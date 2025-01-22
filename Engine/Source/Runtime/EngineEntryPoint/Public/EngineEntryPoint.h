@@ -24,7 +24,7 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~EngineEntryPoint() override;
 
-		void OnUIUpdate(const float dt) override;
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void Update(const float dt) override;

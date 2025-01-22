@@ -48,8 +48,7 @@ namespace Engine::Abstracts
 		}
 
 		virtual void Initialize() = 0;
-		void OnUIUpdate(const float dt) override {}
-
+		
 		void OnSerialized() final {}
 		void OnDeserialized() final {}
 

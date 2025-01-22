@@ -42,6 +42,7 @@ namespace Engine::Abstracts
 
 		~ObjectBase() override = default;
 
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PreRender(const float dt) override;
@@ -177,6 +178,7 @@ namespace Engine::Abstracts
 
 	private:
 		friend class Scene;
+		friend class Layer;
 		friend class Managers::ShadowManager;
 
 		// Overridable function for derived object clone behavior.
@@ -256,6 +258,10 @@ namespace Engine::Abstracts
 		std::map<ScriptSizeType, Strong<Script>>       m_scripts_;
 
 		// Non-serialized
+#if WITH_EDITOR
+		bool m_b_detail_opened_ = false;
+		std::string m_ui_summary_text_;
+#endif
 		Weak<ObjectBase>                                     m_parent_;
 		std::map<LocalActorID, Weak<ObjectBase>>             m_children_cache_;
 		std::set<LocalComponentID>                           m_assigned_component_ids_;

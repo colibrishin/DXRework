@@ -61,8 +61,23 @@ void Engine::Abstracts::Entity::Initialize()
 	m_b_initialized_ = true;
 }
 
-void Engine::Abstracts::Entity::OnUIUpdate(const float dt)
+void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float dt)
 {
+#if WITH_EDITOR
+	if (parent)
+	{
+		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		GlobalEntityID id = GetID();
+
+		(*parent) |= ui.NewLabelAndText({"Name", m_name_, true});
+		(*parent) |= ui.NewLabelAndUInt({"Entity ID", id, false});
+		(*parent) |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
+		((*parent) |= (ui.NewButton({"Save"}))).SetFunction([]()
+		{
+			// todo: trigger save
+		});
+	}
+#endif
 }
 
 void Engine::Abstracts::Entity::OnSerialized()

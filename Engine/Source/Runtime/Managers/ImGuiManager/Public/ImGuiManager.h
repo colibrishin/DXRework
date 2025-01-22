@@ -46,29 +46,143 @@ namespace Engine
 	    [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiButtonToken : ButtonToken
+    {
+	    explicit ImGuiButtonToken(const std::string_view title)
+		    : ButtonToken(title) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndTextToken : LabelAndTextToken
+    {
+	    ImGuiLabelAndTextToken(const std::string_view title, std::string& target, bool editable)
+		    : LabelAndTextToken(title, target, editable) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, std::string&, bool) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndFloatToken : LabelAndFloatToken
+    {
+	    ImGuiLabelAndFloatToken(const std::string_view title, float& target, float step, float speed, bool editable)
+		    : LabelAndFloatToken(title, target, step, speed, editable) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, float&, float, float, bool) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndIntToken : LabelAndIntToken
+    {
+	    ImGuiLabelAndIntToken(const std::string_view title, int& target, bool editable)
+		    : LabelAndIntToken(title, target, editable) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, int&, bool) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndUIntToken : LabelAndUIntToken
+    {
+	    ImGuiLabelAndUIntToken(const std::string_view title, uint32_t& target, bool editable)
+		    : LabelAndUIntToken(title, target, editable) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, unsigned int&, bool) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndULLDToken : LabelAndULLDToken
+    {
+	    ImGuiLabelAndULLDToken(const std::string_view title, uint64_t& target, bool editable)
+		    : LabelAndULLDToken(title, target, editable) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, unsigned long long&, bool) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndPathToken : LabelAndPathToken
+    {
+	    ImGuiLabelAndPathToken(const std::string_view title, const std::filesystem::path& path)
+		    : LabelAndPathToken(title, path) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, const std::filesystem::path&) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiListBoxToken : ListBoxToken
+    {
+	    ImGuiListBoxToken(const std::string_view label, float x, float y)
+		    : ListBoxToken(label, x, y) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, float, float) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiTreeNodeToken : TreeNodeToken
+    {
+	    explicit ImGuiTreeNodeToken(const std::string_view label)
+		    : TreeNodeToken(label) {}
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiSelectableToken : SelectableToken
+    {
+	    ImGuiSelectableToken(const std::string_view label, bool& opened)
+		    : SelectableToken(label, opened)
+	    {
+		    
+	    }
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
+    };
+
+#define IMGUI_INLINE_GETTER_DECL(Name) \
+    Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
+    { \
+		return Generate<ImGui##Name##Token>(arguments); \
+    }
+
     struct ENGINE_IMGUIMANAGER_API ImGuiUIInterface final : UIInterface
     {
-        MainMenuBarToken* NewMainMenuBar(const MainMenuBarToken::ArgumentTuple& arguments) override
-        {
-            return Generate<ImGuiMainMenuBarToken>(arguments);
-        }
-        
-        MenuToken* NewMenu(const MenuToken::ArgumentTuple& arguments) override
-        {
-            return Generate<ImGuiMenuToken>(arguments);
-        }
-        
-        MenuItemToken* NewMenuItem(const MenuItemToken::ArgumentTuple& arguments) override
-        {
-            return Generate<ImGuiMenuItemToken>(arguments);
-        }
+        IMGUI_INLINE_GETTER_DECL(MainMenuBar)
+        IMGUI_INLINE_GETTER_DECL(Menu)
+        IMGUI_INLINE_GETTER_DECL(MenuItem)
+        IMGUI_INLINE_GETTER_DECL(Dialog)
+        IMGUI_INLINE_GETTER_DECL(Button)
+        IMGUI_INLINE_GETTER_DECL(LabelAndText)
+        IMGUI_INLINE_GETTER_DECL(LabelAndFloat)
+        IMGUI_INLINE_GETTER_DECL(LabelAndInt)
+        IMGUI_INLINE_GETTER_DECL(LabelAndUInt)
+        IMGUI_INLINE_GETTER_DECL(LabelAndULLD)
+        IMGUI_INLINE_GETTER_DECL(LabelAndPath)
+        IMGUI_INLINE_GETTER_DECL(ListBox)
+        IMGUI_INLINE_GETTER_DECL(TreeNode)
+        IMGUI_INLINE_GETTER_DECL(Selectable)
 
-        DialogToken* NewDialog(const DialogToken::ArgumentTuple& arguments) override
-        {
-	        return Generate<ImGuiDialogToken>(arguments);
-        }
-
-        void NewFrame() override;
+        void               NewFrame() override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiManagerModule : public IModule
@@ -88,7 +202,7 @@ namespace Engine::Managers
 
         void Initialize() override;
 
-        void OnUIUpdate(const float dt) override;
+        void OnUIUpdate(UIContext* const parent, const float dt) override;
         void PreUpdate(const float dt) override;
         void Update(const float dt) override;
         void PreRender(const float dt) override;

@@ -644,6 +644,26 @@ namespace Engine::Abstracts
 		return m_cached_script_;
 	}
 
+	void ObjectBase::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+#if WITH_EDITOR
+		if (parent)
+		{
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			if (m_b_detail_opened_)
+			{
+				if (UIContext context = UIInterface::NewContext(ui.NewDialog({m_ui_summary_text_, m_b_detail_opened_})))
+				{
+					Actor::OnUIUpdate(&context, dt);
+				}
+
+				// todo: component management
+			}
+		}
+#endif
+	}
+
 	void ObjectBase::PreUpdate(const float dt)
 	{
 		for (const auto& script : m_scripts_ | std::views::values)

@@ -66,14 +66,12 @@ namespace Engine::Managers
 #endif
 	}
 
-	void ImGuiManager::OnUIUpdate(const float dt) {}
-
-	void ImGuiManager::PreUpdate(const float dt)
+	void ImGuiManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
-		// Start ImGui Routine
-#endif
+		Singleton::OnUIUpdate(parent, dt);
 	}
+
+	void ImGuiManager::PreUpdate(const float dt) {}
 
 	void ImGuiManager::PreRender(const float dt)
 	{
@@ -144,6 +142,7 @@ std::string Engine::LabelPrefix(const std::string_view label)
 {
 	std::string labelID = "##";
 	labelID += label;
+	labelID + std::to_string(reinterpret_cast<uint64_t>(label.data()));
 
 	return labelID;
 }
@@ -165,14 +164,16 @@ void Engine::ImGuiMenuToken::End() const
 
 bool Engine::ImGuiMenuToken::DoImpl(const std::string_view title) const
 {
-	return ImGui::BeginMenu(title.data());
+	const std::string& temp_label = std::string(title) + LabelPrefix(title);
+	return ImGui::BeginMenu(temp_label.c_str());
 }
 
 void Engine::ImGuiMenuItemToken::End() const {}
 
 bool Engine::ImGuiMenuItemToken::DoImpl(const std::string_view label) const
 {
-	return ImGui::MenuItem(label.data());
+	const std::string& temp_label = std::string(label) + LabelPrefix(label);
+	return ImGui::MenuItem(temp_label.c_str());
 }
 
 void Engine::ImGuiDialogToken::End() const
@@ -182,8 +183,101 @@ void Engine::ImGuiDialogToken::End() const
 
 bool Engine::ImGuiDialogToken::DoImpl(const std::string_view title, bool& opened) const
 {
-	return ImGui::Begin(title.data(), &opened);
+	const std::string& temp_label = std::string(title) + LabelPrefix(title);
+	return ImGui::Begin(temp_label.c_str(), &opened);
 }
+
+void Engine::ImGuiButtonToken::End() const {}
+
+bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title) const
+{
+	const std::string& temp_label = std::string(title) + LabelPrefix(title);
+	return ImGui::Button(temp_label.c_str(), {-1, 50});
+}
+
+void Engine::ImGuiLabelAndTextToken::End() const {}
+
+bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::string& text, const bool editable) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputText(temp_label.c_str(), &text, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiLabelAndFloatToken::End() const {}
+
+bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float step, const float speed, const bool editable) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputFloat(temp_label.c_str(), &value, step, speed, "%.3f", !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiLabelAndIntToken::End() const {}
+
+bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, bool editable) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_S32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiLabelAndUIntToken::End() const {}
+bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, unsigned& value, bool editable) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiLabelAndULLDToken::End() const {}
+
+bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, unsigned long long& value, bool editable) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U64, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiLabelAndPathToken::End() const {}
+
+bool Engine::ImGuiLabelAndPathToken::DoImpl(const std::string_view label, const std::filesystem::path& path) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	AlignText(label);
+	return ImGui::InputText(temp_label.c_str(), const_cast<char*>(path.generic_string().c_str()), ImGuiInputTextFlags_ReadOnly);
+}
+
+void Engine::ImGuiListBoxToken::End() const
+{
+	ImGui::EndListBox();
+}
+
+bool Engine::ImGuiListBoxToken::DoImpl(const std::string_view label, float x, float y) const
+{
+	return ImGui::BeginListBox(label.data(), {x, y});
+}
+
+void Engine::ImGuiTreeNodeToken::End() const
+{
+	ImGui::TreePop();
+}
+
+bool Engine::ImGuiTreeNodeToken::DoImpl(const std::string_view label) const
+{
+	const std::string& temp_label = LabelPrefix(label);
+	return ImGui::TreeNode(temp_label.c_str(), label.data());
+}
+
+void Engine::ImGuiSelectableToken::End() const
+{
+}
+
+bool Engine::ImGuiSelectableToken::DoImpl(const std::string_view label, bool& opened) const
+{
+	return ImGui::Selectable(label.data(), &opened);
+}
+
 
 void Engine::ImGuiUIInterface::NewFrame()
 {

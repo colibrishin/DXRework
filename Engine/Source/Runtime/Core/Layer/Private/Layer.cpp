@@ -1,5 +1,7 @@
 #include "../Public/Layer.h"
 
+#include "UIInterface.h"
+
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 
 namespace Engine
@@ -135,12 +137,26 @@ namespace Engine
 		}
 	}
 
-	void Layer::OnUIUpdate(const float dt)
+	void Layer::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		for (const auto& object : m_objects_)
+#if WITH_EDITOR
+		if (parent)
 		{
-			object->OnUIUpdate(dt);
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			*parent += ui.NewTreeNode({GetName()});
+
+			for (const auto& object : m_objects_)
+			{
+				// todo: lost pointer due to reallocation
+				object->m_ui_summary_text_ = std::format("{} {} {}", object->GetPrettyTypeName(), object->GetName(), std::to_string(object->GetID()));
+				*parent |= ui.NewSelectable({object->m_ui_summary_text_, object->m_b_detail_opened_});
+
+				object->OnUIUpdate(parent, dt);
+			}
+
+			--*parent;
 		}
+#endif
 	}
 
 	void Layer::OnSerialized()

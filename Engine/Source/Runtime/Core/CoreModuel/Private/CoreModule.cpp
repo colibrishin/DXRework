@@ -5,11 +5,11 @@ MODULE_IMPL(Engine::CoreModule, Core);
 
 Engine::CoreLoop Engine::CoreModule::s_core_module = {};
 
-void Engine::CoreLoop::OnUIUpdate(const float dt) const
+void Engine::CoreLoop::OnUIUpdate(UIContext* const parent, const float dt) const
 {
 	for (const auto& singletons : m_singleton_accessor_)
 	{
-		DoOnUIUpdate(dt, singletons);
+		DoOnUIUpdate(parent, dt, singletons);
 	}
 }
 

@@ -70,6 +70,11 @@ namespace Engine
 		for (int i = 0; i < m_layer_count_; ++i)
 		{
 			m_layers_.emplace_back(boost::make_shared<Layer>(i));
+
+			if (i < std::size(g_reserved_layer_name))
+			{
+				m_layers_[i]->SetName(g_reserved_layer_name[i]);
+			}
 		}
 
 		const auto& camera       = CreateGameObject<Objects::Camera>(RESERVED_LAYER_CAMERA).lock();
@@ -183,7 +188,7 @@ namespace Engine
 		{
 			throw std::logic_error("Only camera object can be added to camera layer");
 		}
-		if (layer != RESERVED_LAYER_UI && obj->GetObjectType() == DEF_OBJ_T_OBSERVER)
+		if (layer != RESERVED_LAYER_OBSERVER && obj->GetObjectType() == DEF_OBJ_T_OBSERVER)
 		{
 			throw std::logic_error("Observer object can only be added to UI layer");
 		}
@@ -653,18 +658,26 @@ namespace Engine
 		}
 	}
 
-	void Scene::OnUIUpdate(const float dt)
+	void Scene::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 #if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (const UIContext& context = UIInterface::NewContext(ui.NewDialog({GetName(), m_b_dialog_opened_})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({GetName(), m_b_dialog_opened_})))
 		{
-		}
+			m_layer_list_box_name_ = std::to_string(GetID()) + "LayersListBox";
 
-		for (const auto& layer : m_layers_)
-		{
-			layer->OnUIUpdate(dt);
+			context << [&]()
+			{
+				Renderable::OnUIUpdate(&context, dt);
+
+				context += ui.NewListBox({m_layer_list_box_name_, -1, -1});
+
+				for (const auto& layer : m_layers_)
+				{
+					layer->OnUIUpdate(&context, dt);
+				}
+			};
 		}
 #endif
 	}
@@ -703,7 +716,7 @@ namespace Engine
 	{
 #if WITH_DEBUG
 		DisableControllers();
-		const auto& observer = CreateGameObject<Objects::Observer>(RESERVED_LAYER_UI).lock();
+		const auto& observer = CreateGameObject<Objects::Observer>(RESERVED_LAYER_OBSERVER).lock();
 		m_observer_         = observer;
 		observer->AddChild(GetMainCamera());
 #endif
@@ -713,7 +726,7 @@ namespace Engine
 	{
 		Renderable::OnDeserialized();
 
-		auto ui = m_layers_[static_cast<size_t>(RESERVED_LAYER_UI)]->GetGameObjects();
+		auto ui = m_layers_[static_cast<size_t>(RESERVED_LAYER_OBSERVER)]->GetGameObjects();
 
 		// remove observer of previous scene
 		for (int i = 0; i < ui.size(); ++i)
@@ -722,7 +735,7 @@ namespace Engine
 			{
 				if (locked->GetObjectType() == DEF_OBJ_T_OBSERVER)
 				{
-					m_layers_[static_cast<size_t>(RESERVED_LAYER_UI)]->RemoveGameObject(ui[i].lock()->GetID());
+					m_layers_[static_cast<size_t>(RESERVED_LAYER_OBSERVER)]->RemoveGameObject(ui[i].lock()->GetID());
 					i--;
 				}
 			}

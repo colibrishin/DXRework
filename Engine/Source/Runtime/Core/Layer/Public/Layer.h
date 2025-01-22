@@ -20,7 +20,7 @@ namespace Engine
 		void PostRender(const float dt) override;
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
-		void OnUIUpdate(const float dt) override;
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
@@ -73,6 +73,10 @@ namespace Engine
 		aligned_vector<Strong<Abstracts::ObjectBase>> m_objects_;
 
 		// Non-serialized
+#if WITH_EDITOR
+		bool m_b_layer_expanded_ = false;
+		std::string                m_ui_text_;
+#endif
 		ConcurrentWeakObjGlobalMap m_weak_objects_cache_;
 	};
 } // namespace Engine

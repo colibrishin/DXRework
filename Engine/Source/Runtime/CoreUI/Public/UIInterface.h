@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string_view>
@@ -27,6 +28,10 @@ namespace Engine
         UITokenBase& AddChildren(const std::initializer_list<UITokenBase*>& contexts)
         {
             m_children_.insert(m_children_.end(), contexts.begin(), contexts.end());
+            std::ranges::for_each(contexts, [&](UITokenBase* new_child)
+            {
+	            new_child->m_parent_ = this;
+            });
             return *this;
         }
 
@@ -34,14 +39,26 @@ namespace Engine
         UITokenBase& AddChild(UITokenBase* child)
         {
             m_children_.push_back(std::unique_ptr<UITokenBase>(child));
+            child->m_parent_ = this;
         	return *child;
+        }
+
+        UITokenBase& operator+=(UITokenBase* child)
+        {
+	        return AddChild(child);
+        }
+
+        UITokenBase* GetParentInternal() const
+        {
+	        return m_parent_;
         }
 
         virtual void Do() const = 0;
         virtual void End() const = 0;
 
     protected:
-        std::function<void()>                           m_function_;
+        std::function<void()>                     m_function_;
+        UITokenBase*                              m_parent_ = nullptr;
         std::vector<std::unique_ptr<UITokenBase>> m_children_;
     };
     
@@ -126,10 +143,58 @@ namespace Engine
             : UIToken(title) {}
     };
 
-    struct ENGINE_COREUI_API TextEditableToken : UIToken<const std::string_view, std::string&>
+    struct ENGINE_COREUI_API LabelAndTextToken : UIToken<const std::string_view, std::string&, bool>
     {
-        explicit TextEditableToken(const std::string_view title, std::string& target)
-            : UIToken(title, target) {}
+        explicit LabelAndTextToken(const std::string_view title, std::string& target, bool editable)
+            : UIToken(title, target, editable) {}
+    };
+
+    struct ENGINE_COREUI_API LabelAndPathToken : UIToken<const std::string_view, const std::filesystem::path&>
+    {
+        explicit LabelAndPathToken(const std::string_view title, const std::filesystem::path& path)
+            : UIToken(title, path) {}
+    };
+
+    struct ENGINE_COREUI_API LabelAndFloatToken : UIToken<const std::string_view, float&, float, float, bool>
+    {
+        explicit LabelAndFloatToken(const std::string_view title, float& target, float step, float speed, bool editable)
+            : UIToken(title, target, step, speed, editable) {}
+    };
+
+    struct ENGINE_COREUI_API LabelAndIntToken : UIToken<const std::string_view, int&, bool>
+    {
+        explicit LabelAndIntToken(const std::string_view title, int& target, bool editable)
+            : UIToken(title, target, editable) {}
+    };
+
+    struct ENGINE_COREUI_API LabelAndUIntToken : UIToken<const std::string_view, uint32_t&, bool>
+    {
+        explicit LabelAndUIntToken(const std::string_view title, uint32_t& target, bool editable)
+            : UIToken(title, target, editable) {}
+    };
+
+    struct ENGINE_COREUI_API LabelAndULLDToken : UIToken<const std::string_view, uint64_t&, bool>
+    {
+        explicit LabelAndULLDToken(const std::string_view title, uint64_t& target, bool editable)
+            : UIToken(title, target, editable) {}
+    };
+
+    struct ENGINE_COREUI_API ListBoxToken : UIToken<const std::string_view, float, float>
+    {
+	    ListBoxToken(const std::string_view label, float x, float y)
+		    : UIToken<const std::string_view, float, float>(label, x, y) {}
+    };
+
+    struct ENGINE_COREUI_API TreeNodeToken : UIToken<const std::string_view>
+    {
+	    explicit TreeNodeToken(const std::string_view label)
+		    : UIToken<const std::string_view>(label) {}
+    };
+
+    struct ENGINE_COREUI_API SelectableToken : UIToken<const std::string_view, bool&>
+    {
+	    SelectableToken(const std::string_view basic_string_view, bool& cond)
+		    : UIToken<const std::string_view, bool&>(basic_string_view, cond) {}
     };
 
     struct UIContext
@@ -137,6 +202,7 @@ namespace Engine
         explicit UIContext(UITokenBase* parent)
         {
 	        m_parent_ = std::unique_ptr<UITokenBase>(parent);
+            m_active_child_ = nullptr;
         }
 
         UIContext(UIContext&) = delete;
@@ -152,22 +218,75 @@ namespace Engine
 	        return m_parent_ != nullptr;
         }
 
-        // Returns this
-        UITokenBase& operator()() const
+        // Add Child and return this
+        UITokenBase& operator<<(UITokenBase* child)
         {
+            m_parent_->AddChild(child);
+            m_active_child_ = child;
 	        return *m_parent_;
         }
 
-        // Add multiple child to this
-        template <typename... Args>
-        UITokenBase& operator[](Args&&... args)
+        UITokenBase& operator<<(const std::function<void()>& functor) const
         {
-	        m_parent_->AddChildren(args...);
-            return *m_parent_;
+            m_parent_->SetFunction(functor);
+	        return *m_parent_;
+        }
+
+        // Add Child and return child
+        UITokenBase& operator+=(UITokenBase* child)
+        {
+            if (m_active_child_)
+            {
+                UITokenBase* old_active = m_active_child_;
+				old_active->AddChild(child);
+                m_active_child_ = child;
+                return *old_active;
+            }
+            else
+            {
+                operator<<(child);
+                return *m_parent_;
+            }
+        }
+
+        // Add Child to active child without swapping active child.
+        UITokenBase& operator|=(UITokenBase* child) const
+        {
+	        if (m_active_child_)
+	        {
+		        m_active_child_->AddChild(child);
+                return *child;
+	        }
+            else
+            {
+	            m_parent_->AddChild(child);
+                return *m_parent_;
+            }
+        }
+
+        UITokenBase& operator+=(const std::function<void()>& functor) const
+        {
+            if (m_active_child_)
+            {
+				m_active_child_->SetFunction(functor);
+                return *m_active_child_;
+            }
+            else
+            {
+	            m_parent_->SetFunction(functor);
+                return *m_parent_;
+            }
+        }
+
+        UITokenBase& operator--()
+        {
+	        m_active_child_ = m_active_child_->GetParentInternal();
+            return *m_active_child_;
         }
 
     private:
         std::unique_ptr<UITokenBase> m_parent_;
+        UITokenBase* m_active_child_ = nullptr;
     };
 
     struct ENGINE_COREUI_API UIInterface
@@ -179,14 +298,22 @@ namespace Engine
             return UIContext(root);
         }
 
-        virtual MainMenuBarToken* NewMainMenuBar(const MainMenuBarToken::ArgumentTuple& arguments) = 0;
-        virtual MenuToken*        NewMenu(const MenuToken::ArgumentTuple& arguments) = 0;
-        virtual MenuItemToken*    NewMenuItem(const MenuItemToken::ArgumentTuple& arguments) = 0;
-        virtual DialogToken*      NewDialog(const DialogToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase*  NewMainMenuBar(const MainMenuBarToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase*         NewMenu(const MenuToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase*     NewMenuItem(const MenuItemToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase*       NewDialog(const DialogToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase*       NewButton(const ButtonToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndText(const LabelAndTextToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndFloat(const LabelAndFloatToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndInt(const LabelAndIntToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndUInt(const LabelAndUIntToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndULLD(const LabelAndULLDToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndPath(const LabelAndPathToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewListBox(const ListBoxToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewTreeNode(const TreeNodeToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewSelectable(const SelectableToken::ArgumentTuple& arguments) = 0;
 
         virtual void NewFrame() = 0;
-        //virtual UITokenBase* NewButton(const std::string_view title) = 0;
-        //virtual UITokenBase* NewTextEditable(const std::string_view title) = 0;
 
     protected:
         template <typename T>

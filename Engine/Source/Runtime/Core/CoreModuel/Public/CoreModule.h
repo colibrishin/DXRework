@@ -17,7 +17,16 @@ using SingletonCollection = std::vector<Engine::Abstracts::SingletonBase&(*)()>;
 		} \
 	}
 
-UPDATE_CALL_TEMPLATE(OnUIUpdate);
+#define UPDATE_CALL_TEMPLATE_OneParam(UpdateType, ParamType, ParamName) \
+	void Do##UpdateType(##ParamType ParamName##, const float dt, const SingletonCollection& singletons) \
+	{ \
+		for (const auto& s : singletons) \
+		{ \
+			s().##UpdateType(##ParamName, dt); \
+		} \
+	}
+
+UPDATE_CALL_TEMPLATE_OneParam(OnUIUpdate, Engine::UIContext* const, parent)
 UPDATE_CALL_TEMPLATE(PreUpdate)
 UPDATE_CALL_TEMPLATE(Update)
 UPDATE_CALL_TEMPLATE(PostUpdate)
@@ -45,7 +54,7 @@ namespace Engine
 			LOOP_TYPE_MAX
 		};
 
-		void OnUIUpdate(const float dt) const;
+		void OnUIUpdate(UIContext* const parent, const float dt) const;
 		void PreUpdate(const float dt) const;
 		void Update(const float dt) const;
 		void PostUpdate(const float dt) const;

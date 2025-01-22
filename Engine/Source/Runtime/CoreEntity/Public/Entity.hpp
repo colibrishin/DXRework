@@ -5,6 +5,10 @@
 
 #include "CoreEntity.h"
 
+namespace Engine {
+	struct UIContext;
+}
+
 namespace Engine::Abstracts
 {
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
@@ -46,7 +50,7 @@ namespace Engine::Abstracts
 		virtual void Update(const float dt) = 0;
 		virtual void PostUpdate(const float dt) = 0;
 		virtual void FixedUpdate(const float dt) = 0;
-		virtual void OnUIUpdate(const float dt);
+		virtual void OnUIUpdate(UIContext* const parent, const float dt);
 
 		virtual void OnSerialized() = 0;
 		virtual void OnDeserialized() = 0;
