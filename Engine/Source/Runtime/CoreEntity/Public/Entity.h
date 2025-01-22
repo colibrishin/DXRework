@@ -65,7 +65,7 @@ namespace Engine
 
 namespace Engine::Abstracts
 {
-	ECLASS()
+	ECLASS(abstract)
 	class ENGINE_COREENTITY_API Entity : public boost::enable_shared_from_this<Entity>
 	{
 	public:
@@ -133,8 +133,11 @@ namespace Engine::Abstracts
 			m_b_garbage_(false) {}
 
 	private:
-		//EPROPERTY()
+		EPROPERTY()
 		EntityName     m_name_;
+
+		EPROPERTY()
+		std::filesystem::path m_meta_path_;
 
 #if WITH_EDITOR
 	public:
@@ -144,7 +147,5 @@ namespace Engine::Abstracts
 #endif
 		bool		   m_b_initialized_;
 		bool           m_b_garbage_;
-
-		std::filesystem::path m_meta_path_;
 	};
 } // namespace Engine::Abstracts

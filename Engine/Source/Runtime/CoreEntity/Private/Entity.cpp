@@ -3,8 +3,6 @@
 #include "UIInterface.h"
 #include "Serialization.hpp"
 
-SERIALIZE_IMPL(ENGINE_COREENTITY_API, Engine::Abstracts::Entity, _ARTAG(m_name_) _ARTAG(m_meta_path_))
-
 void Engine::Abstracts::Entity::SetName(const EntityName& name)
 {
 	m_name_ = name;
