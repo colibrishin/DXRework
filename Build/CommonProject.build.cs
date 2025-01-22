@@ -25,7 +25,7 @@ public class EngineTarget : Target
         Optimization optimization,
         OutputType outputType = OutputType.Lib,
         Blob blob = Blob.NoBlob,
-        BuildSystem buildSystem = BuildSystem.MSBuild,
+        BuildSystem buildSystem = BuildSystem.FastBuild,
         DotNetFramework framework = DotNetFramework.v3_5) 
     : base(platform, devEnv, optimization, outputType, blob, buildSystem, framework)
     {
@@ -61,6 +61,7 @@ public abstract class CommonProject : Project
     public virtual void ConfigureAll(Configuration conf, EngineTarget target)
     {
         Utils.MakeConfiturationNameDefine(conf, target);
+
         conf.DumpDependencyGraph = true;
 
         // conf.Output = Configuration.OutputType.Exe;
@@ -72,6 +73,7 @@ public abstract class CommonProject : Project
         {
             conf.Output = Configuration.OutputType.Lib;
         }
+        
         conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
         conf.Options.Add(Options.Vc.Compiler.JumboBuild.Enable);
         conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.CPP20);
@@ -108,17 +110,24 @@ public abstract class CommonProject : Project
             conf.TargetPath = SolutionDir + @"/Binaries/" + conf.Name;
             conf.IntermediatePath = SolutionDir + @"/Intermediate/Build/" + conf.Name + "/[project.Name]/";
 
+            conf.AdditionalCompilerOptions.Add("/FS");
+            conf.IsFastBuild = true;
+            string FastBuildPath = SolutionDir + @"/Programs\Sharpmake\tools\FastBuild\Windows-x64\FBuild.exe";
+            FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
+
             // Include
             {
-                //conf.IncludePrivatePaths.Add("[project.SourceRootPath]");
                 conf.IncludePrivatePaths.Add(conf.ProjectPath);
 
                 string HeaderParserTargetDir = SolutionDir + @"/Intermediate/HeaderParser/HeaderParserGenerated/[project.Name]";
                 conf.IncludePaths.Add(HeaderParserTargetDir);
                 conf.IncludePaths.Add(@"[project.SourceRootPath]");
-                conf.IncludePaths.Add(@"[project.SourceRootPath]\Public");
+                conf.IncludePaths.Add(@"[project.SourceRootPath]/Public");
+                conf.IncludePaths.Add(SolutionDir + @"/Engine");
             }
         }
+
+        conf.AdditionalCompilerOptions.Add("/bigobj");
         
         //if (target.LaunchType == ELaunchType.Editor)
         //{
@@ -146,5 +155,38 @@ public abstract class CommonProject : Project
         ///conf.EventPreBuild.Add(@"cmd /c """"" + EngineDir + @"\Engine\Source\Programs\HeaderParser\HeaderParser.bat"" ""$(SolutionDir)"" [project.Name] ""[project.SourceRootPath]"" " + @""""+ EngineDir + @"""""");
 
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
+
+        conf.AdditionalCompilerOptions.Add("/FS");
+        conf.IsFastBuild = true;
+
+        {
+            conf.Defines.Add("NOMINMAX=1");
+            conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
+            conf.Defines.Add("USE_DX12");
+            //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
+
+            conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
+            conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");
+            conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_HEIGHT=500");
+
+            conf.Defines.Add("CFG_WIDTH=1024");
+            conf.Defines.Add("CFG_HEIGHT=768");
+            conf.Defines.Add("CFG_VSYNC=1");
+            conf.Defines.Add("CFG_FULLSCREEN=0");
+            conf.Defines.Add("CFG_FRAME_BUFFER=2");
+            conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
+            conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
+            conf.Defines.Add("CFG_FOV=90.f");
+            conf.Defines.Add("CFG_RAYTRACING=0");
+
+            conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
+            conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
+            conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
+            conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
+
+            conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
+            conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
+            conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
+        }
     }
 }

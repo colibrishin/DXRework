@@ -1,4 +1,5 @@
 #include "../Public/ThrowIfFailed.h"
+#include <stdio.h>
 
 namespace DX
 {

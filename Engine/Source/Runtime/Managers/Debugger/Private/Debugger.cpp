@@ -6,6 +6,7 @@
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
+#include "Source/Runtime/Managers/InputManager/Public/InputManager.h"
 
 namespace Engine::Managers
 {
@@ -16,7 +17,7 @@ namespace Engine::Managers
 	void Debugger::Update(const float& dt)
 	{	
 #if WITH_DEBUG
-		if (GetApplication().GetCurrentKeyState().Scroll)
+		if (Managers::InputManager::GetInstance().GetCurrentKeyState().Scroll)
 		{
 			m_bDebug = !m_bDebug;
 		}
@@ -31,26 +32,26 @@ namespace Engine::Managers
 				{
 					int value = 0;
 
-					if (GetApplication().HasScrollChanged(value))
+					if (Managers::InputManager::GetInstance().HasScrollChanged(value))
 					{
 						cam->GetComponent<Components::Transform>().lock()->Translate
 								(Vector3::Up * -static_cast<float>(value));
 					}
 
-					if (GetApplication().IsKeyPressed(Keyboard::W))
+					if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::W))
 					{
 						cam->GetComponent<Components::Transform>().lock()->Translate(-g_forward * g_camera_speed);
 					}
-					if (GetApplication().IsKeyPressed(Keyboard::S))
+					if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::S))
 					{
 						cam->GetComponent<Components::Transform>().lock()->Translate(g_forward * g_camera_speed);
 					}
-					if (GetApplication().IsKeyPressed(Keyboard::A))
+					if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::A))
 					{
 						cam->GetComponent<Components::Transform>().lock()->Translate
 								(Vector3::Left * g_camera_speed);
 					}
-					if (GetApplication().IsKeyPressed(Keyboard::D))
+					if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::D))
 					{
 						cam->GetComponent<Components::Transform>().lock()->Translate
 								(Vector3::Right * g_camera_speed);

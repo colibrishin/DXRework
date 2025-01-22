@@ -3,6 +3,10 @@
 #include <bitset>
 #include <stack>
 #include <vector>
+#include <queue>
+#include <map>
+#include <memory>
+#include <set>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
@@ -387,11 +391,6 @@ namespace Engine
 						}
 					}
 
-#if WITH_DEBUG
-				{
-					GetDebugger().Draw(node_bound, DirectX::Colors::BlanchedAlmond);
-				}
-#endif
 					stack.pop();
 					continue;
 				}

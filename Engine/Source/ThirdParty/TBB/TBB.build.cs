@@ -22,11 +22,12 @@ public class TBB : VCPKG
     {
         base.ConfigureDebug(conf, target);
 
+
         conf.LibraryFiles.Add
         (
-            @"tbb12.lib", 
-            @"tbbmalloc.lib", 
-            @"tbbmalloc_proxy.lib"
+            @"tbb12_debug.lib", 
+            @"tbbmalloc_debug.lib", 
+            @"tbbmalloc_proxy_debug.lib"
         );
     }
 
@@ -36,9 +37,9 @@ public class TBB : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"tbb12_debug.lib", 
-            @"tbbmalloc_debug.lib", 
-            @"tbbmalloc_proxy_debug.lib"
+            @"tbb12.lib", 
+            @"tbbmalloc.lib", 
+            @"tbbmalloc_proxy.lib"
         );
     }
 }

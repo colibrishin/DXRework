@@ -3,7 +3,6 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
 public class KolibriProject : CommonProject
@@ -30,44 +29,25 @@ public class KolibriProject : CommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-
+    
         //conf.TargetFileFullNameWithExtension = conf.ProjectName + ".exe";
         conf.TargetFileFullNameWithExtension = "Kolibri.exe";
 
-        FastBuildSettings.FastBuildMakeCommand = "Programs/Sharpmake/tools/FastBuild/Windows-x64/FBuild.exe";
         conf.AdditionalCompilerOptions.Add("/FS");
         conf.IsFastBuild = true;
         conf.SolutionFolder = @"Engine";
 
-        conf.AddPrivateDependency<Boost>(target);
+        string FastBuildPath = @"do-fastbuild.bat";
+        FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
 
-        conf.Defines.Add("NOMINMAX=1");
-        conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
-        conf.Defines.Add("USE_DX12");
-        //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
+        //FastBuildSettings.FastBuildMakeCommand = "msbuild Intermediate\\ProjectFiles\\EngineConfig.vcxproj /t:Rebuild /p:platform=x64 /p:configuration=\"" + conf.Name + "\"\n";
+        //FastBuildSettings.FastBuildMakeCommand += "if exist \"Intermediate\\ProjectFiles\\UserConfig.vcxproj\" ( msbuild Intermediate\\ProjectFiles\\UserConfig.vcxproj /t:Rebuild /p:platform=x64 /p:configuration=\"" + conf.Name + "\")\n";
 
-        conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
-        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");
-        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_HEIGHT=500");
-
-        conf.Defines.Add("CFG_WIDTH=1024");
-        conf.Defines.Add("CFG_HEIGHT=768");
-        conf.Defines.Add("CFG_VSYNC=1");
-        conf.Defines.Add("CFG_FULLSCREEN=0");
-        conf.Defines.Add("CFG_FRAME_BUFFER=2");
-        conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
-        conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
-        conf.Defines.Add("CFG_FOV=90.f");
-        conf.Defines.Add("CFG_RAYTRACING=0");
-
-        conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
-        conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
-        conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
-        conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
-
-        conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
-        conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
-        conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
+        /* if (ELaunchType.Editor == target.LaunchType)
+        {
+            conf.FastBuildMakeCommand += "if exist \"Intermediate\\ProjectFiles\\GameProject.vcxproj\" ( devenv Intermediate\\ProjectFiles\\GameProject.vcxproj /Build \"" + conf.Name + "\")\n";
+        } */
+        
     }
 }
 
@@ -96,7 +76,6 @@ public class KolibriSolution : Solution
         Utils.MakeConfiturationNameDefine(conf, target);
 
         conf.SolutionPath = Utils.GetSolutionDir();
-
         string ProjectFilesDir = conf.SolutionPath + @"\Intermediate\ProjectFiles";
         Environment.SetEnvironmentVariable("ProjectFilesDir", ProjectFilesDir);
 

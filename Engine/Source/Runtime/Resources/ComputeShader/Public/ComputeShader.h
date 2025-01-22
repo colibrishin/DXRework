@@ -1,6 +1,10 @@
 #pragma once
+#include <array>
+#include <directx/d3d12.h>
+
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/Components/ParticleRenderer/Public/ParticleRenderer.h"
 
 namespace Engine::Resources
 {
@@ -10,7 +14,7 @@ namespace Engine::Resources
 		~ComputeShader() override = default;
 
 		void                SetGroup(const std::array<UINT, 3>& group);
-		std::array<UINT, 3> GetThread() const;
+		std::array<uint32_t, 3> GetThread() const;
 		void Dispatch(
 			ID3D12GraphicsCommandList1* list, const DescriptorPtr& w_heap, Graphics::SBs::LocalParamSB& param,
 			Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>& buffer
@@ -29,7 +33,7 @@ namespace Engine::Resources
 		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
 
 	protected:
-		ComputeShader(const std::string& name, const boost::filesystem::path& path, const std::array<UINT, 3>& thread);
+		ComputeShader(const std::string& name, const boost::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
 		static Graphics::ParamBase& getParam(const Strong<Components::ParticleRenderer>& pr);
 		static InstanceParticles&   getInstances(const Strong<Components::ParticleRenderer>& pr);
@@ -59,8 +63,8 @@ namespace Engine::Resources
 
 		ComPtr<ID3DBlob> m_cs_;
 
-		UINT m_thread_[3];
-		UINT m_group_[3];
+		uint32_t m_thread_[3];
+		uint32_t m_group_[3];
 	};
 } // namespace Engine::Resources
 

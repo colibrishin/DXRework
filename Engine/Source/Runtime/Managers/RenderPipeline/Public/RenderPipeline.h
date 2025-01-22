@@ -6,7 +6,7 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 #include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
-#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBuffer.hpp"
+#include "Source/Runtime/ConstantBufferDX12/Public/ConstantBufferDX12.hpp"
 #endif
 
 namespace Engine::Managers

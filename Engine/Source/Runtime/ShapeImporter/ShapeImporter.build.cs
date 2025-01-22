@@ -4,8 +4,6 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXMath/DirectXMath.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Assimp/Assimp.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Resources/Mesh/Mesh.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Resources/Shape/Shape.build.cs")]
 
 [Generate]
 public class ShapeImporter : CommonProject

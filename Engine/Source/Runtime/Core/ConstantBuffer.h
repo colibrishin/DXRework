@@ -1,3 +1,4 @@
+#pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 // Static constant buffer type, this should be added to every constant buffer

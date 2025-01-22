@@ -61,3 +61,11 @@ void Engine::Abstracts::Entity::Initialize()
 {
 	m_b_initialized_ = true;
 }
+
+void Engine::Abstracts::Entity::OnSerialized()
+{
+}
+
+void Engine::Abstracts::Entity::OnDeserialized()
+{
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include <ranges>
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/Serialization/Public/SerializationImpl.hpp"
