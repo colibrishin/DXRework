@@ -7,8 +7,10 @@
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Component/Public/Component.h"
 
-DEFINE_DELEGATE(OnComponentAdded, Engine::Weak<Engine::Abstracts::Component>)
-DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>)
+#include "ObjectBase.generated.h"
+
+DEFINE_DELEGATE(OnComponentAdded, Engine::Weak<Engine::Abstracts::Component>);
+DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>);
 
 // Static engine default provided object type, this should be added to every object
 #define OBJECT_T(enum_val) static constexpr Engine::eDefObjectType dotype = enum_val;
@@ -31,15 +33,14 @@ namespace Engine
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::ObjectBase, Engine::Abstracts::Actor)
-
 namespace Engine::Abstracts
 {
 	// Abstract base class for objects
+	ECLASS(abstract)
 	class ENGINE_CORE_API ObjectBase : public Actor
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ObjectBase)
 		DelegateOnComponentAdded onComponentAdded;
 		DelegateOnComponentRemoved onComponentRemoved;
 
@@ -252,14 +253,26 @@ namespace Engine::Abstracts
 		// Commit the script to the object.
 		void addScriptImpl(const Strong<Script>& script, ScriptSizeType type);
 
-		LocalActorID              m_parent_id_;
-		std::vector<LocalActorID> m_children_;
-		eDefObjectType            m_type_;
-		bool                      m_active_ = true;
-		bool                      m_culled_ = true;
+		EPROPERTY()
+		LocalActorID m_parent_id_;
 
+		EPROPERTY()
+		std::vector<LocalActorID> m_children_;
+
+		EPROPERTY()
+		eDefObjectType m_type_;
+
+		EPROPERTY()
+		bool m_active_ = true;
+
+		EPROPERTY()
+		bool m_culled_ = true;
+
+		EPROPERTY()
 		std::map<ComponentType, Strong<Component>> m_components_;
-		std::map<ScriptSizeType, Strong<Script>>       m_scripts_;
+
+		EPROPERTY()
+		std::map<ScriptSizeType, Strong<Script>> m_scripts_;
 
 		// Non-serialized
 #if WITH_EDITOR

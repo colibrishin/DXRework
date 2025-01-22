@@ -1,6 +1,6 @@
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
 #include "../Public/Generator.hpp"

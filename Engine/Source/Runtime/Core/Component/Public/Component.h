@@ -2,6 +2,8 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Entity.h"
 
+#include "Component.generated.h"
+
 // Cloning component declaration macro
 #define COMP_CLONE_DECL Strong<Engine::Abstracts::Component> cloneImpl() const override;
 // Cloning component implementation macro
@@ -17,16 +19,15 @@ namespace Engine
 	using ComponentType = HashType;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Component, Engine::Abstracts::Entity)
-
 namespace Engine::Abstracts
 {
 	class ObjectBase;
 
+	ECLASS(abstract)
 	class ENGINE_CORE_API Component : public Abstracts::Entity
 	{
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Component)
+		GENERATE_BODY
 
 		~Component() override       = default;
 		Component(const Component&) = default;
@@ -52,7 +53,6 @@ namespace Engine::Abstracts
 		Component(const Weak<ObjectBase>& owner);
 
 	private:
-		SERIALIZE_DECL
 		friend class ObjectBase;
 
 		[[nodiscard]] virtual Strong<Component> cloneImpl() const = 0;
@@ -68,6 +68,7 @@ namespace Engine::Abstracts
 		}
 
 	private:
+		EPROPERTY()
 		LocalComponentID m_local_id_{};
 
 		// Non-serialized
@@ -76,5 +77,3 @@ namespace Engine::Abstracts
 		bool             m_b_active_{};
 	};
 } // namespace Engine::Abstracts
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Component)

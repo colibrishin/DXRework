@@ -1,5 +1,5 @@
 #include "Objects/Observer/Public/Observer.h"
-#include "ObjectBase/Public/ObjectBase.hpp"
+#include "ObjectBase/Public/ObjectBase.h"
 
 #include "Components/Transform/Public/Transform.h"
 

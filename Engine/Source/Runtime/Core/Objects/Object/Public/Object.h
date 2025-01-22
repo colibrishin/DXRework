@@ -1,20 +1,15 @@
 #pragma once
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
-
-namespace Engine
-{
-	class Object;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::Object, Engine::Abstracts::ObjectBase)
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
+#include "Object.generated.h"
 
 namespace Engine
 {
 	// Anonymous non-type defined object
+	ECLASS()
 	class ENGINE_CORE_API Object final : public Abstracts::ObjectBase
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Object)
 		OBJECT_T(DEF_OBJ_T_NONE)
 		Object();
 

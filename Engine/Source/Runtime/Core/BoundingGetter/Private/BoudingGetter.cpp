@@ -1,6 +1,6 @@
 #include "Source/Runtime/Core/BoundingGetter/Public/BoundingGetter.h"
 
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"

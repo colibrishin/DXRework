@@ -3,17 +3,18 @@
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
-DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
+#include "Actor.generated.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Actor, Engine::Abstracts::Renderable)
+DEFINE_DELEGATE(OnLayerChange, const Engine::LayerSizeType);
 
 namespace Engine::Abstracts
 {
+	ECLASS(abstract)
 	class ENGINE_CORE_API Actor : public Renderable
 	{
-	public:
-		INLINE_COMPILE_TIME_TYPENAME(Actor)
+		GENERATE_BODY
 
+	public:
 		DelegateOnLayerChange onLayerChange;
 		~Actor() override = default;
 
@@ -26,7 +27,6 @@ namespace Engine::Abstracts
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		
 	protected:
-		SERIALIZE_DECL
 		explicit Actor();
 
 	private:
@@ -36,10 +36,12 @@ namespace Engine::Abstracts
 		void SetScene(const Weak<Scene>& scene);
 		void SetLocalID(LocalActorID id);
 
-		Weak<Scene>   m_assigned_scene_;
+		EPROPERTY()
 		LayerSizeType m_layer_;
+
+		EPROPERTY()
 		LocalActorID  m_local_id_;
+
+		Weak<Scene>   m_assigned_scene_;
 	};
 } // namespace Engine::Abstracts
-
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Engine::Abstracts::Actor)

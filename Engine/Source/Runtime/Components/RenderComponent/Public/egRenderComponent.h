@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/Component/Public/Component.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 

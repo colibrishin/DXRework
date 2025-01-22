@@ -1,5 +1,5 @@
 #pragma once
-#include "ObjectBase/Public/ObjectBase.hpp"
+#include "ObjectBase/Public/ObjectBase.h"
 
 namespace Engine::Objects
 {

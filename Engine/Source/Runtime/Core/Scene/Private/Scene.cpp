@@ -10,7 +10,7 @@
 
 #include "Source/Runtime/Core/Layer/Public/Layer.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"

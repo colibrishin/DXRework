@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/CoreEntity/Public/Entity.h"
-#include "Source/Runtime/Core/Objects/Object/Public/Object.hpp"
+#include "Source/Runtime/Core/Objects/Object/Public/Object.h"
 #include "Source/Runtime/Core/ConstantBuffer.h"
 
 POLYMORPHIC_TYPE_MAP(Engine::Objects::Camera, Engine::Abstracts::ObjectBase)

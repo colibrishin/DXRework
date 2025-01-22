@@ -3,7 +3,7 @@
 #endif
 
 #include "../Public/Rigidbody.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
+#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/MathExtension/Public/MathExtension.hpp"

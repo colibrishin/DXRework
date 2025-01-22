@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/CoreEntity/Public/Entity.h"
-#include "Public/Renderable.generated.h"
+#include "Renderable.generated.h"
 
 namespace Engine::Abstracts
 {

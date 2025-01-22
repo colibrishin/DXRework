@@ -4,8 +4,6 @@
 #include "Layer/Public/Layer.h"
 #include "Scene/Public/Scene.hpp"
 
-SERIALIZE_IMPL(ENGINE_CORE_API, Engine::Abstracts::Actor, _ARTAG(m_layer_) _ARTAG(m_local_id_))
-
 namespace Engine::Abstracts
 {
 	Actor::Actor(const Actor& other)

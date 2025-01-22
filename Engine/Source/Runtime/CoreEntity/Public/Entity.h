@@ -16,7 +16,7 @@
 #include <string>
 
 #include "CoreEntity.h"
-#include "Public/Entity.generated.h"
+#include "Entity.generated.h"
 
 namespace Engine
 {

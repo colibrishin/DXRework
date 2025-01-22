@@ -1,4 +1,4 @@
-#include "../Public/Object.hpp"
+#include "../Public/Object.h"
 
 namespace Engine
 {

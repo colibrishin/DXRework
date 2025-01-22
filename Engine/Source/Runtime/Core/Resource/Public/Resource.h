@@ -1,6 +1,10 @@
 #pragma once
+#include <filesystem>
+
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreEntity/Public/Entity.h"
+
+#include "Resource.generated.h"
 
 // Static resource getter which infers self as type
 #define RESOURCE_SELF_INFER_GETTER_DECL(TYPE)                                         \
@@ -39,14 +43,13 @@ namespace Engine
 	using ResourceType = HashType;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Abstracts::Resource, Engine::Abstracts::Entity)
-
 namespace Engine::Abstracts
 {
+	ECLASS(abstract)
 	class ENGINE_CORE_API Resource : public Entity
 	{
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Resource)
+		GENERATE_BODY
 
 		~Resource() override;
 
@@ -71,6 +74,8 @@ namespace Engine::Abstracts
 		friend class Managers::ResourceManager;
 
 		bool                    m_bLoaded_;
+
+		EPROPERTY()
 		std::filesystem::path m_path_;
 	};
 } // namespace Engine::Abstract
