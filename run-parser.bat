@@ -29,10 +29,10 @@ popd
 pushd Intermediate\HeaderParser
 echo Copying header from %3...
 if not exist %2 (mkdir %2)
-%4\System32\robocopy %3 %2 "*.h??" /xo /nodcopy /s
+%4\System32\robocopy %3 %2 "*.h" /xo /nodcopy /s
 
 echo Comparing header changes...
-%5\bin\sh.exe --login -c "git status --porcelain -uall | cut -c 1-3 --complement | egrep .hp?p?$ > target && git add . && git commit -m "header update""
+%5\bin\sh.exe --login -c "git status --porcelain -uall | cut -c 1-3 --complement | egrep .h$ > target && git add . && git commit -m "header update""
 echo Parsing header of %2...
 for /f "tokens=*" %%a in (target) do (
   "../../Programs/header-parser/Release/header-parser.exe" %%a -c ECLASS -e EENUM -f EFUNC -p EPROPERTY
