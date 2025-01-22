@@ -21,7 +21,7 @@ void Engine::MaterialModule::Initialize()
 					Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Material>(path);
 				};
 
-			Managers::ResourceManager::GetInstance().OpenLoadDialog<Resources::Material>(managing_flag, {}, load_callback, {});
+			UIHelpers::OpenLoadDialog<Resources::Material, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 			
 		});
 }

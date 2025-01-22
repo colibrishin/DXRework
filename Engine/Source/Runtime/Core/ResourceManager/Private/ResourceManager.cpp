@@ -51,7 +51,7 @@ namespace Engine::Managers
 			{
 				(menu_context |= ui.NewMenuItem({ name })).SetFunction([&]()
 					{
-						m_ui_new_functions_managing_[name] = true;
+						m_ui_new_functions_[name].first = true;
 					});
 			}
 
@@ -63,26 +63,26 @@ namespace Engine::Managers
 			{
 				(menu_context |= ui.NewMenuItem({name})).SetFunction([&]()
 					{
-						m_ui_load_functions_managing_[name] = true;
+						m_ui_load_functions_[name].first = true;
 					});
 			}
 
 			--menu_context;
 		}
 
-		for (auto& [name, flag] : m_ui_new_functions_managing_)
+		for (auto& [flag, func] : m_ui_new_functions_ | std::views::values)
 		{
 			if (flag)
 			{
-				m_ui_new_functions_[name](flag);
+				func(flag);
 			}
 		}
 
-		for (auto& [name, flag] : m_ui_load_functions_managing_)
+		for (auto& [flag, func] : m_ui_load_functions_ | std::views::values)
 		{
 			if (flag)
 			{
-				m_ui_load_functions_[name](flag);
+				func(flag);
 			}
 		}
 	}
@@ -198,11 +198,11 @@ namespace Engine::Managers
 	}
 
 #if WITH_EDITOR
-	void ResourceManager::RegisterLoadResource(const std::string_view name, const ManagedBooleanSignature& functor)
+	void ResourceManager::RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor)
 	{
 		if (!m_ui_load_functions_.contains(name))
 		{
-			m_ui_load_functions_.emplace(name, functor);
+			m_ui_load_functions_[name] = {false, functor};
 		}
 	}
 
@@ -211,15 +211,14 @@ namespace Engine::Managers
 		if (m_ui_load_functions_.contains(name))
 		{
 			m_ui_load_functions_.erase(name);
-			m_ui_load_functions_managing_.erase(name);
 		}
 	}
 
-	void ResourceManager::RegisterNewResource(const std::string_view name, const ManagedBooleanSignature& functor)
+	void ResourceManager::RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor)
 	{
 		if (!m_ui_new_functions_.contains(name))
 		{
-			m_ui_new_functions_.emplace(name, functor);
+			m_ui_new_functions_[name] = {false, functor};
 		}
 	}
 
@@ -228,7 +227,6 @@ namespace Engine::Managers
 		if (m_ui_new_functions_.contains(name))
 		{
 			m_ui_new_functions_.erase(name);
-			m_ui_new_functions_managing_.erase(name);
 		}
 	}
 

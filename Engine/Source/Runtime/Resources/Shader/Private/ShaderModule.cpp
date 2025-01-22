@@ -44,7 +44,7 @@ void Engine::ShaderModule::Initialize()
 					Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::Shader>(path);
 				};
 
-			Managers::ResourceManager::GetInstance().OpenLoadDialog<Engine::Resources::Shader>(managing_flag, {}, load_callback, {});
+			UIHelpers::OpenLoadDialog<Resources::Shader, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 		});
 
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shader::StaticTypeName(), [](bool& managing_flag)
@@ -174,7 +174,7 @@ void Engine::ShaderModule::Initialize()
 					cleanup_callback();
 				};
 
-			Managers::ResourceManager::GetInstance().OpenNewDialog<Resources::Shader>(
+			UIHelpers::OpenNewDialog<Resources::Shader, Managers::ResourceManager>(
 				managing_flag,
 				ui_callback,
 				load_callback,

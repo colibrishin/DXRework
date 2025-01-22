@@ -19,7 +19,7 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                     Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::AtlasAnimationTexture>(path);
                 };
             
-            Managers::ResourceManager::GetInstance().OpenLoadDialog<Engine::Resources::AtlasAnimationTexture>(
+            UIHelpers::OpenLoadDialog<Resources::AtlasAnimationTexture, Managers::ResourceManager>(
                 managing_flag,
                 {},
                 load_callback,
@@ -183,7 +183,7 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                     clearInputBuffers();
                 };
 
-            Managers::ResourceManager::GetInstance().OpenNewDialog<Engine::Resources::AtlasAnimationTexture>(
+            UIHelpers::OpenNewDialog<Resources::AtlasAnimationTexture, Managers::ResourceManager>(
                 managing_flag, 
                 ui_callback, 
                 load_callback,

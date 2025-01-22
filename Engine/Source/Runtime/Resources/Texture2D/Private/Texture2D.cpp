@@ -54,7 +54,7 @@ void Engine::Texture2DModule::Initialize()
 					Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::Texture2D>(path);
 				};
 
-			Managers::ResourceManager::GetInstance().OpenLoadDialog<Engine::Resources::Texture2D>(managing_flag, {}, load_callback, {});
+			UIHelpers::OpenLoadDialog<Resources::Texture2D, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 		});
 
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
@@ -175,7 +175,7 @@ void Engine::Texture2DModule::Initialize()
 			}
 		};
 
-		Managers::ResourceManager::GetInstance().OpenNewDialog<Resources::Texture2D>(managing_flag, ui_callback, load_callback, cleanup_callback);
+		UIHelpers::OpenNewDialog<Resources::Texture2D, Managers::ResourceManager>(managing_flag, ui_callback, load_callback, cleanup_callback);
 	});
 }
 

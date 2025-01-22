@@ -17,7 +17,7 @@ void Engine::ShapeModule::Initialize()
 				};
 
 			// todo: coordination system
-			Managers::ResourceManager::GetInstance().OpenNewDialog<Resources::Shape>(managing_flag, {}, load_callback, {});
+			UIHelpers::OpenNewDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 		});
 
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
@@ -46,7 +46,7 @@ void Engine::ShapeModule::Initialize()
 			}
 		};
 
-		Managers::ResourceManager::GetInstance().OpenLoadDialog<Resources::Shape>(managing_flag, {}, load_callback, {});
+		UIHelpers::OpenLoadDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 	});
 }
 

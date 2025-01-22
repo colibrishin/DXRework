@@ -7,6 +7,7 @@
 #include "Serialization.hpp"
 
 #include "ResourceManager.generated.h"
+#include "UIHelpers.h"
 
 namespace Engine::Managers
 {
@@ -112,137 +113,20 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
 #if WITH_EDITOR
-		using ManagedBooleanSignature = std::function<void(bool&)>;
-		using NewResourceSignature = std::function<void()>;
-
-		void RegisterLoadResource(const std::string_view name, const ManagedBooleanSignature& functor);
+		void RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor);
 		void UnregisterLoadResource(const std::string_view name);
-		void RegisterNewResource(const std::string_view name, const ManagedBooleanSignature& functor);
+		auto RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor) -> void;
 		void UnregisterNewResource(const std::string_view name);
 
 		[[nodiscard]] bool RequestAddResourceDialog();
 		void EndAddResourceDialog();
 		[[nodiscard]] bool TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load);
-
-		using UICallbackSignature = std::function<void(UIContext* const)>;
-		using NameAndPathConfirmCallbackSignature = std::function<void(const std::string&, const std::string&)>;
-		using UICleanupCallbackSignature = std::function<void()>;
-
-		// todo: refactoring, possible shared usage.
-		template <bool UseName, bool UsePath>
-		bool NamePathDialogTemplate(
-			bool& flag, 
-			const std::string_view title,
-			const std::string_view confirm_button_label,
-			const UICallbackSignature& ui_callback,
-			const NameAndPathConfirmCallbackSignature& confirm_callback,
-			const UICleanupCallbackSignature& cleanup_callback)
-		{
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-
-			static bool pressed = false;
-			static std::string name{};
-			static std::string path{};
-
-			if (UIContext context = UIInterface::NewContext(ui.NewDialog({ this, title, flag })))
-			{
-				if constexpr (UseName) 
-				{
-					context |= ui.NewLabelAndText({ "Name", name, true });
-				}
-				
-				if constexpr (UsePath) 
-				{
-					context |= ui.NewLabelAndText({ "Path", path, true });
-				}
-
-				if (ui_callback)
-				{
-					ui_callback(&context);
-				}
-
-				(context |= ui.NewButton({ confirm_button_label })).SetFunction([&]()
-					{
-						pressed = true;
-						flag = false;
-					});
-
-				(context |= ui.NewButton({ "Cancel" })).SetFunction([&]()
-					{
-						flag = false;
-					});
-			}
-
-			if (pressed)
-			{
-				if (confirm_callback)
-				{
-					confirm_callback(name, path);
-				}
-				if (cleanup_callback) 
-				{
-					cleanup_callback();
-				}
-				name = {};
-				path = {};
-				flag = false;
-				pressed = false;
-				return false;
-			}
-
-			if (!flag)
-			{
-				if (cleanup_callback)
-				{
-					cleanup_callback();
-				}
-				name = {};
-				path = {};
-				return false;
-			}
-
-			return true;
-		}
-
-		template <typename T>
-		bool OpenLoadDialog(bool& flag, 
-			const UICallbackSignature& ui_callback, 
-			const NameAndPathConfirmCallbackSignature& load_callback,
-			const UICleanupCallbackSignature& cleanup_callback)
-		{
-			static std::string title = "Load ";
-			static std::once_flag initialized;
-			std::call_once(initialized, []()
-				{
-					title += T::StaticTypeName();
-				});
-
-			return NamePathDialogTemplate<false, true>(flag, title, "Load", ui_callback, load_callback, cleanup_callback);
-		}
-
-		template <typename T>
-		bool OpenNewDialog(bool& flag,
-			const UICallbackSignature& ui_callback,
-			const NameAndPathConfirmCallbackSignature& load_callback,
-			const UICleanupCallbackSignature& cleanup_callback)
-		{
-			static std::string title = "New ";
-			static std::once_flag initialized;
-			std::call_once(initialized, []()
-				{
-					title += T::StaticTypeName();
-				});
-
-			return NamePathDialogTemplate<true, true>(flag, title, "Confirm", ui_callback, load_callback, cleanup_callback);
-		}
-
+		
 	private:
 		bool m_b_ui_add_resource_ = false;
-		
-		std::unordered_map<std::string_view, ManagedBooleanSignature> m_ui_load_functions_;
-		std::unordered_map<std::string_view, bool> m_ui_load_functions_managing_;
-		std::unordered_map<std::string_view, ManagedBooleanSignature> m_ui_new_functions_;
-		std::unordered_map<std::string_view, bool> m_ui_new_functions_managing_;
+
+		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_load_functions_;
+		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_new_functions_;
 #endif
 	private:
 		ResourceManager() = default;
