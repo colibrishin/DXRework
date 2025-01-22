@@ -154,8 +154,6 @@ fn main()
         return;
     }
 
-    //acquire_lock();
-
     let intermediate_path = engine_dir.join("Intermediate").join("HeaderParser");
     check_git(&git_dir, &intermediate_path);
     copy_headers(&intermediate_path, &project_name, &project_dir);
