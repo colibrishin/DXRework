@@ -99,7 +99,6 @@ namespace Engine::Resources
 		MetadataPath m_animations_path_;
 		EPROPERTY()
 		MetadataPath m_tr_animation_path_;
-
 		EPROPERTY()
 		BoundingBox m_bounding_box_;
 		EPROPERTY()
@@ -114,13 +113,12 @@ namespace Engine::Resources
 		inline static Assimp::Importer s_importer_;
 		
 		StrongMeshMaterialVector m_meshes_;
-
-		WeakMeshMaterialVector m_cached_meshes_;
-
 		Strong<AnimationTexture> m_animations_;
-
 		Strong<BaseAnimation> m_tr_animation_;
 
+		WeakMeshMaterialVector m_cached_meshes_;
+		Weak<AnimationTexture> m_cached_animations_;
+		Weak<BaseAnimation> m_tr_animations_;
 		aligned_vector<VertexElement> m_cached_vertices_;
 	};
 }

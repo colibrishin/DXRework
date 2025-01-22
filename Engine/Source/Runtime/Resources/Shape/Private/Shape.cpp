@@ -52,9 +52,9 @@ namespace Engine::Resources
 					}
 				} });
 
-			for (size_t i = 0; i < m_meshes_.size(); ++i)
+			for (size_t i = 0; i < m_cached_meshes_.size(); ++i)
 			{
-				const auto& mesh = m_meshes_[i].first;
+				const auto& mesh = m_cached_meshes_[i].first.lock();
 
 				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened});
 				(*parent |= ui.NewButton({ "Edit Material" })).SetFunction([i, this]()
@@ -65,29 +65,30 @@ namespace Engine::Resources
 
 				if (mesh->m_ui_info_.dialogOpened)
 				{
-					if (UIContext context = ui.NewContext(ui.NewDialog({ mesh.get(), mesh->GetName(), mesh->m_ui_info_.dialogOpened })))
+					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ mesh.get(), mesh->GetName(), mesh->m_ui_info_.dialogOpened })))
 					{
 						mesh->OnUIUpdate(&context, dt);
 					}
 				}
 			}
 
-			for (auto it = m_meshes_.begin(); it != m_meshes_.end(); ++it)
+			for (auto it = m_cached_meshes_.begin(); it != m_cached_meshes_.end(); ++it)
 			{
 				const auto& mesh = it->first;
-				const size_t idx = std::distance(m_meshes_.begin(), it);
+				const size_t idx = std::distance(m_cached_meshes_.begin(), it);
 
-				if (m_ui_material_add_opened_[idx])
+				if (const auto& locked = mesh.lock();
+					m_ui_material_add_opened_[idx] && locked)
 				{
 					if (Weak<Resource> resources_to_load;
-						UIHelpers::SingleResourceSelectionDialogInclusion<Shape, Material>(mesh->GetSharedPtr<Entity>(), resources_to_load))
+						UIHelpers::SingleResourceSelectionDialogInclusion<Shape, Material>(locked->GetSharedPtr<Entity>(), resources_to_load))
 					{
 						if (const Strong<Resource>& res = resources_to_load.lock())
 						{
 							SetMaterial(idx, res->GetSharedPtr<Material>());
 						}
 
-						m_ui_material_add_opened_[std::distance(m_meshes_.begin(), it)] = false;
+						m_ui_material_add_opened_[std::distance(m_cached_meshes_.begin(), it)] = false;
 					}
 				}
 			}
@@ -655,10 +656,8 @@ namespace Engine::Resources
 	void Shape::Unload_INTERNAL()
 	{
 		m_meshes_.clear();
-		m_animation_catalog_.clear();
-		m_bone_bounding_boxes_.clear();
-		m_cached_vertices_.clear();
-		m_bounding_box_ = {};
+		m_animations_.reset();
+		m_tr_animation_.reset();
 	}
 
 	Shape::Shape()
@@ -680,11 +679,10 @@ namespace Engine::Resources
 			const BoundingOrientedBox& obb = mesh->GetBoundingBox();
 			BoundingBox::CreateMerged(m_bounding_box_, m_bounding_box_, reinterpret_cast<const BoundingBox&>(obb));
 		}
-
-		m_cached_meshes_.push_back({res, {}});
-		m_material_paths_.push_back({});
+		
 		if (add_path)
 		{
+			m_material_paths_.push_back({});
 			m_mesh_paths_.push_back(res->GetMetadataPath());
 		}
 		UpdateVertices();
@@ -694,9 +692,9 @@ namespace Engine::Resources
 	{
 		m_animations_      = res;
 		m_animations_path_ = res->GetMetadataPath();
+		
 		m_animation_catalog_.clear();
 		m_animation_catalog_.reserve(m_animations_->GetAnimations().size());
-
 		for (const auto& animation : m_animations_->GetAnimations())
 		{
 			if (const Strong<BoneAnimation>& locked = animation.lock())

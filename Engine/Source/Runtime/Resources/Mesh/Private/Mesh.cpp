@@ -10,12 +10,9 @@
 
 #include <algorithm>
 #include <execution>
-#include <directxtk12/BufferHelpers.h>
-
 #include "Components/Collider/Public/Collider.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 
 namespace Engine::Resources

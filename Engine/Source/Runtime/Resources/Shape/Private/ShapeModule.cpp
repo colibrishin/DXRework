@@ -43,7 +43,7 @@ void Engine::ShapeModule::Initialize()
 				{
 					if (std::filesystem::exists(path))
 					{
-						Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Engine::Resources::Shape>(path);
+						Managers::ResourceManager::GetInstance().GetResourceByMetadataPath<Resources::Shape>(path);
 					}
 				}
 			}

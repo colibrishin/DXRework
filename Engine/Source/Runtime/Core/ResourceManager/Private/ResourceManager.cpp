@@ -301,7 +301,7 @@ namespace Engine::Managers
 		
 		for (const auto& [res_type, resources] : m_resources_)
 		{
-			if (type == res_type || res_type->IsBaseOf(type))
+			if (type == res_type || type->IsBaseOf(res_type))
 			{
 				const auto& it = std::ranges::find_if
 				(
