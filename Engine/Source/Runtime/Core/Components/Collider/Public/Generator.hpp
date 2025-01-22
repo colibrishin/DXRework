@@ -308,6 +308,7 @@ namespace Engine
 		{
 			std::array<Graphics::VertexElement, 24> collection;
 
+			size_t vertex_count = 0;
 			for (size_t i = 0; i < faceCount; ++i)
 			{
 				const Vector3 normal = normals[i];
