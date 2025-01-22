@@ -207,7 +207,10 @@ void Engine::ParticleRendererModule::Initialize()
 {
 	Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
 	{
-		return boost::make_shared<Components::ParticleRenderer>(owner);
+		if (const Strong<Abstracts::ObjectBase>& locked = owner.lock())
+		{
+			locked->AddComponent<Components::ParticleRenderer>();
+		}
 	});
 }
 

@@ -93,7 +93,10 @@ void Engine::ModelRendererModule::Initialize()
 {
 	Abstracts::ObjectBase::RegisterComponentFactory("ModelRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
 	{
-		return boost::make_shared<Components::ModelRenderer>(owner);
+		if (const Strong<Abstracts::ObjectBase>& locked = owner.lock())
+		{
+			locked->AddComponent<Components::ModelRenderer>();
+		}
 	});
 }
 

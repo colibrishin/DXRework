@@ -264,7 +264,8 @@ namespace Engine::Abstracts
 		// Non-serialized
 #if WITH_EDITOR
 	public:
-		using ComponentFactorySignature = std::function<Strong<Component>(const Weak<ObjectBase>& owner)>;
+		using ComponentFactorySignature = std::function<void(const Weak<ObjectBase>& owner)>;
+
 		static void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
 		static void UnregisterComponentFactory(std::string_view name);
 		void UpdateUIText();

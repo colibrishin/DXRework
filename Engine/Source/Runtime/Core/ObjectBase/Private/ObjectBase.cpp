@@ -729,9 +729,9 @@ namespace Engine::Abstracts
 							for (const auto& [name, predicate] : m_component_add_map_)
 							{
 								(add_com_context |= ui.NewButton({ name })).SetFunction([&]()
-									{
-										addComponent(predicate(GetSharedPtr<ObjectBase>()));
-									});
+								{
+									predicate(GetSharedPtr<ObjectBase>());
+								});
 							}
 						};
 					}

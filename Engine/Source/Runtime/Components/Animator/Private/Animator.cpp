@@ -149,7 +149,10 @@ void Engine::AnimatorModule::Initialize()
 {
 	Abstracts::ObjectBase::RegisterComponentFactory("Animator", [](const Weak<Abstracts::ObjectBase>& owner)
 	{
-		return boost::make_shared<Components::Animator>(owner);
+		if (const Strong<Abstracts::ObjectBase>& locked = owner.lock()) 
+		{
+			locked->AddComponent<Components::Animator>();
+		}
 	});
 }
 
