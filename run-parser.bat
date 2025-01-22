@@ -5,8 +5,6 @@ echo Given project directory is %2
 echo Given root directory is %1
 cd /d %1
 
-set "gitdir=
-
 if not exist Intermediate\HeaderParser\ (
 echo Intermediate header directory not found... Generating...
 mkdir Intermediate\HeaderParser
