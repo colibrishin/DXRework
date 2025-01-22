@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <directxtk12/SimpleMath.h>
+#include <DirectXMath.h>
 
 using Vector2 = DirectX::SimpleMath::Vector2;
 using Vector3 = DirectX::SimpleMath::Vector3;
@@ -56,6 +57,15 @@ namespace Engine
 	using DirectX::XMFLOAT2;
 	using DirectX::XMFLOAT3X3;
 	using DirectX::XMVECTORF32;
+
+	using DirectX::CommonStates;
+	using DirectX::GeometricPrimitive;
+	using DirectX::Keyboard;
+	using DirectX::Mouse;
+	using DirectX::SpriteBatch;
+	using DirectX::SpriteFont;
+	using DirectX::VertexPositionColor;
+	using DirectX::BasicEffect;
 
 	struct CommandPair;
 	struct DescriptorHandler;
@@ -119,6 +129,8 @@ namespace Engine
 			struct MaterialSB;
 		} // namespace SBs
 	} // namespace Graphic
+
+	using VertexCollection = std::vector<Graphics::VertexElement>;
 
 	namespace Resources
 	{

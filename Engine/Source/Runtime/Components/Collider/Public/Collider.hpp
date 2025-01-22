@@ -3,9 +3,9 @@
 #include <set>
 
 #include "Source/Runtime/Abstracts/CoreComponent/Public/Component.h"
-#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/GenericBounding/Public/GenericBounding.hpp"
+#include "Source/Runtime/TypeLibrary/Public/TypeLibrary.h"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -163,7 +163,7 @@ namespace Engine::Components
 		XMFLOAT3X3 m_inertia_tensor_;
 		Matrix     m_local_matrix_;
 
-		WeakModel m_shape_;
+		Weak<Resources::Shape> m_shape_;
 
 #ifdef PHYSX_ENABLED
 	private:
