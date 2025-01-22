@@ -73,7 +73,9 @@ namespace Engine::Managers
 
 	void ImGuiManager::PreUpdate(const float dt) {}
 
-	void ImGuiManager::PreRender(const float dt)
+	void ImGuiManager::PreRender(const float dt) {}
+
+	void ImGuiManager::Render(const float dt)
 	{
 #if WITH_EDITOR
 		ImGui::Render();
@@ -100,8 +102,6 @@ namespace Engine::Managers
 		primitive.commandList->FlagReady();
 #endif
 	}
-
-	void ImGuiManager::Render(const float dt) {}
 
 	void ImGuiManager::PostRender(const float dt) {}
 
@@ -354,6 +354,31 @@ bool Engine::ImGuiDragAndDropSourceToken::DoImpl(
 		ImGui::Text(label.data());
 	}
 
+	return ret;
+}
+
+void Engine::ImGuiLabelAndUInt16Token::End() const
+{
+}
+
+bool Engine::ImGuiLabelAndUInt16Token::DoImpl(
+	const std::string_view label, unsigned short& value, float speed, unsigned short min , unsigned short max, bool editable
+) const
+{
+	const std::string& temp_label = LabelSuffix(label);
+	AlignText(label);
+	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U16, &value, speed, &min, &max, nullptr, !editable ? ImGuiSliderFlags_NoInput : ImGuiInputTextFlags_None);
+}
+
+void Engine::ImGuiComboboxUInt8Token::End() const {}
+
+bool Engine::ImGuiComboboxUInt8Token::DoImpl(
+	const std::string_view label, unsigned char* value, const char* const* label_arr, const unsigned long long arr_size
+) const
+{
+	int intermediate = *value;
+	const bool ret = ImGui::Combo(label.data(), &intermediate, label_arr, arr_size);
+	*value = intermediate;
 	return ret;
 }
 

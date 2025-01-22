@@ -151,12 +151,76 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
 #if WITH_EDITOR
+		using LoadResourceSignature = std::function<void(bool&)>;
+
+		void RegisterLoadResource(const std::string_view name, const LoadResourceSignature& functor);
+		void UnregisterLoadResource(const std::string_view name);
+
 		[[nodiscard]] bool RequestAddResourceDialog();
 		void EndAddResourceDialog();
 		[[nodiscard]] bool TryAddResourceDialog(std::vector<Strong<Abstracts::Resource>>& resource_to_load);
 
+		template <typename T>
+		bool OpenNewSimpleDialog(bool& flag, const std::function<void(UIContext* const)>& ui_callback, const std::function<void(const std::string&, const std::string&)>& load_callback)
+		{
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			std::string label = "New ";
+			label += T::StaticTypeName();
+
+			static bool pressed = false;
+			static std::string name{};
+			static std::string path{};
+
+			if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, label, flag})))
+			{
+				context |= ui.NewLabelAndText({"Name", name, true});
+				context |= ui.NewLabelAndText({"Path", path, true});
+
+				if (ui_callback)
+				{
+					ui_callback(&context);
+				}
+
+				(context |= ui.NewButton({"Load"})).SetFunction([&]()
+				{
+					pressed = true;
+					flag = false;
+				});
+
+				(context |= ui.NewButton({"Cancel"})).SetFunction([&]()
+				{
+					flag = false;
+				});
+			}
+
+			if (pressed)
+			{
+				if (load_callback)
+				{
+					load_callback(name, path);
+				}
+				name = {};
+				path = {};
+				flag = false;
+				pressed = false;
+				return false;
+			}
+
+			if (!flag)
+			{
+				name = {};
+				path = {};
+				return false;
+			}
+
+			return true;
+		}
+
 	private:
 		bool m_b_ui_add_resource_ = false;
+		
+		std::unordered_map<std::string_view, LoadResourceSignature> m_ui_load_functions_;
+		std::unordered_map<std::string_view, bool> m_ui_load_functions_managing_;
 #endif
 	private:
 		friend struct SingletonDeleter;

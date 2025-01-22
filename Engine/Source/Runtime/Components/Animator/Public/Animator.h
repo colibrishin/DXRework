@@ -1,8 +1,28 @@
 #pragma once
+#include "ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
 POLYMORPHIC_TYPE_MAP(Engine::Components::Animator, Engine::Abstracts::Component)
+
+namespace Engine
+{
+	struct AnimatorModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::AnimatorModule, Engine::IModule)
+
+namespace Engine
+{
+	struct AnimatorModule : public IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(AnimatorModule)
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
 
 namespace Engine::Components
 {

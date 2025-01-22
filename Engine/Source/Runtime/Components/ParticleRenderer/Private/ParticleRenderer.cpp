@@ -1,5 +1,7 @@
 #include "../Public/ParticleRenderer.h"
 
+#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
 
@@ -197,4 +199,24 @@ Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
 bool& Engine::Graphics::SBs::InstanceParticleSB::GetActive()
 {
 	return reinterpret_cast<bool&>(GetParam<int>(0));
+}
+
+MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)
+
+void Engine::ParticleRendererModule::Initialize()
+{
+	Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
+	{
+		return boost::make_shared<Components::ParticleRenderer>(owner);
+	});
+}
+
+void Engine::ParticleRendererModule::Shutdown()
+{
+	Abstracts::ObjectBase::UnregisterComponentFactory("ParticleRenderer");
+}
+
+bool Engine::ParticleRendererModule::DynamicLoadable()
+{
+	return true;
 }

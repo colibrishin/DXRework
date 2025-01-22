@@ -10,6 +10,7 @@ namespace Engine::Managers
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
 		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Resource Manager", m_ui_info_.dialogOpened})))
 		{
 			for (const auto& set : m_resources_ | std::views::values)
@@ -37,6 +38,29 @@ namespace Engine::Managers
 				}
 
 				--context;
+			}
+		}
+
+		if (UIContext menu_context = UIInterface::NewContext(ui.NewMainMenuBar({})))
+		{
+			menu_context += ui.NewMenu({"Load"});
+
+			for (const auto& name : m_ui_load_functions_ | std::views::keys)
+			{
+				(menu_context |= ui.NewMenuItem({name})).SetFunction([&]()
+				{
+					m_ui_load_functions_managing_[name] = true;
+				});
+			}
+
+			--menu_context;
+		}
+
+		for (auto& [name, flag] : m_ui_load_functions_managing_)
+		{
+			if (flag)
+			{
+				m_ui_load_functions_[name](flag);
 			}
 		}
 	}
@@ -151,6 +175,22 @@ namespace Engine::Managers
 	}
 
 #if WITH_EDITOR
+	void ResourceManager::RegisterLoadResource(const std::string_view name, const LoadResourceSignature& functor)
+	{
+		if (!m_ui_load_functions_.contains(name))
+		{
+			m_ui_load_functions_.emplace(name, functor);
+		}
+	}
+
+	void ResourceManager::UnregisterLoadResource(const std::string_view name)
+	{
+		if (m_ui_load_functions_.contains(name))
+		{
+			m_ui_load_functions_.erase(name);
+		}
+	}
+
 	bool ResourceManager::RequestAddResourceDialog()
 	{
 		if (m_b_ui_add_resource_)

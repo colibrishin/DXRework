@@ -12,6 +12,7 @@
     "directxtex",
     "pugixml",
     "tbb",
-    "tinyobjloader"
+    "tinyobjloader",
+    "magic-enum"
   ]
 }

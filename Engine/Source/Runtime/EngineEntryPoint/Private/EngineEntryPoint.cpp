@@ -48,6 +48,10 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"ImGuiManager");
 		ModuleManager::GetInstance().LoadModule(L"PhysicsManager");
 		ModuleManager::GetInstance().LoadModule(L"Material");
+		ModuleManager::GetInstance().LoadModule(L"Animator");
+		ModuleManager::GetInstance().LoadModule(L"ModelRenderer");
+		ModuleManager::GetInstance().LoadModule(L"ParticleRenderer");
+		ModuleManager::GetInstance().LoadModule(L"Texture2D");
 	}
 
 	void EngineEntryPoint::Tick()

@@ -1,4 +1,7 @@
 #include "../Public/Animator.h"
+
+#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 
@@ -138,4 +141,24 @@ namespace Engine::Components
 			tr->SetAnimationScale(Vector3::One);
 		}
 	}
+}
+
+MODULE_IMPL(Engine::AnimatorModule, Animator)
+
+void Engine::AnimatorModule::Initialize()
+{
+	Abstracts::ObjectBase::RegisterComponentFactory("Animator", [](const Weak<Abstracts::ObjectBase>& owner)
+	{
+		return boost::make_shared<Components::Animator>(owner);
+	});
+}
+
+void Engine::AnimatorModule::Shutdown()
+{
+	Abstracts::ObjectBase::UnregisterComponentFactory("Animator");
+}
+
+bool Engine::AnimatorModule::DynamicLoadable()
+{
+	return true;
 }

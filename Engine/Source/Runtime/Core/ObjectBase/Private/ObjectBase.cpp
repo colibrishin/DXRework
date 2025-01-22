@@ -12,6 +12,8 @@
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #endif
 
+std::unordered_map<std::string_view, Engine::Abstracts::ObjectBase::ComponentFactorySignature> Engine::Abstracts::ObjectBase::m_component_add_map_ {};
+
 namespace Engine::Abstracts
 {
 	void ObjectBase::SetName(const EntityName& name)
@@ -728,7 +730,7 @@ namespace Engine::Abstracts
 							{
 								(add_com_context |= ui.NewButton({ name })).SetFunction([&]()
 									{
-										addComponent(predicate());
+										addComponent(predicate(GetSharedPtr<ObjectBase>()));
 									});
 							}
 						};

@@ -27,6 +27,24 @@ namespace Engine
 
 POLYMORPHIC_TYPE_MAP(Engine::Components::ParticleRenderer, Engine::Components::RenderComponent)
 
+namespace Engine
+{
+	struct ParticleRendererModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::ParticleRendererModule, Engine::IModule);
+
+namespace Engine
+{
+	struct ParticleRendererModule : public Engine::IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(ParticleRendererModule)
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
+
 namespace Engine::Components
 {
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent

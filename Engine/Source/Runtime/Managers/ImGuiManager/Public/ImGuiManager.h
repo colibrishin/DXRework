@@ -201,6 +201,29 @@ namespace Engine
 	    [[nodiscard]] bool DoImpl(const std::string_view, const std::string_view, const void*, unsigned long long) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndUInt16Token : LabelAndUInt16Token
+    {
+        using LabelAndUInt16Token::LabelAndUInt16Token;
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(
+		    const std::string_view, unsigned short&, float, unsigned short, unsigned short, bool
+	    ) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiComboboxUInt8Token : ComboboxUInt8Token
+    {
+        using ComboboxUInt8Token::ComboboxUInt8Token;
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(
+		    const std::string_view, unsigned char*, const char* const*, const unsigned long long
+	    ) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -229,6 +252,8 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(LabelAndVec4)
         IMGUI_INLINE_GETTER_DECL(DragAndDropSource)
         IMGUI_INLINE_GETTER_DECL(DragAndDropTarget)
+        IMGUI_INLINE_GETTER_DECL(LabelAndUInt16)
+        IMGUI_INLINE_GETTER_DECL(ComboboxUInt8)
 
         void               NewFrame() override;
     };

@@ -138,6 +138,7 @@ namespace Engine
     NEW_TOKEN_DECL(Selectable, const std::string_view, bool&)
     NEW_TOKEN_DECL(Checkbox, const std::string_view, bool&)
     NEW_TOKEN_DECL(Combobox, const std::string_view, int*, const char* const*, const size_t)
+    NEW_TOKEN_DECL(ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t)
 
     template <typename Numerical>
     struct ENGINE_COREUI_API LabelAndNumericalToken : UIToken<const std::string_view, Numerical&, float, Numerical, Numerical, bool>
@@ -154,6 +155,7 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(Int, int)
     NEW_LABEL_NUMERICAL_DECL(Float, float)
     NEW_LABEL_NUMERICAL_DECL(UInt, uint32_t)
+    NEW_LABEL_NUMERICAL_DECL(UInt16, uint16_t)
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
@@ -286,26 +288,28 @@ namespace Engine
             return UIContext(root);
         }
 
-        TOKEN_PURE_GETTER_DECL(MainMenuBar);
-        TOKEN_PURE_GETTER_DECL(Menu);
-        TOKEN_PURE_GETTER_DECL(MenuItem);
-        TOKEN_PURE_GETTER_DECL(Dialog);
-        TOKEN_PURE_GETTER_DECL(Button);
-        TOKEN_PURE_GETTER_DECL(LabelAndText);
-        TOKEN_PURE_GETTER_DECL(LabelAndFloat);
-        TOKEN_PURE_GETTER_DECL(LabelAndInt);
-        TOKEN_PURE_GETTER_DECL(LabelAndUInt);
-        TOKEN_PURE_GETTER_DECL(LabelAndULLD);
-        TOKEN_PURE_GETTER_DECL(LabelAndPath);
-        TOKEN_PURE_GETTER_DECL(ListBox);
-        TOKEN_PURE_GETTER_DECL(TreeNode);
-        TOKEN_PURE_GETTER_DECL(Selectable);
-        TOKEN_PURE_GETTER_DECL(LabelAndVec3);
-        TOKEN_PURE_GETTER_DECL(Checkbox);
-        TOKEN_PURE_GETTER_DECL(Combobox);
-        TOKEN_PURE_GETTER_DECL(LabelAndVec4);
+        TOKEN_PURE_GETTER_DECL(MainMenuBar)
+        TOKEN_PURE_GETTER_DECL(Menu)
+        TOKEN_PURE_GETTER_DECL(MenuItem)
+        TOKEN_PURE_GETTER_DECL(Dialog)
+        TOKEN_PURE_GETTER_DECL(Button)
+        TOKEN_PURE_GETTER_DECL(LabelAndText)
+        TOKEN_PURE_GETTER_DECL(LabelAndFloat)
+        TOKEN_PURE_GETTER_DECL(LabelAndInt)
+        TOKEN_PURE_GETTER_DECL(LabelAndUInt)
+        TOKEN_PURE_GETTER_DECL(LabelAndUInt16)
+        TOKEN_PURE_GETTER_DECL(LabelAndULLD)
+        TOKEN_PURE_GETTER_DECL(LabelAndPath)
+        TOKEN_PURE_GETTER_DECL(ListBox)
+        TOKEN_PURE_GETTER_DECL(TreeNode)
+        TOKEN_PURE_GETTER_DECL(Selectable)
+        TOKEN_PURE_GETTER_DECL(LabelAndVec3)
+        TOKEN_PURE_GETTER_DECL(Checkbox)
+        TOKEN_PURE_GETTER_DECL(Combobox)
+        TOKEN_PURE_GETTER_DECL(LabelAndVec4)
         TOKEN_PURE_GETTER_DECL(DragAndDropSource)
         TOKEN_PURE_GETTER_DECL(DragAndDropTarget)
+        TOKEN_PURE_GETTER_DECL(ComboboxUInt8)
 
         virtual void NewFrame() = 0;
 

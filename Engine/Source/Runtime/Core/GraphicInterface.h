@@ -689,7 +689,7 @@ namespace Engine
 		eFormat				     Format = TEX_FORMAT_R32G32B32A32_FLOAT;
 		eResourceFlags			 Flags = RESOURCE_FLAG_NONE;
 		UINT16                   MipsLevel = 1;
-		eTextureLayout			 Layout = TEX_LAYOUT_64KB_STANDARD_SWIZZLE;
+		eTextureLayout			 Layout = TEX_LAYOUT_UNKNOWN;
 		SamplerDescription       SampleDesc = { .Count = 1, .Quality = 0 };
 		bool					 AsSRV = true;
 		bool					 AsRTV = false;

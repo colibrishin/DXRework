@@ -1,7 +1,27 @@
 #pragma once
+#include "ModuleManager/Public/IModule.h"
+
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
 POLYMORPHIC_TYPE_MAP(Engine::Resources::Texture2D, Engine::Resources::Texture)
+
+namespace Engine
+{
+	struct Texture2DModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::Texture2DModule, Engine::IModule);
+
+namespace Engine
+{
+	struct Texture2DModule : public Engine::IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(Texture2DModule)
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
 
 namespace Engine::Resources
 {
@@ -34,5 +54,10 @@ namespace Engine::Resources
 	private:
 		Texture2D()
 			: Texture("", TEX_TYPE_2D, {}) {}
+
+#if WITH_EDITOR
+		friend struct Texture2DModule;
+		static bool m_b_ui_load_dialog_;
+#endif
 	};
 } // namespace Engine::Resources

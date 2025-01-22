@@ -3,6 +3,24 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
+namespace Engine
+{
+	struct ModelRendererModule;
+}
+
+POLYMORPHIC_TYPE_MAP(Engine::ModelRendererModule, Engine::IModule);
+
+namespace Engine
+{
+	struct ModelRendererModule : public Engine::IModule
+	{
+		INLINE_COMPILE_TIME_TYPENAME(ModelRendererModule)
+		void             Initialize() override;
+		void             Shutdown() override;
+		bool             DynamicLoadable() override;
+	};
+}
+
 namespace Engine::Graphics::SBs
 {
 	struct ENGINE_MODELRENDERER_API InstanceModelSB : public InstanceSB

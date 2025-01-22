@@ -1,5 +1,7 @@
 #include "../Public/ModelRenderer.h"
 
+#include "ModuleManager/Public/ModuleManager.h"
+
 namespace Engine::Components
 {
 	COMP_CLONE_IMPL(ModelRenderer)
@@ -83,4 +85,24 @@ void Engine::Graphics::SBs::InstanceModelSB::SetRepeat(const bool repeat)
 void Engine::Graphics::SBs::InstanceModelSB::SetWorld(const Matrix& world)
 {
 	SetParam(0, world);
+}
+
+MODULE_IMPL(Engine::ModelRendererModule, ModelRenderer)
+
+void Engine::ModelRendererModule::Initialize()
+{
+	Abstracts::ObjectBase::RegisterComponentFactory("ModelRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
+	{
+		return boost::make_shared<Components::ModelRenderer>(owner);
+	});
+}
+
+void Engine::ModelRendererModule::Shutdown()
+{
+	Abstracts::ObjectBase::UnregisterComponentFactory("ModelRenderer");
+}
+
+bool Engine::ModelRendererModule::DynamicLoadable()
+{
+	return true;
 }

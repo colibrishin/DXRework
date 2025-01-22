@@ -72,8 +72,7 @@ namespace Engine::Abstracts
 
 			const auto thisObject = GetSharedPtr<ObjectBase>();
 
-			Strong<T> component =
-					boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
+			Strong<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 			component->Initialize();
 
 			addComponentImpl(component, type);
@@ -265,14 +264,14 @@ namespace Engine::Abstracts
 		// Non-serialized
 #if WITH_EDITOR
 	public:
-		using ComponentFactorySignature = std::function<Strong<Component>()>;
-		void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
-		void UnregisterComponentFactory(std::string_view name);
+		using ComponentFactorySignature = std::function<Strong<Component>(const Weak<ObjectBase>& owner)>;
+		static void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
+		static void UnregisterComponentFactory(std::string_view name);
 		void UpdateUIText();
 		void OnNameChanged();
 
 	private:
-		std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;
+		static std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;
 
 		bool m_b_add_component_dialog_opened_ = false;
 #endif
