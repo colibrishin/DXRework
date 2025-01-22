@@ -1,15 +1,15 @@
 #pragma once
 #include "Source/Runtime/Core/Component/Public/Component.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::Rigidbody, Engine::Abstracts::Component)
+#include "Rigidbody.generated.h"
 
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Rigidbody)
-
 		explicit Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object);
 		Rigidbody(const Rigidbody& other);
 
@@ -80,11 +80,19 @@ namespace Engine::Components
 	private:
 		COMP_CLONE_DECL
 
+		EPROPERTY()
 		bool m_b_no_angular_;
+		
+		EPROPERTY()
 		bool m_bGravityOverride;
+		
+		EPROPERTY()
 		bool m_bFixed;
+		
+		EPROPERTY()
 		bool m_b_lerp_;
 
+		EPROPERTY()
 		float m_friction_mu_;
 
 		Vector3 m_linear_velocity;

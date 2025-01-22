@@ -3,6 +3,8 @@
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
+#include "ParticleRenderer.generated.h"
+
 namespace Engine
 {
 	struct ParticleRendererExtension;
@@ -25,8 +27,6 @@ namespace Engine
 	using InstanceParticles = aligned_vector<Graphics::SBs::InstanceParticleSB>;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::ParticleRenderer, Engine::Components::RenderComponent)
-
 namespace Engine
 {
 	struct ParticleRendererModule;
@@ -47,11 +47,12 @@ namespace Engine
 
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ParticleRenderer)
-		// int
+		//int
 		constexpr static size_t particle_count_slot = 0;
 
 		// float
@@ -92,15 +93,19 @@ namespace Engine::Components
 		friend struct ParticleRendererExtension;
 		ParticleRenderer();
 
+		EPROPERTY()
 		bool m_b_follow_owner_;
 
+		EPROPERTY()
 		Graphics::SBs::LocalParamSB                                      m_params_;
 		Unique<StructuredBufferTypeProxy<Graphics::SBs::InstanceParticleSB>> m_sb_buffer_;
 
 		std::mutex        m_instances_mutex_;
 		InstanceParticles m_instances_;
 
-		std::string m_cs_meta_path_str_;
+		EPROPERTY()
+		std::filesystem::path m_cs_meta_path_;
+
 		// Note that we need to store in strong sense due to the gc by the resource manager.
 		Strong<Resources::ComputeShader> m_cs_;
 	};

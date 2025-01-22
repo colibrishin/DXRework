@@ -3,9 +3,6 @@
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
-SERIALIZE_IMPL(ENGINE_BONEANIMATION_API, Engine::Resources::BoneAnimation,
-	_BSTSUPER(BaseAnimation) _ARTAG(m_primitive_) _ARTAG(m_bone_path_))
-
 namespace Engine::Graphics
 {
 	struct BoneTransformElement;

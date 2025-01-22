@@ -2,6 +2,8 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
+#include "BaseAnimation.generated.h"
+
 namespace Engine::Graphics 
 {
 	struct ENGINE_BASEANIMATION_API BoneAnimationPrimitive
@@ -37,17 +39,15 @@ namespace Engine::Graphics
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::BaseAnimation, Engine::Abstracts::Resource)
-
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
+	ECLASS()
 	class ENGINE_BASEANIMATION_API BaseAnimation : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(BaseAnimation)
-
 		BaseAnimation(const BoneAnimationPrimitive& primitive);
 
 		void PreUpdate(const float dt) override;
@@ -78,9 +78,13 @@ namespace Engine::Resources
 
 		BaseAnimation();
 
+		EPROPERTY()
 		float m_ticks_per_second_;
+		
+		EPROPERTY()
 		float m_duration_;
 
+		EPROPERTY()
 		BoneAnimationPrimitive m_simple_primitive_;
 	};
 }

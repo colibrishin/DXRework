@@ -2,6 +2,8 @@
 #include <filesystem>
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
+#include "AtlasAnimation.generated.h"
+
 namespace Engine 
 {
 	struct ENGINE_ATLASANIMATION_API AtlasAnimationPrimitive
@@ -89,17 +91,15 @@ namespace Engine::Resources
 	class AtlasAnimation;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::AtlasAnimation, Engine::Resources::BaseAnimation)
-
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
+	ECLASS()
 	class ENGINE_ATLASANIMATION_API AtlasAnimation : public BaseAnimation
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(AtlasAnimation)
-
 		AtlasAnimation(const AtlasAnimationPrimitive& primitive);
 
 		void PreUpdate(const float dt) override;
@@ -121,15 +121,15 @@ namespace Engine::Resources
 		);
 
 	protected:
-		SERIALIZE_DECL
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
 
 		AtlasAnimation() = default;
 
-		std::string             m_xml_path_;
+		EPROPERTY()
+		std::filesystem::path m_xml_path_;
+		
+		EPROPERTY()
 		AtlasAnimationPrimitive m_primitive_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::AtlasAnimation)

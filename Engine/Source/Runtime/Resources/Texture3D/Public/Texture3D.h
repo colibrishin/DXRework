@@ -1,15 +1,15 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Texture3D, Engine::Resources::Texture)
+#include "Texture3D.generated.h"
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_TEXTURE3D_API Texture3D : public Texture
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Texture3D)
-
 		explicit Texture3D(const std::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_3D, description) {}
 
@@ -24,10 +24,7 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		Texture3D()
 			: Texture("", TEX_TYPE_3D, {}) {}
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture3D)

@@ -12,8 +12,6 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 
-SERIALIZE_IMPL(ENGINE_ANIMATOR_API, Engine::Components::Animator, _BSTSUPER(Component) _ARTAG(m_animation_id_) _ARTAG(m_current_frame_) _ARTAG(m_total_dt_))
-
 namespace Engine::Components
 {
 	COMP_CLONE_IMPL(Animator)

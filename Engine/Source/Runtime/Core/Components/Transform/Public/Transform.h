@@ -3,6 +3,8 @@
 #include "Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Core/Component/Public/Component.h"
 
+#include "Transform.generated.h"
+
 DEFINE_DELEGATE(OnTranfromChanged);
 
 namespace Engine
@@ -10,15 +12,14 @@ namespace Engine
 	inline static constexpr Vector3 g_forward = {0, 0, -1.f};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::Transform, Engine::Abstracts::Component)
-
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
-	public:
-		INLINE_COMPILE_TIME_TYPENAME(Transform)
+		GENERATE_BODY
 
+	public:
 		DelegateOnTranfromChanged onTransformChanged;
 
 		Transform(const Weak<Engine::Abstracts::ObjectBase>& owner);
@@ -85,20 +86,29 @@ namespace Engine::Components
 
 		COMP_CLONE_DECL
 
+		EPROPERTY()
 		bool       m_b_s_absolute_;
+		EPROPERTY()
 		bool       m_b_r_absolute_;
 		Vector3    m_previous_position_;
 		Vector3    m_world_previous_position_;
+		EPROPERTY()
 		Vector3    m_position_;
+		EPROPERTY()
 		Quaternion m_rotation_;
 #if WITH_EDITOR
 		Vector3    m_euler_rotation_;
 #endif
+		EPROPERTY()
 		Vector3    m_scale_;
 
+		EPROPERTY()
 		Vector3    m_animation_position_;
+		EPROPERTY()
 		Quaternion m_animation_rotation_;
+		EPROPERTY()
 		Vector3    m_animation_scale_;
+		EPROPERTY()
 		Matrix     m_animation_matrix_;
 	};
 } // namespace Engine::Components

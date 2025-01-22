@@ -1,15 +1,15 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::AnimationTexture, Engine::Resources::Texture3D)
+#include "AnimationTexture.generated.h"
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_ANIMATIONTEXTURE_API AnimationTexture : public Texture3D
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(AnimationTexture)
-
 		AnimationTexture(const std::vector<Strong<BoneAnimation>>& animations);
 
 		void PreUpdate(const float dt) override;
@@ -30,7 +30,6 @@ namespace Engine::Resources
 		void Load_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		AnimationTexture()
 			: Texture3D("", {}) {}
 
@@ -42,9 +41,9 @@ namespace Engine::Resources
 			const std::vector<Strong<BoneAnimation>>& anims, std::vector<std::vector<std::vector<Matrix>>>& preEvaluated
 		);
 
+		EPROPERTY()
 		std::vector<Strong<BoneAnimation>>            m_animations_;
+		
 		std::vector<std::vector<std::vector<Matrix>>> m_evaluated_animations_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::AnimationTexture)

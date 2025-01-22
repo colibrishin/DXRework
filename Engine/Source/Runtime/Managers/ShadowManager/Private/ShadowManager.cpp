@@ -6,7 +6,7 @@
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/Renderer.h"

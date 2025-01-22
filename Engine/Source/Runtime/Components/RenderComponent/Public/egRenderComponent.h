@@ -4,6 +4,8 @@
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 
+#include "egRenderComponent.generated.h"
+
 DEFINE_DELEGATE(OnMaterialChange, Engine::Weak<Engine::Resources::Material>)
 
 namespace Engine::Components
@@ -11,15 +13,13 @@ namespace Engine::Components
 	class RenderComponent;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::RenderComponent, Engine::Abstracts::Component)
-
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(RenderComponent)
-
 		DelegateOnMaterialChange onMaterialChange;
 
 		using Component::Component;
@@ -35,8 +35,10 @@ namespace Engine::Components
 	protected:
 		RenderComponent();
 
-	private:
-		Strong<Resources::Material> m_material_{};
+	private:		
+		EPROPERTY()
 		std::filesystem::path       m_mtr_meta_path_;
+
+		Strong<Resources::Material> m_material_{};
 	};
 }

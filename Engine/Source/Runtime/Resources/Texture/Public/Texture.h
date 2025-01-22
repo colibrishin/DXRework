@@ -3,14 +3,15 @@
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Texture, Engine::Abstracts::Resource)
+#include "Texture.generated.h"
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_TEXTURE_API Texture : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Texture)
 		explicit Texture(std::filesystem::path path, eTexType type, const GenericTextureDescription& description);
 		~Texture() override = default;
 
@@ -42,16 +43,15 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		friend struct Engine::PrimitiveTexture;
 		
 		Texture();
 		void UpdateDescription(const GenericTextureDescription& description);
 
+		EPROPERTY()
 		GenericTextureDescription m_desc_;
-		std::unique_ptr<PrimitiveTexture> m_primitive_texture_;
+		EPROPERTY()
 		eTexType m_type_;
+		std::unique_ptr<PrimitiveTexture> m_primitive_texture_;
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture)

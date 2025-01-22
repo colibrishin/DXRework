@@ -5,8 +5,6 @@
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
-SERIALIZE_IMPL(ENGINE_ANIMATIONTEXTURE_API, Engine::Resources::AnimationTexture, _BSTSUPER(Texture3D) _ARTAG(m_animations_))
-
 namespace Engine::Resources
 {
 	AnimationTexture::AnimationTexture(const std::vector<Strong<BoneAnimation>>& animations)

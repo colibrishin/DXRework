@@ -3,6 +3,8 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
+#include "ModelRenderer.generated.h"
+
 namespace Engine
 {
 	struct ModelRendererModule;
@@ -40,15 +42,13 @@ namespace Engine::Graphics::SBs
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::ModelRenderer, Engine::Components::RenderComponent)
-
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_MODELRENDERER_API ModelRenderer final : public RenderComponent
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ModelRenderer)
-
 		ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner);
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;

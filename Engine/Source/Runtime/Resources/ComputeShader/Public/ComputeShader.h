@@ -1,17 +1,18 @@
 #pragma once
 #include <array>
 
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::ComputeShader, Engine::Resources::Shader)
+#include "ComputeShader.generated.h"
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ComputeShader)
 		~ComputeShader() override = default;
 
 		std::array<uint32_t, 3> GetThread() const;
@@ -52,7 +53,10 @@ namespace Engine::Resources
 
 		ComputeShader();
 
+		EPROPERTY()
 		Unique<ComputePrimitiveShader> m_primitive_shader_;
+		
+		EPROPERTY()
 		std::array<uint32_t, 3> m_thread_;
 	};
 } // namespace Engine::Resources

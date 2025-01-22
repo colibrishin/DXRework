@@ -9,6 +9,8 @@
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
 
+#include "Shader.generated.h"
+
 namespace Engine
 {
 	struct ShaderModule;
@@ -32,15 +34,13 @@ namespace Engine
 	struct GraphicPrimitiveShader;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Shader, Engine::Abstracts::Resource)
-
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_SHADER_API Shader : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Shader)
-
 		Shader(
 			const EntityName&            name,
 			const std::filesystem::path& path,
@@ -102,17 +102,27 @@ namespace Engine::Resources
 	private:
 		Shader();
 
+		EPROPERTY()
 		eShaderDomain          m_domain_;
+		EPROPERTY()
 		eShaderDepths          m_depth_;
+		EPROPERTY()
 		eShaderRasterizers     m_rasterizer_;
+		EPROPERTY()
 		eSamplerFilter         m_sampler_filter_;
+		EPROPERTY()
 		eShaderSamplers        m_sampler_;
+		EPROPERTY()
 		std::vector<eFormat>   m_rtv_formats_;
+		EPROPERTY()
 		eFormat                m_dsv_format_;
+		EPROPERTY()
 		ePrimitiveTopology     m_topology_;
+		EPROPERTY()
 		ePrimitiveTopologyType m_topology_type_;
+		EPROPERTY()
 		eSampler               m_sampler_slot_;
-
+		EPROPERTY()
 		bool                                    m_depth_flag_;
 		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
 	};

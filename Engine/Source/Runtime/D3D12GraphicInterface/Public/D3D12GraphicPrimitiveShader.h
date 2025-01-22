@@ -3,7 +3,7 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
 namespace Engine

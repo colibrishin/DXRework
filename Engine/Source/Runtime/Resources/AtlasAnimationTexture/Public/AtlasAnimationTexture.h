@@ -2,20 +2,20 @@
 #include "Source/Runtime/Resources/Texture3D/Public/Texture3D.h"
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
+#include "AtlasAnimationTexture.generated.h"
+
 namespace Engine::Resources
 {
 	class AtlasAnimationTexture;
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::AtlasAnimationTexture, Engine::Resources::Texture3D);
-
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_ATLASANIMATIONTEXTURE_API AtlasAnimationTexture : public Texture3D
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(AtlasAnimationTexture)
-
 		AtlasAnimationTexture(const std::filesystem::path& path, const std::vector<Strong<Texture2D>>& atlases);
 
 		void PreUpdate(const float dt) override;
@@ -37,12 +37,10 @@ namespace Engine::Resources
 		void Map() override;
 
 	private:
-		SERIALIZE_DECL
 		AtlasAnimationTexture()
 			: Texture3D("", {}) {}
 
+		EPROPERTY()
 		std::vector<Strong<Texture2D>> m_atlases_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::AtlasAnimationTexture)

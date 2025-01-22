@@ -4,7 +4,7 @@
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Components::Animator, Engine::Abstracts::Component)
+#include "Animator.generated.h"
 
 namespace Engine
 {
@@ -26,11 +26,11 @@ namespace Engine
 
 namespace Engine::Components
 {
+	ECLASS()
 	class ENGINE_ANIMATOR_API Animator final : public Engine::Abstracts::Component
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Animator)
-
 		Animator(const Weak<Engine::Abstracts::ObjectBase>& owner);
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -47,7 +47,6 @@ namespace Engine::Components
 		float GetDt() const;
 
 	private:
-		SERIALIZE_DECL
 		COMP_CLONE_DECL
 		Animator();
 
@@ -69,10 +68,13 @@ namespace Engine::Components
 			m_current_frame_ = anim->ConvertDtToFrame(m_total_dt_, anim->GetTicksPerSecond());
 		}
 
+		EPROPERTY()
 		UINT  m_animation_id_;
+		
+		EPROPERTY()
 		float m_current_frame_;
+		
+		EPROPERTY()
 		float m_total_dt_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Components::Animator)

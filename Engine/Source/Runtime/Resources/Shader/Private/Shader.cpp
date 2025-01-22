@@ -1,4 +1,4 @@
-#include "../Public/Shader.hpp"
+#include "../Public/Shader.h"
 
 #include <ranges>
 

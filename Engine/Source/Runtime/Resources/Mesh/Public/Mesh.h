@@ -1,7 +1,8 @@
 #pragma once
 #include "GraphicInterface.h"
-
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
+
+#include "Mesh.generated.h"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -12,15 +13,13 @@ namespace physx
 }
 #endif
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Mesh, Engine::Abstracts::Resource)
-
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_MESH_API Mesh : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Mesh)
-
 		Mesh(const VertexCollection& shape, const IndexCollection& indices);
 		~Mesh() override;
 		void Initialize() override;
@@ -64,8 +63,13 @@ namespace Engine::Resources
 		);
 		void UpdateTangentBinormal();
 
+		EPROPERTY()
 		VertexCollection m_vertices_;
+		
+		EPROPERTY()
 		IndexCollection  m_indices_;
+		
+		EPROPERTY()
 		BoundingOrientedBox m_bounding_box_;
 
 		Unique<PrimitiveMesh> m_primitive_mesh_;

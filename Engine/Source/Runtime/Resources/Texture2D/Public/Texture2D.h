@@ -3,7 +3,7 @@
 
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Texture2D, Engine::Resources::Texture)
+#include "Texture2D.generated.h"
 
 namespace Engine
 {
@@ -25,11 +25,11 @@ namespace Engine
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_TEXTURE2D_API Texture2D : public Texture
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Texture2D)
-
 		explicit Texture2D(const std::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_2D, description) { }
 
@@ -52,7 +52,6 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		Texture2D()
 			: Texture("", TEX_TYPE_2D, {}) {}
 
@@ -62,5 +61,3 @@ namespace Engine::Resources
 #endif
 	};
 } // namespace Engine::Resources
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::Texture2D)

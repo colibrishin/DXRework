@@ -3,8 +3,6 @@
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
-SERIALIZE_IMPL(ENGINE_ATLASANIMATIONTEXTURE_API, Engine::Resources::AtlasAnimationTexture, _BSTSUPER(Texture3D) _ARTAG(m_atlases_))
-
 namespace Engine::Resources
 {
 	AtlasAnimationTexture::AtlasAnimationTexture(

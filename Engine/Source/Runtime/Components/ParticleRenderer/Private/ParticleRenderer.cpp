@@ -17,7 +17,7 @@ namespace Engine::Components
 		: RenderComponent(other)
 	{
 		m_cs_               = other.m_cs_;
-		m_cs_meta_path_str_ = other.m_cs_meta_path_str_;
+		m_cs_meta_path_ = other.m_cs_meta_path_;
 		m_instances_        = other.m_instances_;
 		m_b_follow_owner_   = other.m_b_follow_owner_;
 	}
@@ -28,7 +28,7 @@ namespace Engine::Components
 		{
 			RenderComponent::operator=(other);
 			m_cs_               = other.m_cs_;
-			m_cs_meta_path_str_ = other.m_cs_meta_path_str_;
+			m_cs_meta_path_ = other.m_cs_meta_path_;
 			m_instances_        = other.m_instances_;
 			m_b_follow_owner_   = other.m_b_follow_owner_;
 		}
@@ -98,7 +98,7 @@ namespace Engine::Components
 	{
 		RenderComponent::OnDeserialized();
 
-		if (const auto cs = Resources::ComputeShader::GetByMetadataPath(m_cs_meta_path_str_).lock())
+		if (const auto cs = Resources::ComputeShader::GetByMetadataPath(m_cs_meta_path_).lock())
 		{
 			m_cs_ = cs;
 		}
@@ -158,7 +158,7 @@ namespace Engine::Components
 		if (const auto shader = cs.lock())
 		{
 			m_cs_               = shader;
-			m_cs_meta_path_str_ = shader->GetMetadataPath().string();
+			m_cs_meta_path_ = shader->GetMetadataPath().string();
 		}
 	}
 }

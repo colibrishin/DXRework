@@ -1,17 +1,16 @@
 #pragma once
 #include <d3d12.h>
-
 #include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::ShadowTexture, Engine::Resources::Texture2D)
+#include "ShadowTexture.generated.h"
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_SHADOWTEXTURE_API ShadowTexture : public Texture2D
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(ShadowTexture)
-
 		ShadowTexture()
 			: Texture2D
 			(

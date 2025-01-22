@@ -1,13 +1,15 @@
 #pragma once
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 
+#include "Texture1D.generated.h"
+
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_TEXTURE1D_API Texture1D : public Texture
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Texture1D)
-
 		explicit Texture1D(const std::filesystem::path& path, const GenericTextureDescription& description)
 			: Texture(path, TEX_TYPE_1D, description) { }
 

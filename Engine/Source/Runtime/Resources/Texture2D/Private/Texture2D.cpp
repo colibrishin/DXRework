@@ -7,8 +7,6 @@
 
 bool Engine::Resources::Texture2D::m_b_ui_load_dialog_ = false;
 
-SERIALIZE_IMPL(ENGINE_TEXTURE2D_API, Engine::Resources::Texture2D, _BSTSUPER(Texture))
-
 namespace Engine::Resources
 {
 	Strong<Texture2D> Texture2D::Create(

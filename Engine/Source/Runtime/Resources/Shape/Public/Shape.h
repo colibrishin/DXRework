@@ -9,7 +9,7 @@
 #include "Source/Runtime/Resources/Bone/Public/Bone.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Shape, Engine::Abstracts::Resource)
+#include "Shape.generated.h"
 
 namespace Engine
 {
@@ -32,11 +32,11 @@ namespace Engine
 
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_SHAPE_API Shape : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Shape)
-
 		Shape(const std::filesystem::path& path);
 
 		void PreUpdate(const float dt) override;
@@ -111,12 +111,18 @@ namespace Engine::Resources
 
 		void UpdateVertices();
 
+		EPROPERTY()
 		std::vector<std::string>     m_animation_catalog_;
+		EPROPERTY()
 		std::vector<MetadataPathStr> m_mesh_paths_;
+		EPROPERTY()
 		MetadataPathStr              m_bone_path_;
+		EPROPERTY()
 		MetadataPathStr              m_animations_path_;
 
+		EPROPERTY()
 		BoundingBox                         m_bounding_box_;
+		EPROPERTY()
 		std::map<UINT, BoundingOrientedBox> m_bone_bounding_boxes_;
 
 		// non-serialized

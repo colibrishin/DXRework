@@ -9,7 +9,7 @@
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/AtlasAnimation/Public/AtlasAnimation.h"
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 

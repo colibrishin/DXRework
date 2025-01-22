@@ -2,12 +2,14 @@
 #include "Source/Runtime/Core/StructuredBuffer.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Resources/Shader/Public/Shader.h"
 
 #include <string>
 #include <map>
 
 #include "ModuleManager/Public/IModule.h"
+
+#include "Material.generated.h"
 
 namespace Engine
 {
@@ -55,15 +57,13 @@ namespace Engine::Graphics::SBs
 	};
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::Material, Engine::Abstracts::Resource)
-
 namespace Engine::Resources
 {
+	ECLASS()
 	class ENGINE_MATERIAL_API Material final : public Abstracts::Resource
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(Material)
-
 		Material(const std::filesystem::path& path);
 
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -147,6 +147,7 @@ namespace Engine::Resources
 	private:
 		Material();
 
+		EPROPERTY()
 		Graphics::SBs::MaterialSB m_material_sb_;
 
 #if WITH_EDITOR
@@ -157,7 +158,10 @@ namespace Engine::Resources
 		void ProcessAddUI();
 #endif
 
+		EPROPERTY()
 		std::vector<std::pair<EntityName, MetadataPathStr>>                         m_shader_paths_;
+		
+		EPROPERTY()
 		std::map<ResourceType, std::vector<std::pair<EntityName, MetadataPathStr>>> m_resource_paths_;
 
 		// non-serialized

@@ -2,6 +2,8 @@
 #include <map>
 #include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
 
+#include "BoneAnimation.generated.h"
+
 namespace Engine::Graphics 
 {
 	struct ENGINE_BONEANIMATION_API AnimationPrimitive
@@ -48,17 +50,15 @@ namespace Engine::Graphics
 	
 }
 
-POLYMORPHIC_TYPE_MAP(Engine::Resources::BoneAnimation, Engine::Resources::BaseAnimation)
-
 namespace Engine::Resources
 {
 	using namespace Graphics;
 
+	ECLASS()
 	class ENGINE_BONEANIMATION_API BoneAnimation : public BaseAnimation
 	{
+		GENERATE_BODY
 	public:
-		INLINE_COMPILE_TIME_TYPENAME(BoneAnimation)
-
 		BoneAnimation(const AnimationPrimitive& primitive);
 
 		void PreUpdate(const float dt) override;
@@ -81,10 +81,12 @@ namespace Engine::Resources
 		void Unload_INTERNAL() override;
 
 	private:
-		SERIALIZE_DECL
 		BoneAnimation();
 
+		EPROPERTY()
 		AnimationPrimitive m_primitive_;
+		
+		EPROPERTY()
 		MetadataPath       m_bone_path_;
 
 		// non-serialized
@@ -93,5 +95,3 @@ namespace Engine::Resources
 		std::vector<Matrix> m_evaluated_data_;
 	};
 }
-
-BOOST_CLASS_EXPORT_KEY(Engine::Resources::BoneAnimation)
