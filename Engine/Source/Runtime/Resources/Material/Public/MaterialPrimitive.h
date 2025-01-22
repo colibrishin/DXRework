@@ -32,7 +32,7 @@ namespace Engine::Graphics
         EPROPERTY()
         int RESERVED_texOffset = 0; // Should be defined by renderer
         EPROPERTY()
-        int texSlot[g_max_texture_per_material];
+        int texSlot[g_max_texture_per_material]{};
 
         void Apply(SBs::InstanceSB& instance) const;
     };

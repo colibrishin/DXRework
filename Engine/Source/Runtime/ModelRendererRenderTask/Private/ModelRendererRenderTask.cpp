@@ -36,7 +36,18 @@ namespace Engine
 	}
 
     ModelRendererRenderInstanceTask::ModelRendererRenderInstanceTask()
-        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()) {}
+        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()),
+          m_allocation_count_(0),
+          m_used_count_(0) {}
+
+    ModelRendererRenderInstanceTask::~ModelRendererRenderInstanceTask()
+    {
+        for (auto* ptr : m_instance_generated_)
+        {
+            m_instance_allocator_.destroy(ptr);
+            m_instance_allocator_.deallocate(ptr);
+        }
+    }
 
     void ModelRendererRenderInstanceTask::Run(
             Scene const* scene, 
@@ -152,31 +163,26 @@ namespace Engine
             domain_map.erase(Components::ModelRenderer::StaticTypeHash());
         }
 
-	    for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)
-        {
-            m_instance_allocator_.deallocate(instance);
-	        instance = nullptr;
-        }
+        m_used_count_ = 0;
     }
 
     Graphics::SBs::InstanceSB* ModelRendererRenderInstanceTask::GetInstance()
 	{
 	    SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
-	    Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
-	    const auto& it = std::ranges::find_if(m_instance_generated_, [&](const Graphics::SBs::InstanceSB* ptr)
+       
+        if (m_allocation_count_ > m_used_count_)
         {
-            return ptr == nullptr;
-        });
+            return m_instance_generated_[m_used_count_++];
+        }
 
-	    if (it == m_instance_generated_.end())
-	    {
-	        std::memset(generated, 0, sizeof(decltype(*generated)));
-	        m_instance_generated_.push_back(generated);
-	        return generated;
-	    }
-
-	    std::memset(generated, 0, sizeof(decltype(*generated)));
-	    *it = generated;
+        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
+        
+        std::memset(generated, 0, sizeof(decltype(*generated)));
+        m_instance_allocator_.construct(generated);
+        m_instance_generated_.push_back(generated);
+        
+        ++m_allocation_count_;
+        ++m_used_count_;
         return generated;
     }
 }

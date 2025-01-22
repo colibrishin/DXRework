@@ -9,6 +9,22 @@
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/align/aligned_allocator.hpp>
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define ALIGN(x) __attribute__ ((aligned(x)))
+#elif defined(_MSC_VER)
+#  define ALIGN(x) __declspec(align(x))
+#else
+#  error "Unknown compiler; can't define ALIGN"
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+#    define ALIGNOF(X) __alignof__(X)
+#elif defined(_MSC_VER)
+#    define ALIGNOF(X) __alignof(X)
+#else
+#  error "Unknown compiler; can't define ALIGNOF"
+#endif
+
 namespace Engine 
 {
 	constexpr uint64_t Align(uint64_t size, uint64_t alignment)

@@ -18,6 +18,7 @@ namespace Engine
     {
         INLINE_COMPILE_TIME_TYPENAME(ParticleRendererRenderInstanceTask)
 
+        ~ParticleRendererRenderInstanceTask();
         ParticleRendererRenderInstanceTask();
 
         void Run(
@@ -32,5 +33,7 @@ namespace Engine
         SpinLockTicket m_instance_ticket_;
         aligned_vector<Graphics::SBs::InstanceSB*> m_instance_generated_;
         u_fast_pool_allocator_single<Graphics::SBs::InstanceSB> m_instance_allocator_;
+        size_t m_allocation_count_{};
+        size_t m_used_count_{};
     };
 }

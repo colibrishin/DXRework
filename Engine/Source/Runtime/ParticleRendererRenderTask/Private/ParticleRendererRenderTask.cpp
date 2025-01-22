@@ -26,6 +26,15 @@ namespace Engine
 		return true;
 	}
 
+    ParticleRendererRenderInstanceTask::~ParticleRendererRenderInstanceTask()
+    {
+        for (auto* ptr : m_instance_generated_)
+        {
+            m_instance_allocator_.destroy(ptr);
+            m_instance_allocator_.deallocate(ptr);
+        }
+    }
+
     ParticleRendererRenderInstanceTask::ParticleRendererRenderInstanceTask() :
         m_instance_ticket_(SingletonSpinLock::GetInstance().Register())
     {}
@@ -137,29 +146,26 @@ namespace Engine
             domain_map.erase(Components::ParticleRenderer::StaticTypeHash());
         }
 
-        for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)
-        {
-            m_instance_allocator_.deallocate(instance);
-            instance = nullptr;
-        }
+        m_used_count_ = 0;
     }
 
     Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetInstance()
     {
         SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
-        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
-        const auto& it = std::ranges::find_if(m_instance_generated_, [&](const Graphics::SBs::InstanceSB* ptr)
-            {
-                return ptr == nullptr;
-            });
 
-        if (it == m_instance_generated_.end())
+        if (m_allocation_count_ > m_used_count_)
         {
-            m_instance_generated_.push_back(generated);
-            return generated;
+            return m_instance_generated_[m_used_count_++];
         }
 
-        *it = generated;
+        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
+
+        std::memset(generated, 0, sizeof(decltype(*generated)));
+        m_instance_allocator_.construct(generated);
+        m_instance_generated_.push_back(generated);
+
+        ++m_allocation_count_;
+        ++m_used_count_;
         return generated;
     }
 }
