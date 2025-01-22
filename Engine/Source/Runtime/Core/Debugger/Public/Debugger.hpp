@@ -27,17 +27,19 @@ namespace Engine
 		float y = 0.f;
 
 		std::string         text;
+		Color               color;
+
 		union
 		{
-			Color               color;
 			BoundingBox         aabb;
 			BoundingOrientedBox obb;
 			BoundingSphere      sphere;
 			BoundingFrustum     frustum;
 			Ray                 ray;
-			Vector3             ray_start;
-			Vector3				ray_end;
 		};
+
+		Vector3             ray_start;
+		Vector3				ray_end;
 	};
 		
 	using DebugCallback = std::function<void(const Message&)>;
