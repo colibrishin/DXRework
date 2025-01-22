@@ -114,15 +114,17 @@ jobs:
         key: ${{ runner.os }}-physx
 
     - name: Copy PhysX preset
+      if: steps.cache-physx.outputs.cache-hit != 'true'  
       working-directory: ${{env.SOLUTION_FILE_PATH}}
       run: Copy-Item -Path "vc17win64.xml" -Destination "Engine\Source\ThirdParty\PhysX\PhysX\physx\buildtools\presets\public" -Force
 
     - name: Generate project file for PhysX
+      if: steps.cache-physx.outputs.cache-hit != 'true'
       working-directory: ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX\physx
       run: Start-Process -FilePath "cmd.exe" -Wait -NoNewWindow -ArgumentList @("/C", "generate_projects.bat", "vc17win64");
 
     - name: Build PhysX
-      if: steps.cache-physx.outputs.cachie-hit != 'true'
+      if: steps.cache-physx.outputs.cache-hit != 'true'
       working-directory: ${{github.workspace}}
       run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}}Engine\Source\ThirdParty\PhysX\PhysX/physx/compiler/vc17win64/PhysXSDK.sln
 
