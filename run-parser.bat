@@ -11,8 +11,8 @@ mkdir Intermediate\HeaderParser
 mkdir Intermediate\HeaderParser\HeaderGenerated
 )
 
-echo Check other instances...
 :WAIT_LOCK
+echo Check other instances...
 if exist (lock) do goto WAIT_LOCK
 rem todo: PID를 저장하고 진행중인 배치파일이 살아있는지 한번 더 확인
 type nul > lock
@@ -29,13 +29,13 @@ popd
 pushd Intermediate\HeaderParser
 echo Copying header from %3...
 if not exist %2 (mkdir %2)
-for /r %3 %%f in (*.h) do %4\System32\robocopy %%~dpf %2 %%~nxf /xo
+for /r %3 %%f in (*.h) do %4\System32\xcopy %%f %2 /y /d
 
 echo Comparing header changes...
-%5\bin\sh.exe --login -c "git status --porcelain -uall | cut -c 1-3 --complement | egrep .h$ > target && git add . && git commit -m "header update""
+%5\bin\sh.exe --login -c "git status --porcelain -uall | cut -c 1-3 --complement | egrep .h$ > target && git add . && git commit -m "header-update""
 echo Parsing header of %2...
 for /f "tokens=*" %%a in (target) do (
-  "../../Programs/header-parser/Release/header-parser.exe" %%a -c ECLASS -e EENUM -f EFUNC -p EPROPERTY
+  "..\..\Programs\header-parser\Release\header-parser.exe" %%a -c ECLASS -e EENUM -f EFUNC -p EPROPERTY
 )
 popd
 
