@@ -1,9 +1,12 @@
+#include "StructuredBufferDX12.hpp"
+
 #include <directxtk12/Keyboard.h>
 
 #include "CommandPair.h"
 #include "Descriptors.h"
+#include "ThrowIfFailed.h"
 
-#include "../Public/StructuredBufferMemoryPoolDX12.hpp"
+#include "SIMDExtension/Public/SIMDExtension.hpp"
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 {
@@ -295,7 +298,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT 
 	auto        buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
 	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_interface.GetInterface().GetNativeInterface());
 
-	if constexpr (m_uav_)
+	if (m_uav_)
 	{
 		buffer_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}

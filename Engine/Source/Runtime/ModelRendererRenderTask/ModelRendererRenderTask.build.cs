@@ -22,6 +22,7 @@ public class ModelRendererRenderTask : CommonProject
         conf.AddPrivateDependency<ModelRenderer>(target);
         conf.AddPrivateDependency<BaseAnimation>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
+        conf.AddPrivateDependency<AtlasAnimation>(target);
         conf.AddPrivateDependency<Animator>(target);
     }
 }

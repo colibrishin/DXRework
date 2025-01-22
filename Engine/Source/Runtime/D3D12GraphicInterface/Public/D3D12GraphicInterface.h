@@ -2,10 +2,8 @@
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "CommandPair.h"
 
-#include <Windows.h>
 #include <wrl/client.h>
 #include <directx/d3d12.h>
-#include <directx/d3dx12.h>
 #include <dxgi1_5.h>
 
 namespace Engine 
@@ -40,22 +38,34 @@ namespace Engine
 		void* GetNativePipeline() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
+
+		CommandPairTask& GetCommandTask();
 		Strong<CommandListBase> GetCommandList(const int8_t type, const std::wstring_view debug_name) override;
 		Unique<GraphicHeapBase> GetHeap() override;
 
 		void SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport) override;
-		void SetDefaultPipeline(const GraphicInterfaceContextPrimitive* context) override;
-		void Draw(const GraphicInterfaceContextPrimitive* context, Resources::Shape* shape, const UINT instance_count) override;
-		void Draw(const GraphicInterfaceContextPrimitive* context, Resources::Mesh* mesh, const UINT instance_count) override;
-		void Bind(const GraphicInterfaceContextPrimitive* context, Resources::Shader* shader) override;
-		void Bind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) override;
-		void Unbind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type) override;
-		void Clear(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType clear_type) override;
+		void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) override;
+		void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) override;
+		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count) override;
+		void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count) override;
+		void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) override;
+		void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) override;
+		void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) override;
+		void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) override;
+		void Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) override;
+		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
+		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) override;
+		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
+		void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) override;
+		void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) override;
 		void ClearRenderTarget();
 		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const;
-
+		
+		Matrix GetProjectionMatrix() override;
+		Matrix GetOrthogonalMatrix() override;
+		
 	protected:
-		Unique<StructuredBufferTypelessBase>&& GetNativeStructuredBuffer() override;
+		StructuredBufferTypelessBase* GetNativeStructuredBuffer() override;
 		
 	private:
 		void InitializeDevice();
@@ -63,6 +73,8 @@ namespace Engine
 		void DetachCommandThread();
 		float GetAspectRatio();
 
+		Unique<IStructuredBufferType<Graphics::SBs::LocalParamSB>> m_local_param_;
+		
 		ComPtr<ID3D12Device2> m_dev_;
 		ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
 
@@ -87,7 +99,7 @@ namespace Engine
 		Matrix m_projection_matrix_{};
 		Matrix m_ortho_matrix_{};
 
-		Matrix GetProjectionMatrix() override;
-		Matrix GetOrthogonalMatrix() override;
+	public:
+		Unique<GraphicResourcePrimitive> CreateBuffer() override;
 	};
 }

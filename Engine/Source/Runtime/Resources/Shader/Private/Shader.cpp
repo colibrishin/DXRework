@@ -10,8 +10,7 @@ namespace Engine::Resources
 	void Shader::Load_INTERNAL()
 	{
 		m_primitive_ = std::unique_ptr<GraphicPrimitiveShader>();
-		m_primitive_->Generate(GetSharedPtr<Shader>(),
-			g_graphic_interface.GetInterface().GetNativePipeline());
+		m_primitive_->Generate(this, g_graphic_interface.GetInterface().GetNativePipeline());
 	}
 
 	Shader::Shader(
@@ -113,9 +112,9 @@ namespace Engine::Resources
 		return m_sampler_slot_;
 	}
 
-	GraphicPrimitiveShader* Shader::GetPrimitiveShader() const
+	GraphicPrimitiveShader& Shader::GetGraphicPrimitiveShader() const
 	{
-		return m_primitive_.get();
+		return *m_primitive_;
 	}
 
 	boost::weak_ptr<Shader> Shader::Get(const std::string& name)

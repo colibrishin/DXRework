@@ -6,10 +6,12 @@ namespace Engine
     struct ParticleRendererRenderInstanceTask : public RenderInstanceTask
     {
         void Run(
-            Scene const* scene, 
-            const RenderMapValueType* render_map,
-            std::atomic<uint64_t>& instance_count) override;
+            Scene const* scene,
+            RenderMap*   render_map,
+            const size_t       map_size,
+            std::atomic<uint64_t>& instance_count
+        ) override;
 
-		void Cleanup(RenderMapValueType* render_map) override;
+		void Cleanup(RenderMap* render_map, const size_t map_size) override;
     };
 }

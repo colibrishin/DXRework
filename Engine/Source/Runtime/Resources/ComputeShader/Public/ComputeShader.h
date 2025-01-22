@@ -18,7 +18,7 @@ namespace Engine::Resources
 		~ComputeShader() override = default;
 
 		std::array<uint32_t, 3> GetThread() const;
-		void Dispatch(const UINT group_count[3], const Graphics::SBs::LocalParamSB& param);
+		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const;
 
 		template <typename T, typename CSLock = std::enable_if_t<std::is_base_of_v<ComputeShader, T>>>
 		static boost::weak_ptr<T> Create()
@@ -31,7 +31,7 @@ namespace Engine::Resources
 		}
 
 		void SetPrimitiveShader(ComputePrimitiveShader* shader);
-		[[nodiscard]] ComputePrimitiveShader& GetPrimitiveShader() const;
+		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(ComputeShader)
 
@@ -83,32 +83,18 @@ namespace Engine
 	{
 	public:
 		virtual ~ComputeDispatchTask() = default;
-		virtual void Dispatch(
-			const Weak<Resources::ComputeShader>& w_shader,
-			const Graphics::SBs::LocalParamSB& local_param,
-			const UINT group_count[3],
-			ComputeDispatchPrerequisiteTask* const* prerequisites,
-			const size_t prerequisite_count) = 0;
+		
 		virtual void Cleanup() = 0;
 	};
 
 	struct COMPUTESHADER_API ComputePrimitiveShader
 	{
 	public:
-		virtual             ~ComputePrimitiveShader() = default;
-		virtual void        Generate(const Weak<Resources::ComputeShader>& shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetComputePrimitiveShader() const;
-		[[nodiscard]] ComputeDispatchTask& GetDispatchTask() const;
-
-	protected:
-		template <typename T> requires (std::is_base_of_v<ComputeDispatchTask, T>)
-		void SetDispatchTask() 
-		{
-			m_dispatch_task = std::make_unique<T>();
-		}
+		virtual ~ComputePrimitiveShader() = default;
+		virtual void Generate(const Weak<Resources::ComputeShader>& shader, void* pipeline_signature) = 0;
+		[[nodiscard]] void* GetNativeShader() const;
 
 	private:
-		std::unique_ptr<ComputeDispatchTask> m_dispatch_task;
 		void* m_shader_ = nullptr;
 	};
 

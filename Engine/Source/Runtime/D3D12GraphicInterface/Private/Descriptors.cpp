@@ -7,7 +7,10 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/ThrowIfFailed/Public/ThrowIfFailed.h"
+#include "CommandPair.h"
+#include "ThrowIfFailed.h"
+
+#include "Source/Runtime/D3D12PrimitiveTexture/Public/D3D12PrimitiveTexture.h"
 
 namespace Engine
 {
@@ -164,6 +167,22 @@ namespace Engine
 	}
 
 	void DescriptorPtrImpl::SetShaderResources(
+		const Resources::Texture* const* textures,
+		const UINT count,
+		const UINT offset) const
+	{
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles;
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			D3D12_CPU_DESCRIPTOR_HANDLE handle = static_cast<D3D12PrimitiveTexture*>(textures[i]->GetPrimitiveTexture())->GetSrv()->GetCPUDescriptorHandleForHeapStart();
+			handles.push_back(handle);
+		}
+
+		SetShaderResources(offset, count, handles);
+	}
+
+	void DescriptorPtrImpl::SetShaderResources(
 		UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data
 	) const
 	{
@@ -216,12 +235,15 @@ namespace Engine
 				);
 	}
 
-	void DescriptorPtrImpl::BindGraphic(ID3D12GraphicsCommandList1* cmd) const
+	void DescriptorPtrImpl::BindGraphic(const GraphicInterfaceContextPrimitive* context) const
 	{
 		if (!IsValid())
 		{
 			return;
 		}
+
+		const auto cmd_pair = static_cast<CommandPair*>(context->commandList);
+		const auto cmd = cmd_pair->GetList();
 
 		cmd->SetGraphicsRootSignature(m_handler_->m_root_signature.Get());
 
@@ -267,12 +289,15 @@ namespace Engine
 				);
 	}
 
-	void DescriptorPtrImpl::BindCompute(ID3D12GraphicsCommandList1* cmd) const
+	void DescriptorPtrImpl::BindCompute(const GraphicInterfaceContextPrimitive* context) const
 	{
 		if (!IsValid())
 		{
 			return;
 		}
+
+		const auto cmd_pair = static_cast<CommandPair*>(context->commandList);
+		const auto cmd = cmd_pair->GetList();
 
 		cmd->SetComputeRootSignature(m_handler_->m_root_signature.Get());
 
@@ -507,7 +532,7 @@ namespace Engine
 				 m_sampler_size_
 				);
 
-		DescriptorPtr ptr = std::make_unique<DescriptorPtrImpl>
+		auto ptr = std::unique_ptr<DescriptorPtrImpl>
 				(
 				 new DescriptorPtrImpl
 				 (

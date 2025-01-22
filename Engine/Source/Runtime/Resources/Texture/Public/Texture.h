@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
+
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 // Static texture type, this should be added to every texture.
 #define TEX_T(enum_val) static constexpr eTexType textype = enum_val;
@@ -512,7 +512,7 @@ namespace Engine
 			const size_t dst_idx) = 0;
 
 		void UpdateDescription(const Weak<Resources::Texture>& texture, const GenericTextureDescription& description);
-		[[nodiscard]] void* GetPrimitiveTexture() const;
+		[[nodiscard]] void* GetNativeTexture() const;
 		[[nodiscard]] const GenericTextureDescription& GetDescription() const;
 
 	protected:

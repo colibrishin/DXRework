@@ -5,23 +5,16 @@
 #endif
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
 	RESOURCE_SELF_INFER_GETTER_IMPL(ComputeShader);
 
-	void ComputeShader::Dispatch(const UINT group_count[3], const Graphics::SBs::LocalParamSB& param)
+	void ComputeShader::Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const
 	{
-		
-		m_primitive_shader_->GetDispatchTask().Dispatch(
-			GetSharedPtr<ComputeShader>(),
-			param,
-			group_count,
-			m_unsafe_raw_prerequisites_.data(),
-			m_unsafe_raw_prerequisites_.size());
-
-		m_primitive_shader_->GetDispatchTask().Cleanup();
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		gi.Dispatch(context, this, param, group_count);
 	}
 
 	void ComputeShader::SetPrimitiveShader(ComputePrimitiveShader* shader)
@@ -29,7 +22,7 @@ namespace Engine::Resources
 		m_primitive_shader_ = std::unique_ptr<ComputePrimitiveShader>(shader);
 	}
 
-	ComputePrimitiveShader& ComputeShader::GetPrimitiveShader() const
+	ComputePrimitiveShader& ComputeShader::GetComputePrimitiveShader() const
 	{
 		return *m_primitive_shader_;
 	}
@@ -77,7 +70,7 @@ namespace Engine::Resources
 	{
 		m_primitive_shader_->Generate(
 			GetSharedPtr<ComputeShader>(), 
-			Managers::RenderPipeline::GetInstance().GetPrimitivePipeline()->GetNativePipeline());
+			g_graphic_interface.GetInterface().GetNativePipeline());
 		
 		loadDerived();
 	}
@@ -97,18 +90,8 @@ namespace Engine::Resources
 
 namespace Engine 
 {
-	void* ComputePrimitiveShader::GetComputePrimitiveShader() const
+	void* ComputePrimitiveShader::GetNativeShader() const
 	{
 		return m_shader_;
-	}
-
-	ComputeDispatchTask& ComputePrimitiveShader::GetDispatchTask() const
-	{
-		if (m_dispatch_task == nullptr) 
-		{
-			throw std::runtime_error("Dispatch Task has not been assigned");
-		}
-
-		return *m_dispatch_task;
 	}
 }

@@ -41,8 +41,8 @@ namespace Engine
 
 		// post_execution is called after the command list is executed.
 		// thread-safety of post_execution inside values should be guaranteed by the caller.
-		void               FlagReady(const std::function<void()>& post_execution = {});
-		void               Execute() const;
+		void               FlagReady(const std::function<void()>& post_execution = {}) override;
+		void               Execute() const override;
 		[[nodiscard]] bool IsReady();
 		[[nodiscard]] bool IsExecuted();
 		[[nodiscard]] bool IsDisposed();

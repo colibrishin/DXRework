@@ -15,7 +15,12 @@ public class D3D12GraphicInterface : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<DX12Agility>(target);
+        conf.AddPublicDependency<Texture>(target);
+        conf.AddPublicDependency<Shape>(target);
+        conf.AddPublicDependency<Mesh>(target);
+        conf.AddPublicDependency<Shader>(target);
+        conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
-        conf.AddPrivateDependency<Texture>(target);
+        conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

@@ -48,13 +48,22 @@ namespace Engine
 		virtual ~CommandListBase() = default;
 		virtual void SoftReset() = 0;
 		virtual void FlagReady(const std::function<void()>& post_function = {}) = 0;
-		virtual void Execute() = 0;
+		virtual void Execute() const = 0;
 	};
 
+	struct GraphicInterfaceContextPrimitive;
+	
 	struct CORE_API GraphicHeapBase
 	{
 		virtual ~GraphicHeapBase() = default;
-		virtual void BindGraphic(CommandListBase* cmd) = 0;
+
+		virtual void SetShaderResources(
+			const Resources::Texture* const* textures,
+			const UINT count,
+			const UINT offset) const = 0;
+		
+		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
+		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 	};
 
 	struct CORE_API GraphicInterfaceContextPrimitive
@@ -115,7 +124,7 @@ namespace Engine
 		Unique<GraphicHeapBase> heap;
 	};
 
-	class StructuredBufferTypelessBase
+	class CORE_API StructuredBufferTypelessBase
 	{
 	public:
 		virtual ~StructuredBufferTypelessBase() = default;
@@ -130,8 +139,8 @@ namespace Engine
 		virtual void TransitionToUAV(const GraphicInterfaceContextPrimitive* context) = 0;
 		virtual void TransitionCommon(const GraphicInterfaceContextPrimitive* context) = 0;
 
-		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
-		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
+		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
 	};
 
 	template <typename T>
@@ -145,6 +154,9 @@ namespace Engine
 		virtual void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr) = 0;
 		virtual void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, T* dst_ptr) = 0;
 		virtual void Clear() = 0;
+
+		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
 
 		[[nodiscard]] StructuredBufferTypelessBase& GetTypeless()
 		{
@@ -168,9 +180,9 @@ namespace Engine
 		virtual Matrix GetOrthogonalMatrix() = 0;
 
 		template <typename T>
-		Unique<IStructuredBufferType<T>>&& GetStructuredBuffer() 
+		IStructuredBufferType<T>* GetStructuredBuffer() 
 		{
-			return std::move(std::reinterpret_pointer_cast<IStructuredBufferType<T>>(GetNativeStructuredBuffer()));
+			return reinterpret_cast<IStructuredBufferType<T>*>(GetNativeStructuredBuffer());
 		}
 
 		virtual GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) = 0;
@@ -178,26 +190,33 @@ namespace Engine
 		virtual Unique<GraphicHeapBase> GetHeap() = 0;
 
 		virtual void SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport) = 0;
-		virtual void SetDefaultPipeline(const GraphicInterfaceContextPrimitive* context) = 0;
+		virtual void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) = 0;
+		virtual void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) = 0;
 
-		virtual void Draw(const GraphicInterfaceContextPrimitive* context, Resources::Shape* shape, const UINT instance_count) = 0;
-		virtual void Draw(const GraphicInterfaceContextPrimitive* context, Resources::Mesh* mesh, const UINT instance_count) = 0;
+		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count) = 0;
+		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count) = 0;
+		virtual void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
 
-		virtual void Bind(const GraphicInterfaceContextPrimitive* context, Resources::Shader* shader) = 0;
+		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) = 0;
+		virtual void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) = 0;
 
-		virtual void Bind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
-		virtual void Unbind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void Clear(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType clear_type) = 0;
+		virtual void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
+		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
+		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
+		virtual void Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
+		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
+		virtual void UnbindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const size_t count) = 0;
+		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
 
 		virtual Unique<GraphicResourcePrimitive> CreateBuffer() = 0;
 		
-		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex);
+		void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex);
 
 	protected:
-		virtual Unique<StructuredBufferTypelessBase>&& GetNativeStructuredBuffer() = 0;
+		virtual StructuredBufferTypelessBase* GetNativeStructuredBuffer() = 0;
 	};
 
-	struct GraphicInterfaceAccessor
+	struct CORE_API GraphicInterfaceAccessor
 	{
 	public:
 		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>)
@@ -225,6 +244,7 @@ namespace Engine
 	class StructuredBufferMemoryPool
 	{
 	public:
+		StructuredBufferMemoryPool() = default;
 		virtual ~StructuredBufferMemoryPool() = default;
 
 		void    resize(const size_t size)
@@ -288,7 +308,7 @@ namespace Engine
 
 				for (; end_it < count; ++end_it)
 				{
-					m_resource_[end_it] = std::move(gi.GetStructuredBuffer<T>());
+					m_resource_.at(end_it) = std::move(std::unique_ptr<IStructuredBufferType<T>>(gi.GetStructuredBuffer<T>()));
 					m_resource_[end_it]->SetData(&primitive, 1, nullptr);
 				}
 

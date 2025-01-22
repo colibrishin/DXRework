@@ -3,10 +3,6 @@
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
 
-#if defined(USE_DX12)
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
-#endif
-
 namespace Engine
 {
 	struct ParticleRendererExtension;
@@ -73,14 +69,13 @@ namespace Engine::Components
 		COMP_CLONE_DECL
 
 		friend class Resources::ComputeShader;
-		friend struct Engine::ParticleRendererExtension;
+		friend struct ParticleRendererExtension;
 		ParticleRenderer();
 
 		bool m_b_follow_owner_;
 
-		Graphics::SBs::LocalParamSB                                   m_params_;
-		Graphics::StructuredBuffer<Graphics::SBs::LocalParamSB>       m_local_param_buffer_;
-		Graphics::StructuredBuffer<Graphics::SBs::InstanceParticleSB> m_sb_buffer_;
+		Graphics::SBs::LocalParamSB                                      m_params_;
+		Unique<IStructuredBufferType<Graphics::SBs::InstanceParticleSB>> m_sb_buffer_;
 
 		std::mutex        m_instances_mutex_;
 		InstanceParticles m_instances_;

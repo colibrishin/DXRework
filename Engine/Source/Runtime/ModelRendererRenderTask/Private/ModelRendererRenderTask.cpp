@@ -1,4 +1,9 @@
 #include "../Public/ModelRendererRenderTask.h"
+#include <tbb/parallel_for_each.h>
+#include <tbb/concurrent_vector.h>
+
+#include "ModelRenderer.h"
+
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
@@ -10,16 +15,16 @@
 namespace Engine 
 {
     void ModelRendererRenderInstanceTask::Run(
-            const Scene const* scene, 
-            const RenderMapValueType* render_map, 
-            const std::size_t map_size, 
+            Scene const* scene, 
+            RenderMap* render_map,
+            const size_t map_size,
             std::atomic<uint64_t>& instance_count) 
     {
-        const auto& rendercomponents = scene->GetCachedComponents<Components::RenderComponent>();
+        const auto& mrs = scene->GetCachedComponents<Components::ModelRenderer>();
 
-        tbb::parallel_for_each(rendercomponents.begin(), rendercomponents.end(), [](const Weak<Components::RenderComponent>& comp)
+        tbb::parallel_for_each(mrs.begin(), mrs.end(), [&](const Weak<Abstracts::Component>& comp)
         {
-            if (const Strong<Components::RenderComponent>& raw_component = comp.lock())
+            if (const Strong<Abstracts::Component>& raw_component = comp.lock())
             {
                 // get model renderer, continue if it is disabled
                 if (!raw_component->GetActive())
@@ -27,8 +32,9 @@ namespace Engine
                     return;
                 }
 
+                const Strong<Components::ModelRenderer>& mr = raw_component->GetSharedPtr<Components::ModelRenderer>();
                 const Strong<Abstracts::ObjectBase>& obj = raw_component->GetOwner().lock();
-                const Strong<Resources::Material> mtr = raw_component->GetMaterial().lock();
+                const Strong<Resources::Material> mtr = mr->GetMaterial().lock();
                 const Strong<Components::Transform> tr  = obj->GetComponent<Components::Transform>().lock();
 
                 // animator parameters
@@ -66,20 +72,21 @@ namespace Engine
                 }
 
                 // Pre-mapping by the material.
-                for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
+                for (size_t i = 0; i < map_size; ++i)
                 {
                     const auto domain = static_cast<eShaderDomain>(i);
 
                     if (mtr->IsRenderDomain(domain))
                     {
-                        RenderMapValueType& domain_map = out_map[domain];
+                        auto& domain_map = render_map[domain];
+
                         RenderMap::accessor acc;
 
                         if (!domain_map.find(acc, RENDER_COM_T_MODEL))
                         {
                             domain_map.insert(acc, RENDER_COM_T_MODEL);
                         }
-
+                        
                         Graphics::SBs::InstanceModelSB sb{};
                         sb.SetWorld(tr->GetWorldMatrix().Transpose());
                         sb.SetFrame(anim_frame);
@@ -97,11 +104,20 @@ namespace Engine
                     }
                 }
             }
-        })
+        });
     }
 
-    void ModelRendererInstanceTask::Cleanup(const RenderMapValueType* render_map)
+    void ModelRendererRenderInstanceTask::Cleanup(RenderMap* render_map, const size_t map_size)
     {
-        render_map->clear();
+        for (size_t i = 0; i < map_size; ++i)
+        {
+            auto& domain_map = render_map[i];
+
+            if (RenderMap::accessor acc;
+                domain_map.find(acc, RENDER_COM_T_MODEL))
+            {
+                domain_map.erase(RENDER_COM_T_MODEL);
+            }
+        }
     }
 }

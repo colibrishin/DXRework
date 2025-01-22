@@ -1,10 +1,7 @@
 #include "../Public/ParticleRenderer.h"
 
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 
 namespace Engine::Components
 {
@@ -39,13 +36,6 @@ namespace Engine::Components
 	void ParticleRenderer::Initialize()
 	{
 		RenderComponent::Initialize();
-
-		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Particle Renderer Init").lock();
-		cmd->SoftReset();
-		m_local_param_buffer_.Create(cmd->GetList(), 1, nullptr);
-		m_sb_buffer_.Create(cmd->GetList(), 1, nullptr);
-		cmd->FlagReady();
-
 		SetCount(1);
 		SetSize(1.f);
 	}
@@ -54,54 +44,42 @@ namespace Engine::Components
 	{
 		if (m_cs_ && GetMaterial().lock())
 		{
-			const auto& cmd  = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Particle Renderer").lock();
-			const auto& heap = Managers::RenderPipeline::GetInstance().AcquireHeapSlot().lock();
-
-			cmd->SoftReset();
-
-			cmd->GetList()->SetComputeRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
-			cmd->GetList()->SetPipelineState(m_cs_->GetPipelineState());
-
+			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
+			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+			
 			CheckSize<UINT>(m_instances_.size(), L"Warning: Particle instance size is too much for structured buffer!");
 
-			m_sb_buffer_.SetData(cmd->GetList(), static_cast<UINT>(m_instances_.size()), m_instances_.data());
-			m_sb_buffer_.TransitionToUAV(cmd->GetList());
-			m_sb_buffer_.CopyUAVHeap(heap);
+			primitive.commandList->SoftReset();
+			m_sb_buffer_->SetData(&primitive, static_cast<UINT>(m_instances_.size()), m_instances_.data());
+			m_sb_buffer_->GetTypeless().TransitionToUAV(&primitive);
+			m_sb_buffer_->CopyUAVHeap(&primitive);
 
 			const auto thread      = m_cs_->GetThread();
 			const auto flatten     = thread[0] * thread[1] * thread[2];
 			const UINT group_count = static_cast<UINT>(m_instances_.size() / flatten);
 			const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
 
-			m_cs_->SetGroup({group_count + (remainder ? 1 : 0), 1, 1});
-			m_cs_->Dispatch(cmd->GetList(), heap, m_params_, m_local_param_buffer_);
+			const UINT groups[3] = {group_count + (remainder ? 1 : 0), 1, 1};
+			m_cs_->Dispatch(&primitive, groups, m_params_);
+			primitive.commandList->Execute();
 
-			m_sb_buffer_.TransitionCommon(cmd->GetList(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			const GraphicInterfaceContextReturnType& copy_context = gi.GetNewContext(0, true, L"Particle Renderer Update");
+			const GraphicInterfaceContextPrimitive& copy_primitive = copy_context.GetPointers();
+			m_sb_buffer_->GetData(&copy_primitive, static_cast<UINT>(m_instances_.size()), m_instances_.data());
 
-			cmd->FlagReady
-					(
-					 [this]()
-					 {
-						 std::lock_guard<std::mutex> lock(m_instances_mutex_);
-						 CheckSize<UINT>(m_instances_.size(), L"Warning: Instance size for particle renderer is too large!");
-						 m_sb_buffer_.GetData(static_cast<UINT>(m_instances_.size()), m_instances_.data());
-
-						 // Remove inactive particles.
-						 for (auto it = m_instances_.begin(); it != m_instances_.end();)
-						 {
-							 if (!it->GetActive())
-							 {
-								 it = m_instances_.erase(it);
-							 }
-							 else
-							 {
-								 ++it;
-							 }
-						 }
-					 }
-					);
-
-			heap->Release();
+			// Remove inactive particles.
+			for (auto it = m_instances_.begin(); it != m_instances_.end();)
+			{
+				if (!it->GetActive())
+				{
+					it = m_instances_.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
 		}
 	}
 

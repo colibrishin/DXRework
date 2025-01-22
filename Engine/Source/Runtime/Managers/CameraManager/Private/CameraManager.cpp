@@ -5,7 +5,6 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "Source/Runtime/Managers/InputManager/Public/InputManager.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
@@ -58,7 +57,7 @@ namespace Engine::Managers
 					}
 					else
 					{
-						camera->m_projection_matrix_ = Managers::D3Device::GetInstance().GetProjectionMatrix();
+						camera->m_projection_matrix_ = g_graphic_interface.GetInterface().GetProjectionMatrix();
 					}
 
 					const auto invView = camera->m_view_matrix_.Invert();
@@ -136,7 +135,7 @@ namespace Engine::Managers
 		{
 			if (const Strong<Objects::Camera>& camera = scene->GetMainCamera().lock())
 			{
-				const Matrix  pv = Managers::D3Device::GetInstance().GetProjectionMatrix() * camera->m_view_matrix_;
+				const Matrix  pv = g_graphic_interface.GetInterface().GetProjectionMatrix() * camera->m_view_matrix_;
 				const Vector2 actual_mouse_position{
 					static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().x),
 					static_cast<float>(Managers::InputManager::GetInstance().GetMouseState().y)

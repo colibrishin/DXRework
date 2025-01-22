@@ -22,10 +22,10 @@ namespace Engine::Managers
 				   .Width = CFG_WIDTH,
 				   .Height = CFG_HEIGHT,
 				   .DepthOrArraySize = 1,
-				   .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-				   .Flags = D3D12_RESOURCE_FLAG_NONE,
+				   .Format = TEX_FORMAT_R8G8B8A8_UNORM,
+				   .Flags = RESOURCE_FLAG_NONE,
 				   .MipsLevel = 1,
-				   .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+				   .Layout = TEX_LAYOUT_UNKNOWN,
 				   .SampleDesc = {.Count = 1, .Quality = 0}
 			   }
 			  ) {}
@@ -39,9 +39,9 @@ namespace Engine::Managers
 		void PostUpdate(const float& dt) override;
 		void Initialize() override;
 
-		void RenderFinished(const Weak<CommandPair>& w_cmd) const;
-		void BindReflectionMap(const Weak<CommandPair>& w_cmd, const DescriptorPtr& heap) const;
-		void UnbindReflectionMap(const Weak<CommandPair>& w_cmd) const;
+		void RenderFinished(const GraphicInterfaceContextPrimitive* context);
+		void BindReflectionMap(const GraphicInterfaceContextPrimitive* context);
+		void UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context);
 
 	private:
 		friend struct SingletonDeleter;

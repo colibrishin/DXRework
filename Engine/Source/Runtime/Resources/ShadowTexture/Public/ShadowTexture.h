@@ -70,7 +70,7 @@ namespace Engine::Resources
 		UINT   GetHeight() const override;
 		UINT64 GetWidth() const override;
 
-		void Clear(ID3D12GraphicsCommandList1* cmd) const;
+		void Clear(const GraphicInterfaceContextPrimitive* context) const;
 
 	protected:
 		void Unload_INTERNAL() override;

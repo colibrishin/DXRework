@@ -33,17 +33,17 @@ namespace Engine::Managers
 		void PostUpdate(const float& dt) override;
 		void Initialize() override;
 
-		RAWPOINTER void RegisterRenderInstance(RenderInstanceTask* task);
-		RAWPOINTER void RegisterRenderPass(RenderPassTask* task);
-		RAWPOINTER void RegisterRenderPassPrerequisite(RenderPassPrerequisiteTask* task);
+		void RegisterRenderInstance(RenderInstanceTask* task);
+		void RegisterRenderPass(RenderPassTask* task);
 
 		void RenderPass(
-			const float                                        dt,
-			const bool                                         shader_bypass,
-			const eShaderDomain                                domain,
-			const Graphics::SBs::LocalParamSB&                 local_param_sb,
-			const aligned_vector<RenderPassPrerequisiteTask*>& additional_task, const ObjectPredication& predication
-		);
+			float dt,
+			bool shader_bypass,
+			eShaderDomain domain,
+			const Graphics::SBs::LocalParamSB& local_param_sb,
+			const ObjectPredication& predication, const ContextSetupFunction& prerender_predicate, const ContextSetupFunction&
+			postrender_predicate
+		) const;
 
 		[[nodiscard]] bool Ready() const;
 		[[nodiscard]] uint64_t GetInstanceCount() const;
@@ -54,9 +54,8 @@ namespace Engine::Managers
 		~Renderer() override;
 		
 		bool m_b_ready_;
-		RAWPOINTER aligned_vector<RenderInstanceTask*> m_render_instance_tasks_;
-		RAWPOINTER aligned_vector<RenderPassTask*> m_render_pass_tasks_;
-		RAWPOINTER aligned_vector<RenderPassPrerequisiteTask*> m_render_prerequisite_tasks_;
+		aligned_vector<Unique<RenderInstanceTask>> m_render_instance_tasks_;
+		aligned_vector<Unique<RenderPassTask>> m_render_pass_tasks_;
 		std::atomic<uint64_t> m_instance_count_;
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};

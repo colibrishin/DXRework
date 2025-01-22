@@ -20,5 +20,6 @@ public class ParticleRendererRenderTask : CommonProject
         
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ParticleRenderer>(target);
+        conf.AddPrivateDependency<ParticleRendererExtension>(target);
     }
 }

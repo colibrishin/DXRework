@@ -2,8 +2,9 @@
 
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
+#include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
-#include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
+#include "Source/Runtime/Core/StructuredBuffer.h"
 
 #include "RenderTask.h"
 
@@ -33,29 +34,10 @@ namespace Engine::Graphics
 	}
 }
 
-namespace Engine
-{
-	struct SHADOWMANAGER_API ShadowRenderPrerequisiteTask : RenderPassPrerequisiteTask
-	{
-		void SetShadowShader(const Strong<Resources::Shader>& shader);
-		void UpdateLight(const std::vector<Graphics::SBs::LightSB>& sb);
-		void UpdateLightVP(const std::vector<Graphics::SBs::LightVPSB>& sb);
-
-	protected:
-		std::vector<Graphics::SBs::LightVPSB> m_light_vps_;
-		std::vector<Graphics::SBs::LightSB> m_lights_;
-		Strong<Resources::Shader> m_shadow_shader_;
-
-		bool IsLazy() const;
-		void FlipLazy();
-
-	private:
-		bool m_lazy_ = false;
-	};
-}
-
 namespace Engine::Managers
 {
+	using namespace Engine::Graphics;
+	
 	constexpr float __placeholder = 0.f;
 
 	class SHADOWMANAGER_API ShadowManager : public Abstracts::Singleton<ShadowManager>
@@ -85,19 +67,9 @@ namespace Engine::Managers
 		void RegisterLight(const Weak<Objects::Light>& light);
 		void UnregisterLight(const Weak<Objects::Light>& light);
 
-		template <typename T> requires (std::is_base_of_v<ShadowRenderPrerequisiteTask, T>)
-		void SetShadowRenderPrerequisiteTask()
-		{
-			m_shadow_task_ = std::make_unique<T>();
-		}
-
-		template <typename T> requires (std::is_base_of_v<ViewportRenderPrerequisiteTask, T>)
-		void SetViewportRenderPrerequisiteTask()
-		{
-			m_viewport_task_ = std::make_unique<T>();
-		}
-
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
+		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
+		void UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 
 	private:
 		friend struct SingletonDeleter;
@@ -107,7 +79,7 @@ namespace Engine::Managers
 		void InitializeShadowBuffer(LocalActorID id);
 
 		void BuildShadowMap(float dt, const Strong<Objects::Light>& light, UINT light_idx);
-		void ClearShadowMaps();
+		void ClearShadowMaps(const GraphicInterfaceContextPrimitive* context);
 
 		static void CreateSubfrusta(
 			const Matrix& projection, float start, float end,
@@ -124,9 +96,8 @@ namespace Engine::Managers
 		// lights from current scene
 		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
 
-		// The DX resources for each of the shadow map (texture, depth stencil view and shader resource view)
-		std::unique_ptr<ShadowRenderPrerequisiteTask> m_shadow_task_;
-		std::unique_ptr<ViewportRenderPrerequisiteTask> m_viewport_task_;
+		Unique<IStructuredBufferType<SBs::LightSB>> m_light_sb_;
+		Unique<IStructuredBufferType<SBs::LightVPSB>> m_light_vp_sb_;
 
 		Viewport m_viewport_;
 	};

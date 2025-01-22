@@ -66,26 +66,19 @@ public class EngineSolution : Solution
                 conf.AddProject<RenderComponent>(target);
                 conf.AddProject<ModelRenderer>(target);
                 conf.AddProject<ParticleRenderer>(target);
+                conf.AddProject<ParticleRendererExtension>(target);
                 conf.AddProject<Animator>(target);
             }
 
             {
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
-
+                conf.AddProject<GenericRenderPassTask>(target);
                 conf.AddProject<D3D12GraphicInterface>(target);
-
-                conf.AddProject<ComputeDispatchTaskDX12>(target);
-                conf.AddProject<GraphicPrimitiveShaderDX12>(target);
-                conf.AddProject<ComputePrimitiveShaderDX12>(target);
-                conf.AddProject<PrimitivePipelineDX12>(target);
-                conf.AddProject<PrimitiveTextureDX12>(target);
-                conf.AddProject<D3D12PrimitiveMesh>(target);
             }
 
             {
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<D3D12Toolkit>(target);
                 conf.AddProject<Debugger>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<InputManager>(target);

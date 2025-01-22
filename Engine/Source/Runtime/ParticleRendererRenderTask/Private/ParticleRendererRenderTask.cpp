@@ -4,47 +4,56 @@
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.hpp"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
 #include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"
 
 namespace Engine 
 {
     void ParticleRendererRenderInstanceTask::Run(
-            Scene const* scene, 
-            const RenderMapValueType* render_map, 
-            std::atomic<uint64_t>& instance_count)
+        Scene const* scene,
+        RenderMap*   render_map,
+        const size_t map_size, std::atomic<uint64_t>& instance_count
+    )
     {
-        const auto& rawcomponents = scene->GetCachedComponents<Components::RenderComponent>();
+        const auto& prs = scene->GetCachedComponents<Components::ParticleRenderer>();
 
-        tbb::parallel_for_each(rawcomponents.begin(), rawcomponents.end(), [&instance_count, render_map](const Weak<Components::RenderComponent>& comp)
+        tbb::parallel_for_each(prs.begin(), prs.end(), [&](const Weak<Abstracts::Component>& comp)
         {
-            if (const Strong<Components::RenderComponent>& pr = comp.lock())
+            if (const Strong<Abstracts::Component>& raw_component = comp.lock())
             {
-                if (!pr->GetActive())
+                if (!raw_component->GetActive())
                 {
                     return;
                 }
 
-                const Strong<Abstracts::ObjectBase>& obj = pr->GetOwner().lock();
+                const Strong<Components::ParticleRenderer>& pr = raw_component->GetSharedPtr<Components::ParticleRenderer>();
+                const Strong<Abstracts::ObjectBase>& obj = raw_component->GetOwner().lock();
                 const Strong<Resources::Material>& mtr = pr->GetMaterial().lock();
                 const Strong<Components::Transform>& tr  = obj->GetComponent<Components::Transform>().lock();
 
                 // Pre-mapping by the material.
-                for (auto i = 0; i < SHADER_DOMAIN_MAX; ++i)
+                for (auto i = 0; i < map_size; ++i)
                 {
                     const auto domain = static_cast<eShaderDomain>(i);
 
                     if (mtr->IsRenderDomain(domain))
                     {
-                        const Strong<Components::ParticleRenderer>& locked = pr->GetSharedPtr<Components::ParticleRenderer>();
-                        auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(locked));
+                        auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(pr));
 
                         if (particles.empty())
                         {
                             continue;
                         }
 
-                        if (locked->IsFollowOwner())
+                        auto& domain_map = render_map[domain];
+
+                        RenderMap::accessor acc;
+
+                        if (!domain_map.find(acc, RENDER_COM_T_PARTICLE))
+                        {
+                            domain_map.insert(acc, RENDER_COM_T_PARTICLE);
+                        }
+                        
+                        if (pr->IsFollowOwner())
                         {
                             for (auto& particle : particles)
                             {
@@ -54,7 +63,7 @@ namespace Engine
                             }
                         }
 
-                        render_map->push_back(std::make_tuple(obj, mtr, particles));
+                        acc->second.push_back(std::make_tuple(obj, mtr, particles));
                         instance_count.fetch_add(particles.size());
                     }
                 }
@@ -62,8 +71,17 @@ namespace Engine
         });
     }
 
-    void ParticleRendererRenderInstanceTask::Cleanup(RenderMapValueType* render_map) 
+    void ParticleRendererRenderInstanceTask::Cleanup(RenderMap* render_map, const size_t map_size) 
     {
-        render_map->clear();
+        for (size_t i = 0; i < map_size; ++i)
+        {
+            auto& domain_map = render_map[i];
+
+            if (RenderMap::accessor acc;
+                domain_map.find(acc, RENDER_COM_T_PARTICLE))
+            {
+                domain_map.erase(RENDER_COM_T_PARTICLE);
+            }
+        }
     }
 }

@@ -3,9 +3,12 @@
 
 #include "StructuredBufferDX12.hpp"
 #include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
+#include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
+
+#include "D3D12PrimitiveTexture.h"
 
 void Engine::D3D12GraphicInterface::Initialize()
 {
@@ -116,6 +119,11 @@ Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewC
     return context;
 }
 
+Engine::CommandPairTask& Engine::D3D12GraphicInterface::GetCommandTask()
+{
+	return m_command_pair_task_;
+}
+
 void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport)
 {
     auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
@@ -133,13 +141,19 @@ void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPri
     cmd->GetList()->RSSetScissorRects(1, &scissor_rect);
 }
 
-void Engine::D3D12GraphicInterface::SetDefaultPipeline(const GraphicInterfaceContextPrimitive* context)
+void Engine::D3D12GraphicInterface::SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	cmd->GetList()->SetGraphicsRootSignature(m_pipeline_root_signature_.Get());
 }
 
-void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, Resources::Shape* shape, const UINT instance_count)
+void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context)
+{
+	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
+	cmd->GetList()->SetComputeRootSignature(m_pipeline_root_signature_.Get());
+}
+
+void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Shape* shape, const UINT instance_count)
 {
 	for (const Strong<Resources::Mesh>& mesh : shape->GetMeshes())
 	{
@@ -147,32 +161,476 @@ void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive*
 	}
 }
 
-void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, Resources::Mesh* mesh, const UINT instance_count)
+void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count)
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	const UINT index_count = mesh->GetIndexCount();
 	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, 0);
 }
 
-void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, Resources::Shader* shader)
+void Engine::D3D12GraphicInterface::Dispatch(
+	const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader,
+	const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]
+)
 {
+	if (!m_local_param_)
+	{
+		GraphicInterface& gi = g_graphic_interface.GetInterface(); 	
+		m_local_param_ = std::unique_ptr<IStructuredBufferType<Graphics::SBs::LocalParamSB>>(gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>());
+	}
+
+	const auto cmd  = static_cast<CommandPair*>(context->commandList);
+	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
+
+	SetDefaultComputePipeline(context);
+	BindCompute(context, shader);
+	
+	m_local_param_->SetData(context, 1, &local_param);
+	StructuredBufferTypelessBase& typeless = m_local_param_->GetTypeless();
+	typeless.TransitionToSRV(context);
+	m_local_param_->CopySRVHeap(context);
+	heap->BindCompute(context);
+
+	cmd->GetList()->Dispatch(group_count[0], group_count[1], group_count[2]);
+	typeless.TransitionCommon(context);
 }
 
-void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset)
+void Engine::D3D12GraphicInterface::BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader)
 {
+	const auto cmd = static_cast<const CommandPair*>(context->commandList);
+	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
+	heap->SetSampler(
+		static_cast<ID3D12DescriptorHeap*>(shader->GetGraphicPrimitiveShader().GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
+		shader->GetSampler());
+	cmd->GetList()->SetPipelineState(static_cast<ID3D12PipelineState*>(shader->GetGraphicPrimitiveShader().GetNativeShader()));
+	cmd->GetList()->IASetPrimitiveTopology(static_cast<D3D12_PRIMITIVE_TOPOLOGY>(shader->GetPrimitiveTopology()));
 }
 
-void Engine::D3D12GraphicInterface::Unbind(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType bind_type)
+void Engine::D3D12GraphicInterface::BindCompute(
+	const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader
+)
 {
+	const auto cmd = static_cast<const CommandPair*>(context->commandList);
+	cmd->GetList()->SetPipelineState(static_cast<ID3D12PipelineState*>(shader->GetComputePrimitiveShader().GetNativeShader()));
 }
 
-void Engine::D3D12GraphicInterface::Clear(const GraphicInterfaceContextPrimitive* context, Resources::Texture* tex, const eBindType clear_type)
+void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset)
 {
+	const D3D12PrimitiveTexture* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
+	auto                         res       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+	auto                         cmd       = static_cast<CommandPair*>(context->commandList);
+	auto                         heap      = static_cast<DescriptorPtrImpl*>(context->heap);
+
+	switch (bind_type)
+	{
+	case BIND_TYPE_SRV:
+	{
+		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &srv_trans);
+		heap->SetShaderResource(primitive->GetSrv()->GetCPUDescriptorHandleForHeapStart(), slot + offset);
+		break;
+	}
+	case BIND_TYPE_UAV:
+	{
+		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &uav_trans);
+		heap->SetUnorderedAccess(primitive->GetUav()->GetCPUDescriptorHandleForHeapStart(), slot + offset);
+		break;
+	}
+	case BIND_TYPE_RTV:
+	{
+		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+
+		const D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle[]
+		{
+			primitive->GetRtv()->GetCPUDescriptorHandleForHeapStart()
+		};
+
+		cmd->GetList()->OMSetRenderTargets
+		(
+			1,
+			rtv_handle,
+			false,
+			nullptr
+		);
+		break;
+	}
+	case BIND_TYPE_DSV:
+	{
+		break;
+	}
+	case BIND_TYPE_DSV_ONLY:
+	{
+		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
+
+		const D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle[]
+		{
+			primitive->GetDsv()->GetCPUDescriptorHandleForHeapStart()
+		};
+
+		cmd->GetList()->OMSetRenderTargets
+		(
+			0,
+			nullptr,
+			false,
+			dsv_handle
+		);
+
+		break;
+	}
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_CB:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+}
+
+void Engine::D3D12GraphicInterface::Unbind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type)
+{
+	auto               primitive = static_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
+	auto               res       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+	const CommandPair* cmd       = static_cast<CommandPair*>(context->commandList);
+
+	switch (bind_type)
+	{
+	case BIND_TYPE_UAV:
+		const auto& uav_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &uav_trans);
+		break;
+	case BIND_TYPE_SRV:
+		const auto& srv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &srv_trans);
+		break;
+	case BIND_TYPE_RTV:
+		const auto& rtv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &rtv_trans);
+		break;
+	case BIND_TYPE_DSV:
+	case BIND_TYPE_DSV_ONLY:
+		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			res,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		cmd->GetList()->ResourceBarrier(1, &dsv_trans);
+		break;
+	case BIND_TYPE_SAMPLER:
+		break;
+	case BIND_TYPE_CB:
+		break;
+	case BIND_TYPE_COUNT:
+		break;
+	default:;
+	}
+}
+
+void Engine::D3D12GraphicInterface::BindMultiple(
+			const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
+			Resources::Texture* dsv
+		) override
+{
+	CommandPair* cmd = static_cast<CommandPair*>(context->commandList);
+
+	std::vector<D3D12_RESOURCE_BARRIER> transitions;
+	transitions.reserve(rtv_count + 1);
+
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs_heap;
+	rtvs_heap.reserve(rtv_count);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv_heap;
+
+	for (size_t i = 0; i < rtv_count; ++i) 
+	{
+		auto rtv = reinterpret_cast<D3D12PrimitiveTexture*>(rtvs[i]->GetPrimitiveTexture());
+		
+		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			static_cast<ID3D12Resource*>(rtv->GetNativeTexture()),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		rtvs_heap.push_back(rtv->GetRtv()->GetCPUDescriptorHandleForHeapStart());
+		transitions.push_back(rtv_transition);
+	}
+
+	D3D12PrimitiveTexture* native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
+	dsv_heap = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
+
+	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		static_cast<ID3D12Resource*>(native_dsv->GetNativeTexture()),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	);
+
+	transitions.push_back(dsv_transition);
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
+	cmd->GetList()->OMSetRenderTargets
+	(
+		rtvs_heap.size(),
+		rtvs_heap.data(),
+		false,
+		&dsv_heap
+	);
+}
+
+void Engine::D3D12GraphicInterface::BindMultiple(
+	const GraphicInterfaceContextPrimitive* context,
+	const Resources::Texture* const* textures,
+	const eBindType bind_type,
+	const UINT slot,
+	const UINT offset,
+	const size_t count)
+{
+	const auto cmd  = static_cast<CommandPair*>(context->commandList);
+	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
+
+	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
+	transitions.reserve(count);
+
+	const auto& doTransition = [&textures, &count, &transitions]<D3D12_RESOURCE_STATES State>()
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto tex = static_cast<ID3D12Resource*>(textures[i]->GetPrimitiveTexture()->GetNativeTexture());
+
+			const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+					(
+					 tex,
+					 D3D12_RESOURCE_STATE_COMMON,
+					 State
+					);
+
+			transitions.push_back(uav_transition);
+		}
+	};
+
+	switch(bind_type)
+	{
+	case BIND_TYPE_UAV:
+		doTransition.operator()<D3D12_RESOURCE_STATE_UNORDERED_ACCESS>();
+		break;
+	case BIND_TYPE_SRV:
+		doTransition.operator()<D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE>();
+		break;
+	case BIND_TYPE_DSV:
+	case BIND_TYPE_CB:	
+	case BIND_TYPE_RTV:
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_DSV_ONLY:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
+	heap->SetShaderResources(textures, count, slot + offset);
+}
+
+void Engine::D3D12GraphicInterface::UnbindMultiple(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
+	Resources::Texture* dsv
+) override
+{
+	auto cmd = static_cast<CommandPair*>(context->commandList);
+
+	std::vector<D3D12_RESOURCE_BARRIER> transitions;
+	transitions.reserve(rtv_count + 1);
+
+	for (size_t i = 0; i < rtv_count; ++i)
+	{
+		auto rtv = reinterpret_cast<D3D12PrimitiveTexture*>(rtvs[i]->GetPrimitiveTexture());
+
+		const auto& rtv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+		(
+			static_cast<ID3D12Resource*>(rtv->GetNativeTexture()),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COMMON
+		);
+
+		transitions.push_back(rtv_transition);
+	}
+
+	auto native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
+
+	const auto& dsv_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		static_cast<ID3D12Resource*>(native_dsv->GetNativeTexture()),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	transitions.push_back(dsv_transition);
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(transitions.size()), transitions.data());
+}
+
+void Engine::D3D12GraphicInterface::UnbindMultiple(
+	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures,
+	const eBindType bind_type, const size_t count
+)
+{
+	const auto cmd  = static_cast<CommandPair*>(context->commandList);
+
+	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
+	transitions.reserve(count);
+
+	const auto& doTransition = [&textures, &count, &transitions]<D3D12_RESOURCE_STATES State>()
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto tex = static_cast<ID3D12Resource*>(textures[i]->GetPrimitiveTexture()->GetNativeTexture());
+
+			const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
+					(
+					 tex,
+					 State,
+					 D3D12_RESOURCE_STATE_COMMON
+					);
+
+			transitions.push_back(uav_transition);
+		}
+	};
+
+	switch(bind_type)
+	{
+	case BIND_TYPE_UAV:
+		doTransition.operator()<D3D12_RESOURCE_STATE_UNORDERED_ACCESS>();
+		break;
+	case BIND_TYPE_SRV:
+		doTransition.operator()<D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE>();
+		break;
+	case BIND_TYPE_DSV:
+	case BIND_TYPE_CB:	
+	case BIND_TYPE_RTV:
+	case BIND_TYPE_SAMPLER:
+	case BIND_TYPE_DSV_ONLY:
+	case BIND_TYPE_COUNT:
+	default:
+		break;
+	}
+
+	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
+}
+
+void Engine::D3D12GraphicInterface::Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type)
+{
+	const auto primitive   = static_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
+	const auto resource = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
+	
+	if (clear_type == BIND_TYPE_RTV)
+	{
+		constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
+		const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 resource,
+				 D3D12_RESOURCE_STATE_COMMON,
+				 D3D12_RESOURCE_STATE_RENDER_TARGET
+				);
+
+		const auto& transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 resource,
+				 D3D12_RESOURCE_STATE_RENDER_TARGET,
+				 D3D12_RESOURCE_STATE_COMMON
+				);
+
+		cmd->GetList()->ResourceBarrier(1, &transition);
+
+		cmd->GetList()->ClearRenderTargetView
+				(
+				 primitive->GetRtv()->GetCPUDescriptorHandleForHeapStart(),
+				 clear_color,
+				 0,
+				 nullptr
+				);
+
+		cmd->GetList()->ResourceBarrier(1, &transition_back);
+	}
+	else if (clear_type == BIND_TYPE_DSV)
+	{
+		const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 resource,
+				 D3D12_RESOURCE_STATE_COMMON,
+				 D3D12_RESOURCE_STATE_DEPTH_WRITE
+				);
+
+		const auto& transition_back = CD3DX12_RESOURCE_BARRIER::Transition
+				(
+				 resource,
+				 D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				 D3D12_RESOURCE_STATE_COMMON
+				);
+
+		cmd->GetList()->ResourceBarrier(1, &transition);
+
+		cmd->GetList()->ClearDepthStencilView
+				(
+				 primitive->GetDsv()->GetCPUDescriptorHandleForHeapStart(),
+				 D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+				 1.f,
+				 0,
+				 0,
+				 nullptr
+				);
+
+		cmd->GetList()->ResourceBarrier(1, &transition_back);
+	}
 }
 
 void Engine::D3D12GraphicInterface::ClearRenderTarget()
 {
-	Strong<CommandPair> cmd = m_command_pair_task_.Acquire(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Render Target Clear").lock();
+	const Strong<CommandPair>& cmd = m_command_pair_task_.Acquire(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Render Target Clear").lock();
 	cmd->SoftReset();
 
 	constexpr float color[4] = { 0.f, 0.f, 0.f, 1.f };
@@ -193,7 +651,7 @@ void Engine::D3D12GraphicInterface::ClearRenderTarget()
 void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) const
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
-	auto* resource = static_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetPrimitiveTexture());
+	auto* resource = static_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetNativeTexture());
 
 	const auto& dst_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -230,9 +688,9 @@ void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceConte
 	cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
 }
 
-Engine::Unique<Engine::StructuredBufferTypelessBase>&& Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
+Engine::StructuredBufferTypelessBase* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
 {
-	return std::move(std::make_unique<Graphics::D3D12StructuredBufferTypeless>());
+	return new Graphics::D3D12StructuredBufferTypeless();
 }
 
 void Engine::D3D12GraphicInterface::InitializeDevice()

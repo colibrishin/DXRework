@@ -3,10 +3,9 @@
 #include <directx/d3dx12.h>
 
 #include "CommandPair.h"
-#include "Source/Runtime/Core/ConstantBuffer.h"
 #include "Descriptors.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
 #include "ThrowIfFailed.h"
+#include "Source/Runtime/Core/ConstantBuffer.h"
 
 namespace Engine::Graphics
 {
@@ -22,10 +21,14 @@ namespace Engine::Graphics
 			m_alignment_size_ = (sizeof(T) + 255) & ~255;
 		}
 
-		void Create(const T* src_data)
+		void Create(const T* src_data) override
 		{
-			const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"ConstantBuffer Initialization").lock();
+			GraphicInterface&                        gi        = g_graphic_interface.GetInterface();
+			const auto                               dev       = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
+			const GraphicInterfaceContextReturnType& context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"ConstantBuffer Initialization");
+			const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();
 
+			const auto cmd = static_cast<CommandPair*>(primitive.commandList);
 			cmd->SoftReset();
 
 			const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -33,7 +36,7 @@ namespace Engine::Graphics
 
 			DX::ThrowIfFailed
 					(
-					 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
+					 dev->CreateCommittedResource
 					 (
 					  &default_heap,
 					  D3D12_HEAP_FLAG_NONE,
@@ -55,7 +58,7 @@ namespace Engine::Graphics
 
 			DX::ThrowIfFailed
 					(
-					 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
+					 dev->CreateCommittedResource
 					 (
 					  &upload_heap,
 					  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
@@ -108,11 +111,11 @@ namespace Engine::Graphics
 
 			DX::ThrowIfFailed
 					(
-					 Managers::D3Device::GetInstance().GetDevice()->CreateDescriptorHeap
+					 dev->CreateDescriptorHeap
 					 (&cbv_heap_desc, IID_PPV_ARGS(m_cpu_cbv_heap_.GetAddressOf()))
 					);
 
-			Managers::D3Device::GetInstance().GetDevice()->CreateConstantBufferView
+			dev->CreateConstantBufferView
 					(
 					 &cbv_desc,
 					 m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart()
@@ -121,7 +124,7 @@ namespace Engine::Graphics
 			m_b_dirty_ = false;
 		}
 
-		void SetData(const T* src_data)
+		void SetData(const T* src_data) override
 		{
 			if (src_data != nullptr)
 			{
@@ -131,26 +134,17 @@ namespace Engine::Graphics
 			m_b_dirty_ = true;
 		}
 
-		T GetData() const
+		T GetData() const override
 		{
 			return m_data_;
 		}
 
-		void Bind(const GraphicInterfaceContextReturnType* context) override 
+		void Bind(const GraphicInterfaceContextPrimitive* context) override 
 		{
-			Bind(static_cast<ID3D12GraphicsCommandList1*>(context->commandList), 
-				static_cast<DescriptorPtrImpl*>(context->heap));
+			Bind(static_cast<CommandPair*>(context->commandList), static_cast<DescriptorPtrImpl*>(context->heap));
 		}
 
-		void Bind(const Weak<CommandPair>& w_cmd, const DescriptorPtrImpl* w_heap)
-		{
-			if (const auto& cmd = w_cmd.lock())
-			{
-				Bind(cmd->GetList(), w_heap);
-			}
-		}
-
-		void Bind(ID3D12GraphicsCommandList* cmd, const DescriptorPtrImpl* heap)
+		void Bind(CommandPair* cmd, DescriptorPtrImpl* heap)
 		{
 			if (m_b_dirty_)
 			{
@@ -176,9 +170,9 @@ namespace Engine::Graphics
 						 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 						);
 
-				cmd->ResourceBarrier(1, &copy_trans);
-				cmd->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
-				cmd->ResourceBarrier(1, &cb_trans);
+				cmd->GetList()->ResourceBarrier(1, &copy_trans);
+				cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+				cmd->GetList()->ResourceBarrier(1, &cb_trans);
 
 				m_b_dirty_ = false;
 			}

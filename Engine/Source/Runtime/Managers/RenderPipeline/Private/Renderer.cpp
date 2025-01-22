@@ -11,21 +11,14 @@ namespace Engine::Managers
 
 	void Renderer::PreUpdate(const float& dt)
 	{
-		for (RenderPassTask* task : m_render_pass_tasks_)
+		for (size_t i = 0; i < m_render_pass_tasks_.size(); ++i)
 		{
-			task->Cleanup();
+			m_render_pass_tasks_[i]->Cleanup();
 		}
 
 		for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i) 
 		{
-			for (size_t j = 0; j < SHADER_DOMAIN_MAX; ++j) 
-			{
-				if (RenderMap::accessor acc;
-					m_render_candidates_[j].find(acc, i))
-				{
-					m_render_instance_tasks_[i]->Cleanup(&acc->second);
-				}
-			}
+			m_render_instance_tasks_[i]->Cleanup(m_render_candidates_, SHADER_DOMAIN_MAX);
 		}
 
 		m_b_ready_ = false;
@@ -41,17 +34,13 @@ namespace Engine::Managers
 		{
 			for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i)
 			{
-				for (size_t j = 0; j < SHADER_DOMAIN_MAX; ++j) 
-				{
-					if (RenderMap::accessor acc;
-						m_render_candidates_[j].find(acc, i))
-					{
-						m_render_instance_tasks_[i]->Run(
-							scene.get(), 
-							&acc->second, 
-							m_instance_count_);
-					}
-				}
+				m_render_instance_tasks_[i]->Run
+					(
+					 scene.get(),
+					 m_render_candidates_,
+					 SHADER_DOMAIN_MAX,
+					 m_instance_count_
+					);
 			}
 		}
 
@@ -62,7 +51,7 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, {}, {});
+			RenderPass(dt, false, static_cast<eShaderDomain>(i), {}, {}, {}, {});
 		}
 	}
 
@@ -71,27 +60,22 @@ namespace Engine::Managers
 		const bool                                         shader_bypass, 
 		const eShaderDomain                                domain,
 		const SBs::LocalParamSB&                           local_param_sb,
-		const aligned_vector<RenderPassPrerequisiteTask*>& additional_task,
-		const ObjectPredication&                           predication) 
+		const ObjectPredication&                           predication,
+		const ContextSetupFunction&						   prerender_predicate,
+		const ContextSetupFunction&						   postrender_predicate) const
 	{
-		const size_t default_offset = m_render_prerequisite_tasks_.size();
-		m_render_prerequisite_tasks_.insert(m_render_prerequisite_tasks_.end(), additional_task.begin(), additional_task.end());
-
-		for (RenderPassTask* task : m_render_pass_tasks_) 
+		for (size_t i = 0; i < m_render_pass_tasks_.size(); ++i) 
 		{
-			task->Run(
+			m_render_pass_tasks_[i]->Run(
 			          dt,
 			          shader_bypass,
 			          &m_render_candidates_[domain],
 			          local_param_sb,
 			          m_instance_count_,
-			          m_render_prerequisite_tasks_.data(),
-			          m_render_prerequisite_tasks_.size(),
-			          predication
-			         ); // todo: culling
+			          predication,
+			          prerender_predicate,
+			          postrender_predicate);
 		}
-
-		m_render_prerequisite_tasks_.erase(m_render_prerequisite_tasks_.begin() + default_offset, m_render_prerequisite_tasks_.end());
 	}
 
 	void Renderer::PostRender(const float& dt) {}
@@ -104,7 +88,7 @@ namespace Engine::Managers
 	{
 		if (task != nullptr) 
 		{
-			m_render_instance_tasks_.push_back(task);
+			m_render_instance_tasks_.push_back(std::unique_ptr<RenderInstanceTask>(task));
 		}
 	}
 
@@ -112,15 +96,7 @@ namespace Engine::Managers
 	{
 		if (task != nullptr)
 		{
-			m_render_pass_tasks_.push_back(task);
-		}
-	}
-
-	void Renderer::RegisterRenderPassPrerequisite(RenderPassPrerequisiteTask* task)
-	{
-		if (task != nullptr) 
-		{
-			m_render_prerequisite_tasks_.push_back(task);
+			m_render_pass_tasks_.push_back(std::unique_ptr<RenderPassTask>(task));
 		}
 	}
 

@@ -129,7 +129,7 @@ namespace Engine
 		m_description_ = description;
 	}
 
-	void* PrimitiveTexture::GetPrimitiveTexture() const
+	void* PrimitiveTexture::GetNativeTexture() const
 	{
 		return m_texture_;
 	}

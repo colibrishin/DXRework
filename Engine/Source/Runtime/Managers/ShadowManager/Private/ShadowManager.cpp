@@ -10,8 +10,8 @@
 #include "Source/Runtime/Resources/ShadowTexture/Public/ShadowTexture.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/Renderer.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 
 namespace Engine::Managers
 {
@@ -47,17 +47,11 @@ namespace Engine::Managers
 				 }
 				);
 
-		m_shadow_map_mask_->Load();
-		m_shadow_map_mask_->Initialize();
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		m_light_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightSB>>(gi.GetStructuredBuffer<SBs::LightSB>());
+		m_light_vp_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightVPSB>>(gi.GetStructuredBuffer<SBs::LightVPSB>());
 
 		InitializeViewport();
-
-		if (!m_shadow_task_)
-		{
-			throw std::runtime_error("No shadow task has been assigned to");
-		}
-
-		m_shadow_task_->SetShadowShader(m_shadow_shader_);
 	}
 
 	void ShadowManager::PreUpdate(const float& dt)
@@ -136,8 +130,13 @@ namespace Engine::Managers
 			return;
 		}
 
-		if (const auto scene = Managers::SceneManager::GetInstance().GetActiveScene().lock())
+		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
+			GraphicInterface& gi = g_graphic_interface.GetInterface();
+			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Depth pass for Shadow");
+			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+
+			primitive.commandList->SoftReset();
 			std::vector<SBs::LightVPSB> current_light_vp;
 			GetLightVP(scene, current_light_vp);
 
@@ -147,14 +146,20 @@ namespace Engine::Managers
 				return;
 			}
 
-			ClearShadowMaps(cmd);
-			
+			ClearShadowMaps(&primitive);
 			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
 			CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
 
-			m_shadow_task_->UpdateLight(light_buffer);
-			m_shadow_task_->UpdateLightVP(current_light_vp);
+			m_light_sb_->GetTypeless().TransitionCommon(&primitive);
+			m_light_vp_sb_->GetTypeless().TransitionCommon(&primitive);
 
+			m_light_sb_->SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
+			m_light_vp_sb_->SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+
+			m_light_sb_->GetTypeless().TransitionToSRV(&primitive);
+			m_light_vp_sb_->GetTypeless().TransitionToSRV(&primitive);
+			primitive.commandList->FlagReady();
+			
 			UINT idx = 0;
 
 			for (const auto& ptr_light : m_lights_ | std::views::values)
@@ -187,53 +192,39 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::BuildShadowMap(
-		const float dt, const Strong<Objects::Light>& light, const UINT light_idx
-	)
+	void ShadowManager::BuildShadowMap(const float dt, const Strong<Objects::Light>& light, const UINT light_idx)
 	{
 		// Notify the light index to the shader.
 		SBs::LocalParamSB local_param{};
 		local_param.SetParam(0, static_cast<int>(light_idx));
 
-		aligned_vector<RenderPassPrerequisiteTask*> vec;
-		vec.push_back(m_viewport_task_.get());
-		vec.push_back(m_shadow_task_.get());
-
-		Managers::Renderer::GetInstance().RenderPass
-				(
-				 dt, true, SHADER_DOMAIN_OPAQUE, local_param,
-				 vec, [](const Strong<Abstracts::ObjectBase>& obj)
-				 {
-					 if (obj->GetLayer() == RESERVED_LAYER_CAMERA || 
-						 obj->GetLayer() == RESERVED_LAYER_UI || 
-						 obj->GetLayer() == RESERVED_LAYER_ENVIRONMENT ||
-					     obj->GetLayer() == RESERVED_LAYER_LIGHT || 
-						 obj->GetLayer() == RESERVED_LAYER_SKYBOX)
-					 {
-						 return false;
-					 }
-
-					 return true;
-				 }
-				);
-
-		/*
-		 It only needs to render the depth of the object from the light's point of view.
-				 // Swap the depth stencil to the each light's shadow map.
-				 const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
-				 m_shadow_map_mask_.Bind(c, dsv);
-
-				 const auto& h = wh.lock();
-
-				 h->SetSampler(m_sampler_heap_->GetCPUDescriptorHandleForHeapStart(), SAMPLER_SHADOW);
-
-				 c->GetList()->IASetPrimitiveTopology(m_shadow_shader_->GetTopology());
-			 }, [this, light](const Weak<CommandPair>& c, const DescriptorPtr& h)
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		Renderer::GetInstance().RenderPass
+			(
+			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, [](const Strong<Abstracts::ObjectBase>& obj)
 			 {
-				 const auto& dsv = m_shadow_texs_.at(light->GetLocalID());
+				 if (obj->GetLayer() == RESERVED_LAYER_CAMERA ||
+				     obj->GetLayer() == RESERVED_LAYER_UI ||
+				     obj->GetLayer() == RESERVED_LAYER_ENVIRONMENT ||
+				     obj->GetLayer() == RESERVED_LAYER_LIGHT ||
+				     obj->GetLayer() == RESERVED_LAYER_SKYBOX) { return false; }
 
-				 m_shadow_map_mask_.Unbind(c, dsv);
-		*/
+				 return true;
+			 },
+			 [&gi, this, &light](const GraphicInterfaceContextPrimitive* context)
+			 {
+				 gi.BindGraphic(context, m_shadow_shader_.get());
+				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
+				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
+				 BindShadowMaps(context);
+			 },
+			 [this, &gi, &light](const GraphicInterfaceContextPrimitive* context)
+			 {
+				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
+				 gi.UnbindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
+				 UnbindShadowMaps(context);
+			 }
+			);
 	}
 
 	void ShadowManager::CreateSubfrusta(
@@ -246,11 +237,11 @@ namespace Engine::Managers
 		frustum.Near = start;
 		frustum.Far  = end;
 
-		static constexpr XMVECTORU32 vGrabY = {
+		static constexpr DirectX::XMVECTORU32 vGrabY = {
 			0x00000000, 0xFFFFFFFF, 0x00000000,
 			0x00000000
 		};
-		static constexpr XMVECTORU32 vGrabX = {
+		static constexpr DirectX::XMVECTORU32 vGrabX = {
 			0xFFFFFFFF, 0x00000000, 0x00000000,
 			0x00000000
 		};
@@ -338,9 +329,9 @@ namespace Engine::Managers
 						);
 
 				buffer.proj[i] =
-						XMMatrixTranspose
+					DirectX::XMMatrixTranspose
 						(
-						 XMMatrixOrthographicOffCenterLH
+						 DirectX::XMMatrixOrthographicOffCenterLH
 						 (
 						  minExtent.x, maxExtent.x, minExtent.y,
 						  maxExtent.y, 0.f,
@@ -360,45 +351,20 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::BindShadowMaps(const Weak<CommandPair>& w_cmd, const DescriptorPtr& w_heap) const
+	void ShadowManager::BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
-		const auto&                              cmd  = w_cmd.lock();
-		const auto&                              heap = w_heap.lock();
-		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> current_shadow_maps;
-
-		for (const auto& buffer : m_shadow_texs_ | std::views::values)
-		{
-			// todo: refactoring
-			const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
-					(
-					 buffer.GetRawResoruce(),
-					 D3D12_RESOURCE_STATE_COMMON,
-					 D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
-					);
-
-			cmd->GetList()->ResourceBarrier(1, &srv_transition);
-
-			current_shadow_maps.emplace_back(buffer.GetSRVDescriptor()->GetCPUDescriptorHandleForHeapStart());
-		}
-
-		// Bind the shadow map resource previously rendered to the pixel shader.
-		CheckSize<UINT>(current_shadow_maps.size(), L"Warning: Shadow map size is too big!");
-		heap->SetShaderResources
-				(
-				 RESERVED_TEX_SHADOW_MAP,
-				 static_cast<UINT>(current_shadow_maps.size()),
-				 current_shadow_maps
-				);
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		const aligned_vector<Resources::Texture*> textures(m_shadow_texs_.begin(), m_shadow_texs_.end());
+		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
+		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
 	}
 
-	void ShadowManager::UnbindShadowMaps(const Weak<CommandPair>& w_cmd) const
+	void ShadowManager::UnbindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
 	{
-		const auto& cmd = w_cmd.lock();
-
-		for (const auto& buffer : m_shadow_texs_ | std::views::values)
-		{
-			buffer.Unbind(cmd, BIND_TYPE_SRV);
-		}
+		GraphicInterface& gi = g_graphic_interface.GetInterface();
+		const aligned_vector<Resources::Texture*> textures(m_shadow_texs_.begin(), m_shadow_texs_.end());
+		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
+		gi.UnbindMultiple(context, textures.data(), BIND_TYPE_SRV, textures.size());
 	}
 
 	void ShadowManager::RegisterLight(const Weak<Objects::Light>& light)
@@ -438,75 +404,15 @@ namespace Engine::Managers
 			.minDepth = 0.f,
 			.maxDepth = 1.f 
 		};
-
-		m_viewport_task_->SetViewport(m_viewport_);
 	}
 
-	void ShadowManager::ClearShadowMaps(const Weak<CommandPair>& w_cmd)
+	void ShadowManager::ClearShadowMaps(const GraphicInterfaceContextPrimitive* context)
 	{
-		const auto& cmd = w_cmd.lock();
-
 		for (auto& tex : m_shadow_texs_ | std::views::values)
 		{
-			tex->Clear(cmd->GetList());
+			tex->Clear(context);
 		}
 
-		constexpr float clear_color[4] = {0.f, 0.f, 0.f, 1.f};
-
-		const auto& command_to_rtv = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_shadow_map_mask_.GetRawResoruce(),
-				 D3D12_RESOURCE_STATE_COMMON,
-				 D3D12_RESOURCE_STATE_RENDER_TARGET
-				);
-
-		const auto& rtv_to_common = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_shadow_map_mask_.GetRawResoruce(),
-				 D3D12_RESOURCE_STATE_RENDER_TARGET,
-				 D3D12_RESOURCE_STATE_COMMON
-				);
-
-		cmd->GetList()->ResourceBarrier(1, &command_to_rtv);
-
-		cmd->GetList()->ClearRenderTargetView
-				(
-				 m_shadow_map_mask_.GetRTVDescriptor()->GetCPUDescriptorHandleForHeapStart(),
-				 clear_color,
-				 0,
-				 nullptr
-				);
-
-		cmd->GetList()->ResourceBarrier(1, &rtv_to_common);
+		m_shadow_map_mask_->Clear(context);
 	}
 } // namespace Engine::Managers
-
-namespace Engine
-{
-	void ShadowRenderPrerequisiteTask::SetShadowShader(const Strong<Resources::Shader>& shader)
-	{
-		m_shadow_shader_ = shader;
-	}
-
-	void ShadowRenderPrerequisiteTask::UpdateLight(const std::vector<Graphics::SBs::LightSB>& sb)
-	{
-		m_lights_ = sb;
-		m_lazy_ = true;
-	}
-
-	void ShadowRenderPrerequisiteTask::UpdateLightVP(const std::vector<Graphics::SBs::LightVPSB>& sb)
-	{
-		m_light_vps_ = sb;
-		m_lazy_ = true;
-	}
-
-	bool ShadowRenderPrerequisiteTask::IsLazy() const
-	{
-		return m_lazy_;
-	}
-
-	void ShadowRenderPrerequisiteTask::FlipLazy()
-	{
-		m_lazy_ = !m_lazy_;
-	}
-}

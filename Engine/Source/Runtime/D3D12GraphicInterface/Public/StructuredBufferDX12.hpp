@@ -9,6 +9,7 @@ namespace Engine::Graphics
 {
 	class D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypelessBase 
 	{
+	public:
 		D3D12StructuredBufferTypeless() = default;
 		~D3D12StructuredBufferTypeless() override = default;
 
@@ -18,7 +19,7 @@ namespace Engine::Graphics
 		void TransitionToUAV(const GraphicInterfaceContextPrimitive* context) override;
 		void TransitionCommon(const GraphicInterfaceContextPrimitive* context) override;
 
-		D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
+		[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
 
 	protected:
 		void Create(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride, const bool uav) override;
@@ -26,8 +27,8 @@ namespace Engine::Graphics
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride) override;
 		void GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride) override;
 
-		void CopySRVHeap(const GraphicInterfaceContextPrimitive* heap, const UINT slot) const;
-		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* heap, const UINT slot) const;
+		void CopySRVHeap(const GraphicInterfaceContextPrimitive* heap, const UINT slot) const override;
+		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* heap, const UINT slot) const override;
 
 	private:
 		void InitializeSRV(UINT size, const size_t stride);

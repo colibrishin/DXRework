@@ -1,10 +1,5 @@
 #include "../Public/ShadowTexture.h"
 
-#if defined(USE_DX12)
-#include <directx/d3d12.h>
-#include <directx/d3dx12.h>
-#endif
-
 namespace Engine::Resources
 {
 	void ShadowTexture::FixedUpdate(const float& dt)
@@ -62,27 +57,9 @@ namespace Engine::Resources
 		return Texture2D::GetWidth();
 	}
 
-	void ShadowTexture::Clear(ID3D12GraphicsCommandList1* cmd) const
+	void ShadowTexture::Clear(const GraphicInterfaceContextPrimitive* context) const
 	{
-		const auto& dsv_trans = CD3DX12_RESOURCE_BARRIER::Transition
-				(GetRawResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-		cmd->ResourceBarrier(1, &dsv_trans);
-
-		cmd->ClearDepthStencilView
-				(
-				 m_dsv_->GetCPUDescriptorHandleForHeapStart(),
-				 D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-				 1.0f,
-				 0,
-				 0,
-				 nullptr
-				);
-
-		const auto& dsv_trans_back = CD3DX12_RESOURCE_BARRIER::Transition
-				(GetRawResource(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
-
-		cmd->ResourceBarrier(1, &dsv_trans_back);
+		g_graphic_interface.GetInterface().Clear(context, this, BIND_TYPE_DSV);
 	}
 
 	void ShadowTexture::Unload_INTERNAL()

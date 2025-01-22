@@ -12,11 +12,11 @@ namespace Engine
 	enum eCBType : uint8_t;
 	enum eRaytracingCBType :uint8_t;
 
-	class ConstantBufferTypelessBase
+	class CORE_API ConstantBufferTypelessBase
 	{
 	public:
 		virtual ~ConstantBufferTypelessBase() = default;
-		virtual void Bind(const GraphicInterfaceContextReturnType* context) = 0;
+		virtual void Bind(const GraphicInterfaceContextPrimitive* context) = 0;
 	};
 
 	template <typename T>
@@ -30,7 +30,7 @@ namespace Engine
 
 	namespace Graphics::CBs 
 	{
-		struct PerspectiveCB
+		struct CORE_API PerspectiveCB
 		{
 			CB_T(CB_TYPE_WVP)
 
@@ -45,14 +45,14 @@ namespace Engine
 			Matrix reflectView;
 		};
 
-		struct ParamCB : public ParamBase
+		struct CORE_API ParamCB : public ParamBase
 		{
 			CB_T(CB_TYPE_PARAM)
 		};
 
 		static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
 
-		struct ViewportCB
+		struct CORE_API ViewportCB
 		{
 			RT_CB_T(RAYTRACING_CB_VIEWPORT)
 			Vector2 resolution;

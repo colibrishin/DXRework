@@ -5,7 +5,6 @@
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 
 namespace Engine 
 {
@@ -52,7 +51,7 @@ namespace Engine::Resources
 		[[nodiscard]] ePrimitiveTopology GetPrimitiveTopology() const;
 		[[nodiscard]] ePrimitiveTopologyType GetPrimitiveTopologyType() const;
 		[[nodiscard]] eSampler GetSampler() const;
-		[[nodiscard]] GraphicPrimitiveShader* GetPrimitiveShader() const;
+		[[nodiscard]] GraphicPrimitiveShader& GetGraphicPrimitiveShader() const;
 
 		static boost::weak_ptr<Shader>   Get(const std::string& name);
 		static boost::shared_ptr<Shader> Create(

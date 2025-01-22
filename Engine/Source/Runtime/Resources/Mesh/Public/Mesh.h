@@ -16,6 +16,7 @@ namespace Engine
 {
 	struct PrimitiveMesh;
 
+#if CFG_RAYTRACING
 	struct MESH_API AccelStructBuffer
 	{
 		Unique<GraphicMemoryPool> instanceDescPool;
@@ -24,6 +25,7 @@ namespace Engine
 
 		bool empty = true;
 	};
+#endif
 }
 
 namespace Engine::Resources

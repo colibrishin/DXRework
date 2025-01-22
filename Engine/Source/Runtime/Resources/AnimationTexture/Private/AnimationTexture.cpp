@@ -61,10 +61,8 @@ namespace Engine::Resources
 
 		const GenericTextureDescription& desc = GetDescription();
 		PrimitiveTexture* tex = GetPrimitiveTexture();
-		TextureMappingTask& map_task = tex->GetMappingTask();
 
-		map_task.Map(
-			tex,
+		tex->Map(
 			m_evaluated_animations_.data(),
 			desc.Width / s_vec4_to_mat,
 			desc.Height,

@@ -15,6 +15,11 @@ namespace Engine::Managers
 		primitive.commandList->FlagReady();
 	}
 
+	const Viewport& RenderPipeline::GetViewport() const
+	{
+		return m_viewport_;
+	}
+	
 	RenderPipeline::~RenderPipeline() { }
 
 	void RenderPipeline::InitializeViewport()

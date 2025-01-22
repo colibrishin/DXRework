@@ -56,6 +56,8 @@ namespace Engine::Managers
 			return {m_param_buffer_};
 		}
 
+		[[nodiscard]] const Viewport& GetViewport() const;
+
 	private:
 		friend struct SingletonDeleter;
 		RenderPipeline() = default;
