@@ -12,7 +12,12 @@
 
 namespace Engine
 {
-	enum eComponentType
+	struct ComponentPriorityComparer
+	{
+		bool operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const;
+	};
+
+	enum eComponentType : uint8_t
 	{
 		COM_T_UNK = 0,
 		COM_T_TRANSFORM,

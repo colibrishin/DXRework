@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+
+#if defined(USE_DX12)
 #include <directxtk12/SimpleMath.h>
 #include <DirectXMath.h>
 
@@ -17,35 +19,8 @@ namespace Microsoft::WRL
 	class ComPtr;
 }
 
-namespace Engine
+namespace Engine 
 {
-	template <typename T>
-	using Weak = boost::weak_ptr<T>;
-
-	template <typename T>
-	using Strong = boost::shared_ptr<T>;
-
-	using GenericString = std::string;
-	using EntityName = GenericString;
-	using TypeName = GenericString;
-
-	using IDType = uint32_t;
-	using GlobalEntityID = IDType;
-	using LocalActorID = IDType;
-	using LocalComponentID = IDType;
-
-	using LayerSizeType = uint32_t;
-	using ScriptSizeType = uint32_t;
-
-	inline constexpr static IDType g_invalid_id = -1;
-
-    using UINT = uint32_t;
-
-	enum eResourceType;
-	enum eComponentType;
-	enum eDefObjectType;
-	enum eTaskType;
-
 	using DirectX::BoundingBox;
 	using DirectX::BoundingFrustum;
 	using DirectX::BoundingOrientedBox;
@@ -58,21 +33,94 @@ namespace Engine
 	using DirectX::XMFLOAT3X3;
 	using DirectX::XMVECTORF32;
 
-	using DirectX::CommonStates;
-	using DirectX::GeometricPrimitive;
-	using DirectX::Keyboard;
-	using DirectX::Mouse;
-	using DirectX::SpriteBatch;
-	using DirectX::SpriteFont;
-	using DirectX::VertexPositionColor;
-	using DirectX::BasicEffect;
-
 	struct CommandPair;
 	struct DescriptorHandler;
 	struct DescriptorPtrImpl;
 
 	using StrongDescriptorPtr = boost::shared_ptr<DescriptorPtrImpl>;
 	using DescriptorPtr = boost::weak_ptr<DescriptorPtrImpl>;
+}
+#endif
+
+// Static structured buffer type, this should be added to every structured buffer
+#define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;
+#define CLIENT_SB_T(enum_val) static constexpr eClientSBType csbtype = enum_val;
+
+namespace Engine
+{
+	template <typename T>
+	struct OffsetT
+	{
+		T     value;
+		float ___p[(16 / sizeof(T)) - 1]{};
+
+		OffsetT()
+			: value(),
+			___p{}
+		{
+			static_assert(sizeof(T) <= 16, "OffsetT: sizeof(T) > 16");
+		}
+
+		~OffsetT() = default;
+
+		OffsetT(const T& v)
+			: value(v) {}
+
+		OffsetT& operator=(const T& v)
+		{
+			value = v;
+			return *this;
+		}
+
+		friend class boost::serialization::access;
+
+		template <class Archive>
+		void serialize(Archive& ar, const unsigned int file_version)
+		{
+			ar& value;
+			ar& ___p;
+		}
+	};
+
+	enum eShaderType : uint8_t
+	{
+		SHADER_VERTEX = 0,
+		SHADER_PIXEL,
+		SHADER_GEOMETRY,
+		SHADER_COMPUTE,
+		SHADER_HULL,
+		SHADER_DOMAIN,
+		SHADER_UNKNOWN
+	};
+
+	template <typename T>
+	using Weak = boost::weak_ptr<T>;
+
+	template <typename T>
+	using Strong = boost::shared_ptr<T>;
+
+	using GenericString = std::string;
+	using EntityName = GenericString;
+	using TypeName = GenericString;
+	using MetadataPathStr = GenericString;
+
+	using IDType = uint32_t;
+	using GlobalEntityID = IDType;
+	using LocalActorID = IDType;
+	using LocalComponentID = IDType;
+	using LocalResourceID = IDType;
+
+	using LayerSizeType = uint32_t;
+	using ScriptSizeType = uint32_t;
+
+	inline constexpr static IDType g_invalid_id = -1;
+
+    using UINT = uint32_t;
+
+	enum eResourceType : uint8_t;
+	enum eComponentType : uint8_t;
+	enum eDefObjectType : uint8_t;
+	enum eTaskType : uint8_t;
 
 	class Serializer;
 	struct ComponentPriorityComparer;
@@ -131,6 +179,7 @@ namespace Engine
 	} // namespace Graphic
 
 	using VertexCollection = std::vector<Graphics::VertexElement>;
+	using IndexCollection = std::vector<uint32_t>;
 
 	namespace Resources
 	{
@@ -168,27 +217,21 @@ namespace Engine
 
 	namespace Managers
 	{
-		namespace Graphics
-		{
-			class RaytracingPipeline;
-			class Raytracer;
-			class ToolkitAPI;
-			class RenderPipeline;
-			class D3Device;
-			class ShadowManager;
-			class ReflectionEvaluator;
-			class Renderer;
-			class ImGuiManager;
-		} // namespace Graphics
+		class RaytracingPipeline;
+		class Raytracer;
+		class ToolkitAPI;
+		class RenderPipeline;
+		class D3Device;
+		class ShadowManager;
+		class ReflectionEvaluator;
+		class Renderer;
+		class ImGuiManager;
 
-		namespace Physics
-		{
-			class PhysicsManager;
-			class LerpManager;
-			class ConstraintSolver;
-			class CollisionDetector;
-			class Graviton;
-		} // namespace Physics
+		class PhysicsManager;
+		class LerpManager;
+		class ConstraintSolver;
+		class CollisionDetector;
+		class Graviton;
 
 		class ProjectionFrustum;
 		class Application;

@@ -24,15 +24,15 @@ public class Boost : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"boost_atomic-vc140-mt-gd.lib", 
-            @"boost_chrono-vc140-mt-gd.lib", 
-            @"boost_container-vc140-mt-gd.lib",
-            @"boost_date_time-vc140-mt-gd.lib",
-            @"boost_regex-vc140-mt-gd.lib",
-            @"boost_serialization-vc140-mt-gd.lib",
-            @"boost_system-vc140-mt-gd.lib",
-            @"boost_thread-vc140-mt-gd.lib",
-            @"boost_wserialization-vc140-mt-gd.lib"
+            @"boost_atomic-vc143-mt-gd-x64-1_86.lib", 
+            @"boost_chrono-vc143-mt-gd-x64-1_86.lib", 
+            @"boost_container-vc143-mt-gd-x64-1_86.lib",
+            @"boost_date_time-vc143-mt-gd-x64-1_86.lib",
+            @"boost_regex-vc143-mt-gd-x64-1_86.lib",
+            @"boost_serialization-vc143-mt-gd-x64-1_86.lib",
+            @"boost_system-vc143-mt-gd-x64-1_86.lib",
+            @"boost_thread-vc143-mt-gd-x64-1_86.lib",
+            @"boost_wserialization-vc143-mt-gd-x64-1_86.lib"
         );
     }
 
@@ -42,15 +42,15 @@ public class Boost : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"boost_atomic-vc140-mt.lib", 
-            @"boost_chrono-vc140-mt.lib", 
-            @"boost_container-vc140-mt.lib",
-            @"boost_date_time-vc140-mt.lib",
-            @"boost_regex-vc140-mt.lib",
-            @"boost_serialization-vc140-mt.lib",
-            @"boost_system-vc140-mt.lib",
-            @"boost_thread-vc140-mt.lib",
-            @"boost_wserialization-vc140-mt.lib"
+            @"boost_atomic-vc143-mt-x64-1_86.lib", 
+            @"boost_chrono-vc143-mt-x64-1_86.lib", 
+            @"boost_container-vc143-mt-x64-1_86.lib",
+            @"boost_date_time-vc143-mt-x64-1_86.lib",
+            @"boost_regex-vc143-mt-x64-1_86.lib",
+            @"boost_serialization-vc143-mt-x64-1_86.lib",
+            @"boost_system-vc143-mt-x64-1_86.lib",
+            @"boost_thread-vc143-mt-x64-1_86.lib",
+            @"boost_wserialization-vc143-mt-x64-1_86.lib"
         );
     }
 }

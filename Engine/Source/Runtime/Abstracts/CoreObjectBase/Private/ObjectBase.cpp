@@ -30,11 +30,6 @@ namespace Engine::Abstracts
 		m_culled_ = culled;
 	}
 
-	void ObjectBase::SetImGuiOpen(bool open)
-	{
-		m_imgui_open_ = open;
-	}
-
 	bool ObjectBase::GetActive() const
 	{
 		return m_active_;
@@ -43,11 +38,6 @@ namespace Engine::Abstracts
 	bool ObjectBase::GetCulled() const
 	{
 		return m_culled_;
-	}
-
-	bool& ObjectBase::GetImGuiOpen()
-	{
-		return m_imgui_open_;
 	}
 
 	eDefObjectType ObjectBase::GetObjectType() const
@@ -464,11 +454,6 @@ namespace Engine::Abstracts
 					continue;
 				}
 
-				if (locked->GetCulled() && !GetProjectionFrustum().CheckRender(locked))
-				{
-					continue;
-				}
-
 				locked->Render(dt);
 			}
 		}
@@ -610,11 +595,6 @@ namespace Engine::Abstracts
 	Strong<ObjectBase> ObjectBase::Clone(bool register_scene) const
 	{
 		const auto& cloned = cloneImpl();
-
-		// Flip the ImGui flags just in case.
-		cloned->m_imgui_children_open_   = false;
-		cloned->m_imgui_components_open_ = false;
-		cloned->m_imgui_open_            = false;
 
 		// Clone components and scripts
 		cloned->m_components_.clear();

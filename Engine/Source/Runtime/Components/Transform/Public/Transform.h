@@ -70,9 +70,9 @@ namespace Engine::Components
 		Transform();
 
 	private:
-		friend class Managers::Physics::LerpManager;
-		friend class Managers::Graphics::ShadowManager;
-		friend class Managers::Graphics::Renderer;
+		friend class Managers::LerpManager;
+		friend class Managers::ShadowManager;
+		friend class Managers::Renderer;
 
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
 

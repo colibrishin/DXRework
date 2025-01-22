@@ -8,6 +8,20 @@ SERIALIZE_IMPL
  _ARTAG(m_type_)
 )
 
+namespace Engine
+{
+	bool ComponentPriorityComparer::operator()(Weak<Abstracts::Component> Left, Weak<Abstracts::Component> Right) const
+	{
+		if (Left.lock()->GetComponentType() != Right.lock()->GetComponentType())
+		{
+			return
+				Left.lock()->GetComponentType() < Right.lock()->GetComponentType();
+		}
+
+		return Left.lock()->GetID() < Right.lock()->GetID();
+	}
+}
+
 namespace Engine::Abstracts
 {
 	Weak<ObjectBase> Component::GetOwner() const
