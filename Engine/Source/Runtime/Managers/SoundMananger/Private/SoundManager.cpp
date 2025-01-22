@@ -1,5 +1,14 @@
 #include "../Public/SoundManager.h"
 
+#include "Components/Rigidbody/Public/Rigidbody.h"
+#include "Components/Transform/Public/Transform.h"
+
+#include "Objects/Camera/Public/Camera.h"
+
+#include "Scene/Public/Scene.hpp"
+
+#include "SceneManager/Public/SceneManager.hpp"
+
 #pragma comment(lib, "fmod_vc.lib")
 
 namespace FMOD 
@@ -50,22 +59,46 @@ namespace Engine::Managers
 
 	void SoundManager::PreUpdate(const float dt) { }
 
-	void SoundManager::Update(const float dt)
-	{
-		m_audio_engine_->update();
-	}
+	void SoundManager::Update(const float dt) {}
 
-	void SoundManager::PreRender(const float dt) { }
+	void SoundManager::PreRender(const float dt) {}
 
 	void SoundManager::Render(const float dt) {}
 
-	void SoundManager::PostRender(const float dt)
-	{
-	}
+	void SoundManager::PostRender(const float dt) {}
 
 	void SoundManager::FixedUpdate(const float dt) { }
 
-	void SoundManager::PostUpdate(const float dt) { }
+	void SoundManager::PostUpdate(const float dt)
+	{
+		if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
+		{
+			if (const Strong<Objects::Camera>& camera = scene->GetMainCamera().lock())
+			{
+				Vector3 velocity = Vector3::Zero;
+
+				if (const auto bound = camera->GetParent().lock())
+				{
+					if (const auto rb = bound->GetComponent<Components::Rigidbody>().lock())
+					{
+						velocity = rb->GetT0LinearVelocity();
+					}
+				}
+
+				const Matrix invView = camera->GetViewMatrix().Invert();
+
+				Set3DListener
+						(
+						{invView._41, invView._42, invView._43},
+						{velocity.x, velocity.y, velocity.z},
+						{g_forward.x, g_forward.y, g_forward.z},
+						{Vector3::Up.x, Vector3::Up.y, Vector3::Up.z}
+						); // todo: fixed up?
+			}
+		}
+
+		m_audio_engine_->update();
+	}
 
 	void SoundManager::LoadSound(FMOD::Sound** sound, const std::string& path) const
 	{

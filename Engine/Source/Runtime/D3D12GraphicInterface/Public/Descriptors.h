@@ -1,8 +1,9 @@
 #pragma once
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+
+#include "GraphicInterface.h"
 
 namespace Engine
 {

@@ -9,6 +9,8 @@
 #include <set>
 #include <boost/smart_ptr/weak_ptr.hpp>
 
+#include "Debugger/Public/Debugger.hpp"
+
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
@@ -390,7 +392,9 @@ namespace Engine
 							}
 						}
 					}
-
+#if WITH_DEBUG
+					Managers::Debugger::GetInstance().Draw(node_bound, {1.f, 1.f, 1.f, 1.f});
+#endif
 					stack.pop();
 					continue;
 				}

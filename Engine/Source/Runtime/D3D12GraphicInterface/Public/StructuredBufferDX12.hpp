@@ -39,66 +39,14 @@ namespace Engine::Graphics
 
 		D3D12_RESOURCE_STATES m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 
-		ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_uav_heap_;
+		ComPtr<ID3D12DescriptorHeap> m_srv_heap_{};
+		ComPtr<ID3D12DescriptorHeap> m_uav_heap_{};
 
-		ComPtr<ID3D12Resource> m_upload_buffer_;
-		ComPtr<ID3D12Resource> m_read_buffer_;
-		ComPtr<ID3D12Resource> m_buffer_;
+		ComPtr<ID3D12Resource> m_upload_buffer_{};
+		ComPtr<ID3D12Resource> m_read_buffer_{};
+		ComPtr<ID3D12Resource> m_buffer_{};
 
 		UINT m_size_{};
 		bool m_uav_ = false;
-	};
-
-	template <typename T>
-	class D3D12StructuredBuffer : public D3D12StructuredBufferTypeless, public IStructuredBufferType<T>
-	{
-	public:
-		D3D12StructuredBuffer() = default;
-		~D3D12StructuredBuffer() override = default;
-
-		void Create(const GraphicInterfaceContextPrimitive* context, UINT size, const T* initial_data, const bool uav) override
-		{
-			Create(context, size, initial_data, sizeof(T), uav);
-		}
-
-		void SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const T* src_ptr) override 
-		{
-			Create(context, size, src_ptr, sizeof(T));
-		}
-
-		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const T* const* src_ptr) override
-		{
-			Create(context, size, src_ptr, sizeof(T));
-		}
-
-		void GetData(const GraphicInterfaceContextPrimitive* context, UINT size, T* dst_ptr) override
-		{
-			GetData(context, size, dst_ptr, sizeof(T));
-		}
-
-		void CopySRVHeap(const GraphicInterfaceContextPrimitive* heap) const override 
-		{
-			if constexpr (is_client_sb<T>::value == true)
-			{
-				CopySRVHeap(heap, which_client_sb<T>::value);
-			}
-			else if constexpr (is_sb<T>::value == true)
-			{
-				CopySRVHeap(heap, which_sb<T>::value);
-			}
-		}
-
-		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* heap) const override
-		{
-			if constexpr (is_client_uav_sb<T>::value == true)
-			{
-				CopySRVHeap(heap, which_client_sb_uav<T>::value);
-			}
-			else if constexpr (is_uav_sb<T>::value == true)
-			{
-				CopySRVHeap(heap, which_sb_uav<T>::value);
-			}
-		}
 	};
 }

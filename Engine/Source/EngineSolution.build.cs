@@ -78,7 +78,6 @@ public class EngineSolution : Solution
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<InputManager>(target);
-                conf.AddProject<CameraManager>(target);
                 conf.AddProject<ProjectionFrustum>(target);
                 //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);

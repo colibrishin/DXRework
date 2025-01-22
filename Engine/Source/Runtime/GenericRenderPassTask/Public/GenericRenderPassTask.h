@@ -43,7 +43,7 @@ namespace Engine
 		void RunImpl(
 			float                                                   dt,
 			bool                                                    shader_bypass,
-			IStructuredBufferType<Graphics::SBs::InstanceSB>&       instance_buffer,
+			StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>&       instance_buffer,
 			const Weak<Resources::Material>&                        material,
 			const GraphicInterfaceContextPrimitive*                 context,
 			const aligned_vector<const Graphics::SBs::InstanceSB*>& structuredbuffers
@@ -58,7 +58,7 @@ namespace Engine
 		CommandListBase* m_current_cmd_ = nullptr;
 		GraphicHeapBase* m_current_heap_ = nullptr;
 
-		std::map<uint64_t, Unique<IStructuredBufferType<Graphics::SBs::MaterialSB>>> m_material_sbs_{};
+		std::map<uint64_t, StructuredBufferTypeProxy<Graphics::SBs::MaterialSB>> m_material_sbs_{};
 		std::set<uint64_t> m_updated_material_in_current_pass_{};
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};

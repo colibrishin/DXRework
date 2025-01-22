@@ -1,6 +1,5 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/GraphicInterface.h"
 
 // Static structured buffer type, this should be added to every structured buffer
 #define SB_T(enum_val) static constexpr eSBType sbtype = enum_val;

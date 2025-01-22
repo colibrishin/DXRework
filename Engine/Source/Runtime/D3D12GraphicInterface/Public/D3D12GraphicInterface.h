@@ -82,6 +82,7 @@ namespace Engine
 		
 	protected:
 		StructuredBufferTypelessBase* GetNativeStructuredBuffer() override;
+		ConstantBufferTypelessBase* GetNativeConstantBuffer() override;
 		
 	private:
 		void InitializeDevice();
@@ -89,7 +90,7 @@ namespace Engine
 		void DetachCommandThread();
 		float GetAspectRatio();
 		
-		Unique<IStructuredBufferType<Graphics::SBs::LocalParamSB>> m_local_param_;
+		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> m_local_param_;
 		
 		ComPtr<ID3D12Device2> m_dev_;
 		ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;

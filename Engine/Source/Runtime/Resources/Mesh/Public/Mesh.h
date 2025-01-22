@@ -41,7 +41,7 @@ namespace Engine::Resources
 		const AccelStructBuffer&               GetBLAS() const;
 #endif
 		
-		[[nodiscard]] IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
+		[[nodiscard]] StructuredBufferTypeProxy<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
@@ -67,7 +67,7 @@ namespace Engine::Resources
 		BoundingOrientedBox m_bounding_box_;
 
 		Unique<PrimitiveMesh> m_primitive_mesh_;
-		Unique<IStructuredBufferType<Graphics::VertexElement>> m_vertex_buffer_structured_;
+		Unique<StructuredBufferTypeProxy<Graphics::VertexElement>> m_vertex_buffer_structured_;
 
 #if CFG_RAYTRACING
 		AccelStructBuffer m_blas_;

@@ -96,8 +96,8 @@ namespace Engine::Managers
 		// lights from current scene
 		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
 
-		Unique<IStructuredBufferType<SBs::LightSB>> m_light_sb_;
-		Unique<IStructuredBufferType<SBs::LightVPSB>> m_light_vp_sb_;
+		StructuredBufferTypeProxy<SBs::LightSB> m_light_sb_;
+		StructuredBufferTypeProxy<SBs::LightVPSB> m_light_vp_sb_;
 
 		Viewport m_viewport_;
 	};

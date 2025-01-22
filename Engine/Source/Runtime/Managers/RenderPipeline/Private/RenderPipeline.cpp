@@ -4,6 +4,10 @@
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 #include "CoreModuel/Public/CoreModule.h"
 
+#include "Objects/Camera/Public/Camera.h"
+
+#include "Scene/Public/Scene.hpp"
+
 namespace Engine::Managers
 {
 	using namespace Resources;
@@ -11,11 +15,14 @@ namespace Engine::Managers
 	void RenderPipeline::SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix)
 	{
 		m_wvp_buffer_ = matrix;
-		const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
-		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-		primitive.commandList->SoftReset();
-		m_wvp_buffer_cb_->SetData(&primitive, 1, &m_wvp_buffer_);
-		primitive.commandList->FlagReady();
+		ConstantBufferGuard();
+		m_wvp_buffer_cb_.SetData(&m_wvp_buffer_);
+	}
+
+	void RenderPipeline::BindConstantBuffers(const GraphicInterfaceContextPrimitive* context)
+	{
+		m_wvp_buffer_cb_.Bind(context);
+		m_param_buffer_cb_.Bind(context);
 	}
 
 	const Viewport& RenderPipeline::GetViewport() const
@@ -24,6 +31,21 @@ namespace Engine::Managers
 	}
 	
 	RenderPipeline::~RenderPipeline() { }
+
+	void RenderPipeline::ConstantBufferGuard()
+	{
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+
+		if (!m_wvp_buffer_cb_)
+		{
+			m_wvp_buffer_cb_ = gi.GetConstantBuffer<CBs::PerspectiveCB>();
+		}
+
+		if (!m_param_buffer_cb_)
+		{
+			m_param_buffer_cb_ = gi.GetConstantBuffer<CBs::ParamCB>();
+		}
+	}
 
 	void RenderPipeline::InitializeViewport()
 	{
@@ -191,7 +213,16 @@ namespace Engine::Managers
 
 	void RenderPipeline::PreRender(const float dt)
 	{
-		GraphicInterfaceAccessor::GetInterface().ClearRenderTarget();
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		gi.ClearRenderTarget();
+
+		if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
+		{
+			if (const Strong<Objects::Camera>& camera = scene->GetMainCamera().lock())
+			{
+				SetPerspectiveMatrix(camera->GetPerspectiveCB());
+			}
+		}
 	}
 
 	void RenderPipeline::Update(const float dt) {}

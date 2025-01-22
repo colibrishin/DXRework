@@ -61,9 +61,7 @@ namespace Engine::Managers
 
 	void ToolkitAPI::PreRender(const float dt) { }
 
-	void ToolkitAPI::Render(const float dt) { }
-
-	void ToolkitAPI::PostRender(const float dt)
+	void ToolkitAPI::Render(const float dt)
 	{
 		m_sprite_batch_->SetViewport(reinterpret_cast<const D3D12_VIEWPORT&>(RenderPipeline::GetInstance().GetViewport()));
 
@@ -71,13 +69,14 @@ namespace Engine::Managers
 		auto&                                    gi          = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		const GraphicInterfaceContextReturnType& s_context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Toolkit Render");
 		const GraphicInterfaceContextPrimitive&  s_primitive = s_context.GetPointers();
-		auto                                     s_cmd       = static_cast<CommandPair*>(s_primitive.commandList);
+		const auto                               s_cmd       = static_cast<CommandPair*>(s_primitive.commandList);
 
 		s_cmd->SoftReset();
 		m_sprite_batch_->Begin(s_cmd->GetList(), DirectX::SpriteSortMode_Deferred);
 
 		gi.SetDefaultGraphicPipeline(&s_primitive);
 		gi.SetViewport(&s_primitive, RenderPipeline::GetInstance().GetViewport());
+		RenderPipeline::GetInstance().BindConstantBuffers(&s_primitive);
 		s_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
 		for (const auto& callback : m_sprite_batch_callbacks_)
@@ -90,7 +89,7 @@ namespace Engine::Managers
 		
 		const GraphicInterfaceContextReturnType& p_context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Toolkit Render");
 		const GraphicInterfaceContextPrimitive&  p_primitive = p_context.GetPointers();
-		auto                                     p_cmd       = static_cast<CommandPair*>(p_primitive.commandList);
+		const auto                               p_cmd       = static_cast<CommandPair*>(p_primitive.commandList);
 		p_cmd->SoftReset();
 
 		m_basic_effect_->Apply(p_cmd->GetList());
@@ -105,6 +104,7 @@ namespace Engine::Managers
 		}
 
 		gi.SetDefaultGraphicPipeline(&p_primitive);
+		RenderPipeline::GetInstance().BindConstantBuffers(&p_primitive);
 		gi.SetViewport(&p_primitive, RenderPipeline::GetInstance().GetViewport());
 		p_cmd->GetList()->SetDescriptorHeaps(2, heaps);
 
@@ -123,6 +123,8 @@ namespace Engine::Managers
 
 		m_graphics_memory_->Commit(gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 	}
+
+	void ToolkitAPI::PostRender(const float dt) {}
 
 	void ToolkitAPI::FixedUpdate(const float dt) { }
 

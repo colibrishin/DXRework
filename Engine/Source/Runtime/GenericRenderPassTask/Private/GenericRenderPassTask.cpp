@@ -3,6 +3,7 @@
 #include <ranges>
 #include <tbb/parallel_for_each.h>
 
+#include "RenderPipeline.h"
 #include "Renderer.h"
 
 #include "Source/Runtime/Resources/Material/Public/Material.h"
@@ -67,17 +68,18 @@ namespace Engine
 			);
 		}
 
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Render Pass");
-		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-		
+		GraphicInterface&                        gi        = GraphicInterfaceAccessor::GetInterface();
+		const GraphicInterfaceContextReturnType& context   = gi.GetNewContext(0, false, L"Render Pass");
+		const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();
+
 		primitive.commandList->SoftReset();
 		m_current_cmd_ = primitive.commandList;
-		
-		IStructuredBufferType<Graphics::SBs::LocalParamSB>& sb          = m_local_param_pool_.get();
-		StructuredBufferTypelessBase&                               sb_typeless = sb.GetTypeless();
+
+		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb          = m_local_param_pool_.get();
+		StructuredBufferTypelessBase&                           sb_typeless = sb.GetTypeless();
 		sb.SetData(&primitive, 1, &local_param);
 		sb_typeless.TransitionToSRV(&primitive);
+		Managers::RenderPipeline::GetInstance().BindConstantBuffers(&primitive);
 
 		for (const auto& [mtr, sbs] : final_mapping)
 		{
@@ -98,7 +100,7 @@ namespace Engine
 			sb.CopySRVHeap(&temp_context);
 			m_current_heap_->BindGraphic(&primitive);
 
-			IStructuredBufferType<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
+			StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 			RunImpl(dt, shader_bypass, instance, mtr.lock(), &temp_context, sbs);
 
 			if (postrender_predicate)
@@ -135,7 +137,7 @@ namespace Engine
 	void GenericRenderPassTask::RunImpl(
 		const float dt,
 		const bool shader_bypass,
-		IStructuredBufferType<Graphics::SBs::InstanceSB>& instance_buffer,
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
 		const Weak<Resources::Material>& material,
 		const GraphicInterfaceContextPrimitive* context,
 		const aligned_vector<const Graphics::SBs::InstanceSB*>& structuredbuffers)
@@ -202,13 +204,13 @@ namespace Engine
 
 			if (!m_updated_material_in_current_pass_.contains(reinterpret_cast<uint64_t>(mat.get()))) 
 			{
-				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())] = std::unique_ptr<IStructuredBufferType<Graphics::SBs::MaterialSB>>(
-					gi.GetStructuredBuffer<Graphics::SBs::MaterialSB>());
-				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())]->SetData(context, 1, &mat_sb);
+				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())] = 
+					gi.GetStructuredBuffer<Graphics::SBs::MaterialSB>();
+				m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())].SetData(context, 1, &mat_sb);
 				m_updated_material_in_current_pass_.insert(reinterpret_cast<uint64_t>(mat.get()));
 			}
 
-			IStructuredBufferType<Graphics::SBs::MaterialSB>& sb = *m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())];
+			StructuredBufferTypeProxy<Graphics::SBs::MaterialSB>& sb = m_material_sbs_[reinterpret_cast<uint64_t>(mat.get())];
 			StructuredBufferTypelessBase& material_typeless = sb.GetTypeless();
 			material_typeless.TransitionToSRV(context);
 			sb.CopySRVHeap(context);

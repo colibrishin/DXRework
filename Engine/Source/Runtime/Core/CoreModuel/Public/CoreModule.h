@@ -1,4 +1,7 @@
 #pragma once
+#include "CameraManager/Public/CameraManager.h"
+
+#include "Debugger/Public/Debugger.hpp"
 #include "ModuleManager/Public/IModule.h"
 #include "ResourceManager/Public/ResourceManager.hpp"
 #include "SceneManager/Public/SceneManager.hpp"
@@ -96,7 +99,14 @@ namespace Engine
 				CoreLoop::LOOP_TYPE_LOGIC,
 				&Managers::ResourceManager::GetInstance, 
 				&Managers::SceneManager::GetInstance, 
-				&Managers::TaskScheduler::GetInstance);
+				&Managers::TaskScheduler::GetInstance,
+				&Managers::CameraManager::GetInstance);
+
+#if WITH_DEBUG
+			s_core_module.AddManager(
+				CoreLoop::LOOP_TYPE_RENDER,
+				&Managers::Debugger::GetInstance);
+#endif
 		}
 
 		void Shutdown() override
@@ -105,7 +115,14 @@ namespace Engine
 				CoreLoop::LOOP_TYPE_LOGIC,
 				&Managers::ResourceManager::GetInstance,
 				&Managers::SceneManager::GetInstance,
-				&Managers::TaskScheduler::GetInstance);
+				&Managers::TaskScheduler::GetInstance,
+				&Managers::CameraManager::GetInstance);
+
+#if WITH_DEBUG
+			s_core_module.RemoveManager(
+				CoreLoop::LOOP_TYPE_RENDER,
+				&Managers::Debugger::GetInstance);
+#endif
 		}
 
 		bool DynamicLoadable() override

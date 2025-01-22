@@ -3,6 +3,7 @@
 #include <queue>
 #include <set>
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 
 #include <tbb/concurrent_hash_map.h>
@@ -27,5 +28,5 @@ namespace Engine
 	using ConcurrentWeakComRootMap = concurrent_fast_pool_map<eComponentType, ConcurrentWeakComMap>;
 	using ConcurrentWeakScpRootMap = concurrent_fast_pool_map<ScriptSizeType, ConcurrentWeakScpMap>;
 
-	using InstanceBufferContainer = tbb::concurrent_vector<Unique<IStructuredBufferType<Graphics::SBs::InstanceSB>>>;
+	using InstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
 }

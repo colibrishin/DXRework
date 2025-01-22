@@ -19,8 +19,6 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 		void FixedUpdate(const float dt) override;
 
-		Vector2 GetWorldMousePosition() const;
-
 	private:
 		friend struct SingletonDeleter;
 		~CameraManager() override = default;

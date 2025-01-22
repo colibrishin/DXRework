@@ -183,7 +183,7 @@ namespace Engine::Resources
 	}
 #endif
 
-	IStructuredBufferType<Graphics::VertexElement>& Mesh::GetVertexStructuredBuffer() const
+	StructuredBufferTypeProxy<Graphics::VertexElement>& Mesh::GetVertexStructuredBuffer() const
 	{
 		return *m_vertex_buffer_structured_;
 	}

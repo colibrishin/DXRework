@@ -1,6 +1,5 @@
 #pragma once
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/GraphicInterface.h"
 
 // Static constant buffer type, this should be added to every constant buffer
 #define CB_T(enum_val) static constexpr eCBType cbtype = enum_val;
@@ -11,22 +10,6 @@ namespace Engine
 {
 	enum eCBType : uint8_t;
 	enum eRaytracingCBType :uint8_t;
-
-	class CORE_API ConstantBufferTypelessBase
-	{
-	public:
-		virtual ~ConstantBufferTypelessBase() = default;
-		virtual void Bind(const GraphicInterfaceContextPrimitive* context) = 0;
-	};
-
-	template <typename T>
-	class ConstantBufferTypeBase : public ConstantBufferTypelessBase
-	{
-	public:
-		virtual void Create(const T* src_data) = 0;
-		virtual void SetData(const T* src_data) = 0;
-		virtual T GetData() const = 0;
-	};
 
 	namespace Graphics::CBs 
 	{

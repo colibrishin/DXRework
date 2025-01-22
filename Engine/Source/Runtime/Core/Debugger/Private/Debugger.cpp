@@ -67,11 +67,7 @@ namespace Engine::Managers
 
 	void Debugger::PostRender(const float dt)
 	{
-		if (!GetDebugFlag())
-		{
-			return;
-		}
-
+#if WITH_DEBUG
 		if (m_render_queue_.empty())
 		{
 			return;
@@ -96,14 +92,16 @@ namespace Engine::Managers
 
 		for (auto it = m_render_queue_.begin(); it != m_render_queue_.end(); ++it)
 		{
+			it->elapsed_time += dt;
 			CallbackMessage(dt, it->type, *it);
 		}
+#endif
 	}
 
 	void Debugger::PostUpdate(const float dt) {}
 
 	Debugger::Debugger(SINGLETON_LOCK_TOKEN)
-		: Singleton(), m_b_debug_(false) {}
+		: Singleton() {}
 
 	void Debugger::Initialize() {}
 
@@ -147,7 +145,9 @@ namespace Engine::Managers
 
 	void Debugger::SetCallback(const eDebugMessage type, const DebugCallback& callback)
 	{
+#if WITH_DEBUG
 		m_process_functions_[type] = callback;
+#endif
 	}
 
 	void Debugger::Draw(const BoundingFrustum& frustum, const Color& color)
@@ -194,28 +194,17 @@ namespace Engine::Managers
 		Push(msg);
 	}
 
-	void Debugger::SetDebugFlag()
-	{
-		m_b_debug_ = true;
-	}
-
-	bool Debugger::GetDebugFlag() const
-	{
-		return m_b_debug_;
-	}
-
 	void Debugger::Push(const Message& msg)
 	{
-		if (!m_b_debug_)
-		{
-			return;
-		}
-
+#if WITH_DEBUG
 		if (m_render_queue_.size() > CFG_DEBUG_MAX_MESSAGE)
 		{
 			m_render_queue_.pop_front();
 		}
 
 		m_render_queue_.emplace_back(msg);
+#else
+		return;
+#endif
 	}
 } // namespace Engine::Manager

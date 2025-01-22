@@ -59,9 +59,7 @@ namespace Engine::Managers
 		void Draw(const BoundingFrustum& frustum, const Color& color);
 		void Draw(const Ray& ray, const Color& color);
 
-		void               SetCallback(eDebugMessage type, const DebugCallback& callback);
-		void               SetDebugFlag();
-		[[nodiscard]] bool GetDebugFlag() const;
+		void SetCallback(eDebugMessage type, const DebugCallback& callback);
 
 		void Render(const float dt) override;
 		void PreUpdate(const float dt) override;
@@ -86,7 +84,6 @@ namespace Engine::Managers
 		
 		void Push(const Message& msg);
 
-		bool m_b_debug_;
 		float m_x_ = 0.f;
 		float m_y_ = CFG_DEBUG_MESSAGE_Y_MOVEMENT;
 

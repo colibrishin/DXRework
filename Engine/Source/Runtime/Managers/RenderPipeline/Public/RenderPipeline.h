@@ -54,16 +54,14 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
+		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context);
 
 		template <typename T>
 		void SetParam(const T& v, const size_t slot)
 		{
 			m_param_buffer_.SetParam(slot, v);
-			const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Pipeline Parameter setting");
-			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-			primitive.commandList->SoftReset();
-			m_param_buffer_cb_->SetData(&primitive, 1, &m_param_buffer_);
-			primitive.commandList->FlagReady();
+			ConstantBufferGuard();
+			m_param_buffer_cb_.SetData(&m_param_buffer_);
 		}
 
 		[[nodiscard]] TempParamTicket SetParam(const ParamBase& param)
@@ -78,13 +76,15 @@ namespace Engine::Managers
 		RenderPipeline() = default;
 		~RenderPipeline() override;
 
+		void ConstantBufferGuard();
+
 		void PrecompileShaders();
 		void InitializeViewport();
 
 		Viewport m_viewport_;
 
-		Unique<IStructuredBufferType<CBs::PerspectiveCB>> m_wvp_buffer_cb_;
-		Unique<IStructuredBufferType<CBs::ParamCB>> m_param_buffer_cb_;
+		ConstantBufferTypeProxy<CBs::PerspectiveCB> m_wvp_buffer_cb_;
+		ConstantBufferTypeProxy<CBs::ParamCB> m_param_buffer_cb_;
 
 		CBs::PerspectiveCB m_wvp_buffer_;
 		CBs::ParamCB       m_param_buffer_;

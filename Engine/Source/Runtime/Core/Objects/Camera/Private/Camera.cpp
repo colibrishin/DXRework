@@ -82,6 +82,11 @@ namespace Engine::Objects
 		return m_fov_;
 	}
 
+	const Graphics::CBs::PerspectiveCB& Camera::GetPerspectiveCB() const
+	{
+		return m_perspective_cb_;
+	}
+
 	void Camera::OnDeserialized()
 	{
 		ObjectBase::OnDeserialized();

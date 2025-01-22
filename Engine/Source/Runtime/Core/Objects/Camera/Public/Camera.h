@@ -31,11 +31,12 @@ namespace Engine::Objects
 		void SetFixedUp(bool bFixedUp);
 		void SetFOV(float zoom);
 
-		Matrix  GetViewMatrix() const;
-		Matrix  GetProjectionMatrix() const;
-		Matrix  GetWorldMatrix() const;
-		bool    GetOrthogonal() const;
-		float   GetFOV() const;
+		[[nodiscard]] Matrix  GetViewMatrix() const;
+		[[nodiscard]] Matrix  GetProjectionMatrix() const;
+		[[nodiscard]] Matrix  GetWorldMatrix() const;
+		[[nodiscard]] bool    GetOrthogonal() const;
+		[[nodiscard]] float   GetFOV() const;
+		[[nodiscard]] const Graphics::CBs::PerspectiveCB& GetPerspectiveCB() const;
 
 	private:
 		OBJ_CLONE_DECL
@@ -52,6 +53,6 @@ namespace Engine::Objects
 		Matrix m_view_matrix_;
 		Matrix m_projection_matrix_;
 
-		Graphics::CBs::PerspectiveCB m_wvp_buffer_;
+		Graphics::CBs::PerspectiveCB m_perspective_cb_;
 	};
 } // namespace Engine::Objects

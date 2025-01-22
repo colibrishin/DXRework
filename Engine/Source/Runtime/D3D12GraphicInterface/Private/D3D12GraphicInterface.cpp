@@ -15,6 +15,10 @@
 
 #include "D3D12PrimitiveTexture.h"
 #include "D3D12ComputePrimitiveShader.h"
+#include "ToolkitAPI.h"
+
+#include "CoreModuel/Public/CoreModule.h"
+
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
@@ -24,10 +28,18 @@ namespace Engine
 	void Engine::D3D12GraphicInterfaceModule::Initialize()
 	{
 		GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
+		
+		CoreModule::GetContext().AddManager(
+			CoreLoop::LOOP_TYPE_RENDER,
+			Managers::ToolkitAPI::GetInstance);
 	}
 
 	void Engine::D3D12GraphicInterfaceModule::Shutdown()
 	{
+		CoreModule::GetContext().RemoveManager(
+			CoreLoop::LOOP_TYPE_RENDER,
+			Managers::ToolkitAPI::GetInstance);
+
 		auto& gi = static_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		gi.Shutdown();
 	}
@@ -224,7 +236,7 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	if (!m_local_param_)
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface(); 	
-		m_local_param_ = std::unique_ptr<IStructuredBufferType<Graphics::SBs::LocalParamSB>>(gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>());
+		m_local_param_ = gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>();
 	}
 
 	const auto cmd  = static_cast<CommandPair*>(context->commandList);
@@ -233,10 +245,10 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	SetDefaultComputePipeline(context);
 	BindCompute(context, shader);
 	
-	m_local_param_->SetData(context, 1, &local_param);
-	StructuredBufferTypelessBase& typeless = m_local_param_->GetTypeless();
+	m_local_param_.SetData(context, 1, &local_param);
+	StructuredBufferTypelessBase& typeless = m_local_param_.GetTypeless();
 	typeless.TransitionToSRV(context);
-	m_local_param_->CopySRVHeap(context);
+	m_local_param_.CopySRVHeap(context);
 	heap->BindCompute(context);
 
 	cmd->GetList()->Dispatch(group_count[0], group_count[1], group_count[2]);
@@ -745,6 +757,11 @@ void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceConte
 Engine::StructuredBufferTypelessBase* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
 {
 	return new Graphics::D3D12StructuredBufferTypeless();
+}
+
+Engine::ConstantBufferTypelessBase* Engine::D3D12GraphicInterface::GetNativeConstantBuffer()
+{
+	return new Graphics::D3D12ConstantBufferTypeless();
 }
 
 void Engine::D3D12GraphicInterface::InitializeDevice()

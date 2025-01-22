@@ -75,7 +75,7 @@ namespace Engine::Components
 		bool m_b_follow_owner_;
 
 		Graphics::SBs::LocalParamSB                                      m_params_;
-		Unique<IStructuredBufferType<Graphics::SBs::InstanceParticleSB>> m_sb_buffer_;
+		Unique<StructuredBufferTypeProxy<Graphics::SBs::InstanceParticleSB>> m_sb_buffer_;
 
 		std::mutex        m_instances_mutex_;
 		InstanceParticles m_instances_;

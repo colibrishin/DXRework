@@ -48,8 +48,8 @@ namespace Engine::Managers
 				);
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		m_light_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightSB>>(gi.GetStructuredBuffer<SBs::LightSB>());
-		m_light_vp_sb_ = std::unique_ptr<IStructuredBufferType<SBs::LightVPSB>>(gi.GetStructuredBuffer<SBs::LightVPSB>());
+		m_light_sb_ = gi.GetStructuredBuffer<SBs::LightSB>();
+		m_light_vp_sb_ = gi.GetStructuredBuffer<SBs::LightVPSB>();
 
 		InitializeViewport();
 	}
@@ -150,14 +150,14 @@ namespace Engine::Managers
 			CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
 			CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
 
-			m_light_sb_->GetTypeless().TransitionCommon(&primitive);
-			m_light_vp_sb_->GetTypeless().TransitionCommon(&primitive);
+			m_light_sb_.GetTypeless().TransitionCommon(&primitive);
+			m_light_vp_sb_.GetTypeless().TransitionCommon(&primitive);
 
-			m_light_sb_->SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
-			m_light_vp_sb_->SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
+			m_light_sb_.SetData(&primitive, static_cast<UINT>(light_buffer.size()), light_buffer.data());
+			m_light_vp_sb_.SetData(&primitive, static_cast<UINT>(current_light_vp.size()), current_light_vp.data());
 
-			m_light_sb_->GetTypeless().TransitionToSRV(&primitive);
-			m_light_vp_sb_->GetTypeless().TransitionToSRV(&primitive);
+			m_light_sb_.GetTypeless().TransitionToSRV(&primitive);
+			m_light_vp_sb_.GetTypeless().TransitionToSRV(&primitive);
 			primitive.commandList->FlagReady();
 			
 			UINT idx = 0;

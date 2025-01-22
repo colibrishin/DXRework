@@ -18,6 +18,6 @@ namespace Engine
 
 		ComPtr<ID3DBlob> m_cs_ = nullptr;
 		ComPtr<ID3D12PipelineState> m_pipeline_state_ = nullptr;
-		Unique<IStructuredBufferType<Graphics::SBs::LocalParamSB>> m_local_param_;
+		Unique<StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>> m_local_param_;
 	};
 }
