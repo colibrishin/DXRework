@@ -15,14 +15,11 @@ namespace Engine
 {
 	struct ENGINE_RENDERPIPELINE_API RenderInstanceTask
 	{
+		INLINE_COMPILE_TIME_TYPENAME(RenderInstanceTask)
+
 		virtual      ~RenderInstanceTask() = default;
 		virtual void Run(Scene const* scene, RenderMap* render_map, const size_t map_size) = 0;
 		virtual void Cleanup(RenderMap* render_map, const size_t map_size) = 0;
-
-		virtual std::string_view GetTypeName() const = 0;
-		virtual std::string_view GetPrettyTypeName() const = 0;
-		virtual HashType GetTypeHash() const = 0;
-		virtual bool IsBaseOf(HashType hash) const = 0;
 	};
 
 	struct RenderPassTask;
@@ -35,6 +32,8 @@ namespace Engine
 {
 	struct ENGINE_RENDERPIPELINE_API RenderPassTask
 	{
+		INLINE_COMPILE_TIME_TYPENAME(RenderPassTask)
+
 		virtual      ~RenderPassTask() = default;
 		virtual void Run(
 			float                                   dt,
@@ -47,10 +46,5 @@ namespace Engine
 		) = 0;
 
 		virtual void Cleanup() = 0;
-
-		virtual std::string_view GetTypeName() const = 0;
-		virtual std::string_view GetPrettyTypeName() const = 0;
-		virtual HashType GetTypeHash() const = 0;
-		virtual bool IsBaseOf(HashType hash) const = 0;
 	};
 }

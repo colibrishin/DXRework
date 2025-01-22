@@ -42,7 +42,14 @@ start /b /wait "" %Cmake% "CMakeLists.txt"
 start /b /wait "" %Cmake% "--build" "."
 popd
 
-set "VSVcpkg=%VSPath%\VC\vcpkg\vcpkg.exe"
+echo [Run VCPKG]
+pushd Progams\vcpkg
+IF NOT EXIST Programs\vcpkg (
+git clone https://github.com/Microsoft/vcpkg.git
+call bootstrap-vcpkg.bat
+popd
+)
+
+set "VcpkgPath=Programs\vcpkg\vcpkg.exe"
 IF NOT EXIST vcpkg_installed (mkdir vcpkg_installed)
-IF EXIST "%VSVcpkg%" (echo Found Visual studo vcpkg) else (echo No vcpkg from Visual studio found, fallback to env path)
-IF EXIST "%VSVcpkg%" ("%VSVcpkg%" install --x-install-root=%cd%\vcpkg_installed) ELSE (vcpkg install --x-install-root=%cd%\vcpkg_installed)
+IF EXIST "%VcpkgPath%" ("%VcpkgPath%" install --x-install-root=%cd%\vcpkg_installed)

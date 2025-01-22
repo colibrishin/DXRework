@@ -105,6 +105,7 @@ namespace Engine
                             instance_pair.object = obj;
                             
                             instance_pair.instance = GetInstance();
+                            instance_pair.instance->SetParam(0, tr->GetWorldMatrix().Transpose());
                             
                             // Copy the material primitive and animator primitive if it exists.
                             locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
@@ -114,19 +115,19 @@ namespace Engine
                                 anim->GetPrimitive().Apply(*instance_pair.instance);
                             }
 
-                            instance_pair.textures.insert(
-                                instance_pair.textures.end(),
+                            std::ranges::copy(
                                 locked_mtr->GetTextures().begin(),
-                                locked_mtr->GetTextures().end());
+                                locked_mtr->GetTextures().end(),
+                                instance_pair.textures.begin());
 
                             if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
                             {
-                                instance_pair.reservedTextures[RESERVED_USER_TEX_BONES] = anims;
+                                instance_pair.reservedTextures[RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN] = anims;
                             }
                             
                             if (const Strong<Resources::AtlasAnimationTexture>& atlas = locked_mtr->GetAtlasTexture().lock())
                             {
-                                instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS] = atlas;
+                                instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN] = atlas;
                             }
                             
                             shader_acc->second.emplace_back(instance_pair);

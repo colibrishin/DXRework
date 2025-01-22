@@ -183,7 +183,7 @@ namespace Engine
 
 		constexpr D3D12_SHADER_BYTECODE empty_shader = {nullptr, 0};
 
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline_state_desc;
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline_state_desc{};
 
 		pipeline_state_desc.pRootSignature = static_cast<ID3D12RootSignature*>(pipeline_signature);
 		pipeline_state_desc.InputLayout    = il;
@@ -387,13 +387,14 @@ namespace Engine
 	void D3D12GraphicPrimitiveShader::ConvertShader(const Resources::Shader* shader)
 	{
 		m_domain_ = shader->GetDomain();
-		m_depth_flag_ = shader->GetDepth() != 0;
-		m_depth_test_ = static_cast<D3D12_DEPTH_WRITE_MASK>(shader->GetDepth() & 1);
-		m_depth_func_ = static_cast<D3D12_COMPARISON_FUNC>(std::log2(shader->GetDepth() >> 1) + 1);
+		m_depth_flag_ = shader->IsDepthEnabled();
+		m_depth_test_ = static_cast<D3D12_DEPTH_WRITE_MASK>(shader->GetDepthMode());
+		m_depth_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetDepthFunction());
 		m_smp_filter_ = static_cast<D3D12_FILTER>(shader->GetSamplerFilter());
-		m_smp_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetShaderSampler());
-		m_cull_mode_ = static_cast<D3D12_CULL_MODE>((shader->GetRasterizer() & 2) + 1);
-		m_fill_mode_ = static_cast<D3D12_FILL_MODE>((shader->GetRasterizer() >> 2) + 1);
+		m_smp_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetSamplerFunction());
+		m_smp_address_ = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode());
+		m_cull_mode_ = static_cast<D3D12_CULL_MODE>(shader->GetRasterizerCull());
+		m_fill_mode_ = static_cast<D3D12_FILL_MODE>(shader->GetRasterizerDraw());
 
 		for (const eFormat format : shader->GetRTVFormat())
 		{

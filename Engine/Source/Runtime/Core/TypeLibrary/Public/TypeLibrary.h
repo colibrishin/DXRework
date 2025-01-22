@@ -480,7 +480,7 @@ namespace Engine
 	};
 
 	constexpr UINT g_max_cb_slots = CB_TYPE_END;
-	constexpr UINT g_max_engine_texture_slots = RESERVED_TEX_END;
+	constexpr UINT g_max_engine_texture_slots = RESERVED_USER_TEX_END;
 	constexpr UINT g_max_uav_slots = SB_TYPE_UAV_END;
 	constexpr UINT g_max_sampler_slots = SAMPLER_END;
 	constexpr UINT g_total_engine_slots = g_max_engine_texture_slots + g_max_cb_slots + g_max_uav_slots;
@@ -505,7 +505,7 @@ namespace Engine
 		SHADER_DOMAIN_MAX,
 	};
 
-	enum ENGINE_CORE_API eShaderDepthEnable : uint8_t
+	enum ENGINE_CORE_API eShaderDepthMode : uint8_t
 	{
 		SHADER_DEPTH_TEST_ZERO = 0,
 		SHADER_DEPTH_TEST_ALL = 1,
@@ -513,23 +513,24 @@ namespace Engine
 
 	enum ENGINE_CORE_API eShaderDepthFunction : UINT
 	{
-		SHADER_DEPTH_NEVER = 2,
-		SHADER_DEPTH_LESS = 4,
-		SHADER_DEPTH_EQUAL = 8,
-		SHADER_DEPTH_LESS_EQUAL = 16,
-		SHADER_DEPTH_GREATER = 32,
-		SHADER_DEPTH_NOT_EQUAL = 64,
-		SHADER_DEPTH_GREATER_EQUAL = 128,
-		SHADER_DEPTH_ALWAYS = 256,
+		SHADER_DEPTH_NONE = 0,
+		SHADER_DEPTH_NEVER = 1,
+		SHADER_DEPTH_LESS = 2,
+		SHADER_DEPTH_EQUAL = 3,
+		SHADER_DEPTH_LESS_EQUAL = 4,
+		SHADER_DEPTH_GREATER = 5,
+		SHADER_DEPTH_NOT_EQUAL = 6,
+		SHADER_DEPTH_GREATER_EQUAL = 7,
+		SHADER_DEPTH_ALWAYS = 8
 	};
 
 	enum ENGINE_CORE_API eShaderSamplerAddress : UINT
 	{
-		SHADER_SAMPLER_CLAMP = 0,
-		SHADER_SAMPLER_WRAP = 1,
-		SHADER_SAMPLER_MIRROR = 2,
+		SHADER_SAMPLER_CLAMP = 1,
+		SHADER_SAMPLER_WRAP = 2,
+		SHADER_SAMPLER_MIRROR = 3,
 		SHADER_SAMPLER_BORDER = 4,
-		SHADER_SAMPLER_MIRROR_ONCE = 8
+		SHADER_SAMPLER_MIRROR_ONCE = 5
 	};
 
 	enum ENGINE_CORE_API eShaderSamplerFunction : UINT
@@ -546,15 +547,15 @@ namespace Engine
 
 	enum ENGINE_CORE_API eShaderRasterizerCull : uint8_t
 	{
-		SHADER_RASTERIZER_CULL_NONE = 0,
-		SHADER_RASTERIZER_CULL_FRONT = 1,
-		SHADER_RASTERIZER_CULL_BACK = 2,
+		SHADER_RASTERIZER_CULL_NONE = 1,
+		SHADER_RASTERIZER_CULL_FRONT = 2,
+		SHADER_RASTERIZER_CULL_BACK = 3,
 	};
 
 	enum ENGINE_CORE_API eShaderRasterizerDraw : uint8_t
 	{
-		SHADER_RASTERIZER_FILL_WIREFRAME = 4,
-		SHADER_RASTERIZER_FILL_SOLID = 8,
+		SHADER_RASTERIZER_FILL_WIREFRAME = 2,
+		SHADER_RASTERIZER_FILL_SOLID = 3,
 	};
 
 	using eShaderDepths = UINT;

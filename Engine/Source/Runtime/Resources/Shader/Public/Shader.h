@@ -25,10 +25,14 @@ namespace Engine::Resources
 		Shader(
 			const std::filesystem::path& path,
 			const eShaderDomain          domain,
-			const eShaderDepths          depth,
-			const eShaderRasterizers     rasterizer,
-			const eSamplerFilter         sampler_filter,
-			const eShaderSamplers        sampler,
+			const bool                   depth_enabled,
+			const eShaderDepthMode          depth,
+			const eShaderDepthFunction     depth_func,
+			const eShaderSamplerAddress         sampler_addr,
+			const eShaderSamplerFunction        sampler_func,
+			const eSamplerFilter sampler_filter,
+			const eShaderRasterizerCull rasterizer_cull,
+			const eShaderRasterizerDraw rasterizer_draw,
 			const std::vector<eFormat>&  rtv_formats,
 			const eFormat                dsv_format    = TEX_FORMAT_D24_UNORM_S8_UINT,
 			const ePrimitiveTopology     topology      = PRIMITIVE_TOPOLOGY_TRIANGLELIST,
@@ -45,10 +49,14 @@ namespace Engine::Resources
 		void PostUpdate(const float dt) override;
 
 		[[nodiscard]] eShaderDomain GetDomain() const;
-		[[nodiscard]] eShaderDepths GetDepth() const;
-		[[nodiscard]] eShaderRasterizers GetRasterizer() const;
+		[[nodiscard]] bool IsDepthEnabled() const;
+		[[nodiscard]] eShaderDepthMode GetDepthMode() const;
+		[[nodiscard]] eShaderDepthFunction GetDepthFunction() const;
+		[[nodiscard]] eShaderSamplerAddress GetSamplerAddressMode() const;
+		[[nodiscard]] eShaderSamplerFunction GetSamplerFunction() const;
 		[[nodiscard]] eSamplerFilter GetSamplerFilter() const;
-		[[nodiscard]] eShaderSamplers GetShaderSampler() const;
+		[[nodiscard]] eShaderRasterizerCull GetRasterizerCull() const;
+		[[nodiscard]] eShaderRasterizerDraw GetRasterizerDraw() const;
 		[[nodiscard]] const std::vector<eFormat>& GetRTVFormat() const;
 		[[nodiscard]] eFormat GetDSVFormat() const;
 		[[nodiscard]] ePrimitiveTopology GetPrimitiveTopology() const;
@@ -69,13 +77,21 @@ namespace Engine::Resources
 		EPROPERTY()
 		eShaderDomain          m_domain_;
 		EPROPERTY()
-		eShaderDepths          m_depth_;
+		bool                  m_depth_enabled_;
 		EPROPERTY()
-		eShaderRasterizers     m_rasterizer_;
+		eShaderDepthMode          m_depth_;
+		EPROPERTY()
+		eShaderDepthFunction   m_depth_func_;
+		EPROPERTY()
+		eShaderSamplerAddress m_sampler_addr_;
+		EPROPERTY()
+		eShaderSamplerFunction m_sampler_func_;
 		EPROPERTY()
 		eSamplerFilter         m_sampler_filter_;
 		EPROPERTY()
-		eShaderSamplers        m_sampler_;
+		eShaderRasterizerCull m_cull_mode_;
+		EPROPERTY()
+		eShaderRasterizerDraw m_draw_mode;
 		EPROPERTY()
 		std::vector<eFormat>   m_rtv_formats_;
 		EPROPERTY()

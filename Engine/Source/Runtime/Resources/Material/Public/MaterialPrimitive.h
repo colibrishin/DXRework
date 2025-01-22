@@ -5,7 +5,7 @@
 namespace Engine::Graphics
 {
     ECLASS(serialize)
-    struct MaterialPrimitive
+    struct ENGINE_MATERIAL_API MaterialPrimitive
     {
         GENERATE_BODY
 

@@ -13,5 +13,7 @@ namespace Engine
 		void             Initialize() override;
 		void             Shutdown() override;
 		bool             DynamicLoadable() override;
+
+		void StockShaderPrecompile();
 	};
 }

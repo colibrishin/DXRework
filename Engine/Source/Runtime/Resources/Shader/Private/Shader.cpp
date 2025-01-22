@@ -19,22 +19,30 @@ namespace Engine::Resources
 	Shader::Shader(
 		const std::filesystem::path& path,
 		const eShaderDomain          domain,
-		const eShaderDepths          depth,
-		const eShaderRasterizers     rasterizer,
-		const eSamplerFilter         sampler_filter,
-		const eShaderSamplers        sampler,
-		const std::vector<eFormat>&  rtv_formats,
+		const bool                   depth_enabled,
+		const eShaderDepthMode          depth,
+		const eShaderDepthFunction     depth_func,
+		const eShaderSamplerAddress         sampler_addr,
+		const eShaderSamplerFunction        sampler_func,
+		const eSamplerFilter sampler_filter,
+		const eShaderRasterizerCull rasterizer_cull,
+		const eShaderRasterizerDraw rasterizer_draw,
+		const std::vector<eFormat>& rtv_formats,
 		const eFormat                dsv_format,
 		const ePrimitiveTopology     topology,
 		const ePrimitiveTopologyType topology_type,
-		const eSampler               sampler_slot  
+		const eSampler               sampler_slot
 	) : 
 		Resource(path),
 		m_domain_(domain),
+		m_depth_enabled_(depth_enabled),
 		m_depth_(depth),
-		m_rasterizer_(rasterizer),
+		m_depth_func_(depth_func),
+		m_sampler_addr_(sampler_addr),
+		m_sampler_func_(m_sampler_func_),
 		m_sampler_filter_(sampler_filter),
-		m_sampler_(sampler),
+		m_cull_mode_(rasterizer_cull),
+		m_draw_mode(rasterizer_draw),
 		m_rtv_formats_(rtv_formats),
 		m_dsv_format_(dsv_format),
 		m_topology_(topology),
@@ -66,14 +74,29 @@ namespace Engine::Resources
 		return m_domain_;
 	}
 
-	eShaderDepths Shader::GetDepth() const
+	bool Shader::IsDepthEnabled() const
+	{
+		return m_depth_enabled_;
+	}
+
+	eShaderDepthMode Shader::GetDepthMode() const
 	{
 		return m_depth_;
 	}
 
-	eShaderRasterizers Shader::GetRasterizer() const
+	eShaderDepthFunction Shader::GetDepthFunction() const
 	{
-		return m_rasterizer_;
+		return m_depth_func_;
+	}
+
+	eShaderSamplerAddress Shader::GetSamplerAddressMode() const
+	{
+		return m_sampler_addr_;
+	}
+
+	eShaderSamplerFunction Shader::GetSamplerFunction() const
+	{
+		return m_sampler_func_;
 	}
 
 	eSamplerFilter Shader::GetSamplerFilter() const
@@ -81,9 +104,14 @@ namespace Engine::Resources
 		return m_sampler_filter_;
 	}
 
-	eShaderSamplers Shader::GetShaderSampler() const
+	eShaderRasterizerCull Shader::GetRasterizerCull() const
 	{
-		return m_sampler_;
+		return m_cull_mode_;
+	}
+
+	eShaderRasterizerDraw Shader::GetRasterizerDraw() const
+	{
+		return m_draw_mode;
 	}
 
 	const std::vector<eFormat>& Shader::GetRTVFormat() const
@@ -148,10 +176,13 @@ namespace Engine::Resources
 	Shader::Shader()
 		: Resource(""),
 		  m_domain_(),
-		  m_depth_(0),
-		  m_rasterizer_(0),
+		  m_depth_enabled_(false),
+		  m_depth_(),
+		  m_depth_func_(),
+		  m_sampler_addr_(),
 		  m_sampler_filter_(),
-		  m_sampler_(0),
+		  m_cull_mode_(),
+		  m_draw_mode(),
 		  m_dsv_format_(),
 		  m_topology_(),
 		  m_topology_type_(),

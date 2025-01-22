@@ -94,7 +94,7 @@ namespace Engine::Managers
 	{
 		for (const auto& resources : m_resources_ | std::views::values)
 		{
-			for (const auto& res : resources)
+			for (const Strong<Abstracts::Resource>& res : resources)
 			{
 				if (res.use_count() == 1 && res->IsLoaded())
 				{

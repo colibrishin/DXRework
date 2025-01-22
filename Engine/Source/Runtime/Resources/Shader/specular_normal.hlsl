@@ -66,7 +66,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 				 2.0f * normalLightIntensity[i] * input.normal - light_dir
 				);
 		specular[i] =
-				pow(saturate(dot(reflection[i], input.viewDirection)), bufMaterial[0].specularPower);
+				pow(saturate(dot(reflection[i], input.viewDirection)), INST_SPECULAR(input.instanceId));
 
 		if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
 		{

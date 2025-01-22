@@ -45,7 +45,7 @@ namespace Engine::Components
 
 	void ParticleRenderer::Update(const float dt)
 	{
-		if (m_cs_ && GetMaterial().lock())
+		if (m_cs_ && GetShape().lock())
 		{
 			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, true, L"Particle Renderer Update");

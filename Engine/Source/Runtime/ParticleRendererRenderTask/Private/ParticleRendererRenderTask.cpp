@@ -1,6 +1,6 @@
 #include "../Public/ParticleRendererRenderTask.h"
 #include <tbb/parallel_for_each.h>
-
+#include <algorithm>
 #include "Renderer.h"
 
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
@@ -8,6 +8,7 @@
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"
+#include "Shape.h"
 
 namespace Engine 
 {
@@ -26,10 +27,14 @@ namespace Engine
 		return true;
 	}
 
+    ParticleRendererRenderInstanceTask::ParticleRendererRenderInstanceTask() :
+        m_instance_ticket_(SingletonSpinLock::GetInstance().Register())
+    {}
+
     void ParticleRendererRenderInstanceTask::Run(
         Scene const* scene,
         RenderMap*   render_map,
-        const size_t map_size, std::atomic<uint64_t>& instance_count
+        const size_t map_size
     )
     {
         const auto& prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
@@ -45,44 +50,75 @@ namespace Engine
 
                 const Strong<Components::ParticleRenderer>& pr = raw_component->GetSharedPtr<Components::ParticleRenderer>();
                 const Strong<Abstracts::ObjectBase>& obj = raw_component->GetOwner().lock();
-                const Strong<Resources::Material>& mtr = pr->GetMaterial().lock();
+                const Strong<Resources::Shape>& shape = pr->GetShape().lock();
                 const Strong<Components::Transform>& tr  = obj->GetComponent<Components::Transform>().lock();
 
-                // Pre-mapping by the material.
+                // Pre-mapping by the shader domain.
                 for (auto i = 0; i < map_size; ++i)
                 {
                     const auto domain = static_cast<eShaderDomain>(i);
+                    auto& domain_map = render_map[domain];
 
-                    if (mtr->IsRenderDomain(domain))
+                    RenderMap::accessor acc;
+                    if (!domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
                     {
-                        auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(pr));
+                        domain_map.insert(acc, Components::ParticleRenderer::StaticTypeHash());
+                    }
 
-                        if (particles.empty())
+                    for (const auto& [mesh, mtr] : shape->GetMeshes())
+                    {
+                        if (mesh.expired() || mtr.expired())
                         {
                             continue;
                         }
 
-                        auto& domain_map = render_map[domain];
+                        const Strong<Resources::Material>& locked_mtr = mtr.lock();
+                        const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
 
-                        RenderMap::accessor acc;
-
-                        if (!domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
+                        MeshMap::accessor mesh_acc;
+                        if (!acc->second.find(mesh_acc, locked_mesh))
                         {
-                            domain_map.insert(acc, Components::ParticleRenderer::StaticTypeHash());
+                            acc->second.insert(mesh_acc, locked_mesh);
                         }
-                        
-                        if (pr->IsFollowOwner())
+
+                        if (const Strong<Resources::Shader>& locked_shader = locked_mtr->GetShader().lock())
                         {
+                            if (locked_shader->GetDomain() != domain)
+                            {
+                                continue;
+                            }
+
+                            decltype(mesh_acc->second)::accessor shader_acc;
+                            if (!mesh_acc->second.find(shader_acc, locked_shader))
+                            {
+                                mesh_acc->second.insert(shader_acc, locked_shader);
+                            }
+
+                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(pr));
+                            
                             for (auto& particle : particles)
                             {
-                                auto mat = particle.GetParam<Matrix>(0);
-                                mat      = tr->GetWorldMatrix().Transpose() * mat;
-                                particle.SetParam(0, mat);
+                                InstancePair instance_pair;
+                                instance_pair.object = obj;
+                                instance_pair.instance = GetInstance();
+
+                                if (pr->IsFollowOwner())
+                                {
+                                    auto mat = particle.GetParam<Matrix>(0);
+                                    mat = tr->GetWorldMatrix().Transpose() * mat;
+                                    particle.SetParam(0, mat);
+                                }
+
+                                locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
+
+                                std::ranges::copy(
+                                    locked_mtr->GetTextures().begin(),
+                                    locked_mtr->GetTextures().end(),
+                                    instance_pair.textures.begin());
+
+                                shader_acc->second.push_back(instance_pair);
                             }
                         }
-
-                        acc->second.push_back(std::make_tuple(obj, mtr, particles));
-                        instance_count.fetch_add(particles.size());
                     }
                 }
             }
@@ -101,5 +137,30 @@ namespace Engine
                 domain_map.erase(Components::ParticleRenderer::StaticTypeHash());
             }
         }
+
+        for (Graphics::SBs::InstanceSB* instance : m_instance_generated_)
+        {
+            m_instance_allocator_.deallocate(instance);
+            instance = nullptr;
+        }
+    }
+
+    Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetInstance()
+    {
+        SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
+        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
+        const auto& it = std::ranges::find_if(m_instance_generated_, [&](const Graphics::SBs::InstanceSB* ptr)
+            {
+                return ptr == nullptr;
+            });
+
+        if (it == m_instance_generated_.end())
+        {
+            m_instance_generated_.push_back(generated);
+            return generated;
+        }
+
+        *it = generated;
+        return generated;
     }
 }

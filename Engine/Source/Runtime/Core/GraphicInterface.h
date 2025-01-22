@@ -1085,11 +1085,7 @@ namespace Engine
 	struct ENGINE_CORE_API GraphicInterface
 	{
 		virtual      ~GraphicInterface() = default;
-
-		virtual std::string_view GetTypeName() const = 0;
-		virtual std::string_view GetPrettyTypeName() const = 0;
-		virtual HashType GetTypeHash() const = 0;
-		virtual bool IsBaseOf(HashType hash) const = 0;
+		INLINE_COMPILE_TIME_TYPENAME(GraphicInterface)
 
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;

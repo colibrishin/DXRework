@@ -184,7 +184,7 @@ namespace Engine::UIHelpers
     {
         const auto& type_pred = [](const ResourceType type)
             {
-                bool retval[] = { type->IsBaseOf(Excluded::StaticTypeHash())...};
+                bool retval[] = { type->IsDerivedOf(Excluded::StaticTypeHash())...};
                 return !std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 
@@ -198,7 +198,7 @@ namespace Engine::UIHelpers
     {
         const auto& type_pred = [](const ResourceType type)
             {
-                bool retval[] = { type->IsBaseOf(Included::StaticTypeHash())... };
+                bool retval[] = { type->IsDerivedOf(Included::StaticTypeHash())... };
                 return std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 
@@ -212,7 +212,7 @@ namespace Engine::UIHelpers
     {
         const auto& type_pred = [](const ResourceType type)
             {
-                bool retval[] = { type->IsBaseOf(Excluded::StaticTypeHash())... };
+                bool retval[] = { type->IsDerivedOf(Excluded::StaticTypeHash())... };
                 return !std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 
@@ -226,7 +226,7 @@ namespace Engine::UIHelpers
     {
         const auto& type_pred = [](const ResourceType type)
             {
-                bool retval[] = { type->IsBaseOf(Included::StaticTypeHash())... };
+                bool retval[] = { type->IsDerivedOf(Included::StaticTypeHash())... };
                 return std::any_of(std::begin(retval), std::end(retval), [](const bool b) {return b == true; });
             };
 

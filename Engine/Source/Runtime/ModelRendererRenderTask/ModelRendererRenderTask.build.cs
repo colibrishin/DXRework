@@ -21,11 +21,12 @@ public class ModelRendererRenderTask : CommonProject
         conf.AddPublicDependency<EngineEntryPoint>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
+        conf.AddPrivateDependency<Mesh>(target);
+        conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ModelRenderer>(target);
-        conf.AddPrivateDependency<BaseAnimation>(target);
-        conf.AddPrivateDependency<BoneAnimation>(target);
-        conf.AddPrivateDependency<AtlasAnimation>(target);
+        conf.AddPrivateDependency<AnimationTexture>(target);
+        conf.AddPrivateDependency<AtlasAnimationTexture>(target);
         conf.AddPrivateDependency<Animator>(target);
     }
 }

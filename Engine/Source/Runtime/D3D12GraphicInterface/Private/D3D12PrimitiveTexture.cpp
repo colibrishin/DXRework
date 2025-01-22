@@ -150,7 +150,7 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	const auto& token = resource_upload_batch.End(queue);
 	token.wait();
 
-	const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_COPY, false, L"Texture Uploading");
+	const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Texture Uploading");
 	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
 
 	const auto& cmd = reinterpret_cast<CommandPair*>(primitive.commandList);

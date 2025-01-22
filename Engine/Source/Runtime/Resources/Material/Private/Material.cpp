@@ -39,7 +39,14 @@ namespace Engine::Resources
 			*parent += ui.NewListBox({ "Textures", 0, 0 });
 			for (auto it = m_textures_.begin(); it != m_textures_.end(); ++it)
 			{
-				*parent += ui.NewSelectable({ (*it)->GetName(), (*it)->m_ui_info_.dialogOpened});
+				if (*it == nullptr)
+				{
+					continue;
+				}
+
+				const Strong<Texture>& tex = *it;
+
+				*parent |= ui.NewSelectable({ tex->GetName(), tex->m_ui_info_.dialogOpened });
 				(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&]()
 					{
 						SetTexture(*it, std::distance(m_textures_.begin(), it) - 1);
@@ -48,11 +55,11 @@ namespace Engine::Resources
 					{
 						SetTexture(*it, std::distance(m_textures_.begin(), it) + 1);
 					});
-				--*parent;
+				*parent |= ui.NewSeparator({});
 
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({ (*it).get(), (*it)->GetName(), (*it)->m_ui_info_.dialogOpened})))
+				if (UIContext context = UIInterface::NewContext(ui.NewDialog({ tex.get(), tex->GetName(), tex->m_ui_info_.dialogOpened})))
 				{
-					(*it)->OnUIUpdate(&context, dt);
+					tex->OnUIUpdate(&context, dt);
 				}
 			}
 			--*parent;
@@ -74,7 +81,7 @@ namespace Engine::Resources
 					{
 						if (const Strong<Resource>& locked = resource.lock())
 						{
-							if (AtlasAnimationTexture::StaticIsBaseOf(locked->GetTypeHash()))
+							if (locked->GetTypeHash()->IsDerivedOf(AtlasAnimationTexture::StaticTypeHash()))
 							{
 								SetAtlasTexture(locked->GetSharedPtr<AtlasAnimationTexture>());
 								continue;
@@ -88,6 +95,8 @@ namespace Engine::Resources
 							}
 						}
 					}
+
+					m_ui_add_dialog_ = false;
 				}
 			}
 		}

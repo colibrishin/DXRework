@@ -18,6 +18,8 @@ public class Animator : CommonProject
         conf.AddPublicDependency<DirectXTK>(target);        
         conf.AddPublicDependency<BaseAnimation>(target);
 
+        conf.AddPrivateDependency<Shape>(target);
+        conf.AddPrivateDependency<AnimationTexture>(target);
         conf.AddPrivateDependency<AtlasAnimation>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<Material>(target);

@@ -2,8 +2,6 @@
 #include "ModuleManager/Public/IModule.h"
 
 #include "Source/Runtime/Core/Component/Public/Component.h"
-#include "Source/Runtime/Resources/BaseAnimation/Public/BaseAnimation.h"
-
 #include "AnimatorPrimitive.h"
 
 #include "Animator.generated.h"

@@ -20,6 +20,8 @@ public class ParticleRendererRenderTask : CommonProject
         conf.AddPublicDependency<EngineEntryPoint>(target);
         conf.AddPublicDependency<RenderComponent>(target);
 
+        conf.AddPrivateDependency<Mesh>(target);
+        conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ParticleRenderer>(target);
         conf.AddPrivateDependency<ParticleRendererExtension>(target);

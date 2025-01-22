@@ -52,16 +52,16 @@ namespace Engine::Resources
 					}
 				} });
 
-			for (auto it = m_meshes_.begin(); it != m_meshes_.end(); ++it)
+			for (size_t i = 0; i < m_meshes_.size(); ++i)
 			{
-				const auto& mesh = (*it).first;
+				const auto& mesh = m_meshes_[i].first;
 
 				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened});
-				(*parent += ui.NewButton({ "Edit Material" })).SetFunction([&]()
+				(*parent |= ui.NewButton({ "Edit Material" })).SetFunction([i, this]()
 					{
-						m_ui_material_add_opened_[std::distance(m_meshes_.begin(), it)] = true;
+						m_ui_material_add_opened_[i] = true;
 					});
-				--*parent;
+				*parent |= ui.NewSeparator({});
 
 				if (mesh->m_ui_info_.dialogOpened)
 				{
@@ -259,15 +259,15 @@ namespace Engine::Resources
 	{
 		if (const Strong<Resource>& locked = res.lock())
 		{
-			if (Mesh::StaticIsBaseOf(locked->GetTypeHash()))
+			if (locked->GetTypeHash()->IsDerivedOf(Mesh::StaticTypeHash()))
 			{
 				addMeshImpl(boost::reinterpret_pointer_cast<Mesh>(locked));
 			}
-			else if (AnimationTexture::StaticIsBaseOf(locked->GetTypeHash()))
+			else if (locked->GetTypeHash()->IsDerivedOf(AnimationTexture::StaticTypeHash()))
 			{
 				addAnimationImpl(boost::reinterpret_pointer_cast<AnimationTexture>(locked));
 			}
-			else if (BaseAnimation::StaticIsBaseOf(locked->GetTypeHash()))
+			else if (locked->GetTypeHash()->IsDerivedOf(BaseAnimation::StaticTypeHash()))
 			{
 				addTrAnimationImpl(boost::reinterpret_pointer_cast<BaseAnimation
 				>(locked));

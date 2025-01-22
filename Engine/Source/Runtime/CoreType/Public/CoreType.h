@@ -844,14 +844,14 @@ public:
 
 #define INLINE_COMPILE_TIME_TYPENAME(Type) \
 	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Type) \
-	static bool StaticIsBaseOf(HashType hash) \
+	static bool StaticIsDerivedOf(HashType base) \
 	{ \
-		return polymorphic_type_hash<##Type##>::is_base_of(hash); \
+		return polymorphic_type_hash<##Type##>::is_derived_of(base); \
 	} \
-	std::string_view GetTypeName() const override { return Type##::StaticFullTypeName(); } \
-	std::string_view GetPrettyTypeName() const override { return Type##::StaticTypeName(); } \
-	HashType GetTypeHash() const override { return Type##::StaticTypeHash(); } \
-	bool IsBaseOf(HashType hash) const override{ return Type##::StaticIsBaseOf(hash); }
+	virtual std::string_view GetTypeName() const { return Type##::StaticFullTypeName(); } \
+	virtual std::string_view GetPrettyTypeName() const { return Type##::StaticTypeName(); } \
+	virtual HashType GetTypeHash() const { return Type##::StaticTypeHash(); } \
+	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); }
 
 struct ENGINE_CORETYPE_API HashTypeImpl
 {
@@ -872,7 +872,7 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 		throw std::runtime_error("Cannot fetch a hash from a base class.");
 		return nullptr;
 	}
-	virtual bool IsBaseOf(const HashTypeImpl* other) const 
+	virtual bool IsDerivedOf(const HashTypeImpl* other) const 
 	{
 		throw std::runtime_error("Cannot check the base class from HashTypeImpl");
 		return false;
@@ -910,7 +910,7 @@ struct polymorphic_type_hash
 	static constexpr size_t upcast_count = 0;
 	static constexpr HashArray<upcast_count> upcast_array{};
 
-	static bool is_base_of(const HashType base)
+	static bool is_derived_of(const HashType base)
 	{
 		return false;
 	}
@@ -936,9 +936,9 @@ struct HashTypeT : public HashTypeImpl
 		return &type_hash<T>::value;
 	}
 
-	bool IsBaseOf(const HashTypeImpl* other) const override
+	bool IsDerivedOf(const HashTypeImpl* other) const override
 	{
-		return polymorphic_type_hash<T>::is_base_of(other);
+		return polymorphic_type_hash<T>::is_derived_of(other);
 	}
 
 	constexpr HashTypeT() :
@@ -967,7 +967,7 @@ struct polymorphic_type_hash<void>
 	static constexpr size_t upcast_count = 1;
 	static constexpr HashArray<upcast_count> upcast_array{ &type_hash<void>::value };
 
-	static bool is_base_of(const HashType base)
+	static bool is_derived_of(const HashType base)
 	{
 		return true;
 	}
@@ -1014,12 +1014,12 @@ struct polymorphic_type_hash<##Type##>\
 		std::ranges::sort(ret, [](const auto lhs, const auto rhs) {return *lhs < *rhs;});\
 		return ret;\
 	}();\
-	static bool is_base_of(const HashType hash)\
+	static bool is_derived_of(const HashType base)\
 	{\
 		if constexpr ((upcast_count * sizeof(HashTypeValue)) < (1 << 7))\
 		{\
-			return std::ranges::find_if(upcast_array, [&hash](const auto other){return hash->Equal(*other);}) != upcast_array.end();\
+			return std::ranges::find_if(upcast_array, [&base](const auto other){return base->Equal(*other);}) != upcast_array.end();\
 		}\
-		return std::ranges::binary_search(upcast_array, hash, [](const auto lhs, const auto rhs){return *lhs < *rhs;});\
+		return std::ranges::binary_search(upcast_array, base, [](const auto lhs, const auto rhs){return *lhs < *rhs;});\
 	}\
 };
