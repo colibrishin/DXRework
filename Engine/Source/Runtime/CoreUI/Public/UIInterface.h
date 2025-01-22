@@ -10,6 +10,12 @@
 
 namespace Engine
 {
+    struct ENGINE_COREUI_API UIInfo
+    {
+        std::string label{};
+        bool        dialogOpened = false;
+    };
+
 	struct ENGINE_COREUI_API UITokenBase
     {
         virtual ~UITokenBase() = default;
@@ -197,6 +203,18 @@ namespace Engine
 		    : UIToken<const std::string_view, bool&>(basic_string_view, cond) {}
     };
 
+    struct ENGINE_COREUI_API LabelAndVec3Token : UIToken<const std::string_view, float&>
+    {
+        LabelAndVec3Token(const std::string_view basic_string_view, float& vec)
+            : UIToken<const std::string_view, float&>(basic_string_view, vec) {}
+    };
+
+    struct ENGINE_COREUI_API CheckboxToken : UIToken<const std::string_view, bool&>
+    {
+        CheckboxToken(const std::string_view basic_string_view, bool& flag)
+            : UIToken<const std::string_view, bool&>(basic_string_view, flag) {}
+    };
+
     struct UIContext
     {
         explicit UIContext(UITokenBase* parent)
@@ -224,6 +242,14 @@ namespace Engine
             m_parent_->AddChild(child);
             m_active_child_ = child;
 	        return *m_parent_;
+        }
+
+        // Add Child and return this
+        UITokenBase& operator<=(UITokenBase* child)
+        {
+            m_parent_->AddChild(child);
+            m_active_child_ = child;
+            return *child;
         }
 
         UITokenBase& operator<<(const std::function<void()>& functor) const
@@ -312,6 +338,8 @@ namespace Engine
         virtual UITokenBase* NewListBox(const ListBoxToken::ArgumentTuple& arguments) = 0;
         virtual UITokenBase* NewTreeNode(const TreeNodeToken::ArgumentTuple& arguments) = 0;
         virtual UITokenBase* NewSelectable(const SelectableToken::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewLabelAndVec3(const LabelAndVec3Token::ArgumentTuple& arguments) = 0;
+        virtual UITokenBase* NewCheckbox(const CheckboxToken::ArgumentTuple& arguments) = 0;
 
         virtual void NewFrame() = 0;
 

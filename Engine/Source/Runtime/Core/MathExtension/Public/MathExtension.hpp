@@ -1,4 +1,7 @@
 #pragma once
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 
@@ -6,6 +9,55 @@ namespace Engine
 {
 	struct MathExtension
 	{
+		inline static Vector3 __vectorcall ToEuler(const Quaternion& q)
+		{
+			const auto& getZ = [&]()
+			{
+				float siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+				float cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+				float z = std::atan2f(siny_cosp, cosy_cosp);
+				return z;
+			};
+
+			const auto& getY = [&]()
+			{
+				float sinp = std::sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
+				float cosp = std::sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
+				float y = 2 * std::atan2f(sinp, cosp) - M_PI / 2;
+				return y;
+			};
+
+			const auto& getX = [&]()
+			{
+				float sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+				float cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+				float x = std::atan2f(sinr_cosp, cosr_cosp);
+				return x;
+			};
+
+			// Z-Forward, Y-Up coordination system.
+			return { getX(), getY(), getZ() };
+		}
+
+		inline static Quaternion __vectorcall ToQuaternion(float pitch, float yaw, float roll) 
+		{
+			// Abbreviations for the various angular functions
+			float cr = std::cosf(roll * 0.5f);
+			float sr = std::sinf(roll * 0.5f);
+			float cp = std::cosf(pitch * 0.5f);
+			float sp = std::sinf(pitch * 0.5f);
+			float cy = std::cosf(yaw * 0.5f);
+			float sy = std::sinf(yaw * 0.5f);
+
+			Quaternion q;
+			q.w = cr * cp * cy + sr * sp * sy;
+			q.x = sr * cp * cy - cr * sp * sy;
+			q.y = cr * sp * cy + sr * cp * sy;
+			q.z = cr * cp * sy - sr * sp * cy;
+
+			return q;
+		}
+
 		inline static float __vectorcall MaxElement(const Vector3& v)
 		{
 			return std::max(std::max(v.x, v.y), v.z);

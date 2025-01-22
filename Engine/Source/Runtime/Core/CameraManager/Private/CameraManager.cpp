@@ -75,15 +75,12 @@ namespace Engine::Managers
 						camera->m_perspective_cb_.invProj = invProj.Transpose();
 						camera->m_perspective_cb_.invVP = XMMatrixTranspose(XMMatrixInverse(nullptr, camera->m_view_matrix_ * camera->m_projection_matrix_));
 
-						// do the same with 180 degree rotation
-
+						// do the same with mirror rotation
+						// flip backward, and roll forward
 						Matrix flipRotation = Matrix::Transform
-								(
-								rotationMatrix, Quaternion::CreateFromYawPitchRoll
-								(
-								0.f, DirectX::XMConvertToRadians(180.f), 0.f
-								)
-								);
+						(
+							rotationMatrix, MathExtension::ToQuaternion(DirectX::XMConvertToRadians(180.f), 0, DirectX::XMConvertToRadians(180.f))
+						);
 
 						Vector3 flipLookAtVector = XMVector3TransformNormal(forward, flipRotation);
 						Vector3 flipUpVector     = XMVector3TransformNormal(up, flipRotation);

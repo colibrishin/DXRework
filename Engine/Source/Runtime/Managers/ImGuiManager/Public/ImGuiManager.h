@@ -148,15 +148,33 @@ namespace Engine
     struct ENGINE_IMGUIMANAGER_API ImGuiSelectableToken : SelectableToken
     {
 	    ImGuiSelectableToken(const std::string_view label, bool& opened)
-		    : SelectableToken(label, opened)
-	    {
-		    
-	    }
+		    : SelectableToken(label, opened) {}
 
 	    void End() const override;
 
     protected:
 	    [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndVec3Token : LabelAndVec3Token 
+    {
+        ImGuiLabelAndVec3Token(const std::string_view label, float& vec)
+            : LabelAndVec3Token(label, vec) {}
+        void End() const override;
+
+    protected:
+        [[nodiscard]] bool DoImpl(const std::string_view, float&) const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiCheckboxToken : CheckboxToken
+    {
+        ImGuiCheckboxToken(const std::string_view label, bool& flag)
+            : CheckboxToken(label, flag) {}
+
+        void End() const override;
+
+    protected:
+        [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
     };
 
 #define IMGUI_INLINE_GETTER_DECL(Name) \
@@ -181,6 +199,8 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(ListBox)
         IMGUI_INLINE_GETTER_DECL(TreeNode)
         IMGUI_INLINE_GETTER_DECL(Selectable)
+        IMGUI_INLINE_GETTER_DECL(LabelAndVec3)
+        IMGUI_INLINE_GETTER_DECL(Checkbox)
 
         void               NewFrame() override;
     };

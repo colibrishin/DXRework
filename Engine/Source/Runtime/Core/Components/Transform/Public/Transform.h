@@ -60,6 +60,7 @@ namespace Engine::Components
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
 		void FixedUpdate(const float dt) override;
+		void OnUIUpdate(UIContext* const context, const float dt) override;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
@@ -85,6 +86,9 @@ namespace Engine::Components
 		Vector3    m_world_previous_position_;
 		Vector3    m_position_;
 		Quaternion m_rotation_;
+#if WITH_EDITOR
+		Vector3    m_euler_rotation_;
+#endif
 		Vector3    m_scale_;
 
 		Vector3    m_animation_position_;

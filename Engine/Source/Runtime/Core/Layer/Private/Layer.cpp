@@ -147,7 +147,7 @@ namespace Engine
 
 			for (const auto& object : m_objects_)
 			{
-				*parent |= ui.NewSelectable({object->m_ui_summary_text_, object->m_b_detail_opened_});
+				*parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
 				object->OnUIUpdate(parent, dt);
 			}
 

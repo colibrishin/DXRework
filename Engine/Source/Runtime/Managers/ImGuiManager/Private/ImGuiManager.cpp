@@ -190,7 +190,7 @@ void Engine::ImGuiButtonToken::End() const {}
 
 bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title) const
 {
-	return ImGui::Button(title.data(), {-1, 50});
+	return ImGui::Button(title.data(), {-1, 20});
 }
 
 void Engine::ImGuiLabelAndTextToken::End() const {}
@@ -276,6 +276,24 @@ bool Engine::ImGuiSelectableToken::DoImpl(const std::string_view label, bool& op
 	return ImGui::Selectable(label.data(), &opened);
 }
 
+void Engine::ImGuiLabelAndVec3Token::End() const
+{
+}
+
+bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float& vec) const
+{
+	return ImGui::DragFloat3(label.data(), &vec, 0.1f);
+}
+
+void Engine::ImGuiCheckboxToken::End() const
+{
+}
+bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag) const
+{
+	AlignText(label);
+	const std::string& temp_label = LabelSuffix(label);
+	return ImGui::Checkbox(temp_label.data(), &flag);
+}
 
 void Engine::ImGuiUIInterface::NewFrame()
 {

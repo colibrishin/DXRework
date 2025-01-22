@@ -22,10 +22,12 @@ namespace Engine::Managers
 		Vector2 delta;
 		(m_current_mouse_position_ - m_previous_mouse_position_).Normalize(delta);
 
+		/* todo: rework
 		// pitch
 		m_mouse_rot_x_ = m_mouse_rot_x_ * Quaternion::CreateFromAxisAngle(Vector3::Up, delta.x * dt);
 		// yaw
 		m_mouse_rot_y_ = m_mouse_rot_y_ * Quaternion::CreateFromAxisAngle(Vector3::Right, delta.y * dt);
+		*/
 	}
 
 	void InputManager::Update(const float dt) {}

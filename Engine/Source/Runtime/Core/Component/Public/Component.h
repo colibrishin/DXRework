@@ -59,6 +59,10 @@ namespace Engine::Abstracts
 		void         Initialize() override;
 		void         PostUpdate(const float dt) override;
 
+#if WITH_EDITOR
+		void         OnNameChanged() override;
+#endif
+
 		void                          OnDeserialized() override;
 		[[nodiscard]] Strong<Component> Clone() const;
 

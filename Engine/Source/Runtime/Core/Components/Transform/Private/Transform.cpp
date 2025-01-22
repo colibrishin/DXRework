@@ -253,6 +253,32 @@ namespace Engine::Components
 
 	void Transform::FixedUpdate(const float dt) {}
 
+	void Transform::OnUIUpdate(UIContext* const context, const float dt)
+	{
+#if WITH_EDITOR
+		if (context) 
+		{
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			Component::OnUIUpdate(context, dt);
+			*context |= ui.NewLabelAndVec3({"Position", m_position_.x});
+
+			m_euler_rotation_ = MathExtension::ToEuler(m_rotation_);
+			m_euler_rotation_ *= 180.f / M_PI;
+			(*context |= ui.NewLabelAndVec3({"Rotation", m_euler_rotation_.x })).SetFunction([&]()
+			{
+				m_euler_rotation_ *= M_PI / 180.f;
+				// since z axis is the forward, roll should be z.
+				m_rotation_ = MathExtension::ToQuaternion(m_euler_rotation_.x, m_euler_rotation_.y, m_euler_rotation_.z);
+			});
+
+			*context |= ui.NewLabelAndVec3({"Scale", m_scale_.x });
+			*context |= ui.NewCheckbox({"Absolute Size", m_b_s_absolute_});
+			*context |= ui.NewCheckbox({"Absolute Rotation",m_b_r_absolute_});
+		}
+#endif
+	}
+
 	void Transform::OnSerialized()
 	{
 		Component::OnSerialized();

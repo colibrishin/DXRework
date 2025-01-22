@@ -3,6 +3,10 @@
 #include <filesystem>
 #include "CoreEntity.h"
 
+#if WITH_EDITOR
+#include <UIInterface.h>
+#endif
+
 namespace Engine
 {
 	struct UIContext;
@@ -19,6 +23,7 @@ namespace Engine::Abstracts
 		{
 			m_name_ = other.m_name_;
 #if WITH_EDITOR
+			m_ui_info_ = other.m_ui_info_;
 			m_precached_id_ = GetID();
 #endif
 			m_b_initialized_ = false;
@@ -78,6 +83,9 @@ namespace Engine::Abstracts
 	private:
 		EntityName     m_name_;
 #if WITH_EDITOR
+	public:
+		UIInfo         m_ui_info_;
+	private:
 		GlobalEntityID m_precached_id_;
 #endif
 		bool		   m_b_initialized_;

@@ -44,13 +44,25 @@ namespace Engine::Abstracts
 	void Component::Initialize()
 	{
 		Entity::Initialize();
+
+#if WITH_EDITOR
 		SetName(GetPrettyTypeName().data());
+		m_ui_info_.label = GetName();
+		m_ui_info_.dialogOpened = false;
+#endif
 	}
 
 	void Component::PostUpdate(const float dt)
 	{
 		m_b_ticked_ = true;
 	}
+
+#if WITH_EDITOR
+	void Component::OnNameChanged()
+	{
+		m_ui_info_.label = GetName();
+	}
+#endif
 
 	void Component::OnDeserialized()
 	{

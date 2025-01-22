@@ -6,6 +6,12 @@
 #include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
+#if WITH_EDITOR
+#include "Components/Transform/Public/Transform.h"
+#include "Components/Collider/Public/Collider.hpp"
+#include "Components/Rigidbody/Public/Rigidbody.h"
+#endif
+
 namespace Engine::Abstracts
 {
 	void ObjectBase::SetName(const EntityName& name)
@@ -377,7 +383,7 @@ namespace Engine::Abstracts
 	}
 	void ObjectBase::UpdateUIText()
 	{
-		m_ui_summary_text_ = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
+		m_ui_info_.label = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
 	}
 	void ObjectBase::OnNameChanged()
 	{
@@ -687,54 +693,76 @@ namespace Engine::Abstracts
 	void ObjectBase::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 #if WITH_EDITOR
-#include "Components/Transform/Public/Transform.h"
-#include "Components/Collider/Public/Collider.hpp"
-#include "Components/Rigidbody/Public/Rigidbody.h"
 		if (parent)
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-			if (m_b_detail_opened_)
+			if (m_ui_info_.dialogOpened)
 			{
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_summary_text_, m_b_detail_opened_})))
+				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened })))
 				{
-					context << [&]()
+					Actor::OnUIUpdate(&context, dt);
+
+					(context |= ui.NewButton({ "Add Component" })).SetFunction([&]()
 					{
-						Actor::OnUIUpdate(&context, dt);
+						m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
+					});
 
-						(context |= ui.NewButton({"Add Component"})).SetFunction([&]()
-						{
-							 m_b_component_dialog_opened_ = !m_b_component_dialog_opened_;
-						});
+					if (m_b_add_component_dialog_opened_)
+					{
+						context += ui.NewDialog({ this, "Add Component dialog", m_b_add_component_dialog_opened_ });
 
-						if (m_b_component_dialog_opened_)
-						{
-							context += ui.NewDialog({this, "Add Component dialog", m_b_component_dialog_opened_});
-
-							context += [&]()
+						context += [&]()
 							{
 								const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
 								{
-									(context |= ui.NewButton({T::StaticTypeName()})).SetFunction([&]()
-									{
-										AddComponent<T>();
-									});
+									(context |= ui.NewButton({ T::StaticTypeName() })).SetFunction([&]()
+										{
+											AddComponent<T>();
+										});
 								};
 
-								internalComponentTemplate.operator()<Components::Collider>();
-								internalComponentTemplate.operator()<Components::Transform>();
-								internalComponentTemplate.operator()<Components::Rigidbody>();
+								internalComponentTemplate.operator() < Components::Collider > ();
+								internalComponentTemplate.operator() < Components::Transform > ();
+								internalComponentTemplate.operator() < Components::Rigidbody > ();
 
 								for (const auto& [name, predicate] : m_component_add_map_)
 								{
-									(context |= ui.NewButton({name})).SetFunction([&]()
-									{
-										addComponent(predicate());
-									});
+									(context |= ui.NewButton({ name })).SetFunction([&]()
+										{
+											addComponent(predicate());
+										});
 								}
+							};
+
+						--context;
+					}
+
+					context += ui.NewTreeNode({"Components"});
+					context += [&]()
+					{
+						for (const Weak<Component>& w_component : m_cached_component_)
+						{
+							if (const Strong<Component>& component = w_component.lock())
+							{
+								context |= ui.NewSelectable({ component->m_ui_info_.label, component->m_ui_info_.dialogOpened });
 							};
 						}
 					};
+				}
+
+				for (const Weak<Component>& w_component : m_cached_component_)
+				{
+					if (const Strong<Component>& component = w_component.lock())
+					{
+						if (component->m_ui_info_.dialogOpened)
+						{
+							if (UIContext context = UIInterface::NewContext(ui.NewDialog({ component.get(), component->m_ui_info_.label, component->m_ui_info_.dialogOpened })))
+							{
+								component->OnUIUpdate(&context, dt);
+							}
+						}
+					}
 				}
 			}
 		}

@@ -271,9 +271,7 @@ namespace Engine::Abstracts
 	private:
 		std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;
 
-		bool m_b_component_dialog_opened_ = false;
-		bool m_b_detail_opened_ = false;
-		std::string m_ui_summary_text_;
+		bool m_b_add_component_dialog_opened_ = false;
 #endif
 		Weak<ObjectBase>                                     m_parent_;
 		std::map<LocalActorID, Weak<ObjectBase>>             m_children_cache_;
