@@ -29,7 +29,7 @@ popd
 pushd Intermediate\HeaderParser
 echo Copying header from %3...
 if not exist %2 (mkdir %2)
-%4\System32\robocopy %3 %2 "*.h" /xo /nodcopy /s
+for /r %3 %%f in (*.h) do %4\System32\robocopy %%~dpf %2 %%~nxf /xo
 
 echo Comparing header changes...
 %5\bin\sh.exe --login -c "git status --porcelain -uall | cut -c 1-3 --complement | egrep .h$ > target && git add . && git commit -m "header update""

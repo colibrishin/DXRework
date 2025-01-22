@@ -179,7 +179,7 @@ public abstract class CommonProject : Project
 
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", new Configuration.BuildStepExecutable(
             $@"{EngineDir}\run-parser.bat",
-            $@"{EngineDir}\Intermediate\HeaderParser\target", //temporarliy set, will start prebuild event everytime.
+            "", //temporarliy set, will start prebuild event everytime.
             @"[project.Name]-headerparser.log",
             $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" {WinDir} ""{GitDir}""",
             EngineDir,
