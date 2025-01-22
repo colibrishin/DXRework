@@ -120,106 +120,42 @@ namespace Engine
         ArgumentTuple m_tuple_;
     };
 
-    struct ENGINE_COREUI_API MainMenuBarToken : UIToken<>
-    {
-        explicit MainMenuBarToken() = default;
+#define NEW_TOKEN_DECL(Name, ...) \
+    struct ENGINE_COREUI_API Name##Token : UIToken<__VA_ARGS__> \
+    {   \
+        using UIToken<__VA_ARGS__>::UIToken; \
     };
 
-    struct ENGINE_COREUI_API MenuToken : UIToken<const std::string_view>
+    NEW_TOKEN_DECL(MainMenuBar)
+    NEW_TOKEN_DECL(Menu, const std::string_view)
+    NEW_TOKEN_DECL(MenuItem, const std::string_view)
+    NEW_TOKEN_DECL(Dialog, const void*, const std::string_view, bool&)
+    NEW_TOKEN_DECL(Button, const std::string_view)
+    NEW_TOKEN_DECL(LabelAndText, const std::string_view, std::string&, bool)
+    NEW_TOKEN_DECL(LabelAndPath, const std::string_view, const std::filesystem::path&)
+    NEW_TOKEN_DECL(ListBox, const std::string_view, float, float)
+    NEW_TOKEN_DECL(TreeNode, const std::string_view)
+    NEW_TOKEN_DECL(Selectable, const std::string_view, bool&)
+    NEW_TOKEN_DECL(Checkbox, const std::string_view, bool&)
+    NEW_TOKEN_DECL(Combobox, const std::string_view, int*, const char* const*, const size_t)
+
+    template <typename Numerical>
+    struct ENGINE_COREUI_API LabelAndNumericalToken : UIToken<const std::string_view, Numerical&, float, Numerical, Numerical, bool>
     {
-        explicit MenuToken(const std::string_view title)
-            : UIToken(title) {}
+        using UIToken<const std::string_view, Numerical&, float, Numerical, Numerical, bool>::UIToken;
     };
 
-    struct ENGINE_COREUI_API MenuItemToken : UIToken<const std::string_view>
-    {
-        explicit MenuItemToken(const std::string_view title)
-            : UIToken(title) {}
+#define NEW_LABEL_NUMERICAL_DECL(Name, Type) \
+    struct ENGINE_COREUI_API LabelAnd##Name##Token : LabelAndNumericalToken<##Type##> \
+    { \
+        using LabelAndNumericalToken<##Type##>::LabelAndNumericalToken; \
     };
 
-    struct ENGINE_COREUI_API DialogToken : UIToken<const void*, const std::string_view, bool&>
-    {
-        explicit DialogToken(const void* context, const std::string_view title, bool& opened)
-            : UIToken(context, title, opened) {}
-    };
-
-    struct ENGINE_COREUI_API ButtonToken : UIToken<const std::string_view>
-    {
-        explicit ButtonToken(const std::string_view title)
-            : UIToken(title) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndTextToken : UIToken<const std::string_view, std::string&, bool>
-    {
-        explicit LabelAndTextToken(const std::string_view title, std::string& target, bool editable)
-            : UIToken(title, target, editable) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndPathToken : UIToken<const std::string_view, const std::filesystem::path&>
-    {
-        explicit LabelAndPathToken(const std::string_view title, const std::filesystem::path& path)
-            : UIToken(title, path) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndFloatToken : UIToken<const std::string_view, float&, float, float, bool>
-    {
-        explicit LabelAndFloatToken(const std::string_view title, float& target, float step, float speed, bool editable)
-            : UIToken(title, target, step, speed, editable) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndIntToken : UIToken<const std::string_view, int&, bool>
-    {
-        explicit LabelAndIntToken(const std::string_view title, int& target, bool editable)
-            : UIToken(title, target, editable) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndUIntToken : UIToken<const std::string_view, uint32_t&, bool>
-    {
-        explicit LabelAndUIntToken(const std::string_view title, uint32_t& target, bool editable)
-            : UIToken(title, target, editable) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndULLDToken : UIToken<const std::string_view, uint64_t&, bool>
-    {
-        explicit LabelAndULLDToken(const std::string_view title, uint64_t& target, bool editable)
-            : UIToken(title, target, editable) {}
-    };
-
-    struct ENGINE_COREUI_API ListBoxToken : UIToken<const std::string_view, float, float>
-    {
-	    ListBoxToken(const std::string_view label, float x, float y)
-		    : UIToken<const std::string_view, float, float>(label, x, y) {}
-    };
-
-    struct ENGINE_COREUI_API TreeNodeToken : UIToken<const std::string_view>
-    {
-	    explicit TreeNodeToken(const std::string_view label)
-		    : UIToken<const std::string_view>(label) {}
-    };
-
-    struct ENGINE_COREUI_API SelectableToken : UIToken<const std::string_view, bool&>
-    {
-	    SelectableToken(const std::string_view basic_string_view, bool& cond)
-		    : UIToken<const std::string_view, bool&>(basic_string_view, cond) {}
-    };
-
-    struct ENGINE_COREUI_API LabelAndVec3Token : UIToken<const std::string_view, float&>
-    {
-        LabelAndVec3Token(const std::string_view basic_string_view, float& vec)
-            : UIToken<const std::string_view, float&>(basic_string_view, vec) {}
-    };
-
-    struct ENGINE_COREUI_API CheckboxToken : UIToken<const std::string_view, bool&>
-    {
-        CheckboxToken(const std::string_view basic_string_view, bool& flag)
-            : UIToken<const std::string_view, bool&>(basic_string_view, flag) {}
-    };
-
-    struct ENGINE_COREUI_API ComboboxToken : UIToken<const std::string_view, int*, const char* const*, const size_t>
-    {
-        ComboboxToken(const std::string_view basic_string_view, int* value, const char* const* label_arr, const size_t arr_size)
-            : UIToken(basic_string_view, value, label_arr, arr_size) {}
-    };
+    NEW_LABEL_NUMERICAL_DECL(Int, int)
+    NEW_LABEL_NUMERICAL_DECL(Float, float)
+    NEW_LABEL_NUMERICAL_DECL(UInt, uint32_t)
+    NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
+    NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
 
     struct UIContext
     {
@@ -321,6 +257,9 @@ namespace Engine
         UITokenBase* m_active_child_ = nullptr;
     };
 
+#define TOKEN_PURE_GETTER_DECL(Name) \
+    virtual UITokenBase* New##Name##(const Name##Token::ArgumentTuple& arguments) = 0;
+
     struct ENGINE_COREUI_API UIInterface
     {
         virtual ~UIInterface() = default;
@@ -330,23 +269,23 @@ namespace Engine
             return UIContext(root);
         }
 
-        virtual UITokenBase*  NewMainMenuBar(const MainMenuBarToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase*         NewMenu(const MenuToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase*     NewMenuItem(const MenuItemToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase*       NewDialog(const DialogToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase*       NewButton(const ButtonToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndText(const LabelAndTextToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndFloat(const LabelAndFloatToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndInt(const LabelAndIntToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndUInt(const LabelAndUIntToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndULLD(const LabelAndULLDToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndPath(const LabelAndPathToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewListBox(const ListBoxToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewTreeNode(const TreeNodeToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewSelectable(const SelectableToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewLabelAndVec3(const LabelAndVec3Token::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewCheckbox(const CheckboxToken::ArgumentTuple& arguments) = 0;
-        virtual UITokenBase* NewCombobox(const ComboboxToken::ArgumentTuple& arguments) = 0;
+        TOKEN_PURE_GETTER_DECL(MainMenuBar);
+        TOKEN_PURE_GETTER_DECL(Menu);
+        TOKEN_PURE_GETTER_DECL(MenuItem);
+        TOKEN_PURE_GETTER_DECL(Dialog);
+        TOKEN_PURE_GETTER_DECL(Button);
+        TOKEN_PURE_GETTER_DECL(LabelAndText);
+        TOKEN_PURE_GETTER_DECL(LabelAndFloat);
+        TOKEN_PURE_GETTER_DECL(LabelAndInt);
+        TOKEN_PURE_GETTER_DECL(LabelAndUInt);
+        TOKEN_PURE_GETTER_DECL(LabelAndULLD);
+        TOKEN_PURE_GETTER_DECL(LabelAndPath);
+        TOKEN_PURE_GETTER_DECL(ListBox);
+        TOKEN_PURE_GETTER_DECL(TreeNode);
+        TOKEN_PURE_GETTER_DECL(Selectable);
+        TOKEN_PURE_GETTER_DECL(LabelAndVec3);
+        TOKEN_PURE_GETTER_DECL(Checkbox);
+        TOKEN_PURE_GETTER_DECL(Combobox);
 
         virtual void NewFrame() = 0;
 

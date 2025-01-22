@@ -64,6 +64,17 @@ namespace Engine::Components
 			{
 				SetGravityOverride(m_bGravityOverride);
 			});
+			(*context |= ui.NewCheckbox({ "Fixed", m_bFixed })).SetFunction([&]()
+			{
+				SetFixed(m_bFixed);
+			});
+			(*context |= ui.NewCheckbox({ "No Angular", m_b_no_angular_ })).SetFunction([&]()
+			{
+				SetNoAngular(m_b_no_angular_);
+			});
+			*context |= ui.NewCheckbox({ "Lerp", m_b_lerp_ });
+
+			*context |= ui.NewLabelAndFloat({ "Friction Coefficient", m_friction_mu_, 0.01f, 0, true });
 		}
 #endif
 	}

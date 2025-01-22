@@ -204,39 +204,41 @@ bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::s
 	return ImGui::InputText(temp_label.c_str(), &text, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndFloatToken::End() const {}
+void Engine::ImGuiLabelAndFloatToken::End() const
+{
+}
 
-bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float step, const float speed, const bool editable) const
+bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float speed, const float min, const float max, const bool editable) const
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
-	return ImGui::InputFloat(temp_label.c_str(), &value, step, speed, "%.3f", !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+	return ImGui::DragFloat(temp_label.c_str(), value, speed, min, max, "%.3f", !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
 void Engine::ImGuiLabelAndIntToken::End() const {}
 
-bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, bool editable) const
+bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, const float speed, const int min, const int max, bool editable) const
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
-	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_S32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_S32, value, speed, &min, &max, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
 void Engine::ImGuiLabelAndUIntToken::End() const {}
-bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, unsigned& value, bool editable) const
+bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, uint32_t& value, const float speed, const uint32_t min, const uint32_t max, bool editable) const
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
-	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U32, value, speed, &min, &max, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
 void Engine::ImGuiLabelAndULLDToken::End() const {}
 
-bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, unsigned long long& value, bool editable) const
+bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, uint64_t* value, const float speed, const uint64_t min, const uint64_t max, bool editable) const
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
-	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U64, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U64, &value, speed, &min, &max, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
 void Engine::ImGuiLabelAndPathToken::End() const {}
@@ -282,9 +284,9 @@ void Engine::ImGuiLabelAndVec3Token::End() const
 {
 }
 
-bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float& vec) const
+bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
 {
-	return ImGui::DragFloat3(label.data(), &vec, 0.1f);
+	return ImGui::DragFloat3(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }
 
 void Engine::ImGuiCheckboxToken::End() const

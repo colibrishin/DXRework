@@ -19,8 +19,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiMenuToken : MenuToken
     {
-        explicit ImGuiMenuToken(const std::string_view title)
-            : MenuToken(title) {}
+        using MenuToken::MenuToken;
 
         void End() const override;
         [[nodiscard]] bool              DoImpl(const std::string_view) const override;
@@ -28,8 +27,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiMenuItemToken : MenuItemToken
     {
-        explicit ImGuiMenuItemToken(const std::string_view title)
-            : MenuItemToken(title) {}
+        using MenuItemToken::MenuItemToken;
 
         void End() const override;
         [[nodiscard]] bool                  DoImpl(const std::string_view) const override;
@@ -37,8 +35,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiDialogToken : DialogToken
     {
-	    ImGuiDialogToken(const void* context, const std::string_view title, bool& opened)
-		    : DialogToken(context, title, opened) {}
+        using DialogToken::DialogToken;
 
 	    void End() const override;
 
@@ -48,8 +45,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiButtonToken : ButtonToken
     {
-	    explicit ImGuiButtonToken(const std::string_view title)
-		    : ButtonToken(title) {}
+        using ButtonToken::ButtonToken;
 
 	    void End() const override;
 
@@ -59,8 +55,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndTextToken : LabelAndTextToken
     {
-	    ImGuiLabelAndTextToken(const std::string_view title, std::string& target, bool editable)
-		    : LabelAndTextToken(title, target, editable) {}
+        using LabelAndTextToken::LabelAndTextToken;
 
 	    void End() const override;
 
@@ -70,52 +65,47 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndFloatToken : LabelAndFloatToken
     {
-	    ImGuiLabelAndFloatToken(const std::string_view title, float& target, float step, float speed, bool editable)
-		    : LabelAndFloatToken(title, target, step, speed, editable) {}
+        using LabelAndFloatToken::LabelAndFloatToken;
 
 	    void End() const override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view, float&, float, float, bool) const override;
+        [[nodiscard]] bool DoImpl(const std::string_view, float&, float, float, float, bool) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndIntToken : LabelAndIntToken
     {
-	    ImGuiLabelAndIntToken(const std::string_view title, int& target, bool editable)
-		    : LabelAndIntToken(title, target, editable) {}
+        using LabelAndIntToken::LabelAndIntToken;
 
 	    void End() const override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view, int&, bool) const override;
+	    [[nodiscard]] bool DoImpl(const std::string_view, int&, float, int, int, bool) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndUIntToken : LabelAndUIntToken
     {
-	    ImGuiLabelAndUIntToken(const std::string_view title, uint32_t& target, bool editable)
-		    : LabelAndUIntToken(title, target, editable) {}
+        using LabelAndUIntToken::LabelAndUIntToken;
 
 	    void End() const override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view, unsigned int&, bool) const override;
+	    [[nodiscard]] bool DoImpl(const std::string_view, uint32_t&, float, uint32_t, uint32_t, bool) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndULLDToken : LabelAndULLDToken
     {
-	    ImGuiLabelAndULLDToken(const std::string_view title, uint64_t& target, bool editable)
-		    : LabelAndULLDToken(title, target, editable) {}
+        using LabelAndULLDToken::LabelAndULLDToken;
 
 	    void End() const override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view, unsigned long long&, bool) const override;
+	    [[nodiscard]] bool DoImpl(const std::string_view, uint64_t&, float, uint64_t, uint64_t, bool) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndPathToken : LabelAndPathToken
     {
-	    ImGuiLabelAndPathToken(const std::string_view title, const std::filesystem::path& path)
-		    : LabelAndPathToken(title, path) {}
+        using LabelAndPathToken::LabelAndPathToken;
 
 	    void End() const override;
 
@@ -125,8 +115,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiListBoxToken : ListBoxToken
     {
-	    ImGuiListBoxToken(const std::string_view label, float x, float y)
-		    : ListBoxToken(label, x, y) {}
+        using ListBoxToken::ListBoxToken;
 
 	    void End() const override;
 
@@ -136,8 +125,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiTreeNodeToken : TreeNodeToken
     {
-	    explicit ImGuiTreeNodeToken(const std::string_view label)
-		    : TreeNodeToken(label) {}
+        using TreeNodeToken::TreeNodeToken;
 
 	    void End() const override;
 
@@ -147,8 +135,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiSelectableToken : SelectableToken
     {
-	    ImGuiSelectableToken(const std::string_view label, bool& opened)
-		    : SelectableToken(label, opened) {}
+        using SelectableToken::SelectableToken;
 
 	    void End() const override;
 
@@ -158,18 +145,17 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndVec3Token : LabelAndVec3Token 
     {
-        ImGuiLabelAndVec3Token(const std::string_view label, float& vec)
-            : LabelAndVec3Token(label, vec) {}
+        using LabelAndVec3Token::LabelAndVec3Token;
+
         void End() const override;
 
     protected:
-        [[nodiscard]] bool DoImpl(const std::string_view, float&) const override;
+        [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiCheckboxToken : CheckboxToken
     {
-        ImGuiCheckboxToken(const std::string_view label, bool& flag)
-            : CheckboxToken(label, flag) {}
+        using CheckboxToken::CheckboxToken;
 
         void End() const override;
 
@@ -179,8 +165,7 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiComboboxToken : ComboboxToken
     {
-        ImGuiComboboxToken(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size)
-            : ComboboxToken(label, value, label_arr, arr_size) {}
+        using ComboboxToken::ComboboxToken;
 
         void End() const override;
 
