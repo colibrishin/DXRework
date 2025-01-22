@@ -28,7 +28,7 @@ namespace Engine::Resources
 	{
 		preDispatch(list, w_heap, param);
 
-		list->SetComputeRootSignature(Managers::RenderPipeline::GetInstance().GetRootSignature());
+		list->SetComputeRootSignature(Managers::RenderPipeline::GetInstance().GetPrimitivePipeline()->GetNativePipeline());
 		buffer.SetData(list, 1, &param);
 		buffer.TransitionToSRV(list);
 		buffer.CopySRVHeap(w_heap);

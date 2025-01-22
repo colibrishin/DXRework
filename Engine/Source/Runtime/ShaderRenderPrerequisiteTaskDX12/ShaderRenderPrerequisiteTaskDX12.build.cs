@@ -13,7 +13,6 @@ public class ShaderRenderPrerequisiteTaskDX12 : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<Renderer>(target);
         conf.AddPublicDependency<D3D12Wrapper>(target);
     }
 }

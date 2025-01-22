@@ -3,7 +3,6 @@
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include <boost/filesystem.hpp>
 
 namespace Engine::Managers
 {

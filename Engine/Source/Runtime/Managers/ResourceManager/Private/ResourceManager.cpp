@@ -1,9 +1,7 @@
 #include "../Public/ResourceManager.hpp"
 
 #include <ranges>
-
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include <boost/filesystem.hpp>
 
 namespace Engine::Managers
 {

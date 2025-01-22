@@ -13,7 +13,7 @@ public class PipelineRenderPrerequisiteTaskDX12 : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<Renderer>(target);
+        conf.AddPublicDependency<RenderPipeline>(target);
         conf.AddPublicDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<Shader>(target);
     }
