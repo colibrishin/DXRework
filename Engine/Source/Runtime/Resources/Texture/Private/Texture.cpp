@@ -1,7 +1,6 @@
 #include "../Public/Texture.h"
 
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {

@@ -8,10 +8,14 @@ namespace Engine
 {
 	struct GRAPHICPRIMITIVESHADERDX12_API DX12GraphicPrimitiveShader : public GraphicPrimitiveShader
 	{
-		DX12GraphicPrimitiveShader();
-		void Generate(const Weak<Resources::Shader>& w_shader, void* pipeline_signature) override;
+		DX12GraphicPrimitiveShader() = default;
+		void Generate(const Resources::Shader* shader, void* pipeline_signature) override;
 		[[nodiscard]] ID3D12PipelineState* GetPSO() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetSamplerHeap() const;
+
+	protected:
+		void SetNativeSampler(void* sampler) override;
+		void SetNativeShader(void* shader) override;
 
 	private:
 		void ConvertShader(const Resources::Shader* shader);

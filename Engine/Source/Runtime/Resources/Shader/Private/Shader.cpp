@@ -3,14 +3,15 @@
 #include <ranges>
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {
 	void Shader::Load_INTERNAL()
 	{
 		m_primitive_ = std::unique_ptr<GraphicPrimitiveShader>();
-		m_primitive_->Generate(GetSharedPtr<Shader>(), Managers::RenderPipeline::GetInstance().GetPrimitivePipeline()->GetNativePipeline());
+		m_primitive_->Generate(GetSharedPtr<Shader>(),
+			g_graphic_interface.GetInterface().GetNativePipeline());
 	}
 
 	Shader::Shader(
@@ -200,38 +201,7 @@ namespace Engine::Resources
 
 namespace Engine 
 {
-	void ShaderRenderPrerequisiteTask::SetShader(const GraphicPrimitiveShader* shader)
-	{
-		if (shader)
-		{
-			m_shader_ = shader;
-		}
-	}
-
-	void ShaderRenderPrerequisiteTask::SetPipelineSignature(void* signature)
-	{
-		if (signature)
-		{
-			m_pipeline_signature_ = signature;
-		}
-	}
-
-	const GraphicPrimitiveShader* ShaderRenderPrerequisiteTask::GetShader() const
-	{
-		return m_shader_;
-	}
-
-	void* ShaderRenderPrerequisiteTask::GetPipelineSignature() const
-	{
-		return m_pipeline_signature_;
-	}
-
-	ShaderRenderPrerequisiteTask& Engine::GraphicPrimitiveShader::GetShaderPrerequisiteTask() const
-	{
-		return *s_binding_task_;
-	}
-
-	void GraphicPrimitiveShader::SetPrimitiveShader(void* shader) 
+	void GraphicPrimitiveShader::SetNativeShader(void* shader) 
 	{
 		if (shader) 
 		{
@@ -239,7 +209,7 @@ namespace Engine
 		}
 	}
 
-	void GraphicPrimitiveShader::SetPrimitiveSampler(void* sampler) 
+	void GraphicPrimitiveShader::SetNativeSampler(void* sampler) 
 	{
 		if (sampler) 
 		{

@@ -11,11 +11,9 @@
 #include <execution>
 #include <directxtk12/BufferHelpers.h>
 
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.hpp"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
 
 RESOURCE_SELF_INFER_GETTER_IMPL(Engine::Resources::Mesh)
 
@@ -31,12 +29,15 @@ namespace Engine::Resources
 		return m_vertices_;
 	}
 
+	const IndexCollection& Mesh::GetIndexCollection() const
+	{
+		return m_indices_;
+	}
+
 	Mesh::Mesh(const VertexCollection& shape, const IndexCollection& indices)
 		: Resource("", RES_T_MESH),
 		  m_vertices_(shape),
-		  m_indices_(indices),
-		  m_vertex_buffer_view_(),
-		  m_index_buffer_view_() {}
+		  m_indices_(indices) {}
 
 	Mesh::~Mesh()
 	{
@@ -164,16 +165,6 @@ namespace Engine::Resources
 		Resource::OnSerialized();
 	}
 
-	D3D12_VERTEX_BUFFER_VIEW Mesh::GetVertexView() const
-	{
-		return m_vertex_buffer_view_;
-	}
-
-	D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexView() const
-	{
-		return m_index_buffer_view_;
-	}
-
 #if CFG_RAYTRACING
 	const AccelStructBuffer& Mesh::GetBLAS() const
 	{
@@ -181,14 +172,9 @@ namespace Engine::Resources
 	}
 #endif
 
-	const Graphics::StructuredBuffer<Graphics::VertexElement>& Mesh::GetVertexStructuredBuffer() const
+	const IStructuredBufferType<Graphics::VertexElement>& Mesh::GetVertexStructuredBuffer() const
 	{
-		return m_vertex_buffer_structured_;
-	}
-
-	ID3D12Resource* Mesh::GetIndexBuffer() const
-	{
-		return m_index_buffer_.Get();
+		return *m_vertex_buffer_structured_;
 	}
 
 	void Mesh::Initialize() {}
@@ -201,9 +187,7 @@ namespace Engine::Resources
 	}
 
 	Mesh::Mesh()
-		: Resource("", RES_T_MESH),
-		  m_vertex_buffer_view_(),
-		  m_index_buffer_view_() {}
+		: Resource("", RES_T_MESH) {}
 
 	void Mesh::Load_INTERNAL()
 	{
@@ -223,139 +207,9 @@ namespace Engine::Resources
 				 sizeof(Vector3)
 				);
 
-		std::string generic_name = GetName();
+		m_primitive_mesh_->Generate(this);
 
-		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
-
-		const auto& cmd = Managers::D3Device::GetInstance().AcquireCommandPair(D3D12_COMMAND_LIST_TYPE_DIRECT, L"Mesh Load Command Pair").lock();
-
-		cmd->SoftReset();
-
-		// -- Structured Buffer -- //
-		// structured buffer for the raytracing pipeline.
-		CheckSize<UINT>(m_vertices_.size(), L"Warning: Vertices are too many to upload!");
-		m_vertex_buffer_structured_.SetData
-				(
-				 cmd->GetList(),
-				 static_cast<UINT>(m_vertices_.size()),
-				 m_vertices_.data()
-				);
-
-		// Since vertices are not going to be modified, we can transition to SRV and keep it.
-		m_vertex_buffer_structured_.TransitionToSRV(cmd->GetList());
-
-		// -- Vertex Buffer -- //
-		// Initialize vertex buffer.
-		const auto& default_heap    = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		const auto& vtx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Graphics::VertexElement) * m_vertices_.size());
-
-		DX::ThrowIfFailed
-				(
-				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
-				 (
-				  &default_heap,
-				  D3D12_HEAP_FLAG_NONE,
-				  &vtx_buffer_desc,
-				  D3D12_RESOURCE_STATE_COPY_DEST,
-				  nullptr,
-				  IID_PPV_ARGS(m_vertex_buffer_.GetAddressOf())
-				 )
-				);
-
-		DX::ThrowIfFailed(m_vertex_buffer_->SetName(vertex_name.c_str()));
-
-		// -- Upload Buffer -- //
-		// Create the upload heap.
-		DX::ThrowIfFailed
-				(
-				 DirectX::CreateUploadBuffer
-				 (
-				  Managers::D3Device::GetInstance().GetDevice(),
-				  m_vertices_.data(),
-				  m_vertices_.size(),
-				  m_vertex_buffer_upload_.GetAddressOf()
-				 )
-				);
-
-		// -- Upload Data -- //
-		// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
-		{
-			char* data = nullptr;
-			DX::ThrowIfFailed(m_vertex_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-			SIMDExtension::_mm256_memcpy(data, m_vertices_.data(), sizeof(Graphics::VertexElement) * m_vertices_.size());
-			m_vertex_buffer_upload_->Unmap(0, nullptr);
-		}
-
-		cmd->GetList()->CopyResource(m_vertex_buffer_.Get(), m_vertex_buffer_upload_.Get());
-
-		// -- Vertex Buffer View -- //
-		// Initialize vertex buffer view.
-		m_vertex_buffer_view_.BufferLocation = m_vertex_buffer_->GetGPUVirtualAddress();
-		m_vertex_buffer_view_.SizeInBytes    = sizeof(Graphics::VertexElement) * static_cast<UINT>(m_vertices_.size());
-		m_vertex_buffer_view_.StrideInBytes  = sizeof(Graphics::VertexElement);
-
-		const std::wstring index_name = std::wstring(generic_name.begin(), generic_name.end()) + L"IndexBuffer";
-
-		const auto& idx_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * m_indices_.size());
-
-		DX::ThrowIfFailed
-				(
-				 Managers::D3Device::GetInstance().GetDevice()->CreateCommittedResource
-				 (
-				  &default_heap,
-				  D3D12_HEAP_FLAG_NONE,
-				  &idx_buffer_desc,
-				  D3D12_RESOURCE_STATE_COPY_DEST,
-				  nullptr,
-				  IID_PPV_ARGS(m_index_buffer_.GetAddressOf())
-				 )
-				);
-
-		DX::ThrowIfFailed(m_index_buffer_->SetName(index_name.c_str()));
-
-		// Create the upload heap.
-		DX::ThrowIfFailed
-				(
-				 DirectX::CreateUploadBuffer
-				 (
-				  Managers::D3Device::GetInstance().GetDevice(),
-				  m_indices_.data(),
-				  m_indices_.size(),
-				  m_index_buffer_upload_.GetAddressOf()
-				 )
-				);
-
-		{
-			char* data = nullptr;
-			DX::ThrowIfFailed(m_index_buffer_upload_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-			SIMDExtension::_mm256_memcpy(data, m_indices_.data(), sizeof(UINT) * m_indices_.size());
-			m_index_buffer_upload_->Unmap(0, nullptr);
-		}
-
-		cmd->GetList()->CopyResource(m_index_buffer_.Get(), m_index_buffer_upload_.Get());
-
-		const auto& idx_trans = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_index_buffer_.Get(),
-				 D3D12_RESOURCE_STATE_COPY_DEST,
-				 D3D12_RESOURCE_STATE_INDEX_BUFFER
-				);
-
-		m_index_buffer_view_.BufferLocation = m_index_buffer_->GetGPUVirtualAddress();
-		m_index_buffer_view_.SizeInBytes    = sizeof(UINT) * static_cast<UINT>(m_indices_.size());
-		m_index_buffer_view_.Format         = DXGI_FORMAT_R32_UINT;
-
-		// -- Resource Barrier -- //
-		// Transition from copy dest buffer to vertex buffer.
-		const auto& vtx_trans = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_vertex_buffer_.Get(),
-				 D3D12_RESOURCE_STATE_COPY_DEST,
-				 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-				);
-
-		cmd->GetList()->ResourceBarrier(1, &vtx_trans);
-		cmd->GetList()->ResourceBarrier(1, &idx_trans);
+		
 
 #if CFG_RAYTRACING
 		if (GetRaytracingPipeline().IsRaytracingSupported() && pure_vertices.size() % 3 == 0)
@@ -514,8 +368,6 @@ namespace Engine::Resources
 		}
 #endif
 
-		cmd->FlagReady();
-
 #ifdef PHYSX_ENABLED
 		m_px_sdf_ = new physx::PxSDFDesc;
 		CookMesh(m_vertices_, m_indices_, &m_px_mesh_, &m_px_sdf_);
@@ -526,10 +378,8 @@ namespace Engine::Resources
 
 	void Mesh::Unload_INTERNAL()
 	{
-		m_vertex_buffer_->Release();
-		m_index_buffer_->Release();
-		m_vertex_buffer_upload_->Release();
-		m_index_buffer_upload_->Release();
+		m_primitive_mesh_.reset();
+		m_vertex_buffer_structured_.reset();
 
 #if CFG_RAYTRACING
 		if (m_blas_.resultPool.GetResource())

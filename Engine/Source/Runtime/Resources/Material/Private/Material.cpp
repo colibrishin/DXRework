@@ -2,10 +2,7 @@
 
 #include <DirectXColors.h>
 
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
-#include "Source/Runtime/Resources/AnimationTexture/Public/AnimationTexture.h"
-#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
-#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 #include "Source/Runtime/Resources/Shader/Public/Shader.hpp"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"

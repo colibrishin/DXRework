@@ -37,8 +37,7 @@ namespace Engine::Managers
 
 	void Renderer::PreRender(const float& dt)
 	{
-		// Pre-processing, Mapping the materials to the model renderers.
-		if (const auto& scene = Managers::SceneManager::GetInstance().GetActiveScene().lock()) 
+		if (const auto& scene = SceneManager::GetInstance().GetActiveScene().lock()) 
 		{
 			for (size_t i = 0; i < m_render_instance_tasks_.size(); ++i)
 			{
@@ -71,7 +70,7 @@ namespace Engine::Managers
 		const float                                        dt, 
 		const bool                                         shader_bypass, 
 		const eShaderDomain                                domain,
-		const Graphics::SBs::LocalParamSB&                 local_param_sb,
+		const SBs::LocalParamSB&                           local_param_sb,
 		const aligned_vector<RenderPassPrerequisiteTask*>& additional_task,
 		const ObjectPredication&                           predication) 
 	{
@@ -81,15 +80,15 @@ namespace Engine::Managers
 		for (RenderPassTask* task : m_render_pass_tasks_) 
 		{
 			task->Run(
-				dt,
-				shader_bypass,
-				domain,
-				&m_render_candidates_[domain],
-				local_param_sb,
-				m_instance_count_,
-				m_render_prerequisite_tasks_.data(),
-				m_render_prerequisite_tasks_.size(),
-				predication); // todo: culling
+			          dt,
+			          shader_bypass,
+			          &m_render_candidates_[domain],
+			          local_param_sb,
+			          m_instance_count_,
+			          m_render_prerequisite_tasks_.data(),
+			          m_render_prerequisite_tasks_.size(),
+			          predication
+			         ); // todo: culling
 		}
 
 		m_render_prerequisite_tasks_.erase(m_render_prerequisite_tasks_.begin() + default_offset, m_render_prerequisite_tasks_.end());

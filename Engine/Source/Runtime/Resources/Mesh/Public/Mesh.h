@@ -1,10 +1,7 @@
 #pragma once
-#include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "GraphicInterface.h"
 
-#if defined(USE_DX12)
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"
-#endif
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 #ifdef PHYSX_ENABLED
 namespace physx
@@ -15,37 +12,23 @@ namespace physx
 }
 #endif
 
-#if defined(USE_DX12)
 namespace Engine 
 {
+	struct PrimitiveMesh;
+
 	struct MESH_API AccelStructBuffer
 	{
-		Graphics::GraphicMemoryPool<
-			D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT,
-			D3D12_HEAP_TYPE_UPLOAD,
-			D3D12_RESOURCE_FLAG_NONE,
-			D3D12_RESOURCE_STATE_GENERIC_READ> instanceDescPool;
-
-		Graphics::GraphicMemoryPool<
-			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
-			D3D12_HEAP_TYPE_DEFAULT,
-			D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE> resultPool;
-
-		Graphics::GraphicMemoryPool<
-			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT,
-			D3D12_HEAP_TYPE_DEFAULT,
-			D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS> scratchPool;
+		Unique<GraphicMemoryPool> instanceDescPool;
+		Unique<GraphicMemoryPool> resultPool;
+		Unique<GraphicMemoryPool> scratchPool;
 
 		bool empty = true;
 	};
 }
-#endif
 
 namespace Engine::Resources
 {
-	class MESH_API Mesh : public Engine::Abstracts::Resource
+	class MESH_API Mesh : public Abstracts::Resource
 	{
 	public:
 		RESOURCE_T(RES_T_MESH)
@@ -58,32 +41,27 @@ namespace Engine::Resources
 		void Update(const float& dt) override;
 		void FixedUpdate(const float& dt) override;
 
-		BoundingOrientedBox GetBoundingBox() const;
-
-		size_t                  GetIndexCount() const;
-		const VertexCollection& GetVertexCollection() const;
+		[[nodiscard]] BoundingOrientedBox     GetBoundingBox() const;
+		[[nodiscard]] size_t                  GetIndexCount() const;
+		[[nodiscard]] const VertexCollection& GetVertexCollection() const;
+		[[nodiscard]] const IndexCollection&  GetIndexCollection() const;
 
 		void                     OnDeserialized() override;
 		void                     OnSerialized() override;
 
-#if defined(USE_DX12)
-		D3D12_VERTEX_BUFFER_VIEW GetVertexView() const;
-		D3D12_INDEX_BUFFER_VIEW  GetIndexView() const;
-
 #if CFG_RAYTRACING
 		const AccelStructBuffer&               GetBLAS() const;
 #endif
-		const Graphics::StructuredBuffer<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
-		ID3D12Resource*                        GetIndexBuffer() const;
-#endif
+		
+		[[nodiscard]] const IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
 
 		RESOURCE_SELF_INFER_GETTER_DECL(Mesh)
 
 	protected:
 		Mesh();
-
 		friend class Components::Collider;
-
+		friend struct PrimitiveMesh;
+		
 		void         Load_INTERNAL() final;
 		virtual void Load_CUSTOM();
 		void         Unload_INTERNAL() override;
@@ -96,30 +74,15 @@ namespace Engine::Resources
 		);
 		void UpdateTangentBinormal();
 
-	protected:
 		VertexCollection m_vertices_;
 		IndexCollection  m_indices_;
 		BoundingOrientedBox m_bounding_box_;
 
-#if defined(USE_DX12)
-		ComPtr<ID3D12Resource> m_vertex_buffer_;
-		ComPtr<ID3D12Resource> m_index_buffer_;
-		ComPtr<ID3D12Resource> m_vertex_buffer_upload_;
-		ComPtr<ID3D12Resource> m_index_buffer_upload_;
-
-		Graphics::StructuredBuffer<Graphics::VertexElement> m_vertex_buffer_structured_;
-
-		D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_;
-		D3D12_INDEX_BUFFER_VIEW  m_index_buffer_view_;
+		Unique<PrimitiveMesh> m_primitive_mesh_;
+		Unique<IStructuredBufferType<Graphics::VertexElement>> m_vertex_buffer_structured_;
 
 #if CFG_RAYTRACING
 		AccelStructBuffer m_blas_;
-
-		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_;
-		ComPtr<ID3D12Resource> m_raytracing_index_buffer_;
-		ComPtr<ID3D12Resource> m_raytracing_vertex_buffer_upload_;
-		ComPtr<ID3D12Resource> m_raytracing_index_buffer_upload_;
-#endif
 #endif
 
 #ifdef PHYSX_ENABLED
@@ -133,3 +96,39 @@ namespace Engine::Resources
 #endif
 	};
 } // namespace Engine::Resources
+
+namespace Engine
+{
+	struct MESH_API PrimitiveMesh
+	{
+		virtual      ~PrimitiveMesh() = default;
+		virtual void Generate(const Resources::Mesh* mesh) = 0;
+
+	protected:
+		virtual void SetNativeVertexBuffer(void* buffer)
+		{
+			m_vertex_buffer_ = buffer;
+		}
+
+		virtual void SetNativeIndexBuffer(void* buffer)
+		{
+			m_index_buffer_ = buffer;
+		}
+
+		static IStructuredBufferType<Graphics::VertexElement>& GetVertexStructuredBuffer(const Resources::Mesh* mesh)
+		{
+			return *mesh->m_vertex_buffer_structured_;
+		}
+
+#if CFG_RAYTRACING
+		static AccelStructBuffer& GetAccelStructBuffer(const Resources::Mesh* mesh)
+		{
+			return mesh->m_blas_;
+		}
+#endif
+		
+	private:
+		void* m_vertex_buffer_ = nullptr;
+		void* m_index_buffer_ = nullptr;
+	};
+}

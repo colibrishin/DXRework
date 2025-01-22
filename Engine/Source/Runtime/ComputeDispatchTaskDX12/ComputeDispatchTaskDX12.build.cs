@@ -18,7 +18,6 @@ public class ComputeDispatchTaskDX12 : CommonProject
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPrivateDependency<PrimitivePipelineDX12>(target);
-        conf.AddPublicDependency<D3D12Wrapper>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<Material>(target);

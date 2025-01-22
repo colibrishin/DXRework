@@ -1,8 +1,5 @@
 #pragma once
-#include "Source/Runtime/CommandPair/Public/CommandPair.h"
-#include "Source/Runtime/DescriptorHeap/Public/Descriptors.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferMemoryPoolDX12.hpp"
 
 namespace Engine 
 {
@@ -18,14 +15,14 @@ namespace Engine
 			const size_t prerequisite_count) override;
 		void Cleanup() override;
 
-		[[nodiscard]] CommandPair* GetCommandPair() const;
-		[[nodiscard]] DescriptorPtrImpl* GetHeap() const;
+		[[nodiscard]] CommandListBase* GetCommandPair() const;
+		[[nodiscard]] GraphicHeapBase* GetHeap() const;
 
 	private:
-		CommandPair* m_current_cmd_ = nullptr;
-		DescriptorPtrImpl* m_current_heap_ = nullptr;
+		CommandListBase* m_current_cmd_ = nullptr;
+		GraphicHeapBase* m_current_heap_ = nullptr;
 		
-		aligned_vector<DescriptorPtr> m_heaps_{};
-		Graphics::StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
+		aligned_vector<Unique<GraphicHeapBase>> m_heaps_{};
+		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
 	};
 }

@@ -17,7 +17,6 @@ public class D3D12Toolkit : CommonProject
         conf.AddPublicDependency<DirectXTK>(target);
         
         conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

@@ -29,9 +29,9 @@ namespace Engine::Resources
 		m_primitive_shader_ = std::unique_ptr<ComputePrimitiveShader>(shader);
 	}
 
-	ComputePrimitiveShader* ComputeShader::GetPrimitiveShader() const
+	ComputePrimitiveShader& ComputeShader::GetPrimitiveShader() const
 	{
-		return m_primitive_shader_.get();
+		return *m_primitive_shader_;
 	}
 
 	ComputeShader::ComputeShader(

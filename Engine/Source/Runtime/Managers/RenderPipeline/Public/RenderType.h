@@ -3,12 +3,11 @@
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/StructuredBuffer.h"
-#include "Source/Runtime/Core/ConstantBuffer.h"
 
 namespace Engine 
 {
 	using RenderInstanceIndex = uint64_t;
-	using CandidateTuple = std::tuple<Weak<Engine::Abstracts::ObjectBase>, Weak<Engine::Resources::Material>, aligned_vector<Engine::Graphics::SBs::InstanceSB>>;
+	using CandidateTuple = std::tuple<Weak<Abstracts::ObjectBase>, Weak<Resources::Material>, aligned_vector<Graphics::SBs::InstanceSB>>;
 	using RenderMapValueType = tbb::concurrent_vector<CandidateTuple, u_align_allocator<CandidateTuple>>;
 	using RenderMap = tbb::concurrent_hash_map<RenderInstanceIndex, RenderMapValueType>;
 
@@ -242,19 +241,5 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST = 62,
 		PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST = 63,
 		PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST = 64
-	};
-
-	struct RENDERPIPELINE_API PrimitivePipeline
-	{
-	public:
-		virtual      ~PrimitivePipeline() = default;
-		virtual void Generate() = 0;
-		[[nodiscard]] void* GetNativePipeline() const;
-
-	protected:
-		void SetPrimitivePipeline(void* pipeline);
-
-	private:
-		void* m_pipeline_ = nullptr;
 	};
 }

@@ -9,43 +9,6 @@
 
 namespace Engine 
 {
-	struct PRIMITIVETEXTUREDX12_API DX12TextureBindingTask : public TextureBindingTask 
-	{
-		void Bind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType bind_type, const UINT bind_slot, const UINT offset) override;
-		void Unbind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType previous_bind_type) override;
-
-		void BindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) override;
-		void UnbindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv) override;
-	};
-
-	struct PRIMITIVETEXTUREDX12_API DX12TextureMappingTask : public TextureMappingTask 
-	{
-		void Map(
-			PrimitiveTexture* texture, 
-			void* data_ptr, 
-			const size_t width,
-			const size_t height,
-			const size_t stride,
-			const size_t depth) override;
-		void Map(
-			PrimitiveTexture* lhs, 
-			PrimitiveTexture* rhs,
-			const UINT src_width,
-			const UINT src_height,
-			const size_t src_idx,
-			const UINT dst_x,
-			const UINT dst_y,
-			const size_t dst_idx) override;
-
-	private:
-		uint64_t GetNextValue(const uint64_t key);
-		void ReleaseUploadBuffer(const uint64_t ptr_id, const uint64_t bucket);
-
-		using BucketKeyType = std::pair<uint64_t, uint64_t>;
-		std::map<uint64_t, uint64_t> m_last_used_values_;
-		std::unordered_map<BucketKeyType, ComPtr<ID3D12Resource>> m_upload_buffers_;
-	};
-
 	struct PRIMITIVETEXTUREDX12_API DX12PrimitiveTexture : public PrimitiveTexture
 	{
 		DX12PrimitiveTexture();
@@ -53,6 +16,14 @@ namespace Engine
 		void LoadFromFile(const Weak<Resources::Texture>& texture, const std::filesystem::path& path) override;
 		void SaveAsFile(const std::filesystem::path& path) override;
 
+		void Map(
+			void* data_ptr, const size_t width, const size_t height, const size_t stride, const size_t depth
+		) override;
+		void Map(
+			PrimitiveTexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
+			const UINT        dst_y, const size_t dst_idx
+		) override;
+		
 		[[nodiscard]] ID3D12DescriptorHeap* GetSrv() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetDsv() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetRtv() const;
@@ -63,8 +34,9 @@ namespace Engine
 		void InitializeDescriptorHeaps();
 		void InitializeResourceViews();
 
+	private:
 		GenericTextureDescription m_desc_;
-		D3D12_RESOURCE_DESC m_native_desc_{};
+		D3D12_RESOURCE_DESC       m_native_desc_{};
 
 		DXGI_FORMAT m_rtv_format_ = DXGI_FORMAT_R8G8B8A8_UNORM;
 		DXGI_FORMAT m_dsv_format_ = DXGI_FORMAT_D24_UNORM_S8_UINT;

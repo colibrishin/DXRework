@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "RenderType.h"
+#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
+#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine 
 {
@@ -10,7 +10,7 @@ namespace Engine
 	{
 		virtual      ~RenderInstanceTask() = default;
 		virtual void Run(Scene const* scene, const RenderMapValueType* render_map, std::atomic<uint64_t>& instance_count) = 0;
-		virtual void Cleanup(const RenderMapValueType* render_map) = 0;
+		virtual void Cleanup(RenderMapValueType* render_map) = 0;
 	};
 
 	struct RenderPassTask;
@@ -26,121 +26,60 @@ namespace Engine
 	{
 		virtual      ~RenderPassTask() = default;
 		virtual void Run(
-			const float dt,
-			const bool shader_bypass,
-			const eShaderDomain domain,
-			RenderMap const* domain_map,
+			float                              dt,
+			bool                               shader_bypass,
+			RenderMap const*                   domain_map,
 			const Graphics::SBs::LocalParamSB& local_param,
-			const std::atomic<uint64_t>& instance_count,
+			const std::atomic<uint64_t>&       instance_count,
 			RenderPassPrerequisiteTask* const* prerequisite,
-			const size_t prerequisite_count,
-			const ObjectPredication& predicate) = 0;
+			size_t                             prerequisite_count,
+			const ObjectPredication&           predicate
+		) = 0;
 
 		virtual void Cleanup() = 0;
 	};
 
-	struct RENDERPIPELINE_API BufferCopyTask
+	struct RENDERPIPELINE_API GenericRenderPassTask : RenderPassTask
 	{
-		virtual ~BufferCopyTask() = default;
-		virtual void Run(
-			void* src_data,
-			const size_t stride,
-			const size_t count,
-			void* upload_buffer, 
-			void* dest_buffer) = 0;
+		void Run(
+			float                              dt,
+			bool                               shader_bypass,
+			RenderMap const*                   domain_map,
+			const Graphics::SBs::LocalParamSB& local_param,
+			const std::atomic<uint64_t>&       instance_count,
+			RenderPassPrerequisiteTask* const* prerequisite,
+			size_t                             prerequisite_count,
+			const ObjectPredication&           predicate
+		) override;
+		
+		void Cleanup() override;
 
-		virtual void Cleanup() = 0;
-	};
-
-	struct RENDERPIPELINE_API ViewportRenderPrerequisiteTask : RenderPassPrerequisiteTask
-	{
-		void SetViewport(const Viewport& viewport);
-		[[nodiscard]] Viewport GetViewport() const;
+		[[nodiscard]] CommandListBase* GetCurrentCommandList() const;
+		[[nodiscard]] GraphicHeapBase* GetCurrentHeap() const;
 
 	private:
-		Engine::Viewport m_viewport_{};
-	};
+		void RunImpl(
+			float                                                     dt,
+			bool                                                      shader_bypass,
+			IStructuredBufferType<Graphics::SBs::InstanceSB>& instance_buffer,
+			const Weak<Resources::Material>&                          material,
+			const GraphicInterfaceContextPrimitive*                   context,
+			const aligned_vector<const Graphics::SBs::InstanceSB*>&   structuredbuffers
+		);
 
-	struct RENDERPIPELINE_API PipelineRenderPrerequisiteTask : RenderPassPrerequisiteTask
-	{
-		void SetPrimitivePipeline(PrimitivePipeline* pipeline);
+		void DrawPhase(
+			const bool shader_bypass,
+			const uint64_t instance_count,
+			const Weak<Resources::Material>& material,
+			const GraphicInterfaceContextPrimitive* context);
 
-	protected:
-		[[nodiscard]] PrimitivePipeline* GetPrimitivePipeline() const;
+		CommandListBase* m_current_cmd_ = nullptr;
+		GraphicHeapBase* m_current_heap_ = nullptr;
 
-	private:
-		PrimitivePipeline* m_pipeline_ = nullptr;
-	};
-
-	template <typename T>
-	struct StructuredBufferRenderPrerequisiteTask : RenderPassPrerequisiteTask
-	{
-		void SetData(const T* data, const size_t count)
-		{
-			if (data)
-			{
-				m_ptr_ = data;
-				m_count_ = count;
-			}
-		}
-
-	protected:
-		void GetData(T** out_ptr, size_t& out_count)
-		{
-			*out_ptr = m_ptr_;
-			out_count = m_count_;
-		}
-
-		[[nodiscard]] bool IsDirty() const
-		{
-			return m_dirty_;
-		}
-
-		void FlipDirty()
-		{
-			m_dirty_ = true;
-		}
-
-	private:
-		bool m_dirty_ = true;
-
-		const T* m_ptr_ = nullptr;
-		size_t m_count_ = 1;
-	};
-
-	template <typename T>
-	struct ConstantBufferRenderPrerequisiteTask : RenderPassPrerequisiteTask
-	{
-		void SetData(const T* data, const size_t count)
-		{
-			if (data)
-			{
-				m_ptr_ = data;
-				m_count_ = count;
-			}
-		}
-
-	protected:
-		void GetData(T** out_ptr, size_t& out_count)
-		{
-			*out_ptr = m_ptr_;
-			out_count = m_count_;
-		}
-
-		[[nodiscard]] bool IsDirty() const
-		{
-			return m_dirty_;
-		}
-
-		void FlipDirty()
-		{
-			m_dirty_ = true;
-		}
-
-	private:
-		bool m_dirty_ = true;
-
-		const T* m_ptr_ = nullptr;
-		size_t m_count_ = 1;
+		std::map<uint64_t, Unique<IStructuredBufferType<Graphics::SBs::MaterialSB>>> m_material_sbs_;
+		std::set<uint64_t> m_updated_material_in_current_pass_;
+		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_;
+		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_;
+		aligned_vector<Unique<GraphicHeapBase>> m_heaps_;
 	};
 }

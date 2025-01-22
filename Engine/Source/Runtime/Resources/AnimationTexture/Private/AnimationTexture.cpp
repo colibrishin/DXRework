@@ -3,8 +3,7 @@
 #include <algorithm>
 
 #include "Source/Runtime/Resources/BoneAnimation/Public/BoneAnimation.h"
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-#include "Source/Runtime/Managers/ResourceManager/Public/ResourceManager.hpp"
+#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.hpp"
 
 namespace Engine::Resources
 {

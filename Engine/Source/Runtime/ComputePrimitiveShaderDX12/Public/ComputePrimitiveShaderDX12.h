@@ -3,7 +3,6 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/StructuredBufferDX12.hpp"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
 
 namespace Engine

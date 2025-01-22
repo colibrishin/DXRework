@@ -1,6 +1,6 @@
 #pragma once
 #include "Source/Runtime/Core/Singleton/Public/Singleton.hpp"
-#include "Source/Runtime/Managers/StepTimer/Public/StepTimer.hpp"
+#include "Source/Runtime/Core/StepTimer/Public/StepTimer.hpp"
 
 namespace Engine::Managers
 {

@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <boost/smart_ptr.hpp>
 #include <string>
 #include <filesystem>
 #include "Source/Runtime/Misc.h"
@@ -402,10 +403,10 @@ namespace Engine
 	enum eClientSBUAVType : uint8_t;
 
 	template <typename T>
-	using Weak = std::weak_ptr<T>;
+	using Weak = boost::weak_ptr<T>;
 
 	template <typename T>
-	using Strong = std::shared_ptr<T>;
+	using Strong = boost::shared_ptr<T>;
 
 	template <typename T>
 	using Unique = std::unique_ptr<T>;
@@ -472,9 +473,6 @@ namespace Engine
 
 	namespace Graphics
 	{
-		template <typename T>
-		class StructuredBuffer;
-
 		struct AnimationPrimitive;
 		struct BonePrimitive;
 		struct BoneAnimationPrimitive;
@@ -533,7 +531,6 @@ namespace Engine
 		class Raytracer;
 		class ToolkitAPI;
 		class RenderPipeline;
-		class D3Device;
 		class ShadowManager;
 		class ReflectionEvaluator;
 		class Renderer;

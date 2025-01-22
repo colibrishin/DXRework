@@ -1,21 +1,16 @@
 #pragma once
 #include <directx/d3d12.h>
-#include <directx/d3dx12.h>
 #include <wrl/client.h>
 
 #include "Source/Runtime/Core/StructuredBuffer.h"
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Descriptors.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "ThrowIfFailed.h"
 
 namespace Engine::Graphics
 {
-	class DXStructuredBufferTypeless : public StructuredBufferTypelessBase 
+	class D3D12GRAPHICINTERFACE_API D3D12StructuredBufferTypeless : public StructuredBufferTypelessBase 
 	{
-		DXStructuredBufferTypeless();
-		~DXStructuredBufferTypeless() override = default;
+		D3D12StructuredBufferTypeless() = default;
+		~D3D12StructuredBufferTypeless() override = default;
 
 		void Clear() override;
 
@@ -37,11 +32,11 @@ namespace Engine::Graphics
 	private:
 		void InitializeSRV(UINT size, const size_t stride);
 		void InitializeUAV(UINT size, const size_t stride);
-		void InitializeMainBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const size_t stride);
+		void InitializeMainBuffer(UINT size, size_t stride);
 		void InitializeUploadBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride);
 		void InitializeReadBuffer(UINT size, const size_t stride);
 
-		D3D12_RESOURCE_STATES m_current_state_;
+		D3D12_RESOURCE_STATES m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 
 		ComPtr<ID3D12DescriptorHeap> m_srv_heap_;
 		ComPtr<ID3D12DescriptorHeap> m_uav_heap_;
@@ -50,20 +45,20 @@ namespace Engine::Graphics
 		ComPtr<ID3D12Resource> m_read_buffer_;
 		ComPtr<ID3D12Resource> m_buffer_;
 
-		UINT m_size_;
-		bool m_uav_;
+		UINT m_size_{};
+		bool m_uav_ = false;
 	};
 
 	template <typename T>
-	class StructuredBuffer : public DXStructuredBufferTypeless, public StructuredBufferTypeInterface<T>
+	class D3D12StructuredBuffer : public D3D12StructuredBufferTypeless, public IStructuredBufferType<T>
 	{
 	public:
-		StructuredBuffer();
-		~StructuredBuffer() override = default;
+		D3D12StructuredBuffer() = default;
+		~D3D12StructuredBuffer() override = default;
 
-		void Create(const GraphicInterfaceContextPrimitive* context, UINT size, const T* initial_data) override
+		void Create(const GraphicInterfaceContextPrimitive* context, UINT size, const T* initial_data, const bool uav) override
 		{
-			Create(context, size, initial_data, sizeof(T));
+			Create(context, size, initial_data, sizeof(T), uav);
 		}
 
 		void SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const T* src_ptr) override 

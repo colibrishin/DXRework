@@ -7,17 +7,10 @@
 #include <directxtk12/ScreenGrab.h>
 #include <directxtk12/BufferHelpers.h>
 
-#include "ThrowIfFailed.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-#include "Source/Runtime/RenderPassTaskDX12/Public/RenderPassTaskDX12.h"
+#include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
 
-Engine::DX12PrimitiveTexture::DX12PrimitiveTexture()
-{
-	SetTextureMappingTask<DX12TextureMappingTask>();
-	SetTextureBindingTask<DX12TextureBindingTask>();
-}
+Engine::DX12PrimitiveTexture::DX12PrimitiveTexture() {}
 
 void Engine::DX12PrimitiveTexture::Generate(const Weak<Resources::Texture>& texture)
 {
@@ -309,6 +302,21 @@ void Engine::DX12PrimitiveTexture::SaveAsFile(const std::filesystem::path& path)
 	);
 }
 
+void Engine::DX12PrimitiveTexture::Map(
+	void* data_ptr, const size_t width, const size_t height, const size_t stride, const size_t depth
+)
+{
+	
+}
+
+void Engine::DX12PrimitiveTexture::Map(
+	PrimitiveTexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
+	const UINT dst_y, const size_t dst_idx
+)
+{
+	
+}
+
 ID3D12DescriptorHeap* Engine::DX12PrimitiveTexture::GetSrv() const
 {
 	return m_srv_.Get();
@@ -549,7 +557,7 @@ void Engine::DX12TextureMappingTask::Map(
 
 void Engine::DX12TextureBindingTask::Bind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType bind_type, const UINT bind_slot, const UINT offset)
 {
-	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	GenericRenderPassTask* task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 	DX12PrimitiveTexture* tex = reinterpret_cast<DX12PrimitiveTexture*>(texture);
 	
 	ID3D12Resource* res = reinterpret_cast<ID3D12Resource*>(tex->GetPrimitiveTexture());
@@ -649,7 +657,7 @@ void Engine::DX12TextureBindingTask::Bind(RenderPassTask* task_context, Primitiv
 
 void Engine::DX12TextureBindingTask::Unbind(RenderPassTask* task_context, PrimitiveTexture* texture, const eBindType previous_bind_type)
 {
-	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	GenericRenderPassTask* task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 	DX12PrimitiveTexture* tex = reinterpret_cast<DX12PrimitiveTexture*>(texture);
 
 	ID3D12Resource* res = reinterpret_cast<ID3D12Resource*>(tex->GetPrimitiveTexture());
@@ -711,7 +719,7 @@ void Engine::DX12TextureBindingTask::Unbind(RenderPassTask* task_context, Primit
 
 void Engine::DX12TextureBindingTask::BindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv)
 {
-	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	GenericRenderPassTask* task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 
 	CommandPair* cmd = task->GetCurrentCommandList();
 	DescriptorPtrImpl* heap = task->GetCurrentHeap();
@@ -762,7 +770,7 @@ void Engine::DX12TextureBindingTask::BindMultiple(RenderPassTask* task_context, 
 
 void Engine::DX12TextureBindingTask::UnbindMultiple(RenderPassTask* task_context, PrimitiveTexture* const* rtvs, const size_t rtv_count, PrimitiveTexture* dsv)
 {
-	DX12RenderPassTask* task = reinterpret_cast<DX12RenderPassTask*>(task_context);
+	GenericRenderPassTask* task = reinterpret_cast<GenericRenderPassTask*>(task_context);
 
 	CommandPair* cmd = task->GetCurrentCommandList();
 	DescriptorPtrImpl* heap = task->GetCurrentHeap();

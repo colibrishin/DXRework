@@ -19,7 +19,6 @@ public class AnimationTexture : CommonProject
         conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<DX12Agility>(target);
         conf.AddPrivateDependency<DirectXTex>(target);
-        conf.AddPrivateDependency<D3D12Wrapper>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
     }
 }

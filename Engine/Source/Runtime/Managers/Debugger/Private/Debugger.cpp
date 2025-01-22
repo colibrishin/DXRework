@@ -1,14 +1,11 @@
 #include "../Public/Debugger.hpp"
 #include "../Public/DebugDraw.h"
 
-#include "Source/Runtime/Managers/D3D12Wrapper/Public/D3Device.hpp"
-#include "Source/Runtime/Managers/SceneManager/Public/SceneManager.hpp"
+#include "Source/Runtime/Core/SceneManager/Public/SceneManager.hpp"
 #include "Source/Runtime/Managers/D3D12Toolkit/Public/ToolkitAPI.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.hpp"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Managers/InputManager/Public/InputManager.h"
 
 namespace Engine::Managers
 {

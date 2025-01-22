@@ -252,7 +252,7 @@ namespace Engine
 		}
 
 		template <typename T>
-		ConcurrentWeakComVec GetCachedComponents()
+		ConcurrentWeakComVec GetCachedComponents() const
 		{
 			ConcurrentWeakComRootMap::const_accessor acc;
 
