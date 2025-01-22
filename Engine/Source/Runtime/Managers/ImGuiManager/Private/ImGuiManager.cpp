@@ -138,9 +138,9 @@ void Engine::AlignText(const std::string_view label)
 	ImGui::SetNextItemWidth(-1);
 }
 
-std::string Engine::LabelPrefix(const std::string_view label)
+std::string Engine::LabelSuffix(const std::string_view label)
 {
-	std::string labelID = "##";
+	std::string labelID = "###";
 	labelID += label;
 
 	return labelID;
@@ -163,7 +163,7 @@ void Engine::ImGuiMenuToken::End() const
 
 bool Engine::ImGuiMenuToken::DoImpl(const std::string_view title) const
 {
-	const std::string& temp_label = std::string(title) + LabelPrefix(title);
+	const std::string& temp_label = std::string(title) + LabelSuffix(title);
 	return ImGui::BeginMenu(temp_label.c_str());
 }
 
@@ -171,7 +171,7 @@ void Engine::ImGuiMenuItemToken::End() const {}
 
 bool Engine::ImGuiMenuItemToken::DoImpl(const std::string_view label) const
 {
-	const std::string& temp_label = std::string(label) + LabelPrefix(label);
+	const std::string& temp_label = std::string(label) + LabelSuffix(label);
 	return ImGui::MenuItem(temp_label.c_str());
 }
 
@@ -180,10 +180,10 @@ void Engine::ImGuiDialogToken::End() const
 	ImGui::End();
 }
 
-bool Engine::ImGuiDialogToken::DoImpl(const std::string_view title, bool& opened) const
+bool Engine::ImGuiDialogToken::DoImpl(const void* context, const std::string_view title, bool& opened) const
 {
-	const std::string& temp_label = std::string(title) + LabelPrefix(title);
-	return ImGui::Begin(temp_label.c_str(), &opened);
+	const std::string& temp_label = std::string(title) + LabelSuffix(std::to_string(reinterpret_cast<uint64_t>(context)));
+	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse);
 }
 
 void Engine::ImGuiButtonToken::End() const {}
@@ -197,7 +197,7 @@ void Engine::ImGuiLabelAndTextToken::End() const {}
 
 bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::string& text, const bool editable) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputText(temp_label.c_str(), &text, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -206,7 +206,7 @@ void Engine::ImGuiLabelAndFloatToken::End() const {}
 
 bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float step, const float speed, const bool editable) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputFloat(temp_label.c_str(), &value, step, speed, "%.3f", !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -215,7 +215,7 @@ void Engine::ImGuiLabelAndIntToken::End() const {}
 
 bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, bool editable) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_S32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -223,7 +223,7 @@ bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& va
 void Engine::ImGuiLabelAndUIntToken::End() const {}
 bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, unsigned& value, bool editable) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U32, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -232,7 +232,7 @@ void Engine::ImGuiLabelAndULLDToken::End() const {}
 
 bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, unsigned long long& value, bool editable) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputScalar(temp_label.c_str(), ImGuiDataType_U64, &value, nullptr, nullptr, nullptr, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -241,9 +241,9 @@ void Engine::ImGuiLabelAndPathToken::End() const {}
 
 bool Engine::ImGuiLabelAndPathToken::DoImpl(const std::string_view label, const std::filesystem::path& path) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
-	return ImGui::InputText(temp_label.c_str(), const_cast<char*>(path.generic_string().c_str()), ImGuiInputTextFlags_ReadOnly);
+	return ImGui::InputText(temp_label.c_str(), const_cast<char*>(path.generic_string().c_str()), ImGuiInputTextFlags_None);
 }
 
 void Engine::ImGuiListBoxToken::End() const
@@ -263,7 +263,7 @@ void Engine::ImGuiTreeNodeToken::End() const
 
 bool Engine::ImGuiTreeNodeToken::DoImpl(const std::string_view label) const
 {
-	const std::string& temp_label = LabelPrefix(label);
+	const std::string& temp_label = LabelSuffix(label);
 	return ImGui::TreeNode(temp_label.c_str(), label.data());
 }
 

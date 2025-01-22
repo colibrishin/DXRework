@@ -18,8 +18,17 @@ public class Launch : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
 
-        conf.AddPrivateDependency<WinAPIWrapper>(target);
         conf.AddPrivateDependency<EngineEntryPoint>(target);
+
+        if (target.Platform == Platform.win64 || target.Platform == Platform.win32) 
+        {
+            conf.AddPublicDependency<WinAPIWrapper>(target);
+        }
+
+        if (target.GraphicAPI == EGraphicAPI.D3D12) 
+        {
+            conf.AddPublicDependency<D3D12GraphicInterface>(target);
+        }
         
         conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
         conf.Output = Configuration.OutputType.Exe;

@@ -22,13 +22,22 @@ public class TBB : VCPKG
     {
         base.ConfigureDebug(conf, target);
 
-
         conf.LibraryFiles.Add
         (
             @"tbb12_debug.lib", 
             @"tbbmalloc_debug.lib", 
             @"tbbmalloc_proxy_debug.lib",
-	    @"hwloc.lib"
+	        @"hwloc.lib"
+        );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/tbb12_debug.dll",
+            BinPath + @"/tbbmalloc_debug.dll",
+            BinPath + @"/tbbmalloc_proxy_debug.dll",
+            BinPath + @"/hwloc-15.dll"
         );
     }
 
@@ -41,7 +50,17 @@ public class TBB : VCPKG
             @"tbb12.lib", 
             @"tbbmalloc.lib", 
             @"tbbmalloc_proxy.lib",
-	    @"hwloc.lib"
+	        @"hwloc.lib"
+        );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/tbb12.dll",
+            BinPath + @"/tbbmalloc.dll",
+            BinPath + @"/tbbmalloc_proxy.dll",
+            BinPath + @"/hwloc-15.dll"
         );
     }
 }

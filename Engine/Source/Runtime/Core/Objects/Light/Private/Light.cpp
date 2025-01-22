@@ -45,6 +45,7 @@ namespace Engine::Objects
 
 	void Light::Initialize()
 	{
+		ObjectBase::Initialize();
 		AddComponent<Components::Transform>();
 		m_color_ = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
 		SetCulled(false);

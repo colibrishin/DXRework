@@ -9,7 +9,7 @@
 namespace Engine
 {
     void AlignText(const std::string_view label);
-    [[nodiscard]] std::string LabelPrefix(const std::string_view label);
+    [[nodiscard]] std::string LabelSuffix(const std::string_view label);
 
     struct ENGINE_IMGUIMANAGER_API ImGuiMainMenuBarToken : MainMenuBarToken
     {
@@ -37,13 +37,13 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiDialogToken : DialogToken
     {
-	    ImGuiDialogToken(const std::string_view title, bool& opened)
-		    : DialogToken(title, opened) {}
+	    ImGuiDialogToken(const void* context, const std::string_view title, bool& opened)
+		    : DialogToken(context, title, opened) {}
 
 	    void End() const override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view, bool&) const override;
+	    [[nodiscard]] bool DoImpl(const void*, const std::string_view, bool&) const override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiButtonToken : ButtonToken

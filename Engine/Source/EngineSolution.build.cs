@@ -52,10 +52,8 @@ public class EngineSolution : Solution
 
 		// Add Projects
         {
-            // dll
             conf.AddProject<Core>(target);
             conf.AddProject<RaycastExtension>(target);
-            conf.AddProject<ParticleRendererExtension>(target);
 
             {
                 conf.AddProject<RenderComponent>(target);
@@ -69,7 +67,6 @@ public class EngineSolution : Solution
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
                 conf.AddProject<GenericRenderPassTask>(target);
-                conf.AddProject<D3D12GraphicInterface>(target);
             }
 
             {
@@ -106,8 +103,6 @@ public class EngineSolution : Solution
                 conf.AddProject<Texture3D>(target);
             }
 
-            // exe
-            conf.AddProject<WinAPIWrapper>(target);
             conf.SetStartupProject<Launch>();
         }
     }

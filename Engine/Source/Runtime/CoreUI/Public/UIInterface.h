@@ -131,10 +131,10 @@ namespace Engine
             : UIToken(title) {}
     };
 
-    struct ENGINE_COREUI_API DialogToken : UIToken<const std::string_view, bool&>
+    struct ENGINE_COREUI_API DialogToken : UIToken<const void*, const std::string_view, bool&>
     {
-        explicit DialogToken(const std::string_view title, bool& opened)
-            : UIToken(title, opened) {}
+        explicit DialogToken(const void* context, const std::string_view title, bool& opened)
+            : UIToken(context, title, opened) {}
     };
 
     struct ENGINE_COREUI_API ButtonToken : UIToken<const std::string_view>

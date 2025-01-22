@@ -7,6 +7,10 @@ void Engine::Abstracts::Entity::SetName(const EntityName& name)
 	m_name_ = name;
 }
 
+void Engine::Abstracts::Entity::OnNameChanged()
+{
+}
+
 void Engine::Abstracts::Entity::SetGarbage(bool garbage)
 {
 	m_b_garbage_ = garbage;
@@ -67,10 +71,12 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 	if (parent)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		GlobalEntityID id = GetID();
 
-		*parent |= ui.NewLabelAndText({"Name", m_name_, true});
-		*parent |= ui.NewLabelAndUInt({"Entity ID", id, false});
+		(*parent |= ui.NewLabelAndText({"Name", m_name_, true})).SetFunction([&]() 
+		{
+			OnNameChanged();
+		});
+		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, false});
 		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
 		(*parent |= ui.NewButton({"Save"})).SetFunction([]()
 		{

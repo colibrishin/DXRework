@@ -8,6 +8,14 @@
 
 namespace Engine::Abstracts
 {
+	void ObjectBase::SetName(const EntityName& name)
+	{
+		Actor::SetName(name);
+#if WITH_EDITOR
+		UpdateUIText();
+#endif
+	}
+
 	void ObjectBase::SetActive(bool active)
 	{
 		m_active_ = active;
@@ -367,6 +375,14 @@ namespace Engine::Abstracts
 			m_component_add_map_.erase(name);
 		}
 	}
+	void ObjectBase::UpdateUIText()
+	{
+		m_ui_summary_text_ = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
+	}
+	void ObjectBase::OnNameChanged()
+	{
+		UpdateUIText();
+	}
 #endif
 
 	void ObjectBase::removeComponentImpl(const eComponentType type, const Strong<Component>& comp)
@@ -661,6 +677,13 @@ namespace Engine::Abstracts
 		return m_cached_script_;
 	}
 
+	void ObjectBase::Initialize()
+	{
+#if WITH_EDITOR
+		UpdateUIText();
+#endif
+	}
+
 	void ObjectBase::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 #if WITH_EDITOR
@@ -673,7 +696,7 @@ namespace Engine::Abstracts
 
 			if (m_b_detail_opened_)
 			{
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({m_ui_summary_text_, m_b_detail_opened_})))
+				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_summary_text_, m_b_detail_opened_})))
 				{
 					context << [&]()
 					{
@@ -686,7 +709,7 @@ namespace Engine::Abstracts
 
 						if (m_b_component_dialog_opened_)
 						{
-							context += ui.NewDialog({"Add Component dialog", m_b_component_dialog_opened_});
+							context += ui.NewDialog({this, "Add Component dialog", m_b_component_dialog_opened_});
 
 							context += [&]()
 							{

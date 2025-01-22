@@ -13,9 +13,16 @@ public enum ELaunchType
     Server = 1 << 2
 }
 
+[Fragment, Flags]
+public enum EGraphicAPI
+{
+    D3D12 = 1 << 0,
+}
+
 public class EngineTarget : Target
 {
     public ELaunchType LaunchType;
+    public EGraphicAPI GraphicAPI;
 
     public EngineTarget() { }
     public EngineTarget(
@@ -26,10 +33,12 @@ public class EngineTarget : Target
         OutputType outputType = OutputType.Lib,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
-        DotNetFramework framework = DotNetFramework.v3_5) 
+        DotNetFramework framework = DotNetFramework.v3_5,
+        EGraphicAPI graphicAPI = EGraphicAPI.D3D12) 
     : base(platform, devEnv, optimization, outputType, blob, buildSystem, framework)
     {
-        LaunchType = launchType; //ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server;
+        LaunchType = launchType;
+        GraphicAPI = graphicAPI;
     }
 }
 
@@ -173,7 +182,11 @@ public abstract class CommonProject : Project
 
         {
             conf.Defines.Add("NOMINMAX=1");
-            conf.Defines.Add("USE_DX12");
+            if (target.GraphicAPI == EGraphicAPI.D3D12) 
+            {
+                conf.Defines.Add("USE_DX12");
+            }
+
             //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 
             conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");

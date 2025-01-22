@@ -147,10 +147,7 @@ namespace Engine
 
 			for (const auto& object : m_objects_)
 			{
-				// todo: lost pointer due to reallocation
-				object->m_ui_summary_text_ = std::format("{} {} {}", object->GetPrettyTypeName(), object->GetName(), std::to_string(object->GetID()));
 				*parent |= ui.NewSelectable({object->m_ui_summary_text_, object->m_b_detail_opened_});
-
 				object->OnUIUpdate(parent, dt);
 			}
 

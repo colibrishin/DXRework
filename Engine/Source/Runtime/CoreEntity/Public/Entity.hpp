@@ -15,7 +15,17 @@ namespace Engine::Abstracts
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(Entity)
 
-		Entity(const Entity& other) = default;
+		Entity(const Entity& other) 
+		{
+			m_name_ = other.m_name_;
+#if WITH_EDITOR
+			m_precached_id_ = GetID();
+#endif
+			m_b_initialized_ = false;
+			m_b_garbage_ = false;
+			m_meta_path_ = other.m_meta_path_;
+		}
+
 		virtual ~Entity()           = default;
 
 		bool operator==(const Entity& other) const
@@ -23,7 +33,10 @@ namespace Engine::Abstracts
 			return GetID() == other.GetID();
 		}
 
-		void SetName(const EntityName& name);
+		virtual void SetName(const EntityName& name);
+#if WITH_EDITOR
+		virtual void OnNameChanged();
+#endif
 		void SetGarbage(bool garbage);
 
 		const std::filesystem::path& GetMetadataPath() const;
@@ -57,14 +70,18 @@ namespace Engine::Abstracts
 		virtual void OnDeserialized() = 0;
 
 	protected:
-		Entity()
-			: m_b_initialized_(false),
-			  m_b_garbage_(false) {}
+		Entity() : 
+			m_b_initialized_(false),
+			m_b_garbage_(false),
+			m_precached_id_(GetID()) {}
 
 	private:
-		EntityName m_name_;
-		bool       m_b_initialized_;
-		bool       m_b_garbage_;
+		EntityName     m_name_;
+#if WITH_EDITOR
+		GlobalEntityID m_precached_id_;
+#endif
+		bool		   m_b_initialized_;
+		bool           m_b_garbage_;
 
 		std::filesystem::path m_meta_path_;
 	};

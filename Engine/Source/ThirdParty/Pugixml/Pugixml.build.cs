@@ -16,6 +16,12 @@ public class Pugixml : VCPKG
     public override void ConfigureAll(Configuration conf, EngineTarget target) 
     {
         base.ConfigureAll(conf, target);
+
+        string BinPath = GetVCPKGBinPath(target);
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/pugixml.dll"
+        );
     }
 
     public override void ConfigureDebug(Configuration conf, EngineTarget target)

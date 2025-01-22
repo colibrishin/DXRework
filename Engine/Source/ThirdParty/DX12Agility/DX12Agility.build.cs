@@ -16,12 +16,21 @@ public class DX12Agility : VCPKG
     public override void ConfigureAll(Configuration conf, EngineTarget target) 
     {
         base.ConfigureAll(conf, target);
+
+        string BinPath = GetVCPKGBinPath(target);
+        
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/D3D12Core.dll",
+            BinPath + @"/d3d12SDKLayers.dll",
+            BinPath + @"/dxcompiler.dll",
+            BinPath + @"/dxil.dll"
+        );
     }
 
     public override void ConfigureDebug(Configuration conf, EngineTarget target)
     {
         base.ConfigureDebug(conf, target);
-        
         conf.LibraryFiles.Add
         (
             @"d3d12.lib",
@@ -37,7 +46,6 @@ public class DX12Agility : VCPKG
     public override void ConfigureRelease(Configuration conf, EngineTarget target)
     {
         base.ConfigureRelease(conf, target);
-
         conf.LibraryFiles.Add
         (
             @"d3d12.lib",

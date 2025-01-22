@@ -15,7 +15,7 @@ public abstract class ExportProject : Project
                 Platform.win64,
                 DevEnv.vs2022,
                 Optimization.Debug | Optimization.Release,
-                OutputType.Lib,
+                OutputType.Lib | OutputType.Dll,
                 Blob.NoBlob,
                 BuildSystem.FastBuild
         ));
@@ -41,6 +41,20 @@ public class VCPKG : ExportProject
 {
     protected VCPKG() 
     {
+    }
+
+    protected string GetVCPKGBinPath(EngineTarget target) 
+    {
+        string SolutionDir = Utils.GetSolutionDir();
+        
+        if (target.Optimization == Optimization.Debug) 
+        {
+            return SolutionDir + @"/vcpkg_installed/x64-windows/debug/bin";
+        }
+        else // target.Optimization == Optimization.Release 
+        {
+            return SolutionDir + @"/vcpkg_installed/x64-windows/bin";
+        }
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target) 

@@ -42,6 +42,7 @@ namespace Engine::Abstracts
 
 		~ObjectBase() override = default;
 
+		void Initialize() override;
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -144,6 +145,7 @@ namespace Engine::Abstracts
 			removeComponent(which_component<T>::value);
 		}
 
+		void SetName(const EntityName& name) override;
 		void SetActive(bool active);
 		void SetCulled(bool culled);
 
@@ -263,6 +265,8 @@ namespace Engine::Abstracts
 		using ComponentFactorySignature = std::function<Strong<Component>()>;
 		void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
 		void UnregisterComponentFactory(std::string_view name);
+		void UpdateUIText();
+		void OnNameChanged();
 
 	private:
 		std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;

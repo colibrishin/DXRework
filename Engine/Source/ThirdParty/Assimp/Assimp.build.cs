@@ -20,7 +20,9 @@ public class Assimp : VCPKG
         conf.LibraryFiles.Add
         (
             @"poly2tri.lib",
-            @"polyclipping.lib"
+            @"polyclipping.lib",
+            @"minizip.lib",
+            @"draco.lib"
         );
     }
 
@@ -30,7 +32,18 @@ public class Assimp : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"assimp-vc143-mtd.lib"
+            @"assimp-vc143-mtd.lib",
+            @"zlibd.lib"
+        );
+
+        string BinPath = GetVCPKGBinPath(target);
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/assimp-vc143-mtd.dll",
+            BinPath + @"/poly2tri.dll",
+            BinPath + @"/zlibd1.dll",
+            BinPath + @"/minizip.dll",
+            BinPath + @"/draco.dll"
         );
     }
 
@@ -40,7 +53,19 @@ public class Assimp : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"assimp-vc143-mt.lib"
+            @"assimp-vc143-mt.lib",
+            @"zlib.lib"
+        );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/assimp-vc143-mt.dll",
+            BinPath + @"/poly2tri.dll",
+            BinPath + @"/zlib1.dll",
+            BinPath + @"/minizip.dll",
+            BinPath + @"/draco.dll"
         );
     }
 }

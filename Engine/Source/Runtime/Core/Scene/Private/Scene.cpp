@@ -663,7 +663,7 @@ namespace Engine
 #if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({GetName(), m_b_dialog_opened_})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, GetName(), m_b_dialog_opened_})))
 		{
 			context << [&]()
 			{
