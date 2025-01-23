@@ -37,6 +37,10 @@ namespace Engine::Components
 		void OnDeserialized() override;
 		eComponentUpdatePriority GetUpdatePriority() const override;
 
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
+
 		[[nodiscard]] aligned_vector<Graphics::SBs::InstanceSB> GetParticles();
 
 		void SetFollowOwner(bool follow);
@@ -67,7 +71,12 @@ namespace Engine::Components
 		EPROPERTY()
 		std::filesystem::path m_cs_meta_path_;
 
-		// Note that we need to store in strong sense due to the gc by the resource manager.
 		Strong<Resources::ComputeShader> m_cs_;
+		
+		Weak<Resources::ComputeShader> m_cached_cs_;
+
+#if WITH_EDITOR
+		bool m_particle_shader_dialog_opened_ = false;
+#endif
 	};
 }

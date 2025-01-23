@@ -152,3 +152,25 @@ namespace Engine::Abstracts
 		bool           m_b_garbage_;
 	};
 } // namespace Engine::Abstracts
+
+
+template <typename Derived, typename Base> requires (std::is_base_of_v<Base, Derived>, std::is_base_of_v<Engine::Abstracts::Entity, Base>)
+inline static Engine::Strong<Derived> Cast(const Engine::Strong<Base>& castee)
+{
+	if (!castee->IsDerivedOf(Derived::StaticTypeHash()))
+	{
+		return {};
+	}
+	return boost::static_pointer_cast<Derived>(castee);
+}
+
+template <typename Derived, typename Base> requires (std::is_base_of_v<Base, Derived>, std::is_base_of_v<Engine::Abstracts::Entity, Base>)
+inline static Engine::Strong<Derived> Cast(const Engine::Weak<Base>& castee)
+{
+	if (castee.expired())
+	{
+		return {}; // weak_ptr expired
+	}
+
+	return Cast<Derived, Base>(castee.lock());
+}

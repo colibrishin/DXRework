@@ -39,16 +39,17 @@ namespace Engine::Resources
 			*parent += ui.NewListBox({ "Textures", 0, 0 });
 			for (auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it)
 			{
+				const size_t idx = std::distance(m_cached_textures_.begin(), it);
 				if (const Strong<Texture>& tex = it->lock())
 				{
 					*parent |= ui.NewSelectable({ tex->GetName(), tex->m_ui_info_.dialogOpened });
-					(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&]()
+					(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&, idx]()
 						{
-							SetTexture(*it, std::distance(m_cached_textures_.begin(), it) - 1);
+							SwapTexture(idx, idx - 1);
 						});
-					(*parent |= ui.NewButton({ "Move Down" })).SetFunction([&]()
+					(*parent |= ui.NewButton({ "Move Down" })).SetFunction([&, idx]()
 						{
-							SetTexture(*it, std::distance(m_cached_textures_.begin(), it) + 1);
+							SwapTexture(idx, idx + 1);
 						});
 					*parent |= ui.NewSeparator({});
 
@@ -109,9 +110,9 @@ namespace Engine::Resources
 				if (Weak<Resource> resource_to_load;
 					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
 				{
-					if (const Strong<Resource>& locked = resource_to_load.lock())
+					if (const Strong<Shader>& shader = Cast<Shader>(resource_to_load))
 					{
-						SetShader(locked->GetSharedPtr<Shader>());
+						SetShader(shader);
 					}
 
 					m_ui_shader_dialog_ = false;
@@ -125,24 +126,25 @@ namespace Engine::Resources
 				{
 					for (const Weak<Resource>& resource : resource_to_load)
 					{
-						if (const Strong<Resource>& locked = resource.lock())
+						if (const auto& atlas = Cast<AtlasAnimationTexture>(resource))
 						{
-							if (locked->GetTypeHash()->IsDerivedOf(AtlasAnimationTexture::StaticTypeHash()))
-							{
-								SetAtlasTexture(locked->GetSharedPtr<AtlasAnimationTexture>());
-								continue;
-							}
+							SetAtlasTexture(atlas);
+							continue;
+						}
 
+						if (const Strong<Texture>& locked = Cast<Texture>(resource)) 
+						{
 							const auto& it = std::ranges::find_if(m_cached_textures_, [&locked](const Weak<Texture>& tex)
-							{
-								return locked == tex.lock();
-							});
+								{
+									return tex.expired();
+								});
 
 							if (it != m_cached_textures_.end())
 							{
-								SetTexture(locked->GetSharedPtr<Texture>(), std::distance(m_cached_textures_.begin(), it));
+								SetTexture(locked, std::distance(m_cached_textures_.begin(), it));
 							}
 						}
+						
 					}
 
 					m_ui_add_dialog_ = false;
@@ -194,30 +196,13 @@ namespace Engine::Resources
 
 	void Material::SetTexture(const Weak<Texture>& texture, const size_t slot)
 	{
-		if (slot > m_cached_textures_.size()) 
+		if (slot >= m_cached_textures_.size()) 
 		{
 			return;
 		}
 
 		if (const Strong<Texture>& locked = texture.lock())
 		{
-			if (const auto it = std::ranges::find_if(m_cached_textures_, [&locked](const Weak<Texture>& tex)
-			{
-				return tex.lock() == locked;
-			});
-				it != m_cached_textures_.end())
-			{
-				const size_t idx = std::distance(m_cached_textures_.begin(), it);
-				if (IsLoaded())
-				{
-					m_textures_[idx] = {};	
-				}
-				
-				m_cached_textures_[idx] = {};
-				m_material_sb_.texSlot[slot] = false;
-				m_texture_paths_[slot] = "";
-			}
-
 			if (IsLoaded())
 			{
 				locked->Load();
@@ -227,6 +212,26 @@ namespace Engine::Resources
 			m_cached_textures_[slot] = locked;
 			m_material_sb_.texSlot[slot] = true;
 			m_texture_paths_[slot] = locked->GetMetadataPath();
+		}
+	}
+
+	void Material::SwapTexture(const size_t before, const size_t after)
+	{
+		if (before >= m_cached_textures_.size() || after >= m_cached_textures_.size())
+		{
+			return;
+		}
+
+		if (const Strong<Texture>& locked = m_cached_textures_[before].lock())
+		{
+			if (IsLoaded())
+			{
+				std::swap(m_textures_[after], m_textures_[before]);
+			}
+
+			std::swap(m_cached_textures_[before], m_cached_textures_[after]);
+			std::swap(m_material_sb_.texSlot[before], m_material_sb_.texSlot[after]);
+			std::swap(m_texture_paths_[before], m_texture_paths_[after]);
 		}
 	}
 

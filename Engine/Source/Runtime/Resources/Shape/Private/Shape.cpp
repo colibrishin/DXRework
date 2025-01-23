@@ -80,12 +80,12 @@ namespace Engine::Resources
 				if (const auto& locked = mesh.lock();
 					m_ui_material_add_opened_[idx] && locked)
 				{
-					if (Weak<Resource> resources_to_load;
-						UIHelpers::SingleResourceSelectionDialogInclusion<Shape, Material>(locked->GetSharedPtr<Entity>(), resources_to_load))
+					if (Weak<Resource> resource_to_load;
+						UIHelpers::SingleResourceSelectionDialogInclusion<Shape, Material>(locked->GetSharedPtr<Entity>(), resource_to_load))
 					{
-						if (const Strong<Resource>& res = resources_to_load.lock())
+						if (const auto& res = Cast<Material>(resource_to_load))
 						{
-							SetMaterial(idx, res->GetSharedPtr<Material>());
+							SetMaterial(idx, res);
 						}
 
 						m_ui_material_add_opened_[std::distance(m_cached_meshes_.begin(), it)] = false;
@@ -102,10 +102,10 @@ namespace Engine::Resources
 
 			if (m_ui_mesh_add_opened_) 
 			{
-				if (std::vector<Weak<Resource>> resources_to_load;
-					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resources_to_load))
+				if (std::vector<Weak<Resource>> resource_to_load;
+					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resource_to_load))
 				{
-					for (const Weak<Resource>& resource : resources_to_load)
+					for (const Weak<Resource>& resource : resource_to_load)
 					{
 						Add(resource);
 					}
@@ -281,18 +281,17 @@ namespace Engine::Resources
 	{
 		if (const Strong<Resource>& locked = res.lock())
 		{
-			if (locked->GetTypeHash()->IsDerivedOf(Mesh::StaticTypeHash()))
+			if (const auto& mesh = Cast<Mesh>(locked))
 			{
-				addMeshImpl(boost::reinterpret_pointer_cast<Mesh>(locked));
+				addMeshImpl(mesh);
 			}
-			else if (locked->GetTypeHash()->IsDerivedOf(AnimationTexture::StaticTypeHash()))
+			else if (const auto& anim = Cast<AnimationTexture>(locked))
 			{
-				addAnimationImpl(boost::reinterpret_pointer_cast<AnimationTexture>(locked));
+				addAnimationImpl(anim);
 			}
-			else if (locked->GetTypeHash()->IsDerivedOf(BaseAnimation::StaticTypeHash()))
+			else if (const auto& tr_anim = Cast<BaseAnimation>(locked))
 			{
-				addTrAnimationImpl(boost::reinterpret_pointer_cast<BaseAnimation
-				>(locked));
+				addTrAnimationImpl(tr_anim);
 			}
 		}
 	}

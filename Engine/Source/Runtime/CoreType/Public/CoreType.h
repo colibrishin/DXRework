@@ -947,7 +947,7 @@ struct polymorphic_type_hash
 	static constexpr size_t upcast_count = 0;
 	static constexpr HashArray<upcast_count> upcast_array{};
 
-	static bool is_derived_of(const HashType /*base*/)
+	constexpr static bool is_derived_of(const HashType /*base*/)
 	{
 		return false;
 	}
@@ -1014,7 +1014,7 @@ struct polymorphic_type_hash<void>
 	static constexpr size_t upcast_count = 1;
 	static constexpr HashArray<upcast_count> upcast_array{ &type_hash<void>::value };
 
-	static bool is_derived_of(const HashType /*base*/)
+	constexpr static bool is_derived_of(const HashType /*base*/)
 	{
 		return true;
 	}
@@ -1061,7 +1061,7 @@ struct polymorphic_type_hash<##Type##>\
 		std::ranges::sort(ret, [](const auto lhs, const auto rhs) {return *lhs < *rhs;});\
 		return ret;\
 	}();\
-	static bool is_derived_of(const HashType base)\
+	constexpr static bool is_derived_of(const HashType base)\
 	{\
 		if constexpr ((upcast_count * sizeof(HashTypeValue)) < (1 << 7))\
 		{\

@@ -1,10 +1,11 @@
 #include "../Public/ParticleRenderer.h"
+#include "ParticleRenderer.generated.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
-#include "ParticleRenderer.generated.h"
+#include "UIHelpersResourceManager.h"
 
 namespace Engine::Components
 {
@@ -103,6 +104,7 @@ namespace Engine::Components
 		if (const auto cs = Resources::ComputeShader::GetByMetadataPath(m_cs_meta_path_).lock())
 		{
 			m_cs_ = cs;
+			m_cached_cs_ = cs;
 		}
 	}
 
@@ -110,6 +112,47 @@ namespace Engine::Components
 	{
 		return COM_PRIORITY_RENDER;
 	}
+
+#if WITH_EDITOR
+	void ParticleRenderer::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		if (parent)
+		{
+			Base::OnUIUpdate(parent, dt);
+
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+
+			static std::string shader_name{};
+			if (const Strong<Resources::ComputeShader>& shader = m_cached_cs_.lock())
+			{
+				shader_name = shader->GetName();
+			}
+			*parent |= ui.NewLabelAndText({ "Particle Shader", shader_name, false });
+			(*parent |= ui.NewButton({ "Set Particle Shader..." })).SetFunction([&]()
+				{
+					m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
+				});
+
+			if (m_particle_shader_dialog_opened_)
+			{
+				if (Weak<Engine::Abstracts::Resource> resource_to_load;
+					UIHelpers::SingleResourceSelectionDialogInclusion<ParticleRenderer, Resources::ComputeShader>
+					(
+						GetSharedPtr<ParticleRenderer>(),
+						resource_to_load
+					))
+				{
+					if (const auto shader = Cast<Engine::Resources::ComputeShader>(resource_to_load))
+					{
+						SetComputeShader(shader);
+					}
+
+					m_particle_shader_dialog_opened_ = false;
+				}
+			}
+		}
+	}
+#endif
 
 	aligned_vector<Graphics::SBs::InstanceSB> ParticleRenderer::GetParticles()
 	{
@@ -159,8 +202,10 @@ namespace Engine::Components
 	{
 		if (const auto shader = cs.lock())
 		{
-			m_cs_               = shader;
-			m_cs_meta_path_ = shader->GetMetadataPath().string();
+			shader->Load();
+			m_cs_ = shader;
+			m_cached_cs_ = shader;
+			m_cs_meta_path_ = shader->GetMetadataPath();
 		}
 	}
 }

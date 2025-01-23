@@ -33,6 +33,7 @@ namespace Engine::Resources
 		void OnDeserialized() override;
 
 		void SetTexture(const Weak<Texture>& texture, const size_t slot = 0);
+		void SwapTexture(const size_t before, const size_t after);
 		void SetAtlasTexture(const Weak<AtlasAnimationTexture>& texture);
 		void SetShader(const Weak<Shader>& shader);
 
