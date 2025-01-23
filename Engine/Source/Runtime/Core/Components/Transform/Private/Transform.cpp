@@ -1,6 +1,7 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Transform.generated.h"
 
+#include "Components/Rigidbody/Public/Rigidbody.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
 namespace Engine::Components
@@ -276,7 +277,14 @@ namespace Engine::Components
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 			Component::OnUIUpdate(context, dt);
-			*context |= ui.NewLabelAndVec3({"Position", &m_position_.x, 0.1f, 0.f, 0.f, true});
+			(*context |= ui.NewLabelAndVec3({ "Position", &m_position_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
+				{
+					if (const Strong<Rigidbody>& rb = GetOwner().lock()->GetComponent<Rigidbody>().lock())
+					{
+						// forcefully reset the rigidbody information and sync with the current position.
+						rb->Synchronize();
+					}
+				});
 
 			m_euler_rotation_ = MathExtension::ToEuler(m_rotation_);
 			m_euler_rotation_ *= 180.f / M_PI;
@@ -285,6 +293,15 @@ namespace Engine::Components
 				m_euler_rotation_ *= M_PI / 180.f;
 				// since z axis is the forward, roll should be z.
 				m_rotation_ = MathExtension::ToQuaternion(m_euler_rotation_.x, m_euler_rotation_.y, m_euler_rotation_.z);
+
+				if (const Strong<Rigidbody>& rb = GetOwner().lock()->GetComponent<Rigidbody>().lock())
+				{
+					if (!rb->GetNoAngular())
+					{
+						// forcefully reset the rigidbody information and sync with the current position.
+						rb->Synchronize();
+					}	
+				}
 			});
 
 			*context |= ui.NewLabelAndVec3({"Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });

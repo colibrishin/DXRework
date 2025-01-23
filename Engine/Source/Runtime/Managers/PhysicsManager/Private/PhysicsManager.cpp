@@ -217,8 +217,15 @@ namespace Engine::Managers
 				);
 
 		rb->Reset();
-
 		rb->SetLinearFriction(lfrc);
+
+		if (const Strong<Abstracts::ObjectBase>& owner = rb->GetOwner().lock())
+		{
+			if (const Strong<Components::Transform>& t0 = owner->GetComponent<Components::Transform>().lock())
+			{
+				t0->SetWorldPosition(t1->GetWorldPosition());
+			}
+		}
 	}
 
 #ifdef PHYSX_ENABLED
