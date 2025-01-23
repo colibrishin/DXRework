@@ -99,7 +99,8 @@ public:
 
 			if (weak_valid || static_func)
 			{
-				value(std::forward<Args>(args)...);
+				// does not forward, need to reuse the variable for each invocations.
+				value(args...);
 				++it;
 			}
 			else
