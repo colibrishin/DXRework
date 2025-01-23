@@ -68,13 +68,30 @@ namespace Engine
 
 		Renderable::Initialize();
 
-		for (int i = 0; i < m_layer_count_; ++i)
+		for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
 		{
 			m_layers_.emplace_back(boost::make_shared<Layer>(i));
 
 			if (i < std::size(g_reserved_layer_name))
 			{
 				m_layers_[i]->SetName(g_reserved_layer_name[i]);
+			}
+		}
+
+		for (int i = 0; i < size(); ++i)
+		{
+			for (int j = 0; j < size(); ++j)
+			{
+				if (i == j) 
+				{
+					m_collision_mask_[i][j] = true;
+					m_collision_mask_[j][i] = true;
+				}
+				else 
+				{
+					m_collision_mask_[i][j] = false;
+					m_collision_mask_[j][i] = false;
+				}
 			}
 		}
 
@@ -103,6 +120,16 @@ namespace Engine
 #ifdef PHYSX_ENABLED
 		InitializePhysX();
 #endif
+	}
+
+	const bool(&Scene::GetCollisionMask())[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]
+	{
+		return m_collision_mask_;
+	}
+
+	void Scene::UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT])
+	{
+		memcpy(m_collision_mask_[0], collision_mask[0], sizeof(m_collision_mask_));
 	}
 
 	void Scene::AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj)
@@ -799,7 +826,7 @@ namespace Engine
 			SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
 
 			// rebuild cache
-			for (int i = 0; i < m_layer_count_; ++i)
+			for (int i = 0; i < size(); ++i)
 			{
 				m_layers_[i]->OnDeserialized();
 

@@ -27,7 +27,7 @@ namespace Engine::Managers
 			//g_raytracing = scene->m_b_scene_raytracing_;
 		}
 
-		onSceneActive.Broadcast(m_active_scene_);
+		onSceneActive.Broadcast(m_active_scene_.lock());
 	}
 
 	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name)

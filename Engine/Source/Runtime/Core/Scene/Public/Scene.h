@@ -28,6 +28,7 @@ DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
 
 namespace Engine
 {
+	EENUM()
 	enum ENGINE_CORE_API eReservedLayerType
 	{
 		RESERVED_LAYER_DEFAULT,
@@ -347,6 +348,9 @@ namespace Engine
 			return {};
 		}
 
+		const bool (&GetCollisionMask())[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT];
+		void UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]);
+
 		Strong<Layer> operator[](const size_t idx) const
 		{
 			return m_layers_[idx];
@@ -429,10 +433,10 @@ namespace Engine
 		LocalActorID m_main_actor_local_id_;
 
 		EPROPERTY()
-		LayerSizeType m_layer_count_ = RESERVED_LAYER_MAX + CFG_LAYER_COUNT;
+		std::vector<Strong<Layer>> m_layers_;
 
 		EPROPERTY()
-		std::vector<Strong<Layer>> m_layers_;
+		bool m_collision_mask_[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]{};
 
 #if WITH_EDITOR
 		bool m_b_dialog_opened_ = true;

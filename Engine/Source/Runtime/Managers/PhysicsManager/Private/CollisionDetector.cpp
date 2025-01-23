@@ -45,22 +45,8 @@ namespace Engine::Managers
 
 	void CollisionDetector::Initialize()
 	{
-		for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
-		{
-			for (int j = 0; j < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++j)
-			{
-				if (i == j)
-				{
-					m_layer_mask_[i][j] = true;
-					m_layer_mask_[j][i] = true;
-				}
-				else
-				{
-					m_layer_mask_[i][j] = false;
-					m_layer_mask_[j][i] = false;
-				}
-			}
-		}
+		UpdateLayerMask(SceneManager::GetInstance().GetActiveScene());
+		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateScene);
 
 #ifdef PHYSX_ENABLED
 		for (int i = 0; i < LAYER_MAX; ++i)
@@ -75,8 +61,6 @@ namespace Engine::Managers
 #if WITH_EDITOR
 		UpdateLayerNames(SceneManager::GetInstance().GetActiveScene());
 		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
-		// todo: synchronize the collision infos from scene
-		// todo: save the collision infos in the scene
 #endif
 
 	}
@@ -233,10 +217,16 @@ namespace Engine::Managers
 				for (size_t i = 0; i < scene->size(); ++i)
 				{
 					context |= ui.NewTableRow({});
-					for (size_t j = 0; j < i; ++j)
+					for (size_t j = 0; j <= i; ++j)
 					{
 						context |= ui.NewTableColumn({});
-						context |= ui.NewCheckbox({m_layer_name_storage_[{i, j}], m_layer_mask_[i][j]});
+						(context |= ui.NewCheckbox({ m_layer_name_storage_[{i, j}], m_layer_mask_[i][j] })).SetFunction([this]()
+							{
+								if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
+								{
+									scene->UpdateCollisionMask(m_layer_mask_);
+								}
+							});
 					}
 				}
 				--context;
@@ -593,6 +583,27 @@ namespace Engine::Managers
 
 	CollisionDetector::~CollisionDetector()
 	{
+	}
+
+	void CollisionDetector::UpdateLayerMask(const Weak<Scene> scene)
+	{
+		if (const Strong<Scene>& locked = scene.lock())
+		{
+			const auto& mask = locked->GetCollisionMask();
+
+			for (int i = 0; i < std::size(mask); ++i) 
+			{
+				for (int j = 0; j < std::size(mask[0]); ++j)
+				{
+					m_layer_mask_[i][j] = mask[i][j];
+				}
+			}
+		}
+	}
+
+	void CollisionDetector::UpdateScene(const Weak<Scene> scene)
+	{
+		UpdateLayerMask(scene);
 	}
 
 	bool CollisionDetector::IsCollidedInFrame(GlobalEntityID id1, GlobalEntityID id2) const

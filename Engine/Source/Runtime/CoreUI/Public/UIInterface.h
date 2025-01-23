@@ -317,9 +317,9 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(ComboboxUInt8)
         TOKEN_PURE_GETTER_DECL(Text)
         TOKEN_PURE_GETTER_DECL(Separator)
-        TOKEN_PURE_GETTER_DECL(Table);
+        TOKEN_PURE_GETTER_DECL(Table)
         TOKEN_PURE_GETTER_DECL(TableRow)
-        TOKEN_PURE_GETTER_DECL(TableColumn);
+        TOKEN_PURE_GETTER_DECL(TableColumn)
 
         virtual void NewFrame() = 0;
 

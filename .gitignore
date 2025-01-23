@@ -412,3 +412,4 @@ kolibri.sln
 Programs/CMake/***
 Programs/vcpkg/***
 lock
+balius/target/.rustc_info.json

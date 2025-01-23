@@ -67,6 +67,9 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~CollisionDetector() override;
 
+		void UpdateLayerMask(const Weak<Scene> scene);
+		void UpdateScene(const Weak<Scene> scene);
+
 		void TestCollision(const Weak<Abstracts::ObjectBase>& p_lhs, const Weak<Abstracts::ObjectBase>& p_rhs);
 		void TestSpeculation(const Weak<Abstracts::ObjectBase>& p_lhs, const Weak<Abstracts::ObjectBase>& p_rhs, float dt);
 
