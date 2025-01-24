@@ -67,7 +67,7 @@ cbuffer ViewportBuffer : register(b2)
 	float2 g_viewResolution;
 }
 
-float4 Sample(in SamplerState inSampler, in float2 uv, in uint offset, in uint slot)
+float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
 {
 	float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
 
@@ -76,15 +76,14 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint offset, in uint s
 		return outValue;
 	}
 	
-#define IF_OFFSET(NUM) if (pos == NUM)\
+#define IF_OFFSET(NUM) if (slot == NUM)\
 {\
     outValue = tex[NUM].Sample(inSampler, uv);\
 }
-#define ELIF_OFFSET(NUM) else if (pos == NUM)\
+#define ELIF_OFFSET(NUM) else if (slot == NUM)\
 {\
     outValue = tex[NUM].Sample(inSampler, uv);\
 }
-    uint pos = offset + slot;
 	IF_OFFSET(0)
 	ELIF_OFFSET(1)
 	ELIF_OFFSET(2)

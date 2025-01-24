@@ -71,9 +71,11 @@ namespace Engine
 			SB_T(SB_TYPE_INSTANCE)
 			SB_UAV_T(SB_TYPE_UAV_INSTANCE)
 
-			void SetTextureOffset(const UINT offset)
+			void SetTextureSlot(const UINT offset, const UINT slot_id)
 			{
-				SetParam<int>(10, offset);
+				assert(offset < g_max_texture_per_material);
+				assert(slot_id < BIND_SLOT_TEXARR);
+				SetParam<int>(11 + offset, slot_id);
 			}
 		};
 	}

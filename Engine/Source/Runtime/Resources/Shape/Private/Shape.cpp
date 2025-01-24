@@ -245,53 +245,59 @@ namespace Engine::Resources
 	void Shape::UpdateVertices()
 	{
 		m_cached_vertices_.clear();
-		for (const auto& mesh : m_cached_meshes_ | std::views::keys)
+
+		if (!m_cached_meshes_.empty())
 		{
-			if (const Strong<Mesh>& locked = mesh.lock())
+			for (const auto& mesh : m_cached_meshes_ | std::views::keys)
 			{
-				for (const auto& vertex : locked->GetVertexCollection())
+				if (const Strong<Mesh>& locked = mesh.lock())
 				{
-					m_cached_vertices_.push_back(vertex);
-				}
-			}
-		}
-
-		m_bounding_box_ = {};
-		BoundingBox::CreateFromPoints(
-			m_bounding_box_,
-			m_cached_vertices_.size(),
-			reinterpret_cast<const Vector3*>(m_cached_vertices_.data()),
-			sizeof(VertexElement));
-
-		m_bone_bounding_boxes_.clear();
-		std::map<UINT, std::vector<Vector3>> bone_vertices;
-		for (const auto& vertex : m_cached_vertices_)
-		{
-			for (const auto& idx : vertex.boneElement.GetIndices())
-			{
-				const auto unique = std::ranges::find_if
-				(
-					bone_vertices[idx], [vertex](const Vector3& v)
+					for (const auto& vertex : locked->GetVertexCollection())
 					{
-						return MathExtension::FloatCompare(v.x, vertex.position.x) &&
-							MathExtension::FloatCompare(v.y, vertex.position.y) &&
-							MathExtension::FloatCompare(v.z, vertex.position.z);
+						m_cached_vertices_.push_back(vertex);
 					}
-				);
-
-				if (unique != bone_vertices[idx].end())
-				{
-					continue;
 				}
-
-				bone_vertices[idx].push_back(vertex.position);
 			}
-		}
 
-		for (const auto& [idx, vertices] : bone_vertices)
-		{
-			BoundingOrientedBox::CreateFromPoints
-			(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
+			m_bounding_box_ = {};
+			BoundingBox::CreateFromPoints
+					(
+					 m_bounding_box_,
+					 m_cached_vertices_.size(),
+					 reinterpret_cast<const Vector3*>(m_cached_vertices_.data()),
+					 sizeof(VertexElement)
+					);
+
+			m_bone_bounding_boxes_.clear();
+			std::map<UINT, std::vector<Vector3>> bone_vertices;
+			for (const auto& vertex : m_cached_vertices_)
+			{
+				for (const auto& idx : vertex.boneElement.GetIndices())
+				{
+					const auto unique = std::ranges::find_if
+							(
+							 bone_vertices[idx], [vertex](const Vector3& v)
+							 {
+								 return MathExtension::FloatCompare(v.x, vertex.position.x) &&
+								        MathExtension::FloatCompare(v.y, vertex.position.y) &&
+								        MathExtension::FloatCompare(v.z, vertex.position.z);
+							 }
+							);
+
+					if (unique != bone_vertices[idx].end())
+					{
+						continue;
+					}
+
+					bone_vertices[idx].push_back(vertex.position);
+				}
+			}
+
+			for (const auto& [idx, vertices] : bone_vertices)
+			{
+				BoundingOrientedBox::CreateFromPoints
+						(m_bone_bounding_boxes_[idx], vertices.size(), vertices.data(), sizeof(Vector3));
+			}
 		}
 	}
 

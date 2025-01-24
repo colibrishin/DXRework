@@ -11,7 +11,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 	refractTex.x = input.refraction.x / input.reflection.w / 2.0f + 0.5f;
 	refractTex.y = -input.refraction.y / input.reflection.w / 2.0f + 0.5f;
 
-	float4 normalMap = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 0);
+    float4 normalMap = Sample(PSSampler, input.tex, INST_TEX_SLOT0(input.instanceId));
 	float3 normal    = (normalMap.xyz * 2.0f) - 1.0f;
 
 	reflectTex += normal.xy * INST_REFLECT_SCL(input.instanceId);

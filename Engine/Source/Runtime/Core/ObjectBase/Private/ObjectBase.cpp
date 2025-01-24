@@ -697,9 +697,9 @@ namespace Engine::Abstracts
 #endif
 	}
 
+#if WITH_EDITOR
 	void ObjectBase::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		if (parent)
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -709,6 +709,10 @@ namespace Engine::Abstracts
 				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened })))
 				{
 					Actor::OnUIUpdate(&context, dt);
+					(context |= ui.NewButton({"Clone"})).SetFunction([&]()
+					{
+						const auto& _ = Clone(true);
+					});
 
 					(context |= ui.NewButton({ "Add Component" })).SetFunction([&]()
 					{
@@ -769,8 +773,8 @@ namespace Engine::Abstracts
 				}
 			}
 		}
-#endif
 	}
+#endif
 
 	void ObjectBase::PreUpdate(const float dt)
 	{

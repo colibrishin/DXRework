@@ -15,14 +15,14 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 		input.tex                 = repeatTex;
 	}
 
-	const float4 textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 0);
+    const float4 textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT0(input.instanceId));
 	float        normalLightIntensity[MAX_NUM_LIGHTS];
 	float        textureLightIntensity[MAX_NUM_LIGHTS];
 
 	float4 normalColorArray[MAX_NUM_LIGHTS];
 	float4 textureColorArray[MAX_NUM_LIGHTS];
 
-	float4 normalMap = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 1);
+    float4 normalMap = Sample(PSSampler, input.tex, INST_TEX_SLOT1(input.instanceId));
 
 	normalMap = (normalMap * 2.0f) - 1.0f;
 

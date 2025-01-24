@@ -91,6 +91,6 @@ void gs_main(
 
 float4 ps_main(PixelBillboardInputType input) : SV_TARGET
 {
-	const float4 tex = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 0);
+	const float4 tex = Sample(PSSampler, input.tex, INST_TEX_SLOT0(input.instanceId));
 	return tex;
 };

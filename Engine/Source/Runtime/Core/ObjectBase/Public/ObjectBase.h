@@ -47,7 +47,9 @@ namespace Engine::Abstracts
 		~ObjectBase() override = default;
 
 		void Initialize() override;
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PreRender(const float dt) override;

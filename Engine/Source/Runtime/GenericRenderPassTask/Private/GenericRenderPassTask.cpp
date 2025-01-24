@@ -273,6 +273,7 @@ namespace Engine
 
 			constexpr size_t max_tex_binds = BIND_SLOT_TEXARR - BIND_SLOT_TEX;
 			uint16_t tex_bind_mask = 0; // See max tex binds
+			std::array<Strong<Resources::Texture>, std::numeric_limits<uint16_t>::digits> assigned_texture;
 
 			while (const uint16_t count = _tzcnt_u16(tex_bind_mask))
 			{
@@ -288,12 +289,12 @@ namespace Engine
 				}))
 				{
 					// independent draw call, no redundant reserved textures slots.
-					constexpr size_t offset = 0;
 					for (size_t i = 0; i < pair.textures->size(); ++i)
 					{
+						constexpr size_t offset = 0;
 						tex_bind_mask |= 1 << (offset + i);
+						instances[offset]->SetTextureSlot(i, offset);
 					}
-					instances[offset]->SetTextureOffset(offset);
 					instance_to_resolve++;
 					break;
 				}
@@ -306,11 +307,21 @@ namespace Engine
 					{
 						if (pair.textures->at(i))
 						{
-							tex_bind_mask |= 1 << msb;
-							--msb;
+							if (const auto& it = std::ranges::find(assigned_texture, pair.textures->at(i));
+								it != assigned_texture.end())
+							{
+								const size_t bind_slot = std::distance(assigned_texture.begin(), it);
+								instances[instance_resolved + instance_to_resolve]->SetTextureSlot(i, bind_slot);
+							}
+							else
+							{
+								tex_bind_mask |= 1 << msb;
+								assigned_texture[lsb] = pair.textures->at(i);
+								instances[instance_resolved + instance_to_resolve]->SetTextureSlot(i, lsb);
+								--msb;
+							}
 						}
 					}
-					instances[instance_to_resolve]->SetTextureOffset(lsb);
 					instance_to_resolve++;
 				}
 			}
@@ -320,17 +331,15 @@ namespace Engine
 			instance_buffer.CopySRVHeap(context);
 
 			const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
-
-			UINT total_offset = 0;
+			
 			for (size_t i = 0; i < instance_to_resolve; ++i)
 			{
-				for (size_t j = 0; j < texture_pairs[instance_resolved + i].textures->size(); ++j)
+				for (size_t j = 0; j < assigned_texture.size(); ++j)
 				{
-					if (const Strong<Resources::Texture>& tex = texture_pairs[instance_resolved + i].textures->at(j))
+					if (const Strong<Resources::Texture>& tex = assigned_texture[j])
 					{
 						RecordUsedTexture(context, gi, tex);
-						gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, total_offset);
-						++total_offset;
+						gi.Bind(context, tex.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j);
 					}
 				}
 				

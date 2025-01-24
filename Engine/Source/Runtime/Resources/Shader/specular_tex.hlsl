@@ -15,7 +15,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 		input.tex                 = repeatTex;
 	}
 
-	const float4 textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT_OFFSET(input.instanceId), 0);
+    const float4 textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT0(input.instanceId));
 
 	float  lightIntensity[MAX_NUM_LIGHTS];
 	float4 colorArray[MAX_NUM_LIGHTS];
