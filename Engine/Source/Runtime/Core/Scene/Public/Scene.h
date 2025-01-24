@@ -123,6 +123,7 @@ namespace Engine
 		Weak<Objects::Camera> GetMainCamera() const;
 
 		const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& GetObjectTree();
+		const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& GetCollisionTree();
 
 		// Add cache component from the object.
 		template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstracts::Component, T>>>
@@ -348,8 +349,8 @@ namespace Engine
 			return {};
 		}
 
-		const bool (&GetCollisionMask())[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT];
-		void UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]);
+		const bool (& GetCollisionMask() const)[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT];
+		void          UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]);
 
 		Strong<Layer> operator[](const size_t idx) const
 		{
@@ -460,7 +461,9 @@ namespace Engine
 		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
 		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
 		ConcurrentWeakScpRootMap                             m_concurrent_cached_scripts_;
+		
 		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_position_tree_;
+		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_collision_tree_;
 
 		static std::atomic<bool> s_debug_observer_;
 

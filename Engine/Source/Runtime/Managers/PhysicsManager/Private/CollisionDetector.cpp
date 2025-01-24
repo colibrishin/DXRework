@@ -83,13 +83,13 @@ namespace Engine::Managers
 			scene->GetPhysXScene()->collide(dt);
 			scene->GetPhysXScene()->fetchCollision(true);
 #else
-			const auto& tree = scene->GetObjectTree();
+			const auto& tree = scene->GetCollisionTree();
 
 			std::stack<const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>*> stack;
 			stack.push(&tree);
 
-			std::vector<std::vector<Weak<Abstracts::ObjectBase>>> node_objects;
-			std::map<const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>*, bool>            visited;
+			std::vector<std::vector<Weak<Abstracts::ObjectBase>>>                       node_objects;
+			std::map<const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>*, bool> visited;
 
 			while (!stack.empty())
 			{

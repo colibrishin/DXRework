@@ -122,7 +122,7 @@ namespace Engine
 #endif
 	}
 
-	const bool(&Scene::GetCollisionMask())[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]
+	const bool(&Scene::GetCollisionMask() const)[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]
 	{
 		return m_collision_mask_;
 	}
@@ -257,9 +257,14 @@ namespace Engine
 					m_cached_components_[comp.lock()->GetTypeHash()].erase(comp.lock()->GetID());
 				}
 
-				if (comp.lock()->GetTypeHash() == Components::Transform::StaticTypeHash())
+				if (comp.lock()->GetTypeHash()->IsDerivedOf(Components::Transform::StaticTypeHash()))
 				{
 					m_object_position_tree_.Remove(obj.lock());
+				}
+
+				if (comp.lock()->GetTypeHash()->IsDerivedOf(Components::Collider::StaticTypeHash()))
+				{
+					m_object_collision_tree_.Remove(obj.lock());
 				}
 			}
 		}
@@ -318,6 +323,7 @@ namespace Engine
 			m_main_actor_local_id_  = scene->m_main_actor_local_id_;
 
 			m_object_position_tree_.Clear();
+			m_object_collision_tree_.Clear();
 			m_cached_objects_.clear();
 			m_cached_components_.clear();
 			m_cached_scripts_.clear();
@@ -400,6 +406,7 @@ namespace Engine
 			}
 
 			m_object_position_tree_.Update();
+			m_object_collision_tree_.Update();
 
 			if (s_debug_observer_)
 			{
@@ -582,9 +589,14 @@ namespace Engine
 			if (!m_concurrent_cached_components_.find(comp_acc, type)) m_concurrent_cached_components_.insert(comp_acc, type);
 			comp_acc->second.emplace(component->GetID(), component);
 
-			if (type == Components::Transform::StaticTypeHash())
+			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
 			{
 				m_object_position_tree_.Insert(component->GetOwner().lock());
+			}
+
+			if (type->IsDerivedOf(Components::Collider::StaticTypeHash()))
+			{
+				m_object_collision_tree_.Insert(component->GetOwner().lock());
 			}
 		}
 	}
@@ -604,9 +616,14 @@ namespace Engine
 				if (m_concurrent_cached_components_.find(comp_acc, type)) comp_acc->second.erase(component->GetID());
 			}
 
-			if (type == Components::Transform::StaticTypeHash())
+			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
 			{
 				m_object_position_tree_.Remove(component->GetOwner().lock());
+			}
+
+			if (type->IsDerivedOf(Components::Collider::StaticTypeHash()))
+			{
+				m_object_collision_tree_.Remove(component->GetOwner().lock());
 			}
 		}
 	}
@@ -781,6 +798,11 @@ namespace Engine
 		return m_object_position_tree_;
 	}
 
+	const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& Scene::GetCollisionTree()
+	{
+		return m_object_collision_tree_;
+	}
+
 	void Scene::AddObserver()
 	{
 #if WITH_DEBUG
@@ -926,17 +948,25 @@ namespace Engine
 
 		// rebuild octree
 		m_object_position_tree_.Clear();
+		m_object_collision_tree_.Clear();
 
 		for (const auto& object : m_cached_objects_ | std::views::values)
 		{
-			if (const auto locked = object.lock();
-				locked->GetComponent<Components::Transform>().lock())
+			if (const auto locked = object.lock())
 			{
-				m_object_position_tree_.Insert(locked);
+				if (locked->GetComponent<Components::Transform>().lock())
+				{
+					m_object_position_tree_.Insert(locked);
+				}
+				if (locked->GetComponent<Components::Collider>().lock())
+				{
+					m_object_collision_tree_.Insert(locked);
+				}
 			}
 		}
 
 		m_object_position_tree_.Update();
+		m_object_collision_tree_.Update();
 
 #if CFG_RAYTRACING
 		if (m_b_scene_raytracing_ && !g_raytracing)
