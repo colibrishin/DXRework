@@ -9,6 +9,9 @@ namespace Engine::Meshes
 
 	void SphereMesh::Load_CUSTOM()
 	{
+		m_vertices_.clear();
+		m_indices_.clear();
+
 		constexpr auto sphere_vertices = DefaultSphereGenerator::GetSphereVertices();
 		m_vertices_.insert(m_vertices_.end(), sphere_vertices.begin(), sphere_vertices.end());
 

@@ -225,10 +225,10 @@ namespace Engine::Managers
 			 },
 			 [&gi, this, &light](const GraphicInterfaceContextPrimitive* context)
 			 {
-			 	gi.BindGraphic(context, m_shadow_shader_.get());
-				Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
-				gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
-			 }, {}, {}, {}, true
+				 gi.BindGraphic(context, m_shadow_shader_.get());
+				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
+				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
+			 }, {}, {}, {}
 			);
 
 		{

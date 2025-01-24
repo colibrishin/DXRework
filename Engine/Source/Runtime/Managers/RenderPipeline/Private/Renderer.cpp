@@ -57,8 +57,7 @@ namespace Engine::Managers
 		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
 		const ObjectPredication&                                predication,
 		const ContextSetupFunction&                             prerender_predicate,
-		const ContextSetupFunction&                             postrender_predicate,
-		const bool call_cleanup
+		const ContextSetupFunction&                             postrender_predicate
 	) const
 	{
 		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
@@ -76,14 +75,6 @@ namespace Engine::Managers
 					 m_prerender_funcs_,
 					 m_postrender_funcs_
 					);
-		}
-
-		if (call_cleanup)
-		{
-			for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
-			{
-				ptr->Cleanup();
-			}
 		}
 	}
 
@@ -184,8 +175,7 @@ namespace Engine::Managers
 		const ContextSetupFunction& prerender_predicate,
 		const ContextSetupFunction& postrender_predicate,
 		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
-		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs,
-		const bool call_cleanup
+		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
 	) const
 	{
 		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
@@ -203,14 +193,6 @@ namespace Engine::Managers
 					 prerender_funcs,
 					 postrender_funcs
 					);
-		}
-
-		if (call_cleanup)
-		{
-			for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
-			{
-				ptr->Cleanup();
-			}
 		}
 	}
 

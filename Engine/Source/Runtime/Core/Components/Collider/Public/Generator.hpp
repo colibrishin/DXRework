@@ -258,26 +258,22 @@ namespace Engine
 	private:
 		static constexpr size_t faceCount = 6;
 
-		static constexpr Vector2 texCoords[8] =
+		static constexpr Vector2 texCoords[] =
 		{
-			{0, 1},
-			{0, 0},
-			{0, 1},
+			{1, 0},
 			{1, 1},
 			{0, 1},
 			{0, 0},
-			{1, 0},
-			{1, 1}
 		};
 
 		static constexpr Vector3 normals[] =
 		{
-			{0, 0, -1},
 			{0, 0, 1},
-			{0, 1, 0},
-			{0, -1, 0},
+			{0, 0, -1},
+			{1, 0, 0},
 			{-1, 0, 0},
-			{1, 0, 0}
+			{0, 1, 0},
+			{0, -1, 0}
 		};
 	
 	public:

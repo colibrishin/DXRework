@@ -184,7 +184,7 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 
 	cmd->SoftReset();
 	cmd->GetList()->ResourceBarrier(1, &common_transition);
-	cmd->FlagReady();
+	cmd->Execute();
 
 	SetPrimitiveTexture(m_dx12_texture_.Get());
 	const D3D12_RESOURCE_DESC desc = m_dx12_texture_->GetDesc();

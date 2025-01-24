@@ -319,6 +319,6 @@ namespace Engine
 		}
 #endif
 
-    	cmd->FlagReady();
+    	cmd->Execute();
     }
 }

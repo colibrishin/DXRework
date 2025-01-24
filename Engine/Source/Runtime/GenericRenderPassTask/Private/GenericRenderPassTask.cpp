@@ -71,8 +71,12 @@ namespace Engine
 		
 		primitive.commandList->SoftReset();
 		const auto& range = std::ranges::unique(m_used_shader_textures_);
-		const size_t unique_idx = std::distance(range.begin(), range.end());
-		gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+		const size_t indeterminate = std::distance(range.begin(), range.begin());
+		const size_t unique_idx = m_used_shader_textures_.size() - indeterminate;
+		if (m_used_shader_textures_.size() > 0 && m_used_shader_textures_[0] != nullptr)
+		{
+			gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+		}
 		primitive.commandList->FlagReady();
 	}
 
@@ -81,7 +85,6 @@ namespace Engine
 		m_local_param_pool_.reset();
 		m_instance_pool_.reset();
 		m_heaps_.clear(); // todo: reuse
-
 		std::ranges::fill(m_used_shader_textures_, nullptr);
 	}
 
@@ -145,8 +148,8 @@ namespace Engine
 
 		// Manual release
 		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
-		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		m_local_param_pool_.advance();
+		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		local_param_token.Release();
 
 		GraphicHeapBase*                       current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
@@ -173,8 +176,8 @@ namespace Engine
 		
 		// Manual release
 		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
-		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		m_instance_pool_.advance();
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		instance_token.Release();
 		
 		static aligned_vector<Graphics::SBs::InstanceSB*> instances;

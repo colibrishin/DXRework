@@ -373,26 +373,28 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 	D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after
 )
 {
-	const auto cmd  = static_cast<CommandPair*>(context->commandList);
-
-	aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
-	transitions.reserve(count);
-	
-	for (size_t i = 0; i < count; ++i)
+	if (count > 0)
 	{
-		const auto tex = static_cast<ID3D12Resource*>(texes[i]->GetPrimitiveTexture()->GetNativeTexture());
+		const auto cmd  = static_cast<CommandPair*>(context->commandList);
+		aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
+		transitions.reserve(count);
+		
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto tex = static_cast<ID3D12Resource*>(texes[i]->GetPrimitiveTexture()->GetNativeTexture());
 
-		const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 tex,
-				 before,
-				 after
-				);
+			const auto& transition = CD3DX12_RESOURCE_BARRIER::Transition
+					(
+					 tex,
+					 before,
+					 after
+					);
 
-		transitions.push_back(transition);
+			transitions.push_back(transition);
+		}
+
+		cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
 	}
-
-	cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
 }
 
 void Engine::D3D12GraphicInterface::TransitToMultiple(

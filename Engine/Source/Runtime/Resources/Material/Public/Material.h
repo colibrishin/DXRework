@@ -32,7 +32,7 @@ namespace Engine::Resources
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		void SetTexture(const Weak<Texture>& texture, const size_t slot = 0);
+		void SetTexture(const Weak<Texture>& texture, const size_t slot = 0, const bool set_path = true);
 		void SwapTexture(const size_t before, const size_t after);
 		void SetAtlasTexture(const Weak<AtlasAnimationTexture>& texture);
 		void SetShader(const Weak<Shader>& shader);
@@ -68,12 +68,12 @@ namespace Engine::Resources
 		bool m_ui_add_dialog_ = false;
 #endif
 
-		Strong<Shader> m_shader_;
-		StrongTextureArray m_textures_;
-		Strong<AtlasAnimationTexture> m_atlas_;
+		Strong<Shader>                m_shader_{};
+		StrongTextureArray            m_textures_{};
+		Strong<AtlasAnimationTexture> m_atlas_{};
 
-		Weak<Shader> m_cached_shader_;
-		WeakTextureArray m_cached_textures_;
-		Weak<AtlasAnimationTexture> m_cached_atlas_;
+		Weak<Shader>                m_cached_shader_{};
+		WeakTextureArray            m_cached_textures_{};
+		Weak<AtlasAnimationTexture> m_cached_atlas_{};
 	};
 }

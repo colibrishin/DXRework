@@ -42,28 +42,28 @@ namespace Engine::Managers
 		void UnregisterContextPostRenderSetup(const std::string_view name);
 
 		void RenderPassVanilla(
-			float dt,
-			bool shader_bypass,
-			eShaderDomain domain,
-			const Graphics::SBs::LocalParamSB& local_param_sb,
-			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-			const ObjectPredication& predication,
-			const ContextSetupFunction& prerender_predicate, 
-			const ContextSetupFunction& postrender_predicate,
+			float                                                             dt,
+			bool                                                              shader_bypass,
+			eShaderDomain                                                     domain,
+			const Graphics::SBs::LocalParamSB&                                local_param_sb,
+			const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
+			const ObjectPredication&                                          predication,
+			const ContextSetupFunction&                                       prerender_predicate,
+			const ContextSetupFunction&                                       postrender_predicate,
 			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
-			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs,
-			const bool call_cleanup = false) const;
+			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
+		) const;
 		
 		void RenderPassAssisted(
-			float dt,
-			bool shader_bypass,
-			eShaderDomain domain,
-			const Graphics::SBs::LocalParamSB& local_param_sb,
+			float                                                   dt,
+			bool                                                    shader_bypass,
+			eShaderDomain                                           domain,
+			const Graphics::SBs::LocalParamSB&                      local_param_sb,
 			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-			const ObjectPredication& predication,
-			const ContextSetupFunction& prerender_predicate, 
-			const ContextSetupFunction& postrender_predicate,
-			const bool call_cleanup = false) const;
+			const ObjectPredication&                                predication,
+			const ContextSetupFunction&                             prerender_predicate,
+			const ContextSetupFunction&                             postrender_predicate
+		) const;
 
 		[[nodiscard]] bool Ready() const;
 

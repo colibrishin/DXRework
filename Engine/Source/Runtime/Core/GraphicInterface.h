@@ -1312,7 +1312,7 @@ namespace Engine
 
 			if (m_read_offset_ >= m_allocated_size_)
 			{
-				resize(m_allocated_size_ * 1.5f);
+				resize(m_allocated_size_ * 2.f);
 			}
 		}
 

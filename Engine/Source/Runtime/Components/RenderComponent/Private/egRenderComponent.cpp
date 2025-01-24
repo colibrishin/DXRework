@@ -61,6 +61,11 @@ namespace Engine::Components
 	{
 		if (const Strong<Resources::Shape>& locked = shape.lock())
 		{
+			if (!locked->IsLoaded())
+			{
+				locked->Load();
+			}
+
 			m_shape_ = locked;
 			m_shape_meta_path_ = locked->GetMetadataPath();
 		}

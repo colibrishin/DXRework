@@ -9,6 +9,9 @@ namespace Engine::Meshes
 
 	void CubeMesh::Load_CUSTOM()
 	{
+		m_vertices_.clear();
+		m_indices_.clear();
+
 		constexpr auto cube_vertices = CubeGenerator::GetCubeVertices();
 		m_vertices_.insert(m_vertices_.end(), cube_vertices.begin(), cube_vertices.end());
 

@@ -11,6 +11,8 @@
 void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 {
 	m_buffer_.Reset();
+	m_read_buffer_.Reset();
+	m_upload_buffer_.Reset();
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const GraphicInterfaceContextPrimitive* context)
@@ -379,12 +381,8 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(con
 			IID_PPV_ARGS(m_upload_buffer_.ReleaseAndGetAddressOf())
 		)
 	);
-
-	const std::string  gen_type_name = typeid(DirectX::Keyboard::T).name();
-	const std::wstring type_name(gen_type_name.begin(), gen_type_name.end());
-	const std::wstring buffer_name = L"StructuredBuffer " + type_name;
-
-	const std::wstring write_buffer_name = L"StructuredBuffer Write " + type_name;
+	
+	const std::wstring write_buffer_name = L"StructuredBuffer Write";
 
 	DX::ThrowIfFailed(m_upload_buffer_->SetName(write_buffer_name.c_str()));
 

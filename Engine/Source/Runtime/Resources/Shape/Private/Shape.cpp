@@ -152,6 +152,25 @@ namespace Engine::Resources
 	void Shape::OnDeserialized()
 	{
 		Resource::OnDeserialized();
+
+		for (int i = 0; i < m_mesh_paths_.size(); ++i)
+		{
+			if (const auto mesh = Mesh::GetByMetadataPath(m_mesh_paths_[i]).lock())
+			{
+				addMeshImpl(mesh, false);
+			}
+		}
+
+		if (const auto anims = AnimationTexture::GetByMetadataPath(m_animations_path_).lock())
+		{
+			Add(anims);
+		}
+
+		if (const auto tr_anim = BaseAnimation::GetByMetadataPath(m_tr_animation_path_).lock())
+		{
+			Add(tr_anim);
+		}
+
 		Load();
 	}
 
@@ -226,7 +245,6 @@ namespace Engine::Resources
 	void Shape::UpdateVertices()
 	{
 		m_cached_vertices_.clear();
-
 		for (const auto& mesh : m_cached_meshes_ | std::views::keys)
 		{
 			if (const Strong<Mesh>& locked = mesh.lock())
@@ -238,22 +256,22 @@ namespace Engine::Resources
 			}
 		}
 
+		m_bounding_box_ = {};
 		BoundingBox::CreateFromPoints(
 			m_bounding_box_,
 			m_cached_vertices_.size(),
 			reinterpret_cast<const Vector3*>(m_cached_vertices_.data()),
 			sizeof(VertexElement));
 
+		m_bone_bounding_boxes_.clear();
 		std::map<UINT, std::vector<Vector3>> bone_vertices;
-
 		for (const auto& vertex : m_cached_vertices_)
 		{
 			for (const auto& idx : vertex.boneElement.GetIndices())
 			{
 				const auto unique = std::ranges::find_if
 				(
-					bone_vertices[idx],
-					[vertex](const Vector3& v)
+					bone_vertices[idx], [vertex](const Vector3& v)
 					{
 						return MathExtension::FloatCompare(v.x, vertex.position.x) &&
 							MathExtension::FloatCompare(v.y, vertex.position.y) &&
@@ -341,24 +359,34 @@ namespace Engine::Resources
 	{
 		if (!GetMetadataPath().empty())
 		{
-			for (int i = 0; i < m_mesh_paths_.size(); ++i)
+			m_meshes_.resize(m_cached_meshes_.size());
+			for (size_t i = 0; i < m_mesh_paths_.size(); ++i)
 			{
-				if (const auto mesh = Mesh::GetByMetadataPath(m_mesh_paths_[i]).lock())
+				m_meshes_[i] = {m_cached_meshes_[i].first.lock(), m_cached_meshes_[i].second.lock()};
+
+				if (m_meshes_[i].first)
 				{
-					addMeshImpl(mesh, false);
+					m_meshes_[i].first->Load();
+				}
+
+				if (m_meshes_[i].second)
+				{
+					m_meshes_[i].second->Load();
 				}
 			}
+			UpdateVertices();
 
-			if (const auto anims = AnimationTexture::GetByMetadataPath(m_animations_path_).lock())
+			if (const Strong<AnimationTexture>& tex = m_cached_animations_.lock())
 			{
-				Add(anims);
+				m_animations_ = tex;
+				m_animations_->Load();
 			}
 
-			if (const auto tr_anim = BaseAnimation::GetByMetadataPath(m_tr_animation_path_).lock())
+			if (const Strong<BaseAnimation>& tr_anim = m_cached_tr_animation_.lock())
 			{
-				Add(tr_anim);
+				m_tr_animation_ = tr_anim;
+				m_tr_animation_->Load();
 			}
-
 			return;
 		}
 
@@ -658,6 +686,7 @@ namespace Engine::Resources
 		m_meshes_.clear();
 		m_animations_.reset();
 		m_tr_animation_.reset();
+		m_cached_vertices_.clear();
 	}
 
 	Shape::Shape()
@@ -671,8 +700,8 @@ namespace Engine::Resources
 			res->Load();
 			m_meshes_.push_back({ res, {} });
 		}
-		
-		m_cached_meshes_.push_back({res, {}});
+
+		m_cached_meshes_.push_back({res, {}});	
 
 #if WITH_EDITOR
 		m_ui_material_add_opened_.push_back(false);

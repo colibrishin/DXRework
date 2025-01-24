@@ -191,10 +191,35 @@ namespace Engine::Resources
 	void Material::OnDeserialized()
 	{
 		Resource::OnDeserialized();
+
+		if (!m_shader_path_.empty())
+		{
+			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
+			{
+				SetShader(shader);
+			}
+		}
+
+		if (!m_atlas_path_.empty())
+		{
+			if (const auto& atlas = AtlasAnimationTexture::GetByMetadataPath(m_atlas_path_).lock())
+			{
+				SetAtlasTexture(atlas);
+			}
+		}
+
+		for (size_t i = 0; i < m_texture_paths_.size(); ++i)
+		{
+			if (const auto& tex = Texture::GetByMetadataPath(m_texture_paths_[i]).lock())
+			{
+				SetTexture(tex, i, false);
+			}
+		}
+
 		Load();
 	}
 
-	void Material::SetTexture(const Weak<Texture>& texture, const size_t slot)
+	void Material::SetTexture(const Weak<Texture>& texture, const size_t slot, const bool set_path)
 	{
 		if (slot >= m_cached_textures_.size()) 
 		{
@@ -211,7 +236,11 @@ namespace Engine::Resources
 			
 			m_cached_textures_[slot] = locked;
 			m_material_sb_.texSlot[slot] = true;
-			m_texture_paths_[slot] = locked->GetMetadataPath();
+
+			if (set_path)
+			{
+				m_texture_paths_[slot] = locked->GetMetadataPath();	
+			}
 		}
 	}
 
@@ -299,30 +328,32 @@ namespace Engine::Resources
 
 	void Material::Load_INTERNAL()
 	{
-		if (!m_shader_path_.empty())
+		if (const Strong<AtlasAnimationTexture>& atlas = m_cached_atlas_.lock())
 		{
-			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
-			{
-				SetShader(shader);
-			}
+			m_atlas_ = atlas;
+			m_atlas_->Load();
 		}
 
-		if (!m_atlas_path_.empty())
+		if (const Strong<Shader>& shader = m_cached_shader_.lock())
 		{
-			if (const auto& atlas = AtlasAnimationTexture::GetByMetadataPath(m_atlas_path_).lock())
-			{
-				SetAtlasTexture(atlas);
-			}
+			m_shader_ = shader;
+			m_shader_->Load();
 		}
 
-		for (size_t i = 0; i < m_texture_paths_.size(); ++i)
+		for (size_t i = 0; i < m_cached_textures_.size(); ++i)
 		{
-			if (const auto& tex = Texture::GetByMetadataPath(m_texture_paths_[i]).lock())
+			if (const Strong<Texture>& tex = m_cached_textures_[i].lock())
 			{
-				SetTexture(tex, i);
+				m_textures_[i] = tex;
+				m_textures_[i]->Load();
 			}
 		}
 	}
 
-	void Material::Unload_INTERNAL() {}
+	void Material::Unload_INTERNAL()
+	{
+		m_atlas_ = {};
+		m_shader_ = {};
+		m_textures_ = {};
+	}
 }
