@@ -1,0 +1,131 @@
+#pragma once
+#include "Entity.h"
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include "CoreType.h"
+
+namespace Engine
+{
+	class Serializer
+	{
+	public:
+		// Serialize the object. Use when the object is nested, and if nested objects are required to be serialized.
+		template <typename T>
+		static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
+		{
+			if (!is_serializable_v<T> || !object->GetTypeHash()->IsSerializable())
+			{
+				return false;
+			}
+
+			object->OnSerialized();
+			std::string fixed_name = filename;
+
+			constexpr char illegal_chars[] =
+			{
+				'#',
+				'%',
+				'&',
+				'{',
+				'}',
+				'\\',
+				'<',
+				'>',
+				'?',
+				'/',
+				' ',
+				'$',
+				'!',
+				'\'',
+				'\"',
+				':',
+				'@',
+				'+',
+				'|',
+				'`',
+				'='
+			};
+
+			for (const auto& illegal : illegal_chars)
+			{
+				while (const auto pos = fixed_name.find(illegal))
+				{
+					if (pos == std::string::npos)
+					{
+						break;
+					}
+					fixed_name.replace(pos, 1, "_");
+				}
+			}
+
+			//int                   i               = 0;
+			//std::string           tagged_filename = fixed_name + "_%d";
+			//char                  buffer[1024]    = {};
+			//std::filesystem::path final_path      = fixed_name;
+			std::string extension = ".meta";
+
+			//while (std::filesystem::exists(final_path.string() + extension))
+			//{
+			//  sprintf_s(buffer, 1024, tagged_filename.c_str(), i++);
+			//  final_path = buffer;
+			//}
+
+			const std::filesystem::path folder = object->GetPrettyTypeName();
+
+			if (!exists(folder))
+			{
+				create_directory(folder);
+			}
+
+			std::filesystem::path final_filename = fixed_name + extension;
+
+			std::filesystem::path final_path = folder / final_filename;
+			object->m_meta_path_             = final_path;
+
+			if (exists(final_path))
+			{
+				std::filesystem::remove(final_path);
+			}
+
+			const auto entity = boost::static_pointer_cast<Abstracts::Entity>(object);
+
+			std::fstream                    stream(final_path, std::ios::out | std::ios::binary);
+			boost::archive::binary_oarchive archive(stream);
+			archive << entity;
+			return true;
+		}
+
+		template <typename T>
+		static bool Deserialize(const std::string& filename, Strong<T>& out_ptr)
+		{
+			if (!is_serializable_v<T>)
+			{
+				return false;
+			}
+
+			Strong<Abstracts::Entity> object;
+			std::fstream                        stream(filename, std::ios::in | std::ios::binary);
+
+			if (!stream.is_open())
+			{
+				throw std::runtime_error("Failed to open file for deserialization");
+			}
+
+			{
+				simple_gc_scope gc;
+				boost::archive::binary_iarchive archive(stream);
+				archive >> object;
+			}
+
+			if (!object->GetTypeHash()->IsDerivedOf(T::StaticTypeHash())) 
+			{
+				out_ptr = nullptr;
+				return false;
+			}
+			
+			object->OnDeserialized();
+			out_ptr = boost::static_pointer_cast<T>(object);
+			return true;
+		}
+	};
+} // namespace Engine

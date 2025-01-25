@@ -398,4 +398,18 @@ pythonenv3.8/
 !DX/Metadata/**
 DX/Metadata/_excluded/**
 
-!DX/fmod/lib/*
+Engine/***/blob/*
+!Engine/Source/ThirdParty/*/lib/*
+
+
+Binaries/***
+Intermediate/***
+*.bff
+*.fdb
+kolibri.sln
+
+!Build/
+Programs/CMake/***
+Programs/vcpkg/***
+lock
+balius/target/.rustc_info.json

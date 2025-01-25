@@ -1,6 +1,12 @@
-[submodule "DX/pugixml"]
-	path = DX/pugixml
-	url = https://github.com/zeux/pugixml
-[submodule "DX/PhysX"]
-	path = DX/PhysX
+[submodule "Programs/Sharpmake"]
+	path = Programs/Sharpmake
+	url = https://github.com/colibrishin/Sharpmake
+[submodule "Engine/Source/ThirdParty/PhysX/PhysX"]
+	path = Engine/Source/ThirdParty/PhysX/PhysX
 	url = https://github.com/NVIDIA-Omniverse/PhysX.git
+[submodule "Engine/Source/ThirdParty/GCEM/GCEM"]
+	path = Engine/Source/ThirdParty/GCEM/GCEM
+	url = https://github.com/kthohr/gcem.git
+[submodule "Programs/header-parser"]
+	path = Programs/header-parser
+	url = https://github.com/colibrishin/header-parser.git
