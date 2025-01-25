@@ -7,7 +7,11 @@ using Sharpmake;
 [Generate]
 public class ShadowManager : CommonProject
 {
-    public ShadowManager() { }
+    public ShadowManager() 
+    {
+        SourceFilesExtensions.Add(".hlsl");
+        SourceFilesExtensions.Add(".hlsli");
+    }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
@@ -21,5 +25,10 @@ public class ShadowManager : CommonProject
         conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<ShadowTexture>(target);
         conf.AddPrivateDependency<ShadowRenderTarget>(target);
+        
+        conf.TargetCopyFiles.Add
+        (
+            @"cascade_shadow_stage1.hlsl"
+        );
     }
 }

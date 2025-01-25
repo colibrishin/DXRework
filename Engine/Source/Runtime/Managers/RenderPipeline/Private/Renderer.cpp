@@ -46,6 +46,7 @@ namespace Engine::Managers
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
 			RenderPassAssisted(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
+			onRenderDone.Broadcast(static_cast<eShaderDomain>(i));
 		}
 	}
 

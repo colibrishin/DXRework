@@ -24,7 +24,6 @@ public class Shader : CommonProject
         (
             @"atlas.hlsl", 
             @"billboard.hlsl", 
-            @"cascade_shadow_stage1.hlsl",
             @"color.hlsl",
             @"common.hlsli",
             @"default.hlsl",

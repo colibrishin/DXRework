@@ -52,6 +52,12 @@ namespace Engine::Abstracts
 				s_destroyed_ = true;
 			}
 		}
+
+		static bool IsInitialized()
+		{
+			std::lock_guard l(s_mutex_);
+			return s_destroyed_;
+		}
 		
 		void OnSerialized() final {}
 		void OnDeserialized() final {}

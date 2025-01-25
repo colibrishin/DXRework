@@ -14,7 +14,7 @@ namespace Engine::Managers
 		ReflectionEvaluator(SINGLETON_LOCK_TOKEN)
 			: Singleton(),
 			  m_copy_() {}
-
+		
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void FixedUpdate(const float dt) override;
@@ -24,13 +24,14 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 		void Initialize() override;
 
-		void RenderFinished(const GraphicInterfaceContextPrimitive* context);
 		void BindReflectionMap(const GraphicInterfaceContextPrimitive* context);
 		void UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context);
 
 	private:
+		void CheckRender(const eShaderDomain shaderDomain);
+		
 		friend struct SingletonDeleter;
-		~ReflectionEvaluator() override = default;
+		~ReflectionEvaluator() override;
 
 		Strong<Resources::Texture2D> m_copy_;
 	};
