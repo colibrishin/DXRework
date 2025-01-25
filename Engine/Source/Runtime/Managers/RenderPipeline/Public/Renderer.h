@@ -5,8 +5,11 @@
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "RenderTask.h"
+#include "Delegation/Public/Delegation.hpp"
 
 #include "Renderer.generated.h"
+
+DEFINE_DELEGATE(OnRenderDone, const Engine::eShaderDomain);
 
 namespace Engine::Managers
 {
@@ -19,6 +22,8 @@ namespace Engine::Managers
 			: Singleton(),
 			  m_b_ready_(false) {}
 
+		DelegateOnRenderDone onRenderDone;
+		
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void FixedUpdate(const float dt) override;
