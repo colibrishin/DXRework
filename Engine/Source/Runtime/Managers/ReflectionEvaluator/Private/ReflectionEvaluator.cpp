@@ -1,5 +1,7 @@
 #include "../Public/ReflectionEvaluator.h"
 
+#include "Renderer.h"
+
 namespace Engine::Managers
 {
 	void ReflectionEvaluator::PreUpdate(const float dt) {}
@@ -18,7 +20,7 @@ namespace Engine::Managers
 
 	void ReflectionEvaluator::Initialize()
 	{
-		m_copy_ = Resources::Texture2D::Create(
+		m_copy_ = Resources::Texture2D::Create<true>(
 			"Evaluated Reflection", 
 			"", 
 			GenericTextureDescription {
@@ -34,14 +36,9 @@ namespace Engine::Managers
 			}
 		);
 
-		m_copy_->SetName("ReflectionEvaluator");
-		m_copy_->Initialize();
-		m_copy_->Load();
-	}
-
-	void ReflectionEvaluator::RenderFinished(const GraphicInterfaceContextPrimitive* context)
-	{
-		GraphicInterfaceAccessor::GetInterface().CopyRenderTarget(context, m_copy_.get());
+		Renderer::GetInstance().onRenderDone.Listen(
+			GetSharedPtr<ReflectionEvaluator>(),
+			&ReflectionEvaluator::CheckRender);
 	}
 
 	void ReflectionEvaluator::BindReflectionMap(const GraphicInterfaceContextPrimitive* context)
@@ -52,5 +49,26 @@ namespace Engine::Managers
 	void ReflectionEvaluator::UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context)
 	{
 		GraphicInterfaceAccessor::GetInterface().TransitBack(context, m_copy_.get(), BIND_TYPE_SRV);
+	}
+
+	void ReflectionEvaluator::CheckRender(const eShaderDomain shaderDomain)
+	{
+		if (shaderDomain == SHADER_DOMAIN_OPAQUE)
+		{
+			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+			const auto& context = gi.GetNewContext(0, false, L"Opaque render target copy");
+			const auto& primitive = context.GetPointers();
+			primitive.commandList->SoftReset();
+			gi.CopyRenderTarget(&primitive, m_copy_.get());
+			primitive.commandList->FlagReady();
+		}
+	}
+
+	ReflectionEvaluator::~ReflectionEvaluator()
+	{
+		if (Renderer::IsInitialized())
+		{
+			Renderer::GetInstance().onRenderDone.Remove(GetSharedPtr<ReflectionEvaluator>(), &ReflectionEvaluator::CheckRender);
+		}
 	}
 }

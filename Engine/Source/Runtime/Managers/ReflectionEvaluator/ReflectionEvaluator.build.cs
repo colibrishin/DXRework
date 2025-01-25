@@ -6,7 +6,11 @@ using Sharpmake;
 [Generate]
 public class ReflectionEvaluator : CommonProject
 {
-    public ReflectionEvaluator() { }
+    public ReflectionEvaluator() 
+    {
+        SourceFilesExtensions.Add(".hlsl");
+        SourceFilesExtensions.Add(".hlsli");
+     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
