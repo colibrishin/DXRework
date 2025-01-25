@@ -11,6 +11,7 @@ namespace Engine::Resources
 	{
 		std::memset(&m_desc_, 0 , sizeof(decltype(m_desc_)));
 		m_desc_ = description;
+		m_desc_.Dimension = type;
 	}
 
 	eTexType Texture::GetPrimitiveTextureType() const
