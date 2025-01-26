@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
-
-#include "Source/Runtime/Resources/Shader/Public/Shader.h"
+#include "GraphicInterface.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include "ComputeShader.generated.h"
@@ -9,7 +8,7 @@
 namespace Engine::Resources
 {
 	ECLASS(resource, abstract, serialize)
-	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
+	class ENGINE_COMPUTESHADER_API ComputeShader : public Abstracts::Resource
 	{
 		GENERATE_BODY
 	public:
@@ -18,10 +17,14 @@ namespace Engine::Resources
 		ComputeShader(const ComputeShader& other);
 		ComputeShader& operator=(const ComputeShader& other);
 
-		std::array<uint32_t, 3> GetThread() const;
+		[[nodiscard]] std::array<uint32_t, 3> GetThread() const;
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param);
 
 		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
+
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
 
 	protected:
 		ComputeShader(const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
@@ -43,7 +46,11 @@ namespace Engine::Resources
 		void Unload_INTERNAL() final;
 
 		ComputeShader();
-		
+
+	public:
+		void OnSerialized() override;
+
+	private:
 		EPROPERTY()
 		std::array<uint32_t, 3> m_thread_;
 

@@ -23,17 +23,23 @@ namespace Engine::Resources
 		return *m_primitive_shader_;
 	}
 
+	void ComputeShader::OnUIUpdate(UIContext* const parent, const float dt)
+	{
+		if (parent)
+		{
+			Resource::OnUIUpdate( parent, dt );
+			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			*parent |= ui.NewLabelAndUInt( { "Thread Group X", m_thread_[0], 0, 0, 256, true} );
+			*parent |= ui.NewLabelAndUInt( { "Thread Group Y", m_thread_[1], 0, 0, 256, true} );
+			*parent |= ui.NewLabelAndUInt( { "Thread Group Z", m_thread_[2], 0, 0, 256, true} );
+		}
+	}
+
 	ComputeShader::ComputeShader(
 		const std::filesystem::path& path,
-		const std::array<UINT, 3>&   thread
-	)
-		: Shader
-		(path, SHADER_DOMAIN_OPAQUE, false, SHADER_DEPTH_TEST_ZERO, SHADER_DEPTH_NEVER, SHADER_SAMPLER_CLAMP,
-			SHADER_SAMPLER_NEVER, SAMPLER_FILTER_MIN_MAG_MIP_POINT, SHADER_RASTERIZER_CULL_NONE,
-			SHADER_RASTERIZER_FILL_WIREFRAME, GetDefaultRTVFormat())
+		const std::array<UINT, 3>&   thread)
+		: Resource(path)
 	{
-		SetPath(path);
-
 		for (size_t i = 0; i < 3; ++i) 
 		{
 			m_thread_[i] = thread[i];
@@ -41,7 +47,7 @@ namespace Engine::Resources
 	}
 
 	ComputeShader::ComputeShader(const ComputeShader& other)
-		: Shader(other)
+		: Resource(other)
 	{
 		m_thread_ = other.m_thread_;
 	}
@@ -71,7 +77,7 @@ namespace Engine::Resources
 
 	void ComputeShader::Initialize()
 	{
-		Shader::Initialize();
+		Resource::Initialize();
 	}
 
 	void ComputeShader::Load_INTERNAL()
@@ -90,9 +96,35 @@ namespace Engine::Resources
 	}
 
 	ComputeShader::ComputeShader()
-		: Shader
-		("", SHADER_DOMAIN_OPAQUE, false, SHADER_DEPTH_TEST_ZERO, SHADER_DEPTH_NEVER, SHADER_SAMPLER_CLAMP,
-			SHADER_SAMPLER_NEVER, SAMPLER_FILTER_MIN_MAG_MIP_POINT, SHADER_RASTERIZER_CULL_NONE,
-			SHADER_RASTERIZER_FILL_WIREFRAME, GetDefaultRTVFormat()),
+		: Resource (""),
 		  m_thread_{1,} {}
+
+	void ComputeShader::OnSerialized()
+	{
+		if (exists(GetPath()))
+		{
+			const std::filesystem::path folder   = GetPrettyTypeName();
+			const std::filesystem::path filename = GetPath().filename();
+			const std::filesystem::path p        = folder / filename;
+
+			if (!exists(folder))
+			{
+				create_directory(folder);
+			}
+
+			if (GetPath() == p)
+			{
+				return;
+			}
+
+			if (exists(p))
+			{
+				std::filesystem::remove(p);
+			}
+
+			copy_file(GetPath(), p, std::filesystem::copy_options::overwrite_existing);
+
+			SetPath(p);
+		}
+	}
 }
