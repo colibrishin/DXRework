@@ -51,15 +51,11 @@ namespace Engine::Abstracts
 		{
 			Entity::OnUIUpdate(parent, dt);
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent |= ui.NewLabelAndPath({ "Raw Path", m_path_ });
-			( *parent |= ui.NewButton( {"Clone"} ) ).SetFunction( [this]()
+			*parent |= ui.NewLabelAndPath( { "Raw Path", m_path_ } );
+			( *parent |= ui.NewButton( { "Clone" } ) ).SetFunction( [this]()
 			{
-				const auto& res = Clone();
-
-				if (const Strong<Resource>& locked = res.lock())
-				{
-					Managers::ResourceManager::GetInstance().AddResource( locked, locked->GetTypeHash() );
-				}
+				const auto& cloned = Clone();
+				Managers::ResourceManager::GetInstance().AddResource( cloned, cloned->GetTypeHash() );
 			} );
 		}
 	}
@@ -81,7 +77,7 @@ namespace Engine::Abstracts
 		return m_path_;
 	}
 
-	Weak<Resource> Resource::Clone() const
+	Strong<Resource> Resource::Clone() const
 	{
 		Strong<Resource> cloned = cloneImpl();
 
@@ -89,7 +85,7 @@ namespace Engine::Abstracts
 		std::string new_name;
 		while ( true )
 		{
-			new_name = std::format( "{} {}", cloned->GetName(), idx );
+			new_name = std::format( "{}_{}", cloned->GetName(), idx );
 			if ( const Strong<Resource>& res = Managers::ResourceManager::GetInstance().GetResource( new_name, cloned->GetTypeHash() ).lock();
 				 res == nullptr )
 			{
@@ -97,6 +93,7 @@ namespace Engine::Abstracts
 			}
 		}
 		cloned->SetName( new_name );
+		Serializer::Serialize( cloned->GetName(), cloned );
 		return cloned;
 	}
 

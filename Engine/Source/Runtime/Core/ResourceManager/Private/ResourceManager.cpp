@@ -147,11 +147,6 @@ namespace Engine::Managers
 		{
 			return;
 		}
-		if (!resource->GetPath().empty() &&
-			GetResourceByRawPath(resource->GetPath(), type).lock())
-		{
-			return;
-		}
 
 		m_resources_[type].insert(resource);
 	}
@@ -167,33 +162,6 @@ namespace Engine::Managers
 				return resource->GetName() == name;
 			}
 		);
-
-		if (it != resources.end())
-		{
-			if (!(*it)->IsLoaded())
-			{
-				(*it)->Load();
-			}
-
-			return *it;
-		}
-
-		return {};
-	}
-
-	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const ResourceType type)
-	{
-		if (path.empty())
-		{
-			return {};
-		}
-
-		auto& resources = m_resources_[type];
-		auto  it        = std::ranges::find_if(
-				 resources, [&path](const Strong<Abstracts::Resource>& resource)
-				 {
-					 return resource->GetPath() == path;
-				 });
 
 		if (it != resources.end())
 		{

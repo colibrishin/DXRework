@@ -60,17 +60,6 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResource(const std::string_view name, ResourceType type);
 
 		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
-		Weak<T> GetResourceByRawPath(const std::filesystem::path& path)
-		{
-			if (const Strong<Abstracts::Resource>& locked = GetResourceByRawPath(path, T::StaticTypeHash()).lock()) 
-			{
-				return boost::reinterpret_pointer_cast<T>(locked);
-			}
-
-			return {};
-		}
-
-		template <typename T> requires std::is_base_of_v<Abstracts::Resource, T> && !std::is_same_v<Abstracts::Resource, T>
 		Weak<T> GetResourceByMetadataPath(const std::filesystem::path& path)
 		{
 			if (const Strong<Abstracts::Resource>& found = GetResourceByMetadataPath(path, T::StaticTypeHash()).lock()) 
@@ -81,7 +70,6 @@ namespace Engine::Managers
 			return {};
 		}
 		
-		Weak<Abstracts::Resource> GetResourceByRawPath(const std::filesystem::path& path, ResourceType type);
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
 #if WITH_EDITOR

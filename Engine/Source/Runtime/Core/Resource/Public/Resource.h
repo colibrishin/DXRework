@@ -59,7 +59,7 @@ namespace Engine::Abstracts
 
 		[[nodiscard]] bool                         IsLoaded() const;
 		[[nodiscard]] const std::filesystem::path& GetPath() const;
-		[[nodiscard]] Weak<Resource> Clone() const;
+		[[nodiscard]] Strong<Resource> Clone() const;
 		
 		void SetPath(const std::filesystem::path& path);
 
