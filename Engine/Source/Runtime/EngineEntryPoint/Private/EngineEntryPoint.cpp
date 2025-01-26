@@ -60,6 +60,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"Mesh");
 		ModuleManager::GetInstance().LoadModule(L"ShadowManager");
 		ModuleManager::GetInstance().LoadModule(L"ReflectionEvaluator");
+		ModuleManager::GetInstance().LoadModule(L"ParticleRendererExtension");
 	}
 
 	void EngineEntryPoint::Tick()

@@ -73,6 +73,7 @@ public abstract class CommonProject : Project
         Utils.MakeConfiturationNameDefine(conf, target);
 
         conf.DumpDependencyGraph = true;
+        conf.ExecuteTargetCopy = true;
 
         string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=EMPTY";
 

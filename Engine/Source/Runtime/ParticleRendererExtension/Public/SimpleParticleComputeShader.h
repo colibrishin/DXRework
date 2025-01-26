@@ -20,9 +20,9 @@ namespace Engine::Resources
         void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param) override;
         void loadDerived() override;
         void unloadDerived() override;
-        void SetScaling(bool scaling, Graphics::ParamBase& config);
-        void SetScalingParam(float min, float max, Graphics::ParamBase& config);
-        void LinearSpread(
+        static void SetScaling(bool scaling, Graphics::ParamBase& config);
+        static void SetScalingParam(float min, float max, Graphics::ParamBase& config);
+        static void LinearSpread(
             const Vector3& local_min, const Vector3& local_max, InstanceParticles& particles,
             const Graphics::ParamBase& config);
 

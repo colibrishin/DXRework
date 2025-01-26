@@ -25,9 +25,6 @@ namespace Engine::Components
 		ParticleRenderer(const ParticleRenderer& other);
 		ParticleRenderer& operator=(const ParticleRenderer& other);
 
-		ParticleRenderer(ParticleRenderer&& other) noexcept            = delete;
-		ParticleRenderer& operator=(ParticleRenderer&& other) noexcept = delete;
-
 		void Initialize() override;
 		void Update(const float dt) override;
 		void PreUpdate(const float dt) override;
@@ -48,6 +45,8 @@ namespace Engine::Components
 		void SetDuration(float duration);
 		void SetSize(float size);
 		void SetComputeShader(const Weak<Resources::ComputeShader>& cs);
+
+		InstanceParticles& GetInstances();
 
 		bool IsFollowOwner() const;
 

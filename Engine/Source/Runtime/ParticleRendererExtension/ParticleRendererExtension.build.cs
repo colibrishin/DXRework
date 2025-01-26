@@ -6,7 +6,11 @@ using Sharpmake;
 [Generate]
 public class ParticleRendererExtension : CommonProject
 {
-    public ParticleRendererExtension() { }
+    public ParticleRendererExtension() 
+    {
+        SourceFilesExtensions.Add(".hlsl");
+        SourceFilesExtensions.Add(".png");
+    }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
@@ -15,5 +19,13 @@ public class ParticleRendererExtension : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ParticleRenderer>(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            @"cs_particle.hlsl",
+            @"noise0.png",
+            @"noise1.png",
+            @"noise2.png"
+        );
     }
 }

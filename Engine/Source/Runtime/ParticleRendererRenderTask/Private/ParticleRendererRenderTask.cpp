@@ -1,12 +1,13 @@
 #include "../Public/ParticleRendererRenderTask.h"
 #include <tbb/parallel_for_each.h>
+
+#include "ParticleRenderer.h"
 #include "Renderer.h"
 
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"
 #include "Shape.h"
 
 namespace Engine 
@@ -107,7 +108,7 @@ namespace Engine
                                 mesh_acc->second.insert(shader_acc, locked_shader);
                             }
 
-                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(pr));
+                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(pr->GetInstances());
                             
                             for (auto& particle : particles)
                             {

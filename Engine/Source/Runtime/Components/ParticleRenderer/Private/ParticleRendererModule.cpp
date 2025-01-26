@@ -5,7 +5,6 @@
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "ParticleRenderer.h"
-#include "SimpleParticleComputeShader.h"
 
 #include "ObjectBase/Public/ObjectBase.h"
 
@@ -20,8 +19,6 @@ void Engine::ParticleRendererModule::Initialize()
             locked->AddComponent<Components::ParticleRenderer>();
         }
     });
-
-    Resources::SimpleParticleComputeShader::Create("SimpleParticleComputeShader");
 }
 
 void Engine::ParticleRendererModule::Shutdown()

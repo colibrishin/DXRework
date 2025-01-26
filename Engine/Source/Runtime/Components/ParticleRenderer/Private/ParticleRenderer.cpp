@@ -208,4 +208,9 @@ namespace Engine::Components
 			m_cs_meta_path_ = shader->GetMetadataPath();
 		}
 	}
+
+	InstanceParticles& ParticleRenderer::GetInstances()
+	{
+		return m_instances_;
+	}
 }

@@ -35,7 +35,7 @@ void Engine::Resources::SimpleParticleComputeShader::postDispatch(
 
 void Engine::Resources::SimpleParticleComputeShader::loadDerived()
 {
-    static std::vector<std::string> f_name = { "./noise0.dds", "./noise1.dds", "./noise2.dds" };
+    static std::vector<std::string> f_name = { "./noise0.png", "./noise1.png", "./noise2.png" };
     auto rng                               = getRandomEngine();
 
     std::ranges::shuffle( f_name, rng );

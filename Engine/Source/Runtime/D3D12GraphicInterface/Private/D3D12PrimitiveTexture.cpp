@@ -132,7 +132,10 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	
 	if (!exists(path))
 	{
-		throw std::runtime_error("File not found.");
+#if WITH_DEBUG
+		Managers::Debugger::GetInstance().Log( "File not found.", {1.f, 0.f, 0.f, 1.f} );
+#endif
+		throw std::runtime_error("File not found");
 	}
 
 	DirectX::ResourceUploadBatch resource_upload_batch(dev);

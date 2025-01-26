@@ -11,9 +11,9 @@
 #define PARAM_SCALING_MAX  bufLocalParam[0].fParam[1].x
 
 
-#define RANDOM_TEX0 tex00
-#define RANDOM_TEX1 tex01
-#define RANDOM_TEX2 tex02
+#define RANDOM_TEX0 tex[0]
+#define RANDOM_TEX1 tex[1]
+#define RANDOM_TEX2 tex[2]
 
 groupshared int global_lock = 0;
 
