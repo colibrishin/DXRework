@@ -23,7 +23,10 @@ public class ParticleRenderer : CommonProject
 
         conf.TargetCopyFiles.Add
         (
-            @"cs_particle.hlsl"
+            @"cs_particle.hlsl",
+            @"noise0.dds",
+            @"noise1.dds",
+            @"noise2.dds"
         );
     }
 }
