@@ -20,5 +20,10 @@ public class ParticleRenderer : CommonProject
         conf.AddPublicDependency<DirectXTK>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            @"cs_particle.hlsl"
+        );
     }
 }
