@@ -17,6 +17,9 @@ namespace Engine::Resources
 		~Texture() override = default;
 
 	public:
+		Texture(const Texture& other);
+		Texture& operator=(const Texture& other);
+		
 		void Initialize() override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;

@@ -14,6 +14,22 @@ namespace Engine::Resources
 		m_desc_.Dimension = type;
 	}
 
+	Texture::Texture(const Texture& other)
+		: Resource(other)
+	{
+		std::memset(&m_desc_, 0 , sizeof(decltype(m_desc_)));
+		m_desc_ = other.m_desc_;
+		m_type_ = other.m_type_;
+	}
+
+	Texture& Texture::operator=(const Texture& other)
+	{
+		std::memset(&m_desc_, 0 , sizeof(decltype(m_desc_)));
+		m_desc_ = other.m_desc_;
+		m_type_ = other.m_type_;
+		return *this;
+	}
+
 	eTexType Texture::GetPrimitiveTextureType() const
 	{
 		return m_type_;

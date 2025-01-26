@@ -27,6 +27,11 @@ Engine::Managers::ResourceManager::GetInstance().AddResource(name, obj);\
 return obj;\
 }
 
+// Cloning resource declaration macro
+#define RES_CLONE_DECL Engine::Strong<Engine::Abstracts::Resource> cloneImpl() const override;
+// Cloning resource implementation macro
+#define RES_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Resource> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+
 namespace Engine
 {
 	using ResourceType = HashType;
@@ -41,6 +46,8 @@ namespace Engine::Abstracts
 		GENERATE_BODY
 
 		~Resource() override;
+		Resource(const Resource& other);
+		Resource& operator=(const Resource& other);
 
 		virtual void Load() final;
 		void         Unload();
@@ -52,12 +59,14 @@ namespace Engine::Abstracts
 
 		[[nodiscard]] bool                         IsLoaded() const;
 		[[nodiscard]] const std::filesystem::path& GetPath() const;
-
+		[[nodiscard]] Weak<Resource> Clone() const;
+		
 		void SetPath(const std::filesystem::path& path);
 
 	protected:
 		Resource(std::filesystem::path path);
 
+		virtual Strong<Resource> cloneImpl() const = 0;
 		virtual void Load_INTERNAL() = 0;
 		virtual void Unload_INTERNAL() = 0;
 
