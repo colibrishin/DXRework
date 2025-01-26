@@ -6,25 +6,7 @@
 
 namespace Engine::Managers
 {
-	void ResourceManager::Initialize() 
-	{
-		for (const std::filesystem::directory_entry& p : 
-			std::filesystem::recursive_directory_iterator(std::filesystem::current_path()))
-		{
-			if (p.is_regular_file())
-			{
-				if (p.path().has_extension() && p.path().extension() == "meta")
-				{
-					if (Strong<Abstracts::Resource> deserialized;
-						Serializer::Deserialize<Abstracts::Resource>(p.path().generic_string(), deserialized))
-					{
-						AddResource(deserialized, deserialized->GetTypeHash());
-					}
-				}
-			}
-			
-		}
-	}
+	void ResourceManager::Initialize() { }
 
 #ifdef WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
