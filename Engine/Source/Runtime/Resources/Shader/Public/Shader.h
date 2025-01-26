@@ -151,7 +151,7 @@ namespace Engine::Resources
 		eSampler m_sampler_slot_;
 
 #if WITH_EDITOR
-		inline void UpdateRtvFormats();
+		inline void UpdateSelected();
 		
 		int m_domain_selected_ = 0;
 		int m_depth_mode_selected_ = 0;

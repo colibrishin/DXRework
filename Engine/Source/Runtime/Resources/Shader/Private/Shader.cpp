@@ -46,7 +46,7 @@ namespace Engine::Resources
 		  m_sampler_slot_(sampler_slot)
 	{
 #if WITH_EDITOR
-		UpdateRtvFormats();
+		UpdateSelected();
 #endif
 	}
 
@@ -69,7 +69,7 @@ namespace Engine::Resources
 		m_sampler_slot_   = other.m_sampler_slot_;
 
 #if WITH_EDITOR
-		UpdateRtvFormats();
+		UpdateSelected();
 #endif
 	}
 
@@ -91,7 +91,7 @@ namespace Engine::Resources
 		m_sampler_slot_ = other.m_sampler_slot_;
 
 #if WITH_EDITOR
-		UpdateRtvFormats();
+		UpdateSelected();
 #endif
 		return *this;
 	}
@@ -288,14 +288,29 @@ namespace Engine::Resources
 		  m_sampler_slot_() {}
 
 #if WITH_EDITOR
-	void Shader::UpdateRtvFormats()
+	void Shader::UpdateSelected()
 	{
-		m_rtv_formats_selected_.resize(m_rtv_formats_.size());
+#define CAST_ENUM(THIS_VAR)\
+		if (const auto& val = magic_enum::enum_index(THIS_VAR); val.has_value())\
+		{ THIS_VAR##selected_ = static_cast<int>(val.value()); }
 
-		for (size_t i = 0; i < m_rtv_formats_selected_.size(); ++i)
+		CAST_ENUM( m_domain_ )
+		CAST_ENUM( m_depth_mode_ )
+		CAST_ENUM( m_depth_func_ )
+		CAST_ENUM( m_sampler_func_ )
+		CAST_ENUM( m_sampler_filter_ )
+		CAST_ENUM( m_cull_mode_ )
+		CAST_ENUM( m_dsv_format_ )
+		CAST_ENUM( m_topology_ )
+		CAST_ENUM( m_topology_type_ )
+		CAST_ENUM( m_sampler_slot_ )
+#undef CAST_ENUM
+		
+		m_rtv_formats_selected_.resize(m_rtv_formats_.size());
+		for ( size_t i = 0; i < m_rtv_formats_selected_.size(); ++i )
 		{
-			if (const auto& val = magic_enum::enum_index(m_rtv_formats_[i]);
-				val.has_value())
+			if ( const auto& val = magic_enum::enum_index(m_rtv_formats_[i]);
+				 val.has_value() )
 			{
 				m_rtv_formats_selected_[i] = static_cast<int>(val.value());
 			} 
