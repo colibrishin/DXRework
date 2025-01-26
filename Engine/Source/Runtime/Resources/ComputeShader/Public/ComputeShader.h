@@ -15,6 +15,9 @@ namespace Engine::Resources
 	public:
 		~ComputeShader() override = default;
 
+		ComputeShader(const ComputeShader& other);
+		ComputeShader& operator=(const ComputeShader& other);
+
 		std::array<uint32_t, 3> GetThread() const;
 		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param);
 

@@ -40,6 +40,18 @@ namespace Engine::Resources
 		}
 	}
 
+	ComputeShader::ComputeShader(const ComputeShader& other)
+		: Shader(other)
+	{
+		m_thread_ = other.m_thread_;
+	}
+
+	ComputeShader& ComputeShader::operator=(const ComputeShader& other)
+	{
+		m_thread_ = other.m_thread_;
+		return *this;
+	}
+
 	std::array<UINT, 3> ComputeShader::GetThread() const
 	{
 		std::array<UINT, 3> thread;

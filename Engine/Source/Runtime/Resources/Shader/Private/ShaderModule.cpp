@@ -11,30 +11,6 @@
 
 MODULE_IMPL(Engine::ShaderModule, Shader)
 
-template <typename Enum>
-constexpr auto CStrEnumStrings()
-{
-	constexpr auto enum_val = magic_enum::enum_names<Enum>();
-	std::array<const char*, enum_val.size()> ret{};
-	for (size_t i = 0; i < enum_val.size(); ++i)
-	{
-		ret[i] = enum_val[i].data();
-	}
-	return ret;
-}
-
-template <typename Enum>
-Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
-{
-	if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
-		format_validity.has_value())
-	{
-		return format_validity.value();
-	}
-
-	return static_cast<Enum>(0);
-}
-
 void Engine::ShaderModule::Initialize()
 {
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Shader::StaticTypeName(), [](bool& managing_flag)
@@ -51,19 +27,6 @@ void Engine::ShaderModule::Initialize()
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-			static constexpr auto domain_enums = CStrEnumStrings<eShaderDomain>();
-			static constexpr auto depth_enable_enums = CStrEnumStrings<eShaderDepthMode>();
-			static constexpr auto depth_function_enums = CStrEnumStrings<eShaderDepthFunction>();
-			static constexpr auto rasterizer_cull_enums = CStrEnumStrings<eShaderRasterizerCull>();
-			static constexpr auto rasterizer_draw_enums = CStrEnumStrings<eShaderRasterizerDraw>();
-			static constexpr auto filter_enums = CStrEnumStrings<eSamplerFilter>();
-			static constexpr auto sampler_addr_enums = CStrEnumStrings<eShaderSamplerAddress>();
-			static constexpr auto sampler_func_enums = CStrEnumStrings<eShaderSamplerFunction>();
-			static constexpr auto format_enums = CStrEnumStrings<eFormat>();
-			static constexpr auto primitive_topology_enum = CStrEnumStrings<ePrimitiveTopology>();
-			static constexpr auto primitive_topology_type_enum = CStrEnumStrings<ePrimitiveTopologyType>();
-			static constexpr auto sampler_slot_enum = CStrEnumStrings<eSampler>();
-
 			static eShaderDomain domain = SHADER_DOMAIN_OPAQUE;
 
 			static bool                 depth_enabled = {};
@@ -74,8 +37,6 @@ void Engine::ShaderModule::Initialize()
 			static eShaderSamplerAddress  sampler_address_mode = {};
 			static eShaderSamplerFunction sampler_function = {};
 			static eSamplerFilter         sampler_filter = SAMPLER_FILTER_MIN_MAG_MIP_POINT;
-			static eShaderRasterizerCull  cull_mode = {};
-			static eShaderRasterizerDraw  draw_mode = {};
 			static std::vector<eFormat>   rtv_formats = GetDefaultRTVFormat();
 			static eFormat                dsv_format = TEX_FORMAT_D24_UNORM_S8_UINT;
 			static ePrimitiveTopology     pt = PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -84,18 +45,18 @@ void Engine::ShaderModule::Initialize()
 
 			const auto& ui_callback = [&](UIContext* const context)
 				{
-					*context |= ui.NewComboboxUInt8({ "Shader Domain", reinterpret_cast<uint8_t*>(&domain), domain_enums.data(), domain_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Shader Domain", reinterpret_cast<uint8_t*>(&domain), Resources::Shader::domain_enums.data(), Resources::Shader::domain_enums.size() });
 
 					*context |= ui.NewCheckbox({ "Depth Enable", depth_enabled });
-					*context |= ui.NewComboboxUInt8({ "Depth Mode", reinterpret_cast<uint8_t*>(&depth_mode), depth_enable_enums.data(), depth_enable_enums.size() });
-					*context |= ui.NewCombobox({ "Depth Function", reinterpret_cast<int*>(&depth_function), depth_function_enums.data(), depth_function_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Depth Mode", reinterpret_cast<uint8_t*>(&depth_mode), Resources::Shader::depth_mode_enums.data(), Resources::Shader::depth_mode_enums.size() });
+					*context |= ui.NewCombobox({ "Depth Function", reinterpret_cast<int*>(&depth_function), Resources::Shader::depth_function_enums.data(), Resources::Shader::depth_function_enums.size() });
 
-					*context |= ui.NewComboboxUInt8({ "Cull Mode", reinterpret_cast<uint8_t*>(&cull), rasterizer_cull_enums.data(), rasterizer_cull_enums.size() });
-					*context |= ui.NewComboboxUInt8({ "Draw Enable", reinterpret_cast<uint8_t*>(&draw), rasterizer_draw_enums.data(), rasterizer_draw_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Cull Mode", reinterpret_cast<uint8_t*>(&cull), Resources::Shader::rasterizer_cull_enums.data(), Resources::Shader::rasterizer_cull_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Draw Enable", reinterpret_cast<uint8_t*>(&draw), Resources::Shader::rasterizer_draw_enums.data(), Resources::Shader::rasterizer_draw_enums.size() });
 
-					*context |= ui.NewCombobox({ "Filter", reinterpret_cast<int*>(&sampler_filter), filter_enums.data(), filter_enums.size() });
-					*context |= ui.NewCombobox({ "Sampler Address Mode", reinterpret_cast<int*>(&sampler_address_mode), sampler_addr_enums.data(), sampler_addr_enums.size() });
-					*context |= ui.NewCombobox({ "Sampler Function", reinterpret_cast<int*>(&sampler_function), sampler_func_enums.data(), sampler_func_enums.size() });
+					*context |= ui.NewCombobox({ "Filter", reinterpret_cast<int*>(&sampler_filter), Resources::Shader::filter_enums.data(), Resources::Shader::filter_enums.size() });
+					*context |= ui.NewCombobox({ "Sampler Address Mode", reinterpret_cast<int*>(&sampler_address_mode), Resources::Shader::sampler_addr_enums.data(), Resources::Shader::sampler_addr_enums.size() });
+					*context |= ui.NewCombobox({ "Sampler Function", reinterpret_cast<int*>(&sampler_function), Resources::Shader::sampler_func_enums.data(), Resources::Shader::sampler_func_enums.size() });
 
 					{
 						*context += ui.NewListBox({ "RenderTarget Format", -1, 0 });
@@ -113,7 +74,7 @@ void Engine::ShaderModule::Initialize()
 
 						for (size_t i = 0; i < rtv_formats.size(); ++i)
 						{
-							*context |= ui.NewComboboxUInt8({ index_string[i], reinterpret_cast<uint8_t*>(&rtv_formats[i]), format_enums.data(), format_enums.size() });
+							*context |= ui.NewComboboxUInt8({ index_string[i], reinterpret_cast<uint8_t*>(&rtv_formats[i]), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size() });
 						}
 						-- * context;
 
@@ -123,10 +84,10 @@ void Engine::ShaderModule::Initialize()
 							});
 					}
 
-					*context |= ui.NewComboboxUInt8({ "Depth/Stencil Format", reinterpret_cast<uint8_t*>(&dsv_format), format_enums.data(), format_enums.size() });
-					*context |= ui.NewCombobox({ "Primitive Topology", reinterpret_cast<int*>(&pt), primitive_topology_enum.data(), primitive_topology_enum.size() });
-					*context |= ui.NewCombobox({ "Primitive Topology Type", reinterpret_cast<int*>(&ptt), primitive_topology_type_enum.data(), primitive_topology_type_enum.size() });
-					*context |= ui.NewComboboxUInt8({ "Sampler Slot", reinterpret_cast<uint8_t*>(&sampler_slot), sampler_slot_enum.data(), sampler_slot_enum.size() });
+					*context |= ui.NewComboboxUInt8({ "Depth/Stencil Format", reinterpret_cast<uint8_t*>(&dsv_format), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size() });
+					*context |= ui.NewCombobox({ "Primitive Topology", reinterpret_cast<int*>(&pt), Resources::Shader::primitive_topology_enum.data(), Resources::Shader::primitive_topology_enum.size() });
+					*context |= ui.NewCombobox({ "Primitive Topology Type", reinterpret_cast<int*>(&ptt), Resources::Shader::primitive_topology_type_enum.data(), Resources::Shader::primitive_topology_type_enum.size() });
+					*context |= ui.NewComboboxUInt8({ "Sampler Slot", reinterpret_cast<uint8_t*>(&sampler_slot), Resources::Shader::sampler_slot_enum.data(), Resources::Shader::sampler_slot_enum.size() });
 				};
 
 			static constexpr auto cleanup_callback = []()
@@ -149,20 +110,20 @@ void Engine::ShaderModule::Initialize()
 
 			const auto& load_callback = [](const std::string& name, const std::string& path)
 				{
-					depth_function = RecastNonlinearEnum<eShaderDepthFunction>(depth_function_enums, depth_function);
-					sampler_filter = RecastNonlinearEnum<eSamplerFilter>(filter_enums, sampler_filter);
-					sampler_address_mode = RecastNonlinearEnum<eShaderSamplerAddress>(sampler_addr_enums, sampler_address_mode);
-					sampler_function = RecastNonlinearEnum<eShaderSamplerFunction>(sampler_func_enums, sampler_function);
-					sampler_filter = RecastNonlinearEnum<eSamplerFilter>(filter_enums, sampler_filter);
-					cull = RecastNonlinearEnum<eShaderRasterizerCull>(rasterizer_cull_enums, cull);
-					draw = RecastNonlinearEnum<eShaderRasterizerDraw>(rasterizer_draw_enums, draw);
+					depth_function = RecastNonlinearEnum<eShaderDepthFunction>(Resources::Shader::depth_function_enums, depth_function);
+					sampler_filter = RecastNonlinearEnum<eSamplerFilter>(Resources::Shader::filter_enums, sampler_filter);
+					sampler_address_mode = RecastNonlinearEnum<eShaderSamplerAddress>(Resources::Shader::sampler_addr_enums, sampler_address_mode);
+					sampler_function = RecastNonlinearEnum<eShaderSamplerFunction>(Resources::Shader::sampler_func_enums, sampler_function);
+					sampler_filter = RecastNonlinearEnum<eSamplerFilter>(Resources::Shader::filter_enums, sampler_filter);
+					cull = RecastNonlinearEnum<eShaderRasterizerCull>(Resources::Shader::rasterizer_cull_enums, cull);
+					draw = RecastNonlinearEnum<eShaderRasterizerDraw>(Resources::Shader::rasterizer_draw_enums, draw);
 					for (auto& format : rtv_formats)
 					{
-						format = RecastNonlinearEnum<eFormat>(format_enums, format);
+						format = RecastNonlinearEnum<eFormat>(Resources::Shader::format_enums, format);
 					}
-					dsv_format = RecastNonlinearEnum<eFormat>(format_enums, dsv_format);
-					pt = RecastNonlinearEnum<ePrimitiveTopology>(primitive_topology_enum, pt);
-					ptt = RecastNonlinearEnum<ePrimitiveTopologyType>(primitive_topology_type_enum, ptt);
+					dsv_format = RecastNonlinearEnum<eFormat>(Resources::Shader::format_enums, dsv_format);
+					pt = RecastNonlinearEnum<ePrimitiveTopology>(Resources::Shader::primitive_topology_enum, pt);
+					ptt = RecastNonlinearEnum<ePrimitiveTopologyType>(Resources::Shader::primitive_topology_type_enum, ptt);
 
 					if (path.empty())
 					{
