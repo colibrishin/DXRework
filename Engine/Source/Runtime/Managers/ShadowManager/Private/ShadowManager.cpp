@@ -18,8 +18,7 @@ namespace Engine::Managers
 {
 	void ShadowManager::Initialize()
 	{
-		m_shadow_shader_ = Resources::Shader::Create<true>
-				(
+		m_shadow_shader_ = Resources::Shader::Create(
 				 "cascade_shadow_stage1", "./cascade_shadow_stage1.hlsl", 
 				 SHADER_DOMAIN_OPAQUE, true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
 				 SHADER_SAMPLER_CLAMP, SHADER_SAMPLER_LESS_EQUAL,
@@ -27,11 +26,10 @@ namespace Engine::Managers
 				 SHADER_RASTERIZER_CULL_BACK, SHADER_RASTERIZER_FILL_SOLID,
 				 GetDefaultRTVFormat(), TEX_FORMAT_D32_FLOAT,
 				 PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-				 SAMPLER_SHADOW
-				);
+				 SAMPLER_SHADOW);
 
 		// Render target for shadow map mask.
-		m_shadow_map_mask_ = Resources::ShadowRenderTarget::Create<true>("Shadow Render Target Texture");
+		m_shadow_map_mask_ = Resources::ShadowRenderTarget::Create("Shadow Render Target Texture");
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());

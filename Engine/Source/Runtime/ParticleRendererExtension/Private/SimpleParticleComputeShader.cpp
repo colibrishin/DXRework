@@ -40,9 +40,9 @@ void Engine::Resources::SimpleParticleComputeShader::loadDerived()
 
     std::ranges::shuffle( f_name, rng );
 
-    m_noises_[ 0 ] = Texture2D::Create<true>( "RandomNoiseTexture1", f_name[ 0 ], GenericTextureDescription{ } );
-    m_noises_[ 1 ] = Texture2D::Create<true>( "RandomNoiseTexture2", f_name[ 1 ], GenericTextureDescription{ } );
-    m_noises_[ 2 ] = Texture2D::Create<true>( "RandomNoiseTexture3", f_name[ 2 ], GenericTextureDescription{ } );
+    m_noises_[ 0 ] = Texture2D::Create( "RandomNoiseTexture1", f_name[ 0 ], GenericTextureDescription{ } );
+    m_noises_[ 1 ] = Texture2D::Create( "RandomNoiseTexture2", f_name[ 1 ], GenericTextureDescription{ } );
+    m_noises_[ 2 ] = Texture2D::Create( "RandomNoiseTexture3", f_name[ 2 ], GenericTextureDescription{ } );
 }
 
 void Engine::Resources::SimpleParticleComputeShader::unloadDerived()

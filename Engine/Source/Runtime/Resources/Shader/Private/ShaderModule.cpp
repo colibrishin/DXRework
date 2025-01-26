@@ -170,7 +170,7 @@ void Engine::ShaderModule::Initialize()
 
 void Engine::ShaderModule::StockShaderPrecompile()
 {
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"default", "./default.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -181,7 +181,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"color", "./color.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -192,7 +192,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"skybox", "./skybox.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -203,7 +203,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"specular_normal", "./specular_normal.hlsl",
 		SHADER_DOMAIN_OPAQUE,
@@ -215,7 +215,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"normal", "./normal.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -226,7 +226,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"refraction", "./refraction.hlsl", SHADER_DOMAIN_POST_PROCESS,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -237,7 +237,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"specular_tex", "./specular_tex.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -248,7 +248,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"specular", "./specular.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -259,7 +259,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"billboard", "./billboard.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
@@ -289,7 +289,7 @@ void Engine::ShaderModule::StockShaderPrecompile()
 	);
 	*/
 
-	Resources::Shader::Create<true>
+	Resources::Shader::Create
 	(
 		"atlas", "./atlas.hlsl", SHADER_DOMAIN_OPAQUE,
 		true, SHADER_DEPTH_TEST_ALL, SHADER_DEPTH_LESS_EQUAL,
