@@ -40,8 +40,8 @@ namespace Engine::Components
 	void ParticleRenderer::Initialize()
 	{
 		RenderComponent::Initialize();
-		SetCount(1);
-		SetSize(1.f);
+		SetCount( 1 );
+		SetSize( 1.f );
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_sb_buffer_ = std::make_unique<decltype(m_sb_buffer_)::element_type>( gi.GetStructuredBuffer<Graphics::SBs::InstanceParticleSB>() );
 	}
@@ -69,6 +69,7 @@ namespace Engine::Components
 
 			const UINT groups[3] = {group_count + (remainder ? 1 : 0), 1, 1};
 			m_cs_->Dispatch(&primitive, groups, m_params_);
+			m_sb_buffer_->TransitionCommon(&primitive);
 			primitive.commandList->Execute();
 
 			const GraphicInterfaceContextReturnType& copy_context = gi.GetNewContext(0, true, L"Particle Renderer Update");
@@ -134,6 +135,37 @@ namespace Engine::Components
 				{
 					m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
 				});
+			*parent |= ui.NewCheckbox( { "Follow Owner", m_b_follow_owner_ } );
+			( *parent |= ui.NewLabelAndInt( {
+				"Particle Count",
+				m_params_.GetParam<int>(particle_count_slot),
+				0,
+				0,
+				std::numeric_limits<int>::max(),
+				true } ) ).SetFunction( [this]()
+			{
+				SetCount(m_params_.GetParam<int>(particle_count_slot));
+			} );
+			( *parent |= ui.NewLabelAndFloat( {
+				"Particle Duration",
+				m_params_.GetParam<float>(duration_slot),
+				0,
+				0.f,
+				std::numeric_limits<float>::max(),
+				true } ) ).SetFunction( [this]()
+			{
+				SetDuration(m_params_.GetParam<float>(duration_slot));
+			} );
+			( *parent |= ui.NewLabelAndInt( {
+				"Particle Size",
+				m_params_.GetParam<int>(size_slot),
+				0,
+				0,
+				std::numeric_limits<int>::max(),
+				true } ) ).SetFunction( [this]()
+			{
+				SetCount(m_params_.GetParam<int>(size_slot));
+			} );
 
 			if (m_particle_shader_dialog_opened_)
 			{
@@ -197,8 +229,7 @@ namespace Engine::Components
 	}
 
 	ParticleRenderer::ParticleRenderer()
-		: RenderComponent(),
-		  m_b_follow_owner_(true) {}
+		: m_b_follow_owner_(true) {}
 
 	void ParticleRenderer::SetComputeShader(const Weak<Resources::ComputeShader>& cs)
 	{
