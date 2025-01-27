@@ -65,7 +65,7 @@ namespace Engine::Resources
 
 				if (mesh->m_ui_info_.dialogOpened)
 				{
-					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ mesh.get(), mesh->GetName(), mesh->m_ui_info_.dialogOpened })))
+					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ mesh.get(), mesh->m_ui_info_.label, mesh->m_ui_info_.dialogOpened })))
 					{
 						mesh->OnUIUpdate(&context, dt);
 					}

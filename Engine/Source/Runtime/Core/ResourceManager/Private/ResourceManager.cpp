@@ -13,7 +13,7 @@ namespace Engine::Managers
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Resource Manager", m_ui_info_.dialogOpened})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
 		{
 			for (const auto& set : m_resources_ | std::views::values)
 			{
@@ -32,7 +32,7 @@ namespace Engine::Managers
 
 					if (resource->m_ui_info_.dialogOpened)
 					{
-						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->GetName(), resource->m_ui_info_.dialogOpened})))
+						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->m_ui_info_.label, resource->m_ui_info_.dialogOpened})))
 						{
 							resource->OnUIUpdate(&resource_context, dt);
 						}

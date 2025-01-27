@@ -440,7 +440,6 @@ namespace Engine
 		bool m_collision_mask_[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]{};
 
 #if WITH_EDITOR
-		bool m_b_dialog_opened_ = true;
 		std::string m_layer_list_box_name_;
 #endif
 
