@@ -10,23 +10,8 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Shape.h"
 
-namespace Engine 
+namespace Engine
 {
-	void ParticleRendererRenderInstanceTaskModule::Initialize()
-	{
-		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ParticleRendererRenderInstanceTask", new ParticleRendererRenderInstanceTask());
-	}
-
-	void ParticleRendererRenderInstanceTaskModule::Shutdown()
-	{
-        Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ParticleRendererRenderInstanceTask");
-	}
-
-	bool ParticleRendererRenderInstanceTaskModule::DynamicLoadable()
-	{
-		return true;
-	}
-
     ParticleRendererRenderInstanceTask::~ParticleRendererRenderInstanceTask()
     {
         for (auto* ptr : m_instance_generated_)
