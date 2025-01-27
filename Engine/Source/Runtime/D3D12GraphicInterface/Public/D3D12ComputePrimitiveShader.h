@@ -11,8 +11,7 @@ namespace Engine
 	{
 		D3D12ComputePrimitiveShader();
 		void                               Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;
-		[[nodiscard]] ID3D12PipelineState* GetPSO() const;
-
+		
 	private:
 		static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version;
 

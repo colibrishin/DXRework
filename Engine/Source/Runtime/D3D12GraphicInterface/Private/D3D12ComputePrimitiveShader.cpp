@@ -78,11 +78,8 @@ namespace Engine
 					&desc, IID_PPV_ARGS(m_pipeline_state_.GetAddressOf())
 				)
 			);
-		}
-	}
 
-	ID3D12PipelineState* D3D12ComputePrimitiveShader::GetPSO() const
-	{
-		return m_pipeline_state_.Get();
+			SetNativeShader(m_pipeline_state_.Get());
+		}
 	}
 }
