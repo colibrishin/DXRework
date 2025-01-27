@@ -22,7 +22,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const Grap
 	const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
 		m_buffer_.Get(),
-		D3D12_RESOURCE_STATE_COMMON,
+		m_current_state_,
 		D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE
 	);
 
@@ -37,7 +37,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const Grap
 	const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
 		m_buffer_.Get(),
-		D3D12_RESOURCE_STATE_COMMON,
+		m_current_state_,
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
@@ -107,13 +107,13 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const GraphicInterf
 	InitializeReadBuffer(size, stride);
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride, const bool uav)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	if (m_size_ < size)
 	{
-		Create(context, size, src_ptr, stride, m_uav_);
+		Create(context, size, src_ptr, stride, uav);
 	}
 
 	if (src_ptr == nullptr)
