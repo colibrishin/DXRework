@@ -85,18 +85,19 @@ namespace Engine::Resources
 
 			GenericTextureDescription new_desc =
 			{
+				.Dimension = TEX_TYPE_3D,
 				.Alignment = 0,
 				.Width = width,
 				.Height = height,
 				.DepthOrArraySize = num_atlases,
-				.Format = TEX_FORMAT_B8G8R8A8_UNORM,
+				.Format = TEX_FORMAT_R8G8B8A8_UNORM,
 				.Flags = RESOURCE_FLAG_NONE,
 				.MipsLevel = 1,
 				.Layout = TEX_LAYOUT_UNKNOWN,
 				.SampleDesc = {1, 0}
 			};
 
-			GetPrimitiveTexture()->UpdateDescription(new_desc);
+			UpdateDescription(new_desc);
 		}
 
 		Texture3D::Load_INTERNAL();

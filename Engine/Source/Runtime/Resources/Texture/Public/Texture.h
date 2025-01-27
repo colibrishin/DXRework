@@ -44,12 +44,13 @@ namespace Engine::Resources
 		virtual void Map() {};
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
-
+		
+		void UpdateDescription(const GenericTextureDescription& description);
+		
 	private:
 		friend struct Engine::PrimitiveTexture;
 		
 		Texture();
-		void UpdateDescription(const GenericTextureDescription& description);
 
 		EPROPERTY()
 		GenericTextureDescription m_desc_;
