@@ -11,6 +11,7 @@ namespace Engine
     {
         struct ENGINE_PARTICLERENDERER_API InstanceParticleSB : public InstanceSB
         {
+            SB_UAV_T(SB_TYPE_UAV_INSTANCE)
         public:
             InstanceParticleSB();
             void SetLife(const float life);

@@ -18,10 +18,10 @@ namespace Engine::Components
 	ParticleRenderer::ParticleRenderer(const ParticleRenderer& other)
 		: RenderComponent(other)
 	{
-		m_cs_               = other.m_cs_;
-		m_cs_meta_path_ = other.m_cs_meta_path_;
-		m_instances_        = other.m_instances_;
-		m_b_follow_owner_   = other.m_b_follow_owner_;
+		m_cs_             = other.m_cs_;
+		m_cs_meta_path_   = other.m_cs_meta_path_;
+		m_instances_      = other.m_instances_;
+		m_b_follow_owner_ = other.m_b_follow_owner_;
 	}
 
 	ParticleRenderer& ParticleRenderer::operator=(const ParticleRenderer& other)
@@ -42,6 +42,8 @@ namespace Engine::Components
 		RenderComponent::Initialize();
 		SetCount(1);
 		SetSize(1.f);
+		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		m_sb_buffer_ = std::make_unique<decltype(m_sb_buffer_)::element_type>( gi.GetStructuredBuffer<Graphics::SBs::InstanceParticleSB>() );
 	}
 
 	void ParticleRenderer::Update(const float dt)
