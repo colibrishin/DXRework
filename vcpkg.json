@@ -9,7 +9,10 @@
     "directx12-agility",
     "directxmath",
     "directxtk12",
-    "directxtex",
+    {
+        "name": "directxtex",
+        "features": ["dx12"]
+    },
     "pugixml",
     "tbb",
     "tinyobjloader",
