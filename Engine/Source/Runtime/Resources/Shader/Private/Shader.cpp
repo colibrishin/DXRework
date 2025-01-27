@@ -153,8 +153,12 @@ namespace Engine::Resources
 			ENUM_COMBOBOX( "Primitive Topology", m_topology_, ePrimitiveTopology, primitive_topology_enum );
 			ENUM_COMBOBOX( "Primitive Topology Type", m_topology_type_, ePrimitiveTopologyType, primitive_topology_type_enum );
 			ENUM_COMBOBOX( "Sampler Slot", m_sampler_slot_, eSampler, sampler_slot_enum );
-			
 #undef ENUM_COMBOBOX
+			( *parent |= ui.NewButton( { "Reload" } ) ).SetFunction( [ this ]()
+			{
+				Unload();
+				Load();
+			} );
 		}
 	}
 #endif
