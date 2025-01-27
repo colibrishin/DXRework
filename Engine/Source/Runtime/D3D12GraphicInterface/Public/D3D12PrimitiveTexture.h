@@ -3,8 +3,6 @@
 #include <wrl/client.h>
 #include <directx/d3d12.h>
 
-#include "Source/Runtime/Resources/Texture/Public/Texture.h"
-
 namespace Engine 
 {
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public PrimitiveTexture
