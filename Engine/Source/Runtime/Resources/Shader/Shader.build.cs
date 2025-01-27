@@ -23,7 +23,8 @@ public class Shader : CommonProject
         conf.TargetCopyFiles.Add
         (
             @"atlas.hlsl", 
-            @"billboard.hlsl", 
+            @"billboard.hlsl",
+            @"atlas_billboard.hlsl",
             @"color.hlsl",
             @"common.hlsli",
             @"default.hlsl",

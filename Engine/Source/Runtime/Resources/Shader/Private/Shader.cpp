@@ -120,10 +120,21 @@ namespace Engine::Resources
 
 			{
 				*parent += ui.NewListBox({ "RenderTarget Format", -1, 0 });
+
+				static std::vector<std::string> render_target_label {
+					"Render Target 0",
+					"Render Target 1",
+					"Render Target 2",
+					"Render Target 3",
+					"Render Target 4",
+					"Render Target 5",
+					"Render Target 6",
+					"Render Target 7"
+				};
 				
 				for (size_t i = 0; i < m_rtv_formats_.size(); ++i)
 				{
-					(*parent |= ui.NewCombobox( {"", &m_rtv_formats_selected_[i], format_enums.data(), format_enums.size() } )).SetFunction( [this, i]()
+					(*parent |= ui.NewCombobox( { render_target_label[i], &m_rtv_formats_selected_[i], format_enums.data(), format_enums.size() } )).SetFunction( [this, i]()
 					{
 						m_rtv_formats_[i] = RecastNonlinearEnum<eFormat>( format_enums, m_rtv_formats_selected_[i] );
 					} );
@@ -132,8 +143,9 @@ namespace Engine::Resources
 
 				(*parent |= ui.NewButton( { "Add Render Target" } )).SetFunction( [this]()
 					{
-						m_rtv_formats_.push_back( GetDefaultRTVFormat().front() );
-						m_rtv_formats_selected_.push_back( 0 );
+						const eFormat default_format = GetDefaultRTVFormat().front();
+						m_rtv_formats_.push_back( default_format );
+						m_rtv_formats_selected_.push_back( default_format );
 					} );
 			}
 
