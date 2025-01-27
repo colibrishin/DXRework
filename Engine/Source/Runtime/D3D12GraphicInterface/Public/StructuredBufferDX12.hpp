@@ -22,7 +22,7 @@ namespace Engine::Graphics
 
 	protected:
 		void Create(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride, const bool uav) override;
-		void SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride) override;
+		void SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride, const bool uav) override;
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride) override;
 		void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride) override;
 		void GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride) override;

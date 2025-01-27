@@ -801,6 +801,12 @@ namespace Engine
 			return m_shader_;
 		}
 
+	protected:
+		virtual void SetNativeShader(void* shader) 
+		{
+			m_shader_ = shader;
+		}
+		
 	private:
 		void* m_shader_ = nullptr;
 	};
@@ -1019,7 +1025,7 @@ namespace Engine
 		virtual ~StructuredBufferTypeless() = default;
 
 		virtual void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) = 0;
-		virtual void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride) = 0;
+		virtual void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride, const bool uav) = 0;
 		virtual void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
 		virtual void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
 		virtual void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) = 0;
@@ -1063,9 +1069,9 @@ namespace Engine
 		{
 			if (m_base_) m_base_->Create(context, size, initial_data, stride, uav);
 		}
-		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride) const
+		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride, const bool uav) const
 		{
-			if (m_base_) m_base_->SetData(context, size, src_data, stride);
+			if (m_base_) m_base_->SetData(context, size, src_data, stride, uav);
 		}
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
 		{
@@ -1138,7 +1144,7 @@ namespace Engine
 		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* src_data)
 		{
 			if (!m_base_) return;
-			m_base_->SetData(context, size, src_data, sizeof(T));
+			m_base_->SetData(context, size, src_data, sizeof(T), is_uav_sb<T>::value || is_client_uav_sb<T>::value);
 		}
 
 		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr)
