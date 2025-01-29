@@ -10,12 +10,12 @@
 
 namespace Engine::Resources
 {
-	void ComputeShader::Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], Graphics::SBs::LocalParamSB& param)
+	void ComputeShader::Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], Graphics::SBs::LocalParamSB& param, const float dt)
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		preDispatch( context, param );
+		preDispatch( context, param, dt );
 		gi.Dispatch(context, this, param, group_count);
-		postDispatch( context, param );
+		postDispatch( context, param, dt );
 	}
 
 	ComputePrimitiveShader& ComputeShader::GetComputePrimitiveShader() const

@@ -18,7 +18,7 @@ namespace Engine::Resources
 		ComputeShader& operator=(const ComputeShader& other);
 
 		[[nodiscard]] std::array<uint32_t, 3> GetThread() const;
-		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param);
+		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param, const float dt);
 
 		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
 
@@ -29,8 +29,8 @@ namespace Engine::Resources
 	protected:
 		ComputeShader(const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
-		virtual void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param) = 0;
-		virtual void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param) = 0;
+		virtual void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
+		virtual void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
 
 		virtual void loadDerived() = 0;
 		virtual void unloadDerived() = 0;
