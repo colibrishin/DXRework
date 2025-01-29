@@ -1,31 +1,19 @@
 #include "../Public/ParticleRendererRenderTask.h"
 #include <tbb/parallel_for_each.h>
+
+#include "ParticleRenderer.h"
 #include "Renderer.h"
 
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/ParticleRendererExtension/Public/ParticleRendererExtension.h"
 #include "Shape.h"
 
-namespace Engine 
+#include "Source/Runtime/Components/Animator/Public/Animator.h"
+
+namespace Engine
 {
-	void ParticleRendererRenderInstanceTaskModule::Initialize()
-	{
-		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ParticleRendererRenderInstanceTask", new ParticleRendererRenderInstanceTask());
-	}
-
-	void ParticleRendererRenderInstanceTaskModule::Shutdown()
-	{
-        Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ParticleRendererRenderInstanceTask");
-	}
-
-	bool ParticleRendererRenderInstanceTaskModule::DynamicLoadable()
-	{
-		return true;
-	}
-
     ParticleRendererRenderInstanceTask::~ParticleRendererRenderInstanceTask()
     {
         for (auto* ptr : m_instance_generated_)
@@ -107,7 +95,7 @@ namespace Engine
                                 mesh_acc->second.insert(shader_acc, locked_shader);
                             }
 
-                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(ParticleRendererExtension::GetInstances(pr));
+                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(pr->GetInstances());
                             
                             for (auto& particle : particles)
                             {
@@ -115,14 +103,20 @@ namespace Engine
                                 instance_pair.object = obj;
                                 instance_pair.instance = GetInstance();
 
+                                *instance_pair.instance = particle;
                                 if (pr->IsFollowOwner())
                                 {
                                     auto mat = particle.GetParam<Matrix>(0);
                                     mat = tr->GetWorldMatrix().Transpose() * mat;
-                                    particle.SetParam(0, mat);
+                                    instance_pair.instance->SetParam(0, mat);
                                 }
 
                                 locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
+                                
+                                if (const Strong<Components::Animator>& anim = obj->GetComponent<Components::Animator>().lock())
+                                {
+                                    anim->GetPrimitive().Apply(*instance_pair.instance);
+                                }
 
                                 for (auto it = locked_mtr->GetTextures().begin(); it != locked_mtr->GetTextures().end(); ++it)
                                 {
@@ -131,6 +125,16 @@ namespace Engine
                                     {
                                         instance_pair.textures[idx] = locked;
                                     }
+                                }
+
+                                if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
+                                {
+                                    instance_pair.reservedTextures[RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN] = anims;
+                                }
+                            
+                                if (const Strong<Resources::AtlasAnimationTexture>& atlas = locked_mtr->GetAtlasTexture().lock())
+                                {
+                                    instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN] = atlas;
                                 }
 
                                 shader_acc->second.push_back(instance_pair);

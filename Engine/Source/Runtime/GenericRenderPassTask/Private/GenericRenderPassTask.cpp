@@ -274,7 +274,8 @@ namespace Engine
 			constexpr size_t max_tex_binds = BIND_SLOT_TEXARR - BIND_SLOT_TEX;
 			uint16_t tex_bind_mask = 0; // See max tex binds
 			std::array<Strong<Resources::Texture>, std::numeric_limits<uint16_t>::digits> assigned_texture;
-
+			std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN> reserved_textures;
+			
 			while (const uint16_t count = _tzcnt_u16(tex_bind_mask))
 			{
 				if (instance_resolved + instance_to_resolve == instance_count)
@@ -283,20 +284,32 @@ namespace Engine
 				}
 				
 				const TexturePair& pair = texture_pairs[instance_resolved];
-				if (std::ranges::any_of(*pair.reservedTextures, [](const Strong<Resources::Texture>& tex)
+				bool reserved_texture_tolerant = false;
+
+				for (size_t i = 0; i < pair.reservedTextures->size(); ++i)
 				{
-					return tex != nullptr;
-				}))
-				{
-					// independent draw call, no redundant reserved textures slots.
-					for (size_t i = 0; i < pair.textures->size(); ++i)
+					if (!pair.reservedTextures->at(i))
 					{
-						constexpr size_t offset = 0;
-						tex_bind_mask |= 1 << (offset + i);
-						instances[offset]->SetTextureSlot(i, offset);
+						continue;
 					}
-					instance_to_resolve++;
-					break;
+					if (pair.reservedTextures->at(i))
+					{
+						if (reserved_textures[i] == nullptr)
+						// allow to instance with the first reserved texture encountered.
+						reserved_texture_tolerant = true;
+						reserved_textures[i] = pair.reservedTextures->at(i);
+					}
+					else if (pair.reservedTextures->at(i) == reserved_textures[i] && reserved_textures[i] != nullptr)
+					{
+						// tolerance the same reserved texture.
+						reserved_texture_tolerant = true;
+					}
+					else
+					{
+						// another reserved texture for the same slot.
+						// unable to handle, split the instancing
+						break;
+					}
 				}
 				
 				if (count > pair.textures->size())
@@ -322,6 +335,19 @@ namespace Engine
 							}
 						}
 					}
+
+					if (reserved_texture_tolerant)
+					{
+						for (size_t i = 0; i < pair.reservedTextures->size(); ++i)
+						{
+							// should be tolerant to the one reserved texture per each.
+							if (pair.reservedTextures->at(i) && reserved_textures[i] != nullptr)
+							{
+								reserved_textures[i] = pair.reservedTextures->at(i);
+							}
+						}
+					}
+					
 					instance_to_resolve++;
 				}
 			}

@@ -39,7 +39,7 @@ namespace Engine
 	struct is_uav_sb : std::false_type {};
 
 	template <typename T>
-	struct is_uav_sb<T, std::void_t<decltype(T::csbuavtype == true)>> : std::true_type {};
+	struct is_uav_sb<T, std::void_t<decltype(T::sbuavtype == true)>> : std::true_type {};
 
 	template <typename T, typename = void>
 	struct is_client_uav_sb : std::false_type {};

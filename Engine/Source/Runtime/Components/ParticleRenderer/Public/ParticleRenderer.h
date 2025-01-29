@@ -1,8 +1,9 @@
 #pragma once
+#include "InstanceParticleSB.h"
+#include "ParticleComputeShader.h"
 #include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
-#include "InstanceParticleSB.h"
 
 #include "ParticleRenderer.generated.h"
 
@@ -25,9 +26,6 @@ namespace Engine::Components
 		ParticleRenderer(const ParticleRenderer& other);
 		ParticleRenderer& operator=(const ParticleRenderer& other);
 
-		ParticleRenderer(ParticleRenderer&& other) noexcept            = delete;
-		ParticleRenderer& operator=(ParticleRenderer&& other) noexcept = delete;
-
 		void Initialize() override;
 		void Update(const float dt) override;
 		void PreUpdate(const float dt) override;
@@ -47,7 +45,9 @@ namespace Engine::Components
 		void SetCount(size_t count);
 		void SetDuration(float duration);
 		void SetSize(float size);
-		void SetComputeShader(const Weak<Resources::ComputeShader>& cs);
+		void SetComputeShader(const Weak<Resources::ParticleComputeShader>& cs);
+
+		InstanceParticles& GetInstances();
 
 		bool IsFollowOwner() const;
 
@@ -60,7 +60,13 @@ namespace Engine::Components
 
 		EPROPERTY()
 		bool m_b_follow_owner_;
-
+		EPROPERTY()
+		size_t m_count_;
+		EPROPERTY()
+		float m_duration_;
+		EPROPERTY()
+		float m_size_;
+		
 		EPROPERTY()
 		Graphics::SBs::LocalParamSB                                      m_params_;
 		Unique<StructuredBufferTypeProxy<Graphics::SBs::InstanceParticleSB>> m_sb_buffer_;
@@ -71,9 +77,9 @@ namespace Engine::Components
 		EPROPERTY()
 		std::filesystem::path m_cs_meta_path_;
 
-		Strong<Resources::ComputeShader> m_cs_;
+		Strong<Resources::ParticleComputeShader> m_cs_;
 		
-		Weak<Resources::ComputeShader> m_cached_cs_;
+		Weak<Resources::ParticleComputeShader> m_cached_cs_;
 
 #if WITH_EDITOR
 		bool m_particle_shader_dialog_opened_ = false;

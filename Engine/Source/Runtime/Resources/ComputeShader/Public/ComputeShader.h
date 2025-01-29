@@ -1,30 +1,36 @@
 #pragma once
 #include <array>
-
-#include "Source/Runtime/Resources/Shader/Public/Shader.h"
+#include "GraphicInterface.h"
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include "ComputeShader.generated.h"
 
 namespace Engine::Resources
 {
-	ECLASS(resource, serialize)
-	class ENGINE_COMPUTESHADER_API ComputeShader : public Shader
+	ECLASS(resource, abstract, serialize)
+	class ENGINE_COMPUTESHADER_API ComputeShader : public Abstracts::Resource
 	{
 		GENERATE_BODY
 	public:
 		~ComputeShader() override = default;
 
-		std::array<uint32_t, 3> GetThread() const;
-		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[3], const Graphics::SBs::LocalParamSB& param) const;
+		ComputeShader(const ComputeShader& other);
+		ComputeShader& operator=(const ComputeShader& other);
+
+		[[nodiscard]] std::array<uint32_t, 3> GetThread() const;
+		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param, const float dt);
 
 		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
+
+#if WITH_EDITOR
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
 
 	protected:
 		ComputeShader(const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
 
-		virtual void preDispatch() = 0;
-		virtual void postDispatch() = 0;
+		virtual void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
+		virtual void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
 
 		virtual void loadDerived() = 0;
 		virtual void unloadDerived() = 0;
@@ -41,10 +47,13 @@ namespace Engine::Resources
 
 		ComputeShader();
 
-		EPROPERTY()
-		Unique<ComputePrimitiveShader> m_primitive_shader_;
-		
+	public:
+		void OnSerialized() override;
+
+	private:
 		EPROPERTY()
 		std::array<uint32_t, 3> m_thread_;
+
+		Unique<ComputePrimitiveShader> m_primitive_shader_;
 	};
 } // namespace Engine::Resources

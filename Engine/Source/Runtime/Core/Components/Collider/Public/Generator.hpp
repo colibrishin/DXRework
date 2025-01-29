@@ -249,6 +249,18 @@ namespace Engine
 			constexpr std::array<Graphics::VertexElement, s_vertices_count> vertices = GenerateSphereSmooth();
 			return vertices;
 		}
+
+		static std::vector<UINT> GetSphereIndicesAsVector()
+		{
+			static constexpr auto value = GetSphereIndices();
+			return std::vector(value.begin(), value.end());
+		}
+
+		static std::vector<Graphics::VertexElement> GetSphereVerticesAsVector()
+		{
+			static constexpr auto value = GetSphereVertices();
+			return std::vector(value.begin(), value.end());
+		}
 	};
 
 	typedef SphereGenerator<> DefaultSphereGenerator;
@@ -297,6 +309,12 @@ namespace Engine
 			}
 
 			return collection;
+		}
+
+		static std::vector<UINT> GetCubeIndicesAsVector()
+		{
+			static constexpr auto value = GetCubeIndices();
+			return std::vector(value.begin(), value.end());
 		}
 		
 	private:
@@ -363,6 +381,12 @@ namespace Engine
 		{
 			constexpr std::array<Graphics::VertexElement, 24> vertices = GenerateCubeVertices();
 			return vertices;
+		}
+
+		static std::vector<Graphics::VertexElement> GetCubeVerticesAsVector()
+		{
+			static constexpr auto value = GetCubeVertices();
+			return std::vector(value.begin(), value.end());
 		}
 	};
 }

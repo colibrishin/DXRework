@@ -1,10 +1,7 @@
 #include "D3D12PrimitiveTexture.h"
 
-#include <directx/d3d12.h>
-#include <directx/d3dx12.h>
 #include <DirectXTex.h>
 
-#include <directxtk12/ScreenGrab.h>
 #include <directxtk12/BufferHelpers.h>
 #include <directxtk12/ResourceUploadBatch.h>
 #include <directxtk12/WICTextureLoader.h>
@@ -20,7 +17,7 @@
 
 Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() = default;
 
-void Engine::D3D12PrimitiveTexture::Generate(Engine::Resources::Texture* texture)
+void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 {
 	m_description_ = texture->GetDescription();
 
@@ -132,7 +129,10 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	
 	if (!exists(path))
 	{
-		throw std::runtime_error("File not found.");
+#if WITH_DEBUG
+		Managers::Debugger::GetInstance().Log( "File not found.", {1.f, 0.f, 0.f, 1.f} );
+#endif
+		throw std::runtime_error("File not found");
 	}
 
 	DirectX::ResourceUploadBatch resource_upload_batch(dev);
@@ -415,18 +415,25 @@ void Engine::D3D12PrimitiveTexture::SaveAsFile(const std::filesystem::path& path
 {
 	auto& native = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 	ID3D12CommandQueue* queue = native.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
-	
-	DX::ThrowIfFailed
-	(
-		DirectX::SaveDDSTextureToFile
-		(
+
+	const auto& image = std::make_unique<DirectX::ScratchImage>();
+
+	DX::ThrowIfFailed(
+		CaptureTexture(
 			queue,
 			m_dx12_texture_.Get(),
-			path.c_str(),
+			false,
+			*image,
 			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_COMMON
-		)
-	);
+			D3D12_RESOURCE_STATE_COMMON ) );
+	
+	DX::ThrowIfFailed(
+		SaveToDDSFile(
+			image->GetImages(),
+			image->GetImageCount(),
+			image->GetMetadata(),
+			DirectX::DDS_FLAGS_ALLOW_LARGE_FILES,
+			path.c_str() ) );
 }
 
 void Engine::D3D12PrimitiveTexture::Map(

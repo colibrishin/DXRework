@@ -6,32 +6,14 @@
 
 namespace Engine::Managers
 {
-	void ResourceManager::Initialize() 
-	{
-		for (const std::filesystem::directory_entry& p : 
-			std::filesystem::recursive_directory_iterator(std::filesystem::current_path()))
-		{
-			if (p.is_regular_file())
-			{
-				if (p.path().has_extension() && p.path().extension() == "meta")
-				{
-					if (Strong<Abstracts::Resource> deserialized;
-						Serializer::Deserialize<Abstracts::Resource>(p.path().generic_string(), deserialized))
-					{
-						AddResource(deserialized, deserialized->GetTypeHash());
-					}
-				}
-			}
-			
-		}
-	}
+	void ResourceManager::Initialize() { }
 
 #ifdef WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Resource Manager", m_ui_info_.dialogOpened})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
 		{
 			for (const auto& set : m_resources_ | std::views::values)
 			{
@@ -50,7 +32,7 @@ namespace Engine::Managers
 
 					if (resource->m_ui_info_.dialogOpened)
 					{
-						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->GetName(), resource->m_ui_info_.dialogOpened})))
+						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->m_ui_info_.label, resource->m_ui_info_.dialogOpened})))
 						{
 							resource->OnUIUpdate(&resource_context, dt);
 						}
@@ -147,11 +129,6 @@ namespace Engine::Managers
 		{
 			return;
 		}
-		if (!resource->GetPath().empty() &&
-			GetResourceByRawPath(resource->GetPath(), type).lock())
-		{
-			return;
-		}
 
 		m_resources_[type].insert(resource);
 	}
@@ -167,33 +144,6 @@ namespace Engine::Managers
 				return resource->GetName() == name;
 			}
 		);
-
-		if (it != resources.end())
-		{
-			if (!(*it)->IsLoaded())
-			{
-				(*it)->Load();
-			}
-
-			return *it;
-		}
-
-		return {};
-	}
-
-	Weak<Abstracts::Resource> ResourceManager::GetResourceByRawPath(const std::filesystem::path& path, const ResourceType type)
-	{
-		if (path.empty())
-		{
-			return {};
-		}
-
-		auto& resources = m_resources_[type];
-		auto  it        = std::ranges::find_if(
-				 resources, [&path](const Strong<Abstracts::Resource>& resource)
-				 {
-					 return resource->GetPath() == path;
-				 });
 
 		if (it != resources.end())
 		{

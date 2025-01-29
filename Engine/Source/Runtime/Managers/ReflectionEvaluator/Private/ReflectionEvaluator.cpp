@@ -20,7 +20,7 @@ namespace Engine::Managers
 
 	void ReflectionEvaluator::Initialize()
 	{
-		m_copy_ = Resources::Texture2D::Create<true>(
+		m_copy_ = Resources::Texture2D::Create(
 			"Evaluated Reflection", 
 			"", 
 			GenericTextureDescription {
@@ -33,8 +33,7 @@ namespace Engine::Managers
 				   .MipsLevel = 1,
 				   .Layout = TEX_LAYOUT_UNKNOWN,
 				   .SampleDesc = {.Count = 1, .Quality = 0}
-			}
-		);
+			});
 
 		Renderer::GetInstance().onRenderDone.Listen(
 			GetSharedPtr<ReflectionEvaluator>(),

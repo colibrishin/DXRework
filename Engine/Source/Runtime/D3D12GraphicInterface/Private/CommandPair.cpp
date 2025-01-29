@@ -391,7 +391,7 @@ namespace Engine
 			
 		uint64_t& nonce = m_fence_nonce_.get()[next_buffer];
 
-		DX::ThrowIfFailed(m_queue_[D3D12_COMMAND_LIST_TYPE_DIRECT]->Signal(m_fence_.Get(), ++nonce));
+		DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Signal(m_fence_.Get(), ++nonce));
 		WaitForEventCompletion(nonce);
 
 		m_buffer_idx_ = next_buffer;
@@ -451,7 +451,7 @@ namespace Engine
 		const auto& fence = m_fence_;
 		uint64_t&   nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
 
-		DX::ThrowIfFailed(m_queue_[in_pair->GetType()]->Signal(fence.Get(), ++nonce));
+		DX::ThrowIfFailed(GetCommandQueue(in_pair->GetType())->Signal(fence.Get(), ++nonce));
 		in_pair->m_latest_fence_value_.store(nonce);
 	}
 
@@ -485,7 +485,7 @@ namespace Engine
 
 		DX::ThrowIfFailed(pair->GetList()->Close());
 		const std::vector<ID3D12CommandList*> lists(1, pair->GetList());
-		m_queue_[pair->GetType()]->ExecuteCommandLists(1, lists.data());
+		GetCommandQueue(pair->GetType())->ExecuteCommandLists(1, lists.data());
 
 		Signal(pair);
 		WaitForEventCompletion(pair->GetLatestFenceValue());

@@ -1,8 +1,11 @@
 #include "ParticleRendererModule.h"
+
+#include "ComputeShader.h"
 #include "ParticleRendererModule.generated.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "ParticleRenderer.h"
+
 #include "ObjectBase/Public/ObjectBase.h"
 
 MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)

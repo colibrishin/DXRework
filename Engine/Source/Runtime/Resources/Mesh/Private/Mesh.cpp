@@ -68,6 +68,23 @@ namespace Engine::Resources
 #endif
 	}
 
+	Mesh::Mesh(const Mesh& other)
+		: Resource(other)
+	{
+		m_vertices_ = other.m_vertices_;
+		m_indices_ = other.m_indices_;
+		m_bounding_box_ = other.m_bounding_box_;
+	}
+
+	Mesh& Mesh::operator=(const Mesh& other)
+	{
+		m_vertices_ = other.m_vertices_;
+		m_indices_ = other.m_indices_;
+		m_bounding_box_ = other.m_bounding_box_;
+
+		return *this;
+	}
+
 	void __vectorcall Mesh::GenerateTangentBinormal(
 		const Vector3& v0, const Vector3&  v1,
 		const Vector3& v2, const Vector2&  uv0,

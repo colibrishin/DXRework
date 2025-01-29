@@ -209,7 +209,7 @@ namespace Engine::Managers
 	void CollisionDetector::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, "Collision Detector", m_ui_info_.dialogOpened})))
+		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
 		{
 			if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
 			{

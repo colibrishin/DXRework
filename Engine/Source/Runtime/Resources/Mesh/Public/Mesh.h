@@ -24,6 +24,10 @@ namespace Engine::Resources
 	public:
 		Mesh(const VertexCollection& shape, const IndexCollection& indices);
 		~Mesh() override;
+
+		Mesh(const Mesh& other);
+		Mesh& operator=(const Mesh& other);
+		
 		void Initialize() override;
 		void PostUpdate(const float dt) override;
 		void PreUpdate(const float dt) override;

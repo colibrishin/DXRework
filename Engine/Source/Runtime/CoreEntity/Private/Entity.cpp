@@ -7,11 +7,17 @@
 void Engine::Abstracts::Entity::SetName(const std::string_view name)
 {
 	m_name_ = name;
+#if WITH_EDITOR
+	OnNameChanged();
+#endif
 }
 
+#if WITH_EDITOR
 void Engine::Abstracts::Entity::OnNameChanged()
 {
+	m_ui_info_.label = m_name_ + "##" + std::to_string(GetID());
 }
+#endif
 
 void Engine::Abstracts::Entity::SetGarbage(bool garbage)
 {

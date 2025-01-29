@@ -25,5 +25,8 @@ public class ParticleRendererRenderTask : CommonProject
         conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<ParticleRenderer>(target);
         conf.AddPrivateDependency<ParticleRendererExtension>(target);
+        conf.AddPrivateDependency<AnimationTexture>(target);
+        conf.AddPrivateDependency<AtlasAnimationTexture>(target);
+        conf.AddPrivateDependency<Animator>(target);
     }
 }

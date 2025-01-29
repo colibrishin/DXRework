@@ -17,6 +17,9 @@ namespace Engine::Resources
 		~Texture() override = default;
 
 	public:
+		Texture(const Texture& other);
+		Texture& operator=(const Texture& other);
+		
 		void Initialize() override;
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -41,12 +44,13 @@ namespace Engine::Resources
 		virtual void Map() {};
 		void Load_INTERNAL() override;
 		void Unload_INTERNAL() override;
-
+		
+		void UpdateDescription(const GenericTextureDescription& description);
+		
 	private:
 		friend struct Engine::PrimitiveTexture;
 		
 		Texture();
-		void UpdateDescription(const GenericTextureDescription& description);
 
 		EPROPERTY()
 		GenericTextureDescription m_desc_;
