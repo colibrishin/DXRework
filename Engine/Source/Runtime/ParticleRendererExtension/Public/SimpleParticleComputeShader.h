@@ -1,23 +1,28 @@
 #pragma once
 #include <random>
 
-#include "ComputeShader.h"
 #include "InstanceParticleSB.h"
+#include "ParticleComputeShader.h"
 
 #include "SimpleParticleComputeShader.generated.h"
 
 namespace Engine::Resources
 {
     ECLASS( resource, internal, serialize )
-    class SimpleParticleComputeShader final : public ComputeShader
+    class ENGINE_PARTICLERENDEREREXTENSION_API SimpleParticleComputeShader final : public ParticleComputeShader
     {
         GENERATE_BODY
         SimpleParticleComputeShader()
-            : ComputeShader( "cs_particle.hlsl", { 32, 32, 1 } ) { }
+            : ParticleComputeShader( "cs_particle.hlsl", { 32, 32, 1 } ) { }
+
+#if WITH_EDITOR
+        void OnUIUpdate(UIContext* const parent, const float dt) override;
+        void OnUIUpdateParam(UIContext* const parent, const float dt, Graphics::ParamBase& local_param, InstanceParticles& instances) override;
+#endif
 
     protected:
-        void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param) override;
-        void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param) override;
+        void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
+        void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
         void loadDerived() override;
         void unloadDerived() override;
         static void SetScaling(bool scaling, Graphics::ParamBase& config);
@@ -28,13 +33,13 @@ namespace Engine::Resources
 
     private:
         // int
-        constexpr static size_t scaling_active_slot = 1;
-        constexpr static size_t random_value_slot   = 2;
+        constexpr static size_t param_scaling_active_slot = 1;
+        constexpr static size_t param_random_value_slot   = 2;
 
         // float
-        constexpr static size_t dt_slot          = 2;
-        constexpr static size_t scaling_min_slot = 3;
-        constexpr static size_t scaling_max_slot = 4;
+        constexpr static size_t param_dt_slot          = 2;
+        constexpr static size_t param_scaling_min_slot = 3;
+        constexpr static size_t param_scaling_max_slot = 4;
 
         static std::mt19937_64 getRandomEngine();
 

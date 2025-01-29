@@ -4,8 +4,42 @@
 #include "ParticleRenderer.h"
 #include "Texture2D.h"
 
+#if WITH_EDITOR
+void Engine::Resources::SimpleParticleComputeShader::OnUIUpdate(UIContext* const parent, const float dt)
+{
+    if (parent)
+    {
+        ComputeShader::OnUIUpdate(parent, dt);
+    }
+}
+
+void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(
+    UIContext* const parent, const float dt, ParamBase& local_param, InstanceParticles& instances
+)
+{
+    if (parent)
+    {
+        UIInterface& ui = UIInterfaceAccessor::GetInterface();
+        *parent |= ui.NewCheckbox( { "Scaling", local_param.GetParam<bool>( param_scaling_active_slot ) } );
+        if ( local_param.GetParam<bool>( param_scaling_active_slot ) )
+        {
+            *parent |= ui.NewLabelAndFloat( { "Scale Min", local_param.GetParam<float>( param_scaling_min_slot ), 0, 0, std::numeric_limits<float>::max(), true } );
+            *parent |= ui.NewLabelAndFloat( { "Scale Max", local_param.GetParam<float>( param_scaling_max_slot ), 0, 0, std::numeric_limits<float>::max(), true } );   
+        }
+
+        static Vector3 linear_min, linear_max;
+        *parent |= ui.NewLabelAndVec3( { "Linear Spread Min", &linear_min.x, 0, 0, std::numeric_limits<float>::max(), true } );
+        *parent |= ui.NewLabelAndVec3( { "Linear Spread Max", &linear_max.x, 0, 0, std::numeric_limits<float>::max(), true } );
+        ( *parent |= ui.NewButton( {"Linear Spread" } ) ).SetFunction( [ this, &instances, &local_param ]()
+        {
+           LinearSpread(linear_min, linear_max, instances, local_param); 
+        } );      
+    }
+}
+#endif
+
 void Engine::Resources::SimpleParticleComputeShader::preDispatch(
-    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param)
+    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param, const float dt)
 {
     GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
     gi.TransitTo( context, m_noises_[ 0 ].get(), BIND_TYPE_SRV );
@@ -16,13 +50,15 @@ void Engine::Resources::SimpleParticleComputeShader::preDispatch(
     gi.Bind( context, m_noises_[ 1 ].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 1 );
     gi.Bind( context, m_noises_[ 2 ].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 2 );
 
+    param.SetParam<float>( param_dt_slot, dt );
+
     auto rng           = getRandomEngine();
     const auto rng_val = rng() % random_texture_size;
-    param.SetParam( random_value_slot, static_cast<int>( rng_val ) );
+    param.SetParam( param_random_value_slot, static_cast<int>( rng_val ) );
 }
 
 void Engine::Resources::SimpleParticleComputeShader::postDispatch(
-    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param)
+    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param, const float dt)
 {
     GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
     gi.TransitBack( context, m_noises_[ 0 ].get(), BIND_TYPE_SRV );
@@ -54,13 +90,13 @@ void Engine::Resources::SimpleParticleComputeShader::unloadDerived()
 
 void Engine::Resources::SimpleParticleComputeShader::SetScaling(bool scaling, ParamBase& config)
 {
-    config.SetParam( scaling, scaling_active_slot );
+    config.SetParam( scaling, param_scaling_active_slot );
 }
 
 void Engine::Resources::SimpleParticleComputeShader::SetScalingParam(float min, float max, ParamBase& config)
 {
-    config.SetParam( min, scaling_min_slot );
-    config.SetParam( max, scaling_max_slot );
+    config.SetParam( min, param_scaling_min_slot );
+    config.SetParam( max, param_scaling_max_slot );
 }
 
 void Engine::Resources::SimpleParticleComputeShader::LinearSpread(
@@ -69,8 +105,8 @@ void Engine::Resources::SimpleParticleComputeShader::LinearSpread(
     const auto count = particles.size();
     for ( auto i = 0; i < count; ++i )
     {
-        auto& instance = particles[ i ];
-        auto world     = instance.GetWorld().Transpose();
+        auto&       instance       = particles[i];
+        auto        world          = instance.GetWorld().Transpose();
 
         const auto new_pos = Vector3::Lerp( local_min,
                                             local_max,
