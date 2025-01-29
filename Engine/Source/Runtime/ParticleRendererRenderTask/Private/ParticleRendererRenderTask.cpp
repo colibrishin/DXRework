@@ -10,6 +10,8 @@
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Shape.h"
 
+#include "Source/Runtime/Components/Animator/Public/Animator.h"
+
 namespace Engine
 {
     ParticleRendererRenderInstanceTask::~ParticleRendererRenderInstanceTask()
@@ -110,6 +112,11 @@ namespace Engine
                                 }
 
                                 locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
+                                
+                                if (const Strong<Components::Animator>& anim = obj->GetComponent<Components::Animator>().lock())
+                                {
+                                    anim->GetPrimitive().Apply(*instance_pair.instance);
+                                }
 
                                 for (auto it = locked_mtr->GetTextures().begin(); it != locked_mtr->GetTextures().end(); ++it)
                                 {
@@ -118,6 +125,16 @@ namespace Engine
                                     {
                                         instance_pair.textures[idx] = locked;
                                     }
+                                }
+
+                                if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
+                                {
+                                    instance_pair.reservedTextures[RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN] = anims;
+                                }
+                            
+                                if (const Strong<Resources::AtlasAnimationTexture>& atlas = locked_mtr->GetAtlasTexture().lock())
+                                {
+                                    instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN] = atlas;
                                 }
 
                                 shader_acc->second.push_back(instance_pair);
