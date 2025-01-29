@@ -53,6 +53,7 @@ namespace Engine::Managers
 		ModuleManager::GetInstance().LoadModule(L"ModelRenderer");
 		ModuleManager::GetInstance().LoadModule(L"ModelRendererRenderTask");
 		ModuleManager::GetInstance().LoadModule(L"ParticleRenderer");
+		ModuleManager::GetInstance().LoadModule( L"ParticleRendererRenderTask" );
 		ModuleManager::GetInstance().LoadModule(L"Texture2D");
 		ModuleManager::GetInstance().LoadModule(L"Shader");
 		ModuleManager::GetInstance().LoadModule(L"Shape");
