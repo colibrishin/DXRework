@@ -1185,11 +1185,11 @@ namespace Engine
 
 			if constexpr (is_uav_sb<T>::value)
 			{
-				m_base_->CopySRVHeap(context, which_sb_uav<T>::value);
+				m_base_->CopyUAVHeap(context, which_sb_uav<T>::value);
 			}
 			else if constexpr(is_client_uav_sb<T>::value)
 			{
-				m_base_->CopySRVHeap(context, which_client_sb_uav<T>::value);
+				m_base_->CopyUAVHeap(context, which_client_sb_uav<T>::value);
 			}
 		}
 	};
