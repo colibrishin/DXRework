@@ -5,7 +5,7 @@
 
 namespace Engine
 {
-    struct ParticleRendererModule : public IModule
+    struct ENGINE_PARTICLERENDERER_API ParticleRendererModule : public IModule
     {
         GENERATE_BODY
         void             Initialize() override;
