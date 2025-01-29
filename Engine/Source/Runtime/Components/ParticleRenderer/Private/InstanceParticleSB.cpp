@@ -11,17 +11,17 @@ Engine::Graphics::SBs::InstanceParticleSB::InstanceParticleSB()
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetLife(const float life)
 {
-    SetParam(0, life);
+    SetParam(6, life);
 }
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetActive(const bool active)
 {
-    SetParam(0, static_cast<int>(active));
+    SetParam(15, static_cast<int>(active));
 }
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetVelocity(const Vector3& velocity)
 {
-    SetParam(0, velocity);
+    SetParam(3, velocity);
 }
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetWorld(const Matrix& world)
@@ -36,5 +36,5 @@ Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
 
 bool& Engine::Graphics::SBs::InstanceParticleSB::GetActive()
 {
-    return reinterpret_cast<bool&>(GetParam<int>(0));
+    return reinterpret_cast<bool&>(GetParam<int>(15));
 }

@@ -73,6 +73,7 @@ struct PixelInputType
 #define INST_REFLECT_TRS(INSTANCE)   bufInstance[INSTANCE].fParam[0].z
 #define INST_REFLECT_SCL(INSTANCE)   bufInstance[INSTANCE].fParam[0].w
 #define INST_REFRACT_SCL(INSTANCE)   bufInstance[INSTANCE].fParam[1].x
+#define INST_PARTICLE_LIFE(INSTANCE) uavInstance[INSTANCE].fParam[1].y
 
 #define INST_BONE_FLAG(INSTANCE) bufInstance[INSTANCE].iParam[0].x
 #define INST_ANIM_DURATION(INSTANCE) bufInstance[INSTANCE].iParam[0].y
@@ -89,12 +90,15 @@ struct PixelInputType
 #define INST_TEX_SLOT1(INSTANCE) bufInstance[INSTANCE].iParam[3].x
 #define INST_TEX_SLOT2(INSTANCE) bufInstance[INSTANCE].iParam[3].y
 #define INST_TEX_SLOT3(INSTANCE) bufInstance[INSTANCE].iParam[3].z
+#define INST_PARTICLE_ACTIVE(INSTANCE) uavInstance[INSTANCE].iParam[3].w
 
 #define INST_OVERRIDE_COL(INSTANCE) bufInstance[INSTANCE].vParam[0]
 #define INST_SPECULAR_COL(INSTANCE) bufInstance[INSTANCE].vParam[1]
 #define INST_CLIP_PLANE(INSTANCE) bufInstance[INSTANCE].vParam[2]
+#define INST_PARTICLE_VELOCITY(INSTANCE) uavInstance[INSTANCE].vParam[3]
 
 #define INST_WORLD(INSTANCE)     bufInstance[INSTANCE].mParam[0]
+#define INST_PARTICLE_WORLD(INSTANCE)  uavInstance[INSTANCE].mParam[0]
 
 struct ParamElement
 {
