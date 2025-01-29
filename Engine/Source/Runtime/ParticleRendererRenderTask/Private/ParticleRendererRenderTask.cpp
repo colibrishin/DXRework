@@ -101,11 +101,12 @@ namespace Engine
                                 instance_pair.object = obj;
                                 instance_pair.instance = GetInstance();
 
+                                *instance_pair.instance = particle;
                                 if (pr->IsFollowOwner())
                                 {
                                     auto mat = particle.GetParam<Matrix>(0);
                                     mat = tr->GetWorldMatrix().Transpose() * mat;
-                                    particle.SetParam(0, mat);
+                                    instance_pair.instance->SetParam(0, mat);
                                 }
 
                                 locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
