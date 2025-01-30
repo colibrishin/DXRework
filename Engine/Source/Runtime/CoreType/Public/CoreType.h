@@ -157,6 +157,73 @@ struct simple_gc_deleter : simple_gc_deleter_impl
 	}
 };
 
+class byte_vector
+{
+    explicit byte_vector(const size_t block_size)
+        : m_first_(nullptr),
+          m_pos_(0),
+          m_block_size_(block_size),
+          m_allocated_size_(0),
+          m_used_size_(0) {}
+
+    ~byte_vector()
+    {
+        delete[] m_first_;
+    }
+
+public:
+    void reset()
+    {
+        m_used_size_ = 0;
+    }
+
+    void* data() const
+    {
+        return m_first_;
+    }
+
+    size_t size() const
+    {
+        return m_used_size_;
+    }
+
+    size_t block_size() const
+    {
+        return m_block_size_;
+    }
+
+    unsigned char* operator[](const size_t idx) const
+    {
+        return m_first_ + (m_block_size_ * idx);
+    }
+    
+    void push_back(const void* src, const size_t src_size)
+    {
+        if (m_pos_ >= m_allocated_size_)
+        {
+            auto new_alloc = new unsigned char[m_block_size_ * ((m_allocated_size_ * 2) + 1)];
+            if (m_first_)
+            {
+                std::memcpy(new_alloc, m_first_, m_block_size_ * m_used_size_);   
+            }
+            delete[] m_first_;
+            m_first_ = new_alloc;
+            m_allocated_size_ = (m_allocated_size_ * 2) + 1;
+        }
+
+        memcpy_s(m_first_ + (m_block_size_ * m_pos_), m_block_size_, src, src_size);
+        ++m_used_size_;
+    }
+
+private:
+    unsigned char* m_first_;
+    size_t m_pos_;
+    size_t m_block_size_;
+    
+    size_t m_allocated_size_;
+    size_t m_used_size_;
+};
+
 struct simple_gc_collector 
 {
 private:
