@@ -18,6 +18,7 @@
 
 #include "D3D12PrimitiveTexture.h"
 #include "D3D12ComputePrimitiveShader.h"
+#include "RaytracingShader.h"
 #include "ToolkitAPI.h"
 
 #include "CoreModule/Public/CoreModule.h"
@@ -43,7 +44,7 @@ namespace Engine
 			CoreLoop::LOOP_TYPE_RENDER,
 			Managers::ToolkitAPI::GetInstance);
 
-		auto& gi = static_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
+		auto& gi = GraphicInterfaceAccessor::GetInterface();
 		gi.Shutdown();
 
 		return true;
@@ -159,6 +160,289 @@ void* Engine::D3D12GraphicInterface::GetNativePipeline()
 {
 	return m_pipeline_root_signature_.Get();
 }
+
+#if CFG_RAYTRACING
+bool Engine::D3D12GraphicInterface::IsRaytracingSupported()
+{
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+	DX::ThrowIfFailed(m_dev_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
+													&options5, sizeof(options5)));
+
+	return options5.RaytracingTier > D3D12_RAYTRACING_TIER_1_0;
+}
+
+void Engine::D3D12GraphicInterface::InitializeSampler() const
+{
+	constexpr D3D12_SAMPLER_DESC sampler_desc
+	{
+		.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+		.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.MipLODBias = 0,
+		.MaxAnisotropy = 0,
+		.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL,
+		.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
+		.MinLOD = 0,
+		.MaxLOD = D3D12_FLOAT32_MAX
+	};
+
+	m_dev_->CreateSampler(&sampler_desc, m_raytracing_sampler_heap_->GetCPUDescriptorHandleForHeapStart());
+}
+
+void Engine::D3D12GraphicInterface::InitializeRaytracing()
+{
+	if (IsRaytracingSupported())
+	{
+		QueryDevice();
+		InitializeDescriptorHeaps();
+		InitializeGlobalRootSignature();
+		InitializeSampler();
+		InitializeOutputBuffer();
+	}
+}
+
+void Engine::D3D12GraphicInterface::ShutdownRaytracing() { }
+
+void* Engine::D3D12GraphicInterface::GetRaytracingNativeInterface()
+{
+	return m_raytracing_dev_.Get();
+}
+
+void* Engine::D3D12GraphicInterface::GetRaytracingNativePipeline()
+{
+	return m_raytracing_root_pipeline_.Get();
+}
+
+bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
+    RenderMap render_map[SHADER_DOMAIN_MAX],
+    AccelStructBuffer& top_level_accel_buffer,
+    byte_vector& hit_records)
+{
+    
+}
+
+void Engine::D3D12GraphicInterface::DispatchRay(
+    const GraphicInterfaceContextPrimitive* context,
+    Resources::RaytracingShader* shader,
+    const byte_vector& hit_records,
+    const AccelStructBuffer& top_level_accel_buffer)
+{
+    const auto& cmd = static_cast<CommandPair*>(context->commandList);
+
+    cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive()->GetNativeShader()));
+    cmd->GetList4()->SetComputeRootShaderResourceView(
+        1,
+        top_level_accel_buffer.resultPool->GetPrimitive().GetResource<ID3D12Resource>()->GetGPUVirtualAddress());
+
+    m_dev_->CopyDescriptorsSimple(
+        1,
+        m_raytracing_sampler_heap_->GetCPUDescriptorHandleForHeapStart(),
+        static_cast<ID3D12DescriptorHeap*>(shader->GetPrimitive()->GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
+        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    shader->GetPrimitive()->UpdateHitRecords(hit_records);
+    
+    D3D12_DISPATCH_RAYS_DESC ray_desc{};
+    ray_desc.Width = CFG_WIDTH;
+    ray_desc.Height = CFG_HEIGHT;
+    ray_desc.Depth = 1;
+    
+    const auto& exported = shader->GetHasExport();
+    const auto& record_sizes = shader->GetShaderRecordSizes();
+    const bool hit_merged[RAY_SHADER_REC_MAX]
+    {
+        exported[RAY_SHADER_GEN],
+        exported[RAY_SHADER_ANY_HIT] || exported[RAY_SHADER_CLOSEST_HIT],
+        exported[RAY_SHADER_MISS]
+    };
+    
+    for (size_t i = 0; i < std::size(hit_merged); ++i)
+    {
+        if (hit_merged[i])
+        {
+            switch (i)
+            {
+            case RAY_SHADER_REC_GEN:
+                {
+                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_GEN));
+                    ray_desc.RayGenerationShaderRecord.StartAddress = resource->GetGPUVirtualAddress();
+                    ray_desc.RayGenerationShaderRecord.SizeInBytes = record_sizes[i];
+                    break;
+                }
+            case RAY_SHADER_REC_HIT:
+                {
+                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_HIT));
+                    ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
+                    ray_desc.HitGroupTable.SizeInBytes = hit_records.size() * record_sizes[i];
+                    ray_desc.HitGroupTable.StrideInBytes = record_sizes[i];
+                    break;
+                }
+            case RAY_SHADER_REC_MISS:
+                {
+                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_MISS));
+                    ray_desc.MissShaderTable.StartAddress = resource->GetGPUVirtualAddress();
+                    ray_desc.MissShaderTable.SizeInBytes = record_sizes[i];
+                    ray_desc.MissShaderTable.StrideInBytes = record_sizes[i];
+                    break;
+                }
+            default:
+                throw std::runtime_error("Unknown type iterated");
+            }
+        }
+    }
+    
+    cmd->GetList4()->DispatchRays(&ray_desc);
+    
+    const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+                (
+                 m_output_buffer_.Get(),
+                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                 D3D12_RESOURCE_STATE_COPY_SOURCE
+                );
+
+    const auto& dst_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_render_targets_[m_frame_idx_].Get(),
+             D3D12_RESOURCE_STATE_RENDER_TARGET,
+             D3D12_RESOURCE_STATE_COPY_DEST
+            );
+
+    cmd->GetList4()->ResourceBarrier(1, &copy_barrier);
+    cmd->GetList4()->ResourceBarrier(1, &dst_barrier);
+
+    cmd->GetList4()->CopyResource
+            (
+             m_render_targets_[m_frame_idx_].Get(),
+             m_output_buffer_.Get()
+            );
+
+    const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_output_buffer_.Get(),
+             D3D12_RESOURCE_STATE_COPY_SOURCE,
+             D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+            );
+
+    const auto& rtv_barrier = CD3DX12_RESOURCE_BARRIER::Transition
+            (
+             m_render_targets_[m_frame_idx_].Get(),
+             D3D12_RESOURCE_STATE_COPY_DEST,
+             D3D12_RESOURCE_STATE_RENDER_TARGET
+            );
+
+    cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
+    cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
+}
+
+void Engine::D3D12GraphicInterface::QueryDevice()
+{
+	DX::ThrowIfFailed(m_dev_->QueryInterface(IID_PPV_ARGS(m_raytracing_dev_.GetAddressOf())));
+}
+
+void Engine::D3D12GraphicInterface::InitializeDescriptorHeaps()
+{
+	constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc
+		{
+			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			.NumDescriptors = 2,
+			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+		};
+
+	DX::ThrowIfFailed( m_dev_->CreateDescriptorHeap(
+			 	&heap_desc,
+			 	IID_PPV_ARGS(m_raytracing_buffer_heap_.ReleaseAndGetAddressOf() ) ) );
+
+	constexpr D3D12_DESCRIPTOR_HEAP_DESC sampler_heap_desc
+	{
+		.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+		.NumDescriptors = 1,
+		.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+	};
+
+	DX::ThrowIfFailed( m_dev_->CreateDescriptorHeap(
+			  &sampler_heap_desc,
+			  IID_PPV_ARGS(m_raytracing_sampler_heap_.ReleaseAndGetAddressOf() ) ) );
+
+	m_buffer_descriptor_size_ = m_dev_->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	m_sampler_descriptor_size_ = m_dev_->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
+}
+
+void Engine::D3D12GraphicInterface::InitializeGlobalRootSignature()
+{
+	CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+	ranges[0].Init( D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0 ); // Output Buffer
+	ranges[1].Init( D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // Light Buffer
+	ranges[1].Init( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 2 ); // Sampler
+
+	CD3DX12_ROOT_PARAMETER1 root_param[8];
+	root_param[0].InitAsDescriptorTable( 1, ranges ); // Output Buffer
+	root_param[1].InitAsDescriptorTable( 1, &ranges[1] ); // Light Buffer
+	root_param[2].InitAsShaderResourceView( 0 ); // Acceleration Structure
+	root_param[3].InitAsShaderResourceView( 1 ); // Vertex Buffer
+	root_param[4].InitAsShaderResourceView( 2 ); // Index Buffer
+	root_param[5].InitAsConstantBufferView( 0 ); // WVP Buffer
+	root_param[6].InitAsConstantBufferView( 1 ); // Param Buffer
+	root_param[7].InitAsDescriptorTable( 1, &ranges[2] ); // Sampler
+
+	const auto& global_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(
+		std::size( root_param ),
+		root_param,
+		0,
+		nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_NONE);
+
+	ComPtr<ID3DBlob> signature;
+	ComPtr<ID3DBlob> error;
+
+	DX::ThrowIfFailed( D3D12SerializeVersionedRootSignature(
+		&global_root_sign_desc,
+		signature.ReleaseAndGetAddressOf(),
+		error.ReleaseAndGetAddressOf() ) );
+
+	if (error) { OutputDebugStringA( static_cast<const char*>( error->GetBufferPointer() ) ); }
+
+	DX::ThrowIfFailed( m_dev_->CreateRootSignature(
+		0,
+		signature->GetBufferPointer(),
+		signature->GetBufferSize(),
+		IID_PPV_ARGS( m_raytracing_root_pipeline_.ReleaseAndGetAddressOf() ) ) );
+}
+
+void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
+{
+    const auto& res_desc = CD3DX12_RESOURCE_DESC::Tex2D
+        (DXGI_FORMAT_R8G8B8A8_UNORM, CFG_WIDTH, CFG_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+    DX::ThrowIfFailed
+        (
+         m_dev_->CreateCommittedResource
+         (
+          &default_heap, D3D12_HEAP_FLAG_NONE, &res_desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS
+          (m_output_buffer_.ReleaseAndGetAddressOf())
+         )
+        );
+
+    constexpr D3D12_DESCRIPTOR_HEAP_DESC heap_desc{
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, .NumDescriptors = 1, .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE};
+
+    DX::ThrowIfFailed
+        (m_dev_->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(m_output_buffer_heap_.ReleaseAndGetAddressOf())));
+
+    constexpr D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc{
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM, .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D, .Texture2D = {0, 0}};
+
+    m_dev_->CreateUnorderedAccessView
+        (m_output_buffer_.Get(), nullptr, &uav_desc, m_output_buffer_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    m_dev_->CopyDescriptorsSimple
+        (
+         1, m_raytracing_heap_->GetCPUDescriptorHandleForHeapStart(),
+         m_output_buffer_heap_->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        );
+}
+#endif
 
 Engine::PrimitiveTexture* Engine::D3D12GraphicInterface::GetNewPrimitiveTexture()
 {

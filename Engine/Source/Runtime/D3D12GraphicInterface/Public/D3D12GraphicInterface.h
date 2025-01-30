@@ -41,11 +41,11 @@ namespace Engine
 	};
 	
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
+#endif
 	{
-	public:
 		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
-
-		void Initialize() override; 
+	public:
+		void Initialize() override;
 		void Shutdown() override;
 		void WaitForNextFrame() override;
 		void Present() override;
@@ -53,6 +53,44 @@ namespace Engine
 		void* GetNativeInterface() override;
 		void* GetNativePipeline() override;
 
+#if CFG_RAYTRACING
+		bool IsRaytracingSupported() override;
+		void InitializeSampler() const;
+		void InitializeRaytracing() override;
+		void ShutdownRaytracing() override;
+		
+		void* GetRaytracingNativeInterface() override;
+		void* GetRaytracingNativePipeline() override;
+
+	    [[nodiscard]] bool BuildTopLevelAccelerationBuffer(RenderMap render_map[], AccelStructBuffer& top_level_accel_buffer, byte_vector& hit_records) override;
+	    
+		void DispatchRay(
+            const GraphicInterfaceContextPrimitive* context,
+            Resources::RaytracingShader* shader,
+            const byte_vector& hit_records,
+            const AccelStructBuffer& top_level_accel_buffer
+        ) override;
+	private:
+		void QueryDevice();
+		void InitializeDescriptorHeaps();
+		void InitializeGlobalRootSignature();
+		void InitializeOutputBuffer();
+		
+		ComPtr<ID3D12Device5> m_raytracing_dev_ = nullptr;
+		ComPtr<ID3D12RootSignature> m_raytracing_root_pipeline_ = nullptr;
+
+		ComPtr<ID3D12DescriptorHeap> m_raytracing_buffer_heap_;
+		ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_;
+		
+		UINT m_buffer_descriptor_size_ = 0;
+		UINT m_sampler_descriptor_size_ = 0;
+
+		ComPtr<ID3D12Resource> m_output_buffer_ = nullptr;
+		ComPtr<ID3D12DescriptorHeap> m_output_buffer_heap_ = nullptr;
+		ComPtr<ID3D12DescriptorHeap> m_raytracing_heap_ = nullptr;
+
+	public:
+#endif
 		PrimitiveTexture       *GetNewPrimitiveTexture() override;
         PrimitiveMesh          *GetNewPrimitiveMesh() override;
         GraphicPrimitiveShader *GetNewGraphicPrimitiveShader() override;
@@ -143,7 +181,7 @@ namespace Engine
 		void InitializePipeline();
 		void DetachCommandThread();
 		float GetAspectRatio();
-		
+
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> m_local_param_;
 
         ComPtr<ID3D12Device2>   m_dev_;

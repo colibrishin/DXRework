@@ -10,7 +10,7 @@ namespace Engine
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12ComputePrimitiveShader : public ComputePrimitiveShader
 	{
 		D3D12ComputePrimitiveShader();
-		void                               Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;
+		void Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;
 		
 	private:
 		static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version;
