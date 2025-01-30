@@ -244,7 +244,7 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
             conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
             conf.Defines.Add("CFG_FOV=90.f");
-            conf.Defines.Add("CFG_RAYTRACING=0");
+            conf.Defines.Add("CFG_RAYTRACING=1");
             conf.Defines.Add("CFG_LAYER_COUNT=0");
             conf.Defines.Add("CFG_EPSILON=0.0001f");
 
