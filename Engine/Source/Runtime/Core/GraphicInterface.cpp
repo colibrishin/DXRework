@@ -1,3 +1,3 @@
 ﻿#include "GraphicInterface.h"
 
-Engine::Unique<Engine::GraphicInterface> Engine::GraphicInterfaceAccessor::s_graphic_interface = {};
+Engine::Unique<Engine::PolymorphicGraphicInterface> Engine::GraphicInterfaceAccessor::s_graphic_interface = {};

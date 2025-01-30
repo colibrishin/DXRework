@@ -763,6 +763,62 @@ namespace Engine
 		void* m_texture_ = nullptr;
 	};
 
+#if CFG_RAYTRACING
+    enum ENGINE_CORE_API eRaytracingShaderType
+    {
+        RAY_SHADER_GEN,
+        RAY_SHADER_ANY_HIT,
+        RAY_SHADER_CLOSEST_HIT,
+        RAY_SHADER_MISS,
+        RAY_SHADER_MAX
+    };
+    
+    enum ENGINE_CORE_API eRaytracingShaderRecordType
+    {
+        RAY_SHADER_REC_GEN = 0,
+        RAY_SHADER_REC_HIT,
+        RAY_SHADER_REC_MISS,
+        RAY_SHADER_REC_MAX
+    };
+    
+    namespace Resources
+    {
+        class RaytracingShader;
+    }
+    
+    struct ENGINE_CORE_API RaytracingPrimitiveShader
+    {
+    public:
+        virtual             ~RaytracingPrimitiveShader() = default;
+        virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
+        [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
+        virtual void        UpdateHitRecords(const byte_vector& hit_records) = 0;
+        [[nodiscard]] void* GetNativeShader() const
+        {
+            return m_shader_;
+        }
+        [[nodiscard]] void* GetNativeSampler() const 
+        {
+            return m_sampler_;
+        }
+
+    protected:
+        virtual void SetNativeShader(void* shader) 
+        {
+            m_shader_ = shader;
+        }
+
+        virtual void SetNativeSampler(void* sampler) 
+        {
+            m_sampler_ = sampler;
+        }
+
+    private:
+        void* m_shader_ = nullptr;
+        void* m_sampler_ = nullptr;
+    };
+#endif
+    
 	struct ENGINE_CORE_API PrimitiveShaderBase
     {
     public:
@@ -871,13 +927,6 @@ namespace Engine
 		{
 			m_index_buffer_ = buffer;
 		}
-
-#if CFG_RAYTRACING
-		static AccelStructBuffer& GetAccelStructBuffer(const Resources::Mesh* mesh)
-		{
-			return mesh->m_blas_;
-		}
-#endif
 		
 	private:
 		void* m_vertex_buffer_ = nullptr;
@@ -1253,13 +1302,44 @@ namespace Engine
 
 	using InstanceBufferContainer = aligned_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
 
-	struct ENGINE_CORE_API GraphicInterface
+	struct ENGINE_CORE_API PolymorphicGraphicInterface
 	{
-		virtual      ~GraphicInterface() = default;
-		INLINE_COMPILE_TIME_TYPENAME(GraphicInterface)
-
+		virtual ~PolymorphicGraphicInterface();
+		INLINE_COMPILE_TIME_TYPENAME(PolymorphicGraphicInterface);
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
+	};
+
+#if CFG_RAYTRACING
+	struct ENGINE_CORE_API RaytracingExtensionInterface : public PolymorphicGraphicInterface
+	{
+        ~RaytracingExtensionInterface() override = default;
+		INLINE_COMPILE_TIME_TYPENAME(RaytracingExtensionInterface)
+
+		virtual bool IsRaytracingSupported() = 0;
+		virtual void InitializeRaytracing() = 0;
+		virtual void ShutdownRaytracing() = 0;
+	    
+	    virtual RaytracingPrimitiveShader* GetNewRaytracingShader() = 0;
+	    
+		virtual void* GetRaytracingNativeInterface() = 0;
+		virtual void* GetRaytracingNativePipeline() = 0;
+
+	    [[nodiscard]] virtual bool BuildTopLevelAccelerationBuffer(RenderMap render_map[], AccelStructBuffer& top_level_accel_buffer, byte_vector& hit_records) = 0;
+		virtual void DispatchRay(
+            const GraphicInterfaceContextPrimitive* context,
+            Resources::RaytracingShader* shader,
+            const byte_vector& hit_records,
+            const AccelStructBuffer& top_level_accel_buffer
+        ) = 0;
+	};
+#endif
+
+	struct ENGINE_CORE_API GraphicInterface : public PolymorphicGraphicInterface
+	{
+		~GraphicInterface() override = default;
+		INLINE_COMPILE_TIME_TYPENAME(GraphicInterface)
+
 		virtual void WaitForNextFrame() = 0;
 		virtual void Present() = 0;
 		
@@ -1335,8 +1415,15 @@ namespace Engine
 
 		[[nodiscard]] static GraphicInterface& GetInterface()
 		{
-			return *s_graphic_interface;
+			return static_cast<GraphicInterface&>(*s_graphic_interface);
 		}
+
+#if CFG_RAYTRACING
+		[[nodiscard]] static RaytracingExtensionInterface& GetRaytracingInterface()
+		{
+			return static_cast<RaytracingExtensionInterface&>(*s_graphic_interface);
+		}
+#endif
 
 		static void Shutdown()
 		{
@@ -1348,7 +1435,7 @@ namespace Engine
 		}
 
 	private:
-		static Unique<GraphicInterface> s_graphic_interface;
+		static Unique<PolymorphicGraphicInterface> s_graphic_interface;
 	};
 
 	template <typename T>
