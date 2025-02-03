@@ -8,19 +8,6 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Components/**/*.build.cs")]
 
-public class FastBuildAllOverrideProject : FastBuildAllProject 
-{
-    public FastBuildAllOverrideProject() : base(typeof(EngineTarget))
-    {
-    }
-
-    [Configure()]
-    public virtual void ConfigureAll(Configuration conf, EngineTarget target) 
-    {
-        Utils.MakeConfiturationNameDefine(conf, target);
-    }
-}
-
 [Generate]
 public class EngineSolution : Solution
 {

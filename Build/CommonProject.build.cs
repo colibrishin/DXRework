@@ -5,6 +5,20 @@ using Sharpmake;
 
 [module:Include("Utils.cs")]
 
+public class FastBuildAllOverrideProject : FastBuildAllProject 
+{
+    public FastBuildAllOverrideProject() : base(typeof(EngineTarget))
+    {
+    }
+
+    [Configure()]
+    public virtual void ConfigureAll(Configuration conf, EngineTarget target) 
+    {
+        Utils.MakeConfiturationNameDefine(conf, target);
+    }
+}
+
+
 [Fragment, Flags]
 public enum ELaunchType
 {

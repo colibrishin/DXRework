@@ -39,15 +39,6 @@ public class KolibriProject : CommonProject
 
         string FastBuildPath = @"do-fastbuild.bat";
         FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
-
-        //FastBuildSettings.FastBuildMakeCommand = "msbuild Intermediate\\ProjectFiles\\EngineConfig.vcxproj /t:Rebuild /p:platform=x64 /p:configuration=\"" + conf.Name + "\"\n";
-        //FastBuildSettings.FastBuildMakeCommand += "if exist \"Intermediate\\ProjectFiles\\UserConfig.vcxproj\" ( msbuild Intermediate\\ProjectFiles\\UserConfig.vcxproj /t:Rebuild /p:platform=x64 /p:configuration=\"" + conf.Name + "\")\n";
-
-        /* if (ELaunchType.Editor == target.LaunchType)
-        {
-            conf.FastBuildMakeCommand += "if exist \"Intermediate\\ProjectFiles\\GameProject.vcxproj\" ( devenv Intermediate\\ProjectFiles\\GameProject.vcxproj /Build \"" + conf.Name + "\")\n";
-        } */
-        
     }
 }
 
@@ -56,8 +47,9 @@ public class KolibriSolution : Solution
 {
     public KolibriSolution() : base(typeof(EngineTarget))
     {
-        IsFileNameToLower = true;
+        IsFileNameToLower = false;
         Name = "Kolibri";
+        FastBuildAllProjectType = typeof(FastBuildAllOverrideProject);
 
         AddTargets(new EngineTarget(
             ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,

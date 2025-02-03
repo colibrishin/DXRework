@@ -406,10 +406,12 @@ Binaries/***
 Intermediate/***
 *.bff
 *.fdb
-kolibri.sln
 
 !Build/
 Programs/CMake/***
 Programs/vcpkg/***
 lock
 balius/target/.rustc_info.json
+Client/
+*.sln
+*.vcxproj
