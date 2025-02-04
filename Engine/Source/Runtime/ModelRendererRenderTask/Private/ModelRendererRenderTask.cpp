@@ -103,23 +103,23 @@ namespace Engine
                                 }
 
                                 const Strong<Resources::Material>   &locked_mtr    = mtr.lock();
-                                const Strong<Resources::ShaderBase> &locked_shader = locked_mtr->GetShader().lock();
+                                const Strong<Resources::ShaderBase>& locked_shader = locked_mtr->GetShader().lock();
 
-                                if ( locked_shader->GetShaderDomain() != domain )
-                                {
-                                    continue;
-                                }
+                                if (locked_shader->GetShaderDomain() != domain)
+                        {
+                            continue;
+                        }
 
                                 ShaderMap::accessor mesh_acc;
-                                if ( !acc->second.find( mesh_acc, locked_shader ) )
-                                {
-                                    acc->second.insert( mesh_acc, locked_shader );
-                                }
-
-                                if ( const Strong<Resources::Mesh> &locked_mesh = mesh.lock() )
-                                {
-                                    decltype( mesh_acc->second )::accessor shader_acc;
-                                    if ( !mesh_acc->second.find( shader_acc, locked_mesh ) )
+                        if (!acc->second.find(mesh_acc, locked_shader))
+                        {
+                            acc->second.insert(mesh_acc, locked_shader);
+                        }
+                       
+                        if (const Strong<Resources::Mesh>& locked_mesh = mesh.lock())
+                        {
+                            decltype(mesh_acc->second)::accessor shader_acc;
+                            if (!mesh_acc->second.find(shader_acc, locked_mesh ) )
                                     {
                                         mesh_acc->second.insert( shader_acc, locked_mesh );
                                     }

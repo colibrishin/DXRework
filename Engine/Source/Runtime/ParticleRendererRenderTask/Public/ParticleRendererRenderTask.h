@@ -11,7 +11,7 @@ namespace Engine
     {
         INLINE_COMPILE_TIME_TYPENAME(ParticleRendererRenderInstanceTask)
 
-        ~ParticleRendererRenderInstanceTask();
+        ~ParticleRendererRenderInstanceTask() override;
         ParticleRendererRenderInstanceTask();
 
         void Run(
