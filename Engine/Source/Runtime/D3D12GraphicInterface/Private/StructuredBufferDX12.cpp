@@ -3,7 +3,7 @@
 #include <directxtk12/Keyboard.h>
 
 #include "CommandPair.h"
-#include "Descriptors.h"
+#include "DescriptorPtrImpl.h"
 #include "ThrowIfFailed.h"
 
 #include "SIMDExtension/Public/SIMDExtension.hpp"
@@ -428,4 +428,9 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeReadBuffer(UINT 
 			IID_PPV_ARGS(m_read_buffer_.ReleaseAndGetAddressOf())
 		)
 	);
+}
+
+void* Engine::Graphics::D3D12StructuredBufferTypeless::GetResource() const
+{
+    return m_buffer_.Get();
 }

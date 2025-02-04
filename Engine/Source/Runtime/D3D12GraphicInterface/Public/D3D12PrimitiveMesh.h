@@ -10,9 +10,12 @@ namespace Engine
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveMesh : public PrimitiveMesh
 	{
 		D3D12PrimitiveMesh() = default;
-		void Generate(const Resources::Mesh* mesh) override;
+		void                   Generate(Resources::Mesh* mesh) override;
 
-	private:
+        [[nodiscard]] uint64_t GetNativeVertexBufferGPUAddress() const override;
+	    [[nodiscard]] uint64_t GetNativeIndexBufferGPUAddress() const override;
+
+    private:
 		ComPtr<ID3D12Resource> m_native_vertex_buffer_;
 		D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_{};
 		ComPtr<ID3D12Resource> m_native_index_buffer_;
