@@ -29,7 +29,6 @@ public class Shader : EngineCommonProject
             @"common.hlsli",
             @"default.hlsl",
             @"normal.hlsl",
-            @"raytracing.hlsl",
             @"refraction.hlsl",
             @"skybox.hlsl",
             @"specular.hlsl",

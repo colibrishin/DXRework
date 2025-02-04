@@ -29,7 +29,7 @@ namespace Engine::Resources
 		const ePrimitiveTopologyType topology_type,
 		const eSampler               sampler_slot
 	)
-        : ShaderBase( path, domain ),
+		: ShaderBase(path, domain),
 		  m_depth_enabled_(depth_enabled),
 		  m_depth_mode_(depth),
 		  m_depth_func_(depth_func),
@@ -52,7 +52,6 @@ namespace Engine::Resources
 	Shader::Shader(const Shader& other)
 		: ShaderBase( other )
 	{
-		m_domain_         = other.m_domain_;
 		m_depth_enabled_  = other.m_depth_enabled_;
 		m_depth_mode_     = other.m_depth_mode_;
 		m_depth_func_     = other.m_depth_func_;
@@ -188,11 +187,6 @@ namespace Engine::Resources
 	void Shader::OnDeserialized()
 	{
 		Resource::OnDeserialized();
-	}
-
-	eShaderDomain Shader::GetDomain() const
-	{
-		return m_domain_;
 	}
 
 	bool Shader::IsDepthEnabled() const

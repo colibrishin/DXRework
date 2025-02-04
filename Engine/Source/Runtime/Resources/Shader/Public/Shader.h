@@ -2,13 +2,15 @@
 #include <filesystem>
 #include <magic_enum.hpp>
 #include <memory>
-#include "ShaderBase.h"
+
+#include "GraphicInterface.h"
 
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "ResourceManager/Public/ResourceManager.h"
+#include "Source/Runtime/Core/Resource/Public/Resource.h"
+#include "ShaderBase.h"
 
 #include "Shader.generated.h"
-
 
 namespace Engine 
 {
@@ -69,8 +71,7 @@ namespace Engine::Resources
 		void FixedUpdate(float dt) override;
 		void PostUpdate(float dt) override;
 
-		[[nodiscard]] eShaderDomain               GetDomain() const;
-        [[nodiscard]] bool                        IsDepthEnabled() const;
+		[[nodiscard]] bool                        IsDepthEnabled() const;
         [[nodiscard]] eShaderDepthMode            GetDepthMode() const;
         [[nodiscard]] eShaderDepthFunction        GetDepthFunction() const;
         [[nodiscard]] eShaderSamplerAddress       GetSamplerAddressMode() const;
@@ -94,7 +95,7 @@ namespace Engine::Resources
 
 	private:
 		Shader();
-
+	    
 		EPROPERTY()
 		bool m_depth_enabled_;
 		EPROPERTY()
