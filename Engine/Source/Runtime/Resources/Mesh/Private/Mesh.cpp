@@ -195,7 +195,7 @@ namespace Engine::Resources
 	}
 
 #if CFG_RAYTRACING
-	const AccelStructBuffer& Mesh::GetBLAS() const
+	AccelStructBuffer& Mesh::GetBLAS()
 	{
 		return m_blas_;
 	}
@@ -236,6 +236,7 @@ namespace Engine::Resources
 				 sizeof(Vector3)
 				);
 
+	    m_vertex_buffer_structured_ = std::make_unique<decltype(m_vertex_buffer_structured_)::element_type>(GraphicInterfaceAccessor::GetInterface().GetStructuredBuffer<Graphics::VertexElement>());
 		m_primitive_mesh_ = Unique<PrimitiveMesh>(GraphicInterfaceAccessor::GetInterface().GetNewPrimitiveMesh());
 		m_primitive_mesh_->Generate(this);
 	}
@@ -248,33 +249,17 @@ namespace Engine::Resources
 		m_vertex_buffer_structured_.reset();
 
 #if CFG_RAYTRACING
-		if (m_blas_.resultPool.GetResource())
+		if (m_blas_.resultPool && m_blas_.resultPool->GetResource<void>())
 		{
-			m_blas_.resultPool.Release();
+			m_blas_.resultPool->Release();
 		}
-		if (m_blas_.scratchPool.GetResource())
+		if (m_blas_.scratchPool && m_blas_.scratchPool->GetResource<void>())
 		{
-			m_blas_.scratchPool.Release();
+			m_blas_.scratchPool->Release();
 		}
-		if (m_raytracing_vertex_buffer_)
+		if (m_blas_.instanceDescPool && m_blas_.instanceDescPool->GetResource<void>())
 		{
-			m_raytracing_vertex_buffer_->Release();
-		}
-		if (m_raytracing_index_buffer_)
-		{
-			m_raytracing_index_buffer_->Release();
-		}
-		if (m_raytracing_vertex_buffer_upload_)
-		{
-			m_raytracing_vertex_buffer_upload_->Release();
-		}
-		if (m_raytracing_index_buffer_upload_)
-		{
-			m_raytracing_index_buffer_upload_->Release();
-		}
-		if (m_blas_.instanceDescPool.GetResource())
-		{
-			m_blas_.instanceDescPool.Release();
+			m_blas_.instanceDescPool->Release();
 		}
 #endif
 
