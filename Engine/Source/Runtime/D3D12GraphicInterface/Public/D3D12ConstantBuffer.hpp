@@ -1,11 +1,8 @@
 #pragma once
 #include <directx/d3d12.h>
-#include <directx/d3dx12.h>
 
 #include "CommandPair.h"
-#include "Descriptors.h"
-#include "ThrowIfFailed.h"
-#include "Source/Runtime/Core/ConstantBuffer.h"
+#include "DescriptorPtrImpl.h"
 
 namespace Engine::Graphics
 {
@@ -29,7 +26,7 @@ namespace Engine::Graphics
 
 		void Bind(const CommandPair* cmd, const DescriptorPtrImpl* heap, const size_t slot);
 
-		[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const
+		[[nodiscard]] UINT64 GetGPUAddress() const override
 		{
 			return m_buffer_->GetGPUVirtualAddress();
 		}
@@ -38,7 +35,7 @@ namespace Engine::Graphics
 		{
 			return m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart();
 		}
-
+	    
 	private:
 		bool m_b_dirty_;
 		char* m_data_;

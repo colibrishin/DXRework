@@ -1,4 +1,4 @@
-#include "../Public/ConstantBufferDX12.hpp"
+#include "../Public/D3D12ConstantBuffer.hpp"
 
 #include "SIMDExtension/Public/SIMDExtension.hpp"
 
