@@ -423,13 +423,19 @@ namespace Engine
 		SB_TYPE_END
 	};
 
-	enum ENGINE_CORE_API eRaytracingSBType
+	enum ENGINE_CORE_API eRaytracingGlobalSBType
 	{
-		SB_TYPE_RAYTRACING_TLAS,
-		SB_TYPE_RAYTRACING_VERTEX,
-		SB_TYPE_RAYTRACING_INDEX,
-		SB_TYPE_RAYTRACING_END
+	    SB_TYPE_RAYTRACING_GLOBAL_INSTANCE,
+	    SB_TYPE_RAYTRACING_GLOBAL_LIGHT,
+		SB_TYPE_RAYTRACING_GLOBAL_END
 	};
+
+    enum ENGINE_CORE_API eRaytracingLocalSBType
+    {
+        SB_TYPE_RAYTRACING_LOCAL_VERTEX,
+        SB_TYPE_RAYTRACING_LOCAL_INDEX,
+        SB_TYPE_RAYTRACING_LOCAL_END
+    };
 
 	enum ENGINE_CORE_API eReservedTexBindSlot : uint8_t
 	{
@@ -478,23 +484,33 @@ namespace Engine
 		RASTERIZER_SLOT_COUNT
 	};
 
+    enum ENGINE_CORE_API eRaytracingGlobalSlot : uint8_t
+    {
+        RAYTRACING_GLOBAL_SLOT_TLAS,
+        RAYTRACING_GLOBAL_SLOT_LIGHT,
+        RAYTRACING_GLOBAL_SLOT_INSTANCE,
+        RAYTRACING_GLOBAL_SLOT_OUTPUT,
+        RAYTRACING_GLOBAL_SLOT_WVP,
+        RAYTRACING_GLOBAL_SLOT_PARAM,
+        RAYTRACING_GLOBAL_SLOT_COUNT
+    };
+    
+    enum ENGINE_CORE_API eRaytracingLocalSlot : uint8_t
+    {
+        RAYTRACING_LOCAL_SLOT_SRV,
+        RAYTRACING_LOCAL_SLOT_UAV,
+        RAYTRACING_LOCAL_SLOT_SAMPLER,
+        RAYTRACING_LOCAL_SLOT_RANGE_END,
+        RAYTRACING_LOCAL_SLOT_VERTEX = RAYTRACING_LOCAL_SLOT_RANGE_END,
+        RAYTRACING_LOCAL_SLOT_INDEX,
+        RAYTRACING_LOCAL_SLOT_END
+    };
+
 	enum ENGINE_CORE_API eCBType : uint8_t
 	{
 		CB_TYPE_WVP = 0,
 		CB_TYPE_PARAM,
 		CB_TYPE_END,
-	};
-
-	enum ENGINE_CORE_API eRaytracingCBType : uint8_t
-	{
-		RAYTRACING_CB_VIEWPORT = 0,
-		RAYTRACING_CB_COUNT
-	};
-
-	enum ENGINE_CORE_API eRaytracingCBLocalType : uint8_t
-	{
-		RAYTRACING_CB_LOCAL_MATERIAL = 0,
-		RAYTRACING_CB_LOCAL_COUNT
 	};
 
 	constexpr UINT g_max_cb_slots = CB_TYPE_END;
@@ -506,6 +522,10 @@ namespace Engine
 	constexpr UINT g_srv_offset = 0;
 	constexpr UINT g_cb_offset = g_max_engine_texture_slots;
 	constexpr UINT g_uav_offset = g_cb_offset + g_max_cb_slots;
+
+    constexpr UINT g_local_raytracing_srv_offset = 0;
+    constexpr UINT g_local_raytracing_uav_offset = g_max_engine_texture_slots;
+    constexpr UINT g_local_raytracing_total_engine_slots = g_max_engine_texture_slots + g_max_uav_slots;
 
 	enum ENGINE_CORE_API eToolkitRenderType : uint8_t
 	{
@@ -713,7 +733,8 @@ namespace Engine
 		class BaseAnimation;
 		class Material;
 		class Shader;
-        class ShaderBase;
+	    class ShaderBase;
+	    class RaytracingShader;
 		class AnimationTexture;
 		class ShadowTexture;
 		class Texture1D;
