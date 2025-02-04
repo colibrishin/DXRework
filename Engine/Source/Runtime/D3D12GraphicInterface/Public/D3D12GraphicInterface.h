@@ -1,10 +1,18 @@
 #pragma once
-#include "Source/Runtime/Core/GraphicInterface.h"
 #include "CommandPair.h"
+#include "GraphicInterface.h"
 
-#include <wrl/client.h>
-#include <directx/d3d12.h>
 #include <dxgi1_5.h>
+#include <directx/d3d12.h>
+#include <wrl/client.h>
+
+#include "DescriptorHandler.hpp"
+#include "default_heap_allocator.hpp"
+#include "default_heap_binder.hpp"
+#include "default_heap_getter.hpp"
+#include "raytracing_heap_allocator.hpp"
+#include "raytracing_heap_binder.hpp"
+#include "raytracing_heap_getter.hpp"
 
 #include "ModuleManager.h"
 
@@ -22,29 +30,15 @@ namespace Engine
 		const std::vector<std::string>& LoadAfter() const override;
 	};
 
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
-	{
-	public:
-		void SetResource(void* resource) override
-		{
-			GraphicResourcePrimitive::SetResource(resource);
-			m_native_resource_ = static_cast<ID3D12Resource*>(resource);
-		}
-
-		ID3D12Resource** GetAddressOf()
-		{
-			return m_native_resource_.GetAddressOf();
-		}
-		
-	private:
-		ComPtr<ID3D12Resource> m_native_resource_;
-	};
-	
+#if CFG_RAYTRACING
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public virtual GraphicInterface, public virtual RaytracingExtensionInterface
+#else
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
 #endif
 	{
 		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
 	public:
+	    D3D12GraphicInterface();
 		void Initialize() override;
 		void Shutdown() override;
 		void WaitForNextFrame() override;
@@ -53,50 +47,56 @@ namespace Engine
 		void* GetNativeInterface() override;
 		void* GetNativePipeline() override;
 
-#if CFG_RAYTRACING
 		bool IsRaytracingSupported() override;
-		void InitializeSampler() const;
+		void InitializeSampler();
 		void InitializeRaytracing() override;
 		void ShutdownRaytracing() override;
+
+	    Unique<GraphicHeapBase> GetRaytracingHeap() override;
 		
 		void* GetRaytracingNativeInterface() override;
 		void* GetRaytracingNativePipeline() override;
 
-	    [[nodiscard]] bool BuildTopLevelAccelerationBuffer(RenderMap render_map[], AccelStructBuffer& top_level_accel_buffer, byte_vector& hit_records) override;
+	    bool BuildTopLevelAccelerationBuffer(
+            const GraphicInterfaceContextPrimitive* context,
+            RenderMap const* render_map,
+            size_t render_map_size,
+            AccelStructBuffer& out_tlas_buffer,
+            const ObjectPredication& predication = {}) override;
 	    
 		void DispatchRay(
-            const GraphicInterfaceContextPrimitive* context,
-            Resources::RaytracingShader* shader,
-            const byte_vector& hit_records,
-            const AccelStructBuffer& top_level_accel_buffer
+            const GraphicInterfaceContextPrimitive* context, const Resources::RaytracingShader* shader, const
+            StructuredBufferTypeProxy<Graphics::SBs::LightSB>& light, const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>
+            & instances, const ConstantBufferTypeProxy<Graphics::CBs::PerspectiveCB>& perspective, const ConstantBufferTypeProxy
+            <Graphics::CBs::ParamCB>& param, const byte_stream& hit_records, const AccelStructBuffer& top_level_accel_buffer
         ) override;
+
+	    void CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context) override;
+	    
 	private:
 		void QueryDevice();
-		void InitializeDescriptorHeaps();
+		void InitializeRaytracingDescriptorHeaps();
 		void InitializeGlobalRootSignature();
 		void InitializeOutputBuffer();
 		
 		ComPtr<ID3D12Device5> m_raytracing_dev_ = nullptr;
 		ComPtr<ID3D12RootSignature> m_raytracing_root_pipeline_ = nullptr;
 
-		ComPtr<ID3D12DescriptorHeap> m_raytracing_buffer_heap_;
-		ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_;
-		
-		UINT m_buffer_descriptor_size_ = 0;
-		UINT m_sampler_descriptor_size_ = 0;
+	    Strong<DescriptorHandler<raytracing_heap_allocator, raytracing_heap_getter, raytracing_heap_binder>> m_raytracing_heap_handler_{};
 
+	    ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_ = nullptr;
 		ComPtr<ID3D12Resource> m_output_buffer_ = nullptr;
-		ComPtr<ID3D12DescriptorHeap> m_output_buffer_heap_ = nullptr;
-		ComPtr<ID3D12DescriptorHeap> m_raytracing_heap_ = nullptr;
+	    ComPtr<ID3D12DescriptorHeap> m_output_heap_ = nullptr;
 
 	public:
 #endif
-		PrimitiveTexture       *GetNewPrimitiveTexture() override;
-        PrimitiveMesh          *GetNewPrimitiveMesh() override;
-        GraphicPrimitiveShader *GetNewGraphicPrimitiveShader() override;
-        ComputePrimitiveShader *GetNewComputePrimitiveShader() override;
-        PrimitiveFont          *GetNewPrimitiveFont() override;
-        PrimitiveSampler       *GetNewPrimitiveSampler() override;
+		PrimitiveTexture*       GetNewPrimitiveTexture() override;
+		PrimitiveMesh*          GetNewPrimitiveMesh() override;
+		GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() override;
+		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
+	    PrimitiveFont          *GetNewPrimitiveFont() override;
+	    PrimitiveSampler       *GetNewPrimitiveSampler() override;
+	    RaytracingPrimitiveShader* GetNewRaytracingShader() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 
@@ -196,7 +196,7 @@ namespace Engine
 
         ComPtr<ID3D12RootSignature> m_pipeline_root_signature_;
 
-        Strong<DescriptorHandler> m_heap_handler_;
+        Strong<DescriptorHandler<default_heap_allocator, default_heap_getter, default_heap_binder>> m_heap_handler_;
         CommandPairTask           m_command_pair_task_;
         std::thread               m_command_task_thread_;
 
