@@ -4,8 +4,8 @@
 #include "StructuredBuffer/Public/StructuredBuffer.h"
 
 namespace Engine
-{
-	enum ENGINE_CORE_API eHeapType
+{    
+	enum ENGINE_CORERENDER_API eHeapType
 	{
 		HEAP_TYPE_DEFAULT	= 1,
 		HEAP_TYPE_UPLOAD	= 2,
@@ -14,7 +14,7 @@ namespace Engine
 		HEAP_TYPE_GPU_UPLOAD	= 5
 	};
 
-	enum ENGINE_CORE_API eHeapFlag
+	enum ENGINE_CORERENDER_API eHeapFlag
 	{
 		HEAP_FLAG_NONE	= 0,
 		HEAP_FLAG_SHARED	= 0x1,
@@ -35,7 +35,7 @@ namespace Engine
 		HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES	= 0x84
 	};
 	
-	struct ENGINE_CORE_API Viewport
+	struct ENGINE_CORERENDER_API Viewport
 	{
 		float topLeftX;
 		float topLeftY;
@@ -45,7 +45,7 @@ namespace Engine
 		float maxDepth;
 	};
 
-	enum ENGINE_CORE_API eFormat
+	enum ENGINE_CORERENDER_API eFormat
 	{
 		TEX_FORMAT_UNKNOWN = 0,
 		TEX_FORMAT_R32G32B32A32_TYPELESS = 1,
@@ -177,7 +177,7 @@ namespace Engine
 		return v;
 	}
 
-	enum ENGINE_CORE_API eSamplerFilter
+	enum ENGINE_CORERENDER_API eSamplerFilter
 	{
 		SAMPLER_FILTER_MIN_MAG_MIP_POINT = 0,
 		SAMPLER_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x1,
@@ -221,7 +221,7 @@ namespace Engine
 		SAMPLER_FILTER_MAXIMUM_ANISOTROPIC = 0x1d5
 	};
 
-	enum ENGINE_CORE_API ePrimitiveTopologyType
+	enum ENGINE_CORERENDER_API ePrimitiveTopologyType
 	{
 		PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED = 0,
 		PRIMITIVE_TOPOLOGY_TYPE_POINT = 1,
@@ -230,7 +230,7 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_TYPE_PATCH = 4
 	};
 
-	enum ENGINE_CORE_API ePrimitiveTopology
+	enum ENGINE_CORERENDER_API ePrimitiveTopology
 	{
 		PRIMITIVE_TOPOLOGY_UNDEFINED = 0,
 		PRIMITIVE_TOPOLOGY_POINTLIST = 1,
@@ -277,7 +277,7 @@ namespace Engine
 		PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST = 64
 	};
 
-	enum ENGINE_CORE_API eResourceFlag
+	enum ENGINE_CORERENDER_API eResourceFlag
 	{
 		RESOURCE_FLAG_NONE = 0,
 		RESOURCE_FLAG_ALLOW_RENDER_TARGET = 0x1,
@@ -293,7 +293,7 @@ namespace Engine
 
 	using eResourceFlags = UINT;
 
-	enum ENGINE_CORE_API eTextureLayout : uint8_t
+	enum ENGINE_CORERENDER_API eTextureLayout : uint8_t
 	{
 		TEX_LAYOUT_UNKNOWN = 0,
 		TEX_LAYOUT_ROW_MAJOR = 1,
@@ -301,13 +301,13 @@ namespace Engine
 		TEX_LAYOUT_64KB_STANDARD_SWIZZLE = 3
 	};
 
-	struct ENGINE_CORE_API SamplerDescription
+	struct ENGINE_CORERENDER_API SamplerDescription
 	{
 		UINT Count;
 		UINT Quality;
 	};
 
-	enum ENGINE_CORE_API eTexType
+	enum ENGINE_CORERENDER_API eTexType
 	{
 		TEX_TYPE_UNKNOWN = -1,
 		TEX_TYPE_1D,
@@ -316,7 +316,7 @@ namespace Engine
 		TEX_TYPE_BUFFER,
 	};
 
-	enum ENGINE_CORE_API eUAVNativeType
+	enum ENGINE_CORERENDER_API eUAVNativeType
 	{
 		UAV_DIMENSION_UNKNOWN = 0,
 		UAV_DIMENSION_BUFFER = 1,
@@ -329,13 +329,13 @@ namespace Engine
 		UAV_DIMENSION_TEXTURE3D = 8
 	};
 
-	enum ENGINE_CORE_API eUAVBufferFlag
+	enum ENGINE_CORERENDER_API eUAVBufferFlag
 	{
 		BUFFER_UAV_FLAG_NONE = 0,
 		BUFFER_UAV_FLAG_RAW = 0x1
 	};
 
-	struct ENGINE_CORE_API BufferUAVDescription
+	struct ENGINE_CORERENDER_API BufferUAVDescription
 	{
 		UINT64 FirstElement = 0;
 		UINT NumElements = 0;
@@ -344,7 +344,7 @@ namespace Engine
 		eUAVBufferFlag Flags = BUFFER_UAV_FLAG_NONE;
 	};
 
-	struct ENGINE_CORE_API Tex1dUAVDescription
+	struct ENGINE_CORERENDER_API Tex1dUAVDescription
 	{
 		UINT MipSlice = 0;
 
@@ -358,20 +358,20 @@ namespace Engine
 		}
 	};
 
-	struct ENGINE_CORE_API Tex1dArrayUAVDescription
+	struct ENGINE_CORERENDER_API Tex1dArrayUAVDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dUAVDescription
+	struct ENGINE_CORERENDER_API Tex2dUAVDescription
 	{
 		UINT MipSlice = 0;
 		UINT PlaneSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dArrayUAVDescription
+	struct ENGINE_CORERENDER_API Tex2dArrayUAVDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstArraySlice = 0;
@@ -379,25 +379,25 @@ namespace Engine
 		UINT PlaneSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsUAVDescription
+	struct ENGINE_CORERENDER_API Tex2dMsUAVDescription
 	{
 		UINT UnusedField_NothingToDefine = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsArrayUAVDescription
+	struct ENGINE_CORERENDER_API Tex2dMsArrayUAVDescription
 	{
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API Tex3dUAVDescription
+	struct ENGINE_CORERENDER_API Tex3dUAVDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstWSlice = 0;
 		UINT WSize = 0;
 	};
 
-	struct ENGINE_CORE_API UAVDescription
+	struct ENGINE_CORERENDER_API UAVDescription
 	{
 		eFormat Format{};
 		eUAVNativeType ViewDimension{};
@@ -414,36 +414,36 @@ namespace Engine
 		};
 	};
 
-	struct ENGINE_CORE_API BufferRtvDescription
+	struct ENGINE_CORERENDER_API BufferRtvDescription
 	{
 		UINT64 FirstElement{};
 		UINT NumElements{};
 	};
 
-	struct ENGINE_CORE_API Tex1dRtvDescription
+	struct ENGINE_CORERENDER_API Tex1dRtvDescription
 	{
 		UINT MipSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex1dArrayRtvDescription
+	struct ENGINE_CORERENDER_API Tex1dArrayRtvDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dRtvDescription
+	struct ENGINE_CORERENDER_API Tex2dRtvDescription
 	{
 		UINT MipSlice = 0;
 		UINT PlaneSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsRtvDescription
+	struct ENGINE_CORERENDER_API Tex2dMsRtvDescription
 	{
 		UINT UnusedField_NothingToDefine = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dArrayRtvDescription
+	struct ENGINE_CORERENDER_API Tex2dArrayRtvDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstArraySlice = 0;
@@ -451,20 +451,20 @@ namespace Engine
 		UINT PlaneSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsArrayRtvDescription
+	struct ENGINE_CORERENDER_API Tex2dMsArrayRtvDescription
 	{
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API Tex3dRtvDescription
+	struct ENGINE_CORERENDER_API Tex3dRtvDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstWSlice = 0;
 		UINT WSize = 0;
 	};
 
-	enum ENGINE_CORE_API eNativeRtvType
+	enum ENGINE_CORERENDER_API eNativeRtvType
 	{
 		RTV_DIMENSION_UNKNOWN = 0,
 		RTV_DIMENSION_BUFFER = 1,
@@ -477,7 +477,7 @@ namespace Engine
 		RTV_DIMENSION_TEXTURE3D = 8
 	};
 
-	struct ENGINE_CORE_API RtvDescription
+	struct ENGINE_CORERENDER_API RtvDescription
 	{
 		eFormat Format{};
 		eNativeRtvType ViewDimension{};
@@ -494,50 +494,50 @@ namespace Engine
 		};
 	};
 
-	struct ENGINE_CORE_API Tex1dDsvDescription
+	struct ENGINE_CORERENDER_API Tex1dDsvDescription
 	{
 		UINT MipSlice = 0;
 	};
 
-	struct ENGINE_CORE_API Tex1dArrayDsvDescription
-	{
-		UINT MipSlice = 0;
-		UINT FirstArraySlice = 0;
-		UINT ArraySize = 0;
-	};
-
-	struct ENGINE_CORE_API Tex2dDsvDescription
-	{
-		UINT MipSlice = 0;
-	};
-
-	struct ENGINE_CORE_API Tex2dArrayDsvDescription
+	struct ENGINE_CORERENDER_API Tex1dArrayDsvDescription
 	{
 		UINT MipSlice = 0;
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsDsvDescription
+	struct ENGINE_CORERENDER_API Tex2dDsvDescription
+	{
+		UINT MipSlice = 0;
+	};
+
+	struct ENGINE_CORERENDER_API Tex2dArrayDsvDescription
+	{
+		UINT MipSlice = 0;
+		UINT FirstArraySlice = 0;
+		UINT ArraySize = 0;
+	};
+
+	struct ENGINE_CORERENDER_API Tex2dMsDsvDescription
 	{
 		UINT UnusedField_NothingToDefine = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsArrayDsvDescription
+	struct ENGINE_CORERENDER_API Tex2dMsArrayDsvDescription
 	{
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
 
-	enum ENGINE_CORE_API eDsvFlag
+	enum ENGINE_CORERENDER_API eDsvFlag
 	{
 		DSV_FLAG_NONE = 0,
 		DSV_FLAG_READ_ONLY_DEPTH = 0x1,
 		DSV_FLAG_READ_ONLY_STENCIL = 0x2
 	};
 
-	enum ENGINE_CORE_API eNativeDsvType
+	enum ENGINE_CORERENDER_API eNativeDsvType
 	{
 		DSV_DIMENSION_UNKNOWN = 0,
 		DSV_DIMENSION_TEXTURE1D = 1,
@@ -548,7 +548,7 @@ namespace Engine
 		DSV_DIMENSION_TEXTURE2DMSARRAY = 6
 	};
 
-	struct ENGINE_CORE_API DsvDescription
+	struct ENGINE_CORERENDER_API DsvDescription
 	{
 		eFormat Format{};
 		eNativeDsvType ViewDimension{};
@@ -564,13 +564,13 @@ namespace Engine
 		};
 	};
 
-	enum ENGINE_CORE_API eSrvFlag
+	enum ENGINE_CORERENDER_API eSrvFlag
 	{
 		BUFFER_SRV_FLAG_NONE = 0,
 		BUFFER_SRV_FLAG_RAW = 0x1
 	};
 
-	struct ENGINE_CORE_API BufferSrvDescription
+	struct ENGINE_CORERENDER_API BufferSrvDescription
 	{
 		UINT64 FirstElement = 0;
 		UINT NumElements = 0;
@@ -578,14 +578,14 @@ namespace Engine
 		eSrvFlag Flags = BUFFER_SRV_FLAG_NONE;
 	};
 
-	struct ENGINE_CORE_API Tex1dSrvDescription
+	struct ENGINE_CORERENDER_API Tex1dSrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API Tex1dArraySrvDescription
+	struct ENGINE_CORERENDER_API Tex1dArraySrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
@@ -594,7 +594,7 @@ namespace Engine
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dSrvDescription
+	struct ENGINE_CORERENDER_API Tex2dSrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
@@ -602,7 +602,7 @@ namespace Engine
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dArraySrvDescription
+	struct ENGINE_CORERENDER_API Tex2dArraySrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
@@ -612,21 +612,21 @@ namespace Engine
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API Tex3dSrvDescription
+	struct ENGINE_CORERENDER_API Tex3dSrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API TexCubeSrvDescription
+	struct ENGINE_CORERENDER_API TexCubeSrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API TexCubeArraySrvDescription
+	struct ENGINE_CORERENDER_API TexCubeArraySrvDescription
 	{
 		UINT  MostDetailedMip = 0;
 		UINT  MipLevels = 0;
@@ -635,23 +635,23 @@ namespace Engine
 		FLOAT ResourceMinLODClamp = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsSrvDescription
+	struct ENGINE_CORERENDER_API Tex2dMsSrvDescription
 	{
 		UINT UnusedField_NothingToDefine = 0;
 	};
 
-	struct ENGINE_CORE_API Tex2dMsArraySrvDescription
+	struct ENGINE_CORERENDER_API Tex2dMsArraySrvDescription
 	{
 		UINT FirstArraySlice = 0;
 		UINT ArraySize = 0;
 	};
 
-	struct ENGINE_CORE_API AccelStructSrvDescription
+	struct ENGINE_CORERENDER_API AccelStructSrvDescription
 	{
 		uint64_t Location = 0; //todo: address type;
 	};
 
-	enum ENGINE_CORE_API eNativeSrvType
+	enum ENGINE_CORERENDER_API eNativeSrvType
 	{
 		SRV_DIMENSION_UNKNOWN = 0,
 		SRV_DIMENSION_BUFFER = 1,
@@ -667,7 +667,7 @@ namespace Engine
 		SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE = 11
 	};
 
-	struct ENGINE_CORE_API SrvDescription
+	struct ENGINE_CORERENDER_API SrvDescription
 	{
 		eFormat Format{};
 		eNativeSrvType ViewDimension{};
@@ -692,7 +692,7 @@ namespace Engine
             ( ( ( ( 0 ) & 0x7 ) | ( ( ( 1 ) & 0x7 ) << 3 ) | ( ( ( 2 ) & 0x7 ) << ( 3 * 2 ) ) |
                 ( ( ( 3 ) & 0x7 ) << ( 3 * 3 ) ) | ( 1 << ( 3 * 4 ) ) ) );
 
-	struct ENGINE_CORE_API GenericTextureDescription
+	struct ENGINE_CORERENDER_API GenericTextureDescription
 	{
 		eTexType				 Dimension = TEX_TYPE_UNKNOWN;
 		UINT64                   Alignment = 0;
@@ -714,7 +714,7 @@ namespace Engine
 		UAVDescription			 Uav = ZeroSet<decltype(Uav)>();
 	};
 
-	struct ENGINE_CORE_API PrimitiveTexture
+	struct ENGINE_CORERENDER_API PrimitiveTexture
 	{
 		virtual      ~PrimitiveTexture() = default;
 		virtual void Generate(Resources::Texture* texture) = 0;
@@ -752,7 +752,9 @@ namespace Engine
 			return m_description_;
 		}
 
-	protected:
+        [[nodiscard]] virtual uint64_t GetGPUAddress() const = 0;
+
+    protected:
 		virtual void SetPrimitiveTexture(void* texture)
 		{
 			m_texture_ = texture;
@@ -763,8 +765,7 @@ namespace Engine
 		void* m_texture_ = nullptr;
 	};
 
-#if CFG_RAYTRACING
-    enum ENGINE_CORE_API eRaytracingShaderType
+    enum ENGINE_CORERENDER_API eRaytracingShaderType
     {
         RAY_SHADER_GEN,
         RAY_SHADER_ANY_HIT,
@@ -773,7 +774,7 @@ namespace Engine
         RAY_SHADER_MAX
     };
     
-    enum ENGINE_CORE_API eRaytracingShaderRecordType
+    enum ENGINE_CORERENDER_API eRaytracingShaderRecordType
     {
         RAY_SHADER_REC_GEN = 0,
         RAY_SHADER_REC_HIT,
@@ -786,13 +787,13 @@ namespace Engine
         class RaytracingShader;
     }
     
-    struct ENGINE_CORE_API RaytracingPrimitiveShader
+    struct ENGINE_CORERENDER_API RaytracingPrimitiveShader : public PrimitiveShaderBase
     {
     public:
         virtual             ~RaytracingPrimitiveShader() = default;
         virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
         [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
-        virtual void        UpdateHitRecords(const byte_vector& hit_records) = 0;
+        virtual void        UpdateHitRecords(const byte_stream& hit_records) = 0;
         [[nodiscard]] void* GetNativeShader() const
         {
             return m_shader_;
@@ -817,46 +818,38 @@ namespace Engine
         void* m_shader_ = nullptr;
         void* m_sampler_ = nullptr;
     };
-#endif
     
-	struct ENGINE_CORE_API PrimitiveShaderBase
-    {
-    public:
-        virtual ~PrimitiveShaderBase() = default;
-
-        [[nodiscard]] void *GetNativeShader() const
-        {
-            return m_shader_;
-        }
-        [[nodiscard]] void *GetNativeSampler() const
-        {
-            return m_sampler_;
-        }
-
-    protected:
-        virtual void SetNativeShader( void *shader )
-        {
-            m_shader_ = shader;
-        }
-
-        virtual void SetNativeSampler( void *sampler )
-        {
-            m_sampler_ = sampler;
-        }
-
-    private:
-        void *m_shader_  = nullptr;
-        void *m_sampler_ = nullptr;
-    };
-
-	struct ENGINE_CORE_API GraphicPrimitiveShader : public PrimitiveShaderBase
+	struct ENGINE_CORERENDER_API GraphicPrimitiveShader : public PrimitiveShaderBase
 	{
 	public:
 		virtual             ~GraphicPrimitiveShader() = default;
 		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
+		[[nodiscard]] void* GetNativeShader() const
+		{
+			return m_shader_;
+		}
+		[[nodiscard]] void* GetNativeSampler() const 
+		{
+			return m_sampler_;
+		}
+
+	protected:
+		virtual void SetNativeShader(void* shader) 
+		{
+			m_shader_ = shader;
+		}
+
+		virtual void SetNativeSampler(void* sampler) 
+		{
+			m_sampler_ = sampler;
+		}
+
+	private:
+		void* m_shader_ = nullptr;
+		void* m_sampler_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API ComputePrimitiveShader
+	struct ENGINE_CORERENDER_API ComputePrimitiveShader
 	{
 	public:
 		virtual      ~ComputePrimitiveShader() = default;
@@ -877,18 +870,44 @@ namespace Engine
 		void* m_shader_ = nullptr;
 	};
 
-#if CFG_RAYTRACING
-	struct ENGINE_CORE_API AccelStructBuffer
+    struct ENGINE_CORERENDER_API GraphicResourcePrimitive
+    {
+    public:
+        virtual ~GraphicResourcePrimitive() = default;
+
+        template <typename T>
+        T* GetResource()
+        {
+            return static_cast<T*>(m_resource_);
+        }
+
+        template <typename T>
+        T** GetAddressOf()
+        {
+            return reinterpret_cast<T**>(&m_resource_);
+        }
+
+        virtual void SetResource(void* resource)
+        {
+            m_resource_ = resource;
+        }
+
+        virtual void Release() = 0;
+		
+    private:
+        void* m_resource_ = nullptr;
+    };
+
+	struct ENGINE_CORERENDER_API AccelStructBuffer
 	{
-		Unique<GraphicMemoryPool> instanceDescPool;
-		Unique<GraphicMemoryPool> resultPool;
-		Unique<GraphicMemoryPool> scratchPool;
+		Unique<GraphicMemoryPool>        instanceDescPool;
+		Unique<GraphicResourcePrimitive> resultPool;
+		Unique<GraphicResourcePrimitive> scratchPool;
 
 		bool empty = true;
 	};
-#endif
 
-	struct ENGINE_CORE_API PrimitiveFont
+	struct ENGINE_CORERENDER_API PrimitiveFont
 	{
 		virtual ~PrimitiveFont() = default;
 		virtual void Generate(const Resources::Font* font) = 0;
@@ -909,13 +928,15 @@ namespace Engine
 		void* m_font_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API PrimitiveMesh
+	struct ENGINE_CORERENDER_API PrimitiveMesh
 	{
 		virtual      ~PrimitiveMesh() = default;
-		virtual void Generate(const Resources::Mesh* mesh) = 0;
+		virtual void Generate(Resources::Mesh* mesh) = 0;
 
 		[[nodiscard]] void* GetNativeVertexBuffer() const { return m_vertex_buffer_; }
 		[[nodiscard]] void* GetNativeIndexBuffer() const { return m_index_buffer_; }
+	    [[nodiscard]] virtual uint64_t GetNativeIndexBufferGPUAddress() const = 0;
+	    [[nodiscard]] virtual uint64_t GetNativeVertexBufferGPUAddress() const = 0;
 
 	protected:
 		virtual void SetNativeVertexBuffer(void* buffer)
@@ -933,7 +954,7 @@ namespace Engine
 		void* m_index_buffer_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API CommandListBase
+	struct ENGINE_CORERENDER_API CommandListBase
 	{
 		virtual ~CommandListBase() = default;
 		virtual void SoftReset() = 0;
@@ -943,7 +964,7 @@ namespace Engine
 
 	struct GraphicInterfaceContextPrimitive;
 
-	struct ENGINE_CORE_API PrimitiveSampler
+	struct ENGINE_CORERENDER_API PrimitiveSampler
     {
         virtual ~PrimitiveSampler() = default;
         virtual void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) = 0;
@@ -965,7 +986,7 @@ namespace Engine
         void *m_sampler_ = nullptr;
     };
 	
-	struct ENGINE_CORE_API GraphicHeapBase
+	struct ENGINE_CORERENDER_API GraphicHeapBase
 	{
 		virtual ~GraphicHeapBase() = default;
 
@@ -981,44 +1002,21 @@ namespace Engine
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 
+	    [[nodiscard]] virtual UINT64 GetBufferHeapGPUAddress(const size_t offset) const = 0;
+	    [[nodiscard]] virtual UINT64 GetSamplerHeapGPUAddress(const size_t offset) const = 0;
+	    
 		virtual void* GetNativeHeap() = 0;
 		virtual void* GetNativeCPUHandle() = 0;
 		virtual void* GetNativeGPUHandle() = 0;
 	};
 
-	struct ENGINE_CORE_API GraphicInterfaceContextPrimitive
+	struct ENGINE_CORERENDER_API GraphicInterfaceContextPrimitive
 	{
 		CommandListBase* commandList;
 		GraphicHeapBase* heap;
 	};
 
-	struct ENGINE_CORE_API GraphicResourcePrimitive
-	{
-	public:
-		virtual ~GraphicResourcePrimitive() = default;
-
-		template <typename T>
-		T* GetResource()
-		{
-			return static_cast<T*>(m_resource_);
-		}
-
-		template <typename T>
-		T** GetAddressOf()
-		{
-			return static_cast<T**>(&m_resource_);
-		}
-
-		virtual void SetResource(void* resource)
-		{
-			m_resource_ = resource;
-		}
-		
-	private:
-		void* m_resource_ = nullptr;
-	};
-
-	struct ENGINE_CORE_API GraphicInterfaceContextReturnType
+	struct ENGINE_CORERENDER_API GraphicInterfaceContextReturnType
 	{
 		GraphicInterfaceContextReturnType(const Weak<CommandListBase>& cmd, Unique<GraphicHeapBase> heap)
 		{
@@ -1044,7 +1042,7 @@ namespace Engine
 		Unique<GraphicHeapBase> m_heap_{};
 	};
 
-	class ENGINE_CORE_API ConstantBufferTypeless
+	class ENGINE_CORERENDER_API ConstantBufferTypeless
 	{
 	public:
 		virtual ~ConstantBufferTypeless() = default;
@@ -1053,9 +1051,10 @@ namespace Engine
 		virtual void                SetData(const void* src_data, const size_t stride) = 0;
 		[[nodiscard]] virtual void* GetData() const = 0;
 		virtual void                Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) = 0;
-	};
+        [[nodiscard]] virtual UINT64 GetGPUAddress() const = 0;
+    };
 
-	class ENGINE_CORE_API ConstantBufferDecorator
+	class ENGINE_CORERENDER_API ConstantBufferDecorator
 	{
 	public:
 		virtual  ~ConstantBufferDecorator() = default;
@@ -1123,9 +1122,15 @@ namespace Engine
 		{
 			if (m_base_) m_base_->Bind(context, which_cb<T>::value);
 		}
-	};
 
-	class ENGINE_CORE_API StructuredBufferTypeless
+        [[nodiscard]] UINT64 GetGPUAddress() const
+		{
+		    if (!m_base_) return 0;
+		    return m_base_->GetGPUAddress();
+		}
+    };
+
+	class ENGINE_CORERENDER_API StructuredBufferTypeless
 	{
 	public:
 		virtual ~StructuredBufferTypeless() = default;
@@ -1143,9 +1148,12 @@ namespace Engine
 
 		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
 		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
+
+	    [[nodiscard]] virtual void* GetResource() const = 0;
+	    [[nodiscard]] virtual uint64_t GetGPUAddress() const = 0;
 	};
 
-	class ENGINE_CORE_API StructuredBufferDecorator
+	class ENGINE_CORERENDER_API StructuredBufferDecorator
 	{
 	public:
 		virtual ~StructuredBufferDecorator() = default;
@@ -1220,6 +1228,18 @@ namespace Engine
 		
 		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
 		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+
+	    [[nodiscard]] void* GetResource() const
+	    {
+	        if (!m_base_) return nullptr;
+	        return m_base_->GetResource();
+	    }
+
+	    [[nodiscard]] uint64_t GetGPUAddress() const
+	    {
+	        if (!m_base_) return 0;
+	        return m_base_->GetGPUAddress();
+	    }
 
 	protected:
 		Unique<StructuredBufferTypeless> m_base_{};
@@ -1298,20 +1318,34 @@ namespace Engine
 				m_base_->CopyUAVHeap(context, which_client_sb_uav<T>::value);
 			}
 		}
+
+	    template <typename U>
+	    U* GetResource() const
+		{
+		    return static_cast<U*>(m_base_->GetResource());
+		}
 	};
 
 	using InstanceBufferContainer = aligned_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
+    using ConcurrentInstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
 
-	struct ENGINE_CORE_API PolymorphicGraphicInterface
+	struct ENGINE_CORERENDER_API PolymorphicGraphicInterface
 	{
-		virtual ~PolymorphicGraphicInterface();
+		virtual ~PolymorphicGraphicInterface() = default;
 		INLINE_COMPILE_TIME_TYPENAME(PolymorphicGraphicInterface);
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 	};
 
-#if CFG_RAYTRACING
-	struct ENGINE_CORE_API RaytracingExtensionInterface : public PolymorphicGraphicInterface
+    template <typename T> class StructuredBufferMemoryPool;
+
+    struct ENGINE_CORERENDER_API RaytracingInstancePair
+    {
+        std::array<Strong<Resources::Texture>, g_max_texture_per_material> textures;
+        StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> instance;
+    };
+    
+	struct ENGINE_CORERENDER_API RaytracingExtensionInterface : public virtual PolymorphicGraphicInterface
 	{
         ~RaytracingExtensionInterface() override = default;
 		INLINE_COMPILE_TIME_TYPENAME(RaytracingExtensionInterface)
@@ -1319,23 +1353,31 @@ namespace Engine
 		virtual bool IsRaytracingSupported() = 0;
 		virtual void InitializeRaytracing() = 0;
 		virtual void ShutdownRaytracing() = 0;
-	    
+
+	    virtual Unique<GraphicHeapBase> GetRaytracingHeap() = 0;
 	    virtual RaytracingPrimitiveShader* GetNewRaytracingShader() = 0;
 	    
 		virtual void* GetRaytracingNativeInterface() = 0;
 		virtual void* GetRaytracingNativePipeline() = 0;
 
-	    [[nodiscard]] virtual bool BuildTopLevelAccelerationBuffer(RenderMap render_map[], AccelStructBuffer& top_level_accel_buffer, byte_vector& hit_records) = 0;
-		virtual void DispatchRay(
+	    virtual bool BuildTopLevelAccelerationBuffer(
             const GraphicInterfaceContextPrimitive* context,
-            Resources::RaytracingShader* shader,
-            const byte_vector& hit_records,
-            const AccelStructBuffer& top_level_accel_buffer
-        ) = 0;
-	};
-#endif
+            RenderMap const* render_map,
+            size_t render_map_size,
+            AccelStructBuffer& out_tlas_buffer,
+            const ObjectPredication& predication = {}) = 0;
 
-	struct ENGINE_CORE_API GraphicInterface : public PolymorphicGraphicInterface
+	    virtual void DispatchRay(
+            const GraphicInterfaceContextPrimitive* context, const Resources::RaytracingShader* shader, const
+            StructuredBufferTypeProxy<Graphics::SBs::LightSB>& light, const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>
+            & instances, const ConstantBufferTypeProxy<Graphics::CBs::PerspectiveCB>& perspective, const ConstantBufferTypeProxy
+            <Graphics::CBs::ParamCB>& param, const byte_stream& hit_records, const AccelStructBuffer& top_level_accel_buffer
+        ) = 0;
+
+	    virtual void CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context) = 0;
+	};
+
+	struct ENGINE_CORERENDER_API GraphicInterface : public virtual PolymorphicGraphicInterface
 	{
 		~GraphicInterface() override = default;
 		INLINE_COMPILE_TIME_TYPENAME(GraphicInterface)
@@ -1400,42 +1442,40 @@ namespace Engine
 		virtual ConstantBufferTypeless* GetNativeConstantBuffer() = 0;
 	};
 
-	struct ENGINE_CORE_API GraphicInterfaceAccessor
+	struct ENGINE_CORERENDER_API GraphicInterfaceAccessor
 	{
 	public:
-		template <typename T> requires (std::is_base_of_v<GraphicInterface, T>)
+		template <typename T> requires (std::is_base_of_v<PolymorphicGraphicInterface, T>)
 		static void SetGraphicInterface()
 		{
-			if (!s_graphic_interface)
+			if (!s_graphic_interface_)
 			{
-				s_graphic_interface = std::make_unique<T>();
-				s_graphic_interface->Initialize();
+				s_graphic_interface_ = std::make_unique<T>();
+				s_graphic_interface_->Initialize();
 			}
 		}
 
 		[[nodiscard]] static GraphicInterface& GetInterface()
 		{
-			return static_cast<GraphicInterface&>(*s_graphic_interface);
+			return *dynamic_cast<GraphicInterface*>(s_graphic_interface_.get());
 		}
 
-#if CFG_RAYTRACING
 		[[nodiscard]] static RaytracingExtensionInterface& GetRaytracingInterface()
 		{
-			return static_cast<RaytracingExtensionInterface&>(*s_graphic_interface);
+			return *dynamic_cast<RaytracingExtensionInterface*>(s_graphic_interface_.get());
 		}
-#endif
 
 		static void Shutdown()
 		{
-			if (s_graphic_interface) 
+			if (s_graphic_interface_) 
 			{
-				s_graphic_interface->Shutdown();
-				s_graphic_interface.reset();
+				s_graphic_interface_->Shutdown();
+				s_graphic_interface_.reset();
 			}
 		}
 
 	private:
-		static Unique<PolymorphicGraphicInterface> s_graphic_interface;
+		static Unique<PolymorphicGraphicInterface> s_graphic_interface_;
 	};
 
 	template <typename T>
@@ -1545,16 +1585,16 @@ namespace Engine
 		size_t                                        m_read_offset_{};
 	};
 
-	class ENGINE_CORE_API GraphicMemoryPool
+	class ENGINE_CORERENDER_API GraphicMemoryPool
 	{
 	public:
 		GraphicMemoryPool()
 			: m_allocated_size_(0),
 			  m_used_size_(0) { }
 
-		virtual ~GraphicMemoryPool() { }
+		virtual ~GraphicMemoryPool() = default;
 
-		void Update(const void* src_data, size_t count, const size_t stride)
+        void Update(const void* src_data, size_t count, const size_t stride)
 		{
 			if (count == 0)
 			{

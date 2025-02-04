@@ -1,7 +1,8 @@
 #pragma once
 #include <memory>
+
+#include "GraphicInterface.h"
 #include "RenderType.h"
-#include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
@@ -13,7 +14,7 @@ POLYMORPHIC_TYPE_MAP(Engine::RenderInstanceTask, void)
 
 namespace Engine 
 {
-	struct ENGINE_RENDERPIPELINE_API RenderInstanceTask
+	struct ENGINE_CORERENDER_API RenderInstanceTask
 	{
 		INLINE_COMPILE_TIME_TYPENAME(RenderInstanceTask)
 
@@ -30,12 +31,12 @@ POLYMORPHIC_TYPE_MAP(Engine::RenderPassTask, void)
 
 namespace Engine
 {
-	struct ENGINE_RENDERPIPELINE_API RenderPassTask
+	struct ENGINE_CORERENDER_API RenderPassTask
 	{
 		INLINE_COMPILE_TIME_TYPENAME(RenderPassTask)
 
 		virtual      ~RenderPassTask() = default;
-
+	    virtual void PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication) = 0;
 		virtual void Run(
 			float                                                             dt,
 			bool                                                              shader_bypass,
