@@ -6,6 +6,8 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/SceneManager/Public/SceneManager.h"
 
+#include "source/runtime/corerender/public/GraphicInterface.h"
+
 namespace Engine::Managers
 {
 	void CameraManager::Initialize() {}

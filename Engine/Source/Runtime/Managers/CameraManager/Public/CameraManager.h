@@ -7,7 +7,7 @@
 namespace Engine::Managers
 {
 	ECLASS()
-	class ENGINE_CORE_API CameraManager : public Abstracts::Singleton<CameraManager>
+	class ENGINE_CAMERAMANAGER_API CameraManager : public Abstracts::Singleton<CameraManager>
 	{
 		GENERATE_BODY
 	public:
