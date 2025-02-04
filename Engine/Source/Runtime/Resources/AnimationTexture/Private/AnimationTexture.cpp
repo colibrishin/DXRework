@@ -39,7 +39,7 @@ namespace Engine::Resources
 	void AnimationTexture::Load_INTERNAL()
 	{
 		const GenericTextureDescription& new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);
-		GetPrimitiveTexture()->UpdateDescription(new_desc);
+		UpdateDescription(new_desc);
 
 		Texture3D::Load_INTERNAL();
 	}
@@ -94,6 +94,7 @@ namespace Engine::Resources
 
 		return
 		{
+			.Dimension = TEX_TYPE_3D,
 			.Alignment = 0,
 			.Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
 			.Height = frame_count,

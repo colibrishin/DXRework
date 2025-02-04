@@ -43,6 +43,8 @@ namespace Engine::Resources
 
 		// non-serialized
 		Strong<Bone>        m_bone_;
+		Weak<Bone>          m_cached_bone_;
+
 		float               m_evaluated_time_;
 		std::vector<Matrix> m_evaluated_data_;
 	};
