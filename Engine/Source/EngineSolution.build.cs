@@ -16,16 +16,8 @@ public class EngineSolution : Solution
         IsFileNameToLower = false;
         Name = "Engine";
         FastBuildAllProjectType = typeof(FastBuildAllOverrideProject);
-
-        AddTargets(new EngineTarget(
-            ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-            Platform.win64,
-            DevEnv.vs2022,
-            Optimization.Debug | Optimization.Release,
-            OutputType.Lib,
-            Blob.NoBlob,
-            BuildSystem.FastBuild
-        ));
+        
+        AddTargets(Utils.GetDefinedTarget());
     }
 
     [Configure()]

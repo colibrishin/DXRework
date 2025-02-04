@@ -56,6 +56,15 @@ public class EngineTarget : Target
     }
 }
 
+public abstract class EngineCommonProject : CommonProject 
+{
+    public override void ConfigureAll(Configuration conf, EngineTarget target)
+    {
+        base.ConfigureAll(conf, target);
+        conf.SolutionFolder = @"Engine";
+    }
+}
+
 public abstract class CommonProject : Project
 {
     protected CommonProject(bool bAddTarget = true) : base(typeof(EngineTarget))
@@ -72,12 +81,7 @@ public abstract class CommonProject : Project
 
         if (bAddTarget == true)
         {
-            AddTargets(new EngineTarget(
-                    ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                    Platform.win64,
-                    DevEnv.vs2022,
-                    Optimization.Debug | Optimization.Release
-            ));
+            AddTargets(Utils.GetDefinedTarget());
         }
     }
 
@@ -194,7 +198,7 @@ public abstract class CommonProject : Project
         Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
             $@"{EngineDir}\balius\target\release\balius.exe",
             $@"",
-            @"[project.Name]-headerparser.log",
+            $@"{EngineDir}\Intermediate\log\[project.Name]-headerparser.log",
             $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}""",
             EngineDir,
             true,

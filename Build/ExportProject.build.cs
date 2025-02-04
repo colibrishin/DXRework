@@ -7,23 +7,23 @@ public abstract class ExportProject : Project
 {
     protected ExportProject() : base(typeof(EngineTarget))
     {
+        Name = GetType().Name;
+
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
+        StripFastBuildSourceFiles = false;
 
-        AddTargets(new EngineTarget(
-                ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                Platform.win64,
-                DevEnv.vs2022,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Lib | OutputType.Dll,
-                Blob.NoBlob,
-                BuildSystem.FastBuild
-        ));
+        SourceRootPath = @"[project.RootPath]";
+        SourceFilesExtensions.Add(".cs");
+
+        AddTargets(Utils.GetDefinedTarget());
     }
 
     [Configure()]
     public virtual void ConfigureAll(Configuration conf, EngineTarget target)
     {
+        Utils.MakeConfiturationNameDefine(conf, target);
+        conf.SolutionFolder = @"ThirdParty";
     }
 
     [Configure(Optimization.Debug)] 
@@ -39,7 +39,7 @@ public abstract class ExportProject : Project
 
 public class VCPKG : ExportProject
 {
-    protected VCPKG() 
+    protected VCPKG()
     {
     }
 
