@@ -30,9 +30,8 @@ namespace Engine::Managers
 				 SAMPLER_SHADOW);
 
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());
-		m_light_vp_sb_ = std::make_unique<decltype(m_light_vp_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightVPSB>());
-        
+		m_light_vp_sb_ = gi.GetStructuredBuffer<SBs::LightVPSB>();
+
 		InitializeViewport();
 
 		SceneManager::GetInstance().onSceneRemoved.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::PreSwapScene);
@@ -57,8 +56,7 @@ namespace Engine::Managers
 				SHADER_SAMPLER_LESS_EQUAL, 
 				SAMPLER_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT );
 
-		Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
-		Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
+		Renderer::GetInstance().RegisterStructuredBuffer(&m_light_vp_sb_);
 
 		Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
 		{
@@ -161,8 +159,8 @@ namespace Engine::Managers
 				CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
 				CheckSize<UINT>(m_current_scene_light_vp_.size(), L"Warning: Light VP size is too big!");
 
-				m_light_sb_->SetData(&primitive, m_lights_.size(), light_buffer.data());
-				m_light_vp_sb_->SetData(&primitive, m_current_scene_light_vp_.size(), m_current_scene_light_vp_.data());
+				RenderPipeline::GetInstance().UpdateLights(&primitive, light_buffer.data(), light_buffer.size());
+			    m_light_vp_sb_.SetData(&primitive, current_light_vp.size(), current_light_vp.data());
 				primitive.commandList->FlagReady();
 			}
 			
@@ -215,7 +213,7 @@ namespace Engine::Managers
 
 		Renderer::GetInstance().RenderPassVanillaInclusion<SHADER_DOMAIN_OPAQUE, Engine::ForwardRenderPassTask>
 			(
-			 dt, true, local_param, { m_light_sb_.get(), m_light_vp_sb_.get() },
+			 dt, true, local_param, { &RenderPipeline::GetInstance().GetLightSB(), &m_light_vp_sb_ },
 			 [](const Strong<Abstracts::ObjectBase>& obj)
 			 {
 				 if (obj->GetLayer() == RESERVED_LAYER_CAMERA ||
@@ -398,12 +396,7 @@ namespace Engine::Managers
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
 		gi.TransitBackMultiple(context, textures.data(), textures.size(), BIND_TYPE_SRV);
 	}
-
-    StructuredBufferTypeProxy<SBs::LightSB> & ShadowManager::GetLightBuffer() const
-    {
-	    return *m_light_sb_;
-	}
-
+    
     StructuredBufferTypeProxy<SBs::LightVPSB> & ShadowManager::GetLightVPBuffer() const
     {
 	    return *m_light_vp_sb_;
@@ -446,8 +439,7 @@ namespace Engine::Managers
 
 	ShadowManager::~ShadowManager()
 	{
-		Renderer::GetInstance().UnregisterStructuredBuffer(m_light_sb_.get());
-		Renderer::GetInstance().UnregisterStructuredBuffer(m_light_vp_sb_.get());
+	    Renderer::GetInstance().UnregisterStructuredBuffer(&m_light_vp_sb_);
 		
 		Renderer::GetInstance().UnregisterContextPreRenderSetup("Shadow Manager");
 	}

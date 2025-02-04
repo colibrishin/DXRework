@@ -68,7 +68,6 @@ namespace Engine::Managers
 		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 		void TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 
-	    StructuredBufferTypeProxy<SBs::LightSB>&   GetLightBuffer() const;
 	    StructuredBufferTypeProxy<SBs::LightVPSB>& GetLightVPBuffer() const;
 	    const std::vector<SBs::LightVPSB>&         GetCurrentSceneLightVP() const;
 
@@ -99,10 +98,9 @@ namespace Engine::Managers
 		// lights from current scene
 		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
 
+		StructuredBufferTypeProxy<SBs::LightVPSB> m_light_vp_sb_;
 	    std::vector<SBs::LightVPSB> m_current_scene_light_vp_;
-		Unique<StructuredBufferTypeProxy<SBs::LightSB>> m_light_sb_;
-		Unique<StructuredBufferTypeProxy<SBs::LightVPSB>> m_light_vp_sb_;
-        Unique<PrimitiveSampler>                          m_shadow_sampler_;
+		Unique<PrimitiveSampler>                          m_shadow_sampler_;
 
 		Viewport m_viewport_;
 	};

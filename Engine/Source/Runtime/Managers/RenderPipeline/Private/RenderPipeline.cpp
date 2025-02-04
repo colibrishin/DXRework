@@ -1,4 +1,5 @@
 #include "../Public/RenderPipeline.h"
+#include "RenderPipeline.generated.h"
 #include "../Public/Renderer.h"
 
 
@@ -19,13 +20,34 @@ namespace Engine::Managers
 		m_wvp_buffer_cb_.SetData(&m_wvp_buffer_);
 	}
 
-	void RenderPipeline::BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const
+    void RenderPipeline::UpdateLights(const GraphicInterfaceContextPrimitive* context, const SBs::LightSB* lights, const size_t count)
+	{
+	    StructuredBufferGuard();
+        m_light_buffer_sb_.SetData(context, count, lights);
+	}
+
+    void RenderPipeline::BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const
 	{
 		m_wvp_buffer_cb_.Bind(context);
 		m_param_buffer_cb_.Bind(context);
 	}
 
-	const Viewport& RenderPipeline::GetViewport() const
+    const ConstantBufferTypeProxy<CBs::PerspectiveCB>& RenderPipeline::GetPerspectiveCB() const
+	{
+	    return m_wvp_buffer_cb_;
+	}
+
+    const ConstantBufferTypeProxy<CBs::ParamCB>& RenderPipeline::GetParamCB() const
+	{
+	    return m_param_buffer_cb_;
+	}
+
+    const StructuredBufferTypeProxy<SBs::LightSB>& RenderPipeline::GetLightSB() const
+	{
+	    return m_light_buffer_sb_;
+	}
+
+    const Viewport& RenderPipeline::GetViewport() const
 	{
 		return m_viewport_;
 	}
@@ -49,7 +71,16 @@ namespace Engine::Managers
 		}
 	}
 
-	void RenderPipeline::InitializeViewport()
+    void RenderPipeline::StructuredBufferGuard()
+	{
+	    if (!m_light_buffer_sb_)
+	    {
+	        GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+	        m_light_buffer_sb_ = gi.GetStructuredBuffer<SBs::LightSB>();
+	    }
+	}
+
+    void RenderPipeline::InitializeViewport()
 	{
 		m_viewport_ = {
 				0,

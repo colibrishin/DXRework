@@ -47,7 +47,12 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
+	    void UpdateLights(const GraphicInterfaceContextPrimitive* context, const SBs::LightSB* lights, size_t count);
 		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const;
+
+        [[nodiscard]] const ConstantBufferTypeProxy<CBs::PerspectiveCB>& GetPerspectiveCB() const;
+        [[nodiscard]] const ConstantBufferTypeProxy<CBs::ParamCB>&       GetParamCB() const;
+	    [[nodiscard]] const StructuredBufferTypeProxy<SBs::LightSB>&     GetLightSB() const;
 
 		template <typename T>
 		void SetParam(const T& v, const size_t slot)
@@ -70,6 +75,7 @@ namespace Engine::Managers
 		~RenderPipeline() override;
 
 		void ConstantBufferGuard();
+	    void StructuredBufferGuard();
 
 		void InitializeViewport();
 
@@ -77,6 +83,7 @@ namespace Engine::Managers
 
 		ConstantBufferTypeProxy<CBs::PerspectiveCB> m_wvp_buffer_cb_;
 		ConstantBufferTypeProxy<CBs::ParamCB> m_param_buffer_cb_;
+	    StructuredBufferTypeProxy<SBs::LightSB> m_light_buffer_sb_;
 
 		CBs::PerspectiveCB m_wvp_buffer_;
 		CBs::ParamCB       m_param_buffer_;
