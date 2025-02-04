@@ -454,11 +454,11 @@ void Engine::D3D12PrimitiveTexture::Map(
 
 	// RowPitch * Height = Slice pitch
 	const size_t slice_pitch = Align(desc.Height * row_pitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-	size_t total_bytes = row_pitch;
+	size_t total_bytes = slice_pitch;
 
-	if (slice_pitch > 0) 
+	if (depth > 0) 
 	{
-		total_bytes = row_pitch * slice_pitch;
+		total_bytes = slice_pitch * depth;
 	}
 
 	DX::ThrowIfFailed
