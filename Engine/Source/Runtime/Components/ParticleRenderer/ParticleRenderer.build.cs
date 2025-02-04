@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ParticleRenderer : CommonProject
+public class ParticleRenderer : EngineCommonProject
 {
     public ParticleRenderer() { }
 

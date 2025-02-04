@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ShadowRenderTarget : CommonProject
+public class ShadowRenderTarget : EngineCommonProject
 {
     public ShadowRenderTarget() { }
 

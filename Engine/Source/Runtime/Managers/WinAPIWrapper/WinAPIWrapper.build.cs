@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class WinAPIWrapper : CommonProject
+public class WinAPIWrapper : EngineCommonProject
 {
     public WinAPIWrapper() { }
 

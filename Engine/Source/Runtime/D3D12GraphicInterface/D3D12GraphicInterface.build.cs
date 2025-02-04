@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class D3D12GraphicInterface : CommonProject
+public class D3D12GraphicInterface : EngineCommonProject
 {
     public D3D12GraphicInterface() { }
 

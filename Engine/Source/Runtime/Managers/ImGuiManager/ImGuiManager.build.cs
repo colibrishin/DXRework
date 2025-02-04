@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/ImGui/ImGui.build.cs")]
 
 [Generate]
-public class ImGuiManager : CommonProject
+public class ImGuiManager : EngineCommonProject
 {
     public ImGuiManager() { }
 

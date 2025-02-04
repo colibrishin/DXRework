@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class BoneAnimation : CommonProject
+public class BoneAnimation : EngineCommonProject
 {
     public BoneAnimation() { }
 

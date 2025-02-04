@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ModelRenderer : CommonProject
+public class ModelRenderer : EngineCommonProject
 {
     public ModelRenderer() { }
 

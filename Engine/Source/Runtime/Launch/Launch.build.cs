@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/TBB/TBB.build.cs")]
 
 [Generate]
-public class Launch : CommonProject
+public class Launch : EngineCommonProject
 {
     public Launch() { }
 

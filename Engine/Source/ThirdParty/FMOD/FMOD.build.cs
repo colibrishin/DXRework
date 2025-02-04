@@ -1,25 +1,18 @@
 using System.IO;
 using Sharpmake;
 
+[module: Include("%EngineDir%/Build/ExportProject.build.cs")]
+
 [Sharpmake.Export]
-public class FMOD : Project
+public class FMOD : ExportProject
 {
-    public FMOD() : base(typeof(EngineTarget))
+    public FMOD()
     {
-        AddTargets(new EngineTarget(
-                ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                Platform.win64,
-                DevEnv.vs2022,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Lib,
-                Blob.NoBlob,
-                BuildSystem.FastBuild
-        ));
     }
 
-    [Configure()]
-    public virtual void ConfigureAll(Configuration conf, EngineTarget target)
+    public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
+        base.ConfigureAll(conf, target);
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\");
         conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\lib\x64");
 
@@ -27,15 +20,6 @@ public class FMOD : Project
         (
             @"fmod_vc.lib"
         );
-    }
-
-    [Configure(Optimization.Debug)] 
-    public virtual void ConfigureDebug(Configuration conf, EngineTarget target)
-    {
-    }
-
-    [Configure(Optimization.Release)]
-    public virtual void ConfigureRelease(Configuration conf, EngineTarget target)
-    {
+        conf.TargetCopyFiles.Add(@"lib\x64\fmod.dll");
     }
 }

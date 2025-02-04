@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class Animator : CommonProject
+public class Animator : EngineCommonProject
 {
     public Animator() { }
 

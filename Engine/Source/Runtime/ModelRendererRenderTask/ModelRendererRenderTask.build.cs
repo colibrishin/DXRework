@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DX12Agility/DX12Agility.build.cs")]
 
 [Generate]
-public class ModelRendererRenderTask : CommonProject
+public class ModelRendererRenderTask : EngineCommonProject
 {
     public ModelRendererRenderTask() { }
 

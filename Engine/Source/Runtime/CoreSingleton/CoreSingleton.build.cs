@@ -7,7 +7,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 
 [Generate]
-public class CoreSingleton : CommonProject
+public class CoreSingleton : EngineCommonProject
 {
     public CoreSingleton() { }
 

@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Assimp/Assimp.build.cs")]
 
 [Generate]
-public class ShapeImporter : CommonProject
+public class ShapeImporter : EngineCommonProject
 {
     public ShapeImporter() { }
 

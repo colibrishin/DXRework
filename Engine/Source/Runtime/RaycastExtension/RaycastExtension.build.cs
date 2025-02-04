@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class RaycastExtension : CommonProject
+public class RaycastExtension : EngineCommonProject
 {
     public RaycastExtension() { }
 

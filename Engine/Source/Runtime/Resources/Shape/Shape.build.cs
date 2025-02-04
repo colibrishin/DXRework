@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Assimp/Assimp.build.cs")]
 
 [Generate]
-public class Shape : CommonProject
+public class Shape : EngineCommonProject
 {
     public Shape() { }
 

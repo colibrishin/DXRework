@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class Mesh : CommonProject
+public class Mesh : EngineCommonProject
 {
     public Mesh() { }
 

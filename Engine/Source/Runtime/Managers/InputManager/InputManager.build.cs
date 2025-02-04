@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 
 [Generate]
-public class InputManager : CommonProject
+public class InputManager : EngineCommonProject
 {
     public InputManager() { }
 

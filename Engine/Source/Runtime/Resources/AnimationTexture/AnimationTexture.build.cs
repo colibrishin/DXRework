@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class AnimationTexture : CommonProject
+public class AnimationTexture : EngineCommonProject
 {
     public AnimationTexture() { }
 

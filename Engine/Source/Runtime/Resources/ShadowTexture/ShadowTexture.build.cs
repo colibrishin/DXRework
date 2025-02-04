@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ShadowTexture : CommonProject
+public class ShadowTexture : EngineCommonProject
 {
     public ShadowTexture() { }
 

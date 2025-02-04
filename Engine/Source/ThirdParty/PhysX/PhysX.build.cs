@@ -2,24 +2,15 @@ using System.IO;
 using Sharpmake;
 
 [Sharpmake.Export]
-public class PhysX : Project
+public class PhysX : ExportProject
 {
-    public PhysX() : base(typeof(EngineTarget))
+    public PhysX()
     {
-        AddTargets(new EngineTarget(
-                ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                Platform.win64,
-                DevEnv.vs2022,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Lib,
-                Blob.NoBlob,
-                BuildSystem.FastBuild
-        ));
     }
 
-    [Configure()]
-    public virtual void ConfigureAll(Configuration conf, EngineTarget target)
+    public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
+        base.ConfigureAll(conf, target);
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\PhysX\physx\include");
         //conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\PhysX\physx\include");
 
@@ -29,15 +20,5 @@ public class PhysX : Project
             @"fmod_vc.lib"
         );
         */
-    }
-
-    [Configure(Optimization.Debug)] 
-    public virtual void ConfigureDebug(Configuration conf, EngineTarget target)
-    {
-    }
-
-    [Configure(Optimization.Release)]
-    public virtual void ConfigureRelease(Configuration conf, EngineTarget target)
-    {
     }
 }

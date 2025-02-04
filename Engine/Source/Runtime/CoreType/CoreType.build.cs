@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class CoreType : CommonProject
+public class CoreType : EngineCommonProject
 {
     public CoreType() { }
 

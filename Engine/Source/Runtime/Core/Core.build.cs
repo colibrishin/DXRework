@@ -8,7 +8,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/GCEM/GCEM.build.cs")]
 
 [Generate]
-public class Core : CommonProject
+public class Core : EngineCommonProject
 {
     public Core() { }
 

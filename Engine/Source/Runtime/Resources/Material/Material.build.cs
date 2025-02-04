@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class Material : CommonProject
+public class Material : EngineCommonProject
 {
     public Material() { }
 

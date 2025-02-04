@@ -7,7 +7,7 @@ using Sharpmake;
 
 
 [Generate]
-public class PhysicsManager : CommonProject
+public class PhysicsManager : EngineCommonProject
 {
     public PhysicsManager() { }
 
