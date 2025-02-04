@@ -21,10 +21,11 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPublicDependency<DirectXTK>(target);
+        conf.AddPublicDependency<CoreRender>(target);
 
         if (Utils.HasRaytracingOn(conf))
         {
-            conf.AddPublicDependency<RaytraceExtension>(target);
+            conf.AddPublicDependency<RaytracingShader>(target);
         }
 
         conf.AddPrivateDependency<DirectXTex>(target);

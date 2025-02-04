@@ -13,6 +13,7 @@ public class ImGuiManager : EngineCommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<CoreRender>(target);
         conf.AddPublicDependency<ImGui>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
