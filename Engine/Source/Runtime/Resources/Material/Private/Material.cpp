@@ -4,13 +4,13 @@
 #include <algorithm>
 #include <DirectXColors.h>
 
-
-
 #include "SceneManager/Public/SceneManager.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 #include "UIHelpersResourceManager.h"
+
+#include "source/runtime/resources/raytracingshader/public/RaytracingShader.h"
 
 namespace Engine::Resources
 {
@@ -78,7 +78,7 @@ namespace Engine::Resources
 
 			{
                 static std::string shader_string = {};
-                if ( const Strong<Shader> &shader = m_cached_shader_.lock() )
+                if ( const Strong<ShaderBase> &shader = m_cached_shader_.lock() )
                 {
                     shader_string = shader->GetName();
                 }
@@ -115,9 +115,9 @@ namespace Engine::Resources
 			if (m_ui_shader_dialog_)
 			{
 				if (Weak<Resource> resource_to_load;
-					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
+					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader, RaytracingShader>(GetSharedPtr<Material>(), resource_to_load))
 				{
-					if (const Strong<Shader>& shader = Cast<Shader>(resource_to_load))
+					if (const Strong<ShaderBase>& shader = Cast<ShaderBase>(resource_to_load))
 					{
 						SetShader(shader);
 					}
@@ -173,7 +173,7 @@ namespace Engine::Resources
 	{
 		Resource::OnSerialized();
 
-		if (const Strong<Shader>& shader = m_cached_shader_.lock())
+		if (const Strong<ShaderBase>& shader = m_cached_shader_.lock())
 		{
 			Serializer::Serialize(shader->GetName(), shader);
 			m_shader_path_ = shader->GetMetadataPath();
@@ -201,7 +201,7 @@ namespace Engine::Resources
 
 		if (!m_shader_path_.empty())
 		{
-			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
+			if (const auto& shader = ShaderBase::GetByMetadataPath(m_shader_path_).lock())
 			{
 				SetShader(shader);
 			}
@@ -286,9 +286,9 @@ namespace Engine::Resources
 		}
 	}
 
-	void Material::SetShader(const Weak<Shader>& shader)
+	void Material::SetShader(const Weak<ShaderBase>& shader)
 	{
-		if (const Strong<Shader>& locked = shader.lock())
+		if (const Strong<ShaderBase>& locked = shader.lock())
 		{
 			if (IsLoaded())
 			{
@@ -300,8 +300,8 @@ namespace Engine::Resources
 			m_shader_path_ = locked->GetMetadataPath();
 		}
 	}
-
-	const MaterialPrimitive& Material::GetPrimitive() const
+    
+    const MaterialPrimitive& Material::GetPrimitive() const
 	{
 		return m_material_sb_;
 	}
@@ -326,12 +326,12 @@ namespace Engine::Resources
 		return {};
 	}
 
-	Weak<Shader> Material::GetShader() const
+	Weak<ShaderBase> Material::GetShader() const
 	{
 		return m_cached_shader_;
 	}
 
-	Material::Material() : Resource("") {}
+    Material::Material() : Resource("") {}
 
 	void Material::Load_INTERNAL()
 	{
@@ -341,7 +341,7 @@ namespace Engine::Resources
 			m_atlas_->Load();
 		}
 
-		if (const Strong<Shader>& shader = m_cached_shader_.lock())
+		if (const Strong<ShaderBase>& shader = m_cached_shader_.lock())
 		{
 			m_shader_ = shader;
 			m_shader_->Load();

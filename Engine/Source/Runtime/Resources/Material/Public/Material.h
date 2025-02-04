@@ -19,7 +19,7 @@ namespace Engine::Resources
 		typedef std::array<Strong<Texture>, g_max_texture_per_material> StrongTextureArray;
 		typedef std::array<Weak<Texture>, g_max_texture_per_material> WeakTextureArray;
 
-		Material(const Graphics::MaterialPrimitive& material);
+		Material(const MaterialPrimitive& material);
 
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -35,13 +35,13 @@ namespace Engine::Resources
 		void SetTexture(const Weak<Texture>& texture, const size_t slot = 0, const bool set_path = true);
 		void SwapTexture(const size_t before, const size_t after);
 		void SetAtlasTexture(const Weak<AtlasAnimationTexture>& texture);
-		void SetShader(const Weak<Shader>& shader);
-
-		[[nodiscard]] const Graphics::MaterialPrimitive& GetPrimitive() const;
+		void SetShader(const Weak<ShaderBase>& shader);
+	    
+		[[nodiscard]] const MaterialPrimitive& GetPrimitive() const;
 		[[nodiscard]] const WeakTextureArray& GetTextures() const;
 		[[nodiscard]] Weak<AtlasAnimationTexture> GetAtlasTexture() const;
 		[[nodiscard]] Weak<AtlasAnimation>        GetAtlasAnimation(const size_t idx) const;
-		[[nodiscard]] Weak<Shader>                GetShader() const;
+		[[nodiscard]] Weak<ShaderBase>                GetShader() const;
 
 	private:
 		Material();
@@ -68,11 +68,11 @@ namespace Engine::Resources
 		bool m_ui_add_dialog_ = false;
 #endif
 
-		Strong<Shader>                m_shader_{};
+		Strong<ShaderBase>                m_shader_{};
 		StrongTextureArray            m_textures_{};
 		Strong<AtlasAnimationTexture> m_atlas_{};
 
-		Weak<Shader>                m_cached_shader_{};
+		Weak<ShaderBase>                m_cached_shader_{};
 		WeakTextureArray            m_cached_textures_{};
 		Weak<AtlasAnimationTexture> m_cached_atlas_{};
 	};
