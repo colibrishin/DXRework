@@ -203,11 +203,14 @@ public:
             {
                 std::memcpy(new_alloc, m_first_, m_used_size_);
                 delete[] m_first_;
+                m_first_ = nullptr;
             }
             m_first_ = new_alloc;
         }
 
-        std::memcpy(m_first_ + m_used_size_, src, src_size);
+        if (m_first_ != nullptr) {
+            std::memcpy(m_first_ + m_used_size_, src, src_size);
+        }
         m_used_size_ += src_size;
     }
 
