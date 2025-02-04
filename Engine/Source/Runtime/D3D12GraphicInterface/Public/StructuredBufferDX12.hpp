@@ -37,7 +37,11 @@ namespace Engine::Graphics
 		void InitializeUploadBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride);
 		void InitializeReadBuffer(UINT size, const size_t stride);
 
-		D3D12_RESOURCE_STATES m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
+    public:
+        [[nodiscard]] void* GetResource() const override;
+
+    private:
+        D3D12_RESOURCE_STATES m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 
 		ComPtr<ID3D12DescriptorHeap> m_srv_heap_{};
 		ComPtr<ID3D12DescriptorHeap> m_uav_heap_{};
