@@ -84,6 +84,7 @@ namespace Engine
 
 		void                        SetMainActor(LocalActorID id);
 		Weak<Abstracts::ObjectBase> GetMainActor() const;
+	    [[nodiscard]] bool HasRaytracingOn() const;
 
 		// Add Object to the scene.
 		// If the object is bound to another scene or layer, it will be moved to this scene and layer.

@@ -1025,30 +1025,7 @@ namespace Engine
 		m_object_position_tree_.Update();
 		m_object_collision_tree_.Update();
 
-#if CFG_RAYTRACING
-		if (m_b_scene_raytracing_ && !g_raytracing)
-		{
-			if (!GetRaytracingPipeline().IsRaytracingSupported())
-			{
-				m_b_scene_raytracing_ = false;
-			}
-			else
-			{
-				Managers::TaskScheduler::GetInstance().AddTask
-				(
-					TASK_TOGGLE_RASTER,
-					{ GetSharedPtr<Scene>(), m_b_scene_raytracing_ },
-					[](const std::vector<std::any>& params, const float)
-					{
-						const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-						const auto& b_raytracing = std::any_cast<bool>(params[1]);
-
-						g_raytracing = b_raytracing;
-					}
-				);
-			}
-		}
-#endif
+		AddObserver();
 	}
 
 	void Scene::SetMainActor(const LocalActorID id)
@@ -1065,7 +1042,12 @@ namespace Engine
 		return m_main_actor_;
 	}
 
-	Scene::~Scene()
+    bool Scene::HasRaytracingOn() const
+	{
+	    return m_b_scene_raytracing_;
+	}
+
+    Scene::~Scene()
 	{
 #ifdef PHYSX_ENABLED
 		CleanupPhysX();
