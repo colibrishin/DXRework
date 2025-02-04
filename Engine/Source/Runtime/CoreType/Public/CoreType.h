@@ -157,68 +157,62 @@ struct simple_gc_deleter : simple_gc_deleter_impl
 	}
 };
 
-class byte_vector
+class byte_stream
 {
-    explicit byte_vector(const size_t block_size)
+public:
+    explicit byte_stream()
         : m_first_(nullptr),
-          m_pos_(0),
-          m_block_size_(block_size),
           m_allocated_size_(0),
           m_used_size_(0) {}
 
-    ~byte_vector()
+    ~byte_stream()
     {
         delete[] m_first_;
     }
 
-public:
     void reset()
     {
         m_used_size_ = 0;
     }
 
-    void* data() const
+    [[nodiscard]] void* data() const
     {
         return m_first_;
     }
 
-    size_t size() const
+    [[nodiscard]] size_t size() const
     {
         return m_used_size_;
-    }
-
-    size_t block_size() const
-    {
-        return m_block_size_;
-    }
-
-    unsigned char* operator[](const size_t idx) const
-    {
-        return m_first_ + (m_block_size_ * idx);
     }
     
     void push_back(const void* src, const size_t src_size)
     {
-        if (m_pos_ >= m_allocated_size_)
+        if (m_used_size_ + src_size >= m_allocated_size_)
         {
-            auto new_alloc = new unsigned char[m_block_size_ * ((m_allocated_size_ * 2) + 1)];
+            if (m_allocated_size_ == 0)
+            {
+                m_allocated_size_ = src_size * 2;
+            }
+            else
+            {
+                m_allocated_size_ = m_allocated_size_ * 2;
+            }
+            
+            auto new_alloc = new unsigned char[m_allocated_size_];
             if (m_first_)
             {
-                std::memcpy(new_alloc, m_first_, m_block_size_ * m_used_size_);   
+                std::memcpy(new_alloc, m_first_, m_used_size_);
+                delete[] m_first_;
             }
-            delete[] m_first_;
             m_first_ = new_alloc;
-            m_allocated_size_ = (m_allocated_size_ * 2) + 1;
         }
 
-        memcpy_s(m_first_ + (m_block_size_ * m_pos_), m_block_size_, src, src_size);
-        ++m_used_size_;
+        std::memcpy(m_first_ + m_used_size_, src, src_size);
+        m_used_size_ += src_size;
     }
 
 private:
     unsigned char* m_first_;
-    size_t m_pos_;
-    size_t m_block_size_;
     
     size_t m_allocated_size_;
     size_t m_used_size_;
