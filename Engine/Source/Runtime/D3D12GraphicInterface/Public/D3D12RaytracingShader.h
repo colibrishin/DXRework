@@ -8,7 +8,7 @@ namespace Engine
     public:
         void                Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) override;
         [[nodiscard]] void* GetShaderRecord(const size_t idx) const override;
-        void                UpdateHitRecords(const byte_vector& hit_records) override;
+        void                UpdateHitRecords(const byte_stream& hit_records) override;
         
     private:
         void InitializeLocalSignature(ID3D12Device5* dev);
@@ -24,6 +24,6 @@ namespace Engine
 
         std::array<size_t, RAY_SHADER_REC_MAX> m_shader_record_sizes_{};
         
-        size_t m_hit_shader_record_size_ = 1;
+        size_t m_hit_shader_record_size_ = 0;
     };
 }

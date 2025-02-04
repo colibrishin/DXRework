@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "GraphicInterface.h"
-
+#include "Source/Runtime/Resources/Shader/Public/ShaderBase.h"
 #include "Resource/Public/Resource.h"
+
+#include "RaytracingShader.generated.h"
 
 namespace Engine
 {
@@ -12,28 +14,29 @@ namespace Engine
 
     struct ALIGN(64) HitShaderRecord : ShaderRecord
     {
-        uint64_t materialSB;
-        uint64_t instanceSB;
-        uint64_t vertices;
-        uint64_t indices;
-        uint64_t textures;
+        uint64_t addresses[RAYTRACING_LOCAL_SLOT_END];
     };
 }
 
 namespace Engine::Resources
 {
-    ECLASS( resource, serialize, abstract )
-    class ENGINE_RAYTRACEEXTENSION_API RaytracingShader : public Abstracts::Resource
+    ECLASS( resource, serialize )
+    class ENGINE_RAYTRACINGSHADER_API RaytracingShader : public ShaderBase
     {
+        GENERATE_BODY
     public:
         RaytracingShader(
             const std::filesystem::path& path,
+            const eShaderDomain domain,
             const std::array<bool, 4>& has_export,
             const std::wstring_view hit_group_name,
             const eSamplerFilter sampler_filter,
             const eShaderSamplerAddress sampler_addr_mode,
             const eShaderSamplerFunction sampler_func,
             const std::array<size_t, 3>& shader_record_sizes = { sizeof(ShaderRecord), sizeof(ShaderRecord), sizeof(ShaderRecord) });
+
+        RaytracingShader(const RaytracingShader&);
+        RaytracingShader& operator=(const RaytracingShader&);
         
         void PreUpdate(const float dt) override;
         void Update(const float dt) override;
@@ -41,18 +44,18 @@ namespace Engine::Resources
         void FixedUpdate(const float dt) override;
         void OnSerialized() override;
 
-        [[nodiscard]] const std::array<bool,4>&                GetHasExport() const;
-        [[nodiscard]] const std::array<unsigned long long, 3>& GetShaderRecordSizes() const;
-        [[nodiscard]] std::wstring_view                        GetHitGroupName() const;
-        [[nodiscard]] eSamplerFilter                           GetSamplerFilter() const;
-        [[nodiscard]] eShaderSamplerAddress                    GetSamplerAddressMode() const;
-        [[nodiscard]] eShaderSamplerFunction                   GetSamplerFunction() const;
-        [[nodiscard]] RaytracingPrimitiveShader*               GetPrimitive() const;
+        [[nodiscard]] const std::array<bool,4>&                    GetHasExport() const;
+        [[nodiscard]] const std::array<unsigned long long, 3>&     GetShaderRecordSizes() const;
+        [[nodiscard]] std::wstring_view                            GetHitGroupName() const;
+        [[nodiscard]] eSamplerFilter                               GetSamplerFilter() const;
+        [[nodiscard]] eShaderSamplerAddress                        GetSamplerAddressMode() const;
+        [[nodiscard]] eShaderSamplerFunction                       GetSamplerFunction() const;
+        [[nodiscard]] RaytracingPrimitiveShader*                   GetPrimitive() const;
 
     protected:
         RaytracingShader();
-        void Load_INTERNAL() override;
-        void Unload_INTERNAL() override;
+        void             Load_INTERNAL() override;
+        void             Unload_INTERNAL() override;
 
     private:
         EPROPERTY()
