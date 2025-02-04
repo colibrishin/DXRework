@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/FMOD/FMOD.build.cs")]
 
 [Generate]
-public class SoundManager : CommonProject
+public class SoundManager : EngineCommonProject
 {
     public SoundManager() { }
 
