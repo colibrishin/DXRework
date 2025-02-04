@@ -12,7 +12,6 @@ lazy_static!{
 fn write_target_file(intermediate_path: &std::path::Path)
 {
     let target_file_path = intermediate_path.join("target");
-    println!("{}", target_file_path.display());
     let mut file = std::fs::File::create(&target_file_path).expect("Unable to create a target file");
     for header_file in target_files.lock().unwrap().iter()
     {
@@ -39,8 +38,27 @@ fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path:
     let target_file = intermediate_path.join("target");
 
     let mut parser = std::process::Command::new(&parser_path);
-    let _output = parser.current_dir(intermediate_path).args(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").output().expect("Unable to spawn the process");
-    std::fs::remove_file(&target_file);
+    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").output().expect("Unable to spawn the process");
+    
+    match std::str::from_utf8(&_output.stdout)
+    {
+        Ok(out) => 
+        {
+            println!("{}", out);
+        },
+        Err(_) => {}
+    }
+
+    match std::str::from_utf8(&_output.stderr) 
+    {
+        Ok(out) =>
+        {
+            println!("{}", out);
+        },
+        Err(_) => {}
+    }
+
+    let _ = std::fs::remove_file(&target_file);
 }
 
 fn diff_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
