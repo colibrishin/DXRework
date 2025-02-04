@@ -1,5 +1,6 @@
 ﻿#include "D3D12RaytracingShader.h"
-#include <dxcapi.h>
+#include <directx-dxc/dxcapi.h>
+#include <directx-dxc/d3d12shader.h>
 
 #include "RaytracingShader.h"
 #include "ThrowIfFailed.h"
@@ -159,7 +160,7 @@ namespace Engine
 				 m_raytracing_pso_->QueryInterface(
 				     IID_PPV_ARGS(m_raytracing_pso_properties_.ReleaseAndGetAddressOf())));
 
-		constexpr D3D12_SAMPLER_DESC sampler
+		const D3D12_SAMPLER_DESC sampler
 		{
 			.Filter = static_cast<D3D12_FILTER>(shader->GetSamplerFilter()),
 			.AddressU = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode()),
@@ -173,6 +174,15 @@ namespace Engine
 			.MaxLOD = D3D12_FLOAT32_MAX
 		};
 
+        constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
+        {
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+            .NumDescriptors = 1,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+            .NodeMask = 0
+        };
+    
+        dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_sampler_heap_.GetAddressOf()));
 		dev->CreateSampler(&sampler, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart());
 
         InitializeShaderTable(shader, dev);
@@ -191,15 +201,17 @@ namespace Engine
         return m_shader_tables_[idx].Get();
     }
 
-    void D3D12RaytracingShader::UpdateHitRecords(const byte_vector& hit_records)
+    void D3D12RaytracingShader::UpdateHitRecords(const byte_stream& hit_records)
     {
         GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
         auto* dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
-        
-        assert(hit_records.block_size() == m_shader_record_sizes_[RAY_SHADER_REC_HIT]);
+
+#if WITH_DEBUG
+        assert(hit_records.size() % m_shader_record_sizes_[RAY_SHADER_REC_HIT] == 0);
+#endif
         auto& hit_record = m_shader_tables_[RAY_SHADER_REC_HIT];
         const auto& new_size = Align(
-            hit_records.size() * m_shader_record_sizes_[RAY_SHADER_REC_HIT],
+            hit_records.size(),
             D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
         
         if (new_size > m_hit_shader_record_size_)
@@ -227,39 +239,48 @@ namespace Engine
 
         char* copy_dst = nullptr;
         DX::ThrowIfFailed(hit_record->Map(0, nullptr, reinterpret_cast<void**>(&copy_dst)));
-        SIMDExtension::_mm256_memcpy(copy_dst, hit_records.data(), hit_records.size() * m_shader_record_sizes_[RAY_SHADER_REC_HIT]);
+        SIMDExtension::_mm256_memcpy(copy_dst, hit_records.data(), hit_records.size());
         hit_record->Unmap(0, nullptr);
     }
 
     void D3D12RaytracingShader::InitializeLocalSignature(ID3D12Device5* dev)
     {
-        // todo: customizable?
-        // use the register space 1 for avoiding the conflict with the global root signature
-        CD3DX12_DESCRIPTOR_RANGE1 hit_local_ranges;
-        hit_local_ranges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 4, 1);
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[RAYTRACING_LOCAL_SLOT_RANGE_END];
+        ranges[RAYTRACING_LOCAL_SLOT_SRV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, g_max_engine_texture_slots, 0);
+        ranges[RAYTRACING_LOCAL_SLOT_UAV].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, g_max_uav_slots, 0);
+        ranges[RAYTRACING_LOCAL_SLOT_SAMPLER].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, SAMPLER_END, 0);
 
-        CD3DX12_ROOT_PARAMETER1 hit_local_param[5];
-        hit_local_param[1].InitAsShaderResourceView(0, 1); // material buffer
-        hit_local_param[2].InitAsShaderResourceView(1, 1); // instance buffer
-        hit_local_param[3].InitAsShaderResourceView(2, 1); // vertex buffer
-        hit_local_param[4].InitAsShaderResourceView(3, 1); // index buffer
-        hit_local_param[5].InitAsDescriptorTable(4, &hit_local_ranges); // texture, normal
+        ranges[RAYTRACING_LOCAL_SLOT_SRV].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+        ranges[RAYTRACING_LOCAL_SLOT_UAV].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+        ranges[RAYTRACING_LOCAL_SLOT_SAMPLER].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
 
-        const auto& local_root_sign_desc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(
-                 _countof(hit_local_param),
-                 hit_local_param,
-                 0,
-                 nullptr,
-                 D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
-
+        CD3DX12_ROOT_PARAMETER1 root_parameters[RAYTRACING_LOCAL_SLOT_END];
+        root_parameters[RAYTRACING_LOCAL_SLOT_SRV].InitAsDescriptorTable
+        (1, &ranges[RAYTRACING_LOCAL_SLOT_SRV], D3D12_SHADER_VISIBILITY_ALL);
+        root_parameters[RAYTRACING_LOCAL_SLOT_UAV].InitAsDescriptorTable
+        (1, &ranges[RAYTRACING_LOCAL_SLOT_UAV], D3D12_SHADER_VISIBILITY_ALL);
+        root_parameters[RAYTRACING_LOCAL_SLOT_SAMPLER].InitAsDescriptorTable
+        (1, &ranges[RAYTRACING_LOCAL_SLOT_SAMPLER], D3D12_SHADER_VISIBILITY_ALL);
+        root_parameters[RAYTRACING_LOCAL_SLOT_VERTEX].InitAsShaderResourceView( 3, 1 );
+        root_parameters[RAYTRACING_LOCAL_SLOT_INDEX].InitAsShaderResourceView( 4, 1 );
+        
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
 
+        const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc(
+            RAYTRACING_LOCAL_SLOT_END,
+            root_parameters,
+            0,
+            nullptr,
+            D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
+
         DX::ThrowIfFailed(
                  D3D12SerializeVersionedRootSignature(
-                  &local_root_sign_desc,
+                  &desc,
                   signature.ReleaseAndGetAddressOf(),
                   error.ReleaseAndGetAddressOf() ) );
+
+        if (error) { OutputDebugStringA( static_cast<const char*>( error->GetBufferPointer() ) ); }
 
         DX::ThrowIfFailed(
                  dev->CreateRootSignature(
@@ -301,5 +322,6 @@ namespace Engine
         }
 
         m_shader_record_sizes_ = shader->GetShaderRecordSizes();
+        m_hit_shader_record_size_ = m_shader_record_sizes_[RAY_SHADER_REC_HIT];
     }
 }
