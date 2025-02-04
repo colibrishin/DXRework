@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderType.h"
+#include "GraphicInterface.h"
+
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 #include "ResourceManager/Public/ResourceManager.h"
 

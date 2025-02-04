@@ -3,6 +3,7 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Source/Runtime/CoreRender/Public/GraphicInterface.h"
 
 #if WITH_DEBUG
 #include "Source/Runtime/Core/Debugger/Public/Debugger.h"
@@ -18,7 +19,7 @@ namespace Engine::Managers
 
 	void ProjectionFrustum::PreRender(const float dt)
 	{
-		if (const auto scene = Managers::SceneManager::GetInstance().GetActiveScene().lock())
+		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
 			const auto camera_layer = scene->GetGameObjects(RESERVED_LAYER_CAMERA);
 
