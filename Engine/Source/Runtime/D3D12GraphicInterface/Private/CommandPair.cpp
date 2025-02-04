@@ -226,7 +226,7 @@ namespace Engine
 		}
 	}
 
-	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak <DescriptorHandler>& handler, CommandPairTask* task)
+	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task)
 	{
 		if (bool expected = false; 
 			m_b_initialized_.compare_exchange_strong(expected, true))
@@ -234,7 +234,7 @@ namespace Engine
 			m_dev_ = dev;
 			m_task_ = task;
 
-			if (const Strong<DescriptorHandler>& locked = handler.lock()) 
+			if (const Strong<DescriptorHandlerBase>& locked = handler.lock()) 
 			{
 				m_heap_handler_ = locked;
 			}
@@ -252,7 +252,7 @@ namespace Engine
 		}
 	}
 
-	void CommandPairTask::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& heap_handler, const size_t buffer_count)
+	void CommandPairTask::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& heap_handler, const size_t buffer_count)
 	{
 		m_dev_ = dev;
 
