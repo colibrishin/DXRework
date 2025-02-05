@@ -399,6 +399,7 @@ pythonenv3.8/
 DX/Metadata/_excluded/**
 
 Engine/***/blob/*
+Client/***/blob/*
 !Engine/Source/ThirdParty/*/lib/*
 
 
@@ -412,6 +413,5 @@ Programs/CMake/***
 Programs/vcpkg/***
 lock
 balius/target/.rustc_info.json
-Client/
 *.sln
 *.vcxproj
