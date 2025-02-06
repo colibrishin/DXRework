@@ -39,6 +39,11 @@ namespace Engine::Managers
 			}
 		}
 
+	    for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+	    {
+	        ptr->PreRun(m_render_candidates_, std::size(m_render_candidates_), {});
+	    }
+	    
 		m_b_ready_ = true;
 	}
 
