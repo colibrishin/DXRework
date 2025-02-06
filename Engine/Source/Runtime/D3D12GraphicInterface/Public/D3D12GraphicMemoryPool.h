@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "D3D12GraphicInterface.h"
+#include "D3D12GraphicResourcePrimitive.h"
+
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "ThrowIfFailed.h"
 
@@ -33,6 +35,8 @@ namespace Engine
     private:
         void InitializeBuffer(const size_t count, const size_t stride) override
         {
+            m_resource_ = std::make_unique<D3D12GraphicResourcePrimitive>();
+            
             const auto& heap_desc = CD3DX12_HEAP_PROPERTIES(HeapProperty);
             const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(Align(count * stride, Alignment), Flags);
             const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
