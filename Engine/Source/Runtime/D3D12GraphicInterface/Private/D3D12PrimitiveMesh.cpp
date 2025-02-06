@@ -300,31 +300,12 @@ namespace Engine
 			const auto& scratch_size = Align
 					(blas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
-		    blas.resultPool = std::make_unique<D3D12GraphicResourcePrimitive>();
-		    blas.scratchPool = std::make_unique<D3D12GraphicResourcePrimitive>();
+		    blas.resultPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE>>();
+		    blas.scratchPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS>>();
 
-		    const auto& default_heap_desc   = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		    const auto& result_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(result_size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-		    const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(scratch_size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		    blas.resultPool->Update(nullptr, result_size, 1);
+            blas.scratchPool->Update(nullptr, scratch_size, 1);
 
-		    DX::ThrowIfFailed(
-                     dev->CreateCommittedResource(
-                      &default_heap_desc,
-                      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-                      &result_buffer_desc,
-                      D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-                      nullptr,
-                      IID_PPV_ARGS( blas.resultPool->GetAddressOf<ID3D12Resource>() ) ) );
-		    
-		    DX::ThrowIfFailed(
-                     dev->CreateCommittedResource(
-                      &default_heap_desc,
-                      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-                      &scratch_buffer_desc,
-                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                      nullptr,
-                      IID_PPV_ARGS( blas.scratchPool->GetAddressOf<ID3D12Resource>() ) ) );
-		    
 			D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
 
 			blas_desc.DestAccelerationStructureData    = blas.resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();

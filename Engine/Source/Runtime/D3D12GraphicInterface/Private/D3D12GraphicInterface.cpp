@@ -248,7 +248,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     const ObjectPredication& predication)
 {
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
-    aligned_vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
+    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
     concurrent_fast_pool_map<Resources::ShaderBase*, size_t> hit_group_id;
 
     size_t shader_count = 0;
@@ -294,7 +294,8 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
                         };
 
                         const auto& world = instance[i].instance->GetParam<Matrix>(0);
-                        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(Matrix));
+                        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
+                        instance_descs.push_back(desc);
                     }
 
                     instance_count += instance.size();
@@ -316,7 +317,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
         .NumDescs = static_cast<UINT>(instance_descs.size()),
         .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-        .InstanceDescs = out_tlas_buffer.resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
+        .InstanceDescs = out_tlas_buffer.instanceDescPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
     };
 
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuild_info{};
@@ -335,35 +336,16 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
 
     if (!out_tlas_buffer.scratchPool)
     {
-        out_tlas_buffer.scratchPool = std::make_unique<D3D12GraphicResourcePrimitive>();
+        out_tlas_buffer.scratchPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS>>();
     }
 
     if (!out_tlas_buffer.resultPool)
     {
-        out_tlas_buffer.resultPool = std::make_unique<D3D12GraphicResourcePrimitive>();
+        out_tlas_buffer.resultPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE>>();
     }
 
-    const auto& default_heap_desc   = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    const auto& result_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(result_size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    const auto& scratch_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(scratch_size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-    DX::ThrowIfFailed(
-             m_dev_->CreateCommittedResource(
-              &default_heap_desc,
-              D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-              &result_buffer_desc,
-              D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-              nullptr,
-              IID_PPV_ARGS( out_tlas_buffer.resultPool->GetAddressOf<ID3D12Resource>() ) ) );
-		    
-    DX::ThrowIfFailed(
-             m_dev_->CreateCommittedResource(
-              &default_heap_desc,
-              D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-              &scratch_buffer_desc,
-              D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-              nullptr,
-              IID_PPV_ARGS( out_tlas_buffer.scratchPool->GetAddressOf<ID3D12Resource>() ) ) );
+    out_tlas_buffer.scratchPool->Update(nullptr, 1, scratch_size);
+    out_tlas_buffer.resultPool->Update(nullptr, 1, result_size);
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 
@@ -391,12 +373,20 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     const byte_stream& hit_records,
     const AccelStructBuffer& top_level_accel_buffer)
 {
-    const auto& cmd = static_cast<CommandPair*>(context->commandList);
-    
+    const auto& cmd = static_cast<CommandPair*>( context->commandList );
+
+    cmd->GetList4()->SetComputeRootSignature( m_raytracing_root_pipeline_.Get() );
+
     if ( shader )
     {
         cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive()->GetNativeShader()));
     }
+
+    perspective.Flush(context);
+    param.Flush(context);
+
+    ID3D12DescriptorHeap* heaps[] = { m_output_heap_.Get() };
+    cmd->GetList4()->SetDescriptorHeaps(1, heaps);
     
     cmd->GetList4()->SetComputeRootShaderResourceView(
         RAYTRACING_GLOBAL_SLOT_TLAS,
@@ -422,7 +412,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         RAYTRACING_GLOBAL_SLOT_PARAM,
         param.GetGPUAddress());
 
-    shader->GetPrimitive()->UpdateHitRecords(hit_records);
+    shader->GetPrimitive()->UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
     
     D3D12_DISPATCH_RAYS_DESC ray_desc{};
     ray_desc.Width = CFG_WIDTH;
@@ -437,7 +427,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         exported[RAY_SHADER_ANY_HIT] || exported[RAY_SHADER_CLOSEST_HIT],
         exported[RAY_SHADER_MISS]
     };
-    
+
     for (size_t i = 0; i < std::size(hit_merged); ++i)
     {
         if (hit_merged[i])
@@ -455,7 +445,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
                 {
                     auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_HIT));
                     ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
-                    ray_desc.HitGroupTable.SizeInBytes = hit_records.size() * record_sizes[i];
+                    ray_desc.HitGroupTable.SizeInBytes = hit_records.size();
                     ray_desc.HitGroupTable.StrideInBytes = record_sizes[i];
                     break;
                 }

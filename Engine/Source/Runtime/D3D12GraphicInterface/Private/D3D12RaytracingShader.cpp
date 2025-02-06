@@ -96,14 +96,6 @@ namespace Engine
 		lib->SetDXILLibrary(&lib_dxil);
 
 		// Add RayGen, Miss, and Hit groups
-		const wchar_t* export_names[] =
-		{
-			L"raygen_main",
-		    L"any_hit_main",
-			L"closest_hit_main",
-			L"miss_main"
-		};
-
         std::vector<const wchar_t*> exporting_names;
         const std::array<bool, 4>& to_export = shader->GetHasExport();
         
@@ -111,17 +103,21 @@ namespace Engine
         {
             if (to_export[i])
             {
-                exporting_names.push_back(export_names[i]);
+                exporting_names.push_back(g_raytracing_export_names[i]);
             }
         }
         
 		lib->DefineExports(exporting_names.data(), exporting_names.size());
-
-        if (to_export[3])
+        
+        if (to_export[RAY_SHADER_CLOSEST_HIT])
         {
             // Hit group
             const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-            hitgroup->SetClosestHitShaderImport(L"closest_hit_main");
+            hitgroup->SetClosestHitShaderImport(g_raytracing_export_names[RAY_SHADER_CLOSEST_HIT]);
+            if (to_export[RAY_SHADER_ANY_HIT])
+            {
+                hitgroup->SetAnyHitShaderImport(g_raytracing_export_names[RAY_SHADER_ANY_HIT]);
+            }
             hitgroup->SetHitGroupExport(shader->GetHitGroupName().data());
             hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
         }
@@ -144,7 +140,11 @@ namespace Engine
 		const auto& local_root_export = raytracing_pipeline_desc.CreateSubobject<
 			CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 		local_root_export->SetSubobjectToAssociate(*local_root_sign);
-		local_root_export->AddExport(shader->GetHitGroupName().data());
+
+        if (to_export[RAY_SHADER_ANY_HIT] || to_export[RAY_SHADER_CLOSEST_HIT])
+        {
+            local_root_export->AddExport(shader->GetHitGroupName().data());
+        }
 
 		// Pipeline config, Recursion depth
 		const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<
@@ -201,20 +201,17 @@ namespace Engine
         return m_shader_tables_[idx].Get();
     }
 
-    void D3D12RaytracingShader::UpdateHitRecords(const byte_stream& hit_records)
+    void D3D12RaytracingShader::UpdateShaderRecords(const eRaytracingShaderRecordType type, const byte_stream& records)
     {
         GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
         auto* dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
-
-#if WITH_DEBUG
-        assert(hit_records.size() % m_shader_record_sizes_[RAY_SHADER_REC_HIT] == 0);
-#endif
-        auto& hit_record = m_shader_tables_[RAY_SHADER_REC_HIT];
+        
+        auto& hit_record = m_shader_tables_[type];
         const auto& new_size = Align(
-            hit_records.size(),
+            records.size(),
             D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
         
-        if (new_size > m_hit_shader_record_size_)
+        if (new_size > m_allocated_shader_record_size_[type])
         {
             const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
             const auto& buffer_desc  = CD3DX12_RESOURCE_DESC::Buffer
@@ -234,12 +231,29 @@ namespace Engine
                       IID_PPV_ARGS(hit_record.ReleaseAndGetAddressOf())
                      ));
 
-            m_hit_shader_record_size_ = new_size;
+            m_allocated_shader_record_size_[type] = new_size;
         }
 
+        const wchar_t* key;
+        switch (type)
+        {
+        case RAY_SHADER_REC_GEN:
+            key = g_raytracing_export_names[RAY_SHADER_GEN];
+            break;
+        case RAY_SHADER_REC_MISS:
+            key = g_raytracing_export_names[RAY_SHADER_MISS];
+            break;
+        case RAY_SHADER_REC_HIT:
+            key = m_hit_group_name_.data();
+            break;
+        default:
+            throw std::runtime_error("Unknown type iterated");
+        }
+        
         char* copy_dst = nullptr;
         DX::ThrowIfFailed(hit_record->Map(0, nullptr, reinterpret_cast<void**>(&copy_dst)));
-        SIMDExtension::_mm256_memcpy(copy_dst, hit_records.data(), hit_records.size());
+        SIMDExtension::_mm256_memcpy(copy_dst, records.data(), records.size());
+        std::memcpy(copy_dst, m_raytracing_pso_properties_->GetShaderIdentifier(key), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
         hit_record->Unmap(0, nullptr);
     }
 
@@ -299,6 +313,9 @@ namespace Engine
             export_targets[RAY_SHADER_ANY_HIT] || export_targets[RAY_SHADER_CLOSEST_HIT],
             export_targets[RAY_SHADER_MISS]
         };
+        
+        m_shader_record_sizes_ = shader->GetShaderRecordSizes();
+
         const auto& shader_record_sizes = shader->GetShaderRecordSizes();
         const auto& upload_heap         = CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD );
         
@@ -318,10 +335,31 @@ namespace Engine
                         D3D12_RESOURCE_STATE_GENERIC_READ,
                         nullptr,
                         IID_PPV_ARGS( m_shader_tables_[i].GetAddressOf() ) ) );
+                
+                m_allocated_shader_record_size_[i] = m_shader_record_sizes_[i];
+
+                const wchar_t* key;
+                switch (i)
+                {
+                case RAY_SHADER_REC_GEN:
+                    key = g_raytracing_export_names[RAY_SHADER_GEN];
+                    break;
+                case RAY_SHADER_REC_MISS:
+                    key = g_raytracing_export_names[RAY_SHADER_MISS];
+                    break;
+                case RAY_SHADER_REC_HIT:
+                    m_hit_group_name_ = shader->GetHitGroupName();
+                    key = m_hit_group_name_.data();
+                    break;
+                default:
+                    throw std::runtime_error("Unknown type iterated");
+                }
+                
+                char* copy_dst = nullptr;
+                DX::ThrowIfFailed(m_shader_tables_[i]->Map(0, nullptr, reinterpret_cast<void**>(&copy_dst)));
+                std::memcpy(copy_dst, m_raytracing_pso_properties_->GetShaderIdentifier(key), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+                m_shader_tables_[i]->Unmap(0, nullptr);
             }
         }
-
-        m_shader_record_sizes_ = shader->GetShaderRecordSizes();
-        m_hit_shader_record_size_ = m_shader_record_sizes_[RAY_SHADER_REC_HIT];
     }
 }

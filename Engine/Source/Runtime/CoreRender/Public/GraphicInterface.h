@@ -793,7 +793,7 @@ namespace Engine
         virtual             ~RaytracingPrimitiveShader() = default;
         virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
         [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
-        virtual void        UpdateHitRecords(const byte_stream& hit_records) = 0;
+        virtual void        UpdateShaderRecords(eRaytracingShaderRecordType type, const byte_stream& records) = 0;
         [[nodiscard]] void* GetNativeShader() const
         {
             return m_shader_;
@@ -900,9 +900,9 @@ namespace Engine
 
 	struct ENGINE_CORERENDER_API AccelStructBuffer
 	{
-		Unique<GraphicMemoryPool>        instanceDescPool;
-		Unique<GraphicResourcePrimitive> resultPool;
-		Unique<GraphicResourcePrimitive> scratchPool;
+        Unique<GraphicMemoryPool> instanceDescPool;
+        Unique<GraphicMemoryPool> resultPool;
+        Unique<GraphicMemoryPool> scratchPool;
 
 		bool empty = true;
 	};
@@ -1647,11 +1647,13 @@ namespace Engine
 			return *m_resource_;
 		}
 
+	protected:
+	    Unique<GraphicResourcePrimitive> m_resource_;
+	    
 	private:
 		virtual void InitializeBuffer(const size_t count, const size_t stride) = 0;
 
-		Unique<GraphicResourcePrimitive> m_resource_;
-		size_t                           m_allocated_size_;
+	    size_t                           m_allocated_size_;
 		size_t                           m_used_size_;
 	};
 }
