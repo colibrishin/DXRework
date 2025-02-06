@@ -87,16 +87,17 @@ namespace Engine
                          meshes.emplace_back(mesh.get(), instances.size());
                      }
 
-                     const Strong<Resources::RaytracingShader>& locked_shader =
-                         pair.first->GetSharedPtr<Resources::RaytracingShader>();
-
-                     if (decltype(intermediate_shader_map)::const_accessor acc;
-                         intermediate_shader_map.find(acc, locked_shader.get()))
+                     if (const Strong<Resources::RaytracingShader>& locked_shader =
+                         Cast<Resources::RaytracingShader>(pair.first))
                      {
-                         StartPhase_MultiThread(
-                              dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
-                              prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
-                              acc->second);
+                         if (decltype(intermediate_shader_map)::const_accessor acc;
+                         intermediate_shader_map.find(acc, locked_shader.get()))
+                         {
+                             StartPhase_MultiThread(
+                                  dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
+                                  prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
+                                  acc->second);
+                         }
                      }
                  }
                 );
@@ -345,8 +346,9 @@ namespace Engine
 	    }
 	    
 	    m_byte_stream_.insert(m_byte_stream_.end(), std::numeric_limits<uint32_t>::digits, byte_stream{});
-	    m_byte_stream_usage_.back() |= 1 << std::numeric_limits<uint32_t>::digits;
-	    return m_byte_stream_[m_byte_stream_usage_.size() * std::numeric_limits<uint32_t>::digits];
+	    m_byte_stream_usage_.insert(m_byte_stream_usage_.end(), 1, 0);
+	    m_byte_stream_usage_.back() |= 1 << (std::numeric_limits<uint32_t>::digits - 1);
+	    return m_byte_stream_[(m_byte_stream_usage_.size() - 1) * std::numeric_limits<uint32_t>::digits];
 	}
 
     void RaytracingRenderPassTask::DispatchPhase_MultiThread(

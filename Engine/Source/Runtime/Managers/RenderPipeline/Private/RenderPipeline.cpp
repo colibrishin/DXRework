@@ -1,4 +1,6 @@
 #include "../Public/RenderPipeline.h"
+
+#include "RaytracingRenderer.h"
 #include "RenderPipeline.generated.h"
 #include "../Public/Renderer.h"
 

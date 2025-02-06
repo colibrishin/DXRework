@@ -1,8 +1,9 @@
 #include "../Public/RaytracingRenderPassTaskModule.h"
-#include "Renderer.h"
+#include "RaytracingRenderPassTaskModule.generated.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 #include "RaytracingRenderPassTask.h"
+#include "RaytracingRenderer.h"
 
 MODULE_IMPL(Engine::RaytracingRenderPassTaskModule, RaytracingRenderPassTask)
 
@@ -10,12 +11,12 @@ namespace Engine
 {
 	void RaytracingRenderPassTaskModule::Initialize()
 	{
-		Managers::Renderer::GetInstance().RegisterRenderPass(L"RaytracingRenderPassTask", new RaytracingRenderPassTask());
+		Managers::RaytracingRenderer::GetInstance().RegisterRenderPass(L"RaytracingRenderPassTask", new RaytracingRenderPassTask());
 	}
 
 	void RaytracingRenderPassTaskModule::Shutdown()
 	{
-		Managers::Renderer::GetInstance().UnregisterRenderPass(L"RaytracingRenderPassTask");
+		Managers::RaytracingRenderer::GetInstance().UnregisterRenderPass(L"RaytracingRenderPassTask");
 	}
 
 	bool RaytracingRenderPassTaskModule::DynamicLoadable()

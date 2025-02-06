@@ -5,9 +5,9 @@
 
 #include "InstanceModelSB.h"
 #include "ModelRenderer.h"
+#include "RaytracingRenderer.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
-
 
 #include "ShapeRenderComponent.h"
 #include "ObjectBase/Public/ObjectBase.h"
