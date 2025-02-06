@@ -6,7 +6,6 @@
 
 #include "CoreModule/Public/CoreModule.h"
 
-
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
 std::atomic<float> Engine::Managers::EngineEntryPoint::s_fixed_update_interval = 1 / 30.f;
