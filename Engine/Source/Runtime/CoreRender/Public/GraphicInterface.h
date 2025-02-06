@@ -1047,11 +1047,12 @@ namespace Engine
 	public:
 		virtual ~ConstantBufferTypeless() = default;
 
-		virtual void                Create(const void* src_data, const size_t stride) = 0;
-		virtual void                SetData(const void* src_data, const size_t stride) = 0;
-		[[nodiscard]] virtual void* GetData() const = 0;
-		virtual void                Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) = 0;
+		virtual void                 Create(const void* src_data, const size_t stride) = 0;
+		virtual void                 SetData(const void* src_data, const size_t stride) = 0;
+		[[nodiscard]] virtual void*  GetData() const = 0;
+		virtual void                 Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) = 0;
         [[nodiscard]] virtual UINT64 GetGPUAddress() const = 0;
+        virtual void Flush(const GraphicInterfaceContextPrimitive* context) = 0;
     };
 
 	class ENGINE_CORERENDER_API ConstantBufferDecorator
@@ -1127,6 +1128,11 @@ namespace Engine
 		{
 		    if (!m_base_) return 0;
 		    return m_base_->GetGPUAddress();
+		}
+
+        void Flush(const GraphicInterfaceContextPrimitive* context) const
+		{
+		    if (m_base_) m_base_->Flush(context);
 		}
     };
 

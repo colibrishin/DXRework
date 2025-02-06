@@ -35,6 +35,13 @@ namespace Engine::Graphics
 		{
 			return m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart();
 		}
+
+	    virtual void Flush(const GraphicInterfaceContextPrimitive* context) override
+		{
+		    Flush(static_cast<CommandPair*>(context->commandList), static_cast<DescriptorPtrImpl*>(context->heap));
+		}
+
+	    void Flush(const CommandPair* cmd, const DescriptorPtrImpl* heap);
 	    
 	private:
 		bool m_b_dirty_;

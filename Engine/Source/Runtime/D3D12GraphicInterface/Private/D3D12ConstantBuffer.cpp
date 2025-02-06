@@ -144,33 +144,7 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Bind(const CommandPair* cmd,
 	assert(m_buffer_);
 	assert(m_cpu_cbv_heap_);
 
-	if (m_b_dirty_)
-	{
-		const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_buffer_.Get(),
-				 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-				 D3D12_RESOURCE_STATE_COPY_DEST
-				);
-
-		char* data = nullptr;
-		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-		SIMDExtension::_mm256_memcpy(data, m_data_, m_stride_);
-		m_upload_buffer_->Unmap(0, nullptr);
-
-		const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
-				(
-				 m_buffer_.Get(),
-				 D3D12_RESOURCE_STATE_COPY_DEST,
-				 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-				);
-
-		cmd->GetList()->ResourceBarrier(1, &copy_trans);
-		cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
-		cmd->GetList()->ResourceBarrier(1, &cb_trans);
-
-		m_b_dirty_ = false;
-	}
+    Flush(cmd, heap);
 
 	if (heap == nullptr)
 	{
@@ -178,4 +152,38 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Bind(const CommandPair* cmd,
 	}
 
 	heap->SetConstantBuffer(m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart(), slot);
+}
+
+void Engine::Graphics::D3D12ConstantBufferTypeless::Flush(const CommandPair* cmd, const DescriptorPtrImpl* heap)
+{
+    assert(m_buffer_);
+    assert(m_cpu_cbv_heap_);
+    
+    if (m_b_dirty_)
+    {
+        const auto& copy_trans = CD3DX12_RESOURCE_BARRIER::Transition
+                (
+                 m_buffer_.Get(),
+                 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                 D3D12_RESOURCE_STATE_COPY_DEST
+                );
+
+        char* data = nullptr;
+        DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        SIMDExtension::_mm256_memcpy(data, m_data_, m_stride_);
+        m_upload_buffer_->Unmap(0, nullptr);
+
+        const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
+                (
+                 m_buffer_.Get(),
+                 D3D12_RESOURCE_STATE_COPY_DEST,
+                 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+                );
+
+        cmd->GetList()->ResourceBarrier(1, &copy_trans);
+        cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+        cmd->GetList()->ResourceBarrier(1, &cb_trans);
+
+        m_b_dirty_ = false;
+    }
 }
