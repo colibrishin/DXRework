@@ -31,13 +31,6 @@ public class ClientProject : CommonProject
 
         string FastBuildPath = @"do-fastbuild.bat";
         FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
-        
-        conf.TargetCopyFiles.Add
-        (
-            @"Sky.jpg",
-            @"Texture.png",
-            @"Texture-Normal.png",
-        );
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);

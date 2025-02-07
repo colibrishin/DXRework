@@ -914,6 +914,10 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 	{
 		throw std::runtime_error("Not Implemented");
 	}
+	[[nodiscard]] virtual std::string_view GetTypeName() const
+	{
+		throw std::runtime_error("Not Implemented");
+	}
 
 	constexpr HashTypeImpl() = default;
 	constexpr HashTypeImpl(const cityhash::cityhash256& value) : v(value) {}
@@ -986,6 +990,10 @@ struct HashTypeT : HashTypeImpl
 	[[nodiscard]] bool IsInternal() const override
 	{
 		return is_internal_v<T>;
+	}
+	[[nodiscard]] std::string_view GetTypeName() const override
+	{
+		return static_type_name<T>::name();
 	}
 
 	constexpr HashTypeT() :

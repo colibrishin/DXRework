@@ -1,10 +1,10 @@
 #pragma once
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+#include "Source/Runtime/Core/ModuleManager/Public/IClientModule.h"
 
 #include "Client.generated.h"
 
-ECLASS(module)
-struct ClientModule : Engine::IModule
+ECLASS(clientModule)
+struct ENGINE_CLIENT_API ClientModule : Engine::IClientModule
 {
 	GENERATE_BODY
 

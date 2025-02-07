@@ -3,7 +3,9 @@
 
 namespace Engine
 {
-	Script::Script(const ScriptSizeType type, const Weak<Abstracts::ObjectBase>& owner) :
+	std::unordered_map<Engine::ScriptType, Engine::ScriptGeneratorSignature> Engine::ScriptFactory::m_script_generators_ = {};
+	
+	Script::Script(const Weak<Abstracts::ObjectBase>& owner) :
 	m_b_active_(true)
 	{
 		if (const auto obj = owner.lock())

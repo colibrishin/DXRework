@@ -38,7 +38,7 @@ fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path:
     let target_file = intermediate_path.join("target");
 
     let mut parser = std::process::Command::new(&parser_path);
-    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").output().expect("Unable to spawn the process");
+    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").arg("-m GENERATE_BODY").output().expect("Unable to spawn the process");
     
     match std::str::from_utf8(&_output.stdout)
     {
@@ -132,20 +132,18 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
                     }
                 }
 
-                println!("Project Path: {}", project_root_path.display());
-
                 let project_name = project_root_path.iter().nth(project_root_path.iter().count() - 1).expect("Unable to parse the project name");
-
+                let sub_directory_and_filename = next_path.strip_prefix(project_root_path.parent().expect("Drive root reached")).expect("Project path is not compatible with header file path");
+                
                 let dest = intermediate_path
-                    .join(&project_name)
-                    .join(next_path.with_extension("h").file_name().unwrap());
+                    .join(sub_directory_and_filename.with_extension("h"));
 
-                println!("Candidate header: {}", dest.display());
+                println!("Candidate header: {}", sub_directory_and_filename.display());
 
                 if !dest.parent().expect("Unable to get the parent path").exists()
                 {
                     println!("Create a new folder for project...");
-                    std::fs::create_dir(dest.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                    std::fs::create_dir_all(dest.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
                 }
 
                 std::fs::copy(&next_path, &dest).expect("Unable to copy the header file");
@@ -153,14 +151,13 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
                 let generated_header = intermediate_path
                     .join("HeaderGenerated")
                     .join(&project_name)
-                    .join(next_path.with_extension("generated.h").file_name().unwrap());
+                    .join(sub_directory_and_filename.with_extension("generated.h").file_name().unwrap());
 
                 if !generated_header.exists()
                 {
                     println!("{}", generated_header.display());
                     println!("Header does not generated before, force regenerate...");
-                    let path_without_intermediate = std::path::Path::new(project_name).join(next_path.with_extension("h").file_name().unwrap());
-                    target_files.lock().unwrap().insert(path_without_intermediate.to_str().expect("Unable to translate to path").to_string());
+                    target_files.lock().unwrap().insert(sub_directory_and_filename.to_str().expect("Unable to translate to path").to_string());
                 }
             }
         }

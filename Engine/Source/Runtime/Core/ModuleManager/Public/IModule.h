@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-	ECLASS(module)
+	ECLASS(abstract, module)
 	struct ENGINE_CORE_API IModule
 	{
 		GENERATE_BODY

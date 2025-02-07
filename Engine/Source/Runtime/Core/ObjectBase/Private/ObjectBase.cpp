@@ -742,6 +742,14 @@ namespace Engine::Abstracts
 									predicate(GetSharedPtr<ObjectBase>());
 								});
 							}
+
+							for (const auto& [script_type, predicate] : ScriptFactory::GetGenerators())
+							{
+								(add_com_context |= ui.NewButton({ script_type->GetTypeName()})).SetFunction([&]()
+								{
+									predicate(GetSharedPtr<ObjectBase>());
+								});
+							}
 						};
 					}
 
