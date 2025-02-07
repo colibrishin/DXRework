@@ -5,7 +5,7 @@
 
 namespace Engine 
 {
-	ECLASS(abstract, module)
+	ECLASS(abstract)
 	struct ENGINE_CORE_API IClientModule : public IModule
 	{
 		GENERATE_BODY

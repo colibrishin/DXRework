@@ -199,7 +199,7 @@ public abstract class CommonProject : Project
             $@"{EngineDir}\balius\target\release\balius.exe",
             $@"",
             $@"{EngineDir}\Intermediate\log\[project.Name]-headerparser.log",
-            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}""",
+            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}"" ""{conf.Name}""",
             EngineDir,
             true,
             true

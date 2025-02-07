@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-	ECLASS(abstract, module)
+	ECLASS(abstract)
 	struct ENGINE_CORE_API IModule
 	{
 		GENERATE_BODY
@@ -15,5 +15,6 @@ namespace Engine
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 		virtual bool DynamicLoadable() = 0;
+		virtual const std::vector<std::string>& GetDependencies() const = 0;
 	};
 }

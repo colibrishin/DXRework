@@ -11,6 +11,7 @@ public abstract class ExportProject : Project
 
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
+        IsExportProject = true;
         StripFastBuildSourceFiles = false;
 
         SourceRootPath = @"[project.RootPath]";

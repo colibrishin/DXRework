@@ -415,3 +415,4 @@ lock
 balius/target/.rustc_info.json
 *.sln
 *.vcxproj
+*.dep

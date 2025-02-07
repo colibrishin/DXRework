@@ -8,6 +8,7 @@ public class ImGui : CommonProject
 {
     public ImGui()
     {
+        IsExportProject = true;
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)

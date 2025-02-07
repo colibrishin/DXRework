@@ -32,13 +32,13 @@ fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
     }
 }
 
-fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path)
+fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path, configuration: &String)
 {
     let parser_path = engine_dir.join("Programs").join("header-parser").join("Release").join("header-parser.exe");
     let target_file = intermediate_path.join("target");
 
     let mut parser = std::process::Command::new(&parser_path);
-    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").arg("-m GENERATE_BODY").output().expect("Unable to spawn the process");
+    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").arg("-m GENERATE_BODY").arg(format!("-b {}", configuration)).output().expect("Unable to spawn the process");
     
     match std::str::from_utf8(&_output.stdout)
     {
@@ -103,17 +103,11 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
 
             if next_path.is_file()
             {
-                match next_path.extension()
+                let extension = match next_path.extension()
                 {
-                    Some(extension) => 
-                    {
-                        if extension != "h" 
-                        {
-                            continue;
-                        }
-                    },
+                    Some(ext) => ext,
                     None => continue
-                }
+                };
 
                 let target_intermediate = std::path::Path::new(next_path.parent().expect("Parent path does not exists"));
                 let mut project_root_path = std::path::Path::new("");
@@ -135,29 +129,49 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
                 let project_name = project_root_path.iter().nth(project_root_path.iter().count() - 1).expect("Unable to parse the project name");
                 let sub_directory_and_filename = next_path.strip_prefix(project_root_path.parent().expect("Drive root reached")).expect("Project path is not compatible with header file path");
                 
-                let dest = intermediate_path
-                    .join(sub_directory_and_filename.with_extension("h"));
-
-                println!("Candidate header: {}", sub_directory_and_filename.display());
-
-                if !dest.parent().expect("Unable to get the parent path").exists()
+                if extension == "h"
                 {
-                    println!("Create a new folder for project...");
-                    std::fs::create_dir_all(dest.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                    let dest = intermediate_path.join(sub_directory_and_filename.with_extension("h"));
+
+                    println!("Candidate header: {}", sub_directory_and_filename.display());
+
+                    if !dest.parent().expect("Unable to get the parent path").exists()
+                    {
+                        println!("Create a new folder for project...");
+                        std::fs::create_dir_all(dest.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                    }
+
+                    std::fs::copy(&next_path, &dest).expect("Unable to copy the header file");
+
+                    let generated_header = intermediate_path
+                        .join("HeaderGenerated")
+                        .join(&project_name)
+                        .join(sub_directory_and_filename.with_extension("generated.h").file_name().unwrap());
+
+                    if !generated_header.exists()
+                    {
+                        println!("{}", generated_header.display());
+                        println!("Header does not generated before, force regenerate...");
+                        target_files.lock().unwrap().insert(sub_directory_and_filename.to_str().expect("Unable to translate to path").to_string());
+                    }
                 }
-
-                std::fs::copy(&next_path, &dest).expect("Unable to copy the header file");
-
-                let generated_header = intermediate_path
-                    .join("HeaderGenerated")
-                    .join(&project_name)
-                    .join(sub_directory_and_filename.with_extension("generated.h").file_name().unwrap());
-
-                if !generated_header.exists()
+                
+                if extension == "dep"
                 {
-                    println!("{}", generated_header.display());
-                    println!("Header does not generated before, force regenerate...");
-                    target_files.lock().unwrap().insert(sub_directory_and_filename.to_str().expect("Unable to translate to path").to_string());
+                    let dependency_dst = intermediate_path
+                        .join(&project_name)
+                        .join(next_path.file_name().unwrap());
+
+                    if !dependency_dst.parent().expect("Unable to get the parent path").exists()
+                    {
+                        println!("Create a new folder for project...");
+                        std::fs::create_dir_all(dependency_dst.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                    }
+
+                    if !dependency_dst.exists()
+                    {
+                        std::fs::copy(&next_path, &dependency_dst).expect("Unable to copy the dependency file");
+                    }
                 }
             }
         }
@@ -335,6 +349,7 @@ fn main()
     let engine_dir = std::path::Path::new(&args[1]);
     let project_dir = std::path::Path::new(&args[3]);
     let git_dir = std::path::Path::new(&args[4]);
+    let configuration = &args[5];
 
     if !engine_dir.exists() 
     {
@@ -359,6 +374,6 @@ fn main()
     if !target_files.lock().unwrap().is_empty()
     {
         write_target_file(&intermediate_path);
-        run_headerparser(&engine_dir, &intermediate_path);
+        run_headerparser(&engine_dir, &intermediate_path, &configuration);
     }
 }
