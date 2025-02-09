@@ -19,7 +19,7 @@ namespace Engine::Graphics
         float refractionScale = 0.15f;
 
         EPROPERTY()
-        Color        overrideColor;
+        Color        overrideColor = {0.f, 0.f, 0.f, 0.f};
         EPROPERTY()
         Color        specularColor = {0.f, 0.f, 0.f, 1.f};
         EPROPERTY()

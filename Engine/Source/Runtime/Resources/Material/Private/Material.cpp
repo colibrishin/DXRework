@@ -242,7 +242,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_textures_[slot] = locked;
-			m_material_sb_.texSlot[slot] = true;
+			m_material_sb_.texSlotEnable[slot] = true;
 
 			if (set_path)
 			{
@@ -262,10 +262,11 @@ namespace Engine::Resources
 		{
 			if (IsLoaded())
 			{
-				std::swap(m_textures_[after], m_textures_[before]);
+				std::swap(m_textures_[before], m_textures_[after]);
 			}
 
 			std::swap(m_cached_textures_[before], m_cached_textures_[after]);
+		    std::swap(m_material_sb_.texSlotEnable[before], m_material_sb_.texSlotEnable[after]);
 			std::swap(m_material_sb_.texSlot[before], m_material_sb_.texSlot[after]);
 			std::swap(m_texture_paths_[before], m_texture_paths_[after]);
 		}
