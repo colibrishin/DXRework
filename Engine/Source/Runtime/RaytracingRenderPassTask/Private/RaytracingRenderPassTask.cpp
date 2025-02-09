@@ -216,39 +216,39 @@ namespace Engine
 
 		if (prerender_predicate) { prerender_predicate(&temp_context); }
 
-		for (const auto& func : prerender_predicates | std::views::values)
+		for ( const auto& func : prerender_predicates | std::views::values )
 		{
-			func(&temp_context);
+			func( &temp_context );
 		}
 		
 		// Manual release
-		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
+		auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket );
 		m_instance_pool_.advance();
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		instance_token.Release();
 		
 		static aligned_vector<Graphics::SBs::InstanceSB*> instances;
 		
-		if (instance_pairs.size() > instances.capacity())
+		if ( instance_pairs.size() > instances.capacity() )
 		{
-			instances.resize(instance_pairs.size());
+			instances.resize( instance_pairs.size() );
 		}
 
 		size_t idx = 0;
-		for (const InstancePair& instance_pair : instance_pairs)
+		for ( const InstancePair& instance_pair : instance_pairs )
 		{
-			instances[idx] = instance_pair.instance;
+			instances[ idx ] = instance_pair.instance;
 			++idx;
 		}
 
-		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
+		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
 		{
 			additional_sb->TransitionToSRV(&temp_context);
 		}
 	    
 	    byte_stream& hit_records = GetByteStream();
 	    size_t instance_pos = 0;
-	    for (const auto& [mesh, instance_count] : meshes)
+	    for ( const auto& [ mesh, instance_count ] : meshes )
 	    {
 	        for ( size_t i = 0; i < instance_count; ++i )
 	        {
@@ -265,28 +265,31 @@ namespace Engine
                         .heap = heap
                     };
 	                
-	            for ( size_t j = 0; j < instance_pairs[i].textures.size(); ++j)
+	            for ( size_t j = 0; j < instance_pairs[i].textures.size(); ++j )
 	            {
 	                if ( instance_pairs[instance_pos + i].textures[j] )
 	                {
-	                    RecordUsedTexture(&local_sig_context, gi, instance_pairs[instance_pos + i].textures[j]);
-	                    gi.Bind(&local_sig_context, instance_pairs[instance_pos + i].textures[j].get(), BIND_TYPE_SRV, TEX_TYPE_2D, j);
+	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i].textures[j] );
+	                    instance_pairs[instance_pos + i].instance->SetTextureSlot( j, 0 );
+	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i].textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
 	                }
 	            }
 
-	            sb.CopySRVHeap(&local_sig_context);
+	            sb.CopySRVHeap( &local_sig_context );
 	                
-	            for (const StructuredBufferDecorator* additional_sb : additional_sbs)
+	            for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
 	            {
-	                additional_sb->CopySRVHeap(&local_sig_context);
+	                additional_sb->CopySRVHeap( &local_sig_context );
 	            }
 
-	            record.addresses[RAYTRACING_LOCAL_SLOT_SRV] = heap->GetBufferHeapGPUAddress(g_local_raytracing_srv_offset);
-	            record.addresses[RAYTRACING_LOCAL_SLOT_UAV] = heap->GetBufferHeapGPUAddress(g_local_raytracing_uav_offset);
-	            record.addresses[RAYTRACING_LOCAL_SLOT_SAMPLER] = heap->GetSamplerHeapGPUAddress(0);
+	            heap->SetSampler( shader, SAMPLER_TEXTURE );
+
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_SRV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_srv_offset );
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_UAV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_uav_offset );
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_SAMPLER ] = heap->GetSamplerHeapGPUAddress(0);
 	            
-	            record.addresses[RAYTRACING_LOCAL_SLOT_VERTEX] = mesh->GetVertexStructuredBuffer().GetGPUAddress();
-	            record.addresses[RAYTRACING_LOCAL_SLOT_INDEX] = mesh->GetPrimitive()->GetNativeIndexBufferGPUAddress();
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_VERTEX ] = mesh->GetVertexStructuredBuffer().GetGPUAddress();
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_INDEX ] = mesh->GetPrimitive()->GetNativeIndexBufferGPUAddress();
 	            
 	            hit_records.push_back(&record, sizeof(HitShaderRecord));
 	        }
@@ -294,21 +297,21 @@ namespace Engine
 	        instance_pos += instance_count;
 	    }
 		
-		DispatchPhase_MultiThread(dt, shader_bypass, idx, instance, shader, hit_records, &temp_context, instances);
+		DispatchPhase_MultiThread( dt, shader_bypass, idx, instance, shader, hit_records, &temp_context, instances );
 
-		if (postrender_predicate) { postrender_predicate(&temp_context); }
+		if (postrender_predicate) { postrender_predicate( &temp_context ); }
 
-		for (const auto& func : postrender_predicates | std::views::values)
+		for ( const auto& func : postrender_predicates | std::views::values )
 		{
-			func(&temp_context);
+			func( &temp_context );
 		}
 		
-		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
+		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
 		{
-			additional_sb->TransitionCommon(&temp_context);
+			additional_sb->TransitionCommon( &temp_context );
 		}
 
-		sb.TransitionCommon(&temp_context);
+		sb.TransitionCommon( &temp_context );
 		temp_context.commandList->FlagReady();
 	}
 
