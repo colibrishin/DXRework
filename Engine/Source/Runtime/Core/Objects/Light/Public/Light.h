@@ -44,6 +44,10 @@ namespace Engine::Objects
 
 		void OnDeserialized() override;
 
+#if WITH_EDITOR
+	    void OnUIUpdate(UIContext* const parent, const float dt) override;
+#endif
+
 		Color GetColor() const
 		{
 			return m_color_;
@@ -67,9 +71,13 @@ namespace Engine::Objects
 	private:
 		OBJ_CLONE_DECL;
 
+	    EPROPERTY()
 		float      m_radius_;
-		float      m_range_;
+	    EPROPERTY()
+	    float      m_range_;
+	    EPROPERTY()
 		eLightType m_type_;
+	    EPROPERTY()
 		Color      m_color_;
 	};
 } // namespace Engine::Objects
