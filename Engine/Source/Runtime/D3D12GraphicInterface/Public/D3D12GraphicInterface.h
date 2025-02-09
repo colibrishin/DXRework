@@ -48,7 +48,6 @@ namespace Engine
 		void* GetNativePipeline() override;
 
 		bool IsRaytracingSupported() override;
-		void InitializeSampler();
 		void InitializeRaytracing() override;
 		void ShutdownRaytracing() override;
 

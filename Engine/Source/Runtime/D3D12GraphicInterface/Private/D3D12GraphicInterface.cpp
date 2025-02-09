@@ -182,35 +182,6 @@ bool Engine::D3D12GraphicInterface::IsRaytracingSupported()
 	return options5.RaytracingTier > D3D12_RAYTRACING_TIER_1_0;
 }
 
-void Engine::D3D12GraphicInterface::InitializeSampler()
-{
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
-    {
-        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-        .NumDescriptors = 1,
-        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-        .NodeMask = 0
-    };
-    
-    DX::ThrowIfFailed(m_dev_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_raytracing_sampler_heap_.GetAddressOf())));
-    
-	constexpr D3D12_SAMPLER_DESC sampler_desc
-	{
-		.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
-		.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		.MipLODBias = 0,
-		.MaxAnisotropy = 0,
-		.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL,
-		.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
-		.MinLOD = 0,
-		.MaxLOD = D3D12_FLOAT32_MAX
-	};
-
-	m_dev_->CreateSampler(&sampler_desc, m_raytracing_sampler_heap_->GetCPUDescriptorHandleForHeapStart());
-}
-
 void Engine::D3D12GraphicInterface::InitializeRaytracing()
 {
 	if (IsRaytracingSupported())
@@ -218,7 +189,6 @@ void Engine::D3D12GraphicInterface::InitializeRaytracing()
 		QueryDevice();
 		InitializeGlobalRootSignature();
 	    InitializeRaytracingDescriptorHeaps();
-	    InitializeSampler();
 		InitializeOutputBuffer();
 	}
 }
@@ -379,7 +349,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
 
     if ( shader )
     {
-        cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive()->GetNativeShader()));
+        cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive().GetNativeShader()));
     }
 
     perspective.Flush(context);
@@ -412,7 +382,8 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         RAYTRACING_GLOBAL_SLOT_PARAM,
         param.GetGPUAddress());
 
-    shader->GetPrimitive()->UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
+    auto& shader_primitive = static_cast<RaytracingPrimitiveShader&>(shader->GetPrimitive());
+    shader_primitive.UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
     
     D3D12_DISPATCH_RAYS_DESC ray_desc{};
     ray_desc.Width = CFG_WIDTH;
@@ -436,14 +407,14 @@ void Engine::D3D12GraphicInterface::DispatchRay(
             {
             case RAY_SHADER_REC_GEN:
                 {
-                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_GEN));
+                    auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_GEN));
                     ray_desc.RayGenerationShaderRecord.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.RayGenerationShaderRecord.SizeInBytes = record_sizes[i];
                     break;
                 }
             case RAY_SHADER_REC_HIT:
                 {
-                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_HIT));
+                    auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_HIT));
                     ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.HitGroupTable.SizeInBytes = hit_records.size();
                     ray_desc.HitGroupTable.StrideInBytes = record_sizes[i];
@@ -451,7 +422,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
                 }
             case RAY_SHADER_REC_MISS:
                 {
-                    auto resource = static_cast<ID3D12Resource*>(shader->GetPrimitive()->GetShaderRecord(RAY_SHADER_REC_MISS));
+                    auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_MISS));
                     ray_desc.MissShaderTable.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.MissShaderTable.SizeInBytes = record_sizes[i];
                     ray_desc.MissShaderTable.StrideInBytes = record_sizes[i];
