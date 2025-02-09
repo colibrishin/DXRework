@@ -353,9 +353,9 @@ namespace Engine::Graphics
 		Matrix  m_param[max_param]{};
 
 		constexpr static size_t float_section_begin = 0;
-		constexpr static size_t int_section_begin = float_section_begin + sizeof(i_param);
-		constexpr static size_t vector_section_begin = int_section_begin + sizeof(v_param);
-		constexpr static size_t matrix_section_begin = vector_section_begin + sizeof(m_param);
+		constexpr static size_t int_section_begin = float_section_begin + sizeof(f_param);
+		constexpr static size_t vector_section_begin = int_section_begin + sizeof(i_param);
+		constexpr static size_t matrix_section_begin = vector_section_begin;
 	};
 
 	static_assert(sizeof(ParamBase) % sizeof(Vector4) == 0);
