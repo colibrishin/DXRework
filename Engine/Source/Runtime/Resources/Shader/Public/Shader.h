@@ -72,19 +72,19 @@ namespace Engine::Resources
 		void PostUpdate(float dt) override;
 
 		[[nodiscard]] bool                        IsDepthEnabled() const;
-        [[nodiscard]] eShaderDepthMode            GetDepthMode() const;
-        [[nodiscard]] eShaderDepthFunction        GetDepthFunction() const;
-        [[nodiscard]] eShaderSamplerAddress       GetSamplerAddressMode() const;
-        [[nodiscard]] eShaderSamplerFunction      GetSamplerFunction() const;
-        [[nodiscard]] eSamplerFilter              GetSamplerFilter() const;
-        [[nodiscard]] eShaderRasterizerCull       GetRasterizerCull() const;
-        [[nodiscard]] eShaderRasterizerDraw       GetRasterizerDraw() const;
-        [[nodiscard]] const std::vector<eFormat> &GetRTVFormat() const;
-        [[nodiscard]] eFormat                     GetDSVFormat() const;
-        [[nodiscard]] ePrimitiveTopology          GetPrimitiveTopology() const;
-        [[nodiscard]] ePrimitiveTopologyType      GetPrimitiveTopologyType() const;
-        [[nodiscard]] eSampler                    GetSampler() const;
-        [[nodiscard]] PrimitiveShaderBase        &GetPrimitive() const override;
+		[[nodiscard]] eShaderDepthMode            GetDepthMode() const;
+		[[nodiscard]] eShaderDepthFunction        GetDepthFunction() const;
+		[[nodiscard]] eShaderSamplerAddress       GetSamplerAddressMode() const;
+		[[nodiscard]] eShaderSamplerFunction      GetSamplerFunction() const;
+		[[nodiscard]] eSamplerFilter              GetSamplerFilter() const;
+		[[nodiscard]] eShaderRasterizerCull       GetRasterizerCull() const;
+		[[nodiscard]] eShaderRasterizerDraw       GetRasterizerDraw() const;
+		[[nodiscard]] const std::vector<eFormat>& GetRTVFormat() const;
+		[[nodiscard]] eFormat                     GetDSVFormat() const;
+		[[nodiscard]] ePrimitiveTopology          GetPrimitiveTopology() const;
+		[[nodiscard]] ePrimitiveTopologyType      GetPrimitiveTopologyType() const;
+		[[nodiscard]] eSampler                    GetSampler() const;
+	    [[nodiscard]] PrimitiveShaderBase&        GetPrimitive() const override;
 
 	protected:
 		void OnSerialized() override;

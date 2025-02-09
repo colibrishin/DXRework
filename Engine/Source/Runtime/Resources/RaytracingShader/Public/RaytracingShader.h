@@ -44,13 +44,13 @@ namespace Engine::Resources
         void FixedUpdate(const float dt) override;
         void OnSerialized() override;
 
-        [[nodiscard]] const std::array<bool,4>&                    GetHasExport() const;
-        [[nodiscard]] const std::array<unsigned long long, 3>&     GetShaderRecordSizes() const;
-        [[nodiscard]] std::wstring_view                            GetHitGroupName() const;
-        [[nodiscard]] eSamplerFilter                               GetSamplerFilter() const;
-        [[nodiscard]] eShaderSamplerAddress                        GetSamplerAddressMode() const;
-        [[nodiscard]] eShaderSamplerFunction                       GetSamplerFunction() const;
-        [[nodiscard]] RaytracingPrimitiveShader*                   GetPrimitive() const;
+        [[nodiscard]] const std::array<bool,4>&                GetHasExport() const;
+        [[nodiscard]] const std::array<unsigned long long, 3>& GetShaderRecordSizes() const;
+        [[nodiscard]] std::wstring_view                        GetHitGroupName() const;
+        [[nodiscard]] eSamplerFilter                           GetSamplerFilter() const;
+        [[nodiscard]] eShaderSamplerAddress                    GetSamplerAddressMode() const;
+        [[nodiscard]] eShaderSamplerFunction                   GetSamplerFunction() const;
+        [[nodiscard]] PrimitiveShaderBase&                     GetPrimitive() const override;
 
     protected:
         RaytracingShader();

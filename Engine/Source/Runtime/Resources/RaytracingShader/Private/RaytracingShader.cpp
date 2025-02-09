@@ -80,9 +80,9 @@ Engine::eShaderSamplerFunction Engine::Resources::RaytracingShader::GetSamplerFu
     return m_sampler_func_;
 }
 
-Engine::RaytracingPrimitiveShader* Engine::Resources::RaytracingShader::GetPrimitive() const
+Engine::PrimitiveShaderBase& Engine::Resources::RaytracingShader::GetPrimitive() const
 {
-    return m_primitive_shader_.get();
+    return *m_primitive_shader_;
 }
 
 Engine::Resources::RaytracingShader::RaytracingShader()
