@@ -57,59 +57,6 @@ ByteAddressBuffer                 l_index : register(t4, space1);
 RWTexture2D<float4>               g_output : register(u0, space1);
 SamplerState                      g_outputSampler : register(s0, space1);
 
-#undef INST_ANIM_FRAME(INSTANCE)    
-#undef INST_SPECULAR(INSTANCE)      
-#undef INST_REFLECT_TRS(INSTANCE)   
-#undef INST_REFLECT_SCL(INSTANCE)   
-#undef INST_REFRACT_SCL(INSTANCE)   
-#undef INST_BONE_FLAG(INSTANCE)     
-#undef INST_ANIM_DURATION(INSTANCE) 
-#undef INST_ANIM_IDX(INSTANCE)      
-#undef INST_NO_ANIM(INSTANCE)       
-#undef INST_ATLAS_X(INSTANCE)       
-#undef INST_ATLAS_Y(INSTANCE)       
-#undef INST_ATLAS_W(INSTANCE)       
-#undef INST_ATLAS_H(INSTANCE)       
-#undef INST_REPEAT_TEX(INSTANCE)    
-#undef INST_ATLAS_FLAG(INSTANCE)    
-#undef INST_TEX_SLOT_OFFSET(INSTANCE)
-#undef INST_TEX_SLOT0(INSTANCE)    
-#undef INST_TEX_SLOT1(INSTANCE)    
-#undef INST_TEX_SLOT2(INSTANCE)    
-#undef INST_TEX_SLOT3(INSTANCE)    
-#undef INST_OVERRIDE_COL(INSTANCE) 
-#undef INST_SPECULAR_COL(INSTANCE) 
-#undef INST_CLIP_PLANE(INSTANCE)   
-#undef INST_WORLD(INSTANCE)        
-
-#define INST_ANIM_FRAME(INSTANCE)    g_Instance[INSTANCE].fParam[0].x
-#define INST_SPECULAR(INSTANCE)      g_Instance[INSTANCE].fParam[0].y
-#define INST_REFLECT_TRS(INSTANCE)   g_Instance[INSTANCE].fParam[0].z
-#define INST_REFLECT_SCL(INSTANCE)   g_Instance[INSTANCE].fParam[0].w
-#define INST_REFRACT_SCL(INSTANCE)   g_Instance[INSTANCE].fParam[1].x
-
-#define INST_BONE_FLAG(INSTANCE)     g_Instance[INSTANCE].iParam[0].x
-#define INST_ANIM_DURATION(INSTANCE) g_Instance[INSTANCE].iParam[0].y
-#define INST_ANIM_IDX(INSTANCE)      g_Instance[INSTANCE].iParam[0].z
-#define INST_NO_ANIM(INSTANCE)       g_Instance[INSTANCE].iParam[0].w
-#define INST_ATLAS_X(INSTANCE)       g_Instance[INSTANCE].iParam[1].x
-#define INST_ATLAS_Y(INSTANCE)       g_Instance[INSTANCE].iParam[1].y
-#define INST_ATLAS_W(INSTANCE)       g_Instance[INSTANCE].iParam[1].z
-#define INST_ATLAS_H(INSTANCE)       g_Instance[INSTANCE].iParam[1].w
-#define INST_REPEAT_TEX(INSTANCE)    g_Instance[INSTANCE].iParam[2].x
-#define INST_ATLAS_FLAG(INSTANCE)    g_Instance[INSTANCE].iParam[2].y
-#define INST_TEX_SLOT_OFFSET(INSTANCE) g_Instance[INSTANCE].iParam[2].z
-#define INST_TEX_SLOT0(INSTANCE)     g_Instance[INSTANCE].iParam[2].w
-#define INST_TEX_SLOT1(INSTANCE)     g_Instance[INSTANCE].iParam[3].x
-#define INST_TEX_SLOT2(INSTANCE)     g_Instance[INSTANCE].iParam[3].y
-#define INST_TEX_SLOT3(INSTANCE)     g_Instance[INSTANCE].iParam[3].z
-
-#define INST_OVERRIDE_COL(INSTANCE) g_Instance[INSTANCE].vParam[0]
-#define INST_SPECULAR_COL(INSTANCE) g_Instance[INSTANCE].vParam[1]
-#define INST_CLIP_PLANE(INSTANCE)   g_Instance[INSTANCE].vParam[2]
-
-#define INST_WORLD(INSTANCE)        g_Instance[INSTANCE].mParam[0]
-
 [shader("raygeneration")]
 void raygen_main()
 {
@@ -218,17 +165,17 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	float2   ddx_uv = mul(baryX, uvMat) - baryUV;
 	float2   ddy_uv = mul(baryY, uvMat) - baryUV;
 
-	if (INST_TEX_SLOT0(instanceId))
+	if (INST_TEX_SLOT0_ENABLE(g_Instance, instanceId))
 	{
 		// Sampling the texture with the gradient changes.
-		baryColor.rgb = tex[0].SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv).rgb;
+		baryColor = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT0(g_Instance, instanceId));
 	}
 
 	float3 bumpNormal = float3(0.f, 0.f, 0.f);
 
-	if (INST_TEX_SLOT1(instanceId))
+	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
 	{
-		float3 normalMap = tex[1].SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv).rgb;
+		float3 normalMap = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT1(g_Instance, instanceId)).rgb;
 		normalMap        = (normalMap * 2.0f) - 1.0f;
 
 		bumpNormal = (normalMap.x * baryTangent) +
@@ -255,21 +202,21 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 			break;
 		}
 
-		float4 lightPos = GetTranslation(bufLight[i].world);
+		float4 lightPos = GetTranslation(g_Light[i].world);
 		lightPos.xyz /= lightPos.w;
 
 		const float3 lightDir = normalize(lightPos.xyz - hitPos);
 		lightIntensity[i]     = saturate(dot(baryNormal, lightDir));
 
-		const float sphere = 4.f * PI * bufLight[i].radius.x * bufLight[i].radius.x;
+		// const float sphere = 4.f * PI * g_Light[i].radius.x * g_Light[i].radius.x;
 
-		if (INST_TEX_SLOT1(instanceId))
+		if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
 		{
 			normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
-			normalColorArray[i]     = bufLight[i].color * normalLightIntensity[i] / sphere;
+			normalColorArray[i]     = g_Light[i].color * normalLightIntensity[i];
 		}
 
-		colorArray[i] = bufLight[i].color * lightIntensity[i] / sphere;
+		colorArray[i] = g_Light[i].color * lightIntensity[i];
 
 		{
 			RayDesc shadowRay;
@@ -305,10 +252,10 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 				shadow += 1.f * lightIntensity[i];
 			}
 
-			if (INST_SPECULAR(instanceId) > 0.f && shadowPayload.colorAndDist.w == 0.f)
+			if (INST_SPECULAR(g_Instance, instanceId) > 0.f && shadowPayload.colorAndDist.w == 0.f)
 			{
-				const float4 specular = CalculateSpecular(hitPos, lightDir, baryNormal, INST_SPECULAR(instanceId));
-				specularColor += specular * INST_SPECULAR_COL(instanceId);
+				const float4 specular = CalculateSpecular(hitPos, lightDir, baryNormal, INST_SPECULAR(g_Instance, instanceId));
+				specularColor += specular * INST_SPECULAR_COL(g_Instance, instanceId);
 			}
 		}
 	}
@@ -330,6 +277,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 		normalColorSum.b += normalColorArray[i].b;
 	}
 
+    normalColorSum = saturate(normalColorSum);
+
 	for (i = 0; i < MAX_NUM_LIGHTS; ++i)
 	{
 		if (i >= g_iParam[0].x)
@@ -344,19 +293,19 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
 	float4 lightColor = saturate(colorSum);
 
-	if (INST_TEX_SLOT1(instanceId))
+	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
 	{
 		lightColor += saturate(normalColorSum);
 	}
 
-	if (INST_SPECULAR(instanceId) > 0.f)
+	if (INST_SPECULAR(g_Instance, instanceId) > 0.f)
 	{
 		lightColor += saturate(specularColor);
 	}
 
 	float4 finalColor = (1.f - shadow) * saturate(lightColor) * baryColor;
 
-	if (INST_REFLECT_SCL(instanceId) > 0.f && !payload.isReflect)
+	if (INST_REFLECT_SCL(g_Instance, instanceId) > 0.f && !payload.isReflect)
 	{
 		float4 reflectionColor = float4(0.f, 0.f, 0.f, 1.f);
 
@@ -386,7 +335,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 				);
 
 		reflectionColor.xyz = reflectionPayload.colorAndDist.xyz;
-		finalColor          = float4(finalColor.xyz + (INST_REFLECT_SCL(instanceId) * reflectionColor), 1.f);
+		finalColor          = float4(finalColor.xyz + (INST_REFLECT_SCL(g_Instance, instanceId) * reflectionColor), 1.f);
 	}
 
 	payload.colorAndDist.xyz = finalColor.xyz;
