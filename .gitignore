@@ -408,8 +408,8 @@ Intermediate/***
 *.fdb
 
 !Build/
-Programs/CMake/***
-Programs/vcpkg/***
+Programs/CMake
+Programs/vcpkg
 lock
 balius/target/.rustc_info.json
 *.sln
