@@ -786,14 +786,12 @@ namespace Engine
     {
         class RaytracingShader;
     }
-    
-    struct ENGINE_CORERENDER_API RaytracingPrimitiveShader : public PrimitiveShaderBase
+
+    struct ENGINE_CORERENDER_API PrimitiveShaderBase
     {
     public:
-        virtual             ~RaytracingPrimitiveShader() = default;
-        virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
-        [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
-        virtual void        UpdateShaderRecords(eRaytracingShaderRecordType type, const byte_stream& records) = 0;
+        virtual ~PrimitiveShaderBase() = default;
+
         [[nodiscard]] void* GetNativeShader() const
         {
             return m_shader_;
@@ -819,34 +817,20 @@ namespace Engine
         void* m_sampler_ = nullptr;
     };
     
-	struct ENGINE_CORERENDER_API GraphicPrimitiveShader : public PrimitiveShaderBase
+    struct ENGINE_CORERENDER_API RaytracingPrimitiveShader : PrimitiveShaderBase
+    {
+    public:
+        ~RaytracingPrimitiveShader() override = default;
+        virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
+        [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
+        virtual void        UpdateShaderRecords(eRaytracingShaderRecordType type, const byte_stream& records) = 0;
+    };
+    
+	struct ENGINE_CORERENDER_API GraphicPrimitiveShader : PrimitiveShaderBase
 	{
 	public:
-		virtual             ~GraphicPrimitiveShader() = default;
+        ~GraphicPrimitiveShader() override = default;
 		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetNativeShader() const
-		{
-			return m_shader_;
-		}
-		[[nodiscard]] void* GetNativeSampler() const 
-		{
-			return m_sampler_;
-		}
-
-	protected:
-		virtual void SetNativeShader(void* shader) 
-		{
-			m_shader_ = shader;
-		}
-
-		virtual void SetNativeSampler(void* sampler) 
-		{
-			m_sampler_ = sampler;
-		}
-
-	private:
-		void* m_shader_ = nullptr;
-		void* m_sampler_ = nullptr;
 	};
 
 	struct ENGINE_CORERENDER_API ComputePrimitiveShader
@@ -990,6 +974,7 @@ namespace Engine
 	{
 		virtual ~GraphicHeapBase() = default;
 
+	    virtual void SetSampler(const Resources::ShaderBase* shader, const eSampler slot) const = 0;
 		virtual void SetShaderResources(
 			const Resources::Texture* const* textures,
 			const UINT count,
