@@ -88,6 +88,15 @@ namespace Engine
         return m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_);
     }
 
+    void DescriptorPtrImpl::SetSampler(const Resources::ShaderBase* shader, const eSampler slot) const
+    {
+        if (!IsValid()) { return; }
+        m_handler_->SetSampler(
+            m_cpu_sampler_handle_,
+            static_cast<ID3D12DescriptorHeap*>(shader->GetPrimitive().GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
+            slot);
+    }
+
     void DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const
     {
         if (!IsValid()) { return; }
