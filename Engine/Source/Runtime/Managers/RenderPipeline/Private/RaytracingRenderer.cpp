@@ -52,6 +52,14 @@ namespace Engine::Managers
 			RenderPassAssisted(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
 			onRenderDone.Broadcast(static_cast<eShaderDomain>(i));
 		}
+
+	    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+	    RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+	    const auto& context = gi.GetNewContext(0, false, L"Copy raytracing result to the render target");
+        const auto& primitive = context.GetPointers();
+	    primitive.commandList->SoftReset();
+	    rgi.CopyRaytracingToRenderTarget(&primitive);
+	    primitive.commandList->FlagReady();
 	}
 
 	void RaytracingRenderer::RenderPassAssisted(
