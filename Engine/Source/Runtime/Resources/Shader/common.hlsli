@@ -107,7 +107,7 @@ float4 SampleGrad(in SamplerState inSampler, in float2 uv, in float2 ddx, in flo
     return outValue;
 }
 
-float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
+float4 SampleGrad(in SamplerState inSampler, in float2 uv, in float2 ddx, in float2 ddy, in uint slot)
 {
     float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
 
@@ -115,7 +115,46 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
     {
         return outValue;
     }
+
+#define SWITCH_OFFSET(NUM) case NUM: \
+    outValue = tex[NUM].SampleGrad(inSampler, uv, ddx, ddy); \
+    break;
+    
+    switch (slot)
+    {
+        SWITCH_OFFSET(0)
+        SWITCH_OFFSET(1)
+        SWITCH_OFFSET(2)
+        SWITCH_OFFSET(3)
+        SWITCH_OFFSET(4)
+        SWITCH_OFFSET(5)
+        SWITCH_OFFSET(6)
+        SWITCH_OFFSET(7)
+        SWITCH_OFFSET(8)
+        SWITCH_OFFSET(9)
+        SWITCH_OFFSET(10)
+        SWITCH_OFFSET(11)
+        SWITCH_OFFSET(12)
+        SWITCH_OFFSET(13)
+        SWITCH_OFFSET(14)
+        SWITCH_OFFSET(15)
+    default:
+        break;
+    }
+#undef SWITCH_OFFSET
 	
+    return outValue;
+}
+
+float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
+{
+    float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
+
+	if (slot >= MAX_TEX_PER_MAT)
+	{
+		return outValue;
+	}
+
 #define SWITCH_OFFSET(NUM) case NUM: \
     outValue = tex[NUM].Sample(inSampler, uv); \
     break;
@@ -138,8 +177,8 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
         SWITCH_OFFSET(13)
         SWITCH_OFFSET(14)
         SWITCH_OFFSET(15)
-        default:
-            break;
+    default:
+        break;
     }
 #undef SWITCH_OFFSET
 	
