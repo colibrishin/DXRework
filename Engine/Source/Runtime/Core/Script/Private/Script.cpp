@@ -2,9 +2,7 @@
 #include "Script.generated.h"
 
 namespace Engine
-{
-	std::unordered_map<Engine::ScriptType, Engine::ScriptGeneratorSignature> Engine::ScriptFactory::m_script_generators_ = {};
-	
+{	
 	Script::Script(const Weak<Abstracts::ObjectBase>& owner) :
 	m_b_active_(true)
 	{

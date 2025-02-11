@@ -277,6 +277,7 @@ namespace Engine::Abstracts
 		// Non-serialized
 #if WITH_EDITOR
 	public:
+		friend struct ConstructorAccess;
 		using ComponentFactorySignature = std::function<void(const Weak<ObjectBase>& owner)>;
 
 		static void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
@@ -297,3 +298,10 @@ namespace Engine::Abstracts
 	};
 } // namespace Engine::Abstracts
 
+namespace Engine 
+{
+	using ObjectFactory = FactoryTemplate<Engine::Abstracts::ObjectBase, const eDefObjectType>;
+}
+
+#define REGISTER_OBJECT(TYPE) Engine::ObjectFactory::Register<##TYPE##>();
+#define UNREGISTER_OBJECT(TYPE) Engine::ObjectFactory::Unregister<##TYPE##>();

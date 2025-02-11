@@ -829,7 +829,10 @@ public:
 	    if constexpr (it == TypeNameStorage.rend())
 	    {
 	        // No namespace
-		    return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
+			constexpr auto space_sep = std::find(TypeNameStorage.rbegin(), TypeNameStorage.rend(), ' ');
+			constexpr auto dist = std::distance(space_sep, std::rend(TypeNameStorage));
+			constexpr auto length = TypeNameStorage.size() - dist;
+		    return {TypeNameStorage.data() + dist, length - 1};
 	    }
 
 	    constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
@@ -1077,4 +1080,66 @@ struct polymorphic_type_hash<##Type##>\
 		}\
 		return std::ranges::binary_search(upcast_array, base, [](const auto lhs, const auto rhs){return *lhs < *rhs;});\
 	}\
+};
+
+template <typename T, typename = void>
+struct is_hash_type : std::false_type {};
+
+template <typename T>
+struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
+
+struct ConstructorAccess 
+{
+	template <typename T, typename... Args>
+	static boost::shared_ptr<T> Create(Args&&... args)
+	{
+		return boost::shared_ptr<T>(new T(std::forward<Args>(args)...));
+	}
+};
+
+template <typename ValueType, typename... Args> requires is_hash_type<ValueType>::value
+struct FactoryTemplate
+{
+public:
+	using GeneratorSignature = std::function<boost::shared_ptr<ValueType>(Args...)>;
+	using GeneratorContainer = std::unordered_map<HashType, GeneratorSignature>;
+
+	static GeneratorSignature GetGenerator(HashType key)
+	{
+		if (m_generators_.contains(key))
+		{
+			return m_generators_.at(key);
+		}
+
+		return {};
+	}
+
+	static const GeneratorContainer& GetGenerators()
+	{
+		return m_generators_;
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static void Register()
+	{
+		m_generators_.emplace(T::StaticTypeHash(), &FactoryTemplate::Create<T>);
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static void Unregister()
+	{
+		if (m_generators_.contains(T::StaticTypeHash()))
+		{
+			m_generators_.erase(T::StaticTypeHash());
+		}
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static boost::shared_ptr<ValueType> Create(Args&&... args)
+	{
+		return ConstructorAccess::Create<T>(std::forward<Args>(args)...);
+	}
+
+private:
+	inline static GeneratorContainer m_generators_ = {};
 };
