@@ -10,8 +10,8 @@ namespace Engine
     {
         GENERATE_BODY
     public:
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };   
 }

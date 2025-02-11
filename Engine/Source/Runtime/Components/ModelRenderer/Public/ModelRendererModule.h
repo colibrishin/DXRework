@@ -1,14 +1,16 @@
 #pragma once
-#include "ModelRendererModule.generated.h"
 #include "ModuleManager/Public/IModule.h"
+
+#include "ModelRendererModule.generated.h"
 
 namespace Engine
 {
+    ECLASS(module)
     struct ModelRendererModule : public IModule
     {
         GENERATE_BODY
-        void             Initialize() override;
-        void             Shutdown() override;
+        bool InitializeImpl() override; 
+        bool ShutdownImpl() override;
         bool             DynamicLoadable() override;
     };
 }

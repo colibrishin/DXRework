@@ -7,14 +7,14 @@
 
 MODULE_IMPL(ClientModule, Client)
 
-void ClientModule::Initialize()
+bool ClientModule::InitializeImpl()
 {
-    Engine::IClientModule::Initialize();
+    return Engine::IClientModule::InitializeImpl();
 }
 
-void ClientModule::Shutdown()
+bool ClientModule::ShutdownImpl()
 {
-    Engine::IClientModule::Shutdown();
+    return Engine::IClientModule::ShutdownImpl();
 }
 
 bool ClientModule::DynamicLoadable()

@@ -97,25 +97,3 @@ namespace Engine::Managers
 	void RenderPipeline::PostUpdate(const float dt) {}
 
 } // namespace Engine::Manager::Graphics
-
-MODULE_IMPL(Engine::RenderPipelineModule, RenderPipeline)
-
-void Engine::RenderPipelineModule::Initialize()
-{
-	CoreModule::GetContext().AddManager(
-		CoreLoop::LOOP_TYPE_RENDER,
-		&Managers::RenderPipeline::GetInstance,
-		&Managers::Renderer::GetInstance);
-}
-void Engine::RenderPipelineModule::Shutdown()
-{
-	CoreModule::GetContext().RemoveManager(
-		CoreLoop::LOOP_TYPE_RENDER,
-		&Managers::RenderPipeline::GetInstance,
-		&Managers::Renderer::GetInstance);
-}
-
-bool Engine::RenderPipelineModule::DynamicLoadable()
-{
-	return true;
-}

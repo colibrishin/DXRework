@@ -6,7 +6,7 @@
 
 namespace Engine::Resources
 {
-	void Engine::Resources::ComputeShaderModule::Initialize()
+	bool Engine::Resources::ComputeShaderModule::InitializeImpl()
 	{
 		Managers::ResourceManager::GetInstance().RegisterLoadResource(ComputeShader::StaticTypeName(), [](bool& managing_flag)
 			{
@@ -17,11 +17,15 @@ namespace Engine::Resources
 
 				return UIHelpers::OpenLoadDialog<ComputeShader, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 			});
+
+		return true;
 	}
 
-	void ComputeShaderModule::Shutdown()
+	bool ComputeShaderModule::ShutdownImpl()
 	{
 		Managers::ResourceManager::GetInstance().UnregisterLoadResource(ComputeShader::StaticTypeName());
+
+		return true;
 	}
 
 	bool ComputeShaderModule::DynamicLoadable()

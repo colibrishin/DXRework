@@ -9,8 +9,8 @@ namespace Engine
     struct ENGINE_SHADOWMANAGER_API ShadowManagerModule : public Engine::IModule
     {
         GENERATE_BODY
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };
 }

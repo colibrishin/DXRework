@@ -7,13 +7,22 @@ namespace Engine
 
 	inline void IClientModule::GeneratedShutdown() {}
 
-	inline void IClientModule::Initialize()
+	inline bool IClientModule::InitializeImpl()
 	{
 		GeneratedInitialize();
+
+		return true;
 	}
 
-	inline void IClientModule::Shutdown()
+	inline bool IClientModule::ShutdownImpl()
 	{
 		GeneratedShutdown();
+
+		return true;
+	}
+
+	const std::vector<std::string>& IClientModule::LoadAfter() const
+	{
+		return GetDependencies();
 	}
 }

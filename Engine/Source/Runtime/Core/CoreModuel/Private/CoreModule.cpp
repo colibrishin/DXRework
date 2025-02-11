@@ -79,7 +79,7 @@ void Engine::CoreLoop::PostRender(const float dt) const
 	}
 }
 
-void Engine::CoreModule::Initialize()
+bool Engine::CoreModule::InitializeImpl()
 {
 	s_core_module.AddManager
 			(
@@ -97,9 +97,11 @@ void Engine::CoreModule::Initialize()
 			 &Managers::Debugger::GetInstance
 			);
 #endif
+
+	return true;
 }
 
-void Engine::CoreModule::Shutdown()
+bool Engine::CoreModule::ShutdownImpl()
 {
 	s_core_module.RemoveManager
 			(
@@ -120,4 +122,6 @@ void Engine::CoreModule::Shutdown()
 
 	GraphicInterfaceAccessor::Shutdown();
 	UIInterfaceAccessor::Shutdown();
+
+	return true;
 }

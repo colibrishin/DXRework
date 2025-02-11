@@ -10,7 +10,7 @@
 
 MODULE_IMPL(Engine::Texture2DModule, Texture2D)
 
-void Engine::Texture2DModule::Initialize()
+bool Engine::Texture2DModule::InitializeImpl()
 {
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
 		{
@@ -142,12 +142,16 @@ void Engine::Texture2DModule::Initialize()
 
 		UIHelpers::OpenNewDialog<Resources::Texture2D, Managers::ResourceManager>(managing_flag, ui_callback, load_callback, cleanup_callback);
 	});
+
+	return true;
 }
 
-void Engine::Texture2DModule::Shutdown()
+bool Engine::Texture2DModule::ShutdownImpl()
 {
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Engine::Resources::Texture2D::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Engine::Resources::Texture2D::StaticTypeName());
+
+	return true;
 }
 
 bool Engine::Texture2DModule::DynamicLoadable()

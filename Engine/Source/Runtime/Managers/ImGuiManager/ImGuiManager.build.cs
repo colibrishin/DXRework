@@ -19,6 +19,10 @@ public class ImGuiManager : EngineCommonProject
         conf.AddPrivateDependency<RenderPipeline>(target);
         
         conf.AddPrivateDependency<WinAPIWrapper>(target); // todo: use platform flag
-        conf.AddPrivateDependency<D3D12GraphicInterface>(target); // todo: use dx12 dx11 flag
+
+        if (target.GraphicAPI == EGraphicAPI.D3D12)
+        {
+            conf.AddPrivateDependency<D3D12GraphicInterface>(target); // todo: use dx12 dx11 flag
+        }
     }
 }

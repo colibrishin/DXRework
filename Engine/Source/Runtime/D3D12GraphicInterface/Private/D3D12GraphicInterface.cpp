@@ -1,4 +1,5 @@
 #include "D3D12GraphicInterface.h"
+#include "D3D12GraphicInterface.generated.h"
 
 #include <dxgidebug.h>
 
@@ -25,16 +26,18 @@ MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
 namespace Engine
 {
-	void Engine::D3D12GraphicInterfaceModule::Initialize()
+	bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 	{
 		GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
 		
 		CoreModule::GetContext().AddManager(
 			CoreLoop::LOOP_TYPE_RENDER,
 			Managers::ToolkitAPI::GetInstance);
+
+		return true;
 	}
 
-	void Engine::D3D12GraphicInterfaceModule::Shutdown()
+	bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
 	{
 		CoreModule::GetContext().RemoveManager(
 			CoreLoop::LOOP_TYPE_RENDER,
@@ -42,11 +45,20 @@ namespace Engine
 
 		auto& gi = static_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
 		gi.Shutdown();
+
+		return true;
 	}
 
 	bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
 	{
 		return true;
+	}
+	const std::vector<std::string>& D3D12GraphicInterfaceModule::LoadAfter() const
+	{
+#if Platform == Windows
+		static std::vector<std::string> load_after{ "WinAPIWrapper" };
+#endif
+		return load_after;
 	}
 }
 

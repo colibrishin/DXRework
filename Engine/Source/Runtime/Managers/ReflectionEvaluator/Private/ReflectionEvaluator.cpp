@@ -1,4 +1,5 @@
 #include "../Public/ReflectionEvaluator.h"
+#include "ReflectionEvaluator.generated.h"
 
 #include "Renderer.h"
 

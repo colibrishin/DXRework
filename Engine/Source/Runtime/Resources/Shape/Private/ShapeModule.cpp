@@ -7,7 +7,7 @@
 
 MODULE_IMPL(Engine::ShapeModule, Shape)
 
-void Engine::ShapeModule::Initialize()
+bool Engine::ShapeModule::InitializeImpl()
 {
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 		{
@@ -55,12 +55,16 @@ void Engine::ShapeModule::Initialize()
 
 		UIHelpers::OpenLoadDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 	});
+
+	return true;
 }
 
-void Engine::ShapeModule::Shutdown()
+bool Engine::ShapeModule::ShutdownImpl()
 {
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shape::StaticTypeName());
-	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shape::StaticTypeName());	
+	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shape::StaticTypeName());
+
+	return true;
 }
 
 bool Engine::ShapeModule::DynamicLoadable()

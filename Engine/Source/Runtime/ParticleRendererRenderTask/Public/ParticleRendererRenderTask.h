@@ -4,6 +4,8 @@
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
 #include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 
+#include "ParticleRendererRenderTask.generated.h"
+
 namespace Engine
 {
     struct ENGINE_PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTask : public RenderInstanceTask

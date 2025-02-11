@@ -1,12 +1,14 @@
-#include "../Public/Animator.h"
 #include "AnimatorModule.h"
+#include "AnimatorModule.generated.h"
+
+#include "../Public/Animator.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
 MODULE_IMPL(Engine::AnimatorModule, Animator)
 
-void Engine::AnimatorModule::Initialize()
+bool Engine::AnimatorModule::InitializeImpl()
 {
 	Abstracts::ObjectBase::RegisterComponentFactory(Components::Animator::StaticTypeName(), [](const Weak<Abstracts::ObjectBase>& owner)
 	{
@@ -15,11 +17,15 @@ void Engine::AnimatorModule::Initialize()
 			locked->AddComponent<Components::Animator>();
 		}
 	});
+
+	return true;
 }
 
-void Engine::AnimatorModule::Shutdown()
+bool Engine::AnimatorModule::ShutdownImpl()
 {
 	Abstracts::ObjectBase::UnregisterComponentFactory(Components::Animator::StaticTypeName());
+
+	return true;
 }
 
 bool Engine::AnimatorModule::DynamicLoadable()

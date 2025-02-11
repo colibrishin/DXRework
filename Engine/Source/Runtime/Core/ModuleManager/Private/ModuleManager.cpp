@@ -7,6 +7,45 @@ namespace Engine::Managers
 {
 	ModuleManager::ModuleManager(SINGLETON_LOCK_TOKEN) {}
 
+	void ModuleManager::TryResolveLazyness(const std::wstring_view name)
+	{
+		if ( m_lazy_modules_.contains( name.data() ) )
+		{
+			auto& target = m_lazy_modules_.at( name.data() );
+			
+			for ( auto it = target.begin(); it != target.end();)
+			{
+				const std::wstring_view dependency = *it;
+				if ( LoadModule( dependency ) )
+				{
+					for (auto outer_it = m_lazy_modules_.begin(); outer_it != m_lazy_modules_.end(); ++outer_it)
+					{
+						if ( outer_it->second == target )
+						{
+							continue;
+						}
+
+						if (outer_it->second.contains( dependency.data() ))
+						{
+							outer_it->second.erase( dependency.data() );
+						}
+					}
+
+					it = target.erase( it );
+				}
+				else 
+				{
+					++it;
+				}
+			}
+
+			if ( target.empty() )
+			{
+				m_lazy_modules_.erase( name.data() );
+			}
+		}
+	}
+
 	ENGINE_CORE_API void ModuleManager::Initialize()
 	{
 		m_module_paths_.emplace(L"Default", "./");
@@ -14,7 +53,8 @@ namespace Engine::Managers
 
 	ENGINE_CORE_API ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
 	{
-		std::lock_guard l(m_critical_mutex_);
+		std::lock_guard l(m_write_mutex_);
+
 		if (!m_module_loaded_.contains(name.data()))
 		{
 			return nullptr;
@@ -34,31 +74,32 @@ namespace Engine::Managers
 				return module;
 			}
 		}
-		else
+		else 
 		{
 			AddModule(name);
 			module_info = FindModule(name);
 		}
 
-		std::lock_guard l(m_critical_mutex_);
+		{
+			std::lock_guard l(m_read_mutex_);
 #if !IS_DLL
-		// Static Library
-		if (m_module_initializer_.contains(name.data()))
-		{
-			if (const ModuleInitializationFunction& func = m_module_initializer_.at(name.data()))
+			// Static Library
+			if (m_module_initializer_.contains(name.data()))
 			{
-				module_info->m_module_ = std::unique_ptr<IModule>(func());
-				module_info->m_module_->Initialize();
-				return module_info->m_module_.get();
+				// todo: lazy module implementation
+				if (const ModuleInitializationFunction& func = m_module_initializer_.at(name.data()))
+				{
+					module_info->m_module_ = std::unique_ptr<IModule>(func());
+					module_info->m_module_->Initialize();
+					return module_info->m_module_.get();
+				}
+				else
+				{
+					return nullptr;
+				}
 			}
-			else
-			{
-				return nullptr;
-			}
-		}
 #else
-		// DLL
-		{
+			// DLL
 			if (const HMODULE hModule = GetModuleHandleW(module_info->m_path_.c_str()))
 			{
 				module_info->m_handle_ = hModule;
@@ -78,10 +119,42 @@ namespace Engine::Managers
 
 			const ModuleInitializationFunctionCStyle& init_func = (ModuleInitializationFunctionCStyle)GetProcAddress(static_cast<HMODULE>(module_info->m_handle_), "InitializeModule");
 
-			if (init_func)
+			if ( init_func )
 			{
-				module_info->m_module_ = std::unique_ptr<IModule>(init_func());
+				module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
+
+				if ( module_info->m_module_ )
+				{
+					for ( const std::string_view& required : module_info->m_module_->LoadAfter() )
+					{
+						std::wstring conversion( required.begin(), required.end() );
+
+						if ( !FindModule( conversion) )
+						{
+							m_lazy_modules_[ conversion ].insert( name.data() );
+							RemoveModule( name );
+							return nullptr;
+						}
+					}
+
+					for ( const std::string_view& dependency : module_info->m_module_->GetDependencies() )
+					{
+						std::wstring conversion( dependency.begin(), dependency.end() );
+
+						if ( !FindModule(conversion) )
+						{
+							if ( !LoadModule(conversion) ) 
+							{
+								m_lazy_modules_[ conversion ].insert( name.data() );
+								RemoveModule( name );
+								return nullptr;
+							}
+						}
+					}
+				}
+
 				module_info->m_module_->Initialize();
+				TryResolveLazyness( name );
 				return module_info->m_module_.get();
 			}
 			else
@@ -102,12 +175,15 @@ namespace Engine::Managers
 
 	ENGINE_CORE_API void ModuleManager::AddModule(const std::wstring_view name)
 	{
-		if (m_module_loaded_.contains(name.data()))
 		{
-			return;
+			std::lock_guard l(m_write_mutex_);
+			if (m_module_loaded_.contains(name.data()))
+			{
+				return;
+			}
 		}
-
-		std::lock_guard l(m_critical_mutex_);
+		
+		std::lock_guard l(m_read_mutex_);
 		m_module_loaded_.emplace(name, std::make_unique<ModuleInfo>());
 
 		ModuleInfo* module_info = m_module_loaded_.at(name.data()).get();
@@ -140,6 +216,47 @@ namespace Engine::Managers
 #else
 		found = true;
 #endif
+	}
+
+#if IS_DLL
+	ENGINE_CORE_API void ModuleManager::RemoveModule(const std::wstring_view name)
+	{
+		{
+			std::lock_guard l(m_write_mutex_);
+			if (!m_module_loaded_.contains(name.data()))
+			{
+				return;
+			}
+		}
+		
+		std::lock_guard l(m_read_mutex_);
+		std::unique_ptr<ModuleInfo> module_info = std::move(m_module_loaded_.at(name.data()));
+		
+		if (module_info)
+		{
+			HMODULE module_ptr = static_cast<HMODULE>(module_info->m_handle_);
+			module_info.reset(); // Free the module information first to avoid the incomplete type.
+
+			FreeLibrary(module_ptr); // Free the library
+		}
+		
+		m_module_loaded_.erase(name.data());
+	}
+#endif
+
+	ENGINE_CORE_API void ModuleManager::LoadModuleAll()
+	{
+		for (const auto& directory : m_module_paths_)
+		{
+			for (const auto& entry : std::filesystem::directory_iterator(directory.second))
+			{
+				if (const std::wstring& file_name = entry.path().stem().generic_wstring();
+					entry.is_regular_file() && entry.path().extension() == ".dll")
+				{
+					LoadModule(file_name);
+				}
+			}
+		}
 	}
 
 	ModuleManager::~ModuleManager()

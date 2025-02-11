@@ -20,14 +20,18 @@ MODULE_IMPL(Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderIn
 
 namespace Engine 
 {
-	void ModelRendererRenderInstanceTaskModule::Initialize()
+	bool ModelRendererRenderInstanceTaskModule::InitializeImpl()
 	{
 		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ModelRendererRenderInstanceTask", new ModelRendererRenderInstanceTask());
+
+        return true;
 	}
 
-	void ModelRendererRenderInstanceTaskModule::Shutdown()
+	bool ModelRendererRenderInstanceTaskModule::ShutdownImpl()
 	{
         Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ModelRendererRenderInstanceTask");
+
+        return true;
 	}
 
 	bool ModelRendererRenderInstanceTaskModule::DynamicLoadable()

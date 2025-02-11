@@ -1,7 +1,7 @@
 #include "ParticleRendererModule.h"
+#include "ParticleRendererModule.generated.h"
 
 #include "ComputeShader.h"
-#include "ParticleRendererModule.generated.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
 #include "ParticleRenderer.h"
@@ -10,7 +10,7 @@
 
 MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)
 
-void Engine::ParticleRendererModule::Initialize()
+bool Engine::ParticleRendererModule::InitializeImpl()
 {
     Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
     {
@@ -19,11 +19,15 @@ void Engine::ParticleRendererModule::Initialize()
             locked->AddComponent<Components::ParticleRenderer>();
         }
     });
+
+    return true;
 }
 
-void Engine::ParticleRendererModule::Shutdown()
+bool Engine::ParticleRendererModule::ShutdownImpl()
 {
     Abstracts::ObjectBase::UnregisterComponentFactory("ParticleRenderer");
+
+    return true;
 }
 
 bool Engine::ParticleRendererModule::DynamicLoadable()

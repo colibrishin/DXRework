@@ -1,16 +1,18 @@
-﻿#pragma once
+#pragma once
+
 #include "ModuleManager/Public/IModule.h"
 
-#include "ReflectionEvaluatorModule.generated.h"
+#include "WinAPIWrapperModule.generated.h"
 
 namespace Engine
 {
     ECLASS(module)
-    struct ReflectionEvaluatorModule : public Engine::IModule
+    struct ENGINE_WINAPIWRAPPER_API WinAPIWrapperModule : public Engine::IModule
     {
+    public:
         GENERATE_BODY
         bool InitializeImpl() override;
         bool ShutdownImpl() override;
         bool DynamicLoadable() override;
-    };   
-}
+    };
+} // namespace WinAPI

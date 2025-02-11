@@ -9,9 +9,9 @@
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Texture.h"
 
-#include "GenericRenderPassTask.generated.h"
-
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
+
+#include "GenericRenderPassTask.generated.h"
 
 namespace Engine
 {

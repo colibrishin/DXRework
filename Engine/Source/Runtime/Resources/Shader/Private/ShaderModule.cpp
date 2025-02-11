@@ -11,7 +11,7 @@
 
 MODULE_IMPL(Engine::ShaderModule, Shader)
 
-void Engine::ShaderModule::Initialize()
+bool Engine::ShaderModule::InitializeImpl()
 {
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Shader::StaticTypeName(), [](bool& managing_flag)
 		{
@@ -165,7 +165,9 @@ void Engine::ShaderModule::Initialize()
 				cleanup_callback);
 		});
 
-		StockShaderPrecompile();
+	StockShaderPrecompile();
+
+	return true;
 }
 
 void Engine::ShaderModule::StockShaderPrecompile()
@@ -293,10 +295,18 @@ void Engine::ShaderModule::StockShaderPrecompile()
 	);
 }
 
-void Engine::ShaderModule::Shutdown()
+const std::vector<std::string>& Engine::ShaderModule::LoadAfter() const
+{
+	static std::vector<std::string> load_after{ "RenderPipeline" };
+	return load_after;
+}
+
+bool Engine::ShaderModule::ShutdownImpl()
 {
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shader::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shader::StaticTypeName());
+
+	return true;
 }
 
 bool Engine::ShaderModule::DynamicLoadable()

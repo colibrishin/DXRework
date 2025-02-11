@@ -9,24 +9,6 @@
 
 #include "RenderPipeline.generated.h"
 
-namespace Engine
-{
-	struct RenderPipelineModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::RenderPipelineModule, Engine::IModule)
-
-namespace Engine
-{
-	struct ENGINE_RENDERPIPELINE_API RenderPipelineModule : public IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(RenderPipelineModule)
-		void Initialize() override;
-		void Shutdown() override;
-		bool DynamicLoadable() override;
-	};
-}
-
 namespace Engine::Managers
 {
 	using namespace Engine::Graphics;

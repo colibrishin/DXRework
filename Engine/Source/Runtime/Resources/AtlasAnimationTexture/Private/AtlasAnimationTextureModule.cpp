@@ -9,7 +9,7 @@
 
 MODULE_IMPL(Engine::AtlasAnimationTextureModule, AtlasAnimationTexture)
 
-void Engine::AtlasAnimationTextureModule::Initialize()
+bool Engine::AtlasAnimationTextureModule::InitializeImpl()
 {
     Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
@@ -188,12 +188,16 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                 load_callback,
                 cleanup_callback);
         });
+
+    return true;
 }
 
-void Engine::AtlasAnimationTextureModule::Shutdown()
+bool Engine::AtlasAnimationTextureModule::ShutdownImpl()
 {
     Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName());
     Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName());
+
+    return true;
 }
 
 bool Engine::AtlasAnimationTextureModule::DynamicLoadable()

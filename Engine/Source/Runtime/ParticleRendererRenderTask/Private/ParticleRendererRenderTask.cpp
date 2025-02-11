@@ -1,4 +1,5 @@
 #include "../Public/ParticleRendererRenderTask.h"
+#include "ParticleRendererRenderTask.generated.h"
 #include <tbb/parallel_for_each.h>
 
 #include "ParticleRenderer.h"

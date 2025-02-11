@@ -11,7 +11,7 @@
 
 MODULE_IMPL(Engine::PhysicsManagerModule, PhysicsManager);
 
-void Engine::PhysicsManagerModule::Initialize()
+bool Engine::PhysicsManagerModule::InitializeImpl()
 {
 	CoreModule::GetContext().AddManager(
 		CoreLoop::LOOP_TYPE_PHYSICS,
@@ -19,9 +19,11 @@ void Engine::PhysicsManagerModule::Initialize()
 		&Managers::CollisionDetector::GetInstance,
 		&Managers::ConstraintSolver::GetInstance,
 		&Managers::PhysicsManager::GetInstance);
+
+	return true;
 }
 
-void Engine::PhysicsManagerModule::Shutdown()
+bool Engine::PhysicsManagerModule::ShutdownImpl()
 {
 	CoreModule::GetContext().RemoveManager(
 		CoreLoop::LOOP_TYPE_PHYSICS,
@@ -29,6 +31,8 @@ void Engine::PhysicsManagerModule::Shutdown()
 		&Managers::CollisionDetector::GetInstance,
 		&Managers::ConstraintSolver::GetInstance,
 		&Managers::PhysicsManager::GetInstance);
+
+	return true;
 }
 
 bool Engine::PhysicsManagerModule::DynamicLoadable()

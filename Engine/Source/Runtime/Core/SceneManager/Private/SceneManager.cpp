@@ -199,12 +199,6 @@ namespace Engine::Managers
 		{
 			context += ui.NewMenu({"New"});
 
-			(context |= ui.NewMenuItem({"Scene"})).SetFunction([&]()
-			{
-				AddScene("UntitledScene");
-				SetActive("UntitledScene");
-			});
-
 			for (auto& [name, func] : m_custom_new_function_)
 			{
 				(context |= ui.NewMenuItem({name})).SetFunction([&]()

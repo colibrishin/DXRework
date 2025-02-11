@@ -22,11 +22,11 @@ namespace Engine::Managers
 	using ModuleInitializationFunction = std::function<IModule*()>;
 
 	ECLASS()
-	class ENGINE_CORE_API ModuleManager : public Abstracts::Singleton<ModuleManager>
+	class ModuleManager : public Abstracts::Singleton<ModuleManager>
 	{
 		GENERATE_BODY
 	public:
-		explicit ModuleManager(SINGLETON_LOCK_TOKEN);
+		ENGINE_CORE_API explicit ModuleManager(SINGLETON_LOCK_TOKEN);
 
 	private:
 		struct ModuleInfo
@@ -45,11 +45,17 @@ namespace Engine::Managers
 		using ModuleInfoPtr = std::unique_ptr<ModuleInfo>;
 		using ModuleMap = std::unordered_map<std::wstring, ModuleInfoPtr>;
 
+		void TryResolveLazyness(const std::wstring_view name);
+
 	public:
-		void        Initialize() override;
-		ModuleInfo* FindModule(const std::wstring_view name);
-		IModule*    LoadModule(const std::wstring_view name);
-		void        AddModule(const std::wstring_view name);
+		ENGINE_CORE_API void        Initialize() override;
+		ENGINE_CORE_API ModuleInfo* FindModule(const std::wstring_view name);
+		ENGINE_CORE_API IModule*    LoadModule(const std::wstring_view name);
+		ENGINE_CORE_API void        AddModule(const std::wstring_view name);
+#if IS_DLL
+        ENGINE_CORE_API void		RemoveModule(const std::wstring_view name);
+#endif
+		ENGINE_CORE_API void		LoadModuleAll();
 
 #if !IS_DLL
 		void                 RegisterStaticModule(const std::wstring_view name, const ModuleInitializationFunction& func);
@@ -68,10 +74,12 @@ namespace Engine::Managers
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
 
-		std::mutex                                                     m_critical_mutex_;
+		std::recursive_mutex                                           m_read_mutex_;
+		std::recursive_mutex                                           m_write_mutex_;
 		std::unordered_map<std::wstring, ModuleInfoPtr>				   m_module_loaded_{};
 		std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_{};
 		std::unordered_map<std::wstring, std::filesystem::path>        m_module_paths_{};
+		std::unordered_map<std::wstring, std::set<std::wstring>>       m_lazy_modules_{};
 	};
 
 #if !IS_DLL

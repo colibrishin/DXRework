@@ -16,9 +16,10 @@ namespace Engine
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterfaceModule : public IModule
 	{
 		GENERATE_BODY
-		void Initialize() override;
-		void Shutdown() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
 		bool DynamicLoadable() override;
+		const std::vector<std::string>& LoadAfter() const override;
 	};
 
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive
@@ -44,7 +45,7 @@ namespace Engine
 	public:
 		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
 
-		void Initialize() override;
+		void Initialize() override; 
 		void Shutdown() override;
 		void WaitForNextFrame() override;
 		void Present() override;

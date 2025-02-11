@@ -1,12 +1,13 @@
 #pragma once
+
 #include "ModuleManager/Public/IModule.h"
 
-#include "AtlasAnimationTextureModule.generated.h"
+#include "BaseAnimationModule.generated.h"
 
-namespace Engine 
+namespace Engine
 {
 	ECLASS(module)
-	struct AtlasAnimationTextureModule : public IModule 
+	struct ENGINE_BASEANIMATION_API BaseAnimationModule : public Engine::IModule
 	{
 		GENERATE_BODY
 		bool InitializeImpl() override;

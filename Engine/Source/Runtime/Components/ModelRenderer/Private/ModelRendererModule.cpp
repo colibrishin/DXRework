@@ -7,7 +7,7 @@
 
 MODULE_IMPL(Engine::ModelRendererModule, ModelRenderer)
 
-void Engine::ModelRendererModule::Initialize()
+bool Engine::ModelRendererModule::InitializeImpl()
 {
     Abstracts::ObjectBase::RegisterComponentFactory("ModelRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
     {
@@ -16,11 +16,15 @@ void Engine::ModelRendererModule::Initialize()
             locked->AddComponent<Components::ModelRenderer>();
         }
     });
+
+    return true;
 }
 
-void Engine::ModelRendererModule::Shutdown()
+bool Engine::ModelRendererModule::ShutdownImpl()
 {
     Abstracts::ObjectBase::UnregisterComponentFactory("ModelRenderer");
+
+    return true;
 }
 
 bool Engine::ModelRendererModule::DynamicLoadable()

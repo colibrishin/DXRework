@@ -9,8 +9,9 @@ namespace Engine
     struct ENGINE_MESH_API MeshModule : public Engine::IModule
     {
         GENERATE_BODY
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
+        const std::vector<std::string>& LoadAfter() const override;
     };
 }

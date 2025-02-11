@@ -13,7 +13,9 @@ namespace Engine
 		virtual void GeneratedInitialize();
 		virtual void GeneratedShutdown();
 
-		void Initialize() override;
-		void Shutdown() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
+		
+		const std::vector<std::string>& LoadAfter() const override;
 	};
 }
