@@ -10,21 +10,13 @@ MODULE_IMPL(Engine::AnimatorModule, Animator)
 
 bool Engine::AnimatorModule::InitializeImpl()
 {
-	Abstracts::ObjectBase::RegisterComponentFactory(Components::Animator::StaticTypeName(), [](const Weak<Abstracts::ObjectBase>& owner)
-	{
-		if (const Strong<Abstracts::ObjectBase>& locked = owner.lock()) 
-		{
-			locked->AddComponent<Components::Animator>();
-		}
-	});
-
+	Engine::ComponentFactory::Register<Engine::Components::Animator>();
 	return true;
 }
 
 bool Engine::AnimatorModule::ShutdownImpl()
 {
-	Abstracts::ObjectBase::UnregisterComponentFactory(Components::Animator::StaticTypeName());
-
+	Engine::ComponentFactory::Unregister<Engine::Components::Animator>();
 	return true;
 }
 

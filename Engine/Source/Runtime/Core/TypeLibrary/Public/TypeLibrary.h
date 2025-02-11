@@ -366,11 +366,13 @@ namespace Engine
 #endif
 	}
 
-	enum ENGINE_CORE_API eComponentUpdatePriority : uint64_t
+	typedef ENGINE_CORE_API UINT eComponentUpdatePriorities;
+
+	enum ENGINE_CORE_API eComponentUpdatePriority : UINT
 	{
-		COM_PRIORITY_POSITIONAL = 100,
-		COM_PRIORITY_PHYSICS = COM_PRIORITY_POSITIONAL + 100,
-		COM_PRIORITY_RENDER = COM_PRIORITY_PHYSICS + 100
+		COM_PRIORITY_POSITIONAL = 0,
+		COM_PRIORITY_PHYSICS = 1 << 1,
+		COM_PRIORITY_RENDER = 1 << 2
 	};
 
 	enum ENGINE_CORE_API eBindType : uint8_t

@@ -5,9 +5,9 @@
 #include "Component.generated.h"
 
 // Cloning component declaration macro
-#define COMP_CLONE_DECL Strong<Engine::Abstracts::Component> cloneImpl() const override;
+#define COMP_CLONE_DECL Engine::Strong<Engine::Abstracts::Component> cloneImpl() const override;
 // Cloning component implementation macro
-#define COMP_CLONE_IMPL(CLASS) Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define COMP_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
 
 namespace Engine
 {
@@ -38,7 +38,7 @@ namespace Engine::Abstracts
 		bool             GetActive() const;
 
 		virtual void SetActive(bool active);
-		virtual eComponentUpdatePriority GetUpdatePriority() const = 0;
+		virtual eComponentUpdatePriorities GetUpdatePriority() const = 0;
 		void         Initialize() override;
 		void         PostUpdate(const float dt) override;
 
@@ -77,3 +77,9 @@ namespace Engine::Abstracts
 		bool             m_b_active_{};
 	};
 } // namespace Engine::Abstracts
+
+namespace Engine
+{
+	template struct ENGINE_CORE_API FactoryTemplate<Engine::Abstracts::Component, const Weak<Engine::Abstracts::ObjectBase>&>;
+	using ComponentFactory = FactoryTemplate<Engine::Abstracts::Component, const Weak<Engine::Abstracts::ObjectBase>&>;
+}

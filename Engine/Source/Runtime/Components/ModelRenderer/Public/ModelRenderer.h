@@ -7,7 +7,7 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_MODELRENDERER_API ModelRenderer final : public RenderComponent
 	{
 		GENERATE_BODY
@@ -18,10 +18,9 @@ namespace Engine::Components
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 	private:
-		COMP_CLONE_DECL
 		friend class Managers::Renderer;
 
 		ModelRenderer();

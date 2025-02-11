@@ -80,3 +80,12 @@ namespace Engine::Abstracts
 		std::filesystem::path m_path_;
 	};
 } // namespace Engine::Abstract
+
+namespace Engine
+{
+	template struct ENGINE_CORE_API FactoryTemplate<Engine::Abstracts::Resource, const std::filesystem::path&>;
+	using ResourceFactory = FactoryTemplate<Engine::Abstracts::Resource, const std::filesystem::path&>;
+}
+
+#define REGISTER_RESOURCE(TYPE) Engine::ResourceFactory::Register<##TYPE##>();
+#define UNREGISTER_RESOURCE(TYPE) Engine::ResourceFactory::Unregister<##TYPE##>();

@@ -13,8 +13,6 @@
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(ParticleRenderer)
-
 	ParticleRenderer::ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
 		: RenderComponent(owner),
 		  m_b_follow_owner_(true) {}
@@ -116,7 +114,7 @@ namespace Engine::Components
 		}
 	}
 
-	eComponentUpdatePriority ParticleRenderer::GetUpdatePriority() const
+	eComponentUpdatePriorities ParticleRenderer::GetUpdatePriority() const
 	{
 		return COM_PRIORITY_RENDER;
 	}

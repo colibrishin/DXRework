@@ -8,7 +8,7 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_ANIMATOR_API Animator final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -21,7 +21,7 @@ namespace Engine::Components
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 		void SetAnimation(UINT idx);
 
 		UINT  GetAnimation() const;
@@ -30,7 +30,6 @@ namespace Engine::Components
 		const Graphics::AnimatorPrimitive& GetPrimitive() const;
 
 	private:
-		COMP_CLONE_DECL
 		Animator();
 
 		void UpdateTransform(const Strong<Transform>& tr, const Strong<Resources::BaseAnimation>& anim) const;

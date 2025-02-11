@@ -11,8 +11,6 @@
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(Rigidbody)
-
 	void Rigidbody::Initialize()
 	{
 		Component::Initialize();
@@ -368,7 +366,7 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
-	eComponentUpdatePriority Rigidbody::GetUpdatePriority() const
+	eComponentUpdatePriorities Rigidbody::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_PHYSICS;
 	}

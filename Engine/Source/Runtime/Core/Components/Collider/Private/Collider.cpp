@@ -28,9 +28,7 @@
 #endif
 
 namespace Engine::Components
-{
-	COMP_CLONE_IMPL(Collider)
-	
+{	
 	VertexCollection Collider::s_cube_vertices_{};
 	IndexCollection Collider::s_cube_indices_{};
 	VertexCollection Collider::s_sphere_vertices_{};
@@ -339,7 +337,7 @@ namespace Engine::Components
 		UpdateInertiaTensor();
 	}
 
-	eComponentUpdatePriority Collider::GetUpdatePriority() const
+	eComponentUpdatePriorities Collider::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_PHYSICS;
 	}

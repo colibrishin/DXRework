@@ -6,8 +6,6 @@
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(Transform)
-
 	Transform::Transform(const Weak<Engine::Abstracts::ObjectBase>& owner)
 		: Engine::Abstracts::Component(owner),
 		  m_b_s_absolute_(true),
@@ -321,7 +319,7 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
-	eComponentUpdatePriority Transform::GetUpdatePriority() const
+	eComponentUpdatePriorities Transform::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_POSITIONAL;
 	}

@@ -3,8 +3,6 @@
 
 #include "ModuleManager/Public/ModuleManager.h"
 
-#include "Script/Public/Script.h"
-
 MODULE_IMPL(ClientModule, Client)
 
 bool ClientModule::InitializeImpl()

@@ -4,7 +4,6 @@
 
 #include "Source/Runtime/Core/Actor/Public/Actor.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
-#include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Component/Public/Component.h"
 
 #include "ObjectBase.generated.h"
@@ -86,42 +85,7 @@ namespace Engine::Abstracts
 			return component;
 		}
 
-		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		Weak<T> AddScript(const std::string& name = "")
-		{
-			if (m_scripts_.contains(T::StaticTypeHash()))
-			{
-				return boost::static_pointer_cast<T>(m_scripts_[T::StaticTypeHash()]);
-			}
-
-			Strong<T> script = boost::make_shared<T>(GetSharedPtr<ObjectBase>());
-			script->SetName(name);
-			addScriptImpl(script, T::StaticTypeHash());
-			addScriptToSceneCache<T>(script);
-
-			return script;
-		}
-
-		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		Weak<T> GetScript(const std::string& name = "")
-		{
-			if (m_scripts_.contains(T::StaticTypeHash()))
-			{
-				return boost::static_pointer_cast<T>(m_scripts_[T::StaticTypeHash()]);
-			}
-
-			return {};
-		}
-
-		template <typename T, typename SLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void RemoveScript()
-		{
-			removeScriptFromSceneCache<T>(m_scripts_[T::StaticTypeHash()]);
-			removeScriptImpl(T::StaticTypeHash());
-		}
-
 		const std::set<Weak<Component>, ComponentPriorityComparer>& GetAllComponents();
-		const std::vector<Weak<Script>>&                            GetAllScripts();
 
 		template <typename T>
 		Weak<T> GetComponent()
@@ -177,10 +141,6 @@ namespace Engine::Abstracts
 			  m_active_(true),
 			  m_culled_(true) { };
 
-		virtual void OnCollisionEnter(const Strong<Components::Collider>& other);
-		virtual void OnCollisionContinue(const Strong<Components::Collider>& other);
-		virtual void OnCollisionExit(const Strong<Components::Collider>& other);
-
 	private:
 		friend class Scene;
 		friend class Layer;
@@ -212,34 +172,8 @@ namespace Engine::Abstracts
 			}
 		}
 
-		// Add script to the scene cache.
-		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void addScriptToSceneCache(const Strong<T>& script)
-		{
-			if (const auto scene = GetScene().lock())
-			{
-				scene->AddCacheScript<T>(script);
-			}
-		}
-
-		// Remove script from the scene cache.
-		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void removeScriptFromSceneCache(const Strong<T>& script)
-		{
-			if (const auto scene = GetScene().lock())
-			{
-				scene->RemoveCacheScript<T>(script);
-			}
-		}
-
-		void removeScript(const ScriptType type);
-		void removeScriptImpl(const ScriptType type);
-
 		// Add pre-existing component to the object.
 		Weak<Component> addComponent(const Strong<Component>& component);
-
-		// Add pre-existing script to the object.
-		Weak<Script> addScript(const Strong<Script>& script);
 
 		// Remove component from the object. Cached component at the scene should be removed manually.
 		void removeComponent(ComponentType type);
@@ -250,8 +184,6 @@ namespace Engine::Abstracts
 
 		// Commit the component to the object.
 		void addComponentImpl(const Strong<Component>& component, ComponentType type);
-		// Commit the script to the object.
-		void addScriptImpl(const Strong<Script>& script, const ScriptType type);
 
 		EPROPERTY()
 		LocalActorID m_parent_id_;
@@ -271,35 +203,26 @@ namespace Engine::Abstracts
 		EPROPERTY()
 		std::map<ComponentType, Strong<Component>> m_components_;
 
-		EPROPERTY()
-		std::map<ScriptType, Strong<Script>> m_scripts_;
-
 		// Non-serialized
 #if WITH_EDITOR
 	public:
 		friend struct ConstructorAccess;
-		using ComponentFactorySignature = std::function<void(const Weak<ObjectBase>& owner)>;
-
-		static void RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate);
-		static void UnregisterComponentFactory(std::string_view name);
 		void UpdateUIText();
 		void OnNameChanged();
 
 	private:
-		static std::unordered_map<std::string_view, ComponentFactorySignature> m_component_add_map_;
-
 		bool m_b_add_component_dialog_opened_ = false;
 #endif
 		Weak<ObjectBase>                                     m_parent_;
 		std::map<LocalActorID, Weak<ObjectBase>>             m_children_cache_;
 		std::set<LocalComponentID>                           m_assigned_component_ids_;
 		std::set<Weak<Component>, ComponentPriorityComparer> m_cached_component_;
-		std::vector<Weak<Script>>                            m_cached_script_;
 	};
 } // namespace Engine::Abstracts
 
 namespace Engine 
 {
+	template struct ENGINE_CORE_API FactoryTemplate<Engine::Abstracts::ObjectBase, const eDefObjectType>;
 	using ObjectFactory = FactoryTemplate<Engine::Abstracts::ObjectBase, const eDefObjectType>;
 }
 

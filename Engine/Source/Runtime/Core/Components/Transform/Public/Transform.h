@@ -14,7 +14,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -69,7 +69,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 		Matrix GetLocalMatrix() const;
 		Matrix GetWorldMatrix() const;
@@ -83,8 +83,6 @@ namespace Engine::Components
 		friend class Managers::Renderer;
 
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
-
-		COMP_CLONE_DECL
 
 		EPROPERTY()
 		bool       m_b_s_absolute_;

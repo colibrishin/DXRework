@@ -9,7 +9,6 @@
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 #include "Source/Runtime/Core/Octree/Public/Octree.hpp"
-#include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
 
@@ -199,80 +198,6 @@ namespace Engine
 			}
 		}
 
-		// Add cache script from the object.
-		template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void AddCacheScript(const Strong<T>& script)
-		{
-			// If the component cannot be deduced, go with runtime.
-			if constexpr (std::is_same_v<Script, T>)
-			{
-				Managers::TaskScheduler::GetInstance().AddTask
-						(
-						 TASK_CACHE_SCRIPT,
-						 {GetSharedPtr<Scene>(), script},
-						 [](const std::vector<std::any>& params, const float)
-						 {
-							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& scp   = std::any_cast<Strong<Script>>(params[1]);
-
-							 scene->addCacheScriptImpl(scp, scp->GetTypeHash());
-						 }
-						);
-			}
-			else
-			{
-				Managers::TaskScheduler::GetInstance().AddTask
-						(
-						 TASK_CACHE_COMPONENT,
-						 {GetSharedPtr<Scene>(), script},
-						 [](const std::vector<std::any>& params, const float)
-						 {
-							 const auto& scene     = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& component = std::any_cast<Strong<T>>(params[1]);
-
-							 scene->addCacheScriptImpl(component, T::StaticTypeHash());
-						 }
-						);
-			}
-		}
-
-		// Remove cache script from the object.
-		template <typename T, typename ScriptLock = std::enable_if_t<std::is_base_of_v<Script, T>>>
-		void RemoveCacheScript(const Strong<T>& script)
-		{
-			// If the component cannot be deduced, go with runtime.
-			if constexpr (std::is_same_v<Script, T>)
-			{
-				Managers::TaskScheduler::GetInstance().AddTask
-						(
-						 TASK_UNCACHE_SCRIPT,
-						 {GetSharedPtr<Scene>(), script},
-						 [](const std::vector<std::any>& params, const float)
-						 {
-							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& scp   = std::any_cast<Strong<Script>>(params[1]);
-
-							 scene->removeCacheScriptImpl(scp, scp->GetTypeHash());
-						 }
-						);
-			}
-			else
-			{
-				Managers::TaskScheduler::GetInstance().AddTask
-						(
-						 TASK_UNCACHE_SCRIPT,
-						 {GetSharedPtr<Scene>(), script},
-						 [](const std::vector<std::any>& params, const float)
-						 {
-							 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-							 const auto& scp   = std::any_cast<Strong<T>>(params[1]);
-
-							 scene->removeCacheScriptImpl(scp, T::StaticTypeHash());
-						 }
-						);
-			}
-		}
-
 		template <typename T>
 		[[nodiscard]] ConcurrentWeakComVec GetCachedComponentsConcurrent() const
 		{
@@ -302,44 +227,6 @@ namespace Engine
 				auto& found = m_cached_components_.at(T::StaticTypeHash());
 				WeakComVec result;
 				for (const auto& comp : m_cached_components_.at(T::StaticTypeHash()) | std::views::values)
-				{
-					result.emplace_back(comp);
-				}
-				return result;
-			}
-
-			return {};
-		}
-
-		template <typename T>
-		[[nodiscard]] ConcurrentWeakScpVec GetCachedScriptsConcurrent() const
-		{
-			ConcurrentWeakScpRootMap::const_accessor acc;
-
-			if (m_cached_scripts_.find(acc, T::StaticTypeHash()))
-			{
-				ConcurrentWeakScpVec result;
-
-				for (const auto& scp : acc->second | std::views::values)
-				{
-					result.push_back(scp);
-				}
-
-				return result;
-			}
-
-			return {};
-		}
-
-		template <typename T>
-		[[nodiscard]] WeakScpVec GetCachedScripts() const
-		{
-			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
-			if (m_cached_scripts_.contains(T::StaticTypeHash()))
-			{
-				auto& found = m_cached_scripts_.at(T::StaticTypeHash());
-				WeakScpVec result;
-				for (const auto& comp : m_cached_scripts_.at(T::StaticTypeHash()) | std::views::values)
 				{
 					result.emplace_back(comp);
 				}
@@ -408,14 +295,8 @@ namespace Engine
 		void addCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 		// Remove cache component from the object.
 		void removeCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
-
-		// Add cache script from the object.
-		void addCacheScriptImpl(const Strong<Script>& script, const ScriptType type);
-		// Remove cache script from the object.
-		void removeCacheScriptImpl(const Strong<Script>& script, const ScriptType type);
-
+		
 		// Functions for the next frame.
-
 		// Add the object from the scene finally. this function should be called at the next frame.
 		void AddObjectFinalize(LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
 		// Remove the object from the scene finally. this function should be called at the next frame.
@@ -451,15 +332,12 @@ namespace Engine
 
 		WeakObjGlobalMap                                     m_cached_objects_;
 		WeakComRootMap                                       m_cached_components_;
-		WeakScpRootMap                                       m_cached_scripts_;
 
 		SpinLockTicket m_object_lock_;
 		SpinLockTicket m_component_lock_;
-		SpinLockTicket m_script_lock_;
 
 		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
 		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
-		ConcurrentWeakScpRootMap                             m_concurrent_cached_scripts_;
 		
 		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_position_tree_;
 		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_collision_tree_;

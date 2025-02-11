@@ -15,6 +15,7 @@
 #include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Components/Collider/Public/Collider.h"
 
 std::atomic<bool> Engine::Scene::s_debug_observer_ = false;
 
@@ -175,14 +176,6 @@ namespace Engine
 			}
 		}
 
-		for (const auto& script : obj->GetAllScripts())
-		{
-			if (const auto& locked = script.lock())
-			{
-				AddCacheScript(locked);
-			}
-		}
-
 		// Set internal information as this scene and layer
 		obj->GetSharedPtr<Abstracts::Actor>()->SetScene(GetSharedPtr<Scene>());
 		obj->GetSharedPtr<Abstracts::Actor>()->SetLayer(layer);
@@ -269,22 +262,6 @@ namespace Engine
 			}
 		}
 
-		{
-			auto token = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
-			for (const auto& script : obj.lock()->GetAllScripts())
-			{
-				ConcurrentWeakScpRootMap::accessor script_acc;
-				if (m_concurrent_cached_scripts_.find(script_acc, script.lock()->GetTypeHash()))
-				{
-					script_acc->second.erase(script.lock()->GetID());
-				}
-				if (m_cached_scripts_.contains(script.lock()->GetTypeHash()))
-				{
-					m_cached_scripts_[script.lock()->GetTypeHash()].erase(script.lock()->GetID());
-				}
-			}
-		}
-
 		obj.lock()->SetScene({});
 
 		if (obj.lock()->GetLocalID() == m_main_actor_local_id_)
@@ -315,7 +292,6 @@ namespace Engine
 
 			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(scene->m_object_lock_);
 			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(scene->m_component_lock_);
-			SpinLockToken st = SingletonSpinLock::GetInstance().Lock(scene->m_script_lock_);
 
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
 			m_layers_               = scene->m_layers_;
@@ -326,8 +302,6 @@ namespace Engine
 			m_object_collision_tree_.Clear();
 			m_cached_objects_.clear();
 			m_cached_components_.clear();
-			m_cached_scripts_.clear();
-			m_concurrent_cached_scripts_.clear();
 			m_concurrent_cached_components_.clear();
 			m_concurrent_cached_objects_.clear();
 			m_object_position_tree_.Clear();
@@ -365,14 +339,6 @@ namespace Engine
 							if (const auto locked_comp = comp.lock())
 							{
 								AddCacheComponent(locked_comp);
-							}
-						}
-
-						for (const auto& script : locked->GetAllScripts())
-						{
-							if (const auto& locked_script = script.lock())
-							{
-								AddCacheScript(locked_script);
 							}
 						}
 
@@ -628,43 +594,6 @@ namespace Engine
 		}
 	}
 
-	void Scene::addCacheScriptImpl(const Strong<Script>& script, const ScriptType type)
-	{
-		if (!script->GetOwner().lock())
-		{
-			return;
-		}
-
-		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
-		SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
-
-		if (m_cached_objects_.contains(script->GetOwner().lock()->GetID()))
-		{
-			m_cached_scripts_[type].emplace(script->GetID(), script);
-
-			ConcurrentWeakScpRootMap::accessor scp_acc;
-			if (!m_concurrent_cached_scripts_.find(scp_acc, type)) m_concurrent_cached_scripts_.insert(scp_acc, type);
-
-			scp_acc->second.emplace(script->GetID(), script);
-		}
-	}
-
-	void Scene::removeCacheScriptImpl(const Strong<Script>& script, const ScriptType type)
-	{
-		SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
-		SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
-
-		if (m_cached_objects_.contains(script->GetOwner().lock()->GetID()))
-		{
-			if (m_cached_scripts_.contains(type))
-			{
-				m_cached_scripts_[type].erase(script->GetID());
-				ConcurrentWeakScpRootMap::accessor scp_acc;
-				if (m_concurrent_cached_scripts_.find(scp_acc, type)) scp_acc->second.erase(script->GetID());
-			}
-		}
-	}
-
 	Scene::Scene() :
 	m_b_scene_raytracing_(false),
 #ifdef PHYSX_ENABLED
@@ -674,7 +603,6 @@ namespace Engine
 	m_main_actor_local_id_(g_invalid_id),
 	m_object_position_tree_(),
 	m_object_lock_(SingletonSpinLock::GetInstance().Register()),
-	m_script_lock_(SingletonSpinLock::GetInstance().Register()),
 	m_component_lock_(SingletonSpinLock::GetInstance().Register()){}
 
 	void Scene::PreUpdate(const float dt)
@@ -845,7 +773,6 @@ namespace Engine
 		{
 			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(m_object_lock_);
 			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
-			SpinLockToken st = SingletonSpinLock::GetInstance().Lock(m_script_lock_);
 
 			// rebuild cache
 			for (int i = 0; i < size(); ++i)
@@ -877,22 +804,6 @@ namespace Engine
 						{
 							m_concurrent_cached_components_.insert(acc, comp.lock()->GetTypeHash());
 							acc->second.emplace(comp.lock()->GetID(), comp);
-						}
-					}
-
-					for (const auto& scp : obj.lock()->GetAllScripts())
-					{
-						m_cached_scripts_[scp.lock()->GetTypeHash()].emplace(scp.lock()->GetID(), scp);
-
-						if (ConcurrentWeakScpRootMap::accessor acc;
-							m_concurrent_cached_scripts_.find(acc, scp.lock()->GetTypeHash()))
-						{
-							acc->second.emplace(scp.lock()->GetID(), scp);
-						}
-						else
-						{
-							m_concurrent_cached_scripts_.insert(acc, scp.lock()->GetTypeHash());
-							acc->second.emplace(scp.lock()->GetID(), scp);
 						}
 					}
 				}

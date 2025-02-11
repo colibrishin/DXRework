@@ -9,7 +9,7 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
 	{
 		GENERATE_BODY
@@ -33,7 +33,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -52,8 +52,6 @@ namespace Engine::Components
 		bool IsFollowOwner() const;
 
 	private:
-		COMP_CLONE_DECL
-
 		friend class Resources::ComputeShader;
 		friend struct ParticleRendererExtension;
 		ParticleRenderer();

@@ -12,21 +12,13 @@ MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)
 
 bool Engine::ParticleRendererModule::InitializeImpl()
 {
-    Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
-    {
-        if (const Strong<Abstracts::ObjectBase>& locked = owner.lock())
-        {
-            locked->AddComponent<Components::ParticleRenderer>();
-        }
-    });
-
+    Engine::ComponentFactory::Register<Engine::Components::ParticleRenderer>();
     return true;
 }
 
 bool Engine::ParticleRendererModule::ShutdownImpl()
 {
-    Abstracts::ObjectBase::UnregisterComponentFactory("ParticleRenderer");
-
+    Engine::ComponentFactory::Unregister<Engine::Components::ParticleRenderer>();
     return true;
 }
 

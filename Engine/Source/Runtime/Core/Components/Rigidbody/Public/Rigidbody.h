@@ -5,7 +5,7 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -66,7 +66,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 	protected:
 		Rigidbody();
@@ -78,8 +78,6 @@ namespace Engine::Components
 #endif
 
 	private:
-		COMP_CLONE_DECL
-
 		EPROPERTY()
 		bool m_b_no_angular_;
 		
