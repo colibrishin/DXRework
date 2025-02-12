@@ -111,7 +111,7 @@ namespace Engine
 
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
-		u_align_allocator<CommandPair>								m_command_pair_pool_{};
+		u_fast_pool_allocator_single<CommandPair>				    m_command_pair_pool_{};
 		Strong<DescriptorHandler>                                   m_heap_handler_{};
 
 		ComPtr<ID3D12Device2> m_dev_{};

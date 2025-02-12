@@ -57,6 +57,7 @@ namespace Engine
 		PrimitiveMesh*          GetNewPrimitiveMesh() override;
 		GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() override;
 		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
+		PrimitiveFont*          GetNewPrimitiveFont() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 

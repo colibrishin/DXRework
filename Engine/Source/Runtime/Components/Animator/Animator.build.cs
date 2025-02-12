@@ -23,7 +23,7 @@ public class Animator : EngineCommonProject
         conf.AddPrivateDependency<AtlasAnimation>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<Material>(target);
-        conf.AddPrivateDependency<RenderComponent>(target);
+        conf.AddPrivateDependency<ShapeRenderComponent>(target);
         conf.AddPrivateDependency<ModelRenderer>(target);
     }
 }

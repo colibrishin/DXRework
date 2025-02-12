@@ -8,13 +8,13 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
-#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
-#include "Source/Runtime/Components/Animator/Public/Animator.h"
-#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include "ModuleManager/Public/ModuleManager.h"
+#include "ShapeRenderComponent.h"
+#include "ObjectBase/Public/ObjectBase.h"
+#include "Components/Transform/Public/Transform.h"
+#include "Animator.h"
+#include "AtlasAnimationTexture.h"
+#include "Shape.h"
 
 MODULE_IMPL(Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderInstanceTask)
 

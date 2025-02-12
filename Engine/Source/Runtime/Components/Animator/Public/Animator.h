@@ -1,6 +1,4 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
-
 #include "Source/Runtime/Core/Component/Public/Component.h"
 #include "AnimatorPrimitive.h"
 

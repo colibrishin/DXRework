@@ -822,6 +822,27 @@ namespace Engine
 	};
 #endif
 
+	struct ENGINE_CORE_API PrimitiveFont
+	{
+		virtual ~PrimitiveFont() = default;
+		virtual void Generate(const Resources::Font* font) = 0;
+		virtual void Render(
+			const std::string_view text, 
+			const Vector2& position, 
+			const Color& color,
+			const float rotation_rad,
+			const Vector2& scale) = 0;
+
+	protected:
+		virtual void SetNativeFont(void* ptr)
+		{
+			ptr = m_font_;
+		}
+
+	private:
+		void* m_font_ = nullptr;
+	};
+
 	struct ENGINE_CORE_API PrimitiveMesh
 	{
 		virtual      ~PrimitiveMesh() = default;
@@ -1213,6 +1234,7 @@ namespace Engine
 		virtual PrimitiveMesh* GetNewPrimitiveMesh() = 0;
 		virtual GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() = 0;
 		virtual ComputePrimitiveShader* GetNewComputePrimitiveShader() = 0;
+		virtual PrimitiveFont* GetNewPrimitiveFont() = 0;
 
 		virtual Matrix GetProjectionMatrix() = 0;
 		virtual Matrix GetOrthogonalMatrix() = 0;

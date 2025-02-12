@@ -46,7 +46,7 @@ namespace Engine
 		std::atomic<bool>                                     m_critical_lock_;
 		size_t                                                m_nonce_ = 0;
 		std::unordered_map<size_t, Strong<std::atomic<bool>>> m_spin_locks_;
-		u_align_allocator<std::atomic<bool>>                  m_allocator_;
+		u_fast_pool_allocator_single<std::atomic<bool>>       m_allocator_;
 	};
 
 	struct SpinLockTicket

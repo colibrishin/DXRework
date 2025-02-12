@@ -5,6 +5,7 @@
 
 #include "D3D12GraphicPrimitiveShader.h"
 #include "D3D12PrimitiveMesh.h"
+#include "D3D12PrimitiveFont.h"
 #include "ThrowIfFailed.h"
 
 #include "StructuredBufferDX12.hpp"
@@ -178,6 +179,11 @@ Engine::GraphicPrimitiveShader* Engine::D3D12GraphicInterface::GetNewGraphicPrim
 Engine::ComputePrimitiveShader* Engine::D3D12GraphicInterface::GetNewComputePrimitiveShader()
 {
 	return new D3D12ComputePrimitiveShader();
+}
+
+Engine::PrimitiveFont* Engine::D3D12GraphicInterface::GetNewPrimitiveFont()
+{
+	return new D3D12PrimitiveFont();
 }
 
 Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)

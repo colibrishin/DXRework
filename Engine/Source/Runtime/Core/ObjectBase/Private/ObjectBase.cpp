@@ -217,9 +217,20 @@ namespace Engine::Abstracts
 
 		// Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
 		component->SetOwner(GetSharedPtr<ObjectBase>());
+		if (!component->IsInitialized())
+		{
+			component->Initialize();
+		}
 
 		// Add the component to the object.
 		addComponentImpl(component, type);
+
+		if (const Strong<Scene>& scene = GetScene().lock())
+		{
+			addComponentToSceneCache(component);
+		}
+
+		onComponentAdded.Broadcast(component);
 
 		return component;
 	}
@@ -514,7 +525,7 @@ namespace Engine::Abstracts
 							{
 								(add_com_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([&]()
 								{
-									predicate(GetSharedPtr<ObjectBase>());
+									addComponent(predicate(GetSharedPtr<ObjectBase>()));
 								});
 							}
 						};

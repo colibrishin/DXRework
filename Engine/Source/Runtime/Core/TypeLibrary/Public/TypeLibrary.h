@@ -647,13 +647,14 @@ namespace Engine
 		namespace Abstracts
 		{
 			class RenderComponent;
+			class ShapeRenderComponent;
 		}
 
 		class Collider;
-		class OffsetCollider;
 		class Transform;
 		class Rigidbody;
 		class ObserverController;
+		class TextRenderer;
 		class SoundPlayer;
 		class ModelRenderer;
 		class Animator;

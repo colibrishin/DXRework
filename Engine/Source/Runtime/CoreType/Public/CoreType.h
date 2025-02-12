@@ -1088,7 +1088,7 @@ struct is_hash_type : std::false_type {};
 template <typename T>
 struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
 
-struct ConstructorAccess 
+struct ENGINE_CORETYPE_API ConstructorAccess 
 {
 	template <typename T, typename... Args>
 	static boost::shared_ptr<T> Create(Args&&... args)

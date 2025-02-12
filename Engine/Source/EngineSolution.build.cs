@@ -49,6 +49,11 @@ public class EngineSolution : Solution
             }
 
             {
+                conf.AddProject<Font>(target);
+                conf.AddProject<TextRenderer>(target);
+            }
+
+            {
                 conf.AddProject<ImGuiManager>(target);
                 conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
@@ -80,6 +85,13 @@ public class EngineSolution : Solution
                 conf.AddProject<Texture1D>(target);
                 conf.AddProject<Texture2D>(target);
                 conf.AddProject<Texture3D>(target);
+            }
+
+            {
+                conf.AddProject<Sound>(target);
+                conf.AddProject<SoundPlayer>(target);
+                conf.AddProject<SoundManager>(target);
+                conf.AddProject<FMODSoundInterface>(target);
             }
 
             conf.SetStartupProject<Launch>();

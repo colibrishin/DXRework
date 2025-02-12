@@ -1,7 +1,7 @@
 #pragma once
 #include "InstanceParticleSB.h"
 #include "ParticleComputeShader.h"
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+#include "ShapeRenderComponent.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
 
@@ -10,7 +10,7 @@
 namespace Engine::Components
 {
 	ECLASS(serialize, component)
-	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
+	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public ShapeRenderComponent
 	{
 		GENERATE_BODY
 	public:

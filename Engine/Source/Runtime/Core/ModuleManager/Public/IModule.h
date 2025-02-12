@@ -31,7 +31,12 @@ namespace Engine
 		virtual bool ShutdownImpl() = 0;
 		virtual bool DynamicLoadable() = 0;
 
-		virtual const std::vector<std::string>& GetDependencies() const = 0;
+		virtual const std::vector<std::string>& GetDependencies() const
+		{
+			static const std::vector<std::string> empty = {};
+			return empty;
+		}
+
 		virtual const std::vector<std::string>& LoadAfter() const
 		{
 			static std::vector<std::string> load_after = {};

@@ -1,14 +1,13 @@
 #pragma once
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
+#include "ObjectBase/Public/ObjectBase.h"
+#include "ShapeRenderComponent.h"
 
-#include "ModuleManager/Public/IModule.h"
 #include "ModelRenderer.generated.h"
 
 namespace Engine::Components
 {
 	ECLASS(serialize, component)
-	class ENGINE_MODELRENDERER_API ModelRenderer final : public RenderComponent
+	class ENGINE_MODELRENDERER_API ModelRenderer final : public ShapeRenderComponent
 	{
 		GENERATE_BODY
 	public:

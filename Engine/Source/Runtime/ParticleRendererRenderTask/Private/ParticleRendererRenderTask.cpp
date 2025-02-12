@@ -5,7 +5,7 @@
 #include "ParticleRenderer.h"
 #include "Renderer.h"
 
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+#include "ShapeRenderComponent.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"

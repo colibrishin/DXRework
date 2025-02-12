@@ -1,14 +1,14 @@
-#include "../Public/egRenderComponent.h"
-#include "egRenderComponent.generated.h"
+#include "ShapeRenderComponent.h"
+#include "ShapeRenderComponent.generated.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "UIHelpersResourceManager.h"
 
 namespace Engine::Components
 {
-	void RenderComponent::OnSerialized()
+	void ShapeRenderComponent::OnSerialized()
 	{
-		Component::OnSerialized();
+		RenderComponent::OnSerialized();
 
 		if (m_shape_) 
 		{
@@ -17,9 +17,9 @@ namespace Engine::Components
 		}
 	}
 
-	void RenderComponent::OnDeserialized()
+	void ShapeRenderComponent::OnDeserialized()
 	{
-		Component::OnDeserialized();
+		RenderComponent::OnDeserialized();
 
 		if (const Strong<Resources::Shape>& shape = Resources::Shape::GetByMetadataPath(m_shape_meta_path_).lock())
 		{
@@ -27,11 +27,12 @@ namespace Engine::Components
 		}
 	}
 
-	void RenderComponent::OnUIUpdate(UIContext* const parent, const float dt)
+#if WITH_EDITOR
+	void ShapeRenderComponent::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent)
 		{
-			Component::OnUIUpdate(parent, dt);
+			RenderComponent::OnUIUpdate(parent, dt);
 
 			static std::string empty_string;
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -56,8 +57,9 @@ namespace Engine::Components
 			}
 		}
 	}
+#endif
 
-	void RenderComponent::SetShape(const Weak<Resources::Shape>& shape)
+	void ShapeRenderComponent::SetShape(const Weak<Resources::Shape>& shape)
 	{
 		if (const Strong<Resources::Shape>& locked = shape.lock())
 		{
@@ -71,16 +73,17 @@ namespace Engine::Components
 		}
 	}
 
-	Weak<Resources::Shape> RenderComponent::GetShape() const
+	Weak<Resources::Shape> ShapeRenderComponent::GetShape() const
 	{
 		return m_shape_;
 	}
 
-	const MetadataPath& RenderComponent::GetShapeMetadataPath() const
+	const MetadataPath& ShapeRenderComponent::GetShapeMetadataPath() const
 	{
 		return m_shape_meta_path_;
 	}
 
-	RenderComponent::RenderComponent()
-		: Component({}) {}
+	ShapeRenderComponent::ShapeRenderComponent()
+		: RenderComponent() {
+	}
 }

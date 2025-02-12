@@ -6,7 +6,7 @@
 namespace Engine::Components
 {
 	ModelRenderer::ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(owner) {}
+		: ShapeRenderComponent(owner) {}
 
 	void ModelRenderer::PreUpdate(const float dt) {}
 

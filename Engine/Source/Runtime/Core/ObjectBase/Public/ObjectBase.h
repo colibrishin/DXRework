@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <set>
+#include <type_traits>
 
 #include "Source/Runtime/Core/Actor/Public/Actor.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
@@ -62,7 +63,7 @@ namespace Engine::Abstracts
 
 		[[nodiscard]] Strong<ObjectBase> Clone(bool register_scene = true) const;
 
-		template <typename T, typename... Args, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
+		template <typename T, typename... Args> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)
 		Weak<T> AddComponent(Args&&... args)
 		{
 			const auto type = T::StaticTypeHash();
@@ -73,7 +74,6 @@ namespace Engine::Abstracts
 			}
 
 			const auto thisObject = GetSharedPtr<ObjectBase>();
-
 			Strong<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
 			component->Initialize();
 
@@ -87,7 +87,7 @@ namespace Engine::Abstracts
 
 		const std::set<Weak<Component>, ComponentPriorityComparer>& GetAllComponents();
 
-		template <typename T>
+		template <typename T> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)
 		Weak<T> GetComponent()
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
@@ -105,7 +105,7 @@ namespace Engine::Abstracts
 			return {};
 		}
 
-		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>
+		template <typename T> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)
 		void RemoveComponent()
 		{
 			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[T::StaticTypeHash()]));
@@ -151,7 +151,6 @@ namespace Engine::Abstracts
 
 		// Check whether the component is already added to the object.
 		Weak<Component> checkComponent(ComponentType type);
-		Weak<Script>    checkScript(const ScriptType type);
 
 		// Add component to the scene cache.
 		template <typename T, typename CLock = std::enable_if_t<std::is_base_of_v<Component, T>>>

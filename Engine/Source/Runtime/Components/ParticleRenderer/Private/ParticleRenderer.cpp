@@ -14,11 +14,11 @@
 namespace Engine::Components
 {
 	ParticleRenderer::ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(owner),
+		: ShapeRenderComponent(owner),
 		  m_b_follow_owner_(true) {}
 
 	ParticleRenderer::ParticleRenderer(const ParticleRenderer& other)
-		: RenderComponent(other)
+		: ShapeRenderComponent(other)
 	{
 		m_cs_             = other.m_cs_;
 		m_cs_meta_path_   = other.m_cs_meta_path_;

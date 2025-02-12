@@ -1,19 +1,19 @@
 #pragma once
-#include "Source/Runtime/Core/Component/Public/Component.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
-#include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
+#include "Component/Public/Component.h"
+#include "ObjectBase/Public/ObjectBase.h"
 #include "Shape.h"
+#include "RenderComponent.h"
 
-#include "egRenderComponent.generated.h"
+#include "ShapeRenderComponent.generated.h"
 
 namespace Engine::Components
 {
-	ECLASS(abstract, serialize)
-	class ENGINE_RENDERCOMPONENT_API RenderComponent : public Engine::Abstracts::Component
+	ECLASS(component, abstract, serialize)
+	class ENGINE_SHAPERENDERCOMPONENT_API ShapeRenderComponent : public Engine::Components::RenderComponent
 	{
 		GENERATE_BODY
 	public:
-		using Component::Component;
+		using RenderComponent::RenderComponent;
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
@@ -27,7 +27,7 @@ namespace Engine::Components
 		[[nodiscard]] const MetadataPath& GetShapeMetadataPath() const;
 
 	protected:
-		RenderComponent();
+		ShapeRenderComponent();
 
 	private:		
 		EPROPERTY()
