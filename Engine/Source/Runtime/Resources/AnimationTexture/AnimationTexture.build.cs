@@ -17,9 +17,6 @@ public class AnimationTexture : EngineCommonProject
         conf.AddPublicDependency<Texture3D>(target);
 
         conf.AddPrivateDependency<BaseAnimation>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
-        conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
     }
 }

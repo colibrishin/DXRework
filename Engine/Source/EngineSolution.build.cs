@@ -35,7 +35,6 @@ public class EngineSolution : Solution
             conf.AddProject<RaycastExtension>(target);
 
             {
-                conf.AddProject<RenderComponent>(target);
                 conf.AddProject<ModelRenderer>(target);
                 conf.AddProject<ParticleRenderer>(target);
                 conf.AddProject<ParticleRendererExtension>(target);
@@ -58,7 +57,6 @@ public class EngineSolution : Solution
                 conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);
-                conf.AddProject<InputManager>(target);
                 conf.AddProject<ProjectionFrustum>(target);
                 //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
@@ -66,6 +64,11 @@ public class EngineSolution : Solution
                 conf.AddProject<ShadowManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<Launch>(target);
+            }
+
+            if (target.LaunchType == ELaunchType.Client || target.LaunchType == ELaunchType.Editor)
+            {
+                conf.AddProject<InputManager>(target);
             }
 
             {

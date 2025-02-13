@@ -6,7 +6,7 @@ using Sharpmake;
 [Generate]
 public class ShapeRenderComponent : EngineCommonProject
 {
-    public ShapeRenderComponent() { }
+    public ShapeRenderComponent() {}
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

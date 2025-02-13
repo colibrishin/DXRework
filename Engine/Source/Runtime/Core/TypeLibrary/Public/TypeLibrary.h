@@ -9,15 +9,52 @@
 
 #if defined(USE_DX12)
 #include <directxtk12/SimpleMath.h>
-#include <DirectXMath.h>
+#include <directxtk12/SimpleMath.inl>
+#include <wrl/client.h>
 
-using Vector2 = DirectX::SimpleMath::Vector2;
-using Vector3 = DirectX::SimpleMath::Vector3;
-using Vector4 = DirectX::SimpleMath::Vector4;
-using Color = DirectX::SimpleMath::Color;
-using Quaternion = DirectX::SimpleMath::Quaternion;
-using Ray = DirectX::SimpleMath::Ray;
-using Matrix = DirectX::SimpleMath::Matrix;
+namespace Engine
+{
+	using DirectX::SimpleMath::Vector2;
+	using DirectX::SimpleMath::Vector3;
+	using DirectX::SimpleMath::Vector4;
+	using DirectX::SimpleMath::Color;
+	using DirectX::SimpleMath::Quaternion;
+	using DirectX::SimpleMath::Ray;
+	using DirectX::SimpleMath::Matrix;
+	using DirectX::BoundingBox;
+	using DirectX::BoundingFrustum;
+	using DirectX::BoundingOrientedBox;
+	using DirectX::BoundingSphere;
+	using DirectX::XMFLOAT2;
+	using DirectX::XMFLOAT3X3;
+	using DirectX::XMVECTORF32;
+	using DirectX::BoundingBox;
+	using DirectX::BoundingFrustum;
+	using DirectX::BoundingOrientedBox;
+	using DirectX::BoundingSphere;
+	using DirectX::XMFLOAT2;
+	using DirectX::XMFLOAT3X3;
+	using DirectX::XMVECTORF32;
+	using Microsoft::WRL::ComPtr;
+}
+
+using Engine::Vector2;
+using Engine::Vector3;
+using Engine::Vector4;
+using Engine::Color;
+using Engine::Quaternion;
+using Engine::Ray;
+using Engine::Matrix;
+using Engine::BoundingBox;
+using Engine::BoundingFrustum;
+using Engine::BoundingOrientedBox;
+using Engine::BoundingSphere;
+using Engine::BoundingBox;
+using Engine::BoundingFrustum;
+using Engine::BoundingOrientedBox;
+using Engine::BoundingSphere;
+
+inline constexpr static Engine::Vector3 g_forward = { 0.f, 0.f, 1.f };
 
 namespace boost::serialization
 {
@@ -143,27 +180,6 @@ namespace boost::serialization
 		ar & bs.Center;
 		ar & bs.Radius;
 	}
-}
-
-namespace Microsoft::WRL
-{
-	template <typename T>
-	class ComPtr;
-}
-
-namespace Engine 
-{
-	using DirectX::BoundingBox;
-	using DirectX::BoundingFrustum;
-	using DirectX::BoundingOrientedBox;
-	using DirectX::BoundingSphere;
-
-	template <typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-	using DirectX::XMFLOAT2;
-	using DirectX::XMFLOAT3X3;
-	using DirectX::XMVECTORF32;
 }
 #endif
 
@@ -630,9 +646,7 @@ namespace Engine
 
 	class Serializer;
 	struct ComponentPriorityComparer;
-
-	template <typename WeakT, typename BoundingValueGetter, float Epsilon>
-	class Octree;
+	struct bounding_getter;
 
 	namespace Objects
 	{
@@ -741,6 +755,11 @@ namespace Engine
 		class InputManager;
 		class TaskScheduler;
 	} // namespace Managers
+
+	template <typename WeakT, typename BoundingValueGetter, float Epsilon>
+	class octree_impl;
+
+	using Octree = octree_impl<Weak<Abstracts::ObjectBase>, bounding_getter, CFG_EPSILON>;
 
 	using ObjectPredication = std::function<bool(const Strong<Abstracts::ObjectBase>&)>;
 

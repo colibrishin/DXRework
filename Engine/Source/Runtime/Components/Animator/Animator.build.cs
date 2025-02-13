@@ -15,7 +15,6 @@ public class Animator : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<DirectXTK>(target);        
         conf.AddPublicDependency<BaseAnimation>(target);
 
         conf.AddPrivateDependency<Shape>(target);

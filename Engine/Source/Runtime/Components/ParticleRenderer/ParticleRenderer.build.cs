@@ -16,9 +16,6 @@ public class ParticleRenderer : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<ShapeRenderComponent>(target);
         conf.AddPublicDependency<ComputeShader>(target);
-        
-        conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

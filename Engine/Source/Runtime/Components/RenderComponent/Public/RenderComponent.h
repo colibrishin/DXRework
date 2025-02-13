@@ -17,7 +17,7 @@ namespace Engine::Components
 		void OnDeserialized() override;
 
 #if WITH_EDITOR
-		void OnUIUpdate(UIContext* const parent, const float dt);
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif
 
 	protected:

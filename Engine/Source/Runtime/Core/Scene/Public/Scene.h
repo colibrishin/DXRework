@@ -121,8 +121,8 @@ namespace Engine
 		WeakObjVec  GetGameObjects(LayerSizeType layer) const;
 		Weak<Objects::Camera> GetMainCamera() const;
 
-		const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& GetObjectTree();
-		const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& GetCollisionTree();
+		const Octree& GetObjectTree();
+		const Octree& GetCollisionTree();
 
 		// Add cache component from the object.
 		template <typename T, typename CompLock = std::enable_if_t<std::is_base_of_v<Abstracts::Component, T>>>
@@ -339,8 +339,8 @@ namespace Engine
 		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
 		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
 		
-		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_position_tree_;
-		Octree<Weak<Abstracts::ObjectBase>, bounding_getter> m_object_collision_tree_;
+		Octree m_object_position_tree_;
+		Octree m_object_collision_tree_;
 
 		static std::atomic<bool> s_debug_observer_;
 

@@ -18,7 +18,6 @@ public class Core : EngineCommonProject
 
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<CoreEntity>(target);
         conf.AddPublicDependency<CoreSingleton>(target);
         conf.AddPrivateDependency<GCEM>(target);

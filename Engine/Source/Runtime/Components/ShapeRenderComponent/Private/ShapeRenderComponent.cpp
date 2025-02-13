@@ -1,7 +1,6 @@
 #include "ShapeRenderComponent.h"
 #include "ShapeRenderComponent.generated.h"
 
-#include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "UIHelpersResourceManager.h"
 
 namespace Engine::Components
@@ -81,9 +80,5 @@ namespace Engine::Components
 	const MetadataPath& ShapeRenderComponent::GetShapeMetadataPath() const
 	{
 		return m_shape_meta_path_;
-	}
-
-	ShapeRenderComponent::ShapeRenderComponent()
-		: RenderComponent() {
 	}
 }

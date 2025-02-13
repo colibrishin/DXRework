@@ -32,7 +32,7 @@ namespace Engine::Managers
 	{
 #if WITH_EDITOR
 		UIInterfaceAccessor::SetInterface<ImGuiUIInterface>();
-		WinAPI::WinAPIWrapper::RegisterHandler(ImGui_ImplWin32_WndProcHandler);
+		WinAPI::WinAPIWrapper::RegisterHandler("ImGuiManager", ImGui_ImplWin32_WndProcHandler);
 		
 		m_imgui_descriptor_ = GraphicInterfaceAccessor::GetInterface().GetHeap();
 

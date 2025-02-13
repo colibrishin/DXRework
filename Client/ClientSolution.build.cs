@@ -16,7 +16,6 @@ public class ClientProject : CommonProject
         SourceFilesExtensions.Add(".hlsl");
         SourceFilesExtensions.Add(".jpg");
         SourceFilesExtensions.Add(".png");
-        StripFastBuildSourceFiles = false;
 
         AddTargets(Utils.GetDefinedTarget());
     }
@@ -24,17 +23,18 @@ public class ClientProject : CommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-
-        conf.AdditionalCompilerOptions.Add("/FS");
-        conf.IsFastBuild = true;
         conf.SolutionFolder = @"Client";
-
-        string FastBuildPath = @"do-fastbuild.bat";
-        FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TextRenderer>(target);
+        conf.AddPublicDependency<Shape>(target);
+        conf.AddPublicDependency<ModelRenderer>(target);
+        conf.AddPrivateDependency<BoneAnimation>(target);
+        conf.AddPrivateDependency<Animator>(target);
+        conf.AddPrivateDependency<AnimationTexture>(target);
+        conf.AddPrivateDependency<InputManager>(target);
+        conf.AddPrivateDependency<PhysicsManager>(target);
     }
 }
 

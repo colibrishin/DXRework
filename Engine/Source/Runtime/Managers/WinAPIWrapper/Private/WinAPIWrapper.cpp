@@ -18,22 +18,22 @@ namespace WinAPI
 		// Check if the window is being destroyed.
 		case WM_DESTROY:
 		case WM_CLOSE:
-		{
-			PostQuitMessage(0);
-			return 0;
-		}
+			{
+				PostQuitMessage(0);
+				return 0;
+			}
 
 		// All other messages pass to the message handler in the system class.
 		default:
-		{
-			return WinAPIWrapper::GetInstance().MessageHandler(hwnd, umessage, wparam, lparam);
-		}
+			{
+				return WinAPIWrapper::GetInstance().MessageHandler(hwnd, umessage, wparam, lparam);
+			}
 		}
 	}
 
 	LRESULT WinAPIWrapper::MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
-		for (const auto& func : m_registered_handlers_)
+		for (const auto& [name, func] : m_registered_handlers_)
 		{
 			func(hwnd, msg, wparam, lparam);
 		}
@@ -173,8 +173,16 @@ namespace WinAPI
 		return s_hwnd_;
 	}
 
-	void WinAPIWrapper::RegisterHandler(const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& func)
+	void WinAPIWrapper::RegisterHandler(const std::string_view name, const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& func)
 	{
-		GetInstance().m_registered_handlers_.push_back(func);
+		GetInstance().m_registered_handlers_.emplace_back(name.data(), func);
+	}
+
+	void WinAPIWrapper::UnregisterHandler(const std::string_view name)
+	{
+		std::erase_if(GetInstance().m_registered_handlers_, [&name](const auto& pair)
+			{
+				return pair.first == name;
+			});
 	}
 } // namespace WinAPI

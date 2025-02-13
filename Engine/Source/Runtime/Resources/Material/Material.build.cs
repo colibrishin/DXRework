@@ -20,6 +20,5 @@ public class Material : EngineCommonProject
         conf.AddPublicDependency<AtlasAnimationTexture>(target);
         
         conf.AddPrivateDependency<Texture>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
     }
 }

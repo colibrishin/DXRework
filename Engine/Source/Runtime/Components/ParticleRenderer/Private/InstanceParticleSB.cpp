@@ -29,7 +29,7 @@ void Engine::Graphics::SBs::InstanceParticleSB::SetWorld(const Matrix& world)
     SetParam(0, world);
 }
 
-Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
+Engine::Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
 {
     return GetParam<Matrix>(0);
 }

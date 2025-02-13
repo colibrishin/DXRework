@@ -12,6 +12,14 @@
 
 #include "Shape.generated.h"
 
+namespace Engine
+{
+	struct ENGINE_SHAPE_API ShapeExtension
+	{
+		static void BindShapeToCollider(const Weak<Resources::Shape>& shape, const Weak<Components::Collider>& collider);
+	};
+}
+
 namespace Engine::Resources
 {
 	ECLASS(resource, serialize)

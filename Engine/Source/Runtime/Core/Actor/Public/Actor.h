@@ -24,8 +24,10 @@ namespace Engine::Abstracts
 		Weak<Scene>         GetScene() const;
 		const LocalActorID& GetLocalID() const;
 
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
-		
+#endif
+
 	protected:
 		explicit Actor();
 

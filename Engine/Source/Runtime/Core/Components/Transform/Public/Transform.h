@@ -7,11 +7,6 @@
 
 DEFINE_DELEGATE(OnTranfromChanged);
 
-namespace Engine
-{
-	inline static constexpr Vector3 g_forward = {0, 0, -1.f};
-}
-
 namespace Engine::Components
 {
 	ECLASS(serialize, component)
@@ -53,7 +48,7 @@ namespace Engine::Components
 		Vector3    GetAnimationScale() const;
 		Quaternion GetAnimationRotation() const;
 
-		// The direction moving towards to the screen if no rotation applied.
+		// The direction moving backward to the screen if no rotation applied.
 		Vector3 Forward() const;
 		Vector3 Right() const;
 		Vector3 Up() const;

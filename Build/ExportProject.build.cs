@@ -3,6 +3,7 @@ using System.Collections;
 using Microsoft.Win32;
 using Sharpmake;
 
+[Sharpmake.Export]
 public abstract class ExportProject : Project
 {
     protected ExportProject() : base(typeof(EngineTarget))

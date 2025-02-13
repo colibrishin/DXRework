@@ -58,6 +58,10 @@ public class EngineTarget : Target
 
 public abstract class EngineCommonProject : CommonProject 
 {
+    public EngineCommonProject() : base(true)
+    {
+    }
+
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
@@ -92,6 +96,7 @@ public abstract class CommonProject : Project
 
         conf.DumpDependencyGraph = true;
         conf.ExecuteTargetCopy = true;
+        conf.IncludeBlobbedSourceFiles = false;
 
         string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=EMPTY";
 
@@ -117,7 +122,6 @@ public abstract class CommonProject : Project
         conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
         conf.Options.Add(Options.Vc.Compiler.JumboBuild.Enable);
         conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.CPP20);
-        //conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
         if (target.Optimization == Optimization.Debug)
         {
             conf.Options.Add(Options.Vc.Compiler.Inline.Default);
@@ -135,6 +139,9 @@ public abstract class CommonProject : Project
 
         // Exceptions
         conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+
+        conf.Options.Add(Options.Vc.Linker.LinkLibraryDependencies.Enable);
+        conf.Options.Add(Options.Vc.CodeAnalysis.ClangTidyCodeAnalysis.Enable);
 
         // Debug
         {
@@ -174,22 +181,21 @@ public abstract class CommonProject : Project
         //    //conf.ForceSymbolReferences.Add("IMPLEMENT_MODULE_" + conf.Project.Name);
         //}
 
-        // Runtime Library
         {
-            //if (target.LaunchType == ELaunchType.Editor)
+            if (target.LaunchType == ELaunchType.Editor)
             {
                 if (target.Optimization == Optimization.Debug)
                     conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
                 else
                     conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
             }
-            //else
-            //{
-            //    if (target.Optimization == Optimization.Debug)
-            //        conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebug);
-            //    else
-            //        conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreaded);
-            //}
+            else
+            {
+                if (target.Optimization == Optimization.Debug)
+                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebug);
+                else
+                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreaded);
+            }
         }
         
         string EngineDir = Utils.GetEngineDir();
@@ -208,11 +214,7 @@ public abstract class CommonProject : Project
         Exec.FastBuildExecAlways = true;
 
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);
-
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
-
-        conf.AdditionalCompilerOptions.Add("/FS");
-        conf.IsFastBuild = true;
 
         {
             conf.Defines.Add("NOMINMAX=1");
@@ -247,6 +249,11 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
             conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
             conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
+        }
+
+        if (target.GraphicAPI == EGraphicAPI.D3D12)
+        {
+            conf.AddPublicDependency<DirectXTK>(target);
         }
     }
 }

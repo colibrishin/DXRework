@@ -12,6 +12,7 @@
 #endif
 
 #include "TypeLibrary/Public/TypeLibrary.h"
+#include "InputInterface.h"
 
 #include "InputManager.generated.h"
 
@@ -33,12 +34,28 @@ namespace Engine::Managers
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
-		bool HasKeyChanged(const DirectX::Keyboard::Keys key) const;
-		bool IsKeyPressed(const DirectX::Keyboard::Keys key) const;
-		bool HasScrollChanged(int& value) const;
+		template <typename Enum>
+		bool IsKeyDown(const Enum key) const
+		{
+			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			return ii.IsKeyDown(key);
+		}
 
-		DirectX::Mouse::State GetMouseState() const;
-		DirectX::Keyboard::State GetKeyboardState() const;
+		template <typename Enum>
+		bool IsKeyPressed(const Enum key) const
+		{
+			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			return ii.IsKeyPressed(key);
+		}
+
+		template <typename Enum>
+		bool IsKeyReleased(const Enum key) const
+		{
+			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			return ii.IsKeyReleased(key);
+		}
+
+		bool HasScrollChanged(int& value) const;
 
 		static Vector2 GetNormalizedMousePosition();
 
@@ -50,16 +67,8 @@ namespace Engine::Managers
 		friend struct SingletonDeleter;
 		~InputManager() override = default;
 
-		LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-
 		Quaternion m_mouse_rot_x_;
 		Quaternion m_mouse_rot_y_;
-
-		std::unique_ptr<DirectX::Mouse> m_mouse_;
-		std::unique_ptr<DirectX::Keyboard> m_keyboard_;
-
-		DirectX::Mouse::State m_previous_mouse_state_;
-		DirectX::Keyboard::State m_previous_keyboard_state_;
 
 		Vector2 m_previous_mouse_position_;
 		Vector2 m_current_mouse_position_;

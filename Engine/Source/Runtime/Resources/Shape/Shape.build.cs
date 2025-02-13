@@ -21,7 +21,6 @@ public class Shape : EngineCommonProject
         conf.AddPublicDependency<Bone>(target);
         conf.AddPublicDependency<Material>(target);
 
-        conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<BaseAnimation>(target);
     }

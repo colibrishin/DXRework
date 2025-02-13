@@ -10,6 +10,8 @@
 
 void Engine::Components::SoundPlayer::Initialize()
 {
+    Component::Initialize();
+
     if (const Strong<Engine::Abstracts::ObjectBase>& owner = GetOwner().lock())
     {
         owner->onComponentRemoved.Listen(GetSharedPtr<SoundPlayer>(), &SoundPlayer::CheckTransform);

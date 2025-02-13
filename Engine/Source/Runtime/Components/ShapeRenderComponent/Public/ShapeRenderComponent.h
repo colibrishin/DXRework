@@ -9,7 +9,7 @@
 namespace Engine::Components
 {
 	ECLASS(component, abstract, serialize)
-	class ENGINE_SHAPERENDERCOMPONENT_API ShapeRenderComponent : public Engine::Components::RenderComponent
+	class ENGINE_SHAPERENDERCOMPONENT_API ShapeRenderComponent : public RenderComponent
 	{
 		GENERATE_BODY
 	public:
@@ -19,15 +19,12 @@ namespace Engine::Components
 		void OnDeserialized() override;
 
 #if WITH_EDITOR
-		void OnUIUpdate(UIContext* const parent, const float dt);
+		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif
 
 		void SetShape(const Weak<Resources::Shape>& shape);
 		[[nodiscard]] Weak<Resources::Shape> GetShape() const;
 		[[nodiscard]] const MetadataPath& GetShapeMetadataPath() const;
-
-	protected:
-		ShapeRenderComponent();
 
 	private:		
 		EPROPERTY()
@@ -37,6 +34,6 @@ namespace Engine::Components
 		bool m_shape_set_dialog_ = false;
 #endif
 
-		Strong<Resources::Shape> m_shape_;
+		Strong<Resources::Shape> m_shape_{};
 	};
 }

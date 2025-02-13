@@ -16,6 +16,5 @@ public class RaycastExtension : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<DirectXMath>(target);
     }
 }

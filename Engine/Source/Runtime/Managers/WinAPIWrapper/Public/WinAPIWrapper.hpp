@@ -25,7 +25,8 @@ namespace WinAPI
         static void UpdateWindowSize(const uint32_t width, const uint32_t height);
         static void Update();
         static HWND GetHWND();
-        static void RegisterHandler(const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& func);
+        static void RegisterHandler(const std::string_view name, const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& func);
+        static void UnregisterHandler(const std::string_view name);
 
     private:
         WinAPIWrapper() = default;
@@ -36,7 +37,7 @@ namespace WinAPI
         LRESULT CALLBACK MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
         static HWND InitializeWindow(HINSTANCE hInstance);
 
-        std::vector<std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>> m_registered_handlers_;
+        std::vector<std::pair<std::string, std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>>> m_registered_handlers_;
 
         static std::unique_ptr<WinAPIWrapper> s_instance_;
         static std::wstring                   s_application_name_;

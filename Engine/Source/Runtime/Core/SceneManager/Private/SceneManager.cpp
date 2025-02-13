@@ -265,6 +265,11 @@ namespace Engine::Managers
 #endif
 	}
 
+	bool SceneManager::IsPlaying() const
+	{
+		return m_b_playing_;
+	}
+
 #if WITH_EDITOR
 	void SceneManager::RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
 	{

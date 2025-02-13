@@ -6,6 +6,7 @@
 
 void HpTextComponent::Initialize()
 {
+	Component::Initialize();
 	SetText("");
 	SetPosition({ 0.f, 64.f });
 	SetColor({ 1.f, 1.f, 1.f, 1.f });

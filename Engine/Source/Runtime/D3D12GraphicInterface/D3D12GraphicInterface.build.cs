@@ -15,7 +15,6 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<DX12Agility>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<DirectXTex>(target);
 
         conf.AddPrivateDependency<Font>(target);

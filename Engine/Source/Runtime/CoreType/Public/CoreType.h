@@ -29,6 +29,7 @@
 #include <boost/serialization/nvp.hpp>
 #include <boost/archive/detail/iserializer.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/serialization/access.hpp>
 
 template<class T, std::size_t... N>
 constexpr T bswap_impl(T i, std::index_sequence<N...>)

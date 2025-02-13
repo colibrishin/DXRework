@@ -721,12 +721,12 @@ namespace Engine
 		return m_mainCamera_;
 	}
 
-	const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& Scene::GetObjectTree()
+	const Octree& Scene::GetObjectTree()
 	{
 		return m_object_position_tree_;
 	}
 
-	const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>& Scene::GetCollisionTree()
+	const Octree& Scene::GetCollisionTree()
 	{
 		return m_object_collision_tree_;
 	}

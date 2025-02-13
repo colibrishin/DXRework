@@ -26,9 +26,11 @@ namespace Engine::Resources
 		void OnDeserialized() override;
 
 		const std::vector<Weak<BoneAnimation>>& GetAnimations() const;
+		Weak<BoneAnimation> GetAnimation(const size_t idx) const;
 
 	protected:
 		void Load_INTERNAL() override;
+		void Unload_INTERNAL() override;
 
 	private:
 		AnimationTexture()
@@ -43,6 +45,8 @@ namespace Engine::Resources
 		);
 
 		EPROPERTY()
+		std::vector<std::filesystem::path>            m_animations_meta_path_;
+
 		std::vector<Strong<BoneAnimation>>            m_animations_;
 		std::vector<Weak<BoneAnimation>>              m_cached_animations_;
 		

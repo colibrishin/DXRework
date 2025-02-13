@@ -14,6 +14,5 @@ public class ProjectionFrustum : EngineCommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
     }
 }

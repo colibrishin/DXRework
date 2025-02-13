@@ -30,6 +30,7 @@ namespace Engine::Abstracts
 		return m_local_id_;
 	}
 
+#if WITH_EDITOR
 	void Actor::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent)
@@ -51,6 +52,7 @@ namespace Engine::Abstracts
 			*(parent) |= ui.NewLabelAndUInt({"Local ID", const_cast<LocalActorID&>(GetLocalID()), 0.f, 0, 0, false});
 		}
 	}
+#endif
 
 	Actor::Actor()
 		: m_assigned_scene_({}),

@@ -6,7 +6,7 @@ using Sharpmake;
 [Generate]
 public class RenderComponent : EngineCommonProject
 {
-    public RenderComponent() { }
+    public RenderComponent() {}
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

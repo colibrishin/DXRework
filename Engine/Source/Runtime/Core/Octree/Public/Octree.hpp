@@ -18,7 +18,7 @@ namespace Engine
 
 	// todo: generic octree
 	template <typename WeakT, typename BoundingValueGetter, float Epsilon = CFG_EPSILON>
-	class Octree
+	class octree_impl
 	{
 	private:
 		constexpr static size_t   octant_count   = 8;
@@ -56,12 +56,12 @@ namespace Engine
 		};
 
 	public:
-		Octree(): m_parent_(nullptr),
+		octree_impl(): m_parent_(nullptr),
 		  m_bounds_(Vector3::Zero, map_size_vec), // Root node is the whole map
 		  m_b_initialized_(false),
 		  m_life_count_(node_lifespan) {}
 
-		Octree(const Octree& other)
+		octree_impl(const octree_impl& other)
 			: m_parent_(other.m_parent_),
 			  m_active_children_(other.m_active_children_),
 			  m_values_(other.m_values_),
@@ -74,7 +74,7 @@ namespace Engine
 			{
 				if (other.m_children_[i])
 				{
-					m_children_[i]            = std::make_unique<Octree>(*other.m_children_[i]);
+					m_children_[i]            = std::make_unique<octree_impl>(*other.m_children_[i]);
 					m_children_[i]->m_parent_ = this;
 				}
 			}
@@ -85,9 +85,9 @@ namespace Engine
 			return m_values_;
 		}
 
-		std::array<const Octree*, 8> Next() const
+		std::array<const octree_impl*, 8> Next() const
 		{
-			std::array<const Octree*, 8> next;
+			std::array<const octree_impl*, 8> next;
 
 			for (int i = 0; i < octant_count; ++i)
 			{
@@ -155,8 +155,8 @@ namespace Engine
 			}
 
 			// This will be the last node that successfully contains the object
-			Octree*             last = nullptr;
-			std::stack<Octree*> stack;
+			octree_impl*             last = nullptr;
+			std::stack<octree_impl*> stack;
 			stack.push(this);
 
 			// exact match (which is the smallest node that can contain the object)
@@ -225,7 +225,7 @@ namespace Engine
 							if (bound_check == DirectX::ContainmentType::CONTAINS)
 							{
 								// Expand the node and check same above
-								node_children[i]            = std::unique_ptr<Octree>(new Octree{bound});
+								node_children[i]            = std::unique_ptr<octree_impl>(new octree_impl{bound});
 								node_children[i]->m_parent_ = node;
 								node_children[i]->Build();
 								node_active_children.set(i);
@@ -258,7 +258,7 @@ namespace Engine
 
 		void Remove(const WeakT& obj)
 		{
-			std::stack<Octree*> stack;
+			std::stack<octree_impl*> stack;
 			stack.push(this);
 
 			while (!stack.empty())
@@ -317,8 +317,8 @@ namespace Engine
 
 			// todo: check whether the node is orphan.
 
-			std::stack<Octree*>     stack;
-			std::map<Octree*, bool> visited;
+			std::stack<octree_impl*>     stack;
+			std::map<octree_impl*, bool> visited;
 
 			stack.push(this);
 
@@ -409,7 +409,7 @@ namespace Engine
 					{
 						if (attempt > retry_exhaust)
 						{
-							throw std::logic_error("Octree update failed.");
+							throw std::logic_error("octree_impl update failed.");
 						}
 
 						node->UpdateInternal();
@@ -463,7 +463,7 @@ namespace Engine
 									if (bound_check == DirectX::ContainmentType::CONTAINS)
 									{
 										// Expand the node
-										node_children[i]            = std::unique_ptr<Octree>(new Octree{bound});
+										node_children[i]            = std::unique_ptr<octree_impl>(new octree_impl{bound});
 										node_children[i]->m_parent_ = node;
 										node_children[i]->Build();
 										node_active_children.set(i);
@@ -502,7 +502,7 @@ namespace Engine
 
 		void Clear()
 		{
-			std::stack<Octree*> stack;
+			std::stack<octree_impl*> stack;
 			stack.push(this);
 
 			while (!stack.empty())
@@ -532,7 +532,7 @@ namespace Engine
 
 		void Iterate(const Vector3& point, const std::function<bool(const WeakT&)>& func) const
 		{
-			std::queue<const Octree*> q;
+			std::queue<const octree_impl*> q;
 			q.push(this);
 
 			while (!q.empty())
@@ -563,8 +563,8 @@ namespace Engine
 
 		std::vector<WeakT> Nearest(const Vector3& point, float distance) const
 		{
-			std::stack<const Octree*> q;
-			std::set<const Octree*>   visited;
+			std::stack<const octree_impl*> q;
+			std::set<const octree_impl*>   visited;
 			std::vector<WeakT>        result;
 			const BoundingSphere      search_sphere(point, distance);
 
@@ -614,8 +614,8 @@ namespace Engine
 			const Vector3& point, const Vector3& direction, size_t count = 0, float distance = 0.f
 		) const
 		{
-			std::stack<const Octree*> q;
-			std::set<const Octree*>   visited;
+			std::stack<const octree_impl*> q;
+			std::set<const octree_impl*>   visited;
 			std::vector<WeakT>        result;
 			float                     dist = 0.f;
 
@@ -681,7 +681,7 @@ namespace Engine
 			       Epsilon * std::fmaxf(1.0f, std::fmaxf(std::fabsf(a), std::fabsf(b)));
 		}
 
-		explicit Octree(const BoundingBox& bounds)
+		explicit octree_impl(const BoundingBox& bounds)
 			: m_parent_(nullptr),
 			  m_b_initialized_(false),
 			  m_life_count_(node_lifespan)
@@ -689,7 +689,7 @@ namespace Engine
 			m_bounds_ = bounds;
 		}
 
-		explicit Octree(const BoundingBox& bounds, const std::vector<WeakT>& values)
+		explicit octree_impl(const BoundingBox& bounds, const std::vector<WeakT>& values)
 			: m_parent_(nullptr),
 			  m_b_initialized_(false),
 			  m_life_count_(node_lifespan)
@@ -701,7 +701,7 @@ namespace Engine
 		// Initialize a node
 		void Build()
 		{
-			std::stack<Octree*> stack;
+			std::stack<octree_impl*> stack;
 			stack.push(this);
 
 			while (!stack.empty())
@@ -756,7 +756,7 @@ namespace Engine
 				{
 					if (!octant_values[i].empty())
 					{
-						node_children[i]            = std::unique_ptr<Octree>(new Octree{octants[i], octant_values[i]});
+						node_children[i]            = std::unique_ptr<octree_impl>(new octree_impl{octants[i], octant_values[i]});
 						node_children[i]->m_parent_ = node;
 						node_children[i]->Build();
 						node_active_children.set(i);
@@ -777,7 +777,7 @@ namespace Engine
 			// Keep in mind that this is rebuilding the whole tree from root node.
 			m_b_initialized_ = false;
 
-			std::stack<Octree*> stack;
+			std::stack<octree_impl*> stack;
 			stack.push(root());
 
 			// Scan the whole tree and collect all objects
@@ -908,12 +908,12 @@ namespace Engine
 			return bound;
 		}
 
-		Octree* root()
+		octree_impl* root()
 		{
 			return m_parent_ ? m_parent_->root() : this;
 		}
 
-		Octree* parent() const
+		octree_impl* parent() const
 		{
 			return m_parent_ ? m_parent_ : nullptr;
 		}
@@ -962,8 +962,8 @@ namespace Engine
 			return m_bounds_.Center;
 		}
 
-		Octree*                                           m_parent_;
-		std::array<std::unique_ptr<Octree>, octant_count> m_children_;
+		octree_impl*                                           m_parent_;
+		std::array<std::unique_ptr<octree_impl>, octant_count> m_children_;
 		std::bitset<octant_count>                         m_active_children_;
 		std::vector<WeakT>                                m_values_;
 

@@ -6,7 +6,7 @@ using Sharpmake;
 [Generate]
 public class CoreType : EngineCommonProject
 {
-    public CoreType() { }
+    public CoreType() {}
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

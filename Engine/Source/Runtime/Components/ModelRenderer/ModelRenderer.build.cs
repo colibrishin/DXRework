@@ -16,7 +16,5 @@ public class ModelRenderer : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ShapeRenderComponent>(target);
-        
-        conf.AddPrivateDependency<DirectXTK>(target);
     }
 }

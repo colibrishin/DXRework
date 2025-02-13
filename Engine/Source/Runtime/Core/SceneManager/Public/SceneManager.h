@@ -65,6 +65,7 @@ namespace Engine::Managers
 		void FixedUpdate(const float dt) override;
 		void PostRender(const float dt) override;
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
+		bool IsPlaying() const;
 
 #if WITH_EDITOR
 		void RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate);
@@ -92,5 +93,7 @@ namespace Engine::Managers
 
 		Weak<Scene>                m_active_scene_{};
 		std::vector<Strong<Scene>> m_scenes_{};
+		
+		bool m_b_playing_ = false;
 	};
 } // namespace Engine::Managers

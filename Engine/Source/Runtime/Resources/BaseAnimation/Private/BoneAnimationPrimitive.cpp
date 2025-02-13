@@ -29,7 +29,7 @@ int Engine::Graphics::BoneAnimationPrimitive::GetIndex() const noexcept
 	return bone_idx;
 }
 
-Vector3 Engine::Graphics::BoneAnimationPrimitive::GetPosition(const float time) const
+Engine::Vector3 Engine::Graphics::BoneAnimationPrimitive::GetPosition(const float time) const
 {
 	if (m_positions_.size() == 1)
 	{
@@ -52,7 +52,7 @@ Vector3 Engine::Graphics::BoneAnimationPrimitive::GetPosition(const float time) 
 	return m_positions_.back().second;
 }
 
-Vector3 Engine::Graphics::BoneAnimationPrimitive::GetScale(const float time) const
+Engine::Vector3 Engine::Graphics::BoneAnimationPrimitive::GetScale(const float time) const
 {
 	if (m_scales_.size() == 1)
 	{
@@ -75,7 +75,7 @@ Vector3 Engine::Graphics::BoneAnimationPrimitive::GetScale(const float time) con
 	return m_scales_.back().second;
 }
 
-Quaternion Engine::Graphics::BoneAnimationPrimitive::GetRotation(const float time) const
+Engine::Quaternion Engine::Graphics::BoneAnimationPrimitive::GetRotation(const float time) const
 {
 	for (size_t i = 0; i < m_rotations_.size() - 1; ++i)
 	{

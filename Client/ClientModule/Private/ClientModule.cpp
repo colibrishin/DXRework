@@ -1,5 +1,5 @@
-#include "ClientModule/Public/Client.h"
-#include "Client.generated.h"
+#include "ClientModule/Public/ClientModule.h"
+#include "ClientModule.generated.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 

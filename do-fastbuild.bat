@@ -10,7 +10,7 @@ IF NOT "%~1" == "-clean" (
 			echo Build %~1
 		)
 
-		start "" /B "./Programs/Sharpmake/tools/FastBuild/Windows-x64/FBuild.exe" %~1 %~2 %~3 -config %%A.bff
+		start "" /B "./Programs/Sharpmake/tools/FastBuild/Windows-x64/FBuild.exe" %~1 %~2 %~3 -config %%A.bff -ide -nofastcancel -wrapper
 	)
 )
 
@@ -27,6 +27,6 @@ IF "%~1" == "-clean" (
 			echo Build %~1
 		)
 
-		start "" /B "./Programs/Sharpmake/tools/FastBuild/Windows-x64/FBuild.exe" -clean %~2 %FBPARAM1% %FBPARAM2% -config %%A.bff
+		start "" /B "./Programs/Sharpmake/tools/FastBuild/Windows-x64/FBuild.exe" -clean %~2 %FBPARAM1% %FBPARAM2% -config %%A.bff -ide -nofastcancel -wrapper
 	)
 )

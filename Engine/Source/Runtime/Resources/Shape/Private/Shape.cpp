@@ -21,6 +21,22 @@
 
 #include "UIHelpersResourceManager.h"
 
+void Engine::ShapeExtension::BindShapeToCollider(const Weak<Resources::Shape>& shape, const Weak<Components::Collider>& collider)
+{
+	if (const Strong<Resources::Shape>& locked_shape = shape.lock())
+	{
+		if (const Strong<Components::Collider>& locked_collider = collider.lock())
+		{
+			BoundingBox bbox = locked_shape->GetBoundingBox();
+			BoundingOrientedBox obb;
+			obb.Center = bbox.Center;
+			obb.Extents = bbox.Extents;
+
+			locked_collider->SetBoundingBox(obb);
+		}
+	}
+}
+
 namespace Engine::Resources
 {
 	Shape::Shape(const std::filesystem::path& path)
