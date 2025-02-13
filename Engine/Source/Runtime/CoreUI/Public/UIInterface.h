@@ -167,7 +167,7 @@ namespace Engine
     NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
     NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
-    struct UIContext
+    struct ENGINE_COREUI_API UIContext
     {
         explicit UIContext(UITokenBase* parent)
         {
