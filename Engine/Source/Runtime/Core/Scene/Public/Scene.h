@@ -86,7 +86,7 @@ namespace Engine
 		// If the object is bound to another scene or layer, it will be moved to this scene and layer.
 		// Note that the object will be added finally at the next frame.
 		template <typename T, typename ObjLock = std::enable_if_t<std::is_base_of_v<Abstracts::ObjectBase, T>>>
-		void AddGameObject(LayerSizeType layer, const Strong<T>& obj)
+		void AddGameObject(const LayerSizeType layer, const Strong<T>& obj)
 		{
 			const auto& downcast = obj->template GetSharedPtr<Abstracts::ObjectBase>();
 			addGameObjectImpl(layer, downcast);
@@ -94,12 +94,11 @@ namespace Engine
 
 		// Create Object and add it to the scene.
 		// Note that the object will be added finally at the next frame.
-		template <typename T, typename... Args, typename ObjLock = std::enable_if_t<std::is_base_of_v<
-			          Abstracts::ObjectBase, T>>>
-		Weak<T> CreateGameObject(LayerSizeType layer, Args&&... args)
+		template <typename T, typename... Args> requires std::is_base_of_v<Abstracts::ObjectBase, T>
+		Weak<T> CreateGameObject(const LayerSizeType layer, Args&&... args)
 		{
 			// Create object, dynamic allocation from scene due to the access limitation.
-			const auto& obj_t = boost::make_shared<T>(args...);
+			const auto& obj_t = Strong<T>(new T(std::forward<Args>(args)...));
 			const auto& obj   = obj_t->template GetSharedPtr<Abstracts::ObjectBase>();
 
 			// Set internal information as this scene and layer, segmenting this process for
@@ -110,9 +109,9 @@ namespace Engine
 			return obj_t;
 		}
 
-		void ChangeLayer(LayerSizeType to, GlobalEntityID id);
+		void ChangeLayer(const LayerSizeType to, const GlobalEntityID id);
 
-		void RemoveGameObject(GlobalEntityID id, LayerSizeType layer);
+		void RemoveGameObject(const GlobalEntityID id, const LayerSizeType layer);
 
 		Weak<Abstracts::ObjectBase> FindGameObject(GlobalEntityID id);
 		Weak<Abstracts::ObjectBase> FindGameObjectByLocalID(LocalActorID id);
@@ -290,7 +289,7 @@ namespace Engine
 		void AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj);
 
 		// Set the scene and layer to the object, and schedule the object to be added at the next frame.
-		void addGameObjectImpl(LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
+		void addGameObjectImpl(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
 		// Add cache component from the object.
 		void addCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 		// Remove cache component from the object.
@@ -298,9 +297,9 @@ namespace Engine
 		
 		// Functions for the next frame.
 		// Add the object from the scene finally. this function should be called at the next frame.
-		void AddObjectFinalize(LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
+		void AddObjectFinalize(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
 		// Remove the object from the scene finally. this function should be called at the next frame.
-		void RemoveObjectFinalize(GlobalEntityID id, LayerSizeType layer);
+		void RemoveObjectFinalize(const GlobalEntityID id, const LayerSizeType layer);
 		void initializeFinalize();
 
 		void synchronize(const Weak<Scene>& ptr_scene);

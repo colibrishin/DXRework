@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <unordered_set>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <type_traits>
@@ -30,6 +31,33 @@
 #include <boost/archive/detail/iserializer.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/pool/pool_alloc.hpp>
+
+#include <magic_enum.hpp>
+
+template <typename Enum>
+constexpr auto CStrEnumStrings()
+{
+	constexpr auto enum_val = magic_enum::enum_names<Enum>();
+	std::array<const char*, enum_val.size()> ret{};
+	for (size_t i = 0; i < enum_val.size(); ++i)
+	{
+		ret[i] = enum_val[i].data();
+	}
+	return ret;
+}
+
+template <typename Enum>
+Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
+{
+	if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
+		format_validity.has_value())
+	{
+		return format_validity.value();
+	}
+
+	return static_cast<Enum>(0);
+}
 
 template<class T, std::size_t... N>
 constexpr T bswap_impl(T i, std::index_sequence<N...>)
@@ -1091,10 +1119,100 @@ struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_ty
 
 struct ENGINE_CORETYPE_API ConstructorAccess 
 {
-	template <typename T, typename... Args>
-	static boost::shared_ptr<T> Create(Args&&... args)
+private:
+	template <typename T>
+	inline static std::vector<T*>& GetInstanced()
 	{
-		return boost::shared_ptr<T>(new T(std::forward<Args>(args)...));
+		static std::vector<T*> instanced{};
+		return instanced;
+	}
+
+	template <typename T>
+	inline static size_t& GetCurrentRegion()
+	{
+		static size_t region = 0;
+		return region;
+	}
+
+	template <typename T>
+	inline static __mmask64& GetInstancedMask(const size_t region)
+	{
+		static std::map<size_t, __mmask64> masks{};
+		return masks[region];
+	}
+
+	template <typename T>
+	inline static uint64_t CurrentRegionAvailable()
+	{
+		return _tzcnt_u64(GetInstancedMask<T>(GetCurrentRegion<T>()));
+	}
+
+	template <typename T>
+	inline static T* __vectorcall CheckAndAllocate(size_t& region, size_t& offset)
+	{
+		if (offset = CurrentRegionAvailable<T>())
+		{
+			region = GetCurrentRegion<T>();
+			return GetInstanced<T>()[region] + offset;
+		}
+
+		region = ++GetCurrentRegion<T>();
+		GetInstanced<T>().at(region) = GetAllocator<T>().allocate(std::numeric_limits<uint64_t>::digits);
+		return GetInstanced<T>()[region];
+	}
+
+	template <typename T>
+	inline static void __vectorcall MarkDestroyed(size_t region, size_t offset)
+	{
+		GetInstancedMask<T>(region) &= ~(1 << offset);
+	}
+
+	template <typename T>
+	inline static boost::fast_pool_allocator<T>& GetAllocator()
+	{
+		static boost::fast_pool_allocator<T> alloc{};
+		static std::once_flag once_flag;
+		std::call_once(once_flag, []()
+			{
+				std::atexit([]()
+					{
+						for (T* ptr : GetInstanced<T>())
+						{
+							alloc.deallocate(ptr);
+						}
+					});
+			});
+		return alloc;
+	}
+
+	template <typename T>
+	struct PoolDeleter
+	{
+		size_t region = -1;
+		size_t offset = -1;
+
+		void operator()(T* ptr) const
+		{
+			boost::fast_pool_allocator<T>& alloc = GetAllocator<T>();
+			alloc.destroy(ptr);
+
+			if (region == -1 || offset == -1)
+			{
+				__debugbreak();
+			}
+
+			MarkDestroyed<T>(region, offset);
+		}
+	};
+
+public:
+	template <typename T, typename... Args>
+	inline static boost::shared_ptr<T> Create(Args&&... args)
+	{
+		size_t region, offset;
+		T* ptr = CheckAndAllocate<T>(region, offset);
+		new(ptr) T(std::forward<Args>(args)...);
+		return boost::shared_ptr<T>(ptr, PoolDeleter<T>(region, offset));
 	}
 };
 

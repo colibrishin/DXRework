@@ -585,7 +585,7 @@ namespace Engine
 					{
 						if (const auto& locked = v.lock())
 						{
-							if (const auto& bounding = BoundingValueGetter::value(*locked);
+							if (const auto& bounding = BoundingValueGetter::value(locked);
 								bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere))
 							{
 								result.push_back(v);
@@ -636,7 +636,7 @@ namespace Engine
 					{
 						if (const auto& locked = v.lock())
 						{
-							if (const auto& bounding = BoundingValueGetter::value(*locked);
+							if (const auto& bounding = BoundingValueGetter::value(locked);
 								bounding.TestRay(point, direction, dist))
 							{
 								if (!FloatCompare(distance, 0.f))

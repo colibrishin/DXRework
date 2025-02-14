@@ -20,9 +20,9 @@ namespace Engine
 		void Update() override;
 		LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 		
-		bool IsKeyDown(const Keys key) const noexcept override;
-		bool IsKeyPressed(const Keys key) const noexcept override;
-		bool IsKeyReleased(const Keys key) const noexcept override;
+		bool IsKeyDown(const Keyboard::Keys key) const noexcept override;
+		bool IsKeyPressed(const Keyboard::Keys key) const noexcept override;
+		bool IsKeyReleased(const Keyboard::Keys key) const noexcept override;
 
 		bool IsKeyDown(const eMouseButtonEnum key) const noexcept override;
 		bool IsKeyPressed(const eMouseButtonEnum key) const noexcept override;

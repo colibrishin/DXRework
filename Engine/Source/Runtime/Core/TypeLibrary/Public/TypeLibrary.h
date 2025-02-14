@@ -55,6 +55,7 @@ using Engine::BoundingOrientedBox;
 using Engine::BoundingSphere;
 
 inline constexpr static Engine::Vector3 g_forward = { 0.f, 0.f, 1.f };
+inline constexpr static Engine::Vector3 g_backward = { 0.f, 0.f, -1.f };
 
 namespace boost::serialization
 {
@@ -678,6 +679,7 @@ namespace Engine
 	class Script;
 	class Scene;
 	class Layer;
+	class Object;
 
 	namespace Graphics
 	{

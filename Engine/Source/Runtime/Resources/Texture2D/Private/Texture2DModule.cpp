@@ -71,7 +71,7 @@ bool Engine::Texture2DModule::InitializeImpl()
 			*context |= ui.NewLabelAndULLD({"Width", desc.Width, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt({"Height", desc.Height, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt16({"Depth or Array Size", desc.DepthOrArraySize, 0.1f, 0, 0, true});
-			*context |= ui.NewCombobox({"Format", reinterpret_cast<int*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size()}); // should recast before use, non-linear enum
+			*context |= ui.NewCombobox({"Format", reinterpret_cast<int*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size(), true }); // should recast before use, non-linear enum
 
 			{
 				*context += ui.NewListBox({"Resource Flags", -1, 0});
@@ -83,7 +83,7 @@ bool Engine::Texture2DModule::InitializeImpl()
 			}
 
 			*context |= ui.NewLabelAndUInt16({"Mips Level", desc.MipsLevel, 0.1f, 0, 0, true});
-			*context |= ui.NewComboboxUInt8({"Texture layout", reinterpret_cast<uint8_t*>(&desc.Layout), tex_layout_cstr.data(), tex_layout_cstr.size()}); // should recast before use, non-linear enum
+			*context |= ui.NewComboboxUInt8({"Texture layout", reinterpret_cast<uint8_t*>(&desc.Layout), tex_layout_cstr.data(), tex_layout_cstr.size() , true }); // should recast before use, non-linear enum
 			*context |= ui.NewLabelAndUInt({"Sampler Count", desc.SampleDesc.Count, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt({"Sampler Quality", desc.SampleDesc.Quality, 0.1f, 0, 0, true});
 

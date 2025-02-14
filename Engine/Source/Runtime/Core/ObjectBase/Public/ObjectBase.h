@@ -136,10 +136,10 @@ namespace Engine::Abstracts
 	protected:
 		explicit ObjectBase(const eDefObjectType type = static_cast<eDefObjectType>(0))
 			: Actor(),
-			  m_parent_id_(g_invalid_id),
-			  m_type_(type),
-			  m_active_(true),
-			  m_culled_(true) { };
+			m_parent_id_(g_invalid_id),
+			m_type_(type),
+			m_active_(true),
+			m_culled_(true) {};
 
 	private:
 		friend class Scene;
@@ -211,6 +211,8 @@ namespace Engine::Abstracts
 
 	private:
 		bool m_b_add_component_dialog_opened_ = false;
+		bool m_b_child_dialog_ = false;
+		bool m_b_child_add_dialog_ = false;
 #endif
 		Weak<ObjectBase>                                     m_parent_;
 		std::map<LocalActorID, Weak<ObjectBase>>             m_children_cache_;
@@ -221,8 +223,8 @@ namespace Engine::Abstracts
 
 namespace Engine 
 {
-	template struct ENGINE_CORE_API FactoryTemplate<Engine::Abstracts::ObjectBase, const eDefObjectType>;
-	using ObjectFactory = FactoryTemplate<Engine::Abstracts::ObjectBase, const eDefObjectType>;
+	template struct ENGINE_CORE_API FactoryTemplate<Engine::Abstracts::ObjectBase>;
+	using ObjectFactory = FactoryTemplate<Engine::Abstracts::ObjectBase>;
 }
 
 #define REGISTER_OBJECT(TYPE) Engine::ObjectFactory::Register<##TYPE##>();

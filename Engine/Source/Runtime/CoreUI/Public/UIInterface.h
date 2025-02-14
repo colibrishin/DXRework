@@ -14,6 +14,7 @@ namespace Engine
     {
         std::string label{};
         bool        dialogOpened = false;
+        std::unordered_map<std::string, std::string> temporaryStrings{};
     };
 
 	struct ENGINE_COREUI_API UITokenBase
@@ -137,8 +138,8 @@ namespace Engine
     NEW_TOKEN_DECL(TreeNode, const std::string_view)
     NEW_TOKEN_DECL(Selectable, const std::string_view, bool&)
     NEW_TOKEN_DECL(Checkbox, const std::string_view, bool&)
-    NEW_TOKEN_DECL(Combobox, const std::string_view, int*, const char* const*, const size_t)
-    NEW_TOKEN_DECL(ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t)
+    NEW_TOKEN_DECL(Combobox, const std::string_view, int*, const char* const*, const size_t, const bool)
+    NEW_TOKEN_DECL(ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t, const bool)
     NEW_TOKEN_DECL(Text, const std::string_view)
     NEW_TOKEN_DECL(Separator)
     NEW_TOKEN_DECL(Table, std::string_view, size_t);
@@ -164,11 +165,10 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
-    NEW_TOKEN_DECL(LabelAndVec2, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
     NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
-    struct ENGINE_COREUI_API UIContext
+    struct UIContext
     {
         explicit UIContext(UITokenBase* parent)
         {
@@ -321,7 +321,6 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(Table)
         TOKEN_PURE_GETTER_DECL(TableRow)
         TOKEN_PURE_GETTER_DECL(TableColumn)
-        TOKEN_PURE_GETTER_DECL(LabelAndVec2)
 
         virtual void NewFrame() = 0;
 

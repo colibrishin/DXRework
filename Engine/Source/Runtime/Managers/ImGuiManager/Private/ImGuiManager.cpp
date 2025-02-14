@@ -138,7 +138,7 @@ void Engine::AlignText(const std::string_view label)
 
 std::string Engine::LabelSuffix(const std::string_view label)
 {
-	std::string labelID = "###";
+	std::string labelID = "##";
 	labelID += label;
 
 	return labelID;
@@ -300,9 +300,18 @@ bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag
 void Engine::ImGuiComboboxToken::End() const
 {
 }
-bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size) const
+bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size, const bool editable) const
 {
-	return ImGui::Combo(label.data(), value, label_arr, arr_size);
+	if (!editable)
+	{
+		ImGui::BeginDisabled();
+	}
+	bool retval = ImGui::Combo(label.data(), value, label_arr, arr_size);
+	if (!editable)
+	{
+		ImGui::EndDisabled();
+	}
+	return retval;
 }
 
 void Engine::ImGuiLabelAndVec4Token::End() const {}
@@ -371,12 +380,22 @@ bool Engine::ImGuiLabelAndUInt16Token::DoImpl(
 void Engine::ImGuiComboboxUInt8Token::End() const {}
 
 bool Engine::ImGuiComboboxUInt8Token::DoImpl(
-	const std::string_view label, unsigned char* value, const char* const* label_arr, const unsigned long long arr_size
+	const std::string_view label, unsigned char* value, const char* const* label_arr, const unsigned long long arr_size, const bool editable
 ) const
 {
+	if (!editable)
+	{
+		ImGui::BeginDisabled();
+	}
+
 	int intermediate = *value;
 	const bool ret = ImGui::Combo(label.data(), &intermediate, label_arr, arr_size);
 	*value = intermediate;
+
+	if (!editable)
+	{
+		ImGui::EndDisabled();
+	}
 	return ret;
 }
 
@@ -435,13 +454,4 @@ void Engine::ImGuiUIInterface::NewFrame()
 		
 	ImGui::NewFrame();
 #endif
-}
-
-void Engine::ImGuiLabelAndVec2Token::End() const
-{
-}
-
-bool Engine::ImGuiLabelAndVec2Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
-{
-	return ImGui::DragFloat2(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }

@@ -7,6 +7,8 @@
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
 #if WITH_EDITOR
+#include "Scene/Public/Scene.h"
+#include "Objects/Object/Public/Object.h"
 #include "Components/Transform/Public/Transform.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #endif
@@ -239,6 +241,7 @@ namespace Engine::Abstracts
 	void ObjectBase::UpdateUIText()
 	{
 		m_ui_info_.label = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
+		m_ui_info_.temporaryStrings["child_title"] = std::format("Children of {}({})...", m_ui_info_.label, GetID());
 	}
 	void ObjectBase::OnNameChanged()
 	{
@@ -505,6 +508,11 @@ namespace Engine::Abstracts
 						m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
 					});
 
+					(context |= ui.NewButton({ "Children" })).SetFunction([&]()
+						{
+							m_b_child_dialog_ = !m_b_child_dialog_;
+						});
+
 					if (m_b_add_component_dialog_opened_)
 					{
 						if (UIContext add_com_context = UIInterface::NewContext(ui.NewDialog({this, "Add Component dialog", m_b_add_component_dialog_opened_}))) 
@@ -553,6 +561,69 @@ namespace Engine::Abstracts
 							if (UIContext context = UIInterface::NewContext(ui.NewDialog({ component.get(), component->m_ui_info_.label, component->m_ui_info_.dialogOpened })))
 							{
 								component->OnUIUpdate(&context, dt);
+							}
+						}
+					}
+				}
+
+				if (m_b_child_dialog_)
+				{
+					if (UIContext child_context = ui.NewContext(ui.NewDialog({ this, m_ui_info_.temporaryStrings["child_title"], m_b_child_dialog_ })))
+					{
+						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
+							{
+								m_b_child_dialog_ = !m_b_child_dialog_;
+							});
+
+						if (m_b_child_add_dialog_)
+						{
+							if (UIContext child_select_context = ui.NewContext(ui.NewDialog({ this, "Add New Child", m_b_child_add_dialog_})))
+							{
+								(child_select_context |= ui.NewButton({ "Object" })).SetFunction([this]()
+									{
+										if (const Strong<Scene>& scene = GetScene().lock())
+										{
+											const Strong<Object>& child = scene->CreateGameObject<Object>(GetLayer()).lock();
+											AddChild(child, false);
+										}
+									});
+
+								for (const auto& [type, predicate] : ObjectFactory::GetGenerators())
+								{
+									(child_select_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([this, &predicate]()
+										{
+											if (const Strong<Scene>& scene = GetScene().lock())
+											{
+												const Strong<ObjectBase>& child = predicate();
+												scene->AddGameObject(GetLayer(), child);
+												AddChild(child, false);
+											}
+										});
+								}
+							}
+						}
+
+						if (m_children_cache_.empty())
+						{
+							child_context |= ui.NewText({ "No child found." });
+						}
+
+						for (const auto& [id, child] : m_children_cache_)
+						{
+							if (const Strong<ObjectBase>& locked = child.lock())
+							{
+								(child_context |= ui.NewButton({ locked->GetName() })).SetFunction([child]()
+									{
+										if (const Strong<ObjectBase>& strong = child.lock())
+										{
+											strong->m_ui_info_.dialogOpened = !strong->m_ui_info_.dialogOpened;
+										}
+									});
+
+								if (locked->m_ui_info_.dialogOpened)
+								{
+									locked->OnUIUpdate(&child_context, dt);
+								}
 							}
 						}
 					}

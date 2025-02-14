@@ -156,7 +156,7 @@ namespace Engine
 		obj->GetSharedPtr<Abstracts::Actor>()->SetLocalID(id);
 	}
 
-	void Scene::addGameObjectImpl(LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj)
+	void Scene::addGameObjectImpl(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj)
 	{
 		// Disconnect the object from the previous scene and layer, if it exists.
 		if (const auto scene = obj->GetScene().lock())

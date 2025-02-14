@@ -65,17 +65,17 @@ LRESULT Engine::DirectInputInterface::MessageHandler(HWND hwnd, UINT msg, WPARAM
 	return 0;
 }
 
-bool Engine::DirectInputInterface::IsKeyDown(const Keys key) const noexcept
+bool Engine::DirectInputInterface::IsKeyDown(const Keyboard::Keys key) const noexcept
 {
     return m_current_keyboard_state_.IsKeyDown(key);
 }
 
-bool Engine::DirectInputInterface::IsKeyPressed(const Keys key) const noexcept
+bool Engine::DirectInputInterface::IsKeyPressed(const Keyboard::Keys key) const noexcept
 {
 	return m_previous_keyboard_state_.IsKeyUp(key) && m_current_keyboard_state_.IsKeyDown(key);
 }
 
-bool Engine::DirectInputInterface::IsKeyReleased(const Keys key) const noexcept
+bool Engine::DirectInputInterface::IsKeyReleased(const Keyboard::Keys key) const noexcept
 {
 	return m_previous_keyboard_state_.IsKeyDown(key) && m_current_keyboard_state_.IsKeyUp(key);
 }

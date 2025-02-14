@@ -291,28 +291,28 @@ void PlayerComponent::checkMove(const Engine::Strong<Engine::Components::Rigidbo
 	constexpr UINT right_anim = 21;
 	constexpr UINT idle_anim = 0;
 
-	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keys::W))
+	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keyboard::Keys::W))
 	{
 		atr->SetAnimation(forward_anim);
 		rb->AddT1Force(forward);
 		pressed = true;
 	}
 
-	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keys::A))
+	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keyboard::Keys::A))
 	{
 		atr->SetAnimation(left_anim);
 		rb->AddT1Force(ortho);
 		pressed = true;
 	}
 
-	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keys::S))
+	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keyboard::Keys::S))
 	{
 		atr->SetAnimation(backward_anim);
 		rb->AddT1Force(-forward);
 		pressed = true;
 	}
 
-	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keys::D))
+	if (Engine::Managers::InputManager::GetInstance().IsKeyPressed(Engine::Keyboard::Keys::D))
 	{
 		atr->SetAnimation(right_anim);
 		rb->AddT1Force(-ortho);

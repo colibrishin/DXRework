@@ -108,7 +108,7 @@ namespace Engine::Components
 			Component::OnUIUpdate(context, dt);
 
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names) })).SetFunction([&]() 
+			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names), true })).SetFunction([&]()
 			{
 				SetType(m_type_);
 			});
