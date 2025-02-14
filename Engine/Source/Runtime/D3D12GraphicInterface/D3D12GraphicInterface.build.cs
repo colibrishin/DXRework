@@ -25,10 +25,5 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<ComputeShader>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
-
-        conf.TargetCopyFiles.Add
-        (
-            @"Font/consolas.spritefont"
-        );
     }
 }

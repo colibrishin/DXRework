@@ -49,6 +49,12 @@ void Engine::Components::TextRenderer::OnUIUpdate(UIContext* const parent, const
             (*parent |= ui.NewButton({ "Select Font..." })).SetFunction([this]() {
                 m_b_font_dialog_ = !m_b_font_dialog_;
                 });
+
+            *parent |= ui.NewLabelAndText( { "Text", m_text_, true } );
+            *parent |= ui.NewLabelAndVec2({ "Position", &m_position_.x, 0.1f, 0, 0, true });
+            *parent |= ui.NewLabelAndVec4({ "Color", &m_color_.x, 0.1f, 0, 1, true });
+            *parent |= ui.NewLabelAndFloat({ "Rotation", m_rotation_rad_, 0, 0, 1, true });
+            *parent |= ui.NewLabelAndVec2({ "Scale", &m_scale_.x, 0.1f, 0, 0, true });
         }
 
         if (m_b_font_dialog_)

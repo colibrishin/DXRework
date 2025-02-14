@@ -13,7 +13,7 @@ namespace Engine
 	template <typename T>
 	using Strong = boost::shared_ptr<T>;
 
-	template <typename T>
+	template <typename T, typename Deleter = std::unique_ptr<T>::deleter_type>
 	using Unique = std::unique_ptr<T>;
 	
 	using GenericString = std::string;

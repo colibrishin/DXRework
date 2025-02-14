@@ -42,7 +42,15 @@ namespace Engine::Resources
 
 		std::unordered_map<Weak<Components::Transform>, SoundChannelID> m_assigned_ids_;
 
-		Unique<SoundPrimitive> m_primitive_;
+		struct SoundDeleter 
+		{
+			void operator()(SoundPrimitive* ptr) const
+			{
+				SoundInterfaceAccessor::GetInterface().ReleaseSound( ptr );
+			}
+		};
+
+		Unique<SoundPrimitive, SoundDeleter> m_primitive_;
 
 		EPROPERTY()
 		UINT m_roll_off_ = 0;

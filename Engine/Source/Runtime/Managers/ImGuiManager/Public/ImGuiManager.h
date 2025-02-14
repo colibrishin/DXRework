@@ -271,6 +271,16 @@ namespace Engine
         bool DoImpl(unsigned long long column) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndVec2Token : LabelAndVec2Token
+    {
+        using LabelAndVec2Token::LabelAndVec2Token;
+
+        void End() const override;
+
+    protected:
+        [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
+    };
+
 #define IMGUI_INLINE_GETTER_DECL(Name) \
     Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
     { \
@@ -306,6 +316,7 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(Table)
         IMGUI_INLINE_GETTER_DECL(TableRow)
         IMGUI_INLINE_GETTER_DECL(TableColumn)
+        IMGUI_INLINE_GETTER_DECL(LabelAndVec2)
 
         void               NewFrame() override;
     };

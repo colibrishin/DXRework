@@ -11,6 +11,7 @@ MODULE_IMPL(Engine::SoundModule, Sound)
 
 bool Engine::SoundModule::InitializeImpl()
 {
+    Resources::Sound::Create("street", "street.mp3");
 #if WITH_EDITOR
     Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Sound::StaticTypeName(), [](bool& managed_flag)
         {

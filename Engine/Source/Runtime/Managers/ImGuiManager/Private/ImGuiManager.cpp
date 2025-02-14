@@ -436,3 +436,12 @@ void Engine::ImGuiUIInterface::NewFrame()
 	ImGui::NewFrame();
 #endif
 }
+
+void Engine::ImGuiLabelAndVec2Token::End() const
+{
+}
+
+bool Engine::ImGuiLabelAndVec2Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
+{
+	return ImGui::DragFloat2(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
+}

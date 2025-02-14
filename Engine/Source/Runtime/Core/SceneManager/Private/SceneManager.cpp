@@ -106,8 +106,14 @@ namespace Engine::Managers
 		return {};
 	}
 
+	const std::vector<Strong<Scene>>& SceneManager::GetScenes() const
+	{
+		return m_scenes_;
+	}
+
 	void SceneManager::Initialize()
 	{
+#if WITH_EDITOR
 		RegisterLoadMenuItem(Scene::StaticTypeName(), [](bool& managing_flag)
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -132,6 +138,7 @@ namespace Engine::Managers
 
 		AddScene("UntitledScene");
 		SetActive("UntitledScene");
+#endif
 	}
 
 	void SceneManager::Update(const float dt)

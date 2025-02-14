@@ -17,7 +17,7 @@ namespace Engine
 		virtual void Shutdown() = 0;
 		virtual void Update() = 0;
 		virtual SoundPrimitive* NewSound( const std::filesystem::path& path ) = 0;
-		virtual void ReleaseSound(SoundPrimitive* primitive) = 0;
+		virtual void ReleaseSound( SoundPrimitive* primitive ) = 0;
 		virtual void UpdatePosition( const SoundChannelID id, const Vector3& position ) = 0;
 		virtual void UpdatePosition( const SoundChannelID id, const Vector3& position, const Vector3& velocity ) = 0;
 		virtual bool PlaySound( const SoundPrimitive* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id ) = 0;
@@ -57,10 +57,7 @@ namespace Engine
 
 	struct ENGINE_CORE_API SoundPrimitive
 	{
-		virtual ~SoundPrimitive()
-		{
-			SoundInterfaceAccessor::GetInterface().ReleaseSound( this );
-		}
+		virtual ~SoundPrimitive() {}
 
 		virtual void SetMinDistance( float value ) = 0;
 		virtual void SetMaxDistance( float value ) = 0;

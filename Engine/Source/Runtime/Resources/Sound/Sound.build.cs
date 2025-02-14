@@ -15,5 +15,7 @@ public class Sound : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<FMOD>(target);
+
+        conf.TargetCopyFiles.Add(@"street.mp3");
     }
 }

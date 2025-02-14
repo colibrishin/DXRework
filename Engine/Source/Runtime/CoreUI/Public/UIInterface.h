@@ -164,6 +164,7 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
+    NEW_TOKEN_DECL(LabelAndVec2, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
     NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
@@ -320,6 +321,7 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(Table)
         TOKEN_PURE_GETTER_DECL(TableRow)
         TOKEN_PURE_GETTER_DECL(TableColumn)
+        TOKEN_PURE_GETTER_DECL(LabelAndVec2)
 
         virtual void NewFrame() = 0;
 

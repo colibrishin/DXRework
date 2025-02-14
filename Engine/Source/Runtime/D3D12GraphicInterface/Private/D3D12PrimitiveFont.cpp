@@ -1,10 +1,12 @@
 #include "D3D12PrimitiveFont.h"
 #include "Font.h"
 #include "ToolkitAPI.h"
+#include "D3D12GraphicInterface.h"
 
 void Engine::D3D12PrimitiveFont::Generate(const Resources::Font* font)
 {
 	GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+	D3D12GraphicInterface& dgi = static_cast<D3D12GraphicInterface&>(gi);
 	ID3D12Device* dev = static_cast<ID3D12Device*>(gi.GetNativeInterface());
 
 	if (!m_heap_)
@@ -13,12 +15,17 @@ void Engine::D3D12PrimitiveFont::Generate(const Resources::Font* font)
 	}
 
 	DirectX::ResourceUploadBatch batch(dev);
+	batch.Begin();
+
 	m_native_font_ = std::make_unique<DirectX::SpriteFont>(
 		dev, 
 		batch, 
 		font->GetPath().c_str(), 
 		m_heap_->GetFirstCpuHandle(), 
 		m_heap_->GetFirstGpuHandle());
+	
+	const auto& token = batch.End(dgi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+	token.wait();
 
 	SetNativeFont(m_native_font_.get());
 }

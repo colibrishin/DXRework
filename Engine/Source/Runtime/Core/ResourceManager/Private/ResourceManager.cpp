@@ -4,9 +4,36 @@
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
 
+#if WITH_EDITOR
+#include "UIHelpersSceneManager.h"
+#include "Prefab/Public/Prefab.h"
+#include "ObjectBase/Public/ObjectBase.h"
+#endif
+
 namespace Engine::Managers
 {
-	void ResourceManager::Initialize() { }
+	void ResourceManager::Initialize() 
+	{
+#if WITH_EDITOR
+		RegisterNewResource(Resources::Prefab::StaticTypeName(), [this](bool& managing_flag)
+			{
+				if (std::vector<Weak<Abstracts::ObjectBase>> object_selected;
+					UIHelpers::MultipleObjectSelectionDialog<ResourceManager>(
+						GetSharedPtr<ResourceManager>(), object_selected, {}, {}))
+				{
+					for (const auto& ptr : object_selected)
+					{
+						if (const Strong<Abstracts::ObjectBase>& object = ptr.lock())
+						{
+							Resources::Prefab::Create(object->GetName() + "_Prefab", object);
+						}
+					}
+
+					managing_flag = false;
+				}
+			});
+#endif
+	}
 
 #ifdef WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
