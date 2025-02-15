@@ -6,7 +6,7 @@
 #include "Graviton.h"
 #include "PhysicsManager.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
 MODULE_IMPL(Engine::PhysicsManagerModule, PhysicsManager);

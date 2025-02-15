@@ -19,7 +19,7 @@
 #include "D3D12ComputePrimitiveShader.h"
 #include "ToolkitAPI.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 

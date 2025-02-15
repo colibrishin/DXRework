@@ -115,7 +115,7 @@ namespace Engine::UIHelpers
                                 continue;
                             }
 
-                            context |= ui.NewSelectable({ locked->GetName(), selection[ptr][locked] });
+                            context |= ui.NewSelectable({ locked->m_ui_info_.label, selection[ptr][locked] });
                         }
                     }
                     --context;

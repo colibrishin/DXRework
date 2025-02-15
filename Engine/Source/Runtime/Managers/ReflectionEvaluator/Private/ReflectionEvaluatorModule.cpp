@@ -3,7 +3,7 @@
 #include "ReflectionEvaluator.h"
 #include "Renderer.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
 

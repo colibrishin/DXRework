@@ -125,7 +125,7 @@ namespace Engine::Managers
 
 				if ( module_info->m_module_ )
 				{
-					for ( const std::string_view& required : module_info->m_module_->LoadAfter() )
+					for ( const std::string_view required : module_info->m_module_->LoadAfter() )
 					{
 						std::wstring conversion( required.begin(), required.end() );
 
@@ -137,7 +137,7 @@ namespace Engine::Managers
 						}
 					}
 
-					for ( const std::string_view& dependency : module_info->m_module_->GetDependencies() )
+					for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
 					{
 						std::wstring conversion( dependency.begin(), dependency.end() );
 

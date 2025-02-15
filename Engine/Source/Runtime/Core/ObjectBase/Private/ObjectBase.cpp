@@ -201,7 +201,7 @@ namespace Engine::Abstracts
 		return {};
 	}
 
-	Weak<Abstracts::Component> ObjectBase::addComponent(const Strong<Component>& component)
+	Weak<Component> ObjectBase::addComponent(const Strong<Component>& component)
 	{
 		const auto type = component->GetTypeHash();
 
@@ -276,6 +276,7 @@ namespace Engine::Abstracts
 		{
 			const auto& comp = m_components_[type];
 
+		    removeComponentFromSceneCache(comp);
 			removeComponentImpl(type, comp);
 		}
 	}
@@ -316,6 +317,9 @@ namespace Engine::Abstracts
 		}
 
 		m_cached_component_.insert(component);
+	    addComponentToSceneCache(component);
+
+	    onComponentAdded.Broadcast(component);
 	}
 
 	void ObjectBase::Render(const float dt)
@@ -546,6 +550,11 @@ namespace Engine::Abstracts
 						{
 							if (const Strong<Component>& component = w_component.lock())
 							{
+							    (context |= ui.NewButton( { "Remove" } )).SetFunction( [this, type = component->GetTypeHash()]()
+							    {
+							        removeComponent( type );
+							    });
+							    context |= ui.NewSameLine( {} );
 								context |= ui.NewSelectable({ component->m_ui_info_.label, component->m_ui_info_.dialogOpened });
 							};
 						}
@@ -565,6 +574,7 @@ namespace Engine::Abstracts
 						}
 					}
 				}
+			    
 
 				if (m_b_child_dialog_)
 				{
@@ -572,7 +582,7 @@ namespace Engine::Abstracts
 					{
 						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
 							{
-								m_b_child_dialog_ = !m_b_child_dialog_;
+								m_b_child_add_dialog_ = !m_b_child_add_dialog_;
 							});
 
 						if (m_b_child_add_dialog_)
@@ -586,6 +596,8 @@ namespace Engine::Abstracts
 											const Strong<Object>& child = scene->CreateGameObject<Object>(GetLayer()).lock();
 											AddChild(child, false);
 										}
+								    
+								        m_b_child_add_dialog_ = false;
 									});
 
 								for (const auto& [type, predicate] : ObjectFactory::GetGenerators())
@@ -598,6 +610,8 @@ namespace Engine::Abstracts
 												scene->AddGameObject(GetLayer(), child);
 												AddChild(child, false);
 											}
+
+									        m_b_child_add_dialog_ = false;
 										});
 								}
 							}

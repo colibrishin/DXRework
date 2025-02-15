@@ -142,6 +142,7 @@ namespace Engine
     NEW_TOKEN_DECL(ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t, const bool)
     NEW_TOKEN_DECL(Text, const std::string_view)
     NEW_TOKEN_DECL(Separator)
+    NEW_TOKEN_DECL(SameLine)
     NEW_TOKEN_DECL(Table, std::string_view, size_t);
     NEW_TOKEN_DECL(TableRow);
     NEW_TOKEN_DECL(TableColumn, size_t);
@@ -165,6 +166,7 @@ namespace Engine
     NEW_LABEL_NUMERICAL_DECL(ULLD, uint64_t)
     NEW_TOKEN_DECL(LabelAndVec3, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(LabelAndVec4, const std::string_view, float*, float, float, float, bool)
+    NEW_TOKEN_DECL(LabelAndVec2, const std::string_view, float*, float, float, float, bool)
     NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
     NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
@@ -318,9 +320,11 @@ namespace Engine
         TOKEN_PURE_GETTER_DECL(ComboboxUInt8)
         TOKEN_PURE_GETTER_DECL(Text)
         TOKEN_PURE_GETTER_DECL(Separator)
+        TOKEN_PURE_GETTER_DECL(SameLine)
         TOKEN_PURE_GETTER_DECL(Table)
         TOKEN_PURE_GETTER_DECL(TableRow)
         TOKEN_PURE_GETTER_DECL(TableColumn)
+		TOKEN_PURE_GETTER_DECL(LabelAndVec2)
 
         virtual void NewFrame() = 0;
 

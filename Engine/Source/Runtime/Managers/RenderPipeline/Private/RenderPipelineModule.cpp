@@ -2,7 +2,7 @@
 #include "RenderPipelineModule.generated.h"
 
 #include "ModuleManager/Public/ModuleManager.h"
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
 

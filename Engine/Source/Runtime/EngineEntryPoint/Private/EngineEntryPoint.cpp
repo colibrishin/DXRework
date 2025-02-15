@@ -2,7 +2,7 @@
 
 #include "UIInterface.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 #include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
 
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;

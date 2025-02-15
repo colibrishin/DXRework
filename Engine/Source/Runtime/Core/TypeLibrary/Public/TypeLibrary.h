@@ -679,7 +679,6 @@ namespace Engine
 	class Script;
 	class Scene;
 	class Layer;
-	class Object;
 
 	namespace Graphics
 	{

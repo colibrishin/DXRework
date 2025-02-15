@@ -183,6 +183,16 @@ namespace Engine
 	    [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
     };
 
+    struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndVec2Token : LabelAndVec2Token
+    {
+        using LabelAndVec2Token::LabelAndVec2Token;
+
+	    void End() const override;
+
+    protected:
+	    [[nodiscard]] bool DoImpl(const std::string_view, float*, float, float, float, bool) const override;
+    };
+
     struct ENGINE_IMGUIMANAGER_API ImGuiDragAndDropTargetToken : DragAndDropTargetToken
     {
         using DragAndDropTargetToken::DragAndDropTargetToken;
@@ -237,6 +247,16 @@ namespace Engine
     struct ENGINE_IMGUIMANAGER_API ImGuiSeparatorToken : SeparatorToken 
     {
         using SeparatorToken::SeparatorToken;
+
+        void End() const override;
+
+    protected:
+        bool DoImpl() const override;
+    };
+
+    struct ENGINE_IMGUIMANAGER_API ImGuiSameLineToken : SameLineToken 
+    {
+        using SameLineToken::SameLineToken;
 
         void End() const override;
 
@@ -303,9 +323,11 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(ComboboxUInt8)
         IMGUI_INLINE_GETTER_DECL(Text)
         IMGUI_INLINE_GETTER_DECL(Separator)
+        IMGUI_INLINE_GETTER_DECL(SameLine)
         IMGUI_INLINE_GETTER_DECL(Table)
         IMGUI_INLINE_GETTER_DECL(TableRow)
         IMGUI_INLINE_GETTER_DECL(TableColumn)
+        IMGUI_INLINE_GETTER_DECL(LabelAndVec2)
 
         void               NewFrame() override;
     };

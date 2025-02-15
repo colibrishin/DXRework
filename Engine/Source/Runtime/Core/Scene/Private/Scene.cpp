@@ -672,9 +672,9 @@ namespace Engine
 		{
 			context << [&]()
 			{
-				m_layer_list_box_name_ = std::to_string(GetID()) + "LayersListBox";
+				m_layer_list_box_name_ = "Layers##LayerListBox" + std::to_string(GetID());
 				Renderable::OnUIUpdate(&context, dt);
-				context += ui.NewListBox({m_layer_list_box_name_, -1, -1});
+				context += ui.NewListBox({m_layer_list_box_name_, 0, 300.f});
 
 				for (const auto& layer : m_layers_)
 				{

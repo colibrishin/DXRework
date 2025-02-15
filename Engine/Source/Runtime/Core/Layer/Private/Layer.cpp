@@ -152,8 +152,15 @@ namespace Engine
 
 			for (const auto& object : m_objects_)
 			{
-				*parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
-				object->OnUIUpdate(parent, dt);
+			    if ( object->GetParent().expired() )
+			    {
+			        *parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
+
+			        if (object->m_ui_info_.dialogOpened)
+			        {
+			            object->OnUIUpdate(parent, dt);   
+			        }
+			    }
 			}
 
 			--*parent;

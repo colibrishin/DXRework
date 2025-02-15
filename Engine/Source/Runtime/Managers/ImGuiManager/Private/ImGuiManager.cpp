@@ -22,7 +22,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 );
 #endif
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
@@ -133,7 +133,7 @@ void Engine::AlignText(const std::string_view label)
 	ImGui::Text(label.data());
 	ImGui::SameLine();
 	ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
-	ImGui::SetNextItemWidth(-1);
+	ImGui::SetNextItemWidth(100.f);
 }
 
 std::string Engine::LabelSuffix(const std::string_view label)
@@ -183,14 +183,14 @@ bool Engine::ImGuiDialogToken::DoImpl(const void* context, const std::string_vie
 	std::string address_suffix = std::to_string(reinterpret_cast<uint64_t>(context));
 	address_suffix += title;
 	const std::string& temp_label = std::string(title) + LabelSuffix(address_suffix);
-	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse);
+	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 }
 
 void Engine::ImGuiButtonToken::End() const {}
 
 bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title) const
 {
-	return ImGui::Button(title.data(), {-1, 20});
+	return ImGui::Button(title.data(), {0, 20});
 }
 
 void Engine::ImGuiLabelAndTextToken::End() const {}
@@ -321,6 +321,13 @@ bool Engine::ImGuiLabelAndVec4Token::DoImpl(const std::string_view label, float*
 	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }
 
+void Engine::ImGuiLabelAndVec2Token::End() const {}
+
+bool Engine::ImGuiLabelAndVec2Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
+{
+	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
+}
+
 void Engine::ImGuiDragAndDropTargetToken::End() const
 {
 	return ImGui::EndDragDropTarget();
@@ -415,6 +422,16 @@ bool Engine::ImGuiSeparatorToken::DoImpl() const
 {
 	ImGui::Separator();
 	return true;
+}
+
+void Engine::ImGuiSameLineToken::End() const
+{
+}
+
+bool Engine::ImGuiSameLineToken::DoImpl() const
+{
+    ImGui::SameLine();
+    return true;
 }
 
 void Engine::ImGuiTableToken::End() const

@@ -15,5 +15,7 @@ public class Font : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
+
+        conf.TargetCopyFiles.Add(@"consolas.spritefont");
     }
 }

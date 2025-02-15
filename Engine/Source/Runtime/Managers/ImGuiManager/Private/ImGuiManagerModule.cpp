@@ -3,7 +3,7 @@
 #include "ImGuiManagerModule.generated.h"
 #include "ModuleManager/Public/ModuleManager.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
 MODULE_IMPL(Engine::ImGuiManagerModule, ImGuiManager)
 

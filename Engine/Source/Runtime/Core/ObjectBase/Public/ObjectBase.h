@@ -3,9 +3,9 @@
 #include <set>
 #include <type_traits>
 
-#include "Source/Runtime/Core/Actor/Public/Actor.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.h"
-#include "Source/Runtime/Core/Component/Public/Component.h"
+#include "Actor/Public/Actor.h"
+#include "Scene/Public/Scene.h"
+#include "Component/Public/Component.h"
 
 #include "ObjectBase.generated.h"
 
@@ -16,9 +16,9 @@ DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>);
 #define OBJECT_T(enum_val) static constexpr Engine::eDefObjectType dotype = enum_val;
 
 // Cloning object declaration macro
-#define OBJ_CLONE_DECL Strong<Engine::Abstracts::ObjectBase> cloneImpl() const override;
+#define OBJ_CLONE_DECL Engine::Strong<Engine::Abstracts::ObjectBase> cloneImpl() const override;
 // Cloning object implementation macro
-#define OBJ_CLONE_IMPL(CLASS) Strong<Engine::Abstracts::ObjectBase> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define OBJ_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::ObjectBase> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
 
 namespace Engine
 {
@@ -78,9 +78,6 @@ namespace Engine::Abstracts
 			component->Initialize();
 
 			addComponentImpl(component, type);
-			addComponentToSceneCache<T>(component);
-
-			onComponentAdded.Broadcast(component);
 
 			return component;
 		}
@@ -108,7 +105,6 @@ namespace Engine::Abstracts
 		template <typename T> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)
 		void RemoveComponent()
 		{
-			removeComponentFromSceneCache<T>(boost::static_pointer_cast<T>(m_components_[T::StaticTypeHash()]));
 			removeComponent(T::StaticTypeHash());
 		}
 
