@@ -3,46 +3,31 @@
 
 #include <ranges>
 
+#include "IModule.h"
+
 namespace Engine::Managers
 {
 	ModuleManager::ModuleManager(SINGLETON_LOCK_TOKEN) {}
 
 	void ModuleManager::TryResolveLazyness(const std::wstring_view name)
 	{
-		if ( m_lazy_modules_.contains( name.data() ) )
+        for ( auto it = m_lazy_modules_.begin(); it != m_lazy_modules_.end(); )
 		{
-			auto& target = m_lazy_modules_.at( name.data() );
-			
-			for ( auto it = target.begin(); it != target.end();)
+			if ( it->second.contains( name.data() ) )
 			{
-				const std::wstring_view dependency = *it;
-				if ( LoadModule( dependency ) )
-				{
-					for (auto outer_it = m_lazy_modules_.begin(); outer_it != m_lazy_modules_.end(); ++outer_it)
-					{
-						if ( outer_it->second == target )
-						{
-							continue;
-						}
+                it->second.erase( name.data() );
 
-						if (outer_it->second.contains( dependency.data() ))
-						{
-							outer_it->second.erase( dependency.data() );
-						}
-					}
-
-					it = target.erase( it );
-				}
-				else 
+				if ( it->second.empty() )
 				{
-					++it;
+                    std::wstring load_finished = it->first;
+                    m_lazy_modules_.erase( it );
+                    LoadModule( load_finished );
+                    it = m_lazy_modules_.begin();
+                    continue;
 				}
 			}
 
-			if ( target.empty() )
-			{
-				m_lazy_modules_.erase( name.data() );
-			}
+			++it;
 		}
 	}
 
@@ -129,27 +114,26 @@ namespace Engine::Managers
 					{
 						std::wstring conversion( required.begin(), required.end() );
 
-						if ( !FindModule( conversion) )
+						if ( !FindModule( conversion ) )
 						{
-							m_lazy_modules_[ conversion ].insert( name.data() );
-							RemoveModule( name );
-							return nullptr;
+                            m_lazy_modules_[ name.data() ].insert( conversion );
 						}
 					}
 
 					for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
-					{
-						std::wstring conversion( dependency.begin(), dependency.end() );
+                    {
+                        std::wstring conversion( dependency.begin(), dependency.end() );
 
-						if ( !FindModule(conversion) )
-						{
-							if ( !LoadModule(conversion) ) 
-							{
-								m_lazy_modules_[ conversion ].insert( name.data() );
-								RemoveModule( name );
-								return nullptr;
-							}
-						}
+                        if ( !FindModule( conversion ) )
+                        {
+                            m_lazy_modules_[ name.data() ].insert( conversion );
+                        }
+                    }
+
+					if ( m_lazy_modules_.contains( name.data() ) )
+                    {
+                        RemoveModule( name );
+                        return nullptr;
 					}
 				}
 

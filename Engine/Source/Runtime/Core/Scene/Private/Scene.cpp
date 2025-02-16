@@ -68,59 +68,7 @@ namespace Engine
 		}
 
 		Renderable::Initialize();
-
-		for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
-		{
-			m_layers_.emplace_back(boost::make_shared<Layer>(i));
-
-			if (i < std::size(g_reserved_layer_name))
-			{
-				m_layers_[i]->SetName(g_reserved_layer_name[i]);
-			}
-		}
-
-		for (int i = 0; i < size(); ++i)
-		{
-			for (int j = 0; j < size(); ++j)
-			{
-				if (i == j) 
-				{
-					m_collision_mask_[i][j] = true;
-					m_collision_mask_[j][i] = true;
-				}
-				else 
-				{
-					m_collision_mask_[i][j] = false;
-					m_collision_mask_[j][i] = false;
-				}
-			}
-		}
-
-		const auto& camera       = CreateGameObject<Objects::Camera>(RESERVED_LAYER_CAMERA).lock();
-		m_mainCamera_           = camera;
-		m_main_camera_local_id_ = camera->GetLocalID();
-
-		const auto& light1 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
-		light1->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(5.f, 2.f, 5.f));
-
-		const auto& light2 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
-		light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
-
-		Managers::TaskScheduler::GetInstance().AddTask
-				(
-				 TASK_INIT_SCENE,
-				 {GetSharedPtr<Scene>()},
-				 [](const std::vector<std::any>& params, const float)
-				 {
-					 const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
-
-					 scene->initializeFinalize();
-				 }
-				);
-
-#ifdef PHYSX_ENABLED
-		InitializePhysX();
-#endif
+	    initializeImpl();
 	}
 
 	const bool(&Scene::GetCollisionMask() const)[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]
@@ -133,7 +81,77 @@ namespace Engine
 		memcpy(m_collision_mask_[0], collision_mask[0], sizeof(m_collision_mask_));
 	}
 
-	void Scene::AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj)
+    void Scene::initializeForce()
+	{
+	    Renderable::Initialize();
+	}
+
+    Strong<Scene> Scene::cloneImpl()
+	{
+        auto copy_scene = Strong<Scene>(new Scene());
+	    copy_scene->initializeForce();
+	    copy_scene->synchronize( GetSharedPtr<Scene>() );
+	    copy_scene->SetName( GetName() + "_Clone" );
+	    return copy_scene;
+	}
+
+    void Scene::initializeImpl()
+	{
+	    for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
+	    {
+	        m_layers_.emplace_back(boost::make_shared<Layer>(i));
+
+	        if (i < std::size(g_reserved_layer_name))
+	        {
+	            m_layers_[i]->SetName(g_reserved_layer_name[i]);
+	        }
+	    }
+
+	    for (int i = 0; i < size(); ++i)
+	    {
+	        for (int j = 0; j < size(); ++j)
+	        {
+	            if (i == j) 
+	            {
+	                m_collision_mask_[i][j] = true;
+	                m_collision_mask_[j][i] = true;
+	            }
+	            else 
+	            {
+	                m_collision_mask_[i][j] = false;
+	                m_collision_mask_[j][i] = false;
+	            }
+	        }
+	    }
+	    
+	    const auto& camera       = CreateGameObject<Objects::Camera>(RESERVED_LAYER_CAMERA).lock();
+	    m_mainCamera_           = camera;
+	    m_main_camera_local_id_ = camera->GetLocalID();
+
+	    const auto& light1 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
+	    light1->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(5.f, 2.f, 5.f));
+
+	    const auto& light2 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
+	    light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
+
+	    Managers::TaskScheduler::GetInstance().AddTask
+                (
+                 TASK_INIT_SCENE,
+                 {GetSharedPtr<Scene>()},
+                 [](const std::vector<std::any>& params, const float)
+                 {
+                     const auto& scene = std::any_cast<Strong<Scene>>(params[0]);
+
+                     scene->initializeFinalize();
+                 }
+                );
+
+#ifdef PHYSX_ENABLED
+	    InitializePhysX();
+#endif
+	}
+
+    void Scene::AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj)
 	{
 		LocalActorID id = 0;
 
@@ -371,6 +389,8 @@ namespace Engine
 				}
 			}
 
+		    std::memcpy(m_collision_mask_, scene->GetCollisionMask(), sizeof(m_collision_mask_));
+
 			m_object_position_tree_.Update();
 			m_object_collision_tree_.Update();
 
@@ -601,7 +621,6 @@ namespace Engine
 #endif
 	m_main_camera_local_id_(g_invalid_id),
 	m_main_actor_local_id_(g_invalid_id),
-	m_object_position_tree_(),
 	m_object_lock_(SingletonSpinLock::GetInstance().Register()),
 	m_component_lock_(SingletonSpinLock::GetInstance().Register()){}
 

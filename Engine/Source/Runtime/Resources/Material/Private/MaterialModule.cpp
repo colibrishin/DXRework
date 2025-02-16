@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "SceneManager/Public/SceneManager.h"
 #include "ResourceManager/Public/ResourceManager.h"
+#include "ModuleManager/Public/ModuleManager.h"
 
 MODULE_IMPL(Engine::MaterialModule, Material)
 

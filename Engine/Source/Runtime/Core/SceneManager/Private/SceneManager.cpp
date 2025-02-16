@@ -79,7 +79,7 @@ namespace Engine::Managers
 			(
 				TASK_ACTIVE_SCENE,
 				{ *scene },
-				[name, this](const std::vector<std::any>& params, float)
+				[this](const std::vector<std::any>& params, float)
 				{
 					const auto s = std::any_cast<Strong<Scene>>(params[0]);
 					SetActiveFinalize(s);
@@ -111,7 +111,32 @@ namespace Engine::Managers
 		return m_scenes_;
 	}
 
-	void SceneManager::Initialize()
+    void SceneManager::RemoveScene( const std::string &name )
+    {
+        if (const auto scene = std::ranges::find_if
+                    (
+                            m_scenes_, [name](const auto& scene)
+                            {
+                                return scene->GetName() == name;
+                            }
+                            );
+            scene != m_scenes_.end())
+        {
+            TaskScheduler::GetInstance().AddTask
+                    (
+                            TASK_REM_SCENE,
+                            {*scene, name},
+                            [this](const std::vector<std::any>& params, float)
+                            {
+                                const auto scene = std::any_cast<Strong<Scene>>(params[0]);
+                                const auto name  = std::any_cast<std::string>(params[1]);
+                                RemoveSceneFinalize(scene, name);
+                            }
+                            );
+        }
+    }
+
+    void SceneManager::Initialize()
 	{
 #if WITH_EDITOR
 		RegisterLoadMenuItem(Scene::StaticTypeName(), [](bool& managing_flag)
@@ -145,7 +170,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->Update(dt);
+			scene->Update(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -153,7 +178,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PreUpdate(dt);
+			scene->PreUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -161,7 +186,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PreRender(dt);
+			scene->PreRender(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -169,7 +194,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PostUpdate(dt);
+			scene->PostUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -177,7 +202,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->Render(dt);
+			scene->Render(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -185,7 +210,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->FixedUpdate(dt);
+			scene->FixedUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -193,60 +218,78 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PostRender(dt);
+			scene->PostRender(m_b_playing_ ? dt : 0.f);
 		}
 	}
-
+    
+#if WITH_EDITOR
 	void SceneManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 		if (UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
 		{
-			context += ui.NewMenu({"New"});
+		    context += ui.NewMenu({"New"});
 
-			for (auto& [name, func] : m_custom_new_function_)
-			{
-				(context |= ui.NewMenuItem({name})).SetFunction([&]()
-				{
-					func.first = true;
-				});
-			}
+		    for (auto& [name, func] : m_custom_new_function_)
+		    {
+		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+                {
+                    func.first = true;
+                });
+		    }
 
-			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
-			{
-				GetActiveScene().lock()->CreateGameObject<T>(Layer);
-			};
+		    const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
+            {
+                GetActiveScene().lock()->CreateGameObject<T>(Layer);
+            };
 
-			(context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
-				});
+		    (context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
+                });
 
-			(context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
-				});
+		    (context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
+                });
 
-			(context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
-				});
+		    (context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
+                });
 
-			--context;
+		    --context;
 
-			context += ui.NewMenu({"Load"});
+		    context += ui.NewMenu({"Load"});
 
-			for (auto& [name, func] : m_custom_load_function_)
-			{
-				(context |= ui.NewMenuItem({name})).SetFunction([&]()
-				{
-					func.first = true;
-				});
-			}
+		    for (auto& [name, func] : m_custom_load_function_)
+		    {
+		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+                {
+                    func.first = true;
+                });
+		    }
 
-			--context;
+		    --context;
+
+		    if (UIContext manager_context = ui.NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ))
+		    {
+		        if (!IsPlaying())
+		        {
+		            (manager_context |= ui.NewButton( { "Play Scene" } )).SetFunction( [this]()
+                    {
+                        Play();
+                    } );   
+		        }
+		        else
+		        {
+		            (manager_context |= ui.NewButton( { "Stop Scene" } )).SetFunction( [this]()
+                    {
+                        Stop();
+                    } );
+		        }
+		    }
 
 			if (const auto& scene = m_active_scene_.lock())
 			{
@@ -269,16 +312,45 @@ namespace Engine::Managers
 				}
 			}
 		}
-#endif
 	}
+#endif
 
 	bool SceneManager::IsPlaying() const
 	{
 		return m_b_playing_;
 	}
 
+    void SceneManager::Play()
+	{
+	    if (const Strong<Scene>& active_scene = m_active_scene_.lock())
+	    {
+	        m_playing_scene_ = active_scene;
+	        
+            const Strong<Scene> scene_clone = active_scene->Clone();
+	        AddScene( scene_clone );
+	        SetActive( scene_clone->GetName() );
+	        
+	        m_b_playing_ = true;
+	    }
+	}
+
+    void SceneManager::Stop()
+	{
+	    const Strong<Scene>& play_scene = m_playing_scene_.lock();
+	    const Strong<Scene>& active_scene = m_active_scene_.lock();
+
+	    if (play_scene && active_scene)
+	    {
+	        RemoveScene( active_scene->GetName() );
+            SetActive( play_scene->GetName() );
+	        
+	        m_playing_scene_ = {};
+	        m_b_playing_ = false;
+	    }
+	}
+
 #if WITH_EDITOR
-	void SceneManager::RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
+	void SceneManager::RegisterNewMenuItem( const std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate )
 	{
 		if (!m_custom_new_function_.contains(name))
 		{
@@ -286,7 +358,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::RegisterLoadMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
+	void SceneManager::RegisterLoadMenuItem( const std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate )
 	{
 		if (!m_custom_load_function_.contains(name))
 		{

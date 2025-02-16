@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+#include "IModule.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"

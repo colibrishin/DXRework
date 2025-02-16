@@ -27,7 +27,8 @@ namespace Engine::Resources
 #endif
 
 	protected:
-		ComputeShader(const std::filesystem::path& path, const std::array<uint32_t, 3>& thread);
+		ComputeShader( const std::filesystem::path& path );
+        void SetThread( const std::array<uint32_t, 3> &thread );
 
 		virtual void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
 		virtual void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
@@ -52,7 +53,7 @@ namespace Engine::Resources
 
 	private:
 		EPROPERTY()
-		std::array<uint32_t, 3> m_thread_;
+        std::array<uint32_t, 3> m_thread_ = { 1, 1, 1 };
 
 		Unique<ComputePrimitiveShader> m_primitive_shader_;
 	};

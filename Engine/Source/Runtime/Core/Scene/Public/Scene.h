@@ -60,12 +60,11 @@ namespace Engine
 		DelegateOnObjectRemoved onObjectRemoved;
 
 		Scene();
-		Scene(const Scene& other) = default;
 		~Scene() override;
 
 		void DisableControllers();
 		void AddObserver();
-		void Initialize() final;
+		void Initialize() override;
 
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
@@ -280,9 +279,24 @@ namespace Engine
 
 		auto size() const noexcept
 		{
-			return m_layers_.size();
+		    return m_layers_.size();
 		}
 
+	    [[nodiscard]] Strong<Scene> Clone()
+		{ 
+		    return cloneImpl();
+		}
+
+	    Scene& operator=(const Scene&) = delete;
+	    
+	protected:
+	    Scene(const Scene& other) = default;
+
+	    // Mark the scene as initialize without initialization. (e.g., clone)
+	    void initializeForce();
+	    virtual Strong<Scene> cloneImpl();
+	    virtual void initializeImpl();
+	    
 	private:
 		friend class Managers::SceneManager;
 

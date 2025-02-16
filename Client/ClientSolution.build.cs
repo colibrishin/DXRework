@@ -29,12 +29,24 @@ public class ClientProject : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TextRenderer>(target);
         conf.AddPublicDependency<Shape>(target);
+        conf.AddPublicDependency<Texture2D>(target);
         conf.AddPublicDependency<ModelRenderer>(target);
+        conf.AddPublicDependency<ShadowTexture>(target);
+        conf.AddPublicDependency<ComputeShader>(target);
+        conf.AddPublicDependency<RenderComponent>(target);
+        
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<Animator>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);
         conf.AddPrivateDependency<InputManager>(target);
         conf.AddPrivateDependency<PhysicsManager>(target);
+        conf.AddPrivateDependency<ShadowManager>(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            @"cs_intensity_test.hlsl", 
+            @"intensity_test.hlsl"
+        );
     }
 }
 

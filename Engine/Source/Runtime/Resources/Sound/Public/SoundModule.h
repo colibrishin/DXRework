@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModuleManager/Public/IModule.h"
+#include "IModule.h"
 
 #include "SoundModule.generated.h"
 

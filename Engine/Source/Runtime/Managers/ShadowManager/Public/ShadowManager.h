@@ -79,6 +79,10 @@ namespace Engine::Managers
 		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 		void TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 
+	    StructuredBufferTypeProxy<SBs::LightSB>&   GetLightBuffer() const;
+	    StructuredBufferTypeProxy<SBs::LightVPSB>& GetLightVPBuffer() const;
+	    const std::vector<SBs::LightVPSB>&         GetCurrentSceneLightVP() const;
+
 	private:
 		friend struct SingletonDeleter;
 		~ShadowManager() override;
@@ -107,6 +111,7 @@ namespace Engine::Managers
 		// lights from current scene
 		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
 
+	    std::vector<SBs::LightVPSB> m_current_scene_light_vp_;
 		Unique<StructuredBufferTypeProxy<SBs::LightSB>> m_light_sb_;
 		Unique<StructuredBufferTypeProxy<SBs::LightVPSB>> m_light_vp_sb_;
 

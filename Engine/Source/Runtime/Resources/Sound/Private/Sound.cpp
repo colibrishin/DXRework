@@ -140,7 +140,7 @@ void Engine::Resources::Sound::SetMaxDistance(const float max_distance)
 void Engine::Resources::Sound::Load_INTERNAL()
 {
 	SoundInterface& si = SoundInterfaceAccessor::GetInterface();
-	m_primitive_ = Unique<decltype(m_primitive_)::element_type>( si.NewSound( GetPath() ) );
+	m_primitive_ = Unique<decltype(m_primitive_)::element_type, SoundDeleter>( si.NewSound( GetPath() ) );
 
 	if (m_primitive_)
 	{

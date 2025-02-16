@@ -688,6 +688,10 @@ namespace Engine
 		};
 	};
 
+	constexpr static UINT d3d12_shader4_component_mapping =
+            ( ( ( ( 0 ) & 0x7 ) | ( ( ( 1 ) & 0x7 ) << 3 ) | ( ( ( 2 ) & 0x7 ) << ( 3 * 2 ) ) |
+                ( ( ( 3 ) & 0x7 ) << ( 3 * 3 ) ) | ( 1 << ( 3 * 4 ) ) ) );
+
 	struct ENGINE_CORE_API GenericTextureDescription
 	{
 		eTexType				 Dimension = TEX_TYPE_UNKNOWN;

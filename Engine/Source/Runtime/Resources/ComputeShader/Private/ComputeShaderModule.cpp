@@ -4,18 +4,20 @@
 #include "ResourceManager/Public/ResourceManager.h"
 #include "ComputeShader.h"
 
-namespace Engine::Resources
+MODULE_IMPL(Engine::ComputeShaderModule, ComputeShader)
+
+namespace Engine
 {
-	bool Engine::Resources::ComputeShaderModule::InitializeImpl()
+	bool ComputeShaderModule::InitializeImpl()
 	{
-		Managers::ResourceManager::GetInstance().RegisterLoadResource(ComputeShader::StaticTypeName(), [](bool& managing_flag)
+		Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::ComputeShader::StaticTypeName(), [](bool& managing_flag)
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
-					{
-						ComputeShader::GetByMetadataPath(path);
+					{ Resources::ComputeShader::GetByMetadataPath( path );
 					};
 
-				return UIHelpers::OpenLoadDialog<ComputeShader, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
+				return UIHelpers::OpenLoadDialog<Resources::ComputeShader, Managers::ResourceManager>(
+                            managing_flag, {}, load_callback, {} );
 			});
 
 		return true;
@@ -23,7 +25,7 @@ namespace Engine::Resources
 
 	bool ComputeShaderModule::ShutdownImpl()
 	{
-		Managers::ResourceManager::GetInstance().UnregisterLoadResource(ComputeShader::StaticTypeName());
+        Managers::ResourceManager::GetInstance().UnregisterLoadResource( Resources::ComputeShader::StaticTypeName() );
 
 		return true;
 	}

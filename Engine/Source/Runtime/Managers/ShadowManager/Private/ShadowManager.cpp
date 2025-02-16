@@ -120,8 +120,7 @@ namespace Engine::Managers
 
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
-			std::vector<SBs::LightVPSB> current_light_vp;
-			GetLightVP(scene, current_light_vp);
+			GetLightVP(scene, m_current_scene_light_vp_);
 
 			// Build light information structured buffer.
 			std::vector<SBs::LightSB> light_buffer;
@@ -153,10 +152,10 @@ namespace Engine::Managers
 				primitive.commandList->SoftReset();
 				ClearShadowMaps(&primitive);
 				CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
-				CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
+				CheckSize<UINT>(m_current_scene_light_vp_.size(), L"Warning: Light VP size is too big!");
 
 				m_light_sb_->SetData(&primitive, m_lights_.size(), light_buffer.data());
-				m_light_vp_sb_->SetData(&primitive, current_light_vp.size(), current_light_vp.data());
+				m_light_vp_sb_->SetData(&primitive, m_current_scene_light_vp_.size(), m_current_scene_light_vp_.data());
 				primitive.commandList->FlagReady();
 			}
 			
@@ -223,6 +222,7 @@ namespace Engine::Managers
 			 },
 			 [&gi, this, &light](const GraphicInterfaceContextPrimitive* context)
 			 {
+			     gi.SetViewport( context, m_viewport_ );
 				 gi.BindGraphic(context, m_shadow_shader_.get());
 				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
 				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
@@ -393,7 +393,22 @@ namespace Engine::Managers
 		gi.TransitBackMultiple(context, textures.data(), textures.size(), BIND_TYPE_SRV);
 	}
 
-	void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
+    StructuredBufferTypeProxy<SBs::LightSB> & ShadowManager::GetLightBuffer() const
+    {
+	    return *m_light_sb_;
+	}
+
+    StructuredBufferTypeProxy<SBs::LightVPSB> & ShadowManager::GetLightVPBuffer() const
+    {
+	    return *m_light_vp_sb_;
+	}
+
+    const std::vector<SBs::LightVPSB> & ShadowManager::GetCurrentSceneLightVP() const
+	{
+	    return m_current_scene_light_vp_;
+	}
+
+    void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
 	{
 		if (const auto locked = light.lock())
 		{

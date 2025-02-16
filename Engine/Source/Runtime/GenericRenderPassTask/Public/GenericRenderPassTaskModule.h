@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+#include "IModule.h"
 
 #include "GenericRenderPassTaskModule.generated.h"
 

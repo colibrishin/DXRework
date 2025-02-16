@@ -77,6 +77,11 @@ namespace Engine::Managers
 
 	void CollisionDetector::FixedUpdate(const float dt)
 	{
+        if ( !SceneManager::GetInstance().IsPlaying() )
+        {
+            return;
+        }
+	    
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
 #ifdef PHYSX_ENABLED

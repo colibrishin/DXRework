@@ -1,7 +1,7 @@
 #include "../Public/ShadowTexture.h"
+#include "ShadowTexture.generated.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
-#include "ShadowTexture.generated.h"
 
 namespace Engine::Resources
 {

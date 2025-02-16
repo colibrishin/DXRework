@@ -13,7 +13,10 @@ namespace Engine::Resources
     {
         GENERATE_BODY
         SimpleParticleComputeShader()
-            : ParticleComputeShader( "cs_particle.hlsl", { 32, 32, 1 } ) { }
+            : ParticleComputeShader( "cs_particle.hlsl" ) 
+        {
+            SetThread( { 32, 32, 1 } );
+        }
 
 #if WITH_EDITOR
         void OnUIUpdate(UIContext* const parent, const float dt) override;

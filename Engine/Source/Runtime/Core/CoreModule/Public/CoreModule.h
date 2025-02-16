@@ -2,7 +2,7 @@
 #include "CameraManager/Public/CameraManager.h"
 
 #include "Debugger/Public/Debugger.h"
-#include "ModuleManager/Public/IModule.h"
+#include "IModule.h"
 #include "ResourceManager/Public/ResourceManager.h"
 #include "SceneManager/Public/SceneManager.h"
 

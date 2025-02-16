@@ -158,3 +158,9 @@ bool Engine::Texture2DModule::DynamicLoadable()
 {
 	return false;
 }
+
+const std::vector<std::string> &Engine::Texture2DModule::LoadAfter() const
+{
+    static std::vector<std::string> load_after = { "RenderPipeline", "Texture" };
+    return load_after;
+}

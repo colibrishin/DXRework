@@ -107,9 +107,13 @@ namespace Engine::Managers
 			scene->GetPhysXScene()->fetchResults(true);
 			UpdateFromPhysX();
 #else
-			const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
+            if ( !SceneManager::GetInstance().IsPlaying() )
+            {
+                return;
+            }
 
-			for (const auto rb : rbs)
+            for ( const auto& rbs = scene->GetCachedComponents<Components::Rigidbody>();
+                const auto rb : rbs )
 			{
 				if (const auto locked = rb.lock())
 				{
@@ -174,34 +178,22 @@ namespace Engine::Managers
 		const auto t1 = rb->GetT1();
 		Vector3 lvel = rb->GetT0LinearVelocity();
 
-		const Vector3 lfrc = EvalFriction
-				(
-				 lvel, rb->GetFrictionCoefficient(),
-				 dt
-				);
+		const Vector3 lfrc = EvalFriction( lvel, rb->GetFrictionCoefficient(), dt );
 
 		const Vector3 rvel = rb->GetT0AngularVelocity();
 
 		lvel += lfrc;
-		FrictionVelocityGuard(lvel, lfrc);
+		FrictionVelocityGuard( lvel, lfrc );
 
-		EpsilonGuard(lvel);
+		EpsilonGuard( lvel );
 
-		t1->SetLocalPosition
-				(
-				 t1->GetLocalPosition() + EvalT1PositionDelta(lvel, rb->GetT0Force(), dt)
-				);
+		t1->SetLocalPosition( t1->GetLocalPosition() + EvalT1PositionDelta( lvel, rb->GetT0Force(), dt ) );
 
 		if (!rb->GetNoAngular())
 		{
 			Quaternion orientation = t1->GetLocalRotation();
-			orientation += Quaternion{
-				EvalT1PositionDelta
-				(
-				 rvel, rb->GetT0Torque(), dt
-				),
-				1.0f
-			} * orientation;
+			orientation += Quaternion{ EvalT1PositionDelta(rvel, rb->GetT0Torque(), dt),
+				1.0f } * orientation;
 
 			orientation.Normalize();
 			t1->SetLocalRotation(orientation);

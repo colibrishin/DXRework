@@ -1,4 +1,4 @@
-#include "ModuleManager/Public/IClientModule.h"
+#include "IClientModule.h"
 #include "IClientModule.generated.h"
 
 namespace Engine 

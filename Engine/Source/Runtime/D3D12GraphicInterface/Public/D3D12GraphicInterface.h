@@ -6,7 +6,7 @@
 #include <directx/d3d12.h>
 #include <dxgi1_5.h>
 
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+#include "IModule.h"
 
 #include "D3D12GraphicInterface.generated.h"
 

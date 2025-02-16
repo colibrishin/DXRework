@@ -1,5 +1,5 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "IModule.h"
 #include "ShapeModule.generated.h"
 
 namespace Engine

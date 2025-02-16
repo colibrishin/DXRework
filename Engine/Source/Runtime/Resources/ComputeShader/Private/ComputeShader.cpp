@@ -35,15 +35,13 @@ namespace Engine::Resources
 		}
 	}
 
-	ComputeShader::ComputeShader(
-		const std::filesystem::path& path,
-		const std::array<UINT, 3>&   thread)
+	ComputeShader::ComputeShader( const std::filesystem::path& path )
 		: Resource(path)
-	{
-		for (size_t i = 0; i < 3; ++i) 
-		{
-			m_thread_[i] = thread[i];
-		}
+    {}
+
+    void ComputeShader::SetThread( const std::array<uint32_t, 3> &thread )
+    { 
+		m_thread_ = thread;
 	}
 
 	ComputeShader::ComputeShader(const ComputeShader& other)

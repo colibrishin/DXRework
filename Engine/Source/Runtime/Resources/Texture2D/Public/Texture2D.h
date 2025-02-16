@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Resources/Texture/Public/Texture.h"
+#include "Texture.h"
 
 #include "Texture2D.generated.h"
 

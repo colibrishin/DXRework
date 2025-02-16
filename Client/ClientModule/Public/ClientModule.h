@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/ModuleManager/Public/IClientModule.h"
+#include "IClientModule.h"
 
 #include "ClientModule.generated.h"
 

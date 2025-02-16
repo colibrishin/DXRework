@@ -2,7 +2,6 @@
 #include "RenderTask.h"
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
 
 #include "ParticleRendererRenderTask.generated.h"
 

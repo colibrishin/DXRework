@@ -1,9 +1,9 @@
 #pragma once
+#include "IModule.h"
 
-#include "ModuleManager/Public/IModule.h"
 #include "ComputeShaderModule.generated.h"
 
-namespace Engine::Resources
+namespace Engine
 {
 	ECLASS(module)
 	struct ENGINE_COMPUTESHADER_API ComputeShaderModule : public Engine::IModule

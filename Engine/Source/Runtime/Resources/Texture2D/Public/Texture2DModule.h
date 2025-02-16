@@ -1,5 +1,5 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "IModule.h"
 
 #include "Texture2DModule.generated.h"
 
@@ -11,6 +11,7 @@ namespace Engine
 		GENERATE_BODY
 		bool InitializeImpl() override;
 		bool ShutdownImpl() override;
-		bool             DynamicLoadable() override;
+		bool DynamicLoadable() override;
+        const std::vector<std::string> &LoadAfter() const override;
 	};
 }
