@@ -90,7 +90,7 @@ namespace Engine
 	{
         auto copy_scene = Strong<Scene>(new Scene());
 	    copy_scene->initializeForce();
-	    copy_scene->synchronize( GetSharedPtr<Scene>() );
+	    copy_scene->deepCopy( GetSharedPtr<Scene>() );
 	    copy_scene->SetName( GetName() + "_Clone" );
 	    return copy_scene;
 	}
@@ -125,7 +125,7 @@ namespace Engine
 	    }
 	    
 	    const auto& camera       = CreateGameObject<Objects::Camera>(RESERVED_LAYER_CAMERA).lock();
-	    m_mainCamera_           = camera;
+	    m_main_camera_           = camera;
 	    m_main_camera_local_id_ = camera->GetLocalID();
 
 	    const auto& light1 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
@@ -174,7 +174,7 @@ namespace Engine
 		obj->GetSharedPtr<Abstracts::Actor>()->SetLocalID(id);
 	}
 
-	void Scene::addGameObjectImpl(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj)
+	void Scene::addGameObjectImpl(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj, bool assign_local_id)
 	{
 		// Disconnect the object from the previous scene and layer, if it exists.
 		if (const auto scene = obj->GetScene().lock())
@@ -197,7 +197,11 @@ namespace Engine
 		// Set internal information as this scene and layer
 		obj->GetSharedPtr<Abstracts::Actor>()->SetScene(GetSharedPtr<Scene>());
 		obj->GetSharedPtr<Abstracts::Actor>()->SetLayer(layer);
-		AssignLocalIDToObject(obj);
+
+		if ( assign_local_id )
+		{
+            AssignLocalIDToObject( obj );
+		}
 
 		if (!obj->IsInitialized())
 		{
@@ -222,11 +226,6 @@ namespace Engine
 
 	void Scene::AddObjectFinalize(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj)
 	{
-		// add object to scene
-		m_layers_[layer]->AddGameObject(obj);
-		m_cached_objects_.emplace(obj->GetID(), obj);
-		m_concurrent_cached_objects_.emplace(obj->GetID(), obj);
-
 		if (layer == RESERVED_LAYER_LIGHT && obj->GetObjectType() != DEF_OBJ_T_LIGHT)
 		{
 			throw std::logic_error("Only light object can be added to light layer");
@@ -239,6 +238,11 @@ namespace Engine
 		{
 			throw std::logic_error("Observer object can only be added to UI layer");
 		}
+
+		// add object to scene
+		m_layers_[layer]->AddGameObject(obj);
+		m_cached_objects_.emplace(obj->GetID(), obj);
+		m_concurrent_cached_objects_.emplace(obj->GetID(), obj);
 
 		onObjectAdded.Broadcast(obj);
 	}
@@ -313,7 +317,6 @@ namespace Engine
 
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
 			m_layers_               = scene->m_layers_;
-			m_mainCamera_           = scene->m_mainCamera_;
 			m_main_actor_local_id_  = scene->m_main_actor_local_id_;
 
 			m_object_position_tree_.Clear();
@@ -322,7 +325,6 @@ namespace Engine
 			m_cached_components_.clear();
 			m_concurrent_cached_components_.clear();
 			m_concurrent_cached_objects_.clear();
-			m_object_position_tree_.Clear();
 			m_assigned_actor_ids_.clear();
 
 			for (const auto& layer : m_layers_)
@@ -342,14 +344,14 @@ namespace Engine
 								 locked->GetID()
 								);
 
-						if (locked->GetLocalID() == m_main_actor_local_id_)
+						if (m_main_actor_local_id_ != g_invalid_id && locked->GetLocalID() == m_main_actor_local_id_)
 						{
 							m_main_actor_ = locked;
 						}
 
-						if (locked->GetLocalID() == m_main_actor_local_id_)
+						if (m_main_camera_local_id_ != g_invalid_id && locked->GetLocalID() == m_main_camera_local_id_)
 						{
-							m_main_actor_ = locked;
+							m_main_camera_ = locked->GetSharedPtr<Objects::Camera>();
 						}
 
 						for (const auto& comp : locked->GetAllComponents())
@@ -400,6 +402,75 @@ namespace Engine
 				AddObserver();
 			}
 		}
+    }
+
+    void Scene::deepCopy( const Weak<Scene> &other )
+    {
+        if ( const auto scene = other.lock() )
+        {
+#ifdef PHYSX_ENABLED
+            CleanupPhysX();
+            InitializePhysX();
+#endif
+
+            SpinLockToken ot = SingletonSpinLock::GetInstance().Lock( scene->m_object_lock_ );
+            SpinLockToken ct = SingletonSpinLock::GetInstance().Lock( scene->m_component_lock_ );
+
+            m_main_camera_local_id_ = scene->m_main_camera_local_id_;
+            m_main_actor_local_id_  = scene->m_main_actor_local_id_;
+
+            m_object_position_tree_.Clear();
+            m_object_collision_tree_.Clear();
+            m_cached_objects_.clear();
+            m_cached_components_.clear();
+            m_concurrent_cached_components_.clear();
+            m_concurrent_cached_objects_.clear();
+
+            m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
+
+			UINT idx = 0;
+            for ( const auto &layer : scene->m_layers_)
+            {
+				m_layers_.push_back( boost::make_shared<Layer>( idx ) );
+				m_layers_.back()->SetName( layer->GetName() );
+
+                for ( const auto &obj : layer->GetGameObjects() )
+                {
+                    if ( const auto locked = obj.lock() )
+                    {
+                        const Strong<Abstracts::ObjectBase> &clone = locked->Clone(false);
+
+                        clone->GetSharedPtr<Abstracts::Actor>()->SetScene( GetSharedPtr<Scene>() );
+                        clone->GetSharedPtr<Abstracts::Actor>()->SetLayer( locked->GetLayer() );
+                        
+						addGameObjectImpl( clone->GetLayer(), clone, false );
+                        // Use the same local id as the previous scene. Scene is different so that local id would not
+                        // duplicate.
+                        clone->GetSharedPtr<Abstracts::Actor>()->SetLocalID( locked->GetLocalID() );
+
+						if ( m_main_actor_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_actor_local_id_ )
+                        {
+                            m_main_actor_ = clone;
+                        }
+                        if ( m_main_camera_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_camera_local_id_ )
+                        {
+                            m_main_camera_ = clone->GetSharedPtr<Objects::Camera>();
+                        }
+                    }
+                }
+            }
+
+            std::memcpy( m_collision_mask_, scene->GetCollisionMask(), sizeof( m_collision_mask_ ) );
+
+            m_object_position_tree_.Update();
+            m_object_collision_tree_.Update();
+
+            if ( s_debug_observer_ )
+            {
+                DisableControllers();
+                AddObserver();
+            }
+        }
 	}
 
 #ifdef PHYSX_ENABLED
@@ -753,7 +824,7 @@ namespace Engine
 
 	Weak<Objects::Camera> Scene::GetMainCamera() const
 	{
-		return m_mainCamera_;
+		return m_main_camera_;
 	}
 
 	const Octree& Scene::GetObjectTree()
@@ -884,11 +955,11 @@ namespace Engine
 		// finding the main camera, if there is no main camera matches the local id, set the first camera as main camera.
 		if (it != cameras.end())
 		{
-			m_mainCamera_ = it->lock()->GetSharedPtr<Objects::Camera>();
+			m_main_camera_ = it->lock()->GetSharedPtr<Objects::Camera>();
 		}
 		else
 		{
-			m_mainCamera_           = cameras.begin()->lock()->GetSharedPtr<Objects::Camera>();
+			m_main_camera_           = cameras.begin()->lock()->GetSharedPtr<Objects::Camera>();
 			m_main_camera_local_id_ = cameras.begin()->lock()->GetLocalID();
 		}
 

@@ -328,7 +328,14 @@ namespace Engine
 		return result;
 	}
 
-	Layer::Layer() :
+    void Layer::clear()
+	{
+	    m_objects_.clear();
+		m_concurrent_weak_objects_cache_.clear();
+		m_weak_objects_cache_.clear();
+	}
+
+    Layer::Layer() :
 		m_layer_type_(0),
 		m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()){}
 } // namespace Engine

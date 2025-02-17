@@ -305,7 +305,11 @@ namespace Engine
 		void AssignLocalIDToObject(const Strong<Abstracts::ObjectBase>& obj);
 
 		// Set the scene and layer to the object, and schedule the object to be added at the next frame.
-		void addGameObjectImpl(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj);
+        void addGameObjectImpl( 
+			const LayerSizeType layer, 
+			const Strong<Abstracts::ObjectBase> &obj, 
+			bool assign_local_id = true );
+		
 		// Add cache component from the object.
 		void addCacheComponentImpl(const Strong<Abstracts::Component>& component, ComponentType type);
 		// Remove cache component from the object.
@@ -319,6 +323,7 @@ namespace Engine
 		void initializeFinalize();
 
 		void synchronize(const Weak<Scene>& ptr_scene);
+        void deepCopy( const Weak<Scene> &other );
 
 		EPROPERTY()
 		bool m_b_scene_raytracing_;
@@ -340,7 +345,7 @@ namespace Engine
 #endif
 
 		Weak<Abstracts::ObjectBase> m_observer_;
-		Weak<Objects::Camera>       m_mainCamera_;
+		Weak<Objects::Camera>       m_main_camera_;
 		Weak<Abstracts::ObjectBase> m_main_actor_;
 
 		LocalGlobalIDMap            m_assigned_actor_ids_;

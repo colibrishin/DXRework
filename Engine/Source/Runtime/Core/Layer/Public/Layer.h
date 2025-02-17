@@ -40,6 +40,8 @@ namespace Engine
 		ConcurrentWeakObjVec GetGameObjectsConcurrent() const;
 		WeakObjVec           GetGameObjects() const;
 
+		void clear();
+
 		auto begin() noexcept
 		{
 			return m_objects_.begin();
