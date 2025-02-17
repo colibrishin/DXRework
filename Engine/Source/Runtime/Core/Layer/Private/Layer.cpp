@@ -14,7 +14,44 @@ namespace Engine
 
 	Layer::~Layer() {}
 
-	void Layer::Initialize() {}
+	void Layer::Initialize()
+    {}
+
+    void Layer::BeginPlay( const float dt )
+    {
+		for (const auto& object : m_objects_)
+		{
+            if ( !object->GetActive() )
+            {
+                continue;
+            }
+
+            if ( object->GetParent().lock() )
+            {
+                continue;
+            }
+
+            object->BeginPlay( dt );
+		}
+    }
+
+    void Layer::EndPlay( const float dt )
+    {
+        for ( const auto &object : m_objects_ )
+        {
+            if ( !object->GetActive() )
+            {
+                continue;
+            }
+
+            if ( object->GetParent().lock() )
+            {
+                continue;
+            }
+
+            object->EndPlay( dt );
+        }
+	}
 
 	void Layer::PreUpdate(const float dt)
 	{

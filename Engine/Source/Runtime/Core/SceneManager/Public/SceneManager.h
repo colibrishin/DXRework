@@ -17,7 +17,7 @@ namespace Engine::Managers
 		GENERATE_BODY
 	public:
 		DelegateOnSceneActive onSceneActive;
-		DelegateOnSceneRemoved onSceneRemoved;
+        DelegateOnSceneRemoved onSceneRemoved;
 
 		explicit SceneManager(SINGLETON_LOCK_TOKEN) {}
 
@@ -28,7 +28,8 @@ namespace Engine::Managers
 
 		void AddScene(const std::string& name);
 	    void RemoveScene(const std::string& name);
-		void SetActive(const std::string& name);
+        void                                            SetActive( const std::string &name );
+
 		[[nodiscard]] Weak<Scene> GetScene(const std::string& name) const;
 		[[nodiscard]] const std::vector<Strong<Scene>>& GetScenes() const;
 
@@ -69,9 +70,15 @@ namespace Engine::Managers
 		// Internal usage of add scene, used for un-deducible type (runtime).
 		void AddScene(const Weak<Scene>& ptr_scene);
 
+		void setPlay( const std::string_view name );
+        void setStop();
+
 		void SetActiveFinalize(const Weak<Scene>& it);
 
-		void RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name);
+        void setPlayFinalize( const float dt, const Weak<Scene> &scene );
+		void setStopFinalize( const float dt );
+		
+		void RemoveSceneFinalize(const Strong<Scene>& scene);
 
         Weak<Scene>                m_active_scene_{};
         Weak<Scene>                m_playing_scene_{};

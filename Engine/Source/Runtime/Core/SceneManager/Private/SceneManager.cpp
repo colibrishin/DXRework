@@ -28,9 +28,48 @@ namespace Engine::Managers
 		}
 
 		onSceneActive.Broadcast(m_active_scene_.lock());
+    }
+
+    void SceneManager::setPlayFinalize( const float dt, const Weak<Scene> &scene )
+    {
+        if ( const auto &play_scene = scene.lock() )
+        {
+            m_playing_scene_ = play_scene;
+            std::swap( m_playing_scene_, m_active_scene_ );
+
+            if ( !play_scene->IsInitialized() )
+            {
+                play_scene->Initialize();
+            }
+
+			m_b_playing_ = true;
+            play_scene->BeginPlay( dt );
+
+            // g_raytracing = scene->m_b_scene_raytracing_;
+
+			onSceneActive.Broadcast( scene );
+        }
+    }
+
+    void SceneManager::setStopFinalize( const float dt )
+    {
+		if ( const auto& play_scene = m_active_scene_.lock() )
+		{
+            m_b_playing_ = false;
+            play_scene->EndPlay( dt );
+
+            m_active_scene_ = {};
+            std::swap( m_active_scene_, m_playing_scene_ );
+
+            const decltype( m_scenes_ )::iterator &found_scene = std::ranges::find_if(
+                    m_scenes_, [ play_scene ]( const auto &v_scene ) { return play_scene == v_scene; } );
+
+            onSceneRemoved.Broadcast( *found_scene );
+            m_scenes_.erase( found_scene );
+		}
 	}
 
-	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name)
+	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene)
 	{
 		if (scene == m_active_scene_.lock())
 		{
@@ -88,6 +127,36 @@ namespace Engine::Managers
 		}
 	}
 
+	void SceneManager::setPlay( const std::string_view name )
+    {
+		const auto scene = std::ranges::find_if( m_scenes_, [ name ]( const auto &scene ) { return scene->GetName() == name; } );
+
+        if ( scene != m_scenes_.end() )
+        {
+            TaskScheduler::GetInstance().AddTask( TASK_PLAY_SCENE,
+                                                  { *scene },
+                                                  [ this ]( const std::vector<std::any> &params, const float dt )
+                                                  {
+                                                      const auto s = std::any_cast<Strong<Scene>>( params[ 0 ] );
+                                                      setPlayFinalize( dt, s );
+                                                  } );
+        }
+    }
+
+	void SceneManager::setStop()
+    {
+		if (const auto& play_scene = m_playing_scene_.lock(); m_b_playing_)
+		{
+            TaskScheduler::GetInstance().AddTask( TASK_STOP_SCENE,
+                                                  {  },
+                                                  [ this ]( const std::vector<std::any> &params, const float dt )
+                                                  {
+                                                      setStopFinalize( dt );
+                                                  } );
+		}
+        
+    }
+
 	inline Weak<Scene> SceneManager::GetScene(const std::string& name) const
 	{
 		const auto scene = std::ranges::find_if
@@ -125,12 +194,11 @@ namespace Engine::Managers
             TaskScheduler::GetInstance().AddTask
                     (
                             TASK_REM_SCENE,
-                            {*scene, name},
+                            { *scene },
                             [this](const std::vector<std::any>& params, float)
                             {
                                 const auto scene = std::any_cast<Strong<Scene>>(params[0]);
-                                const auto name  = std::any_cast<std::string>(params[1]);
-                                RemoveSceneFinalize(scene, name);
+                                RemoveSceneFinalize(scene);
                             }
                             );
         }
@@ -322,30 +390,22 @@ namespace Engine::Managers
 
     void SceneManager::Play()
 	{
-	    if (const Strong<Scene>& active_scene = m_active_scene_.lock())
-	    {
-	        m_playing_scene_ = active_scene;
-	        
+	    if (const Strong<Scene>& active_scene = m_active_scene_.lock();
+			active_scene && !m_b_playing_)
+        {
             const Strong<Scene> scene_clone = active_scene->Clone();
 	        AddScene( scene_clone );
-	        SetActive( scene_clone->GetName() );
-	        
-	        m_b_playing_ = true;
-	    }
+	        setPlay( scene_clone->GetName() );
+		}
 	}
 
     void SceneManager::Stop()
 	{
 	    const Strong<Scene>& play_scene = m_playing_scene_.lock();
-	    const Strong<Scene>& active_scene = m_active_scene_.lock();
 
-	    if (play_scene && active_scene)
+	    if ( m_b_playing_ && play_scene )
 	    {
-	        RemoveScene( active_scene->GetName() );
-            SetActive( play_scene->GetName() );
-	        
-	        m_playing_scene_ = {};
-	        m_b_playing_ = false;
+            setStop( );
 	    }
 	}
 

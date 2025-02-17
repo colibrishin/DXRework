@@ -37,6 +37,8 @@ namespace Engine::Abstracts
 		bool             IsTicked() const;
 		bool             GetActive() const;
 
+		virtual void                       EndPlay( const float dt );
+		virtual void                       BeginPlay( const float dt );
 		virtual void SetActive(bool active);
 		virtual eComponentUpdatePriorities GetUpdatePriority() const = 0;
 		void         Initialize() override;

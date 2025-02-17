@@ -114,6 +114,7 @@ namespace Engine::Managers
 	    std::vector<SBs::LightVPSB> m_current_scene_light_vp_;
 		Unique<StructuredBufferTypeProxy<SBs::LightSB>> m_light_sb_;
 		Unique<StructuredBufferTypeProxy<SBs::LightVPSB>> m_light_vp_sb_;
+        Unique<PrimitiveSampler>                          m_shadow_sampler_;
 
 		Viewport m_viewport_;
 	};

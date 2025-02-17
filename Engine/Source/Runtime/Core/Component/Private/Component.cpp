@@ -31,7 +31,13 @@ namespace Engine::Abstracts
 		return m_b_ticked_;
 	}
 
-	void Component::SetActive(bool active)
+	void Component::EndPlay( const float dt )
+    {}
+
+    void Component::BeginPlay( const float dt )
+    {}
+
+    void Component::SetActive( bool active )
 	{
 		m_b_active_ = active;
 	}

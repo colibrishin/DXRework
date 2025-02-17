@@ -886,6 +886,28 @@ namespace Engine
 	};
 
 	struct GraphicInterfaceContextPrimitive;
+
+	struct ENGINE_CORE_API PrimitiveSampler
+    {
+        virtual ~PrimitiveSampler() = default;
+        virtual void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) = 0;
+        virtual bool IsValid()
+        {
+            return m_sampler_ != nullptr;
+        }
+
+        virtual uint64_t GetCPUAddress() const = 0;
+        virtual uint64_t GetGPUAddress() const = 0;
+
+    protected:
+        void SetSampler( void *sampler )
+        {
+            m_sampler_ = sampler;
+        }
+
+    private:
+        void *m_sampler_ = nullptr;
+    };
 	
 	struct ENGINE_CORE_API GraphicHeapBase
 	{
@@ -895,6 +917,10 @@ namespace Engine
 			const Resources::Texture* const* textures,
 			const UINT count,
 			const UINT offset) const = 0;
+
+        virtual void SetSampler( 
+			const PrimitiveSampler *sampler,
+			const eSampler slot ) const = 0;
 		
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
@@ -1233,11 +1259,12 @@ namespace Engine
 		virtual void* GetNativeInterface() = 0;
 		virtual void* GetNativePipeline() = 0;
 
-		virtual PrimitiveTexture* GetNewPrimitiveTexture() = 0;
-		virtual PrimitiveMesh* GetNewPrimitiveMesh() = 0;
+		virtual PrimitiveTexture       *GetNewPrimitiveTexture()       = 0;
+        virtual PrimitiveMesh          *GetNewPrimitiveMesh()          = 0;
 		virtual GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() = 0;
 		virtual ComputePrimitiveShader* GetNewComputePrimitiveShader() = 0;
-		virtual PrimitiveFont* GetNewPrimitiveFont() = 0;
+        virtual PrimitiveFont          *GetNewPrimitiveFont()          = 0;
+        virtual PrimitiveSampler       *GetNewPrimitiveSampler()       = 0;
 
 		virtual Matrix GetProjectionMatrix() = 0;
 		virtual Matrix GetOrthogonalMatrix() = 0;

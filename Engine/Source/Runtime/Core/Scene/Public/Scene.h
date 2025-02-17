@@ -22,8 +22,8 @@ namespace physx
 }
 #endif
 
-DEFINE_DELEGATE(OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase>);
-DEFINE_DELEGATE(OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase>);
+DEFINE_DELEGATE( OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase> );
+DEFINE_DELEGATE( OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase> );
 
 namespace Engine
 {
@@ -66,6 +66,8 @@ namespace Engine
 		void AddObserver();
 		void Initialize() override;
 
+		virtual void BeginPlay( const float dt );
+        virtual void EndPlay( const float dt );
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PreRender(const float dt) override;

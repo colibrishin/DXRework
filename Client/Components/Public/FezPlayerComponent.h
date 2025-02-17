@@ -23,6 +23,7 @@ class ENGINE_CLIENT_API FezPlayerComponent : public Engine::Abstracts::Component
 	explicit FezPlayerComponent(const Engine::Weak<Engine::Abstracts::ObjectBase>& owner);
 
 	void Initialize() override;
+    void BeginPlay( const float dt ) override;
 	void PreUpdate(const float dt) override;
 	void Update(const float dt) override;
 	void PostUpdate(const float dt) override;

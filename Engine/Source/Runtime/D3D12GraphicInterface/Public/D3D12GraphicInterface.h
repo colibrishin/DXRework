@@ -58,6 +58,7 @@ namespace Engine
 		GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() override;
 		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
 		PrimitiveFont*          GetNewPrimitiveFont() override;
+        PrimitiveSampler       *GetNewPrimitiveSampler() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 
@@ -82,7 +83,7 @@ namespace Engine
 		inline void TransitMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 		void TransitToMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) override;
 		void TransitBackMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) override;
-		
+
 		void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) override;
 		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) override;
 		void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) override;

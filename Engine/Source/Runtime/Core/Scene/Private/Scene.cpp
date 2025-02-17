@@ -624,7 +624,23 @@ namespace Engine
 	m_object_lock_(SingletonSpinLock::GetInstance().Register()),
 	m_component_lock_(SingletonSpinLock::GetInstance().Register()){}
 
-	void Scene::PreUpdate(const float dt)
+	void Scene::BeginPlay( const float dt )
+    {
+		for (const auto& layer : m_layers_)
+		{
+            layer->BeginPlay( dt );
+		}
+    }
+
+    void Scene::EndPlay( const float dt )
+    {
+        for ( const auto &layer : m_layers_ )
+        {
+            layer->EndPlay( dt );
+        }
+	}
+
+    void Scene::PreUpdate( const float dt )
 	{
 		for (const auto& layer : m_layers_)
 		{

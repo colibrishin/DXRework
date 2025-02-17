@@ -47,6 +47,8 @@ namespace Engine::Abstracts
 		~ObjectBase() override = default;
 
 		void Initialize() override;
+        virtual void BeginPlay( const float dt );
+        virtual void EndPlay( const float dt );
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif

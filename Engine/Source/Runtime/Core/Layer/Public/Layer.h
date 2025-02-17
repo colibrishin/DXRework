@@ -18,6 +18,8 @@ namespace Engine
 		~Layer() override;
 
 		void Initialize() override;
+        virtual void BeginPlay( const float dt );
+        virtual void EndPlay( const float dt );
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PreRender(const float dt) override;

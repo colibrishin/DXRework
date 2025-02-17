@@ -488,6 +488,64 @@ namespace Engine::Abstracts
 #if WITH_EDITOR
 		UpdateUIText();
 #endif
+    }
+
+    void ObjectBase::BeginPlay( const float dt )
+    {
+		for (const auto& comp : m_cached_component_)
+		{
+            for ( const auto &component : m_components_ | std::views::values )
+            {
+                if ( !component->GetActive() )
+                {
+                    continue;
+                }
+
+                component->BeginPlay( dt );
+            }
+
+            for ( const auto &child : m_children_cache_ | std::views::values )
+            {
+                if ( const auto locked = child.lock() )
+                {
+                    if ( !locked->GetActive() )
+                    {
+                        continue;
+                    }
+
+                    locked->BeginPlay( dt );
+                }
+            }
+		}
+    }
+
+    void ObjectBase::EndPlay( const float dt )
+    {
+        for ( const auto &comp : m_cached_component_ )
+        {
+            for ( const auto &component : m_components_ | std::views::values )
+            {
+                if ( !component->GetActive() )
+                {
+                    continue;
+                }
+
+                component->EndPlay( dt );
+            }
+
+            for ( const auto &child : m_children_cache_ | std::views::values )
+            {
+                if ( const auto locked = child.lock() )
+                {
+                    if ( !locked->GetActive() )
+                    {
+                        continue;
+                    }
+
+                    locked->EndPlay( dt );
+                }
+            }
+        }
 	}
 
 #if WITH_EDITOR

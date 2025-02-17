@@ -34,7 +34,7 @@ namespace Engine::Managers
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());
 		m_light_vp_sb_ = std::make_unique<decltype(m_light_vp_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightVPSB>());
-
+        
 		InitializeViewport();
 
 		SceneManager::GetInstance().onSceneRemoved.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::PreSwapScene);
@@ -53,6 +53,12 @@ namespace Engine::Managers
 				}
 			}
 		}
+
+		m_shadow_sampler_ = Unique<decltype( m_shadow_sampler_ )::element_type>( gi.GetNewPrimitiveSampler() );
+        m_shadow_sampler_->Generate(
+                SHADER_SAMPLER_WRAP, 
+				SHADER_SAMPLER_LESS_EQUAL, 
+				SAMPLER_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT );
 
 		Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
 		Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
@@ -79,6 +85,9 @@ namespace Engine::Managers
 
 	void ShadowManager::GetLightVP(const Strong<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
 	{
+        current_light_vp.resize( m_lights_.size() );
+		size_t idx = 0;
+
 		for (const auto& ptr_light : m_lights_ | std::views::values)
 		{
 			if (const auto light = ptr_light.lock())
@@ -91,14 +100,14 @@ namespace Engine::Managers
 
 				if (light_dir == Vector3::Zero)
 				{
-					current_light_vp.push_back({});
+					current_light_vp.at(idx) = {};
 					continue;
 				}
 
 				SBs::LightVPSB light_vp{};
 				// Get the light's view and projection matrix in g_max_shadow_cascades parts.
 				EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
-				current_light_vp.emplace_back(light_vp);
+				current_light_vp.at(idx) = light_vp;
 			}
 		}
 	}
@@ -377,6 +386,8 @@ namespace Engine::Managers
 
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
 		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
+
+		context->heap->SetSampler( m_shadow_sampler_.get(), SAMPLER_SHADOW );
 	}
 
 	void ShadowManager::TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const

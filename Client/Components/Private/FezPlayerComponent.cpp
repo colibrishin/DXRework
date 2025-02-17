@@ -37,21 +37,26 @@ inline FezPlayerComponent::FezPlayerComponent(const Engine::Weak<Engine::Abstrac
 void FezPlayerComponent::Initialize()
 {
 	Component::Initialize();
-	MoveCameraToChild();
+}
 
-	const auto& owner = GetOwner().lock();
-	if (!owner)
-	{
-		return;
-	}
+void FezPlayerComponent::BeginPlay( const float dt )
+{
+    Component::BeginPlay( dt );
+    MoveCameraToChild();
 
-	const auto& rb = owner->GetComponent<Components::Rigidbody>().lock();
-	if (!rb)
-	{
-		return;
-	}
+    const auto &owner = GetOwner().lock();
+    if ( !owner )
+    {
+        return;
+    }
 
-	rb->SetFrictionCoefficient(0.1);
+    const auto &rb = owner->GetComponent<Components::Rigidbody>().lock();
+    if ( !rb )
+    {
+        return;
+    }
+
+    rb->SetFrictionCoefficient( 0.1 );
 }
 
 void FezPlayerComponent::PreUpdate(const float dt)
