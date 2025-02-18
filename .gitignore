@@ -386,7 +386,6 @@ MigrationBackup/
 vcpkg.disable-metrics
 archives
 .DS_Store
-prefab/
 *.swp
 
 ###################

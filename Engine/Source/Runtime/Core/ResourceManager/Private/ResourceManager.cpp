@@ -6,8 +6,8 @@
 
 #if WITH_EDITOR
 #include "UIHelpersSceneManager.h"
-#include "Prefab/Public/Prefab.h"
 #include "ObjectBase/Public/ObjectBase.h"
+#include "Prefab/Public/Prefab.h"
 #endif
 
 namespace Engine::Managers
