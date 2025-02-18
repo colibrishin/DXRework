@@ -57,6 +57,10 @@ public class VCPKG : ExportProject
         {
             return SolutionDir + @"/vcpkg_installed/x64-windows/bin";
         }
+        else 
+        {
+            return "";
+        }
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target) 

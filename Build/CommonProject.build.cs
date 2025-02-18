@@ -103,7 +103,6 @@ public abstract class CommonProject : Project
         conf.ExportDefines.Add(emptyAPIString);
         conf.Defines.Add(emptyAPIString);
 
-        // conf.Output = Configuration.OutputType.Exe;
         if (target.LaunchType == ELaunchType.Editor)
         {
             conf.Output = Configuration.OutputType.Dll;
@@ -182,19 +181,19 @@ public abstract class CommonProject : Project
         //}
 
         {
-            if (target.LaunchType == ELaunchType.Editor)
+            if (target.Optimization == Optimization.Debug)
             {
-                if (target.Optimization == Optimization.Debug)
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
-                else
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
             }
             else
             {
-                if (target.Optimization == Optimization.Debug)
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebug);
-                else
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreaded);
+                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrtd.lib");
             }
         }
         
