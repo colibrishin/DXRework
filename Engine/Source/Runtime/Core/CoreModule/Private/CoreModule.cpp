@@ -124,7 +124,9 @@ bool Engine::CoreModule::ShutdownImpl()
 #endif
 
 	GraphicInterfaceAccessor::Shutdown();
+	
+#if WITH_EDITOR
 	UIInterfaceAccessor::Shutdown();
-
+#endif
 	return true;
 }

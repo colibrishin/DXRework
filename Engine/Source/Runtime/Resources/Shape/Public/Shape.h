@@ -41,7 +41,7 @@ namespace Engine::Resources
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif
 

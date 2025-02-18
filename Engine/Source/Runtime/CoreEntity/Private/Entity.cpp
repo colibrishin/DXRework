@@ -1,7 +1,10 @@
 #include "..\Public\Entity.h"
 #include "Entity.generated.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
+
 #include "Serialization.hpp"
 
 void Engine::Abstracts::Entity::SetName(const std::string_view name)
@@ -54,9 +57,9 @@ void Engine::Abstracts::Entity::Initialize()
 	m_b_initialized_ = true;
 }
 
+#if WITH_EDITOR
 void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float dt)
 {
-#if WITH_EDITOR
 	if (parent)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -72,8 +75,8 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, 0.f, 0, 0, false});
 		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
 	}
-#endif
 }
+#endif
 
 void Engine::Abstracts::Entity::OnSerialized()
 {

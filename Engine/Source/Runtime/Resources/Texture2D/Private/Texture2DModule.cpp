@@ -3,8 +3,6 @@
 
 #include "Texture2D.h"
 
-
-
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include <magic_enum.hpp>
 
@@ -12,6 +10,7 @@ MODULE_IMPL(Engine::Texture2DModule, Texture2D)
 
 bool Engine::Texture2DModule::InitializeImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -142,15 +141,17 @@ bool Engine::Texture2DModule::InitializeImpl()
 
 		UIHelpers::OpenNewDialog<Resources::Texture2D, Managers::ResourceManager>(managing_flag, ui_callback, load_callback, cleanup_callback);
 	});
+#endif
 
 	return true;
 }
 
 bool Engine::Texture2DModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Engine::Resources::Texture2D::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Engine::Resources::Texture2D::StaticTypeName());
-
+#endif
 	return true;
 }
 

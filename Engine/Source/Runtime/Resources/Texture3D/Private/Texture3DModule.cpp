@@ -1,8 +1,6 @@
 #include "Texture3DModule.h"
 #include "Texture3DModule.generated.h"
 
-
-
 MODULE_IMPL( Engine::Texture3DModule, Texture3D )
 
 bool Engine::Texture3DModule::InitializeImpl()

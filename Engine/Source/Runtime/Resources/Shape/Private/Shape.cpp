@@ -51,7 +51,7 @@ namespace Engine::Resources
 
 	void Shape::PostUpdate(const float dt) {}
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 	void Shape::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent) 

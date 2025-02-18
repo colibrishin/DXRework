@@ -23,6 +23,7 @@ namespace Engine::Resources
 		return *m_primitive_shader_;
 	}
 
+#if WITH_EDITOR
 	void ComputeShader::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent)
@@ -34,6 +35,7 @@ namespace Engine::Resources
 			*parent |= ui.NewLabelAndUInt( { "Thread Group Z", m_thread_[2], 0, 0, 256, true} );
 		}
 	}
+#endif
 
 	ComputeShader::ComputeShader( const std::filesystem::path& path )
 		: Resource(path)

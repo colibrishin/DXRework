@@ -11,6 +11,7 @@ MODULE_IMPL(Engine::AtlasAnimationTextureModule, AtlasAnimationTexture)
 
 bool Engine::AtlasAnimationTextureModule::InitializeImpl()
 {
+#if WITH_EDITOR
     Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
             const auto& load_callback = [](const std::string_view name, const std::string_view path) 
@@ -188,15 +189,16 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                 load_callback,
                 cleanup_callback);
         });
-
+#endif
     return true;
 }
 
 bool Engine::AtlasAnimationTextureModule::ShutdownImpl()
 {
+#if WITH_EDITOR
     Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName());
     Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName());
-
+#endif
     return true;
 }
 

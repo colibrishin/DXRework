@@ -1,11 +1,11 @@
 #include "../Public/Texture2D.h"
 #include "Texture2D.generated.h"
 
-
-
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
+#if WITH_EDITOR
 bool Engine::Resources::Texture2D::m_b_ui_load_dialog_ = false;
+#endif
 
 namespace Engine::Resources
 {

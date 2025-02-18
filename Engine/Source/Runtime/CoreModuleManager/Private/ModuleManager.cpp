@@ -263,7 +263,6 @@ namespace Engine::Managers
 #endif
 	}
 
-#if IS_DLL
 	void ModuleManager::RemoveModule(const std::wstring_view name)
 	{
 		{
@@ -281,13 +280,13 @@ namespace Engine::Managers
 		{
 			HMODULE module_ptr = static_cast<HMODULE>(module_info->m_handle_);
 			module_info.reset(); // Free the module information first to avoid the incomplete type.
-
+#if IS_DLL
 			FreeLibrary(module_ptr); // Free the library
+#endif
 		}
 		
 		m_module_loaded_.erase(name.data());
 	}
-#endif
 
 	void ModuleManager::LoadModuleAll()
 	{

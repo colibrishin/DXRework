@@ -53,7 +53,7 @@ public class VCPKG : ExportProject
         {
             return SolutionDir + @"/vcpkg_installed/x64-windows/debug/bin";
         }
-        else // target.Optimization == Optimization.Release 
+        else if (target.Optimization == Optimization.Release) 
         {
             return SolutionDir + @"/vcpkg_installed/x64-windows/bin";
         }

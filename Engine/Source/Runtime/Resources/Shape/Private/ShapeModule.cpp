@@ -9,6 +9,7 @@ MODULE_IMPL(Engine::ShapeModule, Shape)
 
 bool Engine::ShapeModule::InitializeImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& ui_callback = [](UIContext* const context)
@@ -55,15 +56,17 @@ bool Engine::ShapeModule::InitializeImpl()
 
 		UIHelpers::OpenLoadDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 	});
+#endif
 
 	return true;
 }
 
 bool Engine::ShapeModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shape::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shape::StaticTypeName());
-
+#endif
 	return true;
 }
 

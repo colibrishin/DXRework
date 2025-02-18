@@ -10,6 +10,7 @@ namespace Engine
 {
 	bool ComputeShaderModule::InitializeImpl()
 	{
+#if WITH_EDITOR
 		Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::ComputeShader::StaticTypeName(), [](bool& managing_flag)
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -19,14 +20,16 @@ namespace Engine
 				return UIHelpers::OpenLoadDialog<Resources::ComputeShader, Managers::ResourceManager>(
                             managing_flag, {}, load_callback, {} );
 			});
+#endif
 
 		return true;
 	}
 
 	bool ComputeShaderModule::ShutdownImpl()
 	{
+#if WITH_EDITOR
         Managers::ResourceManager::GetInstance().UnregisterLoadResource( Resources::ComputeShader::StaticTypeName() );
-
+#endif
 		return true;
 	}
 

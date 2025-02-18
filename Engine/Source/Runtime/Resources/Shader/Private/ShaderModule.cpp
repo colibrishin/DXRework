@@ -13,6 +13,8 @@ MODULE_IMPL(Engine::ShaderModule, Shader)
 
 bool Engine::ShaderModule::InitializeImpl()
 {
+
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Shader::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -164,6 +166,7 @@ bool Engine::ShaderModule::InitializeImpl()
 				load_callback,
 				cleanup_callback);
 		});
+#endif
 
 	StockShaderPrecompile();
 
@@ -303,9 +306,10 @@ const std::vector<std::string>& Engine::ShaderModule::LoadAfter() const
 
 bool Engine::ShaderModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shader::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shader::StaticTypeName());
-
+#endif
 	return true;
 }
 
