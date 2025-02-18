@@ -2,8 +2,6 @@
 #include "AnimatorModule.generated.h"
 
 #include "../Public/Animator.h"
-
-#include "ModuleManager/Public/ModuleManager.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
 
 MODULE_IMPL(Engine::AnimatorModule, Animator)

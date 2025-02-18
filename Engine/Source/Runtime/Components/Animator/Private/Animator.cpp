@@ -1,7 +1,7 @@
 #include "../Public/Animator.h"
 #include "Animator.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"

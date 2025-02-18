@@ -1,6 +1,5 @@
 #pragma once
-#include "CoreType.h"
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "RenderComponentModule.generated.h"
 

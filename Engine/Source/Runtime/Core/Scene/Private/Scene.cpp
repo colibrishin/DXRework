@@ -7,7 +7,9 @@
 #include "../Public/Scene.h"
 #include "Scene.generated.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "Source/Runtime/Core/Layer/Public/Layer.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
@@ -811,9 +813,9 @@ namespace Engine
 		}
 	}
 
+#if WITH_EDITOR
 	void Scene::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
@@ -830,8 +832,8 @@ namespace Engine
 				}
 			};
 		}
-#endif
 	}
+#endif
 
 	void Scene::OnSerialized()
 	{

@@ -35,7 +35,7 @@ namespace Engine::Managers
 #endif
 	}
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -298,8 +298,10 @@ namespace Engine::Managers
 		return {};
 	}
 
+#if WITH_EDITOR
 	const ResourceManager::ResourceMap& ResourceManager::GetResources() const
 	{
 		return m_resources_;
 	}
+#endif
 }

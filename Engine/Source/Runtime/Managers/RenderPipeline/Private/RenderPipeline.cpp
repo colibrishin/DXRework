@@ -1,7 +1,7 @@
 #include "../Public/RenderPipeline.h"
 #include "../Public/Renderer.h"
 
-#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
+
 #include "CoreModule/Public/CoreModule.h"
 
 #include "Objects/Camera/Public/Camera.h"

@@ -1,7 +1,7 @@
 #include "ShapeModule.h"
 #include "Shape.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "ShapeModule.generated.h"
 

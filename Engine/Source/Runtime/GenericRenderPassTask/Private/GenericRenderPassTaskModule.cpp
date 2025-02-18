@@ -2,7 +2,7 @@
 #include "GenericRenderPassTaskModule.generated.h"
 #include "Renderer.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "GenericRenderPassTask.h"
 
 MODULE_IMPL(Engine::GenericRenderPassTaskModule, GenericRenderPassTask)

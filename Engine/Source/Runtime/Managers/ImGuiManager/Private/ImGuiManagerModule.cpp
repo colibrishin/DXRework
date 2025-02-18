@@ -1,7 +1,7 @@
 ﻿#include "ImGuiManager.h"
 #include "ImGuiManagerModule.h"
 #include "ImGuiManagerModule.generated.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "CoreModule/Public/CoreModule.h"
 

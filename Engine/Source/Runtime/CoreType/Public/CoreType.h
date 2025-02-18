@@ -1,7 +1,5 @@
 #pragma once
 #define EMPTY
-#define DLLIMPORT __declspec(dllimport)
-#define DLLEXPORT __declspec(dllexport)
 
 #define ECLASS(...)
 #define EENUM(...)

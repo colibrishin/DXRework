@@ -3,7 +3,7 @@
 
 #include "AtlasAnimationTexture.h"
 #include "AtlasAnimation.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "ResourceManager/Public/ResourceManager.h"
 #include "Texture2D.h"
 

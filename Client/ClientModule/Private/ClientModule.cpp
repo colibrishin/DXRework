@@ -1,8 +1,6 @@
 #include "ClientModule/Public/ClientModule.h"
 #include "ClientModule.generated.h"
 #include "Renderer.h"
-
-#include "ModuleManager/Public/ModuleManager.h"
 #include "RenderTasks/Public/ShadowIntersectionRenderTask.h"
 
 MODULE_IMPL( ClientModule, Client )

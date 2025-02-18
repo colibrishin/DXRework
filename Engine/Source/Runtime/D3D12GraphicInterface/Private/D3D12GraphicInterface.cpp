@@ -22,8 +22,6 @@
 
 #include "CoreModule/Public/CoreModule.h"
 
-#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
-
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
 namespace Engine

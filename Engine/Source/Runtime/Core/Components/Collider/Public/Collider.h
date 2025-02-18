@@ -72,7 +72,11 @@ namespace Engine::Components
 		[[nodiscard]] virtual Matrix                              GetLocalMatrix() const;
 
 		void Initialize() override;
+
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const context, const float dt) override;
+#endif
+
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;

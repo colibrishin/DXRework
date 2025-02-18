@@ -1,5 +1,4 @@
 #include "IClientModule.h"
-#include "IClientModule.generated.h"
 
 namespace Engine 
 {

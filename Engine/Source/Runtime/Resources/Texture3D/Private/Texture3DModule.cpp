@@ -1,7 +1,7 @@
 #include "Texture3DModule.h"
 #include "Texture3DModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL( Engine::Texture3DModule, Texture3D )
 

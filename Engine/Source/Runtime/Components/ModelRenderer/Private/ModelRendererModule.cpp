@@ -1,7 +1,6 @@
 #include "ModelRendererModule.h"
 #include "ModelRendererModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
 #include "ModelRenderer.h"
 #include "ObjectBase/Public/ObjectBase.h"
 #include "Component/Public/Component.h"

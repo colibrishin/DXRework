@@ -1,7 +1,7 @@
 #include "../Public/Texture2D.h"
 #include "Texture2D.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 

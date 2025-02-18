@@ -1,15 +1,10 @@
 #pragma once
-#include "IModule.h"
-
-#include "IClientModule.generated.h"
+#include "ModuleManager.h"
 
 namespace Engine 
 {
-	ECLASS(abstract)
-	struct ENGINE_CORETYPE_API IClientModule : public IModule
+	struct ENGINE_COREMODULEMANAGER_API IClientModule : public Engine::IModule
 	{
-		GENERATE_BODY
-
 		virtual void GeneratedInitialize();
 		virtual void GeneratedShutdown();
 

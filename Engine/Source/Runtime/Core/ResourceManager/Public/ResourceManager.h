@@ -1,18 +1,20 @@
 #pragma once
 #include <ranges>
 #include "Source/Runtime/Core/Resource/Public/Resource.h"
-#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
+#include "Singleton.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-
 #include "Serialization.hpp"
 
-#include "ResourceManager.generated.h"
+#if WITH_EDITOR
 #include "UIHelpers.h"
+#endif
+
+#include "ResourceManager.generated.h"
 
 namespace Engine::Managers
 {
 	ECLASS()
-	class ENGINE_CORE_API ResourceManager : public Engine::Abstracts::Singleton<ResourceManager>
+	class ENGINE_CORE_API ResourceManager : public Abstracts::Singleton<ResourceManager>
 	{
 		GENERATE_BODY
 	public:
@@ -20,7 +22,7 @@ namespace Engine::Managers
 
 		void Initialize() override;
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif
 		void PreUpdate(const float dt) override;

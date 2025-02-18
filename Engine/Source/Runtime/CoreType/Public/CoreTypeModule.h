@@ -1,4 +1,4 @@
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "CoreTypeModule.generated.h"
 

@@ -98,7 +98,7 @@ public abstract class CommonProject : Project
         conf.ExecuteTargetCopy = true;
         conf.IncludeBlobbedSourceFiles = false;
 
-        string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=EMPTY";
+        string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=";
 
         conf.ExportDefines.Add(emptyAPIString);
         conf.Defines.Add(emptyAPIString);

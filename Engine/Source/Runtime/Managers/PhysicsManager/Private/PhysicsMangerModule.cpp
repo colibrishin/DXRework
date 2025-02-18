@@ -7,7 +7,7 @@
 #include "PhysicsManager.h"
 
 #include "CoreModule/Public/CoreModule.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::PhysicsManagerModule, PhysicsManager);
 

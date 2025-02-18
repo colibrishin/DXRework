@@ -2,8 +2,6 @@
 #include "ParticleRendererModule.generated.h"
 
 #include "ComputeShader.h"
-#include "ModuleManager/Public/ModuleManager.h"
-
 #include "ParticleRenderer.h"
 
 #include "ObjectBase/Public/ObjectBase.h"

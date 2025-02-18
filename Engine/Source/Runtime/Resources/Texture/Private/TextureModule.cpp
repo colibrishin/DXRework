@@ -1,7 +1,7 @@
 #include "TextureModule.h"
 #include "TextureModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::TextureModule, Texture)
 

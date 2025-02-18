@@ -267,9 +267,9 @@ namespace Engine::Components
 
 	void Transform::FixedUpdate(const float dt) {}
 
+#if WITH_EDITOR
 	void Transform::OnUIUpdate(UIContext* const context, const float dt)
 	{
-#if WITH_EDITOR
 		if (context) 
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -306,8 +306,8 @@ namespace Engine::Components
 			*context |= ui.NewCheckbox({"Absolute Size", m_b_s_absolute_});
 			*context |= ui.NewCheckbox({"Absolute Rotation",m_b_r_absolute_});
 		}
-#endif
 	}
+#endif
 
 	void Transform::OnSerialized()
 	{

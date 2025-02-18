@@ -1,6 +1,8 @@
 #include "../Public/SceneManager.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"

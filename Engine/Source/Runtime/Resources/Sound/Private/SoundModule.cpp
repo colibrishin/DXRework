@@ -5,7 +5,7 @@
 
 #include "UIHelpersResourceManager.h"
 #include "ResourceManager/Public/ResourceManager.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::SoundModule, Sound)
 

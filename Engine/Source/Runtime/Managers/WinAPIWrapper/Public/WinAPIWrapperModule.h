@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "WinAPIWrapperModule.generated.h"
 

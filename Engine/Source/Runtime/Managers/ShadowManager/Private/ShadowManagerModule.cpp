@@ -5,7 +5,7 @@
 
 #include "CoreModule/Public/CoreModule.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::ShadowManagerModule, ShadowManager)
 

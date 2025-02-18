@@ -3,7 +3,7 @@
 
 #include "Font.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #if WITH_EDITOR
 #include "UIHelpersResourceManager.h"

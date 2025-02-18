@@ -1,7 +1,7 @@
 ﻿#include "ParticleRendererRenderInstanceTaskModule.h"
 #include "ParticleRendererRenderInstanceTaskModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "ParticleRendererRenderTask.h"
 #include "Renderer.h"
 

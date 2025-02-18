@@ -1,4 +1,5 @@
 ﻿#pragma once
+#if WITH_EDITOR
 #include "GraphicInterface.h"
 #include "Singleton.h"
 
@@ -364,3 +365,4 @@ namespace Engine::Managers
         Unique<GraphicHeapBase> m_imgui_descriptor_;
     };
 } // namespace Engine::Managers
+#endif

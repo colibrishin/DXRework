@@ -1,6 +1,5 @@
 ﻿#pragma once
-
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "ImGuiManagerModule.generated.h"
 

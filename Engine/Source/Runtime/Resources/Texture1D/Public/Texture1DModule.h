@@ -1,5 +1,5 @@
 #pragma once
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "Texture1DModule.generated.h"
 

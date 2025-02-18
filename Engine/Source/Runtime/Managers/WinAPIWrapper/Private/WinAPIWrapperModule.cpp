@@ -1,7 +1,7 @@
 #include "WinAPIWrapperModule.h"
 #include "WinAPIWrapperModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::WinAPIWrapperModule, WinAPIWrapper)
 

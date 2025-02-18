@@ -7,7 +7,7 @@
 #include "SimpleParticleComputeShader.h"
 #include "Texture2D.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::ParticleRendererExtensionModule, ParticleRendererExtension)
 

@@ -3,7 +3,7 @@
 
 #include "FMODSoundInterface.h"
 #include "SoundInterface.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::FMODSoundInterfaceModule, FMODSoundInterface)
 

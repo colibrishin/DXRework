@@ -100,9 +100,9 @@ namespace Engine::Components
 #endif
 	}
 
+#if WITH_EDITOR
 	void Collider::OnUIUpdate(UIContext* const context, const float dt)
 	{
-#if WITH_EDITOR
 		if (context)
 		{
 			Component::OnUIUpdate(context, dt);
@@ -114,8 +114,8 @@ namespace Engine::Components
 			});
 			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 0.1f, 0.f, 0.f, true});
 		}
-#endif
 	}
+#endif
 
 	void Collider::InitializeStockVertices()
 	{

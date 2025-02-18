@@ -8,7 +8,7 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "ShapeRenderComponent.h"
 #include "ObjectBase/Public/ObjectBase.h"
 #include "Components/Transform/Public/Transform.h"

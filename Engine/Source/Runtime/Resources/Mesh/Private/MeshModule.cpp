@@ -3,7 +3,7 @@
 #include "Mesh.h"
 
 #include "Components/Collider/Public/Generator.hpp"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::MeshModule, Mesh)
 

@@ -1,10 +1,11 @@
 #include "CoreModule/Public/CoreModule.h"
 #include "CoreModule.generated.h"
-#include "ModuleManager/Public/ModuleManager.h"
 
-MODULE_IMPL(Engine::CoreModule, Core);
+MODULE_IMPL(Engine::CoreModule, Core)
 
+#if WITH_EDITOR
 UPDATE_CALL_TEMPLATE_OneParam(OnUIUpdate, Engine::UIContext* const, parent)
+#endif
 UPDATE_CALL_TEMPLATE(PreUpdate)
 UPDATE_CALL_TEMPLATE(Update)
 UPDATE_CALL_TEMPLATE(PostUpdate)
@@ -15,6 +16,7 @@ UPDATE_CALL_TEMPLATE(PostRender)
 
 Engine::CoreLoop Engine::CoreModule::s_core_module = {};
 
+#if WITH_EDITOR
 void Engine::CoreLoop::OnUIUpdate(UIContext* const parent, const float dt) const
 {
 	for (const auto& singletons : m_singleton_accessor_)
@@ -22,6 +24,7 @@ void Engine::CoreLoop::OnUIUpdate(UIContext* const parent, const float dt) const
 		DoOnUIUpdate(parent, dt, singletons);
 	}
 }
+#endif
 
 void Engine::CoreLoop::PreUpdate(const float dt) const
 {

@@ -3,7 +3,7 @@
 #include "ParticleComputeShader.h"
 #include "ParticleRenderer.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"

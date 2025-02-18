@@ -2,7 +2,6 @@
 #include "SoundPlayerModule.generated.h"
 
 #include "SoundPlayer.h"
-#include "ModuleManager/Public/ModuleManager.h"
 
 MODULE_IMPL(Engine::SoundPlayerModule, SoundPlayer)
 

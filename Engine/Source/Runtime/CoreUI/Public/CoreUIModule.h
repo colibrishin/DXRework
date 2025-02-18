@@ -1,4 +1,5 @@
-#include "IModule.h"
+#pragma once
+#include "ModuleManager.h"
 
 #include "CoreUIModule.generated.h"
 

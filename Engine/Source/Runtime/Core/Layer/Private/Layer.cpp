@@ -1,6 +1,9 @@
 #include "../Public/Layer.h"
 #include "Layer.generated.h"
+
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
 

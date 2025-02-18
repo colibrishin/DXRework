@@ -1,7 +1,10 @@
 #include "../Public/Actor.h"
 #include "Actor.generated.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
+
 #include "Layer/Public/Layer.h"
 #include "Scene/Public/Scene.h"
 

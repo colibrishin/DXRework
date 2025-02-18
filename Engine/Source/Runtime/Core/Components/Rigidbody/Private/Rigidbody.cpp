@@ -51,9 +51,9 @@ namespace Engine::Components
 		}
 	}
 
-	void Rigidbody::OnUIUpdate(UIContext* const context, const float dt)
-	{
 #if WITH_EDITOR
+    void Rigidbody::OnUIUpdate( UIContext *const context, const float dt )
+	{
 		if (context) 
 		{
 			Component::OnUIUpdate(context, dt);
@@ -75,8 +75,8 @@ namespace Engine::Components
 
 			*context |= ui.NewLabelAndFloat({ "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
 		}
-#endif
 	}
+#endif
 
 	Rigidbody::Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object)
 		: Component(object),

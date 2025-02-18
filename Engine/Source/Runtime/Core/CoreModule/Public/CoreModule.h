@@ -2,7 +2,7 @@
 #include "CameraManager/Public/CameraManager.h"
 
 #include "Debugger/Public/Debugger.h"
-#include "IModule.h"
+#include "ModuleManager.h"
 #include "ResourceManager/Public/ResourceManager.h"
 #include "SceneManager/Public/SceneManager.h"
 
@@ -49,7 +49,9 @@ namespace Engine
 			LOOP_TYPE_MAX
 		};
 
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) const;
+#endif
 		void PreUpdate(const float dt) const;
 		void Update(const float dt) const;
 		void PostUpdate(const float dt) const;

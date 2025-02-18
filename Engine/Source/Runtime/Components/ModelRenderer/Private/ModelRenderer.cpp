@@ -1,7 +1,7 @@
 #include "../Public/ModelRenderer.h"
 #include "ModelRenderer.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 namespace Engine::Components
 {

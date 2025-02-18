@@ -4,7 +4,7 @@
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "RenderTask.h"
 
-#include "IModule.h"
+#include "ModuleManager.h"
 
 #include "RenderPipeline.generated.h"
 

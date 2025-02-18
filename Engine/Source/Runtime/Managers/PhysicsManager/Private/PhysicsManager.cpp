@@ -14,7 +14,7 @@
 
 #include "CoreModule/Public/CoreModule.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #ifdef PHYSX_ENABLED
 #include <PxPhysicsAPI.h>

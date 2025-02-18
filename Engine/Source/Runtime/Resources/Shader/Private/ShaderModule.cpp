@@ -4,7 +4,7 @@
 
 #include <ranges>
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include <magic_enum.hpp>

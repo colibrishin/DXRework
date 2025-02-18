@@ -3,8 +3,6 @@
 
 #include "TextRenderer.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
-
 MODULE_IMPL(Engine::TextRendererModule, TextRenderer)
 
 namespace Engine

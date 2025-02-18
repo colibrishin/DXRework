@@ -1,6 +1,6 @@
 #include "BaseAnimationModule.h"
 #include "BaseAnimationModule.generated.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::BaseAnimationModule, BaseAnimation)
 

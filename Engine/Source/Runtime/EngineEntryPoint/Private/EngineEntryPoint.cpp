@@ -1,9 +1,11 @@
 #include "../Public/EngineEntryPoint.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "CoreModule/Public/CoreModule.h"
-#include "Source/Runtime/Core/ModuleManager/Public/ModuleManager.h"
+
 
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
@@ -41,8 +43,8 @@ namespace Engine::Managers
 	void EngineEntryPoint::Initialize()
 	{
 		m_timer = std::make_unique<DX::StepTimer>();
-		ModuleManager::GetInstance().Initialize();
-		ModuleManager::GetInstance().LoadModuleAll();
+		ModuleManager::Initialize();
+		ModuleManager::LoadModuleAll();
 	}
 
 	void EngineEntryPoint::Tick()
@@ -51,10 +53,12 @@ namespace Engine::Managers
 		m_timer->Tick(internal_tick);
 	}
 
+#if WITH_EDITOR
 	void EngineEntryPoint::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		CoreModule::GetContext().OnUIUpdate(parent, dt);
 	}
+#endif
 
 	void EngineEntryPoint::PreUpdate(const float dt)
 	{
@@ -136,6 +140,6 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::SIGTERM()
 	{
-		ModuleManager::GetInstance().Destroy();
+		ModuleManager::Destroy();
 	}
 } // namespace Engine::Manager

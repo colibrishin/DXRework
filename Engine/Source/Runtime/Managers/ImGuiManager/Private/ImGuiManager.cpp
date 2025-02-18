@@ -1,10 +1,10 @@
 ﻿#include "ImGuiManager.h"
-
+#if WITH_EDITOR
 #include "GraphicInterface.h"
 #include "imgui.h"
 #include "imgui_stdlib.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #if USE_DX12
 #include "imgui_impl_dx12.h"
@@ -476,3 +476,4 @@ void Engine::ImGuiUIInterface::NewFrame()
 	ImGui::NewFrame();
 #endif
 }
+#endif

@@ -8,7 +8,7 @@
 
 #include "Components/Collider/Public/Collider.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
