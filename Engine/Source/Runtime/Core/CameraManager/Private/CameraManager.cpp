@@ -44,7 +44,7 @@ namespace Engine::Managers
 					camera->m_view_matrix_ = XMMatrixLookAtLH
 							(
 							position,
-							position - forward,
+							position + forward,
 							up
 							);
 
