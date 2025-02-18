@@ -102,7 +102,7 @@ namespace Engine::Abstracts
 		return out;
 	}
 
-	void ObjectBase::AddChild(const Weak<ObjectBase>& p_child, const bool immediate)
+	void ObjectBase::AddChild(const Weak<ObjectBase>& p_child, const bool immediate )
 	{
 		if (const auto child = p_child.lock();
 			!child || child == GetSharedPtr<ObjectBase>())
@@ -240,8 +240,9 @@ namespace Engine::Abstracts
 #if WITH_EDITOR
 	void ObjectBase::UpdateUIText()
 	{
-		m_ui_info_.label = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
-		m_ui_info_.temporaryStrings["child_title"] = std::format("Children of {}({})...", m_ui_info_.label, GetID());
+        m_ui_info_.label = std::format( "{} {} {}", GetPrettyTypeName(), GetName(), GetID() );
+        m_ui_info_.temporaryStrings[ "child_title" ]   = std::format( "Children of {}({})...", GetName(), GetID() );
+        m_ui_info_.temporaryStrings[ "child_listbox" ] = std::format( "Children##ChildrenListBox{}", GetID() );
 	}
 	void ObjectBase::OnNameChanged()
 	{
@@ -433,7 +434,7 @@ namespace Engine::Abstracts
 		}
 	}
 
-	Strong<ObjectBase> ObjectBase::Clone(bool register_scene) const
+	Strong<ObjectBase> ObjectBase::Clone( bool register_scene, std::vector<Strong<ObjectBase>> *out_child ) const
 	{
 		const auto& cloned = cloneImpl();
 
@@ -457,13 +458,21 @@ namespace Engine::Abstracts
 		// Clone children
 		cloned->m_children_.clear();
 		cloned->m_children_cache_.clear();
+		// Detach from the parent for not getting removed from the original object.
+        cloned->m_parent_    = {};
+        cloned->m_parent_id_ = g_invalid_id;
 
 		for (const auto& child : m_children_cache_ | std::views::values)
 		{
 			if (const auto locked = child.lock())
 			{
-				const auto cloned_child = locked->Clone(register_scene);
-				cloned->AddChild(cloned_child);
+				const auto cloned_child = locked->Clone( register_scene, out_child );
+				cloned->AddChild( cloned_child, true );
+
+				if (out_child)
+				{
+                    out_child->emplace_back( cloned_child );
+				}
 			}
 		}
 
@@ -557,7 +566,7 @@ namespace Engine::Abstracts
 
 			if (m_ui_info_.dialogOpened)
 			{
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened })))
+                if ( UIContext context = UIInterface::NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
 				{
 					Actor::OnUIUpdate(&context, dt);
 					(context |= ui.NewButton({"Clone"})).SetFunction([&]()
@@ -577,7 +586,8 @@ namespace Engine::Abstracts
 
 					if (m_b_add_component_dialog_opened_)
 					{
-						if (UIContext add_com_context = UIInterface::NewContext(ui.NewDialog({this, "Add Component dialog", m_b_add_component_dialog_opened_}))) 
+                        if ( UIContext add_com_context = UIInterface::NewContext( ui.NewDialog(
+                                     { this, "Add Component dialog", m_b_add_component_dialog_opened_ } ) ) ) 
 						{
 							const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
 							{
@@ -636,7 +646,8 @@ namespace Engine::Abstracts
 
 				if (m_b_child_dialog_)
 				{
-					if (UIContext child_context = ui.NewContext(ui.NewDialog({ this, m_ui_info_.temporaryStrings["child_title"], m_b_child_dialog_ })))
+                    if ( UIContext child_context = ui.NewContext( ui.NewDialog(
+                                 { this, m_ui_info_.temporaryStrings[ "child_title" ], m_b_child_dialog_ } ) ) )
 					{
 						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
 							{
@@ -645,7 +656,8 @@ namespace Engine::Abstracts
 
 						if (m_b_child_add_dialog_)
 						{
-							if (UIContext child_select_context = ui.NewContext(ui.NewDialog({ this, "Add New Child", m_b_child_add_dialog_})))
+                            if ( UIContext child_select_context = ui.NewContext(
+                                         ui.NewDialog( { this, "Add New Child", m_b_child_add_dialog_ } ) ) )
 							{
 								(child_select_context |= ui.NewButton({ "Object" })).SetFunction([this]()
 									{
@@ -675,22 +687,48 @@ namespace Engine::Abstracts
 							}
 						}
 
-						if (m_children_cache_.empty())
-						{
-							child_context |= ui.NewText({ "No child found." });
-						}
+						child_context += ui.NewListBox( { m_ui_info_.temporaryStrings[ "child_listbox" ], 0, 0 } );
+                        child_context |= ui.NewDragAndDropTarget(
+                                { "OBJECT",
+                                  [ this ]( void *ptr )
+                                  {
+                                      if ( const Strong<ObjectBase> *scary_ptr =
+                                                   static_cast<Strong<ObjectBase> *>( ptr ) )
+                                      {
+										  if ( ( *scary_ptr )->GetParent().lock() == GetSharedPtr<ObjectBase>() )
+										  {
+                                              return;
+										  }
+
+                                          if ( const Strong<Scene> &scene = GetScene().lock() )
+                                          {
+                                              scene->ChangeLayer( GetLayer(), ( *scary_ptr )->GetID() );
+                                              AddChild( ( *scary_ptr ) );
+                                          }
+                                      }
+                                  } } );
+
+						if ( m_children_cache_.empty() )
+                        {
+                            child_context |= ui.NewText( { "No child found." } );
+                        }
 
 						for (const auto& [id, child] : m_children_cache_)
 						{
 							if (const Strong<ObjectBase>& locked = child.lock())
 							{
-								(child_context |= ui.NewButton({ locked->GetName() })).SetFunction([child]()
-									{
-										if (const Strong<ObjectBase>& strong = child.lock())
+                                ( child_context |= ui.NewButton( { "Remove" } ) ).SetFunction([this, &locked]() 
+									{ 
+										if (const Strong<Scene>& scene = locked->GetScene().lock())
 										{
-											strong->m_ui_info_.dialogOpened = !strong->m_ui_info_.dialogOpened;
+                                            DetachChild( locked->GetLocalID() );
+                                            scene->RemoveGameObject( locked->GetID(), locked->GetLayer() );
 										}
-									});
+								} );
+                                child_context |= ui.NewSameLine( {} );
+                                child_context |= ui.NewSelectable( { locked->m_ui_info_.label, locked->m_ui_info_.dialogOpened } );
+                                child_context |= ui.NewDragAndDropSource(
+                                        { "OBJECT", locked->m_ui_info_.label, &locked, sizeof( decltype( locked ) ) } );
 
 								if (locked->m_ui_info_.dialogOpened)
 								{
@@ -698,6 +736,8 @@ namespace Engine::Abstracts
 								}
 							}
 						}
+
+						--child_context;
 					}
 				}
 			}

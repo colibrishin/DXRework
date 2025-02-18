@@ -5,7 +5,7 @@
 
 namespace Engine::Objects
 {
-	ECLASS(serialize)
+	ECLASS(object, serialize)
 	class ENGINE_CORE_API Observer : public Abstracts::ObjectBase
 	{
 		GENERATE_BODY
@@ -21,8 +21,5 @@ namespace Engine::Objects
 		void Render(const float dt) override;
 		void PostRender(const float dt) override;
 		void FixedUpdate(const float dt) override;
-
-	private:
-		OBJ_CLONE_DECL;
 	};
 } // namespace Engine::Objects

@@ -46,8 +46,7 @@ namespace Engine::Managers
 
 			for (const Weak<Abstracts::ObjectBase>& object : scene->GetGameObjects(RESERVED_LAYER_LIGHT))
 			{
-				if (const Strong<Abstracts::ObjectBase>& locked = object.lock();
-					locked && locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
+				if (const Strong<Objects::Light>& locked = Cast<Objects::Light>(object))
 				{
 					RegisterLight(locked->GetSharedPtr<Objects::Light>());
 				}

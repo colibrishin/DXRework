@@ -63,7 +63,7 @@ namespace Engine::Abstracts
 		void OnSerialized() override;
 		void OnDeserialized() override;
 
-		[[nodiscard]] Strong<ObjectBase> Clone(bool register_scene = true) const;
+		[[nodiscard]] Strong<ObjectBase> Clone(bool register_scene = true, std::vector<Strong<ObjectBase>>* out_child = nullptr) const;
 
 		template <typename T, typename... Args> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)
 		Weak<T> AddComponent(Args&&... args)

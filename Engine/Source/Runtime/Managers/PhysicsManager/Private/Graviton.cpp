@@ -22,6 +22,11 @@ namespace Engine::Managers
 
 	void Graviton::FixedUpdate(const float dt)
 	{
+		if (!SceneManager::GetInstance().IsPlaying())
+		{
+            return;
+		}
+
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
 			const auto& comps = scene->GetCachedComponents<Components::Rigidbody>();

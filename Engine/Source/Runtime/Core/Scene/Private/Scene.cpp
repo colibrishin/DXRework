@@ -16,8 +16,7 @@
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Components/Collider/Public/Collider.h"
-
-std::atomic<bool> Engine::Scene::s_debug_observer_ = false;
+#include "Objects/Observer/Public/Observer.h"
 
 namespace Engine
 {
@@ -78,8 +77,13 @@ namespace Engine
 
 	void Scene::UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT])
 	{
-		memcpy(m_collision_mask_[0], collision_mask[0], sizeof(m_collision_mask_));
-	}
+        std::memcpy( m_collision_mask_, collision_mask, sizeof( m_collision_mask_ ) );
+    }
+
+    const std::vector<Weak<Objects::Light>> &Scene::GetLights() const
+    {
+        return m_lights_;
+    }
 
     void Scene::initializeForce()
 	{
@@ -97,6 +101,7 @@ namespace Engine
 
     void Scene::initializeImpl()
 	{
+#if WITH_EDITOR
 	    for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
 	    {
 	        m_layers_.emplace_back(boost::make_shared<Layer>(i));
@@ -133,6 +138,7 @@ namespace Engine
 
 	    const auto& light2 = CreateGameObject<Objects::Light>(RESERVED_LAYER_LIGHT).lock();
 	    light2->GetComponent<Components::Transform>().lock()->SetLocalPosition(Vector3(-5.f, 2.f, 5.f));
+#endif
 
 	    Managers::TaskScheduler::GetInstance().AddTask
                 (
@@ -226,25 +232,27 @@ namespace Engine
 
 	void Scene::AddObjectFinalize(const LayerSizeType layer, const Strong<Abstracts::ObjectBase>& obj)
 	{
-		if (layer == RESERVED_LAYER_LIGHT && obj->GetObjectType() != DEF_OBJ_T_LIGHT)
-		{
-			throw std::logic_error("Only light object can be added to light layer");
-		}
-		if (layer == RESERVED_LAYER_CAMERA && obj->GetObjectType() != DEF_OBJ_T_CAMERA)
-		{
-			throw std::logic_error("Only camera object can be added to camera layer");
-		}
-		if (layer != RESERVED_LAYER_OBSERVER && obj->GetObjectType() == DEF_OBJ_T_OBSERVER)
-		{
-			throw std::logic_error("Observer object can only be added to UI layer");
-		}
+        if ( ( layer == RESERVED_LAYER_OBSERVER && obj->GetObjectType() != DEF_OBJ_T_OBSERVER ) ||
+             ( layer != RESERVED_LAYER_OBSERVER && obj->GetObjectType() == DEF_OBJ_T_OBSERVER ) )
+        {
+            return;
+        }
 
-		// add object to scene
-		m_layers_[layer]->AddGameObject(obj);
-		m_cached_objects_.emplace(obj->GetID(), obj);
-		m_concurrent_cached_objects_.emplace(obj->GetID(), obj);
+		{
+            SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_object_lock_ );
 
-		onObjectAdded.Broadcast(obj);
+            // add object to scene
+            m_layers_[ layer ]->AddGameObject( obj );
+            m_cached_objects_.emplace( obj->GetID(), obj );
+            m_concurrent_cached_objects_.emplace( obj->GetID(), obj );
+
+            if ( const Strong<Objects::Light> &light = Cast<Objects::Light>( obj ) )
+            {
+                m_lights_.emplace_back( light );
+            }
+
+            onObjectAdded.Broadcast( obj );
+		}	
 	}
 
 	void Scene::RemoveObjectFinalize(const GlobalEntityID id, const LayerSizeType layer)
@@ -286,21 +294,32 @@ namespace Engine
 
 		obj.lock()->SetScene({});
 
-		if (obj.lock()->GetLocalID() == m_main_actor_local_id_)
 		{
-			m_main_actor_local_id_ = g_invalid_id;
-			m_main_actor_          = {};
-		}
+			SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_object_lock_ );
+            
+			if ( obj.lock()->GetLocalID() == m_main_actor_local_id_ )
+            {
+                m_main_actor_local_id_ = g_invalid_id;
+                m_main_actor_          = {};
+            }
 
-		m_cached_objects_.erase(id);
-		m_concurrent_cached_objects_.erase(id);
-		m_assigned_actor_ids_.erase(obj.lock()->GetLocalID());
-		m_layers_[layer]->RemoveGameObject(id);
+			if ( const Strong<Objects::Light> &light = Cast<Objects::Light>( obj ) )
+            {
+                std::erase_if( m_lights_, [&light]( const Weak<Objects::Light> &elem ) { return elem.lock() == light; } );
+            }
+			
+            m_cached_objects_.erase( id );
+            m_concurrent_cached_objects_.erase( id );
+            m_assigned_actor_ids_.erase( obj.lock()->GetLocalID() );
+            m_layers_[ layer ]->RemoveGameObject( id );
+		}
 	}
 
 	void Scene::initializeFinalize()
 	{
+#if WITH_EDITOR
 		AddObserver();
+#endif
 	}
 
 	void Scene::synchronize(const Weak<Scene>& ptr_scene)
@@ -311,7 +330,6 @@ namespace Engine
 			CleanupPhysX();
 			InitializePhysX();
 #endif
-
 			SpinLockToken ot = SingletonSpinLock::GetInstance().Lock(scene->m_object_lock_);
 			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(scene->m_component_lock_);
 
@@ -354,6 +372,11 @@ namespace Engine
 							m_main_camera_ = locked->GetSharedPtr<Objects::Camera>();
 						}
 
+						if ( const Strong<Objects::Light>& light = Cast<Objects::Light>( locked ) )
+						{
+							m_lights_.emplace_back( light );
+						}
+
 						for (const auto& comp : locked->GetAllComponents())
 						{
 							if (const auto locked_comp = comp.lock())
@@ -391,16 +414,9 @@ namespace Engine
 				}
 			}
 
-		    std::memcpy(m_collision_mask_, scene->GetCollisionMask(), sizeof(m_collision_mask_));
-
+			UpdateCollisionMask( scene->GetCollisionMask() );
 			m_object_position_tree_.Update();
 			m_object_collision_tree_.Update();
-
-			if (s_debug_observer_)
-			{
-				DisableControllers();
-				AddObserver();
-			}
 		}
     }
 
@@ -412,12 +428,14 @@ namespace Engine
             CleanupPhysX();
             InitializePhysX();
 #endif
-
             SpinLockToken ot = SingletonSpinLock::GetInstance().Lock( scene->m_object_lock_ );
             SpinLockToken ct = SingletonSpinLock::GetInstance().Lock( scene->m_component_lock_ );
 
             m_main_camera_local_id_ = scene->m_main_camera_local_id_;
             m_main_actor_local_id_  = scene->m_main_actor_local_id_;
+            m_lights_.clear();
+            m_main_actor_ = {};
+            m_main_camera_ = {};
 
             m_object_position_tree_.Clear();
             m_object_collision_tree_.Clear();
@@ -427,6 +445,25 @@ namespace Engine
             m_concurrent_cached_objects_.clear();
 
             m_assigned_actor_ids_ = scene->m_assigned_actor_ids_;
+
+			const auto &checkMains = [ this ](const Strong<Abstracts::ObjectBase>& clone)
+            {
+                if ( m_main_actor_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_actor_local_id_ )
+                {
+                    m_main_actor_ = clone;
+                }
+                if ( m_main_camera_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_camera_local_id_ )
+                {
+                    m_main_camera_ = clone->GetSharedPtr<Objects::Camera>();
+                }
+                if ( const Strong<Objects::Light> &light = Cast<Objects::Light>( clone ) )
+                {
+                    m_lights_.emplace_back( light );
+                }
+            };
+
+			const auto &resetScene = []( const Strong<Abstracts::ObjectBase> &obj )
+            { obj->GetSharedPtr<Abstracts::Actor>()->SetScene( {} ); };
 
 			UINT idx = 0;
             for ( const auto &layer : scene->m_layers_)
@@ -438,38 +475,37 @@ namespace Engine
                 {
                     if ( const auto locked = obj.lock() )
                     {
-                        const Strong<Abstracts::ObjectBase> &clone = locked->Clone(false);
-
-                        clone->GetSharedPtr<Abstracts::Actor>()->SetScene( GetSharedPtr<Scene>() );
-                        clone->GetSharedPtr<Abstracts::Actor>()->SetLayer( locked->GetLayer() );
+                        std::vector<Strong<Abstracts::ObjectBase>> child_storage;
+                        const Strong<Abstracts::ObjectBase> &clone = locked->Clone( false, &child_storage );
                         
-						addGameObjectImpl( clone->GetLayer(), clone, false );
-                        // Use the same local id as the previous scene. Scene is different so that local id would not
-                        // duplicate.
-                        clone->GetSharedPtr<Abstracts::Actor>()->SetLocalID( locked->GetLocalID() );
-
-						if ( m_main_actor_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_actor_local_id_ )
+						for ( const Strong<Abstracts::ObjectBase> &child : child_storage )
                         {
-                            m_main_actor_ = clone;
+                            // Remove the previous scene info. we don't want the object to be removed from the original
+                            // scene.
+                            resetScene( child );
+                            addGameObjectImpl( clone->GetLayer(), child, false );
+                            checkMains( clone );
                         }
-                        if ( m_main_camera_local_id_ != g_invalid_id && clone->GetLocalID() == m_main_camera_local_id_ )
+
+						// Observer is for the pre-play controller.
+						if ( !locked->IsDerivedOf( Objects::Observer::StaticTypeHash() ) )
                         {
-                            m_main_camera_ = clone->GetSharedPtr<Objects::Camera>();
+                            // Remove the previous scene info. we don't want the object to be removed from the original
+                            // scene.
+                            resetScene( clone );
+                            addGameObjectImpl( clone->GetLayer(), clone, false );
+                            // Use the same local id as the previous scene. Scene is different so that local id would
+                            // not duplicate.
+                            clone->GetSharedPtr<Abstracts::Actor>()->SetLocalID( locked->GetLocalID() );
+                            checkMains( clone );
                         }
                     }
                 }
             }
 
-            std::memcpy( m_collision_mask_, scene->GetCollisionMask(), sizeof( m_collision_mask_ ) );
-
+			UpdateCollisionMask( scene->GetCollisionMask() );
             m_object_position_tree_.Update();
             m_object_collision_tree_.Update();
-
-            if ( s_debug_observer_ )
-            {
-                DisableControllers();
-                AddObserver();
-            }
         }
 	}
 
@@ -497,6 +533,12 @@ namespace Engine
 			{
 				return;
 			}
+
+            if ( ( to == RESERVED_LAYER_OBSERVER && obj->GetObjectType() != DEF_OBJ_T_OBSERVER ) ||
+				 ( to != RESERVED_LAYER_OBSERVER && obj->GetObjectType() == DEF_OBJ_T_OBSERVER ) )
+            {
+                return;
+            }
 
 			Managers::TaskScheduler::GetInstance().AddTask
 					(
@@ -839,9 +881,6 @@ namespace Engine
 
 	void Scene::AddObserver()
 	{
-#if WITH_DEBUG
-		DisableControllers();
-
 		const auto& observers = m_layers_[RESERVED_LAYER_OBSERVER]->GetGameObjects();
 		for (const auto& observer : observers)
 		{
@@ -854,7 +893,6 @@ namespace Engine
 		const auto& observer = CreateGameObject<Objects::Observer>(RESERVED_LAYER_OBSERVER).lock();
 		m_observer_         = observer;
 		observer->AddChild(GetMainCamera());
-#endif
 	}
 
 	void Scene::OnDeserialized()
@@ -1009,8 +1047,6 @@ namespace Engine
 			}
 		}
 #endif
-
-		AddObserver();
 	}
 
 	void Scene::SetMainActor(const LocalActorID id)
@@ -1032,22 +1068,5 @@ namespace Engine
 #ifdef PHYSX_ENABLED
 		CleanupPhysX();
 #endif
-	}
-
-	void Scene::DisableControllers()
-	{
-		/*
-		ConcurrentWeakComRootMap::accessor accessor;
-		if (bool check = m_cached_components_.find(accessor, COM_T_STATE))
-		{
-			const auto& states = accessor->second;
-
-			for (const auto& state : states | std::views::values)
-			{
-				const auto locked = state.lock();
-				locked->SetActive(false);
-			}
-		}
-		*/
 	}
 } // namespace Engine

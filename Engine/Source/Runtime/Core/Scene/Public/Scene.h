@@ -62,7 +62,6 @@ namespace Engine
 		Scene();
 		~Scene() override;
 
-		void DisableControllers();
 		void AddObserver();
 		void Initialize() override;
 
@@ -238,6 +237,7 @@ namespace Engine
 
 		const bool (& GetCollisionMask() const)[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT];
 		void          UpdateCollisionMask(const bool collision_mask[RESERVED_LAYER_MAX + CFG_LAYER_COUNT][RESERVED_LAYER_MAX + CFG_LAYER_COUNT]);
+        const std::vector<Weak<Objects::Light>>& GetLights() const;
 
 		Strong<Layer> operator[](const size_t idx) const
 		{
@@ -347,22 +347,21 @@ namespace Engine
 		Weak<Abstracts::ObjectBase> m_observer_;
 		Weak<Objects::Camera>       m_main_camera_;
 		Weak<Abstracts::ObjectBase> m_main_actor_;
+        std::vector<Weak<Objects::Light>> m_lights_;
 
-		LocalGlobalIDMap            m_assigned_actor_ids_;
+		LocalGlobalIDMap m_assigned_actor_ids_;
 
-		WeakObjGlobalMap                                     m_cached_objects_;
-		WeakComRootMap                                       m_cached_components_;
+		WeakObjGlobalMap m_cached_objects_;
+        WeakComRootMap   m_cached_components_;
 
-		SpinLockTicket m_object_lock_;
+        SpinLockTicket m_object_lock_;
 		SpinLockTicket m_component_lock_;
 
-		ConcurrentWeakObjGlobalMap                           m_concurrent_cached_objects_;
-		ConcurrentWeakComRootMap                             m_concurrent_cached_components_;
+		ConcurrentWeakObjGlobalMap m_concurrent_cached_objects_;
+        ConcurrentWeakComRootMap   m_concurrent_cached_components_;
 		
 		Octree m_object_position_tree_;
 		Octree m_object_collision_tree_;
-
-		static std::atomic<bool> s_debug_observer_;
 
 #ifdef PHYSX_ENABLED
 	public:

@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 #include <tuple>
+#include <numeric>
+#include <set>
 
 #include "CoreType.h"
 
@@ -60,8 +62,8 @@ namespace Engine
 	        return m_parent_;
         }
 
-        virtual void Do() const = 0;
-        virtual void End() const = 0;
+        virtual void Do() = 0;
+        virtual void End() = 0;
 
     protected:
         std::function<void()>                     m_function_;
@@ -80,7 +82,7 @@ namespace Engine
         explicit UIToken(Args... args) : m_tuple_(std::forward_as_tuple(args...)) {}
 
 
-        void Do() const override
+        void Do() override
         {
             if (ForwardTuple())
             {
@@ -99,10 +101,10 @@ namespace Engine
         }
 
     protected:
-        [[nodiscard]] virtual bool DoImpl(Args... args) const = 0;
+        [[nodiscard]] virtual bool DoImpl(Args... args) = 0;
 
     private:
-        [[nodiscard]] bool ForwardTuple() const
+        [[nodiscard]] bool ForwardTuple()
         {
             if constexpr (ArgumentCount::value == 0)
             {
@@ -113,13 +115,15 @@ namespace Engine
         }
         
         template <size_t... Is>
-        [[nodiscard]] bool ForwardTupleImpl(const ArgumentTuple& tuple, std::index_sequence<Is...>) const
+        [[nodiscard]] bool ForwardTupleImpl(const ArgumentTuple& tuple, std::index_sequence<Is...>)
         {
             return DoImpl(std::get<Is>(tuple)...);
         }
         
         ArgumentTuple m_tuple_;
     };
+
+    using UITokenInputContext = uint64_t;
 
 #define NEW_TOKEN_DECL(Name, ...) \
     struct ENGINE_COREUI_API Name##Token : UIToken<__VA_ARGS__> \
@@ -130,7 +134,7 @@ namespace Engine
     NEW_TOKEN_DECL(MainMenuBar)
     NEW_TOKEN_DECL(Menu, const std::string_view)
     NEW_TOKEN_DECL(MenuItem, const std::string_view)
-    NEW_TOKEN_DECL(Dialog, const void*, const std::string_view, bool&)
+    NEW_TOKEN_DECL( Dialog, const void*, const std::string_view, bool & )
     NEW_TOKEN_DECL(Button, const std::string_view)
     NEW_TOKEN_DECL(LabelAndText, const std::string_view, std::string&, bool)
     NEW_TOKEN_DECL(LabelAndPath, const std::string_view, const std::filesystem::path&)
@@ -143,9 +147,9 @@ namespace Engine
     NEW_TOKEN_DECL(Text, const std::string_view)
     NEW_TOKEN_DECL(Separator)
     NEW_TOKEN_DECL(SameLine)
-    NEW_TOKEN_DECL(Table, std::string_view, size_t);
-    NEW_TOKEN_DECL(TableRow);
-    NEW_TOKEN_DECL(TableColumn, size_t);
+    NEW_TOKEN_DECL(Table, std::string_view, size_t)
+    NEW_TOKEN_DECL(TableRow)
+    NEW_TOKEN_DECL(TableColumn, size_t)
 
     template <typename Numerical>
     struct ENGINE_COREUI_API LabelAndNumericalToken : UIToken<const std::string_view, Numerical&, float, Numerical, Numerical, bool>
@@ -170,7 +174,17 @@ namespace Engine
     NEW_TOKEN_DECL(DragAndDropSource, const std::string_view, const std::string_view, const void*, size_t);
     NEW_TOKEN_DECL(DragAndDropTarget, const std::string_view, const std::function<void(void* ptr)>)
 
-    struct UIContext
+    struct ENGINE_COREUI_API UIDialogMapper
+    { 
+        static UITokenInputContext Map( const void *ptr );
+        static void                Unmap( UITokenInputContext value );
+        static void                Clear();
+
+    private:
+        static std::set<UITokenInputContext> m_reserved_;
+    };
+
+    struct ENGINE_COREUI_API UIContext
     {
         explicit UIContext(UITokenBase* parent)
         {
