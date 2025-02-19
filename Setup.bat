@@ -27,6 +27,10 @@ if '%errorlevel%' NEQ '0' (
 echo [Install Graphic Tools for debugging]
 dism /online /add-capability /capabilityname:Tools.Graphics.DirectX~~~~0.0.1.0
 
+echo [Install latest build tool]
+bitsadmin /transfer vsbuildtool /download /priority FOREGROUND "https://aka.ms/vs/17/release/vs_BuildTools.exe" "%TEMP%\vsbuildtool.exe"
+start /b /wait "" "%TEMP%/vsbuildtool.exe" "--passive" "--wait" "--add" "Microsoft.VisualStudio.Workload.VCTools;includeRecommended" "--add" "Microsoft.VisualStudio.Component.Windows11SDK.22621^"
+
 echo [Build Sharpmake]
 dotnet build --configuration Release Programs\Sharpmake\Sharpmake.Application\Sharpmake.Application.csproj
 
