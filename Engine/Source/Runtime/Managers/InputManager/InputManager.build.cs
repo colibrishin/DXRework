@@ -2,10 +2,9 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 
 [Generate]
-public class InputManager : CommonProject
+public class InputManager : EngineCommonProject
 {
     public InputManager() { }
 
@@ -13,8 +12,14 @@ public class InputManager : CommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPrivateDependency<WinAPIWrapper>(target);
+
+        if (target.Platform == Platform.win64)
+        {
+            if (target.GraphicAPI == EGraphicAPI.D3D12)
+            {
+                conf.AddPrivateDependency<DirectInputInterface>(target);
+            }
+        }
     }
 }

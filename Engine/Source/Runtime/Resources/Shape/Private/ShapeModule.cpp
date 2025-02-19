@@ -1,14 +1,15 @@
 #include "ShapeModule.h"
 #include "Shape.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "ShapeModule.generated.h"
 
 MODULE_IMPL(Engine::ShapeModule, Shape)
 
-void Engine::ShapeModule::Initialize()
+bool Engine::ShapeModule::InitializeImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& ui_callback = [](UIContext* const context)
@@ -55,12 +56,18 @@ void Engine::ShapeModule::Initialize()
 
 		UIHelpers::OpenLoadDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 	});
+#endif
+
+	return true;
 }
 
-void Engine::ShapeModule::Shutdown()
+bool Engine::ShapeModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shape::StaticTypeName());
-	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shape::StaticTypeName());	
+	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shape::StaticTypeName());
+#endif
+	return true;
 }
 
 bool Engine::ShapeModule::DynamicLoadable()

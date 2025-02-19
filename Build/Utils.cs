@@ -41,6 +41,19 @@ public class Utils
         }
     }
 
+    public static EngineTarget GetDefinedTarget() 
+    {
+        return new EngineTarget(
+            ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
+            Platform.win64,
+            DevEnv.vs2022,
+            Optimization.Debug | Optimization.Release,
+            OutputType.Lib,
+            Blob.NoBlob,
+            BuildSystem.FastBuild
+        );
+    }
+
     public static void MakeConfiturationNameDefine(Project.Configuration conf, EngineTarget target)
     {
         if (target.Optimization == Optimization.Release) { conf.Name = "Development"; }

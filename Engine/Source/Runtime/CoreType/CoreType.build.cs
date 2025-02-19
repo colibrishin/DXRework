@@ -4,9 +4,9 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class CoreType : CommonProject
+public class CoreType : EngineCommonProject
 {
-    public CoreType() { }
+    public CoreType() {}
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
@@ -14,5 +14,6 @@ public class CoreType : CommonProject
 
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<GCEM>(target);
+        conf.AddPublicDependency<CoreModuleManager>(target);
     }
 }

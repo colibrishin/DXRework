@@ -1,17 +1,17 @@
 #pragma once
+#include "ModuleManager.h"
 
-#include "ModuleManager/Public/IModule.h"
 #include "ComputeShaderModule.generated.h"
 
-namespace Engine::Resources
+namespace Engine
 {
 	ECLASS(module)
 	struct ENGINE_COMPUTESHADER_API ComputeShaderModule : public Engine::IModule
 	{
 		GENERATE_BODY
 		
-		void Initialize() override;
-		void Shutdown() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
 		bool DynamicLoadable() override;
 
 	};

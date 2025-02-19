@@ -1,6 +1,5 @@
 #pragma once
-#include <d3d12.h>
-#include "Source/Runtime/Resources/Texture2D/Public/Texture2D.h"
+#include "Texture2D.h"
 
 #include "ShadowTexture.generated.h"
 
@@ -32,7 +31,7 @@ namespace Engine::Resources
 				 .Srv = {
 					.Format = TEX_FORMAT_R32_FLOAT,
 					.ViewDimension = SRV_DIMENSION_TEXTURE2DARRAY,
-					.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+					.Shader4ComponentMapping = d3d12_shader4_component_mapping,
 					.Texture2DArray = {
 						.MostDetailedMip = 0,
 						.MipLevels = 1,

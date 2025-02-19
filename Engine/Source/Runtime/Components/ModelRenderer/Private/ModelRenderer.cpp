@@ -1,14 +1,12 @@
 #include "../Public/ModelRenderer.h"
-
-#include "ModuleManager/Public/ModuleManager.h"
 #include "ModelRenderer.generated.h"
+
+
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(ModelRenderer)
-
 	ModelRenderer::ModelRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(owner) {}
+		: ShapeRenderComponent(owner) {}
 
 	void ModelRenderer::PreUpdate(const float dt) {}
 
@@ -21,7 +19,7 @@ namespace Engine::Components
 		Component::PostUpdate(dt);
 	}
 
-	eComponentUpdatePriority ModelRenderer::GetUpdatePriority() const
+	eComponentUpdatePriorities ModelRenderer::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
 	}

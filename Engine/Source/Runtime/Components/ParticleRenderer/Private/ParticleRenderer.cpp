@@ -3,7 +3,7 @@
 #include "ParticleComputeShader.h"
 #include "ParticleRenderer.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 #include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
@@ -13,14 +13,12 @@
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(ParticleRenderer)
-
 	ParticleRenderer::ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
-		: RenderComponent(owner),
+		: ShapeRenderComponent(owner),
 		  m_b_follow_owner_(true) {}
 
 	ParticleRenderer::ParticleRenderer(const ParticleRenderer& other)
-		: RenderComponent(other)
+		: ShapeRenderComponent(other)
 	{
 		m_cs_             = other.m_cs_;
 		m_cs_meta_path_   = other.m_cs_meta_path_;
@@ -116,7 +114,7 @@ namespace Engine::Components
 		}
 	}
 
-	eComponentUpdatePriority ParticleRenderer::GetUpdatePriority() const
+	eComponentUpdatePriorities ParticleRenderer::GetUpdatePriority() const
 	{
 		return COM_PRIORITY_RENDER;
 	}

@@ -1,5 +1,7 @@
 ﻿#pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
+
+#include "ReflectionEvaluatorModule.generated.h"
 
 namespace Engine
 {
@@ -7,8 +9,8 @@ namespace Engine
     struct ReflectionEvaluatorModule : public Engine::IModule
     {
         GENERATE_BODY
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };   
 }

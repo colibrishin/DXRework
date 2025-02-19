@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ComputeShader : CommonProject
+public class ComputeShader : EngineCommonProject
 {
     public ComputeShader() { }
 

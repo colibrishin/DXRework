@@ -1,6 +1,8 @@
 #include "../Public/SceneManager.h"
 
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 #include "Source/Runtime/Core/Objects/Light/Public/Light.h"
@@ -28,9 +30,48 @@ namespace Engine::Managers
 		}
 
 		onSceneActive.Broadcast(m_active_scene_.lock());
+    }
+
+    void SceneManager::setPlayFinalize( const float dt, const Weak<Scene> &scene )
+    {
+        if ( const auto &play_scene = scene.lock() )
+        {
+            m_playing_scene_ = play_scene;
+            std::swap( m_playing_scene_, m_active_scene_ );
+
+            if ( !play_scene->IsInitialized() )
+            {
+                play_scene->Initialize();
+            }
+
+			m_b_playing_ = true;
+            play_scene->BeginPlay( dt );
+
+            // g_raytracing = scene->m_b_scene_raytracing_;
+
+			onSceneActive.Broadcast( scene );
+        }
+    }
+
+    void SceneManager::setStopFinalize( const float dt )
+    {
+		if ( const auto& play_scene = m_active_scene_.lock() )
+		{
+            m_b_playing_ = false;
+            play_scene->EndPlay( dt );
+
+            m_active_scene_ = {};
+            std::swap( m_active_scene_, m_playing_scene_ );
+
+            const decltype( m_scenes_ )::iterator &found_scene = std::ranges::find_if(
+                    m_scenes_, [ play_scene ]( const auto &v_scene ) { return play_scene == v_scene; } );
+
+            onSceneRemoved.Broadcast( *found_scene );
+            m_scenes_.erase( found_scene );
+		}
 	}
 
-	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene, const std::string& name)
+	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene)
 	{
 		if (scene == m_active_scene_.lock())
 		{
@@ -79,7 +120,7 @@ namespace Engine::Managers
 			(
 				TASK_ACTIVE_SCENE,
 				{ *scene },
-				[name, this](const std::vector<std::any>& params, float)
+				[this](const std::vector<std::any>& params, float)
 				{
 					const auto s = std::any_cast<Strong<Scene>>(params[0]);
 					SetActiveFinalize(s);
@@ -87,6 +128,36 @@ namespace Engine::Managers
 			);
 		}
 	}
+
+	void SceneManager::setPlay( const std::string_view name )
+    {
+		const auto scene = std::ranges::find_if( m_scenes_, [ name ]( const auto &scene ) { return scene->GetName() == name; } );
+
+        if ( scene != m_scenes_.end() )
+        {
+            TaskScheduler::GetInstance().AddTask( TASK_PLAY_SCENE,
+                                                  { *scene },
+                                                  [ this ]( const std::vector<std::any> &params, const float dt )
+                                                  {
+                                                      const auto s = std::any_cast<Strong<Scene>>( params[ 0 ] );
+                                                      setPlayFinalize( dt, s );
+                                                  } );
+        }
+    }
+
+	void SceneManager::setStop()
+    {
+		if (const auto& play_scene = m_playing_scene_.lock(); m_b_playing_)
+		{
+            TaskScheduler::GetInstance().AddTask( TASK_STOP_SCENE,
+                                                  {  },
+                                                  [ this ]( const std::vector<std::any> &params, const float dt )
+                                                  {
+                                                      setStopFinalize( dt );
+                                                  } );
+		}
+        
+    }
 
 	inline Weak<Scene> SceneManager::GetScene(const std::string& name) const
 	{
@@ -106,8 +177,38 @@ namespace Engine::Managers
 		return {};
 	}
 
-	void SceneManager::Initialize()
+	const std::vector<Strong<Scene>>& SceneManager::GetScenes() const
 	{
+		return m_scenes_;
+	}
+
+    void SceneManager::RemoveScene( const std::string &name )
+    {
+        if (const auto scene = std::ranges::find_if
+                    (
+                            m_scenes_, [name](const auto& scene)
+                            {
+                                return scene->GetName() == name;
+                            }
+                            );
+            scene != m_scenes_.end())
+        {
+            TaskScheduler::GetInstance().AddTask
+                    (
+                            TASK_REM_SCENE,
+                            { *scene },
+                            [this](const std::vector<std::any>& params, float)
+                            {
+                                const auto scene = std::any_cast<Strong<Scene>>(params[0]);
+                                RemoveSceneFinalize(scene);
+                            }
+                            );
+        }
+    }
+
+    void SceneManager::Initialize()
+	{
+#if WITH_EDITOR
 		RegisterLoadMenuItem(Scene::StaticTypeName(), [](bool& managing_flag)
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -132,13 +233,14 @@ namespace Engine::Managers
 
 		AddScene("UntitledScene");
 		SetActive("UntitledScene");
+#endif
 	}
 
 	void SceneManager::Update(const float dt)
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->Update(dt);
+			scene->Update(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -146,7 +248,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PreUpdate(dt);
+			scene->PreUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -154,7 +256,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PreRender(dt);
+			scene->PreRender(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -162,7 +264,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PostUpdate(dt);
+			scene->PostUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -170,7 +272,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->Render(dt);
+			scene->Render(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -178,7 +280,7 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->FixedUpdate(dt);
+			scene->FixedUpdate(m_b_playing_ ? dt : 0.f);
 		}
 	}
 
@@ -186,66 +288,78 @@ namespace Engine::Managers
 	{
 		if (const auto& scene = m_active_scene_.lock())
 		{
-			scene->PostRender(dt);
+			scene->PostRender(m_b_playing_ ? dt : 0.f);
 		}
 	}
-
+    
+#if WITH_EDITOR
 	void SceneManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 		if (UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
 		{
-			context += ui.NewMenu({"New"});
+		    context += ui.NewMenu({"New"});
 
-			(context |= ui.NewMenuItem({"Scene"})).SetFunction([&]()
-			{
-				AddScene("UntitledScene");
-				SetActive("UntitledScene");
-			});
+		    for (auto& [name, func] : m_custom_new_function_)
+		    {
+		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+                {
+                    func.first = true;
+                });
+		    }
 
-			for (auto& [name, func] : m_custom_new_function_)
-			{
-				(context |= ui.NewMenuItem({name})).SetFunction([&]()
-				{
-					func.first = true;
-				});
-			}
+		    const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
+            {
+                GetActiveScene().lock()->CreateGameObject<T>(Layer);
+            };
 
-			const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
-			{
-				GetActiveScene().lock()->CreateGameObject<T>(Layer);
-			};
+		    (context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
+                });
 
-			(context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
-				});
+		    (context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
+                });
 
-			(context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
-				});
+		    (context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
+                {
+                    addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
+                });
 
-			(context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
-				{
-					addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
-				});
+		    --context;
 
-			--context;
+		    context += ui.NewMenu({"Load"});
 
-			context += ui.NewMenu({"Load"});
+		    for (auto& [name, func] : m_custom_load_function_)
+		    {
+		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+                {
+                    func.first = true;
+                });
+		    }
 
-			for (auto& [name, func] : m_custom_load_function_)
-			{
-				(context |= ui.NewMenuItem({name})).SetFunction([&]()
-				{
-					func.first = true;
-				});
-			}
+		    --context;
 
-			--context;
+		    if (UIContext manager_context = ui.NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ))
+		    {
+		        if (!IsPlaying())
+		        {
+		            (manager_context |= ui.NewButton( { "Play Scene" } )).SetFunction( [this]()
+                    {
+                        Play();
+                    } );   
+		        }
+		        else
+		        {
+		            (manager_context |= ui.NewButton( { "Stop Scene" } )).SetFunction( [this]()
+                    {
+                        Stop();
+                    } );
+		        }
+		    }
 
 			if (const auto& scene = m_active_scene_.lock())
 			{
@@ -268,11 +382,37 @@ namespace Engine::Managers
 				}
 			}
 		}
+	}
 #endif
+
+	bool SceneManager::IsPlaying() const
+	{
+		return m_b_playing_;
+	}
+
+    void SceneManager::Play()
+	{
+	    if (const Strong<Scene>& active_scene = m_active_scene_.lock();
+			active_scene && !m_b_playing_)
+        {
+            const Strong<Scene> scene_clone = active_scene->Clone();
+	        AddScene( scene_clone );
+	        setPlay( scene_clone->GetName() );
+		}
+	}
+
+    void SceneManager::Stop()
+	{
+	    const Strong<Scene>& play_scene = m_playing_scene_.lock();
+
+	    if ( m_b_playing_ && play_scene )
+	    {
+            setStop( );
+	    }
 	}
 
 #if WITH_EDITOR
-	void SceneManager::RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
+	void SceneManager::RegisterNewMenuItem( const std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate )
 	{
 		if (!m_custom_new_function_.contains(name))
 		{
@@ -280,7 +420,7 @@ namespace Engine::Managers
 		}
 	}
 
-	void SceneManager::RegisterLoadMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate)
+	void SceneManager::RegisterLoadMenuItem( const std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate )
 	{
 		if (!m_custom_load_function_.contains(name))
 		{

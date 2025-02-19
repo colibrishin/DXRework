@@ -1,15 +1,15 @@
 ﻿#include "ReflectionEvaluatorModule.h"
-
+#include "ReflectionEvaluatorModule.generated.h"
 #include "ReflectionEvaluator.h"
 #include "Renderer.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::ReflectionEvaluatorModule, ReflectionEvaluator)
 
-void Engine::ReflectionEvaluatorModule::Initialize()
+bool Engine::ReflectionEvaluatorModule::InitializeImpl()
 {
     CoreModule::GetContext().AddManager(
         CoreLoop::LOOP_TYPE_RENDER,
@@ -28,13 +28,17 @@ void Engine::ReflectionEvaluatorModule::Initialize()
         {
             Managers::ReflectionEvaluator::GetInstance().UnbindReflectionMap(prim);
         });
+
+    return true;
 }
 
-void Engine::ReflectionEvaluatorModule::Shutdown()
+bool Engine::ReflectionEvaluatorModule::ShutdownImpl()
 {
     CoreModule::GetContext().RemoveManager(CoreLoop::LOOP_TYPE_RENDER, &Managers::ReflectionEvaluator::GetInstance);
     Managers::Renderer::GetInstance().UnregisterContextPreRenderSetup("BindReflectionMap");
     Managers::Renderer::GetInstance().UnregisterContextPostRenderSetup("UnbindReflectionMap");
+    
+    return true;
 }
 
 bool Engine::ReflectionEvaluatorModule::DynamicLoadable()

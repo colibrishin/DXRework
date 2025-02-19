@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class ShadowManager : CommonProject
+public class ShadowManager : EngineCommonProject
 {
     public ShadowManager() 
     {
@@ -19,7 +19,6 @@ public class ShadowManager : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<Texture2D>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
 
         conf.AddPrivateDependency<Shader>(target);

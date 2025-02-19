@@ -12,6 +12,14 @@
 
 #include "Shape.generated.h"
 
+namespace Engine
+{
+	struct ENGINE_SHAPE_API ShapeExtension
+	{
+		static void BindShapeToCollider(const Weak<Resources::Shape>& shape, const Weak<Components::Collider>& collider);
+	};
+}
+
 namespace Engine::Resources
 {
 	ECLASS(resource, serialize)
@@ -33,7 +41,7 @@ namespace Engine::Resources
 		void FixedUpdate(const float dt) override;
 		void PostUpdate(const float dt) override;
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
 #endif
 

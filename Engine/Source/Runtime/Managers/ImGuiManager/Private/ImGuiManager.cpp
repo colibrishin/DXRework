@@ -1,10 +1,10 @@
 ﻿#include "ImGuiManager.h"
-
+#if WITH_EDITOR
 #include "GraphicInterface.h"
 #include "imgui.h"
 #include "imgui_stdlib.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #if USE_DX12
 #include "imgui_impl_dx12.h"
@@ -22,7 +22,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 );
 #endif
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
 
@@ -32,7 +32,7 @@ namespace Engine::Managers
 	{
 #if WITH_EDITOR
 		UIInterfaceAccessor::SetInterface<ImGuiUIInterface>();
-		WinAPI::WinAPIWrapper::RegisterHandler(ImGui_ImplWin32_WndProcHandler);
+		WinAPI::WinAPIWrapper::RegisterHandler("ImGuiManager", ImGui_ImplWin32_WndProcHandler);
 		
 		m_imgui_descriptor_ = GraphicInterfaceAccessor::GetInterface().GetHeap();
 
@@ -98,6 +98,7 @@ namespace Engine::Managers
 #endif
 		
 		primitive.commandList->FlagReady();
+        UIDialogMapper::Clear();
 #endif
 	}
 
@@ -133,7 +134,7 @@ void Engine::AlignText(const std::string_view label)
 	ImGui::Text(label.data());
 	ImGui::SameLine();
 	ImGui::SetCursorPosX(x + width * 0.75f + ImGui::GetStyle().ItemInnerSpacing.x);
-	ImGui::SetNextItemWidth(-1);
+	ImGui::SetNextItemWidth(100.f);
 }
 
 std::string Engine::LabelSuffix(const std::string_view label)
@@ -144,180 +145,197 @@ std::string Engine::LabelSuffix(const std::string_view label)
 	return labelID;
 }
 
-void Engine::ImGuiMainMenuBarToken::End() const
+void Engine::ImGuiMainMenuBarToken::End()
 {
 	ImGui::EndMainMenuBar();
 }
 
-bool Engine::ImGuiMainMenuBarToken::DoImpl() const
+bool Engine::ImGuiMainMenuBarToken::DoImpl()
 {
 	return ImGui::BeginMainMenuBar();
 }
 
-void Engine::ImGuiMenuToken::End() const
+void Engine::ImGuiMenuToken::End()
 {
 	ImGui::EndMenu();
 }
 
-bool Engine::ImGuiMenuToken::DoImpl(const std::string_view title) const
+bool Engine::ImGuiMenuToken::DoImpl(const std::string_view title)
 {
 	const std::string& temp_label = std::string(title) + LabelSuffix(title);
 	return ImGui::BeginMenu(temp_label.c_str());
 }
 
-void Engine::ImGuiMenuItemToken::End() const {}
+void Engine::ImGuiMenuItemToken::End() {}
 
-bool Engine::ImGuiMenuItemToken::DoImpl(const std::string_view label) const
+bool Engine::ImGuiMenuItemToken::DoImpl(const std::string_view label)
 {
 	const std::string& temp_label = std::string(label) + LabelSuffix(label);
 	return ImGui::MenuItem(temp_label.c_str());
 }
 
-void Engine::ImGuiDialogToken::End() const
+void Engine::ImGuiDialogToken::End()
 {
 	ImGui::End();
 }
 
-bool Engine::ImGuiDialogToken::DoImpl(const void* context, const std::string_view title, bool& opened) const
+bool Engine::ImGuiDialogToken::DoImpl( const void * ptr, const std::string_view title, bool &opened )
 {
-	std::string address_suffix = std::to_string(reinterpret_cast<uint64_t>(context));
-	address_suffix += title;
-	const std::string& temp_label = std::string(title) + LabelSuffix(address_suffix);
-	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse);
+    value = UIDialogMapper::Map( ptr );
+    const std::string &value_str  = std::to_string( value );
+	const std::string& temp_label = std::string(title) + LabelSuffix(value_str);
+	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 }
 
-void Engine::ImGuiButtonToken::End() const {}
+void Engine::ImGuiButtonToken::End() {}
 
-bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title) const
+bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title)
 {
-	return ImGui::Button(title.data(), {-1, 20});
+	return ImGui::Button(title.data(), {0, 20});
 }
 
-void Engine::ImGuiLabelAndTextToken::End() const {}
+void Engine::ImGuiLabelAndTextToken::End() {}
 
-bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::string& text, const bool editable) const
+bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::string& text, const bool editable)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputText(temp_label.c_str(), &text, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndFloatToken::End() const
+void Engine::ImGuiLabelAndFloatToken::End()
 {
 }
 
-bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float speed, const float min, const float max, const bool editable) const
+bool Engine::ImGuiLabelAndFloatToken::DoImpl(const std::string_view label, float& value, const float speed, const float min, const float max, const bool editable)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::DragFloat(temp_label.c_str(), &value, speed, min, max, "%.3f", !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndIntToken::End() const {}
+void Engine::ImGuiLabelAndIntToken::End() {}
 
-bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, const float speed, const int min, const int max, bool editable) const
+bool Engine::ImGuiLabelAndIntToken::DoImpl(const std::string_view label, int& value, const float speed, const int min, const int max, bool editable)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_S32, &value, speed, &min, &max, nullptr, !editable ? ImGuiSliderFlags_NoInput : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndUIntToken::End() const {}
-bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, uint32_t& value, const float speed, const uint32_t min, const uint32_t max, bool editable) const
+void Engine::ImGuiLabelAndUIntToken::End() {}
+
+bool Engine::ImGuiLabelAndUIntToken::DoImpl(const std::string_view label, uint32_t& value, const float speed, const uint32_t min, const uint32_t max, bool editable)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U32, &value, speed, &min, &max, nullptr, !editable ? ImGuiSliderFlags_NoInput : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndULLDToken::End() const {}
+void Engine::ImGuiLabelAndULLDToken::End() {}
 
-bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, uint64_t& value, const float speed, const uint64_t min, const uint64_t max, bool editable) const
+bool Engine::ImGuiLabelAndULLDToken::DoImpl(const std::string_view label, uint64_t& value, const float speed, const uint64_t min, const uint64_t max, bool editable)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U64, &value, speed, &min, &max, nullptr, !editable ? ImGuiSliderFlags_NoInput : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiLabelAndPathToken::End() const {}
+void Engine::ImGuiLabelAndPathToken::End() {}
 
-bool Engine::ImGuiLabelAndPathToken::DoImpl(const std::string_view label, const std::filesystem::path& path) const
+bool Engine::ImGuiLabelAndPathToken::DoImpl(const std::string_view label, const std::filesystem::path& path)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::InputText(temp_label.c_str(), const_cast<char*>(path.generic_string().c_str()), ImGuiInputTextFlags_ReadOnly);
 }
 
-void Engine::ImGuiListBoxToken::End() const
+void Engine::ImGuiListBoxToken::End()
 {
 	ImGui::EndListBox();
 }
 
-bool Engine::ImGuiListBoxToken::DoImpl(const std::string_view label, float x, float y) const
+bool Engine::ImGuiListBoxToken::DoImpl(const std::string_view label, float x, float y)
 {
 	return ImGui::BeginListBox(label.data(), {x, y});
 }
 
-void Engine::ImGuiTreeNodeToken::End() const
+void Engine::ImGuiTreeNodeToken::End()
 {
 	ImGui::TreePop();
 }
 
-bool Engine::ImGuiTreeNodeToken::DoImpl(const std::string_view label) const
+bool Engine::ImGuiTreeNodeToken::DoImpl(const std::string_view label)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	return ImGui::TreeNode(temp_label.c_str(), label.data());
 }
 
-void Engine::ImGuiSelectableToken::End() const
+void Engine::ImGuiSelectableToken::End()
 {
 }
 
-bool Engine::ImGuiSelectableToken::DoImpl(const std::string_view label, bool& opened) const
+bool Engine::ImGuiSelectableToken::DoImpl(const std::string_view label, bool& opened)
 {
 	return ImGui::Selectable(label.data(), &opened);
 }
 
-void Engine::ImGuiLabelAndVec3Token::End() const
+void Engine::ImGuiLabelAndVec3Token::End()
 {
 }
 
-bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
+bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable)
 {
 	return ImGui::DragFloat3(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }
 
-void Engine::ImGuiCheckboxToken::End() const
+void Engine::ImGuiCheckboxToken::End()
 {
 }
-bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag) const
+bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag)
 {
 	AlignText(label);
 	const std::string& temp_label = LabelSuffix(label);
 	return ImGui::Checkbox(temp_label.data(), &flag);
 }
 
-void Engine::ImGuiComboboxToken::End() const
+void Engine::ImGuiComboboxToken::End()
 {
 }
-bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size) const
+bool Engine::ImGuiComboboxToken::DoImpl(const std::string_view label, int* value, const char* const* label_arr, const size_t arr_size, const bool editable)
 {
-	return ImGui::Combo(label.data(), value, label_arr, arr_size);
+	if (!editable)
+	{
+		ImGui::BeginDisabled();
+	}
+	bool retval = ImGui::Combo(label.data(), value, label_arr, arr_size);
+	if (!editable)
+	{
+		ImGui::EndDisabled();
+	}
+	return retval;
 }
 
-void Engine::ImGuiLabelAndVec4Token::End() const {}
+void Engine::ImGuiLabelAndVec4Token::End() {}
 
-bool Engine::ImGuiLabelAndVec4Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable) const
+bool Engine::ImGuiLabelAndVec4Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable)
 {
 	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
 }
 
-void Engine::ImGuiDragAndDropTargetToken::End() const
+void Engine::ImGuiLabelAndVec2Token::End() {}
+
+bool Engine::ImGuiLabelAndVec2Token::DoImpl(const std::string_view label, float* vec, float step, float min, float max, bool editable)
+{
+	return ImGui::DragFloat4(label.data(), vec, step, min, max, "%.3f", !editable ? ImGuiSliderFlags_NoInput : ImGuiSliderFlags_None);
+}
+
+void Engine::ImGuiDragAndDropTargetToken::End()
 {
 	return ImGui::EndDragDropTarget();
 }
 
-bool Engine::ImGuiDragAndDropTargetToken::DoImpl(const std::string_view tag, const std::function<void(void*)> functor) const
+bool Engine::ImGuiDragAndDropTargetToken::DoImpl(const std::string_view tag, const std::function<void(void*)> functor)
 {
 	const bool ret = ImGui::BeginDragDropTarget();
 
@@ -335,14 +353,14 @@ bool Engine::ImGuiDragAndDropTargetToken::DoImpl(const std::string_view tag, con
 	return ret;
 }
 
-void Engine::ImGuiDragAndDropSourceToken::End() const
+void Engine::ImGuiDragAndDropSourceToken::End()
 {
 	ImGui::EndDragDropSource();
 }
 
 bool Engine::ImGuiDragAndDropSourceToken::DoImpl(
 	const std::string_view tag, const std::string_view label, const void* ptr, unsigned long long size
-) const
+)
 {
 	const bool ret = ImGui::BeginDragDropSource();
 
@@ -355,67 +373,89 @@ bool Engine::ImGuiDragAndDropSourceToken::DoImpl(
 	return ret;
 }
 
-void Engine::ImGuiLabelAndUInt16Token::End() const
+void Engine::ImGuiLabelAndUInt16Token::End()
 {
 }
 
 bool Engine::ImGuiLabelAndUInt16Token::DoImpl(
 	const std::string_view label, unsigned short& value, float speed, unsigned short min , unsigned short max, bool editable
-) const
+)
 {
 	const std::string& temp_label = LabelSuffix(label);
 	AlignText(label);
 	return ImGui::DragScalar(temp_label.c_str(), ImGuiDataType_U16, &value, speed, &min, &max, nullptr, !editable ? ImGuiSliderFlags_NoInput : ImGuiInputTextFlags_None);
 }
 
-void Engine::ImGuiComboboxUInt8Token::End() const {}
+void Engine::ImGuiComboboxUInt8Token::End() {}
 
 bool Engine::ImGuiComboboxUInt8Token::DoImpl(
-	const std::string_view label, unsigned char* value, const char* const* label_arr, const unsigned long long arr_size
-) const
+	const std::string_view label, unsigned char* value, const char* const* label_arr, const unsigned long long arr_size, const bool editable
+)
 {
+	if (!editable)
+	{
+		ImGui::BeginDisabled();
+	}
+
 	int intermediate = *value;
 	const bool ret = ImGui::Combo(label.data(), &intermediate, label_arr, arr_size);
 	*value = intermediate;
+
+	if (!editable)
+	{
+		ImGui::EndDisabled();
+	}
 	return ret;
 }
 
-void Engine::ImGuiTextToken::End() const
+void Engine::ImGuiTextToken::End()
 {
 }
-bool Engine::ImGuiTextToken::DoImpl(const std::string_view text) const
+bool Engine::ImGuiTextToken::DoImpl(const std::string_view text)
 {
 	ImGui::Text(text.data());
 	return true;
 }
 
-void Engine::ImGuiSeparatorToken::End() const
+void Engine::ImGuiSeparatorToken::End()
 {
 }
-bool Engine::ImGuiSeparatorToken::DoImpl() const
+bool Engine::ImGuiSeparatorToken::DoImpl()
 {
 	ImGui::Separator();
 	return true;
 }
 
-void Engine::ImGuiTableToken::End() const
+void Engine::ImGuiSameLineToken::End()
+{
+}
+
+bool Engine::ImGuiSameLineToken::DoImpl()
+{
+    ImGui::SameLine();
+    return true;
+}
+
+void Engine::ImGuiTableToken::End()
 {
 	ImGui::EndTable();
 }
 
-bool Engine::ImGuiTableToken::DoImpl(std::string_view label, unsigned long long column_count) const
+bool Engine::ImGuiTableToken::DoImpl(std::string_view label, unsigned long long column_count)
 {
 	return ImGui::BeginTable(label.data(), column_count);
 }
-void Engine::ImGuiTableRowToken::End() const {}
-bool Engine::ImGuiTableRowToken::DoImpl() const
+void Engine::ImGuiTableRowToken::End() {}
+
+bool Engine::ImGuiTableRowToken::DoImpl()
 {
 	ImGui::TableNextRow();
 	return true;
 }
-void Engine::ImGuiTableColumnToken::End() const {}
 
-bool Engine::ImGuiTableColumnToken::DoImpl(unsigned long long column) const
+void Engine::ImGuiTableColumnToken::End() {}
+
+bool Engine::ImGuiTableColumnToken::DoImpl(unsigned long long column)
 {
 	ImGui::TableNextColumn();
 	return true;
@@ -436,3 +476,4 @@ void Engine::ImGuiUIInterface::NewFrame()
 	ImGui::NewFrame();
 #endif
 }
+#endif

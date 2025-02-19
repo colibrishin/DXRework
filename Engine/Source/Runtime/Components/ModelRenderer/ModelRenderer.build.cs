@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ModelRenderer : CommonProject
+public class ModelRenderer : EngineCommonProject
 {
     public ModelRenderer() { }
 
@@ -15,7 +15,6 @@ public class ModelRenderer : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<RenderComponent>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
+        conf.AddPublicDependency<ShapeRenderComponent>(target);
     }
 }

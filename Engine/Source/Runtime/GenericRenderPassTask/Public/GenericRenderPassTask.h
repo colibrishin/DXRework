@@ -1,17 +1,15 @@
 #pragma once
 #include <memory>
 
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
-
 #include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Texture.h"
 
-#include "GenericRenderPassTask.generated.h"
-
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
+
+#include "GenericRenderPassTask.generated.h"
 
 namespace Engine
 {
@@ -29,7 +27,7 @@ namespace Engine
 		const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>* reservedTextures;
 	};
 	
-	ECLASS()
+	ECLASS(virtual)
 	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTask : RenderPassTask
 	{
 		GENERATE_BODY

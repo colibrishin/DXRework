@@ -32,7 +32,7 @@ namespace Engine
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_CORE_API Collider final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -72,7 +72,11 @@ namespace Engine::Components
 		[[nodiscard]] virtual Matrix                              GetLocalMatrix() const;
 
 		void Initialize() override;
+
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const context, const float dt) override;
+#endif
+
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
@@ -80,7 +84,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 		[[nodiscard]] GenericBounding<> GetBounding() const;
 
@@ -124,7 +128,6 @@ namespace Engine::Components
 		Collider();
 
 	private:
-		COMP_CLONE_DECL
 		friend class Managers::LerpManager;
 
 		static VertexCollection s_cube_vertices_;

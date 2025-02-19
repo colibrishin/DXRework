@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Assimp/Assimp.build.cs")]
 
 [Generate]
-public class Shape : CommonProject
+public class Shape : EngineCommonProject
 {
     public Shape() { }
 
@@ -21,7 +21,6 @@ public class Shape : CommonProject
         conf.AddPublicDependency<Bone>(target);
         conf.AddPublicDependency<Material>(target);
 
-        conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<BaseAnimation>(target);
     }

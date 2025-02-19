@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class BoneAnimation : CommonProject
+public class BoneAnimation : EngineCommonProject
 {
     public BoneAnimation() { }
 
@@ -15,7 +15,6 @@ public class BoneAnimation : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<BaseAnimation>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
         conf.AddPrivateDependency<Bone>(target);        
     }
 }

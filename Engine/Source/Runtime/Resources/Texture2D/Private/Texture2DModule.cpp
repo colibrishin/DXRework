@@ -3,15 +3,14 @@
 
 #include "Texture2D.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
-
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include <magic_enum.hpp>
 
 MODULE_IMPL(Engine::Texture2DModule, Texture2D)
 
-void Engine::Texture2DModule::Initialize()
+bool Engine::Texture2DModule::InitializeImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -71,7 +70,7 @@ void Engine::Texture2DModule::Initialize()
 			*context |= ui.NewLabelAndULLD({"Width", desc.Width, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt({"Height", desc.Height, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt16({"Depth or Array Size", desc.DepthOrArraySize, 0.1f, 0, 0, true});
-			*context |= ui.NewCombobox({"Format", reinterpret_cast<int*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size()}); // should recast before use, non-linear enum
+			*context |= ui.NewCombobox({"Format", reinterpret_cast<int*>(&desc.Format), tex_format_cstr.data(), tex_format_cstr.size(), true }); // should recast before use, non-linear enum
 
 			{
 				*context += ui.NewListBox({"Resource Flags", -1, 0});
@@ -83,7 +82,7 @@ void Engine::Texture2DModule::Initialize()
 			}
 
 			*context |= ui.NewLabelAndUInt16({"Mips Level", desc.MipsLevel, 0.1f, 0, 0, true});
-			*context |= ui.NewComboboxUInt8({"Texture layout", reinterpret_cast<uint8_t*>(&desc.Layout), tex_layout_cstr.data(), tex_layout_cstr.size()}); // should recast before use, non-linear enum
+			*context |= ui.NewComboboxUInt8({"Texture layout", reinterpret_cast<uint8_t*>(&desc.Layout), tex_layout_cstr.data(), tex_layout_cstr.size() , true }); // should recast before use, non-linear enum
 			*context |= ui.NewLabelAndUInt({"Sampler Count", desc.SampleDesc.Count, 0.1f, 0, 0, true});
 			*context |= ui.NewLabelAndUInt({"Sampler Quality", desc.SampleDesc.Quality, 0.1f, 0, 0, true});
 
@@ -142,15 +141,27 @@ void Engine::Texture2DModule::Initialize()
 
 		UIHelpers::OpenNewDialog<Resources::Texture2D, Managers::ResourceManager>(managing_flag, ui_callback, load_callback, cleanup_callback);
 	});
+#endif
+
+	return true;
 }
 
-void Engine::Texture2DModule::Shutdown()
+bool Engine::Texture2DModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Engine::Resources::Texture2D::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Engine::Resources::Texture2D::StaticTypeName());
+#endif
+	return true;
 }
 
 bool Engine::Texture2DModule::DynamicLoadable()
 {
 	return false;
+}
+
+const std::vector<std::string> &Engine::Texture2DModule::LoadAfter() const
+{
+    static std::vector<std::string> load_after = { "RenderPipeline", "Texture" };
+    return load_after;
 }

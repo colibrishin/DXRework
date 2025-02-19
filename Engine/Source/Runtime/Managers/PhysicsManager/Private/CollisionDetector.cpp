@@ -77,6 +77,11 @@ namespace Engine::Managers
 
 	void CollisionDetector::FixedUpdate(const float dt)
 	{
+        if ( !SceneManager::GetInstance().IsPlaying() )
+        {
+            return;
+        }
+	    
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
 #ifdef PHYSX_ENABLED
@@ -85,11 +90,11 @@ namespace Engine::Managers
 #else
 			const auto& tree = scene->GetCollisionTree();
 
-			std::stack<const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>*> stack;
+			std::stack<const Octree*> stack;
 			stack.push(&tree);
 
 			std::vector<std::vector<Weak<Abstracts::ObjectBase>>>                       node_objects;
-			std::map<const Octree<Weak<Abstracts::ObjectBase>, bounding_getter>*, bool> visited;
+			std::map<const Octree*, bool> visited;
 
 			while (!stack.empty())
 			{

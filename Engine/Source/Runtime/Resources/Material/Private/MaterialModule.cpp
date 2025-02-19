@@ -6,8 +6,9 @@
 
 MODULE_IMPL(Engine::MaterialModule, Material)
 
-void Engine::MaterialModule::Initialize()
+bool Engine::MaterialModule::InitializeImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Material::StaticTypeName(), [](bool& managing_flag)
 		{
 			Resources::Material::Create("NewMaterial", Graphics::MaterialPrimitive{});
@@ -24,12 +25,19 @@ void Engine::MaterialModule::Initialize()
 			UIHelpers::OpenLoadDialog<Resources::Material, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
 			
 		});
+#endif 
+
+	return true;
 }
 
-void Engine::MaterialModule::Shutdown()
+bool Engine::MaterialModule::ShutdownImpl()
 {
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Material::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Material::StaticTypeName());
+#endif
+
+	return true;
 }
 
 bool Engine::MaterialModule::DynamicLoadable()

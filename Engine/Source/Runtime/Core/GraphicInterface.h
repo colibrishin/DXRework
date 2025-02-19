@@ -2,7 +2,6 @@
 #include <boost/serialization/access.hpp>
 #include "ConstantBuffer.h"
 #include "StructuredBuffer/Public/StructuredBuffer.h"
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 
 namespace Engine
 {
@@ -689,6 +688,10 @@ namespace Engine
 		};
 	};
 
+	constexpr static UINT d3d12_shader4_component_mapping =
+            ( ( ( ( 0 ) & 0x7 ) | ( ( ( 1 ) & 0x7 ) << 3 ) | ( ( ( 2 ) & 0x7 ) << ( 3 * 2 ) ) |
+                ( ( ( 3 ) & 0x7 ) << ( 3 * 3 ) ) | ( 1 << ( 3 * 4 ) ) ) );
+
 	struct ENGINE_CORE_API GenericTextureDescription
 	{
 		eTexType				 Dimension = TEX_TYPE_UNKNOWN;
@@ -822,6 +825,27 @@ namespace Engine
 	};
 #endif
 
+	struct ENGINE_CORE_API PrimitiveFont
+	{
+		virtual ~PrimitiveFont() = default;
+		virtual void Generate(const Resources::Font* font) = 0;
+		virtual void Render(
+			const std::string_view text, 
+			const Vector2& position, 
+			const Color& color,
+			const float rotation_rad,
+			const Vector2& scale) = 0;
+
+	protected:
+		virtual void SetNativeFont(void* ptr)
+		{
+			ptr = m_font_;
+		}
+
+	private:
+		void* m_font_ = nullptr;
+	};
+
 	struct ENGINE_CORE_API PrimitiveMesh
 	{
 		virtual      ~PrimitiveMesh() = default;
@@ -862,6 +886,28 @@ namespace Engine
 	};
 
 	struct GraphicInterfaceContextPrimitive;
+
+	struct ENGINE_CORE_API PrimitiveSampler
+    {
+        virtual ~PrimitiveSampler() = default;
+        virtual void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) = 0;
+        virtual bool IsValid()
+        {
+            return m_sampler_ != nullptr;
+        }
+
+        virtual uint64_t GetCPUAddress() const = 0;
+        virtual uint64_t GetGPUAddress() const = 0;
+
+    protected:
+        void SetSampler( void *sampler )
+        {
+            m_sampler_ = sampler;
+        }
+
+    private:
+        void *m_sampler_ = nullptr;
+    };
 	
 	struct ENGINE_CORE_API GraphicHeapBase
 	{
@@ -871,6 +917,10 @@ namespace Engine
 			const Resources::Texture* const* textures,
 			const UINT count,
 			const UINT offset) const = 0;
+
+        virtual void SetSampler( 
+			const PrimitiveSampler *sampler,
+			const eSampler slot ) const = 0;
 		
 		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
 		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
@@ -1209,10 +1259,12 @@ namespace Engine
 		virtual void* GetNativeInterface() = 0;
 		virtual void* GetNativePipeline() = 0;
 
-		virtual PrimitiveTexture* GetNewPrimitiveTexture() = 0;
-		virtual PrimitiveMesh* GetNewPrimitiveMesh() = 0;
+		virtual PrimitiveTexture       *GetNewPrimitiveTexture()       = 0;
+        virtual PrimitiveMesh          *GetNewPrimitiveMesh()          = 0;
 		virtual GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() = 0;
 		virtual ComputePrimitiveShader* GetNewComputePrimitiveShader() = 0;
+        virtual PrimitiveFont          *GetNewPrimitiveFont()          = 0;
+        virtual PrimitiveSampler       *GetNewPrimitiveSampler()       = 0;
 
 		virtual Matrix GetProjectionMatrix() = 0;
 		virtual Matrix GetOrthogonalMatrix() = 0;

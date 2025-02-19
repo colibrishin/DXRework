@@ -79,7 +79,13 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::PostRender(const float dt) {}
+	void Renderer::PostRender(const float dt)
+	{
+	    if (m_b_task_dirty_)
+	    {
+	        m_b_task_dirty_ = false;
+	    }
+	}
 
 	void Renderer::PostUpdate(const float dt) {}
 
@@ -97,6 +103,7 @@ namespace Engine::Managers
 	{
 		if (task != nullptr)
 		{
+		    m_b_task_dirty_ = true;
 			m_render_pass_tasks_.emplace(name, std::unique_ptr<RenderPassTask>(task));
 		}
 	}
@@ -113,6 +120,7 @@ namespace Engine::Managers
 	{
 		if (m_render_pass_tasks_.contains(name.data()))
 		{
+		    m_b_task_dirty_ = true;
 			m_render_pass_tasks_.erase(name.data());
 		}
 	}
@@ -156,7 +164,7 @@ namespace Engine::Managers
 	{
 		if (!m_postrender_funcs_.contains(name))
 		{
-			m_postrender_funcs_.erase(name);
+			m_postrender_funcs_.emplace(name, postrender_func);
 		}
 	}
 

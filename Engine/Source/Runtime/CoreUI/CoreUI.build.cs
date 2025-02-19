@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class CoreUI : CommonProject
+public class CoreUI : EngineCommonProject
 {
     public CoreUI() { }
 

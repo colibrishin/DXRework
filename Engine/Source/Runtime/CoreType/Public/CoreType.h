@@ -1,7 +1,12 @@
 #pragma once
 #define EMPTY
-#define DLLIMPORT __declspec(dllimport)
-#define DLLEXPORT __declspec(dllexport)
+#ifndef DLLIMPORT
+#define DLLIMPORT __declspec( dllimport )
+#endif
+
+#ifndef DLLEXPORT
+#define DLLEXPORT __declspec( dllexport )
+#endif
 
 #define ECLASS(...)
 #define EENUM(...)
@@ -20,6 +25,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <unordered_set>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <type_traits>
@@ -29,6 +35,34 @@
 #include <boost/serialization/nvp.hpp>
 #include <boost/archive/detail/iserializer.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/serialization/access.hpp>
+#include <boost/pool/pool_alloc.hpp>
+
+#include <magic_enum.hpp>
+
+template <typename Enum>
+constexpr auto CStrEnumStrings()
+{
+	constexpr auto enum_val = magic_enum::enum_names<Enum>();
+	std::array<const char*, enum_val.size()> ret{};
+	for (size_t i = 0; i < enum_val.size(); ++i)
+	{
+		ret[i] = enum_val[i].data();
+	}
+	return ret;
+}
+
+template <typename Enum>
+Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
+{
+	if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
+		format_validity.has_value())
+	{
+		return format_validity.value();
+	}
+
+	return static_cast<Enum>(0);
+}
 
 template<class T, std::size_t... N>
 constexpr T bswap_impl(T i, std::index_sequence<N...>)
@@ -829,7 +863,10 @@ public:
 	    if constexpr (it == TypeNameStorage.rend())
 	    {
 	        // No namespace
-		    return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
+			constexpr auto space_sep = std::find(TypeNameStorage.rbegin(), TypeNameStorage.rend(), ' ');
+			constexpr auto dist = std::distance(space_sep, std::rend(TypeNameStorage));
+			constexpr auto length = TypeNameStorage.size() - dist;
+		    return {TypeNameStorage.data() + dist, length - 1};
 	    }
 
 	    constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
@@ -914,6 +951,10 @@ struct ENGINE_CORETYPE_API HashTypeImpl
 	{
 		throw std::runtime_error("Not Implemented");
 	}
+	[[nodiscard]] virtual std::string_view GetTypeName() const
+	{
+		throw std::runtime_error("Not Implemented");
+	}
 
 	constexpr HashTypeImpl() = default;
 	constexpr HashTypeImpl(const cityhash::cityhash256& value) : v(value) {}
@@ -986,6 +1027,10 @@ struct HashTypeT : HashTypeImpl
 	[[nodiscard]] bool IsInternal() const override
 	{
 		return is_internal_v<T>;
+	}
+	[[nodiscard]] std::string_view GetTypeName() const override
+	{
+		return static_type_name<T>::name();
 	}
 
 	constexpr HashTypeT() :
@@ -1069,4 +1114,66 @@ struct polymorphic_type_hash<##Type##>\
 		}\
 		return std::ranges::binary_search(upcast_array, base, [](const auto lhs, const auto rhs){return *lhs < *rhs;});\
 	}\
+};
+
+template <typename T, typename = void>
+struct is_hash_type : std::false_type {};
+
+template <typename T>
+struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
+
+struct ENGINE_CORETYPE_API ConstructorAccess 
+{
+	template <typename T, typename... Args>
+	inline static boost::shared_ptr<T> Create(Args&&... args)
+	{
+		return boost::shared_ptr<T>(new T(std::forward<Args>(args)...));
+	}
+};
+
+template <typename ValueType, typename... Args> requires is_hash_type<ValueType>::value
+struct FactoryTemplate
+{
+public:
+	using GeneratorSignature = std::function<boost::shared_ptr<ValueType>(Args...)>;
+	using GeneratorContainer = std::unordered_map<HashType, GeneratorSignature>;
+
+	static GeneratorSignature GetGenerator(HashType key)
+	{
+		if (m_generators_.contains(key))
+		{
+			return m_generators_.at(key);
+		}
+
+		return {};
+	}
+
+	static const GeneratorContainer& GetGenerators()
+	{
+		return m_generators_;
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static void Register()
+	{
+		m_generators_.emplace(T::StaticTypeHash(), &FactoryTemplate::Create<T>);
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static void Unregister()
+	{
+		if (m_generators_.contains(T::StaticTypeHash()))
+		{
+			m_generators_.erase(T::StaticTypeHash());
+		}
+	}
+
+	template <typename T> requires std::is_base_of_v<ValueType, T>
+	static boost::shared_ptr<ValueType> Create(Args&&... args)
+	{
+		return ConstructorAccess::Create<T>(std::forward<Args>(args)...);
+	}
+
+private:
+	inline static GeneratorContainer m_generators_ = {};
 };

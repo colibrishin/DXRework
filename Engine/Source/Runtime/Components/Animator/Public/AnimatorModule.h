@@ -1,5 +1,5 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "AnimatorModule.generated.h"
 
@@ -9,8 +9,8 @@ namespace Engine
 	struct AnimatorModule : public IModule
 	{
 		GENERATE_BODY
-		void             Initialize() override;
-		void             Shutdown() override;
+		bool             InitializeImpl() override;
+		bool             ShutdownImpl() override;
 		bool             DynamicLoadable() override;
 	};
 }

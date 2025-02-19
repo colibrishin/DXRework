@@ -1,5 +1,5 @@
 #pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "AtlasAnimationTextureModule.generated.h"
 
@@ -9,8 +9,8 @@ namespace Engine
 	struct AtlasAnimationTextureModule : public IModule 
 	{
 		GENERATE_BODY
-		void Initialize() override;
-		void Shutdown() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
 		bool DynamicLoadable() override;
 	};
 }

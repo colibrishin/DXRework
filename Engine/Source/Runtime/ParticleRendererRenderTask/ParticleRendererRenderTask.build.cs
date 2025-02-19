@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DX12Agility/DX12Agility.build.cs")]
 
 [Generate]
-public class ParticleRendererRenderTask : CommonProject
+public class ParticleRendererRenderTask : EngineCommonProject
 {
     public ParticleRendererRenderTask() { }
 
@@ -18,7 +18,7 @@ public class ParticleRendererRenderTask : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<EngineEntryPoint>(target);
-        conf.AddPublicDependency<RenderComponent>(target);
+        conf.AddPublicDependency<ShapeRenderComponent>(target);
 
         conf.AddPrivateDependency<Mesh>(target);
         conf.AddPrivateDependency<Shader>(target);

@@ -104,7 +104,7 @@ namespace Engine::Resources
 			Resource::OnUIUpdate( parent, dt );
 
 #define ENUM_COMBOBOX(NAME, THIS_VAR, ENUM_TYPE, ENUM_ARR) \
-	(*parent |= ui.NewCombobox( { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size() } )).SetFunction( [this]() {\
+	(*parent |= ui.NewCombobox( { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size(), true } )).SetFunction( [this]() {\
 		(THIS_VAR) = RecastNonlinearEnum<##ENUM_TYPE##>( ENUM_ARR, THIS_VAR##selected_ ); });
 
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
@@ -134,7 +134,7 @@ namespace Engine::Resources
 				
 				for (size_t i = 0; i < m_rtv_formats_.size(); ++i)
 				{
-					(*parent |= ui.NewCombobox( { render_target_label[i], &m_rtv_formats_selected_[i], format_enums.data(), format_enums.size() } )).SetFunction( [this, i]()
+					(*parent |= ui.NewCombobox( { render_target_label[i], &m_rtv_formats_selected_[i], format_enums.data(), format_enums.size(), true } )).SetFunction( [this, i]()
 					{
 						m_rtv_formats_[i] = RecastNonlinearEnum<eFormat>( format_enums, m_rtv_formats_selected_[i] );
 					} );

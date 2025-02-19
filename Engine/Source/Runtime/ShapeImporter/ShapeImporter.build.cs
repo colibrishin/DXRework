@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Assimp/Assimp.build.cs")]
 
 [Generate]
-public class ShapeImporter : CommonProject
+public class ShapeImporter : EngineCommonProject
 {
     public ShapeImporter() { }
 
@@ -15,7 +15,6 @@ public class ShapeImporter : CommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<DirectXMath>(target);
         conf.AddPublicDependency<Mesh>(target);
         conf.AddPublicDependency<Shape>(target);
         conf.AddPrivateDependency<Assimp>(target);

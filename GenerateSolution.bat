@@ -4,6 +4,10 @@ set EngineDir=%cd%
 IF NOT "%~1"=="" set "EngineDir=%~1"
 echo EngineDir: %EngineDir%
 
+set ClientCS=%EngineDir%\Client\ClientMain.build.cs
+IF NOT "%~2"=="" set ClientCS="%2"
+echo ClientCS: %ClientCS%
+
 set TargetCS=%EngineDir%\Engine\Source\EngineMain.build.cs
 IF NOT "%~2"=="" set TargetCS="%2"
 echo TargetCS: %TargetCS%
@@ -24,4 +28,5 @@ exit /b)
 echo SharpmakeDir: %SharpmakeDir%
 
 "%SharpmakeDir%" /sources(@'%TargetCS%') /verbose
+IF EXIST "%ClientCS%" "%SharpmakeDir%" /sources(@'%ClientCS%') /verbose
 "%SharpmakeDir%" /sources(@'%FrontendTargetCS%') /verbose

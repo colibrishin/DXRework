@@ -1,6 +1,7 @@
 ﻿#include "ParticleRendererRenderInstanceTaskModule.h"
+#include "ParticleRendererRenderInstanceTaskModule.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "ParticleRendererRenderTask.h"
 #include "Renderer.h"
 
@@ -8,16 +9,20 @@ MODULE_IMPL(Engine::ParticleRendererRenderInstanceTaskModule, ParticleRendererRe
 
 namespace Engine
 {
-    void ParticleRendererRenderInstanceTaskModule::Initialize()
+    bool ParticleRendererRenderInstanceTaskModule::InitializeImpl()
     {
         Managers::Renderer::GetInstance().RegisterRenderInstance(
             L"ParticleRendererRenderInstanceTask",
             new ParticleRendererRenderInstanceTask() );
+
+        return true;
     }
 
-    void ParticleRendererRenderInstanceTaskModule::Shutdown()
+    bool ParticleRendererRenderInstanceTaskModule::ShutdownImpl()
     {
         Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ParticleRendererRenderInstanceTask");
+
+        return true;
     }
 
     bool ParticleRendererRenderInstanceTaskModule::DynamicLoadable() { return true; }

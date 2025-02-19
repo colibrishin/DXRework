@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "ParticleRendererExtensionModule.generated.h"
 
@@ -10,8 +10,8 @@ namespace Engine
     {
         GENERATE_BODY
     public:
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };   
 }

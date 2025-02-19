@@ -1,0 +1,16 @@
+#pragma once
+#include "ModuleManager.h"
+
+#include "RenderComponentModule.generated.h"
+
+namespace Engine
+{
+    ECLASS( module )
+    struct ENGINE_RENDERCOMPONENT_API RenderComponentModule : IModule
+    {
+        GENERATE_BODY
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
+        bool DynamicLoadable() override;
+    };
+} // namespace Engine

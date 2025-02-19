@@ -6,7 +6,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXMath/DirectXMath.build.cs")]
 
 [Generate]
-public class GJK : CommonProject
+public class GJK : EngineCommonProject
 {
     public GJK() { }
 
@@ -16,7 +16,5 @@ public class GJK : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
-        conf.AddPublicDependency<DirectXMath>(target);
     }
 }

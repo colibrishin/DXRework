@@ -95,7 +95,20 @@ namespace Engine
 		return m_handler_->GetMainDescriptorHeap(m_heap_queue_offset_);
 	}
 
-	void DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const
+	void DescriptorPtrImpl::SetSampler( const PrimitiveSampler *sampler, const eSampler slot ) const
+    {
+        if ( !IsValid() )
+        {
+            return;
+        }
+
+		const auto &handle = CD3DX12_CPU_DESCRIPTOR_HANDLE( m_cpu_sampler_handle_, slot, m_sampler_descriptor_size_ );
+
+        m_handler_->m_dev_->CopyDescriptorsSimple(
+                1, handle, D3D12_CPU_DESCRIPTOR_HANDLE(sampler->GetCPUAddress()), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
+	}
+
+    void DescriptorPtrImpl::SetSampler( const D3D12_CPU_DESCRIPTOR_HANDLE &sampler, const UINT slot ) const
 	{
 		if (!IsValid())
 		{

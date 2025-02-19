@@ -29,19 +29,49 @@ namespace Engine::Resources
 	void AnimationTexture::OnSerialized()
 	{
 		Texture3D::OnSerialized();
+
+		m_animations_meta_path_.clear();
+		for (const Weak<BoneAnimation>& anim : m_cached_animations_)
+		{
+			if (const Strong<BoneAnimation>& locked = anim.lock())
+			{
+				Serializer::Serialize(locked->GetName(), locked);
+				m_animations_meta_path_.emplace_back(locked->GetMetadataPath());
+			}
+		}
 	}
 
 	void AnimationTexture::OnDeserialized()
 	{
 		Texture3D::OnDeserialized();
+
+		for (const std::filesystem::path& meta_path : m_animations_meta_path_)
+		{
+			if (const Strong<BoneAnimation>& anim = Resources::BoneAnimation::GetByMetadataPath(meta_path).lock())
+			{
+				if (IsLoaded())
+				{
+					m_animations_.emplace_back(anim);
+				}
+
+				m_cached_animations_.emplace_back(anim);
+			}
+		}
 	}
 
 	void AnimationTexture::Load_INTERNAL()
 	{
 		const GenericTextureDescription& new_desc = preEvaluateAnimations(m_animations_, m_evaluated_animations_);
-		GetPrimitiveTexture()->UpdateDescription(new_desc);
+		UpdateDescription(new_desc);
 
 		Texture3D::Load_INTERNAL();
+	}
+
+	void AnimationTexture::Unload_INTERNAL()
+	{
+		Texture3D::Load_INTERNAL();
+		
+		m_animations_.clear();
 	}
 
 	void AnimationTexture::Map()
@@ -63,6 +93,16 @@ namespace Engine::Resources
 	const std::vector<Weak<BoneAnimation>>& AnimationTexture::GetAnimations() const
 	{
 		return m_cached_animations_;
+	}
+
+	Weak<BoneAnimation> AnimationTexture::GetAnimation(const size_t idx) const
+	{
+		if (m_cached_animations_.size() > idx)
+		{
+			return m_cached_animations_.at(idx);
+		}
+
+		return {};
 	}
 
 	GenericTextureDescription AnimationTexture::preEvaluateAnimations(
@@ -94,6 +134,7 @@ namespace Engine::Resources
 
 		return
 		{
+			.Dimension = TEX_TYPE_3D,
 			.Alignment = 0,
 			.Width = static_cast<UINT>(bone_count * s_vec4_to_mat),
 			.Height = frame_count,

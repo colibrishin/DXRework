@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTex/DirectXTex.build.cs")]
 
 [Generate]
-public class AtlasAnimationTexture : CommonProject
+public class AtlasAnimationTexture : EngineCommonProject
 {
     public AtlasAnimationTexture() { }
 

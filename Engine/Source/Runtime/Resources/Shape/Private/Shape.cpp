@@ -8,7 +8,7 @@
 
 #include "Components/Collider/Public/Collider.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
 #include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
@@ -20,6 +20,22 @@
 #include "Source/Runtime/ShapeImporter/Public/ShapeImporter.h"
 
 #include "UIHelpersResourceManager.h"
+
+void Engine::ShapeExtension::BindShapeToCollider(const Weak<Resources::Shape>& shape, const Weak<Components::Collider>& collider)
+{
+	if (const Strong<Resources::Shape>& locked_shape = shape.lock())
+	{
+		if (const Strong<Components::Collider>& locked_collider = collider.lock())
+		{
+			BoundingBox bbox = locked_shape->GetBoundingBox();
+			BoundingOrientedBox obb;
+			obb.Center = bbox.Center;
+			obb.Extents = bbox.Extents;
+
+			locked_collider->SetBoundingBox(obb);
+		}
+	}
+}
 
 namespace Engine::Resources
 {
@@ -35,7 +51,7 @@ namespace Engine::Resources
 
 	void Shape::PostUpdate(const float dt) {}
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR
 	void Shape::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent) 
@@ -120,6 +136,16 @@ namespace Engine::Resources
 	void Shape::OnSerialized()
 	{
 		Resource::OnSerialized();
+
+		if (!GetPath().empty())
+		{
+			if (std::filesystem::exists(GetPath()))
+			{
+				std::filesystem::path dst = GetPrettyTypeName() / GetPath().filename();
+				std::filesystem::copy_file(GetPath(), dst, std::filesystem::copy_options::overwrite_existing);
+				SetPath(dst);
+			}
+		}
 		
 		for (size_t i = 0; i < m_cached_meshes_.size(); ++i)
 		{
@@ -664,13 +690,9 @@ namespace Engine::Resources
 
 					// todo: need an uuid to mark the supported bone.
 					const Strong<BoneAnimation>& anim = BoneAnimation::Create(anim_name + "_ANIM", animation);
+					anim->BindBone(generated_bone);
 					m_animation_catalog_.push_back(anim_name + "_ANIM");
 					animations.push_back(anim);
-				}
-
-				for (const auto& anim : animations)
-				{
-					Managers::ResourceManager::GetInstance().AddResource(anim);
 				}
 
 				const Strong<AnimationTexture>& anims = AnimationTexture::Create(GetName() + "_ANIMS", animations);
@@ -745,8 +767,8 @@ namespace Engine::Resources
 		m_animations_path_ = res->GetMetadataPath();
 		
 		m_animation_catalog_.clear();
-		m_animation_catalog_.reserve(m_animations_->GetAnimations().size());
-		for (const auto& animation : m_animations_->GetAnimations())
+		m_animation_catalog_.reserve(res->GetAnimations().size());
+		for (const auto& animation : res->GetAnimations())
 		{
 			if (const Strong<BoneAnimation>& locked = animation.lock())
 			{

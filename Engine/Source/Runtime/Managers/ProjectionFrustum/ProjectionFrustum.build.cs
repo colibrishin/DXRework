@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 
 [Generate]
-public class ProjectionFrustum : CommonProject
+public class ProjectionFrustum : EngineCommonProject
 {
     public ProjectionFrustum() { }
 
@@ -14,6 +14,5 @@ public class ProjectionFrustum : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
     }
 }

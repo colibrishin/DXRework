@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class ReflectionEvaluator : CommonProject
+public class ReflectionEvaluator : EngineCommonProject
 {
     public ReflectionEvaluator() 
     {

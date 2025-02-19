@@ -3,27 +3,29 @@ using System.Collections;
 using Microsoft.Win32;
 using Sharpmake;
 
+[Sharpmake.Export]
 public abstract class ExportProject : Project
 {
     protected ExportProject() : base(typeof(EngineTarget))
     {
+        Name = GetType().Name;
+
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
+        IsExportProject = true;
+        StripFastBuildSourceFiles = false;
 
-        AddTargets(new EngineTarget(
-                ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                Platform.win64,
-                DevEnv.vs2022,
-                Optimization.Debug | Optimization.Release,
-                OutputType.Lib | OutputType.Dll,
-                Blob.NoBlob,
-                BuildSystem.FastBuild
-        ));
+        SourceRootPath = @"[project.RootPath]";
+        SourceFilesExtensions.Add(".cs");
+
+        AddTargets(Utils.GetDefinedTarget());
     }
 
     [Configure()]
     public virtual void ConfigureAll(Configuration conf, EngineTarget target)
     {
+        Utils.MakeConfiturationNameDefine(conf, target);
+        conf.SolutionFolder = @"ThirdParty";
     }
 
     [Configure(Optimization.Debug)] 
@@ -39,7 +41,7 @@ public abstract class ExportProject : Project
 
 public class VCPKG : ExportProject
 {
-    protected VCPKG() 
+    protected VCPKG()
     {
     }
 
@@ -51,9 +53,13 @@ public class VCPKG : ExportProject
         {
             return SolutionDir + @"/vcpkg_installed/x64-windows/debug/bin";
         }
-        else // target.Optimization == Optimization.Release 
+        else if (target.Optimization == Optimization.Release) 
         {
             return SolutionDir + @"/vcpkg_installed/x64-windows/bin";
+        }
+        else 
+        {
+            return "";
         }
     }
 

@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class Animator : CommonProject
+public class Animator : EngineCommonProject
 {
     public Animator() { }
 
@@ -15,7 +15,6 @@ public class Animator : CommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<DirectXTK>(target);        
         conf.AddPublicDependency<BaseAnimation>(target);
 
         conf.AddPrivateDependency<Shape>(target);
@@ -23,7 +22,7 @@ public class Animator : CommonProject
         conf.AddPrivateDependency<AtlasAnimation>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<Material>(target);
-        conf.AddPrivateDependency<RenderComponent>(target);
+        conf.AddPrivateDependency<ShapeRenderComponent>(target);
         conf.AddPrivateDependency<ModelRenderer>(target);
     }
 }

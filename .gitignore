@@ -386,7 +386,6 @@ MigrationBackup/
 vcpkg.disable-metrics
 archives
 .DS_Store
-prefab/
 *.swp
 
 ###################
@@ -399,6 +398,7 @@ pythonenv3.8/
 DX/Metadata/_excluded/**
 
 Engine/***/blob/*
+Client/***/blob/*
 !Engine/Source/ThirdParty/*/lib/*
 
 
@@ -406,10 +406,12 @@ Binaries/***
 Intermediate/***
 *.bff
 *.fdb
-kolibri.sln
 
 !Build/
 Programs/CMake/***
 Programs/vcpkg/***
 lock
 balius/target/.rustc_info.json
+*.sln
+*.vcxproj
+*.dep

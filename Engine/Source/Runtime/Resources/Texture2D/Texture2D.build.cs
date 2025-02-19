@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class Texture2D : CommonProject
+public class Texture2D : EngineCommonProject
 {
     public Texture2D() { }
 

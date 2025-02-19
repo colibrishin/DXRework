@@ -5,7 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Pugixml/Pugixml.build.cs")]
 
 [Generate]
-public class AtlasAnimation : CommonProject
+public class AtlasAnimation : EngineCommonProject
 {
     public AtlasAnimation() { }
 

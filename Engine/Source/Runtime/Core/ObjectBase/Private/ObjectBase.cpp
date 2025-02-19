@@ -4,16 +4,14 @@
 #include <any>
 
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
-#include "Source/Runtime/Core/Script/Public/Script.h"
 #include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
 
 #if WITH_EDITOR
+#include "Scene/Public/Scene.h"
+#include "Objects/Object/Public/Object.h"
 #include "Components/Transform/Public/Transform.h"
-#include "Components/Collider/Public/Collider.h"
 #include "Components/Rigidbody/Public/Rigidbody.h"
 #endif
-
-std::unordered_map<std::string_view, Engine::Abstracts::ObjectBase::ComponentFactorySignature> Engine::Abstracts::ObjectBase::m_component_add_map_ {};
 
 namespace Engine::Abstracts
 {
@@ -104,7 +102,7 @@ namespace Engine::Abstracts
 		return out;
 	}
 
-	void ObjectBase::AddChild(const Weak<ObjectBase>& p_child, const bool immediate)
+	void ObjectBase::AddChild(const Weak<ObjectBase>& p_child, const bool immediate )
 	{
 		if (const auto child = p_child.lock();
 			!child || child == GetSharedPtr<ObjectBase>())
@@ -193,60 +191,6 @@ namespace Engine::Abstracts
 		}
 	}
 
-	void ObjectBase::OnCollisionEnter(const Strong<Components::Collider>& other)
-	{
-		if (!GetComponent<Components::Collider>().lock())
-		{
-			throw std::exception("Object has no collider");
-		}
-
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->OnCollisionEnter(other);
-		}
-	}
-
-	void ObjectBase::OnCollisionContinue(const Strong<Components::Collider>& other)
-	{
-		if (!GetComponent<Components::Collider>().lock())
-		{
-			throw std::exception("Object has no collider");
-		}
-
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->OnCollisionContinue(other);
-		}
-	}
-
-	void ObjectBase::OnCollisionExit(const Strong<Components::Collider>& other)
-	{
-		if (!GetComponent<Components::Collider>().lock())
-		{
-			throw std::exception("Object has no collider");
-		}
-
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->OnCollisionExit(other);
-		}
-	}
-
 	Weak<Abstracts::Component> ObjectBase::checkComponent(const ComponentType type)
 	{
 		if (m_components_.contains(type))
@@ -257,54 +201,7 @@ namespace Engine::Abstracts
 		return {};
 	}
 
-	Weak<Script> ObjectBase::checkScript(const ScriptType type)
-	{
-		if (m_scripts_.contains(type))
-		{
-			return m_scripts_[type];
-		}
-
-		return {};
-	}
-
-	void ObjectBase::removeScript(const ScriptType type)
-	{
-		removeScriptFromSceneCache(m_scripts_[type]);
-		removeScriptImpl(type);
-	}
-
-	void ObjectBase::removeScriptImpl(const ScriptType type)
-	{
-		if (m_scripts_.contains(type))
-		{
-			Managers::TaskScheduler::GetInstance().AddTask
-					(
-					 TASK_REM_SCRIPT,
-					 {GetSharedPtr<ObjectBase>(), type},
-					 [](const std::vector<std::any>& params, const float)
-					 {
-						 const auto& obj  = std::any_cast<Strong<ObjectBase>>(params[0]);
-						 const auto& type = std::any_cast<ScriptType>(params[1]);
-
-						 std::erase_if
-								 (
-								  obj->m_cached_script_, [type](const auto& script)
-								  {
-									  if (const auto& locked = script.lock())
-									  {
-										  return locked->GetTypeHash() == type;
-									  }
-
-									  return false;
-								  }
-								 );
-						 obj->m_scripts_.erase(type);
-					 }
-					);
-		}
-	}
-
-	Weak<Abstracts::Component> ObjectBase::addComponent(const Strong<Component>& component)
+	Weak<Component> ObjectBase::addComponent(const Strong<Component>& component)
 	{
 		const auto type = component->GetTypeHash();
 
@@ -322,71 +219,30 @@ namespace Engine::Abstracts
 
 		// Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
 		component->SetOwner(GetSharedPtr<ObjectBase>());
+		if (!component->IsInitialized())
+		{
+			component->Initialize();
+		}
 
 		// Add the component to the object.
 		addComponentImpl(component, type);
 
+		if (const Strong<Scene>& scene = GetScene().lock())
+		{
+			addComponentToSceneCache(component);
+		}
+
+		onComponentAdded.Broadcast(component);
+
 		return component;
 	}
 
-	Weak<Script> ObjectBase::addScript(const Strong<Script>& script)
-	{
-		const auto type = script->GetTypeHash();
-
-		if (const auto scp = checkScript(type).lock())
-		{
-			return scp;
-		}
-
-		// Remove the component from the previous owner.
-		if (const auto prev = script->GetOwner().lock();
-			prev && prev != GetSharedPtr<ObjectBase>())
-		{
-			prev->removeScript(type);
-		}
-
-		// Change the owner of the component. Since the component is already added to the cache, skipping the uncaching.
-		script->SetOwner(GetSharedPtr<ObjectBase>());
-
-		// Add the component to the object.
-		addScriptImpl(script, type);
-		addScriptToSceneCache(script);
-
-		return script;
-	}
-
-	void ObjectBase::addScriptImpl(const Strong<Script>& script, const ScriptType type)
-	{
-		script->SetOwner(GetSharedPtr<ObjectBase>());
-
-		if (!script->IsInitialized())
-		{
-			script->Initialize();
-		}
-
-		m_scripts_.emplace(type, script);
-		m_cached_script_.push_back(script);
-	}
-
 #if WITH_EDITOR
-	void ObjectBase::RegisterComponentFactory(std::string_view name, const ComponentFactorySignature& predicate)
-	{
-		if (!m_component_add_map_.contains(name))
-		{
-			m_component_add_map_.emplace(name, predicate);
-		}
-	}
-
-	void ObjectBase::UnregisterComponentFactory(std::string_view name)
-	{
-		if (m_component_add_map_.contains(name))
-		{
-			m_component_add_map_.erase(name);
-		}
-	}
 	void ObjectBase::UpdateUIText()
 	{
-		m_ui_info_.label = std::format("{} {} {}", GetPrettyTypeName(), GetName(), std::to_string(GetID()));
+        m_ui_info_.label = std::format( "{} {} {}", GetPrettyTypeName(), GetName(), GetID() );
+        m_ui_info_.temporaryStrings[ "child_title" ]   = std::format( "Children of {}({})...", GetName(), GetID() );
+        m_ui_info_.temporaryStrings[ "child_listbox" ] = std::format( "Children##ChildrenListBox{}", GetID() );
 	}
 	void ObjectBase::OnNameChanged()
 	{
@@ -421,6 +277,7 @@ namespace Engine::Abstracts
 		{
 			const auto& comp = m_components_[type];
 
+		    removeComponentFromSceneCache(comp);
 			removeComponentImpl(type, comp);
 		}
 	}
@@ -461,20 +318,13 @@ namespace Engine::Abstracts
 		}
 
 		m_cached_component_.insert(component);
+	    addComponentToSceneCache(component);
+
+	    onComponentAdded.Broadcast(component);
 	}
 
 	void ObjectBase::Render(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->Render(dt);
-		}
-
 		for (const auto& child : m_children_cache_ | std::views::values)
 		{
 			if (const auto locked = child.lock())
@@ -491,16 +341,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::PostRender(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->PostRender(dt);
-		}
-
 		for (const auto& child : m_children_cache_ | std::views::values)
 		{
 			if (const auto locked = child.lock())
@@ -517,16 +357,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::FixedUpdate(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->FixedUpdate(dt);
-		}
-
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			if (!component->GetActive())
@@ -553,16 +383,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::PostUpdate(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->PostUpdate(dt);
-		}
-
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			if (!component->GetActive())
@@ -595,11 +415,6 @@ namespace Engine::Abstracts
 		{
 			comp->OnSerialized();
 		}
-
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			script->OnSerialized();
-		}
 	}
 
 	void ObjectBase::OnDeserialized()
@@ -617,27 +432,18 @@ namespace Engine::Abstracts
 			m_assigned_component_ids_.insert(comp->GetLocalID());
 			m_cached_component_.insert(comp);
 		}
-
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			script->SetOwner(GetSharedPtr<ObjectBase>());
-			script->OnDeserialized();
-			m_cached_script_.push_back(script);
-		}
 	}
 
-	Strong<ObjectBase> ObjectBase::Clone(bool register_scene) const
+	Strong<ObjectBase> ObjectBase::Clone( bool register_scene, std::vector<Strong<ObjectBase>> *out_child ) const
 	{
 		const auto& cloned = cloneImpl();
 
 		// Clone components and scripts
 		cloned->m_components_.clear();
-		cloned->m_scripts_.clear();
 
 		// Erase the copied pointers that indicates original object.
 		cloned->m_assigned_component_ids_.clear();
 		cloned->m_cached_component_.clear();
-		cloned->m_scripts_.clear();
 		cloned->m_components_.clear();
 
 		// Copy components
@@ -647,25 +453,26 @@ namespace Engine::Abstracts
 			cloned->addComponent(cloned_comp);
 		}
 
-		// Copy scripts
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			const auto& cloned_script = script->Clone(cloned);
-			cloned->addScript(cloned_script);
-		}
-
 		// Keep intact with the parent.
 
 		// Clone children
 		cloned->m_children_.clear();
 		cloned->m_children_cache_.clear();
+		// Detach from the parent for not getting removed from the original object.
+        cloned->m_parent_    = {};
+        cloned->m_parent_id_ = g_invalid_id;
 
 		for (const auto& child : m_children_cache_ | std::views::values)
 		{
 			if (const auto locked = child.lock())
 			{
-				const auto cloned_child = locked->Clone(register_scene);
-				cloned->AddChild(cloned_child);
+				const auto cloned_child = locked->Clone( register_scene, out_child );
+				cloned->AddChild( cloned_child, true );
+
+				if (out_child)
+				{
+                    out_child->emplace_back( cloned_child );
+				}
 			}
 		}
 
@@ -685,16 +492,69 @@ namespace Engine::Abstracts
 		return m_cached_component_;
 	}
 
-	const std::vector<Weak<Script>>& ObjectBase::GetAllScripts()
-	{
-		return m_cached_script_;
-	}
-
 	void ObjectBase::Initialize()
 	{
 #if WITH_EDITOR
 		UpdateUIText();
 #endif
+    }
+
+    void ObjectBase::BeginPlay( const float dt )
+    {
+		for (const auto& comp : m_cached_component_)
+		{
+            for ( const auto &component : m_components_ | std::views::values )
+            {
+                if ( !component->GetActive() )
+                {
+                    continue;
+                }
+
+                component->BeginPlay( dt );
+            }
+
+            for ( const auto &child : m_children_cache_ | std::views::values )
+            {
+                if ( const auto locked = child.lock() )
+                {
+                    if ( !locked->GetActive() )
+                    {
+                        continue;
+                    }
+
+                    locked->BeginPlay( dt );
+                }
+            }
+		}
+    }
+
+    void ObjectBase::EndPlay( const float dt )
+    {
+        for ( const auto &comp : m_cached_component_ )
+        {
+            for ( const auto &component : m_components_ | std::views::values )
+            {
+                if ( !component->GetActive() )
+                {
+                    continue;
+                }
+
+                component->EndPlay( dt );
+            }
+
+            for ( const auto &child : m_children_cache_ | std::views::values )
+            {
+                if ( const auto locked = child.lock() )
+                {
+                    if ( !locked->GetActive() )
+                    {
+                        continue;
+                    }
+
+                    locked->EndPlay( dt );
+                }
+            }
+        }
 	}
 
 #if WITH_EDITOR
@@ -706,7 +566,7 @@ namespace Engine::Abstracts
 
 			if (m_ui_info_.dialogOpened)
 			{
-				if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened })))
+                if ( UIContext context = UIInterface::NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
 				{
 					Actor::OnUIUpdate(&context, dt);
 					(context |= ui.NewButton({"Clone"})).SetFunction([&]()
@@ -719,9 +579,15 @@ namespace Engine::Abstracts
 						m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
 					});
 
+					(context |= ui.NewButton({ "Children" })).SetFunction([&]()
+						{
+							m_b_child_dialog_ = !m_b_child_dialog_;
+						});
+
 					if (m_b_add_component_dialog_opened_)
 					{
-						if (UIContext add_com_context = UIInterface::NewContext(ui.NewDialog({this, "Add Component dialog", m_b_add_component_dialog_opened_}))) 
+                        if ( UIContext add_com_context = UIInterface::NewContext( ui.NewDialog(
+                                     { this, "Add Component dialog", m_b_add_component_dialog_opened_ } ) ) ) 
 						{
 							const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
 							{
@@ -735,11 +601,11 @@ namespace Engine::Abstracts
 							internalComponentTemplate.operator() < Components::Transform > ();
 							internalComponentTemplate.operator() < Components::Rigidbody > ();
 
-							for (const auto& [name, predicate] : m_component_add_map_)
+							for (const auto& [type, predicate] : ComponentFactory::GetGenerators())
 							{
-								(add_com_context |= ui.NewButton({ name })).SetFunction([&]()
+								(add_com_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([&]()
 								{
-									predicate(GetSharedPtr<ObjectBase>());
+									addComponent(predicate(GetSharedPtr<ObjectBase>()));
 								});
 							}
 						};
@@ -752,6 +618,11 @@ namespace Engine::Abstracts
 						{
 							if (const Strong<Component>& component = w_component.lock())
 							{
+							    (context |= ui.NewButton( { "Remove" } )).SetFunction( [this, type = component->GetTypeHash()]()
+							    {
+							        removeComponent( type );
+							    });
+							    context |= ui.NewSameLine( {} );
 								context |= ui.NewSelectable({ component->m_ui_info_.label, component->m_ui_info_.dialogOpened });
 							};
 						}
@@ -771,6 +642,104 @@ namespace Engine::Abstracts
 						}
 					}
 				}
+			    
+
+				if (m_b_child_dialog_)
+				{
+                    if ( UIContext child_context = ui.NewContext( ui.NewDialog(
+                                 { this, m_ui_info_.temporaryStrings[ "child_title" ], m_b_child_dialog_ } ) ) )
+					{
+						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
+							{
+								m_b_child_add_dialog_ = !m_b_child_add_dialog_;
+							});
+
+						if (m_b_child_add_dialog_)
+						{
+                            if ( UIContext child_select_context = ui.NewContext(
+                                         ui.NewDialog( { this, "Add New Child", m_b_child_add_dialog_ } ) ) )
+							{
+								(child_select_context |= ui.NewButton({ "Object" })).SetFunction([this]()
+									{
+										if (const Strong<Scene>& scene = GetScene().lock())
+										{
+											const Strong<Object>& child = scene->CreateGameObject<Object>(GetLayer()).lock();
+											AddChild(child, false);
+										}
+								    
+								        m_b_child_add_dialog_ = false;
+									});
+
+								for (const auto& [type, predicate] : ObjectFactory::GetGenerators())
+								{
+									(child_select_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([this, &predicate]()
+										{
+											if (const Strong<Scene>& scene = GetScene().lock())
+											{
+												const Strong<ObjectBase>& child = predicate();
+												scene->AddGameObject(GetLayer(), child);
+												AddChild(child, false);
+											}
+
+									        m_b_child_add_dialog_ = false;
+										});
+								}
+							}
+						}
+
+						child_context += ui.NewListBox( { m_ui_info_.temporaryStrings[ "child_listbox" ], 0, 0 } );
+                        child_context |= ui.NewDragAndDropTarget(
+                                { "OBJECT",
+                                  [ this ]( void *ptr )
+                                  {
+                                      if ( const Strong<ObjectBase> *scary_ptr =
+                                                   static_cast<Strong<ObjectBase> *>( ptr ) )
+                                      {
+										  if ( ( *scary_ptr )->GetParent().lock() == GetSharedPtr<ObjectBase>() )
+										  {
+                                              return;
+										  }
+
+                                          if ( const Strong<Scene> &scene = GetScene().lock() )
+                                          {
+                                              scene->ChangeLayer( GetLayer(), ( *scary_ptr )->GetID() );
+                                              AddChild( ( *scary_ptr ) );
+                                          }
+                                      }
+                                  } } );
+
+						if ( m_children_cache_.empty() )
+                        {
+                            child_context |= ui.NewText( { "No child found." } );
+                        }
+
+						for (const auto& [id, child] : m_children_cache_)
+						{
+							if (const Strong<ObjectBase>& locked = child.lock())
+							{
+                                ( child_context |= ui.NewButton( { "Remove" } ) ).SetFunction([this, &locked]() 
+									{ 
+										if (const Strong<Scene>& scene = locked->GetScene().lock())
+										{
+                                            DetachChild( locked->GetLocalID() );
+                                            scene->RemoveGameObject( locked->GetID(), locked->GetLayer() );
+										}
+								} );
+                                child_context |= ui.NewSameLine( {} );
+                                child_context |= ui.NewSelectable( { locked->m_ui_info_.label, locked->m_ui_info_.dialogOpened } );
+                                child_context |= ui.NewDragAndDropSource(
+                                        { "OBJECT", locked->m_ui_info_.label, &locked, sizeof( decltype( locked ) ) } );
+
+								if (locked->m_ui_info_.dialogOpened)
+								{
+									locked->OnUIUpdate(&child_context, dt);
+								}
+							}
+						}
+
+						--child_context;
+					}
+				}
 			}
 		}
 	}
@@ -778,16 +747,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::PreUpdate(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->PreUpdate(dt);
-		}
-
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			if (!component->GetActive())
@@ -814,16 +773,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::PreRender(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->PreRender(dt);
-		}
-
 		for (const auto& child : m_children_cache_ | std::views::values)
 		{
 			if (const auto locked = child.lock())
@@ -840,16 +789,6 @@ namespace Engine::Abstracts
 
 	void ObjectBase::Update(const float dt)
 	{
-		for (const auto& script : m_scripts_ | std::views::values)
-		{
-			if (!script->GetActive())
-			{
-				continue;
-			}
-
-			script->Update(dt);
-		}
-
 		for (const auto& component : m_components_ | std::views::values)
 		{
 			if (!component->GetActive())

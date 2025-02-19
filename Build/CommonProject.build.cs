@@ -5,6 +5,20 @@ using Sharpmake;
 
 [module:Include("Utils.cs")]
 
+public class FastBuildAllOverrideProject : FastBuildAllProject 
+{
+    public FastBuildAllOverrideProject() : base(typeof(EngineTarget))
+    {
+    }
+
+    [Configure()]
+    public virtual void ConfigureAll(Configuration conf, EngineTarget target) 
+    {
+        Utils.MakeConfiturationNameDefine(conf, target);
+    }
+}
+
+
 [Fragment, Flags]
 public enum ELaunchType
 {
@@ -42,6 +56,19 @@ public class EngineTarget : Target
     }
 }
 
+public abstract class EngineCommonProject : CommonProject 
+{
+    public EngineCommonProject() : base(true)
+    {
+    }
+
+    public override void ConfigureAll(Configuration conf, EngineTarget target)
+    {
+        base.ConfigureAll(conf, target);
+        conf.SolutionFolder = @"Engine";
+    }
+}
+
 public abstract class CommonProject : Project
 {
     protected CommonProject(bool bAddTarget = true) : base(typeof(EngineTarget))
@@ -58,12 +85,7 @@ public abstract class CommonProject : Project
 
         if (bAddTarget == true)
         {
-            AddTargets(new EngineTarget(
-                    ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-                    Platform.win64,
-                    DevEnv.vs2022,
-                    Optimization.Debug | Optimization.Release
-            ));
+            AddTargets(Utils.GetDefinedTarget());
         }
     }
 
@@ -74,13 +96,13 @@ public abstract class CommonProject : Project
 
         conf.DumpDependencyGraph = true;
         conf.ExecuteTargetCopy = true;
+        conf.IncludeBlobbedSourceFiles = false;
 
-        string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=EMPTY";
+        string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=";
 
         conf.ExportDefines.Add(emptyAPIString);
         conf.Defines.Add(emptyAPIString);
 
-        // conf.Output = Configuration.OutputType.Exe;
         if (target.LaunchType == ELaunchType.Editor)
         {
             conf.Output = Configuration.OutputType.Dll;
@@ -99,7 +121,6 @@ public abstract class CommonProject : Project
         conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
         conf.Options.Add(Options.Vc.Compiler.JumboBuild.Enable);
         conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.CPP20);
-        //conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
         if (target.Optimization == Optimization.Debug)
         {
             conf.Options.Add(Options.Vc.Compiler.Inline.Default);
@@ -117,6 +138,9 @@ public abstract class CommonProject : Project
 
         // Exceptions
         conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+
+        conf.Options.Add(Options.Vc.Linker.LinkLibraryDependencies.Enable);
+        conf.Options.Add(Options.Vc.CodeAnalysis.ClangTidyCodeAnalysis.Enable);
 
         // Debug
         {
@@ -156,22 +180,21 @@ public abstract class CommonProject : Project
         //    //conf.ForceSymbolReferences.Add("IMPLEMENT_MODULE_" + conf.Project.Name);
         //}
 
-        // Runtime Library
         {
-            //if (target.LaunchType == ELaunchType.Editor)
+            if (target.Optimization == Optimization.Debug)
             {
-                if (target.Optimization == Optimization.Debug)
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
-                else
-                    conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
             }
-            //else
-            //{
-            //    if (target.Optimization == Optimization.Debug)
-            //        conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebug);
-            //    else
-            //        conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreaded);
-            //}
+            else
+            {
+                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
+                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrtd.lib");
+            }
         }
         
         string EngineDir = Utils.GetEngineDir();
@@ -180,8 +203,8 @@ public abstract class CommonProject : Project
         Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
             $@"{EngineDir}\balius\target\release\balius.exe",
             $@"",
-            @"[project.Name]-headerparser.log",
-            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}""",
+            $@"{EngineDir}\Intermediate\log\[project.Name]-headerparser.log",
+            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}"" ""{conf.Name}""",
             EngineDir,
             true,
             true
@@ -190,11 +213,7 @@ public abstract class CommonProject : Project
         Exec.FastBuildExecAlways = true;
 
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);
-
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
-
-        conf.AdditionalCompilerOptions.Add("/FS");
-        conf.IsFastBuild = true;
 
         {
             conf.Defines.Add("NOMINMAX=1");
@@ -229,6 +248,11 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
             conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
             conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
+        }
+
+        if (target.GraphicAPI == EGraphicAPI.D3D12)
+        {
+            conf.AddPublicDependency<DirectXTK>(target);
         }
     }
 }

@@ -7,14 +7,9 @@
 
 DEFINE_DELEGATE(OnTranfromChanged);
 
-namespace Engine
-{
-	inline static constexpr Vector3 g_forward = {0, 0, -1.f};
-}
-
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_CORE_API Transform final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -53,7 +48,7 @@ namespace Engine::Components
 		Vector3    GetAnimationScale() const;
 		Quaternion GetAnimationRotation() const;
 
-		// The direction moving towards to the screen if no rotation applied.
+		// The direction moving backward to the screen if no rotation applied.
 		Vector3 Forward() const;
 		Vector3 Right() const;
 		Vector3 Up() const;
@@ -65,11 +60,13 @@ namespace Engine::Components
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
 		void FixedUpdate(const float dt) override;
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const context, const float dt) override;
+#endif
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 		Matrix GetLocalMatrix() const;
 		Matrix GetWorldMatrix() const;
@@ -83,8 +80,6 @@ namespace Engine::Components
 		friend class Managers::Renderer;
 
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
-
-		COMP_CLONE_DECL
 
 		EPROPERTY()
 		bool       m_b_s_absolute_;

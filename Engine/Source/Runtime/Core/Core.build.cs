@@ -8,7 +8,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/GCEM/GCEM.build.cs")]
 
 [Generate]
-public class Core : CommonProject
+public class Core : EngineCommonProject
 {
     public Core() { }
 
@@ -18,7 +18,6 @@ public class Core : CommonProject
 
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<CoreEntity>(target);
         conf.AddPublicDependency<CoreSingleton>(target);
         conf.AddPrivateDependency<GCEM>(target);

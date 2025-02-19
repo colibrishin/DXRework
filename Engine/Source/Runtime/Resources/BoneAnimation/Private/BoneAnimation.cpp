@@ -21,16 +21,21 @@ namespace Engine::Resources
 	void BoneAnimation::OnSerialized()
 	{
 		BaseAnimation::OnSerialized();
+
+		if (const Strong<Bone>& bone = m_cached_bone_.lock())
+		{
+			Serializer::Serialize(bone->GetName(), bone);
+			m_bone_path_ = bone->GetMetadataPath();
+		}
 	}
 
 	void BoneAnimation::OnDeserialized()
 	{
 		BaseAnimation::OnDeserialized();
 
-		if (const auto res_check = Bone::GetByMetadataPath(m_bone_path_).lock();
-			res_check && !res_check->GetMetadataPath().empty())
+		if (const Strong<Bone>& res_check = Bone::GetByMetadataPath(m_bone_path_).lock())
 		{
-			m_bone_ = res_check;
+			BindBone(res_check);
 		}
 
 		m_primitive_.RebuildIndexCache();
@@ -41,6 +46,8 @@ namespace Engine::Resources
 		if (const auto locked = bone_info.lock())
 		{
 			m_bone_ = locked;
+			m_cached_bone_ = locked;
+			m_bone_path_ = m_bone_->GetMetadataPath();
 		}
 	}
 
@@ -65,36 +72,39 @@ namespace Engine::Resources
 		memo.clear();
 		memo.resize(m_primitive_.GetBoneCount());
 
-		for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
+		if (const Strong<Bone>& locked_bone = m_cached_bone_.lock()) 
 		{
-			Matrix                        bfa;
-			const BoneAnimationPrimitive* bone_animation = m_primitive_.GetBoneAnimation(i);
-			const BonePrimitive*          bone           = m_bone_->GetBone(i);
-			const BonePrimitive*          parent         = m_bone_->GetBoneParent(i);
-
-			const auto position = bone_animation->GetPosition(time);
-			const auto rotation = bone_animation->GetRotation(time);
-			const auto scale    = bone_animation->GetScale(time);
-
-			const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion
-			                                (rotation) * Matrix::CreateTranslation(position);
-
-			Matrix parent_transform = Matrix::Identity;
-
-			if (parent)
+			for (int i = 0; i < m_primitive_.GetBoneCount(); ++i)
 			{
-				parent_transform = memo[parent->GetIndex()];
+				Matrix                        bfa;
+				const BoneAnimationPrimitive* bone_animation = m_primitive_.GetBoneAnimation(i);
+				const BonePrimitive* bone = locked_bone->GetBone(i);
+				const BonePrimitive* parent = locked_bone->GetBoneParent(i);
+
+				const auto position = bone_animation->GetPosition(time);
+				const auto rotation = bone_animation->GetRotation(time);
+				const auto scale = bone_animation->GetScale(time);
+
+				const Matrix vertex_transform = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion
+				(rotation) *Matrix::CreateTranslation(position);
+
+				Matrix parent_transform = Matrix::Identity;
+
+				if (parent)
+				{
+					parent_transform = memo[parent->GetIndex()];
+				}
+
+				const Matrix node_transform = vertex_transform;
+
+				const Matrix global_transform = node_transform * parent_transform;
+				memo[bone->GetIndex()] = global_transform;
+
+				const auto final_transform = bone->GetInvBindPose() * global_transform * m_primitive_.
+					GetGlobalInverseTransform();
+				bfa = final_transform;
+				m_evaluated_data_.push_back(bfa);
 			}
-
-			const Matrix node_transform = vertex_transform;
-
-			const Matrix global_transform = node_transform * parent_transform;
-			memo[bone->GetIndex()]        = global_transform;
-
-			const auto final_transform = bone->GetInvBindPose() * global_transform * m_primitive_.
-			                             GetGlobalInverseTransform();
-			bfa = final_transform;
-			m_evaluated_data_.push_back(bfa);
 		}
 
 		return m_evaluated_data_;
@@ -104,9 +114,17 @@ namespace Engine::Resources
 	{
 		SetDuration(m_primitive_.GetDuration());
 		SetTicksPerSecond(m_primitive_.GetTicksPerSecond());
+
+		if (const Strong<Bone>& bone = m_cached_bone_.lock()) 
+		{
+			m_bone_ = bone;
+		}
 	}
 
-	void BoneAnimation::Unload_INTERNAL() { }
+	void BoneAnimation::Unload_INTERNAL() 
+	{
+		m_bone_.reset();
+	}
 
 	BoneAnimation::BoneAnimation()
 		: BaseAnimation(),

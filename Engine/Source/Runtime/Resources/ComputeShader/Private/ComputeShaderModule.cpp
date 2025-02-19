@@ -4,24 +4,33 @@
 #include "ResourceManager/Public/ResourceManager.h"
 #include "ComputeShader.h"
 
-namespace Engine::Resources
+MODULE_IMPL(Engine::ComputeShaderModule, ComputeShader)
+
+namespace Engine
 {
-	void Engine::Resources::ComputeShaderModule::Initialize()
+	bool ComputeShaderModule::InitializeImpl()
 	{
-		Managers::ResourceManager::GetInstance().RegisterLoadResource(ComputeShader::StaticTypeName(), [](bool& managing_flag)
+#if WITH_EDITOR
+		Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::ComputeShader::StaticTypeName(), [](bool& managing_flag)
 			{
 				const auto& load_callback = [](const std::string_view name, const std::string_view path)
-					{
-						ComputeShader::GetByMetadataPath(path);
+					{ Resources::ComputeShader::GetByMetadataPath( path );
 					};
 
-				return UIHelpers::OpenLoadDialog<ComputeShader, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
+				return UIHelpers::OpenLoadDialog<Resources::ComputeShader, Managers::ResourceManager>(
+                            managing_flag, {}, load_callback, {} );
 			});
+#endif
+
+		return true;
 	}
 
-	void ComputeShaderModule::Shutdown()
+	bool ComputeShaderModule::ShutdownImpl()
 	{
-		Managers::ResourceManager::GetInstance().UnregisterLoadResource(ComputeShader::StaticTypeName());
+#if WITH_EDITOR
+        Managers::ResourceManager::GetInstance().UnregisterLoadResource( Resources::ComputeShader::StaticTypeName() );
+#endif
+		return true;
 	}
 
 	bool ComputeShaderModule::DynamicLoadable()

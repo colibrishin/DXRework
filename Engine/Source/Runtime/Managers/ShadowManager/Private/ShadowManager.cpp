@@ -34,7 +34,7 @@ namespace Engine::Managers
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());
 		m_light_vp_sb_ = std::make_unique<decltype(m_light_vp_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightVPSB>());
-
+        
 		InitializeViewport();
 
 		SceneManager::GetInstance().onSceneRemoved.Listen(GetSharedPtr<ShadowManager>(), &ShadowManager::PreSwapScene);
@@ -46,13 +46,18 @@ namespace Engine::Managers
 
 			for (const Weak<Abstracts::ObjectBase>& object : scene->GetGameObjects(RESERVED_LAYER_LIGHT))
 			{
-				if (const Strong<Abstracts::ObjectBase>& locked = object.lock();
-					locked && locked->IsDerivedOf(Objects::Light::StaticTypeHash()))
+				if (const Strong<Objects::Light>& locked = Cast<Objects::Light>(object))
 				{
 					RegisterLight(locked->GetSharedPtr<Objects::Light>());
 				}
 			}
 		}
+
+		m_shadow_sampler_ = Unique<decltype( m_shadow_sampler_ )::element_type>( gi.GetNewPrimitiveSampler() );
+        m_shadow_sampler_->Generate(
+                SHADER_SAMPLER_WRAP, 
+				SHADER_SAMPLER_LESS_EQUAL, 
+				SAMPLER_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT );
 
 		Renderer::GetInstance().RegisterStructuredBuffer(m_light_sb_.get());
 		Renderer::GetInstance().RegisterStructuredBuffer(m_light_vp_sb_.get());
@@ -79,6 +84,9 @@ namespace Engine::Managers
 
 	void ShadowManager::GetLightVP(const Strong<Scene>& scene, std::vector<SBs::LightVPSB>& current_light_vp)
 	{
+        current_light_vp.resize( m_lights_.size() );
+		size_t idx = 0;
+
 		for (const auto& ptr_light : m_lights_ | std::views::values)
 		{
 			if (const auto light = ptr_light.lock())
@@ -91,14 +99,14 @@ namespace Engine::Managers
 
 				if (light_dir == Vector3::Zero)
 				{
-					current_light_vp.push_back({});
+					current_light_vp.at(idx) = {};
 					continue;
 				}
 
 				SBs::LightVPSB light_vp{};
 				// Get the light's view and projection matrix in g_max_shadow_cascades parts.
 				EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
-				current_light_vp.emplace_back(light_vp);
+				current_light_vp.at(idx) = light_vp;
 			}
 		}
 	}
@@ -120,8 +128,7 @@ namespace Engine::Managers
 
 		if (const auto scene = SceneManager::GetInstance().GetActiveScene().lock())
 		{
-			std::vector<SBs::LightVPSB> current_light_vp;
-			GetLightVP(scene, current_light_vp);
+			GetLightVP(scene, m_current_scene_light_vp_);
 
 			// Build light information structured buffer.
 			std::vector<SBs::LightSB> light_buffer;
@@ -153,10 +160,10 @@ namespace Engine::Managers
 				primitive.commandList->SoftReset();
 				ClearShadowMaps(&primitive);
 				CheckSize<UINT>(light_buffer.size(), L"Warning: Light buffer size is too big!");
-				CheckSize<UINT>(current_light_vp.size(), L"Warning: Light VP size is too big!");
+				CheckSize<UINT>(m_current_scene_light_vp_.size(), L"Warning: Light VP size is too big!");
 
 				m_light_sb_->SetData(&primitive, m_lights_.size(), light_buffer.data());
-				m_light_vp_sb_->SetData(&primitive, current_light_vp.size(), current_light_vp.data());
+				m_light_vp_sb_->SetData(&primitive, m_current_scene_light_vp_.size(), m_current_scene_light_vp_.data());
 				primitive.commandList->FlagReady();
 			}
 			
@@ -223,6 +230,7 @@ namespace Engine::Managers
 			 },
 			 [&gi, this, &light](const GraphicInterfaceContextPrimitive* context)
 			 {
+			     gi.SetViewport( context, m_viewport_ );
 				 gi.BindGraphic(context, m_shadow_shader_.get());
 				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
 				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
@@ -377,6 +385,8 @@ namespace Engine::Managers
 
 		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
 		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
+
+		context->heap->SetSampler( m_shadow_sampler_.get(), SAMPLER_SHADOW );
 	}
 
 	void ShadowManager::TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const
@@ -393,7 +403,22 @@ namespace Engine::Managers
 		gi.TransitBackMultiple(context, textures.data(), textures.size(), BIND_TYPE_SRV);
 	}
 
-	void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
+    StructuredBufferTypeProxy<SBs::LightSB> & ShadowManager::GetLightBuffer() const
+    {
+	    return *m_light_sb_;
+	}
+
+    StructuredBufferTypeProxy<SBs::LightVPSB> & ShadowManager::GetLightVPBuffer() const
+    {
+	    return *m_light_vp_sb_;
+	}
+
+    const std::vector<SBs::LightVPSB> & ShadowManager::GetCurrentSceneLightVP() const
+	{
+	    return m_current_scene_light_vp_;
+	}
+
+    void ShadowManager::RegisterLight(Weak<Abstracts::ObjectBase> light)
 	{
 		if (const auto locked = light.lock())
 		{

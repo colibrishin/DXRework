@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class EngineEntryPoint : CommonProject
+public class EngineEntryPoint : EngineCommonProject
 {
     public EngineEntryPoint() { }
 

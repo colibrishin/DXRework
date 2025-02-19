@@ -6,8 +6,6 @@
 
 namespace Engine::Objects
 {
-	OBJ_CLONE_IMPL(Observer)
-
 	Observer::Observer()
 		: ObjectBase(DEF_OBJ_T_OBSERVER) {}
 
@@ -17,7 +15,6 @@ namespace Engine::Objects
 
 		const auto tr = AddComponent<Components::Transform>().lock();
 		//AddComponent<Components::ObserverController>();
-		tr->SetLocalPosition({0.f, 0.f, -10.f});
 	}
 
 	Observer::~Observer() {}

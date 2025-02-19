@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class GenericRenderPassTask : CommonProject
+public class GenericRenderPassTask : EngineCommonProject
 {
     public GenericRenderPassTask() { }
 

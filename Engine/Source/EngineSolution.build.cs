@@ -8,19 +8,6 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Components/**/*.build.cs")]
 
-public class FastBuildAllOverrideProject : FastBuildAllProject 
-{
-    public FastBuildAllOverrideProject() : base(typeof(EngineTarget))
-    {
-    }
-
-    [Configure()]
-    public virtual void ConfigureAll(Configuration conf, EngineTarget target) 
-    {
-        Utils.MakeConfiturationNameDefine(conf, target);
-    }
-}
-
 [Generate]
 public class EngineSolution : Solution
 {
@@ -29,16 +16,8 @@ public class EngineSolution : Solution
         IsFileNameToLower = false;
         Name = "Engine";
         FastBuildAllProjectType = typeof(FastBuildAllOverrideProject);
-
-        AddTargets(new EngineTarget(
-            ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
-            Platform.win64,
-            DevEnv.vs2022,
-            Optimization.Debug | Optimization.Release,
-            OutputType.Lib,
-            Blob.NoBlob,
-            BuildSystem.FastBuild
-        ));
+        
+        AddTargets(Utils.GetDefinedTarget());
     }
 
     [Configure()]
@@ -56,7 +35,6 @@ public class EngineSolution : Solution
             conf.AddProject<RaycastExtension>(target);
 
             {
-                conf.AddProject<RenderComponent>(target);
                 conf.AddProject<ModelRenderer>(target);
                 conf.AddProject<ParticleRenderer>(target);
                 conf.AddProject<ParticleRendererExtension>(target);
@@ -70,11 +48,19 @@ public class EngineSolution : Solution
             }
 
             {
-                conf.AddProject<ImGuiManager>(target);
+                conf.AddProject<Font>(target);
+                conf.AddProject<TextRenderer>(target);
+            }
+
+            {
+                if (target.LaunchType == ELaunchType.Editor)
+                {
+                    conf.AddProject<ImGuiManager>(target);
+                }
+                
                 conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);
-                conf.AddProject<InputManager>(target);
                 conf.AddProject<ProjectionFrustum>(target);
                 //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
@@ -82,6 +68,11 @@ public class EngineSolution : Solution
                 conf.AddProject<ShadowManager>(target);
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<Launch>(target);
+            }
+
+            if (target.LaunchType == ELaunchType.Client || target.LaunchType == ELaunchType.Editor)
+            {
+                conf.AddProject<InputManager>(target);
             }
 
             {
@@ -101,6 +92,13 @@ public class EngineSolution : Solution
                 conf.AddProject<Texture1D>(target);
                 conf.AddProject<Texture2D>(target);
                 conf.AddProject<Texture3D>(target);
+            }
+
+            {
+                conf.AddProject<Sound>(target);
+                conf.AddProject<SoundPlayer>(target);
+                conf.AddProject<SoundManager>(target);
+                conf.AddProject<FMODSoundInterface>(target);
             }
 
             conf.SetStartupProject<Launch>();

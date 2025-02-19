@@ -23,6 +23,7 @@ namespace Engine::Resources
 		return *m_primitive_shader_;
 	}
 
+#if WITH_EDITOR
 	void ComputeShader::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		if (parent)
@@ -34,16 +35,15 @@ namespace Engine::Resources
 			*parent |= ui.NewLabelAndUInt( { "Thread Group Z", m_thread_[2], 0, 0, 256, true} );
 		}
 	}
+#endif
 
-	ComputeShader::ComputeShader(
-		const std::filesystem::path& path,
-		const std::array<UINT, 3>&   thread)
+	ComputeShader::ComputeShader( const std::filesystem::path& path )
 		: Resource(path)
-	{
-		for (size_t i = 0; i < 3; ++i) 
-		{
-			m_thread_[i] = thread[i];
-		}
+    {}
+
+    void ComputeShader::SetThread( const std::array<uint32_t, 3> &thread )
+    { 
+		m_thread_ = thread;
 	}
 
 	ComputeShader::ComputeShader(const ComputeShader& other)

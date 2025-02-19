@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class AnimationTexture : CommonProject
+public class AnimationTexture : EngineCommonProject
 {
     public AnimationTexture() { }
 
@@ -17,9 +17,6 @@ public class AnimationTexture : CommonProject
         conf.AddPublicDependency<Texture3D>(target);
 
         conf.AddPrivateDependency<BaseAnimation>(target);
-        conf.AddPrivateDependency<DirectXTK>(target);
-        conf.AddPrivateDependency<DX12Agility>(target);
-        conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);
     }
 }

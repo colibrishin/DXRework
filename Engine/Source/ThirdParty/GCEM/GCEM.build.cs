@@ -15,14 +15,4 @@ public class GCEM : ExportProject
         base.ConfigureAll(conf, target);
         conf.IncludePaths.Add(@"GCEM/include/");
     }
-
-    public override void ConfigureRelease(Configuration conf, EngineTarget target)
-    {
-        base.ConfigureRelease(conf, target);
-    }
-
-    public override void ConfigureDebug(Configuration conf, EngineTarget target)
-    {
-        base.ConfigureDebug(conf, target);
-    }
 }

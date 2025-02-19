@@ -1,17 +1,17 @@
 ﻿#include "ParticleRendererExtensionModule.h"
+#include "ParticleRendererExtensionModule.generated.h"
 
 #include "AtlasAnimation.h"
 #include "AtlasAnimationTexture.h"
-#include "ParticleRendererExtensionModule.generated.h"
 
 #include "SimpleParticleComputeShader.h"
 #include "Texture2D.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::ParticleRendererExtensionModule, ParticleRendererExtension)
 
-void Engine::ParticleRendererExtensionModule::Initialize()
+bool Engine::ParticleRendererExtensionModule::InitializeImpl()
 {
     Resources::SimpleParticleComputeShader::Create("SimpleParticleComputeShader");
     
@@ -23,10 +23,13 @@ void Engine::ParticleRendererExtensionModule::Initialize()
         "water-vortex.png",
         GenericTextureDescription{} );
     Resources::AtlasAnimationTexture::Create("water-vortex", "", std::vector{anim}, std::vector{anim_tex});
+
+    return true;
 }
 
-void Engine::ParticleRendererExtensionModule::Shutdown()
+bool Engine::ParticleRendererExtensionModule::ShutdownImpl()
 {
+    return true;
 }
 
 bool Engine::ParticleRendererExtensionModule::DynamicLoadable()

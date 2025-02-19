@@ -7,7 +7,7 @@ using Sharpmake;
 
 
 [Generate]
-public class RenderPipeline : CommonProject
+public class RenderPipeline : EngineCommonProject
 {
     public RenderPipeline() { }
 

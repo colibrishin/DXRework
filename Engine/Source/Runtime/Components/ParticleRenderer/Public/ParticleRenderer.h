@@ -1,7 +1,7 @@
 #pragma once
 #include "InstanceParticleSB.h"
 #include "ParticleComputeShader.h"
-#include "Source/Runtime/Components/RenderComponent/Public/egRenderComponent.h"
+#include "ShapeRenderComponent.h"
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/StructuredBuffer/Public/StructuredBuffer.h"
 
@@ -9,8 +9,8 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
-	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public RenderComponent
+	ECLASS(serialize, component)
+	class ENGINE_PARTICLERENDERER_API ParticleRenderer : public ShapeRenderComponent
 	{
 		GENERATE_BODY
 	public:
@@ -33,7 +33,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -52,8 +52,6 @@ namespace Engine::Components
 		bool IsFollowOwner() const;
 
 	private:
-		COMP_CLONE_DECL
-
 		friend class Resources::ComputeShader;
 		friend struct ParticleRendererExtension;
 		ParticleRenderer();

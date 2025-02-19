@@ -3,24 +3,28 @@
 
 #include "ShadowManager.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+#include "CoreModule/Public/CoreModule.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 MODULE_IMPL(Engine::ShadowManagerModule, ShadowManager)
 
-void Engine::ShadowManagerModule::Initialize()
+bool Engine::ShadowManagerModule::InitializeImpl()
 {
     CoreModule::GetContext().AddManager(
         CoreLoop::LOOP_TYPE_RENDER,
         &Managers::ShadowManager::GetInstance);
+
+    return true;
 }
 
-void Engine::ShadowManagerModule::Shutdown()
+bool Engine::ShadowManagerModule::ShutdownImpl()
 {
     CoreModule::GetContext().RemoveManager(
         CoreLoop::LOOP_TYPE_RENDER,
         &Managers::ShadowManager::GetInstance);
+
+    return true;
 }
 
 bool Engine::ShadowManagerModule::DynamicLoadable()

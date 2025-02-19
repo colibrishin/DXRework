@@ -1,31 +1,12 @@
 #pragma once
 #include <memory>
 #include "Source/Runtime/Core/ConstantBuffer.h"
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "RenderTask.h"
 
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "RenderPipeline.generated.h"
-
-namespace Engine
-{
-	struct RenderPipelineModule;
-}
-
-POLYMORPHIC_TYPE_MAP(Engine::RenderPipelineModule, Engine::IModule)
-
-namespace Engine
-{
-	struct ENGINE_RENDERPIPELINE_API RenderPipelineModule : public IModule
-	{
-		INLINE_COMPILE_TIME_TYPENAME(RenderPipelineModule)
-		void Initialize() override;
-		void Shutdown() override;
-		bool DynamicLoadable() override;
-	};
-}
 
 namespace Engine::Managers
 {

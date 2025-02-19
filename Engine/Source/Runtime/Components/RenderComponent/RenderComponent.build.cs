@@ -4,9 +4,9 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class RenderComponent : CommonProject
+public class RenderComponent : EngineCommonProject
 {
-    public RenderComponent() { }
+    public RenderComponent() {}
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
@@ -14,6 +14,5 @@ public class RenderComponent : CommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Shape>(target);
     }
 }

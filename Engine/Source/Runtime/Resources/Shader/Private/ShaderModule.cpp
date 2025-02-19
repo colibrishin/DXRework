@@ -4,15 +4,17 @@
 
 #include <ranges>
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 
 #include <magic_enum.hpp>
 
 MODULE_IMPL(Engine::ShaderModule, Shader)
 
-void Engine::ShaderModule::Initialize()
+bool Engine::ShaderModule::InitializeImpl()
 {
+
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Engine::Resources::Shader::StaticTypeName(), [](bool& managing_flag)
 		{
 			const auto& load_callback = [](const std::string_view name, const std::string_view path)
@@ -45,18 +47,18 @@ void Engine::ShaderModule::Initialize()
 
 			const auto& ui_callback = [&](UIContext* const context)
 				{
-					*context |= ui.NewComboboxUInt8({ "Shader Domain", reinterpret_cast<uint8_t*>(&domain), Resources::Shader::domain_enums.data(), Resources::Shader::domain_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Shader Domain", reinterpret_cast<uint8_t*>(&domain), Resources::Shader::domain_enums.data(), Resources::Shader::domain_enums.size(), true });
 
 					*context |= ui.NewCheckbox({ "Depth Enable", depth_enabled });
-					*context |= ui.NewComboboxUInt8({ "Depth Mode", reinterpret_cast<uint8_t*>(&depth_mode), Resources::Shader::depth_mode_enums.data(), Resources::Shader::depth_mode_enums.size() });
-					*context |= ui.NewCombobox({ "Depth Function", reinterpret_cast<int*>(&depth_function), Resources::Shader::depth_function_enums.data(), Resources::Shader::depth_function_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Depth Mode", reinterpret_cast<uint8_t*>(&depth_mode), Resources::Shader::depth_mode_enums.data(), Resources::Shader::depth_mode_enums.size(), true });
+					*context |= ui.NewCombobox({ "Depth Function", reinterpret_cast<int*>(&depth_function), Resources::Shader::depth_function_enums.data(), Resources::Shader::depth_function_enums.size(), true });
 
-					*context |= ui.NewComboboxUInt8({ "Cull Mode", reinterpret_cast<uint8_t*>(&cull), Resources::Shader::rasterizer_cull_enums.data(), Resources::Shader::rasterizer_cull_enums.size() });
-					*context |= ui.NewComboboxUInt8({ "Draw Enable", reinterpret_cast<uint8_t*>(&draw), Resources::Shader::rasterizer_draw_enums.data(), Resources::Shader::rasterizer_draw_enums.size() });
+					*context |= ui.NewComboboxUInt8({ "Cull Mode", reinterpret_cast<uint8_t*>(&cull), Resources::Shader::rasterizer_cull_enums.data(), Resources::Shader::rasterizer_cull_enums.size(), true });
+					*context |= ui.NewComboboxUInt8({ "Draw Enable", reinterpret_cast<uint8_t*>(&draw), Resources::Shader::rasterizer_draw_enums.data(), Resources::Shader::rasterizer_draw_enums.size(), true });
 
-					*context |= ui.NewCombobox({ "Filter", reinterpret_cast<int*>(&sampler_filter), Resources::Shader::filter_enums.data(), Resources::Shader::filter_enums.size() });
-					*context |= ui.NewCombobox({ "Sampler Address Mode", reinterpret_cast<int*>(&sampler_address_mode), Resources::Shader::sampler_addr_enums.data(), Resources::Shader::sampler_addr_enums.size() });
-					*context |= ui.NewCombobox({ "Sampler Function", reinterpret_cast<int*>(&sampler_function), Resources::Shader::sampler_func_enums.data(), Resources::Shader::sampler_func_enums.size() });
+					*context |= ui.NewCombobox({ "Filter", reinterpret_cast<int*>(&sampler_filter), Resources::Shader::filter_enums.data(), Resources::Shader::filter_enums.size(), true });
+					*context |= ui.NewCombobox({ "Sampler Address Mode", reinterpret_cast<int*>(&sampler_address_mode), Resources::Shader::sampler_addr_enums.data(), Resources::Shader::sampler_addr_enums.size(), true });
+					*context |= ui.NewCombobox({ "Sampler Function", reinterpret_cast<int*>(&sampler_function), Resources::Shader::sampler_func_enums.data(), Resources::Shader::sampler_func_enums.size(), true });
 
 					{
 						*context += ui.NewListBox({ "RenderTarget Format", -1, 0 });
@@ -74,7 +76,7 @@ void Engine::ShaderModule::Initialize()
 
 						for (size_t i = 0; i < rtv_formats.size(); ++i)
 						{
-							*context |= ui.NewComboboxUInt8({ index_string[i], reinterpret_cast<uint8_t*>(&rtv_formats[i]), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size() });
+							*context |= ui.NewComboboxUInt8({ index_string[i], reinterpret_cast<uint8_t*>(&rtv_formats[i]), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size(), true });
 						}
 						-- * context;
 
@@ -84,10 +86,10 @@ void Engine::ShaderModule::Initialize()
 							});
 					}
 
-					*context |= ui.NewComboboxUInt8({ "Depth/Stencil Format", reinterpret_cast<uint8_t*>(&dsv_format), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size() });
-					*context |= ui.NewCombobox({ "Primitive Topology", reinterpret_cast<int*>(&pt), Resources::Shader::primitive_topology_enum.data(), Resources::Shader::primitive_topology_enum.size() });
-					*context |= ui.NewCombobox({ "Primitive Topology Type", reinterpret_cast<int*>(&ptt), Resources::Shader::primitive_topology_type_enum.data(), Resources::Shader::primitive_topology_type_enum.size() });
-					*context |= ui.NewComboboxUInt8({ "Sampler Slot", reinterpret_cast<uint8_t*>(&sampler_slot), Resources::Shader::sampler_slot_enum.data(), Resources::Shader::sampler_slot_enum.size() });
+					*context |= ui.NewComboboxUInt8({ "Depth/Stencil Format", reinterpret_cast<uint8_t*>(&dsv_format), Resources::Shader::format_enums.data(), Resources::Shader::format_enums.size(), true });
+					*context |= ui.NewCombobox({ "Primitive Topology", reinterpret_cast<int*>(&pt), Resources::Shader::primitive_topology_enum.data(), Resources::Shader::primitive_topology_enum.size(), true });
+					*context |= ui.NewCombobox({ "Primitive Topology Type", reinterpret_cast<int*>(&ptt), Resources::Shader::primitive_topology_type_enum.data(), Resources::Shader::primitive_topology_type_enum.size(), true });
+					*context |= ui.NewComboboxUInt8({ "Sampler Slot", reinterpret_cast<uint8_t*>(&sampler_slot), Resources::Shader::sampler_slot_enum.data(), Resources::Shader::sampler_slot_enum.size(), true });
 				};
 
 			static constexpr auto cleanup_callback = []()
@@ -164,8 +166,11 @@ void Engine::ShaderModule::Initialize()
 				load_callback,
 				cleanup_callback);
 		});
+#endif
 
-		StockShaderPrecompile();
+	StockShaderPrecompile();
+
+	return true;
 }
 
 void Engine::ShaderModule::StockShaderPrecompile()
@@ -293,10 +298,19 @@ void Engine::ShaderModule::StockShaderPrecompile()
 	);
 }
 
-void Engine::ShaderModule::Shutdown()
+const std::vector<std::string>& Engine::ShaderModule::LoadAfter() const
 {
+	static std::vector<std::string> load_after{ "RenderPipeline" };
+	return load_after;
+}
+
+bool Engine::ShaderModule::ShutdownImpl()
+{
+#if WITH_EDITOR
 	Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::Shader::StaticTypeName());
 	Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::Shader::StaticTypeName());
+#endif
+	return true;
 }
 
 bool Engine::ShaderModule::DynamicLoadable()

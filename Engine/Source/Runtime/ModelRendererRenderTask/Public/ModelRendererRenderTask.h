@@ -1,16 +1,19 @@
 #pragma once
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
 
+#include "ModelRendererRenderTask.generated.h"
+
 namespace Engine
 {
+    ECLASS(module)
     struct ModelRendererRenderInstanceTaskModule : public IModule
     {
-        INLINE_COMPILE_TIME_TYPENAME(ModelRendererRenderInstanceTaskModule)
-	    void Initialize() override;
-	    void Shutdown() override;
+        GENERATE_BODY
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
 	    bool DynamicLoadable() override;
     };
 

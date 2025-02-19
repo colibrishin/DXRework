@@ -1,7 +1,7 @@
 #include "../Public/Animator.h"
 #include "Animator.generated.h"
 
-#include "ModuleManager/Public/ModuleManager.h"
+
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
@@ -15,8 +15,6 @@
 
 namespace Engine::Components
 {
-	COMP_CLONE_IMPL(Animator)
-
 	Animator::Animator(const Weak<Engine::Abstracts::ObjectBase>& owner)
 		: Component(owner),
 		  m_animation_id_(0),
@@ -103,7 +101,7 @@ namespace Engine::Components
 		Component::OnDeserialized();
 	}
 
-	eComponentUpdatePriority Animator::GetUpdatePriority() const
+	eComponentUpdatePriorities Animator::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_RENDER;
 	}

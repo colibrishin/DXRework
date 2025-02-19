@@ -28,9 +28,7 @@
 #endif
 
 namespace Engine::Components
-{
-	COMP_CLONE_IMPL(Collider)
-	
+{	
 	VertexCollection Collider::s_cube_vertices_{};
 	IndexCollection Collider::s_cube_indices_{};
 	VertexCollection Collider::s_sphere_vertices_{};
@@ -102,22 +100,22 @@ namespace Engine::Components
 #endif
 	}
 
+#if WITH_EDITOR
 	void Collider::OnUIUpdate(UIContext* const context, const float dt)
 	{
-#if WITH_EDITOR
 		if (context)
 		{
 			Component::OnUIUpdate(context, dt);
 
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names) })).SetFunction([&]() 
+			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names), true })).SetFunction([&]()
 			{
 				SetType(m_type_);
 			});
 			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 0.1f, 0.f, 0.f, true});
 		}
-#endif
 	}
+#endif
 
 	void Collider::InitializeStockVertices()
 	{
@@ -339,7 +337,7 @@ namespace Engine::Components
 		UpdateInertiaTensor();
 	}
 
-	eComponentUpdatePriority Collider::GetUpdatePriority() const
+	eComponentUpdatePriorities Collider::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_PHYSICS;
 	}

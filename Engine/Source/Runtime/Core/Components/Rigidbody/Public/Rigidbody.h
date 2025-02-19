@@ -5,7 +5,7 @@
 
 namespace Engine::Components
 {
-	ECLASS(serialize)
+	ECLASS(serialize, component)
 	class ENGINE_CORE_API Rigidbody final : public Engine::Abstracts::Component
 	{
 		GENERATE_BODY
@@ -58,7 +58,10 @@ namespace Engine::Components
 		bool GetLerp() const;
 
 		void Initialize() override;
+#if WITH_EDITOR
 		void OnUIUpdate(UIContext* const context, const float dt) override;
+#endif
+		
 		void PreUpdate(const float dt) override;
 		void Update(const float dt) override;
 		void PostUpdate(const float dt) override;
@@ -66,7 +69,7 @@ namespace Engine::Components
 
 		void OnSerialized() override;
 		void OnDeserialized() override;
-		eComponentUpdatePriority GetUpdatePriority() const override;
+		eComponentUpdatePriorities GetUpdatePriority() const override;
 
 	protected:
 		Rigidbody();
@@ -78,8 +81,6 @@ namespace Engine::Components
 #endif
 
 	private:
-		COMP_CLONE_DECL
-
 		EPROPERTY()
 		bool m_b_no_angular_;
 		

@@ -1,6 +1,9 @@
 #include "../Public/Layer.h"
 #include "Layer.generated.h"
+
+#if WITH_EDITOR
 #include "UIInterface.h"
+#endif
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
 
@@ -14,7 +17,44 @@ namespace Engine
 
 	Layer::~Layer() {}
 
-	void Layer::Initialize() {}
+	void Layer::Initialize()
+    {}
+
+    void Layer::BeginPlay( const float dt )
+    {
+		for (const auto& object : m_objects_)
+		{
+            if ( !object->GetActive() )
+            {
+                continue;
+            }
+
+            if ( object->GetParent().lock() )
+            {
+                continue;
+            }
+
+            object->BeginPlay( dt );
+		}
+    }
+
+    void Layer::EndPlay( const float dt )
+    {
+        for ( const auto &object : m_objects_ )
+        {
+            if ( !object->GetActive() )
+            {
+                continue;
+            }
+
+            if ( object->GetParent().lock() )
+            {
+                continue;
+            }
+
+            object->EndPlay( dt );
+        }
+	}
 
 	void Layer::PreUpdate(const float dt)
 	{
@@ -142,24 +182,60 @@ namespace Engine
 		}
 	}
 
+#if WITH_EDITOR
 	void Layer::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-#if WITH_EDITOR
 		if (parent)
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 			*parent += ui.NewTreeNode({GetName()});
+            *parent |= ui.NewDragAndDropTarget(
+                    { "OBJECT",
+                      [ this ]( void *ptr )
+                      {
+                          if ( const Strong<Abstracts::ObjectBase> *scary_ptr =
+                                       static_cast<Strong<Abstracts::ObjectBase> *>( ptr ) )
+                          {
+                              if ( const Strong<Abstracts::ObjectBase> &parent = ( *scary_ptr )->GetParent().lock() )
+                              {
+                                  parent->DetachChild( ( *scary_ptr )->GetLocalID() );
+                              }
+
+                              if ( const Strong<Scene> &scene = ( *scary_ptr )->GetScene().lock() )
+                              {
+                                  scene->ChangeLayer( m_layer_type_, ( *scary_ptr )->GetID() );
+                              }
+                          }
+                      } } );
 
 			for (const auto& object : m_objects_)
 			{
-				*parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
-				object->OnUIUpdate(parent, dt);
+			    if ( object->GetParent().expired() )
+			    {
+                    ( *parent |= ui.NewButton( { m_ui_info_.temporaryStrings[ std::format( "{}remove", object->GetID() ) ] } ) )
+                            .SetFunction( [ object ]() 
+					{
+                        if ( const Strong<Scene> &scene = object->GetScene().lock() )
+                        {
+                            scene->RemoveGameObject( object->GetID(), object->GetLayer() );
+						}
+					} );
+                    *parent |= ui.NewSameLine( {} );
+			        *parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
+                    *parent |= ui.NewDragAndDropSource(
+                            { "OBJECT", object->m_ui_info_.label, &object, sizeof( decltype( object ) ) } );
+
+			        if (object->m_ui_info_.dialogOpened)
+			        {
+			            object->OnUIUpdate(parent, dt);   
+			        }
+			    }
 			}
 
 			--*parent;
 		}
-#endif
 	}
+#endif
 
 	void Layer::OnSerialized()
 	{
@@ -198,6 +274,11 @@ namespace Engine
 		m_objects_.push_back(obj);
 		m_weak_objects_cache_.emplace(obj->GetID(), obj);
 		m_concurrent_weak_objects_cache_.emplace(obj->GetID(), obj);
+#if WITH_EDITOR
+        m_ui_info_.temporaryStrings[ std::format( "{}remove", obj->GetID() ) ] = std::format( 
+			"Remove##{}_remove_button", 
+			obj->GetID() );
+#endif
 	}
 
 	void Layer::RemoveGameObject(GlobalEntityID id)
@@ -217,6 +298,10 @@ namespace Engine
 
 			m_weak_objects_cache_.erase(id);
 			m_concurrent_weak_objects_cache_.erase(id);
+
+#if WITH_EDITOR
+            m_ui_info_.temporaryStrings.erase( std::format( "{}remove", locked->GetID() ) );
+#endif
 		}
 	}
 
@@ -284,7 +369,14 @@ namespace Engine
 		return result;
 	}
 
-	Layer::Layer() :
+    void Layer::clear()
+	{
+	    m_objects_.clear();
+		m_concurrent_weak_objects_cache_.clear();
+		m_weak_objects_cache_.clear();
+	}
+
+    Layer::Layer() :
 		m_layer_type_(0),
 		m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()){}
 } // namespace Engine

@@ -9,6 +9,16 @@ namespace Engine
 {
 	struct MathExtension
 	{
+		inline static float ToRadian(const float degree)
+		{
+			return degree * M_PI / 180.f;
+		}
+
+		inline static float ToDegree(const float radian)
+		{
+			return M_PI * 180.f / M_PI;
+		}
+
 		inline static Vector3 __vectorcall ToEuler(const Quaternion& q)
 		{
 			const auto& getZ = [&]()

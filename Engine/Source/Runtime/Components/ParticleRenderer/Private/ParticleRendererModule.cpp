@@ -1,29 +1,23 @@
 #include "ParticleRendererModule.h"
+#include "ParticleRendererModule.generated.h"
 
 #include "ComputeShader.h"
-#include "ParticleRendererModule.generated.h"
-#include "ModuleManager/Public/ModuleManager.h"
-
 #include "ParticleRenderer.h"
 
 #include "ObjectBase/Public/ObjectBase.h"
 
 MODULE_IMPL(Engine::ParticleRendererModule, ParticleRenderer)
 
-void Engine::ParticleRendererModule::Initialize()
+bool Engine::ParticleRendererModule::InitializeImpl()
 {
-    Abstracts::ObjectBase::RegisterComponentFactory("ParticleRenderer", [](const Weak<Abstracts::ObjectBase>& owner)
-    {
-        if (const Strong<Abstracts::ObjectBase>& locked = owner.lock())
-        {
-            locked->AddComponent<Components::ParticleRenderer>();
-        }
-    });
+    Engine::ComponentFactory::Register<Engine::Components::ParticleRenderer>();
+    return true;
 }
 
-void Engine::ParticleRendererModule::Shutdown()
+bool Engine::ParticleRendererModule::ShutdownImpl()
 {
-    Abstracts::ObjectBase::UnregisterComponentFactory("ParticleRenderer");
+    Engine::ComponentFactory::Unregister<Engine::Components::ParticleRenderer>();
+    return true;
 }
 
 bool Engine::ParticleRendererModule::DynamicLoadable()

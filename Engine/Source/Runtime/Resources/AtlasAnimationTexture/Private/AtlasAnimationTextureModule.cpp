@@ -3,14 +3,15 @@
 
 #include "AtlasAnimationTexture.h"
 #include "AtlasAnimation.h"
-#include "ModuleManager/Public/ModuleManager.h"
+
 #include "ResourceManager/Public/ResourceManager.h"
 #include "Texture2D.h"
 
 MODULE_IMPL(Engine::AtlasAnimationTextureModule, AtlasAnimationTexture)
 
-void Engine::AtlasAnimationTextureModule::Initialize()
+bool Engine::AtlasAnimationTextureModule::InitializeImpl()
 {
+#if WITH_EDITOR
     Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
             const auto& load_callback = [](const std::string_view name, const std::string_view path) 
@@ -188,12 +189,17 @@ void Engine::AtlasAnimationTextureModule::Initialize()
                 load_callback,
                 cleanup_callback);
         });
+#endif
+    return true;
 }
 
-void Engine::AtlasAnimationTextureModule::Shutdown()
+bool Engine::AtlasAnimationTextureModule::ShutdownImpl()
 {
+#if WITH_EDITOR
     Managers::ResourceManager::GetInstance().UnregisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName());
     Managers::ResourceManager::GetInstance().UnregisterLoadResource(Resources::AtlasAnimationTexture::StaticTypeName());
+#endif
+    return true;
 }
 
 bool Engine::AtlasAnimationTextureModule::DynamicLoadable()

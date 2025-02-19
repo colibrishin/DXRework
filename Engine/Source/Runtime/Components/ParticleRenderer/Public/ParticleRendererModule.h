@@ -1,15 +1,16 @@
 #pragma once
-#include "ParticleRendererModule.generated.h"
+#include "ModuleManager.h"
 
-#include "ModuleManager/Public/IModule.h"
+#include "ParticleRendererModule.generated.h"
 
 namespace Engine
 {
+    ECLASS(module) 
     struct ENGINE_PARTICLERENDERER_API ParticleRendererModule : public IModule
     {
         GENERATE_BODY
-        void             Initialize() override;
-        void             Shutdown() override;
+        bool InitializeImpl() override; 
+        bool ShutdownImpl() override;
         bool             DynamicLoadable() override;
     };
 }

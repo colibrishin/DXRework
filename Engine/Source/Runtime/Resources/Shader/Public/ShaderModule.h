@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "ShaderModule.generated.h"
 
@@ -10,10 +10,11 @@ namespace Engine
 	struct ShaderModule : public IModule
 	{
 		GENERATE_BODY
-		void             Initialize() override;
-		void             Shutdown() override;
-		bool             DynamicLoadable() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
+		bool DynamicLoadable() override;
 
 		void StockShaderPrecompile();
+		const std::vector<std::string>& LoadAfter() const;
 	};
 }
