@@ -1,4 +1,5 @@
-#include "../Public/GenericRenderPassTask.h"
+#include "../Public/ForwardRenderPassTask.h"
+#include "ForwardRenderPassTask.generated.h"
 
 #include <ranges>
 #include <tbb/parallel_for_each.h>
@@ -12,13 +13,13 @@
 
 namespace Engine
 {
-	GenericRenderPassTask::GenericRenderPassTask()
+	ForwardRenderPassTask::ForwardRenderPassTask()
 		: m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
 		  m_local_param_pool_ticket(SingletonSpinLock::GetInstance().Register()),
 		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()),
 		  m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()) {}
 
-	void GenericRenderPassTask::Run(
+	void ForwardRenderPassTask::Run(
 		float                                                             dt,
 		bool                                                              shader_bypass,
 		RenderMap const*                                                  domain_map,
@@ -43,25 +44,51 @@ namespace Engine
 		
 		// Filter the instances by the predicate
 		uint64_t instance_count = 0;
-		IntermediateMeshMap intermediate_mesh_map;
-		PredicateObject(predicate, domain_map, instance_count, intermediate_mesh_map);
+        IntermediateShaderMap intermediate_shader_map;
+        PredicateObject( predicate, domain_map, instance_count, intermediate_shader_map );
 
 		m_local_param_pool_.Update(nullptr, instance_count);
 		m_instance_pool_.Update(nullptr, instance_count);
 
 		for (const auto& renderer : *domain_map | std::views::values)
 		{
-			for (const auto& [mesh, shader_map] : renderer)
+            for ( const auto &[ shader, mesh_map ] : renderer )
 			{
-				tbb::parallel_for_each(shader_map.begin(), shader_map.end(),
-					[weak_mesh = Weak(mesh), this, &local_param, &postrender_predicates, &prerender_predicates, &prerender_predicate, &postrender_predicate, &additional_sbs, &shader_bypass, &dt, &intermediate_mesh_map](const std::pair<Strong<Resources::Shader>, aligned_vector<InstancePair>>& pair)
-				{
-					// todo: possible bottleneck?
-					if (decltype(intermediate_mesh_map)::const_accessor acc; intermediate_mesh_map.find(acc, weak_mesh))
-					{
-						StartPhase_MultiThread(dt, shader_bypass, weak_mesh, pair.first, additional_sbs, local_param, prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates, acc->second);
-					}
-				});
+                tbb::parallel_for_each(
+                        mesh_map.begin(),
+                        mesh_map.end(),
+                        [ this,
+                          shader,
+                          &local_param,
+                          &postrender_predicates,
+                          &prerender_predicates,
+                          &prerender_predicate,
+                          &postrender_predicate,
+                          &additional_sbs,
+                          &shader_bypass,
+                          &dt,
+                          &intermediate_shader_map ](
+                                const std::pair<Strong<Resources::Mesh>, aligned_vector<InstancePair>> &pair )
+                        {
+                            if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
+                            {
+                                if ( decltype( intermediate_shader_map )::const_accessor acc;
+                                     intermediate_shader_map.find( acc, shader.get() ) )
+                                {
+                                    StartPhase_MultiThread( dt,
+                                                            shader_bypass,
+                                                            locked.get(),
+                                                            pair.first.get(),
+                                                            additional_sbs,
+                                                            local_param,
+                                                            prerender_predicate,
+                                                            postrender_predicate,
+                                                            prerender_predicates,
+                                                            postrender_predicates,
+                                                            acc->second );
+                                }
+                            }
+                        } );
 			}
 		}
 
@@ -80,25 +107,28 @@ namespace Engine
 		primitive.commandList->FlagReady();
 	}
 
-	void GenericRenderPassTask::Cleanup()
+	void ForwardRenderPassTask::Cleanup()
 	{
 		m_local_param_pool_.reset();
 		m_instance_pool_.reset();
-		m_heaps_.clear(); // todo: reuse
+		m_heaps_.clear();
 		std::ranges::fill(m_used_shader_textures_, nullptr);
 	}
 
-	void GenericRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateMeshMap& out_map) const
-	{
+	void ForwardRenderPassTask::PredicateObject( const ObjectPredication &predicate,
+                                                 RenderMap const         *domain_map,
+                                                 uint64_t                &instance_count,
+                                                 IntermediateShaderMap   &out_map ) const
+    {
 		out_map.clear();
 		
-		for (const auto& meshes : *domain_map | std::views::values)
+		for (const auto& shaders : *domain_map | std::views::values)
 		{
 			tbb::parallel_for_each
 			(
-				meshes.begin(), meshes.end(), [&](const std::pair<Strong<Resources::Mesh>, ShaderMap>& mesh_pair)
+				shaders.begin(), shaders.end(), [&](const std::pair<Strong<Resources::ShaderBase>, MeshMap>& shader_pair)
 				{
-					for (const aligned_vector<InstancePair>& instances : mesh_pair.second | std::views::values)
+                    for ( const aligned_vector<InstancePair> &instances : shader_pair.second | std::views::values )
 					{
 						for (const InstancePair& instance_pair : instances)
 						{
@@ -108,9 +138,9 @@ namespace Engine
 							}
 
 							std::remove_reference_t<decltype(out_map)>::accessor acc;
-							if (!out_map.find(acc, mesh_pair.first))
+                            if ( !out_map.find( acc, shader_pair.first.get() ) )
 							{
-								out_map.insert(acc, mesh_pair.first);
+                                out_map.insert( acc, shader_pair.first.get() );
 							}
 
 							acc->second.push_back(instance_pair);
@@ -122,18 +152,18 @@ namespace Engine
 		}
 	}
 
-	void GenericRenderPassTask::StartPhase_MultiThread(
-		const float                                                       dt,
-		const bool                                                        shader_bypass,
-		const Weak<Resources::Mesh>&                                      mesh,
-		const Weak<Resources::Shader>&                                    shader,
-		const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
-		const Graphics::SBs::LocalParamSB&                                local_param,
-		const ContextSetupFunction&                                       prerender_predicate,
-		const ContextSetupFunction&                                       postrender_predicate,
-		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
-		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
-		const aligned_vector<InstancePair>&                               instance_pairs
+	void ForwardRenderPassTask::StartPhase_MultiThread(
+            const float                                                       dt,
+            const bool                                                        shader_bypass,
+            const Resources::Shader                                          *shader,
+            const Resources::Mesh                                            *mesh,
+            const aligned_vector<const StructuredBufferDecorator *>          &additional_sbs,
+            const Graphics::SBs::LocalParamSB                                &local_param,
+            const ContextSetupFunction                                       &prerender_predicate,
+            const ContextSetupFunction                                       &postrender_predicate,
+            const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
+            const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
+            const aligned_vector<InstancePair>                               &instance_pairs
 	)
 	{
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
@@ -221,7 +251,7 @@ namespace Engine
 		temp_context.commandList->FlagReady();
 	}
 
-	void GenericRenderPassTask::RecordUsedTexture(
+	void ForwardRenderPassTask::RecordUsedTexture(
 		const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
 	)
 	{
@@ -241,16 +271,16 @@ namespace Engine
 		}
 	}
 
-	void GenericRenderPassTask::DrawPhase_MultiThread(
-		float dt,
-		bool shader_bypass,
-		const size_t instance_count,
-		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
-		const Weak<Resources::Shader>& shader,
-		const Weak<Resources::Mesh>& mesh,
-		const GraphicInterfaceContextPrimitive* context,
-		const aligned_vector<Graphics::SBs::InstanceSB*>& instances,
-		const aligned_vector<TexturePair>& texture_pairs
+	void ForwardRenderPassTask::DrawPhase_MultiThread( 
+		float                                                 dt,
+		bool                                                  shader_bypass,
+		size_t                                                instance_count,
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
+		const Resources::Shader                              *shader,
+		const Resources::Mesh                                *mesh,
+		const GraphicInterfaceContextPrimitive               *context,
+		const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
+		const aligned_vector<TexturePair>                    &texture_pairs
 	)
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
@@ -260,10 +290,9 @@ namespace Engine
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		token.Release();
 
-		const Strong<Resources::Shader>& locked_shader = shader.lock();
 		if (!shader_bypass)
 		{
-			gi.BindGraphic(context, locked_shader.get());
+            gi.BindGraphic( context, shader );
 		}
 
 		size_t instance_resolved = 0;
@@ -295,9 +324,11 @@ namespace Engine
 					if (pair.reservedTextures->at(i))
 					{
 						if (reserved_textures[i] == nullptr)
-						// allow to instance with the first reserved texture encountered.
-						reserved_texture_tolerant = true;
-						reserved_textures[i] = pair.reservedTextures->at(i);
+						{
+                            // allow to instance with the first reserved texture encountered.
+                            reserved_texture_tolerant = true;
+                            reserved_textures[ i ]    = pair.reservedTextures->at( i );
+						}
 					}
 					else if (pair.reservedTextures->at(i) == reserved_textures[i] && reserved_textures[i] != nullptr)
 					{
@@ -355,8 +386,6 @@ namespace Engine
 			instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
 			instance_buffer.TransitionToSRV(context);
 			instance_buffer.CopySRVHeap(context);
-
-			const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
 			
 			for (size_t i = 0; i < instance_to_resolve; ++i)
 			{
@@ -390,8 +419,8 @@ namespace Engine
 				}
 			}
 
-			gi.Draw(context, locked_mesh.get(), instance_to_resolve, instance_resolved);
-
+			gi.Draw( context, mesh, instance_to_resolve, instance_resolved );
+			
 			instance_buffer.TransitionCommon(context);
 			instance_resolved += instance_to_resolve;
 		}

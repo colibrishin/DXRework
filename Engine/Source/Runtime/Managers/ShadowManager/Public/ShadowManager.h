@@ -18,17 +18,6 @@ namespace Engine::Graphics
 {
 	namespace SBs
 	{
-		struct ENGINE_SHADOWMANAGER_API LightSB
-		{
-			SB_T(SB_TYPE_LIGHT)
-
-			Matrix         world;
-			Color          color;
-			OffsetT<int>   type;
-			OffsetT<float> range;
-			OffsetT<float> radius;
-		};
-
 		struct ENGINE_SHADOWMANAGER_API LightVPSB
 		{
 			SB_T(SB_TYPE_LIGHT_VP)

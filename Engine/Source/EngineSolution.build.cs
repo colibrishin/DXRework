@@ -44,7 +44,12 @@ public class EngineSolution : Solution
             {
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
-                conf.AddProject<GenericRenderPassTask>(target);
+                conf.AddProject<ForwardRenderPassTask>(target);
+                
+                if (target.RenderType == ERenderType.Deferred)
+                {
+                    conf.AddProject<DeferredRenderPassTask>(target);
+                }
             }
 
             {

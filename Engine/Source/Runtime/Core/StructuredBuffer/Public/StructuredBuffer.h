@@ -61,6 +61,17 @@ namespace Engine
 
 	namespace Graphics::SBs 
 	{
+        struct ENGINE_CORE_API LightSB
+        {
+            SB_T( SB_TYPE_LIGHT )
+
+            Matrix         world;
+            Color          color;
+            OffsetT<int>   type;
+            OffsetT<float> range;
+            OffsetT<float> radius;
+        };
+
 		struct ENGINE_CORE_API LocalParamSB : public ParamBase
 		{
 			SB_T(SB_TYPE_LOCAL_PARAM)
@@ -75,7 +86,8 @@ namespace Engine
 			{
 				assert(offset < g_max_texture_per_material);
 				assert(slot_id < BIND_SLOT_TEXARR);
-				SetParam<int>(11 + offset, slot_id);
+                SetParam<int>( 10 + offset, slot_id );
+                SetParam<int>( 10 + g_max_texture_per_material + offset, true );
 			}
 		};
 	}

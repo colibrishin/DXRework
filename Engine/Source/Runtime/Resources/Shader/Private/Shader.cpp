@@ -29,8 +29,7 @@ namespace Engine::Resources
 		const ePrimitiveTopologyType topology_type,
 		const eSampler               sampler_slot
 	)
-		: Resource(path),
-		  m_domain_(domain),
+        : ShaderBase( path, domain ),
 		  m_depth_enabled_(depth_enabled),
 		  m_depth_mode_(depth),
 		  m_depth_func_(depth_func),
@@ -51,7 +50,7 @@ namespace Engine::Resources
 	}
 
 	Shader::Shader(const Shader& other)
-		: Resource( other )
+		: ShaderBase( other )
 	{
 		m_domain_         = other.m_domain_;
 		m_depth_enabled_  = other.m_depth_enabled_;
@@ -253,11 +252,6 @@ namespace Engine::Resources
 		return m_sampler_slot_;
 	}
 
-	GraphicPrimitiveShader& Shader::GetGraphicPrimitiveShader() const
-	{
-		return *m_primitive_;
-	}
-
 	void Shader::OnSerialized()
 	{
 		if (exists(GetPath()))
@@ -288,8 +282,7 @@ namespace Engine::Resources
 	}
 
 	Shader::Shader()
-		: Resource(""),
-		  m_domain_(),
+		: ShaderBase("", SHADER_DOMAIN_OPAQUE),
 		  m_depth_enabled_(false),
 		  m_depth_mode_(),
 		  m_depth_func_(),
@@ -331,6 +324,10 @@ namespace Engine::Resources
 				m_rtv_formats_selected_[i] = static_cast<int>(val.value());
 			} 
 		}
-	}
+    }
+    PrimitiveShaderBase &Shader::GetPrimitive() const
+    {
+        return *m_primitive_;
+    }
 #endif
 } // namespace Engine::Graphic

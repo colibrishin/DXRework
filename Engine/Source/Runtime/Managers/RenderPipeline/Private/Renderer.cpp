@@ -61,9 +61,9 @@ namespace Engine::Managers
 		const ContextSetupFunction&                             postrender_predicate
 	) const
 	{
-		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+		for ( const std::wstring& name : m_main_pass_tasks_ )
 		{
-			ptr->Run
+            m_render_pass_tasks_.at( name )->Run
 					(
 					 dt,
 					 shader_bypass,
@@ -81,10 +81,6 @@ namespace Engine::Managers
 
 	void Renderer::PostRender(const float dt)
 	{
-	    if (m_b_task_dirty_)
-	    {
-	        m_b_task_dirty_ = false;
-	    }
 	}
 
 	void Renderer::PostUpdate(const float dt) {}
@@ -103,8 +99,8 @@ namespace Engine::Managers
 	{
 		if (task != nullptr)
 		{
-		    m_b_task_dirty_ = true;
 			m_render_pass_tasks_.emplace(name, std::unique_ptr<RenderPassTask>(task));
+            onRenderTaskDirty.Broadcast();
 		}
 	}
 
@@ -120,8 +116,9 @@ namespace Engine::Managers
 	{
 		if (m_render_pass_tasks_.contains(name.data()))
 		{
-		    m_b_task_dirty_ = true;
 			m_render_pass_tasks_.erase(name.data());
+            std::erase_if( m_main_pass_tasks_, [ &name ]( const std::wstring &elem ) { return elem == name; } );
+            onRenderTaskDirty.Broadcast();
 		}
 	}
 
@@ -174,7 +171,20 @@ namespace Engine::Managers
 		{
 			m_postrender_funcs_.erase(name);
 		}
+    }
+
+    void Renderer::AddToMainPassTask( const std::wstring_view name )
+    {
+		if ( m_render_pass_tasks_.contains( name.data() ) )
+		{
+            m_main_pass_tasks_.push_back( name.data() );
+		}
 	}
+
+    void Renderer::RemoveFromMainPassTask( const std::wstring_view name )
+    {
+        std::erase_if( m_main_pass_tasks_, [ &name ]( const std::wstring &elem ) { return elem == name; } );
+    }
 
 	void Renderer::RenderPassVanilla(
 		float dt, bool shader_bypass, eShaderDomain domain,
@@ -187,9 +197,9 @@ namespace Engine::Managers
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
 	) const
 	{
-		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+		for (const std::wstring& name : m_main_pass_tasks_)
 		{
-			ptr->Run
+            m_render_pass_tasks_.at( name )->Run
 					(
 					 dt,
 					 shader_bypass,

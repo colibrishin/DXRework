@@ -13,8 +13,8 @@ namespace Engine
 		std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN> reservedTextures;
 	};
 
-	using ShaderMap = concurrent_fast_pool_map<Strong<Resources::Shader>, aligned_vector<InstancePair>>;
-	using MeshMap   = concurrent_fast_pool_map<Strong<Resources::Mesh>, ShaderMap>;
-	// Object + Materials -> Shader -> Mesh -> Renderer -> Shader Domain
-	using RenderMap = concurrent_fast_pool_map<HashType, MeshMap>;
+	using MeshMap = concurrent_fast_pool_map<Strong<Resources::Mesh>, aligned_vector<InstancePair>>;
+	using ShaderMap = concurrent_fast_pool_map<Strong<Resources::ShaderBase>, MeshMap>;
+	// Object + Materials -> Mesh -> Shader -> Renderer -> Shader Domain
+	using RenderMap = concurrent_fast_pool_map<HashType, ShaderMap>;
 }

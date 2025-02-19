@@ -49,8 +49,8 @@ public class Utils
             DevEnv.vs2022,
             Optimization.Debug | Optimization.Release,
             OutputType.Lib,
-            Blob.NoBlob,
-            BuildSystem.FastBuild
+            EGraphicAPI.D3D12,
+            ERenderType.Deferred
         );
     }
 

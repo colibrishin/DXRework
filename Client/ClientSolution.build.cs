@@ -41,6 +41,7 @@ public class ClientProject : CommonProject
         conf.AddPrivateDependency<InputManager>(target);
         conf.AddPrivateDependency<PhysicsManager>(target);
         conf.AddPrivateDependency<ShadowManager>(target);
+        conf.AddPrivateDependency<ForwardRenderPassTask>(target);
 
         conf.TargetCopyFiles.Add
         (

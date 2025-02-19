@@ -8,14 +8,19 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 	float shadowFactor[MAX_NUM_LIGHTS];
 	GetShadowFactor(input.worldPosition, input.clipSpacePosZ, shadowFactor);
 
-	if (INST_REPEAT_TEX(input.instanceId) == true)
+    if (INST_REPEAT_TEX(bufInstance, input.instanceId) == true)
 	{
 		const float2 scaleWiseTex = input.tex * input.scale.xy;
 		const float2 repeatTex    = frac(scaleWiseTex);
 		input.tex                 = repeatTex;
 	}
 
-    const float4 textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT0(input.instanceId));
+    float4 textureColor = float4(0.f, 0.f, 0.f, 0.f);
+	
+    if (INST_TEX_SLOT0_ENABLE(bufInstance, input.instanceId) == true)
+    {
+        textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId));
+    }
 
 	float  lightIntensity[MAX_NUM_LIGHTS];
 	float4 colorArray[MAX_NUM_LIGHTS];
@@ -47,7 +52,7 @@ float4 ps_main(PixelInputType input) : SV_TARGET
 				 2.0f * lightIntensity[i] * input.normal - light_dir
 				);
 		specular[i] =
-				pow(saturate(dot(reflection[i], input.viewDirection)), INST_SPECULAR(input.instanceId));
+				pow(saturate(dot(reflection[i], input.viewDirection)), INST_SPECULAR(bufInstance, input.instanceId));
 
 		if (bufLight[i].type.x == LIGHT_TYPE_SPOT)
 		{

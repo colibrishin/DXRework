@@ -43,6 +43,7 @@ namespace Engine::Managers
 	void ModuleManager::Initialize()
 	{
 		m_module_paths_.emplace(L"Default", "./");
+        LoadModule( L"CoreModuleManager" );
     }
 
     void ModuleManager::Destroy()

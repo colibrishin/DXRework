@@ -763,34 +763,41 @@ namespace Engine
 		void* m_texture_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API GraphicPrimitiveShader
+	struct ENGINE_CORE_API PrimitiveShaderBase
+    {
+    public:
+        virtual ~PrimitiveShaderBase() = default;
+
+        [[nodiscard]] void *GetNativeShader() const
+        {
+            return m_shader_;
+        }
+        [[nodiscard]] void *GetNativeSampler() const
+        {
+            return m_sampler_;
+        }
+
+    protected:
+        virtual void SetNativeShader( void *shader )
+        {
+            m_shader_ = shader;
+        }
+
+        virtual void SetNativeSampler( void *sampler )
+        {
+            m_sampler_ = sampler;
+        }
+
+    private:
+        void *m_shader_  = nullptr;
+        void *m_sampler_ = nullptr;
+    };
+
+	struct ENGINE_CORE_API GraphicPrimitiveShader : public PrimitiveShaderBase
 	{
 	public:
 		virtual             ~GraphicPrimitiveShader() = default;
 		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
-		[[nodiscard]] void* GetNativeShader() const
-		{
-			return m_shader_;
-		}
-		[[nodiscard]] void* GetNativeSampler() const 
-		{
-			return m_sampler_;
-		}
-
-	protected:
-		virtual void SetNativeShader(void* shader) 
-		{
-			m_shader_ = shader;
-		}
-
-		virtual void SetNativeSampler(void* sampler) 
-		{
-			m_sampler_ = sampler;
-		}
-
-	private:
-		void* m_shader_ = nullptr;
-		void* m_sampler_ = nullptr;
 	};
 
 	struct ENGINE_CORE_API ComputePrimitiveShader
@@ -1306,7 +1313,6 @@ namespace Engine
 		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
 		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
 		virtual void ClearRenderTarget() = 0;
-
 		virtual void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) = 0;
 
 	protected:

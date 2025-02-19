@@ -18,7 +18,7 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 
 	output.position = float4(input.position, 1.0f);
 
-    if (INST_BONE_FLAG(instanceId) && !INST_NO_ANIM(instanceId))
+    if (INST_BONE_FLAG(bufInstance, instanceId) && !INST_NO_ANIM(bufInstance, instanceId))
 	{
 		matrix animation_transform;
 
@@ -28,9 +28,9 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 			const float  weight     = input.bone_element.boneWeight[i];
 			const matrix transform  = LoadAnimation
 					(
-					 INST_ANIM_IDX(instanceId),
-					 INST_ANIM_FRAME(instanceId),
-					 INST_ANIM_DURATION(instanceId),
+					 INST_ANIM_IDX(bufInstance, instanceId),
+					 INST_ANIM_FRAME(bufInstance, instanceId),
+					 INST_ANIM_DURATION(bufInstance, instanceId),
 					 bone_index
 					);
 
@@ -40,7 +40,7 @@ GeometryShadowInputType vs_main(VertexInputType input, uint instanceId : SV_Inst
 		output.position = mul(output.position, animation_transform);
 	}
 
-    const matrix world = INST_WORLD(instanceId);
+    const matrix world = INST_WORLD(bufInstance, instanceId);
 
 	output.position   = mul(output.position, world);
 	output.instanceId = instanceId;

@@ -412,7 +412,7 @@ namespace Engine
 		BIND_SLOT_END = BIND_SLOT_TEX1D + 2,
 	};
 
-	static constexpr size_t g_max_texture_per_material = 4;
+	static constexpr size_t g_max_texture_per_material = 8;
 
 	enum ENGINE_CORE_API eSBType : uint8_t
 	{
@@ -712,6 +712,7 @@ namespace Engine
 		class BaseAnimation;
 		class Material;
 		class Shader;
+        class ShaderBase;
 		class AnimationTexture;
 		class ShadowTexture;
 		class Texture1D;

@@ -27,16 +27,22 @@ public enum ELaunchType
     Server = 1 << 2
 }
 
-[Fragment, Flags]
 public enum EGraphicAPI
 {
     D3D12 = 1 << 0,
+}
+
+public enum ERenderType
+{
+    Deferred = 1 << 0,
+    ForwardOnly = 1 << 1
 }
 
 public class EngineTarget : Target
 {
     public ELaunchType LaunchType;
     public EGraphicAPI GraphicAPI;
+    public ERenderType RenderType;
 
     public EngineTarget() { }
     public EngineTarget(
@@ -45,14 +51,16 @@ public class EngineTarget : Target
         DevEnv devEnv,
         Optimization optimization,
         OutputType outputType = OutputType.Lib,
+        EGraphicAPI graphicAPI = EGraphicAPI.D3D12,
+        ERenderType renderType = ERenderType.Deferred,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
-        DotNetFramework framework = DotNetFramework.v3_5,
-        EGraphicAPI graphicAPI = EGraphicAPI.D3D12) 
+        DotNetFramework framework = DotNetFramework.v3_5) 
     : base(platform, devEnv, optimization, outputType, blob, buildSystem, framework)
     {
         LaunchType = launchType;
         GraphicAPI = graphicAPI;
+        RenderType = renderType;
     }
 }
 
@@ -98,7 +106,7 @@ public abstract class CommonProject : Project
         conf.ExecuteTargetCopy = true;
         conf.IncludeBlobbedSourceFiles = false;
 
-        string emptyAPIString = "ENGINE_" + Name.ToUpper() + "_API=";
+        string emptyAPIString = $"ENGINE_{Name.ToUpper()}_API=";
 
         conf.ExportDefines.Add(emptyAPIString);
         conf.Defines.Add(emptyAPIString);
@@ -239,6 +247,8 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_RAYTRACING=0");
             conf.Defines.Add("CFG_LAYER_COUNT=0");
             conf.Defines.Add("CFG_EPSILON=0.0001f");
+
+            conf.Defines.Add($"CFG_RENDERTYPE_{target.RenderType.ToString().ToUpper()}");
 
             conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
             conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");

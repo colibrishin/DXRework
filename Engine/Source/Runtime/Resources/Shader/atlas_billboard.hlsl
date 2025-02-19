@@ -19,7 +19,7 @@ GeometryBillboardInputType vs_main(VertexInputType input, uint instanceId : SV_I
 	GeometryBillboardInputType output;
 
 	output.position = float4(input.position, 1.0f);
-    output.position = mul(output.position, INST_WORLD(instanceId));
+    output.position = mul(output.position, INST_WORLD(bufInstance, instanceId));
 	output.instanceId = instanceId;
 
 	return output;
@@ -33,8 +33,8 @@ void gs_main(
 {
 	PixelBillboardInputType output[6];
 
-    const float4 worldPos = GetTranslation(INST_WORLD(input[0].instanceId));
-    const float3 scale = GetScale(INST_WORLD(input[0].instanceId));
+    const float4 worldPos = GetTranslation(INST_WORLD(bufInstance, input[0].instanceId));
+    const float3 scale = GetScale(INST_WORLD(bufInstance, input[0].instanceId));
 	const float4 viewPos  = mul(worldPos, g_camView);
 
 	float4 baseSquare[4] =
@@ -91,5 +91,5 @@ void gs_main(
 
 float4 ps_main(PixelBillboardInputType input) : SV_TARGET
 {
-    return SampleAtlas(input.instanceId, input.tex);
+    return SampleAtlas(bufInstance, input.instanceId, input.tex);
 };

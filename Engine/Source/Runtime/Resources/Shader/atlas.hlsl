@@ -3,5 +3,5 @@
 
 float4 ps_main(in PixelInputType input) : SV_TARGET
 {
-	return SampleAtlas(input.instanceId, input.tex);
+    return SampleAtlas(bufInstance, input.instanceId, input.tex);
 }

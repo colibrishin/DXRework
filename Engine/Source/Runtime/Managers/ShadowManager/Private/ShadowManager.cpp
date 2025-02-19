@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "ShadowRenderTarget.h"
 #include "ShadowTexture.h"
+#include "ForwardRenderPassTask.h"
 
 namespace Engine::Managers
 {
@@ -108,6 +109,7 @@ namespace Engine::Managers
 				EvalShadowVP(scene->GetMainCamera(), light_dir, light_vp);
 				current_light_vp.at(idx) = light_vp;
 			}
+			++idx;
 		}
 	}
 
@@ -214,8 +216,8 @@ namespace Engine::Managers
 			gi.TransitTo(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_DSV);
 			primitive.commandList->FlagReady();
 		}
-		
-		Renderer::GetInstance().RenderPassVanilla
+
+		Renderer::GetInstance().RenderPassVanillaInclusion<Engine::ForwardRenderPassTask>
 			(
 			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get(), m_light_vp_sb_.get() },
 			 [](const Strong<Abstracts::ObjectBase>& obj)

@@ -36,5 +36,5 @@ Engine::Matrix& Engine::Graphics::SBs::InstanceParticleSB::GetWorld()
 
 bool& Engine::Graphics::SBs::InstanceParticleSB::GetActive()
 {
-    return reinterpret_cast<bool&>(GetParam<int>(15));
+    return reinterpret_cast<bool &>( GetParam<int>( 26 ) );
 }
