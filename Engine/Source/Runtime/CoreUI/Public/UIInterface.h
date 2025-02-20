@@ -135,7 +135,7 @@ namespace Engine
     NEW_TOKEN_DECL(Menu, const std::string_view)
     NEW_TOKEN_DECL(MenuItem, const std::string_view)
     NEW_TOKEN_DECL( Dialog, const void*, const std::string_view, bool & )
-    NEW_TOKEN_DECL(Button, const std::string_view)
+    NEW_TOKEN_DECL( Button, const void*, const std::string_view )
     NEW_TOKEN_DECL(LabelAndText, const std::string_view, std::string&, bool)
     NEW_TOKEN_DECL(LabelAndPath, const std::string_view, const std::filesystem::path&)
     NEW_TOKEN_DECL(ListBox, const std::string_view, float, float)

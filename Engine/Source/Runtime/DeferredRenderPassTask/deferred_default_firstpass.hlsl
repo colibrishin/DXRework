@@ -29,15 +29,10 @@ DeferredOutput ps_main(PixelInputType input)
     }
     if (INST_TEX_SLOT2_ENABLE(bufInstance, input.instanceId) == true)
     {
-        metalic = Sample(PSSampler, input.tex, INST_TEX_SLOT2(bufInstance, input.instanceId)).r;
-    }
-    if (INST_TEX_SLOT3_ENABLE(bufInstance, input.instanceId) == true)
-    {
-        roughness = Sample(PSSampler, input.tex, INST_TEX_SLOT3(bufInstance, input.instanceId)).r;      
-    }
-    if (INST_TEX_SLOT4_ENABLE(bufInstance, input.instanceId) == true)
-    {
-        ao = Sample(PSSampler, input.tex, INST_TEX_SLOT4(bufInstance, input.instanceId)).r;
+        float4 mra = Sample(PSSampler, input.tex, INST_TEX_SLOT2(bufInstance, input.instanceId));
+        metalic = mra.r;
+        roughness = mra.g;
+        ao = mra.b;
     }
 
     output.A = worldNormal;

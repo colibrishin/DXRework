@@ -146,7 +146,7 @@ namespace Engine::UIHelpers
 
             --context;
 
-            (context |= ui.NewButton({ "Add Resources" })).SetFunction([&window]()
+            (context |= ui.NewButton({ &context, "Add Resources" })).SetFunction([&window]()
                 {
                     window = false;
                 });

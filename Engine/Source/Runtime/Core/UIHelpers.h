@@ -37,7 +37,7 @@ namespace Engine::UIHelpers
 
             if (ui_callback) { ui_callback(&context); }
 
-            (context |= ui.NewButton({confirm_button_label})).SetFunction
+            (context |= ui.NewButton({&context, confirm_button_label})).SetFunction
                 (
                  [&]()
                  {
@@ -46,7 +46,7 @@ namespace Engine::UIHelpers
                  }
                 );
 
-            (context |= ui.NewButton({"Cancel"})).SetFunction([&]() { flag = false; });
+            ( context |= ui.NewButton( { &context, "Cancel" } ) ).SetFunction( [ & ]() { flag = false; } );
         }
 
         if (pressed)

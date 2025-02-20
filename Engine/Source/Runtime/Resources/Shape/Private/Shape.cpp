@@ -73,7 +73,7 @@ namespace Engine::Resources
 				const auto& mesh = m_cached_meshes_[i].first.lock();
 
 				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened});
-				(*parent |= ui.NewButton({ "Edit Material" })).SetFunction([i, this]()
+				(*parent |= ui.NewButton({ mesh.get(), "Edit Material" })).SetFunction([i, this]()
 					{
 						m_ui_material_add_opened_[i] = true;
 					});
@@ -111,7 +111,7 @@ namespace Engine::Resources
 
 			--*parent;
 
-			(*parent |= ui.NewButton({ "Add New..." })).SetFunction([&]() 
+			(*parent |= ui.NewButton({ this, "Add New..." })).SetFunction([&]() 
 				{
 					m_ui_mesh_add_opened_ = !m_ui_mesh_add_opened_;
 				});

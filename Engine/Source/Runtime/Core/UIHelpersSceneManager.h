@@ -126,7 +126,7 @@ namespace Engine::UIHelpers
 
             --context;
 
-            (context |= ui.NewButton({ "Select" })).SetFunction([&window]()
+            (context |= ui.NewButton({ &context, "Select" })).SetFunction([&window]()
                 {
                     window = false;
                 });

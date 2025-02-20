@@ -36,7 +36,8 @@ namespace Engine::Components
 			static std::string empty_string;
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 			*parent |= ui.NewLabelAndText({ "Shape", m_shape_ ? const_cast<std::string&>(m_shape_->GetName()) : empty_string, false });
-			(*parent |= ui.NewButton("Set Shape")).SetFunction([&]()
+            ( *parent |= ui.NewButton( { parent, "Set Shape" } ) )
+                    .SetFunction( [ & ]()
 				{
 					m_shape_set_dialog_ = !m_shape_set_dialog_;
 				});

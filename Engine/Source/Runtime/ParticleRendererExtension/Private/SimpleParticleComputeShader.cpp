@@ -30,7 +30,8 @@ void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(
         static Vector3 linear_min, linear_max;
         *parent |= ui.NewLabelAndVec3( { "Linear Spread Min", &linear_min.x, 0, 0, std::numeric_limits<float>::max(), true } );
         *parent |= ui.NewLabelAndVec3( { "Linear Spread Max", &linear_max.x, 0, 0, std::numeric_limits<float>::max(), true } );
-        ( *parent |= ui.NewButton( {"Linear Spread" } ) ).SetFunction( [ this, &instances, &local_param ]()
+        ( *parent |= ui.NewButton( { this, "Linear Spread" } ) )
+                .SetFunction( [ this, &instances, &local_param ]()
         {
            LinearSpread(linear_min, linear_max, instances, local_param); 
         } );      

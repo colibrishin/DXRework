@@ -1,7 +1,5 @@
 #include "common.hlsli"
 
-#define PARAM_NUM_LIGHT g_iParam[0].x
-
 PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 {
 	PixelInputType output;

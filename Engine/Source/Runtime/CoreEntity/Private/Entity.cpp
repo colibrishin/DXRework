@@ -68,7 +68,7 @@ void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float 
 		{
 			OnNameChanged();
 		});
-		(*parent |= ui.NewButton({ "Save" })).SetFunction([&]()
+		(*parent |= ui.NewButton({ parent, "Save" })).SetFunction([&]()
 		{
 			Serializer::Serialize(m_name_, GetSharedPtr<Entity>());
 		});

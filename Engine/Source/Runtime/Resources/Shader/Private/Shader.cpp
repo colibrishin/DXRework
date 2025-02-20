@@ -140,7 +140,7 @@ namespace Engine::Resources
 				}
 				--*parent;
 
-				(*parent |= ui.NewButton( { "Add Render Target" } )).SetFunction( [this]()
+				(*parent |= ui.NewButton( { parent, "Add Render Target" } )).SetFunction( [this]()
 					{
 						const eFormat default_format = GetDefaultRTVFormat().front();
 						m_rtv_formats_.push_back( default_format );
@@ -153,7 +153,7 @@ namespace Engine::Resources
 			ENUM_COMBOBOX( "Primitive Topology Type", m_topology_type_, ePrimitiveTopologyType, primitive_topology_type_enum );
 			ENUM_COMBOBOX( "Sampler Slot", m_sampler_slot_, eSampler, sampler_slot_enum );
 #undef ENUM_COMBOBOX
-			( *parent |= ui.NewButton( { "Reload" } ) ).SetFunction( [ this ]()
+			( *parent |= ui.NewButton( { parent, "Reload" } ) ).SetFunction( [ this ]()
 			{
 				Unload();
 				Load();

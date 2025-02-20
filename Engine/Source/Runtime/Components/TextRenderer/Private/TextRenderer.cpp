@@ -46,7 +46,7 @@ void Engine::Components::TextRenderer::OnUIUpdate(UIContext* const parent, const
                 font_name = "";
             }
             *parent |= ui.NewLabelAndText({ "Font", font_name, false });
-            (*parent |= ui.NewButton({ "Select Font..." })).SetFunction([this]() {
+            (*parent |= ui.NewButton({ parent, "Select Font..." })).SetFunction([this]() {
                 m_b_font_dialog_ = !m_b_font_dialog_;
                 });
 

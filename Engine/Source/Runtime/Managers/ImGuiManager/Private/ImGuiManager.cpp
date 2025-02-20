@@ -139,7 +139,7 @@ void Engine::AlignText(const std::string_view label)
 
 std::string Engine::LabelSuffix(const std::string_view label)
 {
-	std::string labelID = "###";
+	std::string labelID = "##";
 	labelID += label;
 
 	return labelID;
@@ -189,9 +189,12 @@ bool Engine::ImGuiDialogToken::DoImpl( const void * ptr, const std::string_view 
 
 void Engine::ImGuiButtonToken::End() {}
 
-bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title)
+bool Engine::ImGuiButtonToken::DoImpl(const void* ptr, const std::string_view title)
 {
-	return ImGui::Button(title.data(), {0, 20});
+    const uint64_t value = UIDialogMapper::Map( ptr );
+    const std::string &value_str  = std::to_string( value );
+    const std::string &temp_label = std::string( title ) + LabelSuffix( value_str );
+    return ImGui::Button( temp_label.c_str(), { 0, 20 } );
 }
 
 void Engine::ImGuiLabelAndTextToken::End() {}

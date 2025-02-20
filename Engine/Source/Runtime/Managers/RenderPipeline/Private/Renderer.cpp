@@ -11,9 +11,12 @@ namespace Engine::Managers
 
 	void Renderer::PreUpdate(const float dt)
 	{
-		for (const auto& ptr : m_render_pass_tasks_ | std::views::values)
+		for (size_t i = 0; i < std::size(m_render_pass_tasks_); ++i)
 		{
-			ptr->Cleanup();
+            for ( const auto &ptr : m_render_pass_tasks_[ i ] | std::views::values )
+            {
+                ptr->Cleanup();
+            }
 		}
 
 		for (const auto& ptr : m_render_instance_tasks_ | std::views::values) 
@@ -45,37 +48,17 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			RenderPassAssisted(dt, false, static_cast<eShaderDomain>(i), {}, m_additional_sbs_, {}, {}, {});
-			onRenderDone.Broadcast(static_cast<eShaderDomain>(i));
-		}
-	}
+            RenderPassAssisted( m_render_pass_tasks_,
+                                dt,
+                                false,
+                                static_cast<eShaderDomain>( i ),
+                                {},
+                                m_additional_sbs_,
+                                {},
+                                {},
+                                {} );
 
-	void Renderer::RenderPassAssisted(
-		float                                                   dt,
-		bool                                                    shader_bypass,
-		eShaderDomain                                           domain,
-		const SBs::LocalParamSB&                                local_param_sb,
-		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-		const ObjectPredication&                                predication,
-		const ContextSetupFunction&                             prerender_predicate,
-		const ContextSetupFunction&                             postrender_predicate
-	) const
-	{
-		for ( const std::wstring& name : m_main_pass_tasks_ )
-		{
-            m_render_pass_tasks_.at( name )->Run
-					(
-					 dt,
-					 shader_bypass,
-					 &m_render_candidates_[domain],
-					 additional_sbs,
-					 local_param_sb,
-					 predication,
-					 prerender_predicate,
-					 postrender_predicate,
-					 m_prerender_funcs_,
-					 m_postrender_funcs_
-					);
+			onRenderDone.Broadcast(static_cast<eShaderDomain>(i));
 		}
 	}
 
@@ -95,11 +78,24 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPass(const std::wstring_view name, RenderPassTask* task)
+	void Renderer::RegisterRenderPass(const std::wstring_view name, RenderPassTask* task )
 	{
 		if (task != nullptr)
 		{
-			m_render_pass_tasks_.emplace(name, std::unique_ptr<RenderPassTask>(task));
+            m_unique_render_pass_tasks_.emplace( name, std::unique_ptr<RenderPassTask>( task ) );
+		}
+    }
+
+    void Renderer::RenderPassWith( const std::wstring_view name, const eShaderDomain domain )
+    {
+		if (domain < SHADER_DOMAIN_BEGIN || domain >= SHADER_DOMAIN_MAX)
+		{
+            return;
+		}
+
+		if ( m_unique_render_pass_tasks_.contains( name.data() ) )
+		{
+            m_render_pass_tasks_[ domain ].emplace( m_unique_render_pass_tasks_.at( name.data() ).get() );
             onRenderTaskDirty.Broadcast();
 		}
 	}
@@ -112,13 +108,30 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::UnregisterRenderPass(const std::wstring_view name)
+	void Renderer::UnregisterRenderPass( const std::wstring_view name )
 	{
-		if (m_render_pass_tasks_.contains(name.data()))
+        if ( m_unique_render_pass_tasks_.contains( name.data() ) )
 		{
-			m_render_pass_tasks_.erase(name.data());
-            std::erase_if( m_main_pass_tasks_, [ &name ]( const std::wstring &elem ) { return elem == name; } );
+			for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
+			{
+                m_render_pass_tasks_[ i ].erase( name.data() );
+			}
+            m_unique_render_pass_tasks_.erase( name.data() );
             onRenderTaskDirty.Broadcast();
+		}
+    }
+
+    void Renderer::RenderPassWithout( const std::wstring_view name, const eShaderDomain domain )
+    {
+        if ( domain < SHADER_DOMAIN_BEGIN || domain >= SHADER_DOMAIN_MAX )
+        {
+            return;
+        }
+
+		if ( m_unique_render_pass_tasks_.contains( name.data() ) && 
+			 m_render_pass_tasks_[ domain ].contains( name.data() ) )
+		{
+            m_render_pass_tasks_[ domain ].erase( name.data() );
 		}
 	}
 
@@ -172,48 +185,6 @@ namespace Engine::Managers
 			m_postrender_funcs_.erase(name);
 		}
     }
-
-    void Renderer::AddToMainPassTask( const std::wstring_view name )
-    {
-		if ( m_render_pass_tasks_.contains( name.data() ) )
-		{
-            m_main_pass_tasks_.push_back( name.data() );
-		}
-	}
-
-    void Renderer::RemoveFromMainPassTask( const std::wstring_view name )
-    {
-        std::erase_if( m_main_pass_tasks_, [ &name ]( const std::wstring &elem ) { return elem == name; } );
-    }
-
-	void Renderer::RenderPassVanilla(
-		float dt, bool shader_bypass, eShaderDomain domain,
-		const SBs::LocalParamSB& local_param_sb,
-		const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-		const ObjectPredication& predication,
-		const ContextSetupFunction& prerender_predicate,
-		const ContextSetupFunction& postrender_predicate,
-		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
-		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
-	) const
-	{
-		for (const std::wstring& name : m_main_pass_tasks_)
-		{
-            m_render_pass_tasks_.at( name )->Run
-					(
-					 dt,
-					 shader_bypass,
-					 &m_render_candidates_[domain],
-					 additional_sbs,
-					 local_param_sb,
-					 predication,
-					 prerender_predicate,
-					 postrender_predicate,
-					 prerender_funcs,
-					 postrender_funcs
-					);
-		}
-	}
 
 	bool Renderer::Ready() const
 	{

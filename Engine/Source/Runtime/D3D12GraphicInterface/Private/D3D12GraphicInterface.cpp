@@ -411,8 +411,12 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 	if (count > 0)
 	{
 		const auto cmd  = static_cast<CommandPair*>(context->commandList);
-		aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
-		transitions.reserve(count);
+		static std::vector<D3D12_RESOURCE_BARRIER> transitions{};
+		
+		if ( transitions.size() < count )
+		{
+            transitions.resize( count );
+		}
 		
 		for (size_t i = 0; i < count; ++i)
 		{
@@ -425,7 +429,7 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 					 after
 					);
 
-			transitions.push_back(transition);
+			transitions[i] = transition;
 		}
 
 		cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
@@ -553,15 +557,24 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 {
 	CommandPair* cmd = static_cast<CommandPair*>(context->commandList);
 	
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs_heap;
+	static std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> rtvs_heap{};
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv_heap;
 
-	D3D12PrimitiveTexture* native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
-	dsv_heap = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
+	if ( rtvs != nullptr )
+	{
+        for ( size_t i = 0; i < rtv_count; ++i )
+        {
+            D3D12PrimitiveTexture *dtex = static_cast<D3D12PrimitiveTexture *>( rtvs[ i ]->GetPrimitiveTexture() );
+            rtvs_heap[i] = ( dtex->GetRtv()->GetCPUDescriptorHandleForHeapStart() );
+        }
+	}
+	
+	D3D12PrimitiveTexture *native_dsv = reinterpret_cast<D3D12PrimitiveTexture *>( dsv->GetPrimitiveTexture() );
+    dsv_heap                          = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
 
 	cmd->GetList()->OMSetRenderTargets
 	(
-		rtvs_heap.size(),
+		rtv_count,
 		rtvs_heap.data(),
 		false,
 		&dsv_heap

@@ -14,7 +14,7 @@ float4 ps_main(float4 input : SV_Position) : SV_Target
     float metalic = 0.f;
     float roughness = 0.f;
     float ao = 0.f;
-    float worldPosition = float4(0.f, 0.f, 0.f, 1.f);
+    float4 worldPosition = float4(0.f, 0.f, 0.f, 1.f);
     
     worldNormal = tex[0].Sample(PSSampler, input.xy);
     baseColor = tex[1].Sample(PSSampler, input.xy);
@@ -24,6 +24,31 @@ float4 ps_main(float4 input : SV_Position) : SV_Target
     ao = MRA.z;
     worldPosition = tex[3].Sample(PSSampler, input.xy);
     
-    // todo: light calculation
-    return float4(0, 0, 0, 0);
+    float4 lightIntensity[MAX_NUM_LIGHTS];
+    float4 colorArray[MAX_NUM_LIGHTS];
+    
+    float shadowFactor[MAX_NUM_LIGHTS];
+    GetShadowFactor(worldPosition, worldPosition.z, shadowFactor);
+    
+    // todo: MRA
+    for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
+    {
+        const float4 lightPos = GetTranslation(bufLight[i].world);
+        const float3 lightDir = normalize(worldPosition - lightPos).xyz;
+        const float4 shadow = LerpShadow(shadowFactor[i]);
+        
+        lightIntensity[i] = saturate(dot(worldNormal.xyz, lightDir));
+        colorArray[i] = shadow * bufLight[i].color * lightIntensity[i];
+    }
+    
+    float4 lightColor = g_ambientColor;
+    for (i = 0; i < PARAM_NUM_LIGHT; ++i)
+    {
+        lightColor.r += colorArray[i].r;
+        lightColor.g += colorArray[i].g;
+        lightColor.b += colorArray[i].b;
+    }
+    
+    float4 color = saturate(lightColor) * baseColor;
+    return color;
 }

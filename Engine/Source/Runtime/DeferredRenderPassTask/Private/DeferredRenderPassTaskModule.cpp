@@ -16,9 +16,9 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
     const std::string name ( DeferredRenderPassTask::StaticTypeName() );
     const std::wstring name_wstr( name.begin(), name.end() );
 
-    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, task );
-    Managers::Renderer::GetInstance().AddToMainPassTask( name_wstr );
-    
+    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, task, SHADER_DOMAIN_OPAQUE );
+    Managers::Renderer::GetInstance().AddToMainPassTask( name_wstr, SHADER_DOMAIN_OPAQUE );
+
     task->SetMaterialShader( Resources::Shader::Create( "DeferredMaterialPass",
                                                         "deferred_default_firstpass.hlsl",
                                                         SHADER_DOMAIN_OPAQUE,
@@ -161,7 +161,7 @@ bool Engine::DeferredRenderPassTaskModule::ShutdownImpl()
     const std::string  name( DeferredRenderPassTask::StaticTypeName() );
     const std::wstring name_wstr( name.begin(), name.end() );
 
-    Managers::Renderer::GetInstance().UnregisterRenderPass( name_wstr );
+    Managers::Renderer::GetInstance().UnregisterRenderPass( name_wstr, SHADER_DOMAIN_OPAQUE );
 #endif
     return true;
 }

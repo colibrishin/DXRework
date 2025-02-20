@@ -91,7 +91,6 @@ namespace Engine::Managers
 		);
 
 		Strong<Resources::Shader> m_shadow_shader_;
-		Strong<Resources::ShadowRenderTarget> m_shadow_map_mask_;
 		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
 
 		// sub part of the view frustum

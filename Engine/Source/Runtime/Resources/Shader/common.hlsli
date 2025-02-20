@@ -7,6 +7,7 @@
 #define MAX_TEX_PER_MAT 8
 #define FLT_MAX 3.402823466e+38
 #define PI 3.14159265359f
+#define EPSILON 1e-6f
 
 #include "type.hlsli"
 #include "utility.hlsli"
@@ -62,10 +63,10 @@ cbuffer ParamBuffer : register(b1)
     matrix g_mParam[MAX_PARAM_TYPE_SLOTS];
 };
 
-cbuffer ViewportBuffer : register(b2)
+cbuffer RadianceBuffer : register(b2)
 {
-    float2 g_viewResolution;
-}
+    int NumRadianceMipLevels;
+};
 
 float4 SampleGrad(in SamplerState inSampler, in float2 uv, in float2 ddx, in float2 ddy, in uint slot)
 {
@@ -308,7 +309,7 @@ void GetShadowFactor(
     }
 }
 
-float4 LerpShadow(in float4 shadowFactor)
+float4 LerpShadow(in float shadowFactor)
 {
     return lerp(float4(0, 0, 0, 1), float4(1, 1, 1, 1), shadowFactor);
 }

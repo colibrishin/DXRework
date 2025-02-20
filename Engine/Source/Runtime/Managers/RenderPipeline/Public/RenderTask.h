@@ -35,6 +35,7 @@ namespace Engine
 		INLINE_COMPILE_TIME_TYPENAME(RenderPassTask)
 
 		virtual      ~RenderPassTask() = default;
+
 		virtual void Run(
 			float                                                             dt,
 			bool                                                              shader_bypass,

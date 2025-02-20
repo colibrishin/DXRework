@@ -68,6 +68,8 @@ struct PixelInputType
     uint instanceId : SV_InstanceID;
 };
 
+#define PARAM_NUM_LIGHT g_iParam[0].x
+
 #define INST_ANIM_FRAME(PARAM, INSTANCE)        PARAM[INSTANCE].fParam[0].x
 #define INST_SPECULAR(PARAM, INSTANCE)          PARAM[INSTANCE].fParam[0].y
 #define INST_REFLECT_TRS(PARAM, INSTANCE)       PARAM[INSTANCE].fParam[0].z

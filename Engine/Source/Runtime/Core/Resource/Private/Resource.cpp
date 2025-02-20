@@ -52,7 +52,9 @@ namespace Engine::Abstracts
 			Entity::OnUIUpdate(parent, dt);
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 			*parent |= ui.NewLabelAndPath( { "Raw Path", m_path_ } );
-			( *parent |= ui.NewButton( { "Clone" } ) ).SetFunction( [this]()
+            ( *parent |= ui.NewButton( { parent, "Clone" } ) )
+                    .SetFunction(
+                            [ this ]()
 			{
 				const auto& cloned = Clone();
 				Managers::ResourceManager::GetInstance().AddResource( cloned, cloned->GetTypeHash() );

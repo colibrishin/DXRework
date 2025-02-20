@@ -569,17 +569,20 @@ namespace Engine::Abstracts
                 if ( UIContext context = UIInterface::NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
 				{
 					Actor::OnUIUpdate(&context, dt);
-					(context |= ui.NewButton({"Clone"})).SetFunction([&]()
+                    ( context |= ui.NewButton( { this, "Clone" } ) )
+                            .SetFunction( [ & ]()
 					{
 						const auto& _ = Clone(true);
 					});
 
-					(context |= ui.NewButton({ "Add Component" })).SetFunction([&]()
+					( context |= ui.NewButton( { this, "Add Component" } ) )
+                            .SetFunction( [ & ]()
 					{
 						m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
 					});
 
-					(context |= ui.NewButton({ "Children" })).SetFunction([&]()
+					( context |= ui.NewButton( { this, "Children" } ) )
+                            .SetFunction( [ & ]()
 						{
 							m_b_child_dialog_ = !m_b_child_dialog_;
 						});
@@ -591,7 +594,7 @@ namespace Engine::Abstracts
 						{
 							const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
 							{
-								(add_com_context |= ui.NewButton({ T::StaticTypeName() })).SetFunction([&]()
+								(add_com_context |= ui.NewButton({ this, T::StaticTypeName() })).SetFunction([&]()
 									{
 										AddComponent<T>();
 									});
@@ -603,7 +606,8 @@ namespace Engine::Abstracts
 
 							for (const auto& [type, predicate] : ComponentFactory::GetGenerators())
 							{
-								(add_com_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([&]()
+                                ( add_com_context |= ui.NewButton( { type, type->GetTypeName() } ) )
+                                        .SetFunction( [ & ]()
 								{
 									addComponent(predicate(GetSharedPtr<ObjectBase>()));
 								});
@@ -618,7 +622,7 @@ namespace Engine::Abstracts
 						{
 							if (const Strong<Component>& component = w_component.lock())
 							{
-							    (context |= ui.NewButton( { "Remove" } )).SetFunction( [this, type = component->GetTypeHash()]()
+							    (context |= ui.NewButton( { component.get(), "Remove" } )).SetFunction( [this, type = component->GetTypeHash()]()
 							    {
 							        removeComponent( type );
 							    });
@@ -649,7 +653,7 @@ namespace Engine::Abstracts
                     if ( UIContext child_context = ui.NewContext( ui.NewDialog(
                                  { this, m_ui_info_.temporaryStrings[ "child_title" ], m_b_child_dialog_ } ) ) )
 					{
-						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
+						(child_context |= ui.NewButton({ this, "Add Child" })).SetFunction([&]()
 							{
 								m_b_child_add_dialog_ = !m_b_child_add_dialog_;
 							});
@@ -659,7 +663,7 @@ namespace Engine::Abstracts
                             if ( UIContext child_select_context = ui.NewContext(
                                          ui.NewDialog( { this, "Add New Child", m_b_child_add_dialog_ } ) ) )
 							{
-								(child_select_context |= ui.NewButton({ "Object" })).SetFunction([this]()
+								(child_select_context |= ui.NewButton({ this, "Object" })).SetFunction([this]()
 									{
 										if (const Strong<Scene>& scene = GetScene().lock())
 										{
@@ -672,7 +676,7 @@ namespace Engine::Abstracts
 
 								for (const auto& [type, predicate] : ObjectFactory::GetGenerators())
 								{
-									(child_select_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([this, &predicate]()
+									(child_select_context |= ui.NewButton({ type, type->GetTypeName() })).SetFunction([this, &predicate]()
 										{
 											if (const Strong<Scene>& scene = GetScene().lock())
 											{
@@ -717,7 +721,7 @@ namespace Engine::Abstracts
 						{
 							if (const Strong<ObjectBase>& locked = child.lock())
 							{
-                                ( child_context |= ui.NewButton( { "Remove" } ) ).SetFunction([this, &locked]() 
+                                ( child_context |= ui.NewButton( { locked.get(), "Remove" } ) ).SetFunction([this, &locked]() 
 									{ 
 										if (const Strong<Scene>& scene = locked->GetScene().lock())
 										{

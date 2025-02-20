@@ -29,9 +29,6 @@ namespace Engine::Managers
 				 PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
 				 SAMPLER_SHADOW);
 
-		// Render target for shadow map mask.
-		m_shadow_map_mask_ = Resources::ShadowRenderTarget::Create("Shadow Render Target Texture");
-
 		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
 		m_light_sb_ = std::make_unique<decltype(m_light_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightSB>());
 		m_light_vp_sb_ = std::make_unique<decltype(m_light_vp_sb_)::element_type>(gi.GetStructuredBuffer<SBs::LightVPSB>());
@@ -212,7 +209,6 @@ namespace Engine::Managers
 			const auto context   = gi.GetNewContext(0, false, L"Shadow Map Transition");
 			const auto primitive = context.GetPointers();
 			primitive.commandList->SoftReset();
-			gi.TransitTo(&primitive, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 			gi.TransitTo(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_DSV);
 			primitive.commandList->FlagReady();
 		}
@@ -234,8 +230,7 @@ namespace Engine::Managers
 			 {
 			     gi.SetViewport( context, m_viewport_ );
 				 gi.BindGraphic(context, m_shadow_shader_.get());
-				 Resources::Texture* temp_tex_arr[] = {m_shadow_map_mask_.get()};
-				 gi.BindMultiple(context, temp_tex_arr, 1, m_shadow_texs_.at(light->GetLocalID()).get());
+				 gi.BindMultiple(context, nullptr, 0, m_shadow_texs_.at(light->GetLocalID()).get());
 			 }, {}, {}, {}
 			);
 
@@ -243,7 +238,6 @@ namespace Engine::Managers
 			const auto context   = gi.GetNewContext(0, false, L"Shadow Map Transition To Common");
 			const auto primitive = context.GetPointers();
 			primitive.commandList->SoftReset();
-			gi.TransitBack(&primitive, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 			gi.TransitBack(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_DSV);
 			gi.TransitTo(&primitive, m_shadow_texs_.at(light->GetLocalID()).get(), BIND_TYPE_SRV);
 			primitive.commandList->FlagReady();
@@ -498,7 +492,5 @@ namespace Engine::Managers
 			gi.TransitBack(context, tex.get(), BIND_TYPE_SRV);
 			tex->Clear(context);
 		}
-
-		gi.Clear(context, m_shadow_map_mask_.get(), BIND_TYPE_RTV);
 	}
 } // namespace Engine::Managers

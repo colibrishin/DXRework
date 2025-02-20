@@ -134,7 +134,7 @@ namespace Engine::Components
 				shader_name = shader->GetName();
 			}
 			*parent |= ui.NewLabelAndText({ "Particle Shader", shader_name, false });
-			(*parent |= ui.NewButton({ "Set Particle Shader..." })).SetFunction([&]()
+			(*parent |= ui.NewButton({ parent, "Set Particle Shader..." })).SetFunction([&]()
 				{
 					m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
 				});

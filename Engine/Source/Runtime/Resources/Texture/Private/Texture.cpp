@@ -130,6 +130,7 @@ namespace Engine::Resources
 		}
 
 		m_primitive_texture_->SaveAsFile(final_path);
+        SetPath( final_path );
 	}
 
 	void Texture::OnDeserialized()

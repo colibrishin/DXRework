@@ -48,7 +48,7 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                     *context |= ui.NewLabelAndText({ "Atlas Name", sub_atlas_name_buffer, true });
                     *context |= ui.NewLabelAndText({ "Atlas Texture", sub_atlas_texture_path_buffer, true });
                     *context |= ui.NewLabelAndText({ "Atlas XML", sub_atlas_xml_path_buffer, true });
-                    (*context |= ui.NewButton({ "Add" })).SetFunction([&expected_tex_extensions]()
+                    (*context |= ui.NewButton( { context, "Add" } )).SetFunction([&expected_tex_extensions]()
                         {
                             if (!sub_atlas_name_buffer.empty() && sub_atlas_xml_path_buffer.empty()) 
                             {
@@ -113,7 +113,7 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
 
                     static std::string search_folder;
                     *context |= ui.NewLabelAndText({ "Folder", search_folder, true });
-                    (*context |= ui.NewButton({ "Add Multiples..." })).SetFunction([&expected_tex_extensions]()
+                    (*context |= ui.NewButton({ context, "Add Multiples..." })).SetFunction([&expected_tex_extensions]()
                         {
                             std::filesystem::path                               folder = search_folder;
                             const std::filesystem::recursive_directory_iterator it(folder);

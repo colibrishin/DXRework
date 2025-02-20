@@ -43,11 +43,13 @@ namespace Engine::Resources
 				if (const Strong<Texture>& tex = it->lock())
 				{
 					*parent |= ui.NewSelectable({ tex->GetName(), tex->m_ui_info_.dialogOpened });
-					(*parent |= ui.NewButton({ "Move Up" })).SetFunction([&, idx]()
+                    ( *parent |= ui.NewButton( { tex.get(), "Move Up" } ) )
+                            .SetFunction( [ &, idx ]()
 						{
 							SwapTexture(idx, idx - 1);
 						});
-					(*parent |= ui.NewButton({ "Move Down" })).SetFunction([&, idx]()
+                    ( *parent |= ui.NewButton( { tex.get(), "Move Down" } ) )
+                            .SetFunction( [ &, idx ]()
 						{
 							SwapTexture(idx, idx + 1);
 						});
@@ -81,7 +83,7 @@ namespace Engine::Resources
 				}
 			
 				*parent |= ui.NewLabelAndText({"Shader", shader_string, false});
-				(*parent |= ui.NewButton({"Set Shader"})).SetFunction([&]()
+				(*parent |= ui.NewButton( { this, "Set Shader" } )).SetFunction([&]()
 					{
 						m_ui_shader_dialog_ = !m_ui_shader_dialog_;
 					});
@@ -99,7 +101,7 @@ namespace Engine::Resources
 				}
 				
 				*parent |= ui.NewLabelAndText({ "Atlas Texture", atlas_string, false});
-				(*parent |= ui.NewButton({ "Add Texture..." })).SetFunction([&]()
+				(*parent |= ui.NewButton( { this, "Add Texture..." } )).SetFunction([&]()
 					{
 						m_ui_add_dialog_ = !m_ui_add_dialog_;
 					});

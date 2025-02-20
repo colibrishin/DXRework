@@ -28,6 +28,11 @@ public class DeferredRenderPassTask : EngineCommonProject
         conf.AddPrivateDependency<AtlasAnimationTexture>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);
 
-        conf.TargetCopyFiles.Add(@"deferred_default_firstpass.hlsl", @"deferred_secondpass.hlsl");
+        conf.TargetCopyFiles.Add
+        (
+            @"deferred_default_firstpass.hlsl", 
+            @"deferred_secondpass.hlsl",
+            @"pbr.hlsli"
+        );
     }
 }

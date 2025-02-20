@@ -54,7 +54,7 @@ namespace Engine
 	    void End() override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const std::string_view) override;
+	    [[nodiscard]] bool DoImpl(const void*, const std::string_view) override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiLabelAndTextToken : LabelAndTextToken

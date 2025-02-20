@@ -117,7 +117,7 @@ void Engine::Components::SoundPlayer::OnUIUpdate(UIContext* const parent, const 
                 sound_name = "";
             }
             *parent |= ui.NewLabelAndText({ "Sound", sound_name, false });
-            (*parent |= ui.NewButton({ "Select Sound..." })).SetFunction([this](){
+            (*parent |= ui.NewButton( { parent, "Select Sound..." } )).SetFunction([this](){
                 m_b_sound_dialog_ = !m_b_sound_dialog_;
             });
         }

@@ -13,19 +13,30 @@
 
 namespace Engine
 {
-	struct TexturePair
-	{
-		TexturePair() = default;
-		
-		TexturePair(
-			const std::array<Strong<Resources::Texture>, g_max_texture_per_material>* textures,
-			const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>* reservedTextures)
-			: textures(textures),
-			  reservedTextures(reservedTextures) {}
+    struct TexturePair
+    {
+        TexturePair() = default;
 
-		const std::array<Strong<Resources::Texture>, g_max_texture_per_material>* textures;
-		const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>* reservedTextures;
-	};
+        TexturePair( const std::array<Strong<Resources::Texture>, g_max_texture_per_material> *textures,
+                     const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>
+                             *reservedTextures )
+            : textures( textures ),
+              reservedTextures( reservedTextures ),
+              boundTextureCount( std::ranges::count_if(
+                      *textures, []( const Strong<Resources::Texture> &tex ) { return tex != nullptr; } ) )
+        {}
+
+        const std::array<Strong<Resources::Texture>, g_max_texture_per_material>                      *textures;
+        const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN> *reservedTextures;
+
+        size_t GetTextureCount() const
+        {
+            return boundTextureCount;
+        }
+
+    private:
+        size_t boundTextureCount;
+    };
 	
 	ECLASS(virtual)
     struct ENGINE_FORWARDRENDERPASSTASK_API ForwardRenderPassTask : RenderPassTask
@@ -71,7 +82,7 @@ namespace Engine
                                             const aligned_vector<InstancePair>                               &instance_pairs );
 
 		[[nodiscard]] void RecordUsedTexture(
-			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
+			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Resources::Texture* tex
 		);
 
 
@@ -93,6 +104,6 @@ namespace Engine
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};
 		tbb::concurrent_vector<Unique<GraphicHeapBase>> m_heaps_{};
-		std::vector<Resources::Texture*> m_used_shader_textures_{};
+		std::vector<const Resources::Texture*> m_used_shader_textures_{};
 	};
 }

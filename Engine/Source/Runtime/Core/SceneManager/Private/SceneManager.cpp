@@ -347,14 +347,14 @@ namespace Engine::Managers
 		    {
 		        if (!IsPlaying())
 		        {
-		            (manager_context |= ui.NewButton( { "Play Scene" } )).SetFunction( [this]()
+		            (manager_context |= ui.NewButton( { this, "Play Scene" } )).SetFunction( [this]()
                     {
                         Play();
                     } );   
 		        }
 		        else
 		        {
-		            (manager_context |= ui.NewButton( { "Stop Scene" } )).SetFunction( [this]()
+                    ( manager_context |= ui.NewButton( { this, "Stop Scene" } ) ).SetFunction( [ this ]()
                     {
                         Stop();
                     } );

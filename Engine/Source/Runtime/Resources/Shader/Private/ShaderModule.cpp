@@ -80,7 +80,7 @@ bool Engine::ShaderModule::InitializeImpl()
 						}
 						-- * context;
 
-						(*context |= ui.NewButton({ "Add Render Target" })).SetFunction([]()
+						(*context |= ui.NewButton({ context, "Add Render Target" })).SetFunction([]()
 							{
 								rtv_formats.push_back(GetDefaultRTVFormat().front());
 							});

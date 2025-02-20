@@ -22,8 +22,8 @@ float4 ps_main(PixelInputType input) : SV_TARGET
         textureColor = Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId));
     }
 	
-	float        normalLightIntensity[MAX_NUM_LIGHTS];
-	float        textureLightIntensity[MAX_NUM_LIGHTS];
+	float  normalLightIntensity[MAX_NUM_LIGHTS];
+	float  textureLightIntensity[MAX_NUM_LIGHTS];
 
 	float4 normalColorArray[MAX_NUM_LIGHTS];
 	float4 textureColorArray[MAX_NUM_LIGHTS];

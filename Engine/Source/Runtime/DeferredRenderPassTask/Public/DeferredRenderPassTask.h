@@ -4,6 +4,8 @@
 #include "RenderTask.h"
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
 
+#include <ranges>
+
 #include "DeferredRenderPassTask.generated.h"
 
 namespace Engine
@@ -15,11 +17,23 @@ namespace Engine
         TexturePair( const std::array<Strong<Resources::Texture>, g_max_texture_per_material> *textures,
                      const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>
                              *reservedTextures )
-            : textures( textures ), reservedTextures( reservedTextures )
-        {}
+            : textures( textures ),
+              reservedTextures( reservedTextures ),
+              boundTextureCount( std::ranges::count_if(
+                      *textures, []( const Strong<Resources::Texture> &tex ) { return tex != nullptr; } ))
+        {
+        }
 
         const std::array<Strong<Resources::Texture>, g_max_texture_per_material>                      *textures;
         const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN> *reservedTextures;
+
+        size_t GetTextureCount() const
+        {
+            return boundTextureCount;
+        }
+
+    private:
+        size_t boundTextureCount;
     };
 
     ECLASS(virtual)
@@ -94,7 +108,7 @@ namespace Engine
 
         [[nodiscard]] void RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
                                               GraphicInterface                       &gi,
-                                              const Strong<Resources::Texture>       &tex );
+                                              const Resources::Texture               *tex );
 
         SpinLockTicket m_gi_ticket_;
         SpinLockTicket m_local_param_pool_ticket;
@@ -104,7 +118,7 @@ namespace Engine
         StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
         StructuredBufferMemoryPool<Graphics::SBs::InstanceSB>   m_instance_pool_{};
         tbb::concurrent_vector<Unique<GraphicHeapBase>>         m_heaps_{};
-        std::vector<Resources::Texture *>                       m_used_shader_textures_{};
+        std::vector<const Resources::Texture *>                 m_used_shader_textures_{};
 
         Strong<Resources::Shader> m_material_pass_shader_;
         Strong<Resources::Shader> m_light_pass_shader_;

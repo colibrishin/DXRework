@@ -38,9 +38,12 @@ namespace Engine::Managers
 		void Initialize() override;
 		
 		void RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task);
-		void RegisterRenderPass(const std::wstring_view name, RenderPassTask* task);
-		void UnregisterRenderInstance(const std::wstring_view name);
-		void UnregisterRenderPass(const std::wstring_view name);
+        void RegisterRenderPass( const std::wstring_view name, RenderPassTask *task );
+        void RenderPassWith( const std::wstring_view name, const eShaderDomain domain );
+
+        void UnregisterRenderInstance( const std::wstring_view name );
+        void UnregisterRenderPass( const std::wstring_view name );
+        void RenderPassWithout( const std::wstring_view name, const eShaderDomain domain );
 
 		void RegisterStructuredBuffer(const StructuredBufferDecorator* sb);
 		void UnregisterStructuredBuffer(const StructuredBufferDecorator* sb);
@@ -50,31 +53,106 @@ namespace Engine::Managers
 		void RegisterContextPostRenderSetup(const std::string_view name, const ContextSetupFunction& postrender_func);
 		void UnregisterContextPostRenderSetup(const std::string_view name);
 
-        void AddToMainPassTask( const std::wstring_view name );
-        void RemoveFromMainPassTask( const std::wstring_view name );
+		using RenderPassTaskUniqueContainer = std::unordered_map<std::wstring, Unique<RenderPassTask>>;
+		using RenderPassTaskBorrowedContainer = std::unordered_map<std::wstring, RenderPassTask*>;
 
-		using RenderPassTaskContainer = std::unordered_map<std::wstring, Unique<RenderPassTask>>;
+        template <typename Cont>
+        void RenderPass( 
+                const Cont                                                        container[ SHADER_DOMAIN_MAX ],
+                float                                                             dt,
+                bool                                                              shader_bypass,
+                eShaderDomain                                                     domain,
+                const SBs::LocalParamSB                                          &local_param_sb,
+                const aligned_vector<const StructuredBufferDecorator *>          &additional_sbs,
+                const ObjectPredication                                          &predication,
+                const ContextSetupFunction                                       &prerender_predicate,
+                const ContextSetupFunction                                       &postrender_predicate,
+                const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_funcs,
+                const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_funcs ) const
+        {
+            if constexpr ( std::is_same_v<std::remove_const_t<std::remove_reference_t<decltype( m_render_pass_tasks_[ 0 ] )>>, Cont> )
+            {
+                for ( const auto &task : container[ domain ] | std::views::values )
+                {
+                    task->Run( dt,
+                               shader_bypass,
+                               &m_render_candidates_[ domain ],
+                               additional_sbs,
+                               local_param_sb,
+                               predication,
+                               prerender_predicate,
+                               postrender_predicate,
+                               prerender_funcs,
+                               postrender_funcs );
+                }
+            }
+            else
+            {
+                for ( const auto &task : container[ domain ] )
+                {
+                    task->Run( dt,
+                               shader_bypass,
+                               &m_render_candidates_[ domain ],
+                               additional_sbs,
+                               local_param_sb,
+                               predication,
+                               prerender_predicate,
+                               postrender_predicate,
+                               prerender_funcs,
+                               postrender_funcs );
+                }
+            }
+        }
+
+        template <typename Cont>
+        void RenderPassAssisted( const Cont               container[ SHADER_DOMAIN_MAX ],
+                                 float                    dt,
+                                 bool                     shader_bypass,
+                                 eShaderDomain            domain,
+                                 const SBs::LocalParamSB &local_param_sb,
+                                 const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
+                                 const ObjectPredication                                 &predication,
+                                 const ContextSetupFunction                              &prerender_predicate,
+                                 const ContextSetupFunction                              &postrender_predicate ) const
+        {
+            RenderPass( container[ SHADER_DOMAIN_MAX ],
+                        dt,
+                        shader_bypass,
+                        domain,
+                        local_param_sb,
+                        additional_sbs,
+                        predication,
+                        prerender_predicate,
+                        postrender_predicate,
+                        m_prerender_funcs_,
+                        m_postrender_funcs_ );
+        }
 
 		template <typename... ExcludeRenderTaskTs>
 		struct ExclusionPredicate
 		{
-            static void ResolveDirtyness( const RenderPassTaskContainer& cont, std::vector<RenderPassTask *> &tasks )
+            static void ResolveDirtyness( const RenderPassTaskBorrowedContainer cont[ SHADER_DOMAIN_MAX ],
+                                          std::vector<RenderPassTask *> tasks[ SHADER_DOMAIN_MAX ] )
 			{
-                tasks.clear();
-                tasks.reserve( cont.size() );
-
-                for ( const auto &task : cont | std::views::values )
+                for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
                 {
-                    if ( bool check[] = { task->GetTypeHash() == ExcludeRenderTaskTs::StaticTypeHash()... };
-                         std::any_of(
-                                 std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
-                    {
-                        continue;
-                    }
+                    tasks[ i ]->clear();
+                    tasks[ i ]->reserve( cont[ i ]->size() );
 
-                    if ( task != nullptr )
+                    for ( const auto &task : cont[ i ] | std::views::values )
                     {
-                        tasks.emplace_back( task.get() );
+                        if ( bool check[] = { task->GetTypeHash() == ExcludeRenderTaskTs::StaticTypeHash()... };
+                             std::any_of( std::begin( check ),
+                                          std::end( check ),
+                                          []( const bool b ) { return b == true; } ) )
+                        {
+                            continue;
+                        }
+
+                        if ( task != nullptr )
+                        {
+                            tasks[ i ]->emplace_back( task.get() );
+                        }
                     }
                 }
 			}
@@ -83,18 +161,23 @@ namespace Engine::Managers
 		template <typename... IncludeRenderTaskTs>
         struct InclusionPredicate
         {
-            static void ResolveDirtyness( const RenderPassTaskContainer &cont, std::vector<RenderPassTask *> &tasks )
+            static void ResolveDirtyness( const RenderPassTaskBorrowedContainer cont[ SHADER_DOMAIN_MAX ],
+                                          std::vector<RenderPassTask *> tasks[ SHADER_DOMAIN_MAX ] )
             {
-                tasks.clear();
-                tasks.reserve( cont.size() );
-
-                for ( const auto &task : cont | std::views::values )
+                for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
                 {
-                    if ( bool check[] = { task->GetTypeHash() == IncludeRenderTaskTs::StaticTypeHash()... };
-                         std::any_of(
-                                 std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
+                    tasks[ i ]->clear();
+                    tasks[ i ]->reserve( cont[ i ]->size() );
+
+                    for ( const auto &task : cont[ i ] | std::views::values )
                     {
-                        tasks.emplace_back( task.get() );
+                        if ( bool check[] = { task->GetTypeHash() == IncludeRenderTaskTs::StaticTypeHash()... };
+                             std::any_of( std::begin( check ),
+                                          std::end( check ),
+                                          []( const bool b ) { return b == true; } ) )
+                        {
+                            tasks[ i ]->emplace_back( task.get() );
+                        }
                     }
                 }
             }
@@ -114,7 +197,7 @@ namespace Engine::Managers
             const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
         )
 	    {
-	        static std::vector<RenderPassTask*> render_pass_task_copy;
+	        static std::vector<RenderPassTask*> render_pass_task_copy[ SHADER_DOMAIN_MAX ];
             static std::once_flag               delegate_flag;
             static const auto& func = [ this ]()
             {
@@ -127,19 +210,17 @@ namespace Engine::Managers
                 onRenderTaskDirty.Listen( func );
             } );
 
-	        for (const auto& task : render_pass_task_copy)
-	        {
-	            task->Run( dt,
-                          shader_bypass,
-                          &m_render_candidates_[ domain ],
-                          additional_sbs,
-                          local_param_sb,
-                          predication,
-                          prerender_predicate,
-                          postrender_predicate,
-                          prerender_funcs,
-                          postrender_funcs);
-	        }
+            RenderPass( render_pass_task_copy,
+                        dt,
+                        shader_bypass,
+                        domain,
+                        local_param_sb,
+                        additional_sbs,
+                        predication,
+                        prerender_predicate,
+                        postrender_predicate,
+                        prerender_funcs,
+                        postrender_funcs );
 	    }
 
 	    template <typename PredicationT>
@@ -154,7 +235,7 @@ namespace Engine::Managers
             ContextSetupFunction&                             postrender_predicate
         )
 	    {
-	        static std::vector<RenderPassTask*> render_pass_task_copy;
+            static std::vector<RenderPassTask *> render_pass_task_copy[ SHADER_DOMAIN_MAX ];
             static std::once_flag               delegate_flag;
             static const auto& func = [ this ]()
             {
@@ -167,19 +248,15 @@ namespace Engine::Managers
                 onRenderTaskDirty.Listen( func );
             } );
 
-	        for (const auto& task : render_pass_task_copy)
-	        {
-	            task->Run( dt,
-                          shader_bypass,
-                          &m_render_candidates_[ domain ],
-                          additional_sbs,
-                          local_param_sb,
-                          predication,
-                          prerender_predicate,
-                          postrender_predicate,
-                          m_prerender_funcs_,
-                          m_postrender_funcs_);
-	        }
+            RenderPassAssisted( render_pass_task_copy,
+                                dt,
+                                shader_bypass,
+                                domain,
+                                local_param_sb,
+                                additional_sbs,
+                                predication,
+                                prerender_predicate,
+                                postrender_predicate );
 	    }
 
 		template <typename... RenderTaskTs>
@@ -282,30 +359,6 @@ namespace Engine::Managers
                                                                            m_postrender_funcs_ );
         }
 
-		void RenderPassVanilla(
-			float                                                             dt,
-			bool                                                              shader_bypass,
-			eShaderDomain                                                     domain,
-			const Graphics::SBs::LocalParamSB&                                local_param_sb,
-			const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
-			const ObjectPredication&                                          predication,
-			const ContextSetupFunction&                                       prerender_predicate,
-			const ContextSetupFunction&                                       postrender_predicate,
-			const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
-			const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
-		) const;
-		
-		void RenderPassAssisted(
-			float                                                   dt,
-			bool                                                    shader_bypass,
-			eShaderDomain                                           domain,
-			const Graphics::SBs::LocalParamSB&                      local_param_sb,
-			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-			const ObjectPredication&                                predication,
-			const ContextSetupFunction&                             prerender_predicate,
-			const ContextSetupFunction&                             postrender_predicate
-		) const;
-
 		[[nodiscard]] bool Ready() const;
 
 	private:
@@ -321,9 +374,9 @@ namespace Engine::Managers
 	    bool m_b_task_dirty_ = false;
 	    
 		std::unordered_map<std::wstring, Unique<RenderInstanceTask>> m_render_instance_tasks_;
-        std::unordered_map<std::wstring, Unique<RenderPassTask>>     m_render_pass_tasks_;
-        std::vector<std::wstring>                                    m_main_pass_tasks_;
-
+        RenderPassTaskUniqueContainer                                m_unique_render_pass_tasks_;
+        RenderPassTaskBorrowedContainer                              m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];
+        
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};
 }

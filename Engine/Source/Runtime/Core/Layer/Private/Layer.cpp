@@ -212,7 +212,7 @@ namespace Engine
 			{
 			    if ( object->GetParent().expired() )
 			    {
-                    ( *parent |= ui.NewButton( { m_ui_info_.temporaryStrings[ std::format( "{}remove", object->GetID() ) ] } ) )
+                    ( *parent |= ui.NewButton( { object.get(), m_ui_info_.temporaryStrings[ std::format( "{}remove", object->GetID() ) ] } ) )
                             .SetFunction( [ object ]() 
 					{
                         if ( const Strong<Scene> &scene = object->GetScene().lock() )
