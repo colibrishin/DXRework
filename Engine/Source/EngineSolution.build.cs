@@ -3,6 +3,7 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Programs/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Managers/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]

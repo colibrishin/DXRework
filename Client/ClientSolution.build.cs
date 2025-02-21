@@ -12,10 +12,10 @@ public class ClientProject : CommonProject
     {
         Name = "Client";
 
-        SourceFilesExtensions.Add(".ini");
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".jpg");
-        SourceFilesExtensions.Add(".png");
+        ResourceFilesExtensions.Add(".ini");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".jpg");
+        ResourceFilesExtensions.Add(".png");
 
         AddTargets(Utils.GetDefinedTarget());
     }

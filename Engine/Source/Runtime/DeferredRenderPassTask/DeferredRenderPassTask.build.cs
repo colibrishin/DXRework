@@ -8,8 +8,9 @@ public class DeferredRenderPassTask : EngineCommonProject
 {
     public DeferredRenderPassTask() 
     {
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".hlsli");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".hlsli");
+        ResourceFilesExtensions.Add(".json");
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)

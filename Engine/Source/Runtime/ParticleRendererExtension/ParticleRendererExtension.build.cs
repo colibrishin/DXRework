@@ -8,9 +8,9 @@ public class ParticleRendererExtension : EngineCommonProject
 {
     public ParticleRendererExtension() 
     {
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".png");
-        SourceFilesExtensions.Add(".xml");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".png");
+        ResourceFilesExtensions.Add(".xml");
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)

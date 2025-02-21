@@ -9,8 +9,8 @@ public class ShadowManager : EngineCommonProject
 {
     public ShadowManager() 
     {
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".hlsli");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".hlsli");
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
