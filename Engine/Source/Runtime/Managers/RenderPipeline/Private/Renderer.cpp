@@ -11,13 +11,10 @@ namespace Engine::Managers
 
 	void Renderer::PreUpdate(const float dt)
 	{
-		for (size_t i = 0; i < std::size(m_render_pass_tasks_); ++i)
-		{
-            for ( const auto &ptr : m_render_pass_tasks_[ i ] | std::views::values )
-            {
-                ptr->Cleanup();
-            }
-		}
+        for ( const auto &ptr : m_unique_render_pass_tasks_ | std::views::values )
+        {
+            ptr->Cleanup();
+        }
 
 		for (const auto& ptr : m_render_instance_tasks_ | std::views::values) 
 		{
