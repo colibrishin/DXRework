@@ -105,8 +105,8 @@ void Engine::Components::SoundPlayer::OnUIUpdate(UIContext* const parent, const 
     if ( parent )
     {
         Component::OnUIUpdate( parent, dt );
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
         {
+            UIInterface&       ui = UIInterfaceAccessor::GetInterface();
             static std::string sound_name;
             if (m_loaded_sound_)
             {
@@ -116,10 +116,11 @@ void Engine::Components::SoundPlayer::OnUIUpdate(UIContext* const parent, const 
             {
                 sound_name = "";
             }
-            *parent |= ui.NewLabelAndText({ "Sound", sound_name, false });
-            (*parent |= ui.NewButton( { parent, "Select Sound..." } )).SetFunction([this](){
+            *parent |= ui.NewLabelAndText( this, "Sound", { "Sound", sound_name, false } );
+            ( *parent |= ui.NewButton( this, "SoundSelectButton", { "Select Sound..." } ) ).SetFunction( [this]()
+            {
                 m_b_sound_dialog_ = !m_b_sound_dialog_;
-            });
+            } );
         }
 
         if (m_b_sound_dialog_) 

@@ -91,19 +91,22 @@ namespace Engine::Objects
 
             if ( m_ui_info_.dialogOpened )
             {
-                UIInterface          &ui              = UIInterfaceAccessor::GetInterface();
+                UIInterface &         ui              = UIInterfaceAccessor::GetInterface();
                 static constexpr auto light_type_enum = CStrEnumStrings<eLightType>();
 
-                if ( UIContext context = UIInterface::NewContext(
-                             ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
+                if ( const UIContext context = UIInterface::NewContext(
+                        ui.NewDialog( this, "LightDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
                 {
-                    context |= ui.NewLabelAndFloat( { "Radius", m_radius_, 0.f, 0.f, FLT_MAX, true } );
-                    context |= ui.NewLabelAndFloat( { "Range", m_range_, 0.f, 0.f, FLT_MAX, true } );
-                    context |= ui.NewCombobox( { "Light type",
+                    context |= ui.NewLabelAndFloat( this, "Radius", { "Radius", m_radius_, 0.f, 0.f, FLT_MAX, true } );
+                    context |= ui.NewLabelAndFloat( this, "Range", { "Range", m_range_, 0.f, 0.f, FLT_MAX, true } );
+                    context |= ui.NewCombobox( this,
+                                               "LightType",
+                                               { "Light type",
                                                  reinterpret_cast<int *>( &m_type_ ),
                                                  light_type_enum.data(),
-                                                 light_type_enum.size(), true } );
-                    context |= ui.NewLabelAndVec4( { "Color", &m_color_.x, 0.f, 0.f, 1.f, true } );
+                                                 light_type_enum.size(),
+                                                 true } );
+                    context |= ui.NewLabelAndVec4( this, "LightColor", { "Color", &m_color_.x, 0.f, 0.f, 1.f, true } );
                 }
             }
         }

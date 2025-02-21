@@ -2,6 +2,7 @@
 
 #if WITH_EDITOR
 #include "UIInterface.h"
+#include "UIHelpers.h"
 #endif
 
 #include "Source/Runtime/Core/Scene/Public/Scene.h"
@@ -295,93 +296,94 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void SceneManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+        UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewMainMenuBar({})))
-		{
-		    context += ui.NewMenu({"New"});
+        if ( UIContext context = UIInterface::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
+        {
+            context += ui.NewMenu( nullptr, "NewMenu", { "New" } );
 
-		    for (auto& [name, func] : m_custom_new_function_)
-		    {
-		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+            for ( auto &[ name, func ] : m_custom_new_function_ )
+            {
+                ( context |= ui.NewMenuItem( this, std::format( "NewMenuItem{}", name ), { name } ) ).SetFunction( [&]()
                 {
                     func.first = true;
-                });
-		    }
+                } );
+            }
 
-		    const auto& addTemplate = [&] <typename T, LayerSizeType Layer> ()
+            const auto &addTemplate = [&] <typename T, LayerSizeType Layer>()
             {
-                GetActiveScene().lock()->CreateGameObject<T>(Layer);
+                GetActiveScene().lock()->CreateGameObject<T>( Layer );
             };
 
-		    (context |= ui.NewMenuItem({ "Camera" })).SetFunction([&]()
-                {
-                    addTemplate.operator() < Objects::Camera, RESERVED_LAYER_CAMERA > ();
-                });
+            ( context |= ui.NewMenuItem( this, "NewMenuItemCamera", { "Camera" } ) ).SetFunction( [&]()
+            {
+                addTemplate.operator()<Objects::Camera, RESERVED_LAYER_CAMERA>();
+            } );
 
-		    (context |= ui.NewMenuItem({ "Light" })).SetFunction([&]()
-                {
-                    addTemplate.operator() < Objects::Light, RESERVED_LAYER_LIGHT > ();
-                });
+            ( context |= ui.NewMenuItem( this, "NewMenuItemLight", { "Light" } ) ).SetFunction( [&]()
+            {
+                addTemplate.operator()<Objects::Light, RESERVED_LAYER_LIGHT>();
+            } );
 
-		    (context |= ui.NewMenuItem({ "Object" })).SetFunction([&]()
-                {
-                    addTemplate.operator() < Object, RESERVED_LAYER_DEFAULT > ();
-                });
+            ( context |= ui.NewMenuItem( this, "NewMenuItemObject", { "Object" } ) ).SetFunction( [&]()
+            {
+                addTemplate.operator()<Object, RESERVED_LAYER_DEFAULT>();
+            } );
 
-		    --context;
+            --context;
 
-		    context += ui.NewMenu({"Load"});
+            context += ui.NewMenu( nullptr, "LoadMenu", { "Load" } );
 
-		    for (auto& [name, func] : m_custom_load_function_)
-		    {
-		        (context |= ui.NewMenuItem({name})).SetFunction([&]()
+            for ( auto &[ name, func ] : m_custom_load_function_ )
+            {
+                ( context |= ui.NewMenuItem( this, std::format( "LoadMenuItem{}", name ), { name } ) ).SetFunction( [&]()
                 {
                     func.first = true;
-                });
-		    }
+                } );
+            }
 
-		    --context;
+            --context;
 
-		    if (UIContext manager_context = ui.NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ))
-		    {
-		        if (!IsPlaying())
-		        {
-		            (manager_context |= ui.NewButton( { this, "Play Scene" } )).SetFunction( [this]()
+            if ( const UIContext manager_context = ui.NewContext(
+                    ui.NewDialog( this, "SceneManagerDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
+            {
+                if ( !IsPlaying() )
+                {
+                    ( manager_context |= ui.NewButton( this, "PlaySceneButton", { "Play Scene" } ) ).SetFunction( [this]()
                     {
                         Play();
-                    } );   
-		        }
-		        else
-		        {
-                    ( manager_context |= ui.NewButton( { this, "Stop Scene" } ) ).SetFunction( [ this ]()
+                    } );
+                }
+                else
+                {
+                    ( manager_context |= ui.NewButton( this, "StopSceneButton", { "Stop Scene" } ) ).SetFunction( [ this ]()
                     {
                         Stop();
                     } );
-		        }
-		    }
+                }
+            }
 
-			if (const auto& scene = m_active_scene_.lock())
-			{
-				scene->OnUIUpdate(&context, dt);
-			}
+            if ( const auto &scene = m_active_scene_.lock() )
+            {
+                scene->OnUIUpdate( &context, dt );
+            }
 
-			for (auto& [flag, func] : m_custom_new_function_ | std::views::values)
-			{
-				if (flag) 
-				{
-					func(flag);
-				}
-			}
+            for ( auto &[ flag, func ] : m_custom_new_function_ | std::views::values )
+            {
+                if ( flag )
+                {
+                    func( flag );
+                }
+            }
 
-			for (auto& [flag, func] : m_custom_load_function_ | std::views::values)
-			{
-				if (flag)
-				{
-					func(flag);
-				}
-			}
-		}
+            for ( auto &[ flag, func ] : m_custom_load_function_ | std::views::values )
+            {
+                if ( flag )
+                {
+                    func( flag );
+                }
+            }
+        }
 	}
 #endif
 

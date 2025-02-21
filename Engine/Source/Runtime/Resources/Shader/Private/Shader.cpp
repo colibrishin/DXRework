@@ -103,57 +103,65 @@ namespace Engine::Resources
 			Resource::OnUIUpdate( parent, dt );
 
 #define ENUM_COMBOBOX(NAME, THIS_VAR, ENUM_TYPE, ENUM_ARR) \
-	(*parent |= ui.NewCombobox( { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size(), true } )).SetFunction( [this]() {\
+	(*parent |= ui.NewCombobox( this, std::format("{}Combobox", NAME), { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size(), true } )).SetFunction( [this]() {\
 		(THIS_VAR) = RecastNonlinearEnum<##ENUM_TYPE##>( ENUM_ARR, THIS_VAR##selected_ ); });
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			ENUM_COMBOBOX( "Shader Domain", m_domain_, eShaderDomain, domain_enums );
-			*parent |= ui.NewCheckbox( {"Depth Enabled", m_depth_enabled_} );
-			ENUM_COMBOBOX( "Depth Mode", m_depth_mode_, eShaderDepthMode, depth_mode_enums );
-			ENUM_COMBOBOX( "Depth Function", m_depth_func_, eShaderDepthFunction, depth_function_enums );
-			ENUM_COMBOBOX( "Cull Mode", m_cull_mode_, eShaderRasterizerCull, rasterizer_cull_enums );
-			ENUM_COMBOBOX( "Draw Mode", m_draw_mode_, eShaderRasterizerDraw, rasterizer_draw_enums );
-			ENUM_COMBOBOX( "Sampler Filter", m_sampler_filter_, eSamplerFilter, filter_enums );
-			ENUM_COMBOBOX( "Sampler Address Mode", m_sampler_addr_, eShaderSamplerAddress, sampler_addr_enums );
-			ENUM_COMBOBOX( "Sampler Function", m_sampler_func_, eShaderSamplerFunction, sampler_func_enums );
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            ENUM_COMBOBOX( "Shader Domain", m_domain_, eShaderDomain, domain_enums );
+            *parent |= ui.NewCheckbox( this, "DepthEnabled", { "Depth Enabled", m_depth_enabled_ } );
+            ENUM_COMBOBOX( "Depth Mode", m_depth_mode_, eShaderDepthMode, depth_mode_enums );
+            ENUM_COMBOBOX( "Depth Function", m_depth_func_, eShaderDepthFunction, depth_function_enums );
+            ENUM_COMBOBOX( "Cull Mode", m_cull_mode_, eShaderRasterizerCull, rasterizer_cull_enums );
+            ENUM_COMBOBOX( "Draw Mode", m_draw_mode_, eShaderRasterizerDraw, rasterizer_draw_enums );
+            ENUM_COMBOBOX( "Sampler Filter", m_sampler_filter_, eSamplerFilter, filter_enums );
+            ENUM_COMBOBOX( "Sampler Address Mode", m_sampler_addr_, eShaderSamplerAddress, sampler_addr_enums );
+            ENUM_COMBOBOX( "Sampler Function", m_sampler_func_, eShaderSamplerFunction, sampler_func_enums );
 
-			{
-				*parent += ui.NewListBox({ "RenderTarget Format", -1, 0 });
+            {
+                *parent += ui.NewListBox( this, "RenderTargetFormatListBox", { "RenderTarget Format", -1, 0 } );
 
-				static std::vector<std::string> render_target_label {
-					"Render Target 0",
-					"Render Target 1",
-					"Render Target 2",
-					"Render Target 3",
-					"Render Target 4",
-					"Render Target 5",
-					"Render Target 6",
-					"Render Target 7"
-				};
-				
-				for (size_t i = 0; i < m_rtv_formats_.size(); ++i)
-				{
-					(*parent |= ui.NewCombobox( { render_target_label[i], &m_rtv_formats_selected_[i], format_enums.data(), format_enums.size(), true } )).SetFunction( [this, i]()
-					{
-						m_rtv_formats_[i] = RecastNonlinearEnum<eFormat>( format_enums, m_rtv_formats_selected_[i] );
-					} );
-				}
-				--*parent;
+                static std::vector<std::string> render_target_label{
+                    "Render Target 0",
+                    "Render Target 1",
+                    "Render Target 2",
+                    "Render Target 3",
+                    "Render Target 4",
+                    "Render Target 5",
+                    "Render Target 6",
+                    "Render Target 7"
+                };
 
-				(*parent |= ui.NewButton( { parent, "Add Render Target" } )).SetFunction( [this]()
-					{
-						const eFormat default_format = GetDefaultRTVFormat().front();
-						m_rtv_formats_.push_back( default_format );
-						m_rtv_formats_selected_.push_back( default_format );
-					} );
-			}
+                for ( size_t i = 0; i < m_rtv_formats_.size(); ++i )
+                {
+                    ( *parent |= ui.NewCombobox( this,
+                                                 std::format( "RenderTargetComboBox{}", i ),
+                                                 { render_target_label[ i ],
+                                                   &m_rtv_formats_selected_[ i ],
+                                                   format_enums.data(),
+                                                   format_enums.size(),
+                                                   true } ) ).SetFunction( [this, i]()
+                    {
+                        m_rtv_formats_[ i ] = RecastNonlinearEnum<
+                            eFormat>( format_enums, m_rtv_formats_selected_[ i ] );
+                    } );
+                }
+                --*parent;
+
+                ( *parent |= ui.NewButton( this, "AddRenderTargetButton", { "Add Render Target" } ) ).SetFunction(
+                        [this]()
+                        {
+                            const eFormat default_format = GetDefaultRTVFormat().front();
+                            m_rtv_formats_.push_back( default_format );
+                            m_rtv_formats_selected_.push_back( default_format );
+                        } );
+            }
 
 			ENUM_COMBOBOX( "Depth/Stencil Format", m_dsv_format_, eFormat, format_enums );
 			ENUM_COMBOBOX( "Primitive Topology", m_topology_, ePrimitiveTopology, primitive_topology_enum );
 			ENUM_COMBOBOX( "Primitive Topology Type", m_topology_type_, ePrimitiveTopologyType, primitive_topology_type_enum );
 			ENUM_COMBOBOX( "Sampler Slot", m_sampler_slot_, eSampler, sampler_slot_enum );
 #undef ENUM_COMBOBOX
-			( *parent |= ui.NewButton( { parent, "Reload" } ) ).SetFunction( [ this ]()
+			( *parent |= ui.NewButton( this, "ShaderReloadButton", { "Reload" } ) ).SetFunction( [ this ]()
 			{
 				Unload();
 				Load();

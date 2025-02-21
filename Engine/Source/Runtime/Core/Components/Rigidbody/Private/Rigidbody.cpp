@@ -59,21 +59,21 @@ namespace Engine::Components
 			Component::OnUIUpdate(context, dt);
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-			(*context |= ui.NewCheckbox({ "Gravity Override", m_bGravityOverride })).SetFunction([&]()
+			(*context |= ui.NewCheckbox( this, "GravityOverride", { "Gravity Override", m_bGravityOverride })).SetFunction([&]()
 			{
 				SetGravityOverride(m_bGravityOverride);
 			});
-			(*context |= ui.NewCheckbox({ "Fixed", m_bFixed })).SetFunction([&]()
+			(*context |= ui.NewCheckbox( this, "Fixed", { "Fixed", m_bFixed })).SetFunction([&]()
 			{
 				SetFixed(m_bFixed);
 			});
-			(*context |= ui.NewCheckbox({ "No Angular", m_b_no_angular_ })).SetFunction([&]()
+			(*context |= ui.NewCheckbox( this, "NoAngular", { "No Angular", m_b_no_angular_ })).SetFunction([&]()
 			{
 				SetNoAngular(m_b_no_angular_);
 			});
-			*context |= ui.NewCheckbox({ "Lerp", m_b_lerp_ });
+			*context |= ui.NewCheckbox( this, "Lerp", { "Lerp", m_b_lerp_ });
 
-			*context |= ui.NewLabelAndFloat({ "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
+			*context |= ui.NewLabelAndFloat( this, "FrictionCoeff", { "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
 		}
 	}
 #endif

@@ -44,15 +44,15 @@ namespace Engine::Abstracts
 
 			if (const Strong<Scene>& scene = GetScene().lock())
 			{
-				*(parent) |= ui.NewLabelAndText({"Layer", const_cast<EntityName&>((*scene)[GetLayer()]->GetName()), false});
+				*(parent) |= ui.NewLabelAndText( this, "Layer", {"Layer", const_cast<EntityName&>((*scene)[GetLayer()]->GetName()), false});
 			}
 			else
 			{
 				static std::string empty;
-				*(parent) |= ui.NewLabelAndText({"Layer", empty, false});
+				*(parent) |= ui.NewLabelAndText( this, "Layer", {"Layer", empty, false});
 			}
 
-			*(parent) |= ui.NewLabelAndUInt({"Local ID", const_cast<LocalActorID&>(GetLocalID()), 0.f, 0, 0, false});
+			*(parent) |= ui.NewLabelAndUInt( this, "LocalID", {"Local ID", const_cast<LocalActorID&>(GetLocalID()), 0.f, 0, 0, false});
 		}
 	}
 #endif

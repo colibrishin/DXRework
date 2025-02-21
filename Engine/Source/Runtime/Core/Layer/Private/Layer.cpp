@@ -188,8 +188,8 @@ namespace Engine
 		if (parent)
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent += ui.NewTreeNode({GetName()});
-            *parent |= ui.NewDragAndDropTarget(
+			*parent += ui.NewTreeNode( this, "Objects", { GetName() } );
+            *parent |= ui.NewDragAndDropTarget( this, "ObjectDragAndDrop",
                     { "OBJECT",
                       [ this ]( void *ptr )
                       {
@@ -208,29 +208,37 @@ namespace Engine
                           }
                       } } );
 
-			for (const auto& object : m_objects_)
-			{
-			    if ( object->GetParent().expired() )
-			    {
-                    ( *parent |= ui.NewButton( { object.get(), m_ui_info_.temporaryStrings[ std::format( "{}remove", object->GetID() ) ] } ) )
-                            .SetFunction( [ object ]() 
-					{
-                        if ( const Strong<Scene> &scene = object->GetScene().lock() )
-                        {
-                            scene->RemoveGameObject( object->GetID(), object->GetLayer() );
-						}
-					} );
-                    *parent |= ui.NewSameLine( {} );
-			        *parent |= ui.NewSelectable({object->m_ui_info_.label, object->m_ui_info_.dialogOpened});
-                    *parent |= ui.NewDragAndDropSource(
-                            { "OBJECT", object->m_ui_info_.label, &object, sizeof( decltype( object ) ) } );
+            for ( auto it = m_objects_.begin(); it != m_objects_.end(); ++it )
+            {
+                const Strong<Abstracts::ObjectBase> &object = *it;
+                const ptrdiff_t                      idx    = std::distance( m_objects_.begin(), it );
+                if ( object->GetParent().expired() )
+                {
+                    ( *parent |= ui.NewButton( this, std::format( "ObjectRemove{}", idx ), { "Remove" } ) )
+                            .SetFunction( [ object ]()
+                            {
+                                if ( const Strong<Scene> &scene = object->GetScene().lock() )
+                                {
+                                    scene->RemoveGameObject( object->GetID(), object->GetLayer() );
+                                }
+                            } );
+                    *parent |= ui.NewSameLine( this, "SL", {} );
+                    *parent |= ui.NewSelectable( this,
+                                                 std::format( "ObjectSelection{}", idx ),
+                                                 { object->m_ui_info_.label, object->m_ui_info_.dialogOpened } );
+                    *parent |= ui.NewDragAndDropSource( this,
+                                                        "ObjectDragAndDrop",
+                                                        { "OBJECT",
+                                                          object->m_ui_info_.label,
+                                                          &object,
+                                                          sizeof( decltype( object ) ) } );
 
-			        if (object->m_ui_info_.dialogOpened)
-			        {
-			            object->OnUIUpdate(parent, dt);   
-			        }
-			    }
-			}
+                    if ( object->m_ui_info_.dialogOpened )
+                    {
+                        object->OnUIUpdate( parent, dt );
+                    }
+                }
+            }
 
 			--*parent;
 		}

@@ -213,26 +213,31 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void CollisionDetector::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
-		{
-			if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
-			{
-				context += ui.NewTable({"Layer Mask", scene->size()});
-				for (size_t i = 0; i < scene->size(); ++i)
-				{
-					context |= ui.NewTableRow({});
-					for (size_t j = 0; j <= i; ++j)
-					{
-						context |= ui.NewTableColumn({});
-						(context |= ui.NewCheckbox({ m_layer_name_storage_[{i, j}], m_layer_mask_[i][j] })).SetFunction([this]()
-							{
-								if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
-								{
-									scene->UpdateCollisionMask(m_layer_mask_);
-								}
-							});
-					}
+        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        if ( UIContext context = UIInterface::NewContext(
+                ui.NewDialog( this, "CollisionDetectorDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
+        {
+            if ( const Strong<Scene> &scene = SceneManager::GetInstance().GetActiveScene().lock() )
+            {
+                context += ui.NewTable( this, "CollisionDetectorLayerMaskTable", { "Layer Mask", scene->size() } );
+                for ( size_t i = 0; i < scene->size(); ++i )
+                {
+                    context |= ui.NewTableRow( this, std::format( "Row{}", i ), {} );
+                    for ( size_t j = 0; j <= i; ++j )
+                    {
+                        context |= ui.NewTableColumn( this, std::format( "Column{}", j ), {} );
+                        ( context |= ui.NewCheckbox( this,
+                                                     std::format( "Checkbox{}{}", i, j ),
+                                                     { m_layer_name_storage_[ { i, j } ], m_layer_mask_[ i ][ j ] } ) ).
+                                SetFunction( [this]()
+                                {
+                                    if ( const Strong<Scene> &scene = SceneManager::GetInstance().GetActiveScene().
+                                            lock() )
+                                    {
+                                        scene->UpdateCollisionMask( m_layer_mask_ );
+                                    }
+                                } );
+                    }
 				}
 				--context;
 			}

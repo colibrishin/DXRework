@@ -1057,8 +1057,20 @@ void FezPlayerComponent::OnUIUpdate(Engine::UIContext* const parent, const float
 		static constexpr auto state_enum = CStrEnumStrings<eCharacterState>();
 		Component::OnUIUpdate(parent, dt);
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
-		*parent |= ui.NewCombobox({ "Previous State", reinterpret_cast<int*>(&m_prev_state_), state_enum.data(), state_enum.size(), false });
-		*parent |= ui.NewCombobox({ "Current State", reinterpret_cast<int*>(&m_state_), state_enum.data(), state_enum.size(), false });
+        *parent |= ui.NewCombobox( this,
+                                   "PreviousState",
+                                   { "Previous State",
+                                     reinterpret_cast<int *>( &m_prev_state_ ),
+                                     state_enum.data(),
+                                     state_enum.size(),
+                                     false } );
+        *parent |= ui.NewCombobox( this,
+                                   "CurrentState",
+                                   { "Current State",
+                                     reinterpret_cast<int *>( &m_state_ ),
+                                     state_enum.data(),
+                                     state_enum.size(),
+                                     false } );
 	}
 }
 #endif

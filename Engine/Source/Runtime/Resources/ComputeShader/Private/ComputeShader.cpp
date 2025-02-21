@@ -24,16 +24,22 @@ namespace Engine::Resources
 	}
 
 #if WITH_EDITOR
-	void ComputeShader::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-		if (parent)
-		{
-			Resource::OnUIUpdate( parent, dt );
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent |= ui.NewLabelAndUInt( { "Thread Group X", m_thread_[0], 0, 0, 256, true} );
-			*parent |= ui.NewLabelAndUInt( { "Thread Group Y", m_thread_[1], 0, 0, 256, true} );
-			*parent |= ui.NewLabelAndUInt( { "Thread Group Z", m_thread_[2], 0, 0, 256, true} );
-		}
+    void ComputeShader::OnUIUpdate( UIContext *const parent, const float dt )
+    {
+        if ( parent )
+        {
+            Resource::OnUIUpdate( parent, dt );
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            *parent |= ui.NewLabelAndUInt( this,
+                                           "ThreadGroupX",
+                                           { "Thread Group X", m_thread_[ 0 ], 0, 0, 255, true } );
+            *parent |= ui.NewLabelAndUInt( this,
+                                           "ThreadGroupY",
+                                           { "Thread Group Y", m_thread_[ 1 ], 0, 0, 255, true } );
+            *parent |= ui.NewLabelAndUInt( this,
+                                           "ThreadGroupZ",
+                                           { "Thread Group Z", m_thread_[ 2 ], 0, 0, 255, true } );
+        }
 	}
 #endif
 

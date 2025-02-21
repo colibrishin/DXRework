@@ -2,82 +2,83 @@
 #if WITH_EDITOR
 #include <functional>
 #include "UIInterface.h"
+#include "UIHelpers.h"
 #include "SceneManager/Public/SceneManager.h"
-#include "Scene/Public/Scene.h"
-#include "Layer/Public/Layer.h"
+
+#include "ObjectBase/Public/ObjectBase.h"
 
 namespace Engine::UIHelpers
 {
     using ObjectUIPredicateSignature = std::function<bool(const Strong<Abstracts::ObjectBase>&)>;
     using ObjectUITypePredicateSignature = std::function<bool(const HashType)>;
 
-    // todo: gc, and multiple call safe dialog (a mesh <- a shape || b shape)
-    template <typename T>
-    static bool SingleObjectSelectionDialog(
-        const Strong<Abstracts::Entity>& ptr,
-        Weak<Abstracts::ObjectBase>& object_selected,
-        const ObjectUIPredicateSignature& predicate = {},
-        const ObjectUITypePredicateSignature& type_predicate = {})
+    struct UISceneIterator
     {
-        using SelectionMap = std::unordered_map<Weak<Abstracts::ObjectBase>, bool>;
-        using TypeSelectionMap = std::unordered_map<Weak<Abstracts::Entity>, SelectionMap>;
-
-        bool window = true;
-        static TypeSelectionMap selection{};
-
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
-        if (UIContext context = UIInterface::NewContext(ui.NewDialog({ ptr.get(), "Select Object...", window })))
+        void operator()( const auto &                             container,
+                         UIContext *const                         ui_context,
+                         const Strong<Abstracts::Entity> &        ptr,
+                         const ObjectUIPredicateSignature &       predicate,
+                         const ObjectUITypePredicateSignature &   type_predicate,
+                         TypeSelectionMap<Abstracts::ObjectBase> &selection_map,
+                         bool &                                   window ) const
         {
-            context += ui.NewListBox({ "Object List", 0, 0 });
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-            for (const Strong<Scene>& scene : Managers::SceneManager::GetInstance().GetScenes())
+            for ( auto it = container.begin(); it != container.end(); ++it )
             {
-                context += ui.NewTreeNode({ scene->GetName() });
+                const Strong<Scene> &scene = *it;
+                const ptrdiff_t      idx   = std::distance( container.begin(), it );
+                *ui_context += ui.NewTreeNode( ptr.get(), std::format( "Scene{}TreeNode", idx ), { scene->GetName() } );
 
-                for (const Strong<Layer>& layer : *scene)
+                for ( auto lit = scene->begin(); lit != scene->end(); ++it )
                 {
-                    context += ui.NewTreeNode({ layer->GetName()});
+                    const Strong<Layer> &layer = *lit;
+                    const ptrdiff_t      lidx  = std::distance( scene->begin(), lit );
+                    *ui_context += ui.NewTreeNode( this, std::format( "Layer{}", lidx ), { layer->GetName() } );
 
-                    for (const Weak<Abstracts::ObjectBase> object : layer->GetGameObjects())
+                    const auto &layer_objects = layer->GetGameObjects();
+                    for ( auto oit = layer_objects.begin(); oit != layer_objects.end(); ++oit )
                     {
-                        if (const Strong<Abstracts::ObjectBase>& locked = object.lock())
+                        const Weak<Abstracts::ObjectBase> object = *oit;
+                        const size_t                      oidx   = std::distance( layer_objects.begin(), oit );
+
+                        if ( const Strong<Abstracts::ObjectBase> &locked = object.lock() )
                         {
-                            if (predicate && !predicate(locked))
+                            if ( predicate && !predicate( locked ) )
                             {
                                 continue;
                             }
 
-                            (context |= ui.NewSelectable({ locked->GetName(), selection[ptr][locked] })).SetFunction([&window]()
-                                {
-                                    window = false;
-                                });
+                            ( *ui_context |= ui.NewSelectable( ptr.get(),
+                                                               std::format( "ObjectSelectable{}", oidx ),
+                                                               { locked->m_ui_info_.label,
+                                                                 selection_map[ ptr ][ locked ] } ) ).SetFunction(
+                                    [&window]()
+                                    {
+                                        window = false;
+                                    } );
                         }
                     }
-                    --context;
+                    --*ui_context;
                 }
-
-                --context;
+                --*ui_context;
             }
-
-            --context;
         }
+    };
 
-        if (!window)
-        {
-            for (const auto& [key, flag] : selection[ptr])
-            {
-                if (const Strong<Abstracts::ObjectBase>& object = key.lock();
-                    flag && object)
-                {
-                    object_selected = object;
-                    break;
-                }
-            }
-
-            selection.erase(ptr);
-        }
-
-        return !window;
+    template <typename T>
+    static bool SingleObjectSelectionDialog(
+            const Strong<Abstracts::Entity> &     ptr,
+            Weak<Abstracts::ObjectBase> &         object_selected,
+            const ObjectUIPredicateSignature &    predicate      = {},
+            const ObjectUITypePredicateSignature &type_predicate = {} )
+    {
+        return SingleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator>(
+                Managers::SceneManager::GetInstance().GetScenes(),
+                ptr,
+                object_selected,
+                predicate,
+                type_predicate );
     }
 
     template <typename T>
@@ -87,69 +88,12 @@ namespace Engine::UIHelpers
         const ObjectUIPredicateSignature& predicate = {},
         const ObjectUITypePredicateSignature& type_predicate = {})
     {
-        using SelectionMap = std::unordered_map<Weak<Abstracts::ObjectBase>, bool>;
-        using TypeSelectionMap = std::unordered_map<Weak<Abstracts::Entity>, SelectionMap>;
-
-        bool                                                       window = true;
-        static TypeSelectionMap selection{};
-
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
-        if (UIContext context = UIInterface::NewContext(ui.NewDialog({ ptr.get(), "Select Objects...", window})))
-        {
-            context += ui.NewListBox({ "Object List", 0, 0 });
-
-            for (const Strong<Scene>& scene : Managers::SceneManager::GetInstance().GetScenes())
-            {
-                context += ui.NewTreeNode({ scene->GetName() });
-
-                for (const Strong<Layer>& layer : *scene)
-                {
-                    context += ui.NewTreeNode({ layer->GetName() });
-
-                    for (const Weak<Abstracts::ObjectBase> object : layer->GetGameObjects())
-                    {
-                        if (const Strong<Abstracts::ObjectBase>& locked = object.lock())
-                        {
-                            if (predicate && !predicate(locked))
-                            {
-                                continue;
-                            }
-
-                            context |= ui.NewSelectable({ locked->m_ui_info_.label, selection[ptr][locked] });
-                        }
-                    }
-                    --context;
-                }
-
-                --context;
-            }
-
-            --context;
-
-            (context |= ui.NewButton({ &context, "Select" })).SetFunction([&window]()
-                {
-                    window = false;
-                });
-        }
-
-        if (!window)
-        {
-            object_selected.clear();
-            object_selected.reserve(selection[ptr].size());
-
-            for (const auto& [key, flag] : selection[ptr])
-            {
-                if (const Strong<Abstracts::ObjectBase>& resource = key.lock();
-                    flag && resource)
-                {
-                    object_selected.push_back(resource);
-                }
-            }
-
-            selection.erase(ptr);
-        }
-
-        return !window;
+        return MultipleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator>(
+                Managers::SceneManager::GetInstance().GetScenes(),
+                ptr,
+                object_selected,
+                predicate,
+                type_predicate );
     }
 
     template <typename T, typename... Excluded>

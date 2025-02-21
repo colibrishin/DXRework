@@ -58,23 +58,23 @@ void Engine::Abstracts::Entity::Initialize()
 }
 
 #if WITH_EDITOR
-void Engine::Abstracts::Entity::OnUIUpdate(UIContext* const parent, const float dt)
+void Engine::Abstracts::Entity::OnUIUpdate( UIContext *const parent, const float dt )
 {
-	if (parent)
-	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+    if ( parent )
+    {
+        UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-		(*parent |= ui.NewLabelAndText({"Name", m_name_, true})).SetFunction([&]() 
-		{
-			OnNameChanged();
-		});
-		(*parent |= ui.NewButton({ parent, "Save" })).SetFunction([&]()
-		{
-			Serializer::Serialize(m_name_, GetSharedPtr<Entity>());
-		});
-		*parent |= ui.NewLabelAndUInt({"Entity ID", m_precached_id_, 0.f, 0, 0, false});
-		*parent |= ui.NewLabelAndPath({"Metadata Path", m_meta_path_});
-	}
+        ( *parent |= ui.NewLabelAndText( this, "EntityName", { "Name", m_name_, true } ) ).SetFunction( [&]()
+        {
+            OnNameChanged();
+        } );
+        ( *parent |= ui.NewButton( this, "EntitySaveButton", { "Save" } ) ).SetFunction( [&]()
+        {
+            Serializer::Serialize( m_name_, GetSharedPtr<Entity>() );
+        } );
+        *parent |= ui.NewLabelAndUInt( this, "EntityGlobalID", { "Entity ID", m_precached_id_, 0.f, 0, 0, false } );
+        *parent |= ui.NewLabelAndPath( this, "EntityMetadataPath", { "Metadata Path", m_meta_path_ } );
+    }
 }
 #endif
 

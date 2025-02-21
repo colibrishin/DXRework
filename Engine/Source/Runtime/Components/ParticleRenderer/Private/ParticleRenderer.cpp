@@ -120,78 +120,84 @@ namespace Engine::Components
 	}
 
 #if WITH_EDITOR
-	void ParticleRenderer::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-		if (parent)
-		{
-			Base::OnUIUpdate(parent, dt);
+    void ParticleRenderer::OnUIUpdate( UIContext *const parent, const float dt )
+    {
+        if ( parent )
+        {
+            Base::OnUIUpdate( parent, dt );
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-			static std::string shader_name{};
-			if (const Strong<Resources::ParticleComputeShader>& shader = m_cached_cs_.lock())
-			{
-				shader_name = shader->GetName();
-			}
-			*parent |= ui.NewLabelAndText({ "Particle Shader", shader_name, false });
-			(*parent |= ui.NewButton({ parent, "Set Particle Shader..." })).SetFunction([&]()
-				{
-					m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
-				});
-			*parent |= ui.NewCheckbox( { "Follow Owner", m_b_follow_owner_ } );
-			( *parent |= ui.NewLabelAndInt( {
-				"Particle Count",
-				m_params_.GetParam<int>(particle_count_slot),
-				0,
-				0,
-				std::numeric_limits<int>::max(),
-				true } ) ).SetFunction( [this]()
-			{
-				SetCount(m_params_.GetParam<int>(particle_count_slot));
-			} );
-			( *parent |= ui.NewLabelAndFloat( {
-				"Particle Duration",
-				m_params_.GetParam<float>(duration_slot),
-				0,
-				0.f,
-				std::numeric_limits<float>::max(),
-				true } ) ).SetFunction( [this]()
-			{
-				SetDuration(m_params_.GetParam<float>(duration_slot));
-			} );
-			( *parent |= ui.NewLabelAndInt( {
-				"Particle Size",
-				m_params_.GetParam<int>(size_slot),
-				0,
-				0,
-				std::numeric_limits<int>::max(),
-				true } ) ).SetFunction( [this]()
-			{
-				SetCount(m_params_.GetParam<int>(size_slot));
-			} );
+            static std::string shader_name{};
+            if ( const Strong<Resources::ParticleComputeShader> &shader = m_cached_cs_.lock() )
+            {
+                shader_name = shader->GetName();
+            }
+            *parent |= ui.NewLabelAndText( this, "ParticleShader", { "Particle Shader", shader_name, false } );
+            ( *parent |= ui.NewButton( this, "ParticleShaderButton", { "Set Particle Shader..." } ) ).SetFunction( [&]()
+            {
+                m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
+            } );
+            *parent |= ui.NewCheckbox( this, "FollowOwner", { "Follow Owner", m_b_follow_owner_ } );
+            ( *parent |= ui.NewLabelAndInt( this,
+                                            "ParticleCount",
+                                            {
+                                                "Particle Count",
+                                                m_params_.GetParam<int>( particle_count_slot ),
+                                                0,
+                                                0,
+                                                std::numeric_limits<int>::max(),
+                                                true } ) ).SetFunction( [this]()
+            {
+                SetCount( m_params_.GetParam<int>( particle_count_slot ) );
+            } );
+            ( *parent |= ui.NewLabelAndFloat( this,
+                                              "ParticleDuration",
+                                              {
+                                                  "Particle Duration",
+                                                  m_params_.GetParam<float>( duration_slot ),
+                                                  0,
+                                                  0.f,
+                                                  std::numeric_limits<float>::max(),
+                                                  true } ) ).SetFunction( [this]()
+            {
+                SetDuration( m_params_.GetParam<float>( duration_slot ) );
+            } );
+            ( *parent |= ui.NewLabelAndInt( this,
+                                            "ParticleSize",
+                                            {
+                                                "Particle Size",
+                                                m_params_.GetParam<int>( size_slot ),
+                                                0,
+                                                0,
+                                                std::numeric_limits<int>::max(),
+                                                true } ) ).SetFunction( [this]()
+            {
+                SetCount( m_params_.GetParam<int>( size_slot ) );
+            } );
 
-			if (const Strong<Resources::ParticleComputeShader>& locked = m_cached_cs_.lock())
-			{
-				locked->OnUIUpdateParam(parent, dt, m_params_, m_instances_);
-			}
+            if ( const Strong<Resources::ParticleComputeShader> &locked = m_cached_cs_.lock() )
+            {
+                locked->OnUIUpdateParam( parent, dt, m_params_, m_instances_ );
+            }
 
-			if (m_particle_shader_dialog_opened_)
-			{
-				if (Weak<Engine::Abstracts::Resource> resource_to_load;
-					UIHelpers::SingleResourceSelectionDialogInclusion<ParticleRenderer, Resources::ParticleComputeShader>
-					(
-						GetSharedPtr<ParticleRenderer>(),
-						resource_to_load
-					))
-				{
-					if (const auto shader = Cast<Resources::ParticleComputeShader>(resource_to_load))
-					{
-						SetComputeShader(shader);
-					}
+            if ( m_particle_shader_dialog_opened_ )
+            {
+                if ( Weak<Engine::Abstracts::Resource> resource_to_load;
+                    UIHelpers::SingleResourceSelectionDialogInclusion<
+                        ParticleRenderer, Resources::ParticleComputeShader>(
+                            GetSharedPtr<ParticleRenderer>(),
+                            resource_to_load
+                            ) )
+                {
+                    if ( const auto shader = Cast<Resources::ParticleComputeShader>( resource_to_load ) )
+                    {
+                        SetComputeShader( shader );
+                    }
 
-					m_particle_shader_dialog_opened_ = false;
-				}
-			}
+                    m_particle_shader_dialog_opened_ = false;
+                }
+            }
 		}
 	}
 #endif

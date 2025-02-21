@@ -61,6 +61,7 @@ namespace Engine::Abstracts
 #if WITH_EDITOR
 	void Component::OnNameChanged()
 	{
+		Entity::OnNameChanged();
 		m_ui_info_.label = GetName();
 	}
 #endif
