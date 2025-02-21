@@ -415,3 +415,5 @@ balius/target/.rustc_info.json
 *.sln
 *.vcxproj
 *.dep
+
+Programs/vcpkg
